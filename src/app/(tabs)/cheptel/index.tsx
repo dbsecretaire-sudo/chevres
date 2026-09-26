@@ -12,7 +12,7 @@ import { colors } from '@/theme/colors';
 import { dernieresMisesBasParMere, listChevresVivantes, listChevresHistorique} from '@/storage/repositories';
 import type { Chevre } from '@/types/models';
 import { formatDateFR } from '@/utils/dates';
-import { accordNe, categorieAnimal, libelleChevre, LABEL_CATEGORIE_ANIMAL, statutLabel, type CategorieAnimal } from '@/utils/chevreLabel';
+import { categorieAnimal, libelleChevre, LABEL_CATEGORIE_ANIMAL, statutLabel, type CategorieAnimal } from '@/utils/chevreLabel';
 import { statutColors } from '@/theme/colors';
 
 type StatutFiltre = 'vivante' | 'morte' | 'tout';
@@ -267,10 +267,10 @@ export default function CheptelIndex() {
         renderItem={({ item }) => (
           <ListRow
             title={libelleChevre(item)}
-            subtitle={`${item.sexe === 'F' ? 'Femelle' : 'Mâle'} · ${accordNe(item.sexe)} le ${formatDateFR(item.dateNaissance)}${
-              item.mereNumeroBoucle ? ` · Mère : ${item.mereNumeroBoucle}` : ''
+            subtitle={`${item.sexe === 'F' ? 'Femelle' : 'Mâle'} · ${formatDateFR(item.dateNaissance)} - ${
+              item.statut !== 'vivante' && item.dateStatut ? formatDateFR(item.dateStatut) : ''
             }${
-              item.statut === 'abattoir' && item.dateStatut ? ` · Abattu(e) le ${formatDateFR(item.dateStatut)}` : ''
+              item.mereNumeroBoucle ? ` · Mère : ${item.mereNumeroBoucle}` : ''
             }`}
             trailing={
             (() => {
