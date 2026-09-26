@@ -39,12 +39,13 @@ const EMPTY_SUBTITLE: Record<CategorieAnimal, string> = {
   tout: 'Tous les animaux vivants et morts apparaissent ici',
 };
 
-type Tri = 'boucle' | 'naissance' | 'misebas';
+type Tri = 'boucle' | 'naissance' | 'misebas' | 'abattage';
 
 const OPTIONS_TRI: { value: Tri; label: string }[] = [
   { value: 'boucle', label: 'N° de boucle' },
   { value: 'naissance', label: 'Date de naissance' },
   { value: 'misebas', label: 'Dernière mise bas' },
+  { value: 'abattage', label: 'Date d’abattage' },
 ];
 
 /** « Mortes » couvre tous les statuts de sortie (morte, abattoir, vendue, auto-consommée, mort-né). */
@@ -113,8 +114,9 @@ export default function CheptelIndex() {
           (c.numeroBoucle ?? '').toLowerCase().includes(q) ||
           (c.nom ?? '').toLowerCase().includes(q),
       )
-      // Date d'abattage (Du / Au)
+      // Date d'abattage (Du / Au) — uniquement quand ce tri est actif (champs cachés sinon)
       .filter((c) => {
+        if (triActif !== 'abattage') return true;
         if (!dateAbattageDebut && !dateAbattageFin) return true;
         if (c.statut !== 'abattoir' || !c.dateStatut) return false;
         if (dateAbattageDebut && c.dateStatut < dateAbattageDebut) return false;
@@ -135,6 +137,20 @@ export default function CheptelIndex() {
         const db = b.numeroBoucle
           ? misesBas[b.numeroBoucle]
           : undefined;
+
+        if (!da && !db) {
+          return compareBoucle(a.numeroBoucle, b.numeroBoucle);
+        }
+
+        if (!da) return 1;
+        if (!db) return -1;
+
+        return da.localeCompare(db);
+      }
+
+      if (triActif === 'abattage') {
+        const da = a.statut === 'abattoir' ? a.dateStatut : undefined;
+        const db = b.statut === 'abattoir' ? b.dateStatut : undefined;
 
         if (!da && !db) {
           return compareBoucle(a.numeroBoucle, b.numeroBoucle);
@@ -229,24 +245,28 @@ export default function CheptelIndex() {
         onChangeText={setRecherche}
       />
 
-      <View style={styles.filtres}>
-        <View style={styles.flex1}>
-          <DateField label="Date d’abattage — du" value={dateAbattageDebut} onChange={setDateAbattageDebut} />
-        </View>
-        <View style={styles.flex1}>
-          <DateField label="Date d’abattage — au" value={dateAbattageFin} onChange={setDateAbattageFin} />
-        </View>
-      </View>
-      {(!!dateAbattageDebut || !!dateAbattageFin) && (
-        <Pressable
-          style={styles.effacerDates}
-          onPress={() => {
-            setDateAbattageDebut('');
-            setDateAbattageFin('');
-          }}
-        >
-          <Text style={styles.effacerDatesTexte}>Effacer la date d’abattage</Text>
-        </Pressable>
+      {triActif === 'abattage' && (
+        <>
+          <View style={styles.filtres}>
+            <View style={styles.flex1}>
+              <DateField label="Date d’abattage — du" value={dateAbattageDebut} onChange={setDateAbattageDebut} />
+            </View>
+            <View style={styles.flex1}>
+              <DateField label="Date d’abattage — au" value={dateAbattageFin} onChange={setDateAbattageFin} />
+            </View>
+          </View>
+          {(!!dateAbattageDebut || !!dateAbattageFin) && (
+            <Pressable
+              style={styles.effacerDates}
+              onPress={() => {
+                setDateAbattageDebut('');
+                setDateAbattageFin('');
+              }}
+            >
+              <Text style={styles.effacerDatesTexte}>Effacer la date d’abattage</Text>
+            </Pressable>
+          )}
+        </>
       )}
 
       <FlatList
