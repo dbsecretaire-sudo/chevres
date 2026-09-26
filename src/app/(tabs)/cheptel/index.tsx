@@ -47,6 +47,13 @@ const OPTIONS_TRI: { value: Tri; label: string }[] = [
   { value: 'misebas', label: 'Dernière mise bas' },
 ];
 
+/** « Mortes » couvre tous les statuts de sortie (morte, abattoir, vendue, auto-consommée, mort-né). */
+function matchStatut(c: Chevre, filtre: StatutFiltre): boolean {
+  if (filtre === 'tout') return true;
+  if (filtre === 'morte') return c.statut !== 'vivante';
+  return c.statut === filtre;
+}
+
 function compareBoucle(a?: string, b?: string): number {
   if (!a && !b) return 0;
   if (!a) return 1;
@@ -92,11 +99,7 @@ export default function CheptelIndex() {
 
     const liste = chevres
       // Filtre vivant / mort
-      .filter(
-        (c) =>
-          statutFiltre === 'tout' ||
-          c.statut === statutFiltre,
-      )
+      .filter((c) => matchStatut(c, statutFiltre))
       // Filtre chèvre / bouc / cabrit
       .filter(
         (c) =>
@@ -159,9 +162,7 @@ export default function CheptelIndex() {
   const optionsStatut = OPTIONS_STATUT.map((option) => ({
     ...option,
     label: `${option.label} (${
-      option.value === 'tout'
-        ? chevres.length
-        : chevres.filter((c) => c.statut === option.value).length
+      option.value === 'tout' ? chevres.length : chevres.filter((c) => matchStatut(c, option.value)).length
     })`,
   }));
 
@@ -169,17 +170,8 @@ export default function CheptelIndex() {
     ...option,
     label: `${option.label} (${
       option.value === 'tout'
-        ? chevres.filter(
-            (c) =>
-              statutFiltre === 'tout' ||
-              c.statut === statutFiltre,
-          ).length
-        : chevres.filter(
-            (c) =>
-              (statutFiltre === 'tout' ||
-                c.statut === statutFiltre) &&
-              categorieAnimal(c) === option.value,
-          ).length
+        ? chevres.filter((c) => matchStatut(c, statutFiltre)).length
+        : chevres.filter((c) => matchStatut(c, statutFiltre) && categorieAnimal(c) === option.value).length
     })`,
   }));
 
