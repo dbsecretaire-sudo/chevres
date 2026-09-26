@@ -1,6 +1,6 @@
 import { generateId } from '@/utils/id';
 import { yearOf } from '@/utils/dates';
-import { categorieAnimal, cleTriChevre } from '@/utils/chevreLabel';
+import { ageEnMois, categorieAnimal, cleTriChevre } from '@/utils/chevreLabel';
 import { LABEL_CATEGORIE_DEPENSE, LABEL_TYPE_AIDE, tauxImpositionAide } from '@/utils/planComptable';
 import type {
   Chevre,
@@ -329,6 +329,8 @@ export async function supprimerFacture(id: string): Promise<void> {
 }
 
 const TYPES_ALIMENT: TypeAliment[] = ['mais', 'luzerne', 'foin', 'paille', 'autre'];
+/** "Autre" est exclu des totaux/moyennes : la précision libre peut recouvrir un aliment acheté pour un tout autre élevage que les chèvres. */
+const TYPES_ALIMENT_COMPTABILISES: TypeAliment[] = ['mais', 'luzerne', 'foin', 'paille'];
 
 export interface BilanAlimentationType {
   montant: number;
@@ -341,8 +343,12 @@ export interface BilanAlimentation {
   totalKg: number;
   nombreAnimaux: number;
   coutParAnimal: number | undefined;
-  /** Kg par animal, par type d'aliment (undefined si aucun animal). */
+  /** Total (hors Autre) en kg, par animal. */
+  kgParAnimal: number | undefined;
+  /** Kg par animal, par type d'aliment (undefined si aucun animal, ou pour "Autre"). */
   kgParAnimalParType: Record<TypeAliment, number | undefined>;
+  /** Coût (€) par animal, par type d'aliment (undefined si aucun animal, ou pour "Autre"). */
+  montantParAnimalParType: Record<TypeAliment, number | undefined>;
 }
 
 /**
@@ -366,14 +372,28 @@ export async function calculerBilanAlimentation(annee: number): Promise<BilanAli
       parType[ligne.type].quantiteKg += ligne.quantiteKg ?? 0;
     }
   }
-  const total = TYPES_ALIMENT.reduce((s, t) => s + parType[t].montant, 0);
-  const totalKg = TYPES_ALIMENT.reduce((s, t) => s + parType[t].quantiteKg, 0);
+  const total = TYPES_ALIMENT_COMPTABILISES.reduce((s, t) => s + parType[t].montant, 0);
+  const totalKg = TYPES_ALIMENT_COMPTABILISES.reduce((s, t) => s + parType[t].quantiteKg, 0);
 
   const vivantes = await listChevresVivantes();
-  const nombreAnimaux = vivantes.filter((c) => categorieAnimal(c) !== 'cabrit').length;
+  const nombreAnimaux = vivantes.filter((c) => {
+    const cat = categorieAnimal(c);
+    // Un cabrit sevré (2 mois et plus) mange déjà comme un adulte et compte dans l'effectif.
+    return cat !== 'cabrit' || ageEnMois(c.dateNaissance) >= 2;
+  }).length;
 
   const kgParAnimalParType = Object.fromEntries(
-    TYPES_ALIMENT.map((t) => [t, nombreAnimaux > 0 ? parType[t].quantiteKg / nombreAnimaux : undefined]),
+    TYPES_ALIMENT.map((t) => [
+      t,
+      TYPES_ALIMENT_COMPTABILISES.includes(t) && nombreAnimaux > 0 ? parType[t].quantiteKg / nombreAnimaux : undefined,
+    ]),
+  ) as Record<TypeAliment, number | undefined>;
+
+  const montantParAnimalParType = Object.fromEntries(
+    TYPES_ALIMENT.map((t) => [
+      t,
+      TYPES_ALIMENT_COMPTABILISES.includes(t) && nombreAnimaux > 0 ? parType[t].montant / nombreAnimaux : undefined,
+    ]),
   ) as Record<TypeAliment, number | undefined>;
 
   return {
@@ -382,7 +402,9 @@ export async function calculerBilanAlimentation(annee: number): Promise<BilanAli
     totalKg,
     nombreAnimaux,
     coutParAnimal: nombreAnimaux > 0 ? total / nombreAnimaux : undefined,
+    kgParAnimal: nombreAnimaux > 0 ? totalKg / nombreAnimaux : undefined,
     kgParAnimalParType,
+    montantParAnimalParType,
   };
 }
 

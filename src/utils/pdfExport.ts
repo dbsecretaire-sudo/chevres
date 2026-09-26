@@ -148,7 +148,7 @@ export async function exporterExploitationPdf(annee: number): Promise<void> {
       'Kg par animal': alimentation.kgParAnimalParType[type] ?? '—',
     })),
     {
-      Aliment: 'Total',
+      Aliment: 'Total (hors Autre)',
       'Montant (€)': alimentation.total,
       'Quantité (kg)': alimentation.totalKg,
       'Kg par animal': '—',
@@ -163,9 +163,9 @@ export async function exporterExploitationPdf(annee: number): Promise<void> {
     ${tableauHtml(controles.map((c) => controleRow(c, indicatif)), 'Aucun contrôle pour cette année')}
     <h2>Alimentation</h2>
     ${tableauHtml(lignesAlimentation, 'Aucune donnée')}
-    <p>Effectif (chèvres + boucs) : ${alimentation.nombreAnimaux} — Coût par animal : ${
+    <p>Effectif (chèvres + boucs + cabrits de plus de 2 mois) : ${alimentation.nombreAnimaux} — Coût par animal : ${
       alimentation.coutParAnimal !== undefined ? `${alimentation.coutParAnimal.toFixed(2)} €` : '—'
-    }</p>
+    } (« Autre » exclu du total et du calcul par animal)</p>
   `;
 
   const html = documentHtml(`Exploitation ${annee} — Troupeau Chèvres`, settings.exploitation, corps);

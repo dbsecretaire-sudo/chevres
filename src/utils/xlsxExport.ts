@@ -167,10 +167,10 @@ export async function exporterExploitationExcel(annee: number): Promise<void> {
       'Quantité (kg)': alimentation.parType[type].quantiteKg,
       'Kg par animal': alimentation.kgParAnimalParType[type] ?? '',
     })),
-    { Aliment: 'Total', 'Montant (€)': alimentation.total, 'Quantité (kg)': alimentation.totalKg, 'Kg par animal': '' },
+    { Aliment: 'Total (hors Autre)', 'Montant (€)': alimentation.total, 'Quantité (kg)': alimentation.totalKg, 'Kg par animal': '' },
     { Aliment: '', 'Montant (€)': '', 'Quantité (kg)': '', 'Kg par animal': '' },
-    { Aliment: 'Effectif (chèvres + boucs)', 'Montant (€)': alimentation.nombreAnimaux, 'Quantité (kg)': '', 'Kg par animal': '' },
-    { Aliment: 'Coût par animal (€)', 'Montant (€)': alimentation.coutParAnimal ?? '', 'Quantité (kg)': '', 'Kg par animal': '' },
+    { Aliment: 'Effectif (chèvres + boucs + cabrits > 2 mois)', 'Montant (€)': alimentation.nombreAnimaux, 'Quantité (kg)': '', 'Kg par animal': '' },
+    { Aliment: 'Coût par animal (€, hors Autre)', 'Montant (€)': alimentation.coutParAnimal ?? '', 'Quantité (kg)': '', 'Kg par animal': '' },
   ];
   const feuilleAlimentation = XLSX.utils.json_to_sheet(lignesAlimentation);
   XLSX.utils.book_append_sheet(workbook, feuilleAlimentation, 'Alimentation');
