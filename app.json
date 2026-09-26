@@ -1,25 +1,55 @@
 {
   "expo": {
-    "name": "troupeau-chevres",
+    "name": "Troupeau Chèvres",
     "slug": "troupeau-chevres",
     "version": "1.0.0",
+    "scheme": "troupeauchevres",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.troupeauchevres.app"
     },
     "android": {
+      "package": "com.troupeauchevres.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Troupeau Chèvres utilise l’appareil photo pour scanner les numéros de boucle."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4f5cf038-915d-4f01-83ef-f90882ee86b5"
+      }
+    },
+    "owner": "fmusic"
   }
 }
