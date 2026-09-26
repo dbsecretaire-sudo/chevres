@@ -19,11 +19,13 @@ import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { FormField } from '@/components/FormField';
 import { DateField } from '@/components/DateField';
+import { SelectField } from '@/components/SelectField';
 import { OptionsModal } from '@/components/OptionsModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { InfoModal } from '@/components/InfoModal';
 
 import { colors } from '@/theme/colors';
+import { LABEL_TYPE_ALIMENT, LABEL_TYPE_CARBURANT } from '@/utils/planComptable';
 
 import {
   getFacture,
@@ -31,9 +33,28 @@ import {
   supprimerFacture,
 } from '@/storage/repositories';
 
-import type { Facture } from '@/types/models';
+import type { Facture, TypeAliment, TypeCarburant } from '@/types/models';
 
 import { formatDateFR } from '@/utils/dates';
+import { generateId } from '@/utils/id';
+
+interface LigneAlimentForm {
+  key: string;
+  type: TypeAliment;
+  montant: string;
+  quantiteKg: string;
+  typeLibre: string;
+}
+
+function versLignesForm(facture: Facture): LigneAlimentForm[] {
+  return (facture.lignesAlimentation ?? []).map((l) => ({
+    key: generateId(),
+    type: l.type,
+    montant: String(l.montant),
+    quantiteKg: l.quantiteKg !== undefined ? String(l.quantiteKg) : '',
+    typeLibre: l.typeLibre ?? '',
+  }));
+}
 
 export default function FicheFacture() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,11 +62,22 @@ export default function FicheFacture() {
 
   const [facture, setFacture] = useState<Facture | null>(null);
   const [form, setForm] = useState<Facture | null>(null);
+  const [lignes, setLignes] = useState<LigneAlimentForm[]>([]);
 
   const [editing, setEditing] = useState(false);
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
   const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
+
+  const estAlimentation = facture?.categorieDepense === 'alimentation';
+  const totalAlimentation = lignes.reduce((s, l) => s + (Number(l.montant.replace(',', '.')) || 0), 0);
+
+  const majLigne = (key: string, patch: Partial<LigneAlimentForm>) => {
+    setLignes((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+  };
+  const supprimerLigne = (key: string) => {
+    setLignes((prev) => (prev.length > 1 ? prev.filter((l) => l.key !== key) : prev));
+  };
 
   // ---------------------------------------------------------------------------
   // CHARGEMENT
@@ -58,6 +90,7 @@ export default function FicheFacture() {
 
     setFacture(f ?? null);
     setForm(f ?? null);
+    setLignes(f ? versLignesForm(f) : []);
   }, [id]);
 
   useFocusEffect(
@@ -77,15 +110,33 @@ export default function FicheFacture() {
       setErreur({ titre: form.type === 'recue' ? 'Fournisseur requis' : 'Client requis' });
       return;
     }
-    if (!form.montant || form.montant <= 0) {
+
+    let aEnregistrer = form;
+
+    if (estAlimentation) {
+      const lignesFinales = lignes
+        .map((l) => ({
+          type: l.type,
+          montant: Number(l.montant.replace(',', '.')),
+          quantiteKg: Number(l.quantiteKg.replace(',', '.')) || undefined,
+          typeLibre: l.type === 'autre' ? l.typeLibre.trim() || undefined : undefined,
+        }))
+        .filter((l) => l.montant > 0);
+      if (lignesFinales.length === 0) {
+        setErreur({ titre: 'Montant invalide', message: 'Ajoutez au moins un montant pour un aliment.' });
+        return;
+      }
+      aEnregistrer = { ...form, montant: totalAlimentation, lignesAlimentation: lignesFinales };
+    } else if (!form.montant || form.montant <= 0) {
       setErreur({ titre: 'Montant invalide' });
       return;
     }
 
     try {
-      await enregistrerFacture(form);
+      await enregistrerFacture(aEnregistrer);
 
-      setFacture(form);
+      setFacture(aEnregistrer);
+      setForm(aEnregistrer);
       setEditing(false);
     } catch (error) {
       console.error(error);
@@ -252,6 +303,18 @@ export default function FicheFacture() {
               </Text>
             ) : null}
 
+            {facture.typeCarburant ? (
+              <Text style={styles.line}>
+                Type de carburant : {LABEL_TYPE_CARBURANT[facture.typeCarburant]}
+              </Text>
+            ) : null}
+
+            {facture.litrage !== undefined ? (
+              <Text style={styles.line}>
+                Litrage : {facture.litrage} L
+              </Text>
+            ) : null}
+
             {facture.typeAide ? (
               <Text style={styles.line}>
                 Type d&apos;aide : {facture.typeAide}
@@ -312,14 +375,62 @@ export default function FicheFacture() {
               placeholder="Nom du tiers"
             />
 
-            {form.lignesAlimentation && form.lignesAlimentation.length > 0 ? (
-              <>
-                <Text style={styles.lockedLabel}>Montant</Text>
-                <Text style={styles.lockedValue}>{form.montant.toFixed(2)} €</Text>
-                <Text style={styles.lockedNote}>
-                  Calculé depuis le détail par aliment de la facture — non modifiable ici.
-                </Text>
-              </>
+            {estAlimentation ? (
+              <Card style={styles.lignesCard}>
+                <Text style={styles.lignesTitre}>Détail par aliment</Text>
+                {lignes.map((ligne, index) => (
+                  <View key={ligne.key} style={styles.ligneBloc}>
+                    <SelectField
+                      label={`Aliment ${index + 1}`}
+                      value={ligne.type}
+                      onChange={(v) => majLigne(ligne.key, { type: v })}
+                      options={Object.entries(LABEL_TYPE_ALIMENT).map(([value, label]) => ({ value: value as TypeAliment, label }))}
+                    />
+                    {ligne.type === 'autre' && (
+                      <FormField
+                        label="Préciser"
+                        value={ligne.typeLibre}
+                        onChangeText={(v) => majLigne(ligne.key, { typeLibre: v })}
+                        placeholder="ex: Frais de livraison, compléments…"
+                      />
+                    )}
+                    <View style={styles.ligneRow}>
+                      <View style={styles.ligneMontant}>
+                        <FormField
+                          label="Montant (€)"
+                          value={ligne.montant}
+                          onChangeText={(v) => majLigne(ligne.key, { montant: v })}
+                          keyboardType="decimal-pad"
+                          placeholder="ex: 120"
+                        />
+                      </View>
+                      <View style={styles.ligneMontant}>
+                        <FormField
+                          label="Quantité (kg)"
+                          value={ligne.quantiteKg}
+                          onChangeText={(v) => majLigne(ligne.key, { quantiteKg: v })}
+                          keyboardType="decimal-pad"
+                          placeholder="Facultatif"
+                        />
+                      </View>
+                      {lignes.length > 1 && (
+                        <Button label="✕" variant="danger" onPress={() => supprimerLigne(ligne.key)} />
+                      )}
+                    </View>
+                  </View>
+                ))}
+                <Button
+                  label="+ Ajouter un aliment"
+                  variant="secondary"
+                  onPress={() =>
+                    setLignes((prev) => [
+                      ...prev,
+                      { key: generateId(), type: 'foin', montant: '', quantiteKg: '', typeLibre: '' },
+                    ])
+                  }
+                />
+                <Text style={styles.totalAlimentation}>Total facture : {totalAlimentation.toFixed(2).replace('.', ',')} €</Text>
+              </Card>
             ) : (
               <FormField
                 label="Montant"
@@ -336,6 +447,27 @@ export default function FicheFacture() {
                 keyboardType="decimal-pad"
                 placeholder="0,00"
               />
+            )}
+
+            {facture.categorieDepense === 'carburant' && (
+              <>
+                <SelectField
+                  label="Type de carburant"
+                  required
+                  value={form.typeCarburant ?? 'gazoil'}
+                  onChange={(v) => setForm({ ...form, typeCarburant: v })}
+                  options={Object.entries(LABEL_TYPE_CARBURANT).map(([value, label]) => ({ value: value as TypeCarburant, label }))}
+                />
+                <FormField
+                  label="Litrage (L)"
+                  value={form.litrage !== undefined ? String(form.litrage) : ''}
+                  onChangeText={(v) =>
+                    setForm({ ...form, litrage: Number(v.replace(',', '.')) || undefined })
+                  }
+                  keyboardType="decimal-pad"
+                  placeholder="Facultatif — utile pour les aides calculées au litre (GNR…)"
+                />
+              </>
             )}
 
             <FormField
@@ -359,6 +491,7 @@ export default function FicheFacture() {
                 label="Annuler"
                 onPress={() => {
                   setForm(facture);
+                  setLignes(versLignesForm(facture));
                   setEditing(false);
                 }}
               />
@@ -490,4 +623,11 @@ const styles = StyleSheet.create({
     minHeight: 70,
     textAlignVertical: 'top',
   },
+
+  lignesCard: { gap: 10 },
+  lignesTitre: { fontSize: 14, fontWeight: '700', color: colors.text },
+  ligneBloc: { gap: 8 },
+  ligneRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-end' },
+  ligneMontant: { flex: 1 },
+  totalAlimentation: { fontSize: 14, fontWeight: '700', color: colors.primary, marginTop: 4 },
 });

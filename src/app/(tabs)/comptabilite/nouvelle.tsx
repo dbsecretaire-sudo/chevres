@@ -132,6 +132,8 @@ export default function NouvelleFacture() {
             setErreur({ titre: 'Prix invalide' });
             return;
           }
+        } else if (montant.trim()) {
+          prixNum = Number(montant.replace(',', '.')) || undefined;
         }
         await enregistrerVente({
           date,
@@ -478,8 +480,15 @@ export default function NouvelleFacture() {
           placeholder={categorieRecette === 'lait' ? 'ex: 12.5' : 'ex: 2'}
         />
       )}
-      {estProductionVente && categorieRecette !== 'lait' && (
-        <FormField label="Prix total (€)" required value={montant} onChangeText={setMontant} keyboardType="decimal-pad" />
+      {estProductionVente && (
+        <FormField
+          label="Prix total (€)"
+          required={categorieRecette !== 'lait'}
+          value={montant}
+          onChangeText={setMontant}
+          keyboardType="decimal-pad"
+          placeholder={categorieRecette === 'lait' ? 'Facultatif' : undefined}
+        />
       )}
       {estProductionVente && (
         <FormField

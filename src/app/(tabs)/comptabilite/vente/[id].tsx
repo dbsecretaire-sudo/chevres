@@ -120,9 +120,7 @@ export default function FicheVente() {
     if (!form) return;
     const unite: Vente['unite'] =
       categorie === 'lait' ? 'litres' : categorie === 'cabris' ? 'piece' : form.unite === 'kg' ? 'kg' : 'piece';
-    const prix = categorie === 'lait' ? undefined : form.prix;
-    setForm({ ...form, categorie, unite, prix });
-    if (categorie === 'lait') setMontantTexte('');
+    setForm({ ...form, categorie, unite });
   };
 
   // ---------------------------------------------------------------------------
@@ -371,32 +369,31 @@ export default function FicheVente() {
             />
             ) : null}
 
-            {form.categorie !== 'lait' && (
-              <FormField
-                  label="Montant"
-                  value={montantTexte}
-                  onChangeText={(value) => {
-                      // Autorise uniquement chiffres + une virgule ou un point
-                      if (!/^\d*[,.]?\d*$/.test(value)) {
-                      return;
-                      }
+            <FormField
+                label="Prix total (€)"
+                required={form.categorie !== 'lait'}
+                value={montantTexte}
+                onChangeText={(value) => {
+                    // Autorise uniquement chiffres + une virgule ou un point
+                    if (!/^\d*[,.]?\d*$/.test(value)) {
+                    return;
+                    }
 
-                      setMontantTexte(value);
+                    setMontantTexte(value);
 
-                      const texte = value.replace(',', '.');
+                    const texte = value.replace(',', '.');
 
-                      setForm({
-                      ...form,
-                      prix:
-                          texte === '' || texte === '.'
-                          ? undefined
-                          : Number(texte),
-                      });
-                  }}
-                  keyboardType="decimal-pad"
-                  placeholder="0,00"
-                  />
-            )}
+                    setForm({
+                    ...form,
+                    prix:
+                        texte === '' || texte === '.'
+                        ? undefined
+                        : Number(texte),
+                    });
+                }}
+                keyboardType="decimal-pad"
+                placeholder={form.categorie === 'lait' ? 'Facultatif' : '0,00'}
+                />
 
             <View style={styles.row}>
               <Button
