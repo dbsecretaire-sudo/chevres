@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,9 +19,9 @@ import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { FormField } from '@/components/FormField';
 import { DateField } from '@/components/DateField';
-import { SelectField } from '@/components/SelectField';
 import { OptionsModal } from '@/components/OptionsModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { InfoModal } from '@/components/InfoModal';
 
 import { colors } from '@/theme/colors';
 
@@ -32,7 +31,7 @@ import {
   supprimerFacture,
 } from '@/storage/repositories';
 
-import type { Facture, TypeFacture } from '@/types/models';
+import type { Facture } from '@/types/models';
 
 import { formatDateFR } from '@/utils/dates';
 
@@ -46,6 +45,7 @@ export default function FicheFacture() {
   const [editing, setEditing] = useState(false);
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
 
   // ---------------------------------------------------------------------------
   // CHARGEMENT
@@ -73,6 +73,15 @@ export default function FicheFacture() {
   const enregistrerModifications = async () => {
     if (!form) return;
 
+    if (!form.tiers.trim()) {
+      setErreur({ titre: form.type === 'recue' ? 'Fournisseur requis' : 'Client requis' });
+      return;
+    }
+    if (!form.montant || form.montant <= 0) {
+      setErreur({ titre: 'Montant invalide' });
+      return;
+    }
+
     try {
       await enregistrerFacture(form);
 
@@ -81,10 +90,7 @@ export default function FicheFacture() {
     } catch (error) {
       console.error(error);
 
-      Alert.alert(
-        'Erreur',
-        "Impossible d'enregistrer les modifications.",
-      );
+      setErreur({ titre: 'Erreur', message: "Impossible d'enregistrer les modifications." });
     }
   };
 
@@ -102,10 +108,7 @@ export default function FicheFacture() {
     } catch (error) {
       console.error(error);
 
-      Alert.alert(
-        'Erreur',
-        'Impossible de supprimer la facture.',
-      );
+      setErreur({ titre: 'Erreur', message: 'Impossible de supprimer la facture.' });
     }
   };
 
@@ -251,7 +254,7 @@ export default function FicheFacture() {
 
             {facture.typeAide ? (
               <Text style={styles.line}>
-                Type d'aide : {facture.typeAide}
+                Type d&apos;aide : {facture.typeAide}
               </Text>
             ) : null}
 
@@ -277,26 +280,14 @@ export default function FicheFacture() {
               Modifier la facture
             </Text>
 
-            <SelectField
-              label="Type"
-              value={form.type}
-              onChange={(value) =>
-                setForm({
-                  ...form,
-                  type: value as TypeFacture,
-                })
-              }
-              options={[
-                {
-                  value: 'emise',
-                  label: 'Facture émise',
-                },
-                {
-                  value: 'recue',
-                  label: 'Facture reçue',
-                },
-              ]}
-            />
+            <Text style={styles.lockedLabel}>Type</Text>
+            <Text style={styles.lockedValue}>
+              {form.type === 'emise' ? 'Facture émise' : 'Facture reçue'}
+            </Text>
+            <Text style={styles.lockedNote}>
+              Non modifiable : la catégorie, le compte comptable et les rapports sont liés au type choisi à la
+              création. Supprimez la facture et recréez-la si le type est erroné.
+            </Text>
 
             <DateField
               label="Date"
@@ -321,21 +312,31 @@ export default function FicheFacture() {
               placeholder="Nom du tiers"
             />
 
-            <FormField
-              label="Montant"
-              value={String(form.montant)}
-              onChangeText={(value) =>
-                setForm({
-                  ...form,
-                  montant:
-                    Number(
-                      value.replace(',', '.'),
-                    ) || 0,
-                })
-              }
-              keyboardType="decimal-pad"
-              placeholder="0,00"
-            />
+            {form.lignesAlimentation && form.lignesAlimentation.length > 0 ? (
+              <>
+                <Text style={styles.lockedLabel}>Montant</Text>
+                <Text style={styles.lockedValue}>{form.montant.toFixed(2)} €</Text>
+                <Text style={styles.lockedNote}>
+                  Calculé depuis le détail par aliment de la facture — non modifiable ici.
+                </Text>
+              </>
+            ) : (
+              <FormField
+                label="Montant"
+                value={String(form.montant)}
+                onChangeText={(value) =>
+                  setForm({
+                    ...form,
+                    montant:
+                      Number(
+                        value.replace(',', '.'),
+                      ) || 0,
+                  })
+                }
+                keyboardType="decimal-pad"
+                placeholder="0,00"
+              />
+            )}
 
             <FormField
               label="Description"
@@ -383,6 +384,13 @@ export default function FicheFacture() {
         confirmLabel="Supprimer définitivement"
         onCancel={() => setSuppressionOuverte(false)}
         onConfirm={supprimerDefinitivement}
+      />
+
+      <InfoModal
+        visible={!!erreur}
+        title={erreur?.titre ?? ''}
+        message={erreur?.message}
+        onClose={() => setErreur(null)}
       />
     </Screen>
   );
@@ -450,6 +458,23 @@ const styles = StyleSheet.create({
   line: {
     fontSize: 14,
     color: colors.text,
+  },
+
+  lockedLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textMuted,
+  },
+
+  lockedValue: {
+    fontSize: 15,
+    color: colors.text,
+  },
+
+  lockedNote: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
 
   row: {

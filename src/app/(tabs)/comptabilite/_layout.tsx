@@ -19,6 +19,8 @@ export default function ComptabiliteLayout() {
         name="nouvelle"
         options={{ title: 'Nouvelle écriture', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
       />
+      <Stack.Screen name="facture/[id]" options={{ title: 'Facture' }} />
+      <Stack.Screen name="vente/[id]" options={{ title: 'Vente' }} />
       <Stack.Screen name="fiscalite-impots" options={{ title: 'Impôts (micro-BA)' }} />
       <Stack.Screen name="fiscalite-rsa" options={{ title: 'Déclaration RSA' }} />
     </Stack>

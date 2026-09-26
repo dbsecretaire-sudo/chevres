@@ -33,6 +33,7 @@ export default function FiscaliteImpots() {
         <Card>
           <Text style={styles.cardTitle}>Recettes brutes — {settings.anneeActive}</Text>
           <Ligne label="Ventes de production (lait, fromage, cabris)" valeur={recettes.ventesProduits} />
+          <Ligne label="Aides imposables" valeur={recettes.aidesImposables} />
           <Ligne label="Autres factures émises" valeur={recettes.autresRecettesImposables} />
           <View style={styles.separateur} />
           <Ligne label="Total recettes imposables" valeur={recettes.totalImposable} gras />

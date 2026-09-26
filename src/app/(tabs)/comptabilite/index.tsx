@@ -110,8 +110,8 @@ export default function ComptabiliteIndex() {
 
       <Fab
         options={[
-          { label: 'Débit', icon: 'remove-circle', onPress: () => router.push({ pathname: '/comptabilite/nouvelle', params: { type: 'recue' } }) },
-          { label: 'Crédit', icon: 'add-circle', onPress: () => router.push({ pathname: '/comptabilite/nouvelle', params: { type: 'emise' } }) },
+          { label: '- Débit', icon: 'remove-circle', onPress: () => router.push({ pathname: '/comptabilite/nouvelle', params: { type: 'recue' } }) },
+          { label: '+ Crédit', icon: 'add-circle', onPress: () => router.push({ pathname: '/comptabilite/nouvelle', params: { type: 'emise' } }) },
         ]}
       />
     </Screen>

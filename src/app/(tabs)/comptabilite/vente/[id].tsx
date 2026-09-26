@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +24,7 @@ import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { OptionsModal } from '@/components/OptionsModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { InfoModal } from '@/components/InfoModal';
 
 import { colors } from '@/theme/colors';
 
@@ -50,6 +50,7 @@ export default function FicheVente() {
   const [suppressionOuverte, setSuppressionOuverte] =
     useState(false);
   const [montantTexte, setMontantTexte] = useState('');
+  const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
 
   // ---------------------------------------------------------------------------
   // CHARGEMENT
@@ -112,11 +113,33 @@ export default function FicheVente() {
   };
 
   // ---------------------------------------------------------------------------
+  // CHANGEMENT DE PRODUIT (l'unité est fixe pour lait/cabris, comme à la création)
+  // ---------------------------------------------------------------------------
+
+  const changerCategorie = (categorie: Vente['categorie']) => {
+    if (!form) return;
+    const unite: Vente['unite'] =
+      categorie === 'lait' ? 'litres' : categorie === 'cabris' ? 'piece' : form.unite === 'kg' ? 'kg' : 'piece';
+    const prix = categorie === 'lait' ? undefined : form.prix;
+    setForm({ ...form, categorie, unite, prix });
+    if (categorie === 'lait') setMontantTexte('');
+  };
+
+  // ---------------------------------------------------------------------------
   // ENREGISTREMENT
   // ---------------------------------------------------------------------------
 
   const enregistrerModifications = async () => {
     if (!form) return;
+
+    if (!form.quantite || form.quantite <= 0) {
+      setErreur({ titre: 'Quantité invalide' });
+      return;
+    }
+    if (form.categorie !== 'lait' && (!form.prix || form.prix < 0)) {
+      setErreur({ titre: 'Prix invalide' });
+      return;
+    }
 
     try {
       await saveVente(form);
@@ -126,10 +149,7 @@ export default function FicheVente() {
     } catch (error) {
       console.error(error);
 
-      Alert.alert(
-        'Erreur',
-        "Impossible d'enregistrer les modifications.",
-      );
+      setErreur({ titre: 'Erreur', message: "Impossible d'enregistrer les modifications." });
     }
   };
 
@@ -147,10 +167,7 @@ export default function FicheVente() {
     } catch (error) {
       console.error(error);
 
-      Alert.alert(
-        'Erreur',
-        'Impossible de supprimer la vente.',
-      );
+      setErreur({ titre: 'Erreur', message: 'Impossible de supprimer la vente.' });
     }
   };
 
@@ -287,12 +304,7 @@ export default function FicheVente() {
             <SelectField
               label="Produit"
               value={form.categorie}
-              onChange={(value) =>
-                setForm({
-                  ...form,
-                  categorie: value as Vente['categorie'],
-                })
-              }
+              onChange={(value) => changerCategorie(value as Vente['categorie'])}
               options={[
                 {
                   value: 'lait',
@@ -359,30 +371,32 @@ export default function FicheVente() {
             />
             ) : null}
 
-            <FormField
-                label="Montant"
-                value={montantTexte}
-                onChangeText={(value) => {
-                    // Autorise uniquement chiffres + une virgule ou un point
-                    if (!/^\d*[,.]?\d*$/.test(value)) {
-                    return;
-                    }
+            {form.categorie !== 'lait' && (
+              <FormField
+                  label="Montant"
+                  value={montantTexte}
+                  onChangeText={(value) => {
+                      // Autorise uniquement chiffres + une virgule ou un point
+                      if (!/^\d*[,.]?\d*$/.test(value)) {
+                      return;
+                      }
 
-                    setMontantTexte(value);
+                      setMontantTexte(value);
 
-                    const texte = value.replace(',', '.');
+                      const texte = value.replace(',', '.');
 
-                    setForm({
-                    ...form,
-                    prix:
-                        texte === '' || texte === '.'
-                        ? undefined
-                        : Number(texte),
-                    });
-                }}
-                keyboardType="decimal-pad"
-                placeholder="0,00"
-                />
+                      setForm({
+                      ...form,
+                      prix:
+                          texte === '' || texte === '.'
+                          ? undefined
+                          : Number(texte),
+                      });
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder="0,00"
+                  />
+            )}
 
             <View style={styles.row}>
               <Button
@@ -425,6 +439,13 @@ export default function FicheVente() {
           setSuppressionOuverte(false)
         }
         onConfirm={supprimerDefinitivement}
+      />
+
+      <InfoModal
+        visible={!!erreur}
+        title={erreur?.titre ?? ''}
+        message={erreur?.message}
+        onClose={() => setErreur(null)}
       />
     </Screen>
   );

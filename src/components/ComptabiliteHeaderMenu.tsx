@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { OptionsModal } from './OptionsModal';
 import { ExportChoiceModal } from './ExportChoiceModal';
+import { InfoModal } from './InfoModal';
 import { useAppSettings } from '@/context/AppSettingsContext';
 import { exporterPlanComptableExcel } from '@/utils/xlsxExport';
 import { exporterPlanComptablePdf } from '@/utils/pdfExport';
@@ -14,13 +15,14 @@ export function ComptabiliteHeaderMenu() {
   const { settings } = useAppSettings();
   const [ouvert, setOuvert] = useState(false);
   const [choixFormat, setChoixFormat] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   const exporterPlanComptable = async (format: 'pdf' | 'xlsx') => {
     try {
       if (format === 'pdf') await exporterPlanComptablePdf(settings.anneeActive);
       else await exporterPlanComptableExcel(settings.anneeActive);
     } catch (e: any) {
-      Alert.alert('Erreur export', e?.message ?? String(e));
+      setErreur(e?.message ?? String(e));
     }
   };
 
@@ -44,6 +46,12 @@ export function ComptabiliteHeaderMenu() {
         onClose={() => setChoixFormat(false)}
         titre="Plan comptable"
         onChoisir={exporterPlanComptable}
+      />
+      <InfoModal
+        visible={!!erreur}
+        title="Erreur export"
+        message={erreur ?? undefined}
+        onClose={() => setErreur(null)}
       />
     </>
   );
