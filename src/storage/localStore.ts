@@ -97,6 +97,22 @@ async function setIdIndex(categorie: Categorie, index: Record<string, number>): 
   await AsyncStorage.setItem(indexKey(categorie), JSON.stringify(index));
 }
 
+/**
+ * Reconstruit l'entrée d'index id -> année pour ce lot d'enregistrements. Indispensable après un
+ * remplacement massif via saveYear() (ex : tirage Google Drive) qui, contrairement à upsertRecord(),
+ * n'entretient pas l'index — sans ça, findRecord()/getChevre() etc. ne retrouvent plus ces fiches
+ * (« introuvable ») tant qu'elles n'ont pas été ré-enregistrées localement au moins une fois.
+ */
+export async function reindexYear<C extends Categorie>(
+  categorie: C,
+  annee: number,
+  items: (RecordMap[C] & { id: string })[],
+): Promise<void> {
+  const index = await getIdIndex(categorie);
+  for (const item of items) index[item.id] = annee;
+  await setIdIndex(categorie, index);
+}
+
 export async function upsertRecord<C extends Categorie>(
   categorie: C,
   annee: number,
@@ -128,9 +144,28 @@ export async function findRecord<C extends Categorie>(
 ): Promise<RecordMap[C] | undefined> {
   const index = await getIdIndex(categorie);
   const annee = index[id];
-  if (annee === undefined) return undefined;
-  const items = await loadYear(categorie, annee);
-  return (items as any[]).find((i) => i.id === id);
+  if (annee !== undefined) {
+    const items = await loadYear(categorie, annee);
+    const trouve = (items as any[]).find((i) => i.id === id);
+    if (trouve) return trouve;
+  }
+
+  // Index absente ou périmée pour cet id (ex : données récupérées via un tirage Google Drive
+  // antérieur à ce correctif, qui n'entretenait pas l'index) — on balaie toutes les années et on
+  // répare l'index au passage pour que les accès suivants n'aient plus besoin de ce détour.
+  const annees = await getYears(categorie);
+  for (const y of annees) {
+    if (y === annee) continue;
+    const items = await loadYear(categorie, y);
+    const trouve = (items as any[]).find((i) => i.id === id);
+    if (trouve) {
+      const indexAJour = await getIdIndex(categorie);
+      indexAJour[id] = y;
+      await setIdIndex(categorie, indexAJour);
+      return trouve;
+    }
+  }
+  return undefined;
 }
 
 export async function deleteRecord(categorie: Categorie, id: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { CATEGORIES, fileNameFor, fromCSV, toCSV } from '@/storage/csv';
-import { loadYear, saveYear } from '@/storage/localStore';
+import { loadYear, reindexYear, saveYear } from '@/storage/localStore';
 import { toutesLesAnneesConnues } from '@/storage/repositories';
 import { getSettings, updateSettings } from '@/storage/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/storage/fournisseurs';
@@ -81,6 +81,7 @@ export async function tirerAnnee(
     const csv = await downloadFileText(accessToken, file.id);
     const items = fromCSV(categorie, csv);
     await saveYear(categorie, annee, items as any);
+    await reindexYear(categorie, annee, items as any);
   }
 }
 

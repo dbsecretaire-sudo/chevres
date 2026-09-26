@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { Badge } from '@/components/Badge';
 import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
 import { SelectField } from '@/components/SelectField';
+import { DateField } from '@/components/DateField';
 import { Fab } from '@/components/Fab';
 import { colors } from '@/theme/colors';
 import { dernieresMisesBasParMere, listChevresVivantes, listChevresHistorique} from '@/storage/repositories';
@@ -64,6 +65,8 @@ export default function CheptelIndex() {
   const [statutFiltre, setStatutFiltre] = useState<StatutFiltre>('vivante');
   const [categorieFiltre, setCategorieFiltre] = useState<CategorieFiltre>('tout');
   const [tri, setTri] = useState<Tri>('boucle');
+  const [dateAbattageDebut, setDateAbattageDebut] = useState('');
+  const [dateAbattageFin, setDateAbattageFin] = useState('');
 
   const charger = useCallback(async () => {
     const [vivantes, mortes, misesBasParMere] = await Promise.all([listChevresVivantes(), listChevresHistorique(), dernieresMisesBasParMere()]);
@@ -106,7 +109,15 @@ export default function CheptelIndex() {
           !q ||
           (c.numeroBoucle ?? '').toLowerCase().includes(q) ||
           (c.nom ?? '').toLowerCase().includes(q),
-      );
+      )
+      // Date d'abattage (Du / Au)
+      .filter((c) => {
+        if (!dateAbattageDebut && !dateAbattageFin) return true;
+        if (c.statut !== 'abattoir' || !c.dateStatut) return false;
+        if (dateAbattageDebut && c.dateStatut < dateAbattageDebut) return false;
+        if (dateAbattageFin && c.dateStatut > dateAbattageFin) return false;
+        return true;
+      });
 
     return [...liste].sort((a, b) => {
       if (triActif === 'naissance') {
@@ -141,6 +152,8 @@ export default function CheptelIndex() {
     categorieFiltre,
     triActif,
     misesBas,
+    dateAbattageDebut,
+    dateAbattageFin,
   ]);
 
   const optionsStatut = OPTIONS_STATUT.map((option) => ({
@@ -224,6 +237,26 @@ export default function CheptelIndex() {
         onChangeText={setRecherche}
       />
 
+      <View style={styles.filtres}>
+        <View style={styles.flex1}>
+          <DateField label="Date d’abattage — du" value={dateAbattageDebut} onChange={setDateAbattageDebut} />
+        </View>
+        <View style={styles.flex1}>
+          <DateField label="Date d’abattage — au" value={dateAbattageFin} onChange={setDateAbattageFin} />
+        </View>
+      </View>
+      {(!!dateAbattageDebut || !!dateAbattageFin) && (
+        <Pressable
+          style={styles.effacerDates}
+          onPress={() => {
+            setDateAbattageDebut('');
+            setDateAbattageFin('');
+          }}
+        >
+          <Text style={styles.effacerDatesTexte}>Effacer la date d’abattage</Text>
+        </Pressable>
+      )}
+
       <FlatList
         data={filtrees}
         keyExtractor={(item) => item.id}
@@ -236,6 +269,8 @@ export default function CheptelIndex() {
             title={libelleChevre(item)}
             subtitle={`${item.sexe === 'F' ? 'Femelle' : 'Mâle'} · ${accordNe(item.sexe)} le ${formatDateFR(item.dateNaissance)}${
               item.mereNumeroBoucle ? ` · Mère : ${item.mereNumeroBoucle}` : ''
+            }${
+              item.statut === 'abattoir' && item.dateStatut ? ` · Abattu(e) le ${formatDateFR(item.dateStatut)}` : ''
             }`}
             trailing={
             (() => {
@@ -297,5 +332,17 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
     gap: 10,
+  },
+
+  effacerDates: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+
+  effacerDatesTexte: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
