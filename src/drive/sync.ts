@@ -2,11 +2,13 @@ import { CATEGORIES, fileNameFor, fromCSV, toCSV } from '@/storage/csv';
 import { loadYear, saveYear } from '@/storage/localStore';
 import { toutesLesAnneesConnues } from '@/storage/repositories';
 import { getSettings, updateSettings } from '@/storage/settings';
+import { listFournisseurs, remplacerTousFournisseurs } from '@/storage/fournisseurs';
 import { ensureFolder, upsertFileText, downloadFileText, findFile, listFiles } from './driveApi';
 import type { Categorie } from '@/types/models';
 
 const ROOT_FOLDER_NAME = 'Troupeau Chèvres';
 const EXPLOITATION_FILE_NAME = 'exploitation.json';
+const FOURNISSEURS_FILE_NAME = 'fournisseurs.json';
 
 export async function ensureRootFolder(accessToken: string): Promise<string> {
   const folder = await ensureFolder(accessToken, ROOT_FOLDER_NAME);
@@ -28,6 +30,24 @@ export async function tirerInfosExploitation(accessToken: string, folderId: stri
     await updateSettings({ exploitation: JSON.parse(json) });
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les infos locales.
+  }
+}
+
+/** Envoie la liste des fournisseurs vers Google Drive. */
+export async function pousserFournisseurs(accessToken: string, folderId: string): Promise<void> {
+  const fournisseurs = await listFournisseurs();
+  await upsertFileText(accessToken, FOURNISSEURS_FILE_NAME, folderId, JSON.stringify(fournisseurs));
+}
+
+/** Récupère la liste des fournisseurs depuis Google Drive, si présente (remplace la liste locale). */
+export async function tirerFournisseurs(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FOURNISSEURS_FILE_NAME, folderId);
+  if (!file) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    await remplacerTousFournisseurs(JSON.parse(json));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
   }
 }
 
@@ -74,6 +94,7 @@ export async function pousserToutesAnnees(
     await pousserAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
   }
   await pousserInfosExploitation(accessToken, folderId);
+  await pousserFournisseurs(accessToken, folderId);
 }
 
 /** Déduit les années présentes dans le dossier Drive à partir des noms de fichiers. */
@@ -102,4 +123,5 @@ export async function tirerToutesAnnees(
     await tirerAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
   }
   await tirerInfosExploitation(accessToken, folderId);
+  await tirerFournisseurs(accessToken, folderId);
 }

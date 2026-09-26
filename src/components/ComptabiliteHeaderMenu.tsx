@@ -36,6 +36,7 @@ export function ComptabiliteHeaderMenu() {
         onClose={() => setOuvert(false)}
         title="Comptabilité"
         options={[
+          { label: 'Fournisseurs', icon: 'people', onPress: () => router.push('/fournisseurs') },
           { label: 'Générer un plan comptable', icon: 'document-text', onPress: () => setChoixFormat(true) },
           { label: 'Impôts (micro-BA)', icon: 'receipt', onPress: () => router.push('/comptabilite/fiscalite-impots') },
           { label: 'Déclaration RSA', icon: 'calendar', onPress: () => router.push('/comptabilite/fiscalite-rsa') },

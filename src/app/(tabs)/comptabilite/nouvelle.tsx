@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { FormField } from '@/components/FormField';
 import { DateField } from '@/components/DateField';
@@ -10,6 +10,7 @@ import { Card } from '@/components/Card';
 import { InfoModal } from '@/components/InfoModal';
 import { colors } from '@/theme/colors';
 import { enregistrerFacture, enregistrerVente } from '@/storage/repositories';
+import { listFournisseurs } from '@/storage/fournisseurs';
 import { todayISO } from '@/utils/dates';
 import { generateId } from '@/utils/id';
 import { useAjoutTabBarBleu } from '@/hooks/useAjoutTabBarBleu';
@@ -24,7 +25,10 @@ import {
   LABEL_TYPE_CARBURANT,
   TAUX_IMPOSITION_TYPE_AIDE,
 } from '@/utils/planComptable';
-import type { CategorieDepense, CategorieRecette, TypeAide, TypeAliment, TypeCarburant, TypeFacture, TypeFromage, UniteVente } from '@/types/models';
+import type { CategorieDepense, CategorieRecette, Fournisseur, TypeAide, TypeAliment, TypeCarburant, TypeFacture, TypeFromage, UniteVente } from '@/types/models';
+
+/** Sentinelle pour "fournisseur non enregistré" dans le sélecteur — révèle alors la saisie libre. */
+const FOURNISSEUR_AUTRE = '__autre__';
 
 interface LigneAlimentForm {
   key: string;
@@ -49,7 +53,7 @@ export default function NouvelleFacture() {
   // Reçue
   const [categorieDepense, setCategorieDepense] = useState<CategorieDepense>('alimentation');
   const [lignesAlimentation, setLignesAlimentation] = useState<LigneAlimentForm[]>([
-    { key: generateId(), type: 'foin', montant: '', quantiteKg: '', typeLibre: '' },
+    { key: generateId(), type: 'mais', montant: '', quantiteKg: '', typeLibre: '' },
   ]);
 
   // Émise
@@ -67,6 +71,23 @@ export default function NouvelleFacture() {
   const [compteRecetteAutre, setCompteRecetteAutre] = useState(COMPTE_PAR_RECETTE.autre.numero);
   const [tauxTvaVente, setTauxTvaVente] = useState('');
   const [tauxTvaAchat, setTauxTvaAchat] = useState('');
+  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
+  const [fournisseurId, setFournisseurId] = useState(FOURNISSEUR_AUTRE);
+
+  useFocusEffect(
+    useCallback(() => {
+      listFournisseurs().then(setFournisseurs);
+    }, []),
+  );
+
+  const changerFournisseur = (id: string) => {
+    setFournisseurId(id);
+    if (id === FOURNISSEUR_AUTRE) {
+      setTiers('');
+    } else {
+      setTiers(fournisseurs.find((f) => f.id === id)?.nomEntreprise ?? '');
+    }
+  };
 
   const estProductionVente = type === 'emise' && ['lait', 'fromage', 'cabris'].includes(categorieRecette);
   const totalAlimentation = lignesAlimentation.reduce((s, l) => s + (Number(l.montant.replace(',', '.')) || 0), 0);
@@ -222,8 +243,8 @@ export default function NouvelleFacture() {
         value={type}
         onChange={setType}
         options={[
-          { value: 'recue', label: '- Débit' },
-          { value: 'emise', label: '+ Crédit' },
+          { value: 'recue', label: 'Débit' },
+          { value: 'emise', label: 'Crédit' },
         ]}
       />
       <DateField label="Date" required value={date} onChange={setDate} />
@@ -270,9 +291,29 @@ export default function NouvelleFacture() {
         Compte PCG indicatif : {compteAffiche.numero} — {compteAffiche.libelle}
       </Text>
 
-      {!estProductionVente && (
+      {type === 'recue' && (
+        <>
+          <SelectField
+            label="Fournisseur"
+            required
+            value={fournisseurId}
+            onChange={changerFournisseur}
+            options={[
+              ...fournisseurs.map((f) => ({ value: f.id, label: f.nomEntreprise })),
+              { value: FOURNISSEUR_AUTRE, label: 'Autre (non enregistré)' },
+            ]}
+          />
+          <Button
+            label="+ Gérer les fournisseurs"
+            variant="secondary"
+            onPress={() => router.push('/fournisseurs')}
+          />
+        </>
+      )}
+
+      {!estProductionVente && (type === 'emise' || fournisseurId === FOURNISSEUR_AUTRE) && (
         <FormField
-          label={type === 'recue' ? 'Fournisseur' : 'Client / organisme'}
+          label={type === 'recue' ? 'Nom du fournisseur' : 'Client / organisme'}
           required
           value={tiers}
           onChangeText={setTiers}
@@ -329,7 +370,7 @@ export default function NouvelleFacture() {
             onPress={() =>
               setLignesAlimentation((prev) => [
                 ...prev,
-                { key: generateId(), type: 'foin', montant: '', quantiteKg: '', typeLibre: '' },
+                { key: generateId(), type: 'mais', montant: '', quantiteKg: '', typeLibre: '' },
               ])
             }
           />
