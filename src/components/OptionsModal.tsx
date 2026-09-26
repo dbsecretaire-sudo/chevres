@@ -7,6 +7,8 @@ export interface Option {
   label: string;
   icon: ComponentProps<typeof Ionicons>['name'];
   onPress: () => void;
+  /** Couleur de l'icône — colors.primary (vert) par défaut. */
+  color?: string;
 }
 
 interface Props {
@@ -32,7 +34,7 @@ export function OptionsModal({ visible, onClose, title, options }: Props) {
                 o.onPress();
               }}
             >
-              <Ionicons name={o.icon} size={20} color={colors.primary} />
+              <Ionicons name={o.icon} size={20} color={o.color ?? colors.primary} />
               <Text style={styles.optionText}>{o.label}</Text>
             </Pressable>
           ))}

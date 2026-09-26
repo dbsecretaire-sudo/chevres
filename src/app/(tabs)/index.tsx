@@ -8,20 +8,20 @@ import { colors } from '@/theme/colors';
 import { useAppSettings } from '@/context/AppSettingsContext';
 import { formatMontant } from '@/utils/dates';
 import {
+  listChevresHistorique,
   listChevresVivantes,
   listFactures,
   listVentes,
   listVisitesVeterinaire,
 } from '@/storage/repositories';
-import { categorieAnimal } from '@/utils/chevreLabel';
 
 interface Stats {
-  vivantes: number;
-  boucsVivants: number;
-  cabritsVivants: number;
+  totalVivantes: number;
+  sorties: number;
   cabritsAnnee: number;
   ventesTotal: number;
-  facturesEmises: number;
+  entrees: number;
+  facturesRecues: number;
   soldeFactures: number;
   derniereVisite?: string;
 }
@@ -33,8 +33,9 @@ export default function Accueil() {
 
   const charger = useCallback(async () => {
     const annee = settings.anneeActive;
-    const [vivantes, ventes, factures, visites] = await Promise.all([
+    const [vivantes, historique, ventes, factures, visites] = await Promise.all([
       listChevresVivantes(),
+      listChevresHistorique(),
       listVentes(annee),
       listFactures(annee),
       listVisitesVeterinaire(annee),
@@ -55,16 +56,23 @@ export default function Accueil() {
         (sum, f) => sum + (f.montant ?? 0),
         0,
       );
+    const facturesRecues = factures
+      .filter((f) => f.type === 'recue')
+      .reduce(
+        (sum, f) => sum + (f.montant ?? 0),
+        0,
+      );
 
-    const soldeFactures = ventesTotal - facturesEmises;
+    const entrees = ventesTotal + facturesEmises;
+    const soldeFactures = entrees - facturesRecues;
 
     setStats({
-      vivantes: vivantes.filter((c) => categorieAnimal(c) === 'chevre').length,
-      boucsVivants: vivantes.filter((c) => categorieAnimal(c) === 'bouc').length,
-      cabritsVivants: vivantes.filter((c) => categorieAnimal(c) === 'cabrit').length,
+      totalVivantes: vivantes.length,
+      sorties: historique.length,
       cabritsAnnee,
       ventesTotal,
-      facturesEmises,
+      entrees,
+      facturesRecues,
       soldeFactures,
       derniereVisite: visites[0]?.date,
     });
@@ -82,10 +90,10 @@ export default function Accueil() {
 
       <View style={styles.grid}>
         <Card style={styles.gridCard}>
-          <Text style={styles.statValue}>{stats?.vivantes ?? '—'}</Text>
+          <Text style={styles.statValue}>{stats?.totalVivantes ?? '—'}</Text>
           <Text style={styles.statLabel}>Chèvres vivantes</Text>
           <Text style={styles.statSub}>
-            {stats ? `${stats.boucsVivants} bouc${stats.boucsVivants > 1 ? 's' : ''} · ${stats.cabritsVivants} cabrit${stats.cabritsVivants > 1 ? 's' : ''}` : ''}
+            {stats ? `${stats.totalVivantes} vivante${stats.totalVivantes > 1 ? 's' : ''} - ${stats.sorties} morte${stats.sorties > 1 ? 's' : ''}/vendue${stats.sorties > 1 ? 's' : ''}/à l’abattoir` : ''}
           </Text>
         </Card>
         <Card style={styles.gridCard}>
@@ -100,12 +108,17 @@ export default function Accueil() {
           <Text style={styles.statLabel}>Ventes {settings.anneeActive}</Text>
         </Card>
         <Card style={styles.gridCard}>
-          <Text style={styles.statValue}>
-            {stats ? formatMontant(stats.facturesEmises - stats.ventesTotal) : '—'}
+          <Text
+            style={[
+              styles.statValue,
+              { color: stats && stats.soldeFactures < 0 ? colors.danger : colors.primary },
+            ]}
+          >
+            {stats ? formatMontant(stats.soldeFactures) : '—'}
           </Text>
           <Text style={styles.statLabel}>Solde factures</Text>
           <Text style={styles.statSub}>
-            {stats ? `+${formatMontant(stats.facturesEmises)} / -${formatMontant(stats.ventesTotal)}` : ''}
+            {stats ? `+${formatMontant(stats.entrees)} / -${formatMontant(stats.facturesRecues)}` : ''}
           </Text>
         </Card>
       </View>
