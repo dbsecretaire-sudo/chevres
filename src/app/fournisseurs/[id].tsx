@@ -41,7 +41,6 @@ export default function FicheFournisseur() {
     if (!form.nom.trim()) return setErreur('Nom requis');
     if (!form.nomEntreprise.trim()) return setErreur('Nom d’entreprise requis');
     if (!form.siret.trim()) return setErreur('SIRET requis');
-    if (!form.rib.trim()) return setErreur('RIB requis');
     if (!form.adressePostale.trim()) return setErreur('Adresse postale requise');
 
     const nettoye: Fournisseur = {
@@ -51,7 +50,7 @@ export default function FicheFournisseur() {
       nomEntreprise: form.nomEntreprise.trim(),
       siret: form.siret.trim(),
       tva: form.tva?.trim() || undefined,
-      rib: form.rib.trim(),
+      rib: form.rib?.trim() || undefined,
       adressePostale: form.adressePostale.trim(),
     };
     await enregistrerFournisseur(nettoye);
@@ -109,7 +108,7 @@ export default function FicheFournisseur() {
             </Text>
             <Text style={styles.line}>SIRET : {fournisseur.siret}</Text>
             {fournisseur.tva ? <Text style={styles.line}>TVA intracommunautaire : {fournisseur.tva}</Text> : null}
-            <Text style={styles.line}>RIB : {fournisseur.rib}</Text>
+            {fournisseur.rib ? <Text style={styles.line}>RIB : {fournisseur.rib}</Text> : null}
             <Text style={styles.line}>Adresse : {fournisseur.adressePostale}</Text>
 
             <Button label="Modifier la fiche" variant="secondary" onPress={() => setEditing(true)} />
@@ -123,7 +122,7 @@ export default function FicheFournisseur() {
             <FormField label="Prénom" value={form.prenom ?? ''} onChangeText={(v) => setForm({ ...form, prenom: v })} placeholder="Facultatif" />
             <FormField label="SIRET" required value={form.siret} onChangeText={(v) => setForm({ ...form, siret: v })} keyboardType="number-pad" />
             <FormField label="TVA intracommunautaire" value={form.tva ?? ''} onChangeText={(v) => setForm({ ...form, tva: v })} placeholder="Facultatif" />
-            <FormField label="RIB" required value={form.rib} onChangeText={(v) => setForm({ ...form, rib: v })} />
+            <FormField label="RIB" value={form.rib ?? ''} onChangeText={(v) => setForm({ ...form, rib: v })} placeholder="Facultatif" />
             <FormField
               label="Adresse postale"
               required

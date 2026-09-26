@@ -25,7 +25,6 @@ export default function NouveauFournisseur() {
     if (!nom.trim()) return setErreur('Nom requis');
     if (!nomEntreprise.trim()) return setErreur('Nom d’entreprise requis');
     if (!siret.trim()) return setErreur('SIRET requis');
-    if (!rib.trim()) return setErreur('RIB requis');
     if (!adressePostale.trim()) return setErreur('Adresse postale requise');
 
     setEnregistrement(true);
@@ -36,7 +35,7 @@ export default function NouveauFournisseur() {
         nomEntreprise: nomEntreprise.trim(),
         siret: siret.trim(),
         tva: tva.trim() || undefined,
-        rib: rib.trim(),
+        rib: rib.trim() || undefined,
         adressePostale: adressePostale.trim(),
       });
       router.back();
@@ -62,7 +61,7 @@ export default function NouveauFournisseur() {
         />
         <FormField label="SIRET" required value={siret} onChangeText={setSiret} keyboardType="number-pad" placeholder="14 chiffres" />
         <FormField label="TVA intracommunautaire" value={tva} onChangeText={setTva} placeholder="Facultatif" />
-        <FormField label="RIB" required value={rib} onChangeText={setRib} placeholder="IBAN / BIC" />
+        <FormField label="RIB" value={rib} onChangeText={setRib} placeholder="Facultatif — IBAN / BIC" />
         
         <View style={styles.row}>
           <Button style={styles.flex1} variant="secondary" label="Annuler" onPress={() => router.back()} />

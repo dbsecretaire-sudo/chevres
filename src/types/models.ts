@@ -152,7 +152,7 @@ export interface Fournisseur {
   siret: string;
   /** Numéro de TVA intracommunautaire — facultatif (ex : fournisseur en franchise en base). */
   tva?: string;
-  rib: string;
+  rib?: string;
   adressePostale: string;
 }
 
