@@ -220,6 +220,7 @@ export interface CabritInput {
   nom?: string;
   mortNe?: boolean;
   renouvellement?: boolean;
+  renouvellementAnnee?: number;
 }
 
 export async function enregistrerNaissance(input: {
@@ -249,6 +250,7 @@ export async function enregistrerNaissance(input: {
         notes,
         statut: c.mortNe ? 'mortne' : 'vivante',
         renouvellement: c.renouvellement,
+        renouvellementAnnee: c.renouvellement ? c.renouvellementAnnee : undefined,
       }),
     ),
   );

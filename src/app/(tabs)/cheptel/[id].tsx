@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
@@ -14,6 +14,7 @@ import { ListRow } from '@/components/ListRow';
 import { Checkbox } from '@/components/Checkbox';
 import { OptionsModal } from '@/components/OptionsModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { InfoModal } from '@/components/InfoModal';
 import { Fab } from '@/components/Fab';
 import { colors, statutColors } from '@/theme/colors';
 import {
@@ -52,6 +53,7 @@ export default function FicheChevre() {
   const [statutForm, setStatutForm] = useState<StatutChevre>('morte');
   const [dateStatutForm, setDateStatutForm] = useState(todayISO());
   const [showStatutForm, setShowStatutForm] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   const charger = useCallback(async () => {
     if (!id) return;
@@ -79,15 +81,17 @@ export default function FicheChevre() {
     );
   }
 
-  const enregistrerModifications = async () => {
+  /** Retourne true si l'enregistrement a réussi (utile pour enchaîner une navigation, ex : ajout d'un cabri). */
+  const enregistrerModifications = async (): Promise<boolean> => {
     const boucle = form.numeroBoucle?.trim();
     if (boucle && (await numeroBoucleExiste(boucle, form.id))) {
-      Alert.alert('N° de boucle déjà utilisé', `Le n° ${boucle} est déjà attribué à une autre chèvre.`);
-      return;
+      setErreur(`Le n° ${boucle} est déjà attribué à une autre chèvre.`);
+      return false;
     }
     await saveChevre(form);
     setEditing(false);
     charger();
+    return true;
   };
 
   const supprimerDefinitivement = async () => {
@@ -177,12 +181,15 @@ export default function FicheChevre() {
             <Button
               label="Ajouter un cabri (nouvelle naissance)"
               variant="secondary"
-              onPress={() =>
+              onPress={async () => {
+                const boucleMere = form.numeroBoucle ?? '';
+                const ok = await enregistrerModifications();
+                if (!ok) return;
                 router.push({
                   pathname: '/cheptel/naissance-nouvelle',
-                  params: { mereNumeroBoucle: chevre.numeroBoucle ?? '' },
-                })
-              }
+                  params: { mereNumeroBoucle: boucleMere },
+                });
+              }}
             />
           )}
           <BoucleField
@@ -350,6 +357,13 @@ export default function FicheChevre() {
         confirmLabel="Supprimer définitivement"
         onCancel={() => setVueSecondaire(null)}
         onConfirm={supprimerDefinitivement}
+      />
+
+      <InfoModal
+        visible={!!erreur}
+        title="N° de boucle déjà utilisé"
+        message={erreur ?? undefined}
+        onClose={() => setErreur(null)}
       />
 
       {chevre.statut === 'vivante' && !showStatutForm && (

@@ -11,7 +11,7 @@ import { Card } from '@/components/Card';
 import { Checkbox } from '@/components/Checkbox';
 import { colors } from '@/theme/colors';
 import { enregistrerNaissance, numeroBoucleExiste } from '@/storage/repositories';
-import { todayISO } from '@/utils/dates';
+import { currentYear, todayISO } from '@/utils/dates';
 import { generateId } from '@/utils/id';
 import { useAjoutTabBarBleu } from '@/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/theme/AccentColorContext';
@@ -24,10 +24,19 @@ interface CabritForm {
   nom: string;
   mortNe: boolean;
   renouvellement: boolean;
+  renouvellementAnnee: string;
 }
 
 function nouveauCabrit(): CabritForm {
-  return { key: generateId(), numeroBoucle: '', sexe: 'F', nom: '', mortNe: false, renouvellement: false };
+  return {
+    key: generateId(),
+    numeroBoucle: '',
+    sexe: 'F',
+    nom: '',
+    mortNe: false,
+    renouvellement: false,
+    renouvellementAnnee: String(currentYear()),
+  };
 }
 
 function cabritsInitiaux(sexes?: string): CabritForm[] {
@@ -89,6 +98,7 @@ export default function NouvelleNaissance() {
           nom: c.nom.trim() || undefined,
           mortNe: c.mortNe,
           renouvellement: c.renouvellement,
+          renouvellementAnnee: c.renouvellement ? Number(c.renouvellementAnnee) || currentYear() : undefined,
         })),
         notes: notes.trim() || undefined,
       });
@@ -147,6 +157,15 @@ export default function NouvelleNaissance() {
               value={cabrit.renouvellement}
               onChange={(v) => majCabrit(cabrit.key, { renouvellement: v })}
             />
+            {cabrit.renouvellement && (
+              <FormField
+                label="Année de désignation"
+                value={cabrit.renouvellementAnnee}
+                onChangeText={(v) => majCabrit(cabrit.key, { renouvellementAnnee: v })}
+                keyboardType="number-pad"
+                placeholder={String(currentYear())}
+              />
+            )}
             <Checkbox
               label="Mort-né"
               value={cabrit.mortNe}
