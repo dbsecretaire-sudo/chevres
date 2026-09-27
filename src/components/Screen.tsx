@@ -20,5 +20,5 @@ export function Screen({ children, scroll = true }: PropsWithChildren<{ scroll?:
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16, paddingBottom: 40, gap: 12 },
+  content: { padding: 10, paddingBottom: 40, gap: 12, },
 });

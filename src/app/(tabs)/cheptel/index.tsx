@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen } from '@/components/Screen';
+import { Screen } from '@/components/ScreenList';
 import { Badge } from '@/components/Badge';
 import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
