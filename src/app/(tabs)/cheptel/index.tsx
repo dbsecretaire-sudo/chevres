@@ -108,9 +108,9 @@ function compareBoucle(a?: string, b?: string): number {
   return a.localeCompare(b);
 }
 
-/** Compare deux clés facultatives (date, année…) : absentes reléguées en fin de liste. */
-function compareOptionnel<K>(ak: K | undefined, bk: K | undefined, cmp: (a: K, b: K) => number, repli: () => number): number {
-  if (ak === undefined && bk === undefined) return repli();
+/** Compare deux clés facultatives (date, année…) : absentes reléguées en fin de liste, égalité = 0 (départagée ensuite par la boucle). */
+function compareOptionnel<K>(ak: K | undefined, bk: K | undefined, cmp: (a: K, b: K) => number): number {
+  if (ak === undefined && bk === undefined) return 0;
   if (ak === undefined) return 1;
   if (bk === undefined) return -1;
   return cmp(ak, bk);
@@ -186,36 +186,32 @@ export default function CheptelIndex() {
         return true;
       });
 
+    // Chaque tri applique son propre critère, puis départage systématiquement par n° de boucle
+    // croissant (y compris à égalité de date/année, ou quand aucun critère spécifique ne s'applique).
     return [...liste].sort((a, b) => {
-      if (triActif === 'naissance') {
-        return a.dateNaissance.localeCompare(b.dateNaissance);
-      }
+      let cmp = 0;
 
-      if (triActif === 'misebas') {
+      if (triActif === 'naissance') {
+        cmp = a.dateNaissance.localeCompare(b.dateNaissance);
+      } else if (triActif === 'misebas') {
         const da = a.numeroBoucle ? misesBas[a.numeroBoucle] : undefined;
         const db = b.numeroBoucle ? misesBas[b.numeroBoucle] : undefined;
-        return compareOptionnel(da, db, (x, y) => x.localeCompare(y), () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
-      }
-
-      if (triActif === 'abattoir') {
+        cmp = compareOptionnel(da, db, (x, y) => x.localeCompare(y));
+      } else if (triActif === 'abattoir') {
         const da = a.statut === 'abattoir' ? a.dateStatut : undefined;
         const db = b.statut === 'abattoir' ? b.dateStatut : undefined;
-        return compareOptionnel(da, db, (x, y) => x.localeCompare(y), () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
-      }
-
-      if (triActif === 'morte') {
+        cmp = compareOptionnel(da, db, (x, y) => x.localeCompare(y));
+      } else if (triActif === 'morte') {
         const da = a.statut === 'morte' ? a.dateStatut : undefined;
         const db = b.statut === 'morte' ? b.dateStatut : undefined;
-        return compareOptionnel(da, db, (x, y) => x.localeCompare(y), () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
-      }
-
-      if (triActif === 'renouvellement') {
+        cmp = compareOptionnel(da, db, (x, y) => x.localeCompare(y));
+      } else if (triActif === 'renouvellement') {
         const da = a.renouvellement ? a.renouvellementAnnee : undefined;
         const db = b.renouvellement ? b.renouvellementAnnee : undefined;
-        return compareOptionnel(da, db, (x, y) => x - y, () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
+        cmp = compareOptionnel(da, db, (x, y) => x - y);
       }
 
-      return compareBoucle(a.numeroBoucle, b.numeroBoucle);
+      return cmp !== 0 ? cmp : compareBoucle(a.numeroBoucle, b.numeroBoucle);
     });
   }, [
     chevres,
