@@ -13,7 +13,7 @@ import { colors, statutColors } from '@/theme/colors';
 import { dernieresMisesBasParMere, listChevresVivantes, listChevresHistorique} from '@/storage/repositories';
 import type { Chevre } from '@/types/models';
 import { formatDateFR, yearOf } from '@/utils/dates';
-import { categorieAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
+import { afficherBadgeRenouvellement, categorieAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
 
 type StatutFiltre = 'vivante' | 'morte' | 'tout';
 type CategorieFiltre = 'chevre' | 'bouc' | 'cabrit' | 'sansboucle' | 'tout';
@@ -408,7 +408,7 @@ export default function CheptelIndex() {
             }`}
             trailing={
             (() => {
-              if (item.renouvellement) {
+              if (item.renouvellement && afficherBadgeRenouvellement(item.dateNaissance)) {
                 return <Badge label="Renouvellement" color={colors.primary} />;
               } else if (item.statut !== 'vivante') {
                 return (

@@ -29,7 +29,7 @@ import {
 } from '@/storage/repositories';
 import type { Chevre, StatutChevre } from '@/types/models';
 import { currentYear, formatDateFR, todayISO } from '@/utils/dates';
-import { accordNe, categorieAnimal, demonstratifAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
+import { accordNe, afficherBadgeRenouvellement, categorieAnimal, demonstratifAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
 import { avecIndicatif } from '@/utils/xlsxExport';
 import { useAppSettings } from '@/context/AppSettingsContext';
 
@@ -119,7 +119,7 @@ export default function FicheChevre() {
         <View style={styles.headerDroite}>
           <View style={styles.badges}>
             <Badge label={statutLabel(chevre.statut, chevre.sexe)} color={statutColors[chevre.statut]} />
-            {chevre.renouvellement && (
+            {chevre.renouvellement && afficherBadgeRenouvellement(chevre.dateNaissance) && (
               <Badge
                 label={chevre.renouvellementAnnee ? `Renouvellement ${chevre.renouvellementAnnee}` : 'Renouvellement'}
                 color={colors.primary}

@@ -1,5 +1,5 @@
 import type { Chevre, Sexe, StatutChevre } from '@/types/models';
-import { formatDateFR } from './dates';
+import { currentYear, formatDateFR, yearOf } from './dates';
 
 /** Libellé d'affichage d'une chèvre/cabrit, avec repli propre quand le n° de boucle n'a pas encore été posé. */
 export function libelleChevre(c: Pick<Chevre, 'numeroBoucle' | 'nom' | 'sexe' | 'dateNaissance'>): string {
@@ -69,4 +69,22 @@ export function demonstratifAnimal(c: Pick<Chevre, 'dateNaissance' | 'sexe'>): s
   if (cat === 'bouc') return 'ce bouc';
   if (cat === 'cabrit') return 'ce cabri';
   return 'cette chèvre';
+}
+
+/**
+ * Le badge « Renouvellement » n'a de sens que pour les candidates encore jeunes au moment de la
+ * sélection : nées cette année (n'importe quel mois), ou nées l'année précédente au second semestre
+ * (juillet à décembre) — celles nées au premier semestre de l'année précédente sont déjà des adultes
+ * établies au moment où la sélection est faite. La désignation elle-même (renouvellement /
+ * renouvellementAnnee) n'est pas modifiée, seul l'affichage du badge est filtré.
+ */
+export function afficherBadgeRenouvellement(dateNaissance: string): boolean {
+  const anneeNaissance = yearOf(dateNaissance);
+  const cetteAnnee = currentYear();
+  if (anneeNaissance === cetteAnnee) return true;
+  if (anneeNaissance === cetteAnnee - 1) {
+    const mois = Number(dateNaissance.slice(5, 7));
+    return mois >= 7;
+  }
+  return false;
 }
