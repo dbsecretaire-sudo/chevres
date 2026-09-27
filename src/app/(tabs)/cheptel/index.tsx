@@ -126,8 +126,7 @@ export default function CheptelIndex() {
   const [tri, setTri] = useState<Tri>('boucle');
   const [dateAbattoirDebut, setDateAbattoirDebut] = useState('');
   const [dateAbattoirFin, setDateAbattoirFin] = useState('');
-  const [dateMorteDebut, setDateMorteDebut] = useState('');
-  const [dateMorteFin, setDateMorteFin] = useState('');
+  const [anneeMorte, setAnneeMorte] = useState('');
   const [anneeRenouv, setAnneeRenouv] = useState('');
   const [anneePresence, setAnneePresence] = useState('');
 
@@ -154,8 +153,9 @@ export default function CheptelIndex() {
     const q = recherche.trim().toLowerCase();
 
     const liste = chevres
-      // Filtre vivant / mort (ignoré pour « Année » : la présence peut couvrir vivant ET sorti cette année-là)
-      .filter((c) => triActif === 'annee' || matchStatut(c, statutFiltre))
+      // Filtre vivant / mort — ignoré pour Année (couvre vivant ET sorti), Morte et Abattoir (le tri
+      // impose déjà un statut précis ; le filtre Statut par défaut sur « Vivantes » les viderait sinon).
+      .filter((c) => ['annee', 'morte', 'abattoir'].includes(triActif) || matchStatut(c, statutFiltre))
       // Filtre chèvre / bouc / cabrit / sans boucle
       .filter((c) => matchCategorie(c, categorieFiltre))
       // Recherche : tous les champs affichables de la fiche
@@ -163,18 +163,17 @@ export default function CheptelIndex() {
       // Plage Du/Au — uniquement quand le tri correspondant est actif (champs cachés sinon)
       .filter((c) => {
         if (triActif === 'abattoir') {
+          if (c.statut !== 'abattoir') return false;
           if (!dateAbattoirDebut && !dateAbattoirFin) return true;
-          if (c.statut !== 'abattoir' || !c.dateStatut) return false;
+          if (!c.dateStatut) return false;
           if (dateAbattoirDebut && c.dateStatut < dateAbattoirDebut) return false;
           if (dateAbattoirFin && c.dateStatut > dateAbattoirFin) return false;
           return true;
         }
         if (triActif === 'morte') {
-          if (!dateMorteDebut && !dateMorteFin) return true;
-          if (c.statut !== 'morte' || !c.dateStatut) return false;
-          if (dateMorteDebut && c.dateStatut < dateMorteDebut) return false;
-          if (dateMorteFin && c.dateStatut > dateMorteFin) return false;
-          return true;
+          if (c.statut !== 'morte') return false;
+          if (!anneeMorte.trim()) return true;
+          return !!c.dateStatut && yearOf(c.dateStatut) === Number(anneeMorte);
         }
         if (triActif === 'renouvellement') {
           if (!anneeRenouv.trim()) return true;
@@ -227,8 +226,7 @@ export default function CheptelIndex() {
     misesBas,
     dateAbattoirDebut,
     dateAbattoirFin,
-    dateMorteDebut,
-    dateMorteFin,
+    anneeMorte,
     anneeRenouv,
     anneePresence,
   ]);
@@ -320,10 +318,16 @@ export default function CheptelIndex() {
       {triActif === 'morte' && (
         <View style={styles.filtres}>
           <View style={styles.flex1}>
-            <DateField label="Date de décès — du" value={dateMorteDebut} onChange={setDateMorteDebut} />
+            <FormField
+              label="Année"
+              value={anneeMorte}
+              onChangeText={setAnneeMorte}
+              keyboardType="number-pad"
+              placeholder="AAAA"
+            />
           </View>
           <View style={styles.flex1}>
-            <DateField label="Date de décès — au" value={dateMorteFin} onChange={setDateMorteFin} />
+            <Text style={styles.anneeNote}>Nombre d’animaux morts sur l’exploitation cette année-là.</Text>
           </View>
         </View>
       )}
@@ -368,9 +372,9 @@ export default function CheptelIndex() {
           <Pressable onPress={() => { setDateAbattoirDebut(''); setDateAbattoirFin(''); }}>
             <Text style={styles.effacerTexte}>Effacer la date d’abattage</Text>
           </Pressable>
-        ) : triActif === 'morte' && (!!dateMorteDebut || !!dateMorteFin) ? (
-          <Pressable onPress={() => { setDateMorteDebut(''); setDateMorteFin(''); }}>
-            <Text style={styles.effacerTexte}>Effacer la date de décès</Text>
+        ) : triActif === 'morte' && !!anneeMorte ? (
+          <Pressable onPress={() => setAnneeMorte('')}>
+            <Text style={styles.effacerTexte}>Effacer l’année</Text>
           </Pressable>
         ) : triActif === 'renouvellement' && !!anneeRenouv ? (
           <Pressable onPress={() => setAnneeRenouv('')}>
