@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/Checkbox';
 import { Card } from '@/components/Card';
 import { colors } from '@/theme/colors';
 import { creerChevre, enregistrerNaissance, numeroBoucleExiste } from '@/storage/repositories';
-import { todayISO } from '@/utils/dates';
+import { currentYear, todayISO } from '@/utils/dates';
 import { generateId } from '@/utils/id';
 import { useAjoutTabBarBleu } from '@/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/theme/AccentColorContext';
@@ -33,12 +33,14 @@ export default function NouvelleChevre() {
   const router = useRouter();
   const params = useLocalSearchParams<{ numeroBoucle?: string; sexe?: Sexe }>();
   const [numeroBoucle, setNumeroBoucle] = useState(params.numeroBoucle ?? '');
+  const [dateBouclage, setDateBouclage] = useState('');
   const [nom, setNom] = useState('');
   const [sexe, setSexe] = useState<Sexe>(params.sexe === 'M' ? 'M' : 'F');
   const [dateNaissance, setDateNaissance] = useState(todayISO());
   const [mereNumeroBoucle, setMereNumeroBoucle] = useState('');
   const [notes, setNotes] = useState('');
   const [renouvellement, setRenouvellement] = useState(false);
+  const [renouvellementAnnee, setRenouvellementAnnee] = useState(String(currentYear()));
   const [enregistrement, setEnregistrement] = useState(false);
 
   const [avecCabrits, setAvecCabrits] = useState(false);
@@ -81,12 +83,14 @@ export default function NouvelleChevre() {
 
       const chevre = await creerChevre({
         numeroBoucle: boucleMere || undefined,
+        dateBouclage: boucleMere ? dateBouclage || undefined : undefined,
         nom: nom.trim() || undefined,
         sexe,
         dateNaissance,
         mereNumeroBoucle: mereNumeroBoucle.trim() || undefined,
         notes: notes.trim() || undefined,
         renouvellement,
+        renouvellementAnnee: renouvellement ? Number(renouvellementAnnee) || currentYear() : undefined,
       });
 
       if (avecCabrits && chevre.numeroBoucle) {
@@ -116,6 +120,9 @@ export default function NouvelleChevre() {
         onChangeText={setNumeroBoucle}
         placeholder="Facultatif avant 6 mois"
       />
+      {!!numeroBoucle.trim() && (
+        <DateField label="Date de bouclage" value={dateBouclage} onChange={setDateBouclage} />
+      )}
       <FormField label="Nom" value={nom} onChangeText={setNom} placeholder="Facultatif" />
       <SelectField
         label="Sexe"
@@ -143,6 +150,15 @@ export default function NouvelleChevre() {
         style={styles.textarea}
       />
       <Checkbox label="Désigné(e) pour le renouvellement" value={renouvellement} onChange={setRenouvellement} />
+      {renouvellement && (
+        <FormField
+          label="Année de désignation"
+          value={renouvellementAnnee}
+          onChangeText={setRenouvellementAnnee}
+          keyboardType="number-pad"
+          placeholder={String(currentYear())}
+        />
+      )}
 
       {sexe === 'F' && (
         <Checkbox

@@ -7,16 +7,16 @@ import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
 import { SelectField } from '@/components/SelectField';
 import { DateField } from '@/components/DateField';
+import { FormField } from '@/components/FormField';
 import { Fab } from '@/components/Fab';
-import { colors } from '@/theme/colors';
+import { colors, statutColors } from '@/theme/colors';
 import { dernieresMisesBasParMere, listChevresVivantes, listChevresHistorique} from '@/storage/repositories';
 import type { Chevre } from '@/types/models';
-import { formatDateFR } from '@/utils/dates';
-import { categorieAnimal, libelleChevre, LABEL_CATEGORIE_ANIMAL, statutLabel, type CategorieAnimal } from '@/utils/chevreLabel';
-import { statutColors } from '@/theme/colors';
+import { formatDateFR, yearOf } from '@/utils/dates';
+import { categorieAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
 
 type StatutFiltre = 'vivante' | 'morte' | 'tout';
-type CategorieFiltre = 'chevre' | 'bouc' | 'cabrit' | 'tout';
+type CategorieFiltre = 'chevre' | 'bouc' | 'cabrit' | 'sansboucle' | 'tout';
 
 const OPTIONS_STATUT: { value: StatutFiltre; label: string }[] = [
   { value: 'vivante', label: 'Vivantes' },
@@ -28,31 +28,74 @@ const OPTIONS_CATEGORIE: { value: CategorieFiltre; label: string }[] = [
   { value: 'chevre', label: 'Chèvres' },
   { value: 'bouc', label: 'Boucs' },
   { value: 'cabrit', label: 'Cabrits' },
+  { value: 'sansboucle', label: 'Sans boucle' },
   { value: 'tout', label: 'Tous' },
 ];
 
-const EMPTY_SUBTITLE: Record<CategorieAnimal, string> = {
-  chevre: 'Les femelles de 6 mois et plus apparaissent ici.',
-  bouc: 'Les mâles de 6 mois et plus apparaissent ici.',
-  cabrit: 'Les jeunes de moins de 6 mois (mâles et femelles) apparaissent ici.',
-  vivante: 'Tous les animaux vivants apparaissent ici.',
-  tout: 'Tous les animaux vivants et morts apparaissent ici',
+const LABEL_CATEGORIE_FILTRE: Record<CategorieFiltre, string> = {
+  chevre: 'chèvre',
+  bouc: 'bouc',
+  cabrit: 'cabrit',
+  sansboucle: 'animal sans boucle',
+  tout: 'animal',
 };
 
-type Tri = 'boucle' | 'naissance' | 'misebas' | 'abattage';
+/** Un animal correspond à cette catégorie de filtre (âge/sexe, ou absence de boucle). */
+function matchCategorie(c: Chevre, filtre: CategorieFiltre): boolean {
+  if (filtre === 'tout') return true;
+  if (filtre === 'sansboucle') return !c.numeroBoucle;
+  return categorieAnimal(c) === filtre;
+}
+
+type Tri = 'boucle' | 'naissance' | 'misebas' | 'abattoir' | 'morte' | 'renouvellement' | 'annee';
 
 const OPTIONS_TRI: { value: Tri; label: string }[] = [
   { value: 'boucle', label: 'N° de boucle' },
   { value: 'naissance', label: 'Date de naissance' },
   { value: 'misebas', label: 'Dernière mise bas' },
-  { value: 'abattage', label: 'Date d’abattage' },
+  { value: 'abattoir', label: 'Abattoir' },
+  { value: 'morte', label: 'Morte' },
+  { value: 'annee', label: 'Année (présent sur l’exploitation)' },
+  { value: 'renouvellement', label: 'Renouvellement' },
 ];
+
+/**
+ * Présent sur l'exploitation durant cette année : né avant ou pendant, et encore vivant à cette
+ * date ou sorti pendant/après (ex : né en 2022, mort en août 2024 → présent en 2022, 2023 et 2024).
+ */
+function chevrePresenteAnnee(c: Chevre, annee: number): boolean {
+  if (yearOf(c.dateNaissance) > annee) return false;
+  if (c.statut === 'vivante') return true;
+  if (!c.dateStatut) return true;
+  return yearOf(c.dateStatut) >= annee;
+}
 
 /** « Mortes » couvre tous les statuts de sortie (morte, abattoir, vendue, auto-consommée, mort-né). */
 function matchStatut(c: Chevre, filtre: StatutFiltre): boolean {
   if (filtre === 'tout') return true;
   if (filtre === 'morte') return c.statut !== 'vivante';
   return c.statut === filtre;
+}
+
+/** Recherche large : toutes les infos affichables de la fiche, pas seulement boucle/nom. */
+function chevreCorrespond(c: Chevre, q: string): boolean {
+  if (!q) return true;
+  const champs: (string | undefined)[] = [
+    c.numeroBoucle,
+    c.nom,
+    c.mereNumeroBoucle,
+    c.notes,
+    c.sexe === 'F' ? 'femelle' : 'mâle',
+    statutLabel(c.statut, c.sexe),
+    c.dateNaissance,
+    formatDateFR(c.dateNaissance),
+    c.dateStatut,
+    formatDateFR(c.dateStatut),
+    c.dateBouclage,
+    formatDateFR(c.dateBouclage),
+    c.renouvellement ? `renouvellement ${c.renouvellementAnnee ?? ''}` : undefined,
+  ];
+  return champs.some((v) => (v ?? '').toLowerCase().includes(q));
 }
 
 function compareBoucle(a?: string, b?: string): number {
@@ -65,6 +108,14 @@ function compareBoucle(a?: string, b?: string): number {
   return a.localeCompare(b);
 }
 
+/** Compare deux clés facultatives (date, année…) : absentes reléguées en fin de liste. */
+function compareOptionnel<K>(ak: K | undefined, bk: K | undefined, cmp: (a: K, b: K) => number, repli: () => number): number {
+  if (ak === undefined && bk === undefined) return repli();
+  if (ak === undefined) return 1;
+  if (bk === undefined) return -1;
+  return cmp(ak, bk);
+}
+
 export default function CheptelIndex() {
   const router = useRouter();
   const [chevres, setChevres] = useState<Chevre[]>([]);
@@ -73,8 +124,12 @@ export default function CheptelIndex() {
   const [statutFiltre, setStatutFiltre] = useState<StatutFiltre>('vivante');
   const [categorieFiltre, setCategorieFiltre] = useState<CategorieFiltre>('tout');
   const [tri, setTri] = useState<Tri>('boucle');
-  const [dateAbattageDebut, setDateAbattageDebut] = useState('');
-  const [dateAbattageFin, setDateAbattageFin] = useState('');
+  const [dateAbattoirDebut, setDateAbattoirDebut] = useState('');
+  const [dateAbattoirFin, setDateAbattoirFin] = useState('');
+  const [dateMorteDebut, setDateMorteDebut] = useState('');
+  const [dateMorteFin, setDateMorteFin] = useState('');
+  const [anneeRenouv, setAnneeRenouv] = useState('');
+  const [anneePresence, setAnneePresence] = useState('');
 
   const charger = useCallback(async () => {
     const [vivantes, mortes, misesBasParMere] = await Promise.all([listChevresVivantes(), listChevresHistorique(), dernieresMisesBasParMere()]);
@@ -99,28 +154,36 @@ export default function CheptelIndex() {
     const q = recherche.trim().toLowerCase();
 
     const liste = chevres
-      // Filtre vivant / mort
-      .filter((c) => matchStatut(c, statutFiltre))
-      // Filtre chèvre / bouc / cabrit
-      .filter(
-        (c) =>
-          categorieFiltre === 'tout' ||
-          categorieAnimal(c) === categorieFiltre,
-      )
-      // Recherche
-      .filter(
-        (c) =>
-          !q ||
-          (c.numeroBoucle ?? '').toLowerCase().includes(q) ||
-          (c.nom ?? '').toLowerCase().includes(q),
-      )
-      // Date d'abattage (Du / Au) — uniquement quand ce tri est actif (champs cachés sinon)
+      // Filtre vivant / mort (ignoré pour « Année » : la présence peut couvrir vivant ET sorti cette année-là)
+      .filter((c) => triActif === 'annee' || matchStatut(c, statutFiltre))
+      // Filtre chèvre / bouc / cabrit / sans boucle
+      .filter((c) => matchCategorie(c, categorieFiltre))
+      // Recherche : tous les champs affichables de la fiche
+      .filter((c) => chevreCorrespond(c, q))
+      // Plage Du/Au — uniquement quand le tri correspondant est actif (champs cachés sinon)
       .filter((c) => {
-        if (triActif !== 'abattage') return true;
-        if (!dateAbattageDebut && !dateAbattageFin) return true;
-        if (c.statut !== 'abattoir' || !c.dateStatut) return false;
-        if (dateAbattageDebut && c.dateStatut < dateAbattageDebut) return false;
-        if (dateAbattageFin && c.dateStatut > dateAbattageFin) return false;
+        if (triActif === 'abattoir') {
+          if (!dateAbattoirDebut && !dateAbattoirFin) return true;
+          if (c.statut !== 'abattoir' || !c.dateStatut) return false;
+          if (dateAbattoirDebut && c.dateStatut < dateAbattoirDebut) return false;
+          if (dateAbattoirFin && c.dateStatut > dateAbattoirFin) return false;
+          return true;
+        }
+        if (triActif === 'morte') {
+          if (!dateMorteDebut && !dateMorteFin) return true;
+          if (c.statut !== 'morte' || !c.dateStatut) return false;
+          if (dateMorteDebut && c.dateStatut < dateMorteDebut) return false;
+          if (dateMorteFin && c.dateStatut > dateMorteFin) return false;
+          return true;
+        }
+        if (triActif === 'renouvellement') {
+          if (!anneeRenouv.trim()) return true;
+          return !!c.renouvellement && c.renouvellementAnnee === Number(anneeRenouv);
+        }
+        if (triActif === 'annee') {
+          if (!anneePresence.trim()) return true;
+          return chevrePresenteAnnee(c, Number(anneePresence));
+        }
         return true;
       });
 
@@ -130,36 +193,27 @@ export default function CheptelIndex() {
       }
 
       if (triActif === 'misebas') {
-        const da = a.numeroBoucle
-          ? misesBas[a.numeroBoucle]
-          : undefined;
-
-        const db = b.numeroBoucle
-          ? misesBas[b.numeroBoucle]
-          : undefined;
-
-        if (!da && !db) {
-          return compareBoucle(a.numeroBoucle, b.numeroBoucle);
-        }
-
-        if (!da) return 1;
-        if (!db) return -1;
-
-        return da.localeCompare(db);
+        const da = a.numeroBoucle ? misesBas[a.numeroBoucle] : undefined;
+        const db = b.numeroBoucle ? misesBas[b.numeroBoucle] : undefined;
+        return compareOptionnel(da, db, (x, y) => x.localeCompare(y), () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
       }
 
-      if (triActif === 'abattage') {
+      if (triActif === 'abattoir') {
         const da = a.statut === 'abattoir' ? a.dateStatut : undefined;
         const db = b.statut === 'abattoir' ? b.dateStatut : undefined;
+        return compareOptionnel(da, db, (x, y) => x.localeCompare(y), () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
+      }
 
-        if (!da && !db) {
-          return compareBoucle(a.numeroBoucle, b.numeroBoucle);
-        }
+      if (triActif === 'morte') {
+        const da = a.statut === 'morte' ? a.dateStatut : undefined;
+        const db = b.statut === 'morte' ? b.dateStatut : undefined;
+        return compareOptionnel(da, db, (x, y) => x.localeCompare(y), () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
+      }
 
-        if (!da) return 1;
-        if (!db) return -1;
-
-        return da.localeCompare(db);
+      if (triActif === 'renouvellement') {
+        const da = a.renouvellement ? a.renouvellementAnnee : undefined;
+        const db = b.renouvellement ? b.renouvellementAnnee : undefined;
+        return compareOptionnel(da, db, (x, y) => x - y, () => compareBoucle(a.numeroBoucle, b.numeroBoucle));
       }
 
       return compareBoucle(a.numeroBoucle, b.numeroBoucle);
@@ -171,8 +225,12 @@ export default function CheptelIndex() {
     categorieFiltre,
     triActif,
     misesBas,
-    dateAbattageDebut,
-    dateAbattageFin,
+    dateAbattoirDebut,
+    dateAbattoirFin,
+    dateMorteDebut,
+    dateMorteFin,
+    anneeRenouv,
+    anneePresence,
   ]);
 
   const optionsStatut = OPTIONS_STATUT.map((option) => ({
@@ -185,9 +243,7 @@ export default function CheptelIndex() {
   const optionsCategorie = OPTIONS_CATEGORIE.map((option) => ({
     ...option,
     label: `${option.label} (${
-      option.value === 'tout'
-        ? chevres.filter((c) => matchStatut(c, statutFiltre)).length
-        : chevres.filter((c) => matchStatut(c, statutFiltre) && categorieAnimal(c) === option.value).length
+      chevres.filter((c) => matchStatut(c, statutFiltre) && matchCategorie(c, option.value)).length
     })`,
   }));
 
@@ -197,8 +253,8 @@ export default function CheptelIndex() {
       ? 'Aucun animal'
       : `Aucun animal ${statutFiltre === 'vivante' ? 'vivant' : 'mort'}`
     : statutFiltre === 'tout'
-      ? `Aucun ${categorieFiltre}`
-      : `Aucun ${categorieFiltre} ${
+      ? `Aucun ${LABEL_CATEGORIE_FILTRE[categorieFiltre]}`
+      : `Aucun ${LABEL_CATEGORIE_FILTRE[categorieFiltre]} ${
           statutFiltre === 'vivante' ? 'vivant' : 'mort'
         }`;
 
@@ -224,50 +280,111 @@ export default function CheptelIndex() {
         </View>
       </View>
 
-      <View style={styles.tri}>
-        <SelectField
-          label="Trier par"
-          value={triActif}
-          onChange={setTri}
-          options={
-            categorieFiltre === 'chevre'
-              ? OPTIONS_TRI
-              : OPTIONS_TRI.filter((o) => o.value !== 'misebas')
-          }
-        />
+      <View style={styles.filtres}>
+        <View style={styles.flex1}>
+          <SelectField
+            label="Trier/filtre par"
+            value={triActif}
+            onChange={setTri}
+            options={
+              categorieFiltre === 'chevre'
+                ? OPTIONS_TRI
+                : OPTIONS_TRI.filter((o) => o.value !== 'misebas')
+            }
+          />
+        </View>
+
+        <View style={styles.flex1}>
+          <Text style={styles.searchLabel}>Rechercher</Text>
+          <TextInput
+            style={styles.search}
+            placeholder="Dans tous les champs…"
+            placeholderTextColor={colors.textMuted}
+            value={recherche}
+            onChangeText={setRecherche}
+          />
+        </View>
       </View>
 
-      <TextInput
-        style={styles.search}
-        placeholder="Rechercher par n° de boucle ou nom…"
-        placeholderTextColor={colors.textMuted}
-        value={recherche}
-        onChangeText={setRecherche}
-      />
-
-      {triActif === 'abattage' && (
-        <>
-          <View style={styles.filtres}>
-            <View style={styles.flex1}>
-              <DateField label="Date d’abattage — du" value={dateAbattageDebut} onChange={setDateAbattageDebut} />
-            </View>
-            <View style={styles.flex1}>
-              <DateField label="Date d’abattage — au" value={dateAbattageFin} onChange={setDateAbattageFin} />
-            </View>
+      {triActif === 'abattoir' && (
+        <View style={styles.filtres}>
+          <View style={styles.flex1}>
+            <DateField label="Date d’abattage — du" value={dateAbattoirDebut} onChange={setDateAbattoirDebut} />
           </View>
-          {(!!dateAbattageDebut || !!dateAbattageFin) && (
-            <Pressable
-              style={styles.effacerDates}
-              onPress={() => {
-                setDateAbattageDebut('');
-                setDateAbattageFin('');
-              }}
-            >
-              <Text style={styles.effacerDatesTexte}>Effacer la date d’abattage</Text>
-            </Pressable>
-          )}
-        </>
+          <View style={styles.flex1}>
+            <DateField label="Date d’abattage — au" value={dateAbattoirFin} onChange={setDateAbattoirFin} />
+          </View>
+        </View>
       )}
+
+      {triActif === 'morte' && (
+        <View style={styles.filtres}>
+          <View style={styles.flex1}>
+            <DateField label="Date de décès — du" value={dateMorteDebut} onChange={setDateMorteDebut} />
+          </View>
+          <View style={styles.flex1}>
+            <DateField label="Date de décès — au" value={dateMorteFin} onChange={setDateMorteFin} />
+          </View>
+        </View>
+      )}
+
+      {triActif === 'renouvellement' && (
+        <View style={styles.filtres}>
+          <View style={styles.flex1}>
+            <FormField
+              label="Année de désignation"
+              value={anneeRenouv}
+              onChangeText={setAnneeRenouv}
+              keyboardType="number-pad"
+              placeholder="AAAA"
+            />
+          </View>
+          <View style={styles.flex1} />
+        </View>
+      )}
+
+      {triActif === 'annee' && (
+        <View style={styles.filtres}>
+          <View style={styles.flex1}>
+            <FormField
+              label="Année"
+              value={anneePresence}
+              onChangeText={setAnneePresence}
+              keyboardType="number-pad"
+              placeholder="AAAA"
+            />
+          </View>
+          <View style={styles.flex1}>
+            <Text style={styles.anneeNote}>
+              Chèvres nées avant/pendant cette année et encore présentes (vivantes ou sorties pendant/après) —
+              le filtre Statut est ignoré ici.
+            </Text>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.resultatRow}>
+        {triActif === 'abattoir' && (!!dateAbattoirDebut || !!dateAbattoirFin) ? (
+          <Pressable onPress={() => { setDateAbattoirDebut(''); setDateAbattoirFin(''); }}>
+            <Text style={styles.effacerTexte}>Effacer la date d’abattage</Text>
+          </Pressable>
+        ) : triActif === 'morte' && (!!dateMorteDebut || !!dateMorteFin) ? (
+          <Pressable onPress={() => { setDateMorteDebut(''); setDateMorteFin(''); }}>
+            <Text style={styles.effacerTexte}>Effacer la date de décès</Text>
+          </Pressable>
+        ) : triActif === 'renouvellement' && !!anneeRenouv ? (
+          <Pressable onPress={() => setAnneeRenouv('')}>
+            <Text style={styles.effacerTexte}>Effacer l’année de renouvellement</Text>
+          </Pressable>
+        ) : triActif === 'annee' && !!anneePresence ? (
+          <Pressable onPress={() => setAnneePresence('')}>
+            <Text style={styles.effacerTexte}>Effacer l’année</Text>
+          </Pressable>
+        ) : (
+          <View />
+        )}
+        <Text style={styles.resultatTexte}>Résultat : {filtrees.length}</Text>
+      </View>
 
       <FlatList
         data={filtrees}
@@ -314,7 +431,8 @@ export default function CheptelIndex() {
 const styles = StyleSheet.create({
   filtres: {
     flexDirection: 'row',
-    gap: 12,
+    rowGap: 0,
+    columnGap: 12,
     paddingHorizontal: 16,
     paddingTop: 12,
   },
@@ -323,36 +441,50 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  tri: {
-    paddingHorizontal: 16,
-    marginTop: 12,
+  searchLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
   },
 
   search: {
-    marginHorizontal: 16,
-    marginTop: 12,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     backgroundColor: colors.surface,
     color: colors.text,
   },
 
   list: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 160,
     gap: 10,
   },
 
-  effacerDates: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    alignSelf: 'flex-start',
+  anneeNote: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
 
-  effacerDatesTexte: {
+  resultatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+
+  resultatTexte: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+
+  effacerTexte: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.primary,

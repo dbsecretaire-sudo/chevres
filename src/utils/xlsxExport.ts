@@ -24,13 +24,14 @@ export function avecIndicatif(numero: string | undefined, indicatif: string | un
 export function chevreRow(c: Chevre, indicatif?: string) {
   return {
     'N° boucle': avecIndicatif(c.numeroBoucle, indicatif),
+    'Date de bouclage': formatDateShortFR(c.dateBouclage),
     Nom: c.nom ?? '',
     Sexe: c.sexe,
     'Date de naissance': formatDateShortFR(c.dateNaissance),
     'Mère (n° boucle)': avecIndicatif(c.mereNumeroBoucle, indicatif),
     Statut: c.statut,
     'Date statut': formatDateShortFR(c.dateStatut),
-    Renouvellement: c.renouvellement ? 'Oui' : '',
+    Renouvellement: c.renouvellement ? `Oui (${c.renouvellementAnnee ?? '—'})` : '',
     Notes: c.notes ?? '',
   };
 }

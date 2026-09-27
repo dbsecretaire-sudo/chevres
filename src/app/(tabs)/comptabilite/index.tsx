@@ -138,6 +138,6 @@ const styles = StyleSheet.create({
   balanceCard: { alignItems: 'center' },
   balanceLabel: { fontSize: 12, color: colors.textMuted },
   balanceValeur: { fontSize: 22, fontWeight: '800' },
-  list: { paddingHorizontal: 16, paddingBottom: 100, gap: 10 },
+  list: { paddingHorizontal: 16, paddingBottom: 160, gap: 10 },
   montant: { fontSize: 15, fontWeight: '700' },
 });

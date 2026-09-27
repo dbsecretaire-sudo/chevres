@@ -65,5 +65,5 @@ export default function FournisseursIndex() {
 
 const styles = StyleSheet.create({
   top: { paddingHorizontal: 16, paddingTop: 16 },
-  list: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 4, gap: 10 },
+  list: { paddingHorizontal: 16, paddingBottom: 160, paddingTop: 4, gap: 10 },
 });

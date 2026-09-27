@@ -63,6 +63,7 @@ export async function saveChevre(chevre: Chevre): Promise<void> {
 
 export async function creerChevre(input: {
   numeroBoucle?: string;
+  dateBouclage?: string;
   nom?: string;
   sexe: Sexe;
   dateNaissance: string;
@@ -72,11 +73,13 @@ export async function creerChevre(input: {
   /** Permet de créer directement un cabrit mort-né (statut !== 'vivante' dès la naissance). */
   statut?: StatutChevre;
   renouvellement?: boolean;
+  renouvellementAnnee?: number;
 }): Promise<Chevre> {
   const statut = input.statut ?? 'vivante';
   const chevre: Chevre = {
     id: generateId(),
     numeroBoucle: input.numeroBoucle,
+    dateBouclage: input.dateBouclage,
     nom: input.nom,
     sexe: input.sexe,
     dateNaissance: input.dateNaissance,
@@ -85,6 +88,7 @@ export async function creerChevre(input: {
     statut,
     dateStatut: statut !== 'vivante' ? input.dateNaissance : undefined,
     renouvellement: input.renouvellement,
+    renouvellementAnnee: input.renouvellement ? input.renouvellementAnnee : undefined,
     notes: input.notes,
   };
   await saveChevre(chevre);

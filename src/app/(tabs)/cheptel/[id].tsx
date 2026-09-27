@@ -28,7 +28,7 @@ import {
   supprimerChevre,
 } from '@/storage/repositories';
 import type { Chevre, StatutChevre } from '@/types/models';
-import { formatDateFR, todayISO } from '@/utils/dates';
+import { currentYear, formatDateFR, todayISO } from '@/utils/dates';
 import { accordNe, categorieAnimal, demonstratifAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
 import { avecIndicatif } from '@/utils/xlsxExport';
 import { useAppSettings } from '@/context/AppSettingsContext';
@@ -119,7 +119,12 @@ export default function FicheChevre() {
         <View style={styles.headerDroite}>
           <View style={styles.badges}>
             <Badge label={statutLabel(chevre.statut, chevre.sexe)} color={statutColors[chevre.statut]} />
-            {chevre.renouvellement && <Badge label="Renouvellement" color={colors.primary} />}
+            {chevre.renouvellement && (
+              <Badge
+                label={chevre.renouvellementAnnee ? `Renouvellement ${chevre.renouvellementAnnee}` : 'Renouvellement'}
+                color={colors.primary}
+              />
+            )}
           </View>
           <Pressable style={styles.boutonMenu} onPress={() => setMenuOuvert(true)}>
             <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
@@ -151,8 +156,23 @@ export default function FicheChevre() {
           <Checkbox
             label="Désigné(e) pour le renouvellement"
             value={!!form.renouvellement}
-            onChange={(v) => setForm({ ...form, renouvellement: v })}
+            onChange={(v) =>
+              setForm({
+                ...form,
+                renouvellement: v,
+                renouvellementAnnee: v ? (form.renouvellementAnnee ?? currentYear()) : undefined,
+              })
+            }
           />
+          {form.renouvellement && (
+            <FormField
+              label="Année de désignation"
+              value={form.renouvellementAnnee !== undefined ? String(form.renouvellementAnnee) : ''}
+              onChangeText={(v) => setForm({ ...form, renouvellementAnnee: Number(v) || undefined })}
+              keyboardType="number-pad"
+              placeholder={String(currentYear())}
+            />
+          )}
           {chevre.sexe === 'F' && chevre.statut === 'vivante' && categorieAnimal(chevre) === 'chevre' && (
             <Button
               label="Ajouter un cabri (nouvelle naissance)"
@@ -171,6 +191,13 @@ export default function FicheChevre() {
             onChangeText={(v) => setForm({ ...form, numeroBoucle: v || undefined })}
             placeholder="Facultatif avant 6 mois"
           />
+          {!!form.numeroBoucle?.trim() && (
+            <DateField
+              label="Date de bouclage"
+              value={form.dateBouclage ?? ''}
+              onChange={(v) => setForm({ ...form, dateBouclage: v || undefined })}
+            />
+          )}
           <FormField label="Nom" value={form.nom ?? ''} onChangeText={(v) => setForm({ ...form, nom: v })} />
           <SelectField
             label="Sexe"
@@ -218,6 +245,9 @@ export default function FicheChevre() {
           <Text style={styles.line}>
             N° de boucle : {chevre.numeroBoucle ? avecIndicatif(chevre.numeroBoucle, indicatif) : '—'}
           </Text>
+          {chevre.numeroBoucle && (
+            <Text style={styles.line}>Date de bouclage : {formatDateFR(chevre.dateBouclage)}</Text>
+          )}
           <Text style={styles.line}>Nom : {chevre.nom ?? '—'}</Text>
           <Text style={styles.line}>Sexe : {chevre.sexe === 'F' ? 'Femelle' : 'Mâle'}</Text>
           <Text style={styles.line}>Date de naissance : {formatDateFR(chevre.dateNaissance)}</Text>
@@ -350,7 +380,7 @@ export default function FicheChevre() {
 const styles = StyleSheet.create({
   notFound: { fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 40 },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 100, gap: 12 },
+  scrollContent: { paddingBottom: 160, gap: 12 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { fontSize: 20, fontWeight: '800', color: colors.text },
   subtitle: { fontSize: 14, color: colors.textMuted, marginTop: 2 },

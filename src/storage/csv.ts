@@ -3,8 +3,8 @@ import type { Categorie, LigneAlimentation, RecordMap } from '@/types/models';
 
 const COLUMNS: Record<Categorie, string[]> = {
   cheptel: [
-    'id', 'numeroBoucle', 'nom', 'sexe', 'dateNaissance',
-    'mereId', 'mereNumeroBoucle', 'statut', 'dateStatut', 'renouvellement', 'notes',
+    'id', 'numeroBoucle', 'dateBouclage', 'nom', 'sexe', 'dateNaissance',
+    'mereId', 'mereNumeroBoucle', 'statut', 'dateStatut', 'renouvellement', 'renouvellementAnnee', 'notes',
   ],
   visites_veterinaire: ['id', 'date', 'chevreId', 'chevreNumeroBoucle', 'motif', 'description', 'cout'],
   factures: [
@@ -16,7 +16,7 @@ const COLUMNS: Record<Categorie, string[]> = {
   controles: ['id', 'date', 'chevreId', 'chevreNumeroBoucle', 'type', 'resultat', 'notes'],
 };
 
-const NUMBER_FIELDS = new Set(['cout', 'montant', 'quantite', 'prix', 'litrage', 'tauxImposition', 'tauxTva']);
+const NUMBER_FIELDS = new Set(['cout', 'montant', 'quantite', 'prix', 'litrage', 'tauxImposition', 'tauxTva', 'renouvellementAnnee']);
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */
 const BOOLEAN_FIELDS = new Set(['renouvellement']);
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
