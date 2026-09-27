@@ -42,6 +42,7 @@ export default function FournisseursIndex() {
       <FlatList
         data={filtres}
         keyExtractor={(item) => item.id}
+        style={styles.flatlist}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <EmptyState
@@ -65,5 +66,6 @@ export default function FournisseursIndex() {
 
 const styles = StyleSheet.create({
   top: { paddingHorizontal: 16, paddingTop: 16 },
-  list: { paddingHorizontal: 16, paddingBottom: 160, paddingTop: 4, gap: 10 },
+  flatlist: { flex: 1, marginBottom: 90 },
+  list: { paddingHorizontal: 16, paddingBottom: 20, paddingTop: 4, gap: 10 },
 });

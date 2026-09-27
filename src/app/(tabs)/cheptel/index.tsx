@@ -393,6 +393,7 @@ export default function CheptelIndex() {
       <FlatList
         data={filtrees}
         keyExtractor={(item) => item.id}
+        style={styles.flatlist}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <EmptyState title={emptyTitle} subtitle="Aucun animal ne correspond aux filtres sélectionnés." />
@@ -462,9 +463,14 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
+  flatlist: {
+    flex: 1,
+    marginBottom: 90,
+  },
+
   list: {
     padding: 16,
-    paddingBottom: 160,
+    paddingBottom: 20,
     gap: 10,
   },
 
