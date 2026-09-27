@@ -79,7 +79,6 @@ export default function ComptabiliteIndex() {
       <FlatList
         data={filtrees}
         keyExtractor={(item) => item.id}
-        style={styles.flatlist}
         contentContainerStyle={styles.list}
         ListEmptyComponent={<EmptyState title="Aucune écriture" subtitle="Ventes et factures de l'année apparaîtront ici." />}
         renderItem={({ item }) => (
@@ -139,7 +138,6 @@ const styles = StyleSheet.create({
   balanceCard: { alignItems: 'center' },
   balanceLabel: { fontSize: 12, color: colors.textMuted },
   balanceValeur: { fontSize: 22, fontWeight: '800' },
-  flatlist: { flex: 1, marginBottom: 90 },
-  list: { paddingHorizontal: 16, paddingBottom: 20, gap: 10 },
+  list: { paddingHorizontal: 16, paddingBottom: 160, gap: 10 },
   montant: { fontSize: 15, fontWeight: '700' },
 });
