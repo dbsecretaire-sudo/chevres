@@ -99,7 +99,11 @@ export default function FicheChevre() {
     router.back();
   };
 
-  const choisirStatut = (s: StatutChevre) => {
+  const choisirStatut = async (s: StatutChevre) => {
+    if (editing) {
+      const ok = await enregistrerModifications();
+      if (!ok) return;
+    }
     setStatutForm(s);
     setShowStatutForm(true);
   };

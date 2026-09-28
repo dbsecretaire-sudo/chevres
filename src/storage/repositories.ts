@@ -1,7 +1,7 @@
 import { generateId } from '@/utils/id';
 import { yearOf } from '@/utils/dates';
 import { ageEnMois, categorieAnimal, cleTriChevre } from '@/utils/chevreLabel';
-import { LABEL_CATEGORIE_DEPENSE, LABEL_TYPE_AIDE, tauxImpositionAide } from '@/utils/planComptable';
+import { LABEL_TYPE_AIDE, tauxImpositionAide } from '@/utils/planComptable';
 import type {
   Chevre,
   Controle,
@@ -57,8 +57,12 @@ export async function getChevre(id: string): Promise<Chevre | undefined> {
   return findRecord('cheptel', id);
 }
 
+/** mereId est toujours recalculé depuis mereNumeroBoucle : c'est ce lien qui alimente la descendance affichée sur la fiche de la mère. */
 export async function saveChevre(chevre: Chevre): Promise<void> {
-  await upsertRecord('cheptel', yearOf(chevre.dateNaissance), chevre);
+  const mereId = chevre.mereNumeroBoucle
+    ? (await loadAllYears('cheptel')).find((c) => c.numeroBoucle === chevre.mereNumeroBoucle && c.id !== chevre.id)?.id
+    : undefined;
+  await upsertRecord('cheptel', yearOf(chevre.dateNaissance), { ...chevre, mereId });
 }
 
 export async function creerChevre(input: {
@@ -137,19 +141,43 @@ export async function listDescendance(chevreId: string): Promise<Chevre[]> {
     .sort((a, b) => b.dateNaissance.localeCompare(a.dateNaissance));
 }
 
+/** Une date de sortie avec le nombre d'animaux concernés ce jour-là (plusieurs abattages groupés le même jour, par exemple). */
+export interface DateEtNombre {
+  date: string;
+  nombre: number;
+}
+
 export interface Bilan {
   annee: number;
   cabritsTotal: number;
+  /** Nés au 1er semestre de l'année (naissances tardives, souvent la fin de la campagne N-1). */
+  cabritsPremierSemestre: number;
+  /** Nés au 2e semestre de l'année (début de la nouvelle campagne). */
+  cabritsSecondSemestre: number;
   cabritsRenouvellement: number;
   cabritsVendus: number;
   cabritsAbattoir: number;
+  cabritsAbattoirDates: DateEtNombre[];
   cabritsAutoconsommes: number;
   cabritsMortNes: number;
+  cabritsRestants: number;
   miseBasCount: number;
   chevresMortesAnnee: number;
   chevresAbattoirAnnee: number;
+  chevresAbattoirDates: DateEtNombre[];
   chevresVenduesAnnee: number;
   chevresAutoconsommeesAnnee: number;
+  chevresVivantesFinAnnee: number;
+  /** Parmi les chèvres vivantes ci-dessus, celles désignées pour le renouvellement cette année-là précisément. */
+  chevresRenouvellementFinAnnee: number;
+  boucsMortsAnnee: number;
+  boucsAbattoirAnnee: number;
+  boucsAbattoirDates: DateEtNombre[];
+  boucsVendusAnnee: number;
+  boucsAutoconsommesAnnee: number;
+  boucsVivantsFinAnnee: number;
+  /** Parmi les boucs vivants ci-dessus, ceux désignés pour le renouvellement cette année-là précisément. */
+  boucsRenouvellementFinAnnee: number;
   stockDebutAnnee: number;
   stockFinAnnee: number;
 }
@@ -166,15 +194,71 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
 
   const anneeStatut = (c: Chevre) => (c.dateStatut ? yearOf(c.dateStatut) : undefined);
   const neeAvant = (c: Chevre) => yearOf(c.dateNaissance) < annee;
+  const finAnnee = `${annee}-12-31`;
+
+  // Cabrits nés pendant l'année civile N (01/01 au 31/12).
   const neeCetteAnnee = (c: Chevre) => yearOf(c.dateNaissance) === annee;
 
   const cabrits = toutes.filter(neeCetteAnnee);
+  const premierSemestre = (c: Chevre) => Number(c.dateNaissance.slice(5, 7)) <= 6;
+
+  // Âge en mois révolus entre deux dates (contrairement à ageEnMois, qui compare à aujourd'hui) —
+  // sert à vérifier qu'une sortie (vente/abattoir/auto-consommation) a bien eu lieu pendant que
+  // l'animal était encore un cabri (moins de 6 mois), et pas des années plus tard une fois adulte.
+  const ageEnMoisEntre = (dateNaissance: string, dateRef: string) => {
+    const naissance = new Date(`${dateNaissance}T00:00:00`);
+    const ref = new Date(`${dateRef}T00:00:00`);
+    let mois = (ref.getFullYear() - naissance.getFullYear()) * 12 + (ref.getMonth() - naissance.getMonth());
+    if (ref.getDate() < naissance.getDate()) mois -= 1;
+    return mois;
+  };
+
+  // Sortie comptée comme cabrit : l'animal avait encore moins de 6 mois au moment de la sortie, et
+  // celle-ci a eu lieu pendant l'année N — indépendamment de l'année de naissance (un cabrit né fin
+  // N-1 et sorti début N relève du bilan N, pas de celui de sa naissance).
+  const sortiCommeCabrit = (c: Chevre) =>
+    !!c.dateStatut && anneeStatut(c) === annee && ageEnMoisEntre(c.dateNaissance, c.dateStatut) < 6;
+
+  // Cabrits de la cohorte encore effectivement cabrits au 31/12 (vivants et toujours < 6 mois à cette
+  // date) — sert de base à « Total cabris », puisque les sorties ci-dessus ne sont plus un sous-
+  // ensemble garanti de cette cohorte (elles peuvent venir d'un cabri né l'année précédente).
+  const cabritsRestants = cabrits.filter(
+    (c) =>
+      ageEnMoisEntre(c.dateNaissance, finAnnee) < 6 &&
+      (c.statut === 'vivante' || (anneeStatut(c) ?? -Infinity) > annee),
+  ).length;
+
   const porteesCetteAnnee = new Set(
     cabrits.filter((c) => c.mereNumeroBoucle).map((c) => `${c.mereNumeroBoucle}__${c.dateNaissance}`),
   );
 
-  const sortiesPreexistantes = (statut: StatutChevre) =>
-    toutes.filter((c) => neeAvant(c) && c.statut === statut && anneeStatut(c) === annee).length;
+  // Sortie comptée comme chèvre/bouc adulte : il fallait déjà avoir 6 mois au moment de la sortie —
+  // sinon c'est un cabri (même né une année précédente) et sa sortie relève de la carte Cabrits, pas
+  // de celle-ci (évite qu'un cabri de fin d'année parti tôt à l'abattoir soit compté comme une chèvre).
+  const sortiesPreexistantesListe = (sexe: Sexe, statut: StatutChevre) =>
+    toutes.filter(
+      (c) =>
+        c.sexe === sexe &&
+        neeAvant(c) &&
+        c.statut === statut &&
+        anneeStatut(c) === annee &&
+        !!c.dateStatut &&
+        ageEnMoisEntre(c.dateNaissance, c.dateStatut) >= 6,
+    );
+  const sortiesPreexistantes = (sexe: Sexe, statut: StatutChevre) => sortiesPreexistantesListe(sexe, statut).length;
+
+  // Regroupe par date de sortie, avec le nombre d'animaux concernés chaque jour (plusieurs abattages
+  // le même jour sont fréquents) — trié chronologiquement.
+  const grouperParDate = (items: Chevre[]): DateEtNombre[] => {
+    const compte = new Map<string, number>();
+    for (const c of items) {
+      if (!c.dateStatut) continue;
+      compte.set(c.dateStatut, (compte.get(c.dateStatut) ?? 0) + 1);
+    }
+    return Array.from(compte.entries())
+      .map(([date, nombre]) => ({ date, nombre }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  };
 
   const stockDebutAnnee = toutes.filter(
     (c) => neeAvant(c) && (c.statut === 'vivante' || (anneeStatut(c) ?? Infinity) >= annee),
@@ -184,19 +268,60 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     (c) => yearOf(c.dateNaissance) <= annee && (c.statut === 'vivante' || (anneeStatut(c) ?? -Infinity) > annee),
   ).length;
 
+  // Adultes (6 mois+) d'un sexe donné, vivant(e)s au 31/12 de l'année N, reconstitué comme stockFinAnnee.
+  const estAdulteVivantFinAnnee = (sexe: Sexe) => (c: Chevre) =>
+    c.sexe === sexe &&
+    ageEnMoisEntre(c.dateNaissance, finAnnee) >= 6 &&
+    (c.statut === 'vivante' || (anneeStatut(c) ?? -Infinity) > annee);
+  const estChevreVivanteFinAnnee = estAdulteVivantFinAnnee('F');
+  const estBoucVivantFinAnnee = estAdulteVivantFinAnnee('M');
+  const chevresVivantesFinAnnee = toutes.filter(estChevreVivanteFinAnnee).length;
+  const boucsVivantsFinAnnee = toutes.filter(estBoucVivantFinAnnee).length;
+
+  // Parmi ces adultes, ceux/celles désigné(e)s pour le renouvellement cette année-là précisément (pas
+  // les années précédentes) — le reste étant le troupeau déjà établi, plus ancien.
+  const chevresRenouvellementFinAnnee = toutes.filter(
+    (c) => estChevreVivanteFinAnnee(c) && c.renouvellement && c.renouvellementAnnee === annee,
+  ).length;
+  const boucsRenouvellementFinAnnee = toutes.filter(
+    (c) => estBoucVivantFinAnnee(c) && c.renouvellement && c.renouvellementAnnee === annee,
+  ).length;
+
+  // Basé sur l'année de désignation indiquée par l'utilisateur (renouvellementAnnee), pas sur l'année
+  // de naissance : un cabrit né au second semestre peut être désigné l'année suivante.
+  const renouvellementDesignes = toutes.filter((c) => c.renouvellement && c.renouvellementAnnee === annee).length;
+
+  const cabritsAbattoirListe = toutes.filter((c) => c.statut === 'abattoir' && sortiCommeCabrit(c));
+  const chevresAbattoirListe = sortiesPreexistantesListe('F', 'abattoir');
+  const boucsAbattoirListe = sortiesPreexistantesListe('M', 'abattoir');
+
   return {
     annee,
     cabritsTotal: cabrits.length,
-    cabritsRenouvellement: cabrits.filter((c) => c.statut === 'vivante').length,
-    cabritsVendus: cabrits.filter((c) => c.statut === 'vendue').length,
-    cabritsAbattoir: cabrits.filter((c) => c.statut === 'abattoir').length,
-    cabritsAutoconsommes: cabrits.filter((c) => c.statut === 'autoconsommee').length,
+    cabritsPremierSemestre: cabrits.filter(premierSemestre).length,
+    cabritsSecondSemestre: cabrits.filter((c) => !premierSemestre(c)).length,
+    cabritsRenouvellement: renouvellementDesignes,
+    cabritsVendus: toutes.filter((c) => c.statut === 'vendue' && sortiCommeCabrit(c)).length,
+    cabritsAbattoir: cabritsAbattoirListe.length,
+    cabritsAbattoirDates: grouperParDate(cabritsAbattoirListe),
+    cabritsAutoconsommes: toutes.filter((c) => c.statut === 'autoconsommee' && sortiCommeCabrit(c)).length,
     cabritsMortNes: cabrits.filter((c) => c.statut === 'mortne').length,
+    cabritsRestants,
     miseBasCount: porteesCetteAnnee.size,
-    chevresMortesAnnee: sortiesPreexistantes('morte'),
-    chevresAbattoirAnnee: sortiesPreexistantes('abattoir'),
-    chevresVenduesAnnee: sortiesPreexistantes('vendue'),
-    chevresAutoconsommeesAnnee: sortiesPreexistantes('autoconsommee'),
+    chevresMortesAnnee: sortiesPreexistantes('F', 'morte'),
+    chevresAbattoirAnnee: chevresAbattoirListe.length,
+    chevresAbattoirDates: grouperParDate(chevresAbattoirListe),
+    chevresVenduesAnnee: sortiesPreexistantes('F', 'vendue'),
+    chevresAutoconsommeesAnnee: sortiesPreexistantes('F', 'autoconsommee'),
+    chevresVivantesFinAnnee,
+    chevresRenouvellementFinAnnee,
+    boucsMortsAnnee: sortiesPreexistantes('M', 'morte'),
+    boucsAbattoirAnnee: boucsAbattoirListe.length,
+    boucsAbattoirDates: grouperParDate(boucsAbattoirListe),
+    boucsVendusAnnee: sortiesPreexistantes('M', 'vendue'),
+    boucsAutoconsommesAnnee: sortiesPreexistantes('M', 'autoconsommee'),
+    boucsVivantsFinAnnee,
+    boucsRenouvellementFinAnnee,
     stockDebutAnnee,
     stockFinAnnee,
   };
@@ -349,8 +474,10 @@ export interface BilanAlimentation {
   totalKg: number;
   nombreAnimaux: number;
   coutParAnimal: number | undefined;
-  /** Total (hors Autre) en kg, par animal. */
+  /** Total (hors Autre) en kg, par animal, sur l'année entière. */
   kgParAnimal: number | undefined;
+  /** Le même total (hors Autre), ramené à un g/jour/animal — pour comparer à une ration journalière connue. */
+  gParAnimalParJour: number | undefined;
   /** Kg par animal, par type d'aliment (undefined si aucun animal, ou pour "Autre"). */
   kgParAnimalParType: Record<TypeAliment, number | undefined>;
   /** Coût (€) par animal, par type d'aliment (undefined si aucun animal, ou pour "Autre"). */
@@ -402,13 +529,16 @@ export async function calculerBilanAlimentation(annee: number): Promise<BilanAli
     ]),
   ) as Record<TypeAliment, number | undefined>;
 
+  const kgParAnimal = nombreAnimaux > 0 ? totalKg / nombreAnimaux : undefined;
+
   return {
     parType,
     total,
     totalKg,
     nombreAnimaux,
     coutParAnimal: nombreAnimaux > 0 ? total / nombreAnimaux : undefined,
-    kgParAnimal: nombreAnimaux > 0 ? totalKg / nombreAnimaux : undefined,
+    kgParAnimal,
+    gParAnimalParJour: kgParAnimal !== undefined ? (kgParAnimal * 1000) / 365 : undefined,
     kgParAnimalParType,
     montantParAnimalParType,
   };
@@ -451,10 +581,32 @@ export async function saveVente(
   );
 }
 
+/**
+ * Part du montant d'une facture qui n'est pas de catégorie « Autre » : 0 si la facture entière est
+ * catégorisée « Autre » (dépense ou recette) ; pour une facture « Alimentation », le montant total
+ * moins les lignes elles-mêmes de type « Autre » (une facture peut regrouper plusieurs aliments,
+ * certains catégorisés, d'autres non) ; sinon le montant complet. Sert à exclure « Autre » — non
+ * représentatif de la santé financière de l'activité — des soldes, sans jamais changer le montant
+ * réel affiché sur la facture elle-même.
+ */
+export function montantHorsAutre(f: Facture): number {
+  if (f.type === 'recue' && f.categorieDepense === 'autre') return 0;
+  if (f.type === 'emise' && f.categorieRecette === 'autre') return 0;
+  if (f.categorieDepense === 'alimentation') {
+    const partAutre = (f.lignesAlimentation ?? [])
+      .filter((l) => l.type === 'autre')
+      .reduce((s, l) => s + l.montant, 0);
+    return f.montant - partAutre;
+  }
+  return f.montant;
+}
+
 export interface Transaction {
   id: string;
   date: string;
   montant?: number;
+  /** Part de `montant` comptant réellement dans les soldes (hors « Autre ») — voir montantHorsAutre(). */
+  montantComptabilise?: number;
   sens: 'entree' | 'sortie';
   titre: string;
   sousTitre: string;
@@ -469,6 +621,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     id: v.id,
     date: v.date,
     montant: v.prix,
+    montantComptabilise: v.prix,
     sens: 'entree',
     titre:
       v.categorie === 'lait'
@@ -484,6 +637,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     id: f.id,
     date: f.date,
     montant: f.montant,
+    montantComptabilise: montantHorsAutre(f),
     sens: f.type === 'emise' ? 'entree' : 'sortie',
     titre: f.tiers,
     sousTitre:
@@ -491,7 +645,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
         ? f.typeAide === 'autre' && f.typeAideLibre
           ? f.typeAideLibre
           : LABEL_TYPE_AIDE[f.typeAide]
-        : f.description || (f.categorieDepense ? LABEL_CATEGORIE_DEPENSE[f.categorieDepense] : ''),
+        : f.description,
     source: 'facture',
   }));
 

@@ -53,12 +53,12 @@ export default function FournisseursIndex() {
           <ListRow
             title={item.nomEntreprise}
             subtitle={`${item.nom}${item.prenom ? ` ${item.prenom}` : ''} · SIRET ${item.siret}`}
-            onPress={() => router.push(`/fournisseurs/${item.id}`)}
+            onPress={() => router.push(`/comptabilite/fournisseurs/${item.id}`)}
           />
         )}
       />
 
-      <Fab options={[{ label: 'Nouveau fournisseur', icon: 'add', onPress: () => router.push('/fournisseurs/nouveau') }]} />
+      <Fab options={[{ label: 'Nouveau fournisseur', icon: 'add', onPress: () => router.push('/comptabilite/fournisseurs/nouveau') }]} />
     </Screen>
   );
 }

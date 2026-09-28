@@ -9,24 +9,32 @@ import { useAppSettings } from '@/context/AppSettingsContext';
 import { formatMontant } from '@/utils/dates';
 import {
   calculerBilanAlimentation,
-  listChevresHistorique,
   listChevresVivantes,
   listFactures,
   listVentes,
   listVisitesVeterinaire,
+  montantHorsAutre,
 } from '@/storage/repositories';
+import { categorieAnimal } from '@/utils/chevreLabel';
+import type { Chevre } from '@/types/models';
 
 function formatKg(kg: number): string {
   return `${kg.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kg`;
 }
 
+/** Cabrit = moins de 6 mois OU pas encore bouclé (même si plus âgé) ; sinon chèvre/bouc selon le sexe. */
+function categorieAccueil(c: Chevre): 'chevre' | 'bouc' | 'cabrit' {
+  if (!c.numeroBoucle || categorieAnimal(c) === 'cabrit') return 'cabrit';
+  return c.sexe === 'M' ? 'bouc' : 'chevre';
+}
+
 interface Stats {
   totalVivantes: number;
-  sorties: number;
+  chevres: number;
+  boucs: number;
+  cabrits: number;
   cabritsAnnee: number;
   ventesTotal: number;
-  entrees: number;
-  facturesRecues: number;
   soldeFactures: number;
   kgParAnimalAlimentation?: number;
   derniereVisite?: string;
@@ -39,14 +47,17 @@ export default function Accueil() {
 
   const charger = useCallback(async () => {
     const annee = settings.anneeActive;
-    const [vivantes, historique, ventes, factures, visites, alimentation] = await Promise.all([
+    const [vivantes, ventes, factures, visites, alimentation] = await Promise.all([
       listChevresVivantes(),
-      listChevresHistorique(),
       listVentes(annee),
       listFactures(annee),
       listVisitesVeterinaire(annee),
       calculerBilanAlimentation(annee),
     ]);
+
+    const chevres = vivantes.filter((c) => categorieAccueil(c) === 'chevre').length;
+    const boucs = vivantes.filter((c) => categorieAccueil(c) === 'bouc').length;
+    const cabrits = vivantes.filter((c) => categorieAccueil(c) === 'cabrit').length;
 
     const cabritsAnnee = vivantes.filter(
       (c) => c.mereNumeroBoucle && c.dateNaissance.startsWith(String(annee)),
@@ -57,29 +68,25 @@ export default function Accueil() {
       0,
     );
 
+    // « Autre » n'est pas représentatif de la santé financière de l'activité : exclu du solde, y
+    // compris la part « Autre » à l'intérieur d'une facture Alimentation regroupant plusieurs lignes.
     const facturesEmises = factures
       .filter((f) => f.type === 'emise')
-      .reduce(
-        (sum, f) => sum + (f.montant ?? 0),
-        0,
-      );
+      .reduce((sum, f) => sum + montantHorsAutre(f), 0);
     const facturesRecues = factures
       .filter((f) => f.type === 'recue')
-      .reduce(
-        (sum, f) => sum + (f.montant ?? 0),
-        0,
-      );
+      .reduce((sum, f) => sum + montantHorsAutre(f), 0);
 
     const entrees = ventesTotal + facturesEmises;
     const soldeFactures = entrees - facturesRecues;
 
     setStats({
       totalVivantes: vivantes.length,
-      sorties: historique.length,
+      chevres,
+      boucs,
+      cabrits,
       cabritsAnnee,
       ventesTotal,
-      entrees,
-      facturesRecues,
       soldeFactures,
       kgParAnimalAlimentation: alimentation.kgParAnimal,
       derniereVisite: visites[0]?.date,
@@ -103,9 +110,9 @@ export default function Accueil() {
         >
           <Card>
             <Text style={styles.statValue}>{stats?.totalVivantes ?? '—'}</Text>
-            <Text style={styles.statLabel}>Chèvres vivantes</Text>
+            <Text style={styles.statLabel}>Animaux vivants</Text>
             <Text style={styles.statSub}>
-              {stats ? `${stats.totalVivantes} vivante${stats.totalVivantes > 1 ? 's' : ''} - ${stats.sorties} morte${stats.sorties > 1 ? 's' : ''}/vendue${stats.sorties > 1 ? 's' : ''}/à l’abattoir` : ''}
+              {stats ? `${stats.chevres} chèvre${stats.chevres > 1 ? 's' : ''} · ${stats.boucs} bouc${stats.boucs > 1 ? 's' : ''} · ${stats.cabrits} cabri${stats.cabrits > 1 ? 's' : ''}` : ''}
             </Text>
           </Card>
         </Pressable>
@@ -115,7 +122,7 @@ export default function Accueil() {
         >
           <Card>
             <Text style={styles.statValue}>{stats?.cabritsAnnee ?? '—'}</Text>
-            <Text style={styles.statLabel}>Cabrits nés en {settings.anneeActive}</Text>
+            <Text style={styles.statLabel}>Cabris nés en {settings.anneeActive}</Text>
           </Card>
         </Pressable>
       </View>
@@ -145,10 +152,7 @@ export default function Accueil() {
             >
               {stats ? formatMontant(stats.soldeFactures) : '—'}
             </Text>
-            <Text style={styles.statLabel}>Solde factures</Text>
-            <Text style={styles.statSub}>
-              {stats ? `+${formatMontant(stats.entrees)} / -${formatMontant(stats.facturesRecues)}` : ''}
-            </Text>
+            <Text style={styles.statLabel}>Solde factures (hors Autre)</Text>
           </Card>
         </Pressable>
       </View>

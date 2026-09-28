@@ -28,6 +28,55 @@ export const COMPTE_PAR_RECETTE: Record<CategorieRecette, CompteComptable> = {
   autre: { numero: '708000', libelle: 'Produits des activités annexes' },
 };
 
+/**
+ * Liste élargie de comptes PCG courants pour une petite exploitation agricole, proposée dans le
+ * sélecteur manuel (catégorie "Autre") en plus des comptes déjà affectés automatiquement ci-dessus.
+ * Toujours indicatif — à confirmer avec votre comptable/CGA.
+ */
+export const COMPTES_PCG_DEPENSE: CompteComptable[] = [
+  { numero: '601100', libelle: 'Aliments du bétail' },
+  { numero: '601200', libelle: 'Engrais et amendements' },
+  { numero: '601300', libelle: 'Semences et plants' },
+  { numero: '602600', libelle: 'Emballages' },
+  { numero: '604000', libelle: 'Études et prestations de services' },
+  { numero: '606100', libelle: 'Eau, électricité' },
+  { numero: '606110', libelle: 'Carburants' },
+  { numero: '606300', libelle: 'Fournitures d’entretien, petit équipement' },
+  { numero: '606400', libelle: 'Fournitures de bureau' },
+  { numero: '606800', libelle: 'Autres matières et fournitures' },
+  { numero: '611000', libelle: 'Sous-traitance générale' },
+  { numero: '613200', libelle: 'Location de locaux' },
+  { numero: '613500', libelle: 'Location de matériel' },
+  { numero: '615400', libelle: 'Entretien et réparations — Matériel' },
+  { numero: '615500', libelle: 'Entretien et réparations — Bâtiments' },
+  { numero: '616100', libelle: 'Assurance — Multirisques' },
+  { numero: '616300', libelle: 'Assurance — Responsabilité civile' },
+  { numero: '618300', libelle: 'Documentation technique' },
+  { numero: '621000', libelle: 'Personnel extérieur, main-d’œuvre' },
+  { numero: '622600', libelle: 'Honoraires vétérinaires' },
+  { numero: '622700', libelle: 'Frais d’actes et de contentieux' },
+  { numero: '623000', libelle: 'Publicité, publications' },
+  { numero: '625100', libelle: 'Voyages et déplacements' },
+  { numero: '626000', libelle: 'Frais postaux et télécommunications' },
+  { numero: '627000', libelle: 'Services bancaires' },
+  { numero: '635000', libelle: 'Impôts, taxes et versements assimilés' },
+  { numero: '645100', libelle: 'Cotisations MSA' },
+  { numero: '661100', libelle: 'Intérêts d’emprunts' },
+];
+
+export const COMPTES_PCG_RECETTE: CompteComptable[] = [
+  { numero: '701100', libelle: 'Ventes — Lait' },
+  { numero: '701200', libelle: 'Ventes — Fromage' },
+  { numero: '701300', libelle: 'Ventes — Animaux' },
+  { numero: '701400', libelle: 'Ventes — Laine, peaux' },
+  { numero: '706000', libelle: 'Prestations de services' },
+  { numero: '708000', libelle: 'Activités annexes' },
+  { numero: '740000', libelle: 'Subventions d’exploitation' },
+  { numero: '758000', libelle: 'Produits divers de gestion courante' },
+  { numero: '771000', libelle: 'Produits exceptionnels de gestion' },
+  { numero: '791000', libelle: 'Transferts de charges d’exploitation' },
+];
+
 export const LABEL_CATEGORIE_DEPENSE: Record<CategorieDepense, string> = {
   alimentation: 'Alimentation',
   carburant: 'Carburant',

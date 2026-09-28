@@ -30,7 +30,7 @@ export function chevreRow(c: Chevre, indicatif?: string) {
     'Date de naissance': formatDateShortFR(c.dateNaissance),
     'Mère (n° boucle)': avecIndicatif(c.mereNumeroBoucle, indicatif),
     Statut: c.statut,
-    'Date statut': formatDateShortFR(c.dateStatut),
+    'Date mort': formatDateShortFR(c.dateStatut),
     Renouvellement: c.renouvellement ? `Oui (${c.renouvellementAnnee ?? '—'})` : '',
     Notes: c.notes ?? '',
   };
@@ -170,7 +170,7 @@ export async function exporterExploitationExcel(annee: number): Promise<void> {
     })),
     { Aliment: 'Total (hors Autre)', 'Montant (€)': alimentation.total, 'Quantité (kg)': alimentation.totalKg, 'Kg par animal': '' },
     { Aliment: '', 'Montant (€)': '', 'Quantité (kg)': '', 'Kg par animal': '' },
-    { Aliment: 'Effectif (chèvres + boucs + cabrits > 2 mois)', 'Montant (€)': alimentation.nombreAnimaux, 'Quantité (kg)': '', 'Kg par animal': '' },
+    { Aliment: 'Effectif (chèvres + boucs + cabris > 2 mois)', 'Montant (€)': alimentation.nombreAnimaux, 'Quantité (kg)': '', 'Kg par animal': '' },
     { Aliment: 'Coût par animal (€, hors Autre)', 'Montant (€)': alimentation.coutParAnimal ?? '', 'Quantité (kg)': '', 'Kg par animal': '' },
   ];
   const feuilleAlimentation = XLSX.utils.json_to_sheet(lignesAlimentation);

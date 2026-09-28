@@ -57,7 +57,7 @@ export default function NouvelleChevre() {
 
   const enregistrer = async () => {
     if (avecCabrits && !numeroBoucle.trim()) {
-      Alert.alert('N° de boucle requis', 'Pour enregistrer ses cabrits, il faut le n° de boucle de la mère.');
+      Alert.alert('N° de boucle requis', 'Pour enregistrer ses cabris, il faut le n° de boucle de la mère.');
       return;
     }
 
@@ -162,7 +162,7 @@ export default function NouvelleChevre() {
 
       {sexe === 'F' && (
         <Checkbox
-          label="Cette chèvre a des cabrits à enregistrer"
+          label="Cette chèvre a des cabris à enregistrer"
           value={avecCabrits}
           onChange={setAvecCabrits}
         />
@@ -170,12 +170,12 @@ export default function NouvelleChevre() {
 
       {sexe === 'F' && avecCabrits && (
         <Card style={styles.cabritsCard}>
-          <Text style={styles.sectionTitle}>Cabrits</Text>
+          <Text style={styles.sectionTitle}>Cabris</Text>
           <DateField label="Date de la mise bas" required value={dateMiseBas} onChange={setDateMiseBas} />
           {cabrits.map((cabrit, index) => (
             <Card key={cabrit.key} style={styles.cabritCard}>
               <View style={styles.cabritHeader}>
-                <Text style={styles.cabritTitle}>Cabrit {index + 1}</Text>
+                <Text style={styles.cabritTitle}>Cabri {index + 1}</Text>
                 {cabrits.length > 1 && (
                   <Button label="Retirer" variant="danger" onPress={() => supprimerCabrit(cabrit.key)} />
                 )}
@@ -205,7 +205,7 @@ export default function NouvelleChevre() {
             </Card>
           ))}
           <Button
-            label="+ Ajouter un cabrit"
+            label="+ Ajouter un cabri"
             variant="secondary"
             onPress={() => setCabrits((prev) => [...prev, nouveauCabrit()])}
           />

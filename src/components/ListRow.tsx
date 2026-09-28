@@ -4,7 +4,7 @@ import { colors } from '@/theme/colors';
 
 interface Props {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
 }

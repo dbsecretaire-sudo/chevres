@@ -4,12 +4,13 @@ import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { YearPicker } from '@/components/YearPicker';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { InfoModal } from '@/components/InfoModal';
 import { colors } from '@/theme/colors';
 import { useAppSettings } from '@/context/AppSettingsContext';
-import { toutesLesAnneesConnues } from '@/storage/repositories';
 import { exporterAnneeExcel } from '@/utils/xlsxExport';
 import { exporterAnneePdf } from '@/utils/pdfExport';
+import { exporterSauvegardeLocale, importerSauvegardeLocale } from '@/utils/backup';
 import { ExportChoiceModal } from '@/components/ExportChoiceModal';
 import {
   disconnectGoogle,
@@ -21,10 +22,14 @@ import {
 import { ensureRootFolder, pousserToutesAnnees, tirerToutesAnnees } from '@/drive/sync';
 
 export default function Reglages() {
-  const { settings, setAnneeActive, patchSettings } = useAppSettings();
-  const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
+  const { settings, patchSettings } = useAppSettings();
   const [exportEnCours, setExportEnCours] = useState(false);
   const [choixFormat, setChoixFormat] = useState(false);
+
+  const [sauvegardeEnCours, setSauvegardeEnCours] = useState(false);
+  const [importEnCours, setImportEnCours] = useState(false);
+  const [confirmImport, setConfirmImport] = useState(false);
+  const [resultatImport, setResultatImport] = useState<{ titre: string; message: string } | null>(null);
 
   const [connecte, setConnecte] = useState(false);
   const [connexionEnCours, setConnexionEnCours] = useState(false);
@@ -32,7 +37,6 @@ export default function Reglages() {
   const [syncEtape, setSyncEtape] = useState('');
 
   const charger = useCallback(async () => {
-    setAnnees(await toutesLesAnneesConnues());
     setConnecte(await isGoogleConnected());
   }, []);
 
@@ -103,18 +107,36 @@ export default function Reglages() {
     }
   };
 
+  const exporterSauvegarde = async () => {
+    setSauvegardeEnCours(true);
+    try {
+      await exporterSauvegardeLocale();
+    } catch (e: any) {
+      Alert.alert('Erreur de sauvegarde', e?.message ?? String(e));
+    } finally {
+      setSauvegardeEnCours(false);
+    }
+  };
+
+  const importerSauvegarde = async () => {
+    setConfirmImport(false);
+    setImportEnCours(true);
+    try {
+      const resultat = await importerSauvegardeLocale();
+      if (resultat.annule) return;
+      setResultatImport({
+        titre: 'Sauvegarde restaurée',
+        message: `${resultat.animaux} animal/animaux et ${resultat.fournisseurs} fournisseur(s) importés.`,
+      });
+    } catch (e: any) {
+      setResultatImport({ titre: 'Erreur d’import', message: e?.message ?? String(e) });
+    } finally {
+      setImportEnCours(false);
+    }
+  };
+
   return (
     <Screen>
-      <Card>
-        <Text style={styles.cardTitle}>Année active</Text>
-        <Text style={styles.muted}>Les nouvelles saisies (ventes, factures, visites…) sont classées dans le fichier de cette année.</Text>
-        <YearPicker
-          annees={Array.from(new Set([...annees, settings.anneeActive, settings.anneeActive + 1]))}
-          value={settings.anneeActive}
-          onChange={setAnneeActive}
-        />
-      </Card>
-
       <Card>
         <Text style={styles.cardTitle}>Export</Text>
         <Text style={styles.muted}>
@@ -128,6 +150,44 @@ export default function Reglages() {
         onClose={() => setChoixFormat(false)}
         titre={`Export ${settings.anneeActive}`}
         onChoisir={exporter}
+      />
+
+      <Card>
+        <Text style={styles.cardTitle}>Sauvegarde locale</Text>
+        <Text style={styles.muted}>
+          Exporte toutes les données de l’appli (toutes années, cheptel, ventes, factures, visites,
+          contrôles, fournisseurs) dans un seul fichier à conserver ailleurs (mail, stockage…) — permet
+          de tout récupérer après une réinstallation, sans passer par Google Drive.
+        </Text>
+        <View style={styles.row}>
+          <Button
+            style={styles.flex1}
+            label="Exporter"
+            onPress={exporterSauvegarde}
+            loading={sauvegardeEnCours}
+          />
+          <Button
+            style={styles.flex1}
+            variant="secondary"
+            label="Importer"
+            onPress={() => setConfirmImport(true)}
+            loading={importEnCours}
+          />
+        </View>
+      </Card>
+      <ConfirmModal
+        visible={confirmImport}
+        title="Restaurer une sauvegarde ?"
+        message="Toutes les données actuellement enregistrées sur cet appareil (cheptel, ventes, factures, visites, contrôles, fournisseurs) seront remplacées par celles du fichier choisi. Cette action est irréversible."
+        confirmLabel="Choisir le fichier"
+        onCancel={() => setConfirmImport(false)}
+        onConfirm={importerSauvegarde}
+      />
+      <InfoModal
+        visible={!!resultatImport}
+        title={resultatImport?.titre ?? ''}
+        message={resultatImport?.message}
+        onClose={() => setResultatImport(null)}
       />
 
       <Card>

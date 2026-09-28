@@ -39,7 +39,7 @@ export default function Naissances() {
               <Text style={styles.date}>{formatDateFR(item.date)}</Text>
             </View>
             <Text style={styles.subtitle}>
-              {item.cabrits.length} cabrit{item.cabrits.length > 1 ? 's' : ''} ·{' '}
+              {item.cabrits.length} cabri{item.cabrits.length > 1 ? 's' : ''} ·{' '}
               {item.cabrits.filter((c) => c.sexe === 'F').length} F ·{' '}
               {item.cabrits.filter((c) => c.sexe === 'M').length} M
             </Text>

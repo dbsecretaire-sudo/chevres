@@ -1,6 +1,15 @@
-import { Tabs } from 'expo-router';
+import { Pressable } from 'react-native';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
+
+function BoutonRetour() {
+  return (
+    <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingRight: 20 }}>
+      <Ionicons name="arrow-back" size={24} color="#fff" />
+    </Pressable>
+  );
+}
 
 export default function TabsLayout() {
   return (
@@ -69,6 +78,10 @@ export default function TabsLayout() {
           title: 'Réglages',
           tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
         }}
+      />
+      <Tabs.Screen
+        name="informations-exploitation"
+        options={{ href: null, title: 'Informations de l’exploitation', headerLeft: BoutonRetour }}
       />
     </Tabs>
   );

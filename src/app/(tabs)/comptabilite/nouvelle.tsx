@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
 import { FormField } from '@/components/FormField';
 import { DateField } from '@/components/DateField';
@@ -11,6 +12,7 @@ import { InfoModal } from '@/components/InfoModal';
 import { colors } from '@/theme/colors';
 import { enregistrerFacture, enregistrerVente } from '@/storage/repositories';
 import { listFournisseurs } from '@/storage/fournisseurs';
+import { listComptesPcg, type CompteComptableEnregistre } from '@/storage/comptesPcg';
 import { todayISO } from '@/utils/dates';
 import { generateId } from '@/utils/id';
 import { useAjoutTabBarBleu } from '@/hooks/useAjoutTabBarBleu';
@@ -29,6 +31,15 @@ import type { CategorieDepense, CategorieRecette, Fournisseur, TypeAide, TypeAli
 
 /** Sentinelle pour "fournisseur non enregistré" dans le sélecteur — révèle alors la saisie libre. */
 const FOURNISSEUR_AUTRE = '__autre__';
+
+/** Taux de TVA applicables en France (taux normal, intermédiaire, réduits, particulier et taux zéro). */
+const OPTIONS_TAUX_TVA = [
+  { value: '0', label: '0 %' },
+  { value: '2.1', label: '2,1 %' },
+  { value: '5.5', label: '5,5 %' },
+  { value: '10', label: '10 %' },
+  { value: '20', label: '20 %' },
+];
 
 interface LigneAlimentForm {
   key: string;
@@ -69,14 +80,16 @@ export default function NouvelleFacture() {
   const [typeCarburant, setTypeCarburant] = useState<TypeCarburant>('gazoil');
   const [compteDepenseAutre, setCompteDepenseAutre] = useState(COMPTE_PAR_DEPENSE.autre.numero);
   const [compteRecetteAutre, setCompteRecetteAutre] = useState(COMPTE_PAR_RECETTE.autre.numero);
-  const [tauxTvaVente, setTauxTvaVente] = useState('');
-  const [tauxTvaAchat, setTauxTvaAchat] = useState('');
+  const [tauxTvaVente, setTauxTvaVente] = useState('2.1');
+  const [tauxTvaAchat, setTauxTvaAchat] = useState('2.1');
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [fournisseurId, setFournisseurId] = useState(FOURNISSEUR_AUTRE);
+  const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       listFournisseurs().then(setFournisseurs);
+      listComptesPcg().then(setComptes);
     }, []),
   );
 
@@ -98,7 +111,7 @@ export default function NouvelleFacture() {
   };
 
   const TAUX_TVA_PAR_CATEGORIE_VENTE: Record<'lait' | 'fromage' | 'cabris', string> = {
-    lait: '',
+    lait: '0',
     fromage: '5.5',
     cabris: '10',
   };
@@ -143,7 +156,7 @@ export default function NouvelleFacture() {
           quantite: quantiteNum,
           unite: categorieRecette === 'lait' ? 'litres' : categorieRecette === 'cabris' ? 'piece' : unite,
           prix: prixNum,
-          tauxTva: tauxTvaVente ? Number(tauxTvaVente.replace(',', '.')) || undefined : undefined,
+          tauxTva: Number(tauxTvaVente.replace(',', '.')),
         });
         router.back();
         return;
@@ -209,8 +222,7 @@ export default function NouvelleFacture() {
             : type === 'emise' && categorieRecette === 'autre'
               ? compteRecetteAutre
               : undefined,
-        tauxTva:
-          type === 'recue' && tauxTvaAchat ? Number(tauxTvaAchat.replace(',', '.')) || undefined : undefined,
+        tauxTva: type === 'recue' ? Number(tauxTvaAchat.replace(',', '.')) : undefined,
       });
       router.back();
     } finally {
@@ -218,11 +230,14 @@ export default function NouvelleFacture() {
     }
   };
 
-  const OPTIONS_COMPTE_DEPENSE = Object.values(COMPTE_PAR_DEPENSE).map((c) => ({
+  const comptesDepenseDisponibles = comptes.filter((c) => c.numero.startsWith('6'));
+  const comptesRecetteDisponibles = comptes.filter((c) => c.numero.startsWith('7'));
+
+  const OPTIONS_COMPTE_DEPENSE = comptesDepenseDisponibles.map((c) => ({
     value: c.numero,
     label: `${c.numero} — ${c.libelle}`,
   }));
-  const OPTIONS_COMPTE_RECETTE = Object.values(COMPTE_PAR_RECETTE).map((c) => ({
+  const OPTIONS_COMPTE_RECETTE = comptesRecetteDisponibles.map((c) => ({
     value: c.numero,
     label: `${c.numero} — ${c.libelle}`,
   }));
@@ -230,10 +245,10 @@ export default function NouvelleFacture() {
   const compteAffiche =
     type === 'recue'
       ? categorieDepense === 'autre'
-        ? (Object.values(COMPTE_PAR_DEPENSE).find((c) => c.numero === compteDepenseAutre) ?? COMPTE_PAR_DEPENSE.autre)
+        ? (comptesDepenseDisponibles.find((c) => c.numero === compteDepenseAutre) ?? COMPTE_PAR_DEPENSE.autre)
         : COMPTE_PAR_DEPENSE[categorieDepense]
       : categorieRecette === 'autre'
-        ? (Object.values(COMPTE_PAR_RECETTE).find((c) => c.numero === compteRecetteAutre) ?? COMPTE_PAR_RECETTE.autre)
+        ? (comptesRecetteDisponibles.find((c) => c.numero === compteRecetteAutre) ?? COMPTE_PAR_RECETTE.autre)
         : COMPTE_PAR_RECETTE[categorieRecette];
 
   return (
@@ -249,7 +264,21 @@ export default function NouvelleFacture() {
           { value: 'emise', label: 'Crédit' },
         ]}
       />
-      <DateField label="Date" required value={date} onChange={setDate} />
+      <View style={styles.row}>
+        <View style={styles.flex1}>
+          <DateField label="Date" required value={date} onChange={setDate} />
+        </View>
+        {!estProductionVente && (
+          <View style={styles.flex1}>
+            <FormField
+              label="N° de facture"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Précisions"
+            />
+          </View>
+        )}
+      </View>
 
       {type === 'recue' && (
         <SelectField
@@ -271,22 +300,38 @@ export default function NouvelleFacture() {
       )}
 
       {type === 'recue' && categorieDepense === 'autre' && (
-        <SelectField
-          label="Compte PCG"
-          required
-          value={compteDepenseAutre}
-          onChange={setCompteDepenseAutre}
-          options={OPTIONS_COMPTE_DEPENSE}
-        />
+        <View style={styles.rowFin}>
+          <View style={styles.flex1}>
+            <SelectField
+              label="Compte PCG"
+              required
+              searchable
+              value={compteDepenseAutre}
+              onChange={setCompteDepenseAutre}
+              options={OPTIONS_COMPTE_DEPENSE}
+            />
+          </View>
+          <Pressable style={styles.boutonIcone} onPress={() => router.push('/comptabilite/comptes-pcg')}>
+            <Ionicons name="pencil" size={20} color={colors.ajout} />
+          </Pressable>
+        </View>
       )}
       {type === 'emise' && categorieRecette === 'autre' && (
-        <SelectField
-          label="Compte PCG"
-          required
-          value={compteRecetteAutre}
-          onChange={setCompteRecetteAutre}
-          options={OPTIONS_COMPTE_RECETTE}
-        />
+        <View style={styles.rowFin}>
+          <View style={styles.flex1}>
+            <SelectField
+              label="Compte PCG"
+              required
+              searchable
+              value={compteRecetteAutre}
+              onChange={setCompteRecetteAutre}
+              options={OPTIONS_COMPTE_RECETTE}
+            />
+          </View>
+          <Pressable style={styles.boutonIcone} onPress={() => router.push('/comptabilite/comptes-pcg')}>
+            <Ionicons name="pencil" size={20} color={colors.ajout} />
+          </Pressable>
+        </View>
       )}
 
       <Text style={styles.compte}>
@@ -294,23 +339,24 @@ export default function NouvelleFacture() {
       </Text>
 
       {type === 'recue' && (
-        <>
-          <SelectField
-            label="Fournisseur"
-            required
-            value={fournisseurId}
-            onChange={changerFournisseur}
-            options={[
-              ...fournisseurs.map((f) => ({ value: f.id, label: f.nomEntreprise })),
-              { value: FOURNISSEUR_AUTRE, label: 'Autre (non enregistré)' },
-            ]}
-          />
-          <Button
-            label="+ Gérer les fournisseurs"
-            variant="secondary"
-            onPress={() => router.push('/fournisseurs')}
-          />
-        </>
+        <View style={styles.rowFin}>
+          <View style={styles.flex1}>
+            <SelectField
+              label="Fournisseur"
+              required
+              searchable
+              value={fournisseurId}
+              onChange={changerFournisseur}
+              options={[
+                ...fournisseurs.map((f) => ({ value: f.id, label: f.nomEntreprise })),
+                { value: FOURNISSEUR_AUTRE, label: 'Autre (non enregistré)' },
+              ]}
+            />
+          </View>
+          <Pressable style={styles.boutonIcone} onPress={() => router.push('/comptabilite/fournisseurs')}>
+            <Ionicons name="pencil" size={20} color={colors.ajout} />
+          </Pressable>
+        </View>
       )}
 
       {!estProductionVente && (type === 'emise' || fournisseurId === FOURNISSEUR_AUTRE) && (
@@ -319,6 +365,15 @@ export default function NouvelleFacture() {
           required
           value={tiers}
           onChangeText={setTiers}
+        />
+      )}
+
+      {type === 'recue' && (
+        <SelectField
+          label="Taux de TVA"
+          value={tauxTvaAchat}
+          onChange={setTauxTvaAchat}
+          options={OPTIONS_TAUX_TVA}
         />
       )}
 
@@ -491,33 +546,14 @@ export default function NouvelleFacture() {
         />
       )}
       {estProductionVente && (
-        <FormField
-          label="Taux de TVA (%)"
+        <SelectField
+          label="Taux de TVA"
           value={tauxTvaVente}
-          onChangeText={setTauxTvaVente}
-          keyboardType="decimal-pad"
-          placeholder="Facultatif — ex: 5.5 pour le fromage, 10 pour les cabris"
+          onChange={setTauxTvaVente}
+          options={OPTIONS_TAUX_TVA}
         />
       )}
 
-      {type === 'recue' && (
-        <FormField
-          label="Taux de TVA (%)"
-          value={tauxTvaAchat}
-          onChangeText={setTauxTvaAchat}
-          keyboardType="decimal-pad"
-          placeholder="Facultatif — tel qu’indiqué sur la facture"
-        />
-      )}
-
-      {!estProductionVente && (
-        <FormField
-          label="Note"
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Facultatif — n° de facture, précisions…"
-        />
-      )}
 
       <View style={styles.row}>
         <Button style={styles.flex1} variant="secondary" label="Annuler" onPress={() => router.back()} />
@@ -540,6 +576,15 @@ const styles = StyleSheet.create({
   tauxFixe: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic' },
   row: { flexDirection: 'row', gap: 12 },
   flex1: { flex: 1 },
+  rowFin: { flexDirection: 'row', gap: 8, alignItems: 'flex-end' },
+  boutonIcone: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.ajoutBadgeBg,
+  },
   lignesCard: { gap: 10 },
   lignesTitre: { fontSize: 14, fontWeight: '700', color: colors.text },
   ligneBloc: { gap: 8 },

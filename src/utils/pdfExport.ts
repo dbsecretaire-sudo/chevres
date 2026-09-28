@@ -2,7 +2,7 @@ import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { getSettings, type InfosExploitation } from '@/storage/settings';
-import { getYears, loadYear } from '@/storage/localStore';
+import { loadAllYears, loadYear } from '@/storage/localStore';
 import {
   listFactures,
   listVisitesVeterinaire,
@@ -18,6 +18,8 @@ import {
   controleRow,
   compteDeFacture,
 } from './xlsxExport';
+import { yearOf } from './dates';
+import type { Chevre } from '@/types/models';
 
 function echapper(v: unknown): string {
   return String(v ?? '')
@@ -163,7 +165,7 @@ export async function exporterExploitationPdf(annee: number): Promise<void> {
     ${tableauHtml(controles.map((c) => controleRow(c, indicatif)), 'Aucun contrôle pour cette année')}
     <h2>Alimentation</h2>
     ${tableauHtml(lignesAlimentation, 'Aucune donnée')}
-    <p>Effectif (chèvres + boucs + cabrits de plus de 2 mois) : ${alimentation.nombreAnimaux} — Coût par animal : ${
+    <p>Effectif (chèvres + boucs + cabris de plus de 2 mois) : ${alimentation.nombreAnimaux} — Coût par animal : ${
       alimentation.coutParAnimal !== undefined ? `${alimentation.coutParAnimal.toFixed(2)} €` : '—'
     } (« Autre » exclu du total et du calcul par animal)</p>
   `;
@@ -205,27 +207,76 @@ export async function exporterPlanComptablePdf(annee: number): Promise<void> {
   await ecrireEtPartagerPdf(html, `plan_comptable_${annee}.pdf`, `Plan comptable ${annee} — Troupeau Chèvres`);
 }
 
-/** Registre complet du cheptel en PDF : une section par année, avec saut de page entre chaque. */
+type LigneRegistre = { [K in keyof ReturnType<typeof chevreRow>]: string } & { Descendance: string };
+
+/**
+ * L'année de la ligne d'un animal, c'est son année de désignation au renouvellement quand elle est
+ * connue (comme pour le bilan), sinon son année de naissance — un cabrit né au second semestre peut
+ * par exemple être désigné l'année suivante.
+ */
+function anneeDesignation(c: Chevre): number {
+  return c.renouvellement && c.renouvellementAnnee !== undefined ? c.renouvellementAnnee : yearOf(c.dateNaissance);
+}
+
+/**
+ * Regroupe le cheptel par année de désignation plutôt que par année de naissance. Les cabrits pas
+ * encore bouclés n'ont pas de ligne propre (rien à y présenter d'exploitable) ; ils sont comptés dans
+ * la colonne « Descendance » de leur mère, qui indique le nombre total de petits qu'elle a eus.
+ */
+function construireRegistreCheptel(toutes: Chevre[], indicatif?: string): Map<number, LigneRegistre[]> {
+  const bouclees = toutes.filter((c) => !!c.numeroBoucle);
+
+  const nombreDescendance = (mere: Chevre) =>
+    toutes.filter((c) => c.mereId === mere.id || (!!mere.numeroBoucle && c.mereNumeroBoucle === mere.numeroBoucle))
+      .length;
+
+  const parAnnee = new Map<number, LigneRegistre[]>();
+  for (const annee of new Set(bouclees.map(anneeDesignation))) {
+    const lignesAnnee = bouclees
+      .filter((c) => anneeDesignation(c) === annee)
+      .sort((a, b) => {
+        const na = Number(a.numeroBoucle);
+        const nb = Number(b.numeroBoucle);
+        if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+        return (a.numeroBoucle ?? '').localeCompare(b.numeroBoucle ?? '');
+      })
+      .map((c) => {
+        const descendance = nombreDescendance(c);
+        return { ...chevreRow(c, indicatif), Descendance: descendance > 0 ? String(descendance) : '' };
+      });
+    parAnnee.set(annee, lignesAnnee);
+  }
+
+  return parAnnee;
+}
+
+/**
+ * Registre complet du cheptel en PDF : une section par année de désignation (renouvellement si
+ * connue, sinon naissance), avec saut de page entre chaque. La colonne Descendance indique le nombre
+ * total de petits de chaque mère ; les cabris pas encore bouclés n'ont pas de ligne propre (rien à y
+ * présenter d'exploitable) mais restent comptés dans cette colonne.
+ */
 export async function exporterCheptelPdf(): Promise<void> {
-  const [settings, annees] = await Promise.all([getSettings(), getYears('cheptel')]);
+  const [settings, toutes] = await Promise.all([getSettings(), loadAllYears('cheptel')]);
   const indicatif = settings.exploitation?.indicatifMarquage;
-  const anneesTriees = [...annees].sort((a, b) => a - b);
+  const registre = construireRegistreCheptel(toutes, indicatif);
+  const anneesTriees = [...registre.keys()].sort((a, b) => a - b);
+
+  const note = `<p class="vide">Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. La colonne « Descendance » indique le nombre total de petits de chaque mère (les cabris pas encore bouclés n'ont pas de ligne propre mais sont comptés ici).</p>`;
 
   let corps: string;
   if (anneesTriees.length === 0) {
-    corps = `<h2>Cheptel</h2>${tableauHtml([], 'Aucun animal enregistré')}`;
+    corps = `<h2>Cheptel</h2>${note}${tableauHtml([], 'Aucun animal enregistré')}`;
   } else {
-    const sections = await Promise.all(
-      anneesTriees.map(async (annee, index) => {
-        const chevres = await loadYear('cheptel', annee);
+    corps = anneesTriees
+      .map((annee, index) => {
         const classe = index > 0 ? ' page-break' : '';
-        return `<div class="${classe}"><h2>Cheptel ${annee}</h2>${tableauHtml(
-          chevres.map((c) => chevreRow(c, indicatif)),
+        return `<div class="${classe}"><h2>Cheptel ${annee}</h2>${index === 0 ? note : ''}${tableauHtml(
+          registre.get(annee) ?? [],
           'Aucun animal pour cette année',
         )}</div>`;
-      }),
-    );
-    corps = sections.join('');
+      })
+      .join('');
   }
 
   const html = documentHtml('Cheptel — Troupeau Chèvres', settings.exploitation, corps);

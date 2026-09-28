@@ -49,13 +49,40 @@ export default function ComptabiliteIndex() {
     });
   }, [transactions, filtres]);
 
-  const balance = filtrees.reduce((s, t) => s + (t.montant ?? 0) * (t.sens === 'entree' ? 1 : -1), 0);
+  // « Autre » reste affiché dans la liste à titre indicatif (montant réel), mais sa part n'est pas
+  // représentative de la santé financière de l'activité — exclue du solde via montantComptabilise.
+  const balance = filtrees.reduce(
+    (s, t) => s + (t.montantComptabilise ?? 0) * (t.sens === 'entree' ? 1 : -1),
+    0,
+  );
+  const balanceAvecAutre = filtrees.reduce((s, t) => s + (t.montant ?? 0) * (t.sens === 'entree' ? 1 : -1), 0);
+  const totalRentrees = filtrees
+    .filter((t) => t.sens === 'entree')
+    .reduce((s, t) => s + (t.montantComptabilise ?? 0), 0);
+  const totalDepenses = filtrees
+    .filter((t) => t.sens === 'sortie')
+    .reduce((s, t) => s + (t.montantComptabilise ?? 0), 0);
   const filtresActifs = filtres.dateDebut || filtres.dateFin || filtres.montantMin || filtres.montantMax;
 
   return (
     <Screen scroll={false}>
       <View style={styles.top}>
         <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
+
+        <Card style={styles.balanceCard}>
+          <Text style={styles.balanceLabel}>
+            Solde {filtresActifs ? '(filtré)' : settings.anneeActive} (hors Autre)
+          </Text>
+          <Text style={[styles.balanceValeur, { color: balance >= 0 ? colors.primary : colors.danger }]}>
+            {formatMontant(balance)}
+          </Text>
+          <Text style={styles.montant}>
+            <Text style={{ color: colors.primary }}>{formatMontant(totalRentrees)}</Text>
+            <Text style={styles.separateurVertical}> | </Text>
+            <Text style={{ color: colors.danger }}>-{formatMontant(totalDepenses)}</Text>
+          </Text>
+          <Text style={styles.balanceAutre}>{formatMontant(balanceAvecAutre)} Autre inclus</Text>
+        </Card>
 
         <View style={styles.row}>
           <Pressable style={styles.filtreBouton} onPress={() => setFiltreOuvert(true)}>
@@ -67,13 +94,6 @@ export default function ComptabiliteIndex() {
             </Pressable>
           )}
         </View>
-
-        <Card style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Solde {filtresActifs ? '(filtré)' : settings.anneeActive}</Text>
-          <Text style={[styles.balanceValeur, { color: balance >= 0 ? colors.primary : colors.danger }]}>
-            {formatMontant(balance)}
-          </Text>
-        </Card>
       </View>
 
       <FlatList
@@ -84,10 +104,24 @@ export default function ComptabiliteIndex() {
         renderItem={({ item }) => (
           <ListRow
             title={item.titre}
-            subtitle={`${formatDateFR(item.date)} · ${item.sousTitre}`}
+            subtitle={
+              item.source === 'facture' ? (
+                <Text>
+                  {[formatDateFR(item.date), item.sousTitre].filter(Boolean).join(' · ')}
+                  {' · '}
+                  <Text style={styles.totalIndicatif}>
+                    {item.sens === 'entree' ? '+' : '-'}{formatMontant(item.montant ?? 0)}
+                  </Text>
+                </Text>
+              ) : (
+                formatDateFR(item.date)
+              )
+            }
             trailing={
               <Text style={[styles.montant, { color: item.sens === 'entree' ? colors.primary : colors.danger }]}>
-                {item.montant !== undefined ? `${item.sens === 'entree' ? '+' : '-'}${formatMontant(item.montant)}` : '—'}
+                {item.montantComptabilise !== undefined
+                  ? `${item.sens === 'entree' ? '+' : '-'}${formatMontant(item.montantComptabilise)}`
+                  : '—'}
               </Text>
             }
             onPress={() => {
@@ -138,6 +172,9 @@ const styles = StyleSheet.create({
   balanceCard: { alignItems: 'center' },
   balanceLabel: { fontSize: 12, color: colors.textMuted },
   balanceValeur: { fontSize: 22, fontWeight: '800' },
+  balanceAutre: { fontSize: 12, color: colors.textMuted },
   list: { paddingHorizontal: 16, paddingBottom: 160, gap: 10 },
   montant: { fontSize: 15, fontWeight: '700' },
+  separateurVertical: { fontWeight: '400', color: colors.textMuted },
+  totalIndicatif: { fontWeight: '700', color: colors.text },
 });

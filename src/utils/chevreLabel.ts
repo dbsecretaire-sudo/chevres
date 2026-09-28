@@ -39,7 +39,7 @@ export function categorieAnimal(c: Pick<Chevre, 'dateNaissance' | 'sexe'>): Cate
 export const LABEL_CATEGORIE_ANIMAL: Record<CategorieAnimal, string> = {
   chevre: 'Chèvres',
   bouc: 'Boucs',
-  cabrit: 'Cabrits',
+  cabrit: 'Cabris',
   vivante: 'Vivante',
   tout: 'Tout'
 };

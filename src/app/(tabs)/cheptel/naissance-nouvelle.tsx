@@ -120,11 +120,11 @@ export default function NouvelleNaissance() {
         placeholder="ex: FR12345678"
       />
 
-      <Text style={styles.sectionTitle}>Cabrits ({cabrits.length})</Text>
+      <Text style={styles.sectionTitle}>Cabris ({cabrits.length})</Text>
       {cabrits.map((cabrit, index) => (
         <Card key={cabrit.key} style={styles.cabritCard}>
           <View style={styles.cabritHeader}>
-            <Text style={styles.cabritTitle}>Cabrit {index + 1}</Text>
+            <Text style={styles.cabritTitle}>Cabri {index + 1}</Text>
             {cabrits.length > 1 && (
               <Button label="Retirer" variant="danger" onPress={() => supprimerCabrit(cabrit.key)} />
             )}
@@ -177,7 +177,7 @@ export default function NouvelleNaissance() {
       ))}
 
       <Button
-        label="+ Ajouter un cabrit"
+        label="+ Ajouter un cabri"
         variant="secondary"
         onPress={() => setCabrits((prev) => [...prev, nouveauCabrit()])}
       />

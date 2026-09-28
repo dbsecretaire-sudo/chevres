@@ -14,17 +14,9 @@ export function yearOf(isoDate: string): number {
   return Number.isFinite(year) ? year : new Date().getFullYear();
 }
 
-const MOIS_FR = [
-  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-];
-
-/** Formate une date ISO (YYYY-MM-DD) en format lisible français: "3 mars 2026" */
+/** Formate une date ISO (YYYY-MM-DD) en format français court: "26/09/2026" */
 export function formatDateFR(isoDate?: string): string {
-  if (!isoDate) return '—';
-  const [y, m, d] = isoDate.split('-').map(Number);
-  if (!y || !m || !d) return isoDate;
-  return `${d} ${MOIS_FR[m - 1]} ${y}`;
+  return formatDateShortFR(isoDate);
 }
 
 /** Formate une date ISO en format court: "03/03/2026" */
@@ -35,9 +27,17 @@ export function formatDateShortFR(isoDate?: string): string {
   return `${d}/${m}/${y}`;
 }
 
+const FORMATTEUR_MONTANT = new Intl.NumberFormat('fr-FR', {
+  style: 'currency',
+  currency: 'EUR',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Présentation comptable : séparateur de milliers, virgule décimale (ex: "1 000,00 €"). */
 export function formatMontant(montant?: number): string {
   if (montant === undefined || montant === null || Number.isNaN(montant)) return '—';
-  return `${montant.toFixed(2).replace('.', ',')} €`;
+  return FORMATTEUR_MONTANT.format(montant);
 }
 
 export function currentYear(): number {

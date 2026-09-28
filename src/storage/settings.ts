@@ -21,17 +21,7 @@ export interface AppSettings {
   driveFolderName?: string;
   driveAccountEmail?: string;
   derniereSynchronisation?: string; // ISO datetime
-  /** Effectif officiellement déclaré (ex: établissement de l'élevage) par année, pour comparaison dans le Bilan. */
-  declarations?: Record<string, number>;
   exploitation?: InfosExploitation;
-}
-
-export async function setDeclarationAnnee(annee: number, valeur: number | undefined): Promise<AppSettings> {
-  const current = await getSettings();
-  const declarations = { ...(current.declarations ?? {}) };
-  if (valeur === undefined) delete declarations[String(annee)];
-  else declarations[String(annee)] = valeur;
-  return updateSettings({ declarations });
 }
 
 const DEFAULTS: AppSettings = {

@@ -33,7 +33,7 @@ export function CheptelHeaderMenu() {
         title="Autres vues"
         options={[
           { label: 'Naissances', icon: 'paw', onPress: () => router.push('/cheptel/naissances') },
-          { label: 'Historique', icon: 'time', onPress: () => router.push('/cheptel/historique') },
+          // { label: 'Historique', icon: 'time', onPress: () => router.push('/cheptel/historique') },
           { label: 'Bilan annuel', icon: 'stats-chart', onPress: () => router.push('/cheptel/bilan') },
           { label: 'Exporter le cheptel', icon: 'download', onPress: () => setChoixFormat(true) },
         ]}

@@ -15,19 +15,35 @@ import type { Chevre } from '@/types/models';
 import { formatDateFR, yearOf } from '@/utils/dates';
 import { afficherBadgeRenouvellement, categorieAnimal, libelleChevre, statutLabel } from '@/utils/chevreLabel';
 
-type StatutFiltre = 'vivante' | 'morte' | 'tout';
+type StatutFiltre = 'vivante' | 'morte' | 'abattoir' | 'vendue' | 'autoconsommee' | 'mortne' | 'sorties' | 'tout';
 type CategorieFiltre = 'chevre' | 'bouc' | 'cabrit' | 'sansboucle' | 'tout';
 
 const OPTIONS_STATUT: { value: StatutFiltre; label: string }[] = [
   { value: 'vivante', label: 'Vivantes' },
   { value: 'morte', label: 'Mortes' },
+  { value: 'abattoir', label: 'Abattoir' },
+  { value: 'vendue', label: 'Vendues' },
+  { value: 'autoconsommee', label: 'Auto-consommées' },
+  { value: 'mortne', label: 'Mort-nées' },
+  { value: 'sorties', label: 'Toutes sorties' },
   { value: 'tout', label: 'Toutes' },
 ];
+
+const LABEL_STATUT_VIDE: Record<StatutFiltre, string> = {
+  vivante: 'vivant',
+  morte: 'mort',
+  abattoir: 'envoyé à l’abattoir',
+  vendue: 'vendu',
+  autoconsommee: 'auto-consommé',
+  mortne: 'mort-né',
+  sorties: 'sorti',
+  tout: '',
+};
 
 const OPTIONS_CATEGORIE: { value: CategorieFiltre; label: string }[] = [
   { value: 'chevre', label: 'Chèvres' },
   { value: 'bouc', label: 'Boucs' },
-  { value: 'cabrit', label: 'Cabrits' },
+  { value: 'cabrit', label: 'Cabris' },
   { value: 'sansboucle', label: 'Sans boucle' },
   { value: 'tout', label: 'Tous' },
 ];
@@ -35,7 +51,7 @@ const OPTIONS_CATEGORIE: { value: CategorieFiltre; label: string }[] = [
 const LABEL_CATEGORIE_FILTRE: Record<CategorieFiltre, string> = {
   chevre: 'chèvre',
   bouc: 'bouc',
-  cabrit: 'cabrit',
+  cabrit: 'cabri',
   sansboucle: 'animal sans boucle',
   tout: 'animal',
 };
@@ -70,10 +86,10 @@ function chevrePresenteAnnee(c: Chevre, annee: number): boolean {
   return yearOf(c.dateStatut) >= annee;
 }
 
-/** « Mortes » couvre tous les statuts de sortie (morte, abattoir, vendue, auto-consommée, mort-né). */
+/** « Toutes sorties » couvre tous les statuts de sortie (morte, abattoir, vendue, auto-consommée, mort-né) ; les autres valeurs correspondent chacune à un statut précis. */
 function matchStatut(c: Chevre, filtre: StatutFiltre): boolean {
   if (filtre === 'tout') return true;
-  if (filtre === 'morte') return c.statut !== 'vivante';
+  if (filtre === 'sorties') return c.statut !== 'vivante';
   return c.statut === filtre;
 }
 
@@ -126,6 +142,8 @@ export default function CheptelIndex() {
   const [tri, setTri] = useState<Tri>('boucle');
   const [dateAbattoirDebut, setDateAbattoirDebut] = useState('');
   const [dateAbattoirFin, setDateAbattoirFin] = useState('');
+  const [dateNaissanceDebut, setDateNaissanceDebut] = useState('');
+  const [dateNaissanceFin, setDateNaissanceFin] = useState('');
   const [anneeMorte, setAnneeMorte] = useState('');
   const [anneeRenouv, setAnneeRenouv] = useState('');
   const [anneePresence, setAnneePresence] = useState('');
@@ -183,6 +201,12 @@ export default function CheptelIndex() {
           if (!anneePresence.trim()) return true;
           return chevrePresenteAnnee(c, Number(anneePresence));
         }
+        if (triActif === 'naissance') {
+          if (!dateNaissanceDebut && !dateNaissanceFin) return true;
+          if (dateNaissanceDebut && c.dateNaissance < dateNaissanceDebut) return false;
+          if (dateNaissanceFin && c.dateNaissance > dateNaissanceFin) return false;
+          return true;
+        }
         return true;
       });
 
@@ -222,6 +246,8 @@ export default function CheptelIndex() {
     misesBas,
     dateAbattoirDebut,
     dateAbattoirFin,
+    dateNaissanceDebut,
+    dateNaissanceFin,
     anneeMorte,
     anneeRenouv,
     anneePresence,
@@ -241,16 +267,11 @@ export default function CheptelIndex() {
     })`,
   }));
 
+  const suffixeStatut = statutFiltre === 'tout' ? '' : ` ${LABEL_STATUT_VIDE[statutFiltre]}`;
   const emptyTitle =
-  categorieFiltre === 'tout'
-    ? statutFiltre === 'tout'
-      ? 'Aucun animal'
-      : `Aucun animal ${statutFiltre === 'vivante' ? 'vivant' : 'mort'}`
-    : statutFiltre === 'tout'
-      ? `Aucun ${LABEL_CATEGORIE_FILTRE[categorieFiltre]}`
-      : `Aucun ${LABEL_CATEGORIE_FILTRE[categorieFiltre]} ${
-          statutFiltre === 'vivante' ? 'vivant' : 'mort'
-        }`;
+    categorieFiltre === 'tout'
+      ? `Aucun animal${suffixeStatut}`
+      : `Aucun ${LABEL_CATEGORIE_FILTRE[categorieFiltre]}${suffixeStatut}`;
 
   return (
     <Screen scroll={false}>
@@ -299,6 +320,17 @@ export default function CheptelIndex() {
           />
         </View>
       </View>
+
+      {triActif === 'naissance' && (
+        <View style={styles.filtres}>
+          <View style={styles.flex1}>
+            <DateField label="Date de naissance — du" value={dateNaissanceDebut} onChange={setDateNaissanceDebut} />
+          </View>
+          <View style={styles.flex1}>
+            <DateField label="Date de naissance — au" value={dateNaissanceFin} onChange={setDateNaissanceFin} />
+          </View>
+        </View>
+      )}
 
       {triActif === 'abattoir' && (
         <View style={styles.filtres}>
@@ -364,7 +396,11 @@ export default function CheptelIndex() {
       )}
 
       <View style={styles.resultatRow}>
-        {triActif === 'abattoir' && (!!dateAbattoirDebut || !!dateAbattoirFin) ? (
+        {triActif === 'naissance' && (!!dateNaissanceDebut || !!dateNaissanceFin) ? (
+          <Pressable onPress={() => { setDateNaissanceDebut(''); setDateNaissanceFin(''); }}>
+            <Text style={styles.effacerTexte}>Effacer la date de naissance</Text>
+          </Pressable>
+        ) : triActif === 'abattoir' && (!!dateAbattoirDebut || !!dateAbattoirFin) ? (
           <Pressable onPress={() => { setDateAbattoirDebut(''); setDateAbattoirFin(''); }}>
             <Text style={styles.effacerTexte}>Effacer la date d’abattage</Text>
           </Pressable>
