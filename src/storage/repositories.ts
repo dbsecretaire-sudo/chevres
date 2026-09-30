@@ -3,6 +3,8 @@ import { yearOf } from '@/utils/dates';
 import { ageEnMois, categorieAnimal, cleTriChevre } from '@/utils/chevreLabel';
 import { LABEL_TYPE_AIDE, tauxImpositionAide } from '@/utils/planComptable';
 import type {
+  CategorieDepense,
+  CategorieRecette,
   Chevre,
   Controle,
   Facture,
@@ -10,6 +12,7 @@ import type {
   StatutChevre,
   TypeAide,
   TypeAliment,
+  TypeCarburant,
   Vente,
   VisiteVeterinaire,
 } from '@/types/models';
@@ -455,6 +458,12 @@ export async function facturesAnnees(): Promise<number[]> {
   return getYears('factures');
 }
 
+/** Toutes les factures, toutes années confondues, triées par date décroissante — utile pour lister les écritures liées à un tiers précis. */
+export async function listToutesFactures(): Promise<Facture[]> {
+  const items = await loadAllYears('factures');
+  return items.sort((a, b) => b.date.localeCompare(a.date));
+}
+
 export async function supprimerFacture(id: string): Promise<void> {
   await deleteRecord('factures', id);
 }
@@ -544,6 +553,43 @@ export async function calculerBilanAlimentation(annee: number): Promise<BilanAli
   };
 }
 
+export interface BilanCarburantType {
+  montant: number;
+  litrage: number;
+}
+
+export interface BilanCarburant {
+  parType: Record<TypeCarburant, BilanCarburantType>;
+  total: number;
+  totalLitrage: number;
+}
+
+/** Ventile les factures reçues catégorisées « Carburant » de l'année par type (gazole, essence, GNR). */
+export async function calculerBilanCarburant(annee: number): Promise<BilanCarburant> {
+  const factures = await listFactures(annee);
+  const parType: Record<TypeCarburant, BilanCarburantType> = {
+    gazoil: { montant: 0, litrage: 0 },
+    essence: { montant: 0, litrage: 0 },
+    gnr: { montant: 0, litrage: 0 },
+  };
+  for (const f of factures) {
+    if (f.type !== 'recue' || f.categorieDepense !== 'carburant') continue;
+    if (f.lignesCarburant && f.lignesCarburant.length > 0) {
+      for (const ligne of f.lignesCarburant) {
+        parType[ligne.type].montant += ligne.montant;
+        parType[ligne.type].litrage += ligne.litrage ?? 0;
+      }
+    } else if (f.typeCarburant) {
+      parType[f.typeCarburant].montant += f.montant;
+      parType[f.typeCarburant].litrage += f.litrage ?? 0;
+    }
+  }
+  const total = Object.values(parType).reduce((s, t) => s + t.montant, 0);
+  const totalLitrage = Object.values(parType).reduce((s, t) => s + t.litrage, 0);
+
+  return { parType, total, totalLitrage };
+}
+
 // ---------------------------------------------------------------------------
 // Ventes (lait et fromage)
 // ---------------------------------------------------------------------------
@@ -561,6 +607,12 @@ export async function listVentes(annee: number): Promise<Vente[]> {
 
 export async function ventesAnnees(): Promise<number[]> {
   return getYears('ventes');
+}
+
+/** Toutes les ventes, toutes années confondues, triées par date décroissante — utile pour lister les écritures liées à un client précis. */
+export async function listToutesVentes(): Promise<Vente[]> {
+  const items = await loadAllYears('ventes');
+  return items.sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function supprimerVente(id: string): Promise<void> {
@@ -589,9 +641,7 @@ export async function saveVente(
  * représentatif de la santé financière de l'activité — des soldes, sans jamais changer le montant
  * réel affiché sur la facture elle-même.
  */
-export function montantHorsAutre(f: Facture): number {
-  if (f.type === 'recue' && f.categorieDepense === 'autre') return 0;
-  if (f.type === 'emise' && f.categorieRecette === 'autre') return 0;
+export function montantAlimentationHorsAutre(f: Facture): number {
   if (f.categorieDepense === 'alimentation') {
     const partAutre = (f.lignesAlimentation ?? [])
       .filter((l) => l.type === 'autre')
@@ -600,6 +650,7 @@ export function montantHorsAutre(f: Facture): number {
   }
   return f.montant;
 }
+
 
 export interface Transaction {
   id: string;
@@ -637,7 +688,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     id: f.id,
     date: f.date,
     montant: f.montant,
-    montantComptabilise: montantHorsAutre(f),
+    montantComptabilise: montantAlimentationHorsAutre(f),
     sens: f.type === 'emise' ? 'entree' : 'sortie',
     titre: f.tiers,
     sousTitre:
@@ -650,6 +701,67 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
   }));
 
   return [...deVentes, ...deFactures].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+const ORDRE_CATEGORIE_DEPENSE: CategorieDepense[] = [
+  'alimentation',
+  'carburant',
+  'reparation',
+  'veterinaire',
+  'production',
+  'impots',
+  'autre',
+];
+const ORDRE_CATEGORIE_RECETTE: CategorieRecette[] = ['lait', 'fromage', 'cabris', 'aide', 'autre'];
+
+export interface DetailCategorie<C extends string> {
+  categorie: C;
+  montant: number;
+}
+
+export interface DetailComptable {
+  depenses: DetailCategorie<CategorieDepense>[];
+  recettes: DetailCategorie<CategorieRecette>[];
+  totalDepenses: number;
+  totalRecettes: number;
+}
+
+/**
+ * Ventile les écritures de l'année par catégorie de dépense/recette, montant réel (sans exclure
+ * « Autre », contrairement au solde principal) — sert à l'écran Détail du menu Comptabilité.
+ */
+export async function calculerDetailComptable(annee: number): Promise<DetailComptable> {
+  const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+
+  const depensesParCategorie = new Map<CategorieDepense, number>();
+  const recettesParCategorie = new Map<CategorieRecette, number>();
+
+  for (const v of ventes) {
+    recettesParCategorie.set(v.categorie, (recettesParCategorie.get(v.categorie) ?? 0) + (v.prix ?? 0));
+  }
+  for (const f of factures) {
+    if (f.type === 'recue' && f.categorieDepense) {
+      depensesParCategorie.set(f.categorieDepense, (depensesParCategorie.get(f.categorieDepense) ?? 0) + f.montant);
+    } else if (f.type === 'emise' && f.categorieRecette) {
+      recettesParCategorie.set(f.categorieRecette, (recettesParCategorie.get(f.categorieRecette) ?? 0) + f.montant);
+    }
+  }
+
+  const depenses = ORDRE_CATEGORIE_DEPENSE.map((categorie) => ({
+    categorie,
+    montant: depensesParCategorie.get(categorie) ?? 0,
+  }));
+  const recettes = ORDRE_CATEGORIE_RECETTE.map((categorie) => ({
+    categorie,
+    montant: recettesParCategorie.get(categorie) ?? 0,
+  }));
+
+  return {
+    depenses,
+    recettes,
+    totalDepenses: depenses.reduce((s, d) => s + d.montant, 0),
+    totalRecettes: recettes.reduce((s, r) => s + r.montant, 0),
+  };
 }
 
 // ---------------------------------------------------------------------------

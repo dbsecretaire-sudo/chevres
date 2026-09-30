@@ -3,12 +3,16 @@ import { loadYear, reindexYear, saveYear } from '@/storage/localStore';
 import { toutesLesAnneesConnues } from '@/storage/repositories';
 import { getSettings, updateSettings } from '@/storage/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/storage/fournisseurs';
+import { listClients, remplacerTousClients } from '@/storage/clients';
+import { listComptesPcg, remplacerTousComptesPcg } from '@/storage/comptesPcg';
 import { ensureFolder, upsertFileText, downloadFileText, findFile, listFiles } from './driveApi';
 import type { Categorie } from '@/types/models';
 
 const ROOT_FOLDER_NAME = 'Troupeau Chèvres';
 const EXPLOITATION_FILE_NAME = 'exploitation.json';
 const FOURNISSEURS_FILE_NAME = 'fournisseurs.json';
+const CLIENTS_FILE_NAME = 'clients.json';
+const COMPTES_PCG_FILE_NAME = 'comptes-pcg.json';
 
 export async function ensureRootFolder(accessToken: string): Promise<string> {
   const folder = await ensureFolder(accessToken, ROOT_FOLDER_NAME);
@@ -46,6 +50,42 @@ export async function tirerFournisseurs(accessToken: string, folderId: string): 
   const json = await downloadFileText(accessToken, file.id);
   try {
     await remplacerTousFournisseurs(JSON.parse(json));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie la liste des clients vers Google Drive. */
+export async function pousserClients(accessToken: string, folderId: string): Promise<void> {
+  const clients = await listClients();
+  await upsertFileText(accessToken, CLIENTS_FILE_NAME, folderId, JSON.stringify(clients));
+}
+
+/** Récupère la liste des clients depuis Google Drive, si présente (remplace la liste locale). */
+export async function tirerClients(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, CLIENTS_FILE_NAME, folderId);
+  if (!file) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    await remplacerTousClients(JSON.parse(json));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie la liste des comptes PCG vers Google Drive. */
+export async function pousserComptesPcg(accessToken: string, folderId: string): Promise<void> {
+  const comptes = await listComptesPcg();
+  await upsertFileText(accessToken, COMPTES_PCG_FILE_NAME, folderId, JSON.stringify(comptes));
+}
+
+/** Récupère la liste des comptes PCG depuis Google Drive, si présente (remplace la liste locale). */
+export async function tirerComptesPcg(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, COMPTES_PCG_FILE_NAME, folderId);
+  if (!file) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    await remplacerTousComptesPcg(JSON.parse(json));
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
   }
@@ -96,6 +136,8 @@ export async function pousserToutesAnnees(
   }
   await pousserInfosExploitation(accessToken, folderId);
   await pousserFournisseurs(accessToken, folderId);
+  await pousserClients(accessToken, folderId);
+  await pousserComptesPcg(accessToken, folderId);
 }
 
 /** Déduit les années présentes dans le dossier Drive à partir des noms de fichiers. */
@@ -125,4 +167,6 @@ export async function tirerToutesAnnees(
   }
   await tirerInfosExploitation(accessToken, folderId);
   await tirerFournisseurs(accessToken, folderId);
+  await tirerClients(accessToken, folderId);
+  await tirerComptesPcg(accessToken, folderId);
 }

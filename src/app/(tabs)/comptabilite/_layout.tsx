@@ -21,6 +21,7 @@ export default function ComptabiliteLayout() {
       />
       <Stack.Screen name="facture/[id]" options={{ title: 'Facture' }} />
       <Stack.Screen name="vente/[id]" options={{ title: 'Vente' }} />
+      <Stack.Screen name="detail" options={{ title: 'Détail' }} />
       <Stack.Screen name="fiscalite-impots" options={{ title: 'Impôts (micro-BA)' }} />
       <Stack.Screen name="fiscalite-rsa" options={{ title: 'Déclaration RSA' }} />
       <Stack.Screen name="fournisseurs/index" options={{ title: 'Fournisseurs' }} />
@@ -35,6 +36,12 @@ export default function ComptabiliteLayout() {
         options={{ title: 'Nouveau compte', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
       />
       <Stack.Screen name="comptes-pcg/[id]" options={{ title: 'Compte PCG' }} />
+      <Stack.Screen name="clients/index" options={{ title: 'Clients' }} />
+      <Stack.Screen
+        name="clients/nouveau"
+        options={{ title: 'Nouveau client', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+      />
+      <Stack.Screen name="clients/[id]" options={{ title: 'Client' }} />
     </Stack>
   );
 }

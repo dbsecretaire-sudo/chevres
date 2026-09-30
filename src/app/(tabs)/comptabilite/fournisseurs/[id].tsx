@@ -7,13 +7,16 @@ import { Screen } from '@/components/Screen';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { FormField } from '@/components/FormField';
+import { ListRow } from '@/components/ListRow';
 import { OptionsModal } from '@/components/OptionsModal';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { InfoModal } from '@/components/InfoModal';
 
 import { colors } from '@/theme/colors';
 import { getFournisseur, enregistrerFournisseur, supprimerFournisseur } from '@/storage/fournisseurs';
-import type { Fournisseur } from '@/types/models';
+import { listToutesFactures } from '@/storage/repositories';
+import { formatDateFR, formatMontant } from '@/utils/dates';
+import type { Facture, Fournisseur } from '@/types/models';
 
 export default function FicheFournisseur() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +24,7 @@ export default function FicheFournisseur() {
 
   const [fournisseur, setFournisseur] = useState<Fournisseur | null>(null);
   const [form, setForm] = useState<Fournisseur | null>(null);
+  const [ecritures, setEcritures] = useState<Facture[]>([]);
 
   const [editing, setEditing] = useState(false);
   const [menuOuvert, setMenuOuvert] = useState(false);
@@ -32,6 +36,12 @@ export default function FicheFournisseur() {
     const f = await getFournisseur(id);
     setFournisseur(f ?? null);
     setForm(f ?? null);
+    if (f) {
+      const toutes = await listToutesFactures();
+      setEcritures(toutes.filter((fac) => fac.type === 'recue' && fac.tiers === f.nomEntreprise));
+    } else {
+      setEcritures([]);
+    }
   }, [id]);
 
   useFocusEffect(useCallback(() => { charger(); }, [charger]));
@@ -143,6 +153,36 @@ export default function FicheFournisseur() {
             </View>
           </Card>
         )}
+
+        {!editing && ecritures.length > 0 && (
+          <Card style={styles.totalCard}>
+            <Text style={styles.totalLabel}>Total payé à ce fournisseur</Text>
+            <Text style={styles.totalValeur}>
+              {formatMontant(ecritures.reduce((s, f) => s + f.montant, 0))}
+            </Text>
+          </Card>
+        )}
+
+        {!editing && (
+          <View style={styles.ecrituresBloc}>
+            <Text style={styles.ecrituresTitre}>
+              Écritures liées{ecritures.length > 0 ? ` (${ecritures.length})` : ''}
+            </Text>
+            {ecritures.length === 0 ? (
+              <Text style={styles.ecrituresVide}>Aucune écriture liée à ce fournisseur pour l’instant.</Text>
+            ) : (
+              ecritures.map((f) => (
+                <ListRow
+                  key={f.id}
+                  title={f.description || 'Facture'}
+                  subtitle={formatDateFR(f.date)}
+                  trailing={<Text style={styles.montantEcriture}>-{formatMontant(f.montant)}</Text>}
+                  onPress={() => router.push(`/comptabilite/facture/${f.id}`)}
+                />
+              ))
+            )}
+          </View>
+        )}
       </ScrollView>
 
       <ConfirmModal
@@ -173,4 +213,11 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12 },
   flex1: { flex: 1 },
   textarea: { minHeight: 70, textAlignVertical: 'top' },
+  totalCard: { alignItems: 'center', gap: 2 },
+  totalLabel: { fontSize: 12, color: colors.textMuted },
+  totalValeur: { fontSize: 20, fontWeight: '800', color: colors.danger },
+  ecrituresBloc: { gap: 10 },
+  ecrituresTitre: { fontSize: 15, fontWeight: '700', color: colors.text },
+  ecrituresVide: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
+  montantEcriture: { fontSize: 15, fontWeight: '700', color: colors.danger },
 });

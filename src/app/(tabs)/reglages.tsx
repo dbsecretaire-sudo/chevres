@@ -126,7 +126,7 @@ export default function Reglages() {
       if (resultat.annule) return;
       setResultatImport({
         titre: 'Sauvegarde restaurée',
-        message: `${resultat.animaux} animal/animaux et ${resultat.fournisseurs} fournisseur(s) importés.`,
+        message: `${resultat.animaux} animal/animaux, ${resultat.fournisseurs} fournisseur(s), ${resultat.clients} client(s) et ${resultat.comptesPcg} compte(s) PCG importés.`,
       });
     } catch (e: any) {
       setResultatImport({ titre: 'Erreur d’import', message: e?.message ?? String(e) });

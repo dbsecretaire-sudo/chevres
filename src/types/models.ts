@@ -40,6 +40,7 @@ export type CategorieDepense =
   | 'carburant'
   | 'reparation'
   | 'veterinaire'
+  | 'production'
   | 'impots'
   | 'autre';
 
@@ -61,15 +62,29 @@ export type TypeAide =
 
 export type TypeAliment = 'mais' | 'luzerne' | 'foin' | 'paille' | 'autre';
 
-export type TypeCarburant = 'gazoil' | 'essence' | 'gnr';
+export type TypeCarburant = 'gazoil' | 'essence' | 'gnr' | 'autre';
+
+/** Unités de conditionnement du fourrage (luzerne, foin, paille) — la quantité en kg est dérivée du nombre d'unités. */
+export type UniteConditionnement = 'matela' | 'botte' | 'ballot';
 
 export interface LigneAlimentation {
   type: TypeAliment;
   montant: number;
-  /** Quantité en kg, facultative — utile pour calculer le kg par animal en plus du coût. */
+  /** Quantité en kg, facultative — utile pour calculer le kg par animal en plus du coût. Pour luzerne/foin/paille, dérivée de nombreUnitesConditionnement × poids unitaire. */
   quantiteKg?: number;
   /** Précision libre quand type === 'autre' (ex: "Frais de livraison", "Compléments minéraux"). */
   typeLibre?: string;
+  /** Uniquement pour type luzerne/foin/paille : conditionnement saisi (conservé pour ré-affichage lors de la modification). */
+  uniteConditionnement?: UniteConditionnement;
+  /** Uniquement pour type luzerne/foin/paille : nombre d'unités saisi (conservé pour ré-affichage lors de la modification). */
+  nombreUnitesConditionnement?: number;
+}
+
+export interface LigneCarburant {
+  type: TypeCarburant;
+  montant: number;
+  /** Litrage facultatif — utile pour les aides calculées au litre (ex: GNR). */
+  litrage?: number;
 }
 
 export interface Facture {
@@ -102,10 +117,12 @@ export interface Facture {
    * traitement réel peut différer d'une aide à l'autre (à confirmer avec un comptable/CGA).
    */
   tauxImposition?: number;
-  /** Uniquement pour categorieDepense === 'carburant' : utile pour les aides calculées au litre (ex: GNR). */
+  /** Ancien format (une facture = un seul type de carburant) — conservé pour les factures existantes, non écrit par les nouvelles saisies (voir lignesCarburant). */
   litrage?: number;
-  /** Uniquement pour categorieDepense === 'carburant' : certaines aides (ex: GNR) ne concernent qu'un type précis. */
+  /** Ancien format — voir lignesCarburant. */
   typeCarburant?: TypeCarburant;
+  /** Uniquement si categorieDepense === 'carburant' : une facture peut regrouper plusieurs pleins/types. */
+  lignesCarburant?: LigneCarburant[];
   /**
    * Uniquement pour categorieDepense === 'autre' ou categorieRecette === 'autre' : n° de compte PCG
    * choisi manuellement (les autres catégories ont un compte fixe, voir planComptable.ts).
@@ -135,6 +152,10 @@ export interface Vente {
    * selon votre régime de TVA (franchise en base, remboursement forfaitaire agricole, etc.).
    */
   tauxTva?: number;
+  /** Nom du client, facultatif — préremplissable depuis la fiche client. */
+  client?: string;
+  /** Uniquement pour categorie === 'cabris' : poids total vendu, facultatif. */
+  poidsKg?: number;
 }
 
 export interface Controle {
@@ -158,6 +179,16 @@ export interface Fournisseur {
   tva?: string;
   rib?: string;
   adressePostale: string;
+}
+
+/** Fiche client, réutilisable pour préremplir le client d'une vente de production (lait, fromage, cabris). */
+export interface Client {
+  id: string;
+  nom: string;
+  prenom?: string;
+  telephone?: string;
+  email?: string;
+  adressePostale?: string;
 }
 
 export type Categorie =

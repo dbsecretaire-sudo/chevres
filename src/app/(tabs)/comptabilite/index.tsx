@@ -7,6 +7,7 @@ import { ListRow } from '@/components/ListRow';
 import { EmptyState } from '@/components/EmptyState';
 import { YearPicker } from '@/components/YearPicker';
 import { Fab } from '@/components/Fab';
+import { FormField } from '@/components/FormField';
 import { FiltreTransactionsModal, type FiltresTransactions } from '@/components/FiltreTransactionsModal';
 import { colors } from '@/theme/colors';
 import { useAppSettings } from '@/context/AppSettingsContext';
@@ -22,6 +23,7 @@ export default function ComptabiliteIndex() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filtres, setFiltres] = useState<FiltresTransactions>(FILTRES_VIDES);
   const [filtreOuvert, setFiltreOuvert] = useState(false);
+  const [recherche, setRecherche] = useState('');
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste] = await Promise.all([
@@ -37,6 +39,7 @@ export default function ComptabiliteIndex() {
   const filtrees = useMemo(() => {
     const min = filtres.montantMin ? Number(filtres.montantMin.replace(',', '.')) : undefined;
     const max = filtres.montantMax ? Number(filtres.montantMax.replace(',', '.')) : undefined;
+    const recherchee = recherche.trim().toLowerCase();
     return transactions.filter((t) => {
       if (filtres.dateDebut && t.date < filtres.dateDebut) return false;
       if (filtres.dateFin && t.date > filtres.dateFin) return false;
@@ -45,9 +48,19 @@ export default function ComptabiliteIndex() {
         if (min !== undefined && t.montant < min) return false;
         if (max !== undefined && t.montant > max) return false;
       }
+      if (recherchee) {
+        const champs = [
+          t.titre,
+          t.sousTitre,
+          t.date ? formatDateFR(t.date) : '',
+          t.montant !== undefined ? String(t.montant).replace('.', ',') : '',
+          t.montantComptabilise !== undefined ? String(t.montantComptabilise).replace('.', ',') : '',
+        ];
+        if (!champs.some((c) => (c ?? '').toString().toLowerCase().includes(recherchee))) return false;
+      }
       return true;
     });
-  }, [transactions, filtres]);
+  }, [transactions, filtres, recherche]);
 
   // « Autre » reste affiché dans la liste à titre indicatif (montant réel), mais sa part n'est pas
   // représentative de la santé financière de l'activité — exclue du solde via montantComptabilise.
@@ -71,20 +84,31 @@ export default function ComptabiliteIndex() {
 
         <Card style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>
-            Solde {filtresActifs ? '(filtré)' : settings.anneeActive} (hors Autre)
+            Solde {filtresActifs ? '(filtré)' : settings.anneeActive} (hors Alimentation, Autre)
           </Text>
           <Text style={[styles.balanceValeur, { color: balance >= 0 ? colors.primary : colors.danger }]}>
             {formatMontant(balance)}
           </Text>
-          <Text style={styles.montant}>
-            <Text style={{ color: colors.primary }}>{formatMontant(totalRentrees)}</Text>
-            <Text style={styles.separateurVertical}> | </Text>
-            <Text style={{ color: colors.danger }}>-{formatMontant(totalDepenses)}</Text>
-          </Text>
-          <Text style={styles.balanceAutre}>{formatMontant(balanceAvecAutre)} Autre inclus</Text>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statBloc}>
+              <Text style={styles.statLabel}>Rentrées</Text>
+              <Text style={[styles.statValeur, { color: colors.primary }]}>{formatMontant(totalRentrees)}</Text>
+            </View>
+            <View style={styles.statSeparateur} />
+            <View style={styles.statBloc}>
+              <Text style={styles.statLabel}>Dépenses</Text>
+              <Text style={[styles.statValeur, { color: colors.danger }]}>-{formatMontant(totalDepenses)}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.balanceAutre}>Solde toutes catégories incluses : {formatMontant(balanceAvecAutre)}</Text>
         </Card>
 
         <View style={styles.row}>
+          <View style={styles.flex1}>
+            <FormField value={recherche} onChangeText={setRecherche} placeholder="Rechercher…" />
+          </View>
           <Pressable style={styles.filtreBouton} onPress={() => setFiltreOuvert(true)}>
             <Text style={styles.filtreTexte}>{filtresActifs ? 'Filtres actifs' : 'Filtrer'}</Text>
           </Pressable>
@@ -165,6 +189,7 @@ export default function ComptabiliteIndex() {
 const styles = StyleSheet.create({
   top: { padding: 16, gap: 12 },
   row: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  flex1: { flex: 1 },
   filtreBouton: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.badgeBg },
   filtreTexte: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
   filtreEffacer: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.danger + '22' },
@@ -172,9 +197,13 @@ const styles = StyleSheet.create({
   balanceCard: { alignItems: 'center' },
   balanceLabel: { fontSize: 12, color: colors.textMuted },
   balanceValeur: { fontSize: 22, fontWeight: '800' },
-  balanceAutre: { fontSize: 12, color: colors.textMuted },
+  balanceAutre: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, marginTop: 8 },
+  statBloc: { alignItems: 'center', minWidth: 80 },
+  statSeparateur: { width: 1, height: 28, backgroundColor: colors.border },
+  statLabel: { fontSize: 11, color: colors.textMuted, marginBottom: 2 },
+  statValeur: { fontSize: 15, fontWeight: '700' },
   list: { paddingHorizontal: 16, paddingBottom: 160, gap: 10 },
   montant: { fontSize: 15, fontWeight: '700' },
-  separateurVertical: { fontWeight: '400', color: colors.textMuted },
   totalIndicatif: { fontWeight: '700', color: colors.text },
 });

@@ -6,6 +6,8 @@ import { useAccentColor } from '@/theme/AccentColorContext';
 export interface SelectOption<T extends string> {
   value: T;
   label: string;
+  /** Libellé affiché une fois sélectionné, dans le champ fermé — si absent, retombe sur `label` (utilisé dans la liste déroulante, lui, toujours affiché en entier). */
+  shortLabel?: string;
 }
 
 interface Props<T extends string> {
@@ -16,9 +18,11 @@ interface Props<T extends string> {
   required?: boolean;
   /** Affiche un champ de recherche (filtre sur la valeur et le libellé) — utile pour les longues listes. */
   searchable?: boolean;
+  /** Texte affiché quand aucune option ne correspond à value (ex: rien de sélectionné). */
+  placeholder?: string;
 }
 
-export function SelectField<T extends string>({ label, value, options, onChange, required, searchable }: Props<T>) {
+export function SelectField<T extends string>({ label, value, options, onChange, required, searchable, placeholder }: Props<T>) {
   const accent = useAccentColor();
   const [open, setOpen] = useState(false);
   const [recherche, setRecherche] = useState('');
@@ -42,7 +46,9 @@ export function SelectField<T extends string>({ label, value, options, onChange,
         {required ? <Text style={styles.required}> *</Text> : null}
       </Text>
       <Pressable style={styles.input} onPress={() => setOpen(true)}>
-        <Text style={styles.value}>{current?.label ?? 'Sélectionner…'}</Text>
+        <Text style={current ? styles.value : styles.placeholder}>
+          {current ? (current.shortLabel ?? current.label) : (placeholder ?? 'Sélectionner…')}
+        </Text>
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={fermer}>
@@ -97,6 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   value: { fontSize: 16, color: colors.text },
+  placeholder: { fontSize: 16, color: colors.textMuted },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.35)',

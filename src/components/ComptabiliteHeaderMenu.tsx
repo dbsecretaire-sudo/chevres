@@ -36,7 +36,9 @@ export function ComptabiliteHeaderMenu() {
         onClose={() => setOuvert(false)}
         title="Comptabilité"
         options={[
+          { label: 'Détail', icon: 'bar-chart', onPress: () => router.push('/comptabilite/detail') },
           { label: 'Fournisseurs', icon: 'people', onPress: () => router.push('/comptabilite/fournisseurs') },
+          { label: 'Clients', icon: 'person', onPress: () => router.push('/comptabilite/clients') },
           { label: 'Comptes PCG', icon: 'list', onPress: () => router.push('/comptabilite/comptes-pcg') },
           { label: 'Générer un plan comptable', icon: 'document-text', onPress: () => setChoixFormat(true) },
           { label: 'Impôts (micro-BA)', icon: 'receipt', onPress: () => router.push('/comptabilite/fiscalite-impots') },

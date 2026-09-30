@@ -27,6 +27,7 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { InfoModal } from '@/components/InfoModal';
 
 import { colors } from '@/theme/colors';
+import { COMPTE_PAR_RECETTE } from '@/utils/planComptable';
 
 import {
   getVente,
@@ -140,9 +141,11 @@ export default function FicheVente() {
     }
 
     try {
-      await saveVente(form);
+      const nettoye: Vente = { ...form, client: form.client?.trim() || undefined };
+      await saveVente(nettoye);
 
-      setVente(form);
+      setVente(nettoye);
+      setForm(nettoye);
       setEditing(false);
     } catch (error) {
       console.error(error);
@@ -279,9 +282,25 @@ export default function FicheVente() {
               Quantité : {libelleQuantite(vente)}
             </Text>
 
+            {vente.categorie === 'cabris' && vente.poidsKg !== undefined ? (
+              <Text style={styles.line}>
+                Poids : {vente.poidsKg} kg
+              </Text>
+            ) : null}
+
             <Text style={styles.line}>
               Montant : {vente.prix?.toFixed(2)} €
             </Text>
+
+            <Text style={styles.line}>
+              Compte PCG : {COMPTE_PAR_RECETTE[vente.categorie].numero} — {COMPTE_PAR_RECETTE[vente.categorie].libelle}
+            </Text>
+
+            {vente.client ? (
+              <Text style={styles.line}>
+                Client : {vente.client}
+              </Text>
+            ) : null}
 
             <Button
               label="Modifier la vente"
@@ -330,21 +349,38 @@ export default function FicheVente() {
               }
             />
 
-            <FormField
-              label="Quantité"
-              value={String(form.quantite)}
-              onChangeText={(value) =>
-                setForm({
-                  ...form,
-                  quantite:
-                    Number(
-                      value.replace(',', '.'),
-                    ) || 0,
-                })
-              }
-              keyboardType="decimal-pad"
-              placeholder="0"
-            />
+            <View style={styles.row}>
+              <View style={styles.flex1}>
+                <FormField
+                  label="Quantité"
+                  value={String(form.quantite)}
+                  onChangeText={(value) =>
+                    setForm({
+                      ...form,
+                      quantite:
+                        Number(
+                          value.replace(',', '.'),
+                        ) || 0,
+                    })
+                  }
+                  keyboardType="decimal-pad"
+                  placeholder="0"
+                />
+              </View>
+              {form.categorie === 'cabris' && (
+                <View style={styles.flex1}>
+                  <FormField
+                    label="Poids (kg)"
+                    value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
+                    onChangeText={(value) =>
+                      setForm({ ...form, poidsKg: Number(value.replace(',', '.')) || undefined })
+                    }
+                    keyboardType="decimal-pad"
+                    placeholder="Facultatif"
+                  />
+                </View>
+              )}
+            </View>
 
             {form.categorie === 'fromage' ? (
             <SelectField
@@ -394,6 +430,13 @@ export default function FicheVente() {
                 keyboardType="decimal-pad"
                 placeholder={form.categorie === 'lait' ? 'Facultatif' : '0,00'}
                 />
+
+            <FormField
+              label="Client"
+              value={form.client ?? ''}
+              onChangeText={(client) => setForm({ ...form, client })}
+              placeholder="Facultatif"
+            />
 
             <View style={styles.row}>
               <Button

@@ -2,17 +2,20 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-na
 import { colors } from '@/theme/colors';
 
 interface Props extends TextInputProps {
-  label: string;
+  /** Facultatif : quand absent, aucun libellé n'est affiché au-dessus du champ (utile pour un champ auto-porté par son placeholder). */
+  label?: string;
   required?: boolean;
 }
 
 export function FormField({ label, required, style, ...rest }: Props) {
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.label}>
-        {label}
-        {required ? <Text style={styles.required}> *</Text> : null}
-      </Text>
+      {label ? (
+        <Text style={styles.label}>
+          {label}
+          {required ? <Text style={styles.required}> *</Text> : null}
+        </Text>
+      ) : null}
       <TextInput
         style={[styles.input, style]}
         placeholderTextColor={colors.textMuted}

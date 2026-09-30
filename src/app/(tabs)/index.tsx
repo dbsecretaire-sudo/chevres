@@ -13,13 +13,17 @@ import {
   listFactures,
   listVentes,
   listVisitesVeterinaire,
-  montantHorsAutre,
+  montantAlimentationHorsAutre,
 } from '@/storage/repositories';
 import { categorieAnimal } from '@/utils/chevreLabel';
 import type { Chevre } from '@/types/models';
 
 function formatKg(kg: number): string {
   return `${kg.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kg`;
+}
+
+function formatG(g: number): string {
+  return `${g.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} g`;
 }
 
 /** Cabrit = moins de 6 mois OU pas encore bouclé (même si plus âgé) ; sinon chèvre/bouc selon le sexe. */
@@ -37,6 +41,7 @@ interface Stats {
   ventesTotal: number;
   soldeFactures: number;
   kgParAnimalAlimentation?: number;
+  gParAnimalParJour: number | undefined;
   derniereVisite?: string;
 }
 
@@ -72,10 +77,10 @@ export default function Accueil() {
     // compris la part « Autre » à l'intérieur d'une facture Alimentation regroupant plusieurs lignes.
     const facturesEmises = factures
       .filter((f) => f.type === 'emise')
-      .reduce((sum, f) => sum + montantHorsAutre(f), 0);
+      .reduce((sum, f) => sum + montantAlimentationHorsAutre(f), 0);
     const facturesRecues = factures
       .filter((f) => f.type === 'recue')
-      .reduce((sum, f) => sum + montantHorsAutre(f), 0);
+      .reduce((sum, f) => sum + montantAlimentationHorsAutre(f), 0);
 
     const entrees = ventesTotal + facturesEmises;
     const soldeFactures = entrees - facturesRecues;
@@ -89,6 +94,7 @@ export default function Accueil() {
       ventesTotal,
       soldeFactures,
       kgParAnimalAlimentation: alimentation.kgParAnimal,
+      gParAnimalParJour: alimentation.gParAnimalParJour,
       derniereVisite: visites[0]?.date,
     });
   }, [settings.anneeActive]);
@@ -118,7 +124,7 @@ export default function Accueil() {
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.gridCard, pressed && styles.pressed]}
-          onPress={() => router.push('/cheptel')}
+          onPress={() => router.push('/cheptel/bilan')}
         >
           <Card>
             <Text style={styles.statValue}>{stats?.cabritsAnnee ?? '—'}</Text>
@@ -134,9 +140,9 @@ export default function Accueil() {
         >
           <Card>
             <Text style={styles.statValue}>
-              {stats?.kgParAnimalAlimentation !== undefined ? formatKg(stats.kgParAnimalAlimentation) : '—'}
+              {stats?.gParAnimalParJour !== undefined ? formatG(stats.gParAnimalParJour) : '—'}
             </Text>
-            <Text style={styles.statLabel}>Kg d’aliment / animal</Text>
+            <Text style={styles.statLabel}>d’aliment / animal / jour</Text>
           </Card>
         </Pressable>
         <Pressable

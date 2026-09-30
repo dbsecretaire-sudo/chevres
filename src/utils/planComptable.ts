@@ -1,4 +1,4 @@
-import type { CategorieDepense, CategorieRecette, TypeAide, TypeAliment, TypeCarburant } from '@/types/models';
+import type { CategorieDepense, CategorieRecette, TypeAide, TypeAliment, TypeCarburant, UniteConditionnement } from '@/types/models';
 
 export interface CompteComptable {
   numero: string;
@@ -16,6 +16,7 @@ export const COMPTE_PAR_DEPENSE: Record<CategorieDepense, CompteComptable> = {
   carburant: { numero: '606110', libelle: 'Achats non stockés — Carburants' },
   reparation: { numero: '615400', libelle: 'Entretien et réparations — Matériel' },
   veterinaire: { numero: '622600', libelle: 'Honoraires vétérinaires' },
+  production: { numero: '601500', libelle: 'Achats stockés — Fournitures liées à la production (sel, emballages...)' },
   impots: { numero: '635000', libelle: 'Autres impôts, taxes et versements assimilés' },
   autre: { numero: '606800', libelle: 'Autres matières et fournitures' },
 };
@@ -82,6 +83,7 @@ export const LABEL_CATEGORIE_DEPENSE: Record<CategorieDepense, string> = {
   carburant: 'Carburant',
   reparation: 'Réparation',
   veterinaire: 'Vétérinaire',
+  production: 'Production',
   impots: 'Impôts & taxes',
   autre: 'Autre',
 };
@@ -102,10 +104,27 @@ export const LABEL_TYPE_ALIMENT: Record<TypeAliment, string> = {
   autre: 'Autre',
 };
 
+/** Types d'aliment vendus au conditionnement (matelas/ballot) plutôt qu'au kg direct. */
+export const TYPES_ALIMENT_CONDITIONNES: TypeAliment[] = ['luzerne', 'foin', 'paille'];
+
+export const LABEL_UNITE_CONDITIONNEMENT: Record<UniteConditionnement, string> = {
+  matela: 'Matelas',
+  botte: 'Botte',
+  ballot: 'Ballot',
+};
+
+/** Poids approximatif (kg) d'une unité de conditionnement (luzerne, foin, paille). */
+export const POIDS_UNITE_CONDITIONNEMENT: Record<UniteConditionnement, number> = {
+  matela: 17,
+  botte: 30,
+  ballot: 360,
+};
+
 export const LABEL_TYPE_CARBURANT: Record<TypeCarburant, string> = {
   gazoil: 'Gazole',
   essence: 'Essence',
   gnr: 'GNR (Gazole Non Routier)',
+  autre: 'Autre'
 };
 
 /**

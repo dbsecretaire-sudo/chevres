@@ -5,7 +5,9 @@ import { CATEGORIES } from '@/storage/csv';
 import { getYears, loadYear, saveYear, reindexYear } from '@/storage/localStore';
 import { getSettings, updateSettings, type InfosExploitation } from '@/storage/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/storage/fournisseurs';
-import type { Categorie, Fournisseur, RecordMap } from '@/types/models';
+import { listClients, remplacerTousClients } from '@/storage/clients';
+import { listComptesPcg, remplacerTousComptesPcg, type CompteComptableEnregistre } from '@/storage/comptesPcg';
+import type { Categorie, Client, Fournisseur, RecordMap } from '@/types/models';
 
 const VERSION_SAUVEGARDE = 1;
 
@@ -14,6 +16,8 @@ interface FichierSauvegarde {
   exporteLe: string;
   donnees: Partial<Record<Categorie, Record<string, unknown[]>>>;
   fournisseurs: Fournisseur[];
+  clients?: Client[];
+  comptesPcg?: CompteComptableEnregistre[];
   exploitation?: InfosExploitation;
 }
 
@@ -33,13 +37,20 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees[categorie] = parAnnee;
   }
 
-  const [fournisseurs, settings] = await Promise.all([listFournisseurs(), getSettings()]);
+  const [fournisseurs, clients, comptesPcg, settings] = await Promise.all([
+    listFournisseurs(),
+    listClients(),
+    listComptesPcg(),
+    getSettings(),
+  ]);
 
   const sauvegarde: FichierSauvegarde = {
     version: VERSION_SAUVEGARDE,
     exporteLe: new Date().toISOString(),
     donnees,
     fournisseurs,
+    clients,
+    comptesPcg,
     exploitation: settings.exploitation,
   };
 
@@ -63,6 +74,8 @@ export interface ResultatImport {
   annule: boolean;
   animaux: number;
   fournisseurs: number;
+  clients: number;
+  comptesPcg: number;
 }
 
 /**
@@ -72,7 +85,7 @@ export interface ResultatImport {
  */
 export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   const choix = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
-  if (choix.canceled) return { annule: true, animaux: 0, fournisseurs: 0 };
+  if (choix.canceled) return { annule: true, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0 };
 
   const contenu = await FileSystem.readAsStringAsync(choix.assets[0].uri, {
     encoding: FileSystem.EncodingType.UTF8,
@@ -106,9 +119,23 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     await remplacerTousFournisseurs(sauvegarde.fournisseurs);
   }
 
+  if (Array.isArray(sauvegarde.clients)) {
+    await remplacerTousClients(sauvegarde.clients);
+  }
+
+  if (Array.isArray(sauvegarde.comptesPcg)) {
+    await remplacerTousComptesPcg(sauvegarde.comptesPcg);
+  }
+
   if (sauvegarde.exploitation) {
     await updateSettings({ exploitation: sauvegarde.exploitation });
   }
 
-  return { annule: false, animaux, fournisseurs: sauvegarde.fournisseurs?.length ?? 0 };
+  return {
+    annule: false,
+    animaux,
+    fournisseurs: sauvegarde.fournisseurs?.length ?? 0,
+    clients: sauvegarde.clients?.length ?? 0,
+    comptesPcg: sauvegarde.comptesPcg?.length ?? 0,
+  };
 }
