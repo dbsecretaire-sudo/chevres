@@ -20,10 +20,12 @@ import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_RECETTE } from '@/shared/textes/libelles';
 
-const OPTIONS_CATEGORIE_RECETTE = Object.entries(LABEL_CATEGORIE_RECETTE).map(([value, label]) => ({
-  value: value as CategorieRecette,
-  label,
-}));
+/** Lues à l'affichage : certains libellés (vente de cabris…) dépendent de l'espèce de l'établissement. */
+const optionsCategorieRecette = () =>
+  Object.entries(LABEL_CATEGORIE_RECETTE).map(([value, label]) => ({
+    value: value as CategorieRecette,
+    label,
+  }));
 
 /** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
 export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
@@ -44,7 +46,7 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
         label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
         value={e.categorieRecette}
         onChange={e.changerCategorieRecette}
-        options={OPTIONS_CATEGORIE_RECETTE}
+        options={optionsCategorieRecette()}
         demanderCompte={e.categorieRecette === CATEGORIE_RECETTE.AUTRE}
         compte={e.compteRecetteAutre}
         onCompteChange={e.setCompteRecetteAutre}

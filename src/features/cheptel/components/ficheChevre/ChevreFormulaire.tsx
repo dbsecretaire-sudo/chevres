@@ -71,7 +71,7 @@ export function ChevreFormulaire({
         label={TEXTES.commun.general.nDeBoucle}
         value={form.numeroBoucle ?? ''}
         onChangeText={(v) => onChange({ ...form, numeroBoucle: v || undefined })}
-        placeholder={TEXTES.commun.general.facultatifAvant6Mois}
+        placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
       />
       {!!form.numeroBoucle?.trim() && (
         <DateField

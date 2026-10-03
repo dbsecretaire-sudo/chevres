@@ -13,8 +13,6 @@ import { TEXTES } from '@/shared/textes';
 const formatG = (g: number) =>
   `${g.toLocaleString(LOCALE, { maximumFractionDigits: DECIMALES_QUANTITE_MAX })} g`;
 
-const pluriel = (n: number) => (n > 1 ? 's' : '');
-
 interface TuileProps {
   route: Parameters<ReturnType<typeof useRouter>['push']>[0];
   children: React.ReactNode;
@@ -48,14 +46,7 @@ export function TuilesAccueil({ stats, annee }: Props) {
           <Text style={styles.statLabel}>{TEXTES.accueil.accueil.animauxVivants}</Text>
           <Text style={commonStyles.caption}>
             {stats
-              ? TEXTES.accueil.accueil.chevresChevreValeurBoucsBouc(
-                  stats.chevres,
-                  pluriel(stats.chevres),
-                  stats.boucs,
-                  pluriel(stats.boucs),
-                  stats.cabrits,
-                  pluriel(stats.cabrits),
-                )
+              ? TEXTES.accueil.accueil.repartitionAnimaux(stats.chevres, stats.boucs, stats.cabrits)
               : ''}
           </Text>
         </Tuile>

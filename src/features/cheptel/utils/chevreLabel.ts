@@ -2,7 +2,7 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import {
   CATEGORIE_ANIMAL,
   SEXE,
-  AGE_CABRIT_MAX_MOIS,
+  ageMaxPetitMois,
   PREMIER_MOIS_SECOND_SEMESTRE,
 } from '@/shared/constants/cheptel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
@@ -41,11 +41,11 @@ export function ageEnMois(dateNaissance: string): number {
 }
 
 /**
- * Catégorie déduite de l'âge et du sexe : moins de 6 mois → cabrit (mâle ou femelle) ;
- * 6 mois et plus → chèvre (femelle) ou bouc (mâle).
+ * Catégorie déduite de l'âge et du sexe : moins que l’âge limite du petit (voir ageMaxPetitMois) → petit (mâle ou femelle) ;
+ * au-delà → femelle ou mâle adulte.
  */
 export function categorieAnimal(c: Pick<Chevre, 'dateNaissance' | 'sexe'>): CategorieAnimal {
-  if (ageEnMois(c.dateNaissance) < AGE_CABRIT_MAX_MOIS) return CATEGORIE_ANIMAL.CABRIT;
+  if (ageEnMois(c.dateNaissance) < ageMaxPetitMois()) return CATEGORIE_ANIMAL.CABRIT;
   return c.sexe === SEXE.MALE ? CATEGORIE_ANIMAL.BOUC : CATEGORIE_ANIMAL.CHEVRE;
 }
 

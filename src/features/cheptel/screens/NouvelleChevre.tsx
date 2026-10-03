@@ -28,7 +28,7 @@ export default function NouvelleChevre() {
           label={TEXTES.commun.general.nDeBoucle}
           value={e.numeroBoucle}
           onChangeText={e.setNumeroBoucle}
-          placeholder={TEXTES.commun.general.facultatifAvant6Mois}
+          placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
         />
         {!!e.numeroBoucle.trim() && (
           <DateField

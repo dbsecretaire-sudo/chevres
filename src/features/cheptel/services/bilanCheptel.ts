@@ -5,7 +5,7 @@ import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import {
   SEXE,
   STATUT_CHEVRE,
-  AGE_CABRIT_MAX_MOIS,
+  ageMaxPetitMois,
   DERNIER_MOIS_PREMIER_SEMESTRE,
 } from '@/shared/constants/cheptel';
 import { FIN_ANNEE_MOIS_JOUR, HEURE_MINUIT, MOIS_PAR_AN } from '@/shared/constants/temps';
@@ -59,6 +59,7 @@ export interface Bilan {
  * un mouvement d'une année à l'autre.
  */
 export async function calculerBilan(annee: number): Promise<Bilan> {
+  const ageMaxPetit = ageMaxPetitMois();
   const toutes = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
 
   const anneeStatut = (c: Chevre) => (c.dateStatut ? yearOf(c.dateStatut) : undefined);
@@ -73,7 +74,7 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
 
   // Âge en mois révolus entre deux dates (contrairement à ageEnMois, qui compare à aujourd'hui) —
   // sert à vérifier qu'une sortie (vente/abattoir/auto-consommation) a bien eu lieu pendant que
-  // l'animal était encore un cabri (moins de 6 mois), et pas des années plus tard une fois adulte.
+  // l'animal était encore un petit (moins de l’âge limite du petit), et pas des années plus tard une fois adulte.
   const ageEnMoisEntre = (dateNaissance: string, dateRef: string) => {
     const naissance = new Date(`${dateNaissance}${HEURE_MINUIT}`);
     const ref = new Date(`${dateRef}${HEURE_MINUIT}`);
@@ -83,20 +84,18 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     return mois;
   };
 
-  // Sortie comptée comme cabrit : l'animal avait encore moins de 6 mois au moment de la sortie, et
+  // Sortie comptée comme cabrit : l'animal avait encore moins de l’âge limite du petit au moment de la sortie, et
   // celle-ci a eu lieu pendant l'année N — indépendamment de l'année de naissance (un cabrit né fin
   // N-1 et sorti début N relève du bilan N, pas de celui de sa naissance).
   const sortiCommeCabrit = (c: Chevre) =>
-    !!c.dateStatut &&
-    anneeStatut(c) === annee &&
-    ageEnMoisEntre(c.dateNaissance, c.dateStatut) < AGE_CABRIT_MAX_MOIS;
+    !!c.dateStatut && anneeStatut(c) === annee && ageEnMoisEntre(c.dateNaissance, c.dateStatut) < ageMaxPetit;
 
-  // Cabrits de la cohorte encore effectivement cabrits au 31/12 (vivants et toujours < 6 mois à cette
+  // Cabrits de la cohorte encore effectivement cabrits au 31/12 (vivants et toujours petits à cette
   // date) — sert de base à « Total cabris », puisque les sorties ci-dessus ne sont plus un sous-
   // ensemble garanti de cette cohorte (elles peuvent venir d'un cabri né l'année précédente).
   const cabritsRestants = cabrits.filter(
     (c) =>
-      ageEnMoisEntre(c.dateNaissance, finAnnee) < AGE_CABRIT_MAX_MOIS &&
+      ageEnMoisEntre(c.dateNaissance, finAnnee) < ageMaxPetit &&
       (c.statut === STATUT_CHEVRE.VIVANTE || (anneeStatut(c) ?? -Infinity) > annee),
   ).length;
 
@@ -104,7 +103,7 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     cabrits.filter((c) => c.mereNumeroBoucle).map((c) => `${c.mereNumeroBoucle}__${c.dateNaissance}`),
   );
 
-  // Sortie comptée comme chèvre/bouc adulte : il fallait déjà avoir 6 mois au moment de la sortie —
+  // Sortie comptée comme chèvre/bouc adulte : il fallait déjà avoir dépassé l’âge limite du petit au moment de la sortie —
   // sinon c'est un cabri (même né une année précédente) et sa sortie relève de la carte Cabrits, pas
   // de celle-ci (évite qu'un cabri de fin d'année parti tôt à l'abattoir soit compté comme une chèvre).
   const sortiesPreexistantesListe = (sexe: Sexe, statut: StatutChevre) =>
@@ -115,7 +114,7 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
         c.statut === statut &&
         anneeStatut(c) === annee &&
         !!c.dateStatut &&
-        ageEnMoisEntre(c.dateNaissance, c.dateStatut) >= AGE_CABRIT_MAX_MOIS,
+        ageEnMoisEntre(c.dateNaissance, c.dateStatut) >= ageMaxPetit,
     );
   const sortiesPreexistantes = (sexe: Sexe, statut: StatutChevre) =>
     sortiesPreexistantesListe(sexe, statut).length;
@@ -143,10 +142,10 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
       (c.statut === STATUT_CHEVRE.VIVANTE || (anneeStatut(c) ?? -Infinity) > annee),
   ).length;
 
-  // Adultes (6 mois+) d'un sexe donné, vivant(e)s au 31/12 de l'année N, reconstitué comme stockFinAnnee.
+  // Adultes (âge limite du petit dépassé) d'un sexe donné, vivant(e)s au 31/12 de l'année N, reconstitué comme stockFinAnnee.
   const estAdulteVivantFinAnnee = (sexe: Sexe) => (c: Chevre) =>
     c.sexe === sexe &&
-    ageEnMoisEntre(c.dateNaissance, finAnnee) >= AGE_CABRIT_MAX_MOIS &&
+    ageEnMoisEntre(c.dateNaissance, finAnnee) >= ageMaxPetit &&
     (c.statut === STATUT_CHEVRE.VIVANTE || (anneeStatut(c) ?? -Infinity) > annee);
   const estChevreVivanteFinAnnee = estAdulteVivantFinAnnee(SEXE.FEMELLE);
   const estBoucVivantFinAnnee = estAdulteVivantFinAnnee(SEXE.MALE);

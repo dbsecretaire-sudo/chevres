@@ -1,3 +1,8 @@
+import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+const Cap = capitaliser;
+
 /** Textes de l'interface — « clients ». À modifier ici uniquement. */
 export const TEXTES_CLIENTS = {
   ficheClient: {
@@ -7,7 +12,9 @@ export const TEXTES_CLIENTS = {
     resume: 'Résumé',
     laitVendu: 'Lait vendu',
     fromageVendu: 'Fromage vendu',
-    cabrisVendus: 'Cabris vendus',
+    get cabrisVendus() {
+      return `${Cap(V().petit.pluriel)} vendus`;
+    },
     aidesSubventions: 'Aides / subventions',
     totalPayeParCeClient: 'Total payé par ce client',
     aucuneEcritureLieeACe: 'Aucune écriture liée à ce client pour l’instant.',

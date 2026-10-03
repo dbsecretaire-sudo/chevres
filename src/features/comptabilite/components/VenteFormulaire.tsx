@@ -12,7 +12,12 @@ import { TEXTES } from '@/shared/textes';
 const OPTIONS_PRODUIT = [
   { value: CATEGORIE_VENTE.LAIT, label: TEXTES.comptabilite.ficheVente.lait },
   { value: CATEGORIE_VENTE.FROMAGE, label: TEXTES.comptabilite.ficheVente.fromage },
-  { value: CATEGORIE_VENTE.CABRIS, label: TEXTES.commun.general.cabris },
+  {
+    value: CATEGORIE_VENTE.CABRIS,
+    get label() {
+      return TEXTES.commun.general.cabris;
+    },
+  },
 ];
 
 const OPTIONS_UNITE = [

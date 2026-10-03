@@ -13,6 +13,7 @@ import {
 } from '@/shared/constants/comptabilite';
 import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+import { capitaliser, de, vocabulaire } from '@/shared/dictionnaire/animaux';
 
 /** Libellés des valeurs énumérées (sexe, statut, catégories, types…) — à modifier ici uniquement. */
 
@@ -37,7 +38,9 @@ export const LIBELLES_STATUT_CHEVRE: Record<
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {
   [CATEGORIE_VENTE.LAIT]: 'Lait',
   [CATEGORIE_VENTE.FROMAGE]: 'Fromage',
-  [CATEGORIE_VENTE.CABRIS]: 'Cabris',
+  get [CATEGORIE_VENTE.CABRIS]() {
+    return capitaliser(vocabulaire().petit.pluriel);
+  },
 };
 
 export const LABEL_TYPE_FROMAGE: Record<ValeurDe<typeof TYPE_FROMAGE>, string> = {
@@ -90,7 +93,9 @@ export const LABEL_CATEGORIE_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>,
 export const LABEL_CATEGORIE_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, string> = {
   [CATEGORIE_RECETTE.LAIT]: 'Vente de lait',
   [CATEGORIE_RECETTE.FROMAGE]: 'Vente de fromage',
-  [CATEGORIE_RECETTE.CABRIS]: 'Vente de cabris',
+  get [CATEGORIE_RECETTE.CABRIS]() {
+    return `Vente ${de(vocabulaire().petit.pluriel)}`;
+  },
   [CATEGORIE_RECETTE.AIDE]: 'Aide / subvention',
   [CATEGORIE_RECETTE.AUTRE]: 'Autre recette',
 };
@@ -131,9 +136,15 @@ export const LABEL_TYPE_AIDE: Record<ValeurDe<typeof TYPE_AIDE>, string> = {
 };
 
 export const LABEL_CATEGORIE_ANIMAL: Record<ValeurDe<typeof CATEGORIE_ANIMAL>, string> = {
-  [CATEGORIE_ANIMAL.CHEVRE]: 'Chèvres',
-  [CATEGORIE_ANIMAL.BOUC]: 'Boucs',
-  [CATEGORIE_ANIMAL.CABRIT]: 'Cabris',
+  get [CATEGORIE_ANIMAL.CHEVRE]() {
+    return capitaliser(vocabulaire().femelle.pluriel);
+  },
+  get [CATEGORIE_ANIMAL.BOUC]() {
+    return capitaliser(vocabulaire().male.pluriel);
+  },
+  get [CATEGORIE_ANIMAL.CABRIT]() {
+    return capitaliser(vocabulaire().petit.pluriel);
+  },
   [CATEGORIE_ANIMAL.VIVANTE]: 'Vivante',
   [CATEGORIE_ANIMAL.TOUT]: 'Tout',
 };

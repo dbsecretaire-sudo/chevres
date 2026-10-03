@@ -1,7 +1,13 @@
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+
 /** Textes de l'interface — « sauvegarde ». À modifier ici uniquement. */
 export const TEXTES_SAUVEGARDE = {
   backup: {
-    sauvegardeTroupeauChevres: 'Sauvegarde Troupeau Chèvres',
+    get sauvegardeTroupeauChevres() {
+      return `Sauvegarde ${V().troupeau}`;
+    },
     ceFichierNEstPas: 'Ce fichier n’est pas une sauvegarde Troupeau Chèvres valide (JSON illisible).',
     ceFichierNEstPasUne: 'Ce fichier n’est pas une sauvegarde Troupeau Chèvres valide.',
   },

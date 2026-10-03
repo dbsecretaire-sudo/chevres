@@ -7,7 +7,7 @@ export type StatutChevre = ValeurDe<typeof STATUT_CHEVRE>;
 
 export interface Chevre {
   id: string;
-  /** Facultatif : légalement obligatoire seulement à partir de 6 mois (l'animal n'est alors plus un cabrit). */
+  /** Facultatif : obligatoire seulement une fois l’âge limite du petit dépassé (l'animal n'est alors plus un petit). */
   numeroBoucle?: string;
   /** Date de pose de la boucle — souvent postérieure à la naissance. */
   dateBouclage?: string; // YYYY-MM-DD

@@ -55,3 +55,9 @@ Docs: https://docs.expo.dev/eas/index.md
 - **All user-visible text** lives in `src/shared/textes/` (`TEXTES.<domaine>.<écran>.<clé>`, a function when the text has parameters); enum → label maps are in `src/shared/textes/libelles.ts`.
 - **Colors** come from `src/shared/theme/colors.ts` (no raw `#fff` / `rgba(...)`).
 - To change a value, change it in one of those folders only — screens and services must reference them.
+
+## Vocabulary by animal species (dictionnaire)
+
+- The words for the animals (female / male / young: chèvre-bouc-cabri, brebis-bélier-agneau, vache-taureau-veau, truie-verrat-porcelet) depend on the species chosen for the active établissement. They live in `src/shared/dictionnaire/animaux.ts` only (`DICTIONNAIRE_ANIMAUX`); several species selected → neutral words (`VOCABULAIRE_GENERIQUE`), none selected → goats.
+- Texts that contain one of these words read `vocabulaire()` through a **getter** in `src/shared/textes/` (`get uneChevre() { … }`), so they are evaluated at display time, after the établissement is chosen. Never copy such a text into a module-level constant (`const X = TEXTES…chevres`): use a getter or a function instead.
+- Internal identifiers keep their original names (`Chevre`, `CATEGORIE_ANIMAL.BOUC`, `ficheChevre`…); only the displayed wording changes.

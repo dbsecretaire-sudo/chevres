@@ -1,3 +1,9 @@
+import { ageMaxPetitMois } from '@/shared/constants/cheptel';
+import { ce, capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+const Cap = capitaliser;
+
 /** Textes de l'interface — « cheptel ». À modifier ici uniquement. */
 export const TEXTES_CHEPTEL = {
   cheptelHeaderMenu: {
@@ -27,10 +33,16 @@ export const TEXTES_CHEPTEL = {
   ajoutRapideChevre: {
     deQuiSAgitIlQuestion: 'De qui s’agit-il ?',
     laMere: 'La mère',
-    declarerUneNaissancePourCette: 'Déclarer une naissance pour cette chèvre',
-    uneChevre: 'Une chèvre',
+    get declarerUneNaissancePourCette() {
+      return `Déclarer une naissance pour cette ${V().femelle.singulier}`;
+    },
+    get uneChevre() {
+      return `Une ${V().femelle.singulier}`;
+    },
     ajouterCetteFemelleAuCheptel: 'Ajouter cette femelle au cheptel',
-    unBouc: 'Un bouc',
+    get unBouc() {
+      return `Un ${V().male.singulier}`;
+    },
     ajouterCeMaleAuCheptel: 'Ajouter ce mâle au cheptel',
     combienDePetitsQuestion: 'Combien de petits ?',
     sexeDeChaquePetit: 'Sexe de chaque petit',
@@ -42,35 +54,48 @@ export const TEXTES_CHEPTEL = {
     precedenteAnneeEntreParenthesesDeuxPoints: '(précédente année entre parenthèses : ',
     nesEntreLe0101: 'Nés entre le 01/01 et le 31/12/',
     vendusAbattoirAutoConsommationComptent: '. Vendus/Abattoir/Auto-consommation comptent les sorties de',
-    pourToutCabriEncoreAge:
-      'pour tout cabri encore âgé de moins de 6 mois à ce moment-là, même né l’année précédente.',
+    get pourToutCabriEncoreAge() {
+      return `pour tout ${V().petit.singulier} encore âgé de moins de ${ageMaxPetitMois()} mois à ce moment-là, même né l’année précédente.`;
+    },
     t1erSemestreTardifsValeur: (valeur: number) => `1er semestre (tardifs ${valeur})`,
-    t2eSemestreCabrisAnnee: (annee: number) => `2e semestre (cabris ${annee})`,
+    t2eSemestreCabrisAnnee: (annee: number) => `2e semestre (${V().petit.pluriel} ${annee})`,
     vendus: 'Vendus',
     autoConsommation: 'Auto-consommation',
     mortNes: 'Mort-nés',
-    totalCabris: 'Total cabris',
-    chevresFemelles6MoisEt: 'Chèvres (femelles, 6 mois et plus) vivantes au 31/12/',
+    get totalCabris() {
+      return `Total ${V().petit.pluriel}`;
+    },
+    get chevresFemelles6MoisEt() {
+      return `${Cap(V().femelle.pluriel)} (${ageMaxPetitMois()} mois et plus) vivantes au 31/12/`;
+    },
     reconstitueAPartirDesStatuts: ', reconstitué à partir des statuts actuels.',
     renouvellementDesigneesCetteAnnee: 'Renouvellement (désignées cette année)',
     plusAnciennes: 'Plus anciennes',
     misesBasPortees: 'Mises bas (portées)',
-    boucsMales6MoisEt: 'Boucs (mâles, 6 mois et plus) vivants au 31/12/',
+    get boucsMales6MoisEt() {
+      return `${Cap(V().male.pluriel)} (${ageMaxPetitMois()} mois et plus) vivants au 31/12/`;
+    },
     renouvellementDesignesCetteAnnee: 'Renouvellement (désignés cette année)',
     plusAnciens: 'Plus anciens',
     morts: 'Morts',
     effectifDuTroupeau: 'Effectif du troupeau',
     au0101Annee: (annee: number) => `Au 01/01/${annee}`,
     effectifActuelFinAnnee: (annee: number) => `Effectif actuel / fin ${annee}`,
-    chevresBoucsEtCabrisConfondus: 'Chèvres, boucs et cabris confondus, vivants (ou sortis après le 31/12/',
+    get chevresBoucsEtCabrisConfondus() {
+      return `${Cap(V().femelle.pluriel)}, ${V().male.pluriel} et ${V().petit.pluriel} confondus, vivants (ou sortis après le 31/12/`;
+    },
     dApresLesStatutsActuels: ') d’après les statuts actuels.',
   },
   ficheChevre: {
-    chevreIntrouvable: 'Chèvre introuvable.',
+    get chevreIntrouvable() {
+      return `${Cap(V().femelle.singulier)} introuvable.`;
+    },
     le: 'le',
     visitesVeterinairesLength: (length: number) => `Visites vétérinaires (${length})`,
     controlesLength: (length: number) => `Contrôles (${length})`,
-    ajouterUnCabriNouvelleNaissance: 'Ajouter un cabri (nouvelle naissance)',
+    get ajouterUnCabriNouvelleNaissance() {
+      return `Ajouter un ${V().petit.singulier} (nouvelle naissance)`;
+    },
     nDeBoucleDeuxPoints: 'N° de boucle : ',
     dateDeBouclageDeuxPoints: 'Date de bouclage : ',
     sexeDeuxPoints: 'Sexe : ',
@@ -106,7 +131,7 @@ export const TEXTES_CHEPTEL = {
     trierPar: 'Trier par',
     aucunHistorique: 'Aucun historique',
     lesChevresMortesEnvoyeesA:
-      "Les chèvres mortes, envoyées à l'abattoir ou vendues apparaîtront ici, tout en restant enregistrées.",
+      "Les animaux morts, envoyés à l'abattoir ou vendus apparaîtront ici, tout en restant enregistrés.",
   },
   listeCheptel: {
     vivantes: 'Vivantes',
@@ -130,7 +155,7 @@ export const TEXTES_CHEPTEL = {
     aaaa: 'AAAA',
     nombreDAnimauxMortsSur: 'Nombre d’animaux morts sur l’exploitation cette année-là.',
     chevresNeesAvantPendantCette:
-      'Chèvres nées avant/pendant cette année et encore présentes (vivantes ou sorties pendant/après) — le filtre Statut est ignoré ici.',
+      'Animaux nés avant/pendant cette année et encore présents (vivants ou sortis pendant/après) — le filtre Statut est ignoré ici.',
     effacerLaDateDeNaissance: 'Effacer la date de naissance',
     effacerLaDateDAbattage: 'Effacer la date d’abattage',
     effacerLAnnee: 'Effacer l’année',
@@ -141,7 +166,9 @@ export const TEXTES_CHEPTEL = {
     envoyeALAbattoir: 'envoyé à l’abattoir',
     autoConsomme: 'auto-consommé',
     mortNe: 'mort-né',
-    chevre: 'chèvre',
+    get chevre() {
+      return V().femelle.singulier;
+    },
     animalSansBoucle: 'animal sans boucle',
     male: 'mâle',
     renouvellementValeur: (valeur: unknown) => `renouvellement ${valeur}`,
@@ -153,15 +180,21 @@ export const TEXTES_CHEPTEL = {
     aucuneNaissanceEnregistree: 'Aucune naissance enregistrée',
     declarezUneNaissanceDepuisL: "Déclarez une naissance depuis l'onglet Cheptel.",
     mereEspace: 'Mère ',
-    cabri: 'cabri',
+    get cabri() {
+      return V().petit.singulier;
+    },
     naissanceNotes: (notes: string) => `Naissance: ${notes}`,
     sansBoucleSexe: (sexe: unknown) => `sans boucle (${sexe})`,
   },
   nouvelleChevre: {
     nDeBoucleRequis: 'N° de boucle requis',
-    pourEnregistrerSesCabrisIl: 'Pour enregistrer ses cabris, il faut le n° de boucle de la mère.',
+    get pourEnregistrerSesCabrisIl() {
+      return `Pour enregistrer ses ${V().petit.pluriel}, il faut le n° de boucle de la mère.`;
+    },
     leNValeurEstUtilise: (valeur: string) => `Le n° ${valeur} est utilisé plusieurs fois dans ce formulaire.`,
-    cetteChevreADesCabris: 'Cette chèvre a des cabris à enregistrer',
+    get cetteChevreADesCabris() {
+      return `Cette ${V().femelle.singulier} a des ${V().petit.pluriel} à enregistrer`;
+    },
   },
   nouvelleNaissance: {
     mereRequise: 'Mère requise',
@@ -169,18 +202,30 @@ export const TEXTES_CHEPTEL = {
     leNDoublonlocalEstUtilise: (doublonLocal: string) =>
       `Le n° ${doublonLocal} est utilisé plusieurs fois dans ce formulaire.`,
     exFr12345678: 'ex: FR12345678',
-    cabris: 'Cabris (',
+    get cabris() {
+      return `${Cap(V().petit.pluriel)} (`;
+    },
     enregistrerLaNaissance: 'Enregistrer la naissance',
   },
   chevreLabel: {
     nomSansBoucle: (nom: string) => `${nom} (sans boucle)`,
-    chevrette: 'Chevrette',
-    chevreau: 'Chevreau',
+    get chevrette() {
+      return V().petitFemelle;
+    },
+    get chevreau() {
+      return V().petitMale;
+    },
     typeSansBoucleNeE: (type: string, valeur: string) => `${type} sans boucle — né(e) le ${valeur}`,
     nee: 'née',
     ne: 'né',
-    ceBouc: 'ce bouc',
-    ceCabri: 'ce cabri',
-    cetteChevre: 'cette chèvre',
+    get ceBouc() {
+      return ce(V().male.singulier);
+    },
+    get ceCabri() {
+      return ce(V().petit.singulier);
+    },
+    get cetteChevre() {
+      return `cette ${V().femelle.singulier}`;
+    },
   },
 } as const;

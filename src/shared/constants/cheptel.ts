@@ -1,3 +1,6 @@
+import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import { especeActive, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+
 /** Valeurs et seuils métier du cheptel — à modifier ici uniquement. */
 
 export const SEXE = {
@@ -22,11 +25,31 @@ export const CATEGORIE_ANIMAL = {
   TOUT: 'tout',
 } as const;
 
-/** En dessous de cet âge (en mois), l'animal est un cabri ; au-delà, une chèvre ou un bouc. */
-export const AGE_CABRIT_MAX_MOIS = 6;
+/** Seuils qui dépendent de l'espèce de l'établissement. */
+export interface ParametresEspece {
+  /** En dessous de cet âge (en mois), l'animal est un petit (cabri, agneau, veau, porcelet) ; au-delà, un adulte. */
+  ageMaxPetitMois: number;
+  /** À partir de cet âge (en mois), un petit sevré mange comme un adulte et compte dans l'effectif. */
+  ageSevrageMois: number;
+  /** Nombre maximal de petits déclarables en une seule mise bas. */
+  nbPetitsMax: number;
+}
 
-/** À partir de cet âge (en mois), un cabri sevré mange comme un adulte et compte dans l'effectif. */
-export const AGE_SEVRAGE_MOIS = 2;
+export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
+  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: { ageMaxPetitMois: 6, ageSevrageMois: 2, nbPetitsMax: 6 },
+  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: { ageMaxPetitMois: 6, ageSevrageMois: 2, nbPetitsMax: 5 },
+  // Veau : bovin de moins de 8 mois (définition européenne).
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: { ageMaxPetitMois: 8, ageSevrageMois: 3, nbPetitsMax: 2 },
+  // Porcelet : jusqu'à la fin du post-sevrage (environ 10 semaines) ; sevrage vers 4 semaines.
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { ageMaxPetitMois: 3, ageSevrageMois: 1, nbPetitsMax: 20 },
+};
+
+/** Seuils de l'établissement actif (ceux de son espèce ; ceux des chèvres s'il en a plusieurs ou aucune). */
+export const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[especeActive()];
+
+export const ageMaxPetitMois = (): number => parametresEspece().ageMaxPetitMois;
+export const ageSevrageMois = (): number => parametresEspece().ageSevrageMois;
+export const nbPetitsMax = (): number => parametresEspece().nbPetitsMax;
 
 /** Dernier mois (1-12) du premier semestre civil. */
 export const DERNIER_MOIS_PREMIER_SEMESTRE = 6;
@@ -86,6 +109,5 @@ export const ETAPE_AJOUT_RAPIDE = {
   DETAILS_MERE: 'details-mere',
 } as const;
 
-/** Nombre de petits déclarables en une seule mise bas (écran d'ajout rapide). */
+/** Nombre minimal de petits déclarables en une seule mise bas (le maximum dépend de l'espèce : voir nbPetitsMax). */
 export const NB_PETITS_MIN = 1;
-export const NB_PETITS_MAX = 6;

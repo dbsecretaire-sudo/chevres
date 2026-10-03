@@ -1,3 +1,7 @@
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+
 /** Textes de l'interface — « settings ». À modifier ici uniquement. */
 export const TEXTES_SETTINGS = {
   appSettingsContext: {
@@ -49,8 +53,9 @@ export const TEXTES_SETTINGS = {
     envoyerVersDrive: 'Envoyer vers Drive',
     recupererDepuisDrive: 'Récupérer depuis Drive',
     seDeconnecter: 'Se déconnecter',
-    troupeauChevresToutesLesDonnees:
-      'Troupeau Chèvres — toutes les données restent d’abord enregistrées sur cet appareil.',
+    get troupeauChevresToutesLesDonnees() {
+      return `${V().troupeau} — toutes les données restent d’abord enregistrées sur cet appareil.`;
+    },
     donneesEnvoyeesVersGoogleDrive: 'Données envoyées vers Google Drive.',
     donneesRecupereesDepuisGoogleDrive: 'Données récupérées depuis Google Drive.',
     lengthEtablissementsChacunASes: (length: number) =>
@@ -58,7 +63,9 @@ export const TEXTES_SETTINGS = {
     creezUnAutreEtablissementPour:
       'Créez un autre établissement pour gérer un second élevage avec des données séparées.',
     exportAnneeactive: (anneeActive: number) => `Export ${anneeActive}`,
-    troupeauChevres: 'Troupeau Chèvres',
+    get troupeauChevres() {
+      return V().troupeau;
+    },
     derniereSynchronisationValeur: (valeur: string) => `Dernière synchronisation : ${valeur}`,
     jamaisSynchronise: 'Jamais synchronisé',
   },

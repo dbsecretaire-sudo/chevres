@@ -1,3 +1,9 @@
+import { ageMaxPetitMois } from '@/shared/constants/cheptel';
+import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+const Cap = capitaliser;
+
 /** Textes de l'interface — « commun ». À modifier ici uniquement. */
 export const TEXTES_COMMUN = {
   general: {
@@ -22,20 +28,28 @@ export const TEXTES_COMMUN = {
     visitesVeterinaire: 'Visites vétérinaire',
     controles: 'Contrôles',
     alimentation: 'Alimentation',
-    cabrisNesEnEspace: 'Cabris nés en ',
+    get cabrisNesEnEspace() {
+      return `${Cap(V().petit.pluriel)} nés en `;
+    },
     erreurExport: 'Erreur export',
     annuler: 'Annuler',
     retour: 'Retour',
     abattoir: 'Abattoir',
-    chevres: 'Chèvres',
+    get chevres() {
+      return Cap(V().femelle.pluriel);
+    },
     mortes: 'Mortes',
     vendues: 'Vendues',
-    boucs: 'Boucs',
+    get boucs() {
+      return Cap(V().male.pluriel);
+    },
     supprimerDefinitivement: 'Supprimer définitivement',
     designeEPourLeRenouvellement: 'Désigné(e) pour le renouvellement',
     anneeDeDesignation: 'Année de désignation',
     nDeBoucle: 'N° de boucle',
-    facultatifAvant6Mois: 'Facultatif avant 6 mois',
+    get facultatifAvantAgeMax() {
+      return `Facultatif avant ${ageMaxPetitMois()} mois`;
+    },
     dateDeBouclage: 'Date de bouclage',
     nom: 'Nom',
     sexe: 'Sexe',
@@ -52,16 +66,22 @@ export const TEXTES_COMMUN = {
     accordNeLeDate: (accordNe: string, date: string) => `${accordNe} le ${date}`,
     supprimerDefinitivementQuestion: 'Supprimer définitivement ?',
     nDeBoucleDejaUtilise: 'N° de boucle déjà utilisé',
-    cabris: 'Cabris',
+    get cabris() {
+      return Cap(V().petit.pluriel);
+    },
     rechercher: 'Rechercher',
     nDeBoucleEnDouble: 'N° de boucle en double',
-    leNBoucleEstDeja: (boucle: string) => `Le n° ${boucle} est déjà attribué à une autre chèvre.`,
+    leNBoucleEstDeja: (boucle: string) => `Le n° ${boucle} est déjà attribué à un autre animal.`,
     facultatif: 'Facultatif',
     dateDeLaMiseBas: 'Date de la mise bas',
-    cabriEspace: 'Cabri ',
+    get cabriEspace() {
+      return `${Cap(V().petit.singulier)} `;
+    },
     retirer: 'Retirer',
     mortNe: 'Mort-né',
-    ajouterUnCabri: '+ Ajouter un cabri',
+    get ajouterUnCabri() {
+      return `+ Ajouter un ${V().petit.singulier}`;
+    },
     adresseDeuxPoints: 'Adresse : ',
     prenom: 'Prénom',
     telephone: 'Téléphone',
@@ -119,11 +139,13 @@ export const TEXTES_COMMUN = {
     descriptionRequise: 'Description requise',
     nCheptel: 'N° cheptel',
     indicatifDeMarquage: 'Indicatif de marquage',
-    exportAnneeTroupeauChevres: (annee: number) => `Export ${annee} — Troupeau Chèvres`,
+    exportAnneeTroupeauChevres: (annee: number) => `Export ${annee} — ${V().troupeau}`,
     totalHorsAutre: 'Total (hors Autre)',
-    exploitationAnneeTroupeauChevres: (annee: number) => `Exploitation ${annee} — Troupeau Chèvres`,
-    planComptableAnneeTroupeauChevres: (annee: number) => `Plan comptable ${annee} — Troupeau Chèvres`,
-    cheptelTroupeauChevres: 'Cheptel — Troupeau Chèvres',
+    exploitationAnneeTroupeauChevres: (annee: number) => `Exploitation ${annee} — ${V().troupeau}`,
+    planComptableAnneeTroupeauChevres: (annee: number) => `Plan comptable ${annee} — ${V().troupeau}`,
+    get cheptelTroupeauChevres() {
+      return `Cheptel — ${V().troupeau}`;
+    },
     nomDEntrepriseRequis: 'Nom d’entreprise requis',
     siretRequis: 'SIRET requis',
     adressePostaleRequise: 'Adresse postale requise',

@@ -36,7 +36,7 @@ export function CabritNaissanceBloc({ cabrit, numero, retirable, onChange, onRet
         label={TEXTES.commun.general.nDeBoucle}
         value={cabrit.numeroBoucle}
         onChangeText={(v) => onChange({ numeroBoucle: v })}
-        placeholder={TEXTES.commun.general.facultatifAvant6Mois}
+        placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
       />
       <SelectField
         label={TEXTES.commun.general.sexe}

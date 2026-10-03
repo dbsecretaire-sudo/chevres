@@ -10,7 +10,7 @@ import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import type { Sexe } from '@/features/cheptel/types';
 import { styles } from '@/shared/styles/cheptel/AjoutRapideChevre.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { SEXE, ETAPE_AJOUT_RAPIDE, NB_PETITS_MAX, NB_PETITS_MIN } from '@/shared/constants/cheptel';
+import { SEXE, ETAPE_AJOUT_RAPIDE, NB_PETITS_MIN, nbPetitsMax } from '@/shared/constants/cheptel';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -26,7 +26,7 @@ export default function AjoutRapide() {
   const [sexesPetits, setSexesPetits] = useState<Sexe[]>([SEXE.FEMELLE]);
 
   const ajusterNombrePetits = (n: number) => {
-    const borne = Math.max(NB_PETITS_MIN, Math.min(NB_PETITS_MAX, n));
+    const borne = Math.max(NB_PETITS_MIN, Math.min(nbPetitsMax(), n));
     setNombrePetits(borne);
     setSexesPetits((prev) => {
       const copie = [...prev];

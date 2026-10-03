@@ -20,7 +20,7 @@ export interface StatsAccueil {
   derniereVisite?: string;
 }
 
-/** Cabrit = moins de 6 mois OU pas encore bouclé (même si plus âgé) ; sinon chèvre/bouc selon le sexe. */
+/** Petit = moins que l’âge limite OU pas encore bouclé (même si plus âgé) ; sinon femelle/mâle adulte selon le sexe. */
 export function categorieAccueil(c: Chevre): CategorieAnimal {
   if (!c.numeroBoucle || categorieAnimal(c) === CATEGORIE_ANIMAL.CABRIT) return CATEGORIE_ANIMAL.CABRIT;
   return c.sexe === SEXE.MALE ? CATEGORIE_ANIMAL.BOUC : CATEGORIE_ANIMAL.CHEVRE;

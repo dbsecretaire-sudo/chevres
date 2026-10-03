@@ -9,6 +9,7 @@ import {
 } from '@/shared/constants/cheptel';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { formatDateFR, yearOf } from '@/shared/utils/dates';
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 export type StatutFiltre = ValeurDe<typeof FILTRE_STATUT_CHEPTEL>;
@@ -71,17 +72,39 @@ export const LABEL_STATUT_VIDE: Record<StatutFiltre, string> = {
 };
 
 export const OPTIONS_CATEGORIE: { value: CategorieFiltre; label: string }[] = [
-  { value: FILTRE_CATEGORIE_CHEPTEL.CHEVRE, label: TEXTES.commun.general.chevres },
-  { value: FILTRE_CATEGORIE_CHEPTEL.BOUC, label: TEXTES.commun.general.boucs },
-  { value: FILTRE_CATEGORIE_CHEPTEL.CABRIT, label: TEXTES.commun.general.cabris },
+  // label en getter : lu au moment de l'affichage, après le choix de l'établissement (vocabulaire de l'espèce).
+  {
+    value: FILTRE_CATEGORIE_CHEPTEL.CHEVRE,
+    get label() {
+      return TEXTES.commun.general.chevres;
+    },
+  },
+  {
+    value: FILTRE_CATEGORIE_CHEPTEL.BOUC,
+    get label() {
+      return TEXTES.commun.general.boucs;
+    },
+  },
+  {
+    value: FILTRE_CATEGORIE_CHEPTEL.CABRIT,
+    get label() {
+      return TEXTES.commun.general.cabris;
+    },
+  },
   { value: FILTRE_CATEGORIE_CHEPTEL.SANS_BOUCLE, label: TEXTES.cheptel.listeCheptel.sansBoucle },
   { value: FILTRE_CATEGORIE_CHEPTEL.TOUT, label: TEXTES.cheptel.listeCheptel.tous },
 ];
 
 export const LABEL_CATEGORIE_FILTRE: Record<CategorieFiltre, string> = {
-  [FILTRE_CATEGORIE_CHEPTEL.CHEVRE]: TEXTES.cheptel.listeCheptel.chevre,
-  [FILTRE_CATEGORIE_CHEPTEL.BOUC]: 'bouc',
-  [FILTRE_CATEGORIE_CHEPTEL.CABRIT]: 'cabri',
+  get [FILTRE_CATEGORIE_CHEPTEL.CHEVRE]() {
+    return vocabulaire().femelle.singulier;
+  },
+  get [FILTRE_CATEGORIE_CHEPTEL.BOUC]() {
+    return vocabulaire().male.singulier;
+  },
+  get [FILTRE_CATEGORIE_CHEPTEL.CABRIT]() {
+    return vocabulaire().petit.singulier;
+  },
   [FILTRE_CATEGORIE_CHEPTEL.SANS_BOUCLE]: TEXTES.cheptel.listeCheptel.animalSansBoucle,
   [FILTRE_CATEGORIE_CHEPTEL.TOUT]: 'animal',
 };

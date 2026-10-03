@@ -1,3 +1,8 @@
+import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+const Cap = capitaliser;
+
 /** Textes de l'interface — « comptabilite ». À modifier ici uniquement. */
 export const TEXTES_COMPTABILITE = {
   comptabiliteHeaderMenu: {
@@ -79,7 +84,9 @@ export const TEXTES_COMPTABILITE = {
   },
   fiscaliteImpots: {
     recettesBrutesEspace: 'Recettes brutes — ',
-    ventesDeProductionLaitFromage: 'Ventes de production (lait, fromage, cabris)',
+    get ventesDeProductionLaitFromage() {
+      return `Ventes de production (lait, fromage, ${V().petit.pluriel})`;
+    },
     aidesImposables: 'Aides imposables',
     autresFacturesEmises: 'Autres factures émises',
     totalRecettesImposables: 'Total recettes imposables',
@@ -88,8 +95,9 @@ export const TEXTES_COMPTABILITE = {
       'Le caractère imposable est celui que vous avez indiqué à la saisie de chaque aide — vérifiez-le type par type, il peut différer d’une aide à l’autre (voir notice ci-dessous).',
     imposable: 'Imposable',
     nonImposable: 'Non imposable',
-    ceTotalAdditionnePourL:
-      'Ce total additionne, pour l’année sélectionnée : vos ventes de production enregistrées (lait, fromage, cabris), vos factures émises hors aides, et les aides que vous avez marquées « imposable » (voir le détail par type ci-dessus — chaque type d’aide PAC peut avoir un traitement fiscal différent, c’est pour ça que la ventilation est faite type par type plutôt qu’un seul total générique).',
+    get ceTotalAdditionnePourL() {
+      return `Ce total additionne, pour l’année sélectionnée : vos ventes de production enregistrées (lait, fromage, ${V().petit.pluriel}), vos factures émises hors aides, et les aides que vous avez marquées « imposable » (voir le détail par type ci-dessus — chaque type d’aide PAC peut avoir un traitement fiscal différent, c’est pour ça que la ventilation est faite type par type plutôt qu’un seul total générique).`;
+    },
     celaCorrespondALaNotion:
       'Cela correspond à la notion de « recettes brutes encaissées » du régime micro-BA (Code général des impôts, art. 64 bis). Ce régime s’applique si vos recettes moyennes sur 3 ans ne dépassent pas le seuil en vigueur.',
     ceQueLAppNe:
@@ -103,8 +111,9 @@ export const TEXTES_COMPTABILITE = {
   },
   fiscaliteRsa: {
     recettesParMoisEspace: 'Recettes par mois — ',
-    chaqueLigneMensuelleAdditionneVos:
-      'Chaque ligne mensuelle additionne : vos ventes de production encaissées ce mois-là (lait, fromage, cabris) et vos factures émises (ventes et aides) datées de ce mois. C’est un montant de chiffre d’affaires / recettes encaissées, mois par mois.',
+    get chaqueLigneMensuelleAdditionneVos() {
+      return `Chaque ligne mensuelle additionne : vos ventes de production encaissées ce mois-là (lait, fromage, ${V().petit.pluriel}) et vos factures émises (ventes et aides) datées de ce mois. C’est un montant de chiffre d’affaires / recettes encaissées, mois par mois.`;
+    },
     laDeclarationTrimestrielleDeRessources:
       'La déclaration trimestrielle de ressources (DTR) pour le RSA, pour un exploitant agricole non-salarié, demande généralement le montant du chiffre d’affaires (ou des recettes) de chacun des 3 derniers mois — c’est ce que ces lignes visent à vous donner rapidement.',
     ceQueLAppNe:
@@ -144,12 +153,15 @@ export const TEXTES_COMPTABILITE = {
     typeDeFromage: 'Type de fromage',
     preciserLeType: 'Préciser le type',
     ex2: 'ex: 2',
-    nombreDeCabris: 'Nombre de cabris',
+    get nombreDeCabris() {
+      return `Nombre de ${V().petit.pluriel}`;
+    },
   },
   transactions: {
     venteDeProduction: 'Vente de production',
     laitQuantiteL: (quantite: number) => `Lait — ${quantite} L`,
-    cabrisQuantiteTeteValeur: (quantite: number, valeur: string) => `Cabris — ${quantite} tête${valeur}`,
+    cabrisQuantiteTeteValeur: (quantite: number, valeur: string) =>
+      `${Cap(V().petit.pluriel)} — ${quantite} tête${valeur}`,
     fromageQuantiteUnite: (quantite: number, unite: unknown) => `Fromage — ${quantite} ${unite}`,
   },
 } as const;

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { definirEspecesActives } from '@/shared/dictionnaire/animaux';
 import {
   CLE_STOCKAGE,
   ID_ETABLISSEMENT_DEFAUT,
@@ -73,13 +74,16 @@ export async function initialiserEtablissements(): Promise<{ liste: Etablissemen
   const liste = await listEtablissements();
   const sauvegarde = await AsyncStorage.getItem(KEY_ACTIF);
   idActif = liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id;
+  definirEspecesActives(liste.find((e) => e.id === idActif)?.animaux);
   return { liste, actifId: idActif };
 }
 
 export async function choisirEtablissementActif(id: string): Promise<void> {
   const liste = await listEtablissements();
-  if (!liste.some((e) => e.id === id)) return;
+  const cible = liste.find((e) => e.id === id);
+  if (!cible) return;
   idActif = id;
+  definirEspecesActives(cible.animaux);
   await AsyncStorage.setItem(KEY_ACTIF, id);
 }
 
@@ -93,6 +97,7 @@ export async function creerEtablissement(donnees: DonneesEtablissement): Promise
 export async function modifierEtablissement(id: string, donnees: DonneesEtablissement): Promise<void> {
   const liste = await listEtablissements();
   await ecrireListe(liste.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
+  if (id === idActif) definirEspecesActives(donnees.animaux);
 }
 
 /** Supprime l'établissement et toutes ses données locales. L'établissement par défaut ne peut pas être supprimé. */

@@ -42,7 +42,7 @@ export function CabritsChevreForm({ e }: { e: EtatNouvelleChevre }) {
             label={TEXTES.commun.general.nDeBoucle}
             value={cabrit.numeroBoucle}
             onChangeText={(v) => e.majCabrit(cabrit.key, { numeroBoucle: v })}
-            placeholder={TEXTES.commun.general.facultatifAvant6Mois}
+            placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
           />
           <SelectField
             label={TEXTES.commun.general.sexe}

@@ -1,3 +1,8 @@
+import { ageSevrageMois } from '@/shared/constants/cheptel';
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+
 /** Textes de l'interface — « export ». À modifier ici uniquement. */
 export const TEXTES_EXPORT = {
   exportChoiceModal: {
@@ -12,19 +17,22 @@ export const TEXTES_EXPORT = {
     aucuneVentePourCetteAnnee: 'Aucune vente pour cette année',
     aucuneDonnee: 'Aucune donnée',
     effectifEtCoutParAnimal: (nombreAnimaux: number, coutParAnimal: string) =>
-      `Effectif (chèvres + boucs + cabris de plus de 2 mois) : ${nombreAnimaux} — Coût par animal : ${coutParAnimal} (« Autre » exclu du total et du calcul par animal)`,
+      `Effectif (${V().femelle.pluriel} + ${V().male.pluriel} + ${V().petit.pluriel} de plus de ${ageSevrageMois()} mois) : ${nombreAnimaux} — Coût par animal : ${coutParAnimal} (« Autre » exclu du total et du calcul par animal)`,
     ventes: 'Ventes',
     factures: 'Factures',
     recapitulatifParCompte: 'Récapitulatif par compte',
     detailDesFactures: 'Détail des factures',
-    noteRegroupementCheptel:
-      "Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. La colonne « Descendance » indique le nombre total de petits de chaque mère (les cabris pas encore bouclés n'ont pas de ligne propre mais sont comptés ici).",
+    get noteRegroupementCheptel() {
+      return `Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. La colonne « Descendance » indique le nombre total de petits de chaque mère (les ${V().petit.pluriel} pas encore bouclés n'ont pas de ligne propre mais sont comptés ici).`;
+    },
   },
   xlsxExport: {
     ouiValeur: (valeur: unknown) => `Oui (${valeur})`,
     aucuneDonneePourCetteAnnee: 'Aucune donnée pour cette année',
     veterinaire: 'Vétérinaire',
-    effectifChevresBoucsCabris2: 'Effectif (chèvres + boucs + cabris > 2 mois)',
+    get effectifChevresBoucsCabris2() {
+      return `Effectif (${V().femelle.pluriel} + ${V().male.pluriel} + ${V().petit.pluriel} > ${ageSevrageMois()} mois)`;
+    },
     coutParAnimalHorsAutre: 'Coût par animal (€, hors Autre)',
     detailFactures: 'Détail factures',
   },

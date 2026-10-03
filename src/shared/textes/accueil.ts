@@ -1,3 +1,7 @@
+import { accorder, vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+
 /** Textes de l'interface — « accueil ». À modifier ici uniquement. */
 export const TEXTES_ACCUEIL = {
   accueil: {
@@ -9,14 +13,8 @@ export const TEXTES_ACCUEIL = {
     actionsRapides: 'Actions rapides',
     cheptel: '+ Cheptel',
     comptabilite: '+ Comptabilité',
-    chevresChevreValeurBoucsBouc: (
-      chevres: number,
-      valeur: string,
-      boucs: number,
-      valeur2: string,
-      cabrits: number,
-      valeur3: string,
-    ) => `${chevres} chèvre${valeur} · ${boucs} bouc${valeur2} · ${cabrits} cabri${valeur3}`,
+    repartitionAnimaux: (femelles: number, males: number, petits: number) =>
+      `${femelles} ${accorder(V().femelle, femelles)} · ${males} ${accorder(V().male, males)} · ${petits} ${accorder(V().petit, petits)}`,
     aucuneVisiteEnregistreeCetteAnnee: 'Aucune visite enregistrée cette année',
   },
 } as const;
