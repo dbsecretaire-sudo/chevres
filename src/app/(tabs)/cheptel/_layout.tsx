@@ -1,26 +1,27 @@
 import { Stack } from 'expo-router';
-import { colors } from '@/theme/colors';
-import { CheptelHeaderMenu } from '@/components/CheptelHeaderMenu';
-import { HeaderBackTo } from '@/components/HeaderBackTo';
+import { colors } from '@/shared/theme/colors';
+import { CheptelHeaderMenu } from '@/features/cheptel/components/CheptelHeaderMenu';
+import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { TEXTES } from '@/shared/textes';
 
 export default function CheptelLayout() {
   return (
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: '#fff',
+        headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
       }}
     >
       <Stack.Screen
         name="index"
-        options={{ title: 'Cheptel', headerRight: () => <CheptelHeaderMenu /> }}
+        options={{ title: TEXTES.commun.general.cheptel, headerRight: () => <CheptelHeaderMenu /> }}
       />
-      <Stack.Screen name="[id]" options={{ title: 'Fiche chèvre' }} />
+      <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
       <Stack.Screen
         name="nouvelle"
         options={{
-          title: 'Nouvelle chèvre',
+          title: TEXTES.navigation.layout.nouvelleChevre,
           presentation: 'modal',
           headerStyle: { backgroundColor: colors.ajout },
           headerLeft: () => <HeaderBackTo to="/cheptel" />,
@@ -28,15 +29,26 @@ export default function CheptelLayout() {
       />
       <Stack.Screen
         name="naissance-nouvelle"
-        options={{ title: 'Déclarer une naissance', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+        options={{
+          title: TEXTES.navigation.layout.declarerUneNaissance,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
       />
       <Stack.Screen
         name="ajout-rapide"
-        options={{ title: 'Ajout rapide', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+        options={{
+          title: TEXTES.navigation.layout.ajoutRapide,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
       />
-      <Stack.Screen name="naissances" options={{ title: 'Naissances' }} />
-      <Stack.Screen name="historique" options={{ title: 'Historique (mortes, abattoir, vendues)' }} />
-      <Stack.Screen name="bilan" options={{ title: 'Bilan annuel' }} />
+      <Stack.Screen name="naissances" options={{ title: TEXTES.navigation.layout.naissances }} />
+      <Stack.Screen
+        name="historique"
+        options={{ title: TEXTES.navigation.layout.historiqueMortesAbattoirVendues }}
+      />
+      <Stack.Screen name="bilan" options={{ title: TEXTES.commun.general.bilanAnnuel }} />
     </Stack>
   );
 }

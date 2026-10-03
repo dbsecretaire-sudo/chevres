@@ -1,0 +1,62 @@
+import { StyleSheet } from 'react-native';
+import { colors } from '@/shared/theme/colors';
+
+export const styles = StyleSheet.create({
+  centre: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
+  info: { color: colors.blanc, fontSize: 15, textAlign: 'center' },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  cadre: {
+    width: '75%',
+    height: 90,
+    borderWidth: 2,
+    borderColor: colors.blanc,
+    borderRadius: 10,
+  },
+  consigne: {
+    color: colors.blanc,
+    fontSize: 14,
+    fontWeight: '600',
+    backgroundColor: colors.voileCamera,
+    padding: 8,
+    borderRadius: 8,
+  },
+  controles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 32,
+    paddingTop: 24,
+    paddingBottom: 8,
+  },
+  boutonVide: { width: 44, height: 44 },
+  boutonCapture: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 4,
+    borderColor: colors.blanc,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  boutonCaptureInterieur: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.blanc },
+  lienSecondaire: { alignItems: 'center', paddingBottom: 28, paddingTop: 4 },
+  lienSecondaireTexte: {
+    color: colors.blanc,
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  apercu: { width: '100%', height: '45%' },
+  formulaire: { flex: 1, padding: 16, gap: 14, backgroundColor: colors.background },
+  candidats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  candidatTexte: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
+});

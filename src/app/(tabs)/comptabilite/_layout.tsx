@@ -1,47 +1,64 @@
 import { Stack } from 'expo-router';
-import { colors } from '@/theme/colors';
-import { ComptabiliteHeaderMenu } from '@/components/ComptabiliteHeaderMenu';
+import { colors } from '@/shared/theme/colors';
+import { ComptabiliteHeaderMenu } from '@/features/comptabilite/components/ComptabiliteHeaderMenu';
+import { TEXTES } from '@/shared/textes';
 
 export default function ComptabiliteLayout() {
   return (
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: '#fff',
+        headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
       }}
     >
       <Stack.Screen
         name="index"
-        options={{ title: 'Comptabilité', headerRight: () => <ComptabiliteHeaderMenu /> }}
+        options={{ title: TEXTES.commun.general.comptabilite, headerRight: () => <ComptabiliteHeaderMenu /> }}
       />
       <Stack.Screen
         name="nouvelle"
-        options={{ title: 'Nouvelle écriture', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+        options={{
+          title: TEXTES.navigation.layout.nouvelleEcriture,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
       />
-      <Stack.Screen name="facture/[id]" options={{ title: 'Facture' }} />
-      <Stack.Screen name="vente/[id]" options={{ title: 'Vente' }} />
-      <Stack.Screen name="detail" options={{ title: 'Détail' }} />
-      <Stack.Screen name="fiscalite-impots" options={{ title: 'Impôts (micro-BA)' }} />
-      <Stack.Screen name="fiscalite-rsa" options={{ title: 'Déclaration RSA' }} />
-      <Stack.Screen name="fournisseurs/index" options={{ title: 'Fournisseurs' }} />
+      <Stack.Screen name="facture/[id]" options={{ title: TEXTES.commun.general.facture }} />
+      <Stack.Screen name="vente/[id]" options={{ title: TEXTES.commun.general.vente }} />
+      <Stack.Screen name="detail" options={{ title: TEXTES.commun.general.detail }} />
+      <Stack.Screen name="fiscalite-impots" options={{ title: TEXTES.commun.general.impotsMicroBa }} />
+      <Stack.Screen name="fiscalite-rsa" options={{ title: TEXTES.commun.general.declarationRsa }} />
+      <Stack.Screen name="fournisseurs/index" options={{ title: TEXTES.commun.general.fournisseurs }} />
       <Stack.Screen
         name="fournisseurs/nouveau"
-        options={{ title: 'Nouveau fournisseur', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+        options={{
+          title: TEXTES.commun.general.nouveauFournisseur,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
       />
-      <Stack.Screen name="fournisseurs/[id]" options={{ title: 'Fournisseur' }} />
-      <Stack.Screen name="comptes-pcg/index" options={{ title: 'Comptes PCG' }} />
+      <Stack.Screen name="fournisseurs/[id]" options={{ title: TEXTES.commun.general.fournisseur }} />
+      <Stack.Screen name="comptes-pcg/index" options={{ title: TEXTES.commun.general.comptesPcg }} />
       <Stack.Screen
         name="comptes-pcg/nouveau"
-        options={{ title: 'Nouveau compte', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+        options={{
+          title: TEXTES.commun.general.nouveauCompte,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
       />
-      <Stack.Screen name="comptes-pcg/[id]" options={{ title: 'Compte PCG' }} />
-      <Stack.Screen name="clients/index" options={{ title: 'Clients' }} />
+      <Stack.Screen name="comptes-pcg/[id]" options={{ title: TEXTES.commun.general.comptePcg }} />
+      <Stack.Screen name="clients/index" options={{ title: TEXTES.commun.general.clients }} />
       <Stack.Screen
         name="clients/nouveau"
-        options={{ title: 'Nouveau client', presentation: 'modal', headerStyle: { backgroundColor: colors.ajout } }}
+        options={{
+          title: TEXTES.commun.general.nouveauClient,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
       />
-      <Stack.Screen name="clients/[id]" options={{ title: 'Client' }} />
+      <Stack.Screen name="clients/[id]" options={{ title: TEXTES.commun.general.client }} />
     </Stack>
   );
 }

@@ -39,3 +39,19 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Code organisation
+
+- `src/app/` holds **routes only**: each file is a one-line re-export (`export { default } from '@/features/<feature>/screens/<Screen>'`) plus the `_layout.tsx` navigators.
+- `src/features/<feature>/` is organised by domain (`cheptel`, `comptabilite`, `exploitation`, `clients`, `fournisseurs`, `comptes-pcg`, `etablissements`, `settings`, `drive`, `export`, `sauvegarde`, `accueil`) with sub-folders as needed: `screens/`, `components/`, `repository/` (storage access), `services/` (calculations), `forms/`, `utils/`, `types.ts`.
+- `src/shared/` is cross-feature code: `components/`, `styles/`, `storage/`, `theme/`, `hooks/`, `utils/`.
+- All styles live in `src/shared/styles/` (never inside a feature): `shared/styles/<feature>/<Name>.styles.ts` (`export const styles`), `shared/styles/components/` for shared components. A style used by several files is defined once in `src/shared/styles/commonStyles.ts` (`commonStyles`) — reuse it instead of redefining it locally.
+- Format with `npx prettier --write "src/**/*.{ts,tsx}"` (config in `.prettierrc`).
+
+## No hard-coded data in application files
+
+- **Enumerated values** (statuts, catégories, types, unités…) live in `src/shared/constants/` as `as const` objects (`STATUT_CHEVRE.VIVANTE`, `TYPE_FACTURE.RECUE`…); the TypeScript union types are derived from them (`ValeurDe<typeof …>`). Never compare to a raw string like `'vivante'`.
+- **Business thresholds and settings** (âge d'un cabri, taux de TVA, poids d'un matelas, comptes PCG, formats d'export, clés de stockage, noms de fichiers/dossiers Drive, URL et MIME Google, CSV, routes…) are also in `src/shared/constants/` (`cheptel`, `comptabilite`, `planComptable`, `stockage`, `drive`, `google`, `csv`, `export`, `routes`, `temps`, `format`).
+- **All user-visible text** lives in `src/shared/textes/` (`TEXTES.<domaine>.<écran>.<clé>`, a function when the text has parameters); enum → label maps are in `src/shared/textes/libelles.ts`.
+- **Colors** come from `src/shared/theme/colors.ts` (no raw `#fff` / `rgba(...)`).
+- To change a value, change it in one of those folders only — screens and services must reference them.

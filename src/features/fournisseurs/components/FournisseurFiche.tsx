@@ -1,0 +1,128 @@
+import { Text, View } from 'react-native';
+import { Button } from '@/shared/components/Button';
+import { Card } from '@/shared/components/Card';
+import { FormField } from '@/shared/components/FormField';
+import type { Fournisseur } from '@/features/fournisseurs/types';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+
+/** Fiche d'un fournisseur en lecture seule. */
+export function FournisseurLecture({
+  fournisseur,
+  onModifier,
+}: {
+  fournisseur: Fournisseur;
+  onModifier: () => void;
+}) {
+  return (
+    <Card>
+      <Text style={commonStyles.line}>
+        {TEXTES.fournisseurs.ficheFournisseur.nomDEntrepriseDeuxPoints}
+        {fournisseur.nomEntreprise}
+      </Text>
+      <Text style={commonStyles.line}>
+        {TEXTES.fournisseurs.ficheFournisseur.contactDeuxPoints}
+        {fournisseur.nom}
+        {fournisseur.prenom ? ` ${fournisseur.prenom}` : ''}
+      </Text>
+      <Text style={commonStyles.line}>
+        {TEXTES.fournisseurs.ficheFournisseur.siretDeuxPoints}
+        {fournisseur.siret}
+      </Text>
+      {fournisseur.tva ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.fournisseurs.ficheFournisseur.tvaIntracommunautaireDeuxPoints}
+          {fournisseur.tva}
+        </Text>
+      ) : null}
+      {fournisseur.rib ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.fournisseurs.ficheFournisseur.ribDeuxPoints}
+          {fournisseur.rib}
+        </Text>
+      ) : null}
+      <Text style={commonStyles.line}>
+        {TEXTES.commun.general.adresseDeuxPoints}
+        {fournisseur.adressePostale}
+      </Text>
+
+      <Button label={TEXTES.commun.general.modifierLaFiche} variant="secondary" onPress={onModifier} />
+    </Card>
+  );
+}
+
+interface FormulaireProps {
+  form: Fournisseur;
+  onChange: (form: Fournisseur) => void;
+  onAnnuler: () => void;
+  onEnregistrer: () => void;
+}
+
+/** Formulaire de modification d'un fournisseur. */
+export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer }: FormulaireProps) {
+  return (
+    <Card>
+      <Text style={commonStyles.cardTitle}>{TEXTES.commun.general.modifierLaFiche}</Text>
+
+      <FormField
+        label={TEXTES.commun.general.nomDEntreprise}
+        required
+        value={form.nomEntreprise}
+        onChangeText={(v) => onChange({ ...form, nomEntreprise: v })}
+      />
+      <FormField
+        label={TEXTES.commun.general.nom}
+        required
+        value={form.nom}
+        onChangeText={(v) => onChange({ ...form, nom: v })}
+      />
+      <FormField
+        label={TEXTES.commun.general.prenom}
+        value={form.prenom ?? ''}
+        onChangeText={(v) => onChange({ ...form, prenom: v })}
+        placeholder={TEXTES.commun.general.facultatif}
+      />
+      <FormField
+        label={TEXTES.commun.general.siret}
+        required
+        value={form.siret}
+        onChangeText={(v) => onChange({ ...form, siret: v })}
+        keyboardType="number-pad"
+      />
+      <FormField
+        label={TEXTES.commun.general.tvaIntracommunautaire}
+        value={form.tva ?? ''}
+        onChangeText={(v) => onChange({ ...form, tva: v })}
+        placeholder={TEXTES.commun.general.facultatif}
+      />
+      <FormField
+        label={TEXTES.commun.general.rib}
+        value={form.rib ?? ''}
+        onChangeText={(v) => onChange({ ...form, rib: v })}
+        placeholder={TEXTES.commun.general.facultatif}
+      />
+      <FormField
+        label={TEXTES.commun.general.adressePostale}
+        required
+        value={form.adressePostale}
+        onChangeText={(v) => onChange({ ...form, adressePostale: v })}
+        multiline
+        style={commonStyles.textarea}
+      />
+
+      <View style={commonStyles.row}>
+        <Button
+          style={commonStyles.flex1}
+          variant="secondary"
+          label={TEXTES.commun.general.annuler}
+          onPress={onAnnuler}
+        />
+        <Button
+          style={commonStyles.flex1}
+          label={TEXTES.commun.general.enregistrer}
+          onPress={onEnregistrer}
+        />
+      </View>
+    </Card>
+  );
+}

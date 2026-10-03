@@ -1,0 +1,110 @@
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen } from '@/shared/components/Screen';
+import { Badge } from '@/shared/components/Badge';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { InfoModal } from '@/shared/components/InfoModal';
+import { colors } from '@/shared/theme/colors';
+import { formatDateFR } from '@/shared/utils/dates';
+import { VenteFormulaire } from '@/features/comptabilite/components/VenteFormulaire';
+import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
+import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
+
+export default function FicheVente() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const fiche = useFicheVente(id);
+  const { vente, form } = fiche;
+
+  if (!vente || !form) {
+    return (
+      <Screen>
+        <Text style={commonStyles.notFound}>{TEXTES.comptabilite.ficheVente.venteIntrouvable}</Text>
+      </Screen>
+    );
+  }
+
+  const titre = LABEL_CATEGORIE_VENTE[vente.categorie] ?? vente.categorie;
+
+  return (
+    <Screen scroll={false}>
+      <ScrollView style={commonStyles.flex1} contentContainerStyle={commonStyles.scrollContent}>
+        <View style={commonStyles.header}>
+          <View style={commonStyles.flex1}>
+            <Text style={commonStyles.title}>{titre}</Text>
+            <Text style={commonStyles.subtitle}>
+              {formatDateFR(vente.date)} · {vente.prix?.toFixed(2)} €
+            </Text>
+          </View>
+
+          <View style={commonStyles.headerDroite}>
+            <Badge label={TEXTES.commun.general.vente} color={colors.primary} />
+            <Pressable style={commonStyles.boutonMenu} onPress={() => fiche.setMenuOuvert(true)}>
+              <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+            </Pressable>
+          </View>
+        </View>
+
+        <OptionsModal
+          visible={fiche.menuOuvert}
+          onClose={() => fiche.setMenuOuvert(false)}
+          title={titre}
+          options={[
+            {
+              label: TEXTES.comptabilite.ficheVente.modifierLaVente,
+              icon: 'create',
+              onPress: () => {
+                fiche.setMenuOuvert(false);
+                fiche.setEditing(true);
+              },
+            },
+            {
+              label: TEXTES.commun.general.supprimerDefinitivement,
+              icon: 'trash',
+              onPress: () => {
+                fiche.setMenuOuvert(false);
+                fiche.setSuppressionOuverte(true);
+              },
+            },
+          ]}
+        />
+
+        {fiche.editing ? (
+          <VenteFormulaire
+            form={form}
+            onChange={fiche.setForm}
+            onChangerCategorie={fiche.changerCategorie}
+            montantTexte={fiche.montantTexte}
+            onChangerMontant={fiche.changerMontant}
+            onAnnuler={fiche.annulerModifications}
+            onEnregistrer={fiche.enregistrerModifications}
+          />
+        ) : (
+          <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} />
+        )}
+      </ScrollView>
+
+      <ConfirmModal
+        visible={fiche.suppressionOuverte}
+        title={TEXTES.commun.general.supprimerDefinitivementQuestion}
+        message={TEXTES.comptabilite.ficheVente.cetteActionSupprimeraDefinitivementCette(
+          formatDateFR(vente.date),
+        )}
+        confirmLabel={TEXTES.commun.general.supprimerDefinitivement}
+        onCancel={() => fiche.setSuppressionOuverte(false)}
+        onConfirm={fiche.supprimerDefinitivement}
+      />
+
+      <InfoModal
+        visible={!!fiche.erreur}
+        title={fiche.erreur?.titre ?? ''}
+        message={fiche.erreur?.message}
+        onClose={() => fiche.setErreur(null)}
+      />
+    </Screen>
+  );
+}

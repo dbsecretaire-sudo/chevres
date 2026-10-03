@@ -1,0 +1,136 @@
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import {
+  declarerStatutChevre,
+  getChevre,
+  listDescendance,
+  numeroBoucleExiste,
+  reactiverChevre,
+  saveChevre,
+  supprimerChevre,
+} from '@/features/cheptel/repository/chevres';
+import { listControlesPourChevre } from '@/features/exploitation/repository/controles';
+import { listVisitesPourChevre } from '@/features/exploitation/repository/visitesVeterinaire';
+import type { Chevre, StatutChevre } from '@/features/cheptel/types';
+import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
+import { todayISO } from '@/shared/utils/dates';
+import { STATUT_CHEVRE, VUE_FICHE_CHEVRE } from '@/shared/constants/cheptel';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { TEXTES } from '@/shared/textes';
+
+/** État et actions de la fiche d'une chèvre : chargement, modification, changement de statut, suppression. */
+export function useFicheChevre(id: string | undefined) {
+  const router = useRouter();
+
+  const [chevre, setChevre] = useState<Chevre | null>(null);
+  const [form, setForm] = useState<Chevre | null>(null);
+  const [descendance, setDescendance] = useState<Chevre[]>([]);
+  const [visites, setVisites] = useState<VisiteVeterinaire[]>([]);
+  const [controles, setControles] = useState<Controle[]>([]);
+
+  const [editing, setEditing] = useState(false);
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  const [vueSecondaire, setVueSecondaire] = useState<ValeurDe<typeof VUE_FICHE_CHEVRE> | null>(null);
+
+  const [statutForm, setStatutForm] = useState<StatutChevre>(STATUT_CHEVRE.MORTE);
+  const [dateStatutForm, setDateStatutForm] = useState(todayISO());
+  const [showStatutForm, setShowStatutForm] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  const charger = useCallback(async () => {
+    if (!id) return;
+    const c = await getChevre(id);
+    setChevre(c ?? null);
+    setForm(c ?? null);
+    if (c) {
+      setDescendance(await listDescendance(c.id));
+      setVisites(await listVisitesPourChevre(c.id));
+      setControles(await listControlesPourChevre(c.id));
+    }
+  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      charger();
+    }, [charger]),
+  );
+
+  /** Retourne true si l'enregistrement a réussi (utile pour enchaîner une navigation, ex : ajout d'un cabri). */
+  const enregistrerModifications = async (): Promise<boolean> => {
+    if (!form) return false;
+    const boucle = form.numeroBoucle?.trim();
+    if (boucle && (await numeroBoucleExiste(boucle, form.id))) {
+      setErreur(TEXTES.cheptel.ficheChevre.leNBoucleEstDeja(boucle));
+      return false;
+    }
+    await saveChevre(form);
+    setEditing(false);
+    charger();
+    return true;
+  };
+
+  const annulerModifications = () => {
+    setForm(chevre);
+    setEditing(false);
+  };
+
+  const supprimerDefinitivement = async () => {
+    if (!chevre) return;
+    await supprimerChevre(chevre.id);
+    router.back();
+  };
+
+  const choisirStatut = async (statut: StatutChevre) => {
+    if (editing) {
+      const ok = await enregistrerModifications();
+      if (!ok) return;
+    }
+    setStatutForm(statut);
+    setShowStatutForm(true);
+  };
+
+  const enregistrerStatut = async () => {
+    if (!chevre) return;
+    await declarerStatutChevre(chevre.id, statutForm, dateStatutForm);
+    setShowStatutForm(false);
+    charger();
+  };
+
+  const reactiver = async () => {
+    if (!chevre) return;
+    await reactiverChevre(chevre.id);
+    charger();
+  };
+
+  const basculerVue = (vue: ValeurDe<typeof VUE_FICHE_CHEVRE>) =>
+    setVueSecondaire((actuelle) => (actuelle === vue ? null : vue));
+
+  return {
+    chevre,
+    form,
+    setForm,
+    descendance,
+    visites,
+    controles,
+    editing,
+    setEditing,
+    menuOuvert,
+    setMenuOuvert,
+    vueSecondaire,
+    setVueSecondaire,
+    basculerVue,
+    statutForm,
+    dateStatutForm,
+    setDateStatutForm,
+    showStatutForm,
+    setShowStatutForm,
+    erreur,
+    setErreur,
+    enregistrerModifications,
+    annulerModifications,
+    supprimerDefinitivement,
+    choisirStatut,
+    enregistrerStatut,
+    reactiver,
+  };
+}

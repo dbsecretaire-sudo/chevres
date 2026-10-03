@@ -1,7 +1,9 @@
 import { Pressable } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/theme/colors';
+import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
+import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
 
 function BoutonRetour() {
   return (
@@ -19,21 +21,22 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarShowLabel: false,
         headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: '#fff',
+        headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Accueil',
+          title: TEXTES.navigation.layout.accueil,
+          headerRight: () => <EtablissementHeaderButton />,
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="cheptel"
         options={{
-          title: 'Cheptel',
+          title: TEXTES.commun.general.cheptel,
           headerShown: false,
           tabBarIcon: ({ color, size }) => <Ionicons name="paw" size={size} color={color} />,
         }}
@@ -47,7 +50,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="comptabilite"
         options={{
-          title: 'Comptabilité',
+          title: TEXTES.commun.general.comptabilite,
           headerShown: false,
           tabBarIcon: ({ color, size }) => <Ionicons name="cash" size={size} color={color} />,
         }}
@@ -61,7 +64,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="exploitation"
         options={{
-          title: 'Exploitation',
+          title: TEXTES.commun.general.exploitation,
           headerShown: false,
           tabBarIcon: ({ color, size }) => <Ionicons name="clipboard" size={size} color={color} />,
         }}
@@ -75,13 +78,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="reglages"
         options={{
-          title: 'Réglages',
+          title: TEXTES.navigation.layout.reglages,
           tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="informations-exploitation"
-        options={{ href: null, title: 'Informations de l’exploitation', headerLeft: BoutonRetour }}
+        options={{
+          href: null,
+          title: TEXTES.commun.general.informationsDeLExploitation,
+          headerLeft: BoutonRetour,
+        }}
       />
     </Tabs>
   );

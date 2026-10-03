@@ -1,0 +1,222 @@
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import {
+  enregistrerFacture,
+  getFacture,
+  supprimerFacture,
+} from '@/features/comptabilite/repository/factures';
+import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
+import { listFournisseurs } from '@/features/fournisseurs/repository';
+import { listClients } from '@/features/clients/repository';
+import {
+  lignesAlimentationFinales,
+  versLignesAlimentationForm,
+  type LigneAlimentForm,
+} from '@/features/comptabilite/forms/lignesAlimentation';
+import {
+  lignesCarburantFinales,
+  versLignesCarburantForm,
+  type LigneCarburantForm,
+} from '@/features/comptabilite/forms/lignesCarburant';
+import type { Facture } from '@/features/comptabilite/types';
+import type { Client } from '@/features/clients/types';
+import type { Fournisseur } from '@/features/fournisseurs/types';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
+import { totalMontants } from '@/shared/utils/nombres';
+import { nomComplet } from '@/shared/utils/personne';
+import { TEXTES } from '@/shared/textes';
+
+const montantEnTexte = (f: Facture) => String(f.montant).replace('.', ',');
+
+/** État et actions de la fiche d'une facture : chargement, modification (lignes, tiers, TVA), suppression. */
+export function useFicheFacture(id: string | undefined) {
+  const router = useRouter();
+
+  const [facture, setFacture] = useState<Facture | null>(null);
+  const [form, setForm] = useState<Facture | null>(null);
+  const [lignes, setLignes] = useState<LigneAlimentForm[]>([]);
+  const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([]);
+  const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
+  const [montantTexte, setMontantTexte] = useState('');
+  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+
+  const [editing, setEditing] = useState(false);
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
+
+  const estAlimentation = facture?.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
+  const estCarburant = facture?.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
+  const totalAlimentation = totalMontants(lignes);
+  const totalCarburant = totalMontants(lignesCarburant);
+
+  const charger = useCallback(async () => {
+    if (!id) return;
+    const f = await getFacture(id);
+    setFacture(f ?? null);
+    setForm(f ?? null);
+    setLignes(f ? versLignesAlimentationForm(f) : []);
+    setLignesCarburant(f ? versLignesCarburantForm(f) : []);
+    setMontantTexte(f ? montantEnTexte(f) : '');
+    setComptes(await listComptesPcg());
+  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      charger();
+      listFournisseurs().then(setFournisseurs);
+      listClients().then(setClients);
+    }, [charger]),
+  );
+
+  const choisirFournisseur = (fournisseurId: string) => {
+    const fournisseur = fournisseurs.find((f) => f.id === fournisseurId);
+    setForm((prev) => (prev ? { ...prev, tiers: fournisseur?.nomEntreprise ?? '' } : prev));
+  };
+
+  const choisirClient = (clientId: string) => {
+    const client = clients.find((c) => c.id === clientId);
+    setForm((prev) => (prev ? { ...prev, tiers: client ? nomComplet(client) : '' } : prev));
+  };
+
+  const changerTauxTva = (valeur: string) => {
+    setForm((prev) => (prev ? { ...prev, tauxTva: valeur === '' ? undefined : Number(valeur) } : prev));
+  };
+
+  /** Garde le texte tel que saisi (virgule comprise) et n'en déduit le montant qu'à part. */
+  const changerMontant = (valeur: string) => {
+    if (!form || !/^\d*[,.]?\d*$/.test(valeur)) return;
+    setMontantTexte(valeur);
+    const texte = valeur.replace(',', '.');
+    setForm({ ...form, montant: texte === '' || texte === '.' ? 0 : Number(texte) || 0 });
+  };
+
+  const enregistrerModifications = async () => {
+    if (!form) return;
+
+    if (!form.tiers.trim()) {
+      setErreur({
+        titre:
+          form.type === TYPE_FACTURE.RECUE
+            ? TEXTES.commun.general.fournisseurRequis
+            : TEXTES.commun.general.clientRequis,
+      });
+      return;
+    }
+
+    let aEnregistrer = form;
+
+    if (estAlimentation) {
+      const lignesFinales = lignesAlimentationFinales(lignes);
+      if (lignesFinales.length === 0) {
+        setErreur({
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        });
+        return;
+      }
+      aEnregistrer = { ...form, montant: totalAlimentation, lignesAlimentation: lignesFinales };
+    } else if (estCarburant) {
+      const lignesRetenues = lignesCarburantFinales(lignesCarburant);
+      if (lignesRetenues.length === 0) {
+        setErreur({
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontantPour,
+        });
+        return;
+      }
+      aEnregistrer = { ...form, montant: totalCarburant, lignesCarburant: lignesRetenues };
+    } else if (!form.montant || form.montant <= 0) {
+      setErreur({ titre: TEXTES.commun.general.montantInvalide });
+      return;
+    }
+
+    try {
+      await enregistrerFacture(aEnregistrer);
+      setFacture(aEnregistrer);
+      setForm(aEnregistrer);
+      setEditing(false);
+    } catch (error) {
+      console.error(error);
+      setErreur({
+        titre: TEXTES.commun.general.erreur,
+        message: TEXTES.commun.general.impossibleDEnregistrerLesModifications,
+      });
+    }
+  };
+
+  const annulerModifications = () => {
+    if (!facture) return;
+    setForm(facture);
+    setLignes(versLignesAlimentationForm(facture));
+    setLignesCarburant(versLignesCarburantForm(facture));
+    setMontantTexte(montantEnTexte(facture));
+    setEditing(false);
+  };
+
+  const supprimerDefinitivement = async () => {
+    if (!facture) return;
+    try {
+      await supprimerFacture(facture.id);
+      router.back();
+    } catch (error) {
+      console.error(error);
+      setErreur({
+        titre: TEXTES.commun.general.erreur,
+        message: TEXTES.comptabilite.ficheFacture.impossibleDeSupprimerLaFacture,
+      });
+    }
+  };
+
+  /** Compte PCG de la facture : fixe selon la catégorie, ou choisi à la main pour « Autre ». */
+  const compteAffiche = !facture
+    ? undefined
+    : facture.categorieDepense
+      ? facture.categorieDepense === CATEGORIE_DEPENSE.AUTRE && facture.compteManuel
+        ? (comptes.find((c) => c.numero === facture.compteManuel) ??
+          COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE])
+        : COMPTE_PAR_DEPENSE[facture.categorieDepense]
+      : facture.categorieRecette
+        ? facture.categorieRecette === CATEGORIE_RECETTE.AUTRE && facture.compteManuel
+          ? (comptes.find((c) => c.numero === facture.compteManuel) ??
+            COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.AUTRE])
+          : COMPTE_PAR_RECETTE[facture.categorieRecette]
+        : undefined;
+
+  return {
+    facture,
+    form,
+    setForm,
+    lignes,
+    setLignes,
+    lignesCarburant,
+    setLignesCarburant,
+    fournisseurs,
+    clients,
+    montantTexte,
+    estAlimentation,
+    estCarburant,
+    totalAlimentation,
+    totalCarburant,
+    compteAffiche,
+    editing,
+    setEditing,
+    menuOuvert,
+    setMenuOuvert,
+    suppressionOuverte,
+    setSuppressionOuverte,
+    erreur,
+    setErreur,
+    choisirFournisseur,
+    choisirClient,
+    changerTauxTva,
+    changerMontant,
+    enregistrerModifications,
+    annulerModifications,
+    supprimerDefinitivement,
+  };
+}
+
+export type EtatFicheFacture = ReturnType<typeof useFicheFacture>;
