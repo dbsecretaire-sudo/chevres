@@ -60,7 +60,7 @@ export function TuilesAccueil({ stats, annee }: Props) {
       </View>
 
       <View style={commonStyles.row}>
-        <Tuile route={ROUTES.EXPLOITATION_ALIMENTATION}>
+        <Tuile route={ROUTES.CHEPTEL_ALIMENTATION}>
           <Text style={styles.statValue}>
             {stats?.gParAnimalParJour !== undefined ? formatG(stats.gParAnimalParJour) : '—'}
           </Text>

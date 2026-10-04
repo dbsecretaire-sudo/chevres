@@ -3,6 +3,8 @@ import { generateId } from '@/shared/utils/id';
 import {
   COMPTES_PCG_DEPENSE,
   COMPTES_PCG_RECETTE,
+  COMPTE_PAR_DEPENSE,
+  COMPTE_PAR_RECETTE,
   type CompteComptable,
 } from '@/shared/constants/planComptable';
 import { cleStockage } from '@/features/etablissements/repository';
@@ -25,6 +27,22 @@ function comptesInitiaux(): CompteComptableEnregistre[] {
   return comptes;
 }
 
+/**
+ * Les comptes affectés automatiquement à une catégorie (ex : ventes de viande) doivent figurer dans le plan :
+ * ceux qui manquent (ajoutés par une mise à jour de l'app) sont ajoutés, sans toucher au reste.
+ */
+function avecComptesAutomatiques(comptes: CompteComptableEnregistre[]): CompteComptableEnregistre[] {
+  const numeros = new Set(comptes.map((c) => c.numero));
+  const manquants = [...Object.values(COMPTE_PAR_DEPENSE), ...Object.values(COMPTE_PAR_RECETTE)].filter(
+    (c) => {
+      if (numeros.has(c.numero)) return false;
+      numeros.add(c.numero);
+      return true;
+    },
+  );
+  return manquants.length > 0 ? [...comptes, ...manquants.map((c) => ({ id: generateId(), ...c }))] : comptes;
+}
+
 async function lireTous(): Promise<CompteComptableEnregistre[]> {
   const raw = await AsyncStorage.getItem(cle());
   if (!raw) {
@@ -33,7 +51,10 @@ async function lireTous(): Promise<CompteComptableEnregistre[]> {
     return initiaux;
   }
   try {
-    return JSON.parse(raw) as CompteComptableEnregistre[];
+    const enregistres = JSON.parse(raw) as CompteComptableEnregistre[];
+    const complets = avecComptesAutomatiques(enregistres);
+    if (complets.length !== enregistres.length) await ecrireTous(complets);
+    return complets;
   } catch {
     return [];
   }

@@ -21,13 +21,21 @@ import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { todayISO } from '@/shared/utils/dates';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
+import {
+  categoriesGroupe,
+  categoriesRecetteActivite,
+  estCategorieVente,
+  groupeRecette,
+  groupesRecetteActivite,
+  type GroupeRecette,
+  premiereCategorieRecette,
+} from '@/features/comptabilite/utils/recettes';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { totalMontants } from '@/shared/utils/nombres';
 import {
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
-  CATEGORIE_VENTE,
   POURCENTAGE_MIN,
   TAUX_TVA_ACHAT_DEFAUT,
   TAUX_TVA_CARBURANT,
@@ -42,6 +50,10 @@ import {
   COMPTE_PAR_RECETTE,
   TAUX_IMPOSITION_TYPE_AIDE,
 } from '@/shared/constants/planComptable';
+
+/** Taux de TVA proposé pour une recette (celui de la vente de production, 0 pour une aide ou autre). */
+const tauxTvaParDefaut = (categorie: CategorieRecette): number =>
+  estCategorieVente(categorie) ? TAUX_TVA_VENTE_PAR_CATEGORIE[categorie] : 0;
 
 /** Préfixes des comptes PCG de charges (6…) et de produits (7…) proposés dans les listes. */
 const PREFIXE_COMPTES_DEPENSE = '6';
@@ -75,12 +87,16 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [fournisseurId, setFournisseurId] = useState('');
 
   // Crédit (facture émise ou vente de production)
-  const [categorieRecette, setCategorieRecette] = useState<CategorieRecette>(CATEGORIE_RECETTE.LAIT);
+  // Première recette de l'espèce courante : le lait pour les chèvres, la charcuterie pour les cochons…
+  const [categorieRecette, setCategorieRecette] = useState<CategorieRecette>(
+    premiereCategorieRecette(especeCourante()),
+  );
   const [typeFromage, setTypeFromage] = useState<TypeFromage>(TYPE_FROMAGE.FRAIS);
   const [typeFromageLibre, setTypeFromageLibre] = useState('');
   const [quantite, setQuantite] = useState('');
   const [unite, setUnite] = useState<UniteVente>(UNITE_VENTE.PIECE);
   const [poidsKg, setPoidsKg] = useState('');
+  const [precision, setPrecision] = useState('');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
   const [tauxImpositionLibre, setTauxImpositionLibre] = useState(
@@ -90,7 +106,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.AUTRE].numero,
   );
   const [tauxTvaVente, setTauxTvaVente] = useState(
-    String(TAUX_TVA_VENTE_PAR_CATEGORIE[CATEGORIE_VENTE.LAIT]),
+    String(tauxTvaParDefaut(premiereCategorieRecette(especeCourante()))),
   );
   const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState('');
@@ -107,8 +123,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   // --- Valeurs calculées ---
   const clientSelectionne = clients.find((c) => c.id === clientId);
-  const estProductionVente =
-    type === TYPE_FACTURE.EMISE && Object.values<string>(CATEGORIE_VENTE).includes(categorieRecette);
+  const estProductionVente = type === TYPE_FACTURE.EMISE && estCategorieVente(categorieRecette);
   const estAlimentationDebit =
     type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   // L'alimentation et les ventes de production sont propres à une espèce ; le reste peut être « commun ».
@@ -144,6 +159,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setActivite(nouvelle);
     // Les lignes d'alimentation déjà saisies passent au premier aliment de l'espèce si le leur n'en fait pas partie.
     const types = typesAlimentEspece(nouvelle === ACTIVITE_COMMUNE ? especeCourante() : nouvelle);
+    const permises = categoriesRecetteActivite(nouvelle);
+    if (!permises.includes(categorieRecette)) changerCategorieRecette(premiereCategorieRecette(nouvelle));
     setLignesAlimentation((lignes) =>
       lignes.map((l) => (types.includes(l.type) ? l : { ...l, type: types[0] })),
     );
@@ -164,7 +181,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   const changerCategorieRecette = (v: CategorieRecette) => {
     setCategorieRecette(v);
-    if (v === CATEGORIE_RECETTE.LAIT || v === CATEGORIE_RECETTE.FROMAGE || v === CATEGORIE_RECETTE.CABRIS) {
+    if (estCategorieVente(v)) {
       setTauxTvaVente(String(TAUX_TVA_VENTE_PAR_CATEGORIE[v]));
       rattacherSiCommun();
     }
@@ -202,6 +219,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         tauxTvaVente,
         tauxTvaAchat,
         poidsKg,
+        precision,
         clientSelectionne,
         estProductionVente,
       });
@@ -267,6 +285,13 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setUnite,
     poidsKg,
     setPoidsKg,
+    precision,
+    setPrecision,
+    groupeRecette: groupeRecette(categorieRecette, activite),
+    groupesRecette: groupesRecetteActivite(activite),
+    categoriesDuGroupe: categoriesGroupe(groupeRecette(categorieRecette, activite), activite),
+    changerGroupeRecette: (groupe: GroupeRecette) =>
+      changerCategorieRecette(categoriesGroupe(groupe, activite)[0]),
     typeAide,
     changerTypeAide,
     typeAideLibre,

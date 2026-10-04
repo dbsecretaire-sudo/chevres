@@ -20,12 +20,23 @@ export const styles = StyleSheet.create({
     gap: 4,
   },
   carteActive: { borderColor: colors.primary },
-  carteEntete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 },
-  carteNom: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text },
+  /** Ligne réservée au bouton crayon, en haut à droite de la carte. */
+  carteBarre: { flexDirection: 'row', justifyContent: 'flex-end' },
+  carteCrayon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.ajout,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carteNom: { fontSize: 15, fontWeight: '700', color: colors.text },
   carteSousTitre: { fontSize: 12, color: colors.textMuted },
   carteType: { fontSize: 12, color: colors.primaryDark, fontWeight: '600' },
   groupeTitre: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
   retour: { marginTop: 'auto' },
+  /** « Supprimer cet établissement » : épinglé en bas de l'écran, comme « Retour ». */
+  supprimer: { marginTop: 'auto' },
   /** Espace sous « Retour » pour que le bouton « + » flottant ne le cache pas. */
   espaceFab: { height: 70 },
 });

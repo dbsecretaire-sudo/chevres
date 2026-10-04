@@ -114,6 +114,30 @@ export async function choisirEtablissementActif(id: string): Promise<void> {
   definirEspecesActives(cible.animaux, await lireEspeceMemorisee());
 }
 
+/** Les types d'un établissement (espèces élevées, activités), sans son nom : ce qui voyage avec ses données. */
+export type ProfilEtablissement = Pick<DonneesEtablissement, 'animaux' | 'activites'>;
+
+export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
+  const actif = (await listEtablissements()).find((e) => e.id === idActif);
+  return { animaux: actif?.animaux ?? [], activites: actif?.activites ?? [] };
+}
+
+/**
+ * Applique à l'établissement actif les types lus dans une sauvegarde ou sur Drive (son nom ne change pas) ;
+ * les valeurs inconnues sont ignorées.
+ */
+export async function appliquerProfilEtablissementActif(profil: ProfilEtablissement): Promise<void> {
+  const actif = (await listEtablissements()).find((e) => e.id === idActif);
+  if (!actif || !profil || typeof profil !== 'object') return;
+  const garder = <T extends string>(valeurs: unknown, permises: readonly T[]): T[] =>
+    Array.isArray(valeurs) ? valeurs.filter((v): v is T => permises.includes(v)) : [];
+  await modifierEtablissement(actif.id, {
+    nom: actif.nom,
+    animaux: garder(profil.animaux, Object.values(TYPE_ANIMAL_ETABLISSEMENT)),
+    activites: garder(profil.activites, Object.values(ACTIVITE_SOCIETE)),
+  });
+}
+
 export async function creerEtablissement(donnees: DonneesEtablissement): Promise<Etablissement> {
   const liste = await listEtablissements();
   const nouveau = { ...donnees, id: generateId(), nom: donnees.nom.trim() };
@@ -127,12 +151,28 @@ export async function modifierEtablissement(id: string, donnees: DonneesEtabliss
   if (id === idActif) definirEspecesActives(donnees.animaux, especeCourante());
 }
 
-/** Supprime l'établissement et toutes ses données locales. L'établissement par défaut ne peut pas être supprimé. */
-export async function supprimerEtablissement(id: string): Promise<void> {
-  if (id === ID_ETABLISSEMENT_DEFAUT || id === idActif) return;
+/**
+ * Supprime l'établissement et toutes ses données locales. Il en faut toujours au moins un : rien n'est supprimé
+ * s'il est le dernier. Si c'est l'établissement actif, un autre devient actif. Renvoie l'établissement actif ensuite.
+ */
+export async function supprimerEtablissement(id: string): Promise<{ supprime: boolean; actifId: string }> {
   const liste = await listEtablissements();
-  await ecrireListe(liste.filter((e) => e.id !== id));
+  if (liste.length <= 1 || !liste.some((e) => e.id === id)) return { supprime: false, actifId: idActif };
+
+  const restants = liste.filter((e) => e.id !== id);
+  if (id === idActif) await choisirEtablissementActif(restants[0].id);
+
+  // L'établissement historique a pour préfixe celui de toute l'application : on ne touche ni aux autres
+  // établissements, ni à la liste, ni au choix de l'établissement actif.
   const prefixe = prefixePour(id);
-  const cles = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(prefixe));
+  const prefixeAutres = `${PREFIXE_STOCKAGE}${SEGMENT_ETABLISSEMENT}${SEPARATEUR_CLE}`;
+  const cles = (await AsyncStorage.getAllKeys()).filter(
+    (k) =>
+      k.startsWith(prefixe) &&
+      (id !== ID_ETABLISSEMENT_DEFAUT ||
+        (!k.startsWith(prefixeAutres) && k !== KEY_LISTE && k !== KEY_ACTIF)),
+  );
   if (cles.length > 0) await AsyncStorage.multiRemove(cles);
+  await ecrireListe(restants);
+  return { supprime: true, actifId: idActif };
 }

@@ -22,6 +22,9 @@ import type {
 } from '@/features/comptabilite/types';
 import type { Client } from '@/features/clients/types';
 import {
+  CATEGORIES_VENTE_ANIMAUX,
+  CATEGORIES_VENTE_AVEC_PRECISION,
+  CATEGORIES_VENTE_VIANDE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
   POURCENTAGE_MAX,
@@ -59,6 +62,8 @@ export interface SaisieEcriture {
   tauxTvaVente: string;
   tauxTvaAchat: string;
   poidsKg: string;
+  /** Commentaire facultatif (viande, charcuterie, animal sur pied ou vivant). */
+  precision: string;
   clientSelectionne?: Client;
   /** Vrai si l'écriture est une vente de production (lait, fromage, cabris) plutôt qu'une facture. */
   estProductionVente: boolean;
@@ -73,7 +78,12 @@ export type ResultatSaisie =
   { erreur: ErreurSaisie } | { vente: Omit<Vente, 'id'> } | { facture: Omit<Facture, 'id'> };
 
 function construireVente(s: SaisieEcriture): ResultatSaisie {
-  const quantiteNum = parseDecimal(s.quantite);
+  const categorie = s.categorieRecette as CategorieVente;
+  const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorie);
+  const estAnimal = (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(categorie);
+
+  // La viande et la charcuterie se saisissent sans quantité : un montant suffit (comptée pour 1).
+  const quantiteNum = estViande ? 1 : parseDecimal(s.quantite);
   if (quantiteNum <= 0) return { erreur: { titre: TEXTES.commun.general.quantiteInvalide } };
 
   let prixNum: number | undefined;
@@ -85,12 +95,11 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   const estFromage = s.categorieRecette === CATEGORIE_RECETTE.FROMAGE;
-  const estCabris = s.categorieRecette === CATEGORIE_RECETTE.CABRIS;
   return {
     vente: {
       activite: s.activite,
       date: s.date,
-      categorie: s.categorieRecette as CategorieVente,
+      categorie,
       typeFromage: estFromage ? s.typeFromage : undefined,
       typeFromageLibre:
         estFromage && s.typeFromage === TYPE_FROMAGE.AUTRE ? s.typeFromageLibre.trim() : undefined,
@@ -98,13 +107,16 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       unite:
         s.categorieRecette === CATEGORIE_RECETTE.LAIT
           ? UNITE_VENTE.LITRES
-          : estCabris
+          : estAnimal || estViande
             ? UNITE_VENTE.PIECE
             : s.unite,
       prix: prixNum,
       tauxTva: parseDecimal(s.tauxTvaVente),
       client: s.clientSelectionne ? nomComplet(s.clientSelectionne) : undefined,
-      poidsKg: estCabris && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
+      poidsKg: estAnimal && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
+      precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
+        ? s.precision.trim() || undefined
+        : undefined,
     },
   };
 }

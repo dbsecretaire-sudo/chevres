@@ -1,17 +1,9 @@
-import { Pressable } from 'react-native';
-import { Tabs, router } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
-
-function BoutonRetour() {
-  return (
-    <Pressable onPress={() => router.back()} hitSlop={8} style={{ paddingRight: 20 }}>
-      <Ionicons name="arrow-back" size={24} color="#fff" />
-    </Pressable>
-  );
-}
 
 export default function TabsLayout() {
   return (
@@ -62,18 +54,11 @@ export default function TabsLayout() {
         })}
       />
       <Tabs.Screen
-        name="exploitation"
+        name="rh"
         options={{
-          title: TEXTES.commun.general.exploitation,
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => <Ionicons name="clipboard" size={size} color={color} />,
+          title: TEXTES.rh.ressourcesHumaines.titre,
+          tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
         }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('exploitation', { screen: 'index' });
-          },
-        })}
       />
       <Tabs.Screen
         name="reglages"
@@ -87,7 +72,8 @@ export default function TabsLayout() {
         options={{
           href: null,
           title: TEXTES.commun.general.informationsDeLExploitation,
-          headerLeft: BoutonRetour,
+          // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to="/" />,
         }}
       />
     </Tabs>

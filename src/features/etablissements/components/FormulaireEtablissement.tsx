@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -19,24 +19,24 @@ interface Props {
   libelleValider: string;
   onValider: (donnees: DonneesEtablissement) => void;
   onAnnuler: () => void;
-  /** Présent seulement quand l'établissement peut être supprimé. */
-  onSupprimer?: () => void;
 }
 
 /** Nom et types (animaux, société) d'un établissement — sert à la création et à la modification. */
-export function FormulaireEtablissement({
-  initial,
-  titre,
-  libelleValider,
-  onValider,
-  onAnnuler,
-  onSupprimer,
-}: Props) {
+export function FormulaireEtablissement({ initial, titre, libelleValider, onValider, onAnnuler }: Props) {
   const [nom, setNom] = useState(initial?.nom ?? '');
   const [animaux, setAnimaux] = useState(initial?.animaux ?? []);
   const [activites, setActivites] = useState(initial?.activites ?? []);
 
   const t = TEXTES.etablissements;
+
+  /** Dès qu'on élève des animaux, l'établissement est agricole : le groupe « Société » est grisé sur « Agriculture ». */
+  const agricole = animaux.length > 0;
+
+  const changerAnimal = (animal: (typeof animaux)[number]) => {
+    const suivants = basculer(animaux, animal);
+    setAnimaux(suivants);
+    setActivites(suivants.length > 0 ? [ACTIVITE_SOCIETE.AGRICOLE] : []);
+  };
 
   return (
     <Card>
@@ -59,7 +59,7 @@ export function FormulaireEtablissement({
           key={animal}
           label={LABEL_TYPE_ANIMAL_ETABLISSEMENT[animal]}
           value={animaux.includes(animal)}
-          onChange={() => setAnimaux((prev) => basculer(prev, animal))}
+          onChange={() => changerAnimal(animal)}
         />
       ))}
 
@@ -68,7 +68,8 @@ export function FormulaireEtablissement({
         <Checkbox
           key={activite}
           label={LABEL_ACTIVITE_SOCIETE[activite]}
-          value={activites.includes(activite)}
+          value={agricole ? activite === ACTIVITE_SOCIETE.AGRICOLE : activites.includes(activite)}
+          disabled={agricole}
           onChange={() => setActivites((prev) => basculer(prev, activite))}
         />
       ))}
@@ -76,24 +77,11 @@ export function FormulaireEtablissement({
       <Button
         label={libelleValider}
         disabled={!nom.trim()}
-        onPress={() => onValider({ nom, animaux, activites })}
+        onPress={() =>
+          onValider({ nom, animaux, activites: agricole ? [ACTIVITE_SOCIETE.AGRICOLE] : activites })
+        }
       />
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={onAnnuler}
-        />
-        {onSupprimer && (
-          <Button
-            style={commonStyles.flex1}
-            variant="danger"
-            label={TEXTES.commun.general.supprimerDefinitivement}
-            onPress={onSupprimer}
-          />
-        )}
-      </View>
+      <Button variant="secondary" label={TEXTES.commun.general.annuler} onPress={onAnnuler} />
     </Card>
   );
 }

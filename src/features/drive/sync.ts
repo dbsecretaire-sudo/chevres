@@ -5,6 +5,10 @@ import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { getSettings, updateSettings } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
+import {
+  appliquerProfilEtablissementActif,
+  profilEtablissementActif,
+} from '@/features/etablissements/repository';
 import { listComptesPcg, remplacerTousComptesPcg } from '@/features/comptes-pcg/repository';
 import {
   ensureFolder,
@@ -18,6 +22,7 @@ import {
   DOSSIER_RACINE_DRIVE,
   FICHIER_CLIENTS,
   FICHIER_COMPTES_PCG,
+  FICHIER_ETABLISSEMENT,
   FICHIER_EXPLOITATION,
   FICHIER_FOURNISSEURS,
   MOTIF_FICHIER_ANNEE,
@@ -56,6 +61,24 @@ export async function tirerInfosExploitation(accessToken: string, folderId: stri
     await updateSettings({ exploitation: JSON.parse(json) });
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les infos locales.
+  }
+}
+
+/** Envoie les espèces et activités de l'établissement vers Google Drive. */
+export async function pousserEtablissement(accessToken: string, folderId: string): Promise<void> {
+  const profil = await profilEtablissementActif();
+  await upsertFileText(accessToken, FICHIER_ETABLISSEMENT, folderId, JSON.stringify(profil));
+}
+
+/** Récupère les espèces et activités de l'établissement depuis Google Drive, si présentes (sans toucher à son nom). */
+export async function tirerEtablissement(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_ETABLISSEMENT, folderId);
+  if (!file) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    await appliquerProfilEtablissementActif(JSON.parse(json));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les types locaux.
   }
 }
 
@@ -157,6 +180,7 @@ export async function pousserToutesAnnees(
     await pousserAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
   }
   await pousserInfosExploitation(accessToken, folderId);
+  await pousserEtablissement(accessToken, folderId);
   await pousserFournisseurs(accessToken, folderId);
   await pousserClients(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
@@ -188,6 +212,7 @@ export async function tirerToutesAnnees(
     await tirerAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
   }
   await tirerInfosExploitation(accessToken, folderId);
+  await tirerEtablissement(accessToken, folderId);
   await tirerFournisseurs(accessToken, folderId);
   await tirerClients(accessToken, folderId);
   await tirerComptesPcg(accessToken, folderId);

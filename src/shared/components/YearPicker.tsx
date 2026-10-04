@@ -9,7 +9,8 @@ interface Props {
 }
 
 export function YearPicker({ annees, value, onChange }: Props) {
-  const anneesTriees = [...annees].sort((a, b) => a - b);
+  // De la plus récente à la plus ancienne : 2026, 2025, 2024…
+  const anneesTriees = [...annees].sort((a, b) => b - a);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rowCompact}>
       {anneesTriees.map((annee) => {

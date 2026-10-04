@@ -37,8 +37,8 @@ function ChampTauxTvaVente({ e }: Props) {
   );
 }
 
-/** Champs d'une aide / subvention : type d'aide, montant et taux d'imposition. */
-export function ChampsAide({ e }: Props) {
+/** Type d'aide (DPB, écorégime, ICHN…) : remplace le numéro de facture pour une aide / subvention. */
+export function ChampTypeAide({ e }: Props) {
   return (
     <>
       <SelectField
@@ -56,6 +56,14 @@ export function ChampsAide({ e }: Props) {
           placeholder={TEXTES.comptabilite.nouvelleEcriture.exAideGnrGuerreUkrainePoints}
         />
       )}
+    </>
+  );
+}
+
+/** Montant et taux d'imposition d'une aide / subvention (son type se choisit en haut du formulaire). */
+export function ChampsAide({ e }: Props) {
+  return (
+    <>
       <View style={commonStyles.row}>
         <View style={commonStyles.flex1}>
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
@@ -199,6 +207,81 @@ export function ChampsVenteCabris({ e }: Props) {
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
+    </>
+  );
+}
+
+/** Commentaire facultatif pour préciser de quoi il s'agissait. */
+function ChampPrecision({ e }: Props) {
+  return (
+    <FormField
+      label={TEXTES.comptabilite.nouvelleEcriture.precision}
+      value={e.precision}
+      onChangeText={e.setPrecision}
+      placeholder={TEXTES.comptabilite.nouvelleEcriture.precisionPlaceholder}
+    />
+  );
+}
+
+/** Vente de viande ou de charcuterie : montant, TVA et précision facultative. */
+export function ChampsVenteViande({ e }: Props) {
+  return (
+    <>
+      <View style={commonStyles.row}>
+        <View style={commonStyles.flex1}>
+          <ChampMontantTtc
+            label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
+            value={e.montant}
+            onChange={e.setMontant}
+          />
+        </View>
+        <View style={commonStyles.flex1}>
+          <ChampTauxTvaVente e={e} />
+        </View>
+      </View>
+      <ChampPrecision e={e} />
+    </>
+  );
+}
+
+/** Vente d'un animal sur pied ou vivant : nombre de têtes, poids (facultatif), prix, TVA et précision facultative. */
+export function ChampsVenteAnimal({ e }: Props) {
+  return (
+    <>
+      <View style={commonStyles.row}>
+        <View style={commonStyles.flex1}>
+          <FormField
+            label={TEXTES.comptabilite.nouvelleEcriture.nombreDeTetes}
+            required
+            value={e.quantite}
+            onChangeText={e.setQuantite}
+            keyboardType="decimal-pad"
+            placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
+          />
+        </View>
+        <View style={commonStyles.flex1}>
+          <FormField
+            label={TEXTES.commun.general.poidsKg}
+            value={e.poidsKg}
+            onChangeText={e.setPoidsKg}
+            keyboardType="decimal-pad"
+            placeholder={TEXTES.commun.general.facultatif}
+          />
+        </View>
+      </View>
+      <View style={commonStyles.row}>
+        <View style={commonStyles.flex1}>
+          <ChampMontantTtc
+            label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
+            value={e.montant}
+            onChange={e.setMontant}
+          />
+        </View>
+        <View style={commonStyles.flex1}>
+          <ChampTauxTvaVente e={e} />
+        </View>
+      </View>
+      <ChampPrecision e={e} />
     </>
   );
 }

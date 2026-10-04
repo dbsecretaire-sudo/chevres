@@ -13,6 +13,7 @@ export const ACTIVITE_SOCIETE = {
   LIBERAL: 'liberal',
   PRESTATIONS_SERVICE: 'prestations_service',
   VENTE: 'vente',
+  /** Choisi automatiquement dès qu'un établissement élève des animaux. */
   AGRICOLE: 'agricole',
 } as const;
 

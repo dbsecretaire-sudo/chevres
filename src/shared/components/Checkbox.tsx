@@ -10,13 +10,19 @@ interface Props {
   value: boolean;
   onChange: (value: boolean) => void;
   activeColor?: string;
+  /** Grisée et non modifiable. */
+  disabled?: boolean;
 }
 
-export function Checkbox({ label, value, onChange, activeColor }: Props) {
+export function Checkbox({ label, value, onChange, activeColor, disabled }: Props) {
   const accent = useAccentColor();
   const couleurActive = activeColor ?? accent;
   return (
-    <Pressable style={styles.rowCheckbox} onPress={() => onChange(!value)}>
+    <Pressable
+      style={[styles.rowCheckbox, disabled && styles.desactivee]}
+      disabled={disabled}
+      onPress={() => onChange(!value)}
+    >
       <Ionicons
         name={value ? 'checkbox' : 'square-outline'}
         size={22}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { exporterAnneeExcel } from '@/features/export/xlsxExport';
 import { exporterAnneePdf } from '@/features/export/pdfExport';
 import { exporterSauvegardeLocale, importerSauvegardeLocale } from '@/features/sauvegarde/backup';
@@ -10,6 +11,7 @@ import { TEXTES } from '@/shared/textes';
 /** Export de l'année (PDF / Excel) et sauvegarde locale (export / restauration). */
 export function useExportEtSauvegarde() {
   const { settings } = useAppSettings();
+  const { recharger } = useEtablissement();
 
   const [exportEnCours, setExportEnCours] = useState(false);
   const [choixFormat, setChoixFormat] = useState(false);
@@ -48,6 +50,7 @@ export function useExportEtSauvegarde() {
     try {
       const resultat = await importerSauvegardeLocale();
       if (resultat.annule) return;
+      await recharger();
       setResultatImport({
         titre: TEXTES.settings.reglages.sauvegardeRestauree,
         message: TEXTES.settings.reglages.animauxAnimalAnimauxFournisseursFournisseur(

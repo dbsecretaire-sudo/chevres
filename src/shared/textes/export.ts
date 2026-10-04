@@ -38,6 +38,7 @@ export const TEXTES_EXPORT = {
   },
   colonnes: {
     espece: 'Espèce',
+    precision: 'Précision',
     activite: 'Activité',
     nCompte: 'N° compte',
     libelle: 'Libellé',

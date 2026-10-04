@@ -49,6 +49,25 @@ export default function CheptelLayout() {
         options={{ title: TEXTES.navigation.layout.historiqueMortesAbattoirVendues }}
       />
       <Stack.Screen name="bilan" options={{ title: TEXTES.commun.general.bilanAnnuel }} />
+      <Stack.Screen name="veterinaire/index" options={{ title: TEXTES.commun.general.visitesVeterinaire }} />
+      <Stack.Screen
+        name="veterinaire/nouvelle"
+        options={{
+          title: TEXTES.navigation.layout.nouvelleVisite,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
+      />
+      <Stack.Screen name="controles/index" options={{ title: TEXTES.commun.general.controles }} />
+      <Stack.Screen
+        name="controles/nouvelle"
+        options={{
+          title: TEXTES.navigation.layout.nouveauControle,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
+      />
+      <Stack.Screen name="alimentation" options={{ title: TEXTES.commun.general.alimentation }} />
     </Stack>
   );
 }

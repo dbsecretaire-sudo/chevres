@@ -10,6 +10,7 @@ import { TEXTES_EXPLOITATION } from '@/shared/textes/exploitation';
 import { TEXTES_EXPORT } from '@/shared/textes/export';
 import { TEXTES_FOURNISSEURS } from '@/shared/textes/fournisseurs';
 import { TEXTES_NAVIGATION } from '@/shared/textes/navigation';
+import { TEXTES_RH } from '@/shared/textes/rh';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
 
@@ -27,6 +28,7 @@ export const TEXTES = {
   export: TEXTES_EXPORT,
   fournisseurs: TEXTES_FOURNISSEURS,
   navigation: TEXTES_NAVIGATION,
+  rh: TEXTES_RH,
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,
 } as const;

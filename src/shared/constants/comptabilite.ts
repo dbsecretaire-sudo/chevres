@@ -1,4 +1,5 @@
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /** Valeurs métier de la comptabilité — à modifier ici uniquement. */
 
@@ -23,6 +24,10 @@ export const CATEGORIE_RECETTE = {
   LAIT: 'lait',
   FROMAGE: 'fromage',
   CABRIS: 'cabris',
+  /** Boucherie / charcuterie : le seul choix de viande, pour toutes les espèces. */
+  BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
+  ANIMAL_SUR_PIED: 'animal_sur_pied',
+  ANIMAL_VIVANT: 'animal_vivant',
   AIDE: 'aide',
   AUTRE: 'autre',
 } as const;
@@ -32,7 +37,27 @@ export const CATEGORIE_VENTE = {
   LAIT: 'lait',
   FROMAGE: 'fromage',
   CABRIS: 'cabris',
+  BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
+  ANIMAL_SUR_PIED: 'animal_sur_pied',
+  ANIMAL_VIVANT: 'animal_vivant',
 } as const;
+
+/** Ventes d'animaux : on saisit un nombre de têtes (et, facultatif, un poids). */
+export const CATEGORIES_VENTE_ANIMAUX = [
+  CATEGORIE_VENTE.CABRIS,
+  CATEGORIE_VENTE.ANIMAL_SUR_PIED,
+  CATEGORIE_VENTE.ANIMAL_VIVANT,
+] as const;
+
+/** Ventes de viande et de charcuterie : un montant, sans quantité. */
+export const CATEGORIES_VENTE_VIANDE = [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE] as const;
+
+/** Ventes qui acceptent un commentaire facultatif pour préciser de quoi il s'agissait. */
+export const CATEGORIES_VENTE_AVEC_PRECISION = [
+  CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_VENTE.ANIMAL_SUR_PIED,
+  CATEGORIE_VENTE.ANIMAL_VIVANT,
+] as const;
 
 export const TYPE_AIDE = {
   PAIEMENT_BASE: 'paiement_base',
@@ -154,10 +179,94 @@ export const ORDRE_CATEGORIE_DEPENSE = [
   CATEGORIE_DEPENSE.AUTRE,
 ] as const;
 
+/**
+ * Premier niveau du choix d'une recette : quelques groupes, pour ne pas avoir une longue liste. Les groupes qui
+ * contiennent plusieurs recettes ouvrent une seconde liste (lait ou fromage ; petits, animal sur pied ou vivant…).
+ */
+export const GROUPE_RECETTE = {
+  LAITERIE: 'laiterie',
+  BOUCHERIE: 'boucherie',
+  ANIMAL: 'animal',
+  AIDE: 'aide',
+  AUTRE: 'autre',
+} as const;
+
+export interface GroupeRecetteDefinition {
+  groupe: ValeurDe<typeof GROUPE_RECETTE>;
+  categories: readonly ValeurDe<typeof CATEGORIE_RECETTE>[];
+}
+
+const AIDE_ET_AUTRE: GroupeRecetteDefinition[] = [
+  { groupe: GROUPE_RECETTE.AIDE, categories: [CATEGORIE_RECETTE.AIDE] },
+  { groupe: GROUPE_RECETTE.AUTRE, categories: [CATEGORIE_RECETTE.AUTRE] },
+];
+
+/** Chèvres et brebis : laiterie / fromagerie, puis tout ce qui touche à l'animal (dont la boucherie). */
+const GROUPES_RECETTE_LAITIERS: GroupeRecetteDefinition[] = [
+  { groupe: GROUPE_RECETTE.LAITERIE, categories: [CATEGORIE_RECETTE.LAIT, CATEGORIE_RECETTE.FROMAGE] },
+  {
+    groupe: GROUPE_RECETTE.ANIMAL,
+    categories: [
+      CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+      CATEGORIE_RECETTE.CABRIS,
+      CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
+      CATEGORIE_RECETTE.ANIMAL_VIVANT,
+    ],
+  },
+  ...AIDE_ET_AUTRE,
+];
+
+/** Vaches et cochons : pas de laiterie ; la boucherie / charcuterie est un choix à part, puis « animal ». */
+const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [
+  { groupe: GROUPE_RECETTE.BOUCHERIE, categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE] },
+  {
+    groupe: GROUPE_RECETTE.ANIMAL,
+    categories: [
+      CATEGORIE_RECETTE.CABRIS,
+      CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
+      CATEGORIE_RECETTE.ANIMAL_VIVANT,
+    ],
+  },
+  ...AIDE_ET_AUTRE,
+];
+
+/** Les groupes de recettes (et leurs recettes) proposés selon l'espèce de l'activité. */
+export const GROUPES_RECETTE_PAR_ESPECE: Record<
+  ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>,
+  GroupeRecetteDefinition[]
+> = {
+  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: GROUPES_RECETTE_LAITIERS,
+  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: GROUPES_RECETTE_LAITIERS,
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: GROUPES_RECETTE_VIANDE,
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: GROUPES_RECETTE_VIANDE,
+};
+
+/** Groupes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
+export const GROUPES_RECETTE_COMMUNS = AIDE_ET_AUTRE;
+
+const aplatir = (groupes: GroupeRecetteDefinition[]) => groupes.flatMap((g) => g.categories);
+
+/** Toutes les recettes proposées selon l'espèce de l'activité. */
+export const CATEGORIES_RECETTE_PAR_ESPECE: Record<
+  ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>,
+  readonly ValeurDe<typeof CATEGORIE_RECETTE>[]
+> = {
+  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.chevres),
+  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: aplatir(GROUPES_RECETTE_PAR_ESPECE.brebis),
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.vaches),
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: aplatir(GROUPES_RECETTE_PAR_ESPECE.cochons),
+};
+
+/** Recettes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
+export const CATEGORIES_RECETTE_COMMUNES = aplatir(GROUPES_RECETTE_COMMUNS);
+
 export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.LAIT,
   CATEGORIE_RECETTE.FROMAGE,
   CATEGORIE_RECETTE.CABRIS,
+  CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
+  CATEGORIE_RECETTE.ANIMAL_VIVANT,
   CATEGORIE_RECETTE.AIDE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
@@ -177,6 +286,9 @@ export const TAUX_TVA_VENTE_PAR_CATEGORIE = {
   [CATEGORIE_VENTE.LAIT]: 5.5,
   [CATEGORIE_VENTE.FROMAGE]: 5.5,
   [CATEGORIE_VENTE.CABRIS]: 10,
+  [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: 5.5,
+  [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: 10,
+  [CATEGORIE_VENTE.ANIMAL_VIVANT]: 10,
 } as const;
 
 // --- Pourcentages ---

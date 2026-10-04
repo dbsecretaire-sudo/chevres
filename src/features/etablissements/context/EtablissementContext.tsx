@@ -13,6 +13,7 @@ import {
   choisirEtablissementActif,
   creerEtablissement,
   initialiserEtablissements,
+  listEtablissements,
   modifierEtablissement,
   supprimerEtablissement,
   type DonneesEtablissement,
@@ -32,6 +33,8 @@ interface EtablissementContextValue {
   espece: EspeceAnimale;
   /** Change d'espèce et revient sur l'écran indiqué (l'écran courant par défaut) une fois les données rechargées. */
   changerEspece: (espece: EspeceAnimale, chemin?: string) => Promise<void>;
+  /** Relit la liste des établissements (après une restauration qui a changé les types de l'établissement actif). */
+  recharger: () => Promise<void>;
 }
 
 const EtablissementContext = createContext<EtablissementContextValue | undefined>(undefined);
@@ -82,9 +85,17 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
     if (chemin) setTimeout(() => router.replace(chemin as never), 0);
   }, []);
 
+  const recharger = useCallback(async () => {
+    setListe(await listEtablissements());
+    setEspece(especeCourante());
+  }, []);
+
   const supprimer = useCallback(async (id: string) => {
-    await supprimerEtablissement(id);
+    const resultat = await supprimerEtablissement(id);
+    if (!resultat.supprime) return;
     setListe((prev) => prev.filter((e) => e.id !== id));
+    setActifId(resultat.actifId);
+    setEspece(especeCourante());
   }, []);
 
   if (!pret) return null;
@@ -114,6 +125,7 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
         especes: especesActives(),
         espece,
         changerEspece,
+        recharger,
       }}
     >
       {/* Remonter tout l'arbre au changement d'établissement ou d'espèce : chaque écran recharge ses données depuis le bon espace de stockage. */}

@@ -2,7 +2,12 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
-import { CATEGORIE_VENTE, UNITE_VENTE } from '@/shared/constants/comptabilite';
+import {
+  CATEGORIES_VENTE_ANIMAUX,
+  CATEGORIES_VENTE_VIANDE,
+  CATEGORIE_VENTE,
+  UNITE_VENTE,
+} from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 
 const montantEnTexte = (v: Vente | null | undefined) =>
@@ -40,7 +45,8 @@ export function useFicheVente(id: string | undefined) {
     const unite: Vente['unite'] =
       categorie === CATEGORIE_VENTE.LAIT
         ? UNITE_VENTE.LITRES
-        : categorie === CATEGORIE_VENTE.CABRIS
+        : (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(categorie) ||
+            (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorie)
           ? UNITE_VENTE.PIECE
           : form.unite === UNITE_VENTE.KG
             ? UNITE_VENTE.KG
@@ -59,7 +65,9 @@ export function useFicheVente(id: string | undefined) {
   const enregistrerModifications = async () => {
     if (!form) return;
 
-    if (!form.quantite || form.quantite <= 0) {
+    // La viande et la charcuterie n'ont pas de quantité à saisir.
+    const sansQuantite = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
+    if (!sansQuantite && (!form.quantite || form.quantite <= 0)) {
       setErreur({ titre: TEXTES.commun.general.quantiteInvalide });
       return;
     }
@@ -69,7 +77,12 @@ export function useFicheVente(id: string | undefined) {
     }
 
     try {
-      const nettoye: Vente = { ...form, client: form.client?.trim() || undefined };
+      const nettoye: Vente = {
+        ...form,
+        quantite: sansQuantite ? 1 : form.quantite,
+        client: form.client?.trim() || undefined,
+        precision: form.precision?.trim() || undefined,
+      };
       await saveVente(nettoye);
       setVente(nettoye);
       setForm(nettoye);

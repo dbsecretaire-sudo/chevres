@@ -7,7 +7,6 @@ import { Fab } from '@/shared/components/Fab';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
 import { FormulaireEtablissement } from '@/features/etablissements/components/FormulaireEtablissement';
 import type { DonneesEtablissement, Etablissement } from '@/features/etablissements/repository';
-import { ID_ETABLISSEMENT_DEFAUT } from '@/shared/constants/stockage';
 import { styles } from '@/shared/styles/etablissements/SelecteurEtablissement.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -40,7 +39,7 @@ export function SelecteurEtablissement({
 
   const t = TEXTES.etablissements.selecteurEtablissement;
   const enEdition = mode.type === 'edition' ? etablissements.find((e) => e.id === mode.id) : undefined;
-  const supprimable = !!enEdition && enEdition.id !== ID_ETABLISSEMENT_DEFAUT && enEdition.id !== actifId;
+  const dernier = etablissements.length <= 1;
 
   return (
     <Screen scroll={false}>
@@ -60,17 +59,26 @@ export function SelecteurEtablissement({
         )}
 
         {enEdition && (
-          <FormulaireEtablissement
-            initial={enEdition}
-            titre={t.modifierLEtablissement}
-            libelleValider={TEXTES.commun.general.enregistrer}
-            onValider={async (donnees) => {
-              await onModifier(enEdition.id, donnees);
-              setMode({ type: 'liste' });
-            }}
-            onAnnuler={() => setMode({ type: 'liste' })}
-            onSupprimer={supprimable ? () => setASupprimer(enEdition) : undefined}
-          />
+          <>
+            <FormulaireEtablissement
+              initial={enEdition}
+              titre={t.modifierLEtablissement}
+              libelleValider={TEXTES.commun.general.enregistrer}
+              onValider={async (donnees) => {
+                await onModifier(enEdition.id, donnees);
+                setMode({ type: 'liste' });
+              }}
+              onAnnuler={() => setMode({ type: 'liste' })}
+            />
+            {dernier && <Text style={commonStyles.muted}>{t.auMoinsUnEtablissement}</Text>}
+            <Button
+              style={styles.supprimer}
+              variant="danger"
+              label={t.supprimerCetEtablissement}
+              disabled={dernier}
+              onPress={() => setASupprimer(enEdition)}
+            />
+          </>
         )}
 
         {mode.type === 'liste' && (

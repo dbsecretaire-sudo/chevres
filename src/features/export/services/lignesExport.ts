@@ -55,6 +55,7 @@ export function venteRow(v: Vente) {
     [TEXTES.export.colonnes.quantite]: v.quantite,
     [TEXTES.export.colonnes.unite]: v.unite,
     [TEXTES.export.colonnes.prix]: v.prix,
+    [TEXTES.export.colonnes.precision]: v.precision ?? '',
   };
 }
 

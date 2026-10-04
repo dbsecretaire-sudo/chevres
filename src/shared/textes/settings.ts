@@ -25,9 +25,6 @@ export const TEXTES_SETTINGS = {
     ) =>
       `${animaux} animal/animaux, ${fournisseurs} fournisseur(s), ${clients} client(s) et ${comptesPcg} compte(s) PCG importés.`,
     erreurDImport: 'Erreur d’import',
-    etablissement: 'Établissement',
-    actuelDeuxPoints: 'Actuel : ',
-    changerCreerUnEtablissement: 'Changer / créer un établissement',
     export: 'Export',
     genereUnRapportCheptelVentes:
       'Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année',
@@ -58,10 +55,6 @@ export const TEXTES_SETTINGS = {
     },
     donneesEnvoyeesVersGoogleDrive: 'Données envoyées vers Google Drive.',
     donneesRecupereesDepuisGoogleDrive: 'Données récupérées depuis Google Drive.',
-    lengthEtablissementsChacunASes: (length: number) =>
-      `${length} établissements. Chacun a ses propres données et son propre dossier Google Drive.`,
-    creezUnAutreEtablissementPour:
-      'Créez un autre établissement pour gérer un second élevage avec des données séparées.',
     exportAnneeactive: (anneeActive: number) => `Export ${anneeActive}`,
     get troupeauChevres() {
       return V().troupeau;

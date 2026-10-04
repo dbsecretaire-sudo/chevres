@@ -66,6 +66,9 @@ export function ClientResume({ resume }: { resume: ResumeClient }) {
           valeur={`${resume.nombreCabris}${resume.kgCabris > 0 ? T.kgcabrisKg(resume.kgCabris) : ''}`}
         />
       )}
+      {resume.aAutresVentes && (
+        <LigneTotal libelle={T.autresVentes} valeur={formatMontant(resume.montantAutresVentes)} />
+      )}
       {resume.aAide && <LigneTotal libelle={T.aidesSubventions} valeur={formatMontant(resume.montantAide)} />}
       {resume.aAutre && (
         <LigneTotal libelle={TEXTES.commun.general.autre} valeur={formatMontant(resume.montantAutre)} />

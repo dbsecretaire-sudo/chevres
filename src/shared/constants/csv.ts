@@ -73,6 +73,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'tauxTva',
     'client',
     'poidsKg',
+    'precision',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',

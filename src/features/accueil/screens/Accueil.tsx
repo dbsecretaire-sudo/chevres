@@ -28,7 +28,7 @@ export default function Accueil() {
 
       <Pressable
         style={({ pressed }) => pressed && commonStyles.pressed}
-        onPress={() => router.push(ROUTES.EXPLOITATION_VETERINAIRE)}
+        onPress={() => router.push(ROUTES.CHEPTEL_VETERINAIRE)}
       >
         <Card>
           <Text style={commonStyles.lineBold}>{TEXTES.accueil.accueil.derniereVisiteVeterinaire}</Text>

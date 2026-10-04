@@ -6,22 +6,22 @@ import { Card } from '@/shared/components/Card';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import {
-  calculerBilanAlimentation,
-  type BilanAlimentation,
-} from '@/features/exploitation/services/bilanAlimentation';
+import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
+import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
+import { activiteFacture } from '@/features/comptabilite/utils/activite';
+import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
+import { libelleRecetteActivite, libelleRecetteEtablissement } from '@/features/comptabilite/utils/recettes';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { especeCourante, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { calculerBilanCarburant, type BilanCarburant } from '@/features/comptabilite/services/bilanCarburant';
 import {
   calculerDetailComptable,
+  correspondAuFiltre,
+  especesDuFiltre,
   type DetailComptable,
 } from '@/features/comptabilite/services/detailComptable';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import {
-  LABEL_CATEGORIE_DEPENSE,
-  LABEL_CATEGORIE_RECETTE,
-  LABEL_TYPE_ALIMENT,
-  LABEL_TYPE_CARBURANT,
-} from '@/shared/textes/libelles';
+import { LABEL_CATEGORIE_DEPENSE, LABEL_TYPE_ALIMENT, LABEL_TYPE_CARBURANT } from '@/shared/textes/libelles';
 import { formatMontant } from '@/shared/utils/dates';
 import type { CategorieDepense } from '@/features/comptabilite/types';
 import { styles } from '@/shared/styles/comptabilite/DetailComptable.styles';
@@ -33,7 +33,13 @@ import {
 } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 
-const VIDE: DetailComptable = { depenses: [], recettes: [], totalDepenses: 0, totalRecettes: 0 };
+const VIDE: DetailComptable = {
+  depenses: [],
+  recettes: [],
+  alimentationParType: {} as DetailComptable['alimentationParType'],
+  totalDepenses: 0,
+  totalRecettes: 0,
+};
 
 interface SousPoste {
   label: string;
@@ -44,22 +50,23 @@ export default function DetailComptabilite() {
   const { settings, setAnneeActive } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [detail, setDetail] = useState<DetailComptable>(VIDE);
-  const [bilanAlimentation, setBilanAlimentation] = useState<BilanAlimentation | null>(null);
+  // Comme l'écran Comptabilité : l'espèce active par défaut, ou toutes les activités ensemble.
+  const [filtre, setFiltre] = useState<FiltreActivite>(
+    plusieursEspeces() ? especeCourante() : TOUTES_ACTIVITES,
+  );
   const [bilanCarburant, setBilanCarburant] = useState<BilanCarburant | null>(null);
   const [categorieOuverte, setCategorieOuverte] = useState<CategorieDepense | null>(null);
 
   const charger = useCallback(async () => {
-    const [toutesAnnees, d, alimentation, carburant] = await Promise.all([
+    const [toutesAnnees, d, carburant] = await Promise.all([
       toutesLesAnneesConnues(),
-      calculerDetailComptable(settings.anneeActive),
-      calculerBilanAlimentation(settings.anneeActive),
-      calculerBilanCarburant(settings.anneeActive),
+      calculerDetailComptable(settings.anneeActive, filtre),
+      calculerBilanCarburant(settings.anneeActive, (f) => correspondAuFiltre(filtre, activiteFacture(f))),
     ]);
     setAnnees(toutesAnnees);
     setDetail(d);
-    setBilanAlimentation(alimentation);
     setBilanCarburant(carburant);
-  }, [settings.anneeActive]);
+  }, [settings.anneeActive, filtre]);
 
   useFocusEffect(
     useCallback(() => {
@@ -68,11 +75,12 @@ export default function DetailComptabilite() {
   );
 
   const sousPostes = (categorie: CategorieDepense): SousPoste[] | null => {
-    if (categorie === CATEGORIE_DEPENSE.ALIMENTATION && bilanAlimentation) {
-      return TYPES_ALIMENT_COMPTABILISES.map((t) => ({
-        label: LABEL_TYPE_ALIMENT[t],
-        montant: bilanAlimentation.parType[t].montant,
-      }));
+    if (categorie === CATEGORIE_DEPENSE.ALIMENTATION) {
+      // Les aliments des espèces concernées, plus tout aliment qui a un montant (anciennes écritures).
+      const concernes = new Set<string>(especesDuFiltre(filtre).flatMap((e) => typesAlimentEspece(e)));
+      return TYPES_ALIMENT_COMPTABILISES.filter(
+        (t) => concernes.has(t) || (detail.alimentationParType[t] ?? 0) !== 0,
+      ).map((t) => ({ label: LABEL_TYPE_ALIMENT[t], montant: detail.alimentationParType[t] ?? 0 }));
     }
     if (categorie === CATEGORIE_DEPENSE.CARBURANT && bilanCarburant) {
       return TYPES_CARBURANT.map((t) => ({
@@ -86,6 +94,7 @@ export default function DetailComptabilite() {
   return (
     <Screen>
       <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
+      <PucesActivite valeur={filtre} onChange={setFiltre} />
 
       <Text style={styles.titreSection}>{TEXTES.commun.general.depenses}</Text>
       <Card style={commonStyles.gap2}>
@@ -132,7 +141,11 @@ export default function DetailComptabilite() {
       <Card style={commonStyles.gap2}>
         {detail.recettes.map((r) => (
           <View key={r.categorie} style={styles.ligne}>
-            <Text style={commonStyles.body}>{LABEL_CATEGORIE_RECETTE[r.categorie]}</Text>
+            <Text style={commonStyles.body}>
+              {filtre === TOUTES_ACTIVITES || filtre === ACTIVITE_COMMUNE
+                ? libelleRecetteEtablissement(r.categorie)
+                : libelleRecetteActivite(r.categorie, filtre)}
+            </Text>
             <Text style={[styles.montant, { color: colors.primary }]}>{formatMontant(r.montant)}</Text>
           </View>
         ))}

@@ -5,6 +5,8 @@ export const DOSSIER_RACINE_DRIVE = 'Troupeau Chèvres';
 export const FICHIER_EXPLOITATION = 'exploitation.json';
 export const FICHIER_FOURNISSEURS = 'fournisseurs.json';
 export const FICHIER_CLIENTS = 'clients.json';
+/** Espèces et activités de l'établissement. */
+export const FICHIER_ETABLISSEMENT = 'etablissement.json';
 export const FICHIER_COMPTES_PCG = 'comptes-pcg.json';
 
 /** Extension des fichiers de données annuels (un par catégorie et par année : « factures_2026.csv »). */

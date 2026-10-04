@@ -9,11 +9,11 @@ export const ROUTES = {
   CHEPTEL_NOUVELLE: '/cheptel/nouvelle',
   CHEPTEL_NAISSANCE_NOUVELLE: '/cheptel/naissance-nouvelle',
 
-  EXPLOITATION_ALIMENTATION: '/exploitation/alimentation',
-  EXPLOITATION_VETERINAIRE: '/exploitation/veterinaire',
-  EXPLOITATION_VISITE_NOUVELLE: '/exploitation/veterinaire/nouvelle',
-  EXPLOITATION_CONTROLES: '/exploitation/controles',
-  EXPLOITATION_CONTROLE_NOUVEAU: '/exploitation/controles/nouvelle',
+  CHEPTEL_ALIMENTATION: '/cheptel/alimentation',
+  CHEPTEL_VETERINAIRE: '/cheptel/veterinaire',
+  CHEPTEL_VISITE_NOUVELLE: '/cheptel/veterinaire/nouvelle',
+  CHEPTEL_CONTROLES: '/cheptel/controles',
+  CHEPTEL_CONTROLE_NOUVEAU: '/cheptel/controles/nouvelle',
 
   COMPTABILITE: '/comptabilite',
   COMPTABILITE_NOUVELLE: '/comptabilite/nouvelle',

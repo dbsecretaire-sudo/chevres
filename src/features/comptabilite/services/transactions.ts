@@ -1,13 +1,15 @@
 import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
 import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
-import type { ActiviteComptable } from '@/features/comptabilite/types';
+import type { ActiviteComptable, Vente } from '@/features/comptabilite/types';
 import { montantAlimentationHorsAutre } from '@/features/comptabilite/utils/montants';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
 import {
   SENS_TRANSACTION,
   SOURCE_TRANSACTION,
+  CATEGORIES_VENTE_ANIMAUX,
+  CATEGORIES_VENTE_VIANDE,
   CATEGORIE_VENTE,
   TYPE_FACTURE,
   CATEGORIE_RECETTE,
@@ -30,6 +32,20 @@ export interface Transaction {
   activite: ActiviteComptable;
 }
 
+/** Titre d'une vente dans la liste : « Lait — 12 L », « Veaux — 2 têtes », « Charcuterie »… */
+function titreVente(v: Vente): string {
+  if (v.categorie === CATEGORIE_VENTE.LAIT) return TEXTES.comptabilite.transactions.laitQuantiteL(v.quantite);
+  if ((CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(v.categorie)) {
+    return TEXTES.comptabilite.transactions.cabrisQuantiteTeteValeur(
+      libelleCategorieVente(v),
+      v.quantite,
+      v.quantite > 1 ? 's' : '',
+    );
+  }
+  if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie)) return libelleCategorieVente(v);
+  return TEXTES.comptabilite.transactions.fromageQuantiteUnite(v.quantite, v.unite);
+}
+
 /** Vue unifiée : ventes (lait/fromage/cabris) + factures (reçues/émises), triée par date décroissante. */
 export async function listTransactions(annee: number): Promise<Transaction[]> {
   const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
@@ -40,17 +56,10 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     montant: v.prix,
     montantComptabilise: v.prix,
     sens: SENS_TRANSACTION.ENTREE,
-    titre:
-      v.categorie === CATEGORIE_VENTE.LAIT
-        ? TEXTES.comptabilite.transactions.laitQuantiteL(v.quantite)
-        : v.categorie === CATEGORIE_VENTE.CABRIS
-          ? TEXTES.comptabilite.transactions.cabrisQuantiteTeteValeur(
-              libelleCategorieVente(v),
-              v.quantite,
-              v.quantite > 1 ? 's' : '',
-            )
-          : TEXTES.comptabilite.transactions.fromageQuantiteUnite(v.quantite, v.unite),
-    sousTitre: TEXTES.comptabilite.transactions.venteDeProduction,
+    titre: titreVente(v),
+    sousTitre: v.precision
+      ? `${TEXTES.comptabilite.transactions.venteDeProduction} · ${v.precision}`
+      : TEXTES.comptabilite.transactions.venteDeProduction,
     source: SOURCE_TRANSACTION.VENTE,
     activite: activiteVente(v),
   }));

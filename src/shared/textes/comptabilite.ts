@@ -1,4 +1,4 @@
-import { vocabulaire } from '@/shared/dictionnaire/animaux';
+import { produitsVendus, vocabulaire } from '@/shared/dictionnaire/animaux';
 
 const V = vocabulaire;
 
@@ -92,7 +92,7 @@ export const TEXTES_COMPTABILITE = {
   fiscaliteImpots: {
     recettesBrutesEspace: 'Recettes brutes — ',
     get ventesDeProductionLaitFromage() {
-      return `Ventes de production (lait, fromage, ${V().petit.pluriel})`;
+      return `Ventes de production (${produitsVendus()})`;
     },
     aidesImposables: 'Aides imposables',
     autresFacturesEmises: 'Autres factures émises',
@@ -103,7 +103,7 @@ export const TEXTES_COMPTABILITE = {
     imposable: 'Imposable',
     nonImposable: 'Non imposable',
     get ceTotalAdditionnePourL() {
-      return `Ce total additionne, pour l’année sélectionnée : vos ventes de production enregistrées (lait, fromage, ${V().petit.pluriel}), vos factures émises hors aides, et les aides que vous avez marquées « imposable » (voir le détail par type ci-dessus — chaque type d’aide PAC peut avoir un traitement fiscal différent, c’est pour ça que la ventilation est faite type par type plutôt qu’un seul total générique).`;
+      return `Ce total additionne, pour l’année sélectionnée : vos ventes de production enregistrées (${produitsVendus()}), vos factures émises hors aides, et les aides que vous avez marquées « imposable » (voir le détail par type ci-dessus — chaque type d’aide PAC peut avoir un traitement fiscal différent, c’est pour ça que la ventilation est faite type par type plutôt qu’un seul total générique).`;
     },
     celaCorrespondALaNotion:
       'Cela correspond à la notion de « recettes brutes encaissées » du régime micro-BA (Code général des impôts, art. 64 bis). Ce régime s’applique si vos recettes moyennes sur 3 ans ne dépassent pas le seuil en vigueur.',
@@ -119,7 +119,7 @@ export const TEXTES_COMPTABILITE = {
   fiscaliteRsa: {
     recettesParMoisEspace: 'Recettes par mois — ',
     get chaqueLigneMensuelleAdditionneVos() {
-      return `Chaque ligne mensuelle additionne : vos ventes de production encaissées ce mois-là (lait, fromage, ${V().petit.pluriel}) et vos factures émises (ventes et aides) datées de ce mois. C’est un montant de chiffre d’affaires / recettes encaissées, mois par mois.`;
+      return `Chaque ligne mensuelle additionne : vos ventes de production encaissées ce mois-là (${produitsVendus()}) et vos factures émises (ventes et aides) datées de ce mois. C’est un montant de chiffre d’affaires / recettes encaissées, mois par mois.`;
     },
     laDeclarationTrimestrielleDeRessources:
       'La déclaration trimestrielle de ressources (DTR) pour le RSA, pour un exploitant agricole non-salarié, demande généralement le montant du chiffre d’affaires (ou des recettes) de chacun des 3 derniers mois — c’est ce que ces lignes visent à vous donner rapidement.',
@@ -160,6 +160,10 @@ export const TEXTES_COMPTABILITE = {
     typeDeFromage: 'Type de fromage',
     preciserLeType: 'Préciser le type',
     ex2: 'ex: 2',
+    nombreDeTetes: 'Nombre de têtes',
+    detailDeLaVente: 'Détail de la vente',
+    precision: 'Précision',
+    precisionPlaceholder: 'Facultatif — de quoi s’agissait-il ?',
     get nombreDeCabris() {
       return `Nombre de ${V().petit.pluriel}`;
     },

@@ -7,25 +7,23 @@ import {
   NoteComptePcg,
 } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
 import {
+  ChampTypeAide,
   ChampsAide,
+  ChampsVenteAnimal,
   ChampsVenteCabris,
   ChampsVenteFromage,
   ChampsVenteLait,
+  ChampsVenteViande,
 } from '@/features/comptabilite/components/ecriture/ChampsVente';
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
-import type { CategorieRecette } from '@/features/comptabilite/types';
+import type { Vente } from '@/features/comptabilite/types';
+import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_CATEGORIE_RECETTE } from '@/shared/textes/libelles';
-
-/** Lues à l'affichage : certains libellés (vente de cabris…) dépendent de l'espèce de l'établissement. */
-const optionsCategorieRecette = () =>
-  Object.entries(LABEL_CATEGORIE_RECETTE).map(([value, label]) => ({
-    value: value as CategorieRecette,
-    label,
-  }));
+import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
+import { SelectField } from '@/shared/components/SelectField';
 
 /** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
 export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
@@ -34,7 +32,9 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
 
   return (
     <>
-      {!e.estProductionVente && (
+      {/* Une aide se décrit par son type (DPB, ICHN…) ; une autre facture par son numéro. */}
+      {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampTypeAide e={e} />}
+      {!e.estProductionVente && e.categorieRecette !== CATEGORIE_RECETTE.AIDE && (
         <FormField
           label={TEXTES.comptabilite.nouvelleEcriture.nDeFacture}
           value={e.description}
@@ -44,15 +44,32 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
       )}
       <ChampCategorieCompte
         label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
-        value={e.categorieRecette}
-        onChange={e.changerCategorieRecette}
-        options={optionsCategorieRecette()}
+        value={e.groupeRecette}
+        onChange={e.changerGroupeRecette}
+        options={e.groupesRecette.map((groupe) => ({ value: groupe, label: LABEL_GROUPE_RECETTE[groupe] }))}
         demanderCompte={e.categorieRecette === CATEGORIE_RECETTE.AUTRE}
         compte={e.compteRecetteAutre}
         onCompteChange={e.setCompteRecetteAutre}
         optionsCompte={e.optionsCompteRecette}
         onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
       />
+
+      {/* Seconde liste : lait ou fromage ; boucherie, petits, animal sur pied ou vivant. */}
+      {e.categoriesDuGroupe.length > 1 && (
+        <SelectField
+          label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
+          required
+          value={e.categorieRecette}
+          onChange={e.changerCategorieRecette}
+          options={e.categoriesDuGroupe.map((categorie) => ({
+            value: categorie,
+            label: libelleCategorieVente({
+              categorie: categorie as Vente['categorie'],
+              activite: e.activite,
+            }),
+          }))}
+        />
+      )}
 
       <NoteComptePcg compte={e.compteAffiche} />
 
@@ -90,6 +107,9 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
       {e.categorieRecette === CATEGORIE_RECETTE.LAIT && <ChampsVenteLait e={e} />}
       {e.categorieRecette === CATEGORIE_RECETTE.FROMAGE && <ChampsVenteFromage e={e} />}
       {e.categorieRecette === CATEGORIE_RECETTE.CABRIS && <ChampsVenteCabris e={e} />}
+      {(e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_SUR_PIED ||
+        e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_VIVANT) && <ChampsVenteAnimal e={e} />}
+      {e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE && <ChampsVenteViande e={e} />}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { listFactures } from '@/features/comptabilite/repository/factures';
-import type { TypeCarburant } from '@/features/comptabilite/types';
+import type { Facture, TypeCarburant } from '@/features/comptabilite/types';
 import { TYPE_CARBURANT, TYPE_FACTURE, CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 
 export interface BilanCarburantType {
@@ -14,8 +14,12 @@ export interface BilanCarburant {
 }
 
 /** Ventile les factures reçues catégorisées « Carburant » de l'année par type (gazole, essence, GNR). */
-export async function calculerBilanCarburant(annee: number): Promise<BilanCarburant> {
-  const factures = await listFactures(annee);
+export async function calculerBilanCarburant(
+  annee: number,
+  /** Ne garde que certaines factures (par exemple celles d'une activité) ; toutes par défaut. */
+  garder: (facture: Facture) => boolean = () => true,
+): Promise<BilanCarburant> {
+  const factures = (await listFactures(annee)).filter(garder);
   const parType: Record<TypeCarburant, BilanCarburantType> = {
     [TYPE_CARBURANT.GAZOIL]: { montant: 0, litrage: 0 },
     [TYPE_CARBURANT.ESSENCE]: { montant: 0, litrage: 0 },

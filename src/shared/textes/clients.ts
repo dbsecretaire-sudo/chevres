@@ -15,6 +15,7 @@ export const TEXTES_CLIENTS = {
     get cabrisVendus() {
       return `${Cap(V().petit.pluriel)} vendus`;
     },
+    autresVentes: 'Autres ventes (animaux, viande, charcuterie)',
     aidesSubventions: 'Aides / subventions',
     totalPayeParCeClient: 'Total payé par ce client',
     aucuneEcritureLieeACe: 'Aucune écriture liée à ce client pour l’instant.',

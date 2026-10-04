@@ -130,6 +130,8 @@ export interface Vente {
   tauxTva?: number;
   /** Nom du client, facultatif — préremplissable depuis la fiche client. */
   client?: string;
-  /** Uniquement pour categorie === 'cabris' : poids total vendu, facultatif. */
+  /** Pour les ventes d'animaux (cabris, animal sur pied, animal vivant) : poids total vendu, facultatif. */
   poidsKg?: number;
+  /** Commentaire facultatif précisant de quoi il s'agissait (viande, charcuterie, animal sur pied ou vivant). */
+  precision?: string;
 }

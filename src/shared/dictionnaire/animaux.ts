@@ -24,6 +24,8 @@ export interface Vocabulaire {
   /** Le petit sans boucle, selon son sexe, tel qu'affiché dans les listes (singulier, avec majuscule). */
   petitFemelle: string;
   petitMale: string;
+  /** Ce que l'élevage vend (pour les phrases du type « ventes de production (lait, fromage, cabris) »). */
+  produits: string[];
 }
 
 const terme = (singulier: string, pluriel = `${singulier}s`): Terme => ({ singulier, pluriel });
@@ -36,6 +38,7 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('cabri'),
     petitFemelle: 'Chevrette',
     petitMale: 'Chevreau',
+    produits: ['lait', 'fromage', 'cabris', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: {
     troupeau: 'Troupeau Brebis',
@@ -44,6 +47,7 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('agneau', 'agneaux'),
     petitFemelle: 'Agnelle',
     petitMale: 'Agneau',
+    produits: ['lait', 'fromage', 'agneaux', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: {
     troupeau: 'Troupeau Vaches',
@@ -52,6 +56,7 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('veau', 'veaux'),
     petitFemelle: 'Génisse',
     petitMale: 'Veau',
+    produits: ['veaux', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: {
     troupeau: 'Troupeau Cochons',
@@ -60,6 +65,7 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('porcelet'),
     petitFemelle: 'Cochette',
     petitMale: 'Porcelet',
+    produits: ['porcelets', 'boucherie', 'charcuterie', 'animaux'],
   },
 };
 
@@ -112,3 +118,13 @@ export const plusieursEspeces = (): boolean => especesActives().length > 1;
 
 /** « ce bouc » / « cet agneau » : « ce » devient « cet » devant une voyelle ou un h muet (mots masculins). */
 export const ce = (mot: string): string => (/^[aeiouyhéèêàâîô]/i.test(mot) ? `cet ${mot}` : `ce ${mot}`);
+
+/** Les produits vendus par les espèces de l'établissement, sans doublon (« lait, fromage, cabris, animaux »). */
+export const produitsVendus = (): string =>
+  Array.from(new Set(especesActives().flatMap((e) => DICTIONNAIRE_ANIMAUX[e].produits))).join(', ');
+
+/**
+ * Mot désignant les petits d'une activité (« cabris », « agneaux »…) pour une espèce précise — et non celle qui
+ * est affichée en ce moment, pour qu'une vente de l'activité Chèvres ne parle jamais de porcelets.
+ */
+export const petitsDe = (espece: EspeceAnimale): string => DICTIONNAIRE_ANIMAUX[espece].petit.pluriel;

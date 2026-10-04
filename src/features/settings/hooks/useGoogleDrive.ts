@@ -21,7 +21,7 @@ import { TEXTES } from '@/shared/textes';
 /** Connexion à Google Drive et synchronisation (envoi / récupération) des données de l'établissement. */
 export function useGoogleDrive() {
   const { settings, patchSettings } = useAppSettings();
-  const { actif } = useEtablissement();
+  const { actif, recharger } = useEtablissement();
 
   const [connecte, setConnecte] = useState(false);
   const [connexionEnCours, setConnexionEnCours] = useState(false);
@@ -86,6 +86,8 @@ export function useGoogleDrive() {
         await pousserToutesAnnees(accessToken, settings.driveFolderId, onProgress);
       } else {
         await tirerToutesAnnees(accessToken, settings.driveFolderId, onProgress);
+        // Les espèces de l'établissement ont pu changer : on les relit pour afficher les bons cheptels.
+        await recharger();
       }
       await patchSettings({ derniereSynchronisation: new Date().toISOString() });
       Alert.alert(

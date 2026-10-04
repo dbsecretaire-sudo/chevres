@@ -1,6 +1,7 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { CATEGORIE_ANIMAL, SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import {
+  GROUPE_RECETTE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
   CATEGORIE_VENTE,
@@ -42,6 +43,9 @@ export const LIBELLES_STATUT_CHEVRE: Record<
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {
   [CATEGORIE_VENTE.LAIT]: 'Lait',
   [CATEGORIE_VENTE.FROMAGE]: 'Fromage',
+  [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: 'Boucherie / charcuterie',
+  [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: 'Animal sur pied',
+  [CATEGORIE_VENTE.ANIMAL_VIVANT]: 'Animal vivant',
   get [CATEGORIE_VENTE.CABRIS]() {
     return capitaliser(vocabulaire().petit.pluriel);
   },
@@ -97,6 +101,9 @@ export const LABEL_CATEGORIE_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>,
 export const LABEL_CATEGORIE_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, string> = {
   [CATEGORIE_RECETTE.LAIT]: 'Vente de lait',
   [CATEGORIE_RECETTE.FROMAGE]: 'Vente de fromage',
+  [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE]: 'Vente de boucherie / charcuterie',
+  [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: 'Vente d’animal sur pied',
+  [CATEGORIE_RECETTE.ANIMAL_VIVANT]: 'Vente d’animal vivant',
   get [CATEGORIE_RECETTE.CABRIS]() {
     return `Vente ${de(vocabulaire().petit.pluriel)}`;
   },
@@ -186,4 +193,13 @@ export const LABEL_ACTIVITE_COMPTABLE: Record<
 > = {
   ...LABEL_TYPE_ANIMAL_ETABLISSEMENT,
   [ACTIVITE_COMMUNE]: 'Commun',
+};
+
+/** Premier niveau du choix d'une recette. */
+export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, string> = {
+  [GROUPE_RECETTE.LAITERIE]: 'Vente laiterie / fromagerie',
+  [GROUPE_RECETTE.BOUCHERIE]: 'Vente boucherie / charcuterie',
+  [GROUPE_RECETTE.ANIMAL]: 'Vente animal',
+  [GROUPE_RECETTE.AIDE]: 'Aide / subvention',
+  [GROUPE_RECETTE.AUTRE]: 'Autre recette',
 };

@@ -7,6 +7,11 @@ import { getSettings, updateSettings, type InfosExploitation } from '@/features/
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
 import {
+  appliquerProfilEtablissementActif,
+  profilEtablissementActif,
+  type ProfilEtablissement,
+} from '@/features/etablissements/repository';
+import {
   listComptesPcg,
   remplacerTousComptesPcg,
   type CompteComptableEnregistre,
@@ -26,6 +31,8 @@ interface FichierSauvegarde {
   clients?: Client[];
   comptesPcg?: CompteComptableEnregistre[];
   exploitation?: InfosExploitation;
+  /** Espèces et activités de l'établissement (absent des anciennes sauvegardes). */
+  etablissement?: ProfilEtablissement;
 }
 
 /**
@@ -44,11 +51,12 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees[categorie] = parAnnee;
   }
 
-  const [fournisseurs, clients, comptesPcg, settings] = await Promise.all([
+  const [fournisseurs, clients, comptesPcg, settings, etablissement] = await Promise.all([
     listFournisseurs(),
     listClients(),
     listComptesPcg(),
     getSettings(),
+    profilEtablissementActif(),
   ]);
 
   const sauvegarde: FichierSauvegarde = {
@@ -59,6 +67,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     clients,
     comptesPcg,
     exploitation: settings.exploitation,
+    etablissement,
   };
 
   const nomFichier = `${NOM_FICHIER_SAUVEGARDE}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
@@ -136,6 +145,11 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
 
   if (sauvegarde.exploitation) {
     await updateSettings({ exploitation: sauvegarde.exploitation });
+  }
+
+  // Les espèces de l'établissement : sans elles, les animaux d'une autre espèce que les chèvres resteraient masqués.
+  if (sauvegarde.etablissement) {
+    await appliquerProfilEtablissementActif(sauvegarde.etablissement);
   }
 
   return {

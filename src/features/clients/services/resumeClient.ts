@@ -1,5 +1,6 @@
 import type { Facture, TypeFromage, UniteVente, Vente } from '@/features/comptabilite/types';
 import {
+  CATEGORIES_VENTE_VIANDE,
   CATEGORIE_RECETTE,
   CATEGORIE_VENTE,
   SOURCE_TRANSACTION,
@@ -28,9 +29,11 @@ export function ecrituresDuClient(ventes: Vente[], factures: Facture[]): Ecritur
   const deVentes: EcritureClient[] = ventes.map((v) => ({
     id: v.id,
     date: v.date,
-    titre: `${libelleCategorieVente(v)} — ${v.quantite} ${
-      v.categorie === CATEGORIE_VENTE.LAIT ? LABEL_UNITE_VENTE_COURT[UNITE_VENTE.LITRES] : v.unite
-    }`,
+    titre: (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie)
+      ? libelleCategorieVente(v)
+      : `${libelleCategorieVente(v)} — ${v.quantite} ${
+          v.categorie === CATEGORIE_VENTE.LAIT ? LABEL_UNITE_VENTE_COURT[UNITE_VENTE.LITRES] : v.unite
+        }`,
     montant: v.prix ?? 0,
     source: SOURCE_TRANSACTION.VENTE,
   }));
@@ -71,6 +74,9 @@ export interface ResumeClient {
   aCabris: boolean;
   nombreCabris: number;
   kgCabris: number;
+  /** Autres ventes (animaux sur pied ou vivants, viande, charcuterie) — hors cabris. */
+  aAutresVentes: boolean;
+  montantAutresVentes: number;
   aAide: boolean;
   montantAide: number;
   aAutre: boolean;
@@ -90,6 +96,10 @@ export function calculerResumeClient(
   const ventesLait = ventes.filter((v) => v.categorie === CATEGORIE_VENTE.LAIT);
   const ventesFromage = ventes.filter((v) => v.categorie === CATEGORIE_VENTE.FROMAGE);
   const ventesCabris = ventes.filter((v) => v.categorie === CATEGORIE_VENTE.CABRIS);
+  const ventesAutres = ventes.filter(
+    (v) =>
+      ![CATEGORIE_VENTE.LAIT, CATEGORIE_VENTE.FROMAGE, CATEGORIE_VENTE.CABRIS].some((c) => c === v.categorie),
+  );
   const facturesAide = factures.filter((f) => f.categorieRecette === CATEGORIE_RECETTE.AIDE);
   const facturesAutre = factures.filter((f) => f.categorieRecette === CATEGORIE_RECETTE.AUTRE);
 
@@ -119,6 +129,8 @@ export function calculerResumeClient(
     aCabris: ventesCabris.length > 0,
     nombreCabris: somme(ventesCabris, (v) => v.quantite),
     kgCabris: somme(ventesCabris, (v) => v.poidsKg ?? 0),
+    aAutresVentes: ventesAutres.length > 0,
+    montantAutresVentes: somme(ventesAutres, (v) => v.prix ?? 0),
     aAide: facturesAide.length > 0,
     montantAide: somme(facturesAide, (f) => f.montant),
     aAutre: facturesAutre.length > 0,

@@ -9,6 +9,8 @@ export const TEXTES_ETABLISSEMENTS = {
     modifierLEtablissement: 'Modifier l’établissement',
     nomExElevageDesHauts: 'Nom — ex: Élevage des Hauts',
     creerEtOuvrir: 'Créer et ouvrir',
+    supprimerCetEtablissement: 'Supprimer cet établissement',
+    auMoinsUnEtablissement: 'Il faut garder au moins un établissement.',
     supprimerCetEtablissementQuestion: 'Supprimer cet établissement ?',
     toutesLesDonneesLocalesDe: (valeur: string) =>
       `Toutes les données locales de « ${valeur} » (cheptel, comptabilité, fournisseurs, clients…) seront supprimées définitivement de cet appareil.`,
