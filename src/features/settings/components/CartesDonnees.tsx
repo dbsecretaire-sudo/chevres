@@ -20,8 +20,7 @@ export function CarteExport({ d }: { d: Donnees }) {
       <Card>
         <Text style={commonStyles.cardTitle}>{TEXTES.settings.reglages.export}</Text>
         <Text style={commonStyles.muted}>
-          {TEXTES.settings.reglages.genereUnRapportCheptelVentes} {settings.anneeActive}
-          {TEXTES.settings.reglages.enPdfOuEnExcel}
+          {TEXTES.settings.reglages.descriptionExport(settings.anneeActive)}
         </Text>
         <Button
           label={TEXTES.settings.reglages.exporter}

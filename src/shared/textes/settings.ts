@@ -1,6 +1,12 @@
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { vocabulaire } from '@/shared/dictionnaire/animaux';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 
 const V = vocabulaire;
+
+/** Ce que contient une entreprise, pour décrire ses exports et sauvegardes (le gîte seulement pour une association). */
+const contenuEntreprise = (base: string): string =>
+  activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION) ? `${base}, séjours du gîte` : base;
 
 /** Textes de l'interface — « settings ». À modifier ici uniquement. */
 export const TEXTES_SETTINGS = {
@@ -17,30 +23,47 @@ export const TEXTES_SETTINGS = {
     erreurDeSynchronisation: 'Erreur de synchronisation',
     erreurDeSauvegarde: 'Erreur de sauvegarde',
     sauvegardeRestauree: 'Sauvegarde restaurée',
-    animauxAnimalAnimauxFournisseursFournisseur: (
-      animaux: number,
-      fournisseurs: number,
-      clients: number,
-      comptesPcg: number,
-    ) =>
-      `${animaux} animal/animaux, ${fournisseurs} fournisseur(s), ${clients} client(s) et ${comptesPcg} compte(s) PCG importés.`,
+    messageImport: (r: {
+      animaux: number;
+      fournisseurs: number;
+      clients: number;
+      comptesPcg: number;
+      contenus: number;
+      sejours: number;
+    }) =>
+      modeEntreprise()
+        ? `${r.clients} client(s), ${r.fournisseurs} fournisseur(s), ${r.contenus} contenu(s) de dossier, ${r.sejours} séjour(s) et ${r.comptesPcg} compte(s) PCG importés.`
+        : `${r.animaux} animal/animaux, ${r.fournisseurs} fournisseur(s), ${r.clients} client(s) et ${r.comptesPcg} compte(s) PCG importés.`,
     erreurDImport: 'Erreur d’import',
     export: 'Export',
-    genereUnRapportCheptelVentes:
-      'Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année',
-    enPdfOuEnExcel: ', en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.',
+    descriptionExport: (annee: number) =>
+      modeEntreprise()
+        ? `Génère un rapport (${contenuEntreprise('synthèse, factures, clients, contenus des dossiers')}) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`
+        : `Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`,
     exporter: 'Exporter',
     sauvegardeLocale: 'Sauvegarde locale',
-    exporteToutesLesDonneesDe:
-      'Exporte toutes les données de l’appli (toutes années, cheptel, ventes, factures, visites, contrôles, fournisseurs) dans un seul fichier à conserver ailleurs (mail, stockage…) — permet de tout récupérer après une réinstallation, sans passer par Google Drive.',
+    get exporteToutesLesDonneesDe() {
+      const contenu = modeEntreprise()
+        ? contenuEntreprise('factures, clients, dossiers et contenus, fournisseurs')
+        : 'cheptel, ventes, factures, visites, contrôles, fournisseurs';
+      return `Exporte toutes les données de l’appli (toutes années, ${contenu}) dans un seul fichier à conserver ailleurs (mail, stockage…) — permet de tout récupérer après une réinstallation, sans passer par Google Drive.`;
+    },
     importer: 'Importer',
     restaurerUneSauvegardeQuestion: 'Restaurer une sauvegarde ?',
-    toutesLesDonneesActuellementEnregistrees:
-      'Toutes les données actuellement enregistrées sur cet appareil (cheptel, ventes, factures, visites, contrôles, fournisseurs) seront remplacées par celles du fichier choisi. Cette action est irréversible.',
+    get toutesLesDonneesActuellementEnregistrees() {
+      const contenu = modeEntreprise()
+        ? contenuEntreprise('factures, clients, dossiers et contenus, fournisseurs')
+        : 'cheptel, ventes, factures, visites, contrôles, fournisseurs';
+      return `Toutes les données actuellement enregistrées sur cet appareil (${contenu}) seront remplacées par celles du fichier choisi. Cette action est irréversible.`;
+    },
     choisirLeFichier: 'Choisir le fichier',
     googleDrive: 'Google Drive',
-    synchroniseLesFichiersTexteCheptel:
-      'Synchronise les fichiers texte (cheptel, ventes, factures, visites vétérinaire, contrôles) dans un dossier « Troupeau Chèvres » sur Google Drive, pour partager les données entre plusieurs appareils.',
+    get synchroniseLesFichiersTexteCheptel() {
+      const contenu = modeEntreprise()
+        ? contenuEntreprise('factures, clients, dossiers et contenus')
+        : 'cheptel, ventes, factures, visites vétérinaire, contrôles';
+      return `Synchronise les fichiers texte (${contenu}) dans un dossier « Troupeau Chèvres » sur Google Drive, pour partager les données entre plusieurs appareils.`;
+    },
     laSynchronisationGoogleDriveN:
       'La synchronisation Google Drive n’est pas disponible sur le web — utilisez l’application mobile.',
     seConnecterAGoogleDrive: 'Se connecter à Google Drive',
@@ -51,7 +74,9 @@ export const TEXTES_SETTINGS = {
     recupererDepuisDrive: 'Récupérer depuis Drive',
     seDeconnecter: 'Se déconnecter',
     get troupeauChevresToutesLesDonnees() {
-      return `${V().troupeau} — toutes les données restent d’abord enregistrées sur cet appareil.`;
+      return modeEntreprise()
+        ? 'Toutes les données restent d’abord enregistrées sur cet appareil.'
+        : `${V().troupeau} — toutes les données restent d’abord enregistrées sur cet appareil.`;
     },
     donneesEnvoyeesVersGoogleDrive: 'Données envoyées vers Google Drive.',
     donneesRecupereesDepuisGoogleDrive: 'Données récupérées depuis Google Drive.',

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
@@ -11,6 +12,7 @@ import type { Sejour } from '@/features/gite/types';
 import { normaliser } from '@/features/dossiers/services/recherche';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
+import { colors } from '@/shared/theme/colors';
 import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
 import { formatDateShortFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/gite/Gite.styles';
@@ -18,6 +20,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 interface TuileProps {
+  icone: keyof typeof Ionicons.glyphMap;
   titre: string;
   details: readonly string[];
   /** Sans destination, la tuile est annoncée comme « bientôt disponible ». */
@@ -25,7 +28,7 @@ interface TuileProps {
 }
 
 /** Une activité de l'association : son nom, ce qu'elle comprend, et l'écran qu'elle ouvre. */
-function Tuile({ titre, details, onPress }: TuileProps) {
+function Tuile({ icone, titre, details, onPress }: TuileProps) {
   return (
     <Pressable
       style={({ pressed }) => [
@@ -36,6 +39,7 @@ function Tuile({ titre, details, onPress }: TuileProps) {
       onPress={onPress}
       disabled={!onPress}
     >
+      <Ionicons name={icone} size={34} color={colors.primary} />
       <Text style={styles.tuileTitre}>{titre}</Text>
       {details.map((detail) => (
         <Text key={detail} style={styles.tuileDetail}>
@@ -68,7 +72,7 @@ export default function ActivitesAssociation() {
   const trouves = sejours
     .filter((s) => {
       const texte = normaliser(
-        `${s.nom} ${s.notes ?? ''} ${TEXTES.gite.jour.chambre(s.chambre)} ${formatDateShortFR(s.arrivee)}`,
+        `${s.nom} ${s.notes ?? ''} ${TEXTES.gite.jour.chambres(s.chambres)} ${formatDateShortFR(s.arrivee)}`,
       );
       return termes.every((t) => texte.includes(t));
     })
@@ -86,11 +90,17 @@ export default function ActivitesAssociation() {
 
         {termes.length === 0 ? (
           <View style={styles.grilleTuiles}>
-            <Tuile titre={T.gite} details={T.giteDetails} onPress={() => router.push(ROUTES.GITE)} />
-            <Tuile titre={T.bar} details={T.barDetails} />
-            <Tuile titre={T.annexes} details={T.annexesDetails} />
+            <Tuile
+              icone="bed"
+              titre={T.gite}
+              details={T.giteDetails}
+              onPress={() => router.push(ROUTES.GITE)}
+            />
+            <Tuile icone="beer" titre={T.bar} details={T.barDetails} />
+            <Tuile icone="storefront" titre={T.annexes} details={T.annexesDetails} />
             {aussiPrestations ? (
               <Tuile
+                icone="people"
                 titre={T.dossiersClients}
                 details={[]}
                 onPress={() => router.push(ROUTES.CLIENTS_DOSSIERS)}
@@ -103,8 +113,8 @@ export default function ActivitesAssociation() {
           trouves.map((sejour) => (
             <ListRow
               key={sejour.id}
-              title={`${sejour.nom} — ${TEXTES.gite.jour.chambre(sejour.chambre)}`}
-              subtitle={`${TEXTES.gite.jour.dates(formatDateShortFR(sejour.arrivee), formatDateShortFR(sejour.depart))} · ${formatMontant(sejour.prix)}`}
+              title={`${sejour.nom} — ${TEXTES.gite.jour.chambres(sejour.chambres)}`}
+              subtitle={`${TEXTES.gite.jour.dates(formatDateShortFR(sejour.arrivee), formatDateShortFR(sejour.depart))} · ${formatMontant(sejour.prix)} · ${sejour.paye ? TEXTES.gite.jour.paye : TEXTES.gite.jour.aRegler}`}
               onPress={() => router.push(ROUTES.sejour(sejour.id))}
             />
           ))

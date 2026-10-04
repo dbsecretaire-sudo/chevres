@@ -21,7 +21,6 @@ export default function ClientsLayout() {
         options={{ title: TEXTES.dossiers.explorateur.titre, headerRight: () => <MenuActivite /> }}
       />
       <Stack.Screen name="liste" options={{ title: TEXTES.commun.general.clients }} />
-      <Stack.Screen name="structure" options={{ title: TEXTES.dossiers.structure.titre }} />
       <Stack.Screen
         name="nouveau"
         options={{

@@ -22,12 +22,15 @@ export const NOM_FICHIER_EXPORT_ANNEE = 'troupeau_chevres';
 export const NOM_FICHIER_EXPORT_EXPLOITATION = 'exploitation';
 export const NOM_FICHIER_EXPORT_PLAN_COMPTABLE = 'plan_comptable';
 export const NOM_FICHIER_EXPORT_CHEPTEL = 'cheptel';
+/** Export de l'année d'une entreprise (prestations de service, association…). */
+export const NOM_FICHIER_EXPORT_ENTREPRISE = 'entreprise';
 
 /** Version du format du fichier de sauvegarde locale (à incrémenter si sa structure change). */
 export const VERSION_SAUVEGARDE = 1;
 
 /** Début du nom du fichier de sauvegarde locale (suivi de la date et de l'extension .json). */
 export const NOM_FICHIER_SAUVEGARDE = 'troupeau_chevres_sauvegarde';
+export const NOM_FICHIER_SAUVEGARDE_ENTREPRISE = 'entreprise_sauvegarde';
 export const EXTENSION_SAUVEGARDE = 'json';
 
 /** Classe CSS qui force un saut de page dans les rapports PDF. */

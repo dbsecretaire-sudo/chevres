@@ -49,7 +49,8 @@ export default function JourGite() {
   const occupes = Array.from({ length: NOMBRE_CHAMBRES_GITE }, (_, i) => parChambre(i + 1)).filter(
     (s): s is Sejour => !!s,
   );
-  const personnes = occupes.reduce((total, s) => total + s.personnes, 0);
+  // Un séjour de plusieurs chambres compte une seule fois ses personnes.
+  const personnes = [...new Set(occupes)].reduce((total, s) => total + (s.personnes ?? 0), 0);
 
   const changerJour = (decalage: number) => router.setParams({ date: ajouterJours(date, decalage) });
 
@@ -67,8 +68,16 @@ export default function JourGite() {
             <Text style={styles.chambreNom} numberOfLines={2}>
               {sejour.nom}
             </Text>
-            <Text style={styles.chambreInfo}>{T.personnes(sejour.personnes)}</Text>
+            {sejour.chambres.length > 1 ? (
+              <Text style={styles.chambreInfo}>{T.reservationDe(sejour.chambres.length)}</Text>
+            ) : null}
+            {sejour.personnes ? (
+              <Text style={styles.chambreInfo}>{T.personnes(sejour.personnes)}</Text>
+            ) : null}
             <Text style={styles.chambreInfo}>{formatMontant(sejour.prix)}</Text>
+            <Text style={sejour.paye ? styles.chambrePaye : styles.chambreAlerte}>
+              {sejour.paye ? T.paye : T.aRegler}
+            </Text>
             <Text style={styles.chambreDates}>
               {T.dates(formatDateShortFR(sejour.arrivee), formatDateShortFR(sejour.depart))}
             </Text>

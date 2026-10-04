@@ -5,6 +5,7 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
   BALANCE: '/balance',
+  REGLAGES: '/reglages',
 
   CHEPTEL: '/cheptel',
   CHEPTEL_BILAN: '/cheptel/bilan',
@@ -44,7 +45,7 @@ export const ROUTES = {
     modeEntreprise() ? (`/clients/${id}` as const) : (`/comptabilite/clients/${id}` as const),
   // Explorateur de dossiers d'une entreprise
   CLIENTS_EXPLORATEUR: '/clients',
-  CLIENTS_STRUCTURE: '/clients/structure',
+  STRUCTURE_DOSSIERS: '/structure-dossiers',
   dossierClient: (id: string) => `/clients/dossiers/${id}` as const,
   sousDossier: (id: string) => `/clients/sous-dossier/${id}` as const,
   elementNouveau: (dossierId: string) => `/clients/element/nouveau?dossierId=${dossierId}` as const,

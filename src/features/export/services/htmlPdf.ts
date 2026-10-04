@@ -79,6 +79,8 @@ export function documentHtml(
   corps: string,
   /** Espèces couvertes par le rapport (celles de l'établissement par défaut) : leur identification figure en en-tête. */
   especes: EspeceAnimale[] = especesActives(),
+  /** En-tête déjà construit (celui d'une entreprise) : il remplace celui de l'exploitation. */
+  enTete?: string,
 ): string {
   return `<!DOCTYPE html>
 <html>
@@ -99,7 +101,7 @@ export function documentHtml(
 </head>
 <body>
   <h1>${echapper(titre)}</h1>
-  ${enTeteExploitationHtml(infos, especes)}
+  ${enTete ?? enTeteExploitationHtml(infos, especes)}
   ${corps}
 </body>
 </html>`;

@@ -24,7 +24,13 @@ import type { Categorie, RecordMap } from '@/shared/storage/types';
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
-import { VERSION_SAUVEGARDE, EXTENSION_SAUVEGARDE, NOM_FICHIER_SAUVEGARDE } from '@/shared/constants/export';
+import {
+  VERSION_SAUVEGARDE,
+  EXTENSION_SAUVEGARDE,
+  NOM_FICHIER_SAUVEGARDE,
+  NOM_FICHIER_SAUVEGARDE_ENTREPRISE,
+} from '@/shared/constants/export';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 interface FichierSauvegarde {
@@ -82,7 +88,8 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     etablissement,
   };
 
-  const nomFichier = `${NOM_FICHIER_SAUVEGARDE}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
+  const debutNom = modeEntreprise() ? NOM_FICHIER_SAUVEGARDE_ENTREPRISE : NOM_FICHIER_SAUVEGARDE;
+  const nomFichier = `${debutNom}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
   await FileSystem.writeAsStringAsync(destination, JSON.stringify(sauvegarde), {
     encoding: FileSystem.EncodingType.UTF8,
@@ -104,6 +111,10 @@ export interface ResultatImport {
   fournisseurs: number;
   clients: number;
   comptesPcg: number;
+  /** Contenus des dossiers des clients (mode entreprise). */
+  contenus: number;
+  /** Séjours du gîte (association). */
+  sejours: number;
 }
 
 /**
@@ -113,7 +124,8 @@ export interface ResultatImport {
  */
 export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   const choix = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
-  if (choix.canceled) return { annule: true, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0 };
+  if (choix.canceled)
+    return { annule: true, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0, contenus: 0, sejours: 0 };
 
   const contenu = await FileSystem.readAsStringAsync(choix.assets[0].uri, {
     encoding: FileSystem.EncodingType.UTF8,
@@ -181,5 +193,7 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     fournisseurs: sauvegarde.fournisseurs?.length ?? 0,
     clients: sauvegarde.clients?.length ?? 0,
     comptesPcg: sauvegarde.comptesPcg?.length ?? 0,
+    contenus: sauvegarde.dossiers?.elements?.length ?? 0,
+    sejours: sauvegarde.gite?.sejours?.length ?? 0,
   };
 }

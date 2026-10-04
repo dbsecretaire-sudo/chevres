@@ -13,7 +13,6 @@ export const TEXTES_DOSSIERS = {
     resultatsDossiers: 'Dossiers',
     resultatsContenus: 'Contenus',
     menuClients: 'Clients',
-    menuStructure: 'Structure des dossiers',
     nouveauClient: 'Nouveau client',
     contenus: (nombre: number) => `${nombre} contenu${nombre > 1 ? 's' : ''}`,
     aucunContenu: 'Aucun contenu',
@@ -72,6 +71,13 @@ export const TEXTES_DOSSIERS = {
       'En retard : l’échéance est dépassée et ce n’est pas terminé. Passez-le en « Terminé » une fois fait.',
     echeanceLe: (date: string) => `échéance le ${date}`,
     introuvable: 'Contenu introuvable',
+  },
+  clientTaches: {
+    titre: 'Tâches et contenus',
+    aucune: 'Aucune tâche ni contenu pour ce client pour l’instant.',
+    ouvrirLeDossier: 'Ouvrir le dossier du client',
+    resume: (aFaire: number, enCours: number, termine: number, enRetard: number) =>
+      `${aFaire} à faire · ${enCours} en cours · ${termine} terminé(s)${enRetard > 0 ? ` · ${enRetard} en retard` : ''}`,
   },
   echeances: {
     titre: (date: string) => `Tâches du ${date}`,

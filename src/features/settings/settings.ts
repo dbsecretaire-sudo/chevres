@@ -29,11 +29,21 @@ export interface InfosEntreprise {
   regimeTva?: ValeurDe<typeof REGIME_TVA>;
   /** Noms des sous-dossiers créés dans le dossier de chaque nouveau client (structure type, modifiable). */
   structureDossiers?: string[];
+  /** Prix d'une chambre par nuit, en euros (gîte). */
+  tarifNuit?: number;
+  /** Prix d'un repas, en euros (gîte). */
+  tarifRepas?: number;
   /** Vrai si l'établissement suit la taxe de séjour (gîte, hébergement). */
   taxeSejour?: boolean;
-  /** Montant de la taxe de séjour par personne et par nuit, en euros. */
+  /** Montant de la taxe de séjour ajouté à chaque réservation, en euros (montant fixe, quel que soit le séjour). */
+  montantTaxeSejour?: number;
+  /** Ancien format : montant par personne et par nuit, repris comme montant fixe (voir montantTaxeSejourDe). */
   taxeSejourParNuit?: number;
 }
+
+/** Le montant de la taxe de séjour d'une entreprise (celui d'avant le montant fixe est repris tel quel). */
+export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined =>
+  infos?.montantTaxeSejour ?? infos?.taxeSejourParNuit;
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {

@@ -8,7 +8,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { styles } from '@/shared/styles/dossiers/Dossiers.styles';
 import { TEXTES } from '@/shared/textes';
 
-/** Menu burger de l'écran Activité : la liste des clients et la structure type des dossiers. */
+/** Menu burger de l'écran Activité : la liste des clients (la structure type des dossiers est dans les Réglages). */
 export function MenuActivite() {
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
@@ -22,14 +22,7 @@ export function MenuActivite() {
       <OptionsModal
         visible={ouvert}
         onClose={() => setOuvert(false)}
-        options={[
-          { label: T.menuClients, icon: 'people', onPress: () => router.push(ROUTES.CLIENTS) },
-          {
-            label: T.menuStructure,
-            icon: 'git-branch',
-            onPress: () => router.push(ROUTES.CLIENTS_STRUCTURE),
-          },
-        ]}
+        options={[{ label: T.menuClients, icon: 'people', onPress: () => router.push(ROUTES.CLIENTS) }]}
       />
     </>
   );

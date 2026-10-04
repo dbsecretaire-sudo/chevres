@@ -11,8 +11,21 @@ export async function lireArchiveGite(): Promise<ArchiveGite> {
   const raw = await AsyncStorage.getItem(cle());
   if (!raw) return { sejours: [] };
   try {
-    const archive = JSON.parse(raw) as Partial<ArchiveGite>;
-    return { sejours: Array.isArray(archive.sejours) ? archive.sejours : [] };
+    const archive = JSON.parse(raw) as {
+      sejours?: (Omit<Sejour, 'chambres'> & { chambres?: number[]; chambre?: number })[];
+    };
+    // Les séjours d'avant les réservations de plusieurs chambres n'ont qu'une chambre.
+    // Ceux d'avant la validation du paiement, déjà en comptabilité, sont comptés comme payés.
+    const sejours = (Array.isArray(archive.sejours) ? archive.sejours : []).map(({ chambre, ...s }) => {
+      const paye = s.paye ?? Boolean(s.factureId || s.factureRepasId);
+      return {
+        ...s,
+        chambres: Array.isArray(s.chambres) ? s.chambres : [Number(chambre ?? 1)],
+        paye,
+        datePaiement: paye ? (s.datePaiement ?? s.arrivee) : undefined,
+      };
+    });
+    return { sejours };
   } catch {
     return { sejours: [] };
   }

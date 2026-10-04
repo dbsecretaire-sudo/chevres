@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { ROUTES } from '@/shared/constants/routes';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
@@ -101,14 +102,23 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="structure-dossiers"
+        options={{
+          href: null,
+          title: TEXTES.dossiers.structure.titre,
+          // Destination fixe : on revient toujours aux Réglages, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to={ROUTES.REGLAGES} />,
+        }}
+      />
+      <Tabs.Screen
         name="informations-exploitation"
         options={{
           href: null,
           title: entreprise
             ? TEXTES.commun.general.informationsDeLEntreprise
             : TEXTES.commun.general.informationsDeLExploitation,
-          // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
-          headerLeft: () => <HeaderBackTo to="/" />,
+          // Destination fixe : les Réglages pour une entreprise, l'Accueil pour une exploitation.
+          headerLeft: () => <HeaderBackTo to={entreprise ? ROUTES.REGLAGES : '/'} />,
         }}
       />
     </Tabs>

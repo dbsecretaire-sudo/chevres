@@ -9,7 +9,7 @@ import { LigneInfo } from '@/shared/components/LigneInfo';
 import { SelectField } from '@/shared/components/SelectField';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import type { InfosEntreprise } from '@/features/settings/settings';
+import { montantTaxeSejourDe, type InfosEntreprise } from '@/features/settings/settings';
 import { REGIME_TVA_PAR_DEFAUT } from '@/shared/constants/entreprise';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { LABEL_REGIME_FISCAL, LABEL_REGIME_TVA, LABEL_STATUT_JURIDIQUE } from '@/shared/textes/libelles';
@@ -36,7 +36,9 @@ export function InformationsEntreprise() {
   const { actif } = useEtablissement();
   const infos = settings.exploitation?.entreprise;
   const [form, setForm] = useState<InfosEntreprise>(infos ?? {});
-  const [montantTaxe, setMontantTaxe] = useState(montantEnTexte(infos?.taxeSejourParNuit));
+  const [montantTaxe, setMontantTaxe] = useState(montantEnTexte(montantTaxeSejourDe(infos)));
+  const [montantNuit, setMontantNuit] = useState(montantEnTexte(infos?.tarifNuit));
+  const [montantRepas, setMontantRepas] = useState(montantEnTexte(infos?.tarifRepas));
   const [editing, setEditing] = useState(false);
   const [enregistrement, setEnregistrement] = useState(false);
 
@@ -46,7 +48,9 @@ export function InformationsEntreprise() {
 
   const charger = () => {
     setForm(infos ?? {});
-    setMontantTaxe(montantEnTexte(infos?.taxeSejourParNuit));
+    setMontantTaxe(montantEnTexte(montantTaxeSejourDe(infos)));
+    setMontantNuit(montantEnTexte(infos?.tarifNuit));
+    setMontantRepas(montantEnTexte(infos?.tarifRepas));
   };
 
   useEffect(() => {
@@ -67,8 +71,11 @@ export function InformationsEntreprise() {
       const entreprise: InfosEntreprise = {
         ...form,
         regimeTva: form.tvaApplicable ? (form.regimeTva ?? REGIME_TVA_PAR_DEFAUT) : undefined,
-        taxeSejourParNuit:
+        tarifNuit: concerneTaxeSejour ? parseDecimal(montantNuit) || undefined : undefined,
+        tarifRepas: concerneTaxeSejour ? parseDecimal(montantRepas) || undefined : undefined,
+        montantTaxeSejour:
           concerneTaxeSejour && taxeSejourSuivie(form) ? parseDecimal(montantTaxe) || undefined : undefined,
+        taxeSejourParNuit: undefined,
       };
       await patchSettings({ exploitation: { ...settings.exploitation, entreprise } });
       setEditing(false);
@@ -189,10 +196,25 @@ export function InformationsEntreprise() {
 
       {concerneTaxeSejour ? (
         <>
-          <Text style={styles.titreSection}>{T.titreTaxeSejour}</Text>
+          <Text style={styles.titreSection}>{T.titreTarifs}</Text>
+          <Text style={styles.aide}>{T.aideTarifs}</Text>
           <Card>
             {editing ? (
               <>
+                <FormField
+                  label={T.tarifNuit}
+                  value={montantNuit}
+                  onChangeText={setMontantNuit}
+                  keyboardType="decimal-pad"
+                  placeholder={T.exempleMontant}
+                />
+                <FormField
+                  label={T.tarifRepas}
+                  value={montantRepas}
+                  onChangeText={setMontantRepas}
+                  keyboardType="decimal-pad"
+                  placeholder={T.exempleMontant}
+                />
                 <Checkbox
                   label={T.suivreTaxeSejour}
                   value={taxeSejourSuivie(form)}
@@ -211,13 +233,21 @@ export function InformationsEntreprise() {
               </>
             ) : (
               <>
+                <LigneInfo
+                  label={T.tarifNuit}
+                  valeur={infos?.tarifNuit !== undefined ? formatMontant(infos.tarifNuit) : undefined}
+                />
+                <LigneInfo
+                  label={T.tarifRepas}
+                  valeur={infos?.tarifRepas !== undefined ? formatMontant(infos.tarifRepas) : undefined}
+                />
                 <LigneInfo label={T.suivreTaxeSejour} valeur={ouiNon(taxeSejourSuivie(infos))} />
                 {taxeSejourSuivie(infos) ? (
                   <LigneInfo
                     label={T.montantTaxeSejour}
                     valeur={
-                      infos?.taxeSejourParNuit !== undefined
-                        ? formatMontant(infos.taxeSejourParNuit)
+                      montantTaxeSejourDe(infos) !== undefined
+                        ? formatMontant(montantTaxeSejourDe(infos)!)
                         : undefined
                     }
                   />

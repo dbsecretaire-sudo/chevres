@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
-import { Button } from '@/shared/components/Button';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { CalendrierMois, type MarqueJour } from '@/shared/components/CalendrierMois';
 import { TuileChiffre } from '@/features/accueil/components/TuileChiffre';
@@ -22,7 +21,7 @@ import { TEXTES } from '@/shared/textes';
 /**
  * Accueil d'une entreprise : l'année active, deux chiffres (le solde des factures et le nombre de réservations ou de
  * tâches de l'année), puis un grand calendrier — les réservations du gîte pour une association, les tâches à réaliser
- * sinon. Un jour ouvre son détail dans l'onglet Activité ; le solde ouvre la balance mois par mois.
+ * sinon. Un jour ouvre son détail dans l'onglet Activité ; le solde ouvre la balance mois par mois. Les informations de l'entreprise sont dans les Réglages.
  */
 export default function AccueilEntreprise() {
   const router = useRouter();
@@ -100,12 +99,6 @@ export default function AccueilEntreprise() {
         marque={marque}
         onJour={(jour) => router.push(association ? ROUTES.giteJour(jour) : ROUTES.jourEcheances(jour))}
         legende={association ? T.calendrier.legendeGite : T.calendrier.legendeTaches}
-      />
-
-      <Button
-        label={TEXTES.commun.general.informationsDeLEntreprise}
-        variant="secondary"
-        onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
       />
     </Screen>
   );

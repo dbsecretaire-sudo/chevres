@@ -8,6 +8,8 @@ import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
 import { ClientEcritures, ClientResume, estVente } from '@/features/clients/components/ClientResume';
 import { ClientFormulaire, ClientLecture } from '@/features/clients/components/ClientFiche';
+import { ClientTaches } from '@/features/dossiers/components/ClientTaches';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { useFicheClient } from '@/features/clients/hooks/useFicheClient';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -80,6 +82,8 @@ export default function FicheClient() {
         ) : (
           <ClientLecture client={client} onModifier={() => fiche.setEditing(true)} />
         )}
+
+        {!fiche.editing && modeEntreprise() && <ClientTaches clientId={client.id} />}
 
         {!fiche.editing && fiche.ecritures.length > 0 && <ClientResume resume={fiche.resume} />}
 

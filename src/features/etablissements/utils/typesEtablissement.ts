@@ -19,6 +19,9 @@ export function basculer<T>(selection: T[], valeur: T): T[] {
 }
 
 /** Vrai pour un établissement sans animaux dont un type est une activité d'entreprise (libéral, prestations, association). */
-export function estEntreprise({ animaux = [], activites = [] }: Pick<DonneesEtablissement, 'animaux' | 'activites'>): boolean {
+export function estEntreprise({
+  animaux = [],
+  activites = [],
+}: Pick<DonneesEtablissement, 'animaux' | 'activites'>): boolean {
   return animaux.length === 0 && activites.some((a) => ACTIVITES_ENTREPRISE.includes(a));
 }

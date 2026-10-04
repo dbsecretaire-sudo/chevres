@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
+import { colors } from '@/shared/theme/colors';
 import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { DateField } from '@/shared/components/DateField';
@@ -87,73 +89,82 @@ export default function EcranElement() {
   };
 
   return (
-    <Screen>
-      <Stack.Screen options={{ title: existant ? titre || T.nouveau : T.nouveau }} />
-      <FormField
-        label={T.titre}
-        required
-        value={titre}
-        onChangeText={setTitre}
-        placeholder={T.exempleTitre}
-      />
-      <FormField
-        label={T.texte}
-        value={texte}
-        onChangeText={setTexte}
-        multiline
-        style={styles.textareaBasse}
-      />
-      <DateField label={T.date} required value={date} onChange={setDate} />
-
-      {echeance ? (
-        <>
-          <DateField label={T.echeance} value={echeance} onChange={setEcheance} />
-          <Button variant="secondary" label={T.retirerEcheance} onPress={() => setEcheance('')} />
-        </>
-      ) : (
-        <Button variant="secondary" label={T.echeance} onPress={() => setEcheance(todayISO())} />
-      )}
-
-      <View style={commonStyles.gap6}>
-        <Text style={commonStyles.lineSemiBold}>{T.avancement}</Text>
-        <PucesDefilantes<string>
-          puces={PUCES_AVANCEMENT}
-          valeur={statut}
-          onChoisir={(v) => setStatut(v as StatutElement)}
+    <AccentColorProvider
+      color={existant ? colors.primary : colors.ajout}
+      softColor={existant ? colors.badgeBg : colors.ajoutBadgeBg}
+    >
+      <Screen>
+        <Stack.Screen options={{ title: existant ? titre || T.nouveau : T.nouveau }} />
+        <FormField
+          label={T.titre}
+          required
+          value={titre}
+          onChangeText={setTitre}
+          placeholder={T.exempleTitre}
         />
-        {estEnRetard({ echeance: echeance || undefined, statut }, todayISO()) ? (
-          <Text style={commonStyles.required}>{T.enRetardInfo}</Text>
+        <FormField
+          label={T.texte}
+          value={texte}
+          onChangeText={setTexte}
+          multiline
+          style={styles.textareaBasse}
+        />
+        <DateField label={T.date} required value={date} onChange={setDate} />
+
+        {echeance ? (
+          <>
+            <DateField label={T.echeance} value={echeance} onChange={setEcheance} />
+            <Button variant="secondary" label={T.retirerEcheance} onPress={() => setEcheance('')} />
+          </>
+        ) : (
+          <Button variant="secondary" label={T.echeance} onPress={() => setEcheance(todayISO())} />
+        )}
+
+        <View style={commonStyles.gap6}>
+          <Text style={commonStyles.lineSemiBold}>{T.avancement}</Text>
+          <PucesDefilantes<string>
+            puces={PUCES_AVANCEMENT}
+            valeur={statut}
+            onChoisir={(v) => setStatut(v as StatutElement)}
+          />
+          {estEnRetard({ echeance: echeance || undefined, statut }, todayISO()) ? (
+            <Text style={commonStyles.required}>{T.enRetardInfo}</Text>
+          ) : null}
+        </View>
+        <FormField
+          label={T.etiquettes}
+          value={etiquettes}
+          onChangeText={setEtiquettes}
+          placeholder={T.exempleEtiquettes}
+        />
+
+        <View style={commonStyles.row}>
+          <Button
+            style={commonStyles.flex1}
+            variant="secondary"
+            label={TEXTES.commun.general.annuler}
+            onPress={() => router.back()}
+          />
+          <Button
+            style={commonStyles.flex1}
+            label={TEXTES.commun.general.enregistrer}
+            onPress={enregistrer}
+          />
+        </View>
+        {existant ? (
+          <Button variant="danger" label={T.supprimer} onPress={() => setSuppressionOuverte(true)} />
         ) : null}
-      </View>
-      <FormField
-        label={T.etiquettes}
-        value={etiquettes}
-        onChangeText={setEtiquettes}
-        placeholder={T.exempleEtiquettes}
-      />
 
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={() => router.back()}
+        <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
+        <ConfirmModal
+          visible={suppressionOuverte}
+          title={T.supprimerQuestion}
+          message={T.supprimerMessage}
+          confirmLabel={TEXTES.commun.general.supprimer}
+          onCancel={() => setSuppressionOuverte(false)}
+          onConfirm={supprimer}
         />
-        <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={enregistrer} />
-      </View>
-      {existant ? (
-        <Button variant="danger" label={T.supprimer} onPress={() => setSuppressionOuverte(true)} />
-      ) : null}
-
-      <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
-      <ConfirmModal
-        visible={suppressionOuverte}
-        title={T.supprimerQuestion}
-        message={T.supprimerMessage}
-        confirmLabel={TEXTES.commun.general.supprimer}
-        onCancel={() => setSuppressionOuverte(false)}
-        onConfirm={supprimer}
-      />
-    </Screen>
+      </Screen>
+    </AccentColorProvider>
   );
 }
