@@ -3,6 +3,9 @@ import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
 import type { TypeAide } from '@/features/comptabilite/types';
+import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
+import { correspondAuFiltre } from '@/features/comptabilite/services/detailComptable';
+import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
 import { TYPE_AIDE, TYPE_FACTURE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 
 // Agrégats calculés à partir des ventes et factures déjà enregistrées (micro-BA, déclaration RSA).
@@ -33,11 +36,18 @@ export interface RecettesMicroBA {
  * Les aides sont ventilées par type car leur caractère imposable peut différer
  * de l'une à l'autre.
  */
-export async function calculerRecettesMicroBA(annee: number): Promise<RecettesMicroBA> {
-  const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+export async function calculerRecettesMicroBA(
+  annee: number,
+  /** Activité dont on veut les recettes : un cheptel, « commun », ou tout (par défaut, pour la déclaration). */
+  filtre: FiltreActivite = TOUTES_ACTIVITES,
+): Promise<RecettesMicroBA> {
+  const [toutesVentes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+  const ventes = toutesVentes.filter((v) => correspondAuFiltre(filtre, activiteVente(v)));
 
   const ventesProduits = ventes.reduce((s, v) => s + (v.prix ?? 0), 0);
-  const emises = factures.filter((f) => f.type === TYPE_FACTURE.EMISE);
+  const emises = factures.filter(
+    (f) => f.type === TYPE_FACTURE.EMISE && correspondAuFiltre(filtre, activiteFacture(f)),
+  );
 
   const aides = emises.filter((f) => f.categorieRecette === CATEGORIE_RECETTE.AIDE);
   const parType = new Map<string, AideParType>();
@@ -82,9 +92,16 @@ export interface RecettesMois {
 }
 
 /** Ventilation mois par mois des recettes de l'année (utile pour la déclaration trimestrielle RSA). */
-export async function calculerRecettesMensuelles(annee: number): Promise<RecettesMois[]> {
-  const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
-  const emises = factures.filter((f) => f.type === TYPE_FACTURE.EMISE);
+export async function calculerRecettesMensuelles(
+  annee: number,
+  /** Activité dont on veut les recettes : un cheptel, « commun », ou tout (par défaut, pour la déclaration). */
+  filtre: FiltreActivite = TOUTES_ACTIVITES,
+): Promise<RecettesMois[]> {
+  const [toutesVentes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+  const ventes = toutesVentes.filter((v) => correspondAuFiltre(filtre, activiteVente(v)));
+  const emises = factures.filter(
+    (f) => f.type === TYPE_FACTURE.EMISE && correspondAuFiltre(filtre, activiteFacture(f)),
+  );
 
   const mois: RecettesMois[] = Array.from({ length: 12 }, (_, i) => ({
     mois: i + 1,

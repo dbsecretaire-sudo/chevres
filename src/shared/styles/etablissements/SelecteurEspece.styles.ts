@@ -3,6 +3,8 @@ import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
   ligne: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  /** Les puces sur une seule ligne, qui défile horizontalement quand elles ne tiennent pas. */
+  ligneDefilante: { flexDirection: 'row', gap: 8 },
   puce: {
     paddingHorizontal: 14,
     paddingVertical: 8,

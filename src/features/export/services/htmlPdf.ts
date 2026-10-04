@@ -1,7 +1,9 @@
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import type { InfosExploitation } from '@/features/settings/settings';
+import { identificationCheptel, type InfosExploitation } from '@/features/settings/settings';
+import { especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { MIME_PDF, UTI_PDF } from '@/shared/constants/export';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -24,19 +26,30 @@ export function tableauHtml(rows: Record<string, unknown>[], messageVide: string
   return `<table><thead><tr>${entetes}</tr></thead><tbody>${lignes}</tbody></table>`;
 }
 
-function enTeteExploitationHtml(infos: InfosExploitation | undefined): string {
+/**
+ * En-tête de l'exploitation : coordonnées communes, puis l'identification du cheptel. Pour un rapport sur une seule
+ * espèce, son n° de cheptel et son indicatif suivent les coordonnées ; pour plusieurs espèces, une ligne par espèce.
+ */
+function enTeteExploitationHtml(infos: InfosExploitation | undefined, especes: EspeceAnimale[]): string {
   if (!infos) return '';
   const identite = [infos.nomExploitant, infos.adresseExploitant].filter(Boolean).map(echapper);
+  const unique = especes.length === 1 ? identificationCheptel(infos, especes[0]) : undefined;
   const champs: [string, string | undefined][] = [
     [TEXTES.export.pdfExport.nExploitation, infos.numeroExploitation],
     [TEXTES.commun.general.siret, infos.siret],
-    [TEXTES.commun.general.nCheptel, infos.numeroCheptel],
-    [TEXTES.commun.general.indicatifDeMarquage, infos.indicatifMarquage],
+    [TEXTES.commun.general.nCheptel, unique?.numeroCheptel],
+    [TEXTES.commun.general.indicatifDeMarquage, unique?.indicatifMarquage],
     [TEXTES.export.pdfExport.nPacage, infos.numeroPacage],
     [TEXTES.export.pdfExport.nDetenteur, infos.numeroDetenteur],
   ];
   const champsRenseignes = champs.filter(([, v]) => !!v);
-  if (identite.length === 0 && champsRenseignes.length === 0) return '';
+  const parEspece =
+    especes.length > 1
+      ? especes
+          .map((espece) => ({ espece, id: identificationCheptel(infos, espece) }))
+          .filter(({ id }) => !!id.numeroCheptel || !!id.indicatifMarquage)
+      : [];
+  if (identite.length === 0 && champsRenseignes.length === 0 && parEspece.length === 0) return '';
 
   const ligneIdentite = identite.length > 0 ? `<div>${identite.join(' — ')}</div>` : '';
   const ligneChamps =
@@ -45,11 +58,28 @@ function enTeteExploitationHtml(infos: InfosExploitation | undefined): string {
           .map(([label, v]) => `<span><strong>${label} :</strong> ${echapper(v)}</span>`)
           .join('')}</div>`
       : '';
-  return `<div class="exploitation">${ligneIdentite}${ligneChamps}</div>`;
+  const lignesEspeces = parEspece
+    .map(({ espece, id }) => {
+      const details = [
+        id.numeroCheptel ? `${TEXTES.commun.general.nCheptel} : ${echapper(id.numeroCheptel)}` : '',
+        id.indicatifMarquage
+          ? `${TEXTES.commun.general.indicatifDeMarquage} : ${echapper(id.indicatifMarquage)}`
+          : '',
+      ].filter(Boolean);
+      return `<div><strong>${echapper(LABEL_ACTIVITE_COMPTABLE[espece])}</strong> — ${details.join(' · ')}</div>`;
+    })
+    .join('');
+  return `<div class="exploitation">${ligneIdentite}${ligneChamps}${lignesEspeces}</div>`;
 }
 
 /** Document HTML complet : feuille de style, titre, en-tête de l'exploitation puis le corps. */
-export function documentHtml(titre: string, infos: InfosExploitation | undefined, corps: string): string {
+export function documentHtml(
+  titre: string,
+  infos: InfosExploitation | undefined,
+  corps: string,
+  /** Espèces couvertes par le rapport (celles de l'établissement par défaut) : leur identification figure en en-tête. */
+  especes: EspeceAnimale[] = especesActives(),
+): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -69,7 +99,7 @@ export function documentHtml(titre: string, infos: InfosExploitation | undefined
 </head>
 <body>
   <h1>${echapper(titre)}</h1>
-  ${enTeteExploitationHtml(infos)}
+  ${enTeteExploitationHtml(infos, especes)}
   ${corps}
 </body>
 </html>`;

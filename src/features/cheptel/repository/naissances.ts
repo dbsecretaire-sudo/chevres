@@ -30,7 +30,7 @@ export async function enregistrerNaissance(input: {
 
   let mereId = input.mereId;
   if (!mereId) {
-    const toutes = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+    const toutes = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
     mereId = toutes.find((c) => c.numeroBoucle === input.mereNumeroBoucle)?.id;
   }
 

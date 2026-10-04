@@ -1,4 +1,5 @@
-import { ageMaxPetitMois } from '@/shared/constants/cheptel';
+import { agePetitMax } from '@/shared/constants/cheptel';
+import { libelleDuree } from '@/shared/utils/age';
 import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
 
 const V = vocabulaire;
@@ -49,7 +50,7 @@ export const TEXTES_COMMUN = {
     anneeDeDesignation: 'Année de désignation',
     nDeBoucle: 'N° de boucle',
     get facultatifAvantAgeMax() {
-      return `Facultatif avant ${ageMaxPetitMois()} mois`;
+      return `Facultatif avant ${libelleDuree(agePetitMax())}`;
     },
     dateDeBouclage: 'Date de bouclage',
     nom: 'Nom',

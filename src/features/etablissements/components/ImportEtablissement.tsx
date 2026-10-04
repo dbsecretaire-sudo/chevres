@@ -1,6 +1,6 @@
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { ListRow } from '@/shared/components/ListRow';
 import type { useImportDepuisEtablissement } from '@/features/etablissements/hooks/useImportDepuisEtablissement';
@@ -8,7 +8,6 @@ import { libelleTypesEtablissement } from '@/features/etablissements/utils/types
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/etablissements/ImportEtablissement.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { TEXTES } from '@/shared/textes';
 
 interface Props<T extends { id: string }> {
   etat: ReturnType<typeof useImportDepuisEtablissement<T>>;
@@ -24,9 +23,10 @@ interface Props<T extends { id: string }> {
 }
 
 /**
- * Bloc « OU importer depuis un autre établissement » d'un écran de création : le bouton, puis (une fois choisi)
- * la liste des autres établissements, dépliables un par un, avec leurs éléments à importer.
- * Rien ne s'affiche s'il n'y a pas d'autre établissement.
+ * Import depuis un autre établissement, d'un écran de création : une icône dans l'en-tête de l'écran bascule entre
+ * la saisie (formulaire, géré par l'écran) et l'import, dont ce bloc affiche la liste des autres établissements,
+ * dépliables un par un, avec leurs éléments à importer.
+ * Rien ne s'affiche (pas même l'icône) s'il n'y a pas d'autre établissement.
  */
 export function ImportEtablissement<T extends { id: string }>({
   etat,
@@ -40,13 +40,27 @@ export function ImportEtablissement<T extends { id: string }>({
 }: Props<T>) {
   if (etat.autres.length === 0) return null;
 
+  const libelleIcone = importer ? libelleSaisir : libelleImporter;
+
   return (
     <>
-      {!importer && <Text style={styles.ou}>{TEXTES.etablissements.importEtablissement.ou}</Text>}
-      <Button
-        variant={importer ? 'secondary' : 'primary'}
-        label={importer ? libelleSaisir : libelleImporter}
-        onPress={onBasculer}
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              style={styles.boutonEntete}
+              onPress={onBasculer}
+              hitSlop={8}
+              accessibilityLabel={libelleIcone}
+            >
+              <Ionicons
+                name={importer ? 'create-outline' : 'download-outline'}
+                size={22}
+                color={colors.ajout}
+              />
+            </Pressable>
+          ),
+        }}
       />
 
       {importer && (

@@ -16,6 +16,8 @@ export const ACTIVITE_SOCIETE = {
   VENTE: 'vente',
   /** Choisi automatiquement dès qu'un établissement élève des animaux. */
   AGRICOLE: 'agricole',
+  /** Case seule, au même niveau que les groupes : usage personnel, exclusive de tout autre choix. */
+  PERSO: 'perso',
 } as const;
 
 /** Activité d'une écriture comptable qui ne concerne aucune espèce en particulier (carburant, impôts, etc.). */

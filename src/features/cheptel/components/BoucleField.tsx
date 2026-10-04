@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { identificationCheptel } from '@/features/settings/settings';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
 import { styles } from '@/shared/styles/cheptel/BoucleField.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -20,7 +22,8 @@ interface Props {
 export function BoucleField({ label, value, onChangeText, placeholder, required }: Props) {
   const accent = useAccentColor();
   const { settings } = useAppSettings();
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  // Les animaux saisis ici sont ceux de l'espèce courante : c'est l'indicatif de son cheptel qui précède la boucle.
+  const indicatif = identificationCheptel(settings.exploitation, especeCourante()).indicatifMarquage;
   const [scannerOuvert, setScannerOuvert] = useState(false);
 
   return (

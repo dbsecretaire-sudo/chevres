@@ -62,6 +62,24 @@ export default function NouveauFournisseur() {
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
       <Screen>
+        <ImportEtablissement
+          etat={importFournisseur}
+          importer={importer}
+          onBasculer={() => setImporter((v) => !v)}
+          libelleImporter={TEXTES.fournisseurs.importFournisseur.importerDepuisUnAutreEtablissement}
+          libelleSaisir={TEXTES.fournisseurs.importFournisseur.saisirUnNouveauFournisseur}
+          consigne={TEXTES.fournisseurs.importFournisseur.choisissezUnEtablissement}
+          texteVide={TEXTES.fournisseurs.importFournisseur.aucunFournisseurDansCetEtablissement}
+          ligne={(f) => ({
+            titre: f.nomEntreprise,
+            sousTitre: TEXTES.fournisseurs.listeFournisseurs.nomValeurSiretSiret(
+              f.nom,
+              f.prenom ? ` ${f.prenom}` : '',
+              f.siret,
+            ),
+          })}
+        />
+
         {/* Le formulaire est enroulé quand on choisit d'importer un fournisseur d'un autre établissement. */}
         {!importer && (
           <>
@@ -131,24 +149,6 @@ export default function NouveauFournisseur() {
             </View>
           </>
         )}
-
-        <ImportEtablissement
-          etat={importFournisseur}
-          importer={importer}
-          onBasculer={() => setImporter((v) => !v)}
-          libelleImporter={TEXTES.fournisseurs.importFournisseur.importerDepuisUnAutreEtablissement}
-          libelleSaisir={TEXTES.fournisseurs.importFournisseur.saisirUnNouveauFournisseur}
-          consigne={TEXTES.fournisseurs.importFournisseur.choisissezUnEtablissement}
-          texteVide={TEXTES.fournisseurs.importFournisseur.aucunFournisseurDansCetEtablissement}
-          ligne={(f) => ({
-            titre: f.nomEntreprise,
-            sousTitre: TEXTES.fournisseurs.listeFournisseurs.nomValeurSiretSiret(
-              f.nom,
-              f.prenom ? ` ${f.prenom}` : '',
-              f.siret,
-            ),
-          })}
-        />
       </Screen>
 
       <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />

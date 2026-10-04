@@ -1,12 +1,18 @@
 import { Stack } from 'expo-router';
+import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
 import { ComptabiliteHeaderMenu } from '@/features/comptabilite/components/ComptabiliteHeaderMenu';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 export default function ComptabiliteLayout() {
+  // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
+  useEtablissement();
   return (
     <Stack
+      // La liste, le Détail et la fiscalité suivent l'espèce active par un simple filtre : ils ne sont pas recréés.
+      screenLayout={ecranParEspeceSauf('index', 'detail', 'fiscalite-impots', 'fiscalite-rsa')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,

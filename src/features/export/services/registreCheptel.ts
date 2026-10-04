@@ -1,5 +1,6 @@
 import type { Chevre } from '@/features/cheptel/types';
-import { chevreRow } from '@/features/export/services/lignesExport';
+import { especeDe } from '@/features/cheptel/utils/espece';
+import { chevreRow, type IndicatifParEspece } from '@/features/export/services/lignesExport';
 import { yearOf } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
@@ -25,13 +26,15 @@ function anneeDesignation(c: Chevre): number {
  */
 export function construireRegistreCheptel(
   toutes: Chevre[],
-  indicatif?: string,
+  indicatif?: IndicatifParEspece,
 ): Map<number, LigneRegistre[]> {
   const bouclees = toutes.filter((c) => !!c.numeroBoucle);
 
   const nombreDescendance = (mere: Chevre) =>
     toutes.filter(
-      (c) => c.mereId === mere.id || (!!mere.numeroBoucle && c.mereNumeroBoucle === mere.numeroBoucle),
+      (c) =>
+        c.mereId === mere.id ||
+        (!!mere.numeroBoucle && c.mereNumeroBoucle === mere.numeroBoucle && especeDe(c) === especeDe(mere)),
     ).length;
 
   const parAnnee = new Map<number, LigneRegistre[]>();

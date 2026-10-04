@@ -1,13 +1,18 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 export default function TabsLayout() {
+  // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
+  useEtablissement();
   return (
     <Tabs
+      screenLayout={ecranParEspeceSauf('cheptel', 'comptabilite')}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,

@@ -1,4 +1,5 @@
-import { getSettings } from '@/features/settings/settings';
+import { getSettings, indicatifMarquagePar } from '@/features/settings/settings';
+import { especeCourante, especesActives } from '@/shared/dictionnaire/animaux';
 import { loadAllYears, loadYear } from '@/shared/storage/localStore';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVisitesVeterinaire } from '@/features/exploitation/repository/visitesVeterinaire';
@@ -37,7 +38,7 @@ export async function exporterAnneePdf(annee: number): Promise<void> {
     loadYear(CATEGORIE_STOCKAGE.CONTROLES, annee),
   ]);
 
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  const indicatif = indicatifMarquagePar(settings.exploitation);
   const corps = `
     <h2>${TEXTES.commun.general.cheptel}</h2>
     ${tableauHtml(
@@ -62,7 +63,7 @@ export async function exporterAnneePdf(annee: number): Promise<void> {
 
   const titre = TEXTES.commun.general.exportAnneeTroupeauChevres(annee);
   await ecrireEtPartagerPdf(
-    documentHtml(titre, settings.exploitation, corps),
+    documentHtml(titre, settings.exploitation, corps, especesActives()),
     `${NOM_FICHIER_EXPORT_ANNEE}_${annee}.${FORMAT_EXPORT.PDF}`,
     titre,
   );
@@ -77,7 +78,7 @@ export async function exporterExploitationPdf(annee: number): Promise<void> {
     calculerBilanAlimentation(annee),
   ]);
 
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  const indicatif = indicatifMarquagePar(settings.exploitation);
   const coutParAnimal =
     alimentation.coutParAnimal !== undefined ? `${alimentation.coutParAnimal.toFixed(2)} €` : '—';
   const corps = `
@@ -98,7 +99,7 @@ export async function exporterExploitationPdf(annee: number): Promise<void> {
 
   const titre = TEXTES.commun.general.exploitationAnneeTroupeauChevres(annee);
   await ecrireEtPartagerPdf(
-    documentHtml(titre, settings.exploitation, corps),
+    documentHtml(titre, settings.exploitation, corps, [especeCourante()]),
     `${NOM_FICHIER_EXPORT_EXPLOITATION}_${annee}.${FORMAT_EXPORT.PDF}`,
     titre,
   );
@@ -135,7 +136,7 @@ export async function exporterCheptelPdf(): Promise<void> {
     getSettings(),
     loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then(deEspeceCourante),
   ]);
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  const indicatif = indicatifMarquagePar(settings.exploitation);
   const registre = construireRegistreCheptel(toutes, indicatif);
   const anneesTriees = [...registre.keys()].sort((a, b) => a - b);
 
@@ -158,7 +159,7 @@ export async function exporterCheptelPdf(): Promise<void> {
 
   const titre = TEXTES.commun.general.cheptelTroupeauChevres;
   await ecrireEtPartagerPdf(
-    documentHtml(titre, settings.exploitation, corps),
+    documentHtml(titre, settings.exploitation, corps, [especeCourante()]),
     `${NOM_FICHIER_EXPORT_CHEPTEL}.${FORMAT_EXPORT.PDF}`,
     titre,
   );

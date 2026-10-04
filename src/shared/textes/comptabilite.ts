@@ -10,7 +10,9 @@ export const TEXTES_COMPTABILITE = {
   },
   parActivite: {
     parActivite: 'Comptabilité par activité',
-    toutes: 'Toutes',
+    toutes: 'Tout',
+    noteDeclaration:
+      'Pour votre déclaration, utilisez « Tout » : un cheptel ou « Commun » ne représente qu’une partie de vos recettes.',
   },
   comptabiliteHeaderMenu: {
     genererUnPlanComptable: 'Générer un plan comptable',

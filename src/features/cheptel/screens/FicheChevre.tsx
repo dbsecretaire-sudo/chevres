@@ -5,6 +5,8 @@ import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { identificationCheptel } from '@/features/settings/settings';
+import { especeDe } from '@/features/cheptel/utils/espece';
 import { useFicheChevre } from '@/features/cheptel/hooks/useFicheChevre';
 import { ChevreEntete } from '@/features/cheptel/components/ficheChevre/ChevreEntete';
 import { ChevreFormulaire } from '@/features/cheptel/components/ficheChevre/ChevreFormulaire';
@@ -90,7 +92,7 @@ export default function FicheChevre() {
         ) : (
           <ChevreResume
             chevre={chevre}
-            indicatif={settings.exploitation?.indicatifMarquage}
+            indicatif={identificationCheptel(settings.exploitation, especeDe(chevre)).indicatifMarquage}
             onModifier={() => fiche.setEditing(true)}
           />
         )}

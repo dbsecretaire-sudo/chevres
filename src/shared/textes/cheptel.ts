@@ -1,4 +1,5 @@
-import { ageMaxPetitMois } from '@/shared/constants/cheptel';
+import { agePetitMax } from '@/shared/constants/cheptel';
+import { libelleDuree } from '@/shared/utils/age';
 import { ce, capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
 
 const V = vocabulaire;
@@ -55,7 +56,7 @@ export const TEXTES_CHEPTEL = {
     nesEntreLe0101: 'Nés entre le 01/01 et le 31/12/',
     vendusAbattoirAutoConsommationComptent: '. Vendus/Abattoir/Auto-consommation comptent les sorties de',
     get pourToutCabriEncoreAge() {
-      return `pour tout ${V().petit.singulier} encore âgé de moins de ${ageMaxPetitMois()} mois à ce moment-là, même né l’année précédente.`;
+      return `pour tout ${V().petit.singulier} encore âgé de moins de ${libelleDuree(agePetitMax())} à ce moment-là, même né l’année précédente.`;
     },
     t1erSemestreTardifsValeur: (valeur: number) => `1er semestre (tardifs ${valeur})`,
     t2eSemestreCabrisAnnee: (annee: number) => `2e semestre (${V().petit.pluriel} ${annee})`,
@@ -66,14 +67,14 @@ export const TEXTES_CHEPTEL = {
       return `Total ${V().petit.pluriel}`;
     },
     get chevresFemelles6MoisEt() {
-      return `${Cap(V().femelle.pluriel)} (${ageMaxPetitMois()} mois et plus) vivantes au 31/12/`;
+      return `${Cap(V().femelle.pluriel)} (${libelleDuree(agePetitMax())} et plus) vivantes au 31/12/`;
     },
     reconstitueAPartirDesStatuts: ', reconstitué à partir des statuts actuels.',
     renouvellementDesigneesCetteAnnee: 'Renouvellement (désignées cette année)',
     plusAnciennes: 'Plus anciennes',
     misesBasPortees: 'Mises bas (portées)',
     get boucsMales6MoisEt() {
-      return `${Cap(V().male.pluriel)} (${ageMaxPetitMois()} mois et plus) vivants au 31/12/`;
+      return `${Cap(V().male.pluriel)} (${libelleDuree(agePetitMax())} et plus) vivants au 31/12/`;
     },
     renouvellementDesignesCetteAnnee: 'Renouvellement (désignés cette année)',
     plusAnciens: 'Plus anciens',
@@ -215,6 +216,13 @@ export const TEXTES_CHEPTEL = {
     },
     get chevreau() {
       return V().petitMale;
+    },
+    /** L'adulte sans boucle, une fois l'âge de petit dépassé (chèvre, bouc, truie, verrat, poule, coq…). */
+    get femelleAdulte() {
+      return Cap(V().femelle.singulier);
+    },
+    get maleAdulte() {
+      return Cap(V().male.singulier);
     },
     typeSansBoucleNeE: (type: string, valeur: string) => `${type} sans boucle — né(e) le ${valeur}`,
     nee: 'née',

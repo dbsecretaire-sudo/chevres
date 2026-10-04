@@ -52,6 +52,20 @@ export default function NouveauClient() {
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
       <Screen>
+        <ImportEtablissement
+          etat={importClient}
+          importer={importer}
+          onBasculer={() => setImporter((v) => !v)}
+          libelleImporter={TEXTES.clients.importClient.importerDepuisUnAutreEtablissement}
+          libelleSaisir={TEXTES.clients.importClient.saisirUnNouveauClient}
+          consigne={TEXTES.clients.importClient.choisissezUnEtablissement}
+          texteVide={TEXTES.clients.importClient.aucunClientDansCetEtablissement}
+          ligne={(c) => ({
+            titre: nomComplet(c),
+            sousTitre: [c.telephone, c.email].filter(Boolean).join(' · ') || undefined,
+          })}
+        />
+
         {/* Le formulaire est enroulé quand on choisit d'importer un client d'un autre établissement. */}
         {!importer && (
           <>
@@ -107,20 +121,6 @@ export default function NouveauClient() {
             </View>
           </>
         )}
-
-        <ImportEtablissement
-          etat={importClient}
-          importer={importer}
-          onBasculer={() => setImporter((v) => !v)}
-          libelleImporter={TEXTES.clients.importClient.importerDepuisUnAutreEtablissement}
-          libelleSaisir={TEXTES.clients.importClient.saisirUnNouveauClient}
-          consigne={TEXTES.clients.importClient.choisissezUnEtablissement}
-          texteVide={TEXTES.clients.importClient.aucunClientDansCetEtablissement}
-          ligne={(c) => ({
-            titre: nomComplet(c),
-            sousTitre: [c.telephone, c.email].filter(Boolean).join(' · ') || undefined,
-          })}
-        />
       </Screen>
 
       <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />

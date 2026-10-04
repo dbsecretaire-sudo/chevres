@@ -2,13 +2,14 @@ import * as XLSX from 'xlsx';
 import { LABEL_CATEGORIE_STOCKAGE } from '@/shared/textes/libelles';
 import { CATEGORIES_STOCKAGE } from '@/shared/constants/csv';
 import { getYears, loadYear } from '@/shared/storage/localStore';
-import { getSettings } from '@/features/settings/settings';
+import { getSettings, indicatifMarquagePar } from '@/features/settings/settings';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVisitesVeterinaire } from '@/features/exploitation/repository/visitesVeterinaire';
 import { listControles } from '@/features/exploitation/repository/controles';
 import { calculerBilanAlimentation } from '@/features/exploitation/services/bilanAlimentation';
 import { ecrireEtPartager, feuilleOuMessage } from '@/features/export/services/classeurXlsx';
 import {
+  type IndicatifParEspece,
   chevreRow,
   controleRow,
   factureRow,
@@ -29,7 +30,10 @@ import {
 } from '@/shared/constants/export';
 import { TEXTES } from '@/shared/textes';
 
-const ROW_BUILDERS: Record<Categorie, (items: any[], indicatif?: string) => Record<string, unknown>[]> = {
+const ROW_BUILDERS: Record<
+  Categorie,
+  (items: any[], indicatif?: IndicatifParEspece) => Record<string, unknown>[]
+> = {
   [CATEGORIE_STOCKAGE.CHEPTEL]: (items, indicatif) => items.map((c) => chevreRow(c, indicatif)),
   [CATEGORIE_STOCKAGE.VENTES]: (items) => items.map(venteRow),
   [CATEGORIE_STOCKAGE.FACTURES]: (items) => items.map(factureRow),
@@ -40,7 +44,7 @@ const ROW_BUILDERS: Record<Categorie, (items: any[], indicatif?: string) => Reco
 /** Génère un classeur Excel (un onglet par catégorie) pour l'année donnée et ouvre le menu de partage. */
 export async function exporterAnneeExcel(annee: number): Promise<void> {
   const settings = await getSettings();
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  const indicatif = indicatifMarquagePar(settings.exploitation);
   const workbook = XLSX.utils.book_new();
 
   for (const categorie of CATEGORIES_STOCKAGE) {
@@ -70,7 +74,7 @@ export async function exporterExploitationExcel(annee: number): Promise<void> {
     listControles(annee),
     calculerBilanAlimentation(annee),
   ]);
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  const indicatif = indicatifMarquagePar(settings.exploitation);
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(
@@ -153,7 +157,7 @@ export async function exporterPlanComptableExcel(annee: number): Promise<void> {
 /** Registre complet du cheptel : un onglet par année (vivantes et historique confondues). */
 export async function exporterCheptelExcel(): Promise<void> {
   const [settings, annees] = await Promise.all([getSettings(), getYears(CATEGORIE_STOCKAGE.CHEPTEL)]);
-  const indicatif = settings.exploitation?.indicatifMarquage;
+  const indicatif = indicatifMarquagePar(settings.exploitation);
   const workbook = XLSX.utils.book_new();
 
   const anneesTriees = [...annees].sort((a, b) => a - b);

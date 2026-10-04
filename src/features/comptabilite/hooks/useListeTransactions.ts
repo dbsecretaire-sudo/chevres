@@ -2,18 +2,16 @@ import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import type { FiltresTransactions } from '@/features/comptabilite/components/FiltreTransactionsModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
 import {
   FILTRES_VIDES,
-  TOUTES_ACTIVITES,
   calculerSoldes,
   filtrerParActivite,
   filtrerTransactions,
   filtresSontActifs,
-  type FiltreActivite,
 } from '@/features/comptabilite/services/filtresTransactions';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import { especeCourante, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 
 /** Transactions de l'année active, par activité, filtrées et recherchées, avec leurs soldes. */
 export function useListeTransactions() {
@@ -23,9 +21,7 @@ export function useListeTransactions() {
   const [filtres, setFiltres] = useState<FiltresTransactions>(FILTRES_VIDES);
   const [filtreOuvert, setFiltreOuvert] = useState(false);
   const [recherche, setRecherche] = useState('');
-  const [filtreActivite, setFiltreActivite] = useState<FiltreActivite>(
-    plusieursEspeces() ? especeCourante() : TOUTES_ACTIVITES,
-  );
+  const [filtreActivite, setFiltreActivite] = useFiltreActivite();
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste] = await Promise.all([

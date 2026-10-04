@@ -1,5 +1,7 @@
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { UNITE_DUREE } from '@/shared/constants/temps';
+import type { Duree } from '@/shared/utils/age';
 
 /** Valeurs et seuils métier du cheptel — à modifier ici uniquement. */
 
@@ -27,29 +29,34 @@ export const CATEGORIE_ANIMAL = {
 
 /** Seuils qui dépendent de l'espèce de l'établissement. */
 export interface ParametresEspece {
-  /** En dessous de cet âge (en mois), l'animal est un petit (cabri, agneau, veau, porcelet) ; au-delà, un adulte. */
-  ageMaxPetitMois: number;
+  /** En dessous de cet âge, l'animal est un petit (cabri, agneau, veau, porcelet, poussin) ; au-delà, un adulte. */
+  agePetitMax: Duree;
   /** À partir de cet âge (en mois), un petit sevré mange comme un adulte et compte dans l'effectif. */
   ageSevrageMois: number;
   /** Nombre maximal de petits déclarables en une seule mise bas. */
   nbPetitsMax: number;
 }
 
+const mois = (valeur: number): Duree => ({ valeur, unite: UNITE_DUREE.MOIS });
+const semaines = (valeur: number): Duree => ({ valeur, unite: UNITE_DUREE.SEMAINES });
+const jours = (valeur: number): Duree => ({ valeur, unite: UNITE_DUREE.JOURS });
+
 export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
-  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: { ageMaxPetitMois: 6, ageSevrageMois: 2, nbPetitsMax: 6 },
-  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: { ageMaxPetitMois: 6, ageSevrageMois: 2, nbPetitsMax: 5 },
-  // Veau : bovin de moins de 8 mois (définition européenne).
-  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: { ageMaxPetitMois: 8, ageSevrageMois: 3, nbPetitsMax: 2 },
-  // Porcelet : jusqu'à la fin du post-sevrage (environ 10 semaines) ; sevrage vers 4 semaines.
-  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { ageMaxPetitMois: 3, ageSevrageMois: 1, nbPetitsMax: 20 },
-  // Poussin : jusqu'à environ 2 mois ; une couvée compte jusqu'à une quinzaine d'œufs.
-  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { ageMaxPetitMois: 2, ageSevrageMois: 1, nbPetitsMax: 15 },
+  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: { agePetitMax: mois(6), ageSevrageMois: 2, nbPetitsMax: 6 },
+  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: { agePetitMax: mois(6), ageSevrageMois: 2, nbPetitsMax: 5 },
+  // Veau : jusqu'à 8 mois.
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: { agePetitMax: mois(8), ageSevrageMois: 3, nbPetitsMax: 2 },
+  // Porcelet : jusqu'à 28 jours.
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { agePetitMax: jours(28), ageSevrageMois: 1, nbPetitsMax: 20 },
+  // Poussin : jusqu'à 16 semaines ; une couvée compte jusqu'à une quinzaine d'œufs.
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { agePetitMax: semaines(16), ageSevrageMois: 1, nbPetitsMax: 15 },
 };
 
 /** Seuils de l'espèce courante. */
 export const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[especeCourante()];
 
-export const ageMaxPetitMois = (): number => parametresEspece().ageMaxPetitMois;
+/** Âge en dessous duquel un animal de l'espèce courante est un petit. */
+export const agePetitMax = (): Duree => parametresEspece().agePetitMax;
 export const ageSevrageMois = (): number => parametresEspece().ageSevrageMois;
 export const nbPetitsMax = (): number => parametresEspece().nbPetitsMax;
 

@@ -71,7 +71,8 @@ export function calculerSoldes(transactions: Transaction[]): SoldesTransactions 
 
   return {
     balance: somme(transactions, (t) => (t.montantComptabilise ?? 0) * signe(t)),
-    balanceAvecAutre: somme(transactions, (t) => (t.montant ?? 0) * signe(t)),
+    // La part de l'activité, pas le total de la facture : une facture répartie entre des cheptels n'est comptée qu'une fois.
+    balanceAvecAutre: somme(transactions, (t) => (t.montantActivite ?? t.montant ?? 0) * signe(t)),
     totalRentrees: somme(
       transactions.filter((t) => t.sens === SENS_TRANSACTION.ENTREE),
       (t) => t.montantComptabilise ?? 0,

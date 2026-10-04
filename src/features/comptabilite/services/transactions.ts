@@ -21,7 +21,10 @@ import { TEXTES } from '@/shared/textes';
 export interface Transaction {
   id: string;
   date: string;
+  /** Montant de l'écriture entière (le total de la facture, même si elle est répartie entre plusieurs cheptels). */
   montant?: number;
+  /** Part de `montant` qui revient à l'activité de cette ligne (toutes catégories) : c'est elle qu'on additionne. */
+  montantActivite?: number;
   /** Part de `montant` comptant réellement dans les soldes (hors « Autre ») — voir montantHorsAutre(). */
   montantComptabilise?: number;
   sens: ValeurDe<typeof SENS_TRANSACTION>;
@@ -55,6 +58,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     id: v.id,
     date: v.date,
     montant: v.prix,
+    montantActivite: v.prix,
     montantComptabilise: v.prix,
     sens: SENS_TRANSACTION.ENTREE,
     titre: titreVente(v),
@@ -72,6 +76,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
       id: f.id,
       date: f.date,
       montant: f.montant,
+      montantActivite: part.montant,
       montantComptabilise: montantAlimentationHorsAutre(part),
       sens: f.type === TYPE_FACTURE.EMISE ? SENS_TRANSACTION.ENTREE : SENS_TRANSACTION.SORTIE,
       titre: f.tiers,

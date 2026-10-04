@@ -9,7 +9,7 @@ import {
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { activiteVente, activitesFacture } from '@/features/comptabilite/utils/activite';
-import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
+import { plusieursEspeces, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import {
   CATEGORIE_DEPENSE,
@@ -19,21 +19,24 @@ import {
 } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 
+/** L'indicatif de marquage d'une espèce (voir indicatifMarquagePar), pour des exports qui mélangent plusieurs espèces. */
+export type IndicatifParEspece = (espece: EspeceAnimale) => string | undefined;
+
 /** Fait précéder un n° de boucle de l'indicatif de marquage du troupeau, quand il est renseigné. */
 export function avecIndicatif(numero: string | undefined, indicatif: string | undefined): string {
   if (!numero) return '';
   return indicatif ? `${indicatif}${numero}` : numero;
 }
 
-export function chevreRow(c: Chevre, indicatif?: string) {
+export function chevreRow(c: Chevre, indicatif?: IndicatifParEspece) {
   return {
     ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
-    [TEXTES.export.colonnes.nBoucle]: avecIndicatif(c.numeroBoucle, indicatif),
+    [TEXTES.export.colonnes.nBoucle]: avecIndicatif(c.numeroBoucle, indicatif?.(especeDe(c))),
     [TEXTES.export.colonnes.dateDeBouclage]: formatDateShortFR(c.dateBouclage),
     [TEXTES.export.colonnes.nom]: c.nom ?? '',
     [TEXTES.export.colonnes.sexe]: c.sexe,
     [TEXTES.export.colonnes.dateDeNaissance]: formatDateShortFR(c.dateNaissance),
-    [TEXTES.export.colonnes.mereNBoucle]: avecIndicatif(c.mereNumeroBoucle, indicatif),
+    [TEXTES.export.colonnes.mereNBoucle]: avecIndicatif(c.mereNumeroBoucle, indicatif?.(especeDe(c))),
     [TEXTES.export.colonnes.statut]: c.statut,
     [TEXTES.export.colonnes.dateMort]: formatDateShortFR(c.dateStatut),
     [TEXTES.export.colonnes.renouvellement]: c.renouvellement
@@ -102,12 +105,12 @@ export function factureRow(f: Facture) {
   };
 }
 
-export function visiteRow(v: VisiteVeterinaire, indicatif?: string) {
+export function visiteRow(v: VisiteVeterinaire, indicatif?: IndicatifParEspece) {
   return {
     ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(v)] } : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(v.date),
     [TEXTES.export.colonnes.nBoucle]: v.chevreNumeroBoucle
-      ? avecIndicatif(v.chevreNumeroBoucle, indicatif)
+      ? avecIndicatif(v.chevreNumeroBoucle, indicatif?.(especeDe(v)))
       : TEXTES.commun.general.troupeauEntier,
     [TEXTES.export.colonnes.motif]: v.motif,
     [TEXTES.export.colonnes.description]: v.description ?? '',
@@ -115,12 +118,12 @@ export function visiteRow(v: VisiteVeterinaire, indicatif?: string) {
   };
 }
 
-export function controleRow(c: Controle, indicatif?: string) {
+export function controleRow(c: Controle, indicatif?: IndicatifParEspece) {
   return {
     ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(c.date),
     [TEXTES.export.colonnes.nBoucle]: c.chevreNumeroBoucle
-      ? avecIndicatif(c.chevreNumeroBoucle, indicatif)
+      ? avecIndicatif(c.chevreNumeroBoucle, indicatif?.(especeDe(c)))
       : TEXTES.commun.general.troupeauEntier,
     [TEXTES.export.colonnes.type]: c.type,
     [TEXTES.export.colonnes.resultat]: c.resultat ?? '',

@@ -7,12 +7,12 @@ import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
-import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
+import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
+import { TOUTES_ACTIVITES } from '@/features/comptabilite/services/filtresTransactions';
 import { activiteFacture } from '@/features/comptabilite/utils/activite';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import { libelleRecetteActivite, libelleRecetteEtablissement } from '@/features/comptabilite/utils/recettes';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { especeCourante, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { calculerBilanCarburant, type BilanCarburant } from '@/features/comptabilite/services/bilanCarburant';
 import {
   calculerDetailComptable,
@@ -51,9 +51,7 @@ export default function DetailComptabilite() {
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [detail, setDetail] = useState<DetailComptable>(VIDE);
   // Comme l'écran Comptabilité : l'espèce active par défaut, ou toutes les activités ensemble.
-  const [filtre, setFiltre] = useState<FiltreActivite>(
-    plusieursEspeces() ? especeCourante() : TOUTES_ACTIVITES,
-  );
+  const [filtre, setFiltre] = useFiltreActivite();
   const [bilanCarburant, setBilanCarburant] = useState<BilanCarburant | null>(null);
   const [categorieOuverte, setCategorieOuverte] = useState<CategorieDepense | null>(null);
 

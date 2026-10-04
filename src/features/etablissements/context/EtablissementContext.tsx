@@ -32,7 +32,7 @@ interface EtablissementContextValue {
   /** Espèce dont le cheptel est affiché en ce moment. */
   espece: EspeceAnimale;
   /** Change d'espèce et revient sur l'écran indiqué (l'écran courant par défaut) une fois les données rechargées. */
-  changerEspece: (espece: EspeceAnimale, chemin?: string) => Promise<void>;
+  changerEspece: (espece: EspeceAnimale) => Promise<void>;
   /** Relit la liste des établissements (après une restauration qui a changé les types de l'établissement actif). */
   recharger: () => Promise<void>;
 }
@@ -79,10 +79,10 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
     setListe((prev) => prev.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
   }, []);
 
-  const changerEspece = useCallback(async (nouvelle: EspeceAnimale, chemin?: string) => {
+  // Pas de navigation ni de remontage de l'arbre : les écrans se recréent seuls (voir ecranParEspece).
+  const changerEspece = useCallback(async (nouvelle: EspeceAnimale) => {
     await choisirEspeceCourante(nouvelle);
     setEspece(especeCourante());
-    if (chemin) setTimeout(() => router.replace(chemin as never), 0);
   }, []);
 
   const recharger = useCallback(async () => {
@@ -128,8 +128,8 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
         recharger,
       }}
     >
-      {/* Remonter tout l'arbre au changement d'établissement ou d'espèce : chaque écran recharge ses données depuis le bon espace de stockage. */}
-      <Fragment key={`${actif.id}:${espece}`}>{children}</Fragment>
+      {/* Remonter tout l'arbre au changement d'établissement : chaque écran recharge ses données depuis le bon espace de stockage. Le changement d'espèce, lui, ne recrée que le contenu des écrans (ecranParEspece). */}
+      <Fragment key={actif.id}>{children}</Fragment>
     </EtablissementContext.Provider>
   );
 }

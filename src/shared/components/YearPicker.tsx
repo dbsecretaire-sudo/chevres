@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
+import { DefilementFleches } from '@/shared/components/DefilementFleches';
 import { styles } from '@/shared/styles/components/YearPicker.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
@@ -12,7 +13,7 @@ export function YearPicker({ annees, value, onChange }: Props) {
   // De la plus récente à la plus ancienne : 2026, 2025, 2024…
   const anneesTriees = [...annees].sort((a, b) => b - a);
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rowCompact}>
+    <DefilementFleches contentContainerStyle={styles.rowCompact}>
       {anneesTriees.map((annee) => {
         const selected = annee === value;
         return (
@@ -25,6 +26,6 @@ export function YearPicker({ annees, value, onChange }: Props) {
           </Pressable>
         );
       })}
-    </ScrollView>
+    </DefilementFleches>
   );
 }

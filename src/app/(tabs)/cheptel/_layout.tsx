@@ -1,12 +1,17 @@
 import { Stack } from 'expo-router';
+import { ecranParEspece } from '@/features/etablissements/components/EcranParEspece';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
 import { CheptelHeaderMenu } from '@/features/cheptel/components/CheptelHeaderMenu';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { TEXTES } from '@/shared/textes';
 
 export default function CheptelLayout() {
+  // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
+  useEtablissement();
   return (
     <Stack
+      screenLayout={ecranParEspece}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,

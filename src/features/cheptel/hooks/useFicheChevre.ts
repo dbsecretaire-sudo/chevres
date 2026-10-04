@@ -11,6 +11,7 @@ import {
 } from '@/features/cheptel/repository/chevres';
 import { listControlesPourChevre } from '@/features/exploitation/repository/controles';
 import { listVisitesPourChevre } from '@/features/exploitation/repository/visitesVeterinaire';
+import { especeDe } from '@/features/cheptel/utils/espece';
 import type { Chevre, StatutChevre } from '@/features/cheptel/types';
 import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
 import { todayISO } from '@/shared/utils/dates';
@@ -59,7 +60,7 @@ export function useFicheChevre(id: string | undefined) {
   const enregistrerModifications = async (): Promise<boolean> => {
     if (!form) return false;
     const boucle = form.numeroBoucle?.trim();
-    if (boucle && (await numeroBoucleExiste(boucle, form.id))) {
+    if (boucle && (await numeroBoucleExiste(boucle, form.id, especeDe(form)))) {
       setErreur(TEXTES.cheptel.ficheChevre.leNBoucleEstDeja(boucle));
       return false;
     }

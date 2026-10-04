@@ -22,21 +22,24 @@ export default function ComptabiliteIndex() {
 
   return (
     <Screen scroll={false}>
-      <View style={commonStyles.topBox}>
-        <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
-        <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
-        <CarteSolde soldes={e.soldes} anneeActive={e.anneeActive} filtresActifs={e.filtresActifs} />
-        <BarreRecherche
-          recherche={e.recherche}
-          onRecherche={e.setRecherche}
-          filtresActifs={e.filtresActifs}
-          onOuvrirFiltres={() => e.setFiltreOuvert(true)}
-          onEffacerFiltres={e.effacerFiltres}
-        />
-      </View>
-
       <FlatList
         data={e.filtrees}
+        // Années, activités, solde et recherche défilent avec la liste : plus de place pour les écritures.
+        ListHeaderComponent={
+          <View style={[commonStyles.topBox, styles.entete]}>
+            <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
+            <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
+            <CarteSolde soldes={e.soldes} anneeActive={e.anneeActive} filtresActifs={e.filtresActifs} />
+            <BarreRecherche
+              recherche={e.recherche}
+              onRecherche={e.setRecherche}
+              filtresActifs={e.filtresActifs}
+              onOuvrirFiltres={() => e.setFiltreOuvert(true)}
+              onEffacerFiltres={e.effacerFiltres}
+            />
+          </View>
+        }
+        keyboardShouldPersistTaps="handled"
         keyExtractor={(item) => `${item.id}:${item.activite}`}
         contentContainerStyle={styles.list}
         ListEmptyComponent={

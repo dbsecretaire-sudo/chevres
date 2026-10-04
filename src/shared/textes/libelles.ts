@@ -191,6 +191,7 @@ export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, s
   [ACTIVITE_SOCIETE.PRESTATIONS_SERVICE]: 'Prestations de service',
   [ACTIVITE_SOCIETE.VENTE]: 'Vente',
   [ACTIVITE_SOCIETE.AGRICOLE]: 'Agriculture',
+  [ACTIVITE_SOCIETE.PERSO]: 'Perso',
 };
 
 /** Activité d'une écriture comptable : une espèce, ou « commun ». */

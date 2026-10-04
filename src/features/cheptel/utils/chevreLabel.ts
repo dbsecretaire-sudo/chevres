@@ -2,10 +2,11 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import {
   CATEGORIE_ANIMAL,
   SEXE,
-  ageMaxPetitMois,
+  agePetitMax,
   PREMIER_MOIS_SECOND_SEMESTRE,
 } from '@/shared/constants/cheptel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
+import { ageAtteint } from '@/shared/utils/age';
 import { currentYear, formatDateFR, yearOf } from '@/shared/utils/dates';
 import { HEURE_MINUIT, MOIS_PAR_AN } from '@/shared/constants/temps';
 import { LIBELLES_STATUT_CHEVRE } from '@/shared/textes/libelles';
@@ -17,8 +18,18 @@ export function libelleChevre(c: Pick<Chevre, 'numeroBoucle' | 'nom' | 'sexe' | 
     return c.nom ? `${c.numeroBoucle} — ${c.nom}` : c.numeroBoucle;
   }
   if (c.nom) return TEXTES.cheptel.chevreLabel.nomSansBoucle(c.nom);
+  // Sans boucle ni nom : le mot du petit (porcelet, poussin…) tant que l'animal a moins que l'âge limite du petit,
+  // puis celui de l'adulte (truie, verrat, poule, coq…).
+  const petit = categorieAnimal(c) === CATEGORIE_ANIMAL.CABRIT;
+  const mots = TEXTES.cheptel.chevreLabel;
   const type =
-    c.sexe === SEXE.FEMELLE ? TEXTES.cheptel.chevreLabel.chevrette : TEXTES.cheptel.chevreLabel.chevreau;
+    c.sexe === SEXE.FEMELLE
+      ? petit
+        ? mots.chevrette
+        : mots.femelleAdulte
+      : petit
+        ? mots.chevreau
+        : mots.maleAdulte;
   return TEXTES.cheptel.chevreLabel.typeSansBoucleNeE(type, formatDateFR(c.dateNaissance));
 }
 
@@ -41,11 +52,11 @@ export function ageEnMois(dateNaissance: string): number {
 }
 
 /**
- * Catégorie déduite de l'âge et du sexe : moins que l’âge limite du petit (voir ageMaxPetitMois) → petit (mâle ou femelle) ;
+ * Catégorie déduite de l'âge et du sexe : moins que l’âge limite du petit (voir agePetitMax) → petit (mâle ou femelle) ;
  * au-delà → femelle ou mâle adulte.
  */
 export function categorieAnimal(c: Pick<Chevre, 'dateNaissance' | 'sexe'>): CategorieAnimal {
-  if (ageEnMois(c.dateNaissance) < ageMaxPetitMois()) return CATEGORIE_ANIMAL.CABRIT;
+  if (!ageAtteint(c.dateNaissance, agePetitMax())) return CATEGORIE_ANIMAL.CABRIT;
   return c.sexe === SEXE.MALE ? CATEGORIE_ANIMAL.BOUC : CATEGORIE_ANIMAL.CHEVRE;
 }
 

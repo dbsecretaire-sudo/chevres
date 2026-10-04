@@ -4,6 +4,9 @@ import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { YearPicker } from '@/shared/components/YearPicker';
+import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
+import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
+import { TOUTES_ACTIVITES } from '@/features/comptabilite/services/filtresTransactions';
 
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { calculerRecettesMicroBA, type RecettesMicroBA } from '@/features/comptabilite/services/fiscalite';
@@ -17,15 +20,17 @@ export default function FiscaliteImpots() {
   const { settings, setAnneeActive } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [recettes, setRecettes] = useState<RecettesMicroBA | null>(null);
+  // Tout par défaut : la déclaration porte sur l'ensemble des recettes.
+  const [filtre, setFiltre] = useFiltreActivite(true);
 
   const charger = useCallback(async () => {
     const [toutesAnnees, r] = await Promise.all([
       toutesLesAnneesConnues(),
-      calculerRecettesMicroBA(settings.anneeActive),
+      calculerRecettesMicroBA(settings.anneeActive, filtre),
     ]);
     setAnnees(toutesAnnees);
     setRecettes(r);
-  }, [settings.anneeActive]);
+  }, [settings.anneeActive, filtre]);
 
   useFocusEffect(
     useCallback(() => {
@@ -36,6 +41,10 @@ export default function FiscaliteImpots() {
   return (
     <Screen>
       <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
+      <PucesActivite valeur={filtre} onChange={setFiltre} />
+      {filtre !== TOUTES_ACTIVITES && (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.parActivite.noteDeclaration}</Text>
+      )}
 
       {recettes && (
         <Card>
