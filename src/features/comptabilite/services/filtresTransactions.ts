@@ -1,5 +1,6 @@
 import type { FiltresTransactions } from '@/features/comptabilite/components/FiltreTransactionsModal';
 import type { Transaction } from '@/features/comptabilite/services/transactions';
+import type { ActiviteComptable } from '@/features/comptabilite/types';
 import { SENS_TRANSACTION } from '@/shared/constants/comptabilite';
 import { formatDateFR } from '@/shared/utils/dates';
 
@@ -81,3 +82,11 @@ export function calculerSoldes(transactions: Transaction[]): SoldesTransactions 
     ),
   };
 }
+
+/** Valeur du filtre « activité » qui garde toutes les écritures. */
+export const TOUTES_ACTIVITES = 'toutes';
+export type FiltreActivite = ActiviteComptable | typeof TOUTES_ACTIVITES;
+
+/** Garde les écritures d'une activité (toutes si le filtre est « toutes »). */
+export const filtrerParActivite = (transactions: Transaction[], filtre: FiltreActivite): Transaction[] =>
+  filtre === TOUTES_ACTIVITES ? transactions : transactions.filter((t) => t.activite === filtre);

@@ -1,4 +1,5 @@
 import { Text } from 'react-native';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';
 import {
@@ -18,6 +19,7 @@ export default function BilanAnnuel() {
 
   return (
     <Screen>
+      <SelecteurEspece />
       <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
 
       <Text style={commonStyles.muted}>

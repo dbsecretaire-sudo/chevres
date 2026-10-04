@@ -1,6 +1,7 @@
 import { yearOf } from '@/shared/utils/dates';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { loadAllYears } from '@/shared/storage/localStore';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import {
   SEXE,
@@ -60,7 +61,7 @@ export interface Bilan {
  */
 export async function calculerBilan(annee: number): Promise<Bilan> {
   const ageMaxPetit = ageMaxPetitMois();
-  const toutes = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  const toutes = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
 
   const anneeStatut = (c: Chevre) => (c.dateStatut ? yearOf(c.dateStatut) : undefined);
   const neeAvant = (c: Chevre) => yearOf(c.dateNaissance) < annee;

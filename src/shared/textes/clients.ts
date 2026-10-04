@@ -32,4 +32,12 @@ export const TEXTES_CLIENTS = {
   nouveauClient: {
     nomDuClient: 'Nom du client',
   },
+  importClient: {
+    importerDepuisUnAutreEtablissement: 'Importer un client depuis un autre établissement',
+    saisirUnNouveauClient: 'Saisir un nouveau client',
+    choisissezUnEtablissement: 'Choisissez un établissement, puis le client à importer.',
+    aucunClientDansCetEtablissement: 'Aucun client dans cet établissement.',
+    dejaPresent: (nom: string) =>
+      `« ${nom} » existe déjà dans cet établissement (même nom et même téléphone) : rien n’a été importé.`,
+  },
 } as const;

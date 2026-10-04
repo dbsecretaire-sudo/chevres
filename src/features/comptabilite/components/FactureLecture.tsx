@@ -3,6 +3,7 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import {
+  LABEL_ACTIVITE_COMPTABLE,
   LABEL_TYPE_ALIMENT,
   LABEL_TYPE_CARBURANT,
   LABEL_UNITE_CONDITIONNEMENT,
@@ -11,6 +12,8 @@ import { type CompteComptable } from '@/shared/constants/planComptable';
 import type { Facture, UniteConditionnement } from '@/features/comptabilite/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_ALIMENT, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { activiteFacture } from '@/features/comptabilite/utils/activite';
+import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 /** « 1 matelas », « 3 matelas », « 2 ballots » (matelas est invariable). */
@@ -29,6 +32,12 @@ interface Props {
 export function FactureLecture({ facture, compte, onModifier }: Props) {
   return (
     <Card>
+      {plusieursEspeces() ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.comptabilite.activite.activiteDeuxPoints}
+          {LABEL_ACTIVITE_COMPTABLE[activiteFacture(facture)]}
+        </Text>
+      ) : null}
       <Text style={commonStyles.line}>
         {TEXTES.comptabilite.factureLecture.typeDeuxPoints}
         {facture.type === TYPE_FACTURE.EMISE

@@ -1,3 +1,5 @@
+import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+
 /** Valeurs métier de la comptabilité — à modifier ici uniquement. */
 
 export const TYPE_FACTURE = {
@@ -46,6 +48,11 @@ export const TYPE_ALIMENT = {
   LUZERNE: 'luzerne',
   FOIN: 'foin',
   PAILLE: 'paille',
+  FOURRAGE: 'fourrage',
+  /** Orge, blé et/ou maïs. */
+  CEREALES: 'cereales',
+  SEL: 'sel',
+  PORC_CROISSANCE: 'porc_croissance',
   AUTRE: 'autre',
 } as const;
 
@@ -87,21 +94,48 @@ export const SOURCE_TRANSACTION = {
 } as const;
 
 // --- Listes ordonnées (affichage, boucles) ---
+/** Tous les types d'aliment, toutes espèces confondues. */
 export const TYPES_ALIMENT = [
   TYPE_ALIMENT.MAIS,
   TYPE_ALIMENT.LUZERNE,
   TYPE_ALIMENT.FOIN,
   TYPE_ALIMENT.PAILLE,
+  TYPE_ALIMENT.FOURRAGE,
+  TYPE_ALIMENT.CEREALES,
+  TYPE_ALIMENT.SEL,
+  TYPE_ALIMENT.PORC_CROISSANCE,
   TYPE_ALIMENT.AUTRE,
 ] as const;
 
+/** Aliments proposés selon l'espèce (« Autre » toujours en dernier). */
+export const TYPES_ALIMENT_PAR_ESPECE = {
+  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: [
+    TYPE_ALIMENT.MAIS,
+    TYPE_ALIMENT.LUZERNE,
+    TYPE_ALIMENT.FOIN,
+    TYPE_ALIMENT.PAILLE,
+    TYPE_ALIMENT.AUTRE,
+  ],
+  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: [
+    TYPE_ALIMENT.MAIS,
+    TYPE_ALIMENT.LUZERNE,
+    TYPE_ALIMENT.FOIN,
+    TYPE_ALIMENT.PAILLE,
+    TYPE_ALIMENT.AUTRE,
+  ],
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: [
+    TYPE_ALIMENT.FOURRAGE,
+    TYPE_ALIMENT.LUZERNE,
+    TYPE_ALIMENT.FOIN,
+    TYPE_ALIMENT.CEREALES,
+    TYPE_ALIMENT.SEL,
+    TYPE_ALIMENT.AUTRE,
+  ],
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: [TYPE_ALIMENT.PORC_CROISSANCE, TYPE_ALIMENT.AUTRE],
+} as const;
+
 /** « Autre » est exclu des totaux/moyennes : la précision libre peut recouvrir un achat pour un tout autre élevage que les chèvres. */
-export const TYPES_ALIMENT_COMPTABILISES = [
-  TYPE_ALIMENT.MAIS,
-  TYPE_ALIMENT.LUZERNE,
-  TYPE_ALIMENT.FOIN,
-  TYPE_ALIMENT.PAILLE,
-] as const;
+export const TYPES_ALIMENT_COMPTABILISES = TYPES_ALIMENT.filter((t) => t !== TYPE_ALIMENT.AUTRE);
 
 export const TYPES_CARBURANT = [
   TYPE_CARBURANT.GAZOIL,

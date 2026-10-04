@@ -1,10 +1,17 @@
-import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
 
 const V = vocabulaire;
-const Cap = capitaliser;
 
 /** Textes de l'interface — « comptabilite ». À modifier ici uniquement. */
 export const TEXTES_COMPTABILITE = {
+  activite: {
+    activite: 'Activité',
+    activiteDeuxPoints: 'Activité : ',
+  },
+  parActivite: {
+    parActivite: 'Comptabilité par activité',
+    toutes: 'Toutes',
+  },
   comptabiliteHeaderMenu: {
     genererUnPlanComptable: 'Générer un plan comptable',
   },
@@ -160,8 +167,8 @@ export const TEXTES_COMPTABILITE = {
   transactions: {
     venteDeProduction: 'Vente de production',
     laitQuantiteL: (quantite: number) => `Lait — ${quantite} L`,
-    cabrisQuantiteTeteValeur: (quantite: number, valeur: string) =>
-      `${Cap(V().petit.pluriel)} — ${quantite} tête${valeur}`,
+    cabrisQuantiteTeteValeur: (libelle: string, quantite: number, valeur: string) =>
+      `${libelle} — ${quantite} tête${valeur}`,
     fromageQuantiteUnite: (quantite: number, unite: unknown) => `Fromage — ${quantite} ${unite}`,
   },
 } as const;

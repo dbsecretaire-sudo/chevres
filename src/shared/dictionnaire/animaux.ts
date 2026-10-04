@@ -63,32 +63,41 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
   },
 };
 
-/** Vocabulaire neutre, quand l'établissement élève plusieurs espèces à la fois. */
-export const VOCABULAIRE_GENERIQUE: Vocabulaire = {
-  troupeau: 'Troupeau',
-  femelle: terme('femelle'),
-  male: terme('mâle'),
-  petit: terme('jeune'),
-  petitFemelle: 'Jeune',
-  petitMale: 'Jeune',
-};
-
 /** Espèce utilisée tant qu'aucune n'est renseignée (établissements créés avant l'ajout du type). */
 export const ESPECE_PAR_DEFAUT: EspeceAnimale = TYPE_ANIMAL_ETABLISSEMENT.CHEVRES;
 
-let especesActives: EspeceAnimale[] = [];
+let especesEtablissement: EspeceAnimale[] = [];
+let courante: EspeceAnimale = ESPECE_PAR_DEFAUT;
 
-/** À appeler à chaque changement d'établissement actif, ou de ses animaux. */
-export function definirEspecesActives(especes: EspeceAnimale[] | undefined): void {
-  especesActives = especes ?? [];
+/** Espèces de l'établissement actif ; les chèvres tant qu'aucune n'est renseignée. */
+export const especesActives = (): EspeceAnimale[] =>
+  especesEtablissement.length > 0 ? especesEtablissement : [ESPECE_PAR_DEFAUT];
+
+/**
+ * Espèce des animaux dont la fiche n'en porte pas (données saisies avant le choix de l'espèce) :
+ * les chèvres si l'établissement en élève, sinon sa première espèce.
+ */
+export const especeParDefaut = (): EspeceAnimale =>
+  especesActives().includes(ESPECE_PAR_DEFAUT) ? ESPECE_PAR_DEFAUT : especesActives()[0];
+
+/**
+ * À appeler à chaque changement d'établissement actif, ou de ses animaux. L'espèce courante est le choix
+ * mémorisé s'il est encore valable, sinon l'espèce par défaut de l'établissement.
+ */
+export function definirEspecesActives(especes: EspeceAnimale[] | undefined, choix?: EspeceAnimale): void {
+  especesEtablissement = especes ?? [];
+  courante = choix && especesActives().includes(choix) ? choix : especeParDefaut();
 }
 
-/** Vocabulaire de l'établissement actif : celui de son espèce, neutre s'il en a plusieurs. */
-export function vocabulaire(): Vocabulaire {
-  if (especesActives.length === 0) return DICTIONNAIRE_ANIMAUX[ESPECE_PAR_DEFAUT];
-  if (especesActives.length > 1) return VOCABULAIRE_GENERIQUE;
-  return DICTIONNAIRE_ANIMAUX[especesActives[0]];
+export function definirEspeceCourante(espece: EspeceAnimale): void {
+  if (especesActives().includes(espece)) courante = espece;
 }
+
+/** Espèce affichée et gérée en ce moment : tous les écrans du cheptel travaillent sur elle. */
+export const especeCourante = (): EspeceAnimale => courante;
+
+/** Vocabulaire d'une espèce ; celui de l'espèce courante par défaut. */
+export const vocabulaire = (espece: EspeceAnimale = courante): Vocabulaire => DICTIONNAIRE_ANIMAUX[espece];
 
 /** Le terme au singulier ou au pluriel selon le nombre. */
 export const accorder = (t: Terme, nombre: number): string => (nombre > 1 ? t.pluriel : t.singulier);
@@ -98,10 +107,8 @@ export const capitaliser = (texte: string): string => texte.charAt(0).toUpperCas
 /** « de cabris » / « d'agneaux » : le « de » s'élide devant une voyelle ou un h muet. */
 export const de = (mot: string): string => (/^[aeiouyhéèêàâîô]/i.test(mot) ? `d’${mot}` : `de ${mot}`);
 
+/** Vrai quand l'établissement élève plusieurs espèces : c'est alors qu'on les distingue dans les écrans. */
+export const plusieursEspeces = (): boolean => especesActives().length > 1;
+
 /** « ce bouc » / « cet agneau » : « ce » devient « cet » devant une voyelle ou un h muet (mots masculins). */
 export const ce = (mot: string): string => (/^[aeiouyhéèêàâîô]/i.test(mot) ? `cet ${mot}` : `ce ${mot}`);
-
-/** Espèce dont dépendent les seuils métier : celle de l'établissement, l'espèce par défaut s'il en a plusieurs ou aucune. */
-export function especeActive(): EspeceAnimale {
-  return especesActives.length === 1 ? especesActives[0] : ESPECE_PAR_DEFAUT;
-}

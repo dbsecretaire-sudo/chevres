@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { colors } from '@/shared/theme/colors';
 import { ComptabiliteHeaderMenu } from '@/features/comptabilite/components/ComptabiliteHeaderMenu';
+import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 export default function ComptabiliteLayout() {
@@ -14,7 +15,12 @@ export default function ComptabiliteLayout() {
     >
       <Stack.Screen
         name="index"
-        options={{ title: TEXTES.commun.general.comptabilite, headerRight: () => <ComptabiliteHeaderMenu /> }}
+        options={{
+          title: plusieursEspeces()
+            ? TEXTES.comptabilite.parActivite.parActivite
+            : TEXTES.commun.general.comptabilite,
+          headerRight: () => <ComptabiliteHeaderMenu />,
+        }}
       />
       <Stack.Screen
         name="nouvelle"

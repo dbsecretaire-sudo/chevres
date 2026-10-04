@@ -3,6 +3,7 @@ import { creerChevre } from '@/features/cheptel/repository/chevres';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { TEXTES } from '@/shared/textes';
 
 // Naissances : pas de fichier dédié — un cabrit est une Chevre dont
@@ -59,7 +60,7 @@ export interface PorteeNaissance {
 
 /** Regroupe les cabrits du cheptel par (mère, date de naissance) pour l'écran Naissances. */
 export async function listNaissancesGroupees(): Promise<PorteeNaissance[]> {
-  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
   const cabrits = all.filter((c) => c.mereNumeroBoucle);
   const groupes = new Map<string, PorteeNaissance>();
   for (const c of cabrits) {

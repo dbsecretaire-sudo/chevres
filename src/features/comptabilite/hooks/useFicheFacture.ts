@@ -18,7 +18,11 @@ import {
   versLignesCarburantForm,
   type LigneCarburantForm,
 } from '@/features/comptabilite/forms/lignesCarburant';
-import type { Facture } from '@/features/comptabilite/types';
+import type { ActiviteComptable, Facture } from '@/features/comptabilite/types';
+import { activiteFacture } from '@/features/comptabilite/utils/activite';
+import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
@@ -49,6 +53,11 @@ export function useFicheFacture(id: string | undefined) {
 
   const estAlimentation = facture?.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   const estCarburant = facture?.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
+  /** Activité affichée dans le formulaire (celle de la facture, ou celle déduite pour les anciennes factures). */
+  const activiteForm: ActiviteComptable = form ? activiteFacture(form) : especeCourante();
+  const typesAliment = typesAlimentEspece(
+    activiteForm === ACTIVITE_COMMUNE ? especeCourante() : activiteForm,
+  );
   const totalAlimentation = totalMontants(lignes);
   const totalCarburant = totalMontants(lignesCarburant);
 
@@ -70,6 +79,13 @@ export function useFicheFacture(id: string | undefined) {
       listClients().then(setClients);
     }, [charger]),
   );
+
+  const changerActivite = (activite: ActiviteComptable) => {
+    setForm((prev) => (prev ? { ...prev, activite } : prev));
+    // Les lignes d'alimentation passent au premier aliment de la nouvelle espèce si le leur n'en fait pas partie.
+    const types = typesAlimentEspece(activite === ACTIVITE_COMMUNE ? especeCourante() : activite);
+    setLignes((prev) => prev.map((l) => (types.includes(l.type) ? l : { ...l, type: types[0] })));
+  };
 
   const choisirFournisseur = (fournisseurId: string) => {
     const fournisseur = fournisseurs.find((f) => f.id === fournisseurId);
@@ -198,6 +214,9 @@ export function useFicheFacture(id: string | undefined) {
     montantTexte,
     estAlimentation,
     estCarburant,
+    activiteForm,
+    typesAliment,
+    changerActivite,
     totalAlimentation,
     totalCarburant,
     compteAffiche,

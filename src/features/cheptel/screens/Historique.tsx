@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { FlatList, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -57,6 +58,7 @@ export default function Historique() {
 
   return (
     <Screen scroll={false}>
+      <SelecteurEspece />
       <View style={styles.filtre}>
         <SelectField
           label={TEXTES.cheptel.historique.trierPar}

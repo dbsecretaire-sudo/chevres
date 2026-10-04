@@ -8,6 +8,7 @@ import type {
   UniteConditionnement,
 } from '@/features/comptabilite/types';
 import { TYPE_ALIMENT, UNITE_CONDITIONNEMENT } from '@/shared/constants/comptabilite';
+import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 
 /** Une ligne d'aliment telle que saisie dans le formulaire (tout en texte, converti à l'enregistrement). */
 export interface LigneAlimentForm {
@@ -20,7 +21,8 @@ export interface LigneAlimentForm {
   nombreUnitesConditionnement: string;
 }
 
-export const ligneAlimentVide = (type: TypeAliment = TYPE_ALIMENT.MAIS): LigneAlimentForm => ({
+/** Nouvelle ligne : le premier aliment de l'espèce courante par défaut. */
+export const ligneAlimentVide = (type: TypeAliment = typesAlimentEspece()[0]): LigneAlimentForm => ({
   key: generateId(),
   type,
   montant: '',

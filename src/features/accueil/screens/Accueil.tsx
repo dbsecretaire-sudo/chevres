@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
@@ -17,6 +18,7 @@ export default function Accueil() {
 
   return (
     <Screen>
+      <SelecteurEspece />
       <Text style={commonStyles.heading}>
         {TEXTES.accueil.accueil.troupeauEspace}
         {annee}

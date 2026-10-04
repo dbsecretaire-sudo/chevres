@@ -11,7 +11,11 @@ import {
   UNITE_CONDITIONNEMENT,
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
-import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import {
+  ACTIVITE_COMMUNE,
+  ACTIVITE_SOCIETE,
+  TYPE_ANIMAL_ETABLISSEMENT,
+} from '@/shared/constants/etablissements';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { capitaliser, de, vocabulaire } from '@/shared/dictionnaire/animaux';
 
@@ -105,6 +109,10 @@ export const LABEL_TYPE_ALIMENT: Record<ValeurDe<typeof TYPE_ALIMENT>, string> =
   [TYPE_ALIMENT.LUZERNE]: 'Luzerne',
   [TYPE_ALIMENT.FOIN]: 'Foin',
   [TYPE_ALIMENT.PAILLE]: 'Paille',
+  [TYPE_ALIMENT.FOURRAGE]: 'Fourrage',
+  [TYPE_ALIMENT.CEREALES]: 'Céréales (orge, blé, maïs)',
+  [TYPE_ALIMENT.SEL]: 'Sel',
+  [TYPE_ALIMENT.PORC_CROISSANCE]: 'Porc croissance',
   [TYPE_ALIMENT.AUTRE]: 'Autre',
 };
 
@@ -168,4 +176,14 @@ export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, s
   [ACTIVITE_SOCIETE.LIBERAL]: 'Libéral',
   [ACTIVITE_SOCIETE.PRESTATIONS_SERVICE]: 'Prestations de service',
   [ACTIVITE_SOCIETE.VENTE]: 'Vente',
+  [ACTIVITE_SOCIETE.AGRICOLE]: 'Agriculture',
+};
+
+/** Activité d'une écriture comptable : une espèce, ou « commun ». */
+export const LABEL_ACTIVITE_COMPTABLE: Record<
+  ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT> | typeof ACTIVITE_COMMUNE,
+  string
+> = {
+  ...LABEL_TYPE_ANIMAL_ETABLISSEMENT,
+  [ACTIVITE_COMMUNE]: 'Commun',
 };

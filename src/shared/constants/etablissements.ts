@@ -13,4 +13,8 @@ export const ACTIVITE_SOCIETE = {
   LIBERAL: 'liberal',
   PRESTATIONS_SERVICE: 'prestations_service',
   VENTE: 'vente',
+  AGRICOLE: 'agricole',
 } as const;
+
+/** Activité d'une écriture comptable qui ne concerne aucune espèce en particulier (carburant, impôts, etc.). */
+export const ACTIVITE_COMMUNE = 'commun';

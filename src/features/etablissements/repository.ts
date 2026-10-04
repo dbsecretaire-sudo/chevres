@@ -2,7 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { definirEspecesActives } from '@/shared/dictionnaire/animaux';
+import {
+  definirEspeceCourante,
+  definirEspecesActives,
+  especeCourante,
+  type EspeceAnimale,
+} from '@/shared/dictionnaire/animaux';
 import {
   CLE_STOCKAGE,
   ID_ETABLISSEMENT_DEFAUT,
@@ -41,13 +46,23 @@ function prefixePour(id: string): string {
     : `${PREFIXE_STOCKAGE}${SEGMENT_ETABLISSEMENT}${SEPARATEUR_CLE}${id}${SEPARATEUR_CLE}`;
 }
 
+/** Clé AsyncStorage d'une donnée propre à un établissement donné (pour lire les données d'un autre établissement). */
+export function cleStockagePour(etablissementId: string, suffixe: string): string {
+  return `${prefixePour(etablissementId)}${suffixe}`;
+}
+
 /** Clé AsyncStorage d'une donnée propre à l'établissement actif. */
 export function cleStockage(suffixe: string): string {
-  return `${prefixePour(idActif)}${suffixe}`;
+  return cleStockagePour(idActif, suffixe);
 }
 
 export function getIdEtablissementActif(): string {
   return idActif;
+}
+
+/** Les établissements autres que l'établissement actif. */
+export async function listAutresEtablissements(): Promise<Etablissement[]> {
+  return (await listEtablissements()).filter((e) => e.id !== idActif);
 }
 
 export async function listEtablissements(): Promise<Etablissement[]> {
@@ -69,12 +84,24 @@ async function ecrireListe(liste: Etablissement[]): Promise<void> {
   await AsyncStorage.setItem(KEY_LISTE, JSON.stringify(liste));
 }
 
+/** Choix mémorisé de l'espèce courante de l'établissement actif (undefined s'il n'y en a pas). */
+async function lireEspeceMemorisee(): Promise<EspeceAnimale | undefined> {
+  const raw = await AsyncStorage.getItem(cleStockage(CLE_STOCKAGE.ESPECE_COURANTE));
+  return (raw as EspeceAnimale | null) ?? undefined;
+}
+
+/** Fixe l'espèce courante (et la mémorise) : les écrans du cheptel travaillent ensuite sur cette espèce. */
+export async function choisirEspeceCourante(espece: EspeceAnimale): Promise<void> {
+  definirEspeceCourante(espece);
+  await AsyncStorage.setItem(cleStockage(CLE_STOCKAGE.ESPECE_COURANTE), especeCourante());
+}
+
 /** À appeler une fois au démarrage : fixe l'établissement actif avant toute lecture de données. */
 export async function initialiserEtablissements(): Promise<{ liste: Etablissement[]; actifId: string }> {
   const liste = await listEtablissements();
   const sauvegarde = await AsyncStorage.getItem(KEY_ACTIF);
   idActif = liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id;
-  definirEspecesActives(liste.find((e) => e.id === idActif)?.animaux);
+  definirEspecesActives(liste.find((e) => e.id === idActif)?.animaux, await lireEspeceMemorisee());
   return { liste, actifId: idActif };
 }
 
@@ -83,8 +110,8 @@ export async function choisirEtablissementActif(id: string): Promise<void> {
   const cible = liste.find((e) => e.id === id);
   if (!cible) return;
   idActif = id;
-  definirEspecesActives(cible.animaux);
   await AsyncStorage.setItem(KEY_ACTIF, id);
+  definirEspecesActives(cible.animaux, await lireEspeceMemorisee());
 }
 
 export async function creerEtablissement(donnees: DonneesEtablissement): Promise<Etablissement> {
@@ -97,7 +124,7 @@ export async function creerEtablissement(donnees: DonneesEtablissement): Promise
 export async function modifierEtablissement(id: string, donnees: DonneesEtablissement): Promise<void> {
   const liste = await listEtablissements();
   await ecrireListe(liste.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
-  if (id === idActif) definirEspecesActives(donnees.animaux);
+  if (id === idActif) definirEspecesActives(donnees.animaux, especeCourante());
 }
 
 /** Supprime l'établissement et toutes ses données locales. L'établissement par défaut ne peut pas être supprimé. */

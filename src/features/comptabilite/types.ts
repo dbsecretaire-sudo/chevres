@@ -1,4 +1,6 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import type { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import type {
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
@@ -13,6 +15,9 @@ import type {
 } from '@/shared/constants/comptabilite';
 
 export type TypeFacture = ValeurDe<typeof TYPE_FACTURE>;
+
+/** Activité à laquelle se rattache une écriture : une espèce, ou « commun » (carburant, impôts…). */
+export type ActiviteComptable = EspeceAnimale | typeof ACTIVITE_COMMUNE;
 
 /** Catégorie de dépense pour une facture reçue (achat). */
 export type CategorieDepense = ValeurDe<typeof CATEGORIE_DEPENSE>;
@@ -59,6 +64,8 @@ export interface Facture {
   date: string;
   type: TypeFacture;
   tiers: string; // fournisseur ou client
+  /** Activité de la facture ; absente sur les anciennes factures (voir activiteFacture). */
+  activite?: ActiviteComptable;
   description: string;
   montant: number;
   /** Uniquement pour type === 'recue'. */
@@ -105,6 +112,8 @@ export type UniteVente = ValeurDe<typeof UNITE_VENTE>;
 
 export interface Vente {
   id: string;
+  /** Activité (espèce) de la vente ; absente sur les anciennes ventes (voir activiteVente). */
+  activite?: ActiviteComptable;
   date: string;
   categorie: CategorieVente;
   typeFromage?: TypeFromage; // utilisé quand categorie === 'fromage'

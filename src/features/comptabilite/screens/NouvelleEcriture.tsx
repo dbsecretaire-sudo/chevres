@@ -8,6 +8,7 @@ import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
+import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
 import { SectionDepense } from '@/features/comptabilite/components/ecriture/SectionDepense';
 import { SectionRecette } from '@/features/comptabilite/components/ecriture/SectionRecette';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
@@ -43,6 +44,8 @@ export default function NouvelleFacture() {
             <DateField label={TEXTES.commun.general.date} required value={e.date} onChange={e.setDate} />
           </View>
         </View>
+
+        <ChampActivite value={e.activite} onChange={e.changerActivite} avecCommun={e.avecCommunActivite} />
 
         {e.type === TYPE_FACTURE.RECUE ? <SectionDepense e={e} /> : <SectionRecette e={e} />}
 

@@ -5,17 +5,20 @@ import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { deleteRecord, findRecord, getYears, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
+import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 
+/** Animaux vivants de l'espèce courante. */
 export async function listChevresVivantes(): Promise<Chevre[]> {
-  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
   return all
     .filter((c) => c.statut === STATUT_CHEVRE.VIVANTE)
     .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
 }
 
-/** Chèvres mortes, abattues ou vendues : conservées mais masquées de la liste principale. */
+/** Animaux de l'espèce courante morts, abattus ou vendus : conservés mais masqués de la liste principale. */
 export async function listChevresHistorique(): Promise<Chevre[]> {
-  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
   return all
     .filter((c) => c.statut !== STATUT_CHEVRE.VIVANTE)
     .sort((a, b) => (b.dateStatut ?? '').localeCompare(a.dateStatut ?? ''));
@@ -48,6 +51,8 @@ export async function saveChevre(chevre: Chevre): Promise<void> {
 }
 
 export async function creerChevre(input: {
+  /** Espèce de l'animal ; l'espèce courante par défaut. */
+  espece?: EspeceAnimale;
   numeroBoucle?: string;
   dateBouclage?: string;
   nom?: string;
@@ -64,6 +69,7 @@ export async function creerChevre(input: {
   const statut = input.statut ?? STATUT_CHEVRE.VIVANTE;
   const chevre: Chevre = {
     id: generateId(),
+    espece: input.espece ?? especeCourante(),
     numeroBoucle: input.numeroBoucle,
     dateBouclage: input.dateBouclage,
     nom: input.nom,

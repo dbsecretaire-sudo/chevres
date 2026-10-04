@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { router } from 'expo-router';
 import {
+  choisirEspeceCourante,
   choisirEtablissementActif,
   creerEtablissement,
   initialiserEtablissements,
@@ -18,12 +19,19 @@ import {
   type Etablissement,
 } from '@/features/etablissements/repository';
 import { SelecteurEtablissement } from '@/features/etablissements/components/SelecteurEtablissement';
+import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 interface EtablissementContextValue {
   etablissements: Etablissement[];
   actif: Etablissement;
   ouvrirSelecteur: () => void;
+  /** Espèces de l'établissement actif (une seule la plupart du temps). */
+  especes: EspeceAnimale[];
+  /** Espèce dont le cheptel est affiché en ce moment. */
+  espece: EspeceAnimale;
+  /** Change d'espèce et revient sur l'écran indiqué (l'écran courant par défaut) une fois les données rechargées. */
+  changerEspece: (espece: EspeceAnimale, chemin?: string) => Promise<void>;
 }
 
 const EtablissementContext = createContext<EtablissementContextValue | undefined>(undefined);
@@ -32,6 +40,7 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
   const [pret, setPret] = useState(false);
   const [liste, setListe] = useState<Etablissement[]>([]);
   const [actifId, setActifId] = useState('');
+  const [espece, setEspece] = useState<EspeceAnimale>(especeCourante());
   // L'application s'ouvre toujours sur le choix de l'établissement.
   const [selecteurOuvert, setSelecteurOuvert] = useState(true);
 
@@ -39,6 +48,7 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
     initialiserEtablissements().then(({ liste: l, actifId: a }) => {
       setListe(l);
       setActifId(a);
+      setEspece(especeCourante());
       setPret(true);
     });
   }, []);
@@ -46,6 +56,7 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
   const entrer = useCallback(async (id: string) => {
     await choisirEtablissementActif(id);
     setActifId(id);
+    setEspece(especeCourante());
     setSelecteurOuvert(false);
     setTimeout(() => router.replace('/'), 0);
   }, []);
@@ -61,7 +72,14 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
 
   const modifier = useCallback(async (id: string, donnees: DonneesEtablissement) => {
     await modifierEtablissement(id, donnees);
+    setEspece(especeCourante());
     setListe((prev) => prev.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
+  }, []);
+
+  const changerEspece = useCallback(async (nouvelle: EspeceAnimale, chemin?: string) => {
+    await choisirEspeceCourante(nouvelle);
+    setEspece(especeCourante());
+    if (chemin) setTimeout(() => router.replace(chemin as never), 0);
   }, []);
 
   const supprimer = useCallback(async (id: string) => {
@@ -89,10 +107,17 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
 
   return (
     <EtablissementContext.Provider
-      value={{ etablissements: liste, actif, ouvrirSelecteur: () => setSelecteurOuvert(true) }}
+      value={{
+        etablissements: liste,
+        actif,
+        ouvrirSelecteur: () => setSelecteurOuvert(true),
+        especes: especesActives(),
+        espece,
+        changerEspece,
+      }}
     >
-      {/* Remonter tout l'arbre au changement d'établissement : chaque écran recharge ses données depuis le bon espace de stockage. */}
-      <Fragment key={actif.id}>{children}</Fragment>
+      {/* Remonter tout l'arbre au changement d'établissement ou d'espèce : chaque écran recharge ses données depuis le bon espace de stockage. */}
+      <Fragment key={`${actif.id}:${espece}`}>{children}</Fragment>
     </EtablissementContext.Provider>
   );
 }

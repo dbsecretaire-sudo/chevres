@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -27,6 +28,7 @@ export default function Naissances() {
 
   return (
     <Screen scroll={false}>
+      <SelecteurEspece />
       <FlatList
         data={portees}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}

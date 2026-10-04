@@ -1,5 +1,5 @@
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
-import { especeActive, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 
 /** Valeurs et seuils métier du cheptel — à modifier ici uniquement. */
 
@@ -44,8 +44,8 @@ export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { ageMaxPetitMois: 3, ageSevrageMois: 1, nbPetitsMax: 20 },
 };
 
-/** Seuils de l'établissement actif (ceux de son espèce ; ceux des chèvres s'il en a plusieurs ou aucune). */
-export const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[especeActive()];
+/** Seuils de l'espèce courante. */
+export const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[especeCourante()];
 
 export const ageMaxPetitMois = (): number => parametresEspece().ageMaxPetitMois;
 export const ageSevrageMois = (): number => parametresEspece().ageSevrageMois;

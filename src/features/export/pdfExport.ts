@@ -14,6 +14,7 @@ import {
 } from '@/features/export/services/lignesExport';
 import { construireRegistreCheptel } from '@/features/export/services/registreCheptel';
 import { lignesAlimentation, lignesRecapCompte, recapParCompte } from '@/features/export/services/syntheses';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import {
   CLASSE_CSS_SAUT_PAGE,
@@ -130,7 +131,10 @@ export async function exporterPlanComptablePdf(annee: number): Promise<void> {
  * présenter d'exploitable) mais restent comptés dans cette colonne.
  */
 export async function exporterCheptelPdf(): Promise<void> {
-  const [settings, toutes] = await Promise.all([getSettings(), loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)]);
+  const [settings, toutes] = await Promise.all([
+    getSettings(),
+    loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then(deEspeceCourante),
+  ]);
   const indicatif = settings.exploitation?.indicatifMarquage;
   const registre = construireRegistreCheptel(toutes, indicatif);
   const anneesTriees = [...registre.keys()].sort((a, b) => a - b);

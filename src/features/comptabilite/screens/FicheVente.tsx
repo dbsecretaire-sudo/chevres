@@ -13,7 +13,7 @@ import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
+import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 
 export default function FicheVente() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +28,7 @@ export default function FicheVente() {
     );
   }
 
-  const titre = LABEL_CATEGORIE_VENTE[vente.categorie] ?? vente.categorie;
+  const titre = libelleCategorieVente(vente);
 
   return (
     <Screen scroll={false}>

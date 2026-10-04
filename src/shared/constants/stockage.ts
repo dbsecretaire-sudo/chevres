@@ -23,6 +23,7 @@ export const ID_ETABLISSEMENT_DEFAUT = 'defaut';
 export const CLE_STOCKAGE = {
   ETABLISSEMENTS: 'etablissements',
   ETABLISSEMENT_ACTIF: 'etablissement-actif',
+  ESPECE_COURANTE: 'espece-courante',
   FOURNISSEURS: 'fournisseurs',
   CLIENTS: 'clients',
   COMPTES_PCG: 'comptes-pcg',

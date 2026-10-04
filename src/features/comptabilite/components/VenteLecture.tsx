@@ -7,7 +7,10 @@ import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
+import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
+import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { activiteVente } from '@/features/comptabilite/utils/activite';
+import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 
 /** « 12 L », « 2 têtes », « 6 piece »… selon le produit vendu. */
 function libelleQuantite(v: Vente): string {
@@ -23,10 +26,16 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
   const compte = COMPTE_PAR_RECETTE[vente.categorie];
   return (
     <Card>
+      {plusieursEspeces() ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.comptabilite.activite.activiteDeuxPoints}
+          {LABEL_ACTIVITE_COMPTABLE[activiteVente(vente)]}
+        </Text>
+      ) : null}
       <Text style={commonStyles.line}>{TEXTES.comptabilite.ficheVente.typeVenteDeProduction}</Text>
       <Text style={commonStyles.line}>
         {TEXTES.comptabilite.ficheVente.produitDeuxPoints}
-        {LABEL_CATEGORIE_VENTE[vente.categorie]}
+        {libelleCategorieVente(vente)}
       </Text>
       <Text style={commonStyles.line}>
         {TEXTES.commun.general.dateDeuxPoints}

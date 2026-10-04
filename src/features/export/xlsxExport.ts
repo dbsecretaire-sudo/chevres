@@ -17,6 +17,7 @@ import {
 } from '@/features/export/services/lignesExport';
 import { lignesAlimentation, lignesRecapCompte, recapParCompte } from '@/features/export/services/syntheses';
 import type { Categorie } from '@/shared/storage/types';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import {
   FORMAT_EXPORT,
@@ -164,7 +165,7 @@ export async function exporterCheptelExcel(): Promise<void> {
     );
   } else {
     for (const annee of anneesTriees) {
-      const chevres = await loadYear(CATEGORIE_STOCKAGE.CHEPTEL, annee);
+      const chevres = deEspeceCourante(await loadYear(CATEGORIE_STOCKAGE.CHEPTEL, annee));
       XLSX.utils.book_append_sheet(
         workbook,
         feuilleOuMessage(

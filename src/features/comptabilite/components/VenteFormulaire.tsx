@@ -5,6 +5,8 @@ import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import type { Vente } from '@/features/comptabilite/types';
+import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
+import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { CATEGORIE_VENTE, UNITE_VENTE } from '@/shared/constants/comptabilite';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -50,6 +52,12 @@ export function VenteFormulaire({
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{TEXTES.comptabilite.ficheVente.modifierLaVente}</Text>
+
+      <ChampActivite
+        value={activiteVente(form)}
+        onChange={(activite) => onChange({ ...form, activite })}
+        avecCommun={false}
+      />
 
       <SelectField
         label={TEXTES.comptabilite.ficheVente.produit}

@@ -75,7 +75,11 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
 
       {estAlimentation && (
         <>
-          <LignesAlimentationEditor lignes={e.lignesAlimentation} onChange={e.setLignesAlimentation} />
+          <LignesAlimentationEditor
+            lignes={e.lignesAlimentation}
+            onChange={e.setLignesAlimentation}
+            types={e.typesAliment}
+          />
           <Card style={commonStyles.gap10}>
             <Text style={styles.total}>
               {TEXTES.commun.general.totalFactureTtcDeuxPoints}

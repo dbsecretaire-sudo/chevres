@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
-import { cleStockage } from '@/features/etablissements/repository';
+import { cleStockage, cleStockagePour } from '@/features/etablissements/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
 const cle = () => cleStockage(CLE_STOCKAGE.FOURNISSEURS);
 
-async function lireTous(): Promise<Fournisseur[]> {
-  const raw = await AsyncStorage.getItem(cle());
+async function lireTous(cleLecture: string = cle()): Promise<Fournisseur[]> {
+  const raw = await AsyncStorage.getItem(cleLecture);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as Fournisseur[];
@@ -24,6 +24,23 @@ async function ecrireTous(items: Fournisseur[]): Promise<void> {
 export async function listFournisseurs(): Promise<Fournisseur[]> {
   const items = await lireTous();
   return items.sort((a, b) => a.nom.localeCompare(b.nom));
+}
+
+/** Fournisseurs d'un autre établissement (lecture seule), triés par nom — pour les importer dans l'établissement actif. */
+export async function listFournisseursDeEtablissement(etablissementId: string): Promise<Fournisseur[]> {
+  const items = await lireTous(cleStockagePour(etablissementId, CLE_STOCKAGE.FOURNISSEURS));
+  return items.sort((a, b) => a.nom.localeCompare(b.nom));
+}
+
+/**
+ * Copie un fournisseur d'un autre établissement dans l'établissement actif (nouvel identifiant).
+ * Renvoie undefined, sans rien copier, s'il y existe déjà un fournisseur avec le même SIRET.
+ */
+export async function importerFournisseur(source: Fournisseur): Promise<Fournisseur | undefined> {
+  const existants = await lireTous();
+  if (existants.some((f) => f.siret === source.siret)) return undefined;
+  const { id: _id, ...donnees } = source;
+  return creerFournisseur(donnees);
 }
 
 export async function getFournisseur(id: string): Promise<Fournisseur | undefined> {

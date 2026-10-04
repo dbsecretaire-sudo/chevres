@@ -37,6 +37,8 @@ export const TEXTES_EXPORT = {
     detailFactures: 'Détail factures',
   },
   colonnes: {
+    espece: 'Espèce',
+    activite: 'Activité',
     nCompte: 'N° compte',
     libelle: 'Libellé',
     nombreDeFactures: 'Nombre de factures',

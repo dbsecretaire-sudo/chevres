@@ -24,6 +24,9 @@ export const TEXTES_ETABLISSEMENTS = {
     animaux: 'Animaux',
     societe: 'Société / Auto-entrepreneur',
   },
+  importEtablissement: {
+    ou: 'OU',
+  },
   etablissementContext: {
     useetablissementDoitEtreUtiliseDans: 'useEtablissement doit être utilisé dans EtablissementProvider',
   },

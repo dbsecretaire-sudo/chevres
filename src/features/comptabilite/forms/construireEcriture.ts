@@ -7,6 +7,7 @@ import {
   type LigneCarburantForm,
 } from '@/features/comptabilite/forms/lignesCarburant';
 import type {
+  ActiviteComptable,
   CategorieDepense,
   CategorieRecette,
   CategorieVente,
@@ -36,6 +37,7 @@ import { TEXTES } from '@/shared/textes';
 
 /** Toutes les valeurs saisies dans le formulaire « Nouvelle écriture » (tout en texte, converti ici). */
 export interface SaisieEcriture {
+  activite: ActiviteComptable;
   type: TypeFacture;
   date: string;
   tiers: string;
@@ -86,6 +88,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   const estCabris = s.categorieRecette === CATEGORIE_RECETTE.CABRIS;
   return {
     vente: {
+      activite: s.activite,
       date: s.date,
       categorie: s.categorieRecette as CategorieVente,
       typeFromage: estFromage ? s.typeFromage : undefined,
@@ -156,6 +159,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
 
   return {
     facture: {
+      activite: s.activite,
       date: s.date,
       type: s.type,
       tiers: tiersFinal,

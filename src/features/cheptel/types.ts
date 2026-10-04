@@ -1,5 +1,6 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 
 export type Sexe = ValeurDe<typeof SEXE>;
 
@@ -7,6 +8,8 @@ export type StatutChevre = ValeurDe<typeof STATUT_CHEVRE>;
 
 export interface Chevre {
   id: string;
+  /** Espèce de l'animal ; absente sur les fiches saisies avant le choix de l'espèce (voir especeDe). */
+  espece?: EspeceAnimale;
   /** Facultatif : obligatoire seulement une fois l’âge limite du petit dépassé (l'animal n'est alors plus un petit). */
   numeroBoucle?: string;
   /** Date de pose de la boucle — souvent postérieure à la naissance. */

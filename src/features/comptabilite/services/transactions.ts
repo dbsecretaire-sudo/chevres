@@ -1,4 +1,7 @@
 import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
+import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import type { ActiviteComptable } from '@/features/comptabilite/types';
 import { montantAlimentationHorsAutre } from '@/features/comptabilite/utils/montants';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
@@ -23,6 +26,8 @@ export interface Transaction {
   titre: string;
   sousTitre: string;
   source: ValeurDe<typeof SOURCE_TRANSACTION>;
+  /** Activité (espèce, ou « commun ») de l'écriture. */
+  activite: ActiviteComptable;
 }
 
 /** Vue unifiée : ventes (lait/fromage/cabris) + factures (reçues/émises), triée par date décroissante. */
@@ -39,10 +44,15 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
       v.categorie === CATEGORIE_VENTE.LAIT
         ? TEXTES.comptabilite.transactions.laitQuantiteL(v.quantite)
         : v.categorie === CATEGORIE_VENTE.CABRIS
-          ? TEXTES.comptabilite.transactions.cabrisQuantiteTeteValeur(v.quantite, v.quantite > 1 ? 's' : '')
+          ? TEXTES.comptabilite.transactions.cabrisQuantiteTeteValeur(
+              libelleCategorieVente(v),
+              v.quantite,
+              v.quantite > 1 ? 's' : '',
+            )
           : TEXTES.comptabilite.transactions.fromageQuantiteUnite(v.quantite, v.unite),
     sousTitre: TEXTES.comptabilite.transactions.venteDeProduction,
     source: SOURCE_TRANSACTION.VENTE,
+    activite: activiteVente(v),
   }));
 
   const deFactures: Transaction[] = factures.map((f) => ({
@@ -59,6 +69,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
           : LABEL_TYPE_AIDE[f.typeAide]
         : f.description,
     source: SOURCE_TRANSACTION.FACTURE,
+    activite: activiteFacture(f),
   }));
 
   return [...deVentes, ...deFactures].sort((a, b) => b.date.localeCompare(a.date));

@@ -1,4 +1,5 @@
 import { FlatList } from 'react-native';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -16,6 +17,7 @@ export default function CheptelIndex() {
 
   return (
     <Screen scroll={false}>
+      <SelecteurEspece />
       <FiltresCheptel e={e} />
 
       <FlatList

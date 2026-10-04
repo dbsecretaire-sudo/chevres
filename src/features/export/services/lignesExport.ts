@@ -1,8 +1,15 @@
 import type { Chevre } from '@/features/cheptel/types';
 import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
 import type { Facture, Vente } from '@/features/comptabilite/types';
-import { LABEL_CATEGORIE_DEPENSE, LABEL_CATEGORIE_RECETTE } from '@/shared/textes/libelles';
+import {
+  LABEL_ACTIVITE_COMPTABLE,
+  LABEL_CATEGORIE_DEPENSE,
+  LABEL_CATEGORIE_RECETTE,
+} from '@/shared/textes/libelles';
 import { formatDateShortFR } from '@/shared/utils/dates';
+import { especeDe } from '@/features/cheptel/utils/espece';
+import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import {
   CATEGORIE_DEPENSE,
@@ -20,6 +27,7 @@ export function avecIndicatif(numero: string | undefined, indicatif: string | un
 
 export function chevreRow(c: Chevre, indicatif?: string) {
   return {
+    ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
     [TEXTES.export.colonnes.nBoucle]: avecIndicatif(c.numeroBoucle, indicatif),
     [TEXTES.export.colonnes.dateDeBouclage]: formatDateShortFR(c.dateBouclage),
     [TEXTES.export.colonnes.nom]: c.nom ?? '',
@@ -37,6 +45,9 @@ export function chevreRow(c: Chevre, indicatif?: string) {
 
 export function venteRow(v: Vente) {
   return {
+    ...(plusieursEspeces()
+      ? { [TEXTES.export.colonnes.activite]: LABEL_ACTIVITE_COMPTABLE[activiteVente(v)] }
+      : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(v.date),
     [TEXTES.export.colonnes.categorie]: v.categorie,
     [TEXTES.export.colonnes.typeFromage]:
@@ -64,6 +75,9 @@ export function compteDeFacture(f: Facture): { numero: string; libelle: string }
 export function factureRow(f: Facture) {
   const compte = compteDeFacture(f);
   return {
+    ...(plusieursEspeces()
+      ? { [TEXTES.export.colonnes.activite]: LABEL_ACTIVITE_COMPTABLE[activiteFacture(f)] }
+      : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(f.date),
     [TEXTES.export.colonnes.type]:
       f.type === TYPE_FACTURE.RECUE ? TEXTES.commun.general.debit : TEXTES.commun.general.credit,
@@ -85,6 +99,7 @@ export function factureRow(f: Facture) {
 
 export function visiteRow(v: VisiteVeterinaire, indicatif?: string) {
   return {
+    ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(v)] } : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(v.date),
     [TEXTES.export.colonnes.nBoucle]: v.chevreNumeroBoucle
       ? avecIndicatif(v.chevreNumeroBoucle, indicatif)
@@ -97,6 +112,7 @@ export function visiteRow(v: VisiteVeterinaire, indicatif?: string) {
 
 export function controleRow(c: Controle, indicatif?: string) {
   return {
+    ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(c.date),
     [TEXTES.export.colonnes.nBoucle]: c.chevreNumeroBoucle
       ? avecIndicatif(c.chevreNumeroBoucle, indicatif)

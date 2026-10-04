@@ -9,6 +9,7 @@ import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/f
 import { ligneAlimentVide, type LigneAlimentForm } from '@/features/comptabilite/forms/lignesAlimentation';
 import { ligneCarburantVide, type LigneCarburantForm } from '@/features/comptabilite/forms/lignesCarburant';
 import type {
+  ActiviteComptable,
   CategorieDepense,
   CategorieRecette,
   TypeAide,
@@ -19,6 +20,9 @@ import type {
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { todayISO } from '@/shared/utils/dates';
+import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { totalMontants } from '@/shared/utils/nombres';
 import {
   CATEGORIE_DEPENSE,
@@ -50,6 +54,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [type, setType] = useState<TypeFacture>(
     typeInitial === TYPE_FACTURE.EMISE ? TYPE_FACTURE.EMISE : TYPE_FACTURE.RECUE,
   );
+  // Activité : l'espèce courante par défaut (visible seulement si l'établissement en élève plusieurs).
+  const [activite, setActivite] = useState<ActiviteComptable>(especeCourante());
   const [date, setDate] = useState(todayISO());
   const [tiers, setTiers] = useState('');
   const [description, setDescription] = useState('');
@@ -103,6 +109,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const clientSelectionne = clients.find((c) => c.id === clientId);
   const estProductionVente =
     type === TYPE_FACTURE.EMISE && Object.values<string>(CATEGORIE_VENTE).includes(categorieRecette);
+  const estAlimentationDebit =
+    type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
+  // L'alimentation et les ventes de production sont propres à une espèce ; le reste peut être « commun ».
+  const avecCommunActivite = !estAlimentationDebit && !estProductionVente;
+  const especeAliment = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
+  const typesAliment = typesAlimentEspece(especeAliment);
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
 
@@ -128,6 +140,18 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         : COMPTE_PAR_RECETTE[categorieRecette];
 
   // --- Actions ---
+  const changerActivite = (nouvelle: ActiviteComptable) => {
+    setActivite(nouvelle);
+    // Les lignes d'alimentation déjà saisies passent au premier aliment de l'espèce si le leur n'en fait pas partie.
+    const types = typesAlimentEspece(nouvelle === ACTIVITE_COMMUNE ? especeCourante() : nouvelle);
+    setLignesAlimentation((lignes) =>
+      lignes.map((l) => (types.includes(l.type) ? l : { ...l, type: types[0] })),
+    );
+  };
+
+  /** Une écriture propre à une espèce ne peut pas rester « commune » : on revient à l'espèce courante. */
+  const rattacherSiCommun = () => setActivite((a) => (a === ACTIVITE_COMMUNE ? especeCourante() : a));
+
   const changerFournisseur = (id: string) => {
     setFournisseurId(id);
     setTiers(fournisseurs.find((f) => f.id === id)?.nomEntreprise ?? '');
@@ -142,11 +166,13 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setCategorieRecette(v);
     if (v === CATEGORIE_RECETTE.LAIT || v === CATEGORIE_RECETTE.FROMAGE || v === CATEGORIE_RECETTE.CABRIS) {
       setTauxTvaVente(String(TAUX_TVA_VENTE_PAR_CATEGORIE[v]));
+      rattacherSiCommun();
     }
   };
 
   const changerCategorieDepense = (v: CategorieDepense) => {
     setCategorieDepense(v);
+    if (v === CATEGORIE_DEPENSE.ALIMENTATION) rattacherSiCommun();
     setTauxTvaAchat(String(v === CATEGORIE_DEPENSE.CARBURANT ? TAUX_TVA_CARBURANT : TAUX_TVA_ACHAT_DEFAUT));
   };
 
@@ -154,6 +180,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setEnregistrement(true);
     try {
       const resultat = construireEcriture({
+        activite,
         type,
         date,
         tiers,
@@ -192,6 +219,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   return {
     // champs communs
+    activite,
+    changerActivite,
+    avecCommunActivite,
+    typesAliment,
     type,
     setType,
     date,

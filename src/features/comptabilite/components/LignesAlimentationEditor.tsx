@@ -16,10 +16,12 @@ import { TEXTES } from '@/shared/textes';
 interface Props {
   lignes: LigneAlimentForm[];
   onChange: (lignes: LigneAlimentForm[]) => void;
+  /** Aliments proposés (ceux de l'espèce concernée). */
+  types: readonly TypeAliment[];
 }
 
 /** Carte « Détail par aliment » : une facture d'alimentation peut regrouper plusieurs aliments. */
-export function LignesAlimentationEditor({ lignes, onChange }: Props) {
+export function LignesAlimentationEditor({ lignes, onChange, types }: Props) {
   const maj = (key: string, patch: Partial<LigneAlimentForm>) =>
     onChange(lignes.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const supprimer = (key: string) =>
@@ -33,7 +35,7 @@ export function LignesAlimentationEditor({ lignes, onChange }: Props) {
         </Text>
         <Pressable
           style={commonStyles.boutonPastille}
-          onPress={() => onChange([...lignes, ligneAlimentVide()])}
+          onPress={() => onChange([...lignes, ligneAlimentVide(types[0])])}
         >
           <Ionicons name="add-circle" size={28} color={colors.ajout} />
         </Pressable>
@@ -49,10 +51,7 @@ export function LignesAlimentationEditor({ lignes, onChange }: Props) {
                   label={TEXTES.comptabilite.lignesAlimentationEditor.alimentValeur(index + 1)}
                   value={ligne.type}
                   onChange={(v) => maj(ligne.key, { type: v })}
-                  options={Object.entries(LABEL_TYPE_ALIMENT).map(([value, label]) => ({
-                    value: value as TypeAliment,
-                    label,
-                  }))}
+                  options={types.map((type) => ({ value: type, label: LABEL_TYPE_ALIMENT[type] }))}
                 />
               </View>
               {!estConditionne && (

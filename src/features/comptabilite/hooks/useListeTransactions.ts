@@ -4,14 +4,18 @@ import type { FiltresTransactions } from '@/features/comptabilite/components/Fil
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import {
   FILTRES_VIDES,
+  TOUTES_ACTIVITES,
   calculerSoldes,
+  filtrerParActivite,
   filtrerTransactions,
   filtresSontActifs,
+  type FiltreActivite,
 } from '@/features/comptabilite/services/filtresTransactions';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { especeCourante, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 
-/** Transactions de l'année active, filtrées et recherchées, avec leurs soldes. */
+/** Transactions de l'année active, par activité, filtrées et recherchées, avec leurs soldes. */
 export function useListeTransactions() {
   const { settings, setAnneeActive } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
@@ -19,6 +23,9 @@ export function useListeTransactions() {
   const [filtres, setFiltres] = useState<FiltresTransactions>(FILTRES_VIDES);
   const [filtreOuvert, setFiltreOuvert] = useState(false);
   const [recherche, setRecherche] = useState('');
+  const [filtreActivite, setFiltreActivite] = useState<FiltreActivite>(
+    plusieursEspeces() ? especeCourante() : TOUTES_ACTIVITES,
+  );
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste] = await Promise.all([
@@ -36,11 +43,13 @@ export function useListeTransactions() {
   );
 
   const filtrees = useMemo(
-    () => filtrerTransactions(transactions, filtres, recherche),
-    [transactions, filtres, recherche],
+    () => filtrerTransactions(filtrerParActivite(transactions, filtreActivite), filtres, recherche),
+    [transactions, filtreActivite, filtres, recherche],
   );
 
   return {
+    filtreActivite,
+    setFiltreActivite,
     anneeActive: settings.anneeActive,
     setAnneeActive,
     annees,

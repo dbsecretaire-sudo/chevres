@@ -5,6 +5,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { Fab } from '@/shared/components/Fab';
 import { FiltreTransactionsModal } from '@/features/comptabilite/components/FiltreTransactionsModal';
+import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { BarreRecherche, CarteSolde } from '@/features/comptabilite/components/SoldeTransactions';
 import { useListeTransactions } from '@/features/comptabilite/hooks/useListeTransactions';
@@ -23,6 +24,7 @@ export default function ComptabiliteIndex() {
     <Screen scroll={false}>
       <View style={commonStyles.topBox}>
         <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
+        <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
         <CarteSolde soldes={e.soldes} anneeActive={e.anneeActive} filtresActifs={e.filtresActifs} />
         <BarreRecherche
           recherche={e.recherche}

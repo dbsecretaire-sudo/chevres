@@ -15,6 +15,7 @@ export const CSV_NON = 'non';
 export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]> = {
   [CATEGORIE_STOCKAGE.CHEPTEL]: [
     'id',
+    'espece',
     'numeroBoucle',
     'dateBouclage',
     'nom',
@@ -30,6 +31,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
   ],
   [CATEGORIE_STOCKAGE.VISITES_VETERINAIRE]: [
     'id',
+    'espece',
     'date',
     'chevreId',
     'chevreNumeroBoucle',
@@ -40,6 +42,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
   [CATEGORIE_STOCKAGE.FACTURES]: [
     'id',
     'date',
+    'activite',
     'type',
     'tiers',
     'description',
@@ -59,6 +62,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
   ],
   [CATEGORIE_STOCKAGE.VENTES]: [
     'id',
+    'activite',
     'date',
     'categorie',
     'typeFromage',
@@ -72,6 +76,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
+    'espece',
     'date',
     'chevreId',
     'chevreNumeroBoucle',

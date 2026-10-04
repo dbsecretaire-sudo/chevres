@@ -9,7 +9,8 @@ import {
 } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_CATEGORIE_VENTE, LABEL_TYPE_FROMAGE, LABEL_UNITE_VENTE_COURT } from '@/shared/textes/libelles';
+import { LABEL_TYPE_FROMAGE, LABEL_UNITE_VENTE_COURT } from '@/shared/textes/libelles';
+import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 
 /** Une vente ou une facture émise rattachée à un client, prête à être listée. */
 export interface EcritureClient {
@@ -27,7 +28,7 @@ export function ecrituresDuClient(ventes: Vente[], factures: Facture[]): Ecritur
   const deVentes: EcritureClient[] = ventes.map((v) => ({
     id: v.id,
     date: v.date,
-    titre: `${LABEL_CATEGORIE_VENTE[v.categorie] ?? v.categorie} — ${v.quantite} ${
+    titre: `${libelleCategorieVente(v)} — ${v.quantite} ${
       v.categorie === CATEGORIE_VENTE.LAIT ? LABEL_UNITE_VENTE_COURT[UNITE_VENTE.LITRES] : v.unite
     }`,
     montant: v.prix ?? 0,

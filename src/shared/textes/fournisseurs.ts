@@ -27,4 +27,12 @@ export const TEXTES_FOURNISSEURS = {
     t14Chiffres: '14 chiffres',
     facultatifIbanBic: 'Facultatif — IBAN / BIC',
   },
+  importFournisseur: {
+    importerDepuisUnAutreEtablissement: 'Importer un fournisseur depuis un autre établissement',
+    saisirUnNouveauFournisseur: 'Saisir un nouveau fournisseur',
+    choisissezUnEtablissement: 'Choisissez un établissement, puis le fournisseur à importer.',
+    aucunFournisseurDansCetEtablissement: 'Aucun fournisseur dans cet établissement.',
+    dejaPresent: (nomEntreprise: string) =>
+      `« ${nomEntreprise} » existe déjà dans cet établissement (même SIRET) : rien n’a été importé.`,
+  },
 } as const;

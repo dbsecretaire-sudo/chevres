@@ -6,6 +6,7 @@ import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
+import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import type { EtatFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
@@ -44,6 +45,8 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           : TEXTES.commun.general.factureRecue}
       </Text>
       <Text style={commonStyles.note}>{TEXTES.comptabilite.ficheFacture.nonModifiableLaCategorieLe}</Text>
+
+      <ChampActivite value={f.activiteForm} onChange={f.changerActivite} avecCommun={!f.estAlimentation} />
 
       <View style={commonStyles.rowFin}>
         <View style={commonStyles.flex1}>
@@ -89,7 +92,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
 
       {f.estAlimentation ? (
         <>
-          <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} />
+          <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} types={f.typesAliment} />
           <Text style={styles.total}>
             {TEXTES.commun.general.totalFactureTtcDeuxPoints}
             {formatTotalEuros(f.totalAlimentation)}
