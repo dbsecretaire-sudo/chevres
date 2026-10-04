@@ -55,9 +55,6 @@ export function useFicheFacture(id: string | undefined) {
   const estCarburant = facture?.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   /** Activité affichée dans le formulaire (celle de la facture, ou celle déduite pour les anciennes factures). */
   const activiteForm: ActiviteComptable = form ? activiteFacture(form) : especeCourante();
-  const typesAliment = typesAlimentEspece(
-    activiteForm === ACTIVITE_COMMUNE ? especeCourante() : activiteForm,
-  );
   const totalAlimentation = totalMontants(lignes);
   const totalCarburant = totalMontants(lignesCarburant);
 
@@ -84,7 +81,9 @@ export function useFicheFacture(id: string | undefined) {
     setForm((prev) => (prev ? { ...prev, activite } : prev));
     // Les lignes d'alimentation passent au premier aliment de la nouvelle espèce si le leur n'en fait pas partie.
     const types = typesAlimentEspece(activite === ACTIVITE_COMMUNE ? especeCourante() : activite);
-    setLignes((prev) => prev.map((l) => (types.includes(l.type) ? l : { ...l, type: types[0] })));
+    setLignes((prev) =>
+      prev.map((l) => (l.activite || types.includes(l.type) ? l : { ...l, type: types[0] })),
+    );
   };
 
   const choisirFournisseur = (fournisseurId: string) => {
@@ -125,7 +124,7 @@ export function useFicheFacture(id: string | undefined) {
     let aEnregistrer = form;
 
     if (estAlimentation) {
-      const lignesFinales = lignesAlimentationFinales(lignes);
+      const lignesFinales = lignesAlimentationFinales(lignes, activiteForm);
       if (lignesFinales.length === 0) {
         setErreur({
           titre: TEXTES.commun.general.montantInvalide,
@@ -215,7 +214,6 @@ export function useFicheFacture(id: string | undefined) {
     estAlimentation,
     estCarburant,
     activiteForm,
-    typesAliment,
     changerActivite,
     totalAlimentation,
     totalCarburant,

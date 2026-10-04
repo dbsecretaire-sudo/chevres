@@ -3,6 +3,8 @@ import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
   placeholder: { fontSize: 16, color: colors.textMuted },
+  lien: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  lienTexte: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
   sheet: {
     backgroundColor: colors.surface,
     borderRadius: 16,

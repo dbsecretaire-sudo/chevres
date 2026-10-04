@@ -2,7 +2,7 @@ import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
 import type { CategorieDepense, CategorieRecette, TypeAliment } from '@/features/comptabilite/types';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
-import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import {
@@ -48,7 +48,11 @@ export async function calculerDetailComptable(
 ): Promise<DetailComptable> {
   const [toutesVentes, toutesFactures] = await Promise.all([listVentes(annee), listFactures(annee)]);
   const ventes = toutesVentes.filter((v) => correspondAuFiltre(filtre, activiteVente(v)));
-  const factures = toutesFactures.filter((f) => correspondAuFiltre(filtre, activiteFacture(f)));
+  // Une facture d'alimentation répartie entre des cheptels compte pour chacun à hauteur de ses lignes.
+  const factures = toutesFactures
+    .flatMap(partsDeFacture)
+    .filter((p) => correspondAuFiltre(filtre, p.activite))
+    .map((p) => p.facture);
   const alimentationParType = Object.fromEntries(TYPES_ALIMENT.map((t) => [t, 0])) as Record<
     TypeAliment,
     number

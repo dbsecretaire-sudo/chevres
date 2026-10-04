@@ -78,7 +78,7 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
           <LignesAlimentationEditor
             lignes={e.lignesAlimentation}
             onChange={e.setLignesAlimentation}
-            types={e.typesAliment}
+            activite={e.activite}
           />
           <Card style={commonStyles.gap10}>
             <Text style={styles.total}>

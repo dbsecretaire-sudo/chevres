@@ -37,7 +37,7 @@ export default function ComptabiliteIndex() {
 
       <FlatList
         data={e.filtrees}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => `${item.id}:${item.activite}`}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <EmptyState

@@ -92,7 +92,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
 
       {f.estAlimentation ? (
         <>
-          <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} types={f.typesAliment} />
+          <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} />
           <Text style={styles.total}>
             {TEXTES.commun.general.totalFactureTtcDeuxPoints}
             {formatTotalEuros(f.totalAlimentation)}

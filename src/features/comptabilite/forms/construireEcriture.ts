@@ -144,7 +144,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
   let lignesCarburant: LigneCarburant[] | undefined;
 
   if (estAlimentation) {
-    lignesAlimentation = lignesAlimentationFinales(s.lignesAlimentation);
+    lignesAlimentation = lignesAlimentationFinales(s.lignesAlimentation, s.activite);
     if (lignesAlimentation.length === 0) {
       return {
         erreur: {

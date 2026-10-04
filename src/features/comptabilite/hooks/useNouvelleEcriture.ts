@@ -128,8 +128,6 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   // L'alimentation et les ventes de production sont propres à une espèce ; le reste peut être « commun ».
   const avecCommunActivite = !estAlimentationDebit && !estProductionVente;
-  const especeAliment = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
-  const typesAliment = typesAlimentEspece(especeAliment);
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
 
@@ -162,7 +160,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     const permises = categoriesRecetteActivite(nouvelle);
     if (!permises.includes(categorieRecette)) changerCategorieRecette(premiereCategorieRecette(nouvelle));
     setLignesAlimentation((lignes) =>
-      lignes.map((l) => (types.includes(l.type) ? l : { ...l, type: types[0] })),
+      lignes.map((l) => (l.activite || types.includes(l.type) ? l : { ...l, type: types[0] })),
     );
   };
 
@@ -240,7 +238,6 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     activite,
     changerActivite,
     avecCommunActivite,
-    typesAliment,
     type,
     setType,
     date,

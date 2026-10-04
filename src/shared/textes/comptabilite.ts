@@ -41,6 +41,7 @@ export const TEXTES_COMPTABILITE = {
   },
   lignesAlimentationEditor: {
     detailParAliment: 'Détail par aliment',
+    cheptelConcerne: 'Cheptel concerné',
     alimentValeur: (valeur: number) => `Aliment ${valeur}`,
     quantiteKg: 'Quantité (kg)',
     ex100: 'ex: 100',

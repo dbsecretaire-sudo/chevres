@@ -42,6 +42,8 @@ export type UniteConditionnement = ValeurDe<typeof UNITE_CONDITIONNEMENT>;
 export interface LigneAlimentation {
   type: TypeAliment;
   montant: number;
+  /** Cheptel concerné quand il diffère de l'activité de la facture (voir activiteLigne). */
+  activite?: ActiviteComptable;
   /** Quantité en kg, facultative — utile pour calculer le kg par animal en plus du coût. Pour luzerne/foin/paille, dérivée de nombreUnitesConditionnement × poids unitaire. */
   quantiteKg?: number;
   /** Précision libre quand type === 'autre' (ex: "Frais de livraison", "Compléments minéraux"). */

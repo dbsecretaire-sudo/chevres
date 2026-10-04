@@ -7,6 +7,7 @@ const Cap = capitaliser;
 /** Textes de l'interface — « commun ». À modifier ici uniquement. */
 export const TEXTES_COMMUN = {
   general: {
+    separateurListe: ', ',
     informationsDeLExploitation: 'Informations de l’exploitation',
     cheptel: 'Cheptel',
     comptabilite: 'Comptabilité',

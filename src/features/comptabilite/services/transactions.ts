@@ -1,5 +1,5 @@
 import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
-import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import type { ActiviteComptable, Vente } from '@/features/comptabilite/types';
 import { montantAlimentationHorsAutre } from '@/features/comptabilite/utils/montants';
@@ -65,22 +65,26 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     activite: activiteVente(v),
   }));
 
-  const deFactures: Transaction[] = factures.map((f) => ({
-    id: f.id,
-    date: f.date,
-    montant: f.montant,
-    montantComptabilise: montantAlimentationHorsAutre(f),
-    sens: f.type === TYPE_FACTURE.EMISE ? SENS_TRANSACTION.ENTREE : SENS_TRANSACTION.SORTIE,
-    titre: f.tiers,
-    sousTitre:
-      f.categorieRecette === CATEGORIE_RECETTE.AIDE && f.typeAide
-        ? f.typeAide === TYPE_AIDE.AUTRE && f.typeAideLibre
-          ? f.typeAideLibre
-          : LABEL_TYPE_AIDE[f.typeAide]
-        : f.description,
-    source: SOURCE_TRANSACTION.FACTURE,
-    activite: activiteFacture(f),
-  }));
+  // Une facture d'alimentation répartie entre des cheptels donne une ligne par cheptel : `montant` reste le
+  // total de la facture (affiché dans le sous-titre), `montantComptabilise` la part du cheptel.
+  const deFactures: Transaction[] = factures.flatMap((f) =>
+    partsDeFacture(f).map(({ activite, facture: part }) => ({
+      id: f.id,
+      date: f.date,
+      montant: f.montant,
+      montantComptabilise: montantAlimentationHorsAutre(part),
+      sens: f.type === TYPE_FACTURE.EMISE ? SENS_TRANSACTION.ENTREE : SENS_TRANSACTION.SORTIE,
+      titre: f.tiers,
+      sousTitre:
+        f.categorieRecette === CATEGORIE_RECETTE.AIDE && f.typeAide
+          ? f.typeAide === TYPE_AIDE.AUTRE && f.typeAideLibre
+            ? f.typeAideLibre
+            : LABEL_TYPE_AIDE[f.typeAide]
+          : f.description,
+      source: SOURCE_TRANSACTION.FACTURE,
+      activite,
+    })),
+  );
 
   return [...deVentes, ...deFactures].sort((a, b) => b.date.localeCompare(a.date));
 }

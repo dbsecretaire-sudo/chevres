@@ -12,7 +12,7 @@ import { type CompteComptable } from '@/shared/constants/planComptable';
 import type { Facture, UniteConditionnement } from '@/features/comptabilite/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_ALIMENT, TYPE_FACTURE } from '@/shared/constants/comptabilite';
-import { activiteFacture } from '@/features/comptabilite/utils/activite';
+import { activiteLigne, activitesFacture } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
@@ -35,7 +35,9 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
       {plusieursEspeces() ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.activite.activiteDeuxPoints}
-          {LABEL_ACTIVITE_COMPTABLE[activiteFacture(facture)]}
+          {activitesFacture(facture)
+            .map((a) => LABEL_ACTIVITE_COMPTABLE[a])
+            .join(TEXTES.commun.general.separateurListe)}
         </Text>
       ) : null}
       <Text style={commonStyles.line}>
@@ -97,6 +99,9 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
                   : LABEL_TYPE_ALIMENT[ligne.type]}
                 {ligne.nombreUnitesConditionnement && ligne.uniteConditionnement
                   ? ` — ${ligne.nombreUnitesConditionnement} ${libelleUnite(ligne.uniteConditionnement, ligne.nombreUnitesConditionnement)}`
+                  : ''}
+                {plusieursEspeces() && activitesFacture(facture).length > 1
+                  ? ` (${LABEL_ACTIVITE_COMPTABLE[activiteLigne(facture, ligne)]})`
                   : ''}
               </Text>
               <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>

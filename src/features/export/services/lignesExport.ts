@@ -8,7 +8,7 @@ import {
 } from '@/shared/textes/libelles';
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { especeDe } from '@/features/cheptel/utils/espece';
-import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { activiteVente, activitesFacture } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import {
@@ -77,7 +77,11 @@ export function factureRow(f: Facture) {
   const compte = compteDeFacture(f);
   return {
     ...(plusieursEspeces()
-      ? { [TEXTES.export.colonnes.activite]: LABEL_ACTIVITE_COMPTABLE[activiteFacture(f)] }
+      ? {
+          [TEXTES.export.colonnes.activite]: activitesFacture(f)
+            .map((a) => LABEL_ACTIVITE_COMPTABLE[a])
+            .join(TEXTES.commun.general.separateurListe),
+        }
       : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(f.date),
     [TEXTES.export.colonnes.type]:

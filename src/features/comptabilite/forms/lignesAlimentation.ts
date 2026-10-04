@@ -2,6 +2,7 @@ import { generateId } from '@/shared/utils/id';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { POIDS_UNITE_CONDITIONNEMENT, TYPES_ALIMENT_CONDITIONNES } from '@/shared/constants/planComptable';
 import type {
+  ActiviteComptable,
   Facture,
   LigneAlimentation,
   TypeAliment,
@@ -9,11 +10,15 @@ import type {
 } from '@/features/comptabilite/types';
 import { TYPE_ALIMENT, UNITE_CONDITIONNEMENT } from '@/shared/constants/comptabilite';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
+import { activiteFacture } from '@/features/comptabilite/utils/activite';
+import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 
 /** Une ligne d'aliment telle que saisie dans le formulaire (tout en texte, converti à l'enregistrement). */
 export interface LigneAlimentForm {
   key: string;
   type: TypeAliment;
+  /** Cheptel concerné ('' = celui de la facture). */
+  activite: EspeceAnimale | '';
   montant: string;
   quantiteKg: string;
   typeLibre: string;
@@ -25,6 +30,7 @@ export interface LigneAlimentForm {
 export const ligneAlimentVide = (type: TypeAliment = typesAlimentEspece()[0]): LigneAlimentForm => ({
   key: generateId(),
   type,
+  activite: '',
   montant: '',
   quantiteKg: '',
   typeLibre: '',
@@ -36,6 +42,7 @@ export function versLignesAlimentationForm(facture: Facture): LigneAlimentForm[]
   return (facture.lignesAlimentation ?? []).map((l) => ({
     key: generateId(),
     type: l.type,
+    activite: l.activite && l.activite !== activiteFacture(facture) ? (l.activite as EspeceAnimale) : '',
     montant: String(l.montant),
     quantiteKg: l.quantiteKg !== undefined ? String(l.quantiteKg) : '',
     typeLibre: l.typeLibre ?? '',
@@ -49,7 +56,11 @@ export function versLignesAlimentationForm(facture: Facture): LigneAlimentForm[]
  * Convertit les lignes saisies en lignes enregistrables : seules les lignes avec un montant sont
  * gardées, et pour luzerne/foin/paille la quantité en kg est dérivée du nombre de matelas/ballots.
  */
-export function lignesAlimentationFinales(lignes: LigneAlimentForm[]): LigneAlimentation[] {
+export function lignesAlimentationFinales(
+  lignes: LigneAlimentForm[],
+  /** Activité de la facture : une ligne n'enregistre son cheptel que s'il en diffère. */
+  activiteDeLaFacture: ActiviteComptable,
+): LigneAlimentation[] {
   return lignes
     .map((l) => {
       const estConditionne = TYPES_ALIMENT_CONDITIONNES.includes(l.type);
@@ -58,6 +69,7 @@ export function lignesAlimentationFinales(lignes: LigneAlimentForm[]): LigneAlim
         : undefined;
       return {
         type: l.type,
+        activite: l.activite && l.activite !== activiteDeLaFacture ? l.activite : undefined,
         montant: parseDecimal(l.montant),
         quantiteKg: estConditionne
           ? nombreUnites

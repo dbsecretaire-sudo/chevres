@@ -3,7 +3,7 @@ import type { Facture, Vente } from '@/features/comptabilite/types';
 import type { VisiteVeterinaire } from '@/features/exploitation/types';
 import type { BilanAlimentation } from '@/features/exploitation/services/bilanAlimentation';
 import { categorieAnimal, type CategorieAnimal } from '@/features/cheptel/utils/chevreLabel';
-import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { montantAlimentationHorsAutre } from '@/features/comptabilite/utils/montants';
 import { CATEGORIE_ANIMAL, SEXE } from '@/shared/constants/cheptel';
@@ -51,7 +51,10 @@ export function calculerStatsAccueil({
 }: Sources): StatsAccueil {
   const espece = especeCourante();
   const ventes = toutesVentes.filter((v) => activiteVente(v) === espece);
-  const factures = toutesFactures.filter((f) => activiteFacture(f) === espece);
+  const factures = toutesFactures
+    .flatMap(partsDeFacture)
+    .filter((p) => p.activite === espece)
+    .map((p) => p.facture);
 
   const nombre = (categorie: CategorieAnimal) =>
     vivantes.filter((c) => categorieAccueil(c) === categorie).length;
