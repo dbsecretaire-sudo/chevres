@@ -10,6 +10,9 @@ export const TEXTES_COMMUN = {
   general: {
     separateurListe: ', ',
     informationsDeLExploitation: 'Informations de l’exploitation',
+    informationsDeLEntreprise: 'Informations de l’entreprise',
+    balance: 'Balance',
+    nonRenseigne: 'Non renseigné',
     cheptel: 'Cheptel',
     comptabilite: 'Comptabilité',
     exploitation: 'Exploitation',
@@ -160,8 +163,15 @@ export const TEXTES_COMMUN = {
     aucunAnimalEnregistre: 'Aucun animal enregistré',
     aucunAnimalPourCetteAnnee: 'Aucun animal pour cette année',
   },
+  /** Le calendrier mensuel (accueil d'une entreprise, gîte). */
+  calendrier: {
+    jours: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
+    moisPrecedent: 'Mois précédent',
+    moisSuivant: 'Mois suivant',
+  },
   dateField: {
     aaaaMmJj: 'AAAA-MM-JJ',
+    invalide: 'Date invalide : écrivez-la sous la forme AAAA-MM-JJ (ex : 2026-10-04).',
   },
   infoModal: {
     ok: 'OK',

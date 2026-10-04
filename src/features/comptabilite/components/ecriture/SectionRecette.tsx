@@ -20,6 +20,7 @@ import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouv
 import type { Vente } from '@/features/comptabilite/types';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ROUTES } from '@/shared/constants/routes';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
@@ -87,8 +88,19 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
         />
       )}
 
-      {e.categorieRecette === CATEGORIE_RECETTE.AUTRE && (
+      {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
+        (e.entreprise && e.categorieRecette !== CATEGORIE_RECETTE.AIDE)) && (
         <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+      )}
+
+      {/* Une entreprise assujettie à la TVA indique le taux de chaque recette (hors aide). */}
+      {e.entreprise && e.afficherTva && e.categorieRecette !== CATEGORIE_RECETTE.AIDE && (
+        <SelectField
+          label={TEXTES.commun.general.tauxDeTva}
+          value={e.tauxTvaVente}
+          onChange={e.setTauxTvaVente}
+          options={OPTIONS_TAUX_TVA}
+        />
       )}
 
       {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampsAide e={e} />}

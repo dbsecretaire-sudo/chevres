@@ -3,6 +3,8 @@ import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
+import type { REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/shared/constants/entreprise';
 
 const cle = () => cleStockage(CLE_STOCKAGE.SETTINGS);
 
@@ -10,6 +12,27 @@ const cle = () => cleStockage(CLE_STOCKAGE.SETTINGS);
 export interface IdentificationCheptel {
   numeroCheptel?: string;
   indicatifMarquage?: string;
+}
+
+/** Informations d'une entreprise (hors élevage) ; tout est modifiable : statut, régimes, TVA, taxe de séjour. */
+export interface InfosEntreprise {
+  nomEntreprise?: string;
+  dirigeant?: string;
+  adresse?: string;
+  siret?: string;
+  codeApe?: string;
+  numeroTva?: string;
+  statut?: ValeurDe<typeof STATUT_JURIDIQUE>;
+  regimeFiscal?: ValeurDe<typeof REGIME_FISCAL>;
+  /** Vrai si l'entreprise facture avec TVA ; absent ou faux : sans TVA (franchise en base). */
+  tvaApplicable?: boolean;
+  regimeTva?: ValeurDe<typeof REGIME_TVA>;
+  /** Noms des sous-dossiers créés dans le dossier de chaque nouveau client (structure type, modifiable). */
+  structureDossiers?: string[];
+  /** Vrai si l'établissement suit la taxe de séjour (gîte, hébergement). */
+  taxeSejour?: boolean;
+  /** Montant de la taxe de séjour par personne et par nuit, en euros. */
+  taxeSejourParNuit?: number;
 }
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
@@ -20,6 +43,8 @@ export interface InfosExploitation {
   adresseExploitant?: string;
   numeroPacage?: string;
   numeroDetenteur?: string;
+  /** Informations de l'entreprise, pour un établissement qui n'est pas un élevage. */
+  entreprise?: InfosEntreprise;
   /** Identification propre à chaque espèce élevée (n° de cheptel et indicatif de marquage diffèrent d'une espèce à l'autre). */
   cheptels?: Partial<Record<EspeceAnimale, IdentificationCheptel>>;
   /** Anciens champs uniques (avant la séparation par espèce) : ils valent pour toute espèce sans identification propre. */

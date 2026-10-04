@@ -10,6 +10,14 @@ export function toISODate(d: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/** Vrai pour une vraie date au format YYYY-MM-DD (« 2026-20-04 » ou « 2026-02-30 » ne le sont pas). */
+export function estDateISO(valeur: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return false;
+  const [annee, mois, jour] = valeur.split('-').map(Number);
+  const date = new Date(annee, mois - 1, jour);
+  return date.getFullYear() === annee && date.getMonth() === mois - 1 && date.getDate() === jour;
+}
+
 export function yearOf(isoDate: string): number {
   const year = Number(isoDate.slice(0, 4));
   return Number.isFinite(year) ? year : new Date().getFullYear();

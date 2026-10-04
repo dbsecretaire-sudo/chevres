@@ -43,7 +43,7 @@ Docs: https://docs.expo.dev/eas/index.md
 ## Code organisation
 
 - `src/app/` holds **routes only**: each file is a one-line re-export (`export { default } from '@/features/<feature>/screens/<Screen>'`) plus the `_layout.tsx` navigators.
-- `src/features/<feature>/` is organised by domain (`cheptel`, `comptabilite`, `exploitation`, `clients`, `fournisseurs`, `comptes-pcg`, `etablissements`, `settings`, `drive`, `export`, `sauvegarde`, `accueil`) with sub-folders as needed: `screens/`, `components/`, `repository/` (storage access), `services/` (calculations), `forms/`, `utils/`, `types.ts`.
+- `src/features/<feature>/` is organised by domain (`cheptel`, `comptabilite`, `exploitation`, `entreprise`, `dossiers`, `clients`, `fournisseurs`, `comptes-pcg`, `etablissements`, `settings`, `drive`, `export`, `sauvegarde`, `accueil`) with sub-folders as needed: `screens/`, `components/`, `repository/` (storage access), `services/` (calculations), `forms/`, `utils/`, `types.ts`.
 - `src/shared/` is cross-feature code: `components/`, `styles/`, `storage/`, `theme/`, `hooks/`, `utils/`.
 - All styles live in `src/shared/styles/` (never inside a feature): `shared/styles/<feature>/<Name>.styles.ts` (`export const styles`), `shared/styles/components/` for shared components. A style used by several files is defined once in `src/shared/styles/commonStyles.ts` (`commonStyles`) — reuse it instead of redefining it locally.
 - Format with `npx prettier --write "src/**/*.{ts,tsx}"` (config in `.prettierrc`).
@@ -55,6 +55,12 @@ Docs: https://docs.expo.dev/eas/index.md
 - **All user-visible text** lives in `src/shared/textes/` (`TEXTES.<domaine>.<écran>.<clé>`, a function when the text has parameters); enum → label maps are in `src/shared/textes/libelles.ts`.
 - **Colors** come from `src/shared/theme/colors.ts` (no raw `#fff` / `rgba(...)`).
 - To change a value, change it in one of those folders only — screens and services must reference them.
+
+## Mode entreprise
+
+- An établissement without animals whose types include Libéral / Prestations de service / Association is in **mode entreprise** (`modeEntreprise()` in `src/shared/dictionnaire/entreprise.ts`, set with the species on every establishment change). It swaps the Cheptel tab for a Clients tab (`ROUTES.CLIENTS`/`ficheClient` are mode-aware), the Accueil, and the « Informations de l'entreprise » screen (`settings.exploitation.entreprise`: statut, régimes, TVA on/off, taxe de séjour on/off — everything is user-editable).
+
+- In mode entreprise the Clients tab is the **explorateur de dossiers** (`features/dossiers`): `/clients` = search + filters + grid of client folders, burger menu → `ROUTES.CLIENTS` (`/clients/liste`, the client list) and the structure type; each client's folder has sub-folders (created from the structure type on first open) holding contents (`Element`: titre, notes, date, échéance, avancement, étiquettes). Folders and contents are stored per établissement (`CLE_STOCKAGE.DOSSIERS`) and included in the local backup and the Drive sync.
 
 ## Vocabulary by animal species (dictionnaire)
 

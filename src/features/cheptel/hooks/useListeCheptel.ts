@@ -6,6 +6,7 @@ import {
   listChevresVivantes,
 } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import {
   CRITERES_PRECIS_VIDES,
   LABEL_CATEGORIE_FILTRE,
@@ -25,6 +26,8 @@ import { TEXTES } from '@/shared/textes';
 
 /** État de la liste du cheptel : chargement, filtres, tri, recherche et libellés dérivés. */
 export function useListeCheptel() {
+  // L'espèce active : la liste se recharge quand elle change, sans que l'écran soit recréé.
+  const { espece } = useEtablissement();
   const [chevres, setChevres] = useState<Chevre[]>([]);
   const [misesBas, setMisesBas] = useState<Record<string, string>>({});
   const [recherche, setRecherche] = useState('');
@@ -41,7 +44,8 @@ export function useListeCheptel() {
     ]);
     setChevres([...vivantes, ...sorties]);
     setMisesBas(misesBasParMere);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [espece]);
 
   useFocusEffect(
     useCallback(() => {

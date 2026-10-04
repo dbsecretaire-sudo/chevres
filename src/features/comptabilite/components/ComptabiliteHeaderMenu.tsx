@@ -8,6 +8,8 @@ import { InfoModal } from '@/shared/components/InfoModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { exporterPlanComptableExcel } from '@/features/export/xlsxExport';
 import { exporterPlanComptablePdf } from '@/features/export/pdfExport';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ROUTES } from '@/shared/constants/routes';
 import { FORMAT_EXPORT, type FormatExport } from '@/shared/constants/export';
@@ -17,6 +19,9 @@ import { TEXTES } from '@/shared/textes';
 export function ComptabiliteHeaderMenu() {
   const router = useRouter();
   const { settings } = useAppSettings();
+  useEtablissement();
+  const entreprise = modeEntreprise();
+  const tvaApplicable = !!settings.exploitation?.entreprise?.tvaApplicable;
   const [ouvert, setOuvert] = useState(false);
   const [choixFormat, setChoixFormat] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -66,15 +71,25 @@ export function ComptabiliteHeaderMenu() {
             onPress: () => setChoixFormat(true),
           },
           {
-            label: TEXTES.commun.general.impotsMicroBa,
+            label: entreprise ? TEXTES.entreprise.menu.impots : TEXTES.commun.general.impotsMicroBa,
             icon: 'receipt',
             onPress: () => router.push(ROUTES.FISCALITE_IMPOTS),
           },
           {
-            label: TEXTES.commun.general.declarationRsa,
+            label: entreprise ? TEXTES.entreprise.menu.chiffreAffaires : TEXTES.commun.general.declarationRsa,
             icon: 'calendar',
             onPress: () => router.push(ROUTES.FISCALITE_RSA),
           },
+          // La TVA n'apparaît que pour une entreprise assujettie.
+          ...(entreprise && tvaApplicable
+            ? [
+                {
+                  label: TEXTES.entreprise.menu.tva,
+                  icon: 'calculator' as const,
+                  onPress: () => router.push(ROUTES.TVA),
+                },
+              ]
+            : []),
         ]}
       />
       <ExportChoiceModal

@@ -11,6 +11,8 @@ import { LignesAlimentationEditor } from '@/features/comptabilite/components/Lig
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import type { EtatFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
@@ -22,10 +24,13 @@ import { TEXTES } from '@/shared/textes';
 /** Formulaire de modification d'une facture (le type, lui, n'est pas modifiable). */
 export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   const router = useRouter();
+  const { settings } = useAppSettings();
   const { form, fournisseurs, clients } = f;
   if (!form) return null;
 
-  const champTauxTva = (
+  // Une entreprise non assujettie à la TVA n'a pas de taux à saisir.
+  const sansTva = modeEntreprise() && !settings.exploitation?.entreprise?.tvaApplicable;
+  const champTauxTva = sansTva ? null : (
     <SelectField
       label={TEXTES.commun.general.tauxDeTva}
       value={form.tauxTva?.toString() ?? ''}

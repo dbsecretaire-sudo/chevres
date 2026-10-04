@@ -14,6 +14,7 @@ import {
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { CategorieDepense } from '@/features/comptabilite/types';
+import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
@@ -22,10 +23,12 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 
-const OPTIONS_CATEGORIE_DEPENSE = Object.entries(LABEL_CATEGORIE_DEPENSE).map(([value, label]) => ({
-  value: value as CategorieDepense,
-  label,
-}));
+/** Les catégories proposées : celles d'une entreprise, ou celles d'un élevage. */
+const optionsCategorieDepense = () =>
+  categoriesDepenseDuMode().map((value) => ({
+    value: value as CategorieDepense,
+    label: LABEL_CATEGORIE_DEPENSE[value],
+  }));
 
 /** Champs d'un débit (facture reçue) : catégorie, fournisseur, TVA et détail des montants. */
 export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
@@ -45,7 +48,7 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
         label={TEXTES.comptabilite.nouvelleEcriture.categorieDeDepense}
         value={e.categorieDepense}
         onChange={e.changerCategorieDepense}
-        options={OPTIONS_CATEGORIE_DEPENSE}
+        options={optionsCategorieDepense()}
         demanderCompte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE}
         compte={e.compteDepenseAutre}
         onCompteChange={e.setCompteDepenseAutre}
@@ -66,12 +69,14 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
         onEdit={() => router.push(ROUTES.FOURNISSEURS)}
       />
 
-      <SelectField
-        label={TEXTES.commun.general.tauxDeTva}
-        value={e.tauxTvaAchat}
-        onChange={e.setTauxTvaAchat}
-        options={OPTIONS_TAUX_TVA}
-      />
+      {e.afficherTva && (
+        <SelectField
+          label={TEXTES.commun.general.tauxDeTva}
+          value={e.tauxTvaAchat}
+          onChange={e.setTauxTvaAchat}
+          options={OPTIONS_TAUX_TVA}
+        />
+      )}
 
       {estAlimentation && (
         <>

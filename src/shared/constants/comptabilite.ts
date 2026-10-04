@@ -17,6 +17,20 @@ export const CATEGORIE_DEPENSE = {
   PRODUCTION: 'production',
   IMPOTS: 'impots',
   AUTRE: 'autre',
+  // --- Entreprise (hors élevage) ---
+  ACHATS_MARCHANDISES: 'achats_marchandises',
+  FOURNITURES: 'fournitures',
+  SOUS_TRAITANCE: 'sous_traitance',
+  LOYER_CHARGES: 'loyer_charges',
+  ASSURANCES: 'assurances',
+  TELECOM: 'telecom',
+  DEPLACEMENTS: 'deplacements',
+  FRAIS_BANCAIRES: 'frais_bancaires',
+  COTISATIONS_SOCIALES: 'cotisations_sociales',
+  FORMATION: 'formation',
+  HONORAIRES: 'honoraires',
+  PUBLICITE: 'publicite',
+  MATERIEL: 'materiel',
 } as const;
 
 /** Catégorie de recette pour une facture émise (vente / aide). */
@@ -32,6 +46,14 @@ export const CATEGORIE_RECETTE = {
   OEUFS: 'oeufs',
   AIDE: 'aide',
   AUTRE: 'autre',
+  // --- Entreprise (hors élevage) ---
+  PRESTATIONS: 'prestations',
+  VENTE_MARCHANDISES: 'vente_marchandises',
+  HEBERGEMENT: 'hebergement',
+  RESTAURATION: 'restauration',
+  BAR: 'bar',
+  COTISATIONS: 'cotisations',
+  DONS: 'dons',
 } as const;
 
 /** Catégories de vente de production (saisies comme des ventes, pas comme des factures). */
@@ -205,6 +227,14 @@ export const GROUPE_RECETTE = {
   ANIMAL: 'animal',
   AIDE: 'aide',
   AUTRE: 'autre',
+  // --- Entreprise : un groupe par recette (pas de seconde liste) ---
+  PRESTATIONS: 'prestations',
+  VENTE_MARCHANDISES: 'vente_marchandises',
+  HEBERGEMENT: 'hebergement',
+  RESTAURATION: 'restauration',
+  BAR: 'bar',
+  COTISATIONS: 'cotisations',
+  DONS: 'dons',
 } as const;
 
 export interface GroupeRecetteDefinition {
@@ -268,6 +298,50 @@ export const GROUPES_RECETTE_PAR_ESPECE: Record<
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: GROUPES_RECETTE_POULES,
 };
 
+// --- Entreprise (hors élevage) ---
+const unSeulChoix = (
+  groupe: ValeurDe<typeof GROUPE_RECETTE>,
+  categorie: ValeurDe<typeof CATEGORIE_RECETTE>,
+): GroupeRecetteDefinition => ({ groupe, categories: [categorie] });
+
+/** Recettes d'une activité de prestations de service ou libérale. */
+export const GROUPES_RECETTE_SERVICES: GroupeRecetteDefinition[] = [
+  unSeulChoix(GROUPE_RECETTE.PRESTATIONS, CATEGORIE_RECETTE.PRESTATIONS),
+  unSeulChoix(GROUPE_RECETTE.VENTE_MARCHANDISES, CATEGORIE_RECETTE.VENTE_MARCHANDISES),
+  ...AIDE_ET_AUTRE,
+];
+
+/** Recettes d'une association (gîte, restauration, bar) : hébergement, restauration, bar, cotisations, dons… */
+export const GROUPES_RECETTE_ASSOCIATION: GroupeRecetteDefinition[] = [
+  unSeulChoix(GROUPE_RECETTE.HEBERGEMENT, CATEGORIE_RECETTE.HEBERGEMENT),
+  unSeulChoix(GROUPE_RECETTE.RESTAURATION, CATEGORIE_RECETTE.RESTAURATION),
+  unSeulChoix(GROUPE_RECETTE.BAR, CATEGORIE_RECETTE.BAR),
+  unSeulChoix(GROUPE_RECETTE.VENTE_MARCHANDISES, CATEGORIE_RECETTE.VENTE_MARCHANDISES),
+  unSeulChoix(GROUPE_RECETTE.COTISATIONS, CATEGORIE_RECETTE.COTISATIONS),
+  unSeulChoix(GROUPE_RECETTE.DONS, CATEGORIE_RECETTE.DONS),
+  ...AIDE_ET_AUTRE,
+];
+
+/** Dépenses d'une entreprise (hors élevage), dans l'ordre d'affichage. */
+export const CATEGORIES_DEPENSE_ENTREPRISE = [
+  CATEGORIE_DEPENSE.FOURNITURES,
+  CATEGORIE_DEPENSE.ACHATS_MARCHANDISES,
+  CATEGORIE_DEPENSE.SOUS_TRAITANCE,
+  CATEGORIE_DEPENSE.LOYER_CHARGES,
+  CATEGORIE_DEPENSE.ASSURANCES,
+  CATEGORIE_DEPENSE.TELECOM,
+  CATEGORIE_DEPENSE.DEPLACEMENTS,
+  CATEGORIE_DEPENSE.FRAIS_BANCAIRES,
+  CATEGORIE_DEPENSE.COTISATIONS_SOCIALES,
+  CATEGORIE_DEPENSE.FORMATION,
+  CATEGORIE_DEPENSE.HONORAIRES,
+  CATEGORIE_DEPENSE.PUBLICITE,
+  CATEGORIE_DEPENSE.MATERIEL,
+  CATEGORIE_DEPENSE.REPARATION,
+  CATEGORIE_DEPENSE.IMPOTS,
+  CATEGORIE_DEPENSE.AUTRE,
+] as const;
+
 /** Groupes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
 export const GROUPES_RECETTE_COMMUNS = AIDE_ET_AUTRE;
 
@@ -297,6 +371,13 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.ANIMAL_VIVANT,
   CATEGORIE_RECETTE.ANIMAL_MORT,
   CATEGORIE_RECETTE.OEUFS,
+  CATEGORIE_RECETTE.PRESTATIONS,
+  CATEGORIE_RECETTE.VENTE_MARCHANDISES,
+  CATEGORIE_RECETTE.HEBERGEMENT,
+  CATEGORIE_RECETTE.RESTAURATION,
+  CATEGORIE_RECETTE.BAR,
+  CATEGORIE_RECETTE.COTISATIONS,
+  CATEGORIE_RECETTE.DONS,
   CATEGORIE_RECETTE.AIDE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
@@ -310,6 +391,22 @@ export const TAUX_TVA_ACHAT_DEFAUT = 2.1;
 
 /** Taux pré-rempli pour une facture d'achat de carburant. */
 export const TAUX_TVA_CARBURANT = 13;
+
+/** Taux pré-rempli pour une dépense d'entreprise assujettie à la TVA. */
+export const TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT = 20;
+
+/** Taux pré-rempli pour une recette d'entreprise assujettie à la TVA, selon sa catégorie (à confirmer avec votre comptable). */
+export const TAUX_TVA_RECETTE_ENTREPRISE = {
+  [CATEGORIE_RECETTE.PRESTATIONS]: 20,
+  [CATEGORIE_RECETTE.VENTE_MARCHANDISES]: 20,
+  [CATEGORIE_RECETTE.HEBERGEMENT]: 10,
+  [CATEGORIE_RECETTE.RESTAURATION]: 10,
+  [CATEGORIE_RECETTE.BAR]: 20,
+  [CATEGORIE_RECETTE.COTISATIONS]: 0,
+  [CATEGORIE_RECETTE.DONS]: 0,
+  [CATEGORIE_RECETTE.AIDE]: 0,
+  [CATEGORIE_RECETTE.AUTRE]: 20,
+} as const;
 
 /** Taux pré-rempli pour une vente de production, selon sa catégorie (indicatif — à confirmer avec le comptable/CGA). */
 export const TAUX_TVA_VENTE_PAR_CATEGORIE = {

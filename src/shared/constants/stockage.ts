@@ -26,6 +26,8 @@ export const CLE_STOCKAGE = {
   ESPECE_COURANTE: 'espece-courante',
   FOURNISSEURS: 'fournisseurs',
   CLIENTS: 'clients',
+  DOSSIERS: 'dossiers',
+  GITE: 'gite',
   COMPTES_PCG: 'comptes-pcg',
   SETTINGS: 'settings',
   DONNEES: 'data',

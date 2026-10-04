@@ -1,0 +1,90 @@
+/** Textes de l'interface — explorateur de dossiers (clients, sous-dossiers, contenus). À modifier ici uniquement. */
+export const TEXTES_DOSSIERS = {
+  /** Les sous-dossiers créés dans le dossier de chaque nouveau client tant que la structure type n'a pas été modifiée. */
+  structureParDefaut: ['Administratif', 'Factures et devis', 'Courriers', 'Divers'],
+  explorateur: {
+    titre: 'Activité',
+    rechercher: 'N’importe quel terme d’un dossier ou contenu',
+    aucunClient: 'Aucun client',
+    ajoutezUnClient: 'Ajoutez un client : son dossier apparaît ici.',
+    aucunResultat: 'Aucun résultat',
+    modifiezLaRecherche: 'Essayez un autre terme ou un autre filtre.',
+    resultatsClients: 'Clients',
+    resultatsDossiers: 'Dossiers',
+    resultatsContenus: 'Contenus',
+    menuClients: 'Clients',
+    menuStructure: 'Structure des dossiers',
+    nouveauClient: 'Nouveau client',
+    contenus: (nombre: number) => `${nombre} contenu${nombre > 1 ? 's' : ''}`,
+    aucunContenu: 'Aucun contenu',
+    aFaire: (nombre: number) => `${nombre} à faire`,
+    separateurChemin: ' › ',
+    dansCeDossier: 'Rechercher dans ce dossier',
+  },
+  dossierClient: {
+    ficheClient: 'Fiche client',
+    nouveauDossier: 'Nouveau dossier',
+    nomDuDossier: 'Nom du dossier',
+    aucunDossier: 'Aucun dossier',
+    ajoutezUnDossier: 'Ajoutez un dossier pour ranger les contenus de ce client.',
+    clientIntrouvable: 'Client introuvable',
+  },
+  sousDossier: {
+    nouveauContenu: 'Nouveau contenu',
+    aucunContenu: 'Aucun contenu dans ce dossier',
+    ajoutezUnContenu: 'Ajoutez une note, un courrier, une démarche…',
+    renommer: 'Renommer le dossier',
+    supprimer: 'Supprimer le dossier',
+    supprimerQuestion: 'Supprimer ce dossier ?',
+    supprimerMessage: (nom: string, contenus: number, dossiers: number) => {
+      const dedans = [
+        dossiers > 0 ? `${dossiers} dossier${dossiers > 1 ? 's' : ''}` : '',
+        contenus > 0 ? `${contenus} contenu${contenus > 1 ? 's' : ''}` : '',
+      ].filter(Boolean);
+      return dedans.length > 0
+        ? `« ${nom} » et ce qu’il contient (${dedans.join(' et ')}) seront supprimés définitivement.`
+        : `« ${nom} » sera supprimé définitivement.`;
+    },
+    nouveauDossier: 'Nouveau dossier',
+    nomDuDossier: 'Nom du dossier',
+    aucunContenuNiDossier: 'Ce dossier est vide',
+    ajoutezUnDossierOuUnContenu: 'Ajoutez un dossier pour classer, ou un contenu : note, courrier, démarche…',
+    nomRequis: 'Nom requis',
+    introuvable: 'Dossier introuvable',
+  },
+  element: {
+    nouveau: 'Nouveau contenu',
+    titre: 'Titre',
+    exempleTitre: 'ex : Devis déménagement',
+    texte: 'Notes',
+    date: 'Date',
+    echeance: 'Échéance (facultatif)',
+    retirerEcheance: 'Retirer l’échéance',
+    avancement: 'Avancement',
+    etiquettes: 'Étiquettes (séparées par des virgules)',
+    exempleEtiquettes: 'ex : urgent, assurance',
+    titreRequis: 'Titre requis',
+    supprimer: 'Supprimer ce contenu',
+    supprimerQuestion: 'Supprimer ce contenu ?',
+    supprimerMessage: 'Il sera supprimé définitivement.',
+    enRetard: 'En retard',
+    enRetardInfo:
+      'En retard : l’échéance est dépassée et ce n’est pas terminé. Passez-le en « Terminé » une fois fait.',
+    echeanceLe: (date: string) => `échéance le ${date}`,
+    introuvable: 'Contenu introuvable',
+  },
+  echeances: {
+    titre: (date: string) => `Tâches du ${date}`,
+    aucune: 'Aucune tâche ce jour-là',
+    aucuneDetail: 'Les contenus avec une échéance à cette date apparaissent ici.',
+    ouvrirDossier: 'Ouvrir l’explorateur',
+  },
+  structure: {
+    titre: 'Structure des dossiers',
+    aide: 'Ces dossiers sont créés dans le dossier de chaque nouveau client. Les dossiers déjà créés ne changent pas.',
+    nomDuDossier: 'Nom du dossier',
+    ajouter: 'Ajouter un dossier',
+    retirer: 'Retirer',
+    nomVide: 'Un nom de dossier ne peut pas être vide.',
+  },
+} as const;

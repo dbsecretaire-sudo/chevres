@@ -18,6 +18,7 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TRI_HISTORIQUE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 
 type Tri = ValeurDe<typeof TRI_HISTORIQUE>;
 
@@ -39,13 +40,17 @@ function compareBoucle(a?: string, b?: string): number {
 
 export default function Historique() {
   const router = useRouter();
+  // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
+  const { espece } = useEtablissement();
   const [chevres, setChevres] = useState<Chevre[]>([]);
   const [tri, setTri] = useState<Tri>(TRI_HISTORIQUE.SORTIE);
 
   useFocusEffect(
     useCallback(() => {
       listChevresHistorique().then(setChevres);
-    }, []),
+      // L'espèce n'est pas lue dans le chargement : elle sert à le relancer quand elle change.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [espece]),
   );
 
   const triees = useMemo(() => {

@@ -4,12 +4,16 @@ import {
   CATEGORIES_RECETTE_PAR_ESPECE,
   CATEGORIE_RECETTE,
   CATEGORIE_VENTE,
+  GROUPES_RECETTE_ASSOCIATION,
   GROUPES_RECETTE_COMMUNS,
   GROUPES_RECETTE_PAR_ESPECE,
+  GROUPES_RECETTE_SERVICES,
   type GROUPE_RECETTE,
+  type GroupeRecetteDefinition,
 } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { ACTIVITE_COMMUNE, ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import {
   ESPECE_PAR_DEFAUT,
   de,
@@ -19,9 +23,36 @@ import {
 } from '@/shared/dictionnaire/animaux';
 import { LABEL_CATEGORIE_RECETTE } from '@/shared/textes/libelles';
 
+/**
+ * Les groupes de recettes d'une entreprise selon ses types : prestations et ventes pour un libéral ou un prestataire,
+ * hébergement, restauration, bar, cotisations et dons pour une association (les deux listes se complètent si
+ * l'établissement a les deux types).
+ */
+export function groupesRecetteEntreprise(): GroupeRecetteDefinition[] {
+  const activites = activitesEtablissement();
+  const association = activites.includes(ACTIVITE_SOCIETE.ASSOCIATION);
+  const services = activites.some(
+    (a) => a === ACTIVITE_SOCIETE.LIBERAL || a === ACTIVITE_SOCIETE.PRESTATIONS_SERVICE,
+  );
+  const listes = [
+    ...(services || !association ? GROUPES_RECETTE_SERVICES : []),
+    ...(association ? GROUPES_RECETTE_ASSOCIATION : []),
+  ];
+  // Un même groupe (vente de marchandises, aide, autre) ne figure qu'une fois.
+  return listes.filter((g, i) => listes.findIndex((autre) => autre.groupe === g.groupe) === i);
+}
+
+/** Les groupes d'une écriture « commune » : ceux de l'entreprise, ou seulement aide et autre pour un élevage. */
+const groupesCommuns = (): GroupeRecetteDefinition[] =>
+  modeEntreprise() ? groupesRecetteEntreprise() : GROUPES_RECETTE_COMMUNS;
+
 /** Catégories de recette proposées pour une activité : celles de son espèce, ou seulement aide et autre si « commun ». */
 export const categoriesRecetteActivite = (activite: ActiviteComptable): readonly CategorieRecette[] =>
-  activite === ACTIVITE_COMMUNE ? CATEGORIES_RECETTE_COMMUNES : CATEGORIES_RECETTE_PAR_ESPECE[activite];
+  activite === ACTIVITE_COMMUNE
+    ? modeEntreprise()
+      ? groupesRecetteEntreprise().flatMap((g) => g.categories)
+      : CATEGORIES_RECETTE_COMMUNES
+    : CATEGORIES_RECETTE_PAR_ESPECE[activite];
 
 /** Vrai pour une recette saisie comme une vente de production (lait, fromage, animaux, viande…). */
 export const estCategorieVente = (categorie: string): categorie is CategorieVente =>
@@ -54,7 +85,7 @@ export type GroupeRecette = ValeurDe<typeof GROUPE_RECETTE>;
 
 /** Les groupes de recettes (et leurs recettes) proposés pour une activité. */
 const groupesDe = (activite: ActiviteComptable) =>
-  activite === ACTIVITE_COMMUNE ? GROUPES_RECETTE_COMMUNS : GROUPES_RECETTE_PAR_ESPECE[activite];
+  activite === ACTIVITE_COMMUNE ? groupesCommuns() : GROUPES_RECETTE_PAR_ESPECE[activite];
 
 /** Les recettes d'un groupe pour l'activité, dans l'ordre du groupe. */
 export const categoriesGroupe = (groupe: GroupeRecette, activite: ActiviteComptable): CategorieRecette[] => [

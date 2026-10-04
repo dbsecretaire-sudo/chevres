@@ -6,6 +6,10 @@ import { getYears, loadYear, saveYear, reindexYear } from '@/shared/storage/loca
 import { getSettings, updateSettings, type InfosExploitation } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
+import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
+import type { ArchiveDossiers } from '@/features/dossiers/types';
+import { lireArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
+import type { ArchiveGite } from '@/features/gite/types';
 import {
   appliquerProfilEtablissementActif,
   profilEtablissementActif,
@@ -29,6 +33,10 @@ interface FichierSauvegarde {
   donnees: Partial<Record<Categorie, Record<string, unknown[]>>>;
   fournisseurs: Fournisseur[];
   clients?: Client[];
+  /** Sous-dossiers et contenus de l'explorateur de dossiers (absent des anciennes sauvegardes). */
+  dossiers?: ArchiveDossiers;
+  /** Séjours du gîte (absent des anciennes sauvegardes). */
+  gite?: ArchiveGite;
   comptesPcg?: CompteComptableEnregistre[];
   exploitation?: InfosExploitation;
   /** Espèces et activités de l'établissement (absent des anciennes sauvegardes). */
@@ -51,9 +59,11 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees[categorie] = parAnnee;
   }
 
-  const [fournisseurs, clients, comptesPcg, settings, etablissement] = await Promise.all([
+  const [fournisseurs, clients, dossiers, gite, comptesPcg, settings, etablissement] = await Promise.all([
     listFournisseurs(),
     listClients(),
+    lireArchiveDossiers(),
+    lireArchiveGite(),
     listComptesPcg(),
     getSettings(),
     profilEtablissementActif(),
@@ -65,6 +75,8 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees,
     fournisseurs,
     clients,
+    dossiers,
+    gite,
     comptesPcg,
     exploitation: settings.exploitation,
     etablissement,
@@ -137,6 +149,17 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
 
   if (Array.isArray(sauvegarde.clients)) {
     await remplacerTousClients(sauvegarde.clients);
+  }
+
+  if (sauvegarde.dossiers && Array.isArray(sauvegarde.dossiers.sousDossiers)) {
+    await remplacerArchiveDossiers({
+      sousDossiers: sauvegarde.dossiers.sousDossiers,
+      elements: Array.isArray(sauvegarde.dossiers.elements) ? sauvegarde.dossiers.elements : [],
+    });
+  }
+
+  if (sauvegarde.gite && Array.isArray(sauvegarde.gite.sejours)) {
+    await remplacerArchiveGite({ sejours: sauvegarde.gite.sejours });
   }
 
   if (Array.isArray(sauvegarde.comptesPcg)) {

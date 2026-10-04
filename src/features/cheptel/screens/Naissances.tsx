@@ -15,15 +15,20 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { SEXE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 
 export default function Naissances() {
   const router = useRouter();
+  // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
+  const { espece } = useEtablissement();
   const [portees, setPortees] = useState<PorteeNaissance[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       listNaissancesGroupees().then(setPortees);
-    }, []),
+      // L'espèce n'est pas lue dans le chargement : elle sert à le relancer quand elle change.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [espece]),
   );
 
   return (

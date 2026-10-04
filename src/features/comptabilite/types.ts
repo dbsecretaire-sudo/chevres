@@ -104,7 +104,10 @@ export interface Facture {
    * choisi manuellement (les autres catégories ont un compte fixe, voir planComptable.ts).
    */
   compteManuel?: string;
-  /** Uniquement pour type === 'recue' : taux de TVA (%) indiqué sur la facture d'achat, tel quel. */
+  /**
+   * Taux de TVA (%) indiqué sur la facture, tel quel : pour une facture reçue (achat), et pour une facture émise
+   * d'une entreprise assujettie à la TVA.
+   */
   tauxTva?: number;
 }
 

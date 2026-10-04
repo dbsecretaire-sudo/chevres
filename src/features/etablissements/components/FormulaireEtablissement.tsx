@@ -36,7 +36,7 @@ export function FormulaireEtablissement({ initial, titre, libelleValider, onVali
   const perso = activites.includes(ACTIVITE_SOCIETE.PERSO);
 
   /**
-   * Libéral, prestations de service ou vente : une activité sans élevage, donc les animaux et « Agriculture »
+   * Libéral, prestations de service ou association : une activité sans élevage, donc les animaux et « Agriculture »
    * sont grisés (et décochés). « Agriculture » seule n'y change rien : on peut ensuite choisir ses animaux.
    */
   const sansElevage =

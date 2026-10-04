@@ -17,6 +17,11 @@ export async function enregistrerFacture(input: Omit<Facture, 'id'>): Promise<Fa
   return facture;
 }
 
+/** Enregistre une facture qui a déjà son identifiant (la crée ou la met à jour, même si sa date change d'année). */
+export async function remplacerFacture(facture: Facture): Promise<void> {
+  await upsertRecord(CATEGORIE_STOCKAGE.FACTURES, yearOf(facture.date), facture);
+}
+
 export async function getFacture(id: string): Promise<Facture | undefined> {
   return findRecord(CATEGORIE_STOCKAGE.FACTURES, id);
 }

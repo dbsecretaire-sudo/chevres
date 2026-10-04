@@ -68,6 +68,8 @@ export interface SaisieEcriture {
   clientSelectionne?: Client;
   /** Vrai si l'écriture est une vente de production (lait, fromage, cabris) plutôt qu'une facture. */
   estProductionVente: boolean;
+  /** Vrai pour une recette d'entreprise assujettie à la TVA : le taux saisi est alors enregistré sur la facture émise. */
+  tvaEmise: boolean;
 }
 
 export interface ErreurSaisie {
@@ -194,7 +196,11 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
           : estEmise && s.categorieRecette === CATEGORIE_RECETTE.AUTRE
             ? s.compteRecetteAutre
             : undefined,
-      tauxTva: estRecue ? parseDecimal(s.tauxTvaAchat) : undefined,
+      tauxTva: estRecue
+        ? parseDecimal(s.tauxTvaAchat)
+        : s.tvaEmise
+          ? parseDecimal(s.tauxTvaVente)
+          : undefined,
     },
   };
 }

@@ -13,12 +13,19 @@ export const TYPE_ANIMAL_ETABLISSEMENT = {
 export const ACTIVITE_SOCIETE = {
   LIBERAL: 'liberal',
   PRESTATIONS_SERVICE: 'prestations_service',
-  VENTE: 'vente',
+  ASSOCIATION: 'association',
   /** Choisi automatiquement dès qu'un établissement élève des animaux. */
   AGRICOLE: 'agricole',
   /** Case seule, au même niveau que les groupes : usage personnel, exclusive de tout autre choix. */
   PERSO: 'perso',
 } as const;
+
+/** Les activités qui font d'un établissement sans animaux une entreprise (et non un élevage). */
+export const ACTIVITES_ENTREPRISE: readonly string[] = [
+  ACTIVITE_SOCIETE.LIBERAL,
+  ACTIVITE_SOCIETE.PRESTATIONS_SERVICE,
+  ACTIVITE_SOCIETE.ASSOCIATION,
+];
 
 /** Activité d'une écriture comptable qui ne concerne aucune espèce en particulier (carburant, impôts, etc.). */
 export const ACTIVITE_COMMUNE = 'commun';

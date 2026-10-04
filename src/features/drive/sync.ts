@@ -5,6 +5,8 @@ import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { getSettings, updateSettings } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
+import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
+import { lireArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
 import {
   appliquerProfilEtablissementActif,
   profilEstVide,
@@ -23,9 +25,11 @@ import {
   DOSSIER_RACINE_DRIVE,
   FICHIER_CLIENTS,
   FICHIER_COMPTES_PCG,
+  FICHIER_DOSSIERS,
   FICHIER_ETABLISSEMENT,
   FICHIER_EXPLOITATION,
   FICHIER_FOURNISSEURS,
+  FICHIER_GITE,
   MOTIF_FICHIER_ANNEE,
 } from '@/shared/constants/drive';
 
@@ -121,6 +125,46 @@ export async function tirerClients(accessToken: string, folderId: string): Promi
   }
 }
 
+/** Envoie les sous-dossiers et contenus de l'explorateur de dossiers vers Google Drive. */
+export async function pousserDossiers(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveDossiers();
+  await upsertFileText(accessToken, FICHIER_DOSSIERS, folderId, JSON.stringify(archive));
+}
+
+/** Récupère les sous-dossiers et contenus depuis Google Drive, s'ils sont présents (remplace les données locales). */
+export async function tirerDossiers(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_DOSSIERS, folderId);
+  if (!file) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.sousDossiers) && Array.isArray(archive?.elements)) {
+      await remplacerArchiveDossiers(archive);
+    }
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie les séjours du gîte vers Google Drive. */
+export async function pousserGite(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveGite();
+  await upsertFileText(accessToken, FICHIER_GITE, folderId, JSON.stringify(archive));
+}
+
+/** Récupère les séjours du gîte depuis Google Drive, s'ils sont présents (remplace les données locales). */
+export async function tirerGite(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_GITE, folderId);
+  if (!file) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.sejours)) await remplacerArchiveGite({ sejours: archive.sejours });
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
 /** Envoie la liste des comptes PCG vers Google Drive. */
 export async function pousserComptesPcg(accessToken: string, folderId: string): Promise<void> {
   const comptes = await listComptesPcg();
@@ -186,6 +230,8 @@ export async function pousserToutesAnnees(
   await pousserEtablissement(accessToken, folderId);
   await pousserFournisseurs(accessToken, folderId);
   await pousserClients(accessToken, folderId);
+  await pousserDossiers(accessToken, folderId);
+  await pousserGite(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
 }
 
@@ -218,5 +264,7 @@ export async function tirerToutesAnnees(
   await tirerEtablissement(accessToken, folderId);
   await tirerFournisseurs(accessToken, folderId);
   await tirerClients(accessToken, folderId);
+  await tirerDossiers(accessToken, folderId);
+  await tirerGite(accessToken, folderId);
   await tirerComptesPcg(accessToken, folderId);
 }

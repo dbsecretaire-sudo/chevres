@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import { definirModeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { estEntreprise } from '@/features/etablissements/utils/typesEtablissement';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import {
   definirEspeceCourante,
@@ -70,7 +72,11 @@ export async function listEtablissements(): Promise<Etablissement[]> {
   if (raw) {
     try {
       const liste = JSON.parse(raw) as Etablissement[];
-      if (Array.isArray(liste) && liste.length > 0) return liste;
+      // Les types disparus (ex. « Vente », retiré) sont ignorés pour les établissements déjà enregistrés.
+      const connues: string[] = Object.values(ACTIVITE_SOCIETE);
+      if (Array.isArray(liste) && liste.length > 0) {
+        return liste.map((e) => ({ ...e, activites: e.activites?.filter((a) => connues.includes(a)) }));
+      }
     } catch {
       // liste corrompue : on repart sur l'établissement par défaut
     }
@@ -101,7 +107,9 @@ export async function initialiserEtablissements(): Promise<{ liste: Etablissemen
   const liste = await listEtablissements();
   const sauvegarde = await AsyncStorage.getItem(KEY_ACTIF);
   idActif = liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id;
-  definirEspecesActives(liste.find((e) => e.id === idActif)?.animaux, await lireEspeceMemorisee());
+  const actif = liste.find((e) => e.id === idActif);
+  definirEspecesActives(actif?.animaux, await lireEspeceMemorisee());
+  definirModeEntreprise(!!actif && estEntreprise(actif), actif?.activites);
   return { liste, actifId: idActif };
 }
 
@@ -112,6 +120,7 @@ export async function choisirEtablissementActif(id: string): Promise<void> {
   idActif = id;
   await AsyncStorage.setItem(KEY_ACTIF, id);
   definirEspecesActives(cible.animaux, await lireEspeceMemorisee());
+  definirModeEntreprise(estEntreprise(cible), cible.activites);
 }
 
 /** Les types d'un établissement (espèces élevées, activités), sans son nom : ce qui voyage avec ses données. */
@@ -153,7 +162,10 @@ export async function creerEtablissement(donnees: DonneesEtablissement): Promise
 export async function modifierEtablissement(id: string, donnees: DonneesEtablissement): Promise<void> {
   const liste = await listEtablissements();
   await ecrireListe(liste.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
-  if (id === idActif) definirEspecesActives(donnees.animaux, especeCourante());
+  if (id === idActif) {
+    definirEspecesActives(donnees.animaux, especeCourante());
+    definirModeEntreprise(estEntreprise(donnees), donnees.activites);
+  }
 }
 
 /**

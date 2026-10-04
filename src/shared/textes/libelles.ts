@@ -17,6 +17,8 @@ import {
   ACTIVITE_SOCIETE,
   TYPE_ANIMAL_ETABLISSEMENT,
 } from '@/shared/constants/etablissements';
+import { REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/shared/constants/entreprise';
+import { FILTRE_DOSSIERS, STATUT_ELEMENT } from '@/shared/constants/dossiers';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { capitaliser, de, vocabulaire } from '@/shared/dictionnaire/animaux';
 
@@ -98,6 +100,19 @@ export const LABEL_CATEGORIE_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>,
   [CATEGORIE_DEPENSE.PRODUCTION]: 'Production',
   [CATEGORIE_DEPENSE.IMPOTS]: 'Impôts & taxes',
   [CATEGORIE_DEPENSE.AUTRE]: 'Autre',
+  [CATEGORIE_DEPENSE.ACHATS_MARCHANDISES]: 'Achats de marchandises',
+  [CATEGORIE_DEPENSE.FOURNITURES]: 'Fournitures',
+  [CATEGORIE_DEPENSE.SOUS_TRAITANCE]: 'Sous-traitance',
+  [CATEGORIE_DEPENSE.LOYER_CHARGES]: 'Loyer et charges',
+  [CATEGORIE_DEPENSE.ASSURANCES]: 'Assurances',
+  [CATEGORIE_DEPENSE.TELECOM]: 'Téléphone et internet',
+  [CATEGORIE_DEPENSE.DEPLACEMENTS]: 'Déplacements',
+  [CATEGORIE_DEPENSE.FRAIS_BANCAIRES]: 'Frais bancaires',
+  [CATEGORIE_DEPENSE.COTISATIONS_SOCIALES]: 'Cotisations sociales (URSSAF)',
+  [CATEGORIE_DEPENSE.FORMATION]: 'Formation',
+  [CATEGORIE_DEPENSE.HONORAIRES]: 'Honoraires',
+  [CATEGORIE_DEPENSE.PUBLICITE]: 'Publicité',
+  [CATEGORIE_DEPENSE.MATERIEL]: 'Matériel et équipement',
 };
 
 export const LABEL_CATEGORIE_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, string> = {
@@ -113,6 +128,13 @@ export const LABEL_CATEGORIE_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>,
   },
   [CATEGORIE_RECETTE.AIDE]: 'Aide / subvention',
   [CATEGORIE_RECETTE.AUTRE]: 'Autre recette',
+  [CATEGORIE_RECETTE.PRESTATIONS]: 'Prestations de services',
+  [CATEGORIE_RECETTE.VENTE_MARCHANDISES]: 'Vente de marchandises',
+  [CATEGORIE_RECETTE.HEBERGEMENT]: 'Hébergement',
+  [CATEGORIE_RECETTE.RESTAURATION]: 'Restauration',
+  [CATEGORIE_RECETTE.BAR]: 'Bar',
+  [CATEGORIE_RECETTE.COTISATIONS]: 'Cotisations des adhérents',
+  [CATEGORIE_RECETTE.DONS]: 'Dons',
 };
 
 export const LABEL_TYPE_ALIMENT: Record<ValeurDe<typeof TYPE_ALIMENT>, string> = {
@@ -189,7 +211,7 @@ export const LABEL_TYPE_ANIMAL_ETABLISSEMENT: Record<ValeurDe<typeof TYPE_ANIMAL
 export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, string> = {
   [ACTIVITE_SOCIETE.LIBERAL]: 'Libéral',
   [ACTIVITE_SOCIETE.PRESTATIONS_SERVICE]: 'Prestations de service',
-  [ACTIVITE_SOCIETE.VENTE]: 'Vente',
+  [ACTIVITE_SOCIETE.ASSOCIATION]: 'Association',
   [ACTIVITE_SOCIETE.AGRICOLE]: 'Agriculture',
   [ACTIVITE_SOCIETE.PERSO]: 'Perso',
 };
@@ -211,4 +233,52 @@ export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, strin
   [GROUPE_RECETTE.ANIMAL]: 'Vente animal',
   [GROUPE_RECETTE.AIDE]: 'Aide / subvention',
   [GROUPE_RECETTE.AUTRE]: 'Autre recette',
+  [GROUPE_RECETTE.PRESTATIONS]: 'Prestations de services',
+  [GROUPE_RECETTE.VENTE_MARCHANDISES]: 'Vente de marchandises',
+  [GROUPE_RECETTE.HEBERGEMENT]: 'Hébergement',
+  [GROUPE_RECETTE.RESTAURATION]: 'Restauration',
+  [GROUPE_RECETTE.BAR]: 'Bar',
+  [GROUPE_RECETTE.COTISATIONS]: 'Cotisations des adhérents',
+  [GROUPE_RECETTE.DONS]: 'Dons',
+};
+
+export const LABEL_STATUT_JURIDIQUE: Record<ValeurDe<typeof STATUT_JURIDIQUE>, string> = {
+  [STATUT_JURIDIQUE.MICRO_ENTREPRISE]: 'Auto-entrepreneur (micro-entreprise)',
+  [STATUT_JURIDIQUE.ENTREPRISE_INDIVIDUELLE]: 'Entreprise individuelle',
+  [STATUT_JURIDIQUE.EURL]: 'EURL',
+  [STATUT_JURIDIQUE.SASU]: 'SASU',
+  [STATUT_JURIDIQUE.SARL]: 'SARL',
+  [STATUT_JURIDIQUE.SAS]: 'SAS',
+  [STATUT_JURIDIQUE.ASSOCIATION]: 'Association loi 1901',
+  [STATUT_JURIDIQUE.AUTRE]: 'Autre',
+};
+
+export const LABEL_REGIME_FISCAL: Record<ValeurDe<typeof REGIME_FISCAL>, string> = {
+  [REGIME_FISCAL.MICRO_BNC]: 'Micro-BNC',
+  [REGIME_FISCAL.MICRO_BIC_SERVICES]: 'Micro-BIC (prestations de services)',
+  [REGIME_FISCAL.MICRO_BIC_VENTE]: 'Micro-BIC (vente de marchandises)',
+  [REGIME_FISCAL.DECLARATION_CONTROLEE]: 'Déclaration contrôlée (BNC au réel)',
+  [REGIME_FISCAL.REEL_SIMPLIFIE]: 'Réel simplifié (BIC)',
+  [REGIME_FISCAL.REEL_NORMAL]: 'Réel normal (BIC)',
+  [REGIME_FISCAL.IMPOT_SOCIETES]: 'Impôt sur les sociétés',
+  [REGIME_FISCAL.NON_FISCALISE]: 'Association non fiscalisée',
+};
+
+export const LABEL_REGIME_TVA: Record<ValeurDe<typeof REGIME_TVA>, string> = {
+  [REGIME_TVA.REEL_SIMPLIFIE]: 'Réel simplifié',
+  [REGIME_TVA.REEL_NORMAL]: 'Réel normal',
+};
+
+export const LABEL_STATUT_ELEMENT: Record<ValeurDe<typeof STATUT_ELEMENT>, string> = {
+  [STATUT_ELEMENT.A_FAIRE]: 'À faire',
+  [STATUT_ELEMENT.EN_COURS]: 'En cours',
+  [STATUT_ELEMENT.TERMINE]: 'Terminé',
+};
+
+export const LABEL_FILTRE_DOSSIERS: Record<ValeurDe<typeof FILTRE_DOSSIERS>, string> = {
+  [FILTRE_DOSSIERS.TOUT]: 'Tout',
+  [FILTRE_DOSSIERS.A_FAIRE]: 'À faire',
+  [FILTRE_DOSSIERS.EN_COURS]: 'En cours',
+  [FILTRE_DOSSIERS.TERMINE]: 'Terminé',
+  [FILTRE_DOSSIERS.EN_RETARD]: 'En retard',
 };

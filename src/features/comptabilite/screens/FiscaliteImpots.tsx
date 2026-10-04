@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import ImpotsEntreprise from '@/features/entreprise/screens/ImpotsEntreprise';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { Card } from '@/shared/components/Card';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
@@ -16,7 +18,12 @@ import { styles } from '@/shared/styles/comptabilite/FiscaliteImpots.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
+/** Impôts de l'élevage (micro-BA), ou, pour une entreprise, ses impôts selon son régime fiscal. */
 export default function FiscaliteImpots() {
+  return modeEntreprise() ? <ImpotsEntreprise /> : <ImpotsElevage />;
+}
+
+function ImpotsElevage() {
   const { settings, setAnneeActive } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [recettes, setRecettes] = useState<RecettesMicroBA | null>(null);

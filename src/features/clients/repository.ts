@@ -3,6 +3,7 @@ import { generateId } from '@/shared/utils/id';
 import { cleStockage, cleStockagePour } from '@/features/etablissements/repository';
 import { nomComplet } from '@/shared/utils/personne';
 import type { Client } from '@/features/clients/types';
+import { supprimerDossiersDuClient } from '@/features/dossiers/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
 const cle = () => cleStockage(CLE_STOCKAGE.CLIENTS);
@@ -75,6 +76,8 @@ export async function enregistrerClient(client: Client): Promise<void> {
 export async function supprimerClient(id: string): Promise<void> {
   const items = await lireTous();
   await ecrireTous(items.filter((c) => c.id !== id));
+  // Son dossier (sous-dossiers et contenus) disparaît avec lui.
+  await supprimerDossiersDuClient(id);
 }
 
 /** Remplace intégralement la liste locale — utilisé lors d'un tirage depuis Google Drive. */

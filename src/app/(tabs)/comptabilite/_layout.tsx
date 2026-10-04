@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
@@ -12,7 +13,7 @@ export default function ComptabiliteLayout() {
   return (
     <Stack
       // La liste, le Détail et la fiscalité suivent l'espèce active par un simple filtre : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'detail', 'fiscalite-impots', 'fiscalite-rsa')}
+      screenLayout={ecranParEspeceSauf('index', 'detail', 'fiscalite-impots', 'fiscalite-rsa', 'tva')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -39,8 +40,21 @@ export default function ComptabiliteLayout() {
       <Stack.Screen name="facture/[id]" options={{ title: TEXTES.commun.general.facture }} />
       <Stack.Screen name="vente/[id]" options={{ title: TEXTES.commun.general.vente }} />
       <Stack.Screen name="detail" options={{ title: TEXTES.commun.general.detail }} />
-      <Stack.Screen name="fiscalite-impots" options={{ title: TEXTES.commun.general.impotsMicroBa }} />
-      <Stack.Screen name="fiscalite-rsa" options={{ title: TEXTES.commun.general.declarationRsa }} />
+      <Stack.Screen
+        name="fiscalite-impots"
+        options={{
+          title: modeEntreprise() ? TEXTES.entreprise.menu.impots : TEXTES.commun.general.impotsMicroBa,
+        }}
+      />
+      <Stack.Screen
+        name="fiscalite-rsa"
+        options={{
+          title: modeEntreprise()
+            ? TEXTES.entreprise.menu.chiffreAffaires
+            : TEXTES.commun.general.declarationRsa,
+        }}
+      />
+      <Stack.Screen name="tva" options={{ title: TEXTES.entreprise.menu.tva }} />
       <Stack.Screen name="fournisseurs/index" options={{ title: TEXTES.commun.general.fournisseurs }} />
       <Stack.Screen
         name="fournisseurs/nouveau"

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
@@ -31,13 +32,17 @@ import {
   premiereCategorieRecette,
 } from '@/features/comptabilite/utils/recettes';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { totalMontants } from '@/shared/utils/nombres';
 import {
+  CATEGORIES_DEPENSE_ENTREPRISE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
   POURCENTAGE_MIN,
   TAUX_TVA_ACHAT_DEFAUT,
+  TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT,
+  TAUX_TVA_RECETTE_ENTREPRISE,
   TAUX_TVA_CARBURANT,
   TAUX_TVA_VENTE_PAR_CATEGORIE,
   TYPE_AIDE,
@@ -62,12 +67,23 @@ const PREFIXE_COMPTES_RECETTE = '7';
 /** État, valeurs calculées et actions du formulaire « Nouvelle écriture » (débit/crédit). */
 export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const router = useRouter();
+  const { settings } = useAppSettings();
+  // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
+  // s'applique (champ affiché, taux enregistré) que si elle a coché « Assujetti à la TVA » dans ses informations.
+  const entreprise = modeEntreprise();
+  const tvaEntreprise = entreprise && !!settings.exploitation?.entreprise?.tvaApplicable;
+  const afficherTva = !entreprise || tvaEntreprise;
+  const activiteInitiale: ActiviteComptable = entreprise ? ACTIVITE_COMMUNE : especeCourante();
+  const tauxTvaEntreprise = (categorie: CategorieRecette): string =>
+    tvaEntreprise
+      ? String(TAUX_TVA_RECETTE_ENTREPRISE[categorie as keyof typeof TAUX_TVA_RECETTE_ENTREPRISE] ?? 0)
+      : '0';
 
   const [type, setType] = useState<TypeFacture>(
     typeInitial === TYPE_FACTURE.EMISE ? TYPE_FACTURE.EMISE : TYPE_FACTURE.RECUE,
   );
   // Activité : l'espèce courante par défaut (visible seulement si l'établissement en élève plusieurs).
-  const [activite, setActivite] = useState<ActiviteComptable>(especeCourante());
+  const [activite, setActivite] = useState<ActiviteComptable>(activiteInitiale);
   const [date, setDate] = useState(todayISO());
   const [tiers, setTiers] = useState('');
   const [description, setDescription] = useState('');
@@ -76,10 +92,18 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [erreur, setErreur] = useState<ErreurSaisie | null>(null);
 
   // Débit (facture reçue)
-  const [categorieDepense, setCategorieDepense] = useState<CategorieDepense>(CATEGORIE_DEPENSE.ALIMENTATION);
+  const [categorieDepense, setCategorieDepense] = useState<CategorieDepense>(
+    entreprise ? CATEGORIES_DEPENSE_ENTREPRISE[0] : CATEGORIE_DEPENSE.ALIMENTATION,
+  );
   const [lignesAlimentation, setLignesAlimentation] = useState<LigneAlimentForm[]>([ligneAlimentVide()]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
-  const [tauxTvaAchat, setTauxTvaAchat] = useState(String(TAUX_TVA_ACHAT_DEFAUT));
+  const [tauxTvaAchat, setTauxTvaAchat] = useState(
+    entreprise
+      ? tvaEntreprise
+        ? String(TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT)
+        : '0'
+      : String(TAUX_TVA_ACHAT_DEFAUT),
+  );
   const [compteDepenseAutre, setCompteDepenseAutre] = useState(
     COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero,
   );
@@ -89,7 +113,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   // Crédit (facture émise ou vente de production)
   // Première recette de l'espèce courante : le lait pour les chèvres, la charcuterie pour les cochons…
   const [categorieRecette, setCategorieRecette] = useState<CategorieRecette>(
-    premiereCategorieRecette(especeCourante()),
+    premiereCategorieRecette(activiteInitiale),
   );
   const [typeFromage, setTypeFromage] = useState<TypeFromage>(TYPE_FROMAGE.FRAIS);
   const [typeFromageLibre, setTypeFromageLibre] = useState('');
@@ -106,7 +130,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.AUTRE].numero,
   );
   const [tauxTvaVente, setTauxTvaVente] = useState(
-    String(tauxTvaParDefaut(premiereCategorieRecette(especeCourante()))),
+    entreprise
+      ? tauxTvaEntreprise(premiereCategorieRecette(activiteInitiale))
+      : String(tauxTvaParDefaut(premiereCategorieRecette(especeCourante()))),
   );
   const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState('');
@@ -182,13 +208,18 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     if (estCategorieVente(v)) {
       setTauxTvaVente(String(TAUX_TVA_VENTE_PAR_CATEGORIE[v]));
       rattacherSiCommun();
+    } else if (entreprise) {
+      setTauxTvaVente(tauxTvaEntreprise(v));
     }
   };
 
   const changerCategorieDepense = (v: CategorieDepense) => {
     setCategorieDepense(v);
     if (v === CATEGORIE_DEPENSE.ALIMENTATION) rattacherSiCommun();
-    setTauxTvaAchat(String(v === CATEGORIE_DEPENSE.CARBURANT ? TAUX_TVA_CARBURANT : TAUX_TVA_ACHAT_DEFAUT));
+    // Une entreprise garde le taux choisi (ou l'absence de TVA) ; un élevage a un taux par défaut selon la catégorie.
+    if (!entreprise) {
+      setTauxTvaAchat(String(v === CATEGORIE_DEPENSE.CARBURANT ? TAUX_TVA_CARBURANT : TAUX_TVA_ACHAT_DEFAUT));
+    }
   };
 
   const enregistrer = async () => {
@@ -220,6 +251,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         precision,
         clientSelectionne,
         estProductionVente,
+        tvaEmise: tvaEntreprise && type === TYPE_FACTURE.EMISE && categorieRecette !== CATEGORIE_RECETTE.AIDE,
       });
       if ('erreur' in resultat) {
         setErreur(resultat.erreur);
@@ -238,6 +270,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     activite,
     changerActivite,
     avecCommunActivite,
+    entreprise,
+    afficherTva,
     type,
     setType,
     date,

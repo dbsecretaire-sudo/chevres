@@ -58,10 +58,12 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         {TEXTES.commun.general.montantDeuxPoints}
         {facture.montant.toFixed(2)} €
       </Text>
-      <Text style={commonStyles.line}>
-        {TEXTES.comptabilite.factureLecture.tvaDeuxPoints}
-        {facture.tauxTva} %
-      </Text>
+      {facture.tauxTva !== undefined ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.comptabilite.factureLecture.tvaDeuxPoints}
+          {facture.tauxTva} %
+        </Text>
+      ) : null}
 
       {facture.description ? (
         <Text style={commonStyles.line}>

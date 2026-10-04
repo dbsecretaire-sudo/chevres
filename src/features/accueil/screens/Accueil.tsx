@@ -4,6 +4,9 @@ import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { Button } from '@/shared/components/Button';
+import { YearPicker } from '@/shared/components/YearPicker';
+import AccueilEntreprise from '@/features/accueil/screens/AccueilEntreprise';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TuilesAccueil } from '@/features/accueil/components/TuilesAccueil';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 import { LOCALE } from '@/shared/constants/format';
@@ -12,12 +15,18 @@ import { styles } from '@/shared/styles/accueil/Accueil.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
+/** Accueil de l'élevage, ou celui de l'entreprise quand l'établissement actif n'est pas un élevage. */
 export default function Accueil() {
+  return modeEntreprise() ? <AccueilEntreprise /> : <AccueilElevage />;
+}
+
+function AccueilElevage() {
   const router = useRouter();
-  const { annee, stats } = useAccueil();
+  const { annee, annees, setAnneeActive, stats } = useAccueil();
 
   return (
     <Screen>
+      <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
       <SelecteurEspece />
       <Text style={commonStyles.heading}>
         {TEXTES.accueil.accueil.troupeauEspace}

@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { ecranParEspece } from '@/features/etablissements/components/EcranParEspece';
+import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
 import { CheptelHeaderMenu } from '@/features/cheptel/components/CheptelHeaderMenu';
@@ -11,7 +11,16 @@ export default function CheptelLayout() {
   useEtablissement();
   return (
     <Stack
-      screenLayout={ecranParEspece}
+      // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
+      screenLayout={ecranParEspeceSauf(
+        'index',
+        'bilan',
+        'historique',
+        'naissances',
+        'alimentation',
+        'veterinaire/index',
+        'controles/index',
+      )}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,

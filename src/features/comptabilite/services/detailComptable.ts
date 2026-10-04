@@ -4,14 +4,15 @@ import type { CategorieDepense, CategorieRecette, TypeAliment } from '@/features
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
+import { categoriesRecetteActivite } from '@/features/comptabilite/utils/recettes';
 import { especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import {
-  CATEGORIES_RECETTE_COMMUNES,
   CATEGORIES_RECETTE_PAR_ESPECE,
   CATEGORIE_DEPENSE,
   TYPES_ALIMENT,
   TYPE_FACTURE,
-  ORDRE_CATEGORIE_DEPENSE,
   ORDRE_CATEGORIE_RECETTE,
 } from '@/shared/constants/comptabilite';
 
@@ -81,15 +82,15 @@ export async function calculerDetailComptable(
     }
   }
 
-  const depenses = ORDRE_CATEGORIE_DEPENSE.map((categorie) => ({
+  const depenses = categoriesDepenseDuMode().map((categorie) => ({
     categorie,
     montant: depensesParCategorie.get(categorie) ?? 0,
   }));
   // Les recettes que proposent les espèces de l'établissement (pas de lait ni de fromage pour des cochons),
   // plus toute catégorie qui a un montant (anciennes écritures).
   const proposees = new Set<string>(
-    filtre === ACTIVITE_COMMUNE
-      ? CATEGORIES_RECETTE_COMMUNES
+    modeEntreprise() || filtre === ACTIVITE_COMMUNE
+      ? categoriesRecetteActivite(ACTIVITE_COMMUNE)
       : especesDuFiltre(filtre).flatMap((e) => CATEGORIES_RECETTE_PAR_ESPECE[e]),
   );
   const recettes = ORDRE_CATEGORIE_RECETTE.filter(

@@ -6,4 +6,6 @@ export interface Client {
   telephone?: string;
   email?: string;
   adressePostale?: string;
+  /** Vrai une fois que la structure type de sous-dossiers a été créée pour ce client (voir features/dossiers). */
+  structureInitialisee?: boolean;
 }

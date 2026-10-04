@@ -3,10 +3,13 @@ import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { calculerBilan, type Bilan } from '@/features/cheptel/services/bilanCheptel';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 
 /** Bilan de l'année active, celui de l'année précédente (pour comparaison) et les années disponibles. */
 export function useBilanAnnuel() {
   const { settings, setAnneeActive } = useAppSettings();
+  // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
+  const { espece } = useEtablissement();
   const annee = settings.anneeActive;
 
   const [annees, setAnnees] = useState<number[]>([annee]);
@@ -22,7 +25,9 @@ export function useBilanAnnuel() {
     setBilan(b);
     setBilanPrecedent(bPrec);
     setAnnees(toutesAnnees);
-  }, [annee]);
+    // L'espèce n'est pas lue dans le chargement : elle sert à le relancer quand elle change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [annee, espece]);
 
   useFocusEffect(
     useCallback(() => {
