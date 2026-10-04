@@ -34,6 +34,7 @@ export default function ExplorateurClients() {
                 return (
                   <CarteDossier
                     key={client.id}
+                    client
                     titre={nomComplet(client)}
                     detail={resume ? T.contenus(resume.total) : T.aucunContenu}
                     alerte={resume && resume.aFaire > 0 ? T.aFaire(resume.aFaire) : undefined}

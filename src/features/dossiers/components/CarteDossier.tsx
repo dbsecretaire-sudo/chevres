@@ -12,17 +12,19 @@ interface Props {
   alerte?: string;
   /** Deux cartes par ligne au lieu de trois : pour des noms plus longs. */
   large?: boolean;
+  /** La carte d'un client (une personne) plutôt que celle d'un dossier. */
+  client?: boolean;
   onPress: () => void;
 }
 
-/** Une carte de la grille : l'icône d'un dossier, son nom et ce qu'il contient. */
-export function CarteDossier({ titre, detail, alerte, large, onPress }: Props) {
+/** Une carte de la grille : l'icône d'un dossier ou d'une personne (client), son nom et ce qu'il contient. */
+export function CarteDossier({ titre, detail, alerte, large, client, onPress }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [styles.carte, large && styles.carteLarge, pressed && commonStyles.pressed]}
       onPress={onPress}
     >
-      <Ionicons name="folder" size={26} color={colors.primary} />
+      <Ionicons name={client ? 'person' : 'folder'} size={26} color={colors.primary} />
       <Text style={styles.carteTitre} numberOfLines={3}>
         {titre}
       </Text>
