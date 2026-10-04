@@ -46,6 +46,8 @@ export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, str
   [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: 'Boucherie / charcuterie',
   [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: 'Animal sur pied',
   [CATEGORIE_VENTE.ANIMAL_VIVANT]: 'Animal vivant',
+  [CATEGORIE_VENTE.ANIMAL_MORT]: 'Animal mort',
+  [CATEGORIE_VENTE.OEUFS]: 'Œufs',
   get [CATEGORIE_VENTE.CABRIS]() {
     return capitaliser(vocabulaire().petit.pluriel);
   },
@@ -104,6 +106,8 @@ export const LABEL_CATEGORIE_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>,
   [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE]: 'Vente de boucherie / charcuterie',
   [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: 'Vente d’animal sur pied',
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: 'Vente d’animal vivant',
+  [CATEGORIE_RECETTE.ANIMAL_MORT]: 'Vente d’animal mort',
+  [CATEGORIE_RECETTE.OEUFS]: 'Vente d’œufs',
   get [CATEGORIE_RECETTE.CABRIS]() {
     return `Vente ${de(vocabulaire().petit.pluriel)}`;
   },
@@ -120,6 +124,8 @@ export const LABEL_TYPE_ALIMENT: Record<ValeurDe<typeof TYPE_ALIMENT>, string> =
   [TYPE_ALIMENT.CEREALES]: 'Céréales (orge, blé, maïs)',
   [TYPE_ALIMENT.SEL]: 'Sel',
   [TYPE_ALIMENT.PORC_CROISSANCE]: 'Porc croissance',
+  [TYPE_ALIMENT.MAIS_CONCASSE]: 'Maïs concassé',
+  [TYPE_ALIMENT.MAIS_PONTE]: 'Maïs ponte',
   [TYPE_ALIMENT.AUTRE]: 'Autre',
 };
 
@@ -177,6 +183,7 @@ export const LABEL_TYPE_ANIMAL_ETABLISSEMENT: Record<ValeurDe<typeof TYPE_ANIMAL
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: 'Vaches',
   [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: 'Chèvres',
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: 'Brebis',
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: 'Poules',
 };
 
 export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, string> = {
@@ -198,6 +205,7 @@ export const LABEL_ACTIVITE_COMPTABLE: Record<
 /** Premier niveau du choix d'une recette. */
 export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, string> = {
   [GROUPE_RECETTE.LAITERIE]: 'Vente laiterie / fromagerie',
+  [GROUPE_RECETTE.OEUFS]: 'Vente œufs',
   [GROUPE_RECETTE.BOUCHERIE]: 'Vente boucherie / charcuterie',
   [GROUPE_RECETTE.ANIMAL]: 'Vente animal',
   [GROUPE_RECETTE.AIDE]: 'Aide / subvention',

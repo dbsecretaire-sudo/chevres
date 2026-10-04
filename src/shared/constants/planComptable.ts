@@ -43,6 +43,11 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   },
   [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
+  [CATEGORIE_RECETTE.ANIMAL_MORT]: {
+    numero: '701500',
+    libelle: 'Ventes de produits finis — Viande et charcuterie',
+  },
+  [CATEGORIE_RECETTE.OEUFS]: { numero: '701600', libelle: 'Ventes de produits finis — Œufs' },
   [CATEGORIE_RECETTE.AIDE]: { numero: '740000', libelle: 'Subventions d’exploitation' },
   [CATEGORIE_RECETTE.AUTRE]: { numero: '708000', libelle: 'Produits des activités annexes' },
 };
@@ -89,6 +94,7 @@ export const COMPTES_PCG_RECETTE: CompteComptable[] = [
   { numero: '701300', libelle: 'Ventes — Animaux' },
   { numero: '701400', libelle: 'Ventes — Laine, peaux' },
   { numero: '701500', libelle: 'Ventes — Viande, charcuterie' },
+  { numero: '701600', libelle: 'Ventes — Œufs' },
   { numero: '706000', libelle: 'Prestations de services' },
   { numero: '708000', libelle: 'Activités annexes' },
   { numero: '740000', libelle: 'Subventions d’exploitation' },

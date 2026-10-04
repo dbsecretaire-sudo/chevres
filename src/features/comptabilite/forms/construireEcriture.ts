@@ -27,6 +27,7 @@ import {
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
+  CATEGORIE_VENTE,
   POURCENTAGE_MAX,
   POURCENTAGE_MIN,
   TYPE_AIDE,
@@ -107,7 +108,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       unite:
         s.categorieRecette === CATEGORIE_RECETTE.LAIT
           ? UNITE_VENTE.LITRES
-          : estAnimal || estViande
+          : estAnimal || estViande || categorie === CATEGORIE_VENTE.OEUFS
             ? UNITE_VENTE.PIECE
             : s.unite,
       prix: prixNum,

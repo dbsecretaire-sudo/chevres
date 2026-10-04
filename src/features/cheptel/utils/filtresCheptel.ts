@@ -110,7 +110,7 @@ export const LABEL_CATEGORIE_FILTRE: Record<CategorieFiltre, string> = {
 };
 
 export const OPTIONS_TRI: { value: Tri; label: string }[] = [
-  { value: TRI_CHEPTEL.BOUCLE, label: TEXTES.commun.general.nDeBoucle },
+  { value: TRI_CHEPTEL.BOUCLE, label: TEXTES.cheptel.listeCheptel.aucunFiltre },
   { value: TRI_CHEPTEL.NAISSANCE, label: TEXTES.commun.general.dateDeNaissance },
   { value: TRI_CHEPTEL.MISE_BAS, label: TEXTES.cheptel.listeCheptel.derniereMiseBas },
   { value: TRI_CHEPTEL.ABATTOIR, label: TEXTES.commun.general.abattoir },

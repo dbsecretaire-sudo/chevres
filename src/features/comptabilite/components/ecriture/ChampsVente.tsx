@@ -244,6 +244,34 @@ export function ChampsVenteViande({ e }: Props) {
   );
 }
 
+/** Vente d'œufs : nombre d'œufs, prix et TVA. */
+export function ChampsVenteOeufs({ e }: Props) {
+  return (
+    <>
+      <FormField
+        label={TEXTES.comptabilite.nouvelleEcriture.nombreDOeufs}
+        required
+        value={e.quantite}
+        onChangeText={e.setQuantite}
+        keyboardType="decimal-pad"
+        placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
+      />
+      <View style={commonStyles.row}>
+        <View style={commonStyles.flex1}>
+          <ChampMontantTtc
+            label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
+            value={e.montant}
+            onChange={e.setMontant}
+          />
+        </View>
+        <View style={commonStyles.flex1}>
+          <ChampTauxTvaVente e={e} />
+        </View>
+      </View>
+    </>
+  );
+}
+
 /** Vente d'un animal sur pied ou vivant : nombre de têtes, poids (facultatif), prix, TVA et précision facultative. */
 export function ChampsVenteAnimal({ e }: Props) {
   return (

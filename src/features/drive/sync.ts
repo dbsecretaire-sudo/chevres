@@ -7,6 +7,7 @@ import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fourniss
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
 import {
   appliquerProfilEtablissementActif,
+  profilEstVide,
   profilEtablissementActif,
 } from '@/features/etablissements/repository';
 import { listComptesPcg, remplacerTousComptesPcg } from '@/features/comptes-pcg/repository';
@@ -67,6 +68,8 @@ export async function tirerInfosExploitation(accessToken: string, folderId: stri
 /** Envoie les espèces et activités de l'établissement vers Google Drive. */
 export async function pousserEtablissement(accessToken: string, folderId: string): Promise<void> {
   const profil = await profilEtablissementActif();
+  // Un profil vide n'est pas envoyé : il écraserait les types renseignés depuis un autre appareil.
+  if (profilEstVide(profil)) return;
   await upsertFileText(accessToken, FICHIER_ETABLISSEMENT, folderId, JSON.stringify(profil));
 }
 

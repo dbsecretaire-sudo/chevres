@@ -6,6 +6,7 @@ export const TYPE_ANIMAL_ETABLISSEMENT = {
   VACHES: 'vaches',
   CHEVRES: 'chevres',
   BREBIS: 'brebis',
+  POULES: 'poules',
 } as const;
 
 /** Choix du groupe « Société / Auto-entrepreneur » : activités d'un établissement non agricole (choix multiple). */

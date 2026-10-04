@@ -31,9 +31,11 @@ export function ecrituresDuClient(ventes: Vente[], factures: Facture[]): Ecritur
     date: v.date,
     titre: (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie)
       ? libelleCategorieVente(v)
-      : `${libelleCategorieVente(v)} — ${v.quantite} ${
-          v.categorie === CATEGORIE_VENTE.LAIT ? LABEL_UNITE_VENTE_COURT[UNITE_VENTE.LITRES] : v.unite
-        }`,
+      : v.categorie === CATEGORIE_VENTE.OEUFS
+        ? `${libelleCategorieVente(v)} — ${v.quantite}`
+        : `${libelleCategorieVente(v)} — ${v.quantite} ${
+            v.categorie === CATEGORIE_VENTE.LAIT ? LABEL_UNITE_VENTE_COURT[UNITE_VENTE.LITRES] : v.unite
+          }`,
     montant: v.prix ?? 0,
     source: SOURCE_TRANSACTION.VENTE,
   }));

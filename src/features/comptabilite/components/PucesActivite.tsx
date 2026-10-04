@@ -25,9 +25,11 @@ export function PucesActivite({ valeur, onChange }: Props) {
 
   if (especes.length < 2) return null;
 
-  const puces: { filtre: FiltreActivite; label: string }[] = [
+  type Puce = { filtre: FiltreActivite; label: string };
+  // Deux lignes distinctes : les cheptels, puis « Toutes » et « Commun ».
+  const cheptels: Puce[] = especes.map((e) => ({ filtre: e, label: LABEL_ACTIVITE_COMPTABLE[e] }));
+  const autres: Puce[] = [
     { filtre: TOUTES_ACTIVITES, label: TEXTES.comptabilite.parActivite.toutes },
-    ...especes.map((e) => ({ filtre: e, label: LABEL_ACTIVITE_COMPTABLE[e] })),
     { filtre: ACTIVITE_COMMUNE, label: LABEL_ACTIVITE_COMPTABLE[ACTIVITE_COMMUNE] },
   ];
 
@@ -36,7 +38,7 @@ export function PucesActivite({ valeur, onChange }: Props) {
     else changerEspece(filtre as EspeceAnimale, chemin);
   };
 
-  return (
+  const ligne = (puces: Puce[]) => (
     <View style={styles.ligne}>
       {puces.map((p) => {
         const active = p.filtre === valeur;
@@ -51,5 +53,12 @@ export function PucesActivite({ valeur, onChange }: Props) {
         );
       })}
     </View>
+  );
+
+  return (
+    <>
+      {ligne(cheptels)}
+      {ligne(autres)}
+    </>
   );
 }

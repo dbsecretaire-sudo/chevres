@@ -117,6 +117,10 @@ export async function choisirEtablissementActif(id: string): Promise<void> {
 /** Les types d'un établissement (espèces élevées, activités), sans son nom : ce qui voyage avec ses données. */
 export type ProfilEtablissement = Pick<DonneesEtablissement, 'animaux' | 'activites'>;
 
+/** Vrai si aucune espèce ni activité n'est renseignée. */
+export const profilEstVide = (profil: ProfilEtablissement): boolean =>
+  (profil.animaux?.length ?? 0) === 0 && (profil.activites?.length ?? 0) === 0;
+
 export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
   const actif = (await listEtablissements()).find((e) => e.id === idActif);
   return { animaux: actif?.animaux ?? [], activites: actif?.activites ?? [] };
@@ -124,11 +128,12 @@ export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
 
 /**
  * Applique à l'établissement actif les types lus dans une sauvegarde ou sur Drive (son nom ne change pas) ;
- * les valeurs inconnues sont ignorées.
+ * les valeurs inconnues sont ignorées. Un profil vide n'écrase rien : un appareil sans types renseignés ne doit pas
+ * effacer ceux d'un autre.
  */
 export async function appliquerProfilEtablissementActif(profil: ProfilEtablissement): Promise<void> {
   const actif = (await listEtablissements()).find((e) => e.id === idActif);
-  if (!actif || !profil || typeof profil !== 'object') return;
+  if (!actif || !profil || typeof profil !== 'object' || profilEstVide(profil)) return;
   const garder = <T extends string>(valeurs: unknown, permises: readonly T[]): T[] =>
     Array.isArray(valeurs) ? valeurs.filter((v): v is T => permises.includes(v)) : [];
   await modifierEtablissement(actif.id, {

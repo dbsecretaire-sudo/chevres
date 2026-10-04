@@ -10,6 +10,7 @@ import {
   ChampTypeAide,
   ChampsAide,
   ChampsVenteAnimal,
+  ChampsVenteOeufs,
   ChampsVenteCabris,
   ChampsVenteFromage,
   ChampsVenteLait,
@@ -108,7 +109,9 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
       {e.categorieRecette === CATEGORIE_RECETTE.FROMAGE && <ChampsVenteFromage e={e} />}
       {e.categorieRecette === CATEGORIE_RECETTE.CABRIS && <ChampsVenteCabris e={e} />}
       {(e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_SUR_PIED ||
-        e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_VIVANT) && <ChampsVenteAnimal e={e} />}
+        e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_VIVANT ||
+        e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_MORT) && <ChampsVenteAnimal e={e} />}
+      {e.categorieRecette === CATEGORIE_RECETTE.OEUFS && <ChampsVenteOeufs e={e} />}
       {e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE && <ChampsVenteViande e={e} />}
     </>
   );

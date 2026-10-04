@@ -45,12 +45,14 @@ export function useFicheVente(id: string | undefined) {
     const unite: Vente['unite'] =
       categorie === CATEGORIE_VENTE.LAIT
         ? UNITE_VENTE.LITRES
-        : (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(categorie) ||
-            (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorie)
+        : categorie === CATEGORIE_VENTE.OEUFS
           ? UNITE_VENTE.PIECE
-          : form.unite === UNITE_VENTE.KG
-            ? UNITE_VENTE.KG
-            : UNITE_VENTE.PIECE;
+          : (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(categorie) ||
+              (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorie)
+            ? UNITE_VENTE.PIECE
+            : form.unite === UNITE_VENTE.KG
+              ? UNITE_VENTE.KG
+              : UNITE_VENTE.PIECE;
     setForm({ ...form, categorie, unite });
   };
 

@@ -32,6 +32,22 @@ export function FormulaireEtablissement({ initial, titre, libelleValider, onVali
   /** Dès qu'on élève des animaux, l'établissement est agricole : le groupe « Société » est grisé sur « Agriculture ». */
   const agricole = animaux.length > 0;
 
+  /**
+   * Libéral, prestations de service ou vente : une activité sans élevage, donc les animaux et « Agriculture »
+   * sont grisés (et décochés). « Agriculture » seule n'y change rien : on peut ensuite choisir ses animaux.
+   */
+  const sansElevage = !agricole && activites.some((a) => a !== ACTIVITE_SOCIETE.AGRICOLE);
+
+  const changerActivite = (activite: (typeof activites)[number]) => {
+    const suivantes = basculer(activites, activite);
+    if (suivantes.some((a) => a !== ACTIVITE_SOCIETE.AGRICOLE)) {
+      setActivites(suivantes.filter((a) => a !== ACTIVITE_SOCIETE.AGRICOLE));
+      setAnimaux([]);
+    } else {
+      setActivites(suivantes);
+    }
+  };
+
   const changerAnimal = (animal: (typeof animaux)[number]) => {
     const suivants = basculer(animaux, animal);
     setAnimaux(suivants);
@@ -59,6 +75,7 @@ export function FormulaireEtablissement({ initial, titre, libelleValider, onVali
           key={animal}
           label={LABEL_TYPE_ANIMAL_ETABLISSEMENT[animal]}
           value={animaux.includes(animal)}
+          disabled={sansElevage}
           onChange={() => changerAnimal(animal)}
         />
       ))}
@@ -69,8 +86,8 @@ export function FormulaireEtablissement({ initial, titre, libelleValider, onVali
           key={activite}
           label={LABEL_ACTIVITE_SOCIETE[activite]}
           value={agricole ? activite === ACTIVITE_SOCIETE.AGRICOLE : activites.includes(activite)}
-          disabled={agricole}
-          onChange={() => setActivites((prev) => basculer(prev, activite))}
+          disabled={agricole || (sansElevage && activite === ACTIVITE_SOCIETE.AGRICOLE)}
+          onChange={() => changerActivite(activite)}
         />
       ))}
 

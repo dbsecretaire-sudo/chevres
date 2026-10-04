@@ -28,6 +28,8 @@ export const CATEGORIE_RECETTE = {
   BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
   ANIMAL_SUR_PIED: 'animal_sur_pied',
   ANIMAL_VIVANT: 'animal_vivant',
+  ANIMAL_MORT: 'animal_mort',
+  OEUFS: 'oeufs',
   AIDE: 'aide',
   AUTRE: 'autre',
 } as const;
@@ -40,6 +42,8 @@ export const CATEGORIE_VENTE = {
   BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
   ANIMAL_SUR_PIED: 'animal_sur_pied',
   ANIMAL_VIVANT: 'animal_vivant',
+  ANIMAL_MORT: 'animal_mort',
+  OEUFS: 'oeufs',
 } as const;
 
 /** Ventes d'animaux : on saisit un nombre de têtes (et, facultatif, un poids). */
@@ -47,6 +51,7 @@ export const CATEGORIES_VENTE_ANIMAUX = [
   CATEGORIE_VENTE.CABRIS,
   CATEGORIE_VENTE.ANIMAL_SUR_PIED,
   CATEGORIE_VENTE.ANIMAL_VIVANT,
+  CATEGORIE_VENTE.ANIMAL_MORT,
 ] as const;
 
 /** Ventes de viande et de charcuterie : un montant, sans quantité. */
@@ -57,6 +62,7 @@ export const CATEGORIES_VENTE_AVEC_PRECISION = [
   CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
   CATEGORIE_VENTE.ANIMAL_SUR_PIED,
   CATEGORIE_VENTE.ANIMAL_VIVANT,
+  CATEGORIE_VENTE.ANIMAL_MORT,
 ] as const;
 
 export const TYPE_AIDE = {
@@ -78,6 +84,8 @@ export const TYPE_ALIMENT = {
   CEREALES: 'cereales',
   SEL: 'sel',
   PORC_CROISSANCE: 'porc_croissance',
+  MAIS_CONCASSE: 'mais_concasse',
+  MAIS_PONTE: 'mais_ponte',
   AUTRE: 'autre',
 } as const;
 
@@ -129,6 +137,8 @@ export const TYPES_ALIMENT = [
   TYPE_ALIMENT.CEREALES,
   TYPE_ALIMENT.SEL,
   TYPE_ALIMENT.PORC_CROISSANCE,
+  TYPE_ALIMENT.MAIS_CONCASSE,
+  TYPE_ALIMENT.MAIS_PONTE,
   TYPE_ALIMENT.AUTRE,
 ] as const;
 
@@ -157,6 +167,11 @@ export const TYPES_ALIMENT_PAR_ESPECE = {
     TYPE_ALIMENT.AUTRE,
   ],
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: [TYPE_ALIMENT.PORC_CROISSANCE, TYPE_ALIMENT.AUTRE],
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: [
+    TYPE_ALIMENT.MAIS_CONCASSE,
+    TYPE_ALIMENT.MAIS_PONTE,
+    TYPE_ALIMENT.AUTRE,
+  ],
 } as const;
 
 /** « Autre » est exclu des totaux/moyennes : la précision libre peut recouvrir un achat pour un tout autre élevage que les chèvres. */
@@ -185,6 +200,7 @@ export const ORDRE_CATEGORIE_DEPENSE = [
  */
 export const GROUPE_RECETTE = {
   LAITERIE: 'laiterie',
+  OEUFS: 'oeufs',
   BOUCHERIE: 'boucherie',
   ANIMAL: 'animal',
   AIDE: 'aide',
@@ -230,6 +246,16 @@ const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [
   ...AIDE_ET_AUTRE,
 ];
 
+/** Poules : les œufs, puis l'animal (vivant, mort ou poussins), l'aide et le reste. */
+const GROUPES_RECETTE_POULES: GroupeRecetteDefinition[] = [
+  { groupe: GROUPE_RECETTE.OEUFS, categories: [CATEGORIE_RECETTE.OEUFS] },
+  {
+    groupe: GROUPE_RECETTE.ANIMAL,
+    categories: [CATEGORIE_RECETTE.ANIMAL_VIVANT, CATEGORIE_RECETTE.ANIMAL_MORT, CATEGORIE_RECETTE.CABRIS],
+  },
+  ...AIDE_ET_AUTRE,
+];
+
 /** Les groupes de recettes (et leurs recettes) proposés selon l'espèce de l'activité. */
 export const GROUPES_RECETTE_PAR_ESPECE: Record<
   ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>,
@@ -239,6 +265,7 @@ export const GROUPES_RECETTE_PAR_ESPECE: Record<
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: GROUPES_RECETTE_LAITIERS,
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: GROUPES_RECETTE_VIANDE,
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: GROUPES_RECETTE_VIANDE,
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: GROUPES_RECETTE_POULES,
 };
 
 /** Groupes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
@@ -255,6 +282,7 @@ export const CATEGORIES_RECETTE_PAR_ESPECE: Record<
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: aplatir(GROUPES_RECETTE_PAR_ESPECE.brebis),
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.vaches),
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: aplatir(GROUPES_RECETTE_PAR_ESPECE.cochons),
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.poules),
 };
 
 /** Recettes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
@@ -267,6 +295,8 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
   CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
   CATEGORIE_RECETTE.ANIMAL_VIVANT,
+  CATEGORIE_RECETTE.ANIMAL_MORT,
+  CATEGORIE_RECETTE.OEUFS,
   CATEGORIE_RECETTE.AIDE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
@@ -289,6 +319,8 @@ export const TAUX_TVA_VENTE_PAR_CATEGORIE = {
   [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: 5.5,
   [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: 10,
   [CATEGORIE_VENTE.ANIMAL_VIVANT]: 10,
+  [CATEGORIE_VENTE.ANIMAL_MORT]: 5.5,
+  [CATEGORIE_VENTE.OEUFS]: 5.5,
 } as const;
 
 // --- Pourcentages ---

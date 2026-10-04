@@ -22,6 +22,7 @@ function libelleQuantite(v: Vente): string {
   if ((CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(v.categorie)) {
     return `${v.quantite} ${v.quantite > 1 ? TEXTES.comptabilite.ficheVente.tetes : TEXTES.comptabilite.ficheVente.tete}`;
   }
+  if (v.categorie === CATEGORIE_VENTE.OEUFS) return `${v.quantite} ${TEXTES.comptabilite.ficheVente.oeufs}`;
   return `${v.quantite} ${v.unite}`;
 }
 

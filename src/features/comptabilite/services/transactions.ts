@@ -43,6 +43,7 @@ function titreVente(v: Vente): string {
     );
   }
   if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie)) return libelleCategorieVente(v);
+  if (v.categorie === CATEGORIE_VENTE.OEUFS) return `${libelleCategorieVente(v)} — ${v.quantite}`;
   return TEXTES.comptabilite.transactions.fromageQuantiteUnite(v.quantite, v.unite);
 }
 

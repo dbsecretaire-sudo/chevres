@@ -42,6 +42,8 @@ export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: { ageMaxPetitMois: 8, ageSevrageMois: 3, nbPetitsMax: 2 },
   // Porcelet : jusqu'à la fin du post-sevrage (environ 10 semaines) ; sevrage vers 4 semaines.
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { ageMaxPetitMois: 3, ageSevrageMois: 1, nbPetitsMax: 20 },
+  // Poussin : jusqu'à environ 2 mois ; une couvée compte jusqu'à une quinzaine d'œufs.
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { ageMaxPetitMois: 2, ageSevrageMois: 1, nbPetitsMax: 15 },
 };
 
 /** Seuils de l'espèce courante. */
