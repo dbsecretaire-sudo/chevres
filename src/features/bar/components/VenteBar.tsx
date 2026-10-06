@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Button } from '@/shared/components/Button';
-import { Card } from '@/shared/components/Card';
-import { enregistrerVenteBar, totalVenteBar } from '@/features/bar/services/ventes';
-import type { Boisson } from '@/features/bar/types';
-import { colors } from '@/shared/theme/colors';
+import { Text, View } from 'react-native';
+import { NomModal } from '@/features/dossiers/components/NomModal';
+import { TicketBarCarte } from '@/features/bar/components/TicketBarCarte';
+import { ajusterStock } from '@/features/bar/repository';
+import { ajouterAuTicket, lignesDuTicket } from '@/features/bar/services/tickets';
+import { enregistrerVenteBar } from '@/features/bar/services/ventes';
+import type { Boisson, TicketBar } from '@/features/bar/types';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
-import { styles } from '@/shared/styles/bar/Bar.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -15,29 +14,31 @@ const T = TEXTES.bar.bar;
 
 interface Props {
   boissons: Boisson[];
+  /** Les tickets en cours (toujours au moins un). */
+  tickets: TicketBar[];
+  /** Enregistre la nouvelle liste de tickets. */
+  onTickets: (tickets: TicketBar[]) => Promise<void>;
   /** Appelé après une vente enregistrée (pour recharger les stocks). */
   onVendu: () => void;
 }
 
 /**
- * La vente au bar : chaque boisson avec son nom seulement, une quantité à régler en dessous, et le prix (celui fixé dans
- * la gestion des boissons) qui suit la quantité. Une seule vente regroupe toutes les boissons choisies.
+ * La vente au bar par tickets : chaque ticket est une commande en cours (nommée « Ticket 1 », « Ticket 2 »… ou comme on
+ * veut), à laquelle on ajoute des boissons de la liste du stock. Enregistrer la vente d'un ticket l'efface de la liste,
+ * l'inscrit en comptabilité (recette « Bar ») ; le ticket suivant reprend le plus petit numéro libre. Le stock baisse dès
+ * qu'une boisson est ajoutée au ticket (« OK ») et remonte si on la retire : la vente n'y touche plus.
  */
-export function VenteBar({ boissons, onVendu }: Props) {
-  const [quantites, setQuantites] = useState<Record<string, number>>({});
+export function VenteBar({ boissons, tickets, onTickets, onVendu }: Props) {
+  const [replies, setReplies] = useState<string[]>([]);
+  const [renomme, setRenomme] = useState<TicketBar | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const lignes = boissons.map((boisson) => ({ boisson, quantite: quantites[boisson.id] ?? 0 }));
-  const total = totalVenteBar(lignes);
+  const modifier = (id: string, patch: (ticket: TicketBar) => TicketBar) =>
+    onTickets(tickets.map((t) => (t.id === id ? patch(t) : t)));
 
-  const changer = (id: string, delta: number) => {
-    setMessage(null);
-    setQuantites((actuelles) => ({ ...actuelles, [id]: Math.max(0, (actuelles[id] ?? 0) + delta) }));
-  };
-
-  const vendre = async () => {
-    const montant = await enregistrerVenteBar(lignes, todayISO());
-    setQuantites({});
+  const vendre = async (ticket: TicketBar) => {
+    const montant = await enregistrerVenteBar(lignesDuTicket(ticket, boissons), todayISO(), ticket.nom);
+    await onTickets(tickets.filter((t) => t.id !== ticket.id));
     setMessage(T.venteEnregistree(formatMontant(montant)));
     onVendu();
   };
@@ -46,36 +47,51 @@ export function VenteBar({ boissons, onVendu }: Props) {
 
   return (
     <View style={commonStyles.gap10}>
-      {lignes.map(({ boisson, quantite }) => (
-        <View key={boisson.id} style={styles.ligneBoisson}>
-          <Text style={styles.nomBoisson}>{boisson.nom}</Text>
-          <View style={styles.quantiteLigne}>
-            <Pressable
-              style={styles.boutonQuantite}
-              onPress={() => changer(boisson.id, -1)}
-              accessibilityLabel={T.quantiteMoins}
-            >
-              <Ionicons name="remove" size={22} color={colors.primary} />
-            </Pressable>
-            <Text style={styles.quantite}>{quantite}</Text>
-            <Pressable
-              style={styles.boutonQuantite}
-              onPress={() => changer(boisson.id, 1)}
-              accessibilityLabel={T.quantitePlus}
-            >
-              <Ionicons name="add" size={22} color={colors.primary} />
-            </Pressable>
-          </View>
-          <Text style={[styles.prixLigne, quantite > 0 && styles.prixLigneActif]}>
-            {formatMontant(boisson.prix * quantite)}
-          </Text>
-        </View>
+      {tickets.map((ticket) => (
+        <TicketBarCarte
+          key={ticket.id}
+          ticket={ticket}
+          boissons={boissons}
+          replie={replies.includes(ticket.id)}
+          onBasculer={() =>
+            setReplies((actuels) =>
+              actuels.includes(ticket.id) ? actuels.filter((i) => i !== ticket.id) : [...actuels, ticket.id],
+            )
+          }
+          onRenommer={() => setRenomme(ticket)}
+          onAjouter={async (boissonId, quantite) => {
+            setMessage(null);
+            const avant = ticket.lignes.find((l) => l.boissonId === boissonId)?.quantite ?? 0;
+            const lignes = ajouterAuTicket(ticket.lignes, boissonId, quantite);
+            const ajoutees = (lignes.find((l) => l.boissonId === boissonId)?.quantite ?? 0) - avant;
+            // Le stock de la boisson baisse tout de suite, de ce qui a été ajouté au ticket.
+            if (ajoutees > 0) await ajusterStock('boisson', boissonId, -ajoutees);
+            await modifier(ticket.id, (t) => ({ ...t, lignes }));
+          }}
+          onRetirer={async (boissonId) => {
+            const retiree = ticket.lignes.find((l) => l.boissonId === boissonId)?.quantite ?? 0;
+            // Une boisson retirée du ticket revient en stock.
+            if (retiree > 0) await ajusterStock('boisson', boissonId, retiree);
+            await modifier(ticket.id, (t) => ({
+              ...t,
+              lignes: t.lignes.filter((l) => l.boissonId !== boissonId),
+            }));
+          }}
+          onVendre={() => vendre(ticket)}
+        />
       ))}
-      <Card>
-        <Text style={styles.total}>{T.total(formatMontant(total))}</Text>
-        <Button label={T.enregistrerVente} disabled={total <= 0} onPress={vendre} />
-        {message ? <Text style={commonStyles.note}>{message}</Text> : null}
-      </Card>
+      {message ? <Text style={commonStyles.note}>{message}</Text> : null}
+
+      <NomModal
+        visible={!!renomme}
+        titre={T.ticket.renommer}
+        valeurInitiale={renomme?.nom}
+        onValider={(nom) => {
+          if (renomme) modifier(renomme.id, (t) => ({ ...t, nom }));
+          setRenomme(null);
+        }}
+        onAnnuler={() => setRenomme(null)}
+      />
     </View>
   );
 }

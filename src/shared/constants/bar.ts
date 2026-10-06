@@ -6,3 +6,6 @@ export const ONGLET_BAR = {
   BAR: 'bar',
   STOCK: 'stock',
 } as const;
+
+/** Le nombre maximum d'une même boisson sur un ticket du bar (la quantité se choisit de 1 à ce nombre). */
+export const NOMBRE_MAX_BOISSONS_TICKET = 50;

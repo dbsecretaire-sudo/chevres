@@ -13,8 +13,26 @@ export interface Aliment {
   stock: number;
 }
 
+/** Une boisson et le nombre commandé sur un ticket. */
+export interface LigneTicket {
+  boissonId: string;
+  quantite: number;
+}
+
+/**
+ * Un ticket du bar : une commande en cours (une table, un client), avec un nom (« Ticket 1 » d'office, modifiable) et les
+ * boissons commandées. Il disparaît de la liste quand sa vente est enregistrée.
+ */
+export interface TicketBar {
+  id: string;
+  nom: string;
+  lignes: LigneTicket[];
+}
+
 /** Tout ce que contient le bar et la restauration d'un établissement : stocké, sauvegardé et synchronisé ensemble. */
 export interface ArchiveBar {
   boissons: Boisson[];
   aliments: Aliment[];
+  /** Les tickets en cours au bar (vente pas encore enregistrée). */
+  tickets: TicketBar[];
 }

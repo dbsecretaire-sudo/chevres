@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { ListRow } from '@/shared/components/ListRow';
 import type { Element, StatutElement } from '@/features/dossiers/types';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
@@ -24,6 +24,7 @@ interface Props {
 /** Un contenu dans une liste : titre, date, avancement et échéance (en rouge si elle est dépassée). */
 export function LigneElement({ element, chemin, onStatut }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const enRetard = estEnRetard(element, todayISO());
 
   const infos = [
@@ -65,7 +66,15 @@ export function LigneElement({ element, chemin, onStatut }: Props) {
           ) : null}
         </View>
       }
-      onPress={() => router.push(ROUTES.element(element.id))}
+      onPress={() => {
+        // Ouvert depuis l'accueil (hors de l'onglet Activité) : on reconstruit l'arborescence — dossier du client, puis
+        // sous-dossier — pour que « retour » ramène dans le sous-dossier du contenu et non à l'accueil.
+        if (!pathname.startsWith(ROUTES.CLIENTS_EXPLORATEUR)) {
+          router.push(ROUTES.dossierClient(element.clientId));
+          router.push(ROUTES.sousDossier(element.dossierId));
+        }
+        router.push(ROUTES.element(element.id));
+      }}
     />
   );
 }

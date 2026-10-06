@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { cleStockage } from '@/features/etablissements/repository';
-import type { Aliment, ArchiveBar, Boisson } from '@/features/bar/types';
+import type { Aliment, ArchiveBar, Boisson, TicketBar } from '@/features/bar/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
 const cle = () => cleStockage(CLE_STOCKAGE.BAR);
@@ -11,6 +11,7 @@ export function normaliserArchiveBar(archive: Partial<ArchiveBar> | undefined): 
   return {
     boissons: Array.isArray(archive?.boissons) ? archive.boissons : [],
     aliments: Array.isArray(archive?.aliments) ? archive.aliments : [],
+    tickets: Array.isArray(archive?.tickets) ? archive.tickets : [],
   };
 }
 
@@ -31,6 +32,12 @@ export async function remplacerArchiveBar(archive: ArchiveBar): Promise<void> {
 }
 
 const parNom = <T extends { nom: string }>(a: T, b: T) => a.nom.localeCompare(b.nom);
+
+/** Remplace les tickets en cours (les boissons et aliments ne bougent pas). */
+export async function remplacerTickets(tickets: TicketBar[]): Promise<void> {
+  const archive = await lireArchiveBar();
+  await remplacerArchiveBar({ ...archive, tickets });
+}
 
 /** Les boissons dans l'ordre alphabétique. */
 export async function listBoissons(): Promise<Boisson[]> {

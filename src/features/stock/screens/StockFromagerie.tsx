@@ -20,7 +20,6 @@ import {
   cleArticle,
   conditionnementDe,
   definirConditionnement,
-  deplacerArticle,
   positionnerArticle,
   renommerArticle,
   libelleArticle,
@@ -91,8 +90,6 @@ export default function StockFromagerie() {
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
   /** Le fromage dont on modifie le conditionnement. */
   const [enEdition, setEnEdition] = useState<string | null>(null);
-  /** La ligne dont les flèches sont affichées (un appui sur sa poignée), pour la déplacer d'un cran. */
-  const [deplace, setDeplace] = useState<string | null>(null);
   /** Vrai pendant qu'on fait glisser une ligne : la page ne défile alors pas. */
   const [glisse, setGlisse] = useState(false);
 
@@ -106,24 +103,6 @@ export default function StockFromagerie() {
 
   const niveaux = niveauxDeStock(archive.mouvements);
   const genre = GENRE_PAR_ONGLET[onglet];
-
-  const deplacer = async (a: ArticleAffiche, sens: -1 | 1) => {
-    if (genre) await deplacerArticle(genre, a.cle, sens);
-    charger();
-  };
-
-  /** Les flèches haut et bas d'une ligne, affichées après un appui sur sa poignée (le glissement se fait avec la poignée). */
-  const fleches = (a: ArticleAffiche) =>
-    deplace === a.cle ? (
-      <View style={stylesStock.deplacement}>
-        <Pressable onPress={() => deplacer(a, -1)} hitSlop={6} style={stylesStock.boutonDeplacement}>
-          <Ionicons name="chevron-up" size={22} color={colors.primary} />
-        </Pressable>
-        <Pressable onPress={() => deplacer(a, 1)} hitSlop={6} style={stylesStock.boutonDeplacement}>
-          <Ionicons name="chevron-down" size={22} color={colors.primary} />
-        </Pressable>
-      </View>
-    ) : null;
 
   const ligne = (a: ArticleAffiche, poignee: ReactNode) => {
     const niveau = niveaux.get(a.cle) ?? 0;
@@ -140,7 +119,6 @@ export default function StockFromagerie() {
             <Pressable onPress={() => setRenomme(a)} hitSlop={8} accessibilityLabel={T.renommer.modifier}>
               <Ionicons name="pencil" size={18} color={colors.primary} />
             </Pressable>
-            {fleches(a)}
             {poignee}
           </View>
         }
@@ -199,7 +177,6 @@ export default function StockFromagerie() {
             cle={(a) => a.cle}
             ligne={ligne}
             onGlisse={setGlisse}
-            onAppuiPoignee={(cle) => setDeplace((actuelle) => (actuelle === cle ? null : cle))}
             onDeplacer={async (cle, index) => {
               await positionnerArticle(genre, cle, index);
               charger();

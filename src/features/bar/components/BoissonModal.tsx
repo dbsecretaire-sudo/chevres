@@ -3,7 +3,8 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import type { Boisson } from '@/features/bar/types';
-import { parseDecimal } from '@/shared/utils/nombres';
+import { formatMontant } from '@/shared/utils/dates';
+import { parseMontant } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -28,14 +29,14 @@ export function BoissonModal({ visible, boisson, onValider, onSupprimer, onFerme
     if (visible) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNom(boisson?.nom ?? '');
-      setPrix(boisson ? String(boisson.prix).replace('.', ',') : '');
+      setPrix(boisson ? formatMontant(boisson.prix) : '');
       setErreur(null);
     }
   }, [visible, boisson]);
 
   const valider = () => {
     if (!nom.trim()) return setErreur(T.nomRequis);
-    const montant = parseDecimal(prix);
+    const montant = parseMontant(prix);
     if (!(montant > 0)) return setErreur(T.prixInvalide);
     onValider(nom.trim(), montant);
   };

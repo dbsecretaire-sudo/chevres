@@ -56,22 +56,13 @@ interface Props<T> {
   onDeplacer: (cle: string, nouvelIndex: number) => void;
   /** Dit si un glissement est en cours : la page qui contient la liste doit alors cesser de défiler. */
   onGlisse?: (actif: boolean) => void;
-  /** Appelé quand on touche la poignée sans glisser. */
-  onAppuiPoignee?: (cle: string) => void;
 }
 
 /**
  * Une liste dont on change l'ordre au doigt : on appuie sur la poignée d'une ligne, on la fait glisser jusqu'à sa place
  * (les autres lignes s'écartent), puis on la lâche. Un simple appui sur la poignée est signalé à part.
  */
-export function ListeReordonnable<T>({
-  elements,
-  cle,
-  ligne,
-  onDeplacer,
-  onGlisse,
-  onAppuiPoignee,
-}: Props<T>) {
+export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGlisse }: Props<T>) {
   const [hauteurs, setHauteurs] = useState<Record<string, number>>({});
   const [actif, setActif] = useState<{ cle: string; dy: number } | null>(null);
 
@@ -100,7 +91,6 @@ export function ListeReordonnable<T>({
     setActif(null);
     onGlisse?.(false);
     if (Math.abs(dy) < SEUIL_GLISSEMENT) {
-      onAppuiPoignee?.(c);
       return;
     }
     const cible = indexCible(depart, dy);

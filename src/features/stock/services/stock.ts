@@ -230,17 +230,6 @@ export async function positionnerArticle(
   await remplacerArchiveStock({ ...archive, ordres: { ...archive.ordres, [genre]: cles } });
 }
 
-/** Monte (−1) ou descend (+1) un article d'une ligne dans la liste de son genre. */
-export async function deplacerArticle(genre: GenreArticle, cle: string, sens: -1 | 1): Promise<void> {
-  const archive = await lireArchiveStock();
-  const cles = articlesDuGenre(genre, archive).map((a) => a.cle);
-  const i = cles.indexOf(cle);
-  const j = i + sens;
-  if (i < 0 || j < 0 || j >= cles.length) return;
-  [cles[i], cles[j]] = [cles[j], cles[i]];
-  await remplacerArchiveStock({ ...archive, ordres: { ...archive.ordres, [genre]: cles } });
-}
-
 /** Le lait utilisé pour les fabrications d'un fromage sur une année : par fromage, et mois par mois. */
 export interface StatistiqueLait {
   /** Litres de lait par fromage sur l'année. */

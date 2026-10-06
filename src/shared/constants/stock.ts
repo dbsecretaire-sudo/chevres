@@ -72,10 +72,5 @@ export const ORIGINE_MOUVEMENT = {
   MANUEL: 'manuel',
 } as const;
 
-export const SENS_STOCK = {
-  AJOUT: 'ajout',
-  RETRAIT: 'retrait',
-} as const;
-
 /** Nombre de mouvements récents affichés sous le stock. */
 export const NOMBRE_MOUVEMENTS_AFFICHES = 15;

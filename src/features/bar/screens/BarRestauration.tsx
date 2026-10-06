@@ -10,6 +10,7 @@ import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { BoissonModal } from '@/features/bar/components/BoissonModal';
 import { RestaurationGite } from '@/features/bar/components/RestaurationGite';
 import { VenteBar } from '@/features/bar/components/VenteBar';
+import { nouveauTicket } from '@/features/bar/services/tickets';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
 import {
@@ -17,6 +18,7 @@ import {
   ajusterStock,
   enregistrerBoisson,
   lireArchiveBar,
+  remplacerTickets,
   renommerAliment,
   supprimerAliment,
   supprimerBoisson,
@@ -53,7 +55,7 @@ const PREFIXE_ALIMENT = 'aliment:';
  */
 export default function BarRestauration() {
   const [onglet, setOnglet] = useState<Onglet>(ONGLET_BAR.RESTAURATION);
-  const [archive, setArchive] = useState<ArchiveBar>({ boissons: [], aliments: [] });
+  const [archive, setArchive] = useState<ArchiveBar>({ boissons: [], aliments: [], tickets: [] });
   const [sejours, setSejours] = useState<Sejour[]>([]);
   const [article, setArticle] = useState<{ cle: string; libelle: string } | null>(null);
   const [alimentOuvert, setAlimentOuvert] = useState(false);
@@ -68,6 +70,8 @@ export default function BarRestauration() {
     setArchive({
       boissons: [...bar.boissons].sort((a, b) => a.nom.localeCompare(b.nom)),
       aliments: [...bar.aliments].sort((a, b) => a.nom.localeCompare(b.nom)),
+      // Au moins un ticket est toujours ouvert : « Ticket 1 » quand il n'y en a plus.
+      tickets: bar.tickets.length > 0 ? bar.tickets : [nouveauTicket([])],
     });
     setSejours(tous);
   }, []);
@@ -78,10 +82,14 @@ export default function BarRestauration() {
     }, [charger]),
   );
 
-  const valider = async (cle: string, delta: number) => {
-    if (cle.startsWith(PREFIXE_BOISSON))
-      await ajusterStock('boisson', cle.slice(PREFIXE_BOISSON.length), delta);
-    else await ajusterStock('aliment', cle.slice(PREFIXE_ALIMENT.length), delta);
+  const valider = async (cle: string, delta: number, _litres?: number, prix?: number) => {
+    if (cle.startsWith(PREFIXE_BOISSON)) {
+      const id = cle.slice(PREFIXE_BOISSON.length);
+      const boisson = archive.boissons.find((b) => b.id === id);
+      // Le prix de vente se modifie ici aussi (le stock de la boisson est conservé).
+      if (boisson && prix !== undefined) await enregistrerBoisson({ ...boisson, prix });
+      if (delta !== 0) await ajusterStock('boisson', id, delta);
+    } else await ajusterStock('aliment', cle.slice(PREFIXE_ALIMENT.length), delta);
     setArticle(null);
     charger();
   };
@@ -145,7 +153,17 @@ export default function BarRestauration() {
 
         {onglet === ONGLET_BAR.RESTAURATION ? <RestaurationGite sejours={sejours} /> : null}
 
-        {onglet === ONGLET_BAR.BAR ? <VenteBar boissons={archive.boissons} onVendu={charger} /> : null}
+        {onglet === ONGLET_BAR.BAR ? (
+          <VenteBar
+            boissons={archive.boissons}
+            tickets={archive.tickets}
+            onTickets={async (tickets) => {
+              await remplacerTickets(tickets);
+              await charger();
+            }}
+            onVendu={charger}
+          />
+        ) : null}
 
         {onglet === ONGLET_BAR.STOCK ? (
           <>
@@ -186,6 +204,21 @@ export default function BarRestauration() {
         ) : null}
       </ScrollView>
 
+      {onglet === ONGLET_BAR.BAR && archive.boissons.length > 0 ? (
+        <Fab
+          options={[
+            {
+              label: T.bar.ticket.nouveau,
+              icon: 'receipt',
+              onPress: async () => {
+                await remplacerTickets([...archive.tickets, nouveauTicket(archive.tickets)]);
+                await charger();
+              },
+            },
+          ]}
+        />
+      ) : null}
+
       {onglet === ONGLET_BAR.STOCK ? (
         <Fab
           options={[
@@ -204,6 +237,11 @@ export default function BarRestauration() {
 
       <MouvementStockModal
         article={article}
+        prixVente={
+          article?.cle.startsWith(PREFIXE_BOISSON)
+            ? archive.boissons.find((b) => b.id === article.cle.slice(PREFIXE_BOISSON.length))?.prix
+            : undefined
+        }
         onValider={valider}
         onSupprimer={article?.cle.startsWith(PREFIXE_ALIMENT) ? retirerAliment : undefined}
         onFermer={() => setArticle(null)}

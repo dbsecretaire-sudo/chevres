@@ -1,5 +1,4 @@
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
-import { ajusterStock } from '@/features/bar/repository';
 import type { Boisson } from '@/features/bar/types';
 import { getSettings } from '@/features/settings/settings';
 import {
@@ -22,9 +21,13 @@ export const totalVenteBar = (lignes: LigneVenteBar[]): number =>
 
 /**
  * Enregistre une vente de boissons : une recette « Bar » du total (avec la TVA du bar si l'entreprise y est assujettie),
- * qui détaille les boissons vendues, et le stock de chaque boisson baisse de la quantité vendue. Renvoie le total.
+ * qui détaille les boissons vendues. Le stock, lui, a déjà baissé quand chaque boisson a été ajoutée au ticket. Renvoie le total.
  */
-export async function enregistrerVenteBar(lignes: LigneVenteBar[], date: string): Promise<number> {
+export async function enregistrerVenteBar(
+  lignes: LigneVenteBar[],
+  date: string,
+  nomTicket?: string,
+): Promise<number> {
   const vendues = lignes.filter((l) => l.quantite > 0);
   const total = totalVenteBar(vendues);
   const settings = await getSettings();
@@ -35,6 +38,7 @@ export async function enregistrerVenteBar(lignes: LigneVenteBar[], date: string)
     tiers: TEXTES.bar.bar.tiers,
     description: TEXTES.bar.bar.descriptionVente(
       vendues.map((l) => TEXTES.bar.bar.ligneVente(l.quantite, l.boisson.nom)),
+      nomTicket,
     ),
     montant: total,
     categorieRecette: CATEGORIE_RECETTE.BAR,
@@ -42,6 +46,5 @@ export async function enregistrerVenteBar(lignes: LigneVenteBar[], date: string)
       ? TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.BAR]
       : undefined,
   });
-  for (const { boisson, quantite } of vendues) await ajusterStock('boisson', boisson.id, -quantite);
   return total;
 }

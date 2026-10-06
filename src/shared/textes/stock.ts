@@ -50,13 +50,15 @@ export const TEXTES_STOCK = {
     `${date} · ${article} · ${delta} (${origine})`,
   modal: {
     titre: (article: string) => `Stock : ${article}`,
-    ajout: 'Ajout',
-    retrait: 'Retrait',
     quantite: 'Quantité',
     litres: 'Litres de lait utilisés (facultatif)',
     litresBrocciu: 'Litres de lait versés dans le lactosérum (facultatif)',
-    quantiteInvalide: 'Indiquez une quantité d’au moins 1.',
-    aide: 'Ajout : fabriqué ou acheté. Retrait : casse, perte, don.',
+    quantiteInvalide: 'Indiquez une quantité : +1 pour un ajout, −1 pour un retrait.',
+    prixVente: 'Prix de vente (€)',
+    prixInvalide: 'Le prix doit être supérieur à zéro.',
+    quantiteOuPrix:
+      'Indiquez une quantité (+1 pour un ajout, −1 pour un retrait), ou un nouveau prix de vente.',
+    aide: '+1 pour un ajout, −1 pour un retrait.',
     supprimer: 'Supprimer cet article',
   },
 } as const;
