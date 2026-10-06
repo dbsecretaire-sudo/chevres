@@ -33,6 +33,8 @@ export interface Transaction {
   source: ValeurDe<typeof SOURCE_TRANSACTION>;
   /** Activité (espèce, ou « commun ») de l'écriture. */
   activite: ActiviteComptable;
+  /** Catégorie d'une facture (recette ou dépense) : sert à classer l'écriture par rubrique (gîte, bar, activité). */
+  categorie?: string;
 }
 
 /** Titre d'une vente dans la liste : « Lait — 12 L », « Veaux — 2 têtes », « Charcuterie »… */
@@ -88,6 +90,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
           : f.description,
       source: SOURCE_TRANSACTION.FACTURE,
       activite,
+      categorie: f.categorieRecette ?? f.categorieDepense,
     })),
   );
 

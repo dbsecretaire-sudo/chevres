@@ -6,6 +6,7 @@ import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
+import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { ClientEcritures, ClientResume, estVente } from '@/features/clients/components/ClientResume';
 import { ClientFormulaire, ClientLecture } from '@/features/clients/components/ClientFiche';
 import { ClientReservations } from '@/features/gite/components/ClientReservations';
@@ -44,6 +45,9 @@ export default function FicheClient() {
                 {[client.telephone, client.email].filter(Boolean).join(' · ')}
               </Text>
             ) : null}
+          </View>
+          <View style={commonStyles.headerDroite}>
+            <BoutonsContact telephone={client.telephone} email={client.email} />
           </View>
           <Pressable style={commonStyles.boutonMenu} onPress={() => fiche.setMenuOuvert(true)}>
             <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />

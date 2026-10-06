@@ -1,7 +1,14 @@
 import type { FiltresTransactions } from '@/features/comptabilite/components/FiltreTransactionsModal';
 import type { Transaction } from '@/features/comptabilite/services/transactions';
 import type { ActiviteComptable } from '@/features/comptabilite/types';
-import { SENS_TRANSACTION } from '@/shared/constants/comptabilite';
+import {
+  CATEGORIE_RECETTE,
+  DEPENSES_DU_GITE,
+  RECETTES_DU_GITE,
+  RUBRIQUE_COMPTABILITE,
+  SENS_TRANSACTION,
+} from '@/shared/constants/comptabilite';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { formatDateFR } from '@/shared/utils/dates';
 
 export const FILTRES_VIDES: FiltresTransactions = {
@@ -87,6 +94,28 @@ export function calculerSoldes(transactions: Transaction[]): SoldesTransactions 
 /** Valeur du filtre « activité » qui garde toutes les écritures. */
 export const TOUTES_ACTIVITES = 'toutes';
 export type FiltreActivite = ActiviteComptable | typeof TOUTES_ACTIVITES;
+
+export type RubriqueComptabilite = ValeurDe<typeof RUBRIQUE_COMPTABILITE>;
+
+/**
+ * La rubrique d'une écriture : « gîte » pour l'hébergement, les repas et les remboursements aux clients, « bar » pour les
+ * recettes du bar, « activité » pour tout le reste.
+ */
+export function rubriqueDe(t: Transaction): RubriqueComptabilite {
+  if (t.categorie === CATEGORIE_RECETTE.BAR) return RUBRIQUE_COMPTABILITE.BAR;
+  if (t.categorie && (RECETTES_DU_GITE.includes(t.categorie) || DEPENSES_DU_GITE.includes(t.categorie)))
+    return RUBRIQUE_COMPTABILITE.GITE;
+  return RUBRIQUE_COMPTABILITE.ACTIVITE;
+}
+
+/** Garde les écritures d'une rubrique (toutes si la rubrique est « tout »). */
+export const filtrerParRubrique = (
+  transactions: Transaction[],
+  rubrique: RubriqueComptabilite,
+): Transaction[] =>
+  rubrique === RUBRIQUE_COMPTABILITE.TOUT
+    ? transactions
+    : transactions.filter((t) => rubriqueDe(t) === rubrique);
 
 /** Garde les écritures d'une activité (toutes si le filtre est « toutes »). */
 export const filtrerParActivite = (transactions: Transaction[], filtre: FiltreActivite): Transaction[] =>

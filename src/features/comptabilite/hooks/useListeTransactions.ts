@@ -7,10 +7,13 @@ import {
   FILTRES_VIDES,
   calculerSoldes,
   filtrerParActivite,
+  filtrerParRubrique,
+  type RubriqueComptabilite,
   filtrerTransactions,
   filtresSontActifs,
 } from '@/features/comptabilite/services/filtresTransactions';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
+import { RUBRIQUE_COMPTABILITE } from '@/shared/constants/comptabilite';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 
 /** Transactions de l'année active, par activité, filtrées et recherchées, avec leurs soldes. */
@@ -22,6 +25,7 @@ export function useListeTransactions() {
   const [filtreOuvert, setFiltreOuvert] = useState(false);
   const [recherche, setRecherche] = useState('');
   const [filtreActivite, setFiltreActivite] = useFiltreActivite();
+  const [rubrique, setRubrique] = useState<RubriqueComptabilite>(RUBRIQUE_COMPTABILITE.TOUT);
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste] = await Promise.all([
@@ -39,13 +43,20 @@ export function useListeTransactions() {
   );
 
   const filtrees = useMemo(
-    () => filtrerTransactions(filtrerParActivite(transactions, filtreActivite), filtres, recherche),
-    [transactions, filtreActivite, filtres, recherche],
+    () =>
+      filtrerTransactions(
+        filtrerParRubrique(filtrerParActivite(transactions, filtreActivite), rubrique),
+        filtres,
+        recherche,
+      ),
+    [transactions, filtreActivite, rubrique, filtres, recherche],
   );
 
   return {
     filtreActivite,
     setFiltreActivite,
+    rubrique,
+    setRubrique,
     anneeActive: settings.anneeActive,
     setAnneeActive,
     annees,

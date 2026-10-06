@@ -16,6 +16,7 @@ import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
+import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { AjustementSejourModal } from '@/features/gite/components/AjustementSejourModal';
 import { LignesPaiement } from '@/features/gite/components/LignesPaiement';
 import { ValidationPaiementModal } from '@/features/gite/components/ValidationPaiementModal';
@@ -438,18 +439,25 @@ export default function EcranSejour() {
         </View>
         {nuits > 0 ? <Text style={commonStyles.note}>{T.nuits(nuits)}</Text> : null}
 
-        <View style={verrou} pointerEvents={evenements}>
-          <SelectFieldEditable<string>
-            label={T.client}
-            required
-            searchable
-            placeholder={T.aucuneFiche}
-            value={clientId}
-            options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
-            onChange={setClientId}
-            onEdit={() => router.push(ROUTES.CLIENTS)}
-          />
-        </View>
+        <SelectFieldEditable<string>
+          label={T.client}
+          verrouille={payeEnregistre}
+          actions={
+            <BoutonsContact
+              telephone={client?.telephone}
+              email={client?.email}
+              couleur={colors.ajout}
+              fond={colors.ajoutBadgeBg}
+            />
+          }
+          required
+          searchable
+          placeholder={T.aucuneFiche}
+          value={clientId}
+          options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+          onChange={setClientId}
+          onEdit={() => router.push(ROUTES.CLIENTS)}
+        />
         {coordonnees ? <Text style={commonStyles.note}>{coordonnees}</Text> : null}
 
         <View style={[commonStyles.row, verrou]} pointerEvents={evenements}>

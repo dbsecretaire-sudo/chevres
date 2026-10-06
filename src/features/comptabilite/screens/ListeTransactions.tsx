@@ -7,6 +7,7 @@ import { YearPicker } from '@/shared/components/YearPicker';
 import { Fab } from '@/shared/components/Fab';
 import { FiltreTransactionsModal } from '@/features/comptabilite/components/FiltreTransactionsModal';
 import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
+import { PucesRubrique } from '@/features/comptabilite/components/PucesRubrique';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { BarreRecherche, CarteSolde } from '@/features/comptabilite/components/SoldeTransactions';
 import { useListeTransactions } from '@/features/comptabilite/hooks/useListeTransactions';
@@ -35,6 +36,7 @@ export default function ComptabiliteIndex() {
         ListHeaderComponent={
           <View style={[commonStyles.topBox, styles.entete]}>
             <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
+            <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
             <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
             <CarteSolde soldes={e.soldes} anneeActive={e.anneeActive} filtresActifs={e.filtresActifs} />
             <BarreRecherche

@@ -68,6 +68,23 @@ export const CATEGORIE_RECETTE = {
   DEPOT: 'depot',
 } as const;
 
+/** Les rubriques de la liste de comptabilité d'un gîte : tout, le gîte (hébergement, repas), le bar, ou le reste de l'activité. */
+export const RUBRIQUE_COMPTABILITE = {
+  TOUT: 'tout',
+  GITE: 'gite',
+  BAR: 'bar',
+  ACTIVITE: 'activite',
+} as const;
+
+/** Les catégories de recette qui relèvent du gîte (le reste hors bar est « Activité »). */
+export const RECETTES_DU_GITE: readonly string[] = [
+  CATEGORIE_RECETTE.HEBERGEMENT,
+  CATEGORIE_RECETTE.RESTAURATION,
+];
+
+/** Les catégories de dépense qui relèvent du gîte : les remboursements faits aux clients. */
+export const DEPENSES_DU_GITE: readonly string[] = [CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT];
+
 /** Catégories de vente de production (saisies comme des ventes, pas comme des factures). */
 export const CATEGORIE_VENTE = {
   LAIT: 'lait',

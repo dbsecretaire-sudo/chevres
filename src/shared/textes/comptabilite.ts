@@ -8,6 +8,7 @@ export const TEXTES_COMPTABILITE = {
     activite: 'Activité',
     activiteDeuxPoints: 'Activité : ',
   },
+  rubriques: { tout: 'Tout', gite: 'Gîte', bar: 'Bar', activite: 'Activité' },
   parActivite: {
     parActivite: 'Comptabilité par activité',
     toutes: 'Tout',

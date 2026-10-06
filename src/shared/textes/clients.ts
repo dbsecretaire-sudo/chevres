@@ -5,6 +5,7 @@ const Cap = capitaliser;
 
 /** Textes de l'interface — « clients ». À modifier ici uniquement. */
 export const TEXTES_CLIENTS = {
+  contact: { appeler: 'Appeler le client', ecrire: 'Écrire un e-mail au client' },
   ficheClient: {
     clientIntrouvable: 'Client introuvable.',
     telephoneDeuxPoints: 'Téléphone : ',
