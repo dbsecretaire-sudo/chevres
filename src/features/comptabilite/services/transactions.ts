@@ -13,6 +13,7 @@ import {
   CATEGORIE_VENTE,
   TYPE_FACTURE,
   CATEGORIE_RECETTE,
+  RUBRIQUE_COMPTABLE_DE_MARCHANDISE,
   TYPE_AIDE,
 } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -35,6 +36,8 @@ export interface Transaction {
   activite: ActiviteComptable;
   /** Catégorie d'une facture (recette ou dépense) : sert à classer l'écriture par rubrique (gîte, bar, activité). */
   categorie?: string;
+  /** Pour un achat de marchandises détaillé : les rubriques (gîte, bar, activité) que ses lignes servent. */
+  rubriques?: string[];
 }
 
 /** Titre d'une vente dans la liste : « Lait — 12 L », « Veaux — 2 têtes », « Charcuterie »… */
@@ -91,6 +94,9 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
       source: SOURCE_TRANSACTION.FACTURE,
       activite,
       categorie: f.categorieRecette ?? f.categorieDepense,
+      rubriques: f.lignesMarchandises?.length
+        ? [...new Set(f.lignesMarchandises.map((l) => RUBRIQUE_COMPTABLE_DE_MARCHANDISE[l.rubrique]))]
+        : undefined,
     })),
   );
 

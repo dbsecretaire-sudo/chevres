@@ -14,8 +14,9 @@ import { TEXTES } from '@/shared/textes';
 
 export default function Reglages() {
   const router = useRouter();
-  // La structure type des dossiers ne sert qu'aux entreprises qui suivent des dossiers clients (pas à une association seule).
-  const avecDossiersClients = activitesEtablissement().some((a) => a !== ACTIVITE_SOCIETE.ASSOCIATION);
+  // La structure type des dossiers ne sert qu'aux entreprises qui suivent des dossiers clients (pas à une association seule, ni à une exploitation agricole).
+  const avecDossiersClients =
+    modeEntreprise() && activitesEtablissement().some((a) => a !== ACTIVITE_SOCIETE.ASSOCIATION);
   const donnees = useExportEtSauvegarde();
   const drive = useGoogleDrive();
 

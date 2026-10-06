@@ -1,12 +1,13 @@
 import Papa from 'papaparse';
 import type { Categorie, RecordMap } from '@/shared/storage/types';
-import type { LigneAlimentation, LigneCarburant } from '@/features/comptabilite/types';
+import type { LigneAlimentation, LigneCarburant, LigneMarchandise } from '@/features/comptabilite/types';
 
 import {
   CHAMPS_BOOLEEN,
   CHAMPS_BOOLEEN_TROIS_ETATS,
   CHAMPS_LIGNES_ALIMENTATION,
   CHAMPS_LIGNES_CARBURANT,
+  CHAMPS_LIGNES_MARCHANDISES,
   CHAMPS_NOMBRE,
   COLONNES_CSV,
   CSV_NON,
@@ -15,6 +16,9 @@ import {
   SEPARATEUR_CHAMPS,
   SEPARATEUR_LIGNES,
 } from '@/shared/constants/csv';
+
+/** Un texte libre dans une ligne : les séparateurs du fichier y sont remplacés par une espace (ils casseraient la ligne). */
+const proteger = (texte: string): string => texte.replace(/[|:]/g, ' ');
 
 function serializeValue(key: string, value: unknown): string {
   if (value === undefined || value === null) return '';
@@ -27,10 +31,19 @@ function serializeValue(key: string, value: unknown): string {
           l.type,
           l.montant,
           l.quantiteKg ?? '',
-          l.typeLibre ?? '',
+          proteger(l.typeLibre ?? ''),
           l.uniteConditionnement ?? '',
           l.nombreUnitesConditionnement ?? '',
         ].join(SEPARATEUR_CHAMPS),
+      )
+      .join(SEPARATEUR_LIGNES);
+  }
+  if (CHAMPS_LIGNES_MARCHANDISES.has(key)) {
+    return (value as LigneMarchandise[])
+      .map((l) =>
+        [proteger(l.marchandise), l.rubrique, l.quantite ?? '', l.unite ?? '', l.montant].join(
+          SEPARATEUR_CHAMPS,
+        ),
       )
       .join(SEPARATEUR_LIGNES);
   }
@@ -67,6 +80,25 @@ function deserializeValue(key: string, raw: string): unknown {
         } as LigneAlimentation;
       })
       .filter((l): l is LigneAlimentation => !!l);
+    return lignes.length > 0 ? lignes : undefined;
+  }
+  if (CHAMPS_LIGNES_MARCHANDISES.has(key)) {
+    const lignes = raw
+      .split(SEPARATEUR_LIGNES)
+      .map((part) => {
+        const [marchandise, rubrique, quantite, unite, montant] = part.split(SEPARATEUR_CHAMPS);
+        const n = Number(montant);
+        if (!rubrique || !Number.isFinite(n)) return undefined;
+        const q = Number(quantite);
+        return {
+          marchandise: marchandise ?? '',
+          rubrique,
+          quantite: quantite && Number.isFinite(q) ? q : undefined,
+          unite: unite || undefined,
+          montant: n,
+        } as LigneMarchandise;
+      })
+      .filter((l): l is LigneMarchandise => !!l);
     return lignes.length > 0 ? lignes : undefined;
   }
   if (CHAMPS_LIGNES_CARBURANT.has(key)) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
+import { ChampRubrique } from '@/features/bar/components/ChampRubrique';
 import type { Boisson } from '@/features/bar/types';
 import { formatMontant } from '@/shared/utils/dates';
 import { parseMontant } from '@/shared/utils/nombres';
@@ -12,7 +13,7 @@ interface Props {
   visible: boolean;
   /** La boisson qu'on modifie ; absente pour en créer une. */
   boisson?: Boisson;
-  onValider: (nom: string, prix: number) => void;
+  onValider: (nom: string, prix: number, rubrique?: Boisson['rubrique']) => void;
   onSupprimer: () => void;
   onFermer: () => void;
 }
@@ -22,6 +23,7 @@ export function BoissonModal({ visible, boisson, onValider, onSupprimer, onFerme
   const T = TEXTES.bar.bar;
   const [nom, setNom] = useState('');
   const [prix, setPrix] = useState('');
+  const [rubrique, setRubrique] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export function BoissonModal({ visible, boisson, onValider, onSupprimer, onFerme
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNom(boisson?.nom ?? '');
       setPrix(boisson ? formatMontant(boisson.prix) : '');
+      setRubrique(boisson?.rubrique ?? '');
       setErreur(null);
     }
   }, [visible, boisson]);
@@ -38,7 +41,7 @@ export function BoissonModal({ visible, boisson, onValider, onSupprimer, onFerme
     if (!nom.trim()) return setErreur(T.nomRequis);
     const montant = parseMontant(prix);
     if (!(montant > 0)) return setErreur(T.prixInvalide);
-    onValider(nom.trim(), montant);
+    onValider(nom.trim(), montant, (rubrique || undefined) as Boisson['rubrique']);
   };
 
   return (
@@ -61,6 +64,7 @@ export function BoissonModal({ visible, boisson, onValider, onSupprimer, onFerme
             keyboardType="decimal-pad"
             placeholder="0,00"
           />
+          <ChampRubrique value={rubrique} onChange={setRubrique} />
           {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
           <View style={commonStyles.row}>
             <Button

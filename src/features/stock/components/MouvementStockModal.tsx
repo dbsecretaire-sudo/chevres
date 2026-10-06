@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
-import { formatMontant } from '@/shared/utils/dates';
-import { parseDecimal, parseMontant } from '@/shared/utils/nombres';
+import { parseDecimal } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -14,10 +13,10 @@ interface Props {
   avecLitres?: boolean;
   /** Le nom du champ des litres quand il diffère (brocciu : le lait versé dans le lactosérum). */
   libelleLitres?: string;
-  /** Le prix de vente actuel de l'article, quand il en a un (une boisson du bar) : un champ permet de le modifier ici. */
-  prixVente?: number;
-  /** Reçoit la variation (positive pour un ajout, négative pour un retrait, nulle si seul le prix change), les litres de lait éventuels et le prix de vente saisi. */
-  onValider: (cle: string, delta: number, litres?: number, prix?: number) => void;
+  /** L'unité de la quantité (kg pour un aliment), rappelée dans le libellé du champ. */
+  unite?: string;
+  /** Reçoit la variation (positive pour un ajout, négative pour un retrait) et les litres de lait éventuels. */
+  onValider: (cle: string, delta: number, litres?: number) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (un article ajouté par l'utilisateur). */
   onSupprimer?: () => void;
   onFermer: () => void;
@@ -33,14 +32,13 @@ export function MouvementStockModal({
   article,
   avecLitres,
   libelleLitres,
-  prixVente,
+  unite,
   onValider,
   onSupprimer,
   onFermer,
 }: Props) {
   const [quantite, setQuantite] = useState('');
   const [litres, setLitres] = useState('');
-  const [prix, setPrix] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,11 +47,8 @@ export function MouvementStockModal({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuantite('');
       setLitres('');
-      setPrix(prixVente === undefined ? '' : formatMontant(prixVente));
       setErreur(null);
     }
-    // Seule l'ouverture remet le formulaire à zéro, pas un changement du prix en arrière-plan.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article]);
 
   /** La quantité saisie avec son signe : positive pour un ajout, négative pour un retrait (le « − » typographique est accepté). */
@@ -61,18 +56,12 @@ export function MouvementStockModal({
 
   const valider = () => {
     if (!article) return;
-    const prixSaisi = prixVente === undefined ? undefined : parseMontant(prix);
-    if (prixSaisi !== undefined && !(prixSaisi > 0)) return setErreur(T.prixInvalide);
-    const prixChange = prixSaisi !== undefined && prixSaisi !== prixVente;
-    // Sans quantité, il faut au moins un nouveau prix à enregistrer.
-    if (nombre === 0 && !prixChange)
-      return setErreur(prixSaisi === undefined ? T.quantiteInvalide : T.quantiteOuPrix);
+    if (nombre === 0) return setErreur(T.quantiteInvalide);
     const litresUtilises = litres.trim() ? parseDecimal(litres) : undefined;
     onValider(
       article.cle,
       nombre,
       nombre > 0 && litresUtilises && litresUtilises > 0 ? litresUtilises : undefined,
-      prixChange ? prixSaisi : undefined,
     );
   };
 
@@ -82,8 +71,8 @@ export function MouvementStockModal({
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{T.titre(article?.libelle ?? '')}</Text>
           <FormField
-            label={T.quantite}
-            required={prixVente === undefined}
+            label={unite ? `${T.quantite} (${unite})` : T.quantite}
+            required
             value={quantite}
             onChangeText={(texte) => {
               setQuantite(texte);
@@ -102,20 +91,6 @@ export function MouvementStockModal({
               placeholder="0"
             />
           ) : null}
-          {prixVente === undefined ? null : (
-            <FormField
-              label={T.prixVente}
-              value={prix}
-              onChangeText={(texte) => {
-                setPrix(texte);
-                setErreur(null);
-              }}
-              // Une fois saisi, le prix s'affiche en monnaie (2,00 €).
-              onBlur={() => parseMontant(prix) > 0 && setPrix(formatMontant(parseMontant(prix)))}
-              keyboardType="decimal-pad"
-              placeholder="0"
-            />
-          )}
           {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
           <View style={commonStyles.row}>
             <Button

@@ -5,6 +5,7 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
+import { LignesMarchandisesEditor } from '@/features/comptabilite/components/LignesMarchandisesEditor';
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import {
   ChampCategorieCompte,
@@ -94,6 +95,18 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
         </>
       )}
 
+      {e.estMarchandisesGite && (
+        <>
+          <LignesMarchandisesEditor lignes={e.lignesMarchandises} onChange={e.setLignesMarchandises} />
+          <Card style={commonStyles.gap10}>
+            <Text style={styles.total}>
+              {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+              {formatTotalEuros(e.totalMarchandises)}
+            </Text>
+          </Card>
+        </>
+      )}
+
       {estCarburant && (
         <>
           <LignesCarburantEditor lignes={e.lignesCarburant} onChange={e.setLignesCarburant} />
@@ -106,7 +119,9 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
         </>
       )}
 
-      {!estAlimentation && !estCarburant && <ChampMontantTtc value={e.montant} onChange={e.setMontant} />}
+      {!estAlimentation && !estCarburant && !e.estMarchandisesGite && (
+        <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+      )}
     </>
   );
 }

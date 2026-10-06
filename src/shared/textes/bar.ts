@@ -1,13 +1,13 @@
 /** Textes de l'interface — restauration, bar et stock du gîte. À modifier ici uniquement. */
 export const TEXTES_BAR = {
   titre: 'Restauration, bar et stock',
-  onglets: { restauration: 'Restauration', bar: 'Bar', stock: 'Stock' },
+  onglets: { restauration: 'Restauration', bar: 'Bar' },
   bar: {
     vendre: 'Vendre',
     total: (montant: string) => `Total : ${montant}`,
     enregistrerVente: 'Enregistrer la vente',
     venteEnregistree: (total: string) => `Vente enregistrée : ${total} (en comptabilité, recette « Bar »).`,
-    aucuneBoisson: 'Aucune boisson : ajoutez-les dans l’onglet Stock (bouton +).',
+    aucuneBoisson: 'Aucune boisson : ajoutez-les dans le stock (onglet Stock en bas de l’écran, bouton +).',
     nouvelleBoisson: 'Nouvelle boisson',
     modifierBoisson: 'Modifier la boisson',
     supprimerBoisson: 'Supprimer cette boisson',
@@ -37,6 +37,25 @@ export const TEXTES_BAR = {
   stock: {
     boissons: 'Boissons',
     nourriture: 'Nourriture',
+    onglets: {
+      consommables: 'Consommables',
+      materiel: 'Matériel',
+      conditionnement: 'Conditionnement',
+      entretien: 'Entretien',
+    },
+    aucunConsommable: 'Aucun consommable : ajoutez une boisson ou un aliment avec le bouton +.',
+    aucunArticle: 'Rien dans cette liste : ajoutez-en avec le bouton +.',
+    ajouterArticle: {
+      materiel: 'Ajouter du matériel',
+      conditionnement: 'Ajouter un conditionnement',
+      entretien: 'Ajouter un produit d’entretien',
+    },
+    exempleArticle: {
+      materiel: 'ex : Casserole, tireuse',
+      conditionnement: 'ex : Sacs, barquettes',
+      entretien: 'ex : Produit vaisselle, éponges',
+    },
+    renommerArticle: 'Modifier le nom',
     aucuneBoisson: 'Aucune boisson : ajoutez-en avec le bouton +.',
     ajouterBoisson: 'Ajouter une boisson',
     modifierBoisson: 'Modifier la boisson',
@@ -45,6 +64,9 @@ export const TEXTES_BAR = {
     renommerAliment: 'Modifier le nom de l’aliment',
     nomAliment: 'ex : Farine, huile, légumes',
     negatif: 'Stock négatif : notez l’achat manquant.',
+    tout: 'Tout',
+    activite: 'Activité concernée',
+    toutesActivites: 'Toutes les activités',
   },
   restauration: {
     repasDuJour: (date: string) => `Repas du ${date}`,

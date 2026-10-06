@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import {
   enregistrerFacture,
   getFacture,
@@ -8,6 +9,11 @@ import {
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
+import {
+  lignesMarchandisesFinales,
+  versLignesMarchandisesForm,
+  type LigneMarchandiseForm,
+} from '@/features/comptabilite/forms/lignesMarchandises';
 import {
   lignesAlimentationFinales,
   versLignesAlimentationForm,
@@ -25,7 +31,12 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
-import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import {
+  CATEGORIE_DEPENSE,
+  CATEGORIE_RECETTE,
+  TYPE_ALIMENT,
+  TYPE_FACTURE,
+} from '@/shared/constants/comptabilite';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import { totalMontants } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
@@ -41,6 +52,7 @@ export function useFicheFacture(id: string | undefined) {
   const [form, setForm] = useState<Facture | null>(null);
   const [lignes, setLignes] = useState<LigneAlimentForm[]>([]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([]);
+  const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([]);
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
   const [montantTexte, setMontantTexte] = useState('');
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
@@ -53,10 +65,15 @@ export function useFicheFacture(id: string | undefined) {
 
   const estAlimentation = facture?.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   const estCarburant = facture?.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
+  /** Un achat de marchandises d'un gîte détaillé par marchandise (les anciens achats gardent un seul montant). */
+  const estMarchandises =
+    facture?.categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
+    (facture.lignesMarchandises?.length ?? 0) > 0;
   /** Activité affichée dans le formulaire (celle de la facture, ou celle déduite pour les anciennes factures). */
   const activiteForm: ActiviteComptable = form ? activiteFacture(form) : especeCourante();
   const totalAlimentation = totalMontants(lignes);
   const totalCarburant = totalMontants(lignesCarburant);
+  const totalMarchandises = totalMontants(lignesMarchandises);
 
   const charger = useCallback(async () => {
     if (!id) return;
@@ -65,6 +82,7 @@ export function useFicheFacture(id: string | undefined) {
     setForm(f ?? null);
     setLignes(f ? versLignesAlimentationForm(f) : []);
     setLignesCarburant(f ? versLignesCarburantForm(f) : []);
+    setLignesMarchandises(f ? versLignesMarchandisesForm(f) : []);
     setMontantTexte(f ? montantEnTexte(f) : '');
     setComptes(await listComptesPcg());
   }, [id]);
@@ -82,7 +100,9 @@ export function useFicheFacture(id: string | undefined) {
     // Les lignes d'alimentation passent au premier aliment de la nouvelle espèce si le leur n'en fait pas partie.
     const types = typesAlimentEspece(activite === ACTIVITE_COMMUNE ? especeCourante() : activite);
     setLignes((prev) =>
-      prev.map((l) => (l.activite || types.includes(l.type) ? l : { ...l, type: types[0] })),
+      prev.map((l) =>
+        l.activite || l.type === TYPE_ALIMENT.AUTRE || types.includes(l.type) ? l : { ...l, type: types[0] },
+      ),
     );
   };
 
@@ -143,13 +163,30 @@ export function useFicheFacture(id: string | undefined) {
         return;
       }
       aEnregistrer = { ...form, montant: totalCarburant, lignesCarburant: lignesRetenues };
+    } else if (estMarchandises) {
+      const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises);
+      if (lignesRetenues.length === 0) {
+        setErreur({
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        });
+        return;
+      }
+      aEnregistrer = { ...form, montant: totalMarchandises, lignesMarchandises: lignesRetenues };
     } else if (!form.montant || form.montant <= 0) {
       setErreur({ titre: TEXTES.commun.general.montantInvalide });
       return;
     }
 
     try {
+      const lignesAchetees = aEnregistrer.lignesMarchandises;
+      if (lignesAchetees?.length) aEnregistrer = { ...aEnregistrer, stockApplique: true };
       await enregistrerFacture(aEnregistrer);
+      // Seul l'écart de quantités achetées s'applique au stock (tout, pour une facture qui n'y avait pas encore été ajoutée).
+      await synchroniserStockAchat(
+        facture?.stockApplique ? facture.lignesMarchandises : undefined,
+        lignesAchetees,
+      );
       setFacture(aEnregistrer);
       setForm(aEnregistrer);
       setEditing(false);
@@ -167,6 +204,7 @@ export function useFicheFacture(id: string | undefined) {
     setForm(facture);
     setLignes(versLignesAlimentationForm(facture));
     setLignesCarburant(versLignesCarburantForm(facture));
+    setLignesMarchandises(versLignesMarchandisesForm(facture));
     setMontantTexte(montantEnTexte(facture));
     setEditing(false);
   };
@@ -175,6 +213,8 @@ export function useFicheFacture(id: string | undefined) {
     if (!facture) return;
     try {
       await supprimerFacture(facture.id);
+      // Supprimer l'achat retire du stock ce qu'il y avait ajouté.
+      if (facture.stockApplique) await synchroniserStockAchat(facture.lignesMarchandises, undefined);
       router.back();
     } catch (error) {
       console.error(error);
@@ -208,6 +248,10 @@ export function useFicheFacture(id: string | undefined) {
     setLignes,
     lignesCarburant,
     setLignesCarburant,
+    lignesMarchandises,
+    setLignesMarchandises,
+    estMarchandises,
+    totalMarchandises,
     fournisseurs,
     clients,
     montantTexte,

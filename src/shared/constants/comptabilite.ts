@@ -68,12 +68,42 @@ export const CATEGORIE_RECETTE = {
   DEPOT: 'depot',
 } as const;
 
+/** À quelle activité du gîte un achat de marchandises sert : le bar, le restaurant ou une activité annexe. */
+export const RUBRIQUE_MARCHANDISE = {
+  BAR: 'bar',
+  RESTAURANT: 'restaurant',
+  ANNEXE: 'annexe',
+} as const;
+
+/** Les unités d'une quantité de marchandise achetée. */
+export const UNITE_MARCHANDISE = {
+  UNITE: 'unite',
+  KG: 'kg',
+  BAC: 'bac',
+  PIECE: 'piece',
+  LITRE: 'litre',
+} as const;
+
+/** Les unités proposées pour une quantité achetée (« Unité » et « Bac » ne le sont plus, mais d'anciennes saisies les gardent). */
+export const UNITES_MARCHANDISE_PROPOSEES = [
+  UNITE_MARCHANDISE.KG,
+  UNITE_MARCHANDISE.PIECE,
+  UNITE_MARCHANDISE.LITRE,
+] as const;
+
 /** Les rubriques de la liste de comptabilité d'un gîte : tout, le gîte (hébergement, repas), le bar, ou le reste de l'activité. */
 export const RUBRIQUE_COMPTABILITE = {
   TOUT: 'tout',
   GITE: 'gite',
   BAR: 'bar',
   ACTIVITE: 'activite',
+} as const;
+
+/** La rubrique de la liste de comptabilité d'une marchandise achetée, selon l'activité qu'elle sert. */
+export const RUBRIQUE_COMPTABLE_DE_MARCHANDISE = {
+  [RUBRIQUE_MARCHANDISE.BAR]: RUBRIQUE_COMPTABILITE.BAR,
+  [RUBRIQUE_MARCHANDISE.RESTAURANT]: RUBRIQUE_COMPTABILITE.GITE,
+  [RUBRIQUE_MARCHANDISE.ANNEXE]: RUBRIQUE_COMPTABILITE.ACTIVITE,
 } as const;
 
 /** Les catégories de recette qui relèvent du gîte (le reste hors bar est « Activité »). */
@@ -193,21 +223,19 @@ export const TYPES_ALIMENT = [
   TYPE_ALIMENT.AUTRE,
 ] as const;
 
-/** Aliments proposés selon l'espèce (« Autre » toujours en dernier). */
+/** Aliments proposés selon l'espèce (ceux qu'on ajoute au stock s'y joignent). */
 export const TYPES_ALIMENT_PAR_ESPECE = {
   [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: [
     TYPE_ALIMENT.MAIS,
     TYPE_ALIMENT.LUZERNE,
     TYPE_ALIMENT.FOIN,
     TYPE_ALIMENT.PAILLE,
-    TYPE_ALIMENT.AUTRE,
   ],
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: [
     TYPE_ALIMENT.MAIS,
     TYPE_ALIMENT.LUZERNE,
     TYPE_ALIMENT.FOIN,
     TYPE_ALIMENT.PAILLE,
-    TYPE_ALIMENT.AUTRE,
   ],
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: [
     TYPE_ALIMENT.FOURRAGE,
@@ -215,14 +243,9 @@ export const TYPES_ALIMENT_PAR_ESPECE = {
     TYPE_ALIMENT.FOIN,
     TYPE_ALIMENT.CEREALES,
     TYPE_ALIMENT.SEL,
-    TYPE_ALIMENT.AUTRE,
   ],
-  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: [TYPE_ALIMENT.PORC_CROISSANCE, TYPE_ALIMENT.AUTRE],
-  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: [
-    TYPE_ALIMENT.MAIS_CONCASSE,
-    TYPE_ALIMENT.MAIS_PONTE,
-    TYPE_ALIMENT.AUTRE,
-  ],
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: [TYPE_ALIMENT.PORC_CROISSANCE],
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: [TYPE_ALIMENT.MAIS_CONCASSE, TYPE_ALIMENT.MAIS_PONTE],
 } as const;
 
 /** « Autre » est exclu des totaux/moyennes : la précision libre peut recouvrir un achat pour un tout autre élevage que les chèvres. */
@@ -365,24 +388,21 @@ export const CATEGORIES_DEPENSE_FINANCE = [
   CATEGORIE_DEPENSE.RETRAIT,
 ] as const;
 
-/** Dépenses d'une entreprise (hors élevage), dans l'ordre d'affichage. */
+/**
+ * Dépenses d'une entreprise (hors élevage), dans l'ordre d'affichage : les dépenses régulières seulement. Les achats
+ * ponctuels (matériel, réparation, formation…) se rangent sous « Autre » ; le remboursement d'un client se crée tout seul.
+ */
 export const CATEGORIES_DEPENSE_ENTREPRISE = [
   CATEGORIE_DEPENSE.FOURNITURES,
   CATEGORIE_DEPENSE.ACHATS_MARCHANDISES,
-  CATEGORIE_DEPENSE.SOUS_TRAITANCE,
   CATEGORIE_DEPENSE.LOYER_CHARGES,
   CATEGORIE_DEPENSE.ASSURANCES,
   CATEGORIE_DEPENSE.TELECOM,
   CATEGORIE_DEPENSE.DEPLACEMENTS,
   CATEGORIE_DEPENSE.FRAIS_BANCAIRES,
   CATEGORIE_DEPENSE.COTISATIONS_SOCIALES,
-  CATEGORIE_DEPENSE.FORMATION,
   CATEGORIE_DEPENSE.HONORAIRES,
-  CATEGORIE_DEPENSE.PUBLICITE,
-  CATEGORIE_DEPENSE.MATERIEL,
-  CATEGORIE_DEPENSE.REPARATION,
   CATEGORIE_DEPENSE.IMPOTS,
-  CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT,
   CATEGORIE_DEPENSE.AUTRE,
 ] as const;
 

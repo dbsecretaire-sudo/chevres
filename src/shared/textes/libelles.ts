@@ -11,6 +11,8 @@ import {
   TYPE_FROMAGE,
   UNITE_CONDITIONNEMENT,
   UNITE_VENTE,
+  RUBRIQUE_MARCHANDISE,
+  UNITE_MARCHANDISE,
 } from '@/shared/constants/comptabilite';
 import {
   ACTIVITE_COMMUNE,
@@ -164,6 +166,20 @@ export const LABEL_TYPE_ALIMENT: Record<ValeurDe<typeof TYPE_ALIMENT>, string> =
   [TYPE_ALIMENT.MAIS_CONCASSE]: 'Maïs concassé',
   [TYPE_ALIMENT.MAIS_PONTE]: 'Maïs ponte',
   [TYPE_ALIMENT.AUTRE]: 'Autre',
+};
+
+export const LABEL_RUBRIQUE_MARCHANDISE: Record<ValeurDe<typeof RUBRIQUE_MARCHANDISE>, string> = {
+  [RUBRIQUE_MARCHANDISE.BAR]: 'Bar',
+  [RUBRIQUE_MARCHANDISE.RESTAURANT]: 'Restaurant',
+  [RUBRIQUE_MARCHANDISE.ANNEXE]: 'Activité annexe',
+};
+
+export const LABEL_UNITE_MARCHANDISE: Record<ValeurDe<typeof UNITE_MARCHANDISE>, string> = {
+  [UNITE_MARCHANDISE.UNITE]: 'Unité',
+  [UNITE_MARCHANDISE.KG]: 'kg',
+  [UNITE_MARCHANDISE.BAC]: 'Bac',
+  [UNITE_MARCHANDISE.PIECE]: 'Pièce',
+  [UNITE_MARCHANDISE.LITRE]: 'Litre',
 };
 
 export const LABEL_UNITE_CONDITIONNEMENT: Record<ValeurDe<typeof UNITE_CONDITIONNEMENT>, string> = {

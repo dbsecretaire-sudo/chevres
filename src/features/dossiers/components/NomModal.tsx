@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
@@ -14,10 +14,20 @@ interface Props {
   placeholder?: string;
   onValider: (nom: string) => void;
   onAnnuler: () => void;
+  /** Des champs de plus sous le nom (ex : le choix de l'activité). */
+  enfants?: ReactNode;
 }
 
 /** Petite fenêtre qui demande un nom (nouveau dossier, renommer un dossier). */
-export function NomModal({ visible, titre, valeurInitiale = '', placeholder, onValider, onAnnuler }: Props) {
+export function NomModal({
+  visible,
+  titre,
+  valeurInitiale = '',
+  placeholder,
+  onValider,
+  onAnnuler,
+  enfants,
+}: Props) {
   const [nom, setNom] = useState(valeurInitiale);
 
   useEffect(() => {
@@ -34,6 +44,7 @@ export function NomModal({ visible, titre, valeurInitiale = '', placeholder, onV
           <View style={styles.champNom}>
             <FormField value={nom} onChangeText={setNom} placeholder={placeholder} />
           </View>
+          {enfants}
           <View style={commonStyles.row}>
             <Button
               style={commonStyles.flex1}

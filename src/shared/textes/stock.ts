@@ -6,8 +6,22 @@ export const TEXTES_STOCK = {
     emballages: 'Emballages',
     materiel: 'Matériel',
     conditionnement: 'Conditionnement',
+    aliments: 'Aliments',
+    fromagerie: 'Fromagerie',
+    entretien: 'Entretien',
+  },
+  /** Les sections déroulables de la fromagerie. */
+  /** Le menu en haut du stock, à droite du titre. */
+  statistiques: { menu: 'Menu du stock', titre: 'Statistiques', fermer: 'Fermer' },
+  sections: {
+    fromages: 'Fromages',
+    emballages: 'Emballages',
+    materiel: 'Matériel',
+    conditionnement: 'Conditionnement',
   },
   unites: (nombre: number) => `${nombre}`,
+  /** Le niveau d'un aliment : il se compte en kilos. */
+  kilos: (nombre: number) => `${nombre} kg`,
   negatif: 'Stock négatif : notez la production ou l’achat manquant.',
   lait: {
     titre: 'Lait par fromage',
@@ -30,6 +44,12 @@ export const TEXTES_STOCK = {
     fromage: 'Ajouter un fromage',
     emballages: 'Ajouter un emballage',
     materiel: 'Ajouter du matériel',
+    aliment: 'Ajouter un aliment',
+    exempleAliment: 'ex : Granulés, orge',
+    entretien: 'Ajouter un produit d’entretien',
+    exempleEntretien: 'ex : Désinfectant, chaux, gants',
+    activite: 'Activité concernée',
+    toutesActivites: 'Toutes les activités',
     nom: 'Nom',
     exempleFromage: 'ex : Tomme',
     exempleEmballage: 'ex : Étiquette 8 cm',
@@ -54,10 +74,6 @@ export const TEXTES_STOCK = {
     litres: 'Litres de lait utilisés (facultatif)',
     litresBrocciu: 'Litres de lait versés dans le lactosérum (facultatif)',
     quantiteInvalide: 'Indiquez une quantité : +1 pour un ajout, −1 pour un retrait.',
-    prixVente: 'Prix de vente (€)',
-    prixInvalide: 'Le prix doit être supérieur à zéro.',
-    quantiteOuPrix:
-      'Indiquez une quantité (+1 pour un ajout, −1 pour un retrait), ou un nouveau prix de vente.',
     aide: '+1 pour un ajout, −1 pour un retrait.',
     supprimer: 'Supprimer cet article',
   },

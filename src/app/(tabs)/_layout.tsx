@@ -1,24 +1,22 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
-import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 export default function TabsLayout() {
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
-  const { especes } = useEtablissement();
+  useEtablissement();
   // Une entreprise a un onglet Clients à la place du Cheptel ; un élevage l'inverse.
   const entreprise = modeEntreprise();
-  // Le stock de la fromagerie : seulement pour un élevage de chèvres ou de brebis (qui font du fromage).
-  const fromagerie =
-    !entreprise &&
-    especes.some((e) => e === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES || e === TYPE_ANIMAL_ETABLISSEMENT.BREBIS);
+  // Le stock : un onglet en bas pour une exploitation agricole (fromagerie, aliments) et pour un gîte (boissons, nourriture).
+  const stockGite = entreprise && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
   return (
     <Tabs
       screenLayout={ecranParEspeceSauf('cheptel', 'comptabilite', 'index')}
@@ -87,7 +85,7 @@ export default function TabsLayout() {
         name="stock"
         options={{
           title: TEXTES.stock.titre,
-          href: fromagerie ? undefined : null,
+          href: !entreprise || stockGite ? undefined : null,
           tabBarIcon: ({ color, size }) => <Ionicons name="cube" size={size} color={color} />,
         }}
       />

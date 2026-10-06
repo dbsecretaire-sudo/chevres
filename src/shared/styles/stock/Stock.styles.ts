@@ -4,6 +4,8 @@ import { colors } from '@/shared/theme/colors';
 export const styles = StyleSheet.create({
   /** Le niveau d'un article et la commande de déplacement, côte à côte au bout de la ligne. */
   fin: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  /** La feuille des statistiques : elle défile quand il y en a beaucoup. */
+  feuilleStatistiques: { maxHeight: 520 },
   enteteCarte: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 
   /** Le tableau des litres de lait par fromage, mois par mois : une ligne de mois, une ligne de litres. */

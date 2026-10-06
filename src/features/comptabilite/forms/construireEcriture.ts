@@ -3,6 +3,10 @@ import {
   type LigneAlimentForm,
 } from '@/features/comptabilite/forms/lignesAlimentation';
 import {
+  lignesMarchandisesFinales,
+  type LigneMarchandiseForm,
+} from '@/features/comptabilite/forms/lignesMarchandises';
+import {
   lignesCarburantFinales,
   type LigneCarburantForm,
 } from '@/features/comptabilite/forms/lignesCarburant';
@@ -13,6 +17,7 @@ import type {
   CategorieVente,
   Facture,
   LigneAlimentation,
+  LigneMarchandise,
   LigneCarburant,
   TypeAide,
   TypeFacture,
@@ -49,6 +54,8 @@ export interface SaisieEcriture {
   montant: string;
   categorieDepense: CategorieDepense;
   lignesAlimentation: LigneAlimentForm[];
+  /** Le détail des marchandises, quand l'achat est un achat de marchandises d'un gîte. */
+  lignesMarchandises?: LigneMarchandiseForm[];
   lignesCarburant: LigneCarburantForm[];
   categorieRecette: CategorieRecette;
   typeFromage: TypeFromage;
@@ -147,6 +154,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
   let montantFinal: number;
   let lignesAlimentation: LigneAlimentation[] | undefined;
   let lignesCarburant: LigneCarburant[] | undefined;
+  let lignesMarchandises: LigneMarchandise[] | undefined;
 
   if (estAlimentation) {
     lignesAlimentation = lignesAlimentationFinales(s.lignesAlimentation, s.activite);
@@ -159,6 +167,17 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       };
     }
     montantFinal = totalMontants(s.lignesAlimentation);
+  } else if (estRecue && s.lignesMarchandises) {
+    lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises);
+    if (lignesMarchandises.length === 0) {
+      return {
+        erreur: {
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        },
+      };
+    }
+    montantFinal = totalMontants(s.lignesMarchandises);
   } else if (estCarburant) {
     lignesCarburant = lignesCarburantFinales(s.lignesCarburant);
     if (lignesCarburant.length === 0) {
@@ -185,6 +204,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       montant: montantFinal,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       lignesAlimentation,
+      lignesMarchandises,
       categorieRecette: estEmise ? s.categorieRecette : undefined,
       typeAide: estAide ? s.typeAide : undefined,
       typeAideLibre:

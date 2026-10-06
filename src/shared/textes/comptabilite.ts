@@ -51,7 +51,16 @@ export const TEXTES_COMPTABILITE = {
     ex120: 'ex: 120',
     nombre: 'Nombre',
     ex3: 'ex: 3',
-    preciserExFraisDeLivraisonPoints: 'Préciser — ex: Frais de livraison, compléments…',
+    choixAliment: 'Choix de l’aliment',
+  },
+  lignesMarchandisesEditor: {
+    detailParMarchandise: 'Détail par marchandise',
+    marchandiseValeur: (valeur: number) => `Marchandise ${valeur}`,
+    rubrique: 'Activité concernée',
+    choixMarchandise: 'Choix de la marchandise',
+    quantite: 'Quantité',
+    ex10: 'ex: 10',
+    aucuneDansLeStock: 'Ajoutez-les dans le stock (crayon).',
   },
   lignesCarburantEditor: {
     detailParCarburant: 'Détail par carburant',

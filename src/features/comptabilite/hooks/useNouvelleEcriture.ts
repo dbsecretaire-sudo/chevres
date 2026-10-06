@@ -2,12 +2,17 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
+import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
 import { ligneAlimentVide, type LigneAlimentForm } from '@/features/comptabilite/forms/lignesAlimentation';
+import {
+  ligneMarchandiseVide,
+  type LigneMarchandiseForm,
+} from '@/features/comptabilite/forms/lignesMarchandises';
 import { ligneCarburantVide, type LigneCarburantForm } from '@/features/comptabilite/forms/lignesCarburant';
 import type {
   ActiviteComptable,
@@ -31,8 +36,8 @@ import {
   type GroupeRecette,
   premiereCategorieRecette,
 } from '@/features/comptabilite/utils/recettes';
-import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { ACTIVITE_COMMUNE, ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { totalMontants } from '@/shared/utils/nombres';
 import {
@@ -46,6 +51,7 @@ import {
   TAUX_TVA_CARBURANT,
   TAUX_TVA_VENTE_PAR_CATEGORIE,
   TYPE_AIDE,
+  TYPE_ALIMENT,
   TYPE_FACTURE,
   TYPE_FROMAGE,
   UNITE_VENTE,
@@ -96,6 +102,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     entreprise ? CATEGORIES_DEPENSE_ENTREPRISE[0] : CATEGORIE_DEPENSE.ALIMENTATION,
   );
   const [lignesAlimentation, setLignesAlimentation] = useState<LigneAlimentForm[]>([ligneAlimentVide()]);
+  const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([
+    ligneMarchandiseVide(),
+  ]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise
@@ -155,6 +164,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   // L'alimentation et les ventes de production sont propres à une espèce ; le reste peut être « commun ».
   const avecCommunActivite = !estAlimentationDebit && !estProductionVente;
+  // Un achat de marchandises d'un gîte se détaille par marchandise (bar, restaurant, activité annexe).
+  const estMarchandisesGite =
+    type === TYPE_FACTURE.RECUE &&
+    categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
+    activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
+  const totalMarchandises = totalMontants(lignesMarchandises);
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
 
@@ -187,7 +202,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     const permises = categoriesRecetteActivite(nouvelle);
     if (!permises.includes(categorieRecette)) changerCategorieRecette(premiereCategorieRecette(nouvelle));
     setLignesAlimentation((lignes) =>
-      lignes.map((l) => (l.activite || types.includes(l.type) ? l : { ...l, type: types[0] })),
+      lignes.map((l) =>
+        l.activite || l.type === TYPE_ALIMENT.AUTRE || types.includes(l.type) ? l : { ...l, type: types[0] },
+      ),
     );
   };
 
@@ -235,6 +252,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         montant,
         categorieDepense,
         lignesAlimentation,
+        lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
         lignesCarburant,
         categorieRecette,
         typeFromage,
@@ -260,7 +278,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         return;
       }
       if ('vente' in resultat) await enregistrerVente(resultat.vente);
-      else await enregistrerFacture(resultat.facture);
+      else {
+        const achat = resultat.facture.lignesMarchandises;
+        await enregistrerFacture({ ...resultat.facture, stockApplique: achat?.length ? true : undefined });
+        // Un achat de marchandises du gîte augmente le stock de ce qui est acheté.
+        await synchroniserStockAchat(undefined, achat);
+      }
       router.back();
     } finally {
       setEnregistrement(false);
@@ -292,6 +315,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     changerCategorieDepense,
     lignesAlimentation,
     setLignesAlimentation,
+    lignesMarchandises,
+    setLignesMarchandises,
+    estMarchandisesGite,
+    totalMarchandises,
     lignesCarburant,
     setLignesCarburant,
     totalAlimentation,

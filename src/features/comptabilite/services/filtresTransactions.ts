@@ -102,6 +102,8 @@ export type RubriqueComptabilite = ValeurDe<typeof RUBRIQUE_COMPTABILITE>;
  * recettes du bar, « activité » pour tout le reste.
  */
 export function rubriqueDe(t: Transaction): RubriqueComptabilite {
+  // Un achat de marchandises se range selon l'activité que ses lignes servent (la première, s'il y en a plusieurs).
+  if (t.rubriques?.length) return t.rubriques[0] as RubriqueComptabilite;
   if (t.categorie === CATEGORIE_RECETTE.BAR) return RUBRIQUE_COMPTABILITE.BAR;
   if (t.categorie && (RECETTES_DU_GITE.includes(t.categorie) || DEPENSES_DU_GITE.includes(t.categorie)))
     return RUBRIQUE_COMPTABILITE.GITE;
@@ -115,7 +117,7 @@ export const filtrerParRubrique = (
 ): Transaction[] =>
   rubrique === RUBRIQUE_COMPTABILITE.TOUT
     ? transactions
-    : transactions.filter((t) => rubriqueDe(t) === rubrique);
+    : transactions.filter((t) => (t.rubriques ?? [rubriqueDe(t)]).includes(rubrique));
 
 /** Garde les écritures d'une activité (toutes si le filtre est « toutes »). */
 export const filtrerParActivite = (transactions: Transaction[], filtre: FiltreActivite): Transaction[] =>

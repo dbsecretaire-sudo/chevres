@@ -10,7 +10,14 @@ export const GENRE_ARTICLE = {
   FROMAGE: 'fromage',
   EMBALLAGE: 'emballage',
   MATERIEL: 'materiel',
+  /** Un aliment des animaux (exploitation agricole) : ceux d'office de l'espèce, et ceux qu'on ajoute. */
+  ALIMENT: 'aliment',
+  /** Un produit d'entretien (toujours ajouté par l'utilisateur). */
+  ENTRETIEN: 'entretien',
 } as const;
+
+/** Le choix « toutes les activités » du filtre du stock (sinon : une espèce de l'exploitation). */
+export const FILTRE_STOCK_TOUT = 'tout';
 
 /** Les emballages tenus en stock d'office (on peut en ajouter d'autres, avec le nom qu'on veut). */
 export const ARTICLE_EMBALLAGE = {
@@ -58,9 +65,16 @@ export const CONDITIONNEMENT_PAR_DEFAUT: Record<TypeFromage, readonly Emballage[
 /** Début de la valeur du choix d'un fromage ajouté dans le stock (suivi de son identifiant), dans le formulaire de vente. */
 export const PREFIXE_FROMAGE_AJOUTE = 'ajoute:';
 
-/** Les parties de l'écran Stock. */
+/** Les parties de l'écran Stock : la fromagerie (en sections), les aliments, l'entretien. */
 export const ONGLET_STOCK = {
-  FROMAGE: 'fromage',
+  FROMAGERIE: 'fromagerie',
+  ALIMENTS: 'aliments',
+  ENTRETIEN: 'entretien',
+} as const;
+
+/** Les sections déroulables de la fromagerie. */
+export const SECTION_FROMAGERIE = {
+  FROMAGES: 'fromages',
   EMBALLAGES: 'emballages',
   MATERIEL: 'materiel',
   CONDITIONNEMENT: 'conditionnement',

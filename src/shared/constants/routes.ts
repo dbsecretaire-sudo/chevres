@@ -58,6 +58,14 @@ export const ROUTES = {
   CLIENTS_DOSSIERS: '/clients/dossiers-clients',
   GITE: '/clients/gite',
   BAR: '/clients/bar',
+  /** Le stock (onglet du bas), où se gèrent les marchandises, les aliments, les boissons. */
+  STOCK: '/stock',
+  /**
+   * Le stock ouvert depuis un formulaire en cours : `retour` est l'adresse de ce formulaire (le stock affiche alors une
+   * flèche pour y revenir), et `onglet` l'onglet à ouvrir (les aliments, par exemple).
+   */
+  stockDepuis: (retour: string, onglet?: string) =>
+    `/stock?${onglet ? `onglet=${onglet}&` : ''}retour=${encodeURIComponent(retour)}` as const,
   repasDuJour: (date: string) => `/clients/repas/${date}` as const,
   jourEcheances: (date: string) => `/clients/echeances/${date}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,

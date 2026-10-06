@@ -6,10 +6,19 @@ import {
   ARTICLE_EMBALLAGE,
   ARTICLE_MATERIEL,
   CONDITIONNEMENT_PAR_DEFAUT,
+  FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
   ORIGINE_MOUVEMENT,
 } from '@/shared/constants/stock';
-import { LABEL_EMBALLAGE, LABEL_MATERIEL, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
+import {
+  LABEL_EMBALLAGE,
+  LABEL_MATERIEL,
+  LABEL_TYPE_ALIMENT,
+  LABEL_TYPE_FROMAGE,
+} from '@/shared/textes/libelles';
+import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
+import { especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { generateId } from '@/shared/utils/id';
 
 /** L'identifiant d'un article de stock : son genre puis son code (« fromage:frais », « emballage:sac_plastique »). */
@@ -23,27 +32,63 @@ export interface ArticleAffiche {
   id?: string;
 }
 
-/** Les articles d'un genre : ceux d'office, puis ceux que l'utilisateur a ajoutés. */
-export function articlesDuGenre(genre: GenreArticle, archive: ArchiveStock): ArticleAffiche[] {
+/** Ce que le filtre du stock choisit : toutes les activités, ou une espèce de l'exploitation. */
+export type FiltreStock = typeof FILTRE_STOCK_TOUT | EspeceAnimale;
+
+/** La fromagerie ne concerne que les chèvres et les brebis. */
+const FAIT_DU_FROMAGE: readonly string[] = [
+  TYPE_ANIMAL_ETABLISSEMENT.CHEVRES,
+  TYPE_ANIMAL_ETABLISSEMENT.BREBIS,
+];
+
+/**
+ * Les articles d'un genre pour une activité : ceux d'office (les aliments de l'espèce ; les fromages, emballages et
+ * matériel pour les chèvres et les brebis), puis ceux que l'utilisateur a ajoutés pour elle ou pour toutes les activités.
+ * Sans filtre, tous. L'ordre est celui que l'utilisateur a choisi.
+ */
+export function articlesDuGenre(
+  genre: GenreArticle,
+  archive: ArchiveStock,
+  filtre: FiltreStock = FILTRE_STOCK_TOUT,
+): ArticleAffiche[] {
+  const toutes = filtre === FILTRE_STOCK_TOUT;
   const parDefaut: ArticleAffiche[] =
-    genre === GENRE_ARTICLE.FROMAGE
-      ? Object.values(TYPE_FROMAGE).map((code) => ({
-          cle: cleArticle(genre, code),
-          libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_TYPE_FROMAGE[code],
-        }))
-      : genre === GENRE_ARTICLE.EMBALLAGE
-        ? Object.values(ARTICLE_EMBALLAGE).map((code) => ({
+    genre === GENRE_ARTICLE.ENTRETIEN
+      ? []
+      : genre === GENRE_ARTICLE.FROMAGE
+        ? Object.values(TYPE_FROMAGE).map((code) => ({
             cle: cleArticle(genre, code),
-            libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_EMBALLAGE[code],
+            libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_TYPE_FROMAGE[code],
           }))
-        : Object.values(ARTICLE_MATERIEL).map((code) => ({
-            cle: cleArticle(genre, code),
-            libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_MATERIEL[code],
-          }));
+        : genre === GENRE_ARTICLE.ALIMENT
+          ? [
+              ...new Set(
+                (toutes ? especesActives() : [filtre]).flatMap(
+                  (e) => typesAlimentEspece(e) as readonly string[],
+                ),
+              ),
+            ].map((type) => ({
+              cle: cleArticle(genre, type),
+              libelle:
+                archive.noms[cleArticle(genre, type)] ??
+                LABEL_TYPE_ALIMENT[type as keyof typeof LABEL_TYPE_ALIMENT],
+            }))
+          : genre === GENRE_ARTICLE.EMBALLAGE
+            ? Object.values(ARTICLE_EMBALLAGE).map((code) => ({
+                cle: cleArticle(genre, code),
+                libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_EMBALLAGE[code],
+              }))
+            : Object.values(ARTICLE_MATERIEL).map((code) => ({
+                cle: cleArticle(genre, code),
+                libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_MATERIEL[code],
+              }));
+  // Les articles d'office des fromages, emballages et matériel ne sont pas ceux d'un élevage qui ne fait pas de fromage.
+  const dOfficeVisibles =
+    genre === GENRE_ARTICLE.ALIMENT || toutes || FAIT_DU_FROMAGE.includes(filtre) ? parDefaut : [];
   const ajoutes = archive.articles
-    .filter((a) => a.genre === genre)
+    .filter((a) => a.genre === genre && (toutes || !a.activite || a.activite === filtre))
     .map((a) => ({ cle: cleArticle(genre, a.id), libelle: a.nom, id: a.id }));
-  const tous = [...parDefaut, ...ajoutes];
+  const tous = [...dOfficeVisibles, ...ajoutes];
   // L'ordre choisi d'abord ; les articles qu'il ne cite pas suivent, dans l'ordre d'office.
   const ordre = archive.ordres[genre] ?? [];
   const rang = (a: ArticleAffiche) => {
@@ -165,11 +210,11 @@ export async function ajouterMouvementManuel(
 }
 
 /** Ajoute un article (fromage, emballage ou matériel) avec le nom choisi. */
-export async function ajouterArticle(genre: GenreArticle, nom: string): Promise<void> {
+export async function ajouterArticle(genre: GenreArticle, nom: string, activite?: string): Promise<void> {
   const archive = await lireArchiveStock();
   await remplacerArchiveStock({
     ...archive,
-    articles: [...archive.articles, { id: generateId(), genre, nom: nom.trim() }],
+    articles: [...archive.articles, { id: generateId(), genre, nom: nom.trim(), activite }],
   });
 }
 
@@ -221,12 +266,19 @@ export async function positionnerArticle(
   genre: GenreArticle,
   cle: string,
   nouvelIndex: number,
+  /** La liste affichée (filtrée par activité) dans laquelle on a glissé la ligne. */
+  filtre: FiltreStock = FILTRE_STOCK_TOUT,
 ): Promise<void> {
   const archive = await lireArchiveStock();
-  const cles = articlesDuGenre(genre, archive).map((a) => a.cle);
-  const index = cles.indexOf(cle);
-  if (index < 0 || nouvelIndex < 0 || nouvelIndex >= cles.length) return;
-  cles.splice(nouvelIndex, 0, ...cles.splice(index, 1));
+  const plein = articlesDuGenre(genre, archive).map((a) => a.cle);
+  const affichees = articlesDuGenre(genre, archive, filtre).map((a) => a.cle);
+  const index = affichees.indexOf(cle);
+  if (index < 0 || nouvelIndex < 0 || nouvelIndex >= affichees.length) return;
+  affichees.splice(nouvelIndex, 0, ...affichees.splice(index, 1));
+  // Les lignes affichées reprennent, dans leur nouvel ordre, les places qu'elles occupaient dans la liste complète.
+  const places = plein.map((c, i) => (affichees.includes(c) ? i : -1)).filter((i) => i >= 0);
+  const cles = [...plein];
+  places.forEach((place, rang) => (cles[place] = affichees[rang]));
   await remplacerArchiveStock({ ...archive, ordres: { ...archive.ordres, [genre]: cles } });
 }
 

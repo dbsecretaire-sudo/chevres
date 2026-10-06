@@ -22,6 +22,8 @@ export interface ArticleStock {
   id: string;
   genre: GenreArticle;
   nom: string;
+  /** L'espèce pour laquelle l'article est tenu ; absente : pour toutes les activités de l'exploitation (le cas d'office). */
+  activite?: string;
 }
 
 /**

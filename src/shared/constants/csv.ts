@@ -49,6 +49,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'montant',
     'categorieDepense',
     'lignesAlimentation',
+    'lignesMarchandises',
+    'stockApplique',
     'litrage',
     'typeCarburant',
     'lignesCarburant',
@@ -102,7 +104,7 @@ export const CHAMPS_NOMBRE = new Set([
 ]);
 
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */
-export const CHAMPS_BOOLEEN = new Set(['renouvellement']);
+export const CHAMPS_BOOLEEN = new Set(['renouvellement', 'stockApplique']);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
 export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable']);
@@ -110,6 +112,8 @@ export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable']);
 export const CHAMPS_LIGNES_ALIMENTATION = new Set(['lignesAlimentation']);
 
 export const CHAMPS_LIGNES_CARBURANT = new Set(['lignesCarburant']);
+
+export const CHAMPS_LIGNES_MARCHANDISES = new Set(['lignesMarchandises']);
 
 export const CATEGORIES_STOCKAGE: ValeurDe<typeof CATEGORIE_STOCKAGE>[] = [
   CATEGORIE_STOCKAGE.CHEPTEL,

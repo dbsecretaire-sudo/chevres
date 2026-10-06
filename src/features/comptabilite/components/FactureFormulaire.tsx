@@ -7,6 +7,7 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
+import { LignesMarchandisesEditor } from '@/features/comptabilite/components/LignesMarchandisesEditor';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import type { EtatFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
@@ -101,6 +102,15 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           <Text style={styles.total}>
             {TEXTES.commun.general.totalFactureTtcDeuxPoints}
             {formatTotalEuros(f.totalAlimentation)}
+          </Text>
+          {champTauxTva}
+        </>
+      ) : f.estMarchandises ? (
+        <>
+          <LignesMarchandisesEditor lignes={f.lignesMarchandises} onChange={f.setLignesMarchandises} />
+          <Text style={styles.total}>
+            {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+            {formatTotalEuros(f.totalMarchandises)}
           </Text>
           {champTauxTva}
         </>

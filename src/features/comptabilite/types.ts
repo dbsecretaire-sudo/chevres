@@ -12,6 +12,8 @@ import type {
   TYPE_FROMAGE,
   UNITE_CONDITIONNEMENT,
   UNITE_VENTE,
+  RUBRIQUE_MARCHANDISE,
+  UNITE_MARCHANDISE,
 } from '@/shared/constants/comptabilite';
 
 export type TypeFacture = ValeurDe<typeof TYPE_FACTURE>;
@@ -54,6 +56,15 @@ export interface LigneAlimentation {
   nombreUnitesConditionnement?: number;
 }
 
+/** Une marchandise achetée pour le gîte : celle du stock, la rubrique qu'elle sert, sa quantité et son montant TTC. */
+export interface LigneMarchandise {
+  marchandise: string;
+  rubrique: ValeurDe<typeof RUBRIQUE_MARCHANDISE>;
+  quantite?: number;
+  unite?: ValeurDe<typeof UNITE_MARCHANDISE>;
+  montant: number;
+}
+
 export interface LigneCarburant {
   type: TypeCarburant;
   montant: number;
@@ -74,6 +85,13 @@ export interface Facture {
   categorieDepense?: CategorieDepense;
   /** Uniquement si categorieDepense === 'alimentation' : une facture peut regrouper plusieurs aliments. */
   lignesAlimentation?: LigneAlimentation[];
+  /** Uniquement si categorieDepense === 'achats_marchandises' dans un gîte : le détail des marchandises achetées. */
+  lignesMarchandises?: LigneMarchandise[];
+  /**
+   * Vrai quand les quantités de lignesMarchandises ont été ajoutées au stock du gîte. Une facture d'avant cette gestion du
+   * stock ne l'a pas : la première fois qu'on l'enregistre de nouveau, ses quantités sont ajoutées (une seule fois).
+   */
+  stockApplique?: boolean;
   /** Uniquement pour type === 'emise'. */
   categorieRecette?: CategorieRecette;
   /**

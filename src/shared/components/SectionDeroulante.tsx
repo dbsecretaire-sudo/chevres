@@ -14,16 +14,16 @@ interface Props {
   children: ReactNode;
 }
 
-/** Une section qui se déroule d'un appui sur son titre (fermée par défaut) : plusieurs peuvent être ouvertes en même temps. */
+/** Une section qui se déroule d'un appui sur son titre : plusieurs peuvent être ouvertes en même temps. */
 export function SectionDeroulante({ titre, nombre, ouverte, onBasculer, children }: Props) {
   return (
     <View style={commonStyles.gap10}>
       <Pressable style={styles.entete} onPress={onBasculer}>
-        <Text style={commonStyles.cardTitle}>
+        <Text style={styles.titre}>
           {titre}
           {nombre !== undefined ? ` (${nombre})` : ''}
         </Text>
-        <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={22} color={colors.primary} />
+        <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={22} color={colors.blanc} />
       </Pressable>
       {ouverte ? children : null}
     </View>

@@ -4,7 +4,9 @@ import { Card } from '@/shared/components/Card';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import {
   LABEL_ACTIVITE_COMPTABLE,
+  LABEL_RUBRIQUE_MARCHANDISE,
   LABEL_TYPE_ALIMENT,
+  LABEL_UNITE_MARCHANDISE,
   LABEL_TYPE_CARBURANT,
   LABEL_UNITE_CONDITIONNEMENT,
 } from '@/shared/textes/libelles';
@@ -105,6 +107,24 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
                 {plusieursEspeces() && activitesFacture(facture).length > 1
                   ? ` (${LABEL_ACTIVITE_COMPTABLE[activiteLigne(facture, ligne)]})`
                   : ''}
+              </Text>
+              <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {facture.lignesMarchandises && facture.lignesMarchandises.length > 0 ? (
+        <View style={commonStyles.gap2}>
+          <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.factureLecture.detailsDeuxPoints}</Text>
+          {facture.lignesMarchandises.map((ligne, index) => (
+            <View key={index} style={commonStyles.rowBetween}>
+              <Text style={commonStyles.line}>
+                {ligne.marchandise || LABEL_RUBRIQUE_MARCHANDISE[ligne.rubrique]}
+                {ligne.quantite && ligne.unite
+                  ? ` — ${String(ligne.quantite).replace('.', ',')} ${LABEL_UNITE_MARCHANDISE[ligne.unite].toLowerCase()}`
+                  : ''}
+                {` (${LABEL_RUBRIQUE_MARCHANDISE[ligne.rubrique]})`}
               </Text>
               <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>
             </View>
