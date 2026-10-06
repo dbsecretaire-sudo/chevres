@@ -5,7 +5,15 @@ import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
 const cle = () => cleStockage(CLE_STOCKAGE.STOCK);
 
-const VIDE: ArchiveStock = { mouvements: [], articles: [], conditionnements: {}, ordres: {}, noms: {} };
+const VIDE: ArchiveStock = {
+  mouvements: [],
+  articles: [],
+  conditionnements: {},
+  ordres: {},
+  noms: {},
+  lait: [],
+  prix: {},
+};
 
 /** Remet une archive lue (ou reçue d'une sauvegarde) dans sa forme : rien ne manque, un conditionnement est une liste. */
 export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefined): ArchiveStock {
@@ -21,12 +29,18 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
   for (const [cle, nom] of Object.entries(archive?.noms ?? {})) {
     if (typeof nom === 'string' && nom.trim()) noms[cle] = nom;
   }
+  const prix: ArchiveStock['prix'] = {};
+  for (const [cle, montant] of Object.entries(archive?.prix ?? {})) {
+    if (typeof montant === 'number' && montant > 0) prix[cle] = montant;
+  }
   return {
     mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
     articles: Array.isArray(archive?.articles) ? archive.articles : [],
     conditionnements,
     ordres,
     noms,
+    lait: Array.isArray(archive?.lait) ? archive.lait : [],
+    prix,
   };
 }
 

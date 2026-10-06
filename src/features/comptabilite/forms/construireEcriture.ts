@@ -74,6 +74,8 @@ export interface SaisieEcriture {
   sacs: string;
   /** Commentaire facultatif (viande, charcuterie, animal sur pied ou vivant). */
   precision: string;
+  /** Pour un animal sur pied ou vivant : vrai si c'est un petit, faux si c'est un adulte. */
+  jeune?: boolean;
   clientSelectionne?: Client;
   /** Vrai si l'écriture est une vente de production (lait, fromage, cabris) plutôt qu'une facture. */
   estProductionVente: boolean;
@@ -94,8 +96,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorie);
   const estAnimal = (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(categorie);
 
-  // La viande et la charcuterie se saisissent sans quantité : un montant suffit (comptée pour 1).
-  const quantiteNum = estViande ? 1 : parseDecimal(s.quantite);
+  // La viande et la charcuterie se saisissent avec ou sans quantité : un montant suffit (comptée pour 1 d'office).
+  const quantiteNum = estViande ? parseDecimal(s.quantite) || 1 : parseDecimal(s.quantite);
   if (quantiteNum <= 0) return { erreur: { titre: TEXTES.commun.general.quantiteInvalide } };
 
   let prixNum: number | undefined;
@@ -125,7 +127,9 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       prix: prixNum,
       tauxTva: parseDecimal(s.tauxTvaVente),
       client: s.clientSelectionne ? nomComplet(s.clientSelectionne) : undefined,
-      poidsKg: estAnimal && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
+      poidsKg:
+        (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
+      jeune: estViande && s.jeune ? true : undefined,
       sacs: estFromage && s.sacs.trim() ? Math.round(parseDecimal(s.sacs)) || undefined : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
         ? s.precision.trim() || undefined

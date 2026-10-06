@@ -128,8 +128,8 @@ export default function TabsLayout() {
           title: entreprise
             ? TEXTES.commun.general.informationsDeLEntreprise
             : TEXTES.commun.general.informationsDeLExploitation,
-          // Destination fixe : les Réglages pour une entreprise, l'Accueil pour une exploitation.
-          headerLeft: () => <HeaderBackTo to={entreprise ? ROUTES.REGLAGES : '/'} />,
+          // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to="/" />,
         }}
       />
     </Tabs>

@@ -260,8 +260,7 @@ export const LABEL_ACTIVITE_COMPTABLE: Record<
 export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, string> = {
   [GROUPE_RECETTE.LAITERIE]: 'Vente laiterie / fromagerie',
   [GROUPE_RECETTE.OEUFS]: 'Vente œufs',
-  [GROUPE_RECETTE.BOUCHERIE]: 'Vente boucherie / charcuterie',
-  [GROUPE_RECETTE.ANIMAL]: 'Vente animal',
+  [GROUPE_RECETTE.BOUCHERIE]: 'Vente viande / charcuterie',
   [GROUPE_RECETTE.AIDE]: 'Aide / subvention',
   [GROUPE_RECETTE.AUTRE]: 'Autre recette',
   [GROUPE_RECETTE.PRESTATIONS]: 'Prestations de services',

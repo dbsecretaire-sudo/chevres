@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { ROUTES } from '@/shared/constants/routes';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
 import { Screen } from '@/shared/components/Screen';
 import { CarteExport, CarteSauvegarde } from '@/features/settings/components/CartesDonnees';
 import { CarteGoogleDrive } from '@/features/settings/components/CarteGoogleDrive';
@@ -14,21 +14,13 @@ import { TEXTES } from '@/shared/textes';
 
 export default function Reglages() {
   const router = useRouter();
-  // La structure type des dossiers ne sert qu'aux entreprises qui suivent des dossiers clients (pas à une association seule, ni à une exploitation agricole).
-  const avecDossiersClients =
-    modeEntreprise() && activitesEtablissement().some((a) => a !== ACTIVITE_SOCIETE.ASSOCIATION);
+  // La structure type des dossiers ne sert qu'au secrétariat (dossiers clients) : ni à un gîte, ni à une activité financière, ni à une exploitation agricole.
+  const avecDossiersClients = activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE);
   const donnees = useExportEtSauvegarde();
   const drive = useGoogleDrive();
 
   return (
     <Screen>
-      {modeEntreprise() ? (
-        <Button
-          variant="secondary"
-          label={TEXTES.commun.general.informationsDeLEntreprise}
-          onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
-        />
-      ) : null}
       {avecDossiersClients ? (
         <Button
           variant="secondary"

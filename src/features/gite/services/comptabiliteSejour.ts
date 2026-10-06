@@ -96,7 +96,12 @@ export async function synchroniserFacturesSejour(sejour: Sejour): Promise<Factur
     ),
     montant: solde,
     categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
-    tauxTva: tvaApplicable ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total) : undefined,
+    // Une recette déjà inscrite garde son taux de TVA : un changement des réglages ne la modifie pas après coup.
+    tauxTva: existante
+      ? existante.tauxTva
+      : tvaApplicable
+        ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total)
+        : undefined,
   };
   await remplacerFacture({ ...existante, ...facture });
   return { factureId: facture.id, factureRepasId: undefined };

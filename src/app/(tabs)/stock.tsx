@@ -20,7 +20,12 @@ export default function StockScreen() {
   const gite = modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
 
   // La flèche ne vaut que pour cette visite : en quittant le stock, l'adresse de retour est oubliée.
-  useFocusEffect(useCallback(() => () => navigation.setParams({ retour: undefined } as never), [navigation]));
+  useFocusEffect(
+    useCallback(
+      () => () => navigation.setParams({ retour: undefined, espece: undefined, onglet: undefined } as never),
+      [navigation],
+    ),
+  );
 
   return (
     <>

@@ -16,38 +16,47 @@ import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
+import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
+import { HistoriqueStock } from '@/features/stock/components/HistoriqueStock';
+import { JournalLait } from '@/features/stock/components/JournalLait';
+import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { LaitParFromage } from '@/features/stock/components/LaitParFromage';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ajouterArticle,
   ajouterMouvementManuel,
   articlesDuGenre,
+  bilanLait,
   cleArticle,
   conditionnementDe,
   definirConditionnement,
+  definirPrixArticle,
+  enregistrerLaitJour,
   positionnerArticle,
+  supprimerLaitJour,
   renommerArticle,
+  roleDeLaViande,
   libelleArticle,
   niveauxDeStock,
   supprimerArticle,
   type ArticleAffiche,
   type FiltreStock,
 } from '@/features/stock/services/stock';
-import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
+import type { ArchiveStock, GenreArticle, LaitJour } from '@/features/stock/types';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import {
   ARTICLE_EMBALLAGE,
   FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
-  NOMBRE_MOUVEMENTS_AFFICHES,
   ONGLET_STOCK,
-  ORIGINE_MOUVEMENT,
   SECTION_FROMAGERIE,
 } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
-import { formatDateShortFR, todayISO } from '@/shared/utils/dates';
+import { formatMontant, todayISO } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/trading/Trading.styles';
 import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -61,14 +70,17 @@ const PUCE_FROMAGERIE: { valeur: Onglet; label: string } = {
   valeur: ONGLET_STOCK.FROMAGERIE,
   label: T.onglets.fromagerie,
 };
+const PUCE_LAIT: { valeur: Onglet; label: string } = { valeur: ONGLET_STOCK.LAIT, label: T.onglets.lait };
 const PUCES_AUTRES: { valeur: Onglet; label: string }[] = [
   { valeur: ONGLET_STOCK.ALIMENTS, label: T.onglets.aliments },
+  { valeur: ONGLET_STOCK.VIANDE, label: T.onglets.viande },
   { valeur: ONGLET_STOCK.ENTRETIEN, label: T.onglets.entretien },
 ];
 
 /** Le genre d'article des onglets qui ne listent qu'un genre. */
 const GENRE_PAR_ONGLET: Partial<Record<Onglet, GenreArticle>> = {
   [ONGLET_STOCK.ALIMENTS]: GENRE_ARTICLE.ALIMENT,
+  [ONGLET_STOCK.VIANDE]: GENRE_ARTICLE.VIANDE,
   [ONGLET_STOCK.ENTRETIEN]: GENRE_ARTICLE.ENTRETIEN,
 };
 
@@ -86,7 +98,12 @@ const TEXTES_AJOUT: Record<GenreArticle, { titre: string; exemple: string }> = {
   [GENRE_ARTICLE.MATERIEL]: { titre: T.ajouter.materiel, exemple: T.ajouter.exempleMateriel },
   [GENRE_ARTICLE.ALIMENT]: { titre: T.ajouter.aliment, exemple: T.ajouter.exempleAliment },
   [GENRE_ARTICLE.ENTRETIEN]: { titre: T.ajouter.entretien, exemple: T.ajouter.exempleEntretien },
+  [GENRE_ARTICLE.VIANDE]: { titre: T.ajouter.viande, exemple: T.ajouter.exempleViande },
 };
+
+/** Un fromage ou une viande se vend : il a un prix de vente. */
+const seVend = (cle: string): boolean =>
+  cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) || cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`);
 
 /** Le code d'un article (« fromage:frais » → « frais »). */
 const codeDe = (cle: string): string => cle.split(':')[1];
@@ -100,23 +117,35 @@ const codeDe = (cle: string): string => cle.split(':')[1];
 export default function StockFromagerie() {
   // La fromagerie n'existe que pour des chèvres ou des brebis ; les aliments et l'entretien sont là pour toute exploitation.
   // Un lien peut ouvrir directement un onglet.
-  const { especes } = useEtablissement();
-  // Le stock se regarde pour toutes les activités, ou pour un animal (quand l'exploitation en élève plusieurs).
-  const [filtre, setFiltre] = useState<FiltreStock>(FILTRE_STOCK_TOUT);
+  const { especes, espece: especeActive } = useEtablissement();
+  // Le stock se regarde pour un animal (l'animal actif d'office, quand l'exploitation en élève plusieurs) ou pour toutes les
+  // activités. Un choix explicite l'emporte ; sans choix, le filtre suit l'animal actif.
+  const [filtre, setFiltre] = useState<FiltreStock | null>(null);
+  const voulu: FiltreStock = filtre ?? especeActive;
   const filtreCourant: FiltreStock =
-    filtre === FILTRE_STOCK_TOUT || especes.includes(filtre) ? filtre : FILTRE_STOCK_TOUT;
+    voulu === FILTRE_STOCK_TOUT || especes.includes(voulu) ? voulu : FILTRE_STOCK_TOUT;
   const fromagerie =
     filtreCourant === FILTRE_STOCK_TOUT
       ? especes.some((e) => e === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES || e === TYPE_ANIMAL_ETABLISSEMENT.BREBIS)
       : filtreCourant === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES ||
         filtreCourant === TYPE_ANIMAL_ETABLISSEMENT.BREBIS;
-  const puces = fromagerie ? [PUCE_FROMAGERIE, ...PUCES_AUTRES] : PUCES_AUTRES;
+  // Le lait se note pour les chèvres et les brebis, comme la fromagerie ; la viande et l'entretien valent pour tous les animaux.
+  const puces = fromagerie ? [PUCE_FROMAGERIE, PUCE_LAIT, ...PUCES_AUTRES] : PUCES_AUTRES;
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
-  const { onglet: ongletDemande } = useLocalSearchParams<{ onglet?: string }>();
-  const [choisi, setOnglet] = useState<Onglet | undefined>(
-    puces.some((p) => p.valeur === ongletDemande) ? (ongletDemande as Onglet) : undefined,
-  );
+  const { onglet: ongletDemande, espece: especeDemandee } = useLocalSearchParams<{
+    onglet?: string;
+    espece?: string;
+  }>();
+  const [choisi, setOnglet] = useState<Onglet | undefined>();
+  // Un lien (le crayon d'un formulaire) peut ouvrir un onglet et un animal précis, même si le stock était déjà ouvert.
+  const demande = `${ongletDemande ?? ''}|${especeDemandee ?? ''}`;
+  const [demandeVue, setDemandeVue] = useState('|');
+  if (demande !== demandeVue) {
+    setDemandeVue(demande);
+    if (especeDemandee) setFiltre(especeDemandee as FiltreStock);
+    if (ongletDemande) setOnglet(ongletDemande as Onglet);
+  }
   const onglet: Onglet = choisi && puces.some((p) => p.valeur === choisi) ? choisi : puces[0].valeur;
   const [archive, setArchive] = useState<ArchiveStock>({
     mouvements: [],
@@ -124,12 +153,16 @@ export default function StockFromagerie() {
     conditionnements: {},
     ordres: {},
     noms: {},
+    lait: [],
+    prix: {},
   });
   const [article, setArticle] = useState<ArticleAffiche | null>(null);
   /** Le genre d'article qu'on est en train d'ajouter (la fenêtre de saisie est fermée quand il est absent). */
   const [ajout, setAjout] = useState<GenreArticle | null>(null);
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
+  /** Le litrage qu'on modifie (« nouveau » pour en noter un) ; la fenêtre est fermée quand il est absent. */
+  const [laitOuvert, setLaitOuvert] = useState<LaitJour | 'nouveau' | null>(null);
   /** Le fromage dont on modifie le conditionnement. */
   const [enEdition, setEnEdition] = useState<string | null>(null);
   /** Les sections de la fromagerie qui sont déroulées : aucune au départ, tout est réduit. */
@@ -139,8 +172,20 @@ export default function StockFromagerie() {
   /** Le menu en haut à droite (burger) et la feuille des statistiques qu'il ouvre. */
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [statistiquesOuvertes, setStatistiquesOuvertes] = useState(false);
+  const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
 
-  const charger = useCallback(async () => setArchive(await lireArchiveStock()), []);
+  /** Les litres de lait vendus (les ventes de lait en comptabilité), pour le lait restant. */
+  const [litresVendus, setLitresVendus] = useState(0);
+
+  const charger = useCallback(async () => {
+    const [stock, ventes] = await Promise.all([lireArchiveStock(), listToutesVentes()]);
+    setArchive(stock);
+    setLitresVendus(
+      ventes
+        .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT)
+        .reduce((total, v) => total + (v.quantite ?? 0), 0),
+    );
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -157,7 +202,15 @@ export default function StockFromagerie() {
       <ListRow
         key={a.cle}
         title={a.libelle}
-        subtitle={niveau < 0 ? T.negatif : undefined}
+        subtitle={
+          niveau < 0
+            ? T.negatif
+            : a.prix
+              ? roleDeLaViande(a.cle)
+                ? T.parKg(formatMontant(a.prix))
+                : formatMontant(a.prix)
+              : undefined
+        }
         trailing={
           <View style={stylesStock.fin}>
             <Text style={[styles.resultatLigne, niveau < 0 ? styles.perte : undefined]}>
@@ -211,8 +264,12 @@ export default function StockFromagerie() {
     charger();
   };
 
-  const renommer = async (nom: string) => {
-    if (renomme) await renommerArticle(renomme.cle, nom);
+  const renommer = async (nom: string, prix?: number) => {
+    if (renomme) {
+      await renommerArticle(renomme.cle, nom);
+      // Seuls les fromages et les viandes se vendent : eux seuls ont un prix.
+      if (seVend(renomme.cle)) await definirPrixArticle(renomme.cle, prix);
+    }
     setRenomme(null);
     charger();
   };
@@ -231,9 +288,6 @@ export default function StockFromagerie() {
       actuelles.includes(section) ? actuelles.filter((s) => s !== section) : [...actuelles, section],
     );
 
-  const recents = [...archive.mouvements]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, NOMBRE_MOUVEMENTS_AFFICHES);
   const emballages = articlesDuGenre(GENRE_ARTICLE.EMBALLAGE, archive, filtreCourant);
   const fromages = articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, filtreCourant);
 
@@ -291,25 +345,28 @@ export default function StockFromagerie() {
   );
 
   /** Ce que le bouton « + » propose : les trois genres de la fromagerie, ou celui de l'onglet (aliments, entretien). */
-  const optionsAjout = genreOnglet
-    ? [
-        {
-          label: TEXTES_AJOUT[genreOnglet].titre,
-          icon: 'add-circle' as const,
-          onPress: () => ouvrirAjout(genreOnglet),
-        },
-      ]
-    : SECTIONS.flatMap(({ genre }) =>
-        genre
-          ? [
-              {
-                label: TEXTES_AJOUT[genre].titre,
-                icon: 'add-circle' as const,
-                onPress: () => ouvrirAjout(genre),
-              },
-            ]
-          : [],
-      );
+  const optionsAjout =
+    onglet === ONGLET_STOCK.LAIT
+      ? [{ label: T.laitJour.ajouter, icon: 'add-circle' as const, onPress: () => setLaitOuvert('nouveau') }]
+      : genreOnglet
+        ? [
+            {
+              label: TEXTES_AJOUT[genreOnglet].titre,
+              icon: 'add-circle' as const,
+              onPress: () => ouvrirAjout(genreOnglet),
+            },
+          ]
+        : SECTIONS.flatMap(({ genre }) =>
+            genre
+              ? [
+                  {
+                    label: TEXTES_AJOUT[genre].titre,
+                    icon: 'add-circle' as const,
+                    onPress: () => ouvrirAjout(genre),
+                  },
+                ]
+              : [],
+          );
 
   return (
     <Screen scroll={false}>
@@ -329,61 +386,80 @@ export default function StockFromagerie() {
           <PucesDefilantes<Onglet> puces={puces} valeur={onglet} onChoisir={setOnglet} />
         ) : null}
 
-        {genreOnglet
-          ? liste(genreOnglet)
-          : SECTIONS.map(({ section, titre, genre }) => (
-              <SectionDeroulante
-                key={section}
-                titre={titre}
-                nombre={articlesDuGenre(genre ?? GENRE_ARTICLE.FROMAGE, archive, filtreCourant).length}
-                ouverte={ouvertes.includes(section)}
-                onBasculer={() => basculerSection(section)}
-              >
-                {genre ? liste(genre) : conditionnement}
-              </SectionDeroulante>
-            ))}
-
-        <Text style={commonStyles.cardTitle}>{T.mouvements}</Text>
-        {recents.length === 0 ? (
-          <Text style={commonStyles.mutedItalic}>{T.aucunMouvement}</Text>
+        {onglet === ONGLET_STOCK.LAIT ? (
+          <JournalLait
+            lait={archive.lait}
+            bilan={bilanLait(archive, litresVendus)}
+            onOuvrir={setLaitOuvert}
+          />
+        ) : genreOnglet ? (
+          liste(genreOnglet)
         ) : (
-          recents.map((m) => (
-            <Text key={m.id} style={commonStyles.muted}>
-              {T.ligneMouvement(
-                formatDateShortFR(m.date),
-                libelleArticle(m.article, archive),
-                `${m.delta > 0 ? '+' : ''}${m.delta}`,
-                m.origine === ORIGINE_MOUVEMENT.VENTE ? T.vente : T.manuel,
-              )}
-            </Text>
+          SECTIONS.map(({ section, titre, genre }) => (
+            <SectionDeroulante
+              key={section}
+              titre={titre}
+              nombre={articlesDuGenre(genre ?? GENRE_ARTICLE.FROMAGE, archive, filtreCourant).length}
+              ouverte={ouvertes.includes(section)}
+              onBasculer={() => basculerSection(section)}
+            >
+              {genre ? liste(genre) : conditionnement}
+            </SectionDeroulante>
           ))
         )}
       </ScrollView>
 
-      {/* Le menu burger, à droite du titre : les statistiques de la fromagerie (lait par fromage). */}
+      {/* Le menu burger, à droite du titre : les statistiques de la fromagerie (lait par fromage) et l'historique. */}
       <Tabs.Screen
         options={{
-          headerRight: fromagerie
-            ? () => (
-                <Pressable
-                  style={commonStyles.boutonEnteteDroite}
-                  onPress={() => setMenuOuvert(true)}
-                  hitSlop={10}
-                  accessibilityLabel={T.statistiques.menu}
-                >
-                  <Ionicons name="menu" size={26} color={colors.blanc} />
-                </Pressable>
-              )
-            : undefined,
+          headerRight: () => (
+            <Pressable
+              style={commonStyles.boutonEnteteDroite}
+              onPress={() => setMenuOuvert(true)}
+              hitSlop={10}
+              accessibilityLabel={T.statistiques.menu}
+            >
+              <Ionicons name="menu" size={26} color={colors.blanc} />
+            </Pressable>
+          ),
         }}
       />
       <OptionsModal
         visible={menuOuvert}
         onClose={() => setMenuOuvert(false)}
         options={[
-          { label: T.statistiques.titre, icon: 'stats-chart', onPress: () => setStatistiquesOuvertes(true) },
+          ...(fromagerie
+            ? [
+                {
+                  label: T.statistiques.titre,
+                  icon: 'stats-chart' as const,
+                  onPress: () => setStatistiquesOuvertes(true),
+                },
+              ]
+            : []),
+          { label: T.historique.titre, icon: 'time' as const, onPress: () => setHistoriqueOuvert(true) },
         ]}
       />
+      <Modal
+        visible={historiqueOuvert}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setHistoriqueOuvert(false)}
+      >
+        <Pressable style={commonStyles.backdrop} onPress={() => setHistoriqueOuvert(false)}>
+          <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
+            <Text style={commonStyles.subheading}>{T.historique.titre}</Text>
+            <ScrollView style={stylesStock.feuilleStatistiques}>
+              <HistoriqueStock archive={archive} especes={especes} filtreInitial={filtreCourant} />
+            </ScrollView>
+            <Button
+              variant="secondary"
+              label={T.statistiques.fermer}
+              onPress={() => setHistoriqueOuvert(false)}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
       <Modal
         visible={statistiquesOuvertes}
         transparent
@@ -407,6 +483,22 @@ export default function StockFromagerie() {
 
       <Fab options={optionsAjout} />
 
+      <LaitJourModal
+        visible={laitOuvert !== null}
+        entree={laitOuvert && laitOuvert !== 'nouveau' ? laitOuvert : undefined}
+        onValider={async (valeurs) => {
+          await enregistrerLaitJour(valeurs);
+          setLaitOuvert(null);
+          charger();
+        }}
+        onSupprimer={async () => {
+          if (laitOuvert && laitOuvert !== 'nouveau') await supprimerLaitJour(laitOuvert.id);
+          setLaitOuvert(null);
+          charger();
+        }}
+        onFermer={() => setLaitOuvert(null)}
+      />
+
       <MouvementStockModal
         article={article}
         unite={article?.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? TEXTES.commun.general.kg : undefined}
@@ -418,10 +510,13 @@ export default function StockFromagerie() {
         onSupprimer={article?.id ? retirer : undefined}
         onFermer={() => setArticle(null)}
       />
-      <NomModal
+      <ArticleStockModal
         visible={!!renomme}
         titre={T.renommer.titre}
-        valeurInitiale={renomme?.libelle}
+        nom={renomme?.libelle}
+        prix={renomme?.prix}
+        avecPrix={!!renomme && seVend(renomme.cle)}
+        parKg={!!renomme && roleDeLaViande(renomme.cle) !== undefined}
         onValider={renommer}
         onAnnuler={() => setRenomme(null)}
       />

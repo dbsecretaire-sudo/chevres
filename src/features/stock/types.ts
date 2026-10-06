@@ -26,6 +26,14 @@ export interface ArticleStock {
   activite?: string;
 }
 
+/** Le lait produit un jour : son litrage (chèvres et brebis). */
+export interface LaitJour {
+  id: string;
+  /** AAAA-MM-JJ */
+  date: string;
+  litres: number;
+}
+
 /**
  * Tout le stock d'un établissement : les mouvements (le niveau est leur somme), les articles ajoutés, et les emballages
  * consommés par fromage vendu quand ils ont été personnalisés (codes des emballages, d'office ou ajoutés).
@@ -39,4 +47,8 @@ export interface ArchiveStock {
   ordres: Partial<Record<GenreArticle, string[]>>;
   /** Le nom choisi pour un article d'office (fromage, emballage ou matériel de départ), par identifiant d'article. */
   noms: Record<string, string>;
+  /** Le lait produit, jour par jour. */
+  lait: LaitJour[];
+  /** Le prix de vente d'un fromage ou d'une viande (€, par identifiant d'article) : il préremplit le prix d'une vente. */
+  prix: Record<string, number>;
 }

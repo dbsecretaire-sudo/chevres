@@ -76,6 +76,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'client',
     'poidsKg',
     'sacs',
+    'jeune',
     'precision',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
@@ -104,7 +105,7 @@ export const CHAMPS_NOMBRE = new Set([
 ]);
 
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */
-export const CHAMPS_BOOLEEN = new Set(['renouvellement', 'stockApplique']);
+export const CHAMPS_BOOLEEN = new Set(['renouvellement', 'stockApplique', 'jeune']);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
 export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable']);

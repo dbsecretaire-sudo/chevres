@@ -157,6 +157,8 @@ export interface Vente {
   poidsKg?: number;
   /** Pour une vente de fromage : nombre de sacs en plastique emportés par le client, décompté du stock d'emballages. */
   sacs?: number;
+  /** Pour la vente d'un animal sur pied ou vivant : vrai si c'est un petit (cabri, agneau…), faux ou absent pour un adulte. */
+  jeune?: boolean;
   /** Commentaire facultatif précisant de quoi il s'agissait (viande, charcuterie, animal sur pied ou vivant). */
   precision?: string;
 }

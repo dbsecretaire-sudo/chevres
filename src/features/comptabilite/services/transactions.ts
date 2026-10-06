@@ -1,4 +1,9 @@
-import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
+import {
+  LABEL_CATEGORIE_DEPENSE,
+  LABEL_CATEGORIE_RECETTE,
+  LABEL_CATEGORIE_VENTE,
+  LABEL_TYPE_AIDE,
+} from '@/shared/textes/libelles';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import type { ActiviteComptable, Vente } from '@/features/comptabilite/types';
@@ -38,6 +43,8 @@ export interface Transaction {
   categorie?: string;
   /** Pour un achat de marchandises détaillé : les rubriques (gîte, bar, activité) que ses lignes servent. */
   rubriques?: string[];
+  /** Le nom de la catégorie de l'écriture (« Alimentation », « Vente de fromage »…), pour la recherche. */
+  libelleCategorie?: string;
 }
 
 /** Titre d'une vente dans la liste : « Lait — 12 L », « Veaux — 2 têtes », « Charcuterie »… */
@@ -72,6 +79,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
       : TEXTES.comptabilite.transactions.venteDeProduction,
     source: SOURCE_TRANSACTION.VENTE,
     activite: activiteVente(v),
+    libelleCategorie: LABEL_CATEGORIE_VENTE[v.categorie],
   }));
 
   // Une facture d'alimentation répartie entre des cheptels donne une ligne par cheptel : `montant` reste le
@@ -94,6 +102,11 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
       source: SOURCE_TRANSACTION.FACTURE,
       activite,
       categorie: f.categorieRecette ?? f.categorieDepense,
+      libelleCategorie: f.categorieRecette
+        ? LABEL_CATEGORIE_RECETTE[f.categorieRecette]
+        : f.categorieDepense
+          ? LABEL_CATEGORIE_DEPENSE[f.categorieDepense]
+          : undefined,
       rubriques: f.lignesMarchandises?.length
         ? [...new Set(f.lignesMarchandises.map((l) => RUBRIQUE_COMPTABLE_DE_MARCHANDISE[l.rubrique]))]
         : undefined,

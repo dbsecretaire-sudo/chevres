@@ -130,6 +130,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [unite, setUnite] = useState<UniteVente>(UNITE_VENTE.PIECE);
   const [poidsKg, setPoidsKg] = useState('');
   const [sacs, setSacs] = useState('');
+  const [jeune, setJeune] = useState<boolean | undefined>();
   const [precision, setPrecision] = useState('');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
@@ -268,6 +269,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         tauxTvaAchat,
         poidsKg,
         sacs,
+        jeune,
         precision,
         clientSelectionne,
         estProductionVente,
@@ -347,6 +349,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setPoidsKg,
     sacs,
     setSacs,
+    jeune,
+    setJeune,
     precision,
     setPrecision,
     groupeRecette: groupeRecette(categorieRecette, activite),

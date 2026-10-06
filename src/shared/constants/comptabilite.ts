@@ -276,7 +276,6 @@ export const GROUPE_RECETTE = {
   LAITERIE: 'laiterie',
   OEUFS: 'oeufs',
   BOUCHERIE: 'boucherie',
-  ANIMAL: 'animal',
   AIDE: 'aide',
   AUTRE: 'autre',
   // --- Entreprise : un groupe par recette (pas de seconde liste) ---
@@ -301,42 +300,26 @@ const AIDE_ET_AUTRE: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.AUTRE, categories: [CATEGORIE_RECETTE.AUTRE] },
 ];
 
-/** Chèvres et brebis : laiterie / fromagerie, puis tout ce qui touche à l'animal (dont la boucherie). */
+/** La viande : une seule recette, dont le détail (cabris, animal sur pied, saucisson…) se choisit dans la liste du stock. */
+const GROUPE_VIANDE: GroupeRecetteDefinition = {
+  groupe: GROUPE_RECETTE.BOUCHERIE,
+  categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],
+};
+
+/** Chèvres et brebis : laiterie / fromagerie, puis la viande. */
 const GROUPES_RECETTE_LAITIERS: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.LAITERIE, categories: [CATEGORIE_RECETTE.LAIT, CATEGORIE_RECETTE.FROMAGE] },
-  {
-    groupe: GROUPE_RECETTE.ANIMAL,
-    categories: [
-      CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
-      CATEGORIE_RECETTE.CABRIS,
-      CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
-      CATEGORIE_RECETTE.ANIMAL_VIVANT,
-    ],
-  },
+  GROUPE_VIANDE,
   ...AIDE_ET_AUTRE,
 ];
 
-/** Vaches et cochons : pas de laiterie ; la boucherie / charcuterie est un choix à part, puis « animal ». */
-const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [
-  { groupe: GROUPE_RECETTE.BOUCHERIE, categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE] },
-  {
-    groupe: GROUPE_RECETTE.ANIMAL,
-    categories: [
-      CATEGORIE_RECETTE.CABRIS,
-      CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
-      CATEGORIE_RECETTE.ANIMAL_VIVANT,
-    ],
-  },
-  ...AIDE_ET_AUTRE,
-];
+/** Vaches et cochons : pas de laiterie ; la viande, l'aide et le reste. */
+const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [GROUPE_VIANDE, ...AIDE_ET_AUTRE];
 
-/** Poules : les œufs, puis l'animal (vivant, mort ou poussins), l'aide et le reste. */
+/** Poules : les œufs, puis la viande, l'aide et le reste. */
 const GROUPES_RECETTE_POULES: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.OEUFS, categories: [CATEGORIE_RECETTE.OEUFS] },
-  {
-    groupe: GROUPE_RECETTE.ANIMAL,
-    categories: [CATEGORIE_RECETTE.ANIMAL_VIVANT, CATEGORIE_RECETTE.ANIMAL_MORT, CATEGORIE_RECETTE.CABRIS],
-  },
+  GROUPE_VIANDE,
   ...AIDE_ET_AUTRE,
 ];
 

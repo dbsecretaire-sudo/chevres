@@ -14,6 +14,8 @@ export const GENRE_ARTICLE = {
   ALIMENT: 'aliment',
   /** Un produit d'entretien (toujours ajouté par l'utilisateur). */
   ENTRETIEN: 'entretien',
+  /** Un type de viande ou de charcuterie vendu (saucisson, jambon…), toujours ajouté par l'utilisateur. */
+  VIANDE: 'viande',
 } as const;
 
 /** Le choix « toutes les activités » du filtre du stock (sinon : une espèce de l'exploitation). */
@@ -68,7 +70,9 @@ export const PREFIXE_FROMAGE_AJOUTE = 'ajoute:';
 /** Les parties de l'écran Stock : la fromagerie (en sections), les aliments, l'entretien. */
 export const ONGLET_STOCK = {
   FROMAGERIE: 'fromagerie',
+  LAIT: 'lait',
   ALIMENTS: 'aliments',
+  VIANDE: 'viande',
   ENTRETIEN: 'entretien',
 } as const;
 
@@ -84,7 +88,13 @@ export const SECTION_FROMAGERIE = {
 export const ORIGINE_MOUVEMENT = {
   VENTE: 'vente',
   MANUEL: 'manuel',
+  /** Les petits nés vivants d'une naissance déclarée (ajoutés à la ligne des jeunes de la viande). */
+  NAISSANCE: 'naissance',
 } as const;
 
-/** Nombre de mouvements récents affichés sous le stock. */
-export const NOMBRE_MOUVEMENTS_AFFICHES = 15;
+/** Les lignes de viande tenues d'office pour chaque espèce : ses petits, puis l'animal sur pied et l'animal vivant. */
+export const ROLE_VIANDE = {
+  JEUNE: 'jeune',
+  SUR_PIED: 'pied',
+  VIVANT: 'vivant',
+} as const;

@@ -9,8 +9,45 @@ export const TEXTES_STOCK = {
     aliments: 'Aliments',
     fromagerie: 'Fromagerie',
     entretien: 'Entretien',
+    lait: 'Lait',
+    viande: 'Viande',
   },
-  /** Les sections déroulables de la fromagerie. */
+  /** Les lignes de viande tenues d'office : l'animal sur pied et l'animal vivant (leurs petits ont le nom de l'espèce). */
+  viande: { surPied: 'Animal sur pied', vivant: 'Animal vivant' },
+  /** La fenêtre de modification d'un article. */
+  articleModal: {
+    nom: 'Nom',
+    prix: 'Prix de vente (€)',
+    prixKg: 'Prix de vente (€ le kg)',
+    nomRequis: 'Nom requis',
+    prixInvalide: 'Le prix doit être supérieur à zéro.',
+  },
+  /** Le lait produit : un litrage par jour (chèvres et brebis). */
+  laitJour: {
+    ajouter: 'Ajouter du lait',
+    modifier: 'Modifier le lait du jour',
+    litres: 'Litres de lait',
+    date: 'Date',
+    litresInvalides: 'Indiquez un nombre de litres supérieur à zéro.',
+    aucun: 'Aucun litrage noté : ajoutez celui du jour avec le bouton +.',
+    totalDuMois: (mois: string, litres: string) => `${mois} : ${litres} L`,
+    ligne: (litres: string) => `${litres} L`,
+    supprimer: 'Supprimer ce litrage',
+    restant: 'Lait restant',
+    produit: 'Produit',
+    utilise: 'Utilisé en fromagerie',
+    vendu: 'Vendu',
+  },
+  /** L'historique du stock : les mouvements, mois par mois. */
+  historique: {
+    titre: 'Historique',
+    aucun: 'Aucun mouvement de stock.',
+    comparaison: (annee: number, precedente: number) =>
+      `Comparaison ${annee} (précédente année entre parenthèses : ${precedente})`,
+    details: 'Détails',
+    masquer: 'Masquer',
+    mouvements: (nombre: number) => `${nombre} mouvement${nombre > 1 ? 's' : ''}`,
+  },
   /** Le menu en haut du stock, à droite du titre. */
   statistiques: { menu: 'Menu du stock', titre: 'Statistiques', fermer: 'Fermer' },
   sections: {
@@ -20,6 +57,8 @@ export const TEXTES_STOCK = {
     conditionnement: 'Conditionnement',
   },
   unites: (nombre: number) => `${nombre}`,
+  /** Le prix d'une ligne d'animaux : il se compte au kilo. */
+  parKg: (montant: string) => `${montant} le kg`,
   /** Le niveau d'un aliment : il se compte en kilos. */
   kilos: (nombre: number) => `${nombre} kg`,
   negatif: 'Stock négatif : notez la production ou l’achat manquant.',
@@ -46,6 +85,8 @@ export const TEXTES_STOCK = {
     materiel: 'Ajouter du matériel',
     aliment: 'Ajouter un aliment',
     exempleAliment: 'ex : Granulés, orge',
+    viande: 'Ajouter un type de viande',
+    exempleViande: 'ex : Saucisson, jambon, côtes',
     entretien: 'Ajouter un produit d’entretien',
     exempleEntretien: 'ex : Désinfectant, chaux, gants',
     activite: 'Activité concernée',
@@ -62,10 +103,9 @@ export const TEXTES_STOCK = {
     modifier: 'Modifier le conditionnement',
     choisirLesEmballages: 'Emballages consommés par fromage vendu :',
   },
-  mouvements: 'Derniers mouvements',
-  aucunMouvement: 'Aucun mouvement pour le moment.',
   vente: 'vente',
   manuel: 'saisie',
+  naissance: 'naissance',
   ligneMouvement: (date: string, article: string, delta: string, origine: string) =>
     `${date} · ${article} · ${delta} (${origine})`,
   modal: {

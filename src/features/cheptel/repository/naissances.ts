@@ -1,3 +1,5 @@
+import { ajouterJeunesNes } from '@/features/stock/services/stock';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import type { Chevre, Sexe } from '@/features/cheptel/types';
 import { creerChevre } from '@/features/cheptel/repository/chevres';
 import { loadAllYears } from '@/shared/storage/localStore';
@@ -34,7 +36,7 @@ export async function enregistrerNaissance(input: {
     mereId = toutes.find((c) => c.numeroBoucle === input.mereNumeroBoucle)?.id;
   }
 
-  return Promise.all(
+  const creees = await Promise.all(
     input.cabrits.map((c) =>
       creerChevre({
         numeroBoucle: c.numeroBoucle,
@@ -50,6 +52,11 @@ export async function enregistrerNaissance(input: {
       }),
     ),
   );
+
+  // Les petits nés vivants (ni mort-nés, ni gardés pour le renouvellement) s'ajoutent au stock de viande de l'espèce.
+  const aVendre = input.cabrits.filter((c) => !c.mortNe && !c.renouvellement).length;
+  await ajouterJeunesNes(aVendre, input.date, especeCourante());
+  return creees;
 }
 
 export interface PorteeNaissance {

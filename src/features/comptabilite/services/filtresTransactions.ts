@@ -26,7 +26,10 @@ const enNombre = (texte: string) => (texte ? Number(texte.replace(',', '.')) : u
 const enTexteMontant = (montant: number | undefined) =>
   montant !== undefined ? String(montant).replace('.', ',') : '';
 
-/** Garde les transactions qui respectent les filtres (dates, montants) et contiennent le texte recherché. */
+/**
+ * Garde les transactions qui respectent les filtres (dates, montants) et contiennent le texte recherché : dans le titre, le
+ * détail, la date, les montants et le nom de la catégorie (chercher « alimentation » donne les achats d'alimentation).
+ */
 export function filtrerTransactions(
   transactions: Transaction[],
   filtres: FiltresTransactions,
@@ -48,6 +51,7 @@ export function filtrerTransactions(
       const champs = [
         t.titre,
         t.sousTitre,
+        t.libelleCategorie,
         t.date ? formatDateFR(t.date) : '',
         enTexteMontant(t.montant),
         enTexteMontant(t.montantComptabilise),

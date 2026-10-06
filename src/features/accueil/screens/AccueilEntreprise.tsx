@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button } from '@/shared/components/Button';
 import { Screen } from '@/shared/components/Screen';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -29,7 +30,7 @@ import { TEXTES } from '@/shared/textes';
  * Accueil d'une entreprise : l'année active, deux chiffres, puis selon l'activité — le calendrier des chambres occupées
  * pour un gîte, le calendrier des résultats de trading pour une activité financière, la liste des tâches à faire (avec
  * un lien vers chacune) pour le secrétariat. Le solde ouvre la balance mois par mois ; les informations de l'entreprise
- * sont dans les Réglages.
+ * s'ouvrent par un bouton sous les deux chiffres.
  */
 export default function AccueilEntreprise() {
   const router = useRouter();
@@ -109,6 +110,13 @@ export default function AccueilEntreprise() {
           onPress={() => router.push(secondeTuile.vers)}
         />
       </View>
+
+      {/* Les informations de l'entreprise : juste sous les deux chiffres, au-dessus du calendrier (elles ne sont plus dans les Réglages). */}
+      <Button
+        variant="secondary"
+        label={TEXTES.commun.general.informationsDeLEntreprise}
+        onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
+      />
 
       {gite ? (
         <CalendrierMois

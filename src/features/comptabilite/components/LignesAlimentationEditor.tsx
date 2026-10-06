@@ -42,6 +42,8 @@ const ARCHIVE_VIDE: ArchiveStock = {
   conditionnements: {},
   ordres: {},
   noms: {},
+  lait: [],
+  prix: {},
 };
 
 /**
@@ -139,7 +141,7 @@ export function LignesAlimentationEditor({ lignes, onChange, activite }: Props) 
                 )
               }
               options={optionsAliments(espece, ligne)}
-              onEdit={() => router.push(ROUTES.stockDepuis(retour, 'aliments'))}
+              onEdit={() => router.push(ROUTES.stockDepuis(retour, 'aliments', espece))}
             />
             <View style={commonStyles.rowFin}>
               {!estConditionne && (

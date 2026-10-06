@@ -82,7 +82,7 @@ export function MouvementStockModal({
             placeholder="0"
           />
           <Text style={commonStyles.note}>{T.aide}</Text>
-          {avecLitres && nombre > 0 ? (
+          {avecLitres && nombre >= 0 ? (
             <FormField
               label={libelleLitres ?? T.litres}
               value={litres}
