@@ -1,3 +1,4 @@
+import type { PieceJointe } from '@/features/fichiers/types';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { STATUT_ELEMENT } from '@/shared/constants/dossiers';
 
@@ -28,6 +29,8 @@ export interface Element {
   echeance?: string;
   statut?: StatutElement;
   etiquettes?: string[];
+  /** Fichiers joints : Word, Excel, PDF, images (rangés dans l'appareil, envoyés aussi sur Drive). */
+  fichiers?: PieceJointe[];
 }
 
 /** Tout ce que contient l'explorateur pour un établissement : stocké, sauvegardé et synchronisé ensemble. */

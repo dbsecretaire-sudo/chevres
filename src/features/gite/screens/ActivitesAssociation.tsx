@@ -60,6 +60,7 @@ export default function ActivitesAssociation() {
   const [sejours, setSejours] = useState<Sejour[]>([]);
   const [requete, setRequete] = useState('');
   const T = TEXTES.gite.activites;
+  const aussiFinance = activitesEtablissement().includes(ACTIVITE_SOCIETE.LIBERAL);
   const aussiPrestations = activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE);
 
   useFocusEffect(
@@ -96,8 +97,21 @@ export default function ActivitesAssociation() {
               details={T.giteDetails}
               onPress={() => router.push(ROUTES.GITE)}
             />
-            <Tuile icone="beer" titre={T.bar} details={T.barDetails} />
+            <Tuile
+              icone="beer"
+              titre={T.bar}
+              details={T.barDetails}
+              onPress={() => router.push(ROUTES.BAR)}
+            />
             <Tuile icone="storefront" titre={T.annexes} details={T.annexesDetails} />
+            {aussiFinance ? (
+              <Tuile
+                icone="stats-chart"
+                titre={TEXTES.trading.journal.titre}
+                details={[]}
+                onPress={() => router.push(ROUTES.JOURNAL_TRADING)}
+              />
+            ) : null}
             {aussiPrestations ? (
               <Tuile
                 icone="people"

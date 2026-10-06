@@ -15,6 +15,8 @@ export const commonStyles = StyleSheet.create({
   rowBetweenTight: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
   rowSpaceBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  /** Un bouton à droite d'un en-tête d'écran : décollé du bord, comme la flèche de retour à gauche. */
+  boutonEnteteDroite: { marginRight: 16 },
   headerDroite: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   gap2: { gap: 2 },
   gap6: { gap: 6 },
@@ -30,6 +32,12 @@ export const commonStyles = StyleSheet.create({
   screenBg: { flex: 1, backgroundColor: colors.background },
   separateur: { borderTopWidth: 1, borderTopColor: colors.border, marginVertical: 4 },
   pressed: { opacity: 0.7 },
+  /** Une carte sans fond, sans cadre ni marge : son contenu se pose directement sur la page. */
+  carteSansFond: { backgroundColor: 'transparent', borderWidth: 0, padding: 0 },
+  /** Une carte qui garde son cadre mais sans fond blanc. */
+  carteTransparente: { backgroundColor: 'transparent' },
+  /** Un champ qu'on ne peut plus modifier : grisé. */
+  verrouille: { opacity: 0.55 },
 
   // --- Textes ---
   heading: { fontSize: 22, fontWeight: '800', color: colors.text },

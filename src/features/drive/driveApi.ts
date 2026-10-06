@@ -1,3 +1,5 @@
+import { octetsEnBase64 } from '@/shared/utils/base64';
+import { empreinteTexte } from '@/shared/utils/empreinte';
 import {
   CHARSET_UTF8,
   DRIVE_API_URL,
@@ -13,6 +15,8 @@ import {
 export interface DriveFile {
   id: string;
   name: string;
+  /** Empreinte MD5 du contenu gardée par Drive (absente pour un dossier). */
+  md5Checksum?: string;
 }
 
 class DriveApiError extends Error {}
@@ -73,7 +77,10 @@ export async function findFile(
   const q = encodeURIComponent(
     `name='${name.replace(/'/g, "\\'")}' and trashed=false and '${parentId}' in parents`,
   );
-  const res = await driveFetch(`${DRIVE_API_URL}/files?q=${q}&fields=files(id,name)`, accessToken);
+  const res = await driveFetch(
+    `${DRIVE_API_URL}/files?q=${q}&fields=files(id,name,md5Checksum)`,
+    accessToken,
+  );
   const json = await res.json();
   return json.files?.[0];
 }
@@ -121,6 +128,43 @@ export async function createFileWithText(
   return res.json();
 }
 
+/** Envoie un fichier (PDF, Word, image…) donné en base64 : Drive le décode lui-même. */
+export async function createFileBase64(
+  accessToken: string,
+  name: string,
+  parentId: string,
+  mimeType: string,
+  base64: string,
+): Promise<DriveFile> {
+  const metadata = { name, parents: [parentId], mimeType };
+  const body =
+    `--${DRIVE_BOUNDARY}\r\n` +
+    `Content-Type: ${MIME_JSON}; ${CHARSET_UTF8}\r\n\r\n` +
+    `${JSON.stringify(metadata)}\r\n` +
+    `--${DRIVE_BOUNDARY}\r\n` +
+    `Content-Type: ${mimeType}\r\n` +
+    `Content-Transfer-Encoding: base64\r\n\r\n` +
+    `${base64}\r\n` +
+    `--${DRIVE_BOUNDARY}--`;
+
+  const res = await driveFetch(
+    `${DRIVE_UPLOAD_API_URL}/files?uploadType=multipart&fields=id,name`,
+    accessToken,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/related; boundary=${DRIVE_BOUNDARY}` },
+      body,
+    },
+  );
+  return res.json();
+}
+
+/** Télécharge un fichier de Drive et le rend en base64. */
+export async function downloadFileBase64(accessToken: string, fileId: string): Promise<string> {
+  const res = await driveFetch(`${DRIVE_API_URL}/files/${fileId}?alt=media`, accessToken);
+  return octetsEnBase64(new Uint8Array(await res.arrayBuffer()));
+}
+
 export async function updateFileText(accessToken: string, fileId: string, content: string): Promise<void> {
   await driveFetch(`${DRIVE_UPLOAD_API_URL}/files/${fileId}?uploadType=media`, accessToken, {
     method: 'PATCH',
@@ -129,18 +173,25 @@ export async function updateFileText(accessToken: string, fileId: string, conten
   });
 }
 
+/**
+ * Crée le fichier ou met à jour celui qui existe, mais seulement si son contenu a changé : l'empreinte du fichier de
+ * Drive est comparée à celle du contenu local. `modifie` dit si quelque chose a été envoyé.
+ */
 export async function upsertFileText(
   accessToken: string,
   name: string,
   parentId: string,
   content: string,
-): Promise<DriveFile> {
+): Promise<DriveFile & { modifie: boolean }> {
   const existing = await findFile(accessToken, name, parentId);
   if (existing) {
+    if (existing.md5Checksum && existing.md5Checksum === (await empreinteTexte(content))) {
+      return { ...existing, modifie: false };
+    }
     await updateFileText(accessToken, existing.id, content);
-    return existing;
+    return { ...existing, modifie: true };
   }
-  return createFileWithText(accessToken, name, parentId, content);
+  return { ...(await createFileWithText(accessToken, name, parentId, content)), modifie: true };
 }
 
 export async function getAccountEmail(accessToken: string): Promise<string | undefined> {

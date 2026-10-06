@@ -10,6 +10,8 @@ import { TEXTES } from '@/shared/textes';
 /** Ce qu'une case du calendrier affiche en plus du numéro du jour, et sa couleur. */
 export interface MarqueJour {
   texte?: string;
+  /** Un point d'exclamation dans le coin de la case, pour attirer l'attention (ex : un paiement en attente). */
+  attention?: boolean;
   /** Rien, un peu (fond clair), complet (fond plein) ou à surveiller (rouge). */
   niveau?: 'aucun' | 'partiel' | 'plein' | 'alerte';
 }
@@ -65,7 +67,7 @@ export function CalendrierMois({ mois, onChangerMois, marque, onJour, legende }:
         <View key={i} style={styles.ligneSemaine}>
           {semaine.map((jour, j) => {
             if (!jour) return <View key={j} style={styles.caseVide} />;
-            const { texte, niveau = 'aucun' } = marque(jour);
+            const { texte, niveau = 'aucun', attention } = marque(jour);
             const plein = niveau === 'plein';
             return (
               <Pressable
@@ -80,6 +82,11 @@ export function CalendrierMois({ mois, onChangerMois, marque, onJour, legende }:
                 onPress={() => onJour(jour)}
               >
                 <Text style={[styles.numeroJour, plein && styles.textePlein]}>{Number(jour.slice(8))}</Text>
+                {attention ? (
+                  <View style={styles.pastilleAttention}>
+                    <Text style={styles.texteAttention}>!</Text>
+                  </View>
+                ) : null}
                 {texte ? (
                   <Text
                     style={[

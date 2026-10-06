@@ -8,16 +8,18 @@ interface Props {
   subtitle?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
+  /** Texte du titre en gris (une ligne inactive). */
+  grise?: boolean;
 }
 
-export function ListRow({ title, subtitle, trailing, onPress }: Props) {
+export function ListRow({ title, subtitle, trailing, onPress, grise }: Props) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.rowCard, pressed && onPress ? commonStyles.pressed : null]}
     >
       <View style={commonStyles.textWrap}>
-        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={[styles.rowTitle, grise && styles.rowTitleGris]}>{title}</Text>
         {subtitle ? <Text style={commonStyles.muted}>{subtitle}</Text> : null}
       </View>
       {trailing}

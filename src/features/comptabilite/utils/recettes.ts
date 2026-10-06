@@ -6,6 +6,7 @@ import {
   CATEGORIE_VENTE,
   GROUPES_RECETTE_ASSOCIATION,
   GROUPES_RECETTE_COMMUNS,
+  GROUPES_RECETTE_FINANCE,
   GROUPES_RECETTE_PAR_ESPECE,
   GROUPES_RECETTE_SERVICES,
   type GROUPE_RECETTE,
@@ -24,19 +25,19 @@ import {
 import { LABEL_CATEGORIE_RECETTE } from '@/shared/textes/libelles';
 
 /**
- * Les groupes de recettes d'une entreprise selon ses types : prestations et ventes pour un libéral ou un prestataire,
- * hébergement, restauration, bar, cotisations et dons pour une association (les deux listes se complètent si
- * l'établissement a les deux types).
+ * Les groupes de recettes d'une entreprise selon ses types : prestations et ventes pour un secrétariat, hébergement,
+ * restauration, bar, cotisations et dons pour un gîte, gains de trading et dépôts pour une activité financière (les
+ * listes se complètent si l'établissement a plusieurs types).
  */
 export function groupesRecetteEntreprise(): GroupeRecetteDefinition[] {
   const activites = activitesEtablissement();
   const association = activites.includes(ACTIVITE_SOCIETE.ASSOCIATION);
-  const services = activites.some(
-    (a) => a === ACTIVITE_SOCIETE.LIBERAL || a === ACTIVITE_SOCIETE.PRESTATIONS_SERVICE,
-  );
+  const services = activites.includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE);
+  const finance = activites.includes(ACTIVITE_SOCIETE.LIBERAL);
   const listes = [
-    ...(services || !association ? GROUPES_RECETTE_SERVICES : []),
+    ...(services || (!association && !finance) ? GROUPES_RECETTE_SERVICES : []),
     ...(association ? GROUPES_RECETTE_ASSOCIATION : []),
+    ...(finance ? GROUPES_RECETTE_FINANCE : []),
   ];
   // Un même groupe (vente de marchandises, aide, autre) ne figure qu'une fois.
   return listes.filter((g, i) => listes.findIndex((autre) => autre.groupe === g.groupe) === i);

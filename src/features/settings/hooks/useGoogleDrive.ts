@@ -5,6 +5,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import {
   disconnectGoogle,
+  emailGoogleCourant,
   getValidAccessToken,
   isGoogleConnected,
   signInWithGoogle,
@@ -62,6 +63,41 @@ export function useGoogleDrive() {
     }
   };
 
+  /**
+   * La connexion à Google est celle de l'appareil, mais le dossier Drive est propre à chaque établissement : un
+   * établissement créé après la connexion n'a ni compte ni dossier. On le relie au compte déjà connecté.
+   */
+  const lier = async () => {
+    setConnexionEnCours(true);
+    try {
+      const accessToken = await getValidAccessToken();
+      const email = await emailGoogleCourant();
+      if (!accessToken || !email) {
+        Alert.alert(
+          TEXTES.settings.reglages.sessionExpiree,
+          TEXTES.settings.reglages.merciDeVousReconnecterA,
+        );
+        setConnecte(false);
+        return;
+      }
+      const nomDossier = nomDossierDrive(actif.nom, actif.id === ID_ETABLISSEMENT_DEFAUT);
+      const folderId = await ensureRootFolder(accessToken, nomDossier);
+      await patchSettings({
+        driveAccountEmail: email,
+        driveFolderId: folderId,
+        driveFolderName: nomDossier,
+      });
+      Alert.alert(
+        TEXTES.settings.reglages.connecte,
+        TEXTES.settings.reglages.connecteAGoogleDriveEmail(email),
+      );
+    } catch (e: any) {
+      Alert.alert(TEXTES.settings.reglages.erreurDeConnexion, e?.message ?? String(e));
+    } finally {
+      setConnexionEnCours(false);
+    }
+  };
+
   const seDeconnecter = async () => {
     await disconnectGoogle();
     await patchSettings({ driveAccountEmail: undefined, driveFolderId: undefined });
@@ -82,19 +118,22 @@ export function useGoogleDrive() {
         return;
       }
       const onProgress = (annee: number, categorie: string) => setSyncEtape(`${categorie} ${annee}`);
+      let bilan;
       if (sens === 'push') {
-        await pousserToutesAnnees(accessToken, settings.driveFolderId, onProgress);
+        bilan = await pousserToutesAnnees(accessToken, settings.driveFolderId, onProgress);
       } else {
-        await tirerToutesAnnees(accessToken, settings.driveFolderId, onProgress);
+        bilan = await tirerToutesAnnees(accessToken, settings.driveFolderId, onProgress);
         // Les espèces de l'établissement ont pu changer : on les relit pour afficher les bons cheptels.
         await recharger();
       }
       await patchSettings({ derniereSynchronisation: new Date().toISOString() });
       Alert.alert(
         TEXTES.settings.reglages.termine,
-        sens === 'push'
-          ? TEXTES.settings.reglages.donneesEnvoyeesVersGoogleDrive
-          : TEXTES.settings.reglages.donneesRecupereesDepuisGoogleDrive,
+        `${
+          sens === 'push'
+            ? TEXTES.settings.reglages.donneesEnvoyeesVersGoogleDrive
+            : TEXTES.settings.reglages.donneesRecupereesDepuisGoogleDrive
+        } ${TEXTES.settings.reglages.bilanSynchro(bilan.misAJour, bilan.inchanges)}`,
       );
       charger();
     } catch (e: any) {
@@ -105,5 +144,14 @@ export function useGoogleDrive() {
     }
   };
 
-  return { connecte, connexionEnCours, syncEnCours, syncEtape, seConnecter, seDeconnecter, synchroniser };
+  return {
+    connecte,
+    connexionEnCours,
+    syncEnCours,
+    syncEtape,
+    seConnecter,
+    lier,
+    seDeconnecter,
+    synchroniser,
+  };
 }

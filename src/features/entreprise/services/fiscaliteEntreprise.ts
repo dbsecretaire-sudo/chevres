@@ -59,6 +59,8 @@ export async function calculerFiscaliteEntreprise(annee: number): Promise<Fiscal
     const tva = tvaDuTtc(f.montant, f.tauxTva);
     if (f.type === TYPE_FACTURE.RECUE) {
       mois[m].tvaDeductible += tva;
+    } else if (f.categorieRecette === CATEGORIE_RECETTE.DEPOT) {
+      // Un dépôt sur le compte n'est pas un chiffre d'affaires.
     } else if (f.categorieRecette === CATEGORIE_RECETTE.AIDE) {
       aides += f.montant;
     } else {

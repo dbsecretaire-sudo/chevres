@@ -5,8 +5,15 @@ import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/en
 const V = vocabulaire;
 
 /** Ce que contient une entreprise, pour décrire ses exports et sauvegardes (le gîte seulement pour une association). */
-const contenuEntreprise = (base: string): string =>
-  activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION) ? `${base}, séjours du gîte` : base;
+const contenuEntreprise = (base: string): string => {
+  const activites = activitesEtablissement();
+  return [
+    base,
+    ...(activites.includes(ACTIVITE_SOCIETE.ASSOCIATION) ? ['séjours du gîte', 'boissons du bar'] : []),
+    ...(activites.includes(ACTIVITE_SOCIETE.LIBERAL) ? ['trades'] : []),
+    'fichiers joints',
+  ].join(', ');
+};
 
 /** Textes de l'interface — « settings ». À modifier ici uniquement. */
 export const TEXTES_SETTINGS = {
@@ -30,10 +37,15 @@ export const TEXTES_SETTINGS = {
       comptesPcg: number;
       contenus: number;
       sejours: number;
-    }) =>
-      modeEntreprise()
-        ? `${r.clients} client(s), ${r.fournisseurs} fournisseur(s), ${r.contenus} contenu(s) de dossier, ${r.sejours} séjour(s) et ${r.comptesPcg} compte(s) PCG importés.`
-        : `${r.animaux} animal/animaux, ${r.fournisseurs} fournisseur(s), ${r.clients} client(s) et ${r.comptesPcg} compte(s) PCG importés.`,
+      trades: number;
+      misAJour: number;
+      inchanges: number;
+    }) => {
+      const bilan = `${r.misAJour} jeu(x) de données mis à jour, ${r.inchanges} déjà à jour (laissé(s) tel(s) quel(s)).`;
+      return modeEntreprise()
+        ? `${r.clients} client(s), ${r.fournisseurs} fournisseur(s), ${r.contenus} contenu(s) de dossier, ${r.sejours} séjour(s), ${r.trades} trade(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`
+        : `${r.animaux} animal/animaux, ${r.fournisseurs} fournisseur(s), ${r.clients} client(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`;
+    },
     erreurDImport: 'Erreur d’import',
     export: 'Export',
     descriptionExport: (annee: number) =>
@@ -67,6 +79,9 @@ export const TEXTES_SETTINGS = {
     laSynchronisationGoogleDriveN:
       'La synchronisation Google Drive n’est pas disponible sur le web — utilisez l’application mobile.',
     seConnecterAGoogleDrive: 'Se connecter à Google Drive',
+    pasEncoreLie:
+      'Google est connecté sur cet appareil, mais cet établissement n’est pas encore lié à Google Drive : un dossier à son nom sera créé dans votre compte.',
+    lierAuCompteGoogle: 'Lier cet établissement à mon compte Google',
     compteDeuxPoints: 'Compte : ',
     dossierDeuxPoints: 'Dossier : ',
     enCoursPoints: 'En cours… ',
@@ -80,6 +95,8 @@ export const TEXTES_SETTINGS = {
     },
     donneesEnvoyeesVersGoogleDrive: 'Données envoyées vers Google Drive.',
     donneesRecupereesDepuisGoogleDrive: 'Données récupérées depuis Google Drive.',
+    bilanSynchro: (misAJour: number, inchanges: number) =>
+      `${misAJour} fichier${misAJour > 1 ? 's' : ''} mis à jour, ${inchanges} déjà à jour (laissé${inchanges > 1 ? 's' : ''} tel${inchanges > 1 ? 's' : ''} quel${inchanges > 1 ? 's' : ''}).`,
     exportAnneeactive: (anneeActive: number) => `Export ${anneeActive}`,
     get troupeauChevres() {
       return V().troupeau;

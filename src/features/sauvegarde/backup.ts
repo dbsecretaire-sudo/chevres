@@ -8,8 +8,22 @@ import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fourniss
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
-import { lireArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
+import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
 import type { ArchiveGite } from '@/features/gite/types';
+import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
+import type { ArchiveTrading } from '@/features/trading/types';
+import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
+import type { ArchiveBar } from '@/features/bar/types';
+import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
+import type { ArchiveStock } from '@/features/stock/types';
+import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
+import {
+  ecrirePieceBase64,
+  lirePieceBase64,
+  pieceExiste,
+  piecesDisponibles,
+} from '@/features/fichiers/services/pieces';
+import type { PieceJointe } from '@/features/fichiers/types';
 import {
   appliquerProfilEtablissementActif,
   profilEtablissementActif,
@@ -33,6 +47,12 @@ import {
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
+/** Un fichier joint dans la sauvegarde : sa fiche et son contenu en base64. */
+interface PieceSauvegardee {
+  piece: PieceJointe;
+  base64: string;
+}
+
 interface FichierSauvegarde {
   version: number;
   exporteLe: string;
@@ -43,6 +63,14 @@ interface FichierSauvegarde {
   dossiers?: ArchiveDossiers;
   /** Séjours du gîte (absent des anciennes sauvegardes). */
   gite?: ArchiveGite;
+  /** Trades du journal de trading (absent des anciennes sauvegardes). */
+  trading?: ArchiveTrading;
+  /** Boissons du bar (absent des anciennes sauvegardes). */
+  bar?: ArchiveBar;
+  /** Stock de la fromagerie (absent des anciennes sauvegardes). */
+  stock?: ArchiveStock;
+  /** Fichiers joints des contenus et des trades (absent des anciennes sauvegardes). */
+  pieces?: PieceSauvegardee[];
   comptesPcg?: CompteComptableEnregistre[];
   exploitation?: InfosExploitation;
   /** Espèces et activités de l'établissement (absent des anciennes sauvegardes). */
@@ -65,15 +93,26 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees[categorie] = parAnnee;
   }
 
-  const [fournisseurs, clients, dossiers, gite, comptesPcg, settings, etablissement] = await Promise.all([
-    listFournisseurs(),
-    listClients(),
-    lireArchiveDossiers(),
-    lireArchiveGite(),
-    listComptesPcg(),
-    getSettings(),
-    profilEtablissementActif(),
-  ]);
+  const [fournisseurs, clients, dossiers, gite, trading, bar, stock, comptesPcg, settings, etablissement] =
+    await Promise.all([
+      listFournisseurs(),
+      listClients(),
+      lireArchiveDossiers(),
+      lireArchiveGite(),
+      lireArchiveTrading(),
+      lireArchiveBar(),
+      lireArchiveStock(),
+      listComptesPcg(),
+      getSettings(),
+      profilEtablissementActif(),
+    ]);
+
+  const pieces: PieceSauvegardee[] = [];
+  if (piecesDisponibles()) {
+    for (const piece of await toutesLesPieces()) {
+      if (await pieceExiste(piece)) pieces.push({ piece, base64: await lirePieceBase64(piece) });
+    }
+  }
 
   const sauvegarde: FichierSauvegarde = {
     version: VERSION_SAUVEGARDE,
@@ -83,6 +122,10 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     clients,
     dossiers,
     gite,
+    trading,
+    bar,
+    stock,
+    pieces,
     comptesPcg,
     exploitation: settings.exploitation,
     etablissement,
@@ -115,6 +158,12 @@ export interface ResultatImport {
   contenus: number;
   /** Séjours du gîte (association). */
   sejours: number;
+  /** Trades du journal de trading (activité financière). */
+  trades: number;
+  /** Jeux de données (années, listes, fichiers joints) réellement remplacés par ceux de la sauvegarde. */
+  misAJour: number;
+  /** Jeux de données déjà identiques à ceux de la sauvegarde, laissés tels quels. */
+  inchanges: number;
 }
 
 /**
@@ -125,7 +174,18 @@ export interface ResultatImport {
 export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   const choix = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
   if (choix.canceled)
-    return { annule: true, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0, contenus: 0, sejours: 0 };
+    return {
+      annule: true,
+      animaux: 0,
+      fournisseurs: 0,
+      clients: 0,
+      comptesPcg: 0,
+      contenus: 0,
+      sejours: 0,
+      trades: 0,
+      misAJour: 0,
+      inchanges: 0,
+    };
 
   const contenu = await FileSystem.readAsStringAsync(choix.assets[0].uri, {
     encoding: FileSystem.EncodingType.UTF8,
@@ -141,6 +201,18 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
   }
 
+  let misAJour = 0;
+  let inchanges = 0;
+  /** N'écrit que ce qui diffère de ce que l'appareil contient déjà : le reste est laissé tel quel. */
+  const appliquerSiDifferent = async (actuel: unknown, nouveau: unknown, ecrire: () => Promise<void>) => {
+    if (JSON.stringify(actuel) === JSON.stringify(nouveau)) {
+      inchanges += 1;
+      return;
+    }
+    await ecrire();
+    misAJour += 1;
+  };
+
   let animaux = 0;
   for (const categorie of CATEGORIES_STOCKAGE) {
     const parAnnee = sauvegarde.donnees[categorie];
@@ -149,37 +221,79 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
       const annee = Number(anneeTexte);
       if (!Number.isFinite(annee)) continue;
       const types = items as (RecordMap[typeof categorie] & { id: string })[];
-      await saveYear(categorie, annee, types);
-      await reindexYear(categorie, annee, types);
+      await appliquerSiDifferent(await loadYear(categorie, annee), types, async () => {
+        await saveYear(categorie, annee, types);
+        await reindexYear(categorie, annee, types);
+      });
       if (categorie === CATEGORIE_STOCKAGE.CHEPTEL) animaux += types.length;
     }
   }
 
   if (Array.isArray(sauvegarde.fournisseurs)) {
-    await remplacerTousFournisseurs(sauvegarde.fournisseurs);
+    await appliquerSiDifferent(await listFournisseurs(), sauvegarde.fournisseurs, () =>
+      remplacerTousFournisseurs(sauvegarde.fournisseurs),
+    );
   }
 
   if (Array.isArray(sauvegarde.clients)) {
-    await remplacerTousClients(sauvegarde.clients);
+    await appliquerSiDifferent(await listClients(), sauvegarde.clients, () =>
+      remplacerTousClients(sauvegarde.clients!),
+    );
   }
 
   if (sauvegarde.dossiers && Array.isArray(sauvegarde.dossiers.sousDossiers)) {
-    await remplacerArchiveDossiers({
+    const dossiers = {
       sousDossiers: sauvegarde.dossiers.sousDossiers,
       elements: Array.isArray(sauvegarde.dossiers.elements) ? sauvegarde.dossiers.elements : [],
-    });
+    };
+    await appliquerSiDifferent(await lireArchiveDossiers(), dossiers, () =>
+      remplacerArchiveDossiers(dossiers),
+    );
   }
 
   if (sauvegarde.gite && Array.isArray(sauvegarde.gite.sejours)) {
-    await remplacerArchiveGite({ sejours: sauvegarde.gite.sejours });
+    const gite = normaliserArchiveGite(sauvegarde.gite);
+    await appliquerSiDifferent(await lireArchiveGite(), gite, () => remplacerArchiveGite(gite));
+  }
+
+  if (sauvegarde.trading && Array.isArray(sauvegarde.trading.trades)) {
+    const trading = { trades: sauvegarde.trading.trades };
+    await appliquerSiDifferent(await lireArchiveTrading(), trading, () => remplacerArchiveTrading(trading));
+  }
+
+  if (sauvegarde.bar && Array.isArray(sauvegarde.bar.boissons)) {
+    const bar = normaliserArchiveBar(sauvegarde.bar);
+    await appliquerSiDifferent(await lireArchiveBar(), bar, () => remplacerArchiveBar(bar));
+  }
+
+  if (sauvegarde.stock && Array.isArray(sauvegarde.stock.mouvements)) {
+    const stock = normaliserArchiveStock(sauvegarde.stock);
+    await appliquerSiDifferent(await lireArchiveStock(), stock, () => remplacerArchiveStock(stock));
+  }
+
+  if (Array.isArray(sauvegarde.pieces) && piecesDisponibles()) {
+    for (const { piece, base64 } of sauvegarde.pieces) {
+      if (!piece || !base64) continue;
+      // Un fichier joint ne change jamais : s'il est déjà là, on ne le réécrit pas.
+      if (await pieceExiste(piece)) {
+        inchanges += 1;
+        continue;
+      }
+      await ecrirePieceBase64(piece, base64);
+      misAJour += 1;
+    }
   }
 
   if (Array.isArray(sauvegarde.comptesPcg)) {
-    await remplacerTousComptesPcg(sauvegarde.comptesPcg);
+    await appliquerSiDifferent(await listComptesPcg(), sauvegarde.comptesPcg, () =>
+      remplacerTousComptesPcg(sauvegarde.comptesPcg!),
+    );
   }
 
   if (sauvegarde.exploitation) {
-    await updateSettings({ exploitation: sauvegarde.exploitation });
+    await appliquerSiDifferent((await getSettings()).exploitation, sauvegarde.exploitation, () =>
+      updateSettings({ exploitation: sauvegarde.exploitation }).then(() => undefined),
+    );
   }
 
   // Les espèces de l'établissement : sans elles, les animaux d'une autre espèce que les chèvres resteraient masqués.
@@ -195,5 +309,8 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     comptesPcg: sauvegarde.comptesPcg?.length ?? 0,
     contenus: sauvegarde.dossiers?.elements?.length ?? 0,
     sejours: sauvegarde.gite?.sejours?.length ?? 0,
+    trades: sauvegarde.trading?.trades?.length ?? 0,
+    misAJour,
+    inchanges,
   };
 }

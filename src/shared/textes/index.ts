@@ -1,4 +1,5 @@
 import { TEXTES_ACCUEIL } from '@/shared/textes/accueil';
+import { TEXTES_BAR } from '@/shared/textes/bar';
 import { TEXTES_CHEPTEL } from '@/shared/textes/cheptel';
 import { TEXTES_CLIENTS } from '@/shared/textes/clients';
 import { TEXTES_COMMUN } from '@/shared/textes/commun';
@@ -10,16 +11,20 @@ import { TEXTES_ENTREPRISE } from '@/shared/textes/entreprise';
 import { TEXTES_ETABLISSEMENTS } from '@/shared/textes/etablissements';
 import { TEXTES_EXPLOITATION } from '@/shared/textes/exploitation';
 import { TEXTES_EXPORT } from '@/shared/textes/export';
+import { TEXTES_FICHIERS } from '@/shared/textes/fichiers';
 import { TEXTES_FOURNISSEURS } from '@/shared/textes/fournisseurs';
 import { TEXTES_GITE } from '@/shared/textes/gite';
 import { TEXTES_NAVIGATION } from '@/shared/textes/navigation';
 import { TEXTES_RH } from '@/shared/textes/rh';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
+import { TEXTES_STOCK } from '@/shared/textes/stock';
+import { TEXTES_TRADING } from '@/shared/textes/trading';
 
 /** Tous les textes de l'application, groupés par domaine puis par écran. */
 export const TEXTES = {
   accueil: TEXTES_ACCUEIL,
+  bar: TEXTES_BAR,
   cheptel: TEXTES_CHEPTEL,
   clients: TEXTES_CLIENTS,
   commun: TEXTES_COMMUN,
@@ -31,10 +36,13 @@ export const TEXTES = {
   etablissements: TEXTES_ETABLISSEMENTS,
   exploitation: TEXTES_EXPLOITATION,
   export: TEXTES_EXPORT,
+  fichiers: TEXTES_FICHIERS,
   fournisseurs: TEXTES_FOURNISSEURS,
   gite: TEXTES_GITE,
   navigation: TEXTES_NAVIGATION,
   rh: TEXTES_RH,
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,
+  stock: TEXTES_STOCK,
+  trading: TEXTES_TRADING,
 } as const;

@@ -5,11 +5,13 @@ import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/Cha
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { TypeAide, TypeFromage } from '@/features/comptabilite/types';
-import { TYPE_AIDE, TYPE_FROMAGE, UNITE_VENTE } from '@/shared/constants/comptabilite';
+import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
+import { TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
+import { PREFIXE_FROMAGE_AJOUTE } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_TYPE_AIDE, LABEL_TYPE_FROMAGE, LABEL_UNITE_VENTE } from '@/shared/textes/libelles';
+import { LABEL_TYPE_AIDE, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
 
 type Props = { e: EtatNouvelleEcriture };
 
@@ -20,10 +22,6 @@ const OPTIONS_TYPE_AIDE = Object.entries(LABEL_TYPE_AIDE).map(([value, label]) =
 const OPTIONS_TYPE_FROMAGE = Object.entries(LABEL_TYPE_FROMAGE).map(([value, label]) => ({
   value: value as TypeFromage,
   label,
-}));
-const OPTIONS_UNITE_FROMAGE = [UNITE_VENTE.PIECE, UNITE_VENTE.KG].map((value) => ({
-  value,
-  label: LABEL_UNITE_VENTE[value],
 }));
 
 function ChampTauxTvaVente({ e }: Props) {
@@ -113,8 +111,35 @@ export function ChampsVenteLait({ e }: Props) {
   );
 }
 
-/** Vente de fromage : type, unité, quantité, prix et TVA. */
+/** Vente de fromage (à la pièce) : type, nombre de sacs, quantité, prix et TVA. */
 export function ChampsVenteFromage({ e }: Props) {
+  // Les types de fromage viennent du stock : un fromage ajouté là se vend ici, à sa place dans la liste.
+  const fromages = useFromagesDuStock();
+  const options =
+    fromages.length > 0
+      ? fromages.map((f) => ({
+          value: f.id ? `${PREFIXE_FROMAGE_AJOUTE}${f.id}` : f.cle.split(':')[1],
+          label: f.libelle,
+        }))
+      : OPTIONS_TYPE_FROMAGE;
+  const ajouteChoisi = fromages.find(
+    (f) =>
+      f.id &&
+      e.typeFromage === TYPE_FROMAGE.AUTRE &&
+      e.typeFromageLibre.trim().toLowerCase() === f.libelle.trim().toLowerCase(),
+  );
+  /** Un fromage ajouté se note comme « autre » avec son nom : c'est ainsi que la vente retrouve son stock. */
+  const choisirFromage = (valeur: string) => {
+    if (valeur.startsWith(PREFIXE_FROMAGE_AJOUTE)) {
+      const ajoute = fromages.find((f) => f.id === valeur.slice(PREFIXE_FROMAGE_AJOUTE.length));
+      e.setTypeFromage(TYPE_FROMAGE.AUTRE);
+      e.setTypeFromageLibre(ajoute?.libelle ?? '');
+    } else {
+      e.setTypeFromage(valeur as TypeFromage);
+      e.setTypeFromageLibre('');
+    }
+  };
+
   return (
     <>
       <View style={commonStyles.row}>
@@ -122,22 +147,22 @@ export function ChampsVenteFromage({ e }: Props) {
           <SelectField
             label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}
             required
-            value={e.typeFromage}
-            onChange={e.setTypeFromage}
-            options={OPTIONS_TYPE_FROMAGE}
+            value={ajouteChoisi ? `${PREFIXE_FROMAGE_AJOUTE}${ajouteChoisi.id}` : e.typeFromage}
+            onChange={choisirFromage}
+            options={options}
           />
         </View>
         <View style={commonStyles.flex1}>
-          <SelectField
-            label={TEXTES.commun.general.unite}
-            required
-            value={e.unite}
-            onChange={e.setUnite}
-            options={OPTIONS_UNITE_FROMAGE}
+          <FormField
+            label={TEXTES.comptabilite.nouvelleEcriture.nombreDeSacs}
+            value={e.sacs}
+            onChangeText={e.setSacs}
+            keyboardType="number-pad"
+            placeholder={TEXTES.commun.general.facultatif}
           />
         </View>
       </View>
-      {e.typeFromage === TYPE_FROMAGE.AUTRE && (
+      {e.typeFromage === TYPE_FROMAGE.AUTRE && !ajouteChoisi && (
         <FormField
           label={TEXTES.comptabilite.nouvelleEcriture.preciserLeType}
           value={e.typeFromageLibre}

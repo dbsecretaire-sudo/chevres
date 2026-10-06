@@ -1,4 +1,5 @@
-import type { Sejour } from '@/features/gite/types';
+import type { AjustementSejour, Sejour } from '@/features/gite/types';
+import { TYPE_AJUSTEMENT_SEJOUR } from '@/shared/constants/gite';
 import { nuitsDuSejour } from '@/shared/utils/calendrier';
 
 /** Arrondi au centime. */
@@ -28,6 +29,23 @@ export function calculerTarif(p: {
   const taxe = arrondi(p.taxe);
   const restauration = arrondi(p.repas * p.prixRepas);
   return { hebergement, taxe, restauration, total: arrondi(hebergement + taxe + restauration) };
+}
+
+/**
+ * Ce qu'une réservation rapporte en tout : son prix (l'acompte en fait partie), plus les prestations supplémentaires, moins
+ * les remboursements faits au client.
+ */
+export function totalDuSejour(sejour: Sejour): number {
+  return totalAvecAjustements(sejour.prix, sejour.ajustements ?? []);
+}
+
+/** Un prix, plus les prestations supplémentaires et moins les remboursements d'une liste d'ajustements. */
+export function totalAvecAjustements(prix: number, ajustements: AjustementSejour[]): number {
+  const net = ajustements.reduce(
+    (total, a) => total + (a.type === TYPE_AJUSTEMENT_SEJOUR.REMBOURSEMENT ? -a.montant : a.montant),
+    prix,
+  );
+  return arrondi(net);
 }
 
 /**

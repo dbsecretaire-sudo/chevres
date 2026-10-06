@@ -1,5 +1,6 @@
 import type { Facture, TypeFromage, UniteVente, Vente } from '@/features/comptabilite/types';
 import {
+  CATEGORIE_DEPENSE,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_RECETTE,
   CATEGORIE_VENTE,
@@ -18,6 +19,7 @@ export interface EcritureClient {
   id: string;
   date: string;
   titre: string;
+  /** Négatif pour une somme rendue au client (un remboursement). */
   montant: number;
   source: ValeurDe<typeof SOURCE_TRANSACTION>;
 }
@@ -43,17 +45,22 @@ export function ecrituresDuClient(ventes: Vente[], factures: Facture[]): Ecritur
     id: f.id,
     date: f.date,
     titre: f.description || TEXTES.commun.general.facture,
-    montant: f.montant,
+    // Un remboursement est une dépense : il diminue ce que le client a payé.
+    montant: f.type === TYPE_FACTURE.RECUE ? -f.montant : f.montant,
     source: SOURCE_TRANSACTION.FACTURE,
   }));
   return [...deVentes, ...deFactures].sort((a, b) => b.date.localeCompare(a.date));
 }
 
-/** Sélectionne, parmi toutes les ventes et factures, celles de ce client. */
+/** Sélectionne, parmi toutes les ventes et factures, celles de ce client (avec les remboursements qu'on lui a faits). */
 export function filtrerParClient(nomAffiche: string, ventes: Vente[], factures: Facture[]) {
   return {
     ventes: ventes.filter((v) => v.client === nomAffiche),
-    factures: factures.filter((f) => f.type === TYPE_FACTURE.EMISE && f.tiers === nomAffiche),
+    factures: factures.filter(
+      (f) =>
+        f.tiers === nomAffiche &&
+        (f.type === TYPE_FACTURE.EMISE || f.categorieDepense === CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT),
+    ),
   };
 }
 

@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.badgeBg,
   },
-  puceActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  /** Une puce qu'on ne peut pas choisir : estompée. */
+  puceGrisee: { opacity: 0.4 },
   texte: { fontSize: 14, fontWeight: '600', color: colors.primaryDark },
-  texteActif: { color: colors.blanc },
 });

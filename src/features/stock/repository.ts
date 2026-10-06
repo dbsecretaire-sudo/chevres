@@ -1,0 +1,47 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cleStockage } from '@/features/etablissements/repository';
+import type { ArchiveStock } from '@/features/stock/types';
+import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+
+const cle = () => cleStockage(CLE_STOCKAGE.STOCK);
+
+const VIDE: ArchiveStock = { mouvements: [], articles: [], conditionnements: {}, ordres: {}, noms: {} };
+
+/** Remet une archive lue (ou reçue d'une sauvegarde) dans sa forme : rien ne manque, un conditionnement est une liste. */
+export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefined): ArchiveStock {
+  const conditionnements: ArchiveStock['conditionnements'] = {};
+  for (const [code, emballages] of Object.entries(archive?.conditionnements ?? {})) {
+    if (Array.isArray(emballages)) conditionnements[code] = emballages;
+  }
+  const ordres: ArchiveStock['ordres'] = {};
+  for (const [genre, cles] of Object.entries(archive?.ordres ?? {})) {
+    if (Array.isArray(cles)) ordres[genre as keyof ArchiveStock['ordres']] = cles;
+  }
+  const noms: ArchiveStock['noms'] = {};
+  for (const [cle, nom] of Object.entries(archive?.noms ?? {})) {
+    if (typeof nom === 'string' && nom.trim()) noms[cle] = nom;
+  }
+  return {
+    mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
+    articles: Array.isArray(archive?.articles) ? archive.articles : [],
+    conditionnements,
+    ordres,
+    noms,
+  };
+}
+
+/** Le stock de l'établissement actif (vide s'il n'y a encore rien). */
+export async function lireArchiveStock(): Promise<ArchiveStock> {
+  const raw = await AsyncStorage.getItem(cle());
+  if (!raw) return { ...VIDE };
+  try {
+    return normaliserArchiveStock(JSON.parse(raw));
+  } catch {
+    return { ...VIDE };
+  }
+}
+
+/** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
+export async function remplacerArchiveStock(archive: ArchiveStock): Promise<void> {
+  await AsyncStorage.setItem(cle(), JSON.stringify(archive));
+}

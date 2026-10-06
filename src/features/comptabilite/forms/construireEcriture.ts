@@ -63,6 +63,8 @@ export interface SaisieEcriture {
   tauxTvaVente: string;
   tauxTvaAchat: string;
   poidsKg: string;
+  /** Nombre de sacs en plastique emportés (vente de fromage). */
+  sacs: string;
   /** Commentaire facultatif (viande, charcuterie, animal sur pied ou vivant). */
   precision: string;
   clientSelectionne?: Client;
@@ -110,13 +112,14 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       unite:
         s.categorieRecette === CATEGORIE_RECETTE.LAIT
           ? UNITE_VENTE.LITRES
-          : estAnimal || estViande || categorie === CATEGORIE_VENTE.OEUFS
+          : estAnimal || estViande || estFromage || categorie === CATEGORIE_VENTE.OEUFS
             ? UNITE_VENTE.PIECE
             : s.unite,
       prix: prixNum,
       tauxTva: parseDecimal(s.tauxTvaVente),
       client: s.clientSelectionne ? nomComplet(s.clientSelectionne) : undefined,
       poidsKg: estAnimal && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
+      sacs: estFromage && s.sacs.trim() ? Math.round(parseDecimal(s.sacs)) || undefined : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
         ? s.precision.trim() || undefined
         : undefined,

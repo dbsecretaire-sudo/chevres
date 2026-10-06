@@ -8,8 +8,10 @@ import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
 import { ClientEcritures, ClientResume, estVente } from '@/features/clients/components/ClientResume';
 import { ClientFormulaire, ClientLecture } from '@/features/clients/components/ClientFiche';
+import { ClientReservations } from '@/features/gite/components/ClientReservations';
 import { ClientTaches } from '@/features/dossiers/components/ClientTaches';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { useFicheClient } from '@/features/clients/hooks/useFicheClient';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -21,6 +23,7 @@ export default function FicheClient() {
   const router = useRouter();
   const fiche = useFicheClient(id);
   const { client, form } = fiche;
+  const gite = activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
 
   if (!client || !form) {
     return (
@@ -83,7 +86,9 @@ export default function FicheClient() {
           <ClientLecture client={client} onModifier={() => fiche.setEditing(true)} />
         )}
 
-        {!fiche.editing && modeEntreprise() && <ClientTaches clientId={client.id} />}
+        {/* Un gîte liste les réservations du client ; un secrétariat, ses tâches et contenus. */}
+        {!fiche.editing && modeEntreprise() && gite ? <ClientReservations clientId={client.id} /> : null}
+        {!fiche.editing && modeEntreprise() && !gite ? <ClientTaches clientId={client.id} /> : null}
 
         {!fiche.editing && fiche.ecritures.length > 0 && <ClientResume resume={fiche.resume} />}
 

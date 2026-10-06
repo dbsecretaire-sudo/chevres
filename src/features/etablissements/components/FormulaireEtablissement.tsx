@@ -4,7 +4,8 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
-import type { DonneesEtablissement } from '@/features/etablissements/repository';
+import { SelectField } from '@/shared/components/SelectField';
+import type { ActiviteSociete, DonneesEtablissement } from '@/features/etablissements/repository';
 import { basculer } from '@/features/etablissements/utils/typesEtablissement';
 import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { LABEL_ACTIVITE_SOCIETE, LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';
@@ -17,53 +18,62 @@ interface Props {
   initial?: DonneesEtablissement;
   titre: string;
   libelleValider: string;
-  onValider: (donnees: DonneesEtablissement) => void;
+  onValider: (donnees: DonneesEtablissement) => void | Promise<void>;
+  /** Une validation est en cours : le bouton est bloqué pour éviter un double envoi. */
+  enCours?: boolean;
   onAnnuler: () => void;
 }
 
-/** Nom et types (animaux, société) d'un établissement — sert à la création et à la modification. */
-export function FormulaireEtablissement({ initial, titre, libelleValider, onValider, onAnnuler }: Props) {
+/** Les types proposés par le menu déroulant, dans l'ordre : l'élevage d'abord, puis les activités, puis l'usage personnel. */
+const TYPES_PROPOSES: ActiviteSociete[] = [
+  ACTIVITE_SOCIETE.AGRICOLE,
+  ACTIVITE_SOCIETE.PRESTATIONS_SERVICE,
+  ACTIVITE_SOCIETE.ASSOCIATION,
+  ACTIVITE_SOCIETE.LIBERAL,
+  ACTIVITE_SOCIETE.PERSO,
+];
+
+/** Le type affiché d'un établissement déjà enregistré : « Agriculture » s'il élève des animaux, sinon sa première activité. */
+function typeInitial(initial?: DonneesEtablissement): ActiviteSociete | '' {
+  if (!initial) return '';
+  if ((initial.animaux?.length ?? 0) > 0) return ACTIVITE_SOCIETE.AGRICOLE;
+  return initial.activites?.find((a) => TYPES_PROPOSES.includes(a)) ?? '';
+}
+
+/**
+ * Nom et type d'un établissement — sert à la création et à la modification. Le type se choisit dans un menu déroulant ;
+ * pour l'élevage, on coche ensuite les espèces élevées.
+ */
+export function FormulaireEtablissement({
+  initial,
+  titre,
+  libelleValider,
+  onValider,
+  enCours,
+  onAnnuler,
+}: Props) {
   const [nom, setNom] = useState(initial?.nom ?? '');
+  const [type, setType] = useState<ActiviteSociete | ''>(typeInitial(initial));
   const [animaux, setAnimaux] = useState(initial?.animaux ?? []);
-  const [activites, setActivites] = useState(initial?.activites ?? []);
 
   const t = TEXTES.etablissements;
-
-  /** Dès qu'on élève des animaux, l'établissement est agricole : le groupe « Société » est grisé sur « Agriculture ». */
-  const agricole = animaux.length > 0;
-
-  /** « Perso » : case seule, exclusive — cochée, tout le reste est grisé et décoché. */
-  const perso = activites.includes(ACTIVITE_SOCIETE.PERSO);
+  const agricole = type === ACTIVITE_SOCIETE.AGRICOLE;
 
   /**
-   * Libéral, prestations de service ou association : une activité sans élevage, donc les animaux et « Agriculture »
-   * sont grisés (et décochés). « Agriculture » seule n'y change rien : on peut ensuite choisir ses animaux.
+   * Un établissement créé avec plusieurs activités à la fois (avant ce menu) les garde tant qu'on ne change pas son
+   * type : le menu n'en montre qu'une, et l'enregistrer tel quel ne doit pas en effacer.
    */
-  const sansElevage =
-    !agricole && activites.some((a) => a !== ACTIVITE_SOCIETE.AGRICOLE && a !== ACTIVITE_SOCIETE.PERSO);
+  const gardeSesActivites =
+    !!initial && (initial.activites?.length ?? 0) > 1 && !agricole && type === typeInitial(initial);
 
-  /** « Perso » n'est cochable que si rien d'autre ne l'est (animaux, Agriculture, libéral…). */
-  const persoGrise = agricole || activites.some((a) => a !== ACTIVITE_SOCIETE.PERSO);
-
-  const changerPerso = () => {
-    setAnimaux([]);
-    setActivites(perso ? [] : [ACTIVITE_SOCIETE.PERSO]);
-  };
-
-  const changerActivite = (activite: (typeof activites)[number]) => {
-    const suivantes = basculer(activites, activite);
-    if (suivantes.some((a) => a !== ACTIVITE_SOCIETE.AGRICOLE)) {
-      setActivites(suivantes.filter((a) => a !== ACTIVITE_SOCIETE.AGRICOLE));
-      setAnimaux([]);
+  const valider = () => {
+    if (agricole) {
+      void onValider({ nom, animaux, activites: [ACTIVITE_SOCIETE.AGRICOLE] });
+    } else if (gardeSesActivites) {
+      void onValider({ nom, animaux: [], activites: initial?.activites });
     } else {
-      setActivites(suivantes);
+      void onValider({ nom, animaux: [], activites: type ? [type] : [] });
     }
-  };
-
-  const changerAnimal = (animal: (typeof animaux)[number]) => {
-    const suivants = basculer(animaux, animal);
-    setAnimaux(suivants);
-    setActivites(suivants.length > 0 ? [ACTIVITE_SOCIETE.AGRICOLE] : []);
   };
 
   return (
@@ -77,49 +87,39 @@ export function FormulaireEtablissement({ initial, titre, libelleValider, onVali
         placeholder={t.selecteurEtablissement.nomExElevageDesHauts}
       />
 
-      <Text style={commonStyles.labelMuted}>
-        {t.typeEtablissement.typeDEtablissement} — {t.typeEtablissement.plusieursChoixPossibles}
-      </Text>
+      <SelectField<string>
+        label={t.typeEtablissement.typeDEtablissement}
+        required={!initial}
+        value={type}
+        placeholder={t.typeEtablissement.choisirUnType}
+        options={TYPES_PROPOSES.map((a) => ({ value: a, label: LABEL_ACTIVITE_SOCIETE[a] }))}
+        onChange={(valeur) => {
+          setType(valeur as ActiviteSociete);
+          if (valeur !== ACTIVITE_SOCIETE.AGRICOLE) setAnimaux([]);
+        }}
+      />
 
-      <Text style={styles.groupeTitre}>{t.typeEtablissement.animaux}</Text>
-      {Object.values(TYPE_ANIMAL_ETABLISSEMENT).map((animal) => (
-        <Checkbox
-          key={animal}
-          label={LABEL_TYPE_ANIMAL_ETABLISSEMENT[animal]}
-          value={animaux.includes(animal)}
-          disabled={sansElevage || perso}
-          onChange={() => changerAnimal(animal)}
-        />
-      ))}
-
-      <Text style={styles.groupeTitre}>{t.typeEtablissement.societe}</Text>
-      {Object.values(ACTIVITE_SOCIETE)
-        .filter((activite) => activite !== ACTIVITE_SOCIETE.PERSO)
-        .map((activite) => (
-          <Checkbox
-            key={activite}
-            label={LABEL_ACTIVITE_SOCIETE[activite]}
-            value={agricole ? activite === ACTIVITE_SOCIETE.AGRICOLE : activites.includes(activite)}
-            disabled={perso || agricole || (sansElevage && activite === ACTIVITE_SOCIETE.AGRICOLE)}
-            onChange={() => changerActivite(activite)}
-          />
-        ))}
-
-      <View style={styles.caseSeule}>
-        <Checkbox
-          label={LABEL_ACTIVITE_SOCIETE[ACTIVITE_SOCIETE.PERSO]}
-          value={perso}
-          disabled={persoGrise}
-          onChange={changerPerso}
-        />
-      </View>
+      {agricole && (
+        <View style={commonStyles.gap6}>
+          <Text style={styles.groupeTitre}>
+            {t.typeEtablissement.especesElevees} — {t.typeEtablissement.plusieursChoixPossibles}
+          </Text>
+          {Object.values(TYPE_ANIMAL_ETABLISSEMENT).map((animal) => (
+            <Checkbox
+              key={animal}
+              label={LABEL_TYPE_ANIMAL_ETABLISSEMENT[animal]}
+              value={animaux.includes(animal)}
+              onChange={() => setAnimaux(basculer(animaux, animal))}
+            />
+          ))}
+        </View>
+      )}
 
       <Button
         label={libelleValider}
-        disabled={!nom.trim()}
-        onPress={() =>
-          onValider({ nom, animaux, activites: agricole ? [ACTIVITE_SOCIETE.AGRICOLE] : activites })
-        }
+        disabled={!nom.trim() || (!initial && !type)}
+        loading={enCours}
+        onPress={valider}
       />
       <Button variant="secondary" label={TEXTES.commun.general.annuler} onPress={onAnnuler} />
     </Card>

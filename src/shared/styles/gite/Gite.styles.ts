@@ -35,6 +35,9 @@ export const styles = StyleSheet.create({
     padding: 8,
     gap: 3,
   },
+  enteteChambre: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  /** Un remboursement ou une prestation sous « Autre » : décalé vers la droite. */
+  sousLignePaiement: { paddingLeft: 16 },
   chambreOccupee: { backgroundColor: colors.badgeBg, borderColor: colors.primary },
   chambreNumero: { fontSize: 12, fontWeight: '800', color: colors.primaryDark },
   chambreNom: { fontSize: 14, fontWeight: '700', color: colors.text },

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Pressable, type ScrollView, Text } from 'react-native';
 import { DefilementFleches } from '@/shared/components/DefilementFleches';
+import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
+import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/etablissements/SelecteurEspece.styles';
 
 /** Espace laissé à gauche de la puce active quand on fait défiler jusqu'à elle. */
@@ -20,9 +22,11 @@ interface Props<T extends string> {
 
 /**
  * Puces de choix sur une seule ligne, qui défile s'il y en a trop (avec une flèche tant qu'il reste du contenu de
- * chaque côté) et qui amène la puce active dans la vue.
+ * chaque côté) et qui amène la puce active dans la vue. Elles suivent la couleur d'accent de l'écran (bleue dans un ajout).
  */
 export function PucesDefilantes<T extends string>({ puces, valeur, onChoisir }: Props<T>) {
+  const accent = useAccentColor();
+  const accentClair = useAccentSoftColor();
   const defilement = useRef<ScrollView>(null);
   const positions = useRef<Record<string, number>>({});
 
@@ -45,10 +49,14 @@ export function PucesDefilantes<T extends string>({ puces, valeur, onChoisir }: 
               positions.current[p.valeur] = e.nativeEvent.layout.x;
               if (active) amenerDansLaVue(e.nativeEvent.layout.x, false);
             }}
-            style={[styles.puce, active && styles.puceActive]}
+            style={[
+              styles.puce,
+              { backgroundColor: accentClair, borderColor: accentClair },
+              active && { backgroundColor: accent, borderColor: accent },
+            ]}
             onPress={() => !active && onChoisir(p.valeur)}
           >
-            <Text style={[styles.texte, active && styles.texteActif]}>{p.label}</Text>
+            <Text style={[styles.texte, active && { color: colors.blanc }]}>{p.label}</Text>
           </Pressable>
         );
       })}

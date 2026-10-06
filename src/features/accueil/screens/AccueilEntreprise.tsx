@@ -1,65 +1,71 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { CalendrierMois, type MarqueJour } from '@/shared/components/CalendrierMois';
 import { TuileChiffre } from '@/features/accueil/components/TuileChiffre';
 import { useAccueilEntreprise } from '@/features/accueil/hooks/useAccueilEntreprise';
-import { chambresOccupeesParNuit } from '@/features/gite/services/occupation';
-import { NOMBRE_CHAMBRES_GITE } from '@/shared/constants/gite';
+import { LigneElement } from '@/features/dossiers/components/LigneElement';
+import { enregistrerElement } from '@/features/dossiers/repository';
+import { cheminDuDossier } from '@/features/dossiers/services/arborescence';
+import { statutEffectif } from '@/features/dossiers/services/avancement';
+import { chambresOccupeesParNuit, nuitsAvecPaiementEnAttente } from '@/features/gite/services/occupation';
+import { AccueilTrading } from '@/features/accueil/components/AccueilTrading';
+import { calculerStatistiques, tradesDeLAnnee } from '@/features/trading/services/calculs';
 import { STATUT_ELEMENT } from '@/shared/constants/dossiers';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
-import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
+import { activiteFinanciereSeule, activitesEtablissement } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { moisDe, type MoisCalendrier } from '@/shared/utils/calendrier';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
+import { styles as stylesAccueil } from '@/shared/styles/accueil/Accueil.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 /**
- * Accueil d'une entreprise : l'année active, deux chiffres (le solde des factures et le nombre de réservations ou de
- * tâches de l'année), puis un grand calendrier — les réservations du gîte pour une association, les tâches à réaliser
- * sinon. Un jour ouvre son détail dans l'onglet Activité ; le solde ouvre la balance mois par mois. Les informations de l'entreprise sont dans les Réglages.
+ * Accueil d'une entreprise : l'année active, deux chiffres, puis selon l'activité — le calendrier des chambres occupées
+ * pour un gîte, le calendrier des résultats de trading pour une activité financière, la liste des tâches à faire (avec
+ * un lien vers chacune) pour le secrétariat. Le solde ouvre la balance mois par mois ; les informations de l'entreprise
+ * sont dans les Réglages.
  */
 export default function AccueilEntreprise() {
   const router = useRouter();
   const accueil = useAccueilEntreprise();
   const [mois, setMois] = useState<MoisCalendrier>(() => moisDe(todayISO()));
   const T = TEXTES.entreprise.accueil;
-  const association = activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
-  const aujourdhui = todayISO();
+  const gite = activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
+  const finance = !gite && activiteFinanciereSeule();
   const annee = String(accueil.annee);
 
-  // Association : les chambres occupées chaque nuit. Sinon : les tâches (contenus à échéance, pas terminés) par jour.
+  // Les tâches : les contenus à échéance qui ne sont pas terminés, les plus pressées d'abord.
+  const taches = accueil.elements
+    .filter((e) => !!e.echeance && statutEffectif(e) !== STATUT_ELEMENT.TERMINE)
+    .sort((a, b) => a.echeance!.localeCompare(b.echeance!));
+  const tachesDeLAnnee = taches.filter((e) => e.echeance!.startsWith(annee)).length;
+
+  // Gîte : les chambres occupées chaque nuit.
   const occupation = chambresOccupeesParNuit(accueil.sejours);
-  const tachesParJour = new Map<string, number>();
-  for (const element of accueil.elements) {
-    if (element.echeance && element.statut !== STATUT_ELEMENT.TERMINE) {
-      tachesParJour.set(element.echeance, (tachesParJour.get(element.echeance) ?? 0) + 1);
-    }
-  }
+  const impayees = nuitsAvecPaiementEnAttente(accueil.sejours);
+  const reservations = accueil.sejours.filter((s) => s.arrivee.startsWith(annee)).length;
+
+  // Activité financière : le résultat net des trades de l'année.
+  const resultatDeLAnnee = calculerStatistiques(tradesDeLAnnee(accueil.trades, annee)).resultatNet;
 
   const marque = (jour: string): MarqueJour => {
-    if (association) {
+    if (gite) {
       const occupees = occupation.get(jour) ?? 0;
       if (occupees === 0) return {};
       return {
-        texte: `${occupees}/${NOMBRE_CHAMBRES_GITE}`,
-        niveau: occupees >= NOMBRE_CHAMBRES_GITE ? 'plein' : 'partiel',
+        texte: `${occupees}/${accueil.nombreChambres}`,
+        niveau: occupees >= accueil.nombreChambres ? 'plein' : 'partiel',
+        attention: impayees.has(jour),
       };
     }
-    const taches = tachesParJour.get(jour) ?? 0;
-    if (taches === 0) return {};
-    return { texte: String(taches), niveau: jour < aujourdhui ? 'alerte' : 'partiel' };
+    return {};
   };
-
-  // Le second chiffre : les réservations qui commencent cette année, ou les tâches à échéance cette année.
-  const reservations = accueil.sejours.filter((s) => s.arrivee.startsWith(annee)).length;
-  const tachesDeLAnnee = [...tachesParJour.entries()]
-    .filter(([jour]) => jour.startsWith(annee))
-    .reduce((total, [, nombre]) => total + nombre, 0);
 
   /** Changer l'année active ramène le calendrier sur le même mois de cette année. */
   const changerAnnee = (nouvelle: number) => {
@@ -74,6 +80,16 @@ export default function AccueilEntreprise() {
   };
 
   const solde = accueil.balance?.balance;
+  const secondeTuile = gite
+    ? { valeur: String(reservations), label: T.tuiles.reservations(annee), vers: ROUTES.GITE }
+    : finance
+      ? {
+          valeur: formatMontant(resultatDeLAnnee),
+          label: T.tuiles.resultatTrading(annee),
+          couleur: resultatDeLAnnee < 0 ? colors.danger : undefined,
+          vers: ROUTES.CLIENTS_EXPLORATEUR,
+        }
+      : { valeur: String(tachesDeLAnnee), label: T.tuiles.taches(annee), vers: ROUTES.CLIENTS_EXPLORATEUR };
 
   return (
     <Screen>
@@ -87,19 +103,43 @@ export default function AccueilEntreprise() {
           onPress={() => router.push(ROUTES.BALANCE)}
         />
         <TuileChiffre
-          valeur={String(association ? reservations : tachesDeLAnnee)}
-          label={association ? T.tuiles.reservations(annee) : T.tuiles.taches(annee)}
-          onPress={() => router.push(association ? ROUTES.GITE : ROUTES.CLIENTS_EXPLORATEUR)}
+          valeur={secondeTuile.valeur}
+          label={secondeTuile.label}
+          couleur={'couleur' in secondeTuile ? secondeTuile.couleur : undefined}
+          onPress={() => router.push(secondeTuile.vers)}
         />
       </View>
 
-      <CalendrierMois
-        mois={mois}
-        onChangerMois={changerMois}
-        marque={marque}
-        onJour={(jour) => router.push(association ? ROUTES.giteJour(jour) : ROUTES.jourEcheances(jour))}
-        legende={association ? T.calendrier.legendeGite : T.calendrier.legendeTaches}
-      />
+      {gite ? (
+        <CalendrierMois
+          mois={mois}
+          onChangerMois={changerMois}
+          marque={marque}
+          onJour={(jour) => router.push(ROUTES.giteJour(jour))}
+          legende={T.calendrier.legendeGite}
+        />
+      ) : finance ? (
+        <AccueilTrading trades={accueil.trades} annee={annee} />
+      ) : (
+        <View style={commonStyles.gap10}>
+          <Text style={stylesAccueil.sectionTitle}>{T.taches.titre}</Text>
+          {taches.length === 0 ? (
+            <EmptyState title={T.taches.aucune} subtitle={T.taches.aucuneDetail} />
+          ) : (
+            taches.map((tache) => (
+              <LigneElement
+                key={tache.id}
+                element={tache}
+                chemin={cheminDuDossier(tache.dossierId, accueil.sousDossiers, accueil.clients)}
+                onStatut={async (statut) => {
+                  await enregistrerElement({ ...tache, statut });
+                  accueil.recharger();
+                }}
+              />
+            ))
+          )}
+        </View>
+      )}
     </Screen>
   );
 }

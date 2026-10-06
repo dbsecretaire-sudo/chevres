@@ -4,10 +4,17 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Card } from '@/shared/components/Card';
-import { listSejours } from '@/features/gite/repository';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { Fab } from '@/shared/components/Fab';
+import { InfoModal } from '@/shared/components/InfoModal';
+import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { ChambreModal } from '@/features/gite/components/ChambreModal';
+import { useChambres } from '@/features/gite/hooks/useChambres';
+import { ajouterChambre, listSejours, supprimerChambre } from '@/features/gite/repository';
 import { sejourDeLaNuit } from '@/features/gite/services/occupation';
+import { totalDuSejour } from '@/features/gite/services/tarifSejour';
 import type { Sejour } from '@/features/gite/types';
-import { CHAMBRES_PAR_COTE, NOMBRE_CHAMBRES_GITE } from '@/shared/constants/gite';
+import { COTE_CHAMBRE } from '@/shared/constants/gite';
 import { LOCALE } from '@/shared/constants/format';
 import { HEURE_MIDI } from '@/shared/constants/temps';
 import { ROUTES } from '@/shared/constants/routes';
@@ -38,6 +45,11 @@ export default function JourGite() {
   const router = useRouter();
   const { date } = useLocalSearchParams<{ date: string }>();
   const [sejours, setSejours] = useState<Sejour[]>([]);
+  const { chambres, recharger } = useChambres();
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  /** La chambre qu'on est en train de supprimer (en attente de confirmation) et celle qui ne peut pas l'être. */
+  const [aSupprimer, setASupprimer] = useState<number | null>(null);
+  const [refusee, setRefusee] = useState<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,9 +58,7 @@ export default function JourGite() {
   );
 
   const parChambre = (chambre: number) => sejourDeLaNuit(sejours, chambre, date);
-  const occupes = Array.from({ length: NOMBRE_CHAMBRES_GITE }, (_, i) => parChambre(i + 1)).filter(
-    (s): s is Sejour => !!s,
-  );
+  const occupes = chambres.map((c) => parChambre(c.numero)).filter((s): s is Sejour => !!s);
   // Un séjour de plusieurs chambres compte une seule fois ses personnes.
   const personnes = [...new Set(occupes)].reduce((total, s) => total + (s.personnes ?? 0), 0);
 
@@ -62,7 +72,16 @@ export default function JourGite() {
         style={[styles.chambre, sejour && styles.chambreOccupee]}
         onPress={() => router.push(sejour ? ROUTES.sejour(sejour.id) : ROUTES.sejourNouveau(numero, date))}
       >
-        <Text style={styles.chambreNumero}>{TEXTES.gite.jour.chambre(numero)}</Text>
+        <View style={styles.enteteChambre}>
+          <Text style={styles.chambreNumero}>{TEXTES.gite.jour.chambre(numero)}</Text>
+          <Pressable
+            onPress={() => setASupprimer(numero)}
+            hitSlop={10}
+            accessibilityLabel={TEXTES.gite.chambre.supprimer}
+          >
+            <Ionicons name="close" size={18} color={colors.textMuted} />
+          </Pressable>
+        </View>
         {sejour ? (
           <>
             <Text style={styles.chambreNom} numberOfLines={2}>
@@ -74,7 +93,7 @@ export default function JourGite() {
             {sejour.personnes ? (
               <Text style={styles.chambreInfo}>{T.personnes(sejour.personnes)}</Text>
             ) : null}
-            <Text style={styles.chambreInfo}>{formatMontant(sejour.prix)}</Text>
+            <Text style={styles.chambreInfo}>{formatMontant(totalDuSejour(sejour))}</Text>
             <Text style={sejour.paye ? styles.chambrePaye : styles.chambreAlerte}>
               {sejour.paye ? T.paye : T.aRegler}
             </Text>
@@ -89,11 +108,18 @@ export default function JourGite() {
     );
   };
 
-  const numeros = Array.from({ length: CHAMBRES_PAR_COTE }, (_, i) => i + 1);
+  const duCote = (cote: string) => chambres.filter((c) => c.cote === cote).map((c) => c.numero);
+  const prochainNumero = Math.max(0, ...chambres.map((c) => c.numero)) + 1;
 
   return (
     <Screen scroll={false}>
-      <Stack.Screen options={{ title: formatDateShortFR(date) }} />
+      <Stack.Screen
+        options={{
+          title: formatDateShortFR(date),
+          // On revient toujours au calendrier du gîte, d'où que l'on arrive.
+          headerLeft: () => <HeaderBackTo to={ROUTES.GITE} />,
+        }}
+      />
       <ScrollView contentContainerStyle={commonStyles.listFab}>
         <View style={styles.enteteJour2}>
           <Pressable
@@ -114,23 +140,61 @@ export default function JourGite() {
         </View>
 
         <Card>
-          <Text style={commonStyles.lineBold}>
-            {T.resume(occupes.length, NOMBRE_CHAMBRES_GITE, personnes)}
-          </Text>
+          <Text style={commonStyles.lineBold}>{T.resume(occupes.length, chambres.length, personnes)}</Text>
         </Card>
 
         <View style={styles.couloir}>
           <View style={styles.colonneChambres}>
             <Text style={styles.titreCote}>{T.gauche}</Text>
-            {numeros.map((n) => chambre(n))}
+            {duCote(COTE_CHAMBRE.GAUCHE).map(chambre)}
           </View>
           <View style={styles.bandeCouloir} />
           <View style={styles.colonneChambres}>
             <Text style={styles.titreCote}>{T.droite}</Text>
-            {numeros.map((n) => chambre(n + CHAMBRES_PAR_COTE))}
+            {duCote(COTE_CHAMBRE.DROITE).map(chambre)}
           </View>
         </View>
       </ScrollView>
+
+      <Fab
+        options={[
+          {
+            label: TEXTES.gite.chambre.ajouterUneChambre,
+            icon: 'add-circle',
+            onPress: () => setAjoutOuvert(true),
+          },
+        ]}
+      />
+      <ConfirmModal
+        visible={aSupprimer !== null}
+        title={TEXTES.gite.chambre.supprimerQuestion}
+        message={TEXTES.gite.chambre.supprimerMessage(aSupprimer ?? 0)}
+        confirmLabel={TEXTES.commun.general.supprimer}
+        onCancel={() => setASupprimer(null)}
+        onConfirm={async () => {
+          const numero = aSupprimer;
+          setASupprimer(null);
+          if (numero === null) return;
+          if (!(await supprimerChambre(numero))) setRefusee(numero);
+          recharger();
+        }}
+      />
+      <InfoModal
+        visible={refusee !== null}
+        title={TEXTES.gite.chambre.suppressionImpossible}
+        message={TEXTES.gite.chambre.suppressionImpossibleMessage(refusee ?? 0)}
+        onClose={() => setRefusee(null)}
+      />
+      <ChambreModal
+        visible={ajoutOuvert}
+        prochainNumero={prochainNumero}
+        onValider={async (cote) => {
+          await ajouterChambre(cote);
+          setAjoutOuvert(false);
+          recharger();
+        }}
+        onFermer={() => setAjoutOuvert(false)}
+      />
     </Screen>
   );
 }

@@ -4,12 +4,19 @@ import type { Element, SousDossier } from '@/features/dossiers/types';
 import type { FiscaliteEntreprise } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
 import type { Sejour } from '@/features/gite/types';
+import type { Trade } from '@/features/trading/types';
+import { dureeJours, multipleR, resultatTrade } from '@/features/trading/services/calculs';
 import { statutEffectif } from '@/features/dossiers/services/avancement';
 import { cheminDuDossier } from '@/features/dossiers/services/arborescence';
 import { factureRow } from '@/features/export/services/lignesExport';
 import { nuitsDuSejour } from '@/shared/utils/calendrier';
 import { LOCALE } from '@/shared/constants/format';
-import { LABEL_STATUT_ELEMENT } from '@/shared/textes/libelles';
+import {
+  LABEL_ETAT_ESPRIT,
+  LABEL_SENS_TRADE,
+  LABEL_STATUT_ELEMENT,
+  LABEL_TYPE_INSTRUMENT,
+} from '@/shared/textes/libelles';
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
@@ -112,5 +119,28 @@ export function sejourRow(s: Sejour) {
     [C.paye]: s.paye ? C.oui : C.non,
     [C.datePaiement]: s.paye && s.datePaiement ? formatDateShortFR(s.datePaiement) : '',
     [C.notes]: s.notes ?? '',
+  };
+}
+
+export function tradeRow(t: Trade) {
+  return {
+    [C.instrument]: t.instrument,
+    [C.typeInstrument]: t.typeInstrument ? LABEL_TYPE_INSTRUMENT[t.typeInstrument] : '',
+    [C.sens]: LABEL_SENS_TRADE[t.sens],
+    [C.dateEntree]: formatDateShortFR(t.dateEntree),
+    [C.prixEntree]: t.prixEntree,
+    [C.quantite]: t.quantite,
+    [C.dateSortie]: t.dateSortie ? formatDateShortFR(t.dateSortie) : '',
+    [C.prixSortie]: t.prixSortie ?? '',
+    [C.frais]: t.frais ?? '',
+    [C.stop]: t.stop ?? '',
+    [C.resultatNet]: resultatTrade(t) ?? '',
+    [C.multipleR]: multipleR(t) ?? '',
+    [C.dureeJours]: dureeJours(t) ?? '',
+    [C.strategie]: t.strategie ?? '',
+    [C.planRespecte]: t.planRespecte === undefined ? '' : t.planRespecte ? C.oui : C.non,
+    [C.etatEsprit]: t.etatEsprit ? LABEL_ETAT_ESPRIT[t.etatEsprit] : '',
+    [C.etiquettes]: (t.etiquettes ?? []).join(', '),
+    [C.notes]: t.notes ?? '',
   };
 }

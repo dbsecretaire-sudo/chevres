@@ -137,6 +137,8 @@ export interface Vente {
   client?: string;
   /** Pour les ventes d'animaux (cabris, animal sur pied, animal vivant) : poids total vendu, facultatif. */
   poidsKg?: number;
+  /** Pour une vente de fromage : nombre de sacs en plastique emportés par le client, décompté du stock d'emballages. */
+  sacs?: number;
   /** Commentaire facultatif précisant de quoi il s'agissait (viande, charcuterie, animal sur pied ou vivant). */
   precision?: string;
 }

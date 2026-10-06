@@ -32,6 +32,9 @@ export function LigneElement({ element, chemin, onStatut }: Props) {
     statutEffectif(element) ? LABEL_STATUT_ELEMENT[statutEffectif(element)!] : undefined,
     enRetard ? TEXTES.dossiers.element.enRetard : undefined,
     element.echeance ? TEXTES.dossiers.element.echeanceLe(formatDateFR(element.echeance)) : undefined,
+    element.fichiers && element.fichiers.length > 0
+      ? TEXTES.fichiers.nombre(element.fichiers.length)
+      : undefined,
   ]
     .filter(Boolean)
     .join(' · ');

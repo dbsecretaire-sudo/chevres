@@ -7,6 +7,9 @@ export const FICHIER_FOURNISSEURS = 'fournisseurs.json';
 export const FICHIER_CLIENTS = 'clients.json';
 export const FICHIER_DOSSIERS = 'dossiers.json';
 export const FICHIER_GITE = 'gite.json';
+export const FICHIER_TRADING = 'trading.json';
+export const FICHIER_BAR = 'bar.json';
+export const FICHIER_STOCK = 'stock.json';
 /** Espèces et activités de l'établissement. */
 export const FICHIER_ETABLISSEMENT = 'etablissement.json';
 export const FICHIER_COMPTES_PCG = 'comptes-pcg.json';

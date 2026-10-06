@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
@@ -14,11 +15,17 @@ import { styles } from '@/shared/styles/comptabilite/ListeTransactions.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
+import { SENS_MOUVEMENT } from '@/shared/constants/trading';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { MouvementCompteModal } from '@/features/comptabilite/components/MouvementCompteModal';
+import { activiteFinanciereSeule } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 export default function ComptabiliteIndex() {
   const router = useRouter();
   const e = useListeTransactions();
+  // Activité financière : dépôt et retrait se saisissent dans une petite fenêtre flottante.
+  const [mouvement, setMouvement] = useState<ValeurDe<typeof SENS_MOUVEMENT> | null>(null);
 
   return (
     <Screen scroll={false}>
@@ -59,23 +66,47 @@ export default function ComptabiliteIndex() {
       />
 
       <Fab
-        options={[
-          {
-            label: TEXTES.commun.general.debit,
-            icon: 'remove-circle',
-            color: colors.danger,
-            onPress: () =>
-              router.push({ pathname: ROUTES.COMPTABILITE_NOUVELLE, params: { type: TYPE_FACTURE.RECUE } }),
-          },
-          {
-            label: TEXTES.commun.general.credit,
-            icon: 'add-circle',
-            color: colors.primary,
-            onPress: () =>
-              router.push({ pathname: ROUTES.COMPTABILITE_NOUVELLE, params: { type: TYPE_FACTURE.EMISE } }),
-          },
-        ]}
+        options={
+          activiteFinanciereSeule()
+            ? [
+                {
+                  label: TEXTES.trading.compte.retrait,
+                  icon: 'remove-circle',
+                  color: colors.danger,
+                  onPress: () => setMouvement(SENS_MOUVEMENT.RETRAIT),
+                },
+                {
+                  label: TEXTES.trading.compte.depot,
+                  icon: 'add-circle',
+                  color: colors.primary,
+                  onPress: () => setMouvement(SENS_MOUVEMENT.DEPOT),
+                },
+              ]
+            : [
+                {
+                  label: TEXTES.commun.general.debit,
+                  icon: 'remove-circle',
+                  color: colors.danger,
+                  onPress: () =>
+                    router.push({
+                      pathname: ROUTES.COMPTABILITE_NOUVELLE,
+                      params: { type: TYPE_FACTURE.RECUE },
+                    }),
+                },
+                {
+                  label: TEXTES.commun.general.credit,
+                  icon: 'add-circle',
+                  color: colors.primary,
+                  onPress: () =>
+                    router.push({
+                      pathname: ROUTES.COMPTABILITE_NOUVELLE,
+                      params: { type: TYPE_FACTURE.EMISE },
+                    }),
+                },
+              ]
+        }
       />
+      <MouvementCompteModal sens={mouvement} onFermer={() => setMouvement(null)} onEnregistre={e.recharger} />
     </Screen>
   );
 }

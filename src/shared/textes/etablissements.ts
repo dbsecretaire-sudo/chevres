@@ -6,6 +6,7 @@ export const TEXTES_ETABLISSEMENTS = {
       'Chaque établissement a son propre cheptel, sa comptabilité, ses fournisseurs, ses clients et ses informations d’exploitation.',
     nomDeLEtablissement: 'Nom de l’établissement',
     nouvelEtablissement: 'Nouvel établissement',
+    creationImpossible: 'Impossible de créer l’établissement',
     modifierLEtablissement: 'Modifier l’établissement',
     nomExElevageDesHauts: 'Nom — ex: Élevage des Hauts',
     creerEtOuvrir: 'Créer et ouvrir',
@@ -24,6 +25,8 @@ export const TEXTES_ETABLISSEMENTS = {
     typeDEtablissement: 'Type d’établissement',
     plusieursChoixPossibles: 'Plusieurs choix possibles.',
     animaux: 'Animaux',
+    especesElevees: 'Espèces élevées',
+    choisirUnType: 'Choisir un type',
     societe: 'Société / Auto-entrepreneur / Association',
   },
   etablissementContext: {

@@ -1,6 +1,7 @@
 import { generateId } from '@/shared/utils/id';
 import { yearOf } from '@/shared/utils/dates';
 import type { Vente } from '@/features/comptabilite/types';
+import { retirerStockVente, synchroniserStockVente } from '@/features/stock/services/stock';
 import {
   deleteRecord,
   findRecord,
@@ -14,6 +15,7 @@ import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 export async function enregistrerVente(input: Omit<Vente, 'id'>): Promise<Vente> {
   const vente: Vente = { id: generateId(), ...input };
   await upsertRecord(CATEGORIE_STOCKAGE.VENTES, yearOf(vente.date), vente);
+  await synchroniserStockVente(vente);
   return vente;
 }
 
@@ -34,6 +36,7 @@ export async function listToutesVentes(): Promise<Vente[]> {
 
 export async function supprimerVente(id: string): Promise<void> {
   await deleteRecord(CATEGORIE_STOCKAGE.VENTES, id);
+  await retirerStockVente(id);
 }
 
 export async function getVente(id: string): Promise<Vente | undefined> {
@@ -42,4 +45,5 @@ export async function getVente(id: string): Promise<Vente | undefined> {
 
 export async function saveVente(vente: Vente): Promise<void> {
   await upsertRecord(CATEGORIE_STOCKAGE.VENTES, yearOf(vente.date), vente);
+  await synchroniserStockVente(vente);
 }

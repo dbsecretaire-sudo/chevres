@@ -45,6 +45,15 @@ export const COMPTE_PAR_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>, Comp
   },
   [CATEGORIE_DEPENSE.FORMATION]: { numero: '618400', libelle: 'Formation professionnelle' },
   [CATEGORIE_DEPENSE.HONORAIRES]: { numero: '622600', libelle: 'Honoraires (comptable, conseil…)' },
+  [CATEGORIE_DEPENSE.PERTES_TRADING]: {
+    numero: '667000',
+    libelle: 'Charges nettes sur cessions de valeurs mobilières de placement',
+  },
+  [CATEGORIE_DEPENSE.RETRAIT]: { numero: '108000', libelle: 'Compte de l’exploitant — Prélèvements' },
+  [CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT]: {
+    numero: '709000',
+    libelle: 'Rabais, remises et ristournes accordés (remboursements aux clients)',
+  },
   [CATEGORIE_DEPENSE.PUBLICITE]: { numero: '623000', libelle: 'Publicité, publications' },
   [CATEGORIE_DEPENSE.MATERIEL]: { numero: '606300', libelle: 'Fournitures d’entretien et petit équipement' },
 };
@@ -73,6 +82,11 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   [CATEGORIE_RECETTE.BAR]: { numero: '707200', libelle: 'Ventes de marchandises — Bar' },
   [CATEGORIE_RECETTE.COTISATIONS]: { numero: '756000', libelle: 'Cotisations des adhérents' },
   [CATEGORIE_RECETTE.DONS]: { numero: '754000', libelle: 'Dons manuels' },
+  [CATEGORIE_RECETTE.GAINS_TRADING]: {
+    numero: '767000',
+    libelle: 'Produits nets sur cessions de valeurs mobilières de placement',
+  },
+  [CATEGORIE_RECETTE.DEPOT]: { numero: '108000', libelle: 'Compte de l’exploitant — Apports' },
 };
 
 /**
@@ -92,13 +106,17 @@ export const COMPTES_PCG_DEPENSE: CompteComptable[] = [
   { numero: '606400', libelle: 'Fournitures de bureau' },
   { numero: '606800', libelle: 'Autres matières et fournitures' },
   { numero: '607000', libelle: 'Achats de marchandises' },
+  { numero: '607100', libelle: 'Achats de marchandises — Restauration et bar' },
   { numero: '611000', libelle: 'Sous-traitance générale' },
   { numero: '613200', libelle: 'Location de locaux' },
   { numero: '613500', libelle: 'Location de matériel' },
+  { numero: '614000', libelle: 'Charges locatives et de copropriété' },
+  { numero: '615600', libelle: 'Maintenance (logiciels, abonnements)' },
   { numero: '615400', libelle: 'Entretien et réparations — Matériel' },
   { numero: '615500', libelle: 'Entretien et réparations — Bâtiments' },
   { numero: '616100', libelle: 'Assurance — Multirisques' },
   { numero: '616300', libelle: 'Assurance — Responsabilité civile' },
+  { numero: '618100', libelle: 'Documentation générale' },
   { numero: '618300', libelle: 'Documentation technique' },
   { numero: '618400', libelle: 'Formation professionnelle' },
   { numero: '621000', libelle: 'Personnel extérieur, main-d’œuvre' },
@@ -108,10 +126,16 @@ export const COMPTES_PCG_DEPENSE: CompteComptable[] = [
   { numero: '625100', libelle: 'Voyages et déplacements' },
   { numero: '626000', libelle: 'Frais postaux et télécommunications' },
   { numero: '627000', libelle: 'Services bancaires' },
+  { numero: '627100', libelle: 'Frais sur titres (courtage, droits de garde)' },
+  { numero: '627800', libelle: 'Autres frais et commissions sur prestations de services' },
   { numero: '635000', libelle: 'Impôts, taxes et versements assimilés' },
   { numero: '645100', libelle: 'Cotisations MSA' },
   { numero: '646000', libelle: 'Cotisations sociales personnelles de l’exploitant' },
   { numero: '661100', libelle: 'Intérêts d’emprunts' },
+  { numero: '666000', libelle: 'Pertes de change' },
+  { numero: '667000', libelle: 'Charges nettes sur cessions de valeurs mobilières de placement' },
+  { numero: '668000', libelle: 'Autres charges financières' },
+  { numero: '108000', libelle: 'Compte de l’exploitant (prélèvements)' },
 ];
 
 export const COMPTES_PCG_RECETTE: CompteComptable[] = [
@@ -131,6 +155,10 @@ export const COMPTES_PCG_RECETTE: CompteComptable[] = [
   { numero: '754000', libelle: 'Dons manuels' },
   { numero: '756000', libelle: 'Cotisations des adhérents' },
   { numero: '758000', libelle: 'Produits divers de gestion courante' },
+  { numero: '766000', libelle: 'Gains de change' },
+  { numero: '767000', libelle: 'Produits nets sur cessions de valeurs mobilières de placement' },
+  { numero: '768000', libelle: 'Autres produits financiers' },
+  { numero: '108000', libelle: 'Compte de l’exploitant (apports)' },
   { numero: '771000', libelle: 'Produits exceptionnels de gestion' },
   { numero: '791000', libelle: 'Transferts de charges d’exploitation' },
 ];

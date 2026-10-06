@@ -42,6 +42,18 @@ export default function ClientsLayout() {
       />
       <Stack.Screen name="element/[id]" options={{ title: '' }} />
       <Stack.Screen name="echeances/[date]" options={{ title: '' }} />
+      <Stack.Screen name="bar" options={{ title: TEXTES.bar.titre }} />
+      <Stack.Screen name="repas/[date]" options={{ title: '' }} />
+      <Stack.Screen name="journal" options={{ title: TEXTES.trading.journal.titre }} />
+      <Stack.Screen
+        name="trade/nouveau"
+        options={{
+          title: TEXTES.trading.trade.nouveau,
+          presentation: 'modal',
+          headerStyle: { backgroundColor: colors.ajout },
+        }}
+      />
+      <Stack.Screen name="trade/[id]" options={{ title: TEXTES.trading.trade.modifier }} />
       <Stack.Screen name="dossiers-clients" options={{ title: TEXTES.gite.activites.dossiersClients }} />
       <Stack.Screen name="gite/index" options={{ title: TEXTES.gite.calendrier.titre }} />
       <Stack.Screen name="gite/jour/[date]" options={{ title: '' }} />

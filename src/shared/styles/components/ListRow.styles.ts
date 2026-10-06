@@ -15,4 +15,5 @@ export const styles = StyleSheet.create({
     gap: 10,
   },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
+  rowTitleGris: { color: colors.textMuted },
 });

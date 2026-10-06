@@ -12,7 +12,6 @@ import {
   CATEGORIES_VENTE_AVEC_PRECISION,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_VENTE,
-  UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
 import { categoriesRecetteActivite, estCategorieVente } from '@/features/comptabilite/utils/recettes';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
@@ -30,11 +29,6 @@ function optionsProduit(vente: Vente) {
     label: libelleCategorieVente({ categorie, activite: vente.activite }),
   }));
 }
-
-const OPTIONS_UNITE = [
-  { value: UNITE_VENTE.KG, label: TEXTES.commun.general.kg },
-  { value: UNITE_VENTE.PIECE, label: TEXTES.commun.general.piece },
-];
 
 interface Props {
   form: Vente;
@@ -114,11 +108,14 @@ export function VenteFormulaire({
       )}
 
       {form.categorie === CATEGORIE_VENTE.FROMAGE ? (
-        <SelectField
-          label={TEXTES.commun.general.unite}
-          value={form.unite ?? ''}
-          onChange={(valeur) => onChange({ ...form, unite: valeur as Vente['unite'] })}
-          options={OPTIONS_UNITE}
+        <FormField
+          label={TEXTES.comptabilite.nouvelleEcriture.nombreDeSacs}
+          value={form.sacs !== undefined ? String(form.sacs) : ''}
+          onChangeText={(valeur) =>
+            onChange({ ...form, sacs: Math.round(Number(valeur.replace(',', '.'))) || undefined })
+          }
+          keyboardType="number-pad"
+          placeholder={TEXTES.commun.general.facultatif}
         />
       ) : null}
 

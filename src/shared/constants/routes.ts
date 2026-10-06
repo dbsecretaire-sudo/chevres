@@ -50,13 +50,21 @@ export const ROUTES = {
   sousDossier: (id: string) => `/clients/sous-dossier/${id}` as const,
   elementNouveau: (dossierId: string) => `/clients/element/nouveau?dossierId=${dossierId}` as const,
   element: (id: string) => `/clients/element/${id}` as const,
+  // Journal de trading (activité financière)
+  JOURNAL_TRADING: '/clients/journal',
+  tradeNouveau: '/clients/trade/nouveau',
+  trade: (id: string) => `/clients/trade/${id}` as const,
   // Gestion du gîte (association)
   CLIENTS_DOSSIERS: '/clients/dossiers-clients',
   GITE: '/clients/gite',
+  BAR: '/clients/bar',
+  repasDuJour: (date: string) => `/clients/repas/${date}` as const,
   jourEcheances: (date: string) => `/clients/echeances/${date}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,
   sejourNouveau: (chambre: number, date: string) =>
     `/clients/gite/sejour/nouveau?chambre=${chambre}&date=${date}` as const,
+  /** Un nouveau séjour prérempli d'après un séjour existant (sans son historique de paiement). */
+  sejourCopie: (id: string) => `/clients/gite/sejour/nouveau?copie=${id}` as const,
   sejour: (id: string) => `/clients/gite/sejour/${id}` as const,
   ficheComptePcg: (id: string) => `/comptabilite/comptes-pcg/${id}` as const,
 } as const;

@@ -85,6 +85,17 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult | null> {
   }
 }
 
+/** L'adresse du compte Google connecté sur l'appareil (null s'il n'y en a pas ou si la session a expiré). */
+export async function emailGoogleCourant(): Promise<string | null> {
+  configureGoogle();
+  try {
+    const res = await GoogleSignin.signInSilently();
+    return res.type === 'success' ? res.data.user.email : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Retourne un access token valide pour l'API Drive (rafraîchi automatiquement).
  * Null si l'utilisateur ne s'est jamais connecté.

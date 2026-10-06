@@ -13,13 +13,20 @@ interface Props<T extends string | number> {
   /** Les puces actives : on peut en cocher plusieurs. */
   valeurs: T[];
   onChange: (valeurs: T[]) => void;
+  /** Les puces grisées : on ne peut pas les cocher (ex : une chambre déjà prise aux dates choisies). */
+  desactivees?: T[];
 }
 
 /**
  * Puces de choix multiple, sur plusieurs lignes : toucher une puce l'ajoute ou la retire de la sélection. Elles suivent
  * la couleur d'accent de l'écran (bleue dans un ajout).
  */
-export function PucesMultiples<T extends string | number>({ puces, valeurs, onChange }: Props<T>) {
+export function PucesMultiples<T extends string | number>({
+  puces,
+  valeurs,
+  onChange,
+  desactivees = [],
+}: Props<T>) {
   const accent = useAccentColor();
   const accentClair = useAccentSoftColor();
   const basculer = (valeur: T) =>
@@ -29,6 +36,7 @@ export function PucesMultiples<T extends string | number>({ puces, valeurs, onCh
     <View style={styles.ligne}>
       {puces.map((p) => {
         const active = valeurs.includes(p.valeur);
+        const grisee = desactivees.includes(p.valeur);
         return (
           <Pressable
             key={p.valeur}
@@ -36,7 +44,9 @@ export function PucesMultiples<T extends string | number>({ puces, valeurs, onCh
               styles.puce,
               { backgroundColor: accentClair, borderColor: accentClair },
               active && { backgroundColor: accent, borderColor: accent },
+              grisee && styles.puceGrisee,
             ]}
+            disabled={grisee}
             onPress={() => basculer(p.valeur)}
           >
             <Text style={[styles.texte, active && { color: colors.blanc }]}>{p.label}</Text>

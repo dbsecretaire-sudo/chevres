@@ -59,5 +59,6 @@ export function useListeTransactions() {
     setFiltreOuvert,
     recherche,
     setRecherche,
+    recharger: charger,
   };
 }

@@ -6,7 +6,10 @@ import { getSettings, updateSettings } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
-import { lireArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
+import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
+import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
+import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
+import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import {
   appliquerProfilEtablissementActif,
   profilEstVide,
@@ -14,12 +17,25 @@ import {
 } from '@/features/etablissements/repository';
 import { listComptesPcg, remplacerTousComptesPcg } from '@/features/comptes-pcg/repository';
 import {
+  createFileBase64,
+  type DriveFile,
+  downloadFileBase64,
   ensureFolder,
+  findFile,
+  findFolder,
+  listFiles,
   upsertFileText,
   downloadFileText,
-  findFile,
-  listFiles,
 } from '@/features/drive/driveApi';
+import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
+import {
+  ecrirePieceBase64,
+  lirePieceBase64,
+  pieceExiste,
+  piecesDisponibles,
+} from '@/features/fichiers/services/pieces';
+import type { PieceJointe } from '@/features/fichiers/types';
+import { empreinteTexte } from '@/shared/utils/empreinte';
 import type { Categorie } from '@/shared/storage/types';
 import {
   DOSSIER_RACINE_DRIVE,
@@ -30,8 +46,35 @@ import {
   FICHIER_EXPLOITATION,
   FICHIER_FOURNISSEURS,
   FICHIER_GITE,
+  FICHIER_BAR,
+  FICHIER_STOCK,
+  FICHIER_TRADING,
   MOTIF_FICHIER_ANNEE,
 } from '@/shared/constants/drive';
+import { DOSSIER_PIECES_DRIVE, SEPARATEUR_NOM_PIECE } from '@/shared/constants/fichiers';
+
+/** Ce qu'une synchronisation a vraiment fait : fichiers écrits, et fichiers déjà à jour laissés tels quels. */
+export interface BilanSynchro {
+  misAJour: number;
+  inchanges: number;
+}
+
+let bilan: BilanSynchro = { misAJour: 0, inchanges: 0 };
+
+/** Envoie le contenu seulement s'il diffère de celui de Drive. */
+async function deposer(accessToken: string, nom: string, dossierId: string, contenu: string): Promise<void> {
+  const resultat = await upsertFileText(accessToken, nom, dossierId, contenu);
+  if (resultat.modifie) bilan.misAJour += 1;
+  else bilan.inchanges += 1;
+}
+
+/** Vrai si le fichier de Drive a déjà exactement le contenu local : inutile de le télécharger. */
+async function identique(fichier: DriveFile, contenuLocal: string): Promise<boolean> {
+  const pareil = !!fichier.md5Checksum && fichier.md5Checksum === (await empreinteTexte(contenuLocal));
+  if (pareil) bilan.inchanges += 1;
+  else bilan.misAJour += 1;
+  return pareil;
+}
 
 /** Un dossier Drive par établissement : l'établissement historique garde le nom d'origine. */
 export function nomDossierDrive(nomEtablissement: string, estDefaut: boolean): string {
@@ -49,18 +92,13 @@ export async function ensureRootFolder(
 /** Envoie les informations de l'exploitation (écran Accueil) vers Google Drive. */
 export async function pousserInfosExploitation(accessToken: string, folderId: string): Promise<void> {
   const settings = await getSettings();
-  await upsertFileText(
-    accessToken,
-    FICHIER_EXPLOITATION,
-    folderId,
-    JSON.stringify(settings.exploitation ?? {}),
-  );
+  await deposer(accessToken, FICHIER_EXPLOITATION, folderId, JSON.stringify(settings.exploitation ?? {}));
 }
 
 /** Récupère les informations de l'exploitation depuis Google Drive, si présentes. */
 export async function tirerInfosExploitation(accessToken: string, folderId: string): Promise<void> {
   const file = await findFile(accessToken, FICHIER_EXPLOITATION, folderId);
-  if (!file) return;
+  if (!file || (await identique(file, JSON.stringify((await getSettings()).exploitation ?? {})))) return;
   const json = await downloadFileText(accessToken, file.id);
   try {
     await updateSettings({ exploitation: JSON.parse(json) });
@@ -74,7 +112,7 @@ export async function pousserEtablissement(accessToken: string, folderId: string
   const profil = await profilEtablissementActif();
   // Un profil vide n'est pas envoyé : il écraserait les types renseignés depuis un autre appareil.
   if (profilEstVide(profil)) return;
-  await upsertFileText(accessToken, FICHIER_ETABLISSEMENT, folderId, JSON.stringify(profil));
+  await deposer(accessToken, FICHIER_ETABLISSEMENT, folderId, JSON.stringify(profil));
 }
 
 /** Récupère les espèces et activités de l'établissement depuis Google Drive, si présentes (sans toucher à son nom). */
@@ -92,13 +130,13 @@ export async function tirerEtablissement(accessToken: string, folderId: string):
 /** Envoie la liste des fournisseurs vers Google Drive. */
 export async function pousserFournisseurs(accessToken: string, folderId: string): Promise<void> {
   const fournisseurs = await listFournisseurs();
-  await upsertFileText(accessToken, FICHIER_FOURNISSEURS, folderId, JSON.stringify(fournisseurs));
+  await deposer(accessToken, FICHIER_FOURNISSEURS, folderId, JSON.stringify(fournisseurs));
 }
 
 /** Récupère la liste des fournisseurs depuis Google Drive, si présente (remplace la liste locale). */
 export async function tirerFournisseurs(accessToken: string, folderId: string): Promise<void> {
   const file = await findFile(accessToken, FICHIER_FOURNISSEURS, folderId);
-  if (!file) return;
+  if (!file || (await identique(file, JSON.stringify(await listFournisseurs())))) return;
   const json = await downloadFileText(accessToken, file.id);
   try {
     await remplacerTousFournisseurs(JSON.parse(json));
@@ -110,13 +148,13 @@ export async function tirerFournisseurs(accessToken: string, folderId: string): 
 /** Envoie la liste des clients vers Google Drive. */
 export async function pousserClients(accessToken: string, folderId: string): Promise<void> {
   const clients = await listClients();
-  await upsertFileText(accessToken, FICHIER_CLIENTS, folderId, JSON.stringify(clients));
+  await deposer(accessToken, FICHIER_CLIENTS, folderId, JSON.stringify(clients));
 }
 
 /** Récupère la liste des clients depuis Google Drive, si présente (remplace la liste locale). */
 export async function tirerClients(accessToken: string, folderId: string): Promise<void> {
   const file = await findFile(accessToken, FICHIER_CLIENTS, folderId);
-  if (!file) return;
+  if (!file || (await identique(file, JSON.stringify(await listClients())))) return;
   const json = await downloadFileText(accessToken, file.id);
   try {
     await remplacerTousClients(JSON.parse(json));
@@ -128,13 +166,13 @@ export async function tirerClients(accessToken: string, folderId: string): Promi
 /** Envoie les sous-dossiers et contenus de l'explorateur de dossiers vers Google Drive. */
 export async function pousserDossiers(accessToken: string, folderId: string): Promise<void> {
   const archive = await lireArchiveDossiers();
-  await upsertFileText(accessToken, FICHIER_DOSSIERS, folderId, JSON.stringify(archive));
+  await deposer(accessToken, FICHIER_DOSSIERS, folderId, JSON.stringify(archive));
 }
 
 /** Récupère les sous-dossiers et contenus depuis Google Drive, s'ils sont présents (remplace les données locales). */
 export async function tirerDossiers(accessToken: string, folderId: string): Promise<void> {
   const file = await findFile(accessToken, FICHIER_DOSSIERS, folderId);
-  if (!file) return;
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveDossiers())))) return;
   const json = await downloadFileText(accessToken, file.id);
   try {
     const archive = JSON.parse(json);
@@ -149,32 +187,129 @@ export async function tirerDossiers(accessToken: string, folderId: string): Prom
 /** Envoie les séjours du gîte vers Google Drive. */
 export async function pousserGite(accessToken: string, folderId: string): Promise<void> {
   const archive = await lireArchiveGite();
-  await upsertFileText(accessToken, FICHIER_GITE, folderId, JSON.stringify(archive));
+  await deposer(accessToken, FICHIER_GITE, folderId, JSON.stringify(archive));
 }
 
 /** Récupère les séjours du gîte depuis Google Drive, s'ils sont présents (remplace les données locales). */
 export async function tirerGite(accessToken: string, folderId: string): Promise<void> {
   const file = await findFile(accessToken, FICHIER_GITE, folderId);
-  if (!file) return;
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveGite())))) return;
   const json = await downloadFileText(accessToken, file.id);
   try {
     const archive = JSON.parse(json);
-    if (Array.isArray(archive?.sejours)) await remplacerArchiveGite({ sejours: archive.sejours });
+    if (Array.isArray(archive?.sejours)) await remplacerArchiveGite(normaliserArchiveGite(archive));
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie la liste des boissons du bar vers Google Drive. */
+export async function pousserBar(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveBar();
+  await deposer(accessToken, FICHIER_BAR, folderId, JSON.stringify(archive));
+}
+
+/** Récupère la liste des boissons depuis Google Drive, si elle est présente (remplace les données locales). */
+export async function tirerBar(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_BAR, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveBar())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.boissons)) await remplacerArchiveBar(normaliserArchiveBar(archive));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie le stock de la fromagerie vers Google Drive. */
+export async function pousserStock(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  await deposer(accessToken, FICHIER_STOCK, folderId, JSON.stringify(archive));
+}
+
+/** Récupère le stock de la fromagerie depuis Google Drive, s'il est présent (remplace les données locales). */
+export async function tirerStock(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_STOCK, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveStock())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.mouvements)) await remplacerArchiveStock(normaliserArchiveStock(archive));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie le journal de trading vers Google Drive. */
+export async function pousserTrading(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveTrading();
+  await deposer(accessToken, FICHIER_TRADING, folderId, JSON.stringify(archive));
+}
+
+/** Récupère le journal de trading depuis Google Drive, s'il est présent (remplace les données locales). */
+export async function tirerTrading(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_TRADING, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveTrading())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.trades)) await remplacerArchiveTrading({ trades: archive.trades });
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Le nom d'un fichier joint sur Drive : son identifiant puis son nom d'origine (il ne change jamais). */
+const nomPieceDrive = (piece: PieceJointe): string => `${piece.id}${SEPARATEUR_NOM_PIECE}${piece.nom}`;
+
+/** Envoie les fichiers joints qui ne sont pas encore sur Drive (un fichier joint ne change jamais). */
+export async function pousserPieces(accessToken: string, folderId: string): Promise<void> {
+  if (!piecesDisponibles()) return;
+  const pieces = await toutesLesPieces();
+  if (pieces.length === 0) return;
+  const dossier = await ensureFolder(accessToken, DOSSIER_PIECES_DRIVE, folderId);
+  for (const piece of pieces) {
+    if (!(await pieceExiste(piece))) continue;
+    const nom = nomPieceDrive(piece);
+    if (await findFile(accessToken, nom, dossier.id)) {
+      bilan.inchanges += 1;
+      continue;
+    }
+    await createFileBase64(accessToken, nom, dossier.id, piece.mime, await lirePieceBase64(piece));
+    bilan.misAJour += 1;
+  }
+}
+
+/** Récupère les fichiers joints qui manquent dans l'appareil (à appeler une fois les contenus et trades récupérés). */
+export async function tirerPieces(accessToken: string, folderId: string): Promise<void> {
+  if (!piecesDisponibles()) return;
+  const manquantes: PieceJointe[] = [];
+  for (const piece of await toutesLesPieces()) {
+    if (!(await pieceExiste(piece))) manquantes.push(piece);
+  }
+  if (manquantes.length === 0) return;
+  const dossier = await findFolder(accessToken, DOSSIER_PIECES_DRIVE, folderId);
+  if (!dossier) return;
+  for (const piece of manquantes) {
+    const fichier = await findFile(accessToken, nomPieceDrive(piece), dossier.id);
+    if (fichier) {
+      await ecrirePieceBase64(piece, await downloadFileBase64(accessToken, fichier.id));
+      bilan.misAJour += 1;
+    }
   }
 }
 
 /** Envoie la liste des comptes PCG vers Google Drive. */
 export async function pousserComptesPcg(accessToken: string, folderId: string): Promise<void> {
   const comptes = await listComptesPcg();
-  await upsertFileText(accessToken, FICHIER_COMPTES_PCG, folderId, JSON.stringify(comptes));
+  await deposer(accessToken, FICHIER_COMPTES_PCG, folderId, JSON.stringify(comptes));
 }
 
 /** Récupère la liste des comptes PCG depuis Google Drive, si présente (remplace la liste locale). */
 export async function tirerComptesPcg(accessToken: string, folderId: string): Promise<void> {
   const file = await findFile(accessToken, FICHIER_COMPTES_PCG, folderId);
-  if (!file) return;
+  if (!file || (await identique(file, JSON.stringify(await listComptesPcg())))) return;
   const json = await downloadFileText(accessToken, file.id);
   try {
     await remplacerTousComptesPcg(JSON.parse(json));
@@ -194,7 +329,7 @@ export async function pousserAnnee(
     onProgress?.(categorie);
     const items = await loadYear(categorie, annee);
     const csv = toCSV(categorie, items);
-    await upsertFileText(accessToken, fileNameFor(categorie, annee), folderId, csv);
+    await deposer(accessToken, fileNameFor(categorie, annee), folderId, csv);
   }
 }
 
@@ -209,7 +344,7 @@ export async function tirerAnnee(
     onProgress?.(categorie);
     const fileName = fileNameFor(categorie, annee);
     const file = await findFile(accessToken, fileName, folderId);
-    if (!file) continue;
+    if (!file || (await identique(file, toCSV(categorie, await loadYear(categorie, annee))))) continue;
     const csv = await downloadFileText(accessToken, file.id);
     const items = fromCSV(categorie, csv);
     await saveYear(categorie, annee, items as any);
@@ -221,7 +356,8 @@ export async function pousserToutesAnnees(
   accessToken: string,
   folderId: string,
   onProgress?: (annee: number, categorie: Categorie) => void,
-): Promise<void> {
+): Promise<BilanSynchro> {
+  bilan = { misAJour: 0, inchanges: 0 };
   const annees = await toutesLesAnneesConnues();
   for (const annee of annees) {
     await pousserAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
@@ -232,7 +368,12 @@ export async function pousserToutesAnnees(
   await pousserClients(accessToken, folderId);
   await pousserDossiers(accessToken, folderId);
   await pousserGite(accessToken, folderId);
+  await pousserTrading(accessToken, folderId);
+  await pousserBar(accessToken, folderId);
+  await pousserStock(accessToken, folderId);
+  await pousserPieces(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
+  return bilan;
 }
 
 /** Déduit les années présentes dans le dossier Drive à partir des noms de fichiers. */
@@ -251,7 +392,8 @@ export async function tirerToutesAnnees(
   accessToken: string,
   folderId: string,
   onProgress?: (annee: number, categorie: Categorie) => void,
-): Promise<void> {
+): Promise<BilanSynchro> {
+  bilan = { misAJour: 0, inchanges: 0 };
   const [locales, distantes] = await Promise.all([
     toutesLesAnneesConnues(),
     anneesDisponiblesSurDrive(accessToken, folderId),
@@ -266,5 +408,10 @@ export async function tirerToutesAnnees(
   await tirerClients(accessToken, folderId);
   await tirerDossiers(accessToken, folderId);
   await tirerGite(accessToken, folderId);
+  await tirerTrading(accessToken, folderId);
+  await tirerBar(accessToken, folderId);
+  await tirerStock(accessToken, folderId);
+  await tirerPieces(accessToken, folderId);
   await tirerComptesPcg(accessToken, folderId);
+  return bilan;
 }

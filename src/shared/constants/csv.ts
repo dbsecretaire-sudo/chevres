@@ -73,6 +73,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'tauxTva',
     'client',
     'poidsKg',
+    'sacs',
     'precision',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
@@ -97,6 +98,7 @@ export const CHAMPS_NOMBRE = new Set([
   'tauxTva',
   'renouvellementAnnee',
   'poidsKg',
+  'sacs',
 ]);
 
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */

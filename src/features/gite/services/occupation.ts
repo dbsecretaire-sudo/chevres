@@ -16,6 +16,31 @@ export function chambresOccupeesParNuit(sejours: Sejour[]): Map<string, number> 
   return parNuit;
 }
 
+/** Les chambres déjà prises sur au moins une des nuits entre l'arrivée et le départ (hors le séjour qu'on modifie). */
+export function chambresIndisponibles(
+  sejours: Sejour[],
+  arrivee: string,
+  depart: string,
+  ignorerId?: string,
+): Set<number> {
+  const prises = new Set<number>();
+  for (const s of sejours) {
+    if (s.id === ignorerId || !(s.arrivee < depart && arrivee < s.depart)) continue;
+    for (const chambre of s.chambres) prises.add(chambre);
+  }
+  return prises;
+}
+
+/** Les nuits où au moins un séjour n'est pas encore payé (à signaler dans les calendriers). */
+export function nuitsAvecPaiementEnAttente(sejours: Sejour[]): Set<string> {
+  const nuits = new Set<string>();
+  for (const sejour of sejours) {
+    if (sejour.paye) continue;
+    for (const nuit of nuitsDuSejour(sejour.arrivee, sejour.depart)) nuits.add(nuit);
+  }
+  return nuits;
+}
+
 /**
  * Le séjour qui gêne une réservation : une autre réservation qui partage une des chambres demandées sur une des mêmes
  * nuits, avec les chambres en cause.

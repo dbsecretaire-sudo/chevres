@@ -5,6 +5,7 @@ import { listFactures } from '@/features/comptabilite/repository/factures';
 import { lireArchiveDossiers } from '@/features/dossiers/repository';
 import { calculerFiscaliteEntreprise } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { lireArchiveGite } from '@/features/gite/repository';
+import { listTrades } from '@/features/trading/repository';
 import { ecrireEtPartager, feuilleOuMessage } from '@/features/export/services/classeurXlsx';
 import { documentHtml, echapper, ecrireEtPartagerPdf, tableauHtml } from '@/features/export/services/htmlPdf';
 import {
@@ -13,6 +14,7 @@ import {
   factureEntrepriseRow,
   lignesSynthese,
   sejourRow,
+  tradeRow,
 } from '@/features/export/services/lignesEntreprise';
 import { FORMAT_EXPORT, NOM_FICHIER_EXPORT_ENTREPRISE } from '@/shared/constants/export';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
@@ -69,6 +71,18 @@ async function rassemblerDonnees(annee: number): Promise<DonneesEntreprise> {
         .sort((a, b) => a.arrivee.localeCompare(b.arrivee))
         .map(sejourRow),
       vide: T.aucunSejour,
+    });
+  }
+
+  if (activitesEtablissement().includes(ACTIVITE_SOCIETE.LIBERAL)) {
+    const trades = await listTrades();
+    sections.push({
+      nom: TEXTES.trading.export.section,
+      lignes: trades
+        .filter((t) => delAnnee(t.dateEntree))
+        .sort((a, b) => a.dateEntree.localeCompare(b.dateEntree))
+        .map(tradeRow),
+      vide: TEXTES.trading.export.aucun,
     });
   }
 

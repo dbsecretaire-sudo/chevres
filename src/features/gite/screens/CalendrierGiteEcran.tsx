@@ -5,9 +5,9 @@ import { Screen } from '@/shared/components/ScreenList';
 import { CalendrierMois, type MarqueJour } from '@/shared/components/CalendrierMois';
 import { Fab } from '@/shared/components/Fab';
 import { listSejours } from '@/features/gite/repository';
-import { chambresOccupeesParNuit } from '@/features/gite/services/occupation';
+import { chambresOccupeesParNuit, nuitsAvecPaiementEnAttente } from '@/features/gite/services/occupation';
 import type { Sejour } from '@/features/gite/types';
-import { NOMBRE_CHAMBRES_GITE } from '@/shared/constants/gite';
+import { useChambres } from '@/features/gite/hooks/useChambres';
 import { ROUTES } from '@/shared/constants/routes';
 import { moisDe, type MoisCalendrier } from '@/shared/utils/calendrier';
 import { todayISO } from '@/shared/utils/dates';
@@ -20,6 +20,7 @@ export default function CalendrierGiteEcran() {
   const [sejours, setSejours] = useState<Sejour[]>([]);
   const [mois, setMois] = useState<MoisCalendrier>(() => moisDe(todayISO()));
   const T = TEXTES.gite.calendrier;
+  const { chambres } = useChambres();
 
   useFocusEffect(
     useCallback(() => {
@@ -28,12 +29,14 @@ export default function CalendrierGiteEcran() {
   );
 
   const occupation = chambresOccupeesParNuit(sejours);
+  const impayees = nuitsAvecPaiementEnAttente(sejours);
   const marque = (jour: string): MarqueJour => {
     const occupees = occupation.get(jour) ?? 0;
     if (occupees === 0) return {};
     return {
-      texte: T.occupation(occupees, NOMBRE_CHAMBRES_GITE),
-      niveau: occupees >= NOMBRE_CHAMBRES_GITE ? 'plein' : 'partiel',
+      texte: T.occupation(occupees, chambres.length),
+      niveau: occupees >= chambres.length ? 'plein' : 'partiel',
+      attention: impayees.has(jour),
     };
   };
 

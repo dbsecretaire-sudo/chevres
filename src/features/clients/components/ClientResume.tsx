@@ -104,7 +104,12 @@ export function ClientEcritures({ ecritures, onOuvrir }: EcrituresProps) {
             key={e.id}
             title={e.titre}
             subtitle={formatDateFR(e.date)}
-            trailing={<Text style={styles.montantEcriture}>+{formatMontant(e.montant)}</Text>}
+            trailing={
+              <Text style={styles.montantEcriture}>
+                {e.montant < 0 ? '−' : '+'}
+                {formatMontant(Math.abs(e.montant))}
+              </Text>
+            }
             onPress={() => onOuvrir(e)}
           />
         ))

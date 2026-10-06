@@ -80,9 +80,18 @@ export const TEXTES_ENTREPRISE = {
       solde: 'Solde factures (hors Autre)',
       reservations: (annee: string) => `Réservations en ${annee}`,
       taches: (annee: string) => `Tâches en ${annee}`,
+      resultatTrading: (annee: string) => `Résultat des trades en ${annee}`,
+    },
+    taches: {
+      titre: 'Tâches à faire',
+      aucune: 'Aucune tâche à faire',
+      aucuneDetail: 'Les contenus avec une échéance, tant qu’ils ne sont pas terminés, apparaissent ici.',
     },
     calendrier: {
-      legendeGite: 'Chambres occupées cette nuit-là — appuyez sur un jour pour ouvrir le gîte.',
+      legendeTrading:
+        'Résultat des trades clos ce jour-là (vert : gain, rouge : perte) — appuyez sur un jour pour ouvrir le journal.',
+      legendeGite:
+        'Chambres occupées cette nuit-là (! : paiement en attente) — appuyez sur un jour pour ouvrir le gîte.',
       legendeTaches:
         'Tâches à réaliser ce jour-là (en rouge : en retard) — appuyez sur un jour pour les voir.',
     },

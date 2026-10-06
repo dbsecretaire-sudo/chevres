@@ -29,5 +29,18 @@ export const styles = StyleSheet.create({
   marque: { fontSize: 12, fontWeight: '800', color: colors.primaryDark },
   textePlein: { color: colors.blanc },
   texteAlerte: { color: colors.danger },
+  /** Le point d'exclamation d'une case : une pastille rouge dans son coin haut droit. */
+  pastilleAttention: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  texteAttention: { fontSize: 11, fontWeight: '800', color: colors.blanc, lineHeight: 14 },
   legende: { fontSize: 12, color: colors.textMuted, textAlign: 'center' },
 });

@@ -4,6 +4,11 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { InfoModal } from '@/shared/components/InfoModal';
+import { choisirFichiers, piecesDisponibles, rangerFichier } from '@/features/fichiers/services/pieces';
+import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
+import { STATUT_ELEMENT } from '@/shared/constants/dossiers';
+import { todayISO } from '@/shared/utils/dates';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { OptionsModal } from '@/shared/components/OptionsModal';
@@ -12,7 +17,12 @@ import { LigneElement } from '@/features/dossiers/components/LigneElement';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { RechercheDossiers } from '@/features/dossiers/components/RechercheDossiers';
 import { useExplorateur } from '@/features/dossiers/hooks/useExplorateur';
-import { creerSousDossier, renommerSousDossier, supprimerSousDossier } from '@/features/dossiers/repository';
+import {
+  creerSousDossier,
+  enregistrerElement,
+  renommerSousDossier,
+  supprimerSousDossier,
+} from '@/features/dossiers/repository';
 import { cheminDuDossier, dossiersEnfants, resumeDossier } from '@/features/dossiers/services/arborescence';
 import { colors } from '@/shared/theme/colors';
 import { ROUTES } from '@/shared/constants/routes';
@@ -32,6 +42,7 @@ export default function SousDossierEcran() {
   const [renommerOuvert, setRenommerOuvert] = useState(false);
   const [nouveauOuvert, setNouveauOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
   const T = TEXTES.dossiers.sousDossier;
   const { recharger } = e;
 
@@ -59,6 +70,28 @@ export default function SousDossierEcran() {
     await creerSousDossier(dossier.clientId, nom, id);
     setNouveauOuvert(false);
     recharger();
+  };
+
+  /** Chaque fichier choisi (Word, Excel, PDF, image) devient un contenu de ce dossier, déjà terminé. */
+  const importerFichiers = async () => {
+    if (!dossier) return;
+    if (!piecesDisponibles()) return setErreur(TEXTES.fichiers.indisponibleWeb);
+    try {
+      for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {
+        const piece = await rangerFichier(choisi);
+        await enregistrerElement({
+          clientId: dossier.clientId,
+          dossierId: id,
+          titre: choisi.nom.replace(/\.[^.]+$/, ''),
+          date: todayISO(),
+          statut: STATUT_ELEMENT.TERMINE,
+          fichiers: [piece],
+        });
+      }
+      recharger();
+    } catch (e: any) {
+      setErreur(e?.message ?? TEXTES.fichiers.erreurAjout);
+    }
   };
 
   const supprimer = async () => {
@@ -121,6 +154,7 @@ export default function SousDossierEcran() {
             icon: 'document-text',
             onPress: () => router.push(ROUTES.elementNouveau(id)),
           },
+          { label: TEXTES.fichiers.importerUnFichier, icon: 'attach', onPress: importerFichiers },
         ]}
       />
 
@@ -151,6 +185,7 @@ export default function SousDossierEcran() {
         onValider={creerDossier}
         onAnnuler={() => setNouveauOuvert(false)}
       />
+      <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
       <ConfirmModal
         visible={suppressionOuverte}
         title={T.supprimerQuestion}

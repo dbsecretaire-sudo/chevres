@@ -1,10 +1,14 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { listElements } from '@/features/dossiers/repository';
-import type { Element } from '@/features/dossiers/types';
-import { listSejours } from '@/features/gite/repository';
+import { listClients } from '@/features/clients/repository';
+import type { Client } from '@/features/clients/types';
+import { lireArchiveDossiers } from '@/features/dossiers/repository';
+import type { ArchiveDossiers } from '@/features/dossiers/types';
+import { listChambres, listSejours } from '@/features/gite/repository';
 import type { Sejour } from '@/features/gite/types';
+import { listTrades } from '@/features/trading/repository';
+import type { Trade } from '@/features/trading/types';
 import { listTransactions } from '@/features/comptabilite/services/transactions';
 import {
   calculerSoldes,
@@ -20,28 +24,40 @@ export interface BalanceMois {
   solde: number;
 }
 
+const ARCHIVE_VIDE: ArchiveDossiers = { sousDossiers: [], elements: [] };
+
 /**
- * Ce que l'accueil d'une entreprise affiche : les séjours du gîte et les contenus (dont les tâches à échéance) pour le
- * calendrier, et l'état des finances de l'année active (total et mois par mois) pour la balance.
+ * Ce que l'accueil d'une entreprise affiche : les séjours du gîte, les contenus (dont les tâches à échéance) et leurs
+ * dossiers, les trades du journal, et l'état des finances de l'année active (total et mois par mois) pour la balance.
  */
 export function useAccueilEntreprise() {
   const { settings, setAnneeActive } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [sejours, setSejours] = useState<Sejour[]>([]);
-  const [elements, setElements] = useState<Element[]>([]);
+  const [archive, setArchive] = useState<ArchiveDossiers>(ARCHIVE_VIDE);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [nombreChambres, setNombreChambres] = useState(0);
   const [balance, setBalance] = useState<SoldesTransactions | null>(null);
   const [parMois, setParMois] = useState<BalanceMois[]>([]);
 
   const charger = useCallback(async () => {
-    const [toutesAnnees, listeSejours, listeElements, transactions] = await Promise.all([
-      toutesLesAnneesConnues(),
-      listSejours(),
-      listElements(),
-      listTransactions(settings.anneeActive),
-    ]);
+    const [toutesAnnees, listeSejours, chambres, archiveDossiers, listeClients, listeTrades, transactions] =
+      await Promise.all([
+        toutesLesAnneesConnues(),
+        listSejours(),
+        listChambres(),
+        lireArchiveDossiers(),
+        listClients(),
+        listTrades(),
+        listTransactions(settings.anneeActive),
+      ]);
     setAnnees(toutesAnnees);
     setSejours(listeSejours);
-    setElements(listeElements);
+    setNombreChambres(chambres.length);
+    setArchive(archiveDossiers);
+    setClients(listeClients);
+    setTrades(listeTrades);
     setBalance(calculerSoldes(transactions));
     setParMois(
       Array.from({ length: 12 }, (_, i) => {
@@ -62,5 +78,18 @@ export function useAccueilEntreprise() {
     }, [charger]),
   );
 
-  return { annee: settings.anneeActive, annees, setAnneeActive, sejours, elements, balance, parMois };
+  return {
+    annee: settings.anneeActive,
+    annees,
+    setAnneeActive,
+    sejours,
+    nombreChambres,
+    elements: archive.elements,
+    sousDossiers: archive.sousDossiers,
+    clients,
+    trades,
+    balance,
+    parMois,
+    recharger: charger,
+  };
 }

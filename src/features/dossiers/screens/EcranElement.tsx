@@ -10,6 +10,15 @@ import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
+import {
+  choisirFichiers,
+  piecesDisponibles,
+  rangerFichier,
+  supprimerPiece,
+} from '@/features/fichiers/services/pieces';
+import type { PieceJointe } from '@/features/fichiers/types';
+import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
 import {
   enregistrerElement,
   getElement,
@@ -42,6 +51,9 @@ export default function EcranElement() {
   const [echeance, setEcheance] = useState('');
   const [statut, setStatut] = useState<StatutElement>(STATUT_ELEMENT.A_FAIRE);
   const [etiquettes, setEtiquettes] = useState('');
+  const [fichiers, setFichiers] = useState<PieceJointe[]>([]);
+  /** Les fichiers retirés : leur copie n'est effacée de l'appareil qu'à l'enregistrement. */
+  const [retires, setRetires] = useState<PieceJointe[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
 
@@ -56,8 +68,27 @@ export default function EcranElement() {
       setEcheance(e.echeance ?? '');
       setStatut(statutEffectif(e));
       setEtiquettes((e.etiquettes ?? []).join(`${SEPARATEUR_ETIQUETTES} `));
+      setFichiers(e.fichiers ?? []);
     });
   }, [id]);
+
+  const ajouterFichiers = async () => {
+    if (!piecesDisponibles()) return setErreur(TEXTES.fichiers.indisponibleWeb);
+    try {
+      const nouveaux: PieceJointe[] = [];
+      for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {
+        nouveaux.push(await rangerFichier(choisi));
+      }
+      setFichiers((actuels) => [...actuels, ...nouveaux]);
+    } catch (e: any) {
+      setErreur(e?.message ?? TEXTES.fichiers.erreurAjout);
+    }
+  };
+
+  const retirerFichier = (piece: PieceJointe) => {
+    setFichiers((actuels) => actuels.filter((f) => f.id !== piece.id));
+    setRetires((actuels) => [...actuels, piece]);
+  };
 
   const enregistrer = async () => {
     if (!titre.trim()) return setErreur(T.titreRequis);
@@ -74,11 +105,13 @@ export default function EcranElement() {
       date,
       echeance: echeance || undefined,
       statut,
+      fichiers: fichiers.length > 0 ? fichiers : undefined,
       etiquettes: etiquettes
         .split(SEPARATEUR_ETIQUETTES)
         .map((e) => e.trim())
         .filter(Boolean),
     });
+    for (const piece of retires) await supprimerPiece(piece);
     router.back();
   };
 
@@ -136,6 +169,15 @@ export default function EcranElement() {
           value={etiquettes}
           onChangeText={setEtiquettes}
           placeholder={T.exempleEtiquettes}
+        />
+
+        <ListeFichiers
+          titre={TEXTES.fichiers.titre}
+          libelleAjout={TEXTES.fichiers.ajouter}
+          aide={TEXTES.fichiers.aide}
+          pieces={fichiers}
+          onAjouter={ajouterFichiers}
+          onRetirer={retirerFichier}
         />
 
         <View style={commonStyles.row}>

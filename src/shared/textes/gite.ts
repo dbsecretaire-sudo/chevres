@@ -23,9 +23,28 @@ export const TEXTES_GITE = {
   },
   calendrier: {
     occupation: (occupees: number, total: number) => `${occupees}/${total}`,
-    legende: 'Chambres occupées cette nuit-là',
+    legende: 'Chambres occupées cette nuit-là — ! : paiement en attente',
     nouveauSejour: 'Nouveau séjour',
     titre: 'Gîte',
+  },
+  reservationsClient: {
+    titre: 'Réservations',
+    aucune: 'Aucune réservation pour ce client pour l’instant.',
+    abandonnee: 'Réservation abandonnée',
+  },
+  chambre: {
+    ajouter: (numero: number) => `Ajouter la chambre ${numero}`,
+    cote: 'Côté du couloir',
+    gauche: 'Gauche',
+    droite: 'Droite',
+    ajouterUneChambre: 'Ajouter une chambre',
+    supprimer: 'Supprimer la chambre',
+    supprimerQuestion: 'Supprimer cette chambre ?',
+    supprimerMessage: (numero: number) =>
+      `Voulez-vous vraiment supprimer la chambre ${numero} ? Les réservations déjà faites ne sont pas touchées.`,
+    suppressionImpossible: 'Suppression impossible',
+    suppressionImpossibleMessage: (numero: number) =>
+      `La chambre ${numero} fait partie d’au moins une réservation : modifiez ou supprimez d’abord ces réservations.`,
   },
   jour: {
     gauche: 'Gauche',
@@ -53,34 +72,52 @@ export const TEXTES_GITE = {
     chambresRequises: 'Choisissez au moins une chambre.',
     arrivee: 'Arrivée',
     depart: 'Départ',
-    nom: 'Nom du locataire ou du groupe',
-    exempleNom: 'ex : Famille Martin',
-    client: 'Fiche client (facultatif)',
-    aucuneFiche: 'Aucune fiche',
-    personnes: 'Nombre de personnes (facultatif, pour les lits)',
-    personnesNonPrecisees: 'Non précisé',
+    client: 'Fiche client',
+    aucuneFiche: 'Choisir une fiche',
+    clientRequis: 'Choisissez une fiche client.',
+    coordonneesRequises:
+      'Cette fiche n’a ni téléphone ni e-mail : complétez-la pour pouvoir joindre le locataire.',
+    personnes: 'Nombre de personnes',
+    personnesNonPrecisees: '0',
     paiement: 'Paiement',
     validerPaiement: 'Valider le paiement',
-    annulerPaiement: 'Annuler le paiement',
     datePaiement: 'Date du paiement',
     paiementEnAttente: 'Non payé : rien n’est inscrit en comptabilité tant que le paiement n’est pas validé.',
-    paiementValide: 'Payé : le séjour est inscrit en comptabilité quand vous enregistrez.',
+    abandonneeInfo:
+      'Réservation abandonnée : la chambre est libérée, la réservation reste dans l’historique du client.',
+    lignesPaiement: {
+      paiementDu: (date: string) => `Paiement du ${date} :`,
+      acompteDu: (date: string) => `Acompte du ${date} :`,
+      autre: 'Autre :',
+      remboursement: 'Remboursement du client :',
+      prestation: 'Prestation supplémentaire :',
+      maintenue: 'réservation maintenue',
+    },
+    paiementValide:
+      'Payé : le paiement est inscrit en comptabilité. Pour un remboursement ou une prestation supplémentaire, touchez le crayon.',
     repas: 'Nombre de repas',
+    service: 'Service des repas',
+    repasCalcules:
+      'Repas calculés automatiquement : personnes × nuits (× 2 midi et soir). Vous pouvez modifier le nombre si les repas ne sont pas pris tous les jours.',
     recapitulatif: 'Détail du prix',
     ligneHebergement: (chambres: number, nuits: number, prixNuit: string, montant: string) =>
       `${pluriel(chambres, 'chambre')} × ${pluriel(nuits, 'nuit')} × ${prixNuit} = ${montant}`,
     ligneTaxe: (montant: string) => `Taxe de séjour : ${montant}`,
-    ligneRepas: (repas: number, prixRepas: string, montant: string) =>
-      `Repas : ${repas} × ${prixRepas} = ${montant}`,
-    total: 'Total payé',
+    /** Repas par nuit × nuits × prix ; si le nombre de repas ne se répartit pas sur les nuits (saisi à la main), le total des repas. */
+    ligneRepas: (repas: number, nuits: number, prixRepas: string, montant: string) =>
+      nuits > 0 && repas % nuits === 0
+        ? `Repas : ${repas / nuits} × ${pluriel(nuits, 'nuit')} × ${prixRepas} = ${montant}`
+        : `Repas : ${repas} × ${prixRepas} = ${montant}`,
+    total: 'Total',
     taxeHorsCa:
       'La taxe de séjour est comprise dans le total inscrit en comptabilité ; pensez à la reverser à la commune.',
     tarifsAbsents:
-      'Définissez vos tarifs (prix d’une chambre par nuit, prix d’un repas) dans Réglages › Informations de l’entreprise › Tarifs.',
-    appliquerTarifs: 'Appliquer les tarifs actuels',
+      'Aucun tarif défini : touchez le crayon pour renseigner le prix d’une chambre par nuit et d’un repas.',
+    reprendreTarifs: 'Modifier les tarifs',
+    dupliquer: 'Dupliquer la réservation',
+    tarifs: { nuits: 'Nombre de nuits', repas: 'Nombre de repas' },
     notes: 'Notes',
     nuits: (nombre: number) => pluriel(nombre, 'nuit'),
-    nomRequis: 'Nom requis',
     personnesInvalides: (maximum: number) =>
       `Au maximum ${maximum} personnes pour cette réservation (${LITS_PAR_CHAMBRE} lits par chambre).`,
     departApresArrivee: 'Le départ doit être après l’arrivée.',
@@ -100,5 +137,37 @@ export const TEXTES_GITE = {
     detailHebergementTotal: (montant: string) => `hébergement ${montant}`,
     detailTaxe: (montant: string) => `taxe de séjour ${montant}`,
     detailRepas: (repas: number, prixRepas: string) => `${repas} repas × ${prixRepas}`,
+    sejourDu: (chambres: string, arrivee: string, depart: string) =>
+      `séjour ${chambres.toLowerCase()} du ${arrivee} au ${depart}`,
+    descriptionRemboursement: (sejourDu: string, maintenue: boolean) =>
+      `Remboursement du client — ${sejourDu} (${maintenue ? 'réservation maintenue, geste commercial' : 'réservation abandonnée'})`,
+    descriptionPrestation: (sejourDu: string) => `Prestation supplémentaire — ${sejourDu}`,
+    descriptionAcompte: (sejourDu: string) => `Acompte — ${sejourDu}`,
+    detailSolde: (acompte: string) => `solde après un acompte de ${acompte}`,
+    validation: {
+      message:
+        'Attention : la validation du paiement rendra toute modification du séjour impossible. Voulez-vous vraiment valider le paiement ?',
+      oui: 'Oui',
+      acompte: 'Enregistrer un acompte',
+    },
+    acompte: {
+      titre: 'Acompte',
+      montant: 'Montant de l’acompte (€)',
+      date: 'Date',
+      montantInvalide: 'Le montant doit être supérieur à zéro.',
+      depasse: 'L’acompte ne peut pas dépasser le total du séjour.',
+      ligne: (montant: string, date: string) => `Acompte : ${montant} le ${date}`,
+    },
+    ajustement: {
+      modifierPaiement: 'Remboursement ou prestation',
+      remboursement: 'Remboursement du client',
+      prestation: 'Prestation supplémentaire',
+      montant: 'Montant (€)',
+      date: 'Date',
+      maintenue: 'Le client maintient sa réservation',
+      montantInvalide: 'Le montant doit être supérieur à zéro.',
+      ligne: (libelle: string, montant: string, date: string) => `${libelle} : ${montant} (${date})`,
+      ligneMaintenue: 'réservation maintenue',
+    },
   },
 } as const;

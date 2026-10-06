@@ -165,6 +165,7 @@ export const TEXTES_COMPTABILITE = {
     preciserLeType: 'Préciser le type',
     ex2: 'ex: 2',
     nombreDeTetes: 'Nombre de têtes',
+    nombreDeSacs: 'Sacs plastique emportés',
     nombreDOeufs: 'Nombre d’œufs',
     detailDeLaVente: 'Détail de la vente',
     precision: 'Précision',

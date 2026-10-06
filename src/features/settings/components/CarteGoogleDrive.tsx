@@ -31,7 +31,18 @@ export function CarteGoogleDrive({ drive }: { drive: ReturnType<typeof useGoogle
         />
       )}
 
-      {disponible && drive.connecte && (
+      {disponible && drive.connecte && !settings.driveFolderId && (
+        <View style={commonStyles.gap10}>
+          <Text style={commonStyles.muted}>{TEXTES.settings.reglages.pasEncoreLie}</Text>
+          <Button
+            label={TEXTES.settings.reglages.lierAuCompteGoogle}
+            onPress={drive.lier}
+            loading={drive.connexionEnCours}
+          />
+        </View>
+      )}
+
+      {disponible && drive.connecte && !!settings.driveFolderId && (
         <View style={commonStyles.gap10}>
           <Text style={commonStyles.line}>
             {TEXTES.settings.reglages.compteDeuxPoints}

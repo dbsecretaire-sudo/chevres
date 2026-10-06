@@ -31,6 +31,13 @@ export const CATEGORIE_DEPENSE = {
   HONORAIRES: 'honoraires',
   PUBLICITE: 'publicite',
   MATERIEL: 'materiel',
+  /** Remboursement (total ou partiel) d'un client, inscrit depuis un séjour du gîte déjà payé. */
+  REMBOURSEMENT_CLIENT: 'remboursement_client',
+  // --- Activité financière (journal de trading) ---
+  /** Perte nette d'un trade clos, inscrite automatiquement depuis le journal. */
+  PERTES_TRADING: 'pertes_trading',
+  /** Retrait d'argent du compte de trading. */
+  RETRAIT: 'retrait',
 } as const;
 
 /** Catégorie de recette pour une facture émise (vente / aide). */
@@ -54,6 +61,11 @@ export const CATEGORIE_RECETTE = {
   BAR: 'bar',
   COTISATIONS: 'cotisations',
   DONS: 'dons',
+  // --- Activité financière (journal de trading) ---
+  /** Gain net d'un trade clos, inscrit automatiquement depuis le journal. */
+  GAINS_TRADING: 'gains_trading',
+  /** Dépôt d'argent sur le compte de trading. */
+  DEPOT: 'depot',
 } as const;
 
 /** Catégories de vente de production (saisies comme des ventes, pas comme des factures). */
@@ -235,6 +247,8 @@ export const GROUPE_RECETTE = {
   BAR: 'bar',
   COTISATIONS: 'cotisations',
   DONS: 'dons',
+  GAINS_TRADING: 'gains_trading',
+  DEPOT: 'depot',
 } as const;
 
 export interface GroupeRecetteDefinition {
@@ -322,6 +336,18 @@ export const GROUPES_RECETTE_ASSOCIATION: GroupeRecetteDefinition[] = [
   ...AIDE_ET_AUTRE,
 ];
 
+/** Recettes d'une activité financière : les gains du journal de trading et les dépôts sur le compte. */
+export const GROUPES_RECETTE_FINANCE: GroupeRecetteDefinition[] = [
+  unSeulChoix(GROUPE_RECETTE.GAINS_TRADING, CATEGORIE_RECETTE.GAINS_TRADING),
+  unSeulChoix(GROUPE_RECETTE.DEPOT, CATEGORIE_RECETTE.DEPOT),
+];
+
+/** Dépenses propres à une activité financière : les pertes du journal de trading et les retraits du compte. */
+export const CATEGORIES_DEPENSE_FINANCE = [
+  CATEGORIE_DEPENSE.PERTES_TRADING,
+  CATEGORIE_DEPENSE.RETRAIT,
+] as const;
+
 /** Dépenses d'une entreprise (hors élevage), dans l'ordre d'affichage. */
 export const CATEGORIES_DEPENSE_ENTREPRISE = [
   CATEGORIE_DEPENSE.FOURNITURES,
@@ -339,6 +365,7 @@ export const CATEGORIES_DEPENSE_ENTREPRISE = [
   CATEGORIE_DEPENSE.MATERIEL,
   CATEGORIE_DEPENSE.REPARATION,
   CATEGORIE_DEPENSE.IMPOTS,
+  CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT,
   CATEGORIE_DEPENSE.AUTRE,
 ] as const;
 
@@ -378,6 +405,8 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.BAR,
   CATEGORIE_RECETTE.COTISATIONS,
   CATEGORIE_RECETTE.DONS,
+  CATEGORIE_RECETTE.GAINS_TRADING,
+  CATEGORIE_RECETTE.DEPOT,
   CATEGORIE_RECETTE.AIDE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
@@ -402,6 +431,8 @@ export const TAUX_TVA_RECETTE_ENTREPRISE = {
   [CATEGORIE_RECETTE.HEBERGEMENT]: 10,
   [CATEGORIE_RECETTE.RESTAURATION]: 10,
   [CATEGORIE_RECETTE.BAR]: 20,
+  [CATEGORIE_RECETTE.GAINS_TRADING]: 0,
+  [CATEGORIE_RECETTE.DEPOT]: 0,
   [CATEGORIE_RECETTE.COTISATIONS]: 0,
   [CATEGORIE_RECETTE.DONS]: 0,
   [CATEGORIE_RECETTE.AIDE]: 0,

@@ -1,3 +1,4 @@
+import { supprimerPiece } from '@/features/fichiers/services/pieces';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { cleStockage } from '@/features/etablissements/repository';
@@ -71,6 +72,9 @@ export async function renommerSousDossier(id: string, nom: string): Promise<void
 export async function supprimerSousDossier(id: string): Promise<void> {
   const archive = await lireArchiveDossiers();
   const ids = dossiersDuSousArbre(archive.sousDossiers, id);
+  for (const element of archive.elements.filter((e) => ids.has(e.dossierId))) {
+    for (const piece of element.fichiers ?? []) await supprimerPiece(piece);
+  }
   await remplacerArchiveDossiers({
     sousDossiers: archive.sousDossiers.filter((d) => !ids.has(d.id)),
     elements: archive.elements.filter((e) => !ids.has(e.dossierId)),
@@ -119,5 +123,6 @@ export async function enregistrerElement(element: Omit<Element, 'id'> & { id?: s
 
 export async function supprimerElement(id: string): Promise<void> {
   const archive = await lireArchiveDossiers();
+  for (const piece of archive.elements.find((e) => e.id === id)?.fichiers ?? []) await supprimerPiece(piece);
   await remplacerArchiveDossiers({ ...archive, elements: archive.elements.filter((e) => e.id !== id) });
 }

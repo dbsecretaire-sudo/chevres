@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { Screen } from '@/shared/components/ScreenList';
 import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { InfoModal } from '@/shared/components/InfoModal';
 import { Fab } from '@/shared/components/Fab';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
 import { FormulaireEtablissement } from '@/features/etablissements/components/FormulaireEtablissement';
@@ -36,6 +37,8 @@ export function SelecteurEtablissement({
 }: Props) {
   const [mode, setMode] = useState<Mode>({ type: 'liste' });
   const [aSupprimer, setASupprimer] = useState<Etablissement | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [creationEnCours, setCreationEnCours] = useState(false);
 
   const t = TEXTES.etablissements.selecteurEtablissement;
   const enEdition = mode.type === 'edition' ? etablissements.find((e) => e.id === mode.id) : undefined;
@@ -43,7 +46,12 @@ export function SelecteurEtablissement({
 
   return (
     <Screen scroll={false}>
-      <ScrollView style={commonStyles.flex1} contentContainerStyle={styles.contenu}>
+      {/* « handled » : avec le clavier ouvert, un seul appui sur « Créer » suffit (sinon le premier ne fait que fermer le clavier). */}
+      <ScrollView
+        style={commonStyles.flex1}
+        contentContainerStyle={styles.contenu}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.top}>
           <Text style={commonStyles.heading}>{t.choisirUnEtablissement}</Text>
           <Text style={commonStyles.muted}>{t.chaqueEtablissementASonPropre}</Text>
@@ -53,7 +61,18 @@ export function SelecteurEtablissement({
           <FormulaireEtablissement
             titre={t.nouvelEtablissement}
             libelleValider={t.creerEtOuvrir}
-            onValider={onCreer}
+            enCours={creationEnCours}
+            onValider={async (donnees) => {
+              if (creationEnCours) return;
+              setCreationEnCours(true);
+              try {
+                await onCreer(donnees);
+              } catch (e: any) {
+                setErreur(e?.message ?? String(e));
+              } finally {
+                setCreationEnCours(false);
+              }
+            }}
             onAnnuler={() => setMode({ type: 'liste' })}
           />
         )}
@@ -117,6 +136,13 @@ export function SelecteurEtablissement({
           ]}
         />
       )}
+
+      <InfoModal
+        visible={!!erreur}
+        title={t.creationImpossible}
+        message={erreur ?? undefined}
+        onClose={() => setErreur(null)}
+      />
 
       <ConfirmModal
         visible={!!aSupprimer}
