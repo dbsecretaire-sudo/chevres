@@ -113,6 +113,23 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="stock-historique"
+        options={{
+          href: null,
+          title: TEXTES.stock.historique.titre,
+          // Destination fixe : on revient toujours au stock, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to={ROUTES.STOCK} />,
+        }}
+      />
+      <Tabs.Screen
+        name="stock-statistiques"
+        options={{
+          href: null,
+          title: TEXTES.stock.statistiques.titre,
+          headerLeft: () => <HeaderBackTo to={ROUTES.STOCK} />,
+        }}
+      />
+      <Tabs.Screen
         name="structure-dossiers"
         options={{
           href: null,

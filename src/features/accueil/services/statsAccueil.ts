@@ -5,7 +5,6 @@ import type { BilanAlimentation } from '@/features/exploitation/services/bilanAl
 import { categorieAnimal, type CategorieAnimal } from '@/features/cheptel/utils/chevreLabel';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
-import { montantAlimentationHorsAutre } from '@/features/comptabilite/utils/montants';
 import { CATEGORIE_ANIMAL, SEXE } from '@/shared/constants/cheptel';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 
@@ -68,7 +67,7 @@ export function calculerStatsAccueil({
   // « Autre » n'est pas représentatif de la santé financière de l'activité : exclu du solde, y
   // compris la part « Autre » à l'intérieur d'une facture Alimentation regroupant plusieurs lignes.
   const totalFactures = (type: Facture['type']) =>
-    factures.filter((f) => f.type === type).reduce((sum, f) => sum + montantAlimentationHorsAutre(f), 0);
+    factures.filter((f) => f.type === type).reduce((sum, f) => sum + f.montant, 0);
 
   return {
     totalVivantes: vivantes.length,

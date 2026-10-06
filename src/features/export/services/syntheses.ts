@@ -41,12 +41,18 @@ export function lignesRecapCompte(recap: RecapCompte[], formaterSolde: (total: n
 /** Une ligne par type d'aliment, puis le total hors « autre » ; `vide` remplace les valeurs absentes. */
 export function lignesAlimentation(alimentation: BilanAlimentation, vide: string) {
   return [
-    ...Object.values(TYPE_ALIMENT).map((type) => ({
-      [TEXTES.export.colonnes.aliment]: LABEL_TYPE_ALIMENT[type],
-      [TEXTES.export.colonnes.montant]: alimentation.parType[type].montant,
-      [TEXTES.export.colonnes.quantiteKg]: alimentation.parType[type].quantiteKg,
-      [TEXTES.export.colonnes.kgParAnimal]: alimentation.kgParAnimalParType[type] ?? vide,
+    ...alimentation.lignes.map((ligne) => ({
+      [TEXTES.export.colonnes.aliment]: ligne.libelle,
+      [TEXTES.export.colonnes.montant]: ligne.montant,
+      [TEXTES.export.colonnes.quantiteKg]: ligne.quantiteKg,
+      [TEXTES.export.colonnes.kgParAnimal]: ligne.kgParAnimal ?? vide,
     })),
+    {
+      [TEXTES.export.colonnes.aliment]: LABEL_TYPE_ALIMENT[TYPE_ALIMENT.AUTRE],
+      [TEXTES.export.colonnes.montant]: alimentation.autre.montant,
+      [TEXTES.export.colonnes.quantiteKg]: alimentation.autre.quantiteKg,
+      [TEXTES.export.colonnes.kgParAnimal]: vide,
+    },
     {
       [TEXTES.export.colonnes.aliment]: TEXTES.commun.general.totalHorsAutre,
       [TEXTES.export.colonnes.montant]: alimentation.total,

@@ -16,6 +16,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_ALIMENT, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { activiteLigne, activitesFacture } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
+import { useNomsMateriel } from '@/features/stock/hooks/useNomsMateriel';
 import { TEXTES } from '@/shared/textes';
 
 /** « 1 matelas », « 3 matelas », « 2 ballots » (matelas est invariable). */
@@ -32,6 +33,7 @@ interface Props {
 
 /** Fiche d'une facture en lecture seule : informations générales puis détail par aliment/carburant. */
 export function FactureLecture({ facture, compte, onModifier }: Props) {
+  const nomsMateriel = useNomsMateriel();
   return (
     <Card>
       {plusieursEspeces() ? (
@@ -104,9 +106,15 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
                 {ligne.nombreUnitesConditionnement && ligne.uniteConditionnement
                   ? ` — ${ligne.nombreUnitesConditionnement} ${libelleUnite(ligne.uniteConditionnement, ligne.nombreUnitesConditionnement)}`
                   : ''}
-                {plusieursEspeces() && activitesFacture(facture).length > 1
-                  ? ` (${LABEL_ACTIVITE_COMPTABLE[activiteLigne(facture, ligne)]})`
-                  : ''}
+                {ligne.equipement ||
+                (ligne.type === TYPE_ALIMENT.AUTRE && nomsMateriel.equipement.has(ligne.typeLibre ?? ''))
+                  ? ` (${TEXTES.stock.sections.materiel})`
+                  : ligne.materiel ||
+                      (ligne.type === TYPE_ALIMENT.AUTRE && nomsMateriel.materiel.has(ligne.typeLibre ?? ''))
+                    ? ` (${TEXTES.stock.onglets.materiel})`
+                    : plusieursEspeces() && activitesFacture(facture).length > 1
+                      ? ` (${LABEL_ACTIVITE_COMPTABLE[activiteLigne(facture, ligne)]})`
+                      : ''}
               </Text>
               <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>
             </View>

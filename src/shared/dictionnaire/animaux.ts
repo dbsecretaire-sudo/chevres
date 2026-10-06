@@ -67,6 +67,15 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petitMale: 'Poussin',
     produits: ['œufs', 'animaux'],
   },
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: {
+    troupeau: 'Animaux domestiques',
+    femelle: terme('femelle'),
+    male: terme('mâle'),
+    petit: terme('jeune'),
+    petitFemelle: 'Jeune',
+    petitMale: 'Jeune',
+    produits: ['animaux'],
+  },
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: {
     troupeau: 'Troupeau Cochons',
     femelle: terme('truie'),

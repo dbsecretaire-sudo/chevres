@@ -37,7 +37,10 @@ export const TEXTES_BAR = {
   stock: {
     boissons: 'Boissons',
     nourriture: 'Nourriture',
+    boissonsNourriture: 'Boissons et nourriture',
     onglets: {
+      vente: 'Vente',
+      investissements: 'Investissements',
       consommables: 'Consommables',
       materiel: 'Matériel',
       conditionnement: 'Conditionnement',

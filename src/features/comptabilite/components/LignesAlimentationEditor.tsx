@@ -21,8 +21,8 @@ import { articlesDuGenre } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
-import { GENRE_ARTICLE } from '@/shared/constants/stock';
-import { especeCourante, especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
+import { CHOIX_EQUIPEMENT, CHOIX_MATERIEL, GENRE_ARTICLE, SECTION_STOCK } from '@/shared/constants/stock';
+import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { TYPE_ALIMENT } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 
@@ -69,10 +69,38 @@ export function LignesAlimentationEditor({ lignes, onChange, activite }: Props) 
   const supprimer = (key: string) =>
     onChange(lignes.length > 1 ? lignes.filter((l) => l.key !== key) : lignes);
 
+  /** Le matériel du stock (celui du bâtiment : grillage, poteaux…, pas l'équipement de fromagerie). */
+  const materielDuStock = () => articlesDuGenre(GENRE_ARTICLE.BATIMENT, stock, especeFacture);
+  /** Une ligne de matériel : choisie comme telle dans la liste des cheptels, ou dont le nom est celui d'un matériel du stock. */
+  /** L'équipement consommable du stock (gants, filtres…). */
+  const equipementDuStock = () => articlesDuGenre(GENRE_ARTICLE.EQUIPEMENT, stock, especeFacture);
+  const estEquipement = (ligne: LigneAlimentForm) =>
+    !!ligne.equipement ||
+    (ligne.type === TYPE_ALIMENT.AUTRE && equipementDuStock().some((a) => a.libelle === ligne.typeLibre));
+  const estMateriel = (ligne: LigneAlimentForm) =>
+    !!ligne.materiel ||
+    (ligne.type === TYPE_ALIMENT.AUTRE && materielDuStock().some((a) => a.libelle === ligne.typeLibre));
+
+  /** Le titre d'une ligne : « Aliment 1 », « Matériel 2 » ou « Équipement 3 ». */
+  const titreDeLaLigne = (ligne: LigneAlimentForm) =>
+    estEquipement(ligne)
+      ? TEXTES.comptabilite.lignesAlimentationEditor.equipementValeur
+      : estMateriel(ligne)
+        ? TEXTES.comptabilite.lignesAlimentationEditor.materielValeur
+        : TEXTES.comptabilite.lignesAlimentationEditor.alimentValeur;
+
   /** Les aliments proposés pour une espèce : ceux d'office, puis ceux ajoutés au stock (valeur : type, ou « ajoute:nom »). */
   const optionsAliments = (espece: Parameters<typeof typesAlimentEspece>[0], ligne: LigneAlimentForm) => {
-    const options = articlesDuGenre(GENRE_ARTICLE.ALIMENT, stock, espece).map((a) => ({
-      value: a.id ? `${PREFIXE_AJOUTE}${a.libelle}` : a.cle.split(':')[1],
+    // Une ligne de matériel ou d'équipement (choisie comme telle dans la liste des cheptels) ne propose que cela ; sinon, que les aliments.
+    const autre = estMateriel(ligne) || estEquipement(ligne);
+    const options = (
+      estEquipement(ligne)
+        ? equipementDuStock()
+        : estMateriel(ligne)
+          ? materielDuStock()
+          : articlesDuGenre(GENRE_ARTICLE.ALIMENT, stock, espece)
+    ).map((a) => ({
+      value: a.id || autre ? `${PREFIXE_AJOUTE}${a.libelle}` : a.cle.split(':')[1],
       label: a.libelle,
     }));
     // Une ancienne saisie libre (« autre » avec son texte) reste affichée tant qu'on ne la change pas.
@@ -103,51 +131,101 @@ export function LignesAlimentationEditor({ lignes, onChange, activite }: Props) 
         return (
           <View key={ligne.key} style={commonStyles.gap8}>
             <View style={commonStyles.rowSpaceBetween}>
-              <Text style={commonStyles.lineSemiBold}>
-                {TEXTES.comptabilite.lignesAlimentationEditor.alimentValeur(index + 1)}
-              </Text>
-              {plusieursEspeces() && (
-                <SelectLien
+              <Text style={commonStyles.lineSemiBold}>{titreDeLaLigne(ligne)(index + 1)}</Text>
+              <View style={commonStyles.headerDroite}>
+                {/* Un seul lien : le cheptel concerné, ou « Matériel » (un investissement) ; ce qu'on choisit s'affiche ici. */}
+                <SelectLien<string>
                   label={TEXTES.comptabilite.lignesAlimentationEditor.cheptelConcerne}
-                  value={espece}
-                  onChange={(v) =>
-                    maj(ligne.key, {
-                      activite: v === especeFacture ? '' : v,
-                      // Un aliment d'office d'une autre espèce est remplacé ; un aliment ajouté au stock vaut pour toutes.
-                      ...(ligne.type === TYPE_ALIMENT.AUTRE || typesAlimentEspece(v).includes(ligne.type)
-                        ? {}
-                        : { type: typesAlimentEspece(v)[0] }),
-                    })
+                  value={
+                    estEquipement(ligne) ? CHOIX_EQUIPEMENT : estMateriel(ligne) ? CHOIX_MATERIEL : espece
                   }
-                  options={especesActives().map((e) => ({
-                    value: e,
-                    label: LABEL_ACTIVITE_COMPTABLE[e],
-                  }))}
+                  onChange={(v) =>
+                    maj(
+                      ligne.key,
+                      v === CHOIX_MATERIEL
+                        ? // Un matériel ne dépend d'aucun animal : on choisit ensuite le matériel dans la liste.
+                          { materiel: true, equipement: false, type: TYPE_ALIMENT.AUTRE, typeLibre: '' }
+                        : v === CHOIX_EQUIPEMENT
+                          ? { materiel: false, equipement: true, type: TYPE_ALIMENT.AUTRE, typeLibre: '' }
+                          : {
+                              materiel: false,
+                              equipement: false,
+                              activite: v === especeFacture ? '' : (v as EspeceAnimale),
+                              // Un aliment d'office d'une autre espèce est remplacé ; un aliment ajouté au stock vaut pour toutes.
+                              ...(estMateriel(ligne) || estEquipement(ligne)
+                                ? { type: typesAlimentEspece(v as EspeceAnimale)[0], typeLibre: '' }
+                                : ligne.type === TYPE_ALIMENT.AUTRE ||
+                                    typesAlimentEspece(v as EspeceAnimale).includes(ligne.type)
+                                  ? {}
+                                  : { type: typesAlimentEspece(v as EspeceAnimale)[0] }),
+                            },
+                    )
+                  }
+                  options={[
+                    {
+                      value: CHOIX_MATERIEL,
+                      label: TEXTES.stock.onglets.materiel,
+                      groupe: TEXTES.comptabilite.lignesAlimentationEditor.investissement,
+                    },
+                    {
+                      value: CHOIX_EQUIPEMENT,
+                      label: TEXTES.stock.sections.materiel,
+                      groupe: TEXTES.comptabilite.lignesAlimentationEditor.consommables,
+                    },
+                    ...especesActives().map((e) => ({
+                      value: e as string,
+                      label: LABEL_ACTIVITE_COMPTABLE[e],
+                      groupe: TEXTES.comptabilite.lignesAlimentationEditor.cheptelConcerne,
+                    })),
+                  ]}
                 />
-              )}
+                {lignes.length > 1 && (
+                  <Pressable style={commonStyles.boutonPastille} onPress={() => supprimer(ligne.key)}>
+                    <Ionicons name="close-circle" size={28} color={colors.danger} />
+                  </Pressable>
+                )}
+              </View>
             </View>
-            <SelectFieldEditable<string>
-              label={TEXTES.comptabilite.lignesAlimentationEditor.alimentValeur(index + 1)}
-              libelleCache
-              searchable
-              placeholder={TEXTES.comptabilite.lignesAlimentationEditor.choixAliment}
-              value={valeurDe(ligne)}
-              onChange={(v) =>
-                maj(
-                  ligne.key,
-                  v.startsWith(PREFIXE_AJOUTE)
-                    ? { type: TYPE_ALIMENT.AUTRE, typeLibre: v.slice(PREFIXE_AJOUTE.length) }
-                    : { type: v as TypeAliment, typeLibre: '' },
-                )
-              }
-              options={optionsAliments(espece, ligne)}
-              onEdit={() => router.push(ROUTES.stockDepuis(retour, 'aliments', espece))}
-            />
             <View style={commonStyles.rowFin}>
+              <View style={commonStyles.flex2}>
+                <SelectFieldEditable<string>
+                  label={titreDeLaLigne(ligne)(index + 1)}
+                  libelleCache
+                  searchable
+                  placeholder={TEXTES.comptabilite.lignesAlimentationEditor.choixAliment}
+                  value={valeurDe(ligne)}
+                  onChange={(v) =>
+                    maj(
+                      ligne.key,
+                      v.startsWith(PREFIXE_AJOUTE)
+                        ? { type: TYPE_ALIMENT.AUTRE, typeLibre: v.slice(PREFIXE_AJOUTE.length) }
+                        : { type: v as TypeAliment, typeLibre: '' },
+                    )
+                  }
+                  options={optionsAliments(espece, ligne)}
+                  onEdit={() =>
+                    router.push(
+                      ROUTES.stockDepuis(
+                        retour,
+                        estEquipement(ligne)
+                          ? SECTION_STOCK.EQUIPEMENT_CONSOMMABLE
+                          : estMateriel(ligne)
+                            ? SECTION_STOCK.MATERIEL
+                            : SECTION_STOCK.ALIMENTS,
+                        espece,
+                      ),
+                    )
+                  }
+                />
+              </View>
               {!estConditionne && (
                 <View style={commonStyles.flex1}>
                   <FormField
-                    label={TEXTES.comptabilite.lignesAlimentationEditor.quantiteKg}
+                    label={
+                      estMateriel(ligne) || estEquipement(ligne)
+                        ? TEXTES.comptabilite.lignesAlimentationEditor.quantiteCourt
+                        : TEXTES.comptabilite.lignesAlimentationEditor.quantiteKgCourt
+                    }
                     value={ligne.quantiteKg}
                     onChangeText={(v) => maj(ligne.key, { quantiteKg: v })}
                     keyboardType="decimal-pad"
@@ -157,18 +235,13 @@ export function LignesAlimentationEditor({ lignes, onChange, activite }: Props) 
               )}
               <View style={commonStyles.flex1}>
                 <FormField
-                  label={TEXTES.commun.general.montantTtc}
+                  label={TEXTES.comptabilite.lignesAlimentationEditor.montantTtcCourt}
                   value={ligne.montant}
                   onChangeText={(v) => maj(ligne.key, { montant: v })}
                   keyboardType="decimal-pad"
                   placeholder={TEXTES.comptabilite.lignesAlimentationEditor.ex120}
                 />
               </View>
-              {lignes.length > 1 && (
-                <Pressable style={commonStyles.boutonPastille} onPress={() => supprimer(ligne.key)}>
-                  <Ionicons name="close-circle" size={28} color={colors.danger} />
-                </Pressable>
-              )}
             </View>
 
             {estConditionne && (

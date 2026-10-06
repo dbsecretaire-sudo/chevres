@@ -3,7 +3,11 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
+import { synchroniserStockAlimentation } from '@/features/stock/services/stock';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
+import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
+import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
@@ -131,6 +135,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [poidsKg, setPoidsKg] = useState('');
   const [sacs, setSacs] = useState('');
   const [jeune, setJeune] = useState<boolean | undefined>();
+  /** Les fiches des animaux sur pied ou vivants vendus (vide : aucun choisi). */
+  const [animaux, setAnimaux] = useState<string[]>([]);
   const [precision, setPrecision] = useState('');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
@@ -270,6 +276,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         poidsKg,
         sacs,
         jeune,
+        animaux,
         precision,
         clientSelectionne,
         estProductionVente,
@@ -279,12 +286,20 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         setErreur(resultat.erreur);
         return;
       }
-      if ('vente' in resultat) await enregistrerVente(resultat.vente);
-      else {
+      if ('vente' in resultat) {
+        const vente = await enregistrerVente(resultat.vente);
+        // Les animaux vendus quittent le cheptel : leur fiche passe en « vendue » à la date de la vente.
+        for (const id of idsDesAnimaux(vente))
+          await declarerStatutChevre(id, STATUT_CHEVRE.VENDUE, vente.date);
+      } else {
         const achat = resultat.facture.lignesMarchandises;
-        await enregistrerFacture({ ...resultat.facture, stockApplique: achat?.length ? true : undefined });
-        // Un achat de marchandises du gîte augmente le stock de ce qui est acheté.
+        const enregistree = await enregistrerFacture({
+          ...resultat.facture,
+          stockApplique: achat?.length ? true : undefined,
+        });
+        // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
         await synchroniserStockAchat(undefined, achat);
+        await synchroniserStockAlimentation(enregistree);
       }
       router.back();
     } finally {
@@ -351,6 +366,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setSacs,
     jeune,
     setJeune,
+    animaux,
+    setAnimaux,
     precision,
     setPrecision,
     groupeRecette: groupeRecette(categorieRecette, activite),

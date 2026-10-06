@@ -13,6 +13,10 @@ interface Props {
   avecLitres?: boolean;
   /** Le nom du champ des litres quand il diffère (brocciu : le lait versé dans le lactosérum). */
   libelleLitres?: string;
+  /** Le stock se consomme (aliment, emballage, entretien) : un bouton le remet à zéro, et un retrait est une consommation. */
+  consommable?: boolean;
+  /** Ce qu'il reste de l'article (pour le remettre à zéro). */
+  niveau?: number;
   /** L'unité de la quantité (kg pour un aliment), rappelée dans le libellé du champ. */
   unite?: string;
   /** Reçoit la variation (positive pour un ajout, négative pour un retrait) et les litres de lait éventuels. */
@@ -33,6 +37,8 @@ export function MouvementStockModal({
   avecLitres,
   libelleLitres,
   unite,
+  consommable,
+  niveau,
   onValider,
   onSupprimer,
   onFermer,
@@ -81,7 +87,14 @@ export function MouvementStockModal({
             keyboardType={CLAVIER_QUANTITE}
             placeholder="0"
           />
-          <Text style={commonStyles.note}>{T.aide}</Text>
+          <Text style={commonStyles.note}>{consommable ? T.aideConsommable : T.aide}</Text>
+          {consommable && article && niveau && niveau > 0 ? (
+            <Button
+              variant="secondary"
+              label={T.toutConsomme}
+              onPress={() => onValider(article.cle, -niveau)}
+            />
+          ) : null}
           {avecLitres && nombre >= 0 ? (
             <FormField
               label={libelleLitres ?? T.litres}

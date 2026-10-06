@@ -31,11 +31,6 @@ export function ChevreSortieFab({ chevre, onChoisir }: Props) {
           onPress: () => onChoisir(STATUT_CHEVRE.ABATTOIR),
         },
         {
-          label: statutLabel(STATUT_CHEVRE.VENDUE, chevre.sexe),
-          icon: 'cash',
-          onPress: () => onChoisir(STATUT_CHEVRE.VENDUE),
-        },
-        {
           label: statutLabel(STATUT_CHEVRE.AUTOCONSOMMEE, chevre.sexe),
           icon: 'restaurant',
           onPress: () => onChoisir(STATUT_CHEVRE.AUTOCONSOMMEE),

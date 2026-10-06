@@ -9,7 +9,12 @@ type TypeFromage = ValeurDe<typeof TYPE_FROMAGE>;
 export const GENRE_ARTICLE = {
   FROMAGE: 'fromage',
   EMBALLAGE: 'emballage',
+  /** Le matériel de fromagerie (casserole, présure, sel…) : celui d'office, et celui qu'on y ajoute. */
   MATERIEL: 'materiel',
+  /** L'équipement qui se consomme (gants, filtres…) : toujours ajouté par l'utilisateur. */
+  EQUIPEMENT: 'equipement',
+  /** Le matériel du bâtiment (grillage, poteaux…) : toujours ajouté par l'utilisateur, sans rapport avec la fromagerie. */
+  BATIMENT: 'batiment',
   /** Un aliment des animaux (exploitation agricole) : ceux d'office de l'espèce, et ceux qu'on ajoute. */
   ALIMENT: 'aliment',
   /** Un produit d'entretien (toujours ajouté par l'utilisateur). */
@@ -17,6 +22,33 @@ export const GENRE_ARTICLE = {
   /** Un type de viande ou de charcuterie vendu (saucisson, jambon…), toujours ajouté par l'utilisateur. */
   VIANDE: 'viande',
 } as const;
+
+/**
+ * La nature d'un stock : ce qui se vend (fromages, viande, lait), ce qui se consomme (aliments, emballages, entretien — il
+ * s'épuise à l'usage) ou ce qui est un investissement (matériel, équipement — il s'achète et dure).
+ */
+export const NATURE_STOCK = {
+  VENTE: 'vente',
+  CONSOMMABLE: 'consommable',
+  INVESTISSEMENT: 'investissement',
+} as const;
+
+/** La nature de chaque genre d'article. */
+export const NATURE_PAR_GENRE: Record<ValeurDe<typeof GENRE_ARTICLE>, ValeurDe<typeof NATURE_STOCK>> = {
+  [GENRE_ARTICLE.FROMAGE]: NATURE_STOCK.VENTE,
+  [GENRE_ARTICLE.VIANDE]: NATURE_STOCK.VENTE,
+  [GENRE_ARTICLE.ALIMENT]: NATURE_STOCK.CONSOMMABLE,
+  [GENRE_ARTICLE.EMBALLAGE]: NATURE_STOCK.CONSOMMABLE,
+  [GENRE_ARTICLE.ENTRETIEN]: NATURE_STOCK.CONSOMMABLE,
+  [GENRE_ARTICLE.EQUIPEMENT]: NATURE_STOCK.CONSOMMABLE,
+  [GENRE_ARTICLE.MATERIEL]: NATURE_STOCK.INVESTISSEMENT,
+  [GENRE_ARTICLE.BATIMENT]: NATURE_STOCK.INVESTISSEMENT,
+};
+
+/** Le choix « Matériel » d'une ligne de facture d'alimentation (un achat de matériel, pas d'aliment), dans la liste des cheptels. */
+export const CHOIX_MATERIEL = 'materiel';
+/** Le choix « Équipement » (un consommable) de la même liste. */
+export const CHOIX_EQUIPEMENT = 'equipement';
 
 /** Le choix « toutes les activités » du filtre du stock (sinon : une espèce de l'exploitation). */
 export const FILTRE_STOCK_TOUT = 'tout';
@@ -67,21 +99,25 @@ export const CONDITIONNEMENT_PAR_DEFAUT: Record<TypeFromage, readonly Emballage[
 /** Début de la valeur du choix d'un fromage ajouté dans le stock (suivi de son identifiant), dans le formulaire de vente. */
 export const PREFIXE_FROMAGE_AJOUTE = 'ajoute:';
 
-/** Les parties de l'écran Stock : la fromagerie (en sections), les aliments, l'entretien. */
+/** Les trois onglets de l'écran Stock, rangés par nature : ce qui se vend, ce qui se consomme, les investissements. */
 export const ONGLET_STOCK = {
-  FROMAGERIE: 'fromagerie',
-  LAIT: 'lait',
-  ALIMENTS: 'aliments',
-  VIANDE: 'viande',
-  ENTRETIEN: 'entretien',
+  VENTE: 'vente',
+  CONSOMMABLES: 'consommables',
+  INVESTISSEMENTS: 'investissements',
 } as const;
 
-/** Les sections déroulables de la fromagerie. */
-export const SECTION_FROMAGERIE = {
+/** Les sections déroulables de chaque onglet. */
+export const SECTION_STOCK = {
   FROMAGES: 'fromages',
+  LAIT: 'lait',
+  VIANDE: 'viande',
+  ALIMENTS: 'aliments',
   EMBALLAGES: 'emballages',
-  MATERIEL: 'materiel',
   CONDITIONNEMENT: 'conditionnement',
+  ENTRETIEN: 'entretien',
+  EQUIPEMENT: 'equipement',
+  EQUIPEMENT_CONSOMMABLE: 'equipementConsommable',
+  MATERIEL: 'materiel',
 } as const;
 
 /** D'où vient un mouvement de stock : d'une vente (retiré avec elle) ou d'une saisie à la main. */
@@ -90,6 +126,10 @@ export const ORIGINE_MOUVEMENT = {
   MANUEL: 'manuel',
   /** Les petits nés vivants d'une naissance déclarée (ajoutés à la ligne des jeunes de la viande). */
   NAISSANCE: 'naissance',
+  /** Les aliments d'une facture d'alimentation reçue (leurs kilos entrent au stock). */
+  ACHAT: 'achat',
+  /** Ce que les animaux ont mangé ou ce qui a servi (retrait d'un consommable : aliment, emballage, entretien). */
+  CONSOMMATION: 'consommation',
 } as const;
 
 /** Les lignes de viande tenues d'office pour chaque espèce : ses petits, puis l'animal sur pied et l'animal vivant. */

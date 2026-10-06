@@ -52,6 +52,7 @@ export function filtrerTransactions(
         t.titre,
         t.sousTitre,
         t.libelleCategorie,
+        ...(t.termes ?? []),
         t.date ? formatDateFR(t.date) : '',
         enTexteMontant(t.montant),
         enTexteMontant(t.montantComptabilise),
@@ -63,17 +64,15 @@ export function filtrerTransactions(
 }
 
 export interface SoldesTransactions {
-  /** Solde hors « autre » (montants comptabilisés). */
+  /** Solde : toutes les écritures, sans exception (alimentation, matériel, « Autre »…). */
   balance: number;
-  /** Solde toutes catégories incluses (montants réels). */
-  balanceAvecAutre: number;
   totalRentrees: number;
   totalDepenses: number;
 }
 
 /**
- * « Autre » reste affiché dans la liste à titre indicatif (montant réel), mais sa part n'est pas
- * représentative de la santé financière de l'activité — exclue du solde via montantComptabilise.
+ * Le solde additionne toutes les écritures, sans exclure aucune catégorie. Pour une facture répartie entre des cheptels, c'est
+ * la part de l'activité qui compte (montantComptabilise), pas le total de la facture : elle n'est comptée qu'une fois.
  */
 export function calculerSoldes(transactions: Transaction[]): SoldesTransactions {
   const signe = (t: Transaction) => (t.sens === SENS_TRANSACTION.ENTREE ? 1 : -1);
@@ -82,8 +81,6 @@ export function calculerSoldes(transactions: Transaction[]): SoldesTransactions 
 
   return {
     balance: somme(transactions, (t) => (t.montantComptabilise ?? 0) * signe(t)),
-    // La part de l'activité, pas le total de la facture : une facture répartie entre des cheptels n'est comptée qu'une fois.
-    balanceAvecAutre: somme(transactions, (t) => (t.montantActivite ?? t.montant ?? 0) * signe(t)),
     totalRentrees: somme(
       transactions.filter((t) => t.sens === SENS_TRANSACTION.ENTREE),
       (t) => t.montantComptabilise ?? 0,

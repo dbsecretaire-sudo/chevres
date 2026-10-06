@@ -17,7 +17,7 @@ interface CarteSoldeProps {
 }
 
 /**
- * Solde (hors « autre »), rentrées, dépenses, et solde toutes catégories incluses. Replié par défaut : le solde
+ * Solde, rentrées et dépenses. Replié par défaut : le solde
  * et les deux totaux en couleur tiennent sur deux lignes ; un appui déplie le détail.
  */
 export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldeProps) {
@@ -58,8 +58,7 @@ export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldePro
       <Card style={styles.balanceCard}>
         <Text style={commonStyles.caption}>
           {TEXTES.comptabilite.listeTransactions.soldeEspace}
-          {filtresActifs ? TEXTES.comptabilite.listeTransactions.filtre : anneeActive}{' '}
-          {TEXTES.comptabilite.listeTransactions.horsAlimentationAutre}
+          {filtresActifs ? TEXTES.comptabilite.listeTransactions.filtre : anneeActive}
         </Text>
         <Text style={[styles.balanceValeur, { color: couleurSolde }]}>{formatMontant(soldes.balance)}</Text>
 
@@ -76,11 +75,6 @@ export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldePro
             <Text style={[styles.statValeur, { color: colors.danger }]}>{depenses}</Text>
           </View>
         </View>
-
-        <Text style={commonStyles.captionTop}>
-          {TEXTES.comptabilite.listeTransactions.soldeToutesCategoriesInclusesDeuxPoints}
-          {formatMontant(soldes.balanceAvecAutre)}
-        </Text>
       </Card>
     </Pressable>
   );

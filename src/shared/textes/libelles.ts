@@ -165,6 +165,7 @@ export const LABEL_TYPE_ALIMENT: Record<ValeurDe<typeof TYPE_ALIMENT>, string> =
   [TYPE_ALIMENT.PORC_CROISSANCE]: 'Porc croissance',
   [TYPE_ALIMENT.MAIS_CONCASSE]: 'Maïs concassé',
   [TYPE_ALIMENT.MAIS_PONTE]: 'Maïs ponte',
+  [TYPE_ALIMENT.CROQUETTES]: 'Croquettes',
   [TYPE_ALIMENT.AUTRE]: 'Autre',
 };
 
@@ -237,6 +238,7 @@ export const LABEL_TYPE_ANIMAL_ETABLISSEMENT: Record<ValeurDe<typeof TYPE_ANIMAL
   [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: 'Chèvres',
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: 'Brebis',
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: 'Poules',
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: 'Animaux domestiques',
 };
 
 export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, string> = {

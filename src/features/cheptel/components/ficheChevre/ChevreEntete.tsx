@@ -1,5 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
 import { Badge } from '@/shared/components/Badge';
 import { colors, statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
@@ -17,11 +16,10 @@ import { LABEL_SEXE } from '@/shared/textes/libelles';
 
 interface Props {
   chevre: Chevre;
-  onMenu: () => void;
 }
 
-/** En-tête de la fiche : nom, sexe/naissance, badges (statut, renouvellement) et bouton de menu. */
-export function ChevreEntete({ chevre, onMenu }: Props) {
+/** En-tête de la fiche : nom, sexe/naissance, badges (statut, renouvellement). Le menu est dans la barre du haut. */
+export function ChevreEntete({ chevre }: Props) {
   return (
     <View style={commonStyles.header}>
       <View>
@@ -45,9 +43,6 @@ export function ChevreEntete({ chevre, onMenu }: Props) {
             />
           )}
         </View>
-        <Pressable style={commonStyles.boutonMenu} onPress={onMenu}>
-          <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
-        </Pressable>
       </View>
     </View>
   );

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
+import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
 import {
   enregistrerFacture,
   getFacture,
@@ -187,6 +188,7 @@ export function useFicheFacture(id: string | undefined) {
         facture?.stockApplique ? facture.lignesMarchandises : undefined,
         lignesAchetees,
       );
+      await synchroniserStockAlimentation(aEnregistrer);
       setFacture(aEnregistrer);
       setForm(aEnregistrer);
       setEditing(false);
@@ -215,6 +217,7 @@ export function useFicheFacture(id: string | undefined) {
       await supprimerFacture(facture.id);
       // Supprimer l'achat retire du stock ce qu'il y avait ajouté.
       if (facture.stockApplique) await synchroniserStockAchat(facture.lignesMarchandises, undefined);
+      await retirerStockAlimentation(facture.id);
       router.back();
     } catch (error) {
       console.error(error);

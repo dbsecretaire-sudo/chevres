@@ -1,4 +1,4 @@
-import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 /**
- * « Tout · Commun · Chèvres · Brebis… » sur une seule ligne (qui défile s'il y a trop de cheptels) : choisir une
+ * Une puce « Tout », « Commun », « Chèvres »… dont la liste s'ouvre au clic : choisir une
  * espèce la rend active dans toute l'application (comme l'année active), « Tout » et « Commun » ne changent que
  * la liste affichée ici. N'apparaît que pour un établissement qui élève plusieurs espèces.
  */
@@ -34,5 +34,12 @@ export function PucesActivite({ valeur, onChange }: Props) {
     if (filtre !== TOUTES_ACTIVITES && filtre !== ACTIVITE_COMMUNE) changerEspece(filtre as EspeceAnimale);
   };
 
-  return <PucesDefilantes puces={puces} valeur={valeur} onChoisir={choisir} />;
+  return (
+    <ChoixDeroulant
+      titre={TEXTES.commun.choix.animal}
+      valeur={valeur}
+      options={puces.map((p) => ({ value: p.valeur, label: p.label }))}
+      onChoisir={choisir}
+    />
+  );
 }

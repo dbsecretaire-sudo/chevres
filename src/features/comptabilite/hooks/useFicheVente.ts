@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
+import { reactiverChevre } from '@/features/cheptel/repository/chevres';
+import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import type { Vente } from '@/features/comptabilite/types';
 import {
   CATEGORIES_VENTE_ANIMAUX,
@@ -108,6 +110,8 @@ export function useFicheVente(id: string | undefined) {
     if (!vente) return;
     try {
       await supprimerVente(vente.id);
+      // Les animaux de la vente supprimée redeviennent vivants dans le cheptel.
+      for (const id of idsDesAnimaux(vente)) await reactiverChevre(id);
       router.back();
     } catch (error) {
       console.error(error);

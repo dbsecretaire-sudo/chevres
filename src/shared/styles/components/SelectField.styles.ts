@@ -24,6 +24,10 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   liste: { flexShrink: 1 },
+  /** Le titre d'un groupe d'options (ex : « Cheptel concerné »), au-dessus de sa première ligne. */
+  groupe: { paddingTop: 10, paddingBottom: 6, fontSize: 15, color: colors.text },
+  /** Une option d'un groupe : décalée sous le titre de son groupe. */
+  optionGroupee: { marginLeft: 16 },
   option: { paddingVertical: 10, paddingHorizontal: 8, borderRadius: 8 },
   optionSelected: { backgroundColor: colors.badgeBg },
   aucunResultat: {

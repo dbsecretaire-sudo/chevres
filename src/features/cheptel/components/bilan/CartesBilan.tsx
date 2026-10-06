@@ -56,7 +56,7 @@ export function CarteCabris({ bilan, precedent, annee }: CarteProps) {
           <View style={commonStyles.separateur} />
           <View style={commonStyles.gap2}>
             <Ligne
-              label={TEXTES.cheptel.bilanAnnuel.vendus}
+              label={TEXTES.cheptel.bilanAnnuel.vendusStock}
               valeur={bilan.cabritsVendus}
               comparaison={precedent?.cabritsVendus}
             />
@@ -131,7 +131,7 @@ export function CarteChevres({ bilan, precedent, annee }: CarteProps) {
             />
             <DatesAbattoir dates={bilan.chevresAbattoirDates} />
             <Ligne
-              label={TEXTES.commun.general.vendues}
+              label={TEXTES.cheptel.bilanAnnuel.venduesStock}
               valeur={bilan.chevresVenduesAnnee}
               comparaison={precedent?.chevresVenduesAnnee}
             />
@@ -194,7 +194,7 @@ export function CarteBoucs({ bilan, precedent, annee }: CarteProps) {
             />
             <DatesAbattoir dates={bilan.boucsAbattoirDates} />
             <Ligne
-              label={TEXTES.cheptel.bilanAnnuel.vendus}
+              label={TEXTES.cheptel.bilanAnnuel.vendusStock}
               valeur={bilan.boucsVendusAnnee}
               comparaison={precedent?.boucsVendusAnnee}
             />

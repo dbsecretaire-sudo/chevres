@@ -127,6 +127,9 @@ export const CATEGORIE_VENTE = {
   OEUFS: 'oeufs',
 } as const;
 
+/** Sépare les identifiants des animaux d'une vente (Vente.animaux). */
+export const SEPARATEUR_ANIMAUX = ';';
+
 /** Ventes d'animaux : on saisit un nombre de têtes (et, facultatif, un poids). */
 export const CATEGORIES_VENTE_ANIMAUX = [
   CATEGORIE_VENTE.CABRIS,
@@ -167,6 +170,8 @@ export const TYPE_ALIMENT = {
   PORC_CROISSANCE: 'porc_croissance',
   MAIS_CONCASSE: 'mais_concasse',
   MAIS_PONTE: 'mais_ponte',
+  /** Les croquettes des animaux domestiques (chiens, chats…). */
+  CROQUETTES: 'croquettes',
   AUTRE: 'autre',
 } as const;
 
@@ -246,6 +251,7 @@ export const TYPES_ALIMENT_PAR_ESPECE = {
   ],
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: [TYPE_ALIMENT.PORC_CROISSANCE],
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: [TYPE_ALIMENT.MAIS_CONCASSE, TYPE_ALIMENT.MAIS_PONTE],
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: [TYPE_ALIMENT.CROQUETTES],
 } as const;
 
 /** « Autre » est exclu des totaux/moyennes : la précision libre peut recouvrir un achat pour un tout autre élevage que les chèvres. */
@@ -333,6 +339,8 @@ export const GROUPES_RECETTE_PAR_ESPECE: Record<
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: GROUPES_RECETTE_VIANDE,
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: GROUPES_RECETTE_VIANDE,
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: GROUPES_RECETTE_POULES,
+  // Des animaux de compagnie : pas de production à vendre, seulement l'aide et le reste.
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: AIDE_ET_AUTRE,
 };
 
 // --- Entreprise (hors élevage) ---
@@ -404,6 +412,7 @@ export const CATEGORIES_RECETTE_PAR_ESPECE: Record<
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.vaches),
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: aplatir(GROUPES_RECETTE_PAR_ESPECE.cochons),
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.poules),
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: aplatir(GROUPES_RECETTE_PAR_ESPECE.domestiques),
 };
 
 /** Recettes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */

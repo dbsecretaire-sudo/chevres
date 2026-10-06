@@ -164,6 +164,8 @@ export const TEXTES_COMMUN = {
     aucunAnimalPourCetteAnnee: 'Aucun animal pour cette année',
   },
   /** Le calendrier mensuel (accueil d'une entreprise, gîte). */
+  /** Les titres des listes de choix du haut des écrans (l'année, l'animal). */
+  choix: { annee: 'Année', animal: 'Animal', rubrique: 'Rubrique', activite: 'Activité' },
   calendrier: {
     jours: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
     moisPrecedent: 'Mois précédent',

@@ -1,7 +1,5 @@
-import { Pressable, Text } from 'react-native';
-import { DefilementFleches } from '@/shared/components/DefilementFleches';
-import { styles } from '@/shared/styles/components/YearPicker.styles';
-import { commonStyles } from '@/shared/styles/commonStyles';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { TEXTES } from '@/shared/textes';
 
 interface Props {
   annees: number[];
@@ -9,23 +7,17 @@ interface Props {
   onChange: (annee: number) => void;
 }
 
+/** L'année active : une puce, et la liste des années (de la plus récente à la plus ancienne) au clic. */
 export function YearPicker({ annees, value, onChange }: Props) {
-  // De la plus récente à la plus ancienne : 2026, 2025, 2024…
-  const anneesTriees = [...annees].sort((a, b) => b - a);
+  const options = [...new Set([...annees, value])]
+    .sort((a, b) => b - a)
+    .map((annee) => ({ value: String(annee), label: String(annee) }));
   return (
-    <DefilementFleches contentContainerStyle={styles.rowCompact}>
-      {anneesTriees.map((annee) => {
-        const selected = annee === value;
-        return (
-          <Pressable
-            key={annee}
-            onPress={() => onChange(annee)}
-            style={[commonStyles.chip, selected && styles.chipSelected]}
-          >
-            <Text style={[styles.chipText, selected && commonStyles.textWhite]}>{annee}</Text>
-          </Pressable>
-        );
-      })}
-    </DefilementFleches>
+    <ChoixDeroulant
+      titre={TEXTES.commun.choix.annee}
+      valeur={String(value)}
+      options={options}
+      onChoisir={(annee) => onChange(Number(annee))}
+    />
   );
 }

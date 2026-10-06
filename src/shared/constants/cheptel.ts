@@ -50,6 +50,8 @@ export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { agePetitMax: jours(28), ageSevrageMois: 1, nbPetitsMax: 20 },
   // Poussin : jusqu'à 16 semaines ; une couvée compte jusqu'à une quinzaine d'œufs.
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { agePetitMax: semaines(16), ageSevrageMois: 1, nbPetitsMax: 15 },
+  // Chiot ou chaton : jusqu'à 6 mois (26 semaines) ; une portée compte une dizaine de petits.
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: { agePetitMax: semaines(26), ageSevrageMois: 2, nbPetitsMax: 10 },
 };
 
 /** Seuils de l'espèce courante. */

@@ -1,3 +1,4 @@
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { Text } from 'react-native';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Screen } from '@/shared/components/Screen';
@@ -19,8 +20,10 @@ export default function BilanAnnuel() {
 
   return (
     <Screen>
-      <SelecteurEspece />
-      <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
+      <LigneFiltres>
+        <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
+        <SelecteurEspece />
+      </LigneFiltres>
 
       <Text style={commonStyles.muted}>
         {TEXTES.cheptel.bilanAnnuel.comparaisonEspace}

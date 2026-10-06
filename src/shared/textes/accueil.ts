@@ -8,7 +8,7 @@ export const TEXTES_ACCUEIL = {
     troupeauEspace: 'Troupeau — ',
     animauxVivants: 'Animaux vivants',
     dAlimentAnimalJour: 'd’aliment / animal / jour',
-    soldeFacturesHorsAutre: 'Solde factures (hors Autre)',
+    soldeFactures: 'Solde factures',
     derniereVisiteVeterinaire: 'Dernière visite vétérinaire',
     actionsRapides: 'Actions rapides',
     cheptel: '+ Cheptel',

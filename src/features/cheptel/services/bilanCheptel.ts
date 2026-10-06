@@ -1,4 +1,8 @@
 import { yearOf } from '@/shared/utils/dates';
+import { listVentes } from '@/features/comptabilite/repository/ventes';
+import { activiteVente } from '@/features/comptabilite/utils/activite';
+import { CATEGORIE_VENTE, CATEGORIES_VENTE_ANIMAUX } from '@/shared/constants/comptabilite';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ageAtteint } from '@/shared/utils/age';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { loadAllYears } from '@/shared/storage/localStore';
@@ -155,6 +159,20 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     (c) => c.renouvellement && c.renouvellementAnnee === annee,
   ).length;
 
+  // Un animal vendu passe en « vendue » sur sa fiche quand la vente le désigne : il est compté par son statut, comme avant.
+  // Une vente d'animaux sans fiche choisie (cabris, animal sur pied ou vivant) s'ajoute : un petit d'un côté, les adultes de
+  // l'autre (chèvres, une vente sans fiche ne dit pas le sexe).
+  const ventesSansFiche = (await listVentes(annee)).filter(
+    (v) =>
+      activiteVente(v) === especeCourante() &&
+      !v.animaux &&
+      (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(v.categorie),
+  );
+  const venduesSansFiche = (petits: boolean) =>
+    ventesSansFiche
+      .filter((v) => (v.categorie === CATEGORIE_VENTE.CABRIS || !!v.jeune) === petits)
+      .reduce((total, v) => total + v.quantite, 0);
+
   const cabritsAbattoirListe = toutes.filter(
     (c) => c.statut === STATUT_CHEVRE.ABATTOIR && sortiCommeCabrit(c),
   );
@@ -167,7 +185,9 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     cabritsPremierSemestre: cabrits.filter(premierSemestre).length,
     cabritsSecondSemestre: cabrits.filter((c) => !premierSemestre(c)).length,
     cabritsRenouvellement: renouvellementDesignes,
-    cabritsVendus: toutes.filter((c) => c.statut === STATUT_CHEVRE.VENDUE && sortiCommeCabrit(c)).length,
+    cabritsVendus:
+      toutes.filter((c) => c.statut === STATUT_CHEVRE.VENDUE && sortiCommeCabrit(c)).length +
+      venduesSansFiche(true),
     cabritsAbattoir: cabritsAbattoirListe.length,
     cabritsAbattoirDates: grouperParDate(cabritsAbattoirListe),
     cabritsAutoconsommes: toutes.filter(
@@ -179,7 +199,7 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     chevresMortesAnnee: sortiesPreexistantes(SEXE.FEMELLE, STATUT_CHEVRE.MORTE),
     chevresAbattoirAnnee: chevresAbattoirListe.length,
     chevresAbattoirDates: grouperParDate(chevresAbattoirListe),
-    chevresVenduesAnnee: sortiesPreexistantes(SEXE.FEMELLE, STATUT_CHEVRE.VENDUE),
+    chevresVenduesAnnee: sortiesPreexistantes(SEXE.FEMELLE, STATUT_CHEVRE.VENDUE) + venduesSansFiche(false),
     chevresAutoconsommeesAnnee: sortiesPreexistantes(SEXE.FEMELLE, STATUT_CHEVRE.AUTOCONSOMMEE),
     chevresVivantesFinAnnee,
     chevresRenouvellementFinAnnee,

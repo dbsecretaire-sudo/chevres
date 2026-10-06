@@ -13,6 +13,9 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.badgeBg,
   },
+  /** Une puce seule (une année, un animal) qui ouvre une liste : à sa taille, collée à gauche. */
+  puceListe: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  /** Une puce active : sa couleur est celle de l'accent. */
   /** Une puce qu'on ne peut pas choisir : estompée. */
   puceGrisee: { opacity: 0.4 },
   texte: { fontSize: 14, fontWeight: '600', color: colors.primaryDark },

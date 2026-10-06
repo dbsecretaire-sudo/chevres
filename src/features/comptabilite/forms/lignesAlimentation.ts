@@ -24,6 +24,10 @@ export interface LigneAlimentForm {
   typeLibre: string;
   uniteConditionnement: UniteConditionnement;
   nombreUnitesConditionnement: string;
+  /** La ligne est un achat de matériel (choisi dans la liste des cheptels) : sa liste ne propose que le matériel. Pas enregistré. */
+  materiel?: boolean;
+  /** La ligne est un achat d'équipement (consommable) : sa liste ne propose que l'équipement. Pas enregistré tel quel. */
+  equipement?: boolean;
 }
 
 /** Nouvelle ligne : le premier aliment de l'espèce courante par défaut. */
@@ -46,6 +50,8 @@ export function versLignesAlimentationForm(facture: Facture): LigneAlimentForm[]
     montant: String(l.montant),
     quantiteKg: l.quantiteKg !== undefined ? String(l.quantiteKg) : '',
     typeLibre: l.typeLibre ?? '',
+    materiel: l.materiel,
+    equipement: l.equipement,
     uniteConditionnement: l.uniteConditionnement ?? UNITE_CONDITIONNEMENT.MATELAS,
     nombreUnitesConditionnement:
       l.nombreUnitesConditionnement !== undefined ? String(l.nombreUnitesConditionnement) : '',
@@ -79,6 +85,8 @@ export function lignesAlimentationFinales(
         typeLibre: l.type === TYPE_ALIMENT.AUTRE ? l.typeLibre.trim() || undefined : undefined,
         uniteConditionnement: estConditionne ? l.uniteConditionnement : undefined,
         nombreUnitesConditionnement: nombreUnites,
+        materiel: l.materiel || undefined,
+        equipement: l.equipement || undefined,
       };
     })
     .filter((l) => l.montant > 0);

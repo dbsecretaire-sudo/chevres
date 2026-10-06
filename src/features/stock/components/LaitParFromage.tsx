@@ -13,7 +13,7 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.stock.lait;
 const MOIS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-/** Un nombre de litres à l'écran : une décimale au plus, virgule comme séparateur. */
+/** Un nombre de litres à l'écran, virgule comme séparateur. */
 const enLitres = (nombre: number): string => String(nombre).replace('.', ',');
 
 /**
@@ -79,7 +79,7 @@ export function LaitParFromage({ archive }: { archive: ArchiveStock }) {
                           key={i}
                           style={[styles.celluleMois, litres === undefined && styles.celluleMoisVide]}
                         >
-                          {litres === undefined ? '–' : enLitres(litres)}
+                          {litres === undefined ? '–' : enLitres(Math.round(litres * 10) / 10)}
                         </Text>
                       ))}
                     </View>

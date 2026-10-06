@@ -167,12 +167,30 @@ export interface ResultatImport {
 }
 
 /**
+ * Lit le texte du fichier choisi. Sur Android, la copie dans le cache faite par le sélecteur est parfois illisible pour
+ * `FileSystem` (fichier venant d'un service en ligne, droits du fournisseur) : on retente alors par une lecture directe de l'URI.
+ */
+async function lireFichierChoisi(uri: string): Promise<string> {
+  try {
+    return await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.UTF8 });
+  } catch (erreur) {
+    try {
+      return await (await fetch(uri)).text();
+    } catch {
+      throw erreur;
+    }
+  }
+}
+
+/**
  * Restaure une sauvegarde locale précédemment exportée : remplace intégralement les données
  * actuelles (toutes années, toutes catégories, fournisseurs, informations d'exploitation) par
  * celles du fichier choisi — pensé pour une réinstallation, pas pour une fusion avec l'existant.
  */
 export async function importerSauvegardeLocale(): Promise<ResultatImport> {
-  const choix = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
+  // Tous les types sont proposés : selon l'application d'où vient le fichier (Drive, messagerie, gestionnaire de fichiers), un
+  // .json est annoncé « application/octet-stream » et serait grisé avec un filtre strict.
+  const choix = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
   if (choix.canceled)
     return {
       annule: true,
@@ -187,9 +205,7 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
       inchanges: 0,
     };
 
-  const contenu = await FileSystem.readAsStringAsync(choix.assets[0].uri, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
+  const contenu = await lireFichierChoisi(choix.assets[0].uri);
 
   let sauvegarde: FichierSauvegarde;
   try {

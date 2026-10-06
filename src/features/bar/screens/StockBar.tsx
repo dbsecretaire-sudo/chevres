@@ -4,8 +4,11 @@ import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Fab } from '@/shared/components/Fab';
+import type { Option } from '@/shared/components/OptionsModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { BoissonModal } from '@/features/bar/components/BoissonModal';
 import { ChampRubrique } from '@/features/bar/components/ChampRubrique';
@@ -27,7 +30,7 @@ import {
   triesSelonOrdre,
 } from '@/features/bar/repository';
 import type { Aliment, ArchiveBar, ArticleGite, Boisson } from '@/features/bar/types';
-import { FILTRE_RUBRIQUE_TOUT, ONGLET_STOCK_BAR } from '@/shared/constants/bar';
+import { FILTRE_RUBRIQUE_TOUT, ONGLET_STOCK_BAR, ONGLET_STOCK_GITE } from '@/shared/constants/bar';
 import { RUBRIQUE_MARCHANDISE } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
@@ -38,15 +41,39 @@ import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-type Onglet = ValeurDe<typeof ONGLET_STOCK_BAR>;
+type Onglet = ValeurDe<typeof ONGLET_STOCK_GITE>;
+type Section = ValeurDe<typeof ONGLET_STOCK_BAR>;
 type Categorie = ArticleGite['categorie'];
 
 const T = TEXTES.bar;
 const PUCES: { valeur: Onglet; label: string }[] = [
-  { valeur: ONGLET_STOCK_BAR.CONSOMMABLES, label: T.stock.onglets.consommables },
-  { valeur: ONGLET_STOCK_BAR.MATERIEL, label: T.stock.onglets.materiel },
-  { valeur: ONGLET_STOCK_BAR.CONDITIONNEMENT, label: T.stock.onglets.conditionnement },
-  { valeur: ONGLET_STOCK_BAR.ENTRETIEN, label: T.stock.onglets.entretien },
+  { valeur: ONGLET_STOCK_GITE.VENTE, label: T.stock.onglets.vente },
+  { valeur: ONGLET_STOCK_GITE.CONSOMMABLES, label: T.stock.onglets.consommables },
+  { valeur: ONGLET_STOCK_GITE.INVESTISSEMENTS, label: T.stock.onglets.investissements },
+];
+
+/** Les sections déroulables de chaque onglet : ce qui se vend (boissons et nourriture), ce qui se consomme, le matériel. */
+const SECTIONS: { section: Section; onglet: Onglet; titre: string }[] = [
+  {
+    section: ONGLET_STOCK_BAR.CONSOMMABLES,
+    onglet: ONGLET_STOCK_GITE.VENTE,
+    titre: T.stock.boissonsNourriture,
+  },
+  {
+    section: ONGLET_STOCK_BAR.CONDITIONNEMENT,
+    onglet: ONGLET_STOCK_GITE.CONSOMMABLES,
+    titre: T.stock.onglets.conditionnement,
+  },
+  {
+    section: ONGLET_STOCK_BAR.ENTRETIEN,
+    onglet: ONGLET_STOCK_GITE.CONSOMMABLES,
+    titre: T.stock.onglets.entretien,
+  },
+  {
+    section: ONGLET_STOCK_BAR.MATERIEL,
+    onglet: ONGLET_STOCK_GITE.INVESTISSEMENTS,
+    titre: T.stock.onglets.materiel,
+  },
 ];
 
 const PREFIXE_BOISSON = 'boisson:';
@@ -74,7 +101,9 @@ type Ajout = 'aliment' | Categorie;
  * en ajouter. Un appui sur la ligne ajoute ou retire des unités (+1, −1).
  */
 export default function StockBar() {
-  const [onglet, setOnglet] = useState<Onglet>(ONGLET_STOCK_BAR.CONSOMMABLES);
+  const [onglet, setOnglet] = useState<Onglet>(ONGLET_STOCK_GITE.VENTE);
+  /** Les sections qui sont déroulées : aucune au départ, tout est réduit. */
+  const [ouvertes, setOuvertes] = useState<Section[]>([]);
   /** L'activité du gîte regardée : toutes, ou le bar, le restaurant, une activité annexe. */
   const [filtre, setFiltre] = useState<string>(FILTRE_RUBRIQUE_TOUT);
   /** L'activité choisie à la création ou au renommage d'un article (vide : toutes les activités, d'office). */
@@ -104,55 +133,62 @@ export default function StockBar() {
     }, [charger]),
   );
 
-  const consommables = onglet === ONGLET_STOCK_BAR.CONSOMMABLES;
-
   /** Un article sans activité vaut pour toutes ; sinon il apparaît sous son activité (et sous « Tout »). */
   const visible = (rubrique?: string) => filtre === FILTRE_RUBRIQUE_TOUT || !rubrique || rubrique === filtre;
 
-  const toutesLesLignes: LigneStock[] = consommables
-    ? consommablesTries(archive).flatMap((c): LigneStock[] => {
-        if (c.genre === 'boisson') {
-          const b = archive.boissons.find((x) => x.id === c.id);
-          return b
+  /** Les lignes d'une section (filtrées par activité) : les boissons et la nourriture, ou les articles d'une catégorie. */
+  const lignesDe = (section: Section): LigneStock[] => {
+    const consommables = section === ONGLET_STOCK_BAR.CONSOMMABLES;
+    const toutes: LigneStock[] = consommables
+      ? consommablesTries(archive).flatMap((c): LigneStock[] => {
+          if (c.genre === 'boisson') {
+            const b = archive.boissons.find((x) => x.id === c.id);
+            return b
+              ? [
+                  {
+                    id: b.id,
+                    cle: `${PREFIXE_BOISSON}${b.id}`,
+                    genre: 'boisson',
+                    nom: b.nom,
+                    niveau: b.stock ?? 0,
+                    prix: b.prix,
+                    rubrique: b.rubrique,
+                  },
+                ]
+              : [];
+          }
+          const a = archive.aliments.find((x) => x.id === c.id);
+          return a
             ? [
                 {
-                  id: b.id,
-                  cle: `${PREFIXE_BOISSON}${b.id}`,
-                  genre: 'boisson',
-                  nom: b.nom,
-                  niveau: b.stock ?? 0,
-                  prix: b.prix,
-                  rubrique: b.rubrique,
+                  id: a.id,
+                  cle: `${PREFIXE_ALIMENT}${a.id}`,
+                  genre: 'aliment',
+                  nom: a.nom,
+                  niveau: a.stock,
+                  rubrique: a.rubrique,
                 },
               ]
             : [];
-        }
-        const a = archive.aliments.find((x) => x.id === c.id);
-        return a
-          ? [
-              {
-                id: a.id,
-                cle: `${PREFIXE_ALIMENT}${a.id}`,
-                genre: 'aliment',
-                nom: a.nom,
-                niveau: a.stock,
-                rubrique: a.rubrique,
-              },
-            ]
-          : [];
-      })
-    : triesSelonOrdre<ArticleGite>(
-        archive.articles.filter((a) => a.categorie === onglet),
-        archive.ordres[onglet] ?? [],
-      ).map((a) => ({
-        id: a.id,
-        cle: `${PREFIXE_ARTICLE}${a.id}`,
-        genre: 'article' as const,
-        nom: a.nom,
-        niveau: a.stock,
-        rubrique: a.rubrique,
-      }));
-  const lignes = toutesLesLignes.filter((l) => visible(l.rubrique));
+        })
+      : triesSelonOrdre<ArticleGite>(
+          archive.articles.filter((a) => a.categorie === section),
+          archive.ordres[section] ?? [],
+        ).map((a) => ({
+          id: a.id,
+          cle: `${PREFIXE_ARTICLE}${a.id}`,
+          genre: 'article' as const,
+          nom: a.nom,
+          niveau: a.stock,
+          rubrique: a.rubrique,
+        }));
+    return toutes.filter((l) => visible(l.rubrique));
+  };
+
+  const basculerSection = (section: Section) =>
+    setOuvertes((actuelles) =>
+      actuelles.includes(section) ? actuelles.filter((x) => x !== section) : [...actuelles, section],
+    );
 
   const valider = async (cle: string, delta: number) => {
     if (cle.startsWith(PREFIXE_BOISSON))
@@ -242,64 +278,84 @@ export default function StockBar() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
-        <PucesDefilantes<string>
-          puces={[
-            { valeur: FILTRE_RUBRIQUE_TOUT, label: T.stock.tout },
+        <ChoixDeroulant<string>
+          titre={TEXTES.commun.choix.activite}
+          valeur={filtre}
+          options={[
+            { value: FILTRE_RUBRIQUE_TOUT, label: T.stock.tout },
             ...Object.values(RUBRIQUE_MARCHANDISE).map((r) => ({
-              valeur: r as string,
+              value: r as string,
               label: LABEL_RUBRIQUE_MARCHANDISE[r],
             })),
           ]}
-          valeur={filtre}
           onChoisir={setFiltre}
         />
         <PucesDefilantes<Onglet> puces={PUCES} valeur={onglet} onChoisir={setOnglet} />
 
-        {lignes.length === 0 ? (
-          <Text style={commonStyles.mutedItalic}>
-            {consommables ? T.stock.aucunConsommable : T.stock.aucunArticle}
-          </Text>
-        ) : (
-          <ListeReordonnable
-            elements={lignes}
-            cle={(l) => l.cle}
-            ligne={ligneStock}
-            onGlisse={setGlisse}
-            onDeplacer={async (cle, index) => {
-              await positionnerDansLeStock(
-                onglet,
-                cle.split(':')[1],
-                index,
-                lignes.map((l) => l.id),
-              );
-              charger();
-            }}
-          />
-        )}
+        {SECTIONS.filter((x) => x.onglet === onglet).map(({ section, titre }) => {
+          const lignes = lignesDe(section);
+          return (
+            <SectionDeroulante
+              key={section}
+              titre={titre}
+              nombre={lignes.length}
+              ouverte={ouvertes.includes(section)}
+              onBasculer={() => basculerSection(section)}
+            >
+              {lignes.length === 0 ? (
+                <Text style={commonStyles.mutedItalic}>
+                  {section === ONGLET_STOCK_BAR.CONSOMMABLES
+                    ? T.stock.aucunConsommable
+                    : T.stock.aucunArticle}
+                </Text>
+              ) : (
+                <ListeReordonnable
+                  elements={lignes}
+                  cle={(l) => l.cle}
+                  ligne={ligneStock}
+                  onGlisse={setGlisse}
+                  onDeplacer={async (cle, index) => {
+                    await positionnerDansLeStock(
+                      section,
+                      cle.split(':')[1],
+                      index,
+                      lignes.map((l) => l.id),
+                    );
+                    charger();
+                  }}
+                />
+              )}
+            </SectionDeroulante>
+          );
+        })}
       </ScrollView>
 
       <Fab
-        options={
-          consommables
+        options={SECTIONS.filter((x) => x.onglet === onglet).flatMap(({ section }): Option[] =>
+          section === ONGLET_STOCK_BAR.CONSOMMABLES
             ? [
                 {
                   label: T.stock.ajouterBoisson,
-                  icon: 'beer',
+                  icon: 'beer' as const,
                   onPress: () => {
                     setBoissonModifiee(undefined);
                     setBoissonOuverte(true);
                   },
                 },
-                { label: T.stock.ajouterAliment, icon: 'restaurant', onPress: () => ouvrirAjout('aliment') },
+                {
+                  label: T.stock.ajouterAliment,
+                  icon: 'restaurant' as const,
+                  onPress: () => ouvrirAjout('aliment'),
+                },
               ]
             : [
                 {
-                  label: T.stock.ajouterArticle[onglet as Categorie],
-                  icon: 'add-circle',
-                  onPress: () => ouvrirAjout(onglet as Categorie),
+                  label: T.stock.ajouterArticle[section as Categorie],
+                  icon: 'add-circle' as const,
+                  onPress: () => ouvrirAjout(section as Categorie),
                 },
-              ]
-        }
+              ],
+        )}
       />
 
       <MouvementStockModal

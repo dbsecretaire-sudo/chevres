@@ -17,6 +17,8 @@ interface Props {
   /** Le prix se compte au kilo (les lignes d'animaux de la viande). */
   parKg?: boolean;
   onValider: (nom: string, prix?: number) => void;
+  /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
+  onSupprimer?: () => void;
   onAnnuler: () => void;
 }
 
@@ -31,6 +33,7 @@ export function ArticleStockModal({
   avecPrix,
   parKg,
   onValider,
+  onSupprimer,
   onAnnuler,
 }: Props) {
   const [nomSaisi, setNomSaisi] = useState('');
@@ -83,6 +86,7 @@ export function ArticleStockModal({
             />
             <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={valider} />
           </View>
+          {onSupprimer ? <Button variant="danger" label={T.supprimer} onPress={onSupprimer} /> : null}
         </Pressable>
       </Pressable>
     </Modal>

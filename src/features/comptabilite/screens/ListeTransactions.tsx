@@ -1,3 +1,4 @@
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -35,9 +36,11 @@ export default function ComptabiliteIndex() {
         // Années, activités, solde et recherche défilent avec la liste : plus de place pour les écritures.
         ListHeaderComponent={
           <View style={[commonStyles.topBox, styles.entete]}>
-            <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
-            <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
-            <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
+            <LigneFiltres>
+              <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
+              <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
+              <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
+            </LigneFiltres>
             <CarteSolde soldes={e.soldes} anneeActive={e.anneeActive} filtresActifs={e.filtresActifs} />
             <BarreRecherche
               recherche={e.recherche}

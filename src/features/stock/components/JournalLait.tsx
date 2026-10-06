@@ -65,7 +65,7 @@ export function JournalLait({
         return (
           <View key={m} style={commonStyles.gap10}>
             <Text style={commonStyles.cardTitle}>
-              {T.totalDuMois(`${NOMS_MOIS[Number(m.slice(5, 7))]} ${m.slice(0, 4)}`, enLitres(total))}
+              {T.totalDuMois(`${NOMS_MOIS[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`, enLitres(total))}
             </Text>
             {duMois.map((l) => (
               <ListRow

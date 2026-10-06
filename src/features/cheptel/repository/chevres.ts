@@ -1,10 +1,12 @@
 import { generateId } from '@/shared/utils/id';
-import { yearOf } from '@/shared/utils/dates';
+import { todayISO, yearOf } from '@/shared/utils/dates';
+import { ageAtteint } from '@/shared/utils/age';
+import { UNITE_DUREE } from '@/shared/constants/temps';
 import { cleTriChevre } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { deleteRecord, findRecord, getYears, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
-import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { PARAMETRES_ESPECE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { deEspeceCourante, especeDe } from '@/features/cheptel/utils/espece';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 
@@ -13,6 +15,43 @@ export async function listChevresVivantes(): Promise<Chevre[]> {
   const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
   return all
     .filter((c) => c.statut === STATUT_CHEVRE.VIVANTE)
+    .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
+}
+
+/** Les animaux vivants d'une espèce : les petits (qui n'ont pas encore l'âge de sevrage) et les autres. */
+export interface EffectifVivant {
+  petits: number;
+  sevres: number;
+}
+
+/** Un animal est un petit tant qu'il n'a pas atteint l'âge de sevrage de son espèce (2 mois pour une chèvre : un cabri). */
+export const estPetitLe = (c: Pick<Chevre, 'dateNaissance' | 'espece'>, date: string = todayISO()): boolean =>
+  !ageAtteint(
+    c.dateNaissance,
+    { valeur: PARAMETRES_ESPECE[especeDe(c)].ageSevrageMois, unite: UNITE_DUREE.MOIS },
+    date,
+  );
+
+/** Le nombre d'animaux vivants de chaque espèce du cheptel, petits et sevrés (les espèces sans animal n'y figurent pas). */
+export async function effectifsVivants(): Promise<Partial<Record<EspeceAnimale, EffectifVivant>>> {
+  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  const effectifs: Partial<Record<EspeceAnimale, EffectifVivant>> = {};
+  for (const c of all) {
+    if (c.statut !== STATUT_CHEVRE.VIVANTE) continue;
+    const espece = especeDe(c);
+    const effectif = effectifs[espece] ?? { petits: 0, sevres: 0 };
+    if (estPetitLe(c)) effectif.petits += 1;
+    else effectif.sevres += 1;
+    effectifs[espece] = effectif;
+  }
+  return effectifs;
+}
+
+/** Les animaux vivants d'une espèce précise (pas forcément l'espèce courante) : on choisit celui d'une vente dans cette liste. */
+export async function listAnimauxVivantsDe(espece: EspeceAnimale): Promise<Chevre[]> {
+  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  return all
+    .filter((c) => c.statut === STATUT_CHEVRE.VIVANTE && especeDe(c) === espece)
     .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
 }
 

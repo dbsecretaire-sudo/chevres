@@ -64,15 +64,11 @@ export function DateField({ label, value, onChange, required }: Props) {
           value={dateValue}
           mode="date"
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          onChange={(event, selected) => {
-            setShowPicker(Platform.OS === 'ios');
-            if (event.type === 'dismissed') {
-              setShowPicker(false);
-              return;
-            }
-            if (selected) onChange(toISODate(selected));
+          onValueChange={(_event, selected) => {
+            onChange(toISODate(selected));
             if (Platform.OS === 'android') setShowPicker(false);
           }}
+          onDismiss={() => setShowPicker(false)}
         />
       )}
     </View>

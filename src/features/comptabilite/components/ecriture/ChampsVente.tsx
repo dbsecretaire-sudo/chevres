@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
-import { formatMontant } from '@/shared/utils/dates';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
@@ -13,10 +13,17 @@ import {
   type ArticleAffiche,
   type FiltreStock,
 } from '@/features/stock/services/stock';
-import { DICTIONNAIRE_ANIMAUX, especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
-import { Button } from '@/shared/components/Button';
+import { Ionicons } from '@expo/vector-icons';
+import { Card } from '@/shared/components/Card';
+import { SelectModal } from '@/shared/components/SelectModal';
+import { colors } from '@/shared/theme/colors';
+import { estPetitLe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
+import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import type { Chevre } from '@/features/cheptel/types';
+import { SEXE } from '@/shared/constants/cheptel';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
@@ -319,11 +326,25 @@ export function ChampsVenteViande({ e }: Props) {
   const prixDuDetail = choisie?.prix;
   /** Les animaux (petits, sur pied, vivants) se vendent au kilo ; la charcuterie et les autres lignes, à la quantité. */
   const auKilo = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
-  /** Un animal sur pied ou vivant vient d'être choisi : on demande s'il s'agit d'un petit ou d'un adulte. */
+  /** Un animal sur pied ou vivant vient d'être choisi : on ouvre la liste des animaux de l'espèce pour désigner celui qui est vendu. */
   const [question, setQuestion] = useState<ArticleAffiche | null>(null);
   const espece: EspeceAnimale =
     e.activite === ACTIVITE_COMMUNE ? especeCourante() : (e.activite as EspeceAnimale);
-  const petit = DICTIONNAIRE_ANIMAUX[espece].petit.singulier;
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      listAnimauxVivantsDe(espece).then(setAnimaux);
+    }, [espece]),
+  );
+  /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
+  const libelleAnimal = (a: Chevre) =>
+    TEXTES.comptabilite.nouvelleEcriture.animalOption(
+      libelleChevre(a),
+      a.sexe === SEXE.MALE
+        ? TEXTES.comptabilite.nouvelleEcriture.sexeM
+        : TEXTES.comptabilite.nouvelleEcriture.sexeF,
+      formatDateFR(a.dateNaissance),
+    );
   /** Prix total d'un animal vendu au kilo : le poids × le prix au kilo du stock (pour 1 kg tant qu'aucun poids n'est saisi). */
   const totalAuKilo = (poids: string, prixAuKilo = prixDuDetail) => {
     if (!prixAuKilo) return;
@@ -344,10 +365,38 @@ export function ChampsVenteViande({ e }: Props) {
   const limiterAnimaux = (maximum: number) => {
     if (Math.round(parseDecimal(e.quantite)) > maximum) e.setQuantite(String(maximum));
   };
-  const repondre = (jeune: boolean) => {
-    e.setJeune(jeune);
-    limiterAnimaux(maximumAnimaux(question ?? undefined, jeune));
+  /** Un animal de la liste est un petit (cabri, agneau…) s'il n'a pas encore l'âge de sevrage de son espèce le jour de la vente. */
+  const estPetit = (animal: Chevre) => estPetitLe(animal, e.date);
+  /** Les animaux déjà choisis : le nombre d'animaux de la vente est leur nombre. */
+  const animauxChoisis = e.animaux
+    .map((id) => animaux.find((a) => a.id === id))
+    .filter((a): a is Chevre => !!a);
+  /** Une vente d'animaux (petits, sur pied, vivants) se fait animal par animal : on les désigne, plutôt que d'en saisir le nombre. */
+  const parAnimal = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
+  /** La ligne des petits ne propose que des petits. */
+  const lignePetits = !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.JEUNE;
+  /** Les animaux qu'on peut encore ajouter : ceux qui ne sont pas déjà choisis, et du même âge (petits ou adultes) que les autres. */
+  const animauxProposes = animaux.filter(
+    (a) =>
+      !e.animaux.includes(a.id) &&
+      (!lignePetits || estPetit(a)) &&
+      (animauxChoisis.length === 0 || estPetit(a) === estPetit(animauxChoisis[0])),
+  );
+  const ajouterAnimal = (id: string) => {
+    const animal = animaux.find((a) => a.id === id);
+    if (!animal) return;
+    const liste = [...e.animaux, id];
+    e.setAnimaux(liste);
+    e.setJeune(estPetit(animal));
+    e.setQuantite(String(liste.length));
+    limiterAnimaux(maximumAnimaux(question ?? choisie, estPetit(animal)));
     setQuestion(null);
+  };
+  const retirerAnimal = (id: string) => {
+    const liste = e.animaux.filter((x) => x !== id);
+    e.setAnimaux(liste);
+    e.setQuantite(String(Math.max(1, liste.length)));
+    if (liste.length === 0) e.setJeune(undefined);
   };
   const maximum = maximumAnimaux(choisie, e.jeune);
   const optionsAnimaux = Array.from(
@@ -374,8 +423,10 @@ export function ChampsVenteViande({ e }: Props) {
           if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
           if (role) totalAuKilo(e.poidsKg, nouvelle?.prix);
           else proposerMontant(nouvelle?.prix, e.quantite || '1');
-          if (role === ROLE_VIANDE.SUR_PIED || role === ROLE_VIANDE.VIVANT) setQuestion(nouvelle ?? null);
+          if (role) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
+          // Un autre détail : les animaux déjà choisis ne valent plus.
+          e.setAnimaux([]);
         }}
         options={viandes.map((v) => ({ value: v.libelle, label: v.libelle }))}
         onEdit={() =>
@@ -389,12 +440,46 @@ export function ChampsVenteViande({ e }: Props) {
       ) : null}
       {auKilo ? (
         <>
-          <SelectField<string>
-            label={TEXTES.comptabilite.nouvelleEcriture.nombreDAnimaux}
-            value={e.quantite || '1'}
-            onChange={e.setQuantite}
-            options={optionsAnimaux}
-          />
+          {parAnimal ? (
+            <View style={commonStyles.gap6}>
+              <View style={commonStyles.rowSpaceBetween}>
+                <Text style={commonStyles.lineSemiBold}>
+                  {TEXTES.comptabilite.nouvelleEcriture.animauxVendus}
+                </Text>
+                <Pressable
+                  style={commonStyles.boutonPastille}
+                  onPress={() => setQuestion(choisie ?? null)}
+                  accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.ajouterUnAnimal}
+                >
+                  <Ionicons name="add-circle" size={28} color={colors.ajout} />
+                </Pressable>
+              </View>
+              {animauxChoisis.length > 0 ? (
+                <Card style={commonStyles.gap10}>
+                  {animauxChoisis.map((animal) => (
+                    <View key={animal.id} style={commonStyles.rowSpaceBetween}>
+                      <Text style={commonStyles.valueText}>{libelleAnimal(animal)}</Text>
+                      <Pressable
+                        onPress={() => retirerAnimal(animal.id)}
+                        hitSlop={8}
+                        accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.retirerAnimal}
+                      >
+                        <Ionicons name="close-circle" size={22} color={colors.danger} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </Card>
+              ) : null}
+              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.animauxNote}</Text>
+            </View>
+          ) : (
+            <SelectField<string>
+              label={TEXTES.comptabilite.nouvelleEcriture.nombreDAnimaux}
+              value={e.quantite || '1'}
+              onChange={e.setQuantite}
+              options={optionsAnimaux}
+            />
+          )}
           <View style={styles.row3}>
             <View style={commonStyles.flex1}>
               <FormField
@@ -456,13 +541,6 @@ export function ChampsVenteViande({ e }: Props) {
           </View>
         </View>
       )}
-      {e.jeune !== undefined ? (
-        <Text style={commonStyles.note}>
-          {e.jeune
-            ? TEXTES.comptabilite.nouvelleEcriture.petitNote(petit)
-            : TEXTES.comptabilite.nouvelleEcriture.adulteNote}
-        </Text>
-      ) : null}
       {prixDuDetail ? (
         <Text style={commonStyles.note}>
           {auKilo ? null : TEXTES.comptabilite.nouvelleEcriture.prixDuStock(formatMontant(prixDuDetail))}
@@ -470,28 +548,15 @@ export function ChampsVenteViande({ e }: Props) {
       ) : null}
       {viandes.length === 0 ? <ChampPrecision e={e} /> : null}
 
-      <Modal visible={!!question} transparent animationType="fade" onRequestClose={() => setQuestion(null)}>
-        <Pressable style={commonStyles.backdrop} onPress={() => setQuestion(null)}>
-          <Pressable style={commonStyles.modalSheet} onPress={(ev) => ev.stopPropagation()}>
-            <Text style={commonStyles.subheading}>
-              {TEXTES.comptabilite.nouvelleEcriture.petitOuAdulte(question?.libelle ?? '', petit)}
-            </Text>
-            <View style={commonStyles.row}>
-              <Button
-                style={commonStyles.flex1}
-                label={TEXTES.comptabilite.nouvelleEcriture.unPetit(petit)}
-                onPress={() => repondre(true)}
-              />
-              <Button
-                style={commonStyles.flex1}
-                variant="secondary"
-                label={TEXTES.comptabilite.nouvelleEcriture.adulte}
-                onPress={() => repondre(false)}
-              />
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <SelectModal<string>
+        visible={!!question}
+        titre={TEXTES.comptabilite.nouvelleEcriture.animalVendu(question?.libelle ?? '')}
+        value=""
+        options={animauxProposes.map((a) => ({ value: a.id, label: libelleAnimal(a) }))}
+        onSelect={ajouterAnimal}
+        onClose={() => setQuestion(null)}
+        searchable
+      />
     </>
   );
 }

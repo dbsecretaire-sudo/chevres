@@ -12,7 +12,17 @@ export const NOMBRE_MAX_BOISSONS_TICKET = 50;
 /** Le choix « toutes les activités » du filtre du stock d'un gîte (sinon : une rubrique du gîte). */
 export const FILTRE_RUBRIQUE_TOUT = 'tout';
 
-/** Les étiquettes du stock d'un gîte : les consommables (boissons et nourriture), le matériel, le conditionnement, l'entretien. */
+/** Les trois onglets du stock d'un gîte, rangés par nature : ce qui se vend, ce qui se consomme, les investissements. */
+export const ONGLET_STOCK_GITE = {
+  VENTE: 'vente',
+  CONSOMMABLES: 'consommables',
+  INVESTISSEMENTS: 'investissements',
+} as const;
+
+/**
+ * Les sections du stock d'un gîte : les boissons et la nourriture (qui se vendent), le matériel, le conditionnement et
+ * l'entretien. Chacune a sa liste et son ordre ; les trois onglets les rangent par nature.
+ */
 export const ONGLET_STOCK_BAR = {
   CONSOMMABLES: 'consommables',
   MATERIEL: 'materiel',

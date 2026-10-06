@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
+import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
 import type { ArchiveStock } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
@@ -41,15 +42,17 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     noms,
     lait: Array.isArray(archive?.lait) ? archive.lait : [],
     prix,
+    masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
   };
 }
 
-/** Le stock de l'établissement actif (vide s'il n'y a encore rien). */
+/** Le stock de l'établissement actif (vide s'il n'y a encore rien), avec la remise à zéro des aliments à chaque nouvel achat. */
 export async function lireArchiveStock(): Promise<ArchiveStock> {
   const raw = await AsyncStorage.getItem(cle());
   if (!raw) return { ...VIDE };
   try {
-    return normaliserArchiveStock(JSON.parse(raw));
+    const archive = normaliserArchiveStock(JSON.parse(raw));
+    return { ...archive, mouvements: avecRemisesAZero(archive.mouvements) };
   } catch {
     return { ...VIDE };
   }
@@ -57,5 +60,9 @@ export async function lireArchiveStock(): Promise<ArchiveStock> {
 
 /** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
 export async function remplacerArchiveStock(archive: ArchiveStock): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(archive));
+  // Les remises à zéro se déduisent à chaque lecture : on ne les enregistre pas.
+  await AsyncStorage.setItem(
+    cle(),
+    JSON.stringify({ ...archive, mouvements: archive.mouvements.filter((m) => !estRemiseAZero(m)) }),
+  );
 }

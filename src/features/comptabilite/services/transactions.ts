@@ -3,11 +3,12 @@ import {
   LABEL_CATEGORIE_RECETTE,
   LABEL_CATEGORIE_VENTE,
   LABEL_TYPE_AIDE,
+  LABEL_TYPE_ALIMENT,
+  LABEL_TYPE_CARBURANT,
 } from '@/shared/textes/libelles';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
-import type { ActiviteComptable, Vente } from '@/features/comptabilite/types';
-import { montantAlimentationHorsAutre } from '@/features/comptabilite/utils/montants';
+import type { ActiviteComptable, Facture, Vente } from '@/features/comptabilite/types';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
 import {
@@ -20,6 +21,7 @@ import {
   CATEGORIE_RECETTE,
   RUBRIQUE_COMPTABLE_DE_MARCHANDISE,
   TYPE_AIDE,
+  TYPE_ALIMENT,
 } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
@@ -31,7 +33,7 @@ export interface Transaction {
   montant?: number;
   /** Part de `montant` qui revient à l'activité de cette ligne (toutes catégories) : c'est elle qu'on additionne. */
   montantActivite?: number;
-  /** Part de `montant` comptant réellement dans les soldes (hors « Autre ») — voir montantHorsAutre(). */
+  /** Part de `montant` qui compte dans les soldes : tout, aliments de la liste du stock comme le reste. */
   montantComptabilise?: number;
   sens: ValeurDe<typeof SENS_TRANSACTION>;
   titre: string;
@@ -45,6 +47,19 @@ export interface Transaction {
   rubriques?: string[];
   /** Le nom de la catégorie de l'écriture (« Alimentation », « Vente de fromage »…), pour la recherche. */
   libelleCategorie?: string;
+  /** Ce que la facture détaille (ses aliments, son matériel, ses marchandises, ses carburants), pour la recherche. */
+  termes?: string[];
+}
+
+/** Les noms des lignes d'une facture : aliments et matériel, marchandises, carburants (de quoi retrouver « Fourmix »). */
+function termesDeFacture(f: Facture): string[] {
+  return [
+    ...(f.lignesAlimentation ?? []).map((l) =>
+      l.type === TYPE_ALIMENT.AUTRE && l.typeLibre ? l.typeLibre : LABEL_TYPE_ALIMENT[l.type],
+    ),
+    ...(f.lignesMarchandises ?? []).map((l) => l.marchandise),
+    ...(f.lignesCarburant ?? []).map((l) => LABEL_TYPE_CARBURANT[l.type]),
+  ].filter(Boolean);
 }
 
 /** Titre d'une vente dans la liste : « Lait — 12 L », « Veaux — 2 têtes », « Charcuterie »… */
@@ -90,7 +105,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
       date: f.date,
       montant: f.montant,
       montantActivite: part.montant,
-      montantComptabilise: montantAlimentationHorsAutre(part),
+      montantComptabilise: part.montant,
       sens: f.type === TYPE_FACTURE.EMISE ? SENS_TRANSACTION.ENTREE : SENS_TRANSACTION.SORTIE,
       titre: f.tiers,
       sousTitre:
@@ -107,6 +122,7 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
         : f.categorieDepense
           ? LABEL_CATEGORIE_DEPENSE[f.categorieDepense]
           : undefined,
+      termes: termesDeFacture(f),
       rubriques: f.lignesMarchandises?.length
         ? [...new Set(f.lignesMarchandises.map((l) => RUBRIQUE_COMPTABLE_DE_MARCHANDISE[l.rubrique]))]
         : undefined,

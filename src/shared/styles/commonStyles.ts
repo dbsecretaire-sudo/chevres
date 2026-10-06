@@ -9,6 +9,7 @@ import { colors } from '@/shared/theme/colors';
 export const commonStyles = StyleSheet.create({
   // --- Mise en page ---
   flex1: { flex: 1 },
+  flex2: { flex: 2 },
   row: { flexDirection: 'row', gap: 12 },
   rowFin: { flexDirection: 'row', gap: 8, alignItems: 'flex-end' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },

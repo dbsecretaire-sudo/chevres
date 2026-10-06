@@ -36,6 +36,7 @@ import {
   POURCENTAGE_MAX,
   POURCENTAGE_MIN,
   TYPE_AIDE,
+  SEPARATEUR_ANIMAUX,
   TYPE_FACTURE,
   TYPE_FROMAGE,
   UNITE_VENTE,
@@ -76,6 +77,8 @@ export interface SaisieEcriture {
   precision: string;
   /** Pour un animal sur pied ou vivant : vrai si c'est un petit, faux si c'est un adulte. */
   jeune?: boolean;
+  /** Les fiches des animaux vendus (animal sur pied ou vivant). */
+  animaux: string[];
   clientSelectionne?: Client;
   /** Vrai si l'écriture est une vente de production (lait, fromage, cabris) plutôt qu'une facture. */
   estProductionVente: boolean;
@@ -130,6 +133,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       poidsKg:
         (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
       jeune: estViande && s.jeune ? true : undefined,
+      animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
       sacs: estFromage && s.sacs.trim() ? Math.round(parseDecimal(s.sacs)) || undefined : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
         ? s.precision.trim() || undefined

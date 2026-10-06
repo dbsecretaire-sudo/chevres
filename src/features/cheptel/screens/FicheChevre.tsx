@@ -1,5 +1,7 @@
-import { ScrollView, Text } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Pressable, ScrollView, Text } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/Screen';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -55,7 +57,22 @@ export default function FicheChevre() {
   return (
     <Screen scroll={false}>
       <ScrollView style={commonStyles.flex1} contentContainerStyle={styles.scrollContentFab}>
-        <ChevreEntete chevre={chevre} onMenu={() => fiche.setMenuOuvert(true)} />
+        {/* Le menu burger, à droite du titre : visites, contrôles, et la suppression définitive de l'animal. */}
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <Pressable
+                style={commonStyles.boutonEnteteDroite}
+                onPress={() => fiche.setMenuOuvert(true)}
+                hitSlop={10}
+                accessibilityLabel={TEXTES.cheptel.ficheChevre.menu}
+              >
+                <Ionicons name="menu" size={26} color={colors.blanc} />
+              </Pressable>
+            ),
+          }}
+        />
+        <ChevreEntete chevre={chevre} />
 
         <OptionsModal
           visible={fiche.menuOuvert}

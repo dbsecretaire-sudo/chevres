@@ -54,6 +54,10 @@ export interface LigneAlimentation {
   uniteConditionnement?: UniteConditionnement;
   /** Uniquement pour type luzerne/foin/paille : nombre d'unités saisi (conservé pour ré-affichage lors de la modification). */
   nombreUnitesConditionnement?: number;
+  /** Un matériel acheté sur la facture (choisi comme « Matériel » dans la liste des cheptels), pas un aliment. */
+  materiel?: boolean;
+  /** Un équipement (consommable : gants, filtres…) acheté sur la facture, pas un aliment. */
+  equipement?: boolean;
 }
 
 /** Une marchandise achetée pour le gîte : celle du stock, la rubrique qu'elle sert, sa quantité et son montant TTC. */
@@ -159,6 +163,8 @@ export interface Vente {
   sacs?: number;
   /** Pour la vente d'un animal sur pied ou vivant : vrai si c'est un petit (cabri, agneau…), faux ou absent pour un adulte. */
   jeune?: boolean;
+  /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */
+  animaux?: string;
   /** Commentaire facultatif précisant de quoi il s'agissait (viande, charcuterie, animal sur pied ou vivant). */
   precision?: string;
 }

@@ -11,6 +11,8 @@ export interface SelectOption<T extends string> {
   label: string;
   /** Libellé affiché une fois sélectionné, dans le champ fermé — si absent, retombe sur `label` (utilisé dans la liste déroulante, lui, toujours affiché en entier). */
   shortLabel?: string;
+  /** Le titre du groupe de la ligne : il s'affiche au-dessus de la première ligne de chaque groupe (les lignes d'un groupe se suivent). */
+  groupe?: string;
 }
 
 interface Props<T extends string> {
@@ -52,7 +54,8 @@ export function SelectModal<T extends string>({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={fermer}>
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-          <Text style={styles.sheetTitle}>{titre}</Text>
+          {/* Une liste en groupes porte déjà ses titres : celui de la fenêtre ferait doublon. */}
+          {options.some((o) => o.groupe) ? null : <Text style={styles.sheetTitle}>{titre}</Text>}
           {searchable && (
             <TextInput
               style={styles.recherche}
@@ -66,23 +69,32 @@ export function SelectModal<T extends string>({
             style={styles.liste}
             data={optionsFiltrees}
             keyExtractor={(item) => item.value}
-            renderItem={({ item }) => (
-              <Pressable
-                style={[styles.option, item.value === value && styles.optionSelected]}
-                onPress={() => {
-                  onSelect(item.value);
-                  fermer();
-                }}
-              >
-                <Text
+            renderItem={({ item, index }) => (
+              <>
+                {item.groupe && item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
+                  <Text style={[commonStyles.lineBold, styles.groupe]}>{item.groupe}</Text>
+                ) : null}
+                <Pressable
                   style={[
-                    commonStyles.valueText,
-                    item.value === value && { color: accent, fontWeight: '700' },
+                    styles.option,
+                    item.groupe && styles.optionGroupee,
+                    item.value === value && styles.optionSelected,
                   ]}
+                  onPress={() => {
+                    onSelect(item.value);
+                    fermer();
+                  }}
                 >
-                  {item.label}
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      commonStyles.valueText,
+                      item.value === value && { color: accent, fontWeight: '700' },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              </>
             )}
             ListEmptyComponent={
               <Text style={styles.aucunResultat}>{TEXTES.commun.selectField.aucunResultat}</Text>

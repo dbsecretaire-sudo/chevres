@@ -1,3 +1,4 @@
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
@@ -47,8 +48,10 @@ function ImpotsElevage() {
 
   return (
     <Screen>
-      <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
-      <PucesActivite valeur={filtre} onChange={setFiltre} />
+      <LigneFiltres>
+        <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
+        <PucesActivite valeur={filtre} onChange={setFiltre} />
+      </LigneFiltres>
       {filtre !== TOUTES_ACTIVITES && (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.parActivite.noteDeclaration}</Text>
       )}

@@ -7,6 +7,8 @@ export const TYPE_ANIMAL_ETABLISSEMENT = {
   CHEVRES: 'chevres',
   BREBIS: 'brebis',
   POULES: 'poules',
+  /** Chiens, chats… : des animaux de compagnie, sans production. */
+  DOMESTIQUES: 'domestiques',
 } as const;
 
 /** Choix du groupe « Société / Auto-entrepreneur » : activités d'un établissement non agricole (choix multiple). */

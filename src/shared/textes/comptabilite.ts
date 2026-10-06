@@ -45,8 +45,16 @@ export const TEXTES_COMPTABILITE = {
   lignesAlimentationEditor: {
     detailParAliment: 'Détail par aliment',
     cheptelConcerne: 'Cheptel concerné',
+    investissement: 'Investissement',
+    consommables: 'Consommables',
+    equipementValeur: (valeur: number) => `Équipement ${valeur}`,
     alimentValeur: (valeur: number) => `Aliment ${valeur}`,
+    materielValeur: (valeur: number) => `Matériel ${valeur}`,
     quantiteKg: 'Quantité (kg)',
+    /** Les intitulés courts des colonnes d'une ligne (l'aliment, la quantité et le montant tiennent sur une seule ligne). */
+    quantiteKgCourt: 'Q (kg)',
+    quantiteCourt: 'Q',
+    montantTtcCourt: '€ TTC',
     ex100: 'ex: 100',
     ex120: 'ex: 120',
     nombre: 'Nombre',
@@ -144,9 +152,7 @@ export const TEXTES_COMPTABILITE = {
   },
   listeTransactions: {
     soldeEspace: 'Solde ',
-    horsAlimentationAutre: '(hors Alimentation, Autre)',
     rentrees: 'Rentrées',
-    soldeToutesCategoriesInclusesDeuxPoints: 'Solde toutes catégories incluses : ',
     rechercherPoints: 'Rechercher…',
     effacer: 'Effacer',
     aucuneEcriture: 'Aucune écriture',
@@ -174,11 +180,18 @@ export const TEXTES_COMPTABILITE = {
     typeDeFromage: 'Type de fromage',
     detailDeLaVente: 'Détail de la vente',
     choixDuDetail: 'Cabris, saucisson… (liste du stock)',
-    petitOuAdulte: (animal: string, petit: string) => `${animal} : s’agit-il d’un ${petit} ou d’un adulte ?`,
-    adulte: 'Un adulte',
-    unPetit: (petit: string) => `Un ${petit}`,
-    petitNote: (petit: string) => `Un ${petit} : il sort du stock de viande.`,
-    adulteNote: 'Un adulte : le stock de viande ne change pas.',
+    /** Le titre de la liste des animaux de la vente (animal sur pied, animal vivant). */
+    animalVendu: (detail: string) => `${detail} : quel animal ?`,
+    /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
+    animalOption: (libelle: string, sexe: string, naissance: string) =>
+      `${libelle} · ${sexe} · né(e) le ${naissance}`,
+    animauxVendus: 'Animaux vendus',
+    ajouterUnAnimal: 'Ajouter un animal',
+    animauxNote:
+      'Chaque animal passe en vendu dans le cheptel, et le stock de viande baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
+    retirerAnimal: 'Retirer cet animal',
+    sexeM: 'M',
+    sexeF: 'F',
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
     prixDuStockKg: (prix: string) => `Prix défini au stock : ${prix} le kg.`,

@@ -11,6 +11,9 @@ export const TEXTES_STOCK = {
     entretien: 'Entretien',
     lait: 'Lait',
     viande: 'Viande',
+    vente: 'Vente',
+    consommables: 'Consommables',
+    investissements: 'Investissements',
   },
   /** Les lignes de viande tenues d'office : l'animal sur pied et l'animal vivant (leurs petits ont le nom de l'espèce). */
   viande: { surPied: 'Animal sur pied', vivant: 'Animal vivant' },
@@ -21,6 +24,12 @@ export const TEXTES_STOCK = {
     prixKg: 'Prix de vente (€ le kg)',
     nomRequis: 'Nom requis',
     prixInvalide: 'Le prix doit être supérieur à zéro.',
+    supprimer: 'Supprimer cet article',
+  },
+  /** La confirmation avant de supprimer un article du stock. */
+  suppression: {
+    titre: 'Supprimer cet article ?',
+    message: (nom: string) => `« ${nom} » disparaît de la liste, avec ses mouvements de stock.`,
   },
   /** Le lait produit : un litrage par jour (chèvres et brebis). */
   laitJour: {
@@ -46,6 +55,14 @@ export const TEXTES_STOCK = {
       `Comparaison ${annee} (précédente année entre parenthèses : ${precedente})`,
     details: 'Détails',
     masquer: 'Masquer',
+    natures: {
+      vente: 'Vente',
+      consommable: 'Consommables',
+      investissement: 'Investissements',
+    },
+    bilanVendu: (vendu: string) => `Vendu ${vendu}`,
+    bilanConsommable: (achete: string, consomme: string) => `Acheté ${achete} · Consommé ${consomme}`,
+    bilanInvestissement: (achete: string) => `Acheté ${achete}`,
     mouvements: (nombre: number) => `${nombre} mouvement${nombre > 1 ? 's' : ''}`,
   },
   /** Le menu en haut du stock, à droite du titre. */
@@ -53,7 +70,7 @@ export const TEXTES_STOCK = {
   sections: {
     fromages: 'Fromages',
     emballages: 'Emballages',
-    materiel: 'Matériel',
+    materiel: 'Équipement',
     conditionnement: 'Conditionnement',
   },
   unites: (nombre: number) => `${nombre}`,
@@ -82,7 +99,11 @@ export const TEXTES_STOCK = {
   ajouter: {
     fromage: 'Ajouter un fromage',
     emballages: 'Ajouter un emballage',
-    materiel: 'Ajouter du matériel',
+    materiel: 'Ajouter un équipement',
+    equipementConsommable: 'Ajouter un équipement',
+    exempleEquipementConsommable: 'ex : Gants, filtres',
+    batiment: 'Ajouter du matériel',
+    exempleBatiment: 'ex : Grillage, poteaux',
     aliment: 'Ajouter un aliment',
     exempleAliment: 'ex : Granulés, orge',
     viande: 'Ajouter un type de viande',
@@ -106,6 +127,8 @@ export const TEXTES_STOCK = {
   vente: 'vente',
   manuel: 'saisie',
   naissance: 'naissance',
+  achat: 'achat',
+  consommation: 'consommation',
   ligneMouvement: (date: string, article: string, delta: string, origine: string) =>
     `${date} · ${article} · ${delta} (${origine})`,
   modal: {
@@ -115,6 +138,8 @@ export const TEXTES_STOCK = {
     litresBrocciu: 'Litres de lait versés dans le lactosérum (facultatif)',
     quantiteInvalide: 'Indiquez une quantité : +1 pour un ajout, −1 pour un retrait.',
     aide: '+1 pour un ajout, −1 pour un retrait.',
+    aideConsommable: '+1 pour un achat, −1 pour ce qui a été consommé.',
+    toutConsomme: 'Tout consommé (remise à zéro)',
     supprimer: 'Supprimer cet article',
   },
 } as const;

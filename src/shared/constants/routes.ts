@@ -60,12 +60,17 @@ export const ROUTES = {
   BAR: '/clients/bar',
   /** Le stock (onglet du bas), où se gèrent les marchandises, les aliments, les boissons. */
   STOCK: '/stock',
+  /** L'historique et les statistiques du stock : deux écrans à part, ouverts depuis le menu du stock. */
+  STOCK_HISTORIQUE: '/stock-historique',
+  STOCK_STATISTIQUES: '/stock-statistiques',
   /**
    * Le stock ouvert depuis un formulaire en cours : `retour` est l'adresse de ce formulaire (le stock affiche alors une
    * flèche pour y revenir), `onglet` l'onglet à ouvrir (les aliments, par exemple) et `espece` l'animal à regarder.
    */
   stockDepuis: (retour: string, onglet?: string, espece?: string) =>
     `/stock?${onglet ? `onglet=${onglet}&` : ''}${espece ? `espece=${espece}&` : ''}retour=${encodeURIComponent(retour)}` as const,
+  /** L'historique du stock, ouvert sur un animal (ou sur tous quand `espece` est absent). */
+  stockHistorique: (espece?: string) => `/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
   repasDuJour: (date: string) => `/clients/repas/${date}` as const,
   jourEcheances: (date: string) => `/clients/echeances/${date}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,

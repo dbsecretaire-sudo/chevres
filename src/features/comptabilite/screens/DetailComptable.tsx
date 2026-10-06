@@ -1,3 +1,4 @@
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
@@ -91,8 +92,10 @@ export default function DetailComptabilite() {
 
   return (
     <Screen>
-      <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
-      <PucesActivite valeur={filtre} onChange={setFiltre} />
+      <LigneFiltres>
+        <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
+        <PucesActivite valeur={filtre} onChange={setFiltre} />
+      </LigneFiltres>
 
       <Text style={styles.titreSection}>{TEXTES.commun.general.depenses}</Text>
       <Card style={commonStyles.gap2}>

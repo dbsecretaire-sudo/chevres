@@ -75,7 +75,7 @@ export function TuilesAccueil({ stats, annee }: Props) {
           >
             {stats ? formatMontant(stats.soldeFactures) : '—'}
           </Text>
-          <Text style={styles.statLabel}>{TEXTES.accueil.accueil.soldeFacturesHorsAutre}</Text>
+          <Text style={styles.statLabel}>{TEXTES.accueil.accueil.soldeFactures}</Text>
         </Tuile>
       </View>
     </>

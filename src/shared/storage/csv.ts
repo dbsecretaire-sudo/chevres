@@ -13,6 +13,8 @@ import {
   CSV_NON,
   CSV_OUI,
   EXTENSION_CSV,
+  GENRE_EQUIPEMENT,
+  GENRE_MATERIEL,
   SEPARATEUR_CHAMPS,
   SEPARATEUR_LIGNES,
 } from '@/shared/constants/csv';
@@ -34,6 +36,8 @@ function serializeValue(key: string, value: unknown): string {
           proteger(l.typeLibre ?? ''),
           l.uniteConditionnement ?? '',
           l.nombreUnitesConditionnement ?? '',
+          // Le genre d'une ligne qui n'est pas un aliment : un matériel, ou un équipement consommable.
+          l.materiel ? GENRE_MATERIEL : l.equipement ? GENRE_EQUIPEMENT : '',
         ].join(SEPARATEUR_CHAMPS),
       )
       .join(SEPARATEUR_LIGNES);
@@ -63,8 +67,15 @@ function deserializeValue(key: string, raw: string): unknown {
     const lignes = raw
       .split(SEPARATEUR_LIGNES)
       .map((part) => {
-        const [type, montant, quantiteKg, typeLibre, uniteConditionnement, nombreUnitesConditionnement] =
-          part.split(SEPARATEUR_CHAMPS);
+        const [
+          type,
+          montant,
+          quantiteKg,
+          typeLibre,
+          uniteConditionnement,
+          nombreUnitesConditionnement,
+          genre,
+        ] = part.split(SEPARATEUR_CHAMPS);
         const n = Number(montant);
         if (!type || !Number.isFinite(n)) return undefined;
         const kg = Number(quantiteKg);
@@ -77,6 +88,8 @@ function deserializeValue(key: string, raw: string): unknown {
           uniteConditionnement: uniteConditionnement || undefined,
           nombreUnitesConditionnement:
             nombreUnitesConditionnement && Number.isFinite(nombreUnites) ? nombreUnites : undefined,
+          materiel: genre === GENRE_MATERIEL ? true : undefined,
+          equipement: genre === GENRE_EQUIPEMENT ? true : undefined,
         } as LigneAlimentation;
       })
       .filter((l): l is LigneAlimentation => !!l);

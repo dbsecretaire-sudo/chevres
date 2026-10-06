@@ -1,6 +1,6 @@
 import type { Vente } from '@/features/comptabilite/types';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
-import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { capitaliser, especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
@@ -15,3 +15,7 @@ export function libelleCategorieVente(v: Pick<Vente, 'categorie' | 'activite'>):
   const espece = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
   return capitaliser(vocabulaire(espece).petit.pluriel);
 }
+
+/** Les identifiants des fiches du cheptel des animaux d'une vente (aucun pour une vente sans animal choisi). */
+export const idsDesAnimaux = (vente: Pick<Vente, 'animaux'>): string[] =>
+  vente.animaux ? vente.animaux.split(SEPARATEUR_ANIMAUX).filter(Boolean) : [];

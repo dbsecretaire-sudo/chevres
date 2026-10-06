@@ -13,6 +13,13 @@ export interface MouvementStock {
   origine: ValeurDe<typeof ORIGINE_MOUVEMENT>;
   /** La vente qui a créé ce mouvement : il suit ses modifications et disparaît avec elle. */
   venteId?: string;
+  /** La facture d'alimentation qui a créé ce mouvement : il suit ses modifications et disparaît avec elle. */
+  factureId?: string;
+  /**
+   * Une remise à zéro faite toute seule à l'arrivée d'une facture d'aliment (ce qui restait de l'ancienne livraison est
+   * consommé) : elle compte dans le « consommé » mais n'encombre pas la liste de l'historique.
+   */
+  automatique?: boolean;
   /** Pour des fromages fabriqués : les litres de lait qu'il a fallu (facultatif), pour connaître le lait par fromage. */
   litres?: number;
 }
@@ -51,4 +58,6 @@ export interface ArchiveStock {
   lait: LaitJour[];
   /** Le prix de vente d'un fromage ou d'une viande (€, par identifiant d'article) : il préremplit le prix d'une vente. */
   prix: Record<string, number>;
+  /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
+  masques?: string[];
 }

@@ -1,10 +1,12 @@
-import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';
+import { TEXTES } from '@/shared/textes';
 
 /**
- * Choix de l'espèce dont on gère le cheptel (chèvres, brebis…), sur une ligne qui défile. N'apparaît que pour un
- * établissement qui en élève plusieurs. Le changement recharge l'écran courant avec le vocabulaire et les données de l'espèce.
+ * Choix de l'espèce dont on gère le cheptel (chèvres, brebis…) : une puce, et la liste des animaux au clic. N'apparaît que
+ * pour un établissement qui en élève plusieurs. Le changement recharge l'écran courant avec le vocabulaire et les données
+ * de l'espèce.
  */
 export function SelecteurEspece() {
   const { especes, espece, changerEspece } = useEtablissement();
@@ -12,9 +14,10 @@ export function SelecteurEspece() {
   if (especes.length < 2) return null;
 
   return (
-    <PucesDefilantes
-      puces={especes.map((e) => ({ valeur: e, label: LABEL_TYPE_ANIMAL_ETABLISSEMENT[e] }))}
+    <ChoixDeroulant
+      titre={TEXTES.commun.choix.animal}
       valeur={espece}
+      options={especes.map((e) => ({ value: e, label: LABEL_TYPE_ANIMAL_ETABLISSEMENT[e] }))}
       onChoisir={(e) => changerEspece(e)}
     />
   );

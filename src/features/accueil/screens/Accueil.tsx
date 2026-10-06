@@ -1,3 +1,4 @@
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { Pressable, Text, View } from 'react-native';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useRouter } from 'expo-router';
@@ -26,15 +27,16 @@ function AccueilElevage() {
 
   return (
     <Screen>
-      <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
-      <SelecteurEspece />
+      <LigneFiltres>
+        <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
+        <SelecteurEspece />
+      </LigneFiltres>
       <Text style={commonStyles.heading}>
         {TEXTES.accueil.accueil.troupeauEspace}
         {annee}
       </Text>
 
       <TuilesAccueil stats={stats} annee={annee} />
-
       <Pressable
         style={({ pressed }) => pressed && commonStyles.pressed}
         onPress={() => router.push(ROUTES.CHEPTEL_VETERINAIRE)}

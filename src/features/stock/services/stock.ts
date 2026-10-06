@@ -1,7 +1,7 @@
-import type { TypeFromage, Vente } from '@/features/comptabilite/types';
+import type { Facture, TypeFromage, Vente } from '@/features/comptabilite/types';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock, GenreArticle, LaitJour, MouvementStock } from '@/features/stock/types';
-import { CATEGORIE_VENTE, TYPE_FROMAGE, UNITE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, TYPE_ALIMENT, TYPE_FROMAGE, UNITE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ARTICLE_EMBALLAGE,
   ARTICLE_MATERIEL,
@@ -97,7 +97,9 @@ export function articlesDuGenre(
 ): ArticleAffiche[] {
   const toutes = filtre === FILTRE_STOCK_TOUT;
   const parDefaut: ArticleAffiche[] =
-    genre === GENRE_ARTICLE.ENTRETIEN
+    genre === GENRE_ARTICLE.ENTRETIEN ||
+    genre === GENRE_ARTICLE.BATIMENT ||
+    genre === GENRE_ARTICLE.EQUIPEMENT
       ? []
       : genre === GENRE_ARTICLE.VIANDE
         ? lignesDeViandeDOffice(toutes ? especesActives() : [filtre], archive)
@@ -139,7 +141,8 @@ export function articlesDuGenre(
   const ajoutes = archive.articles
     .filter((a) => a.genre === genre && (toutes || !a.activite || a.activite === filtre))
     .map((a) => ({ cle: cleArticle(genre, a.id), libelle: a.nom, id: a.id }));
-  const tous = [...dOfficeVisibles, ...ajoutes];
+  // Un article d'office que l'utilisateur a supprimé n'est plus proposé.
+  const tous = [...dOfficeVisibles.filter((a) => !archive.masques?.includes(a.cle)), ...ajoutes];
   // L'ordre choisi d'abord ; les articles qu'il ne cite pas suivent, dans l'ordre d'office.
   const ordre = archive.ordres[genre] ?? [];
   const rang = (a: ArticleAffiche) => {
@@ -155,10 +158,31 @@ export function libelleArticle(cle: string, archive: ArchiveStock): string {
   return articlesDuGenre(genre, archive).find((a) => a.cle === cle)?.libelle ?? code;
 }
 
-/** Le niveau de chaque article : la somme de ses mouvements (négatif si on a vendu plus qu'on n'avait noté). */
-export function niveauxDeStock(mouvements: MouvementStock[]): Map<string, number> {
+/**
+ * Vrai pour les petits, l'animal sur pied et l'animal vivant : ces lignes ne se tiennent pas à la main. Les petits (cabris,
+ * agneaux…) sont les animaux vivants du cheptel de l'espèce qui n'ont pas encore l'âge de sevrage ; l'animal sur pied et
+ * l'animal vivant, ceux qui l'ont atteint. Une vente fait passer la fiche en « vendue » : ces nombres baissent tout seuls.
+ */
+export function estLigneDuCheptel(cle: string): boolean {
+  return roleDeLaViande(cle) !== undefined;
+}
+
+/**
+ * Le niveau de chaque article : la somme de ses mouvements (négatif si on a vendu plus qu'on n'avait noté). Avec les
+ * effectifs du cheptel, les petits, l'animal sur pied et l'animal vivant de chaque espèce valent ses animaux vivants.
+ */
+export function niveauxDeStock(
+  mouvements: MouvementStock[],
+  effectifs?: Partial<Record<EspeceAnimale, { petits: number; sevres: number }>>,
+): Map<string, number> {
   const niveaux = new Map<string, number>();
   for (const m of mouvements) niveaux.set(m.article, (niveaux.get(m.article) ?? 0) + m.delta);
+  for (const [espece, effectif] of Object.entries(effectifs ?? {})) {
+    niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.JEUNE}`), effectif?.petits ?? 0);
+    for (const role of [ROLE_VIANDE.SUR_PIED, ROLE_VIANDE.VIVANT]) {
+      niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${role}`), effectif?.sevres ?? 0);
+    }
+  }
   return niveaux;
 }
 
@@ -205,12 +229,9 @@ export function consommationDeLaVente(
       (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
     );
     if (!article || !(vente.quantite > 0)) return [];
-    const role = roleDeLaViande(article.cle);
-    // Un animal sur pied ou vivant qui est un petit sort de la ligne des petits ; un adulte ne touche pas ce stock.
-    if (role === ROLE_VIANDE.SUR_PIED || role === ROLE_VIANDE.VIVANT) {
-      const especeDeLaLigne = article.cle.split(':')[1].split('_')[0] as EspeceAnimale;
-      return vente.jeune ? [{ article: cleJeunes(especeDeLaLigne), quantite: vente.quantite }] : [];
-    }
+    // Les petits, l'animal sur pied et l'animal vivant suivent le cheptel (voir estLigneDuCheptel) : la vente n'y touche pas, ce
+    // sont les fiches des animaux vendus qui passent en « vendue ».
+    if (estLigneDuCheptel(article.cle)) return [];
     return [{ article: article.cle, quantite: vente.quantite }];
   }
   const fromage = codeFromageDeLaVente(vente, archive);
@@ -247,6 +268,48 @@ export async function synchroniserStockVente(vente: Vente): Promise<void> {
   await remplacerArchiveStock({ ...archive, mouvements: [...autres, ...nouveaux] });
 }
 
+/**
+ * Met le stock d'aliments à jour pour une facture d'alimentation créée ou modifiée : les kilos de chaque ligne entrent au
+ * stock de l'aliment choisi (celui d'office, ou celui ajouté au stock sous ce nom). Ses anciens mouvements sont remplacés par
+ * les nouveaux : rien n'est compté deux fois, même si la facture est enregistrée plusieurs fois. Ce qui restait du même
+ * aliment est remis à zéro (consommé) à chaque nouvel achat : voir avecRemisesAZero.
+ */
+export async function synchroniserStockAlimentation(facture: Facture): Promise<void> {
+  const archive = await lireArchiveStock();
+  const autres = archive.mouvements.filter((m) => m.factureId !== facture.id);
+  const nouveaux: MouvementStock[] = [];
+  for (const ligne of facture.lignesAlimentation ?? []) {
+    if (!ligne.quantiteKg) continue;
+    // Un aliment ajouté au stock, ou un matériel ou un équipement, se retrouve par son nom.
+    const cle =
+      ligne.type === TYPE_ALIMENT.AUTRE
+        ? [GENRE_ARTICLE.ALIMENT, GENRE_ARTICLE.BATIMENT, GENRE_ARTICLE.EQUIPEMENT]
+            .flatMap((g) => articlesDuGenre(g, archive))
+            .find((a) => a.libelle === ligne.typeLibre)?.cle
+        : cleArticle(GENRE_ARTICLE.ALIMENT, ligne.type);
+    if (!cle) continue;
+    nouveaux.push({
+      id: generateId(),
+      article: cle,
+      date: facture.date,
+      delta: ligne.quantiteKg,
+      origine: ORIGINE_MOUVEMENT.ACHAT,
+      factureId: facture.id,
+    });
+  }
+  if (nouveaux.length === 0 && autres.length === archive.mouvements.length) return;
+  await remplacerArchiveStock({ ...archive, mouvements: [...autres, ...nouveaux] });
+}
+
+/** Retire du stock ce qu'une facture d'alimentation supprimée y avait ajouté. */
+export async function retirerStockAlimentation(factureId: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  const restants = archive.mouvements.filter((m) => m.factureId !== factureId);
+  if (restants.length !== archive.mouvements.length) {
+    await remplacerArchiveStock({ ...archive, mouvements: restants });
+  }
+}
+
 /** Rend au stock ce qu'une vente supprimée avait consommé. */
 export async function retirerStockVente(venteId: string): Promise<void> {
   const archive = await lireArchiveStock();
@@ -265,14 +328,12 @@ export async function ajouterMouvementManuel(
   delta: number,
   date: string,
   litres?: number,
+  origine: ValeurDe<typeof ORIGINE_MOUVEMENT> = ORIGINE_MOUVEMENT.MANUEL,
 ): Promise<void> {
   const archive = await lireArchiveStock();
   await remplacerArchiveStock({
     ...archive,
-    mouvements: [
-      ...archive.mouvements,
-      { id: generateId(), article, date, delta, origine: ORIGINE_MOUVEMENT.MANUEL, litres },
-    ],
+    mouvements: [...archive.mouvements, { id: generateId(), article, date, delta, origine, litres }],
   });
 }
 
@@ -304,6 +365,20 @@ export async function supprimerArticle(id: string): Promise<void> {
     noms: archive.noms,
     lait: archive.lait,
     prix: archive.prix,
+    masques: archive.masques,
+  });
+}
+
+/** Supprime un article d'office (il ne se retire pas du code : on le masque), avec ses mouvements et son prix. */
+export async function masquerArticle(cle: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  const prix = { ...archive.prix };
+  delete prix[cle];
+  await remplacerArchiveStock({
+    ...archive,
+    mouvements: archive.mouvements.filter((m) => m.article !== cle),
+    prix,
+    masques: [...new Set([...(archive.masques ?? []), cle])],
   });
 }
 
@@ -313,25 +388,6 @@ export async function definirPrixArticle(cle: string, prix: number | undefined):
   const autres = { ...archive.prix };
   delete autres[cle];
   await remplacerArchiveStock({ ...archive, prix: prix && prix > 0 ? { ...autres, [cle]: prix } : autres });
-}
-
-/** Ajoute au stock de viande les petits nés vivants d'une naissance (ligne des petits de l'espèce courante). */
-export async function ajouterJeunesNes(nombre: number, date: string, espece: EspeceAnimale): Promise<void> {
-  if (nombre <= 0) return;
-  const archive = await lireArchiveStock();
-  await remplacerArchiveStock({
-    ...archive,
-    mouvements: [
-      ...archive.mouvements,
-      {
-        id: generateId(),
-        article: cleJeunes(espece),
-        date,
-        delta: nombre,
-        origine: ORIGINE_MOUVEMENT.NAISSANCE,
-      },
-    ],
-  });
 }
 
 /** Enregistre le litrage d'un jour : un nouveau (sans identifiant) ou un litrage modifié. */
@@ -410,10 +466,13 @@ export interface BilanLait {
  */
 export function bilanLait(archive: ArchiveStock, litresVendus: number): BilanLait {
   const arrondi = (nombre: number) => Math.round(nombre * 100) / 100;
-  const produit = archive.lait.reduce((total, l) => total + l.litres, 0);
+  const note = archive.lait.reduce((total, l) => total + l.litres, 0);
   const utilise = archive.mouvements
     .filter((m) => m.origine === ORIGINE_MOUVEMENT.MANUEL && m.delta > 0)
     .reduce((total, m) => total + (m.litres ?? 0), 0);
+  // Tout ce qui a été utilisé ou vendu a forcément été produit : le lait produit est au moins ce qui est sorti (le litrage noté
+  // peut être plus grand, la différence est ce qu'il reste).
+  const produit = Math.max(note, utilise + litresVendus);
   return {
     produit: arrondi(produit),
     utilise: arrondi(utilise),

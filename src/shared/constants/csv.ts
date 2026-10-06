@@ -77,6 +77,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'poidsKg',
     'sacs',
     'jeune',
+    'animaux',
     'precision',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
@@ -109,6 +110,10 @@ export const CHAMPS_BOOLEEN = new Set(['renouvellement', 'stockApplique', 'jeune
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
 export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable']);
+
+/** Le genre d'une ligne d'alimentation qui n'est pas un aliment, dans le fichier (7e champ de la ligne). */
+export const GENRE_MATERIEL = 'm';
+export const GENRE_EQUIPEMENT = 'e';
 
 export const CHAMPS_LIGNES_ALIMENTATION = new Set(['lignesAlimentation']);
 
