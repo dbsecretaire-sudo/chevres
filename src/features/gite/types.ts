@@ -13,6 +13,8 @@ export interface AjustementSejour {
   date: string;
   /** Pour un remboursement : le client garde sa réservation (un geste commercial) ou non. */
   maintenue?: boolean;
+  /** Pour un remboursement sans maintien de la réservation : le client garde quand même ses repas (le restaurant). */
+  restaurantMaintenu?: boolean;
   /** L'écriture créée en comptabilité (une dépense pour un remboursement, une recette pour une prestation). */
   factureId?: string;
 }
@@ -72,6 +74,10 @@ export interface Sejour {
    * aucun repas n'est prévu) mais reste dans l'historique du client.
    */
   abandonne?: boolean;
+  /** Vrai quand la réservation est abandonnée mais que le client garde ses repas : ils restent prévus au restaurant. */
+  restaurantMaintenu?: boolean;
+  /** Vrai quand la réservation est maintenue mais que le client a renoncé à ses repas : ils ne sont plus prévus au restaurant. */
+  sansRestaurant?: boolean;
   /** Remboursements et prestations supplémentaires ajoutés depuis le paiement. */
   ajustements?: AjustementSejour[];
 }

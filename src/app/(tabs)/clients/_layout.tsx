@@ -55,6 +55,7 @@ export default function ClientsLayout() {
       <Stack.Screen name="trade/[id]" options={{ title: TEXTES.trading.trade.modifier }} />
       <Stack.Screen name="dossiers-clients" options={{ title: TEXTES.gite.activites.dossiersClients }} />
       <Stack.Screen name="gite/index" options={{ title: TEXTES.gite.calendrier.titre }} />
+      <Stack.Screen name="gite/historique" options={{ title: TEXTES.gite.historique.titre }} />
       <Stack.Screen name="gite/jour/[date]" options={{ title: '' }} />
       <Stack.Screen
         name="gite/sejour/nouveau"

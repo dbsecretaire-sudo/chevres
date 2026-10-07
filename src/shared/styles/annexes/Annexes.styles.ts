@@ -41,14 +41,16 @@ export const styles = StyleSheet.create({
   ligneMontant: { fontSize: 15, fontWeight: '800', color: colors.text },
   retirer: { padding: 4 },
 
-  /** Le bloc d'ajout d'une ligne : un fond doux, l'article puis la quantité et le bouton. */
+  /** Le bloc d'ajout d'une ligne (bleu, comme tout ajout) : un fond doux, l'article puis la quantité et le bouton. */
   ajout: {
-    backgroundColor: colors.badgeBg,
+    backgroundColor: colors.ajoutBadgeBg,
     borderRadius: 12,
     padding: 12,
     gap: 10,
   },
-  titreAjout: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
+  /** La flèche à droite de la ligne des repas : elle mène à la réservation. */
+  flecheBandeau: { marginLeft: 'auto' },
+  titreAjout: { fontSize: 13, fontWeight: '700', color: colors.ajout },
   /** L'étoile rouge dans le coin du champ de l'article. */
   etoile: { position: 'absolute', right: 10, top: 2, zIndex: 1, color: colors.danger, fontSize: 16 },
   rangeeAjout: { flexDirection: 'row', alignItems: 'center', gap: 10 },

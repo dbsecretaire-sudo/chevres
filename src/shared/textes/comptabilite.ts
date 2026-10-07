@@ -19,6 +19,7 @@ export const TEXTES_COMPTABILITE = {
     genererUnPlanComptable: 'Générer un plan comptable',
   },
   factureLecture: {
+    reservationLieeDeuxPoints: 'Réservation liée : ',
     typeDeuxPoints: 'Type : ',
     tiersDeuxPoints: 'Tiers : ',
     tvaDeuxPoints: 'TVA : ',

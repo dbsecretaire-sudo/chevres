@@ -3,6 +3,7 @@ import type { Facture } from '@/features/comptabilite/types';
 import type { Element, SousDossier } from '@/features/dossiers/types';
 import type { FiscaliteEntreprise } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
+import { repasPrevus } from '@/features/gite/services/repas';
 import type { Sejour } from '@/features/gite/types';
 import type { Trade } from '@/features/trading/types';
 import { dureeJours, multipleR, resultatTrade } from '@/features/trading/services/calculs';
@@ -113,7 +114,7 @@ export function sejourRow(s: Sejour) {
     [C.depart]: formatDateShortFR(s.depart),
     [C.nuits]: nuitsDuSejour(s.arrivee, s.depart).length,
     [C.personnes]: s.personnes ?? '',
-    [C.repas]: s.repas ?? '',
+    [C.repas]: repasPrevus(s) || '',
     [C.taxeSejour]: s.taxe ?? '',
     [C.totalPaye]: s.prix,
     [C.paye]: s.paye ? C.oui : C.non,

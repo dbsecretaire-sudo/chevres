@@ -6,10 +6,9 @@ import { TitreCarte } from '@/features/cheptel/components/bilan/BilanBriques';
 import type { ArchiveBar } from '@/features/bar/types';
 import { libelleOrigineMouvement } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
-import { CATEGORIES_GITE } from '@/features/stock/utils/categories';
+import { CATEGORIES_GITE, categoriesAvecAjoutees } from '@/features/stock/utils/categories';
 import { ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
-import { CATEGORIE_INVENTAIRE, CLASSE_INVENTAIRE, GENRE_ARTICLE } from '@/shared/constants/stock';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { CATEGORIE_INVENTAIRE, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { NOMS_MOIS } from '@/shared/textes/libelles';
 import { currentYear, formatDateShortFR } from '@/shared/utils/dates';
 import { styles as stylesBilan } from '@/shared/styles/cheptel/BilanAnnuel.styles';
@@ -19,8 +18,6 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
 
-type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
-
 /** Un mouvement de l'inventaire du gîte, quelle que soit sa provenance (le stock du gîte, ou une liste ajoutée). */
 interface Entree {
   id: string;
@@ -28,7 +25,7 @@ interface Entree {
   article: string;
   delta: number;
   origine: string;
-  categorie: Categorie;
+  categorie: string;
 }
 
 interface Props {
@@ -101,8 +98,8 @@ export function HistoriqueInventaireGite({ bar, inventaire }: Props) {
       <YearPicker annees={annees} value={annee} onChange={setAnnee} />
       <Text style={commonStyles.note}>{T.historique.comparaison(annee, annee - 1)}</Text>
 
-      {CATEGORIES_GITE.map(({ categorie, nom }) => {
-        const titre = T.enteteCategorie(CLASSE_INVENTAIRE[categorie], nom);
+      {categoriesAvecAjoutees(CATEGORIES_GITE, inventaire.categories).map(({ categorie, nom, classe }) => {
+        const titre = T.enteteCategorie(classe, nom);
         const deLaCategorie = entrees.filter((e) => e.categorie === categorie);
         const duMois = (an: number, mois: number) =>
           deLaCategorie.filter((e) => e.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`));

@@ -1,6 +1,7 @@
 import { LITS_PAR_CHAMBRE } from '@/shared/constants/gite';
 
-const pluriel = (nombre: number, mot: string) => `${nombre} ${mot}${nombre > 1 ? 's' : ''}`;
+const pluriel = (nombre: number, mot: string, motPluriel = `${mot}s`) =>
+  `${nombre} ${nombre > 1 ? motPluriel : mot}`;
 
 /** « Chambre 3 » ou « Chambres 1, 2 ». */
 const listeDeChambres = (numeros: readonly number[]) =>
@@ -12,6 +13,7 @@ export const TEXTES_GITE = {
   activite: {
     menu: 'Menu',
     modifier: 'Modifier l’activité',
+    historique: 'Historique des réservations',
     compte: 'Compte du plan comptable (hébergement)',
     choixDuCompte: 'Choisir un compte',
     tva: 'Taux de TVA (hébergement)',
@@ -32,10 +34,17 @@ export const TEXTES_GITE = {
     nouveauSejour: 'Nouveau séjour',
     titre: 'Gîte',
   },
+  historique: {
+    titre: 'Historique des réservations',
+    rechercher: 'Un client ou une date (ex : 07/10/2026)',
+    aucune: (annee: number) => `Aucune réservation en ${annee}.`,
+    aucuneRecherche: 'Aucune réservation ne correspond à cette recherche.',
+  },
   reservationsClient: {
     titre: 'Réservations',
     aucune: 'Aucune réservation pour ce client pour l’instant.',
     abandonnee: 'Réservation abandonnée',
+    abandonneeRestaurantMaintenu: 'Réservation abandonnée — restaurant maintenu',
   },
   chambre: {
     ajouter: (numero: number) => `Ajouter la chambre ${numero}`,
@@ -60,9 +69,9 @@ export const TEXTES_GITE = {
     personnes: (nombre: number) => `${nombre} pers.`,
     /** Le nombre de personnes à droite du nom d'une réservation : « (8 pers.) ». */
     personnesEntreParentheses: (nombre: number) => `(${nombre} pers.)`,
-    /** « 2 chambres — 8 repas » (sans les repas quand il n'y en a pas). */
-    chambresEtRepas: (chambres: number, repas: number) =>
-      `${pluriel(chambres, 'chambre')}${repas > 0 ? ` — ${pluriel(repas, 'repas')}` : ''}`,
+    /** « 2 chambres », puis « 28 repas » sur sa propre ligne (rien quand il n'y en a pas). */
+    nombreChambres: (chambres: number) => pluriel(chambres, 'chambre'),
+    nombreRepas: (repas: number) => pluriel(repas, 'repas', 'repas'),
     /** « 142,00 € — » : le montant, suivi de l'état du paiement. */
     montantEtTiret: (montant: string) => `${montant} — `,
     /** Sur chaque chambre d'une réservation de plusieurs chambres : combien elle en compte. */
@@ -96,6 +105,8 @@ export const TEXTES_GITE = {
     paiementEnAttente: 'Non payé : rien n’est inscrit en comptabilité tant que le paiement n’est pas validé.',
     abandonneeInfo:
       'Réservation abandonnée : la chambre est libérée, la réservation reste dans l’historique du client.',
+    restaurantMaintenuInfo: 'Le client garde ses repas : ils restent prévus au restaurant.',
+    sansRestaurantInfo: 'Le client a renoncé à ses repas : ils ne sont plus prévus au restaurant.',
     lignesPaiement: {
       paiementDu: (date: string) => `Paiement du ${date} :`,
       acompteDu: (date: string) => `Acompte du ${date} :`,
@@ -103,6 +114,8 @@ export const TEXTES_GITE = {
       remboursement: 'Remboursement du client :',
       prestation: 'Prestation supplémentaire :',
       maintenue: 'réservation maintenue',
+      restaurantMaintenu: 'restaurant maintenu',
+      restaurantAnnule: 'restaurant annulé',
     },
     repas: 'Nombre de repas',
     service: 'Service des repas',
@@ -174,6 +187,7 @@ export const TEXTES_GITE = {
       montant: 'Montant (€)',
       date: 'Date',
       maintenue: 'Le client maintient sa réservation',
+      restaurantMaintenu: 'Le client maintient le restaurant',
       montantInvalide: 'Le montant doit être supérieur à zéro.',
       ligne: (libelle: string, montant: string, date: string) => `${libelle} : ${montant} (${date})`,
     },

@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     gap: 10,
   },
+  rowSurlignee: { borderColor: colors.primary, borderWidth: 2 },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
   rowTitleGris: { color: colors.textMuted },
 });

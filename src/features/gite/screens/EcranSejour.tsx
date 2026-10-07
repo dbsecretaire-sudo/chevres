@@ -119,6 +119,10 @@ export default function EcranSejour() {
   const [sejoursDuGite, setSejoursDuGite] = useState<Sejour[]>([]);
   /** Vrai quand le client a été remboursé sans garder sa réservation : elle est abandonnée, sa chambre est libre. */
   const [abandonne, setAbandonne] = useState(false);
+  /** Vrai quand, la réservation abandonnée, le client garde ses repas (le restaurant). */
+  const [restaurantMaintenu, setRestaurantMaintenu] = useState(false);
+  /** Vrai quand la réservation est maintenue mais que le client a renoncé à ses repas. */
+  const [sansRestaurant, setSansRestaurant] = useState(false);
   const [acompte, setAcompte] = useState<AcompteSejour | undefined>();
   const [validationOuverte, setValidationOuverte] = useState(false);
   const [ajustements, setAjustements] = useState<AjustementSejour[]>([]);
@@ -210,6 +214,8 @@ export default function EcranSejour() {
       }
       setAcompte(s.acompte);
       setAbandonne(!!s.abandonne);
+      setRestaurantMaintenu(!!s.restaurantMaintenu);
+      setSansRestaurant(!!s.sansRestaurant);
       setAjustements(s.ajustements ?? []);
       setNotes(s.notes ?? '');
       setPaye(!!s.paye);
@@ -293,6 +299,8 @@ export default function EcranSejour() {
       datePaiement: payeFinal ? datePaiementFinale : undefined,
       acompte: nouvelAcompte ?? acompte,
       abandonne: abandonne || undefined,
+      restaurantMaintenu: (abandonne && restaurantMaintenu) || undefined,
+      sansRestaurant: (!abandonne && sansRestaurant) || undefined,
       ajustements: ajustements.length > 0 ? ajustements : undefined,
       ...factures,
     };
@@ -329,7 +337,12 @@ export default function EcranSejour() {
   };
 
   /** Inscrit en comptabilité un remboursement ou une prestation du séjour payé, et le garde tout de suite avec le séjour. */
-  const ajouterAjustement = async (valeurs: { montant: number; date: string; maintenue: boolean }) => {
+  const ajouterAjustement = async (valeurs: {
+    montant: number;
+    date: string;
+    maintenue: boolean;
+    restaurantMaintenu: boolean;
+  }) => {
     const type = typeAjustement;
     setTypeAjustement(null);
     const stocke = id ? await getSejour(id) : undefined;
@@ -339,17 +352,32 @@ export default function EcranSejour() {
       montant: valeurs.montant,
       date: valeurs.date,
       maintenue: type === TYPE_AJUSTEMENT_SEJOUR.REMBOURSEMENT ? valeurs.maintenue : undefined,
+      // Le restaurant ne se choisit que pour un remboursement, quand il y a des repas.
+      restaurantMaintenu:
+        type === TYPE_AJUSTEMENT_SEJOUR.REMBOURSEMENT && !!stocke.repas
+          ? valeurs.restaurantMaintenu
+          : undefined,
     });
     // Un remboursement sans maintien de la réservation l'abandonne : sa chambre est libérée, sa trace reste.
     const abandon =
       type === TYPE_AJUSTEMENT_SEJOUR.REMBOURSEMENT && !valeurs.maintenue ? true : stocke.abandonne;
+    // Abandonnée, la réservation garde ses repas au restaurant si le client les maintient ; maintenue, elle n'a plus de repas
+    // si le client y renonce.
+    const restaurant = abandon ? ajustement.restaurantMaintenu || stocke.restaurantMaintenu : undefined;
+    const sans =
+      !abandon &&
+      (ajustement.restaurantMaintenu !== undefined ? !ajustement.restaurantMaintenu : stocke.sansRestaurant);
     await enregistrerSejour({
       ...stocke,
       abandonne: abandon,
+      restaurantMaintenu: restaurant || undefined,
+      sansRestaurant: sans || undefined,
       ajustements: [...(stocke.ajustements ?? []), ajustement],
     });
     setAjustements((actuels) => [...actuels, ajustement]);
     setAbandonne(!!abandon);
+    setRestaurantMaintenu(!!restaurant);
+    setSansRestaurant(!!sans);
   };
 
   const supprimer = async () => {
@@ -392,6 +420,10 @@ export default function EcranSejour() {
         />
 
         {abandonne ? <Text style={commonStyles.required}>{T.abandonneeInfo}</Text> : null}
+        {abandonne && restaurantMaintenu ? (
+          <Text style={commonStyles.muted}>{T.restaurantMaintenuInfo}</Text>
+        ) : null}
+        {!abandonne && sansRestaurant ? <Text style={commonStyles.muted}>{T.sansRestaurantInfo}</Text> : null}
 
         <View style={[commonStyles.gap6, verrou]} pointerEvents={evenements}>
           <Text style={commonStyles.lineSemiBold}>
@@ -628,6 +660,8 @@ export default function EcranSejour() {
         <AjustementSejourModal
           type={typeAjustement}
           totalPaye={totalAvecAjustements(tarif.total, ajustements)}
+          avecRepas={nombreRepas > 0}
+          montantRepas={tarif.restauration}
           onValider={ajouterAjustement}
           onFermer={() => setTypeAjustement(null)}
         />

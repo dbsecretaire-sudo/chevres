@@ -47,6 +47,11 @@ export function LignesPaiement({ paiement, acompte, ajustements }: Props) {
                   {remboursement && a.maintenue ? (
                     <Text style={commonStyles.muted}>{T.maintenue}</Text>
                   ) : null}
+                  {remboursement && a.restaurantMaintenu !== undefined ? (
+                    <Text style={commonStyles.muted}>
+                      {a.restaurantMaintenu ? T.restaurantMaintenu : T.restaurantAnnule}
+                    </Text>
+                  ) : null}
                 </View>
                 <Text style={commonStyles.lineBold}>
                   {remboursement ? '−' : '+'}

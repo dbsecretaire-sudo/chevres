@@ -44,7 +44,9 @@ export function ClientReservations({ clientId }: { clientId: string }) {
             title={T.jour.dates(formatDateShortFR(s.arrivee), formatDateShortFR(s.depart))}
             subtitle={
               s.abandonne
-                ? T.reservationsClient.abandonnee
+                ? s.restaurantMaintenu
+                  ? T.reservationsClient.abandonneeRestaurantMaintenu
+                  : T.reservationsClient.abandonnee
                 : `${T.sejour.chambresListe(s.chambres)} · ${s.paye ? T.jour.paye : T.jour.aRegler}`
             }
             trailing={

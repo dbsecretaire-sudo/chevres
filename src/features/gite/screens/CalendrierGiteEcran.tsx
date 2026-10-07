@@ -75,6 +75,14 @@ export default function CalendrierGiteEcran() {
               setActiviteOuverte(true);
             },
           },
+          {
+            label: TEXTES.gite.activite.historique,
+            icon: 'time',
+            onPress: () => {
+              setMenu(false);
+              router.push(ROUTES.giteHistorique());
+            },
+          },
         ]}
       />
       <ActiviteGiteModal visible={activiteOuverte} onFermer={() => setActiviteOuverte(false)} />

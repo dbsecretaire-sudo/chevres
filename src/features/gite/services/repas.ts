@@ -2,6 +2,12 @@ import type { Sejour } from '@/features/gite/types';
 import { SERVICE_REPAS, SERVICE_REPAS_PAR_DEFAUT } from '@/shared/constants/gite';
 import { nuitsDuSejour } from '@/shared/utils/calendrier';
 
+/** Les repas encore prévus d'un séjour : aucun quand le client y a renoncé, ou a abandonné sa réservation sans garder le restaurant. */
+export function repasPrevus(sejour: Sejour): number {
+  if (sejour.abandonne ? !sejour.restaurantMaintenu : sejour.sansRestaurant) return 0;
+  return sejour.repas ?? 0;
+}
+
 /**
  * Les repas d'un séjour, répartis sur ses nuits : le total est partagé à parts égales, les repas en plus allant aux
  * premières nuits. Avec le calcul par défaut (personnes × nuits, ×2 midi et soir), chaque nuit a donc le même nombre.
@@ -9,7 +15,7 @@ import { nuitsDuSejour } from '@/shared/utils/calendrier';
 export function repasParNuit(sejour: Sejour): Map<string, number> {
   const repas = new Map<string, number>();
   const nuits = nuitsDuSejour(sejour.arrivee, sejour.depart);
-  const total = sejour.repas ?? 0;
+  const total = repasPrevus(sejour);
   if (nuits.length === 0 || total <= 0) return repas;
   const base = Math.floor(total / nuits.length);
   const reste = total % nuits.length;

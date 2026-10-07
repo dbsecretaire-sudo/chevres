@@ -73,6 +73,7 @@ export const TEXTES_ANNEXES = {
     plus: 'Une de plus',
     detailLigne: (quantite: number, prix: string) => `${quantite} × ${prix}`,
     venduLibelle: 'Vente enregistrée',
+    ouvrirReservation: 'Ouvrir la réservation',
     repasReserves: (nombre: number) => `Repas réservés et déjà payés : ${nombre}`,
     tva: 'TVA',
     ok: 'OK',

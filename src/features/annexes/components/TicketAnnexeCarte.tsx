@@ -9,6 +9,7 @@ import { lignesDuTicket, totalTicket } from '@/features/annexes/services/tickets
 import type { ArticleAnnexe, CategorieAnnexe, TicketAnnexe } from '@/features/annexes/types';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { NOMBRE_MAX_ARTICLES_TICKET } from '@/shared/constants/annexes';
+import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/bar/Bar.styles';
@@ -28,6 +29,8 @@ interface Props {
   onChangerDate: (date: string) => void;
   /** Les repas de ce jour déjà réservés et payés (le restaurant) : une ligne d'information, hors du total. */
   repasReserves?: number;
+  /** Ouvre la réservation de ce ticket (sa ligne de repas devient un lien). */
+  onOuvrirReservation?: () => void;
   /** Le taux de TVA de l'activité (celui du ticket quand il n'a pas le sien). */
   tauxTvaActivite?: number;
   onChangerTva: (taux: number | undefined) => void;
@@ -51,6 +54,7 @@ export function TicketAnnexeCarte({
   onRenommer,
   onChangerDate,
   repasReserves,
+  onOuvrirReservation,
   tauxTvaActivite,
   onChangerTva,
   onAjouter,
@@ -92,10 +96,23 @@ export function TicketAnnexeCarte({
       {replie ? null : (
         <>
           {repasReserves ? (
-            <View style={stylesTicket.bandeauRepas}>
+            <Pressable
+              style={stylesTicket.bandeauRepas}
+              onPress={onOuvrirReservation}
+              disabled={!onOuvrirReservation}
+              accessibilityLabel={T.ouvrirReservation}
+            >
               <Ionicons name="restaurant" size={18} color={colors.primaryDark} />
               <Text style={stylesTicket.texteBandeau}>{T.repasReserves(repasReserves)}</Text>
-            </View>
+              {onOuvrirReservation ? (
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.primaryDark}
+                  style={stylesTicket.flecheBandeau}
+                />
+              ) : null}
+            </Pressable>
           ) : null}
 
           {lignes.length > 0 ? (
@@ -125,68 +142,70 @@ export function TicketAnnexeCarte({
           {ticket.vendu ? (
             <Text style={commonStyles.lineBold}>{T.venduLibelle}</Text>
           ) : (
-            <View style={stylesTicket.ajout}>
-              <Text style={stylesTicket.titreAjout}>{T.ajouterUneLigne}</Text>
-              {categories.length > 0 ? (
-                <SelectField<string>
-                  label={T.categorie}
-                  libelleCache
-                  value={categorieId}
-                  options={[
-                    { value: '', label: T.toutesCategories },
-                    ...categories.map((c) => ({ value: c.id, label: c.nom })),
-                  ]}
-                  onChange={(valeur) => {
-                    setCategorieId(valeur);
-                    setArticleId('');
-                  }}
-                />
-              ) : null}
-              <View>
-                {/* L'étoile rouge : l'article est obligatoire pour ajouter une ligne. */}
-                <Text style={stylesTicket.etoile}>*</Text>
-                <SelectFieldEditable<string>
-                  label={T.article}
-                  libelleCache
-                  searchable
-                  placeholder={T.choixDeLArticle}
-                  value={articleId}
-                  options={proposes.map((a) => ({
-                    value: a.id,
-                    label: `${a.nom} — ${formatMontant(a.prix)}`,
-                  }))}
-                  onChange={setArticleId}
-                  onEdit={onEditerInventaire}
-                />
-              </View>
-              <View style={stylesTicket.rangeeAjout}>
-                <View style={stylesTicket.compteur}>
-                  <Pressable
-                    style={stylesTicket.boutonCompteur}
-                    onPress={() => setQuantite((q) => Math.max(1, q - 1))}
-                    hitSlop={6}
-                    accessibilityLabel={T.moins}
-                  >
-                    <Ionicons name="remove" size={20} color={colors.primary} />
-                  </Pressable>
-                  <Text style={stylesTicket.valeurCompteur}>{quantite}</Text>
-                  <Pressable
-                    style={stylesTicket.boutonCompteur}
-                    onPress={() => setQuantite((q) => Math.min(NOMBRE_MAX_ARTICLES_TICKET, q + 1))}
-                    hitSlop={6}
-                    accessibilityLabel={T.plus}
-                  >
-                    <Ionicons name="add" size={20} color={colors.primary} />
-                  </Pressable>
+            <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
+              <View style={stylesTicket.ajout}>
+                <Text style={stylesTicket.titreAjout}>{T.ajouterUneLigne}</Text>
+                {categories.length > 0 ? (
+                  <SelectField<string>
+                    label={T.categorie}
+                    libelleCache
+                    value={categorieId}
+                    options={[
+                      { value: '', label: T.toutesCategories },
+                      ...categories.map((c) => ({ value: c.id, label: c.nom })),
+                    ]}
+                    onChange={(valeur) => {
+                      setCategorieId(valeur);
+                      setArticleId('');
+                    }}
+                  />
+                ) : null}
+                <View>
+                  {/* L'étoile rouge : l'article est obligatoire pour ajouter une ligne. */}
+                  <Text style={stylesTicket.etoile}>*</Text>
+                  <SelectFieldEditable<string>
+                    label={T.article}
+                    libelleCache
+                    searchable
+                    placeholder={T.choixDeLArticle}
+                    value={articleId}
+                    options={proposes.map((a) => ({
+                      value: a.id,
+                      label: `${a.nom} — ${formatMontant(a.prix)}`,
+                    }))}
+                    onChange={setArticleId}
+                    onEdit={onEditerInventaire}
+                  />
                 </View>
-                <Button
-                  style={stylesTicket.boutonAjouter}
-                  label={T.ajouter}
-                  disabled={!articleId}
-                  onPress={ajouter}
-                />
+                <View style={stylesTicket.rangeeAjout}>
+                  <View style={stylesTicket.compteur}>
+                    <Pressable
+                      style={stylesTicket.boutonCompteur}
+                      onPress={() => setQuantite((q) => Math.max(1, q - 1))}
+                      hitSlop={6}
+                      accessibilityLabel={T.moins}
+                    >
+                      <Ionicons name="remove" size={20} color={colors.ajout} />
+                    </Pressable>
+                    <Text style={stylesTicket.valeurCompteur}>{quantite}</Text>
+                    <Pressable
+                      style={stylesTicket.boutonCompteur}
+                      onPress={() => setQuantite((q) => Math.min(NOMBRE_MAX_ARTICLES_TICKET, q + 1))}
+                      hitSlop={6}
+                      accessibilityLabel={T.plus}
+                    >
+                      <Ionicons name="add" size={20} color={colors.ajout} />
+                    </Pressable>
+                  </View>
+                  <Button
+                    style={stylesTicket.boutonAjouter}
+                    label={T.ajouter}
+                    disabled={!articleId}
+                    onPress={ajouter}
+                  />
+                </View>
               </View>
-            </View>
+            </AccentColorProvider>
           )}
 
           {ticket.vendu ? (
@@ -209,7 +228,9 @@ export function TicketAnnexeCarte({
             </View>
           )}
           {ticket.vendu ? null : (
-            <Button label={T.enregistrerVente} disabled={total <= 0} onPress={onVendre} />
+            <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
+              <Button label={T.enregistrerVente} disabled={total <= 0} onPress={onVendre} />
+            </AccentColorProvider>
           )}
         </>
       )}

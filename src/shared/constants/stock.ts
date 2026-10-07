@@ -148,6 +148,18 @@ export const CLASSE_INVENTAIRE: Record<ValeurDe<typeof CATEGORIE_INVENTAIRE>, st
 /** Le nombre de chiffres d'un compte du plan comptable proposé à une liste. */
 export const CHIFFRES_COMPTE_PCG = 6;
 
+/** Début de l'identifiant d'une catégorie ajoutée par l'utilisateur (suivi de son identifiant) : « perso:abc123 ». */
+export const PREFIXE_CATEGORIE_PERSO = 'perso:';
+
+/** Un compte commençant par ce chiffre est une immobilisation (classe 2) : ses mouvements sont des investissements. */
+export const CHIFFRE_COMPTE_IMMOBILISATION = '2';
+
+/** Le nombre de chiffres du numéro de classe d'une catégorie ajoutée (31, 35, 37…). */
+export const CHIFFRES_CLASSE_CATEGORIE = 2;
+
+/** Le nombre minimum de chiffres du début des comptes qu'une catégorie ajoutée autorise (21, 701…) ; le maximum est celui d'un compte. */
+export const CHIFFRES_MIN_PREFIXE_COMPTE = 2;
+
 /**
  * Les comptes qu'une liste d'une catégorie peut avoir : ceux de 6 chiffres qui commencent par l'un de ces nombres. Les produits
  * finis et les produits animaux sont des ventes (701…), les matières premières des achats stockés (601…), les autres

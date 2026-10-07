@@ -10,13 +10,19 @@ interface Props {
   onPress?: () => void;
   /** Texte du titre en gris (une ligne inactive). */
   grise?: boolean;
+  /** Met la ligne en évidence (la réservation qu'on est venu voir). */
+  surlignee?: boolean;
 }
 
-export function ListRow({ title, subtitle, trailing, onPress, grise }: Props) {
+export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.rowCard, pressed && onPress ? commonStyles.pressed : null]}
+      style={({ pressed }) => [
+        styles.rowCard,
+        surlignee && styles.rowSurlignee,
+        pressed && onPress ? commonStyles.pressed : null,
+      ]}
     >
       <View style={commonStyles.textWrap}>
         <Text style={[styles.rowTitle, grise && styles.rowTitleGris]}>{title}</Text>

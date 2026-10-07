@@ -59,8 +59,28 @@ export async function listSejours(): Promise<Sejour[]> {
   return (await listTousLesSejours()).filter((s) => !s.abandonne);
 }
 
+/**
+ * Les séjours dont les repas sont prévus : les séjours maintenus (sauf ceux dont le client a renoncé aux repas), et ceux
+ * abandonnés dont le client garde le restaurant.
+ */
+export async function listSejoursRestaurant(): Promise<Sejour[]> {
+  return (await listTousLesSejours()).filter((s) => (s.abandonne ? s.restaurantMaintenu : !s.sansRestaurant));
+}
+
 export async function getSejour(id: string): Promise<Sejour | undefined> {
   return (await lireArchiveGite()).sejours.find((s) => s.id === id);
+}
+
+/** Le séjour (même abandonné) dont l'écriture comptable est cette facture : hébergement, repas, acompte, remboursement ou prestation. */
+export async function sejourDeFacture(factureId: string): Promise<Sejour | undefined> {
+  const { sejours } = await lireArchiveGite();
+  return sejours.find(
+    (s) =>
+      s.factureId === factureId ||
+      s.factureRepasId === factureId ||
+      s.acompte?.factureId === factureId ||
+      s.ajustements?.some((a) => a.factureId === factureId),
+  );
 }
 
 /** Crée le séjour (sans identifiant) ou met à jour celui qui en a un. */

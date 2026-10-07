@@ -18,6 +18,30 @@ export const TEXTES_STOCK = {
     aide: 'Ajoutez une liste à une catégorie. Elle correspond impérativement à un compte du plan comptable : seuls les comptes autorisés par la catégorie sont proposés.',
     comptesAutorises: (prefixes: string) => `Comptes de 6 chiffres commençant par ${prefixes}`,
     ajouterListe: 'Ajouter une liste',
+    ajouterCategorie: 'Ajouter une catégorie',
+    modifierCategorie: 'Modifier la catégorie',
+    supprimerCategorie: 'Supprimer cette catégorie',
+    supprimerCategorieTitre: 'Supprimer cette catégorie ?',
+    supprimerCategorieMessage: (nom: string) =>
+      `« ${nom} » disparaît avec toutes ses listes, leurs articles et leurs mouvements.`,
+    /** Dans le stock : une catégorie ajoutée qui n'a encore aucune liste. */
+    categorieVide: 'Aucune liste : ajoutez-en une depuis « Structure des listes ».',
+    categorie: {
+      nom: 'Nom de la catégorie',
+      exempleNom: 'ex : Produits transformés',
+      classe: 'Numéro de classe (2 chiffres)',
+      exempleClasse: 'ex : 36',
+      comptes: 'Comptes autorisés (débuts de compte)',
+      exempleComptes: 'ex : 701, 706',
+      aideComptes:
+        'Les listes de cette catégorie ne pourront avoir qu’un compte de 6 chiffres commençant par l’un de ces nombres (de 2 à 6 chiffres, séparés par des virgules).',
+      erreurs: {
+        nom: 'Donnez un nom à la catégorie.',
+        classe: 'Le numéro de classe a 2 chiffres.',
+        classeUtilisee: 'Cette classe est déjà prise par une autre catégorie.',
+        comptes: 'Indiquez au moins un début de compte de 2 à 6 chiffres (ex : 701).',
+      },
+    },
     exempleNomListe: 'ex : Laine brute',
     compte: 'Compte du plan comptable',
     aucunCompte:

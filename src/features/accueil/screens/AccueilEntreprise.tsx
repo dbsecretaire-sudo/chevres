@@ -106,6 +106,13 @@ export default function AccueilEntreprise() {
     <Screen>
       <YearPicker annees={accueil.annees} value={accueil.annee} onChange={changerAnnee} />
 
+      {/* Les informations de l'entreprise : juste sous l'année, avant les deux chiffres et le calendrier (elles ne sont plus dans les Réglages). */}
+      <Button
+        variant="secondary"
+        label={TEXTES.commun.general.informationsDeLEntreprise}
+        onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
+      />
+
       <View style={commonStyles.row}>
         <TuileChiffre
           valeur={solde === undefined ? '—' : formatMontant(solde)}
@@ -120,13 +127,6 @@ export default function AccueilEntreprise() {
           onPress={() => router.push(secondeTuile.vers)}
         />
       </View>
-
-      {/* Les informations de l'entreprise : juste sous les deux chiffres, au-dessus du calendrier (elles ne sont plus dans les Réglages). */}
-      <Button
-        variant="secondary"
-        label={TEXTES.commun.general.informationsDeLEntreprise}
-        onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
-      />
 
       {gite ? (
         <CalendrierMois

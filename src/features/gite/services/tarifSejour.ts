@@ -62,3 +62,19 @@ export function tarifDuSejour(sejour: Sejour): TarifSejour {
       : arrondi(sejour.prix - taxe - restauration);
   return { hebergement, taxe, restauration, total: sejour.prix };
 }
+
+/**
+ * Le remboursement proposé selon ce que le client garde : tout quand il abandonne tout (ou garde tout : un geste commercial),
+ * le prix des repas quand il garde sa réservation sans le restaurant, et le reste (sans les repas) quand il abandonne sa
+ * réservation en gardant le restaurant. Sans repas, c'est toujours tout ce qu'il a payé.
+ */
+export function remboursementPropose(p: {
+  totalPaye: number;
+  montantRepas: number;
+  maintenue: boolean;
+  restaurantMaintenu: boolean;
+}): number {
+  const repas = Math.min(Math.max(p.montantRepas, 0), Math.max(p.totalPaye, 0));
+  if (repas === 0 || p.maintenue === p.restaurantMaintenu) return arrondi(Math.max(p.totalPaye, 0));
+  return arrondi(p.maintenue ? repas : Math.max(p.totalPaye - repas, 0));
+}

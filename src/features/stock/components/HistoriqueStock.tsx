@@ -12,9 +12,10 @@ import {
   type FiltreStock,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle, MouvementStock } from '@/features/stock/types';
+import { idCategoriePerso, infosCategorie } from '@/features/stock/utils/categories';
 import {
   CATEGORIE_INVENTAIRE,
-  CLASSE_INVENTAIRE,
+  CHIFFRE_COMPTE_IMMOBILISATION,
   FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
   NATURE_STOCK,
@@ -39,21 +40,12 @@ const nombreFR = (n: number): string => String(Math.round(n * 100) / 100).replac
  * genres d'articles dont elle compte les mouvements.
  */
 /** Le nom de chaque catégorie de l'inventaire. */
-const NOMS_CATEGORIE: Record<ValeurDe<typeof CATEGORIE_INVENTAIRE>, string> = {
-  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: T.categories.produitsFinis,
-  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: T.categories.produitsAnimaux,
-  [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: T.categories.matieresPremieres,
-  [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: T.categories.autresApprovisionnements,
-  [CATEGORIE_INVENTAIRE.MARCHANDISES]: T.categories.marchandises,
-  [CATEGORIE_INVENTAIRE.IMMOBILISATIONS]: T.categories.immobilisations,
-};
-
 const CARTES: {
   titre: string;
   genres: GenreArticle[];
   nature: ValeurDe<typeof NATURE_STOCK>;
   /** La catégorie de l'inventaire (celle de l'organisation comptable) sous laquelle la carte est rangée. */
-  categorie: ValeurDe<typeof CATEGORIE_INVENTAIRE>;
+  categorie: string;
   lait?: boolean;
   /** Pour la carte d'une liste personnalisée : cette liste. */
   listeId?: string;
@@ -159,17 +151,21 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
   ].filter((a) => Number.isFinite(a));
 
   /** Les cartes : celles d'office, puis une par liste ajoutée dans la structure, rangées par catégorie (celle de la comptabilité). */
-  const ordreCategories = Object.values(CATEGORIE_INVENTAIRE) as string[];
+  const ordreCategories = [
+    ...(Object.values(CATEGORIE_INVENTAIRE) as string[]),
+    ...(archive.categories ?? []).map(idCategoriePerso),
+  ];
   const cartes: (typeof CARTES)[number][] = [
     ...CARTES,
     ...(archive.listes ?? []).map((l) => ({
       titre: l.nom,
       genres: [GENRE_ARTICLE.PERSONNALISE] as GenreArticle[],
       // Les mouvements d'une liste ajoutée sont des saisies : des entrées et des sorties, comme un consommable (ou un achat).
-      nature:
-        l.categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS
-          ? NATURE_STOCK.INVESTISSEMENT
-          : NATURE_STOCK.CONSOMMABLE,
+      nature: infosCategorie(l.categorie, archive.categories).prefixes.some((p) =>
+        p.startsWith(CHIFFRE_COMPTE_IMMOBILISATION),
+      )
+        ? NATURE_STOCK.INVESTISSEMENT
+        : NATURE_STOCK.CONSOMMABLE,
       categorie: l.categorie,
       listeId: l.id,
     })),
@@ -301,7 +297,10 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
             <View key={idCarte} style={commonStyles.gap10}>
               {premiereDeSaNature ? (
                 <Text style={commonStyles.subheading}>
-                  {T.enteteCategorie(CLASSE_INVENTAIRE[categorie], NOMS_CATEGORIE[categorie])}
+                  {T.enteteCategorie(
+                    infosCategorie(categorie, archive.categories).classe,
+                    infosCategorie(categorie, archive.categories).nom,
+                  )}
                 </Text>
               ) : null}
               <Card>

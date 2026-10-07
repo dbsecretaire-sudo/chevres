@@ -62,6 +62,9 @@ export const ROUTES = {
   // Gestion du gîte (association)
   CLIENTS_DOSSIERS: '/clients/dossiers-clients',
   GITE: '/clients/gite',
+  /** L'historique des réservations du gîte (année active), ouvert sur une réservation quand `sejour` est donné. */
+  giteHistorique: (sejour?: string) =>
+    `/clients/gite/historique${sejour ? `?sejour=${sejour}` : ''}` as const,
   /** L'écran d'une activité annexe du gîte. */
   annexe: (id: string) => `/clients/annexe/${id}` as const,
   /** Les tickets d'un jour d'une activité qui a le calendrier des repas (le restaurant). */

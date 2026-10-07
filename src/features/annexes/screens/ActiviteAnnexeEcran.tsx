@@ -17,7 +17,7 @@ import {
   supprimerActivite,
 } from '@/features/annexes/repository';
 import { CalendrierMois, type MarqueJour } from '@/shared/components/CalendrierMois';
-import { listSejours } from '@/features/gite/repository';
+import { listSejoursRestaurant } from '@/features/gite/repository';
 import { repasParJour } from '@/features/gite/services/repas';
 import type { Sejour } from '@/features/gite/types';
 import { moisDe, type MoisCalendrier } from '@/shared/utils/calendrier';
@@ -61,7 +61,7 @@ export default function ActiviteAnnexeEcran() {
   const [sejours, setSejours] = useState<Sejour[]>([]);
 
   const charger = useCallback(async () => {
-    const [annexes, tous] = await Promise.all([lireArchiveAnnexes(), listSejours()]);
+    const [annexes, tous] = await Promise.all([lireArchiveAnnexes(), listSejoursRestaurant()]);
     setArchive(annexes);
     setSejours(tous);
   }, []);
@@ -105,6 +105,15 @@ export default function ActiviteAnnexeEcran() {
   const tickets = [...deReservations, ...libres, ...(virtuel ? [virtuel] : [])];
   const repasDe = (ticket: TicketAnnexe) => reservations.find((r) => r.sejour.id === ticket.sejourId)?.repas;
   const totauxRepas = repasParJour(sejours);
+  /**
+   * Ouvre la réservation d'un ticket : le séjour quand la réservation est maintenue ; l'historique du gîte, sur cette
+   * réservation, quand le client n'a gardé que le restaurant.
+   */
+  const ouvrirReservation = (ticket: TicketAnnexe) => {
+    const sejour = sejours.find((s) => s.id === ticket.sejourId);
+    if (!sejour) return;
+    router.push(sejour.abandonne ? ROUTES.giteHistorique(sejour.id) : ROUTES.sejour(sejour.id));
+  };
 
   const modifierTickets = async (liste: TicketAnnexe[]) => {
     await remplacerTicketsActivite(activite.id, liste);
@@ -207,6 +216,7 @@ export default function ActiviteAnnexeEcran() {
                 onRenommer={() => setRenomme(ticket)}
                 onChangerDate={(date) => modifierTicket(ticket.id, (t) => ({ ...t, date }))}
                 repasReserves={repasDe(ticket)}
+                onOuvrirReservation={ticket.sejourId ? () => ouvrirReservation(ticket) : undefined}
                 tauxTvaActivite={activite.tauxTva}
                 onChangerTva={(tauxTva) => modifierTicket(ticket.id, (t) => ({ ...t, tauxTva }))}
                 onEditerInventaire={() =>

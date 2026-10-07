@@ -3,39 +3,22 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { libelleArticle, libelleOrigineMouvement, roleDeLaViande } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle, MouvementStock } from '@/features/stock/types';
+import { CATEGORIES, categoriesAvecAjoutees } from '@/features/stock/utils/categories';
 import { documentHtml, echapper, ecrireEtPartagerPdf, tableauHtml } from '@/features/export/services/htmlPdf';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { FORMAT_EXPORT, NOM_FICHIER_EXPORT_INVENTAIRE } from '@/shared/constants/export';
-import {
-  CATEGORIE_INVENTAIRE,
-  CATEGORIE_PAR_GENRE,
-  CLASSE_INVENTAIRE,
-  GENRE_ARTICLE,
-} from '@/shared/constants/stock';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { CATEGORIE_INVENTAIRE, CATEGORIE_PAR_GENRE, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { especesActives } from '@/shared/dictionnaire/animaux';
 import { formatDateFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
 
-/** Les catégories de l'inventaire, dans l'ordre de l'organisation comptable : leur nom. */
-const CATEGORIES: { categorie: ValeurDe<typeof CATEGORIE_INVENTAIRE>; nom: string }[] = [
-  { categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS, nom: T.categories.produitsFinis },
-  { categorie: CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX, nom: T.categories.produitsAnimaux },
-  { categorie: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES, nom: T.categories.matieresPremieres },
-  { categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS, nom: T.categories.autresApprovisionnements },
-  { categorie: CATEGORIE_INVENTAIRE.IMMOBILISATIONS, nom: T.categories.immobilisations },
-];
-
 /**
  * La catégorie d'un mouvement : celle de son genre d'article (les lignes d'animaux de la viande sont des produits animaux, et
  * un article d'une liste ajoutée suit la catégorie de sa liste).
  */
-const categorieDuMouvement = (
-  m: MouvementStock,
-  archive: ArchiveStock,
-): ValeurDe<typeof CATEGORIE_INVENTAIRE> => {
+const categorieDuMouvement = (m: MouvementStock, archive: ArchiveStock): string => {
   const genre = m.article.split(':')[0] as GenreArticle;
   if (genre === GENRE_ARTICLE.PERSONNALISE) {
     const article = archive.articles.find((a) => a.id === m.article.split(':')[1]);
@@ -60,7 +43,7 @@ export async function exporterInventairePdf(): Promise<void> {
   const parDate = <C extends { date: string }>(liste: C[]) =>
     [...liste].sort((a, b) => a.date.localeCompare(b.date));
 
-  const blocs = CATEGORIES.map(({ categorie, nom }) => {
+  const blocs = categoriesAvecAjoutees(CATEGORIES, archive.categories).map(({ categorie, nom, classe }) => {
     const lignes = parDate(
       archive.mouvements.filter((m) => categorieDuMouvement(m, archive) === categorie),
     ).map((m) => ({
@@ -69,7 +52,7 @@ export async function exporterInventairePdf(): Promise<void> {
       [colonnes.mouvement]: signe(m.delta),
       [colonnes.origine]: libelleOrigineMouvement(m),
     }));
-    return `<h2>${echapper(T.enteteCategorie(CLASSE_INVENTAIRE[categorie], nom))}</h2>${tableauHtml(lignes, T.exporter.aucunMouvement)}`;
+    return `<h2>${echapper(T.enteteCategorie(classe, nom))}</h2>${tableauHtml(lignes, T.exporter.aucunMouvement)}`;
   });
 
   // Le lait n'est pas un article : le litrage de chaque jour, le lait versé dans un fromage et les ventes de lait.

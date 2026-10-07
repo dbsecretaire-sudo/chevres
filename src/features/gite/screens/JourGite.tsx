@@ -11,6 +11,7 @@ import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { ChambreModal } from '@/features/gite/components/ChambreModal';
 import { useChambres } from '@/features/gite/hooks/useChambres';
 import { ajouterChambre, listSejours, supprimerChambre } from '@/features/gite/repository';
+import { repasPrevus } from '@/features/gite/services/repas';
 import { sejourDeLaNuit } from '@/features/gite/services/occupation';
 import { totalDuSejour } from '@/features/gite/services/tarifSejour';
 import type { Sejour } from '@/features/gite/types';
@@ -20,7 +21,7 @@ import { HEURE_MIDI } from '@/shared/constants/temps';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { ajouterJours } from '@/shared/utils/calendrier';
-import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/dates';
+import { formatDateShortFR, formatMontant } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/gite/Gite.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -92,17 +93,15 @@ export default function JourGite() {
                 <Text style={styles.chambreInfo}>{T.personnesEntreParentheses(sejour.personnes)}</Text>
               ) : null}
             </View>
-            <Text style={styles.chambreInfo}>
-              {T.chambresEtRepas(sejour.chambres.length, sejour.repas ?? 0)}
-            </Text>
+            <Text style={styles.chambreInfo}>{T.nombreChambres(sejour.chambres.length)}</Text>
+            {repasPrevus(sejour) > 0 ? (
+              <Text style={styles.chambreInfo}>{T.nombreRepas(repasPrevus(sejour))}</Text>
+            ) : null}
             <Text style={styles.chambreInfo}>
               {T.montantEtTiret(formatMontant(totalDuSejour(sejour)))}
               <Text style={sejour.paye ? styles.chambrePaye : styles.chambreAlerte}>
                 {sejour.paye ? T.paye : T.aRegler}
               </Text>
-            </Text>
-            <Text style={styles.chambreDates}>
-              {T.dates(formatDateFR(sejour.arrivee), formatDateFR(sejour.depart))}
             </Text>
           </>
         ) : (

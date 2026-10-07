@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
-import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/dates';
 import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_RUBRIQUE_MARCHANDISE,
@@ -16,6 +18,9 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_ALIMENT, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { activiteLigne, activitesFacture } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
+import { sejourDeFacture } from '@/features/gite/repository';
+import type { Sejour } from '@/features/gite/types';
+import { ROUTES } from '@/shared/constants/routes';
 import { useNomsMateriel } from '@/features/stock/hooks/useNomsMateriel';
 import { TEXTES } from '@/shared/textes';
 
@@ -34,6 +39,13 @@ interface Props {
 /** Fiche d'une facture en lecture seule : informations générales puis détail par aliment/carburant. */
 export function FactureLecture({ facture, compte, onModifier }: Props) {
   const nomsMateriel = useNomsMateriel();
+  const router = useRouter();
+  /** La réservation du gîte dont cette écriture est le paiement (hébergement, repas, acompte, remboursement). */
+  const [reservation, setReservation] = useState<Sejour | undefined>();
+  useEffect(() => {
+    sejourDeFacture(facture.id).then(setReservation);
+  }, [facture.id]);
+
   return (
     <Card>
       {plusieursEspeces() ? (
@@ -91,6 +103,23 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         <Text style={commonStyles.line}>
           {TEXTES.commun.general.comptePcgDeuxPoints}
           {compte.numero} — {compte.libelle}
+        </Text>
+      ) : null}
+      {reservation ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.comptabilite.factureLecture.reservationLieeDeuxPoints}
+          {/* Une réservation abandonnée n'est plus au calendrier : on la retrouve dans l'historique. */}
+          <Text
+            style={commonStyles.lien}
+            onPress={() =>
+              router.push(
+                reservation.abandonne ? ROUTES.giteHistorique(reservation.id) : ROUTES.sejour(reservation.id),
+              )
+            }
+          >
+            {reservation.nom} — {formatDateShortFR(reservation.arrivee)} →{' '}
+            {formatDateShortFR(reservation.depart)}
+          </Text>
         </Text>
       ) : null}
 

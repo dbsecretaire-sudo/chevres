@@ -50,6 +50,5 @@ export const styles = StyleSheet.create({
   chambreInfo: { fontSize: 12, color: colors.text },
   chambreAlerte: { fontSize: 12, fontWeight: '700', color: colors.danger },
   chambrePaye: { fontSize: 12, fontWeight: '700', color: colors.primary },
-  chambreDates: { fontSize: 11, color: colors.textMuted },
   chambreLibre: { fontSize: 13, fontStyle: 'italic', color: colors.textMuted },
 });

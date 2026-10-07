@@ -47,6 +47,16 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
           (l) => l && typeof l.id === 'string' && typeof l.nom === 'string' && typeof l.compte === 'string',
         )
       : [],
+    categories: Array.isArray(archive?.categories)
+      ? archive.categories.filter(
+          (c) =>
+            c &&
+            typeof c.id === 'string' &&
+            typeof c.nom === 'string' &&
+            typeof c.classe === 'string' &&
+            Array.isArray(c.prefixes),
+        )
+      : [],
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
   };
 }

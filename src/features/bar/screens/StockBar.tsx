@@ -8,7 +8,12 @@ import type { ArchiveStock, ListeInventaire } from '@/features/stock/types';
 import { ROUTES } from '@/shared/constants/routes';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { CATEGORIES_GITE, SECTIONS_GITE, type SectionGite } from '@/features/stock/utils/categories';
+import {
+  CATEGORIES_GITE,
+  SECTIONS_GITE,
+  categoriesAvecAjoutees,
+  type SectionGite,
+} from '@/features/stock/utils/categories';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Fab } from '@/shared/components/Fab';
@@ -44,10 +49,9 @@ import {
 } from '@/features/bar/repository';
 import type { Aliment, ArchiveBar, ArticleGite, Boisson } from '@/features/bar/types';
 import { FILTRE_RUBRIQUE_TOUT, ONGLET_STOCK_BAR } from '@/shared/constants/bar';
-import { CATEGORIE_INVENTAIRE, CLASSE_INVENTAIRE, GENRE_ARTICLE } from '@/shared/constants/stock';
+import { CATEGORIE_INVENTAIRE, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { COMPTE_PAR_SECTION_INVENTAIRE_GITE } from '@/shared/constants/planComptable';
 import { RUBRIQUE_MARCHANDISE } from '@/shared/constants/comptabilite';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
 import { formatMontant } from '@/shared/utils/dates';
 import { LABEL_RUBRIQUE_MARCHANDISE } from '@/shared/textes/libelles';
@@ -56,7 +60,6 @@ import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
 type Section = SectionGite;
 type CategorieArticle = ArticleGite['categorie'];
 
@@ -93,7 +96,7 @@ type Ajout = 'aliment' | CategorieArticle;
 export default function StockBar() {
   const router = useRouter();
   /** La catégorie qui est déroulée (une seule à la fois) : aucune au départ, tout est réduit. */
-  const [ouvertes, setOuvertes] = useState<Categorie[]>([]);
+  const [ouvertes, setOuvertes] = useState<string[]>([]);
   /** L'activité du gîte regardée : toutes, ou le bar, le restaurant, une activité annexe. */
   const [filtre, setFiltre] = useState<string>(FILTRE_RUBRIQUE_TOUT);
   // Un lien (le crayon d'un ticket) peut ouvrir les marchandises sur une activité, même si l'inventaire était déjà ouvert.
@@ -235,7 +238,7 @@ export default function StockBar() {
   };
 
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
-  const basculerCategorie = (categorie: Categorie) =>
+  const basculerCategorie = (categorie: string) =>
     setOuvertes((actuelles) => (actuelles.includes(categorie) ? [] : [categorie]));
 
   const valider = async (cle: string, delta: number) => {
@@ -429,75 +432,80 @@ export default function StockBar() {
           ]}
           onChoisir={setFiltre}
         />
-        {CATEGORIES.map(({ categorie, nom }) => (
-          <SectionDeroulante
-            key={categorie}
-            titre={TS.enteteCategorie(CLASSE_INVENTAIRE[categorie], nom)}
-            ouverte={ouvertes.includes(categorie)}
-            onBasculer={() => basculerCategorie(categorie)}
-          >
-            {SECTIONS.filter((x) => x.categorie === categorie).map(({ section, titre }) => {
-              const lignes = lignesDe(section);
-              const compte = COMPTE_PAR_SECTION_INVENTAIRE_GITE[section];
-              return (
-                <View key={section} style={commonStyles.gap10}>
-                  <View style={commonStyles.gap2}>
-                    <Text style={commonStyles.lineBold}>{titre}</Text>
-                    <Text style={commonStyles.note}>{TS.compte(compte.numero, compte.libelle)}</Text>
+        {categoriesAvecAjoutees(CATEGORIES, inventaire.categories).map(
+          ({ categorie, nom, classe, perso }) => (
+            <SectionDeroulante
+              key={categorie}
+              titre={TS.enteteCategorie(classe, nom)}
+              ouverte={ouvertes.includes(categorie)}
+              onBasculer={() => basculerCategorie(categorie)}
+            >
+              {SECTIONS.filter((x) => x.categorie === categorie).map(({ section, titre }) => {
+                const lignes = lignesDe(section);
+                const compte = COMPTE_PAR_SECTION_INVENTAIRE_GITE[section];
+                return (
+                  <View key={section} style={commonStyles.gap10}>
+                    <View style={commonStyles.gap2}>
+                      <Text style={commonStyles.lineBold}>{titre}</Text>
+                      <Text style={commonStyles.note}>{TS.compte(compte.numero, compte.libelle)}</Text>
+                    </View>
+                    {lignes.length === 0 ? (
+                      section === ONGLET_STOCK_BAR.CONSOMMABLES && avecAnnexes ? null : (
+                        <Text style={commonStyles.mutedItalic}>
+                          {section === ONGLET_STOCK_BAR.CONSOMMABLES
+                            ? T.stock.aucunConsommable
+                            : T.stock.aucunArticle}
+                        </Text>
+                      )
+                    ) : (
+                      <ListeReordonnable
+                        elements={lignes}
+                        cle={(l) => l.cle}
+                        ligne={ligneStock}
+                        onGlisse={setGlisse}
+                        onDeplacer={async (cle, index) => {
+                          await positionnerDansLeStock(
+                            section,
+                            cle.split(':')[1],
+                            index,
+                            lignes.map((l) => l.id),
+                          );
+                          charger();
+                        }}
+                      />
+                    )}
+                    {/* Les activités annexes (bar, restaurant, pizzas…) : des sous-catégories des boissons et de la nourriture. */}
+                    {section === ONGLET_STOCK_BAR.CONSOMMABLES &&
+                    (filtre === FILTRE_RUBRIQUE_TOUT ||
+                      filtre === RUBRIQUE_MARCHANDISE.ANNEXE ||
+                      !!filtreAnnexe) ? (
+                      <InventaireAnnexes archive={annexes} activiteId={filtreAnnexe} onChange={charger} />
+                    ) : null}
                   </View>
-                  {lignes.length === 0 ? (
-                    section === ONGLET_STOCK_BAR.CONSOMMABLES && avecAnnexes ? null : (
-                      <Text style={commonStyles.mutedItalic}>
-                        {section === ONGLET_STOCK_BAR.CONSOMMABLES
-                          ? T.stock.aucunConsommable
-                          : T.stock.aucunArticle}
-                      </Text>
-                    )
-                  ) : (
-                    <ListeReordonnable
-                      elements={lignes}
-                      cle={(l) => l.cle}
-                      ligne={ligneStock}
+                );
+              })}
+              {(inventaire.listes ?? [])
+                .filter((l) => l.categorie === categorie)
+                .map((l) => (
+                  <View key={l.id} style={commonStyles.gap10}>
+                    <View style={commonStyles.gap2}>
+                      <Text style={commonStyles.lineBold}>{l.nom}</Text>
+                      <Text style={commonStyles.note}>{TS.compte(l.compte, l.libelleCompte)}</Text>
+                    </View>
+                    <ListePersonnalisee
+                      liste={l}
+                      archive={inventaire}
+                      onChange={charger}
                       onGlisse={setGlisse}
-                      onDeplacer={async (cle, index) => {
-                        await positionnerDansLeStock(
-                          section,
-                          cle.split(':')[1],
-                          index,
-                          lignes.map((l) => l.id),
-                        );
-                        charger();
-                      }}
                     />
-                  )}
-                  {/* Les activités annexes (bar, restaurant, pizzas…) : des sous-catégories des boissons et de la nourriture. */}
-                  {section === ONGLET_STOCK_BAR.CONSOMMABLES &&
-                  (filtre === FILTRE_RUBRIQUE_TOUT ||
-                    filtre === RUBRIQUE_MARCHANDISE.ANNEXE ||
-                    !!filtreAnnexe) ? (
-                    <InventaireAnnexes archive={annexes} activiteId={filtreAnnexe} onChange={charger} />
-                  ) : null}
-                </View>
-              );
-            })}
-            {(inventaire.listes ?? [])
-              .filter((l) => l.categorie === categorie)
-              .map((l) => (
-                <View key={l.id} style={commonStyles.gap10}>
-                  <View style={commonStyles.gap2}>
-                    <Text style={commonStyles.lineBold}>{l.nom}</Text>
-                    <Text style={commonStyles.note}>{TS.compte(l.compte, l.libelleCompte)}</Text>
                   </View>
-                  <ListePersonnalisee
-                    liste={l}
-                    archive={inventaire}
-                    onChange={charger}
-                    onGlisse={setGlisse}
-                  />
-                </View>
-              ))}
-          </SectionDeroulante>
-        ))}
+                ))}
+              {perso && !(inventaire.listes ?? []).some((l) => l.categorie === categorie) ? (
+                <Text style={commonStyles.mutedItalic}>{TS.structure.categorieVide}</Text>
+              ) : null}
+            </SectionDeroulante>
+          ),
+        )}
       </ScrollView>
 
       <Fab options={optionsAjoutStock} />

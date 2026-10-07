@@ -1,6 +1,13 @@
-import type { GenreArticle } from '@/features/stock/types';
+import type { CategorieInventairePerso, GenreArticle } from '@/features/stock/types';
 import { ONGLET_STOCK_BAR } from '@/shared/constants/bar';
-import { CATEGORIE_INVENTAIRE, GENRE_ARTICLE, SECTION_STOCK } from '@/shared/constants/stock';
+import {
+  CATEGORIE_INVENTAIRE,
+  CLASSE_INVENTAIRE,
+  GENRE_ARTICLE,
+  PREFIXE_CATEGORIE_PERSO,
+  PREFIXES_COMPTE_PAR_CATEGORIE,
+  SECTION_STOCK,
+} from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 
@@ -143,3 +150,61 @@ export const SECTIONS_GITE: { section: SectionGite; categorie: Categorie; titre:
     titre: TG.onglets.materiel,
   },
 ];
+
+/** Le nom de chaque catégorie d'office. */
+const NOMS_CATEGORIE: Record<Categorie, string> = {
+  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: T.categories.produitsFinis,
+  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: T.categories.produitsAnimaux,
+  [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: T.categories.matieresPremieres,
+  [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: T.categories.autresApprovisionnements,
+  [CATEGORIE_INVENTAIRE.MARCHANDISES]: T.categories.marchandises,
+  [CATEGORIE_INVENTAIRE.IMMOBILISATIONS]: T.categories.immobilisations,
+};
+
+/** Une catégorie de l'inventaire telle qu'on l'affiche : d'office ou ajoutée par l'utilisateur. */
+export interface InfosCategorie {
+  /** L'identifiant : « produits_finis »… ou « perso:… » pour une catégorie ajoutée. */
+  categorie: string;
+  nom: string;
+  /** Le numéro de classe (35, 31…). */
+  classe: string;
+  /** Les débuts de compte que ses listes peuvent avoir. */
+  prefixes: readonly string[];
+  /** Vrai pour une catégorie ajoutée par l'utilisateur (qu'il peut renommer et supprimer). */
+  perso: boolean;
+}
+
+/** L'identifiant, dans les listes, d'une catégorie ajoutée. */
+export const idCategoriePerso = (categorie: CategorieInventairePerso): string =>
+  `${PREFIXE_CATEGORIE_PERSO}${categorie.id}`;
+
+const estDOffice = (categorie: string): categorie is Categorie => categorie in NOMS_CATEGORIE;
+
+/** Ce qu'on sait d'une catégorie (d'office ou ajoutée) ; une catégorie inconnue est rangée avec les autres approvisionnements. */
+export function infosCategorie(categorie: string, ajoutees: CategorieInventairePerso[] = []): InfosCategorie {
+  if (estDOffice(categorie)) {
+    return {
+      categorie,
+      nom: NOMS_CATEGORIE[categorie],
+      classe: CLASSE_INVENTAIRE[categorie],
+      prefixes: PREFIXES_COMPTE_PAR_CATEGORIE[categorie],
+      perso: false,
+    };
+  }
+  const perso = ajoutees.find((c) => idCategoriePerso(c) === categorie);
+  if (perso) {
+    return { categorie, nom: perso.nom, classe: perso.classe, prefixes: perso.prefixes, perso: true };
+  }
+  return infosCategorie(CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS);
+}
+
+/** Les catégories d'un inventaire : celles d'office données, puis celles que l'utilisateur a ajoutées (dans l'ordre d'ajout). */
+export function categoriesAvecAjoutees(
+  base: { categorie: Categorie; nom: string }[],
+  ajoutees: CategorieInventairePerso[] = [],
+): InfosCategorie[] {
+  return [
+    ...base.map(({ categorie }) => infosCategorie(categorie)),
+    ...ajoutees.map((c) => infosCategorie(idCategoriePerso(c), ajoutees)),
+  ];
+}

@@ -3,7 +3,12 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { exporterInventairePdf } from '@/features/export/inventairePdf';
 import { chargerChoixGroupesRecette } from '@/features/comptabilite/repository/groupesRecette';
 import { groupesActifsEspece, laiterieActive } from '@/features/comptabilite/utils/recettes';
-import { CATEGORIES, SECTIONS, type Categorie, type Section } from '@/features/stock/utils/categories';
+import {
+  CATEGORIES,
+  SECTIONS,
+  categoriesAvecAjoutees,
+  type Section,
+} from '@/features/stock/utils/categories';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,7 +68,6 @@ import {
   GENRE_ARTICLE,
   NATURE_PAR_GENRE,
   NATURE_STOCK,
-  CLASSE_INVENTAIRE,
   ORIGINE_MOUVEMENT,
   SECTION_STOCK,
 } from '@/shared/constants/stock';
@@ -132,7 +136,7 @@ export default function StockFromagerie() {
     espece?: string;
   }>();
   /** La catégorie qui est déroulée (une seule à la fois) : aucune au départ, tout est réduit. */
-  const [ouvertes, setOuvertes] = useState<Categorie[]>([]);
+  const [ouvertes, setOuvertes] = useState<string[]>([]);
   // Un lien (le crayon d'un formulaire) peut ouvrir une liste et un animal précis, même si l'inventaire était déjà ouvert.
   const demande = `${ongletDemande ?? ''}|${especeDemandee ?? ''}`;
   const [demandeVue, setDemandeVue] = useState('|');
@@ -331,7 +335,7 @@ export default function StockFromagerie() {
   };
 
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
-  const basculerCategorie = (categorie: Categorie) =>
+  const basculerCategorie = (categorie: string) =>
     setOuvertes((actuelles) => (actuelles.includes(categorie) ? [] : [categorie]));
 
   const emballages = articlesDuGenre(GENRE_ARTICLE.EMBALLAGE, archive, filtreCourant);
@@ -433,14 +437,15 @@ export default function StockFromagerie() {
           />
         ) : null}
 
-        {CATEGORIES.map(({ categorie, nom }) => {
+        {categoriesAvecAjoutees(CATEGORIES, archive.categories).map(({ categorie, nom, classe, perso }) => {
           const listes = sectionsVisibles.filter((x) => x.categorie === categorie);
           const listesPerso = (archive.listes ?? []).filter((l) => l.categorie === categorie);
-          if (listes.length === 0 && listesPerso.length === 0) return null;
+          // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
+          if (listes.length === 0 && listesPerso.length === 0 && !perso) return null;
           return (
             <SectionDeroulante
               key={categorie}
-              titre={T.enteteCategorie(CLASSE_INVENTAIRE[categorie], nom)}
+              titre={T.enteteCategorie(classe, nom)}
               ouverte={ouvertes.includes(categorie)}
               onBasculer={() => basculerCategorie(categorie)}
             >
@@ -499,6 +504,9 @@ export default function StockFromagerie() {
                   )}
                 </View>
               ))}
+              {perso && listesPerso.length === 0 ? (
+                <Text style={commonStyles.mutedItalic}>{T.structure.categorieVide}</Text>
+              ) : null}
             </SectionDeroulante>
           );
         })}
