@@ -18,6 +18,3 @@ export const FILTRE_DOSSIERS = {
 
 /** Séparateur des étiquettes d'un contenu quand on les saisit dans un seul champ. */
 export const SEPARATEUR_ETIQUETTES = ',';
-
-/** Nombre de colonnes de la grille des dossiers clients. */
-export const COLONNES_GRILLE_DOSSIERS = 3;

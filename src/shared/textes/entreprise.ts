@@ -39,7 +39,6 @@ export const TEXTES_ENTREPRISE = {
     titreMois: (annee: number) => `Chiffre d’affaires par mois — ${annee}`,
     total: 'Total de l’année',
     horsTaxes: 'hors taxes',
-    toutesTaxes: 'TTC',
     aides: 'Aides et subventions (hors chiffre d’affaires)',
     noticeTitre: 'À savoir',
     notice:
@@ -85,15 +84,12 @@ export const TEXTES_ENTREPRISE = {
     taches: {
       titre: 'Tâches à faire',
       aucune: 'Aucune tâche à faire',
-      aucuneDetail: 'Les contenus avec une échéance, tant qu’ils ne sont pas terminés, apparaissent ici.',
+      aucuneDetail:
+        'Les contenus à faire ou en cours, avec ou sans échéance, apparaissent ici tant qu’ils ne sont pas terminés.',
     },
     calendrier: {
-      legendeTrading:
-        'Résultat des trades clos ce jour-là (vert : gain, rouge : perte) — appuyez sur un jour pour ouvrir le journal.',
       legendeGite:
         'Chambres occupées cette nuit-là (! : paiement en attente) — appuyez sur un jour pour ouvrir le gîte.',
-      legendeTaches:
-        'Tâches à réaliser ce jour-là (en rouge : en retard) — appuyez sur un jour pour les voir.',
     },
     balance: {
       solde: (annee: number) => `Solde ${annee}`,

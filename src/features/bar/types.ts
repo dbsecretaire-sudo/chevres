@@ -31,24 +31,6 @@ export interface ArticleGite {
   rubrique?: ValeurDe<typeof RUBRIQUE_MARCHANDISE>;
 }
 
-/** Une boisson et le nombre commandé sur un ticket. */
-export interface LigneTicket {
-  boissonId: string;
-  quantite: number;
-}
-
-/**
- * Un ticket du bar : une commande en cours (une table, un client), avec un nom (« Ticket 1 » d'office, modifiable) et les
- * boissons commandées. Il disparaît de la liste quand sa vente est enregistrée.
- */
-export interface TicketBar {
-  id: string;
-  nom: string;
-  /** AAAA-MM-JJ : la date de la vente (celle de la recette en comptabilité) ; absente : le jour où on l'enregistre. */
-  date?: string;
-  lignes: LigneTicket[];
-}
-
 /** Tout ce que contient le bar et la restauration d'un établissement : stocké, sauvegardé et synchronisé ensemble. */
 /** Un mouvement de l'inventaire du gîte : des unités ajoutées (positif) ou retirées (négatif) d'une boisson, d'un aliment ou d'un article. */
 export interface MouvementBar {
@@ -67,8 +49,6 @@ export interface ArchiveBar {
   aliments: Aliment[];
   /** Le matériel, le conditionnement et l'entretien. */
   articles: ArticleGite[];
-  /** Les tickets en cours au bar (vente pas encore enregistrée). */
-  tickets: TicketBar[];
   /**
    * L'ordre choisi des articles de chaque étiquette du stock (« consommables » : boissons et aliments mêlés, « materiel »,
    * « conditionnement », « entretien ») : leurs identifiants ; ceux qui n'y sont pas suivent, dans l'ordre de création.

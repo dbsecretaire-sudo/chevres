@@ -29,7 +29,6 @@ export const TEXTES_TRADING = {
     perteMoyenne: 'Perte moyenne',
     drawdownMax: 'Plus forte baisse',
     rMoyen: 'Résultat moyen en R',
-    meilleur: 'Meilleur trade',
     pire: 'Pire trade',
     nombres: (clos: number, ouverts: number) =>
       `${clos} trade${clos > 1 ? 's' : ''} clos${ouverts > 0 ? ` · ${ouverts} ouvert${ouverts > 1 ? 's' : ''}` : ''}`,

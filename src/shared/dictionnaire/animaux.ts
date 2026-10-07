@@ -1,5 +1,4 @@
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /**
  * Dictionnaire des animaux : le vocabulaire de l'application (femelle, mâle, petit…) selon l'espèce
@@ -9,9 +8,6 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /** L'identifiant d'une espèce : l'une de celles d'office (TYPE_ANIMAL_ETABLISSEMENT) ou une espèce ajoutée par l'utilisateur. */
 export type EspeceAnimale = string;
-
-/** Les espèces d'office (les autres sont ajoutées par l'utilisateur, voir features/especes). */
-export type EspeceDOffice = ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>;
 
 export interface Terme {
   singulier: string;

@@ -42,9 +42,7 @@ export default function ClientsLayout() {
       />
       <Stack.Screen name="element/[id]" options={{ title: '' }} />
       <Stack.Screen name="echeances/[date]" options={{ title: '' }} />
-      <Stack.Screen name="bar" options={{ title: TEXTES.bar.titre }} />
       <Stack.Screen name="annexe/[id]" options={{ title: '' }} />
-      <Stack.Screen name="repas/[date]" options={{ title: '' }} />
       <Stack.Screen name="journal" options={{ title: TEXTES.trading.journal.titre }} />
       <Stack.Screen
         name="trade/nouveau"

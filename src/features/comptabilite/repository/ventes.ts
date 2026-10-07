@@ -2,14 +2,7 @@ import { generateId } from '@/shared/utils/id';
 import { yearOf } from '@/shared/utils/dates';
 import type { Vente } from '@/features/comptabilite/types';
 import { retirerStockVente, synchroniserStockVente } from '@/features/stock/services/stock';
-import {
-  deleteRecord,
-  findRecord,
-  getYears,
-  loadAllYears,
-  loadYear,
-  upsertRecord,
-} from '@/shared/storage/localStore';
+import { deleteRecord, findRecord, loadAllYears, loadYear, upsertRecord } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 
 export async function enregistrerVente(input: Omit<Vente, 'id'>): Promise<Vente> {
@@ -22,10 +15,6 @@ export async function enregistrerVente(input: Omit<Vente, 'id'>): Promise<Vente>
 export async function listVentes(annee: number): Promise<Vente[]> {
   const items = await loadYear(CATEGORIE_STOCKAGE.VENTES, annee);
   return items.sort((a, b) => b.date.localeCompare(a.date));
-}
-
-export async function ventesAnnees(): Promise<number[]> {
-  return getYears(CATEGORIE_STOCKAGE.VENTES);
 }
 
 /** Toutes les ventes, toutes années confondues, triées par date décroissante — utile pour lister les écritures liées à un client précis. */

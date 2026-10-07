@@ -41,11 +41,21 @@ export default function AccueilEntreprise() {
   const finance = !gite && activiteFinanciereSeule();
   const annee = String(accueil.annee);
 
-  // Les tâches : les contenus à échéance qui ne sont pas terminés, les plus pressées d'abord.
+  // Les tâches : tous les contenus pas encore terminés (à faire, en cours), avec ou sans échéance — les mêmes que ceux comptés « à
+  // faire » dans les dossiers des clients. Les plus pressées d'abord ; celles sans échéance suivent, par titre.
   const taches = accueil.elements
-    .filter((e) => !!e.echeance && statutEffectif(e) !== STATUT_ELEMENT.TERMINE)
-    .sort((a, b) => a.echeance!.localeCompare(b.echeance!));
-  const tachesDeLAnnee = taches.filter((e) => e.echeance!.startsWith(annee)).length;
+    .filter((e) => statutEffectif(e) !== STATUT_ELEMENT.TERMINE)
+    .sort((a, b) =>
+      a.echeance && b.echeance
+        ? a.echeance.localeCompare(b.echeance)
+        : a.echeance
+          ? -1
+          : b.echeance
+            ? 1
+            : a.titre.localeCompare(b.titre),
+    );
+  /** Les tâches de l'année : celles dont l'échéance est cette année, et celles qui n'ont pas d'échéance. */
+  const tachesDeLAnnee = taches.filter((e) => !e.echeance || e.echeance.startsWith(annee)).length;
 
   // Gîte : les chambres occupées chaque nuit.
   const occupation = chambresOccupeesParNuit(accueil.sejours);
@@ -125,6 +135,7 @@ export default function AccueilEntreprise() {
           marque={marque}
           onJour={(jour) => router.push(ROUTES.giteJour(jour))}
           legende={T.calendrier.legendeGite}
+          compact
         />
       ) : finance ? (
         <AccueilTrading trades={accueil.trades} annee={annee} />

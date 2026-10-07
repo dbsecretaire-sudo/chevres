@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { cleStockage } from '@/features/etablissements/repository';
-import type { Aliment, ArchiveBar, ArticleGite, Boisson, TicketBar } from '@/features/bar/types';
+import type { Aliment, ArchiveBar, ArticleGite, Boisson } from '@/features/bar/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import { ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -21,7 +21,6 @@ export function normaliserArchiveBar(archive: Partial<ArchiveBar> | undefined): 
     boissons: Array.isArray(archive?.boissons) ? archive.boissons : [],
     aliments: Array.isArray(archive?.aliments) ? archive.aliments : [],
     articles: Array.isArray(archive?.articles) ? archive.articles : [],
-    tickets: Array.isArray(archive?.tickets) ? archive.tickets : [],
     ordres,
     mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
   };
@@ -42,8 +41,6 @@ export async function lireArchiveBar(): Promise<ArchiveBar> {
 export async function remplacerArchiveBar(archive: ArchiveBar): Promise<void> {
   await AsyncStorage.setItem(cle(), JSON.stringify(archive));
 }
-
-const parNom = <T extends { nom: string }>(a: T, b: T) => a.nom.localeCompare(b.nom);
 
 /** Les éléments d'une liste dans l'ordre choisi ; ceux que l'ordre ne cite pas suivent, dans l'ordre où ils sont. */
 export function triesSelonOrdre<T extends { id: string }>(elements: T[], ordre: string[]): T[] {
@@ -132,22 +129,6 @@ export async function supprimerArticleGite(id: string): Promise<void> {
     articles: archive.articles.filter((a) => a.id !== id),
     mouvements: (archive.mouvements ?? []).filter((m) => m.articleId !== id),
   });
-}
-
-/** Remplace les tickets en cours (les boissons et aliments ne bougent pas). */
-export async function remplacerTickets(tickets: TicketBar[]): Promise<void> {
-  const archive = await lireArchiveBar();
-  await remplacerArchiveBar({ ...archive, tickets });
-}
-
-/** Les boissons dans l'ordre alphabétique. */
-export async function listBoissons(): Promise<Boisson[]> {
-  return [...(await lireArchiveBar()).boissons].sort(parNom);
-}
-
-/** Les aliments dans l'ordre alphabétique. */
-export async function listAliments(): Promise<Aliment[]> {
-  return [...(await lireArchiveBar()).aliments].sort(parNom);
 }
 
 /** Crée la boisson (sans identifiant) ou met à jour celle qui en a un (son stock est conservé). */

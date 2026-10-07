@@ -3,7 +3,6 @@
 // --- Google Drive ---
 export const DRIVE_API_URL = 'https://www.googleapis.com/drive/v3';
 export const DRIVE_UPLOAD_API_URL = 'https://www.googleapis.com/upload/drive/v3';
-export const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
 
 /** Scope complet "drive" : "drive.file" empêche de voir les fichiers déposés à la main dans le dossier Drive. */
 export const DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive'];

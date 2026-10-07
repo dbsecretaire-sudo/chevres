@@ -222,7 +222,6 @@ export const TEXTES_COMPTABILITE = {
     sexeF: 'F',
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
-    prixDuStockKg: (prix: string) => `Prix défini à l’inventaire : ${prix} le kg.`,
     prixDuStock: (prix: string) => `Prix défini à l’inventaire : ${prix} l’unité.`,
     aucuneViandeAuStock:
       'Aucune viande dans l’inventaire pour cet animal : touchez le crayon pour en ajouter, ou précisez-la ci-dessous.',
@@ -232,7 +231,6 @@ export const TEXTES_COMPTABILITE = {
     nombreDeSacs: 'Sacs plastique emportés',
     nombreDOeufs: 'Nombre d’œufs',
     precision: 'Précision',
-    precisionPlaceholder: 'Facultatif — de quoi s’agissait-il ?',
     get nombreDeCabris() {
       return `Nombre de ${V().petit.pluriel}`;
     },

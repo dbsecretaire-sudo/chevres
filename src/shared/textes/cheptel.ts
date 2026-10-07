@@ -60,7 +60,6 @@ export const TEXTES_CHEPTEL = {
     },
     t1erSemestreTardifsValeur: (valeur: number) => `1er semestre (tardifs ${valeur})`,
     t2eSemestreCabrisAnnee: (annee: number) => `2e semestre (${V().petit.pluriel} ${annee})`,
-    vendus: 'Vendus',
     /** Les ventes déclarées dans la comptabilité : la fiche de l'animal passe en vendu. */
     vendusStock: 'Vendus (inventaire)',
     venduesStock: 'Vendues (inventaire)',

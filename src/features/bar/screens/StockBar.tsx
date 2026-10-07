@@ -121,7 +121,6 @@ export default function StockBar() {
     boissons: [],
     aliments: [],
     articles: [],
-    tickets: [],
     ordres: {},
   });
   const [mouvement, setMouvement] = useState<{ cle: string; libelle: string } | null>(null);

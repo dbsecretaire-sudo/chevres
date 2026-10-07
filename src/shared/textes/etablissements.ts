@@ -27,7 +27,6 @@ export const TEXTES_ETABLISSEMENTS = {
     animaux: 'Animaux',
     especesElevees: 'Espèces élevées',
     choisirUnType: 'Choisir un type',
-    societe: 'Société / Auto-entrepreneur / Association',
   },
   etablissementContext: {
     useetablissementDoitEtreUtiliseDans: 'useEtablissement doit être utilisé dans EtablissementProvider',

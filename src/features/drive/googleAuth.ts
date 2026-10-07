@@ -113,16 +113,6 @@ export async function getValidAccessToken(_clientId?: string): Promise<string | 
   }
 }
 
-/**
- * À appeler si l'API Drive répond 401 avec un token : le vide du cache,
- * puis renvoie un token neuf.
- */
-export async function renewAccessToken(expiredToken: string): Promise<string | null> {
-  configureGoogle();
-  await GoogleSignin.clearCachedAccessToken(expiredToken);
-  return getValidAccessToken();
-}
-
 export async function isGoogleConnected(): Promise<boolean> {
   configureGoogle();
   return await GoogleSignin.hasPreviousSignIn();

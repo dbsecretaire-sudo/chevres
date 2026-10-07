@@ -31,7 +31,6 @@ export const TEXTES_DOSSIERS = {
   sousDossier: {
     nouveauContenu: 'Nouveau contenu',
     aucunContenu: 'Aucun contenu dans ce dossier',
-    ajoutezUnContenu: 'Ajoutez une note, un courrier, une démarche…',
     renommer: 'Renommer le dossier',
     supprimer: 'Supprimer le dossier',
     supprimerQuestion: 'Supprimer ce dossier ?',
@@ -83,7 +82,6 @@ export const TEXTES_DOSSIERS = {
     titre: (date: string) => `Tâches du ${date}`,
     aucune: 'Aucune tâche ce jour-là',
     aucuneDetail: 'Les contenus avec une échéance à cette date apparaissent ici.',
-    ouvrirDossier: 'Ouvrir l’explorateur',
   },
   structure: {
     titre: 'Structure des dossiers',

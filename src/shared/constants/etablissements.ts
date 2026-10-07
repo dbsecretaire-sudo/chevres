@@ -31,3 +31,15 @@ export const ACTIVITES_ENTREPRISE: readonly string[] = [
 
 /** Activité d'une écriture comptable qui ne concerne aucune espèce en particulier (carburant, impôts, etc.). */
 export const ACTIVITE_COMMUNE = 'commun';
+
+/** Le logo (nom d'icône Ionicons) de chaque activité d'un établissement. */
+export const ICONE_ACTIVITE_SOCIETE = {
+  [ACTIVITE_SOCIETE.AGRICOLE]: 'paw',
+  [ACTIVITE_SOCIETE.ASSOCIATION]: 'bed',
+  [ACTIVITE_SOCIETE.PRESTATIONS_SERVICE]: 'folder-open',
+  [ACTIVITE_SOCIETE.LIBERAL]: 'stats-chart',
+  [ACTIVITE_SOCIETE.PERSO]: 'person',
+} as const;
+
+/** Le logo d'un établissement sans activité renseignée. */
+export const ICONE_ETABLISSEMENT_PAR_DEFAUT = 'business';

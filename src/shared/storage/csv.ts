@@ -38,6 +38,8 @@ function serializeValue(key: string, value: unknown): string {
           l.nombreUnitesConditionnement ?? '',
           // Le genre d'une ligne qui n'est pas un aliment : un matériel, ou un équipement consommable.
           l.materiel ? GENRE_MATERIEL : l.equipement ? GENRE_EQUIPEMENT : '',
+          // Le cheptel concerné quand il diffère de celui de la facture (8e champ : absent des anciens fichiers).
+          l.activite ?? '',
         ].join(SEPARATEUR_CHAMPS),
       )
       .join(SEPARATEUR_LIGNES);
@@ -75,6 +77,7 @@ function deserializeValue(key: string, raw: string): unknown {
           uniteConditionnement,
           nombreUnitesConditionnement,
           genre,
+          activite,
         ] = part.split(SEPARATEUR_CHAMPS);
         const n = Number(montant);
         if (!type || !Number.isFinite(n)) return undefined;
@@ -90,6 +93,7 @@ function deserializeValue(key: string, raw: string): unknown {
             nombreUnitesConditionnement && Number.isFinite(nombreUnites) ? nombreUnites : undefined,
           materiel: genre === GENRE_MATERIEL ? true : undefined,
           equipement: genre === GENRE_EQUIPEMENT ? true : undefined,
+          activite: activite || undefined,
         } as LigneAlimentation;
       })
       .filter((l): l is LigneAlimentation => !!l);

@@ -68,7 +68,6 @@ export const TEXTES_GITE = {
     /** Sur chaque chambre d'une réservation de plusieurs chambres : combien elle en compte. */
     paye: 'Payé',
     aRegler: 'À régler',
-    reservationDe: (chambres: number) => `Réservation de ${chambres} chambres`,
     dates: (arrivee: string, depart: string) => `${arrivee} → ${depart}`,
     resume: (chambres: number, total: number, personnes: number) =>
       `${chambres}/${total} chambres occupées${personnes > 0 ? ` · ${pluriel(personnes, 'personne')}` : ''}`,
@@ -105,8 +104,6 @@ export const TEXTES_GITE = {
       prestation: 'Prestation supplémentaire :',
       maintenue: 'réservation maintenue',
     },
-    paiementValide:
-      'Payé : le paiement est inscrit en comptabilité. Pour un remboursement ou une prestation supplémentaire, touchez le crayon.',
     repas: 'Nombre de repas',
     service: 'Service des repas',
     repasCalcules:
@@ -179,7 +176,6 @@ export const TEXTES_GITE = {
       maintenue: 'Le client maintient sa réservation',
       montantInvalide: 'Le montant doit être supérieur à zéro.',
       ligne: (libelle: string, montant: string, date: string) => `${libelle} : ${montant} (${date})`,
-      ligneMaintenue: 'réservation maintenue',
     },
   },
 } as const;

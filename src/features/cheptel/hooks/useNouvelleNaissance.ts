@@ -129,5 +129,3 @@ export function useNouvelleNaissance() {
     enregistrer,
   };
 }
-
-export type EtatNouvelleNaissance = ReturnType<typeof useNouvelleNaissance>;

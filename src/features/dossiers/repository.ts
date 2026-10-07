@@ -30,12 +30,6 @@ export async function remplacerArchiveDossiers(archive: ArchiveDossiers): Promis
 
 // --- Sous-dossiers ---
 
-/** Les sous-dossiers d'un client (ou de tous), dans l'ordre où ils ont été créés. */
-export async function listSousDossiers(clientId?: string): Promise<SousDossier[]> {
-  const { sousDossiers } = await lireArchiveDossiers();
-  return clientId ? sousDossiers.filter((d) => d.clientId === clientId) : sousDossiers;
-}
-
 export async function getSousDossier(id: string): Promise<SousDossier | undefined> {
   return (await lireArchiveDossiers()).sousDossiers.find((d) => d.id === id);
 }
@@ -91,20 +85,6 @@ export async function supprimerDossiersDuClient(clientId: string): Promise<void>
 }
 
 // --- Contenus ---
-
-/** Les contenus d'un sous-dossier ou d'un client (tous si aucun filtre), les plus récents d'abord. */
-export async function listElements(
-  filtre: { clientId?: string; dossierId?: string } = {},
-): Promise<Element[]> {
-  const { elements } = await lireArchiveDossiers();
-  return elements
-    .filter(
-      (e) =>
-        (!filtre.clientId || e.clientId === filtre.clientId) &&
-        (!filtre.dossierId || e.dossierId === filtre.dossierId),
-    )
-    .sort((a, b) => b.date.localeCompare(a.date));
-}
 
 export async function getElement(id: string): Promise<Element | undefined> {
   return (await lireArchiveDossiers()).elements.find((e) => e.id === id);

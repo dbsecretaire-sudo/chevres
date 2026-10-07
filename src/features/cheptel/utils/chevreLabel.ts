@@ -8,7 +8,6 @@ import {
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { ageAtteint } from '@/shared/utils/age';
 import { currentYear, formatDateFR, yearOf } from '@/shared/utils/dates';
-import { HEURE_MINUIT, MOIS_PAR_AN } from '@/shared/constants/temps';
 import { LIBELLES_STATUT_CHEVRE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 
@@ -39,17 +38,6 @@ export function cleTriChevre(c: Pick<Chevre, 'numeroBoucle' | 'nom'>): string {
 }
 
 export type CategorieAnimal = ValeurDe<typeof CATEGORIE_ANIMAL>;
-
-/** Âge en mois révolus à la date du jour. */
-export function ageEnMois(dateNaissance: string): number {
-  const naissance = new Date(`${dateNaissance}${HEURE_MINUIT}`);
-  const maintenant = new Date();
-  let mois =
-    (maintenant.getFullYear() - naissance.getFullYear()) * MOIS_PAR_AN +
-    (maintenant.getMonth() - naissance.getMonth());
-  if (maintenant.getDate() < naissance.getDate()) mois -= 1;
-  return mois;
-}
 
 /**
  * Catégorie déduite de l'âge et du sexe : moins que l’âge limite du petit (voir agePetitMax) → petit (mâle ou femelle) ;

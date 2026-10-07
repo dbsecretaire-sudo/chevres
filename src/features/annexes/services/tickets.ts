@@ -57,13 +57,6 @@ export function lignesDuTicket(ticket: TicketAnnexe, articles: ArticleAnnexe[]):
 export const totalTicket = (lignes: LigneVenteAnnexe[]): number =>
   Math.round(lignes.reduce((total, l) => total + l.article.prix * l.quantite, 0) * 100) / 100;
 
-/** Le nombre de repas d'un jour déjà réservés et payés (les séjours payés qui ont des repas ce jour-là). */
-export function repasReservesEtPayes(sejours: Sejour[], jour: string): number {
-  return repasDuJour(sejours, jour)
-    .filter((r) => r.sejour.paye)
-    .reduce((total, r) => total + r.repas, 0);
-}
-
 /** Les réservations payées qui ont des repas ce jour-là : chacune a son ticket, avec ses repas déjà payés. */
 export function reservationsPayeesDuJour(
   sejours: Sejour[],

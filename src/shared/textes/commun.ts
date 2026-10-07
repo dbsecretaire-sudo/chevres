@@ -117,7 +117,6 @@ export const TEXTES_COMMUN = {
     prixInvalide: 'Prix invalide',
     quantite: 'Quantité',
     poidsKg: 'Poids (kg)',
-    piece: 'Pièce',
     noticeExplicativeAVerifierAvant: 'Notice explicative — à vérifier avant usage officiel',
     debit: 'Débit',
     credit: 'Crédit',

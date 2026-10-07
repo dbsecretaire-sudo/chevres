@@ -6,7 +6,6 @@ import {
   DRIVE_BOUNDARY,
   DRIVE_TAILLE_PAGE,
   DRIVE_UPLOAD_API_URL,
-  GOOGLE_USERINFO_URL,
   MIME_CSV,
   MIME_DOSSIER_DRIVE,
   MIME_JSON,
@@ -192,10 +191,4 @@ export async function upsertFileText(
     return { ...existing, modifie: true };
   }
   return { ...(await createFileWithText(accessToken, name, parentId, content)), modifie: true };
-}
-
-export async function getAccountEmail(accessToken: string): Promise<string | undefined> {
-  const res = await driveFetch(GOOGLE_USERINFO_URL, accessToken);
-  const json = await res.json();
-  return json.email;
 }

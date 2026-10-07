@@ -1,14 +1,6 @@
 /** Textes de l'interface — restauration, bar et inventaire du gîte. À modifier ici uniquement. */
 export const TEXTES_BAR = {
-  titre: 'Restauration, bar et inventaire',
-  onglets: { restauration: 'Restauration', bar: 'Bar' },
   bar: {
-    vendre: 'Vendre',
-    total: (montant: string) => `Total : ${montant}`,
-    enregistrerVente: 'Enregistrer la vente',
-    venteEnregistree: (total: string) => `Vente enregistrée : ${total} (en comptabilité, recette « Bar »).`,
-    aucuneBoisson:
-      'Aucune boisson : ajoutez-les dans l’inventaire (onglet Inventaire en bas de l’écran, bouton +).',
     nouvelleBoisson: 'Nouvelle boisson',
     modifierBoisson: 'Modifier la boisson',
     supprimerBoisson: 'Supprimer cette boisson',
@@ -17,27 +9,8 @@ export const TEXTES_BAR = {
     prix: 'Prix (€)',
     nomRequis: 'Nom requis',
     prixInvalide: 'Le prix doit être supérieur à zéro.',
-    descriptionVente: (lignes: string[], ticket?: string) =>
-      ticket ? `${ticket} : ${lignes.join(', ')}` : lignes.join(', '),
-    ticket: {
-      nomAuto: (numero: number) => `Ticket ${numero}`,
-      renommer: 'Renommer le ticket',
-      nouveau: 'Nouveau ticket',
-      replier: 'Replier le ticket',
-      deplier: 'Déplier le ticket',
-      boisson: 'Boisson',
-      listeDuStock: 'Liste de l’inventaire',
-      quantite: 'Quantité',
-      ok: 'OK',
-      retirerLigne: 'Retirer cette boisson',
-      aucuneLigne: 'Aucune boisson sur ce ticket.',
-    },
-    ligneVente: (quantite: number, nom: string) => `${quantite} × ${nom}`,
-    tiers: 'Bar',
   },
   stock: {
-    boissons: 'Boissons',
-    nourriture: 'Nourriture',
     boissonsNourriture: 'Boissons et nourriture',
     /** Le menu de l'inventaire du gîte (burger) : l'impression de l'état actuel. */
     menu: 'Menu de l’inventaire',
@@ -66,27 +39,13 @@ export const TEXTES_BAR = {
       entretien: 'ex : Produit vaisselle, éponges',
     },
     renommerArticle: 'Modifier le nom',
-    aucuneBoisson: 'Aucune boisson : ajoutez-en avec le bouton +.',
     ajouterBoisson: 'Ajouter une boisson',
     modifierBoisson: 'Modifier la boisson',
-    aucunAliment: 'Aucun aliment : ajoutez-en avec le bouton +.',
     ajouterAliment: 'Ajouter un aliment',
-    renommerAliment: 'Modifier le nom de l’aliment',
     nomAliment: 'ex : Farine, huile, légumes',
     negatif: 'Quantité négative : notez l’achat manquant.',
     tout: 'Tout',
     activite: 'Activité concernée',
     toutesActivites: 'Toutes les activités',
-  },
-  restauration: {
-    repasDuJour: (date: string) => `Repas du ${date}`,
-    total: (repas: number) => `${repas} repas`,
-    detailServices: (midi: number, soir: number) => `Midi : ${midi} · Soir : ${soir}`,
-    repas: (nombre: number) => `${nombre} repas`,
-    service: (midi: number, soir: number) => {
-      const parties = [midi > 0 ? `midi ${midi}` : '', soir > 0 ? `soir ${soir}` : ''].filter(Boolean);
-      return parties.join(' · ');
-    },
-    sansCoordonnees: 'Pas de coordonnées',
   },
 } as const;

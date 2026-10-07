@@ -62,15 +62,10 @@ export const ROUTES = {
   // Gestion du gîte (association)
   CLIENTS_DOSSIERS: '/clients/dossiers-clients',
   GITE: '/clients/gite',
-  BAR: '/clients/bar',
   /** L'écran d'une activité annexe du gîte. */
   annexe: (id: string) => `/clients/annexe/${id}` as const,
   /** Les tickets d'un jour d'une activité qui a le calendrier des repas (le restaurant). */
   annexeJour: (id: string, jour: string) => `/clients/annexe/${id}?jour=${jour}` as const,
-  /** Le stock (onglet du bas), où se gèrent les marchandises, les aliments, les boissons. */
-  STOCK: '/stock',
-  /** L'historique et les statistiques du stock : deux écrans à part, ouverts depuis le menu du stock. */
-  STOCK_HISTORIQUE: '/stock/stock-historique',
   STOCK_STATISTIQUES: '/stock/stock-statistiques',
   /** La structure des listes de l'inventaire (ajouter des listes aux catégories). */
   STOCK_STRUCTURE: '/stock/structure',
@@ -83,7 +78,6 @@ export const ROUTES = {
   /** L'historique du stock, ouvert sur un animal (ou sur tous quand `espece` est absent). */
   stockHistorique: (espece?: string) =>
     `/stock/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
-  repasDuJour: (date: string) => `/clients/repas/${date}` as const,
   jourEcheances: (date: string) => `/clients/echeances/${date}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,
   sejourNouveau: (chambre: number, date: string) =>

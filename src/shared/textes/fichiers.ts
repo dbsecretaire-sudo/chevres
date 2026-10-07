@@ -3,7 +3,6 @@ export const TEXTES_FICHIERS = {
   titre: 'Fichiers',
   ajouter: 'Ajouter un fichier',
   aucun: 'Aucun fichier joint',
-  ouvrir: 'Ouvrir',
   retirer: 'Retirer',
   importerUnFichier: 'Importer un fichier',
   nombre: (nombre: number) => `${nombre} fichier${nombre > 1 ? 's' : ''}`,

@@ -3,7 +3,7 @@ import { todayISO, yearOf } from '@/shared/utils/dates';
 import { ageAtteint } from '@/shared/utils/age';
 import { cleTriChevre } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
-import { deleteRecord, findRecord, getYears, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
+import { deleteRecord, findRecord, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { PARAMETRES_ESPECE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { deEspeceCourante, especeDe } from '@/features/cheptel/utils/espece';
@@ -150,10 +150,6 @@ export async function reactiverChevre(id: string): Promise<void> {
   const chevre = await getChevre(id);
   if (!chevre) return;
   await saveChevre({ ...chevre, statut: STATUT_CHEVRE.VIVANTE, dateStatut: undefined });
-}
-
-export async function chevresAnnees(): Promise<number[]> {
-  return getYears(CATEGORIE_STOCKAGE.CHEPTEL);
 }
 
 /**

@@ -23,13 +23,15 @@ interface Props {
   onJour: (jour: string) => void;
   /** Une phrase sous le calendrier pour expliquer ce que montrent les cases. */
   legende?: string;
+  /** Des cases moins hautes (l'Accueil), pour que le mois tienne mieux à l'écran. */
+  compact?: boolean;
 }
 
 /**
  * Un grand calendrier mensuel (le lundi en premier) : on change de mois avec les flèches, chaque case porte le numéro du
  * jour et une marque choisie par l'écran (chambres occupées, échéances…) ; un appui sur un jour l'ouvre.
  */
-export function CalendrierMois({ mois, onChangerMois, marque, onJour, legende }: Props) {
+export function CalendrierMois({ mois, onChangerMois, marque, onJour, legende, compact }: Props) {
   const aujourdhui = todayISO();
   const T = TEXTES.commun.calendrier;
 
@@ -66,7 +68,7 @@ export function CalendrierMois({ mois, onChangerMois, marque, onJour, legende }:
       {semainesDuMois(mois.annee, mois.mois).map((semaine, i) => (
         <View key={i} style={styles.ligneSemaine}>
           {semaine.map((jour, j) => {
-            if (!jour) return <View key={j} style={styles.caseVide} />;
+            if (!jour) return <View key={j} style={[styles.caseVide, compact && styles.caseCompacte]} />;
             const { texte, niveau = 'aucun', attention } = marque(jour);
             const plein = niveau === 'plein';
             return (
@@ -74,6 +76,7 @@ export function CalendrierMois({ mois, onChangerMois, marque, onJour, legende }:
                 key={j}
                 style={[
                   styles.caseJour,
+                  compact && styles.caseCompacte,
                   niveau === 'partiel' && styles.casePartielle,
                   plein && styles.casePleine,
                   niveau === 'alerte' && styles.caseAlerte,

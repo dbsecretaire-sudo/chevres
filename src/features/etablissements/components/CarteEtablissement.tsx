@@ -2,7 +2,10 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import type { Etablissement } from '@/features/etablissements/repository';
-import { libelleTypesEtablissement } from '@/features/etablissements/utils/typesEtablissement';
+import {
+  iconeEtablissement,
+  libelleTypesEtablissement,
+} from '@/features/etablissements/utils/typesEtablissement';
 import { styles } from '@/shared/styles/etablissements/SelecteurEtablissement.styles';
 import { TEXTES } from '@/shared/textes';
 
@@ -24,6 +27,11 @@ export function CarteEtablissement({ etablissement, actif, onChoisir, onModifier
   return (
     <Pressable style={[styles.carte, actif && styles.carteActive]} onPress={onChoisir}>
       <View style={styles.carteBarre}>
+        <Ionicons
+          name={iconeEtablissement(etablissement) as keyof typeof Ionicons.glyphMap}
+          size={34}
+          color={colors.primary}
+        />
         <Pressable
           style={styles.carteCrayon}
           hitSlop={6}
@@ -33,7 +41,7 @@ export function CarteEtablissement({ etablissement, actif, onChoisir, onModifier
           <Ionicons name="pencil" size={16} color={colors.blanc} />
         </Pressable>
       </View>
-      <Text style={styles.carteNom} numberOfLines={3}>
+      <Text style={styles.carteNom} numberOfLines={2}>
         {etablissement.nom}
       </Text>
       {actif && (

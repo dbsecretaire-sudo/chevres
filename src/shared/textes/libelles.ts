@@ -1,5 +1,5 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { CATEGORIE_ANIMAL, SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import {
   GROUPE_RECETTE,
   CATEGORIE_DEPENSE,
@@ -74,13 +74,6 @@ export const LABEL_TYPE_FROMAGE: Record<ValeurDe<typeof TYPE_FROMAGE>, string> =
   [TYPE_FROMAGE.CROTTIN]: 'Crottin',
   [TYPE_FROMAGE.BROCCIU]: 'Brocciu',
   [TYPE_FROMAGE.AUTRE]: 'Autre',
-};
-
-/** Unité d'une vente, en toutes lettres (liste déroulante). */
-export const LABEL_UNITE_VENTE: Record<ValeurDe<typeof UNITE_VENTE>, string> = {
-  [UNITE_VENTE.LITRES]: 'Litres',
-  [UNITE_VENTE.PIECE]: 'Pièce',
-  [UNITE_VENTE.KG]: 'Kg',
 };
 
 /** Unité d'une vente, abrégée (affichage dans une phrase). */
@@ -210,20 +203,6 @@ export const LABEL_TYPE_AIDE: Record<ValeurDe<typeof TYPE_AIDE>, string> = {
   [TYPE_AIDE.PETITS_RUMINANTS]: 'Aide couplée aux petits ruminants',
   [TYPE_AIDE.ICHN]: 'ICHN (indemnité compensatoire de handicaps naturels)',
   [TYPE_AIDE.AUTRE]: 'Autre aide',
-};
-
-export const LABEL_CATEGORIE_ANIMAL: Record<ValeurDe<typeof CATEGORIE_ANIMAL>, string> = {
-  get [CATEGORIE_ANIMAL.CHEVRE]() {
-    return capitaliser(vocabulaire().femelle.pluriel);
-  },
-  get [CATEGORIE_ANIMAL.BOUC]() {
-    return capitaliser(vocabulaire().male.pluriel);
-  },
-  get [CATEGORIE_ANIMAL.CABRIT]() {
-    return capitaliser(vocabulaire().petit.pluriel);
-  },
-  [CATEGORIE_ANIMAL.VIVANTE]: 'Vivante',
-  [CATEGORIE_ANIMAL.TOUT]: 'Tout',
 };
 
 export const LABEL_CATEGORIE_STOCKAGE: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string> = {

@@ -28,9 +28,6 @@ export const definirChoixGroupesRecette = (
 
 export const choixGroupesRecette = (): ChoixGroupesRecette => choix;
 
-/** Toutes les catégories de recette ajoutées par l'utilisateur. */
-export const categoriesAjoutees = (): CategorieAjoutee[] => ajoutees;
-
 /** Les catégories ajoutées cochées pour une espèce. */
 export const categoriesAjouteesEspece = (espece: string): CategorieAjoutee[] => {
   const coches = choix[espece] ?? [];
