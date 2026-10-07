@@ -7,7 +7,7 @@ import { ajouterArticle as ajouterArticleInventaire } from '@/features/stock/ser
 import type { ArchiveStock, ListeInventaire } from '@/features/stock/types';
 import { ROUTES } from '@/shared/constants/routes';
 import { OptionsModal } from '@/shared/components/OptionsModal';
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CATEGORIES_GITE, SECTIONS_GITE, type SectionGite } from '@/features/stock/utils/categories';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
@@ -16,7 +16,13 @@ import type { Option } from '@/shared/components/OptionsModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { SelectField } from '@/shared/components/SelectField';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { InventaireAnnexes } from '@/features/annexes/components/InventaireAnnexes';
+import { ArticleAnnexeModal } from '@/features/annexes/components/ArticleAnnexeModal';
+import { enregistrerArticle, enregistrerCategorie, lireArchiveAnnexes } from '@/features/annexes/repository';
+import { PREFIXE_FILTRE_ANNEXE, SECTION_ANNEXES } from '@/shared/constants/annexes';
+import type { ArchiveAnnexes } from '@/features/annexes/types';
 import { BoissonModal } from '@/features/bar/components/BoissonModal';
 import { ChampRubrique } from '@/features/bar/components/ChampRubrique';
 import { NomModal } from '@/features/dossiers/components/NomModal';
@@ -90,6 +96,25 @@ export default function StockBar() {
   const [ouvertes, setOuvertes] = useState<Categorie[]>([]);
   /** L'activité du gîte regardée : toutes, ou le bar, le restaurant, une activité annexe. */
   const [filtre, setFiltre] = useState<string>(FILTRE_RUBRIQUE_TOUT);
+  // Un lien (le crayon d'un ticket) peut ouvrir les marchandises sur une activité, même si l'inventaire était déjà ouvert.
+  const { onglet: ongletDemande, espece: filtreDemande } = useLocalSearchParams<{
+    onglet?: string;
+    espece?: string;
+  }>();
+  const demande = `${ongletDemande ?? ''}|${filtreDemande ?? ''}`;
+  const [demandeVue, setDemandeVue] = useState('|');
+  if (demande !== demandeVue) {
+    setDemandeVue(demande);
+    if (filtreDemande) setFiltre(filtreDemande);
+    if (ongletDemande === ONGLET_STOCK_BAR.CONSOMMABLES || ongletDemande === SECTION_ANNEXES) {
+      setOuvertes([CATEGORIE_INVENTAIRE.MARCHANDISES]);
+    }
+  }
+  /** Ce qu'on ajoute avec le + à une activité annexe : un article, ou une catégorie. */
+  const [ajoutAnnexe, setAjoutAnnexe] = useState<{
+    genre: 'article' | 'categorie';
+    activiteId: string;
+  } | null>(null);
   /** L'activité choisie à la création ou au renommage d'un article (vide : toutes les activités, d'office). */
   const [rubriqueArticle, setRubriqueArticle] = useState('');
   const [archive, setArchive] = useState<ArchiveBar>({
@@ -122,13 +147,25 @@ export default function StockBar() {
     prix: {},
     listes: [],
   });
+  /** Les activités annexes (leurs articles, prix et stocks) : elles figurent dans la catégorie des marchandises. */
+  const [annexes, setAnnexes] = useState<ArchiveAnnexes>({
+    activites: [],
+    categories: [],
+    articles: [],
+    tickets: [],
+  });
   /** La liste ajoutée dans laquelle on crée un article (la fenêtre d'ajout est fermée quand elle est absente). */
   const [ajoutListe, setAjoutListe] = useState<ListeInventaire | null>(null);
 
   const charger = useCallback(async () => {
-    const [bar, stock] = await Promise.all([lireArchiveBar(), lireArchiveStock()]);
+    const [bar, stock, annexesLues] = await Promise.all([
+      lireArchiveBar(),
+      lireArchiveStock(),
+      lireArchiveAnnexes(),
+    ]);
     setArchive(bar);
     setInventaire(stock);
+    setAnnexes(annexesLues);
   }, []);
 
   useFocusEffect(
@@ -138,9 +175,17 @@ export default function StockBar() {
   );
 
   /** Un article sans activité vaut pour toutes ; sinon il apparaît sous son activité (et sous « Tout »). */
-  const visible = (rubrique?: string) => filtre === FILTRE_RUBRIQUE_TOUT || !rubrique || rubrique === filtre;
+  const filtreAnnexe = filtre.startsWith(PREFIXE_FILTRE_ANNEXE)
+    ? filtre.slice(PREFIXE_FILTRE_ANNEXE.length)
+    : undefined;
+  const visible = (rubrique?: string) =>
+    filtre === FILTRE_RUBRIQUE_TOUT ||
+    !rubrique ||
+    rubrique === filtre ||
+    (!!filtreAnnexe && rubrique === RUBRIQUE_MARCHANDISE.ANNEXE);
 
   /** Les lignes d'une section (filtrées par activité) : les boissons et la nourriture, ou les articles d'une catégorie. */
+  const avecAnnexes = annexes.activites.length > 0;
   const lignesDe = (section: Section): LigneStock[] => {
     const consommables = section === ONGLET_STOCK_BAR.CONSOMMABLES;
     const toutes: LigneStock[] = consommables
@@ -186,7 +231,8 @@ export default function StockBar() {
           niveau: a.stock,
           rubrique: a.rubrique,
         }));
-    return toutes.filter((l) => visible(l.rubrique));
+    // Avec des activités annexes, leurs articles (prix, stock) remplacent les anciennes boissons : seule la nourriture reste dans la liste.
+    return toutes.filter((l) => visible(l.rubrique) && !(avecAnnexes && l.genre === 'boisson'));
   };
 
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
@@ -273,6 +319,58 @@ export default function StockBar() {
     />
   );
 
+  /** Ce que le bouton « + » propose : un ajout pour chaque liste des catégories déroulées (toutes si aucune ne l'est). */
+  const sectionsOuvertes = SECTIONS.filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie));
+  const ajoutsConsommables: Option[] = [
+    {
+      label: T.stock.ajouterBoisson,
+      icon: 'beer' as const,
+      onPress: () => {
+        setBoissonModifiee(undefined);
+        setBoissonOuverte(true);
+      },
+    },
+    { label: T.stock.ajouterAliment, icon: 'restaurant' as const, onPress: () => ouvrirAjout('aliment') },
+  ];
+  /** Avec des activités annexes : deux entrées (un article, une catégorie) ; l'activité se choisit dans la fenêtre. */
+  const ajoutsMarchandises: Option[] =
+    annexes.activites.length > 0
+      ? [
+          {
+            label: TEXTES.annexes.inventaire.ajouterArticle,
+            icon: 'add-circle' as const,
+            onPress: () =>
+              setAjoutAnnexe({ genre: 'article', activiteId: filtreAnnexe ?? annexes.activites[0].id }),
+          },
+          {
+            label: TEXTES.annexes.inventaire.ajouterCategorie,
+            icon: 'folder' as const,
+            onPress: () =>
+              setAjoutAnnexe({ genre: 'categorie', activiteId: filtreAnnexe ?? annexes.activites[0].id }),
+          },
+        ]
+      : ajoutsConsommables;
+  const optionsAjoutStock: Option[] = [
+    ...sectionsOuvertes.flatMap(({ section }): Option[] =>
+      section === ONGLET_STOCK_BAR.CONSOMMABLES
+        ? ajoutsMarchandises
+        : [
+            {
+              label: T.stock.ajouterArticle[section as CategorieArticle],
+              icon: 'add-circle' as const,
+              onPress: () => ouvrirAjout(section as CategorieArticle),
+            },
+          ],
+    ),
+    ...(inventaire.listes ?? [])
+      .filter((l) => ouvertes.length === 0 || ouvertes.includes(l.categorie))
+      .map((l): Option => ({
+        label: TS.ajouter.dansLaListe(l.nom),
+        icon: 'add-circle' as const,
+        onPress: () => setAjoutListe(l),
+      })),
+  ];
+
   const ouvrirAjout = (quoi: Ajout) => {
     setRubriqueArticle('');
     setAjout(quoi);
@@ -325,10 +423,10 @@ export default function StockBar() {
           valeur={filtre}
           options={[
             { value: FILTRE_RUBRIQUE_TOUT, label: T.stock.tout },
-            ...Object.values(RUBRIQUE_MARCHANDISE).map((r) => ({
-              value: r as string,
-              label: LABEL_RUBRIQUE_MARCHANDISE[r],
-            })),
+            ...Object.values(RUBRIQUE_MARCHANDISE)
+              .filter((r) => r !== RUBRIQUE_MARCHANDISE.ANNEXE || annexes.activites.length === 0)
+              .map((r) => ({ value: r as string, label: LABEL_RUBRIQUE_MARCHANDISE[r] })),
+            ...annexes.activites.map((a) => ({ value: `${PREFIXE_FILTRE_ANNEXE}${a.id}`, label: a.nom })),
           ]}
           onChoisir={setFiltre}
         />
@@ -349,11 +447,13 @@ export default function StockBar() {
                     <Text style={commonStyles.note}>{TS.compte(compte.numero, compte.libelle)}</Text>
                   </View>
                   {lignes.length === 0 ? (
-                    <Text style={commonStyles.mutedItalic}>
-                      {section === ONGLET_STOCK_BAR.CONSOMMABLES
-                        ? T.stock.aucunConsommable
-                        : T.stock.aucunArticle}
-                    </Text>
+                    section === ONGLET_STOCK_BAR.CONSOMMABLES && avecAnnexes ? null : (
+                      <Text style={commonStyles.mutedItalic}>
+                        {section === ONGLET_STOCK_BAR.CONSOMMABLES
+                          ? T.stock.aucunConsommable
+                          : T.stock.aucunArticle}
+                      </Text>
+                    )
                   ) : (
                     <ListeReordonnable
                       elements={lignes}
@@ -371,6 +471,13 @@ export default function StockBar() {
                       }}
                     />
                   )}
+                  {/* Les activités annexes (bar, restaurant, pizzas…) : des sous-catégories des boissons et de la nourriture. */}
+                  {section === ONGLET_STOCK_BAR.CONSOMMABLES &&
+                  (filtre === FILTRE_RUBRIQUE_TOUT ||
+                    filtre === RUBRIQUE_MARCHANDISE.ANNEXE ||
+                    !!filtreAnnexe) ? (
+                    <InventaireAnnexes archive={annexes} activiteId={filtreAnnexe} onChange={charger} />
+                  ) : null}
                 </View>
               );
             })}
@@ -394,44 +501,42 @@ export default function StockBar() {
         ))}
       </ScrollView>
 
-      <Fab
-        options={SECTIONS.filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie))
-          .flatMap(({ section }): Option[] =>
-            section === ONGLET_STOCK_BAR.CONSOMMABLES
-              ? [
-                  {
-                    label: T.stock.ajouterBoisson,
-                    icon: 'beer' as const,
-                    onPress: () => {
-                      setBoissonModifiee(undefined);
-                      setBoissonOuverte(true);
-                    },
-                  },
-                  {
-                    label: T.stock.ajouterAliment,
-                    icon: 'restaurant' as const,
-                    onPress: () => ouvrirAjout('aliment'),
-                  },
-                ]
-              : [
-                  {
-                    label: T.stock.ajouterArticle[section as CategorieArticle],
-                    icon: 'add-circle' as const,
-                    onPress: () => ouvrirAjout(section as CategorieArticle),
-                  },
-                ],
-          )
-          .concat(
-            (inventaire.listes ?? [])
-              .filter((l) => ouvertes.length === 0 || ouvertes.includes(l.categorie))
-              .map((l): Option => ({
-                label: TS.ajouter.dansLaListe(l.nom),
-                icon: 'add-circle' as const,
-                onPress: () => setAjoutListe(l),
-              })),
-          )}
-      />
+      <Fab options={optionsAjoutStock} />
 
+      <ArticleAnnexeModal
+        visible={ajoutAnnexe?.genre === 'article'}
+        categories={annexes.categories.filter((c) => c.activiteId === ajoutAnnexe?.activiteId)}
+        activites={annexes.activites}
+        activiteId={ajoutAnnexe?.activiteId}
+        onChangerActivite={(activiteId) => setAjoutAnnexe((a) => (a ? { ...a, activiteId } : a))}
+        onValider={async (donnees) => {
+          if (ajoutAnnexe) await enregistrerArticle({ ...donnees, activiteId: ajoutAnnexe.activiteId });
+          setAjoutAnnexe(null);
+          charger();
+        }}
+        onSupprimer={() => setAjoutAnnexe(null)}
+        onFermer={() => setAjoutAnnexe(null)}
+      />
+      <NomModal
+        visible={ajoutAnnexe?.genre === 'categorie'}
+        titre={TEXTES.annexes.catalogue.ajouterCategorie}
+        placeholder={TEXTES.annexes.inventaire.categoriePlaceholder}
+        onValider={async (nom) => {
+          if (ajoutAnnexe) await enregistrerCategorie({ activiteId: ajoutAnnexe.activiteId, nom });
+          setAjoutAnnexe(null);
+          charger();
+        }}
+        onAnnuler={() => setAjoutAnnexe(null)}
+        enfants={
+          <SelectField<string>
+            label={TEXTES.annexes.inventaire.activite}
+            required
+            value={ajoutAnnexe?.activiteId ?? ''}
+            onChange={(activiteId) => setAjoutAnnexe((a) => (a ? { ...a, activiteId } : a))}
+            options={annexes.activites.map((a) => ({ value: a.id, label: a.nom }))}
+          />
+        }
+      />
       <MouvementStockModal
         article={mouvement}
         onValider={valider}

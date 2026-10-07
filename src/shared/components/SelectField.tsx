@@ -19,6 +19,8 @@ interface Props<T extends string> {
   placeholder?: string;
   /** Masque le libellé au-dessus du champ (il reste le titre de la liste) — quand il est affiché ailleurs. */
   libelleCache?: boolean;
+  /** Fait du libellé un lien (bleu, souligné) qui mène à ce qui gère la liste. */
+  onPressLabel?: () => void;
 }
 
 export function SelectField<T extends string>({
@@ -30,6 +32,7 @@ export function SelectField<T extends string>({
   searchable,
   placeholder,
   libelleCache,
+  onPressLabel,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
@@ -38,7 +41,13 @@ export function SelectField<T extends string>({
     <View style={commonStyles.gap6}>
       {libelleCache ? null : (
         <Text style={commonStyles.lineSemiBold}>
-          {label}
+          {onPressLabel ? (
+            <Text style={commonStyles.lien} onPress={onPressLabel} accessibilityRole="link">
+              {label}
+            </Text>
+          ) : (
+            label
+          )}
           {required ? <Text style={commonStyles.required}> *</Text> : null}
         </Text>
       )}

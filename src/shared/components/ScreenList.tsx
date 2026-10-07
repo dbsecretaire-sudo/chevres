@@ -4,9 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from '@/shared/styles/components/ScreenList.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
-export function Screen({ children, scroll = true }: PropsWithChildren<{ scroll?: boolean }>) {
+/**
+ * Un écran. Dans les onglets, la barre du bas gère déjà le bord inférieur de l'écran (la barre de navigation d'Android) : y
+ * ajouter sa marge laissait un vide au-dessus de la barre. `avecBordBas` la rétablit pour un écran hors des onglets.
+ */
+export function Screen({
+  children,
+  scroll = true,
+  avecBordBas = false,
+}: PropsWithChildren<{ scroll?: boolean; avecBordBas?: boolean }>) {
   return (
-    <SafeAreaView style={commonStyles.screenBg} edges={['bottom']}>
+    <SafeAreaView style={commonStyles.screenBg} edges={avecBordBas ? ['bottom'] : []}>
       {scroll ? (
         <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.content}>
           {children}

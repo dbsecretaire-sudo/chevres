@@ -1,0 +1,72 @@
+import { StyleSheet } from 'react-native';
+import { colors } from '@/shared/theme/colors';
+
+/** Le ticket d'une activité annexe : ses lignes, le bloc d'ajout d'une ligne et le pied avec la TVA et le total. */
+export const styles = StyleSheet.create({
+  /** L'inventaire des annexes : une activité est un peu décalée, sa catégorie davantage, et ses articles encore. */
+  niveauActivite: { paddingLeft: 12 },
+  niveauCategorie: { paddingLeft: 12 },
+  niveauArticle: { paddingLeft: 12 },
+
+  /** Les repas déjà réservés et payés : un bandeau d'information, hors du total. */
+  bandeauRepas: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.badgeBg,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  texteBandeau: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.primaryDark },
+
+  /** Les lignes déjà enregistrées : l'article et son détail à gauche, le montant de la ligne à droite. */
+  lignes: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  ligne: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  ligneSeparee: { borderTopWidth: 1, borderTopColor: colors.border },
+  ligneTexte: { flex: 1, gap: 2 },
+  ligneNom: { fontSize: 15, fontWeight: '700', color: colors.text },
+  ligneDetail: { fontSize: 12, color: colors.textMuted },
+  ligneMontant: { fontSize: 15, fontWeight: '800', color: colors.text },
+  retirer: { padding: 4 },
+
+  /** Le bloc d'ajout d'une ligne : un fond doux, l'article puis la quantité et le bouton. */
+  ajout: {
+    backgroundColor: colors.badgeBg,
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+  },
+  titreAjout: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
+  /** L'étoile rouge dans le coin du champ de l'article. */
+  etoile: { position: 'absolute', right: 10, top: 2, zIndex: 1, color: colors.danger, fontSize: 16 },
+  rangeeAjout: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  compteur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+  },
+  boutonCompteur: { paddingHorizontal: 12, paddingVertical: 10 },
+  valeurCompteur: { minWidth: 28, textAlign: 'center', fontSize: 16, fontWeight: '800', color: colors.text },
+  boutonAjouter: { flex: 1 },
+
+  /** Le pied : la TVA à gauche, le total à droite. */
+  pied: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  tva: { flexDirection: 'row', alignItems: 'center', gap: 8, width: 140 },
+  libelleTva: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
+  total: { fontSize: 20, fontWeight: '800', color: colors.text },
+});

@@ -67,9 +67,15 @@ export function compteDeFacture(f: Facture): { numero: string; libelle: string }
     const trouve = Object.values(COMPTE_PAR_DEPENSE).find((c) => c.numero === f.compteManuel);
     if (trouve) return trouve;
   }
-  if (f.type === TYPE_FACTURE.EMISE && f.categorieRecette === CATEGORIE_RECETTE.AUTRE && f.compteManuel) {
+  // « Autre recette », une activité annexe ou l'hébergement du gîte : le compte choisi à la main l'emporte sur celui d'office.
+  if (
+    f.type === TYPE_FACTURE.EMISE &&
+    (f.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
+      f.categorieRecette === CATEGORIE_RECETTE.HEBERGEMENT) &&
+    f.compteManuel
+  ) {
     const trouve = Object.values(COMPTE_PAR_RECETTE).find((c) => c.numero === f.compteManuel);
-    if (trouve) return trouve;
+    return trouve ?? { numero: f.compteManuel, libelle: COMPTE_PAR_RECETTE[f.categorieRecette].libelle };
   }
   if (f.type === TYPE_FACTURE.RECUE && f.categorieDepense) return COMPTE_PAR_DEPENSE[f.categorieDepense];
   if (f.type === TYPE_FACTURE.EMISE && f.categorieRecette) return COMPTE_PAR_RECETTE[f.categorieRecette];

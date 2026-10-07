@@ -16,6 +16,8 @@ interface Props {
   avecPrix: boolean;
   /** Le prix se compte au kilo (les lignes d'animaux de la viande). */
   parKg?: boolean;
+  /** Un libellé de prix particulier (le litre de lait, l'œuf) : il n'y a alors que le prix à modifier, sans nom à changer. */
+  libellePrix?: string;
   onValider: (nom: string, prix?: number) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
   onSupprimer?: () => void;
@@ -32,6 +34,7 @@ export function ArticleStockModal({
   prix,
   avecPrix,
   parKg,
+  libellePrix,
   onValider,
   onSupprimer,
   onAnnuler,
@@ -52,7 +55,7 @@ export function ArticleStockModal({
   }, [visible]);
 
   const valider = () => {
-    if (!nomSaisi.trim()) return setErreur(T.nomRequis);
+    if (!libellePrix && !nomSaisi.trim()) return setErreur(T.nomRequis);
     const montant = parseMontant(prixSaisi);
     if (prixSaisi.trim() && !(montant > 0)) return setErreur(T.prixInvalide);
     onValider(nomSaisi.trim(), montant > 0 ? montant : undefined);
@@ -63,10 +66,12 @@ export function ArticleStockModal({
       <Pressable style={commonStyles.backdrop} onPress={onAnnuler}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{titre}</Text>
-          <FormField label={T.nom} required value={nomSaisi} onChangeText={setNomSaisi} />
+          {libellePrix ? null : (
+            <FormField label={T.nom} required value={nomSaisi} onChangeText={setNomSaisi} />
+          )}
           {avecPrix ? (
             <FormField
-              label={parKg ? T.prixKg : T.prix}
+              label={libellePrix ?? (parKg ? T.prixKg : T.prix)}
               value={prixSaisi}
               onChangeText={setPrixSaisi}
               onBlur={() =>

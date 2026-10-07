@@ -34,11 +34,25 @@ export interface FacturesSejour {
  * Le taux de TVA (%) qui, appliqué au total payé, donne la TVA de l'hébergement et des repas : la taxe de séjour, comprise
  * dans le total, n'en porte pas.
  */
-function tauxTvaDuSejour(hebergement: number, restauration: number, total: number): number {
+function tauxTvaDuSejour(
+  hebergement: number,
+  restauration: number,
+  total: number,
+  tauxHebergement: number,
+): number {
   const tva =
-    tvaDuTtc(hebergement, TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.HEBERGEMENT]) +
+    tvaDuTtc(hebergement, tauxHebergement) +
     tvaDuTtc(restauration, TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.RESTAURATION]);
   return total > tva ? Math.round((total / (total - tva) - 1) * 10000) / 100 : 0;
+}
+
+/** Le compte et la TVA de l'hébergement du gîte : ceux choisis dans « Modifier l'activité », sinon ceux d'office. */
+async function reglagesGite(): Promise<{ compte?: string; taux: number }> {
+  const infos = (await getSettings()).exploitation?.entreprise;
+  return {
+    compte: infos?.giteCompte || undefined,
+    taux: infos?.giteTauxTva ?? TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.HEBERGEMENT],
+  };
 }
 
 /**
@@ -55,6 +69,7 @@ export async function synchroniserFacturesSejour(sejour: Sejour): Promise<Factur
   }
   const settings = await getSettings();
   const tvaApplicable = !!settings.exploitation?.entreprise?.tvaApplicable;
+  const gite = await reglagesGite();
   const tarif = tarifDuSejour(sejour);
   const nuits = nuitsDuSejour(sejour.arrivee, sejour.depart).length;
   // Ce qui reste à payer une fois l'acompte versé (il a déjà sa propre écriture).
@@ -96,11 +111,12 @@ export async function synchroniserFacturesSejour(sejour: Sejour): Promise<Factur
     ),
     montant: solde,
     categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
-    // Une recette déjà inscrite garde son taux de TVA : un changement des réglages ne la modifie pas après coup.
+    // Une recette déjà inscrite garde son compte et son taux de TVA : un changement des réglages ne la modifie pas après coup.
+    compteManuel: existante ? existante.compteManuel : gite.compte,
     tauxTva: existante
       ? existante.tauxTva
       : tvaApplicable
-        ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total)
+        ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total, gite.taux)
         : undefined,
   };
   await remplacerFacture({ ...existante, ...facture });
@@ -117,6 +133,7 @@ export async function synchroniserAcompte(sejour: Sejour): Promise<AcompteSejour
   if (acompte.factureId && (await getFacture(acompte.factureId))) return acompte;
   const settings = await getSettings();
   const tvaApplicable = !!settings.exploitation?.entreprise?.tvaApplicable;
+  const gite = await reglagesGite();
   const tarif = tarifDuSejour(sejour);
   const sejourDu = T.sejourDu(
     T.chambresListe(sejour.chambres),
@@ -131,7 +148,10 @@ export async function synchroniserAcompte(sejour: Sejour): Promise<AcompteSejour
     description: T.descriptionAcompte(sejourDu),
     montant: acompte.montant,
     categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
-    tauxTva: tvaApplicable ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total) : undefined,
+    compteManuel: gite.compte,
+    tauxTva: tvaApplicable
+      ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total, gite.taux)
+      : undefined,
   });
   return { ...acompte, factureId: facture.id };
 }
@@ -147,6 +167,7 @@ export async function creerFactureAjustement(
   const remboursement = ajustement.type === TYPE_AJUSTEMENT_SEJOUR.REMBOURSEMENT;
   const settings = await getSettings();
   const tvaApplicable = !!settings.exploitation?.entreprise?.tvaApplicable;
+  const gite = await reglagesGite();
   const sejourDu = T.sejourDu(
     T.chambresListe(sejour.chambres),
     formatDateFR(sejour.arrivee),
@@ -171,7 +192,8 @@ export async function creerFactureAjustement(
           type: TYPE_FACTURE.EMISE,
           categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
           description: T.descriptionPrestation(sejourDu),
-          tauxTva: tvaApplicable ? TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.HEBERGEMENT] : undefined,
+          compteManuel: gite.compte,
+          tauxTva: tvaApplicable ? gite.taux : undefined,
         },
   );
   return { ...ajustement, id: generateId(), factureId: facture.id };

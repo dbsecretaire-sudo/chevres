@@ -2,6 +2,7 @@ import type { LigneVenteBar } from '@/features/bar/services/ventes';
 import type { Boisson, LigneTicket, TicketBar } from '@/features/bar/types';
 import { NOMBRE_MAX_BOISSONS_TICKET } from '@/shared/constants/bar';
 import { TEXTES } from '@/shared/textes';
+import { todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
 
 /** Un ticket vide, nommé d'office « Ticket n » : le plus petit numéro que les tickets en cours n'utilisent pas encore. */
@@ -9,7 +10,7 @@ export function nouveauTicket(tickets: TicketBar[]): TicketBar {
   const noms = new Set(tickets.map((t) => t.nom));
   let numero = 1;
   while (noms.has(TEXTES.bar.bar.ticket.nomAuto(numero))) numero += 1;
-  return { id: generateId(), nom: TEXTES.bar.bar.ticket.nomAuto(numero), lignes: [] };
+  return { id: generateId(), nom: TEXTES.bar.bar.ticket.nomAuto(numero), date: todayISO(), lignes: [] };
 }
 
 /** Ajoute des boissons à un ticket : une boisson déjà présente voit sa quantité augmenter (jusqu'au maximum). */

@@ -13,6 +13,8 @@ interface MontantProps {
   onChange: (valeur: string) => void;
   required?: boolean;
   placeholder?: string;
+  /** Faux quand le montant est calculé : le champ est alors grisé et ne se modifie pas. */
+  editable?: boolean;
 }
 
 /** Champ de saisie d'un montant TTC en euros (clavier décimal). */
@@ -22,6 +24,7 @@ export function ChampMontantTtc({
   onChange,
   required = true,
   placeholder,
+  editable = true,
 }: MontantProps) {
   return (
     <FormField
@@ -31,6 +34,8 @@ export function ChampMontantTtc({
       onChangeText={onChange}
       keyboardType="decimal-pad"
       placeholder={placeholder}
+      editable={editable}
+      style={editable ? undefined : commonStyles.verrouille}
     />
   );
 }
@@ -46,6 +51,10 @@ interface CategorieProps<T extends string> {
   onCompteChange: (numero: string) => void;
   optionsCompte: SelectOption<string>[];
   onGererComptes: () => void;
+  /** Fait du libellé un lien (la gestion de la liste : les catégories cochées par espèce). */
+  onPressLabel?: () => void;
+  /** Un crayon à droite de la liste, vers ce qui gère la valeur choisie (la liste des œufs de l'inventaire). */
+  onEdit?: () => void;
 }
 
 /** Liste des catégories ; si « Autre », elle partage la ligne avec le choix du compte PCG et un crayon vers la gestion des comptes. */
@@ -59,10 +68,29 @@ export function ChampCategorieCompte<T extends string>({
   onCompteChange,
   optionsCompte,
   onGererComptes,
+  onPressLabel,
+  onEdit,
 }: CategorieProps<T>) {
   const categorie = (
-    <SelectField label={label} required value={value} onChange={onChange} options={options} />
+    <SelectField
+      label={label}
+      required
+      value={value}
+      onChange={onChange}
+      options={options}
+      onPressLabel={onPressLabel}
+    />
   );
+  if (!demanderCompte && onEdit) {
+    return (
+      <View style={commonStyles.rowFin}>
+        <View style={commonStyles.flex1}>{categorie}</View>
+        <Pressable style={commonStyles.boutonIcone} onPress={onEdit}>
+          <Ionicons name="pencil" size={20} color={colors.ajout} />
+        </Pressable>
+      </View>
+    );
+  }
   if (!demanderCompte) return categorie;
   return (
     <View style={commonStyles.rowFin}>

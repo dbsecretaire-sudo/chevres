@@ -11,6 +11,7 @@ import { formatDateFR } from '@/shared/utils/dates';
 import { VenteFormulaire } from '@/features/comptabilite/components/VenteFormulaire';
 import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
 import { AnimauxDeLaVente } from '@/features/comptabilite/components/AnimauxDeLaVente';
+import { AnimauxVendusEdition } from '@/features/comptabilite/components/AnimauxVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -89,7 +90,11 @@ export default function FicheVente() {
         )}
 
         {/* Les animaux vendus (cabris, adultes…) : leur boucle, M ou F et leur naissance, comme dans le formulaire de vente. */}
-        <AnimauxDeLaVente vente={vente} />
+        {fiche.editing ? (
+          <AnimauxVendusEdition form={form} onChange={fiche.setForm} />
+        ) : (
+          <AnimauxDeLaVente vente={vente} />
+        )}
       </ScrollView>
 
       <ConfirmModal

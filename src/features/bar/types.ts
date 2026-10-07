@@ -44,6 +44,8 @@ export interface LigneTicket {
 export interface TicketBar {
   id: string;
   nom: string;
+  /** AAAA-MM-JJ : la date de la vente (celle de la recette en comptabilité) ; absente : le jour où on l'enregistre. */
+  date?: string;
   lignes: LigneTicket[];
 }
 

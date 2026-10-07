@@ -21,6 +21,8 @@ export const ROUTES = {
 
   COMPTABILITE: '/comptabilite',
   COMPTABILITE_NOUVELLE: '/comptabilite/nouvelle',
+  /** Les catégories de recette cochées pour chaque espèce (et celles qu'on ajoute). */
+  CATEGORIES_RECETTE: '/comptabilite/categories-recette',
   COMPTABILITE_DETAIL: '/comptabilite/detail',
   FISCALITE_IMPOTS: '/comptabilite/fiscalite-impots',
   FISCALITE_RSA: '/comptabilite/fiscalite-rsa',
@@ -61,6 +63,10 @@ export const ROUTES = {
   CLIENTS_DOSSIERS: '/clients/dossiers-clients',
   GITE: '/clients/gite',
   BAR: '/clients/bar',
+  /** L'écran d'une activité annexe du gîte. */
+  annexe: (id: string) => `/clients/annexe/${id}` as const,
+  /** Les tickets d'un jour d'une activité qui a le calendrier des repas (le restaurant). */
+  annexeJour: (id: string, jour: string) => `/clients/annexe/${id}?jour=${jour}` as const,
   /** Le stock (onglet du bas), où se gèrent les marchandises, les aliments, les boissons. */
   STOCK: '/stock',
   /** L'historique et les statistiques du stock : deux écrans à part, ouverts depuis le menu du stock. */

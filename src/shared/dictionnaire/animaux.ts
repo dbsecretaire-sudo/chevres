@@ -7,7 +7,11 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
  * Pour ajouter une espèce ou changer un mot, c'est ici uniquement.
  */
 
-export type EspeceAnimale = ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>;
+/** L'identifiant d'une espèce : l'une de celles d'office (TYPE_ANIMAL_ETABLISSEMENT) ou une espèce ajoutée par l'utilisateur. */
+export type EspeceAnimale = string;
+
+/** Les espèces d'office (les autres sont ajoutées par l'utilisateur, voir features/especes). */
+export type EspeceDOffice = ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>;
 
 export interface Terme {
   singulier: string;
@@ -24,11 +28,14 @@ export interface Vocabulaire {
   /** Le petit sans boucle, selon son sexe, tel qu'affiché dans les listes (singulier, avec majuscule). */
   petitFemelle: string;
   petitMale: string;
+  /** Les lignes de viande de l'animal adulte dans l'inventaire : « Chèvre sur pied », « Chèvre vivante »… */
+  surPied: string;
+  vivant: string;
   /** Ce que l'élevage vend (pour les phrases du type « ventes de production (lait, fromage, cabris) »). */
   produits: string[];
 }
 
-const terme = (singulier: string, pluriel = `${singulier}s`): Terme => ({ singulier, pluriel });
+export const terme = (singulier: string, pluriel = `${singulier}s`): Terme => ({ singulier, pluriel });
 
 export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
   [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: {
@@ -38,6 +45,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('cabri'),
     petitFemelle: 'Chevrette',
     petitMale: 'Chevreau',
+    surPied: 'Chèvre sur pied',
+    vivant: 'Chèvre vivante',
     produits: ['lait', 'fromage', 'cabris', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: {
@@ -47,6 +56,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('agneau', 'agneaux'),
     petitFemelle: 'Agnelle',
     petitMale: 'Agneau',
+    surPied: 'Brebis sur pied',
+    vivant: 'Brebis vivante',
     produits: ['lait', 'fromage', 'agneaux', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: {
@@ -56,6 +67,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('veau', 'veaux'),
     petitFemelle: 'Veau',
     petitMale: 'Veau',
+    surPied: 'Vache sur pied',
+    vivant: 'Vache vivante',
     produits: ['veaux', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: {
@@ -65,6 +78,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('poussin'),
     petitFemelle: 'Poussin',
     petitMale: 'Poussin',
+    surPied: 'Poule sur pied',
+    vivant: 'Poule vivante',
     produits: ['œufs', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: {
@@ -74,6 +89,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('jeune'),
     petitFemelle: 'Jeune',
     petitMale: 'Jeune',
+    surPied: 'Animal sur pied',
+    vivant: 'Animal vivant',
     produits: ['animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: {
@@ -83,6 +100,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('porcelet'),
     petitFemelle: 'Porcelet',
     petitMale: 'Porcelet',
+    surPied: 'Cochon sur pied',
+    vivant: 'Cochon vivant',
     produits: ['porcelets', 'boucherie', 'charcuterie', 'animaux'],
   },
 };

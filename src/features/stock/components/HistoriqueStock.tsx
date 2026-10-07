@@ -22,7 +22,7 @@ import {
 } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
-import { LABEL_ACTIVITE_COMPTABLE, NOMS_MOIS } from '@/shared/textes/libelles';
+import { LABEL_ACTIVITE_COMPTABLE, LABEL_CATEGORIE_VENTE, NOMS_MOIS } from '@/shared/textes/libelles';
 import { currentYear, formatDateShortFR } from '@/shared/utils/dates';
 import { styles as stylesBilan } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
@@ -119,6 +119,19 @@ const CARTES: {
 /** L'identifiant du « article » lait des mouvements de l'historique. */
 const CLE_LAIT = 'lait';
 
+/** Le début de l'« article » d'un animal vendu lu dans la comptabilité : la suite est la catégorie de la vente. */
+const PREFIXE_VENTE_ANIMAUX = 'vente_animaux:';
+
+/** Le nom d'un article de l'historique : le lait, un animal vendu (sa catégorie de vente) ou un article du stock. */
+const nomArticle = (article: string, archive: ArchiveStock): string =>
+  article === CLE_LAIT
+    ? T.onglets.lait
+    : article.startsWith(PREFIXE_VENTE_ANIMAUX)
+      ? LABEL_CATEGORIE_VENTE[
+          article.slice(PREFIXE_VENTE_ANIMAUX.length) as keyof typeof LABEL_CATEGORIE_VENTE
+        ]
+      : libelleArticle(article, archive);
+
 interface Props {
   archive: ArchiveStock;
   /** Les espèces de l'exploitation (des étiquettes par animal quand il y en a plusieurs). */
@@ -127,6 +140,8 @@ interface Props {
   filtreInitial: FiltreStock;
   /** Les ventes de lait de la comptabilité (leur date et leurs litres). */
   ventesLait: { id: string; date: string; litres: number }[];
+  /** Les ventes d'animaux de la comptabilité (cabris, animal sur pied, vivant, mort) : leur date et leur nombre de têtes. */
+  ventesAnimaux: { id: string; date: string; nombre: number; categorie: string; activite: string }[];
 }
 
 /**
@@ -134,7 +149,7 @@ interface Props {
  * stock (aliments, fromagerie, viande, entretien) qui donne, mois par mois, le nombre de mouvements — celui de l'année
  * précédente entre parenthèses. « Détails » déroule les mouvements du mois (date, article, quantité, origine).
  */
-export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }: Props) {
+export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, ventesAnimaux }: Props) {
   const [filtre, setFiltre] = useState<FiltreStock>(filtreInitial);
   const [annee, setAnnee] = useState(currentYear());
   const [ouverts, setOuverts] = useState<string[]>([]);
@@ -173,6 +188,23 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }:
       origine: ORIGINE_MOUVEMENT.VENTE,
     }));
 
+  /**
+   * Les animaux vendus qui ne passent par aucun article du stock (cabris, animal sur pied, vivant : ces lignes suivent le cheptel) :
+   * ils n'ont pas de mouvement, on les lit donc dans les ventes de la comptabilité — celles de l'animal regardé.
+   */
+  const mouvementsAnimaux = (): MouvementStock[] => {
+    const avecMouvement = new Set(archive.mouvements.map((m) => m.venteId).filter(Boolean));
+    return ventesAnimaux
+      .filter((v) => !avecMouvement.has(v.id) && (filtre === FILTRE_STOCK_TOUT || v.activite === filtre))
+      .map((v) => ({
+        id: v.id,
+        article: `${PREFIXE_VENTE_ANIMAUX}${v.categorie}`,
+        date: v.date,
+        delta: -v.nombre,
+        origine: ORIGINE_MOUVEMENT.VENTE,
+      }));
+  };
+
   /** Les mouvements d'une carte pour un animal (ou tous) : ceux des articles de ses genres que cet animal concerne. */
   const mouvementsDeLaCarte = (
     genres: GenreArticle[],
@@ -181,15 +213,19 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }:
     listeId?: string,
   ): MouvementStock[] => {
     if (lait) return mouvementsLait();
+    const animaux = genres.includes(GENRE_ARTICLE.VIANDE) ? mouvementsAnimaux() : [];
     const cles = new Set(
       genres.flatMap((g) => articlesDuGenre(g, archive, filtre, listeId).map((a) => a.cle)),
     );
-    return archive.mouvements.filter(
-      (m) =>
-        (avecAutomatiques || !m.automatique) &&
-        genres.includes(m.article.split(':')[0] as GenreArticle) &&
-        cles.has(m.article),
-    );
+    return [
+      ...archive.mouvements.filter(
+        (m) =>
+          (avecAutomatiques || !m.automatique) &&
+          genres.includes(m.article.split(':')[0] as GenreArticle) &&
+          cles.has(m.article),
+      ),
+      ...animaux,
+    ];
   };
 
   return (
@@ -311,7 +347,7 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }:
                             <Text key={x.id} style={commonStyles.muted}>
                               {T.ligneMouvement(
                                 formatDateShortFR(x.date),
-                                x.article === CLE_LAIT ? T.onglets.lait : libelleArticle(x.article, archive),
+                                nomArticle(x.article, archive),
                                 ventesSeules
                                   ? `${-x.delta}${lait ? ' L' : ''}`
                                   : `${x.delta > 0 ? '+' : ''}${x.delta}`,

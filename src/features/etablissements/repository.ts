@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
-import { ACTIVITE_SOCIETE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { chargerEspeces } from '@/features/especes/repository';
+import { toutesLesEspeces } from '@/features/especes/services/registre';
 import { definirModeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { estEntreprise } from '@/features/etablissements/utils/typesEtablissement';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -19,7 +21,7 @@ import {
 } from '@/shared/constants/stockage';
 import { TEXTES } from '@/shared/textes';
 
-export type TypeAnimalEtablissement = ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>;
+export type TypeAnimalEtablissement = string;
 export type ActiviteSociete = ValeurDe<typeof ACTIVITE_SOCIETE>;
 
 /** Ce que l'utilisateur renseigne pour un établissement (hors identifiant). */
@@ -104,6 +106,8 @@ export async function choisirEspeceCourante(espece: EspeceAnimale): Promise<void
 
 /** À appeler une fois au démarrage : fixe l'établissement actif avant toute lecture de données. */
 export async function initialiserEtablissements(): Promise<{ liste: Etablissement[]; actifId: string }> {
+  // Les espèces ajoutées ou modifiées par l'utilisateur d'abord : tout ce qui suit lit leurs noms et leurs âges.
+  await chargerEspeces();
   const liste = await listEtablissements();
   const sauvegarde = await AsyncStorage.getItem(KEY_ACTIF);
   idActif = liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id;
@@ -147,7 +151,7 @@ export async function appliquerProfilEtablissementActif(profil: ProfilEtablissem
     Array.isArray(valeurs) ? valeurs.filter((v): v is T => permises.includes(v)) : [];
   await modifierEtablissement(actif.id, {
     nom: actif.nom,
-    animaux: garder(profil.animaux, Object.values(TYPE_ANIMAL_ETABLISSEMENT)),
+    animaux: garder(profil.animaux, toutesLesEspeces()),
     activites: garder(profil.activites, Object.values(ACTIVITE_SOCIETE)),
   });
 }

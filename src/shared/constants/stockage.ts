@@ -23,13 +23,19 @@ export const ID_ETABLISSEMENT_DEFAUT = 'defaut';
 export const CLE_STOCKAGE = {
   ETABLISSEMENTS: 'etablissements',
   ETABLISSEMENT_ACTIF: 'etablissement-actif',
+  /** Les espèces ajoutées par l'utilisateur et les réglages modifiés des espèces d'office (communs à tous les établissements). */
+  ESPECES: 'especes',
   ESPECE_COURANTE: 'espece-courante',
   FOURNISSEURS: 'fournisseurs',
   CLIENTS: 'clients',
   DOSSIERS: 'dossiers',
   GITE: 'gite',
   TRADING: 'trading',
+  /** Les catégories de recette cochées pour chaque espèce (la liste « Catégorie de recette » d'une nouvelle écriture). */
+  GROUPES_RECETTE: 'groupes-recette',
   BAR: 'bar',
+  /** Les activités annexes du gîte (pizza, charcuterie, guide…) : leurs catégories, leurs articles et leurs tickets. */
+  ANNEXES: 'annexes',
   STOCK: 'stock',
   COMPTES_PCG: 'comptes-pcg',
   SETTINGS: 'settings',

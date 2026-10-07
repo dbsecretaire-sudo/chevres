@@ -36,9 +36,7 @@ export const styles = StyleSheet.create({
   groupeTitre: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
   /** Case seule au même niveau que les groupes (« Perso »), dans sa propre section, séparée du groupe qui précède par un trait. */
   caseSeule: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
-  retour: { marginTop: 'auto' },
   /** « Supprimer cet établissement » : épinglé en bas de l'écran, comme « Retour ». */
   supprimer: { marginTop: 'auto' },
   /** Espace sous « Retour » pour que le bouton « + » flottant ne le cache pas. */
-  espaceFab: { height: 70 },
 });

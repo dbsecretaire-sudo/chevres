@@ -7,6 +7,13 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { FormField } from '@/shared/components/FormField';
 import { ListRow } from '@/shared/components/ListRow';
+import { ActiviteAnnexeModal } from '@/features/annexes/components/ActiviteAnnexeModal';
+import { enregistrerActivite, lireArchiveAnnexes } from '@/features/annexes/repository';
+import type { ArchiveAnnexes } from '@/features/annexes/types';
+import { libelleTauxTva } from '@/features/comptabilite/utils/tva';
+import { getSettings } from '@/features/settings/settings';
+import { CATEGORIE_RECETTE, TAUX_TVA_RECETTE_ENTREPRISE } from '@/shared/constants/comptabilite';
+import { COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import { listSejours } from '@/features/gite/repository';
 import type { Sejour } from '@/features/gite/types';
 import { normaliser } from '@/features/dossiers/services/recherche';
@@ -14,7 +21,7 @@ import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
-import { formatDateShortFR, formatMontant, todayISO } from '@/shared/utils/dates';
+import { formatDateShortFR, formatMontant } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/gite/Gite.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -25,21 +32,33 @@ interface TuileProps {
   details: readonly string[];
   /** Sans destination, la tuile est annoncée comme « bientôt disponible ». */
   onPress?: () => void;
+  /** De petites lignes en haut à droite (le compte du plan comptable, la TVA). */
+  reperes?: readonly string[];
 }
 
 /** Une activité de l'association : son nom, ce qu'elle comprend, et l'écran qu'elle ouvre. */
-function Tuile({ icone, titre, details, onPress }: TuileProps) {
+function Tuile({ icone, titre, details, onPress, reperes = [] }: TuileProps) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.tuile,
         !onPress && styles.tuileInactive,
+        details.length === 0 && styles.tuileCompacte,
         pressed && commonStyles.pressed,
       ]}
       onPress={onPress}
       disabled={!onPress}
     >
-      <Ionicons name={icone} size={34} color={colors.primary} />
+      <View style={styles.enteteTuile}>
+        <Ionicons name={icone} size={34} color={colors.primary} />
+        <View style={styles.reperesTuile}>
+          {reperes.map((repere) => (
+            <Text key={repere} style={styles.repereTuile}>
+              {repere}
+            </Text>
+          ))}
+        </View>
+      </View>
       <Text style={styles.tuileTitre}>{titre}</Text>
       {details.map((detail) => (
         <Text key={detail} style={styles.tuileDetail}>
@@ -59,6 +78,19 @@ export default function ActivitesAssociation() {
   const router = useRouter();
   const [sejours, setSejours] = useState<Sejour[]>([]);
   const [requete, setRequete] = useState('');
+  const [annexes, setAnnexes] = useState<ArchiveAnnexes>({
+    activites: [],
+    categories: [],
+    articles: [],
+    tickets: [],
+  });
+  /** La fenêtre d'une nouvelle activité (le bouton +). */
+  const [ajoutActivite, setAjoutActivite] = useState(false);
+  /** Le compte et la TVA de l'hébergement du gîte (ceux d'office tant qu'on ne les a pas modifiés). */
+  const [reglagesGite, setReglagesGite] = useState<{ compte: string; tva: number }>({
+    compte: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.HEBERGEMENT].numero,
+    tva: TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.HEBERGEMENT],
+  });
   const T = TEXTES.gite.activites;
   const aussiFinance = activitesEtablissement().includes(ACTIVITE_SOCIETE.LIBERAL);
   const aussiPrestations = activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE);
@@ -66,10 +98,22 @@ export default function ActivitesAssociation() {
   useFocusEffect(
     useCallback(() => {
       listSejours().then(setSejours);
+      lireArchiveAnnexes().then(setAnnexes);
+      getSettings().then((settings) => {
+        const infos = settings.exploitation?.entreprise;
+        setReglagesGite({
+          compte: infos?.giteCompte ?? COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.HEBERGEMENT].numero,
+          tva: infos?.giteTauxTva ?? TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.HEBERGEMENT],
+        });
+      });
     }, []),
   );
 
   const termes = normaliser(requete).split(/\s+/).filter(Boolean);
+  const activitesTrouvees = annexes.activites.filter((a) => {
+    const texte = normaliser(`${a.nom} ${a.compte}`);
+    return termes.every((t) => texte.includes(t));
+  });
   const trouves = sejours
     .filter((s) => {
       const texte = normaliser(
@@ -78,6 +122,36 @@ export default function ActivitesAssociation() {
       return termes.every((t) => texte.includes(t));
     })
     .sort((a, b) => b.arrivee.localeCompare(a.arrivee));
+
+  /** La tuile d'une activité annexe : son icône, son compte et sa TVA, son nom, et ce qu'elle contient. */
+  const tuileActivite = (id: string) => {
+    const a = annexes.activites.find((x) => x.id === id);
+    if (!a) return null;
+    return (
+      <Pressable
+        key={a.id}
+        style={({ pressed }) => [styles.tuile, pressed && commonStyles.pressed]}
+        onPress={() => router.push(ROUTES.annexe(a.id))}
+      >
+        <View style={styles.enteteTuile}>
+          <Ionicons name={a.icone as keyof typeof Ionicons.glyphMap} size={34} color={colors.primary} />
+          <View style={styles.reperesTuile}>
+            <Text style={styles.repereTuile}>{TEXTES.annexes.carte.pcg(a.compte)}</Text>
+            {a.tauxTva !== undefined ? (
+              <Text style={styles.repereTuile}>{TEXTES.annexes.carte.tva(libelleTauxTva(a.tauxTva))}</Text>
+            ) : null}
+          </View>
+        </View>
+        <Text style={styles.tuileTitre}>{a.nom}</Text>
+        <Text style={styles.tuileDetail}>
+          {TEXTES.annexes.activite.resume(
+            annexes.articles.filter((x) => x.activiteId === a.id).length,
+            annexes.categories.filter((x) => x.activiteId === a.id).length,
+          )}
+        </Text>
+      </Pressable>
+    );
+  };
 
   return (
     <Screen scroll={false}>
@@ -94,16 +168,14 @@ export default function ActivitesAssociation() {
             <Tuile
               icone="bed"
               titre={T.gite}
-              details={T.giteDetails}
+              details={[]}
+              reperes={[
+                TEXTES.annexes.carte.pcg(reglagesGite.compte),
+                TEXTES.annexes.carte.tva(libelleTauxTva(reglagesGite.tva)),
+              ]}
               onPress={() => router.push(ROUTES.GITE)}
             />
-            <Tuile
-              icone="beer"
-              titre={T.bar}
-              details={T.barDetails}
-              onPress={() => router.push(ROUTES.BAR)}
-            />
-            <Tuile icone="storefront" titre={T.annexes} details={T.annexesDetails} />
+            {annexes.activites.map((a) => tuileActivite(a.id))}
             {aussiFinance ? (
               <Tuile
                 icone="stats-chart"
@@ -121,28 +193,43 @@ export default function ActivitesAssociation() {
               />
             ) : null}
           </View>
-        ) : trouves.length === 0 ? (
+        ) : trouves.length === 0 && activitesTrouvees.length === 0 ? (
           <EmptyState title={T.aucunResultat} subtitle={T.modifiezLaRecherche} />
         ) : (
-          trouves.map((sejour) => (
-            <ListRow
-              key={sejour.id}
-              title={`${sejour.nom} — ${TEXTES.gite.jour.chambres(sejour.chambres)}`}
-              subtitle={`${TEXTES.gite.jour.dates(formatDateShortFR(sejour.arrivee), formatDateShortFR(sejour.depart))} · ${formatMontant(sejour.prix)} · ${sejour.paye ? TEXTES.gite.jour.paye : TEXTES.gite.jour.aRegler}`}
-              onPress={() => router.push(ROUTES.sejour(sejour.id))}
-            />
-          ))
+          <>
+            {activitesTrouvees.length > 0 ? (
+              <View style={styles.grilleTuiles}>{activitesTrouvees.map((a) => tuileActivite(a.id))}</View>
+            ) : null}
+            {trouves.map((sejour) => (
+              <ListRow
+                key={sejour.id}
+                title={`${sejour.nom} — ${TEXTES.gite.jour.chambres(sejour.chambres)}`}
+                subtitle={`${TEXTES.gite.jour.dates(formatDateShortFR(sejour.arrivee), formatDateShortFR(sejour.depart))} · ${formatMontant(sejour.prix)} · ${sejour.paye ? TEXTES.gite.jour.paye : TEXTES.gite.jour.aRegler}`}
+                onPress={() => router.push(ROUTES.sejour(sejour.id))}
+              />
+            ))}
+          </>
         )}
       </ScrollView>
 
       <Fab
         options={[
           {
-            label: TEXTES.gite.calendrier.nouveauSejour,
-            icon: 'bed',
-            onPress: () => router.push(ROUTES.sejourNouveau(1, todayISO())),
+            label: TEXTES.annexes.ajouterActivite,
+            icon: 'add-circle',
+            onPress: () => setAjoutActivite(true),
           },
         ]}
+      />
+
+      <ActiviteAnnexeModal
+        visible={ajoutActivite}
+        onValider={async (donnees) => {
+          const id = await enregistrerActivite(donnees);
+          setAjoutActivite(false);
+          router.push(ROUTES.annexe(id));
+        }}
+        onFermer={() => setAjoutActivite(false)}
       />
     </Screen>
   );

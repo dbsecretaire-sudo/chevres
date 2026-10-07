@@ -31,8 +31,8 @@ export const CATEGORIE_ANIMAL = {
 export interface ParametresEspece {
   /** En dessous de cet âge, l'animal est un petit (cabri, agneau, veau, porcelet, poussin) ; au-delà, un adulte. */
   agePetitMax: Duree;
-  /** À partir de cet âge (en mois), un petit sevré mange comme un adulte et compte dans l'effectif. */
-  ageSevrageMois: number;
+  /** À partir de cet âge, un petit sevré mange comme un adulte et compte dans l'effectif. */
+  ageSevrage: Duree;
   /** Nombre maximal de petits déclarables en une seule mise bas. */
   nbPetitsMax: number;
 }
@@ -42,16 +42,20 @@ const semaines = (valeur: number): Duree => ({ valeur, unite: UNITE_DUREE.SEMAIN
 const jours = (valeur: number): Duree => ({ valeur, unite: UNITE_DUREE.JOURS });
 
 export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
-  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: { agePetitMax: mois(6), ageSevrageMois: 2, nbPetitsMax: 6 },
-  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: { agePetitMax: mois(6), ageSevrageMois: 2, nbPetitsMax: 5 },
+  [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: { agePetitMax: mois(6), ageSevrage: mois(2), nbPetitsMax: 6 },
+  [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: { agePetitMax: mois(6), ageSevrage: mois(2), nbPetitsMax: 5 },
   // Veau : jusqu'à 8 mois.
-  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: { agePetitMax: mois(8), ageSevrageMois: 3, nbPetitsMax: 2 },
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: { agePetitMax: mois(8), ageSevrage: mois(3), nbPetitsMax: 2 },
   // Porcelet : jusqu'à 28 jours.
-  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { agePetitMax: jours(28), ageSevrageMois: 1, nbPetitsMax: 20 },
+  [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: { agePetitMax: jours(28), ageSevrage: mois(1), nbPetitsMax: 20 },
   // Poussin : jusqu'à 16 semaines ; une couvée compte jusqu'à une quinzaine d'œufs.
-  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { agePetitMax: semaines(16), ageSevrageMois: 1, nbPetitsMax: 15 },
+  [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { agePetitMax: semaines(16), ageSevrage: mois(1), nbPetitsMax: 15 },
   // Chiot ou chaton : jusqu'à 6 mois (26 semaines) ; une portée compte une dizaine de petits.
-  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: { agePetitMax: semaines(26), ageSevrageMois: 2, nbPetitsMax: 10 },
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: {
+    agePetitMax: semaines(26),
+    ageSevrage: mois(2),
+    nbPetitsMax: 10,
+  },
 };
 
 /** Seuils de l'espèce courante. */
@@ -59,7 +63,7 @@ export const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[espece
 
 /** Âge en dessous duquel un animal de l'espèce courante est un petit. */
 export const agePetitMax = (): Duree => parametresEspece().agePetitMax;
-export const ageSevrageMois = (): number => parametresEspece().ageSevrageMois;
+export const ageSevrage = (): Duree => parametresEspece().ageSevrage;
 export const nbPetitsMax = (): number => parametresEspece().nbPetitsMax;
 
 /** Dernier mois (1-12) du premier semestre civil. */

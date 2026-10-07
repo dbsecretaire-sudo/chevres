@@ -37,6 +37,10 @@ export default function ComptabiliteLayout() {
           headerStyle: { backgroundColor: colors.ajout },
         }}
       />
+      <Stack.Screen
+        name="categories-recette"
+        options={{ title: TEXTES.comptabilite.nouvelleEcriture.choixCategories.titre }}
+      />
       <Stack.Screen name="facture/[id]" options={{ title: TEXTES.commun.general.facture }} />
       <Stack.Screen name="vente/[id]" options={{ title: TEXTES.commun.general.vente }} />
       <Stack.Screen name="detail" options={{ title: TEXTES.commun.general.detail }} />

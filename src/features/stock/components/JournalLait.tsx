@@ -1,4 +1,6 @@
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/shared/theme/colors';
 import { ListRow } from '@/shared/components/ListRow';
 import { Card } from '@/shared/components/Card';
 import type { BilanLait } from '@/features/stock/services/stock';
@@ -20,15 +22,32 @@ const enLitres = (nombre: number): string => String(Math.round(nombre * 100) / 1
 export function JournalLait({
   lait,
   bilan,
+  prix,
+  onModifierPrix,
   onOuvrir,
 }: {
   lait: LaitJour[];
   /** Le bilan du lait : produit, utilisé, vendu et restant. */
   bilan: BilanLait;
+  /** Le prix de vente du lait (€ le litre), quand il est défini : c'est lui qui fait le prix des ventes de lait. */
+  prix?: number;
+  onModifierPrix: () => void;
   onOuvrir: (entree: LaitJour) => void;
 }) {
   const carteBilan = (
     <Card>
+      <View style={commonStyles.rowSpaceBetween}>
+        <Text style={commonStyles.muted}>{T.prixDuLitre}</Text>
+        <Pressable
+          style={commonStyles.rowFin}
+          onPress={onModifierPrix}
+          hitSlop={8}
+          accessibilityLabel={T.modifierLePrix}
+        >
+          <Text style={commonStyles.lineBold}>{prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}</Text>
+          <Ionicons name="pencil" size={18} color={colors.ajout} />
+        </Pressable>
+      </View>
       <View style={commonStyles.rowSpaceBetween}>
         <Text style={commonStyles.cardTitle}>{T.restant}</Text>
         <Text style={commonStyles.cardTitle}>{T.ligne(enLitres(bilan.restant))}</Text>

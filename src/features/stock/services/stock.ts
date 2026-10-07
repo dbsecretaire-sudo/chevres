@@ -1,18 +1,26 @@
 import type { Facture, TypeFromage, Vente } from '@/features/comptabilite/types';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock, GenreArticle, LaitJour, MouvementStock } from '@/features/stock/types';
-import { CATEGORIE_VENTE, TYPE_ALIMENT, TYPE_FROMAGE, UNITE_VENTE } from '@/shared/constants/comptabilite';
+import {
+  CATEGORIE_VENTE,
+  CATEGORIES_VENTE_VIANDE,
+  TYPE_ALIMENT,
+  TYPE_FROMAGE,
+  UNITE_VENTE,
+} from '@/shared/constants/comptabilite';
 import {
   ARTICLE_EMBALLAGE,
   ARTICLE_MATERIEL,
   CONDITIONNEMENT_PAR_DEFAUT,
   FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
+  CLE_PRIX_LAIT,
+  CLE_PRIX_OEUFS,
+  PRIX_OEUF_DEFAUT,
   ORIGINE_MOUVEMENT,
   ROLE_VIANDE,
 } from '@/shared/constants/stock';
 import {
-  LABEL_ACTIVITE_COMPTABLE,
   LABEL_EMBALLAGE,
   LABEL_MATERIEL,
   LABEL_TYPE_ALIMENT,
@@ -25,7 +33,8 @@ import {
   especesActives,
   type EspeceAnimale,
 } from '@/shared/dictionnaire/animaux';
-import { ACTIVITE_COMMUNE, TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
+import { laiterieActive } from '@/features/comptabilite/utils/recettes';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
@@ -58,19 +67,19 @@ export function roleDeLaViande(cle: string): ValeurDe<typeof ROLE_VIANDE> | unde
 
 /**
  * Les lignes de viande tenues d'office : pour chaque espèce, ses petits (cabris, agneaux…), l'animal sur pied et l'animal
- * vivant. Avec plusieurs espèces, le nom de l'animal sur pied ou vivant précise laquelle.
+ * vivant, nommés d'après l'espèce (« Cochon sur pied », « Chèvre vivante »).
  */
 function lignesDeViandeDOffice(especes: readonly EspeceAnimale[], archive: ArchiveStock): ArticleAffiche[] {
-  const plusieurs = especes.length > 1;
   const nom = (cle: string, defaut: string) => archive.noms[cle] ?? defaut;
   return especes.flatMap((espece) => {
-    const suffixe = plusieurs ? ` (${LABEL_ACTIVITE_COMPTABLE[espece]})` : '';
     return Object.values(ROLE_VIANDE).map((role) => {
       const cle = cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${role}`);
       const defaut =
         role === ROLE_VIANDE.JEUNE
           ? capitaliser(DICTIONNAIRE_ANIMAUX[espece].petit.pluriel)
-          : `${role === ROLE_VIANDE.SUR_PIED ? TEXTES.stock.viande.surPied : TEXTES.stock.viande.vivant}${suffixe}`;
+          : role === ROLE_VIANDE.SUR_PIED
+            ? DICTIONNAIRE_ANIMAUX[espece].surPied
+            : DICTIONNAIRE_ANIMAUX[espece].vivant;
       return { cle, libelle: nom(cle, defaut) };
     });
   });
@@ -78,12 +87,6 @@ function lignesDeViandeDOffice(especes: readonly EspeceAnimale[], archive: Archi
 
 /** Ce que le filtre du stock choisit : toutes les activités, ou une espèce de l'exploitation. */
 export type FiltreStock = typeof FILTRE_STOCK_TOUT | EspeceAnimale;
-
-/** La fromagerie ne concerne que les chèvres et les brebis. */
-const FAIT_DU_FROMAGE: readonly string[] = [
-  TYPE_ANIMAL_ETABLISSEMENT.CHEVRES,
-  TYPE_ANIMAL_ETABLISSEMENT.BREBIS,
-];
 
 /**
  * Les articles d'un genre pour une activité : ceux d'office (les aliments de l'espèce ; les fromages, emballages et
@@ -135,10 +138,7 @@ export function articlesDuGenre(
                 }));
   // Les articles d'office des fromages, emballages et matériel ne sont pas ceux d'un élevage qui ne fait pas de fromage.
   const dOfficeVisibles =
-    genre === GENRE_ARTICLE.ALIMENT ||
-    genre === GENRE_ARTICLE.VIANDE ||
-    toutes ||
-    FAIT_DU_FROMAGE.includes(filtre)
+    genre === GENRE_ARTICLE.ALIMENT || genre === GENRE_ARTICLE.VIANDE || toutes || laiterieActive(filtre)
       ? parDefaut
       : [];
   const ajoutes = archive.articles
@@ -247,7 +247,7 @@ export function consommationDeLaVente(
   archive: ArchiveStock,
 ): { article: string; quantite: number }[] {
   // Une vente de viande retire de la ligne du stock du même nom (celle du détail de la vente) la quantité vendue.
-  if (vente.categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE && vente.precision) {
+  if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) && vente.precision) {
     const espece =
       vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
     const article = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).find(
@@ -555,4 +555,49 @@ export function statistiqueLait(
       return fromagesDuMois > 0 ? arrondi(somme(duMois, 'litres') / fromagesDuMois) : undefined;
     }),
   };
+}
+
+/**
+ * Le prix de vente défini à l'inventaire pour ce que la vente a vendu : le litre de lait, le fromage de son type, la ligne de
+ * viande de son détail. Rien quand l'inventaire n'en a pas (ou pour une vente sans inventaire, comme les œufs).
+ */
+/** Le prix de vente de l'œuf : celui de l'inventaire, sinon le prix d'office (0,50 €). */
+export const prixDesOeufs = (archive: Pick<ArchiveStock, 'prix'>): number =>
+  archive.prix[CLE_PRIX_OEUFS] ?? PRIX_OEUF_DEFAUT;
+
+export function prixUnitaireDeLaVente(vente: Vente, archive: ArchiveStock): number | undefined {
+  if (vente.categorie === CATEGORIE_VENTE.LAIT) return archive.prix[CLE_PRIX_LAIT];
+  if (vente.categorie === CATEGORIE_VENTE.OEUFS) return prixDesOeufs(archive);
+  if (vente.categorie === CATEGORIE_VENTE.FROMAGE) {
+    const code = codeFromageDeLaVente(vente, archive);
+    return code ? archive.prix[cleArticle(GENRE_ARTICLE.FROMAGE, code)] : undefined;
+  }
+  const ligne = ligneDeViandeDeLaVente(vente, archive);
+  return ligne ? archive.prix[ligne.cle] : undefined;
+}
+
+/** La ligne de viande de l'inventaire qu'une vente a choisie comme détail (un animal, un morceau, un produit). */
+function ligneDeViandeDeLaVente(vente: Vente, archive: ArchiveStock): ArticleAffiche | undefined {
+  if (!(CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) || !vente.precision)
+    return undefined;
+  const espece =
+    vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
+  return articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).find(
+    (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
+  );
+}
+
+/**
+ * Le prix total d'une vente, tel que l'inventaire le fixe : le prix défini là × la quantité (les litres, les fromages, les
+ * morceaux) — ou × le poids pour un animal, dont le prix se compte au kilo. Rien quand l'inventaire ne donne pas de prix.
+ */
+export function totalDeLaVente(vente: Vente, archive: ArchiveStock): number | undefined {
+  const unitaire = prixUnitaireDeLaVente(vente, archive);
+  if (!unitaire) return undefined;
+  // Un animal se vend au kilo (son poids, 1 kg tant qu'il n'est pas saisi) ; le reste, à la pièce ou au litre.
+  const ligne = ligneDeViandeDeLaVente(vente, archive);
+  const auKilo = !!ligne && roleDeLaViande(ligne.cle) !== undefined;
+  const multiplicateur = auKilo ? (vente.poidsKg ?? 0) || 1 : vente.quantite;
+  if (!(multiplicateur > 0)) return undefined;
+  return Math.round(unitaire * multiplicateur * 100) / 100;
 }

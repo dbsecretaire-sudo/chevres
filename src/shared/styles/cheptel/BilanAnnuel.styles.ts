@@ -14,7 +14,15 @@ export const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     marginTop: 4,
   },
+  libelleLien: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.ajout,
+    textDecorationLine: 'underline',
+  },
+  sousLignes: { paddingLeft: 20, marginTop: 2 },
   datesAbattoir: { marginBottom: 2, gap: 1 },
   ligneDateAbattoir: { flexDirection: 'row', justifyContent: 'space-between', paddingLeft: 20 },
+  animalVendu: { fontSize: 12, color: colors.textMuted, flexShrink: 1, textAlign: 'right' },
   dateAbattoirNombre: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
 });

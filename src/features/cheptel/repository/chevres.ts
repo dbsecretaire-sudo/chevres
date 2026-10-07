@@ -1,7 +1,6 @@
 import { generateId } from '@/shared/utils/id';
 import { todayISO, yearOf } from '@/shared/utils/dates';
 import { ageAtteint } from '@/shared/utils/age';
-import { UNITE_DUREE } from '@/shared/constants/temps';
 import { cleTriChevre } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { deleteRecord, findRecord, getYears, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
@@ -26,11 +25,7 @@ export interface EffectifVivant {
 
 /** Un animal est un petit tant qu'il n'a pas atteint l'âge de sevrage de son espèce (2 mois pour une chèvre : un cabri). */
 export const estPetitLe = (c: Pick<Chevre, 'dateNaissance' | 'espece'>, date: string = todayISO()): boolean =>
-  !ageAtteint(
-    c.dateNaissance,
-    { valeur: PARAMETRES_ESPECE[especeDe(c)].ageSevrageMois, unite: UNITE_DUREE.MOIS },
-    date,
-  );
+  !ageAtteint(c.dateNaissance, PARAMETRES_ESPECE[especeDe(c)].ageSevrage, date);
 
 /** Le nombre d'animaux vivants de chaque espèce du cheptel, petits et sevrés (les espèces sans animal n'y figurent pas). */
 export async function effectifsVivants(): Promise<Partial<Record<EspeceAnimale, EffectifVivant>>> {

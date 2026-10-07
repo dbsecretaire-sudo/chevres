@@ -8,16 +8,21 @@ const listeDeChambres = (numeros: readonly number[]) =>
 
 /** Textes de l'interface — gestion du gîte d'étape (calendrier, séjours). À modifier ici uniquement. */
 export const TEXTES_GITE = {
+  /** « Modifier l'activité » du gîte : le compte et la TVA de l'hébergement. */
+  activite: {
+    menu: 'Menu',
+    modifier: 'Modifier l’activité',
+    compte: 'Compte du plan comptable (hébergement)',
+    choixDuCompte: 'Choisir un compte',
+    tva: 'Taux de TVA (hébergement)',
+    compteRequis: 'Compte requis',
+    parDefaut: 'Compte d’office',
+  },
   activites: {
     gite: 'Gîte',
-    giteDetails: ['+ restauration', '+ ménage (gestion des draps)'],
-    bar: 'Bar',
-    barDetails: ['+ restauration'],
-    annexes: 'Activités annexes',
-    annexesDetails: ['produits à emporter'],
     dossiersClients: 'Dossiers clients',
     bientot: 'Bientôt disponible',
-    rechercher: 'N’importe quel terme d’un séjour',
+    rechercher: 'N’importe quel terme',
     aucunResultat: 'Aucun séjour trouvé',
     modifiezLaRecherche: 'Essayez un autre terme.',
   },
@@ -53,6 +58,13 @@ export const TEXTES_GITE = {
     chambre: (numero: number) => `Chambre ${numero}`,
     chambres: listeDeChambres,
     personnes: (nombre: number) => `${nombre} pers.`,
+    /** Le nombre de personnes à droite du nom d'une réservation : « (8 pers.) ». */
+    personnesEntreParentheses: (nombre: number) => `(${nombre} pers.)`,
+    /** « 2 chambres — 8 repas » (sans les repas quand il n'y en a pas). */
+    chambresEtRepas: (chambres: number, repas: number) =>
+      `${pluriel(chambres, 'chambre')}${repas > 0 ? ` — ${pluriel(repas, 'repas')}` : ''}`,
+    /** « 142,00 € — » : le montant, suivi de l'état du paiement. */
+    montantEtTiret: (montant: string) => `${montant} — `,
     /** Sur chaque chambre d'une réservation de plusieurs chambres : combien elle en compte. */
     paye: 'Payé',
     aRegler: 'À régler',

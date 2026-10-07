@@ -66,12 +66,19 @@ export const commonStyles = StyleSheet.create({
   strong: { fontWeight: '700', color: colors.text },
   strongPrimary: { fontWeight: '800', color: colors.primary },
   required: { color: colors.danger },
+  /** Une liste qui défile dans une fenêtre : elle ne dépasse pas cette hauteur. */
+  listeDeFenetre: { maxHeight: 420 },
+  /** Un libellé qui mène ailleurs : bleu et souligné. */
+  lien: { color: colors.ajout, textDecorationLine: 'underline' },
   textWhite: { color: colors.blanc },
 
   // --- Composants récurrents ---
   boutonMenu: { padding: 4 },
   boutonCompact: { paddingHorizontal: 12, paddingVertical: 6 },
   boutonPastille: { padding: 2 },
+  /** Une fenêtre plein écran : de l'espace sur les bords. */
+  fenetre: { flex: 1, paddingHorizontal: 16, paddingTop: 12, gap: 12 },
+  rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   boutonIcone: {
     width: 48,
     height: 48,

@@ -1,4 +1,5 @@
-import { ageSevrageMois } from '@/shared/constants/cheptel';
+import { ageSevrage } from '@/shared/constants/cheptel';
+import { libelleDuree } from '@/shared/utils/age';
 import { vocabulaire } from '@/shared/dictionnaire/animaux';
 
 const V = vocabulaire;
@@ -17,7 +18,7 @@ export const TEXTES_EXPORT = {
     aucuneVentePourCetteAnnee: 'Aucune vente pour cette année',
     aucuneDonnee: 'Aucune donnée',
     effectifEtCoutParAnimal: (nombreAnimaux: number, coutParAnimal: string) =>
-      `Effectif (${V().femelle.pluriel} + ${V().male.pluriel} + ${V().petit.pluriel} de plus de ${ageSevrageMois()} mois) : ${nombreAnimaux} — Coût par animal : ${coutParAnimal} (« Autre » exclu du total et du calcul par animal)`,
+      `Effectif (${V().femelle.pluriel} + ${V().male.pluriel} + ${V().petit.pluriel} de plus de ${libelleDuree(ageSevrage())}) : ${nombreAnimaux} — Coût par animal : ${coutParAnimal} (« Autre » exclu du total et du calcul par animal)`,
     ventes: 'Ventes',
     factures: 'Factures',
     recapitulatifParCompte: 'Récapitulatif par compte',
@@ -54,7 +55,7 @@ export const TEXTES_EXPORT = {
     aucuneDonneePourCetteAnnee: 'Aucune donnée pour cette année',
     veterinaire: 'Vétérinaire',
     get effectifChevresBoucsCabris2() {
-      return `Effectif (${V().femelle.pluriel} + ${V().male.pluriel} + ${V().petit.pluriel} > ${ageSevrageMois()} mois)`;
+      return `Effectif (${V().femelle.pluriel} + ${V().male.pluriel} + ${V().petit.pluriel} > ${libelleDuree(ageSevrage())})`;
     },
     coutParAnimalHorsAutre: 'Coût par animal (€, hors Autre)',
     detailFactures: 'Détail factures',

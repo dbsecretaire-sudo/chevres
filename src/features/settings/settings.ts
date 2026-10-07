@@ -33,6 +33,10 @@ export interface InfosEntreprise {
   tarifNuit?: number;
   /** Prix d'un repas, en euros (gîte). */
   tarifRepas?: number;
+  /** Le compte du plan comptable (classe 7) des recettes d'hébergement du gîte ; absent : celui d'office. */
+  giteCompte?: string;
+  /** Le taux de TVA (%) de l'hébergement du gîte ; absent : celui d'office. */
+  giteTauxTva?: number;
   /** Vrai si l'établissement suit la taxe de séjour (gîte, hébergement). */
   taxeSejour?: boolean;
   /** Montant de la taxe de séjour ajouté à chaque réservation, en euros (montant fixe, quel que soit le séjour). */

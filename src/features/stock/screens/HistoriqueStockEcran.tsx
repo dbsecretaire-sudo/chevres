@@ -12,10 +12,12 @@ import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/en
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { FiltreStock } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
-import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { activiteVente } from '@/features/comptabilite/utils/activite';
+import { CATEGORIE_VENTE, CATEGORIES_VENTE_ANIMAUX } from '@/shared/constants/comptabilite';
 import { FILTRE_STOCK_TOUT } from '@/shared/constants/stock';
 
 type VenteLait = { id: string; date: string; litres: number };
+type VenteAnimaux = { id: string; date: string; nombre: number; categorie: string; activite: string };
 
 /**
  * L'historique du stock, sur un écran à part : les mouvements par type de stock, mois par mois. Il s'ouvre sur l'animal
@@ -26,6 +28,7 @@ export default function HistoriqueStockEcran() {
   const { espece } = useLocalSearchParams<{ espece?: string }>();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [ventesLait, setVentesLait] = useState<VenteLait[]>([]);
+  const [ventesAnimaux, setVentesAnimaux] = useState<VenteAnimaux[]>([]);
   /** Un gîte a son propre historique (marchandises, autres approvisionnements, immobilisations). */
   const gite = modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
   const [bar, setBar] = useState<ArchiveBar | null>(null);
@@ -40,6 +43,19 @@ export default function HistoriqueStockEcran() {
             ventes
               .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
               .map((v) => ({ id: v.id, date: v.date, litres: v.quantite ?? 0 })),
+          );
+          setVentesAnimaux(
+            ventes
+              .filter(
+                (v) => v.quantite && (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(v.categorie),
+              )
+              .map((v) => ({
+                id: v.id,
+                date: v.date,
+                nombre: v.quantite ?? 0,
+                categorie: v.categorie,
+                activite: activiteVente(v),
+              })),
           );
         },
       );
@@ -64,6 +80,7 @@ export default function HistoriqueStockEcran() {
           especes={especes}
           filtreInitial={filtreInitial}
           ventesLait={ventesLait}
+          ventesAnimaux={ventesAnimaux}
         />
       ) : null}
     </Screen>

@@ -1,11 +1,18 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
-import { reactiverChevre } from '@/features/cheptel/repository/chevres';
+import { declarerStatutChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
+import { activiteVente } from '@/features/comptabilite/utils/activite';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { totalDeLaVente } from '@/features/stock/services/stock';
+import { roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import type { Vente } from '@/features/comptabilite/types';
 import {
   CATEGORIES_VENTE_ANIMAUX,
+  CATEGORIES_VENTE_AVEC_DETAIL,
+  CATEGORIES_VENTE_PRIX_INVENTAIRE,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_VENTE,
   UNITE_VENTE,
@@ -69,25 +76,74 @@ export function useFicheVente(id: string | undefined) {
   const enregistrerModifications = async () => {
     if (!form) return;
 
-    // La viande et la charcuterie n'ont pas de quantité à saisir.
-    const sansQuantite = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
+    // La quantité d'une vente de viande (animaux entiers) est le nombre d'animaux choisis : on ne la saisit pas.
+    const sansQuantite = form.categorie === CATEGORIE_VENTE.VIANDE;
     if (!sansQuantite && (!form.quantite || form.quantite <= 0)) {
       setErreur({ titre: TEXTES.commun.general.quantiteInvalide });
       return;
     }
-    if (form.categorie !== CATEGORIE_VENTE.LAIT && (!form.prix || form.prix < 0)) {
-      setErreur({ titre: TEXTES.commun.general.prixInvalide });
+    if (
+      (CATEGORIES_VENTE_AVEC_DETAIL as readonly string[]).includes(form.categorie) &&
+      !form.precision?.trim()
+    ) {
+      setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.detailRequis });
+      return;
+    }
+    if (!form.client?.trim()) {
+      setErreur({ titre: TEXTES.commun.general.clientRequis });
+      return;
+    }
+    if (form.categorie === CATEGORIE_VENTE.VIANDE && !(form.poidsKg && form.poidsKg > 0)) {
+      setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.poidsRequis });
+      return;
+    }
+
+    // Un animal sur pied, vivant ou un petit ne se vend pas sans dire lesquels : au moins une fiche du cheptel.
+    const animauxForm = idsDesAnimaux(form);
+    if (
+      sansQuantite &&
+      animauxForm.length === 0 &&
+      (await roleDuDetailDeVente(activiteVente(form), form.precision))
+    ) {
+      setErreur({
+        titre: TEXTES.comptabilite.nouvelleEcriture.animauxRequis,
+        message: TEXTES.comptabilite.nouvelleEcriture.animauxRequisMessage,
+      });
+      return;
+    }
+
+    // Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : il n'est jamais saisi.
+    const quantite = sansQuantite ? Math.max(1, animauxForm.length) : form.quantite;
+    let prix = form.prix;
+    if ((CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie)) {
+      prix = totalDeLaVente({ ...form, quantite }, await lireArchiveStock());
+    }
+    if (!prix || prix < 0) {
+      setErreur(
+        (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie)
+          ? {
+              titre: TEXTES.comptabilite.nouvelleEcriture.prixAFixerTitre,
+              message: TEXTES.comptabilite.nouvelleEcriture.prixAFixerMessage,
+            }
+          : { titre: TEXTES.commun.general.prixInvalide },
+      );
       return;
     }
 
     try {
       const nettoye: Vente = {
         ...form,
-        quantite: sansQuantite ? 1 : form.quantite,
+        prix,
+        quantite,
         client: form.client?.trim() || undefined,
         precision: form.precision?.trim() || undefined,
       };
       await saveVente(nettoye);
+      // Les animaux retirés de la vente redeviennent vivants ; ceux de la vente passent « vendus » à sa date.
+      if (vente) {
+        for (const id of idsDesAnimaux(vente)) if (!animauxForm.includes(id)) await reactiverChevre(id);
+      }
+      for (const id of animauxForm) await declarerStatutChevre(id, STATUT_CHEVRE.VENDUE, nettoye.date);
       setVente(nettoye);
       setForm(nettoye);
       setEditing(false);

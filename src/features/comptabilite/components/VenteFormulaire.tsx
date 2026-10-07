@@ -1,15 +1,25 @@
+import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
+import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
+import { lireArchiveStock } from '@/features/stock/repository';
+import type { ArchiveStock } from '@/features/stock/types';
+import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
+import { ROUTES } from '@/shared/constants/routes';
+import { SECTION_STOCK } from '@/shared/constants/stock';
 import type { Vente } from '@/features/comptabilite/types';
 import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import {
   CATEGORIES_VENTE_ANIMAUX,
-  CATEGORIES_VENTE_AVEC_PRECISION,
+  CATEGORIES_VENTE_PRIX_INVENTAIRE,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_VENTE,
 } from '@/shared/constants/comptabilite';
@@ -51,10 +61,28 @@ export function VenteFormulaire({
   onAnnuler,
   onEnregistrer,
 }: Props) {
-  const estLait = form.categorie === CATEGORIE_VENTE.LAIT;
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
   const estAnimal = (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(form.categorie);
-  const aPrecision = (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(form.categorie);
+  const router = useRouter();
+  const retour = useAdresseCourante();
+  const activite = activiteVente(form);
+  /** Les détails de la vente de viande : les lignes de l'inventaire de l'espèce (le détail déjà enregistré y reste). */
+  const viandes = useViandesDuStock(activite as FiltreStock);
+  const detailsVente = viandes
+    .filter((v) => (roleDeLaViande(v.cle) !== undefined) === (form.categorie === CATEGORIE_VENTE.VIANDE))
+    .map((v) => ({ value: v.libelle, label: v.libelle }));
+  if (form.precision && !detailsVente.some((d) => d.value === form.precision))
+    detailsVente.unshift({ value: form.precision, label: form.precision });
+  /** L'inventaire (prix de vente) : il fait le prix total de la vente, jamais saisi. */
+  const [archive, setArchive] = useState<ArchiveStock | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      lireArchiveStock().then(setArchive);
+    }, []),
+  );
+  const prixInventaire = (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie);
+  const totalInventaire = archive ? totalDeLaVente(form, archive) : undefined;
+  const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{TEXTES.comptabilite.ficheVente.modifierLaVente}</Text>
@@ -78,11 +106,46 @@ export function VenteFormulaire({
         onChange={(date) => onChange({ ...form, date })}
       />
 
-      {!estViande && (
+      {estViande && detailsVente.length > 0 ? (
+        <SelectFieldEditable<string>
+          label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
+          required
+          searchable
+          placeholder={TEXTES.comptabilite.nouvelleEcriture.choixDuDetail}
+          value={form.precision ?? ''}
+          onChange={(precision) => onChange({ ...form, precision })}
+          options={detailsVente}
+          onEdit={() =>
+            router.push(
+              ROUTES.stockDepuis(
+                retour,
+                animalEntier ? SECTION_STOCK.ANIMAUX : SECTION_STOCK.VIANDE,
+                activite as FiltreStock,
+              ),
+            )
+          }
+        />
+      ) : estViande ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucuneViandeAuStock}</Text>
+      ) : null}
+
+      {animalEntier ? (
+        <FormField
+          label={TEXTES.commun.general.poidsKg}
+          required
+          value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
+          onChangeText={(valeur) =>
+            onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
+          }
+          keyboardType="decimal-pad"
+          placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
+        />
+      ) : (
         <View style={commonStyles.row}>
           <View style={commonStyles.flex1}>
             <FormField
               label={TEXTES.commun.general.quantite}
+              required
               value={String(form.quantite)}
               onChangeText={(valeur) =>
                 onChange({ ...form, quantite: Number(valeur.replace(',', '.')) || 0 })
@@ -119,29 +182,32 @@ export function VenteFormulaire({
         />
       ) : null}
 
+      {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
       <FormField
         label={TEXTES.comptabilite.ficheVente.prixTotal}
-        required={!estLait}
-        value={montantTexte}
+        required
+        value={
+          prixInventaire
+            ? totalInventaire !== undefined
+              ? String(totalInventaire).replace('.', ',')
+              : ''
+            : montantTexte
+        }
         onChangeText={onChangerMontant}
+        editable={!prixInventaire}
+        style={prixInventaire ? commonStyles.verrouille : undefined}
         keyboardType="decimal-pad"
-        placeholder={estLait ? TEXTES.commun.general.facultatif : '0,00'}
+        placeholder="0,00"
       />
-
-      {aPrecision && (
-        <FormField
-          label={TEXTES.comptabilite.nouvelleEcriture.precision}
-          value={form.precision ?? ''}
-          onChangeText={(precision) => onChange({ ...form, precision })}
-          placeholder={TEXTES.comptabilite.nouvelleEcriture.precisionPlaceholder}
-        />
-      )}
+      {prixInventaire && totalInventaire === undefined ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}</Text>
+      ) : null}
 
       <FormField
         label={TEXTES.commun.general.client}
+        required
         value={form.client ?? ''}
         onChangeText={(client) => onChange({ ...form, client })}
-        placeholder={TEXTES.commun.general.facultatif}
       />
 
       <View style={commonStyles.row}>

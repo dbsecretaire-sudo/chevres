@@ -57,6 +57,7 @@ export const LIBELLES_STATUT_CHEVRE: Record<
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {
   [CATEGORIE_VENTE.LAIT]: 'Lait',
   [CATEGORIE_VENTE.FROMAGE]: 'Fromage',
+  [CATEGORIE_VENTE.VIANDE]: 'Viande',
   [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: 'Boucherie / charcuterie',
   [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: 'Animal sur pied',
   [CATEGORIE_VENTE.ANIMAL_VIVANT]: 'Animal vivant',
@@ -133,6 +134,7 @@ export const LABEL_CATEGORIE_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>,
 export const LABEL_CATEGORIE_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, string> = {
   [CATEGORIE_RECETTE.LAIT]: 'Vente de lait',
   [CATEGORIE_RECETTE.FROMAGE]: 'Vente de fromage',
+  [CATEGORIE_RECETTE.VIANDE]: 'Vente de viande',
   [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE]: 'Vente de boucherie / charcuterie',
   [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: 'Vente d’animal sur pied',
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: 'Vente d’animal vivant',
@@ -232,7 +234,7 @@ export const LABEL_CATEGORIE_STOCKAGE: Record<ValeurDe<typeof CATEGORIE_STOCKAGE
   [CATEGORIE_STOCKAGE.CONTROLES]: 'Contrôles',
 };
 
-export const LABEL_TYPE_ANIMAL_ETABLISSEMENT: Record<ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT>, string> = {
+export const LABEL_TYPE_ANIMAL_ETABLISSEMENT: Record<string, string> = {
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: 'Cochons',
   [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: 'Vaches',
   [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: 'Chèvres',
@@ -250,10 +252,7 @@ export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, s
 };
 
 /** Activité d'une écriture comptable : une espèce, ou « commun ». */
-export const LABEL_ACTIVITE_COMPTABLE: Record<
-  ValeurDe<typeof TYPE_ANIMAL_ETABLISSEMENT> | typeof ACTIVITE_COMMUNE,
-  string
-> = {
+export const LABEL_ACTIVITE_COMPTABLE: Record<string, string> = {
   ...LABEL_TYPE_ANIMAL_ETABLISSEMENT,
   [ACTIVITE_COMMUNE]: 'Commun',
 };
@@ -262,7 +261,8 @@ export const LABEL_ACTIVITE_COMPTABLE: Record<
 export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, string> = {
   [GROUPE_RECETTE.LAITERIE]: 'Vente laiterie / fromagerie',
   [GROUPE_RECETTE.OEUFS]: 'Vente œufs',
-  [GROUPE_RECETTE.BOUCHERIE]: 'Vente viande / charcuterie',
+  [GROUPE_RECETTE.VIANDE]: 'Vente viande',
+  [GROUPE_RECETTE.BOUCHERIE]: 'Vente boucherie / charcuterie',
   [GROUPE_RECETTE.AIDE]: 'Aide / subvention',
   [GROUPE_RECETTE.AUTRE]: 'Autre recette',
   [GROUPE_RECETTE.PRESTATIONS]: 'Prestations de services',

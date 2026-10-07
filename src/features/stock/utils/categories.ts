@@ -29,6 +29,8 @@ export const SECTIONS: {
   titre: string;
   genre?: GenreArticle;
   fromagerie?: boolean;
+  /** Vrai pour ce qui ne vaut que pour les poules (les œufs). */
+  poules?: boolean;
 }[] = [
   {
     section: SECTION_STOCK.FROMAGES,
@@ -42,6 +44,12 @@ export const SECTIONS: {
     categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
     titre: T.onglets.lait,
     fromagerie: true,
+  },
+  {
+    section: SECTION_STOCK.OEUFS,
+    categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+    titre: T.sections.oeufs,
+    poules: true,
   },
   {
     section: SECTION_STOCK.VIANDE,

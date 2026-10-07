@@ -14,7 +14,13 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   tuileInactive: { opacity: 0.55 },
+  /** Une tuile sans détail (le gîte) : pas de hauteur minimale, elle ne fait que la place de son icône et de son nom. */
+  tuileCompacte: { minHeight: 0 },
   tuileTitre: { fontSize: 22, fontWeight: '800', color: colors.text },
+  /** La tuile d'une activité annexe : l'icône à gauche, le compte et la TVA en petit à droite. */
+  enteteTuile: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  reperesTuile: { alignItems: 'flex-end' },
+  repereTuile: { fontSize: 11, color: colors.text },
   tuileDetail: { fontSize: 15, color: colors.textMuted },
   tuileBientot: { fontSize: 13, fontStyle: 'italic', color: colors.textMuted, marginTop: 'auto' },
 

@@ -14,8 +14,21 @@ import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/
 import type { ArchiveTrading } from '@/features/trading/types';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
 import type { ArchiveBar } from '@/features/bar/types';
+import {
+  lireArchiveAnnexes,
+  normaliserArchiveAnnexes,
+  remplacerArchiveAnnexes,
+} from '@/features/annexes/repository';
+import type { ArchiveAnnexes } from '@/features/annexes/types';
 import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
+import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
+import type { ArchiveEspeces } from '@/features/especes/types';
+import {
+  lireArchiveGroupesRecette,
+  remplacerArchiveGroupesRecette,
+  type ArchiveGroupesRecette,
+} from '@/features/comptabilite/repository/groupesRecette';
 import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
 import {
   ecrirePieceBase64,
@@ -69,12 +82,18 @@ interface FichierSauvegarde {
   bar?: ArchiveBar;
   /** Stock de la fromagerie (absent des anciennes sauvegardes). */
   stock?: ArchiveStock;
+  /** Les activités annexes du gîte : catégories, articles, prix, stocks, tickets (absent des anciennes sauvegardes). */
+  annexes?: ArchiveAnnexes;
   /** Fichiers joints des contenus et des trades (absent des anciennes sauvegardes). */
   pieces?: PieceSauvegardee[];
   comptesPcg?: CompteComptableEnregistre[];
   exploitation?: InfosExploitation;
   /** Espèces et activités de l'établissement (absent des anciennes sauvegardes). */
   etablissement?: ProfilEtablissement;
+  /** Les espèces ajoutées ou modifiées, communes à tous les établissements (absent des anciennes sauvegardes). */
+  especes?: ArchiveEspeces;
+  /** Les catégories de recette cochées par espèce et celles ajoutées (absent des anciennes sauvegardes). */
+  groupesRecette?: ArchiveGroupesRecette;
 }
 
 /**
@@ -93,19 +112,35 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees[categorie] = parAnnee;
   }
 
-  const [fournisseurs, clients, dossiers, gite, trading, bar, stock, comptesPcg, settings, etablissement] =
-    await Promise.all([
-      listFournisseurs(),
-      listClients(),
-      lireArchiveDossiers(),
-      lireArchiveGite(),
-      lireArchiveTrading(),
-      lireArchiveBar(),
-      lireArchiveStock(),
-      listComptesPcg(),
-      getSettings(),
-      profilEtablissementActif(),
-    ]);
+  const [
+    fournisseurs,
+    clients,
+    dossiers,
+    gite,
+    trading,
+    bar,
+    stock,
+    comptesPcg,
+    settings,
+    etablissement,
+    especes,
+    groupesRecette,
+    annexes,
+  ] = await Promise.all([
+    listFournisseurs(),
+    listClients(),
+    lireArchiveDossiers(),
+    lireArchiveGite(),
+    lireArchiveTrading(),
+    lireArchiveBar(),
+    lireArchiveStock(),
+    listComptesPcg(),
+    getSettings(),
+    profilEtablissementActif(),
+    lireArchiveEspeces(),
+    lireArchiveGroupesRecette(),
+    lireArchiveAnnexes(),
+  ]);
 
   const pieces: PieceSauvegardee[] = [];
   if (piecesDisponibles()) {
@@ -129,6 +164,9 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     comptesPcg,
     exploitation: settings.exploitation,
     etablissement,
+    especes,
+    groupesRecette,
+    annexes,
   };
 
   const debutNom = modeEntreprise() ? NOM_FICHIER_SAUVEGARDE_ENTREPRISE : NOM_FICHIER_SAUVEGARDE;
@@ -287,6 +325,11 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     await appliquerSiDifferent(await lireArchiveStock(), stock, () => remplacerArchiveStock(stock));
   }
 
+  if (sauvegarde.annexes && Array.isArray(sauvegarde.annexes.activites)) {
+    const annexes = normaliserArchiveAnnexes(sauvegarde.annexes);
+    await appliquerSiDifferent(await lireArchiveAnnexes(), annexes, () => remplacerArchiveAnnexes(annexes));
+  }
+
   if (Array.isArray(sauvegarde.pieces) && piecesDisponibles()) {
     for (const { piece, base64 } of sauvegarde.pieces) {
       if (!piece || !base64) continue;
@@ -309,6 +352,19 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   if (sauvegarde.exploitation) {
     await appliquerSiDifferent((await getSettings()).exploitation, sauvegarde.exploitation, () =>
       updateSettings({ exploitation: sauvegarde.exploitation }).then(() => undefined),
+    );
+  }
+
+  // Les espèces ajoutées ou modifiées d'abord : les types de l'établissement les citent.
+  if (sauvegarde.especes && Array.isArray(sauvegarde.especes.ajoutees)) {
+    await appliquerSiDifferent(await lireArchiveEspeces(), sauvegarde.especes, () =>
+      remplacerArchiveEspeces(sauvegarde.especes!),
+    );
+  }
+
+  if (sauvegarde.groupesRecette && typeof sauvegarde.groupesRecette === 'object') {
+    await appliquerSiDifferent(await lireArchiveGroupesRecette(), sauvegarde.groupesRecette, () =>
+      remplacerArchiveGroupesRecette(sauvegarde.groupesRecette!),
     );
   }
 

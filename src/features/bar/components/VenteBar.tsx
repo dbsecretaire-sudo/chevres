@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { ROUTES } from '@/shared/constants/routes';
 import { Text, View } from 'react-native';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { TicketBarCarte } from '@/features/bar/components/TicketBarCarte';
 import { ajusterStock } from '@/features/bar/repository';
-import { ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
+import { FILTRE_RUBRIQUE_BAR, ONGLET_STOCK_BAR, ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
 import { ajouterAuTicket, lignesDuTicket } from '@/features/bar/services/tickets';
 import { enregistrerVenteBar } from '@/features/bar/services/ventes';
 import type { Boisson, TicketBar } from '@/features/bar/types';
@@ -30,6 +33,8 @@ interface Props {
  * qu'une boisson est ajoutée au ticket (« OK ») et remonte si on la retire : la vente n'y touche plus.
  */
 export function VenteBar({ boissons, tickets, onTickets, onVendu }: Props) {
+  const router = useRouter();
+  const retour = useAdresseCourante();
   const [replies, setReplies] = useState<string[]>([]);
   const [renomme, setRenomme] = useState<TicketBar | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -38,7 +43,11 @@ export function VenteBar({ boissons, tickets, onTickets, onVendu }: Props) {
     onTickets(tickets.map((t) => (t.id === id ? patch(t) : t)));
 
   const vendre = async (ticket: TicketBar) => {
-    const montant = await enregistrerVenteBar(lignesDuTicket(ticket, boissons), todayISO(), ticket.nom);
+    const montant = await enregistrerVenteBar(
+      lignesDuTicket(ticket, boissons),
+      ticket.date ?? todayISO(),
+      ticket.nom,
+    );
     await onTickets(tickets.filter((t) => t.id !== ticket.id));
     setMessage(T.venteEnregistree(formatMontant(montant)));
     onVendu();
@@ -60,6 +69,10 @@ export function VenteBar({ boissons, tickets, onTickets, onVendu }: Props) {
             )
           }
           onRenommer={() => setRenomme(ticket)}
+          onChangerDate={(date) => modifier(ticket.id, (t) => ({ ...t, date }))}
+          onEditerInventaire={() =>
+            router.push(ROUTES.stockDepuis(retour, ONGLET_STOCK_BAR.CONSOMMABLES, FILTRE_RUBRIQUE_BAR))
+          }
           onAjouter={async (boissonId, quantite) => {
             setMessage(null);
             const avant = ticket.lignes.find((l) => l.boissonId === boissonId)?.quantite ?? 0;

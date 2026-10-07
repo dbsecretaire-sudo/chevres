@@ -183,6 +183,8 @@ export const NATURE_PAR_CATEGORIE: Record<
 export const SECTION_STOCK = {
   FROMAGES: 'fromages',
   LAIT: 'lait',
+  /** Les œufs des poules : un prix de vente, sans suivi de quantité. */
+  OEUFS: 'oeufs',
   VIANDE: 'viande',
   /** Les petits, l'animal sur pied et l'animal vivant : ils suivent le cheptel. */
   ANIMAUX: 'animaux',
@@ -213,3 +215,12 @@ export const ROLE_VIANDE = {
   SUR_PIED: 'pied',
   VIVANT: 'vivant',
 } as const;
+
+/** L'identifiant sous lequel le prix de vente du lait (€ le litre) est gardé dans l'inventaire, comme celui d'un fromage. */
+export const CLE_PRIX_LAIT = 'lait';
+
+/** L'identifiant sous lequel le prix de vente de l'œuf (€ pièce) est gardé dans l'inventaire. */
+export const CLE_PRIX_OEUFS = 'oeufs';
+
+/** Le prix d'un œuf tant qu'on n'en a pas défini un autre dans l'inventaire (€). */
+export const PRIX_OEUF_DEFAUT = 0.5;

@@ -58,7 +58,10 @@ export default function TabsLayout() {
           title: TEXTES.commun.general.clients,
           headerShown: false,
           href: entreprise ? undefined : null,
-          tabBarIcon: ({ color, size }) => <Ionicons name="folder-open" size={size} color={color} />,
+          // Un gîte : le logo de ses activités annexes ; un secrétariat : le dossier.
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name={stockGite ? 'storefront' : 'folder-open'} size={size} color={color} />
+          ),
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {

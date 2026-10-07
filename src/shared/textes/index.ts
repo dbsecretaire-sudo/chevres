@@ -1,4 +1,5 @@
 import { TEXTES_ACCUEIL } from '@/shared/textes/accueil';
+import { TEXTES_ANNEXES } from '@/shared/textes/annexes';
 import { TEXTES_BAR } from '@/shared/textes/bar';
 import { TEXTES_CHEPTEL } from '@/shared/textes/cheptel';
 import { TEXTES_CLIENTS } from '@/shared/textes/clients';
@@ -8,6 +9,7 @@ import { TEXTES_COMPTES_PCG } from '@/shared/textes/comptesPcg';
 import { TEXTES_DOSSIERS } from '@/shared/textes/dossiers';
 import { TEXTES_DRIVE } from '@/shared/textes/drive';
 import { TEXTES_ENTREPRISE } from '@/shared/textes/entreprise';
+import { TEXTES_ESPECES } from '@/shared/textes/especes';
 import { TEXTES_ETABLISSEMENTS } from '@/shared/textes/etablissements';
 import { TEXTES_EXPLOITATION } from '@/shared/textes/exploitation';
 import { TEXTES_EXPORT } from '@/shared/textes/export';
@@ -24,6 +26,7 @@ import { TEXTES_TRADING } from '@/shared/textes/trading';
 /** Tous les textes de l'application, groupés par domaine puis par écran. */
 export const TEXTES = {
   accueil: TEXTES_ACCUEIL,
+  annexes: TEXTES_ANNEXES,
   bar: TEXTES_BAR,
   cheptel: TEXTES_CHEPTEL,
   clients: TEXTES_CLIENTS,
@@ -33,6 +36,7 @@ export const TEXTES = {
   dossiers: TEXTES_DOSSIERS,
   drive: TEXTES_DRIVE,
   entreprise: TEXTES_ENTREPRISE,
+  especes: TEXTES_ESPECES,
   etablissements: TEXTES_ETABLISSEMENTS,
   exploitation: TEXTES_EXPLOITATION,
   export: TEXTES_EXPORT,

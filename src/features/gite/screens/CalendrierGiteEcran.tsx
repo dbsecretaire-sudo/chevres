@@ -1,6 +1,10 @@
 import { useCallback, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Pressable, ScrollView } from 'react-native';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { ActiviteGiteModal } from '@/features/gite/components/ActiviteGiteModal';
+import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/ScreenList';
 import { CalendrierMois, type MarqueJour } from '@/shared/components/CalendrierMois';
 import { Fab } from '@/shared/components/Fab';
@@ -21,6 +25,8 @@ export default function CalendrierGiteEcran() {
   const [mois, setMois] = useState<MoisCalendrier>(() => moisDe(todayISO()));
   const T = TEXTES.gite.calendrier;
   const { chambres } = useChambres();
+  const [menu, setMenu] = useState(false);
+  const [activiteOuverte, setActiviteOuverte] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +48,36 @@ export default function CalendrierGiteEcran() {
 
   return (
     <Screen scroll={false}>
+      {/* Le menu burger : « Modifier l'activité » (le compte du plan comptable et la TVA de l'hébergement). */}
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              style={commonStyles.boutonEnteteDroite}
+              onPress={() => setMenu(true)}
+              hitSlop={10}
+              accessibilityLabel={TEXTES.gite.activite.menu}
+            >
+              <Ionicons name="menu" size={26} color={colors.blanc} />
+            </Pressable>
+          ),
+        }}
+      />
+      <OptionsModal
+        visible={menu}
+        onClose={() => setMenu(false)}
+        options={[
+          {
+            label: TEXTES.gite.activite.modifier,
+            icon: 'create',
+            onPress: () => {
+              setMenu(false);
+              setActiviteOuverte(true);
+            },
+          },
+        ]}
+      />
+      <ActiviteGiteModal visible={activiteOuverte} onFermer={() => setActiviteOuverte(false)} />
       <ScrollView contentContainerStyle={commonStyles.listFab}>
         <CalendrierMois
           mois={mois}

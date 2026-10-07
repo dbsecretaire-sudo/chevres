@@ -239,9 +239,11 @@ export function useFicheFacture(id: string | undefined) {
           COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE])
         : COMPTE_PAR_DEPENSE[facture.categorieDepense]
       : facture.categorieRecette
-        ? facture.categorieRecette === CATEGORIE_RECETTE.AUTRE && facture.compteManuel
+        ? (facture.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
+            facture.categorieRecette === CATEGORIE_RECETTE.HEBERGEMENT) &&
+          facture.compteManuel
           ? (comptes.find((c) => c.numero === facture.compteManuel) ??
-            COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.AUTRE])
+            COMPTE_PAR_RECETTE[facture.categorieRecette])
           : COMPTE_PAR_RECETTE[facture.categorieRecette]
         : undefined;
 

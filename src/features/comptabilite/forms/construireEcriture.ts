@@ -29,6 +29,8 @@ import type { Client } from '@/features/clients/types';
 import {
   CATEGORIES_VENTE_ANIMAUX,
   CATEGORIES_VENTE_AVEC_PRECISION,
+  CATEGORIES_VENTE_AVEC_DETAIL,
+  CATEGORIES_VENTE_PRIX_INVENTAIRE,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
@@ -99,16 +101,32 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorie);
   const estAnimal = (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(categorie);
 
-  // La viande et la charcuterie se saisissent avec ou sans quantité : un montant suffit (comptée pour 1 d'office).
-  const quantiteNum = estViande ? parseDecimal(s.quantite) || 1 : parseDecimal(s.quantite);
+  // Le client est obligatoire pour toute vente.
+  if (!s.clientSelectionne) return { erreur: { titre: TEXTES.commun.general.clientRequis } };
+
+  // Le détail de la vente (la ligne de l'inventaire vendue) est obligatoire pour la viande et la boucherie / charcuterie.
+  if ((CATEGORIES_VENTE_AVEC_DETAIL as readonly string[]).includes(categorie) && !s.precision.trim()) {
+    return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.detailRequis } };
+  }
+
+  // La quantité est toujours obligatoire ; celle d'une vente de viande est le nombre d'animaux choisis.
+  const quantiteNum =
+    categorie === CATEGORIE_VENTE.VIANDE
+      ? s.animaux.length || parseDecimal(s.quantite)
+      : parseDecimal(s.quantite);
   if (quantiteNum <= 0) return { erreur: { titre: TEXTES.commun.general.quantiteInvalide } };
 
-  let prixNum: number | undefined;
-  if (s.categorieRecette !== CATEGORIE_RECETTE.LAIT) {
-    prixNum = parseDecimal(s.montant);
-    if (!prixNum || prixNum < 0) return { erreur: { titre: TEXTES.commun.general.prixInvalide } };
-  } else if (s.montant.trim()) {
-    prixNum = parseDecimal(s.montant) || undefined;
+  // Le prix total est obligatoire pour toute vente ; quand il vient de l'inventaire, c'est qu'il n'y est pas défini.
+  const prixNum = parseDecimal(s.montant);
+  if (!prixNum || prixNum < 0) {
+    return {
+      erreur: (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(categorie)
+        ? {
+            titre: TEXTES.comptabilite.nouvelleEcriture.prixAFixerTitre,
+            message: TEXTES.comptabilite.nouvelleEcriture.prixAFixerMessage,
+          }
+        : { titre: TEXTES.commun.general.prixInvalide },
+    };
   }
 
   const estFromage = s.categorieRecette === CATEGORIE_RECETTE.FROMAGE;

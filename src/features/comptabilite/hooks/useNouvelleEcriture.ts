@@ -1,13 +1,26 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
-import { synchroniserStockAlimentation } from '@/features/stock/services/stock';
+import {
+  articlesDuGenre,
+  roleDeLaViande,
+  synchroniserStockAlimentation,
+  type FiltreStock,
+} from '@/features/stock/services/stock';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import {
+  PREFIXE_CATEGORIE_AJOUTEE,
+  categoriesAjouteesEspece,
+} from '@/features/comptabilite/utils/choixGroupesRecette';
+import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
+import { chargerChoixGroupesRecette } from '@/features/comptabilite/repository/groupesRecette';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
@@ -43,7 +56,8 @@ import {
 import { ACTIVITE_COMMUNE, ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
-import { totalMontants } from '@/shared/utils/nombres';
+import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
+import { TEXTES } from '@/shared/textes';
 import {
   CATEGORIES_DEPENSE_ENTREPRISE,
   CATEGORIE_DEPENSE,
@@ -57,6 +71,7 @@ import {
   TYPE_AIDE,
   TYPE_ALIMENT,
   TYPE_FACTURE,
+  CATEGORIES_VENTE_VIANDE,
   TYPE_FROMAGE,
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
@@ -156,8 +171,11 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
 
+  // Les catégories de recette cochées pour chaque espèce : relues à chaque ouverture, et à chaque enregistrement du choix.
+  const [versionGroupes, setVersionGroupes] = useState(0);
   useFocusEffect(
     useCallback(() => {
+      chargerChoixGroupesRecette().then(() => setVersionGroupes((v) => v + 1));
       listFournisseurs().then(setFournisseurs);
       listClients().then(setClients);
       listComptesPcg().then(setComptes);
@@ -230,6 +248,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   const changerCategorieRecette = (v: CategorieRecette) => {
     setCategorieRecette(v);
+    // Le détail (et les animaux choisis) d'une vente de viande ne vaut pas pour une autre catégorie : on repart de zéro.
+    if (v !== categorieRecette) {
+      setPrecision('');
+      setAnimaux([]);
+      setJeune(undefined);
+    }
     if (estCategorieVente(v)) {
       setTauxTvaVente(String(TAUX_TVA_VENTE_PAR_CATEGORIE[v]));
       rattacherSiCommun();
@@ -247,15 +271,66 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     }
   };
 
+  // Une catégorie ajoutée par l'utilisateur : une recette « autre » dont le compte est celui qu'il a choisi.
+  const [categorieAjouteeId, setCategorieAjouteeId] = useState<string | undefined>();
+  const categoriesAjouteesActivite =
+    activite === ACTIVITE_COMMUNE || entreprise ? [] : categoriesAjouteesEspece(activite);
+  const categorieAjoutee =
+    categorieRecette === CATEGORIE_RECETTE.AUTRE
+      ? categoriesAjouteesActivite.find((c) => c.id === categorieAjouteeId)
+      : undefined;
+  const choisirGroupeRecette = (valeur: string) => {
+    const ajoutee = categoriesAjouteesActivite.find((c) => `${PREFIXE_CATEGORIE_AJOUTEE}${c.id}` === valeur);
+    if (ajoutee) {
+      setCategorieAjouteeId(ajoutee.id);
+      changerCategorieRecette(CATEGORIE_RECETTE.AUTRE);
+      setCompteRecetteAutre(ajoutee.compte);
+      return;
+    }
+    setCategorieAjouteeId(undefined);
+    changerCategorieRecette(categoriesGroupe(valeur as GroupeRecette, activite)[0]);
+  };
+
+  // Le choix des catégories de recette a changé (retour de l'écran des catégories) : la recette qui n'est plus proposée laisse la place.
+  useEffect(() => {
+    if (versionGroupes === 0) return;
+    const proposees = groupesRecetteActivite(activite).flatMap((g) => categoriesGroupe(g, activite));
+    if (!proposees.includes(categorieRecette) && !categorieAjoutee)
+      changerCategorieRecette(premiereCategorieRecette(activite));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionGroupes]);
+
   const enregistrer = async () => {
     setEnregistrement(true);
     try {
+      // Un animal sur pied, vivant ou un petit ne se vend pas sans dire lesquels ni leur poids : les fiches du cheptel et le poids
+      // sont obligatoires.
+      if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorieRecette)) {
+        const archive = await lireArchiveStock();
+        const filtre = activite === ACTIVITE_COMMUNE ? undefined : (activite as FiltreStock);
+        const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, filtre).find(
+          (a) => a.libelle === precision,
+        );
+        if (ligne && roleDeLaViande(ligne.cle)) {
+          if (animaux.length === 0) {
+            setErreur({
+              titre: TEXTES.comptabilite.nouvelleEcriture.animauxRequis,
+              message: TEXTES.comptabilite.nouvelleEcriture.animauxRequisMessage,
+            });
+            return;
+          }
+          if (!(parseDecimal(poidsKg) > 0)) {
+            setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.poidsRequis });
+            return;
+          }
+        }
+      }
       const resultat = construireEcriture({
         activite,
         type,
         date,
         tiers,
-        description,
+        description: description.trim() || categorieAjoutee?.nom || '',
         montant,
         categorieDepense,
         lignesAlimentation,
@@ -372,6 +447,22 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setPrecision,
     groupeRecette: groupeRecette(categorieRecette, activite),
     groupesRecette: groupesRecetteActivite(activite),
+    /** Les choix de la liste « Catégorie de recette » : celles d'office, puis celles que l'utilisateur a ajoutées. */
+    optionsGroupesRecette: [
+      ...groupesRecetteActivite(activite).map((g) => ({
+        value: g as string,
+        label: LABEL_GROUPE_RECETTE[g],
+      })),
+      ...categoriesAjouteesActivite.map((c) => ({
+        value: `${PREFIXE_CATEGORIE_AJOUTEE}${c.id}`,
+        label: c.nom,
+      })),
+    ],
+    groupeRecetteAffiche: categorieAjoutee
+      ? `${PREFIXE_CATEGORIE_AJOUTEE}${categorieAjoutee.id}`
+      : (groupeRecette(categorieRecette, activite) as string),
+    choisirGroupeRecette,
+    categorieAjoutee,
     categoriesDuGroupe: categoriesGroupe(groupeRecette(categorieRecette, activite), activite),
     changerGroupeRecette: (groupe: GroupeRecette) =>
       changerCategorieRecette(categoriesGroupe(groupe, activite)[0]),

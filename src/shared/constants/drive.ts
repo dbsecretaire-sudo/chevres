@@ -10,9 +10,14 @@ export const FICHIER_GITE = 'gite.json';
 export const FICHIER_TRADING = 'trading.json';
 export const FICHIER_BAR = 'bar.json';
 export const FICHIER_STOCK = 'stock.json';
+export const FICHIER_ANNEXES = 'annexes.json';
 /** Espèces et activités de l'établissement. */
 export const FICHIER_ETABLISSEMENT = 'etablissement.json';
 export const FICHIER_COMPTES_PCG = 'comptes-pcg.json';
+/** Les espèces ajoutées ou modifiées (communes à tous les établissements). */
+export const FICHIER_ESPECES = 'especes.json';
+/** Les catégories de recette cochées pour chaque espèce, et celles ajoutées par l'utilisateur. */
+export const FICHIER_GROUPES_RECETTE = 'groupes-recette.json';
 
 /** Extension des fichiers de données annuels (un par catégorie et par année : « factures_2026.csv »). */
 export const EXTENSION_CSV = '.csv';

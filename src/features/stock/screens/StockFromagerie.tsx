@@ -1,10 +1,11 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { exporterInventairePdf } from '@/features/export/inventairePdf';
+import { chargerChoixGroupesRecette } from '@/features/comptabilite/repository/groupesRecette';
+import { groupesActifsEspece, laiterieActive } from '@/features/comptabilite/utils/recettes';
 import { CATEGORIES, SECTIONS, type Categorie, type Section } from '@/features/stock/utils/categories';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Card } from '@/shared/components/Card';
@@ -27,7 +28,7 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { effectifsVivants, type EffectifVivant } from '@/features/cheptel/repository/chevres';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, GROUPE_RECETTE } from '@/shared/constants/comptabilite';
 import {
   ajouterArticle,
   ajouterMouvementManuel,
@@ -37,6 +38,7 @@ import {
   conditionnementDe,
   definirConditionnement,
   definirPrixArticle,
+  prixDesOeufs,
   enregistrerLaitJour,
   positionnerArticle,
   supprimerLaitJour,
@@ -55,6 +57,8 @@ import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
 import {
   ARTICLE_EMBALLAGE,
+  CLE_PRIX_LAIT,
+  CLE_PRIX_OEUFS,
   FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
   NATURE_PAR_GENRE,
@@ -111,13 +115,16 @@ export default function StockFromagerie() {
   const voulu: FiltreStock = filtre ?? especeActive;
   const filtreCourant: FiltreStock =
     voulu === FILTRE_STOCK_TOUT || especes.includes(voulu) ? voulu : FILTRE_STOCK_TOUT;
-  const fromagerie =
-    filtreCourant === FILTRE_STOCK_TOUT
-      ? especes.some((e) => e === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES || e === TYPE_ANIMAL_ETABLISSEMENT.BREBIS)
-      : filtreCourant === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES ||
-        filtreCourant === TYPE_ANIMAL_ETABLISSEMENT.BREBIS;
-  // La fromagerie et le lait ne concernent que les chèvres et les brebis ; le reste vaut pour tous les animaux.
-  const sectionsVisibles = SECTIONS.filter((x) => fromagerie || !x.fromagerie);
+  // La fromagerie et le lait : les chèvres et les brebis d'office, les autres espèces (les vaches) si la laiterie est cochée.
+  const fromagerie = (filtreCourant === FILTRE_STOCK_TOUT ? especes : [filtreCourant]).some((espece) =>
+    laiterieActive(espece),
+  );
+  // Les œufs : la liste des espèces pour lesquelles la vente d'œufs est cochée (les poules, d'office).
+  const [, setVersionGroupes] = useState(0);
+  const poules = (filtreCourant === FILTRE_STOCK_TOUT ? especes : [filtreCourant]).some((espece) =>
+    groupesActifsEspece(espece).includes(GROUPE_RECETTE.OEUFS),
+  );
+  const sectionsVisibles = SECTIONS.filter((x) => (fromagerie || !x.fromagerie) && (poules || !x.poules));
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
   const { onglet: ongletDemande, espece: especeDemandee } = useLocalSearchParams<{
@@ -161,6 +168,8 @@ export default function StockFromagerie() {
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
   /** Le litrage qu'on modifie (« nouveau » pour en noter un) ; la fenêtre est fermée quand il est absent. */
+  const [prixLaitOuvert, setPrixLaitOuvert] = useState(false);
+  const [prixOeufsOuvert, setPrixOeufsOuvert] = useState(false);
   const [laitOuvert, setLaitOuvert] = useState<LaitJour | 'nouveau' | null>(null);
   /** Le fromage dont on modifie le conditionnement. */
   const [enEdition, setEnEdition] = useState<string | null>(null);
@@ -178,6 +187,7 @@ export default function StockFromagerie() {
       lireArchiveStock(),
       listToutesVentes(),
       effectifsVivants(),
+      chargerChoixGroupesRecette().then(() => setVersionGroupes((v) => v + 1)),
     ]);
     setArchive(stock);
     setEffectifs(vivants);
@@ -448,8 +458,28 @@ export default function StockFromagerie() {
                       <JournalLait
                         lait={archive.lait}
                         bilan={bilanLait(archive, litresVendus)}
+                        prix={archive.prix[CLE_PRIX_LAIT]}
+                        onModifierPrix={() => setPrixLaitOuvert(true)}
                         onOuvrir={setLaitOuvert}
                       />
+                    ) : section === SECTION_STOCK.OEUFS ? (
+                      <Card>
+                        <View style={commonStyles.rowSpaceBetween}>
+                          <Text style={commonStyles.muted}>{T.oeufs.prixDeLOeuf}</Text>
+                          <Pressable
+                            style={commonStyles.rowFin}
+                            onPress={() => setPrixOeufsOuvert(true)}
+                            hitSlop={8}
+                            accessibilityLabel={T.oeufs.modifierLePrix}
+                          >
+                            <Text style={commonStyles.lineBold}>
+                              {T.oeufs.prixOeuf(formatMontant(prixDesOeufs(archive)))}
+                            </Text>
+                            <Ionicons name="pencil" size={18} color={colors.ajout} />
+                          </Pressable>
+                        </View>
+                        <Text style={commonStyles.note}>{T.oeufs.note}</Text>
+                      </Card>
                     ) : (
                       conditionnement
                     )}
@@ -527,6 +557,34 @@ export default function StockFromagerie() {
       />
 
       <Fab options={[...optionsAjout, ...optionsListes]} />
+
+      <ArticleStockModal
+        visible={prixLaitOuvert}
+        titre={T.laitJour.modifierLePrix}
+        prix={archive.prix[CLE_PRIX_LAIT]}
+        avecPrix
+        libellePrix={T.articleModal.prixLitre}
+        onValider={async (_nom, prix) => {
+          await definirPrixArticle(CLE_PRIX_LAIT, prix);
+          setPrixLaitOuvert(false);
+          charger();
+        }}
+        onAnnuler={() => setPrixLaitOuvert(false)}
+      />
+
+      <ArticleStockModal
+        visible={prixOeufsOuvert}
+        titre={T.oeufs.modifierLePrix}
+        prix={prixDesOeufs(archive)}
+        avecPrix
+        libellePrix={T.oeufs.prixLabel}
+        onValider={async (_nom, prix) => {
+          await definirPrixArticle(CLE_PRIX_OEUFS, prix);
+          setPrixOeufsOuvert(false);
+          charger();
+        }}
+        onAnnuler={() => setPrixOeufsOuvert(false)}
+      />
 
       <LaitJourModal
         visible={laitOuvert !== null}

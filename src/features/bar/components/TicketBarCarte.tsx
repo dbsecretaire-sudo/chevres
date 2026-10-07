@@ -4,12 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { SelectField } from '@/shared/components/SelectField';
+import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { lignesDuTicket } from '@/features/bar/services/tickets';
 import { totalVenteBar } from '@/features/bar/services/ventes';
 import type { Boisson, TicketBar } from '@/features/bar/types';
 import { NOMBRE_MAX_BOISSONS_TICKET } from '@/shared/constants/bar';
 import { colors } from '@/shared/theme/colors';
-import { formatMontant } from '@/shared/utils/dates';
+import { formatMontant, todayISO } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/bar/Bar.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -27,6 +28,9 @@ interface Props {
   replie: boolean;
   onBasculer: () => void;
   onRenommer: () => void;
+  onChangerDate: (date: string) => void;
+  /** Le crayon à côté de la liste : l'inventaire du gîte, où se gèrent les boissons et leurs prix. */
+  onEditerInventaire: () => void;
   /** Ajoute une boisson (et sa quantité) au ticket. */
   onAjouter: (boissonId: string, quantite: number) => void;
   onRetirer: (boissonId: string) => void;
@@ -45,6 +49,8 @@ export function TicketBarCarte({
   replie,
   onBasculer,
   onRenommer,
+  onChangerDate,
+  onEditerInventaire,
   onAjouter,
   onRetirer,
   onVendre,
@@ -65,11 +71,13 @@ export function TicketBarCarte({
   return (
     <Card>
       <View style={styles.enteteTicket}>
-        <Text style={styles.nomTicket}>{ticket.nom}</Text>
-        <Pressable onPress={onRenommer} hitSlop={8} accessibilityLabel={T.ticket.renommer}>
-          <Ionicons name="pencil" size={18} color={colors.primary} />
-        </Pressable>
-        <View style={commonStyles.flex1} />
+        <View style={styles.ticketTitre}>
+          <Text style={styles.nomTicket}>{ticket.nom}</Text>
+          <Pressable onPress={onRenommer} hitSlop={8} accessibilityLabel={T.ticket.renommer}>
+            <Ionicons name="pencil" size={18} color={colors.primary} />
+          </Pressable>
+        </View>
+        <Text>{ticket.date ?? todayISO()}</Text>
         {replie ? <Text style={styles.totalTicketReplie}>{formatMontant(total)}</Text> : null}
         <Pressable
           onPress={onBasculer}
@@ -82,27 +90,23 @@ export function TicketBarCarte({
 
       {replie ? null : (
         <>
-          {lignes.length === 0 ? (
-            <Text style={commonStyles.mutedItalic}>{T.ticket.aucuneLigne}</Text>
-          ) : (
-            lignes.map(({ boisson, quantite: nombre }) => (
-              <View key={boisson.id} style={styles.ligneTicket}>
-                <Text style={styles.nomLigneTicket}>{boisson.nom}</Text>
-                <Text style={styles.quantiteLigneTicket}>{nombre}</Text>
-                <Pressable
-                  onPress={() => onRetirer(boisson.id)}
-                  hitSlop={8}
-                  accessibilityLabel={T.ticket.retirerLigne}
-                >
-                  <Ionicons name="close" size={18} color={colors.textMuted} />
-                </Pressable>
-              </View>
-            ))
-          )}
+          {lignes.map(({ boisson, quantite: nombre }) => (
+            <View key={boisson.id} style={styles.ligneTicket}>
+              <Text style={styles.nomLigneTicket}>{boisson.nom}</Text>
+              <Text style={styles.quantiteLigneTicket}>{nombre}</Text>
+              <Pressable
+                onPress={() => onRetirer(boisson.id)}
+                hitSlop={8}
+                accessibilityLabel={T.ticket.retirerLigne}
+              >
+                <Ionicons name="close" size={18} color={colors.textMuted} />
+              </Pressable>
+            </View>
+          ))}
 
           <View style={styles.ajoutTicket}>
             <View style={commonStyles.flex1}>
-              <SelectField<string>
+              <SelectFieldEditable<string>
                 label={T.ticket.boisson}
                 libelleCache
                 searchable
@@ -110,6 +114,7 @@ export function TicketBarCarte({
                 value={boissonId}
                 options={boissons.map((b) => ({ value: b.id, label: b.nom }))}
                 onChange={setBoissonId}
+                onEdit={onEditerInventaire}
               />
             </View>
             <View style={styles.quantiteAjout}>

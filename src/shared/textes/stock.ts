@@ -64,13 +64,12 @@ export const TEXTES_STOCK = {
     lait: 'Lait',
     viande: 'Viande',
   },
-  /** Les lignes de viande tenues d'office : l'animal sur pied et l'animal vivant (leurs petits ont le nom de l'espèce). */
-  viande: { surPied: 'Animal sur pied', vivant: 'Animal vivant' },
   /** La fenêtre de modification d'un article. */
   articleModal: {
     nom: 'Nom',
     prix: 'Prix de vente (€)',
     prixKg: 'Prix de vente (€ le kg)',
+    prixLitre: 'Prix de vente (€ le litre)',
     nomRequis: 'Nom requis',
     prixInvalide: 'Le prix doit être supérieur à zéro.',
     supprimer: 'Supprimer cet article',
@@ -91,6 +90,10 @@ export const TEXTES_STOCK = {
     totalDuMois: (mois: string, litres: string) => `${mois} : ${litres} L`,
     ligne: (litres: string) => `${litres} L`,
     supprimer: 'Supprimer ce litrage',
+    prixDuLitre: 'Prix de vente du lait',
+    prixLitre: (prix: string) => `${prix} € le litre`,
+    prixAFixer: 'À définir (le prix des ventes de lait en vient)',
+    modifierLePrix: 'Modifier le prix du lait',
     restant: 'Lait restant',
     produit: 'Produit',
     utilise: 'Utilisé en fromagerie',
@@ -111,8 +114,17 @@ export const TEXTES_STOCK = {
   },
   /** Le menu en haut de l'inventaire, à droite du titre. */
   statistiques: { menu: 'Menu de l’inventaire', titre: 'Statistiques', fermer: 'Fermer' },
+  /** La liste des œufs (poules) : leur prix de vente. */
+  oeufs: {
+    prixDeLOeuf: 'Prix de vente de l’œuf',
+    prixOeuf: (prix: string) => `${prix} € l’œuf`,
+    modifierLePrix: 'Modifier le prix de l’œuf',
+    prixLabel: 'Prix de vente (€ l’œuf)',
+    note: 'Une vente d’œufs en comptabilité est liée à cette liste : son prix total est le nombre d’œufs × ce prix.',
+  },
   sections: {
     fromages: 'Fromages',
+    oeufs: 'Œufs',
     emballages: 'Emballages',
     materiel: 'Équipement',
     conditionnement: 'Conditionnement',

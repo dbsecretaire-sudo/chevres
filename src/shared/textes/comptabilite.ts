@@ -186,6 +186,32 @@ export const TEXTES_COMPTABILITE = {
     animalOption: (libelle: string, sexe: string, naissance: string) =>
       `${libelle} · ${sexe} · né(e) le ${naissance}`,
     animauxVendus: 'Animaux vendus',
+    animauxRequis: 'Animaux vendus requis',
+    choixCategories: {
+      titre: 'Catégories de recette',
+      aide: 'Pour chaque catégorie, cochez les espèces de l’exploitation qui la proposent dans la liste « Catégorie de recette ».',
+      laiterieReservee: 'Réservée aux espèces laitières (chèvres, brebis, vaches).',
+      auMoinsUne: 'Cochez au moins une catégorie pour chaque espèce.',
+      ajouter: 'Ajouter une catégorie',
+      nom: 'Nom de la catégorie',
+      compte: 'Compte du plan comptable',
+      choixDuCompte: 'Choisir un compte',
+      nomRequis: 'Nom requis',
+      compteRequis: 'Compte requis',
+      supprimer: 'Supprimer cette catégorie',
+      validerAjout: 'Ajouter',
+    },
+    modifierLePrixOeuf: 'Modifier le prix de l’œuf (inventaire)',
+    detailRequis: 'Détail de la vente requis',
+    prixAFixerTitre: 'Prix à définir dans l’inventaire',
+    prixAFixerMessage:
+      'Le prix total d’une vente vient du prix de vente défini dans l’inventaire : définissez-le (crayon à côté du détail) avant d’enregistrer.',
+    aucunPrixInventaire: 'Aucun prix défini à l’inventaire : le prix total ne peut pas se calculer.',
+    prixLitreInventaire: (prix: string) => `Prix défini à l’inventaire : ${prix} le litre.`,
+    prixOeufInventaire: (prix: string) => `Prix défini à l’inventaire : ${prix} l’œuf.`,
+    poidsRequis: 'Poids requis',
+    animauxRequisMessage:
+      'Choisissez dans le cheptel au moins un animal vendu (le + à droite de « Animaux vendus »).',
     ajouterUnAnimal: 'Ajouter un animal',
     animauxNote:
       'Chaque animal passe en vendu dans le cheptel, et l’inventaire des animaux baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',

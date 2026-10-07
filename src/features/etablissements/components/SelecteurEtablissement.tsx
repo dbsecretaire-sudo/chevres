@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { BackHandler, ScrollView, Text, View } from 'react-native';
 import { Screen } from '@/shared/components/ScreenList';
 import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -40,12 +40,22 @@ export function SelecteurEtablissement({
   const [erreur, setErreur] = useState<string | null>(null);
   const [creationEnCours, setCreationEnCours] = useState(false);
 
+  // Plus de bouton « Retour » : le bouton retour d'Android revient à la liste, puis ferme l'écran.
+  useEffect(() => {
+    const abonnement = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (mode.type === 'liste') onFermer();
+      else setMode({ type: 'liste' });
+      return true;
+    });
+    return () => abonnement.remove();
+  }, [mode.type, onFermer]);
+
   const t = TEXTES.etablissements.selecteurEtablissement;
   const enEdition = mode.type === 'edition' ? etablissements.find((e) => e.id === mode.id) : undefined;
   const dernier = etablissements.length <= 1;
 
   return (
-    <Screen scroll={false}>
+    <Screen scroll={false} avecBordBas>
       {/* « handled » : avec le clavier ouvert, un seul appui sur « Créer » suffit (sinon le premier ne fait que fermer le clavier). */}
       <ScrollView
         style={commonStyles.flex1}
@@ -113,14 +123,6 @@ export function SelecteurEtablissement({
                 />
               ))}
             </View>
-
-            <Button
-              style={styles.retour}
-              label={TEXTES.commun.general.retour}
-              variant="secondary"
-              onPress={onFermer}
-            />
-            <View style={styles.espaceFab} />
           </>
         )}
       </ScrollView>

@@ -9,6 +9,11 @@ import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossie
 import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
 import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
+import {
+  lireArchiveAnnexes,
+  normaliserArchiveAnnexes,
+  remplacerArchiveAnnexes,
+} from '@/features/annexes/repository';
 import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import {
   appliquerProfilEtablissementActif,
@@ -16,6 +21,11 @@ import {
   profilEtablissementActif,
 } from '@/features/etablissements/repository';
 import { listComptesPcg, remplacerTousComptesPcg } from '@/features/comptes-pcg/repository';
+import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
+import {
+  lireArchiveGroupesRecette,
+  remplacerArchiveGroupesRecette,
+} from '@/features/comptabilite/repository/groupesRecette';
 import {
   createFileBase64,
   type DriveFile,
@@ -39,11 +49,14 @@ import { empreinteTexte } from '@/shared/utils/empreinte';
 import type { Categorie } from '@/shared/storage/types';
 import {
   DOSSIER_RACINE_DRIVE,
+  FICHIER_ANNEXES,
   FICHIER_CLIENTS,
   FICHIER_COMPTES_PCG,
   FICHIER_DOSSIERS,
+  FICHIER_ESPECES,
   FICHIER_ETABLISSEMENT,
   FICHIER_EXPLOITATION,
+  FICHIER_GROUPES_RECETTE,
   FICHIER_FOURNISSEURS,
   FICHIER_GITE,
   FICHIER_BAR,
@@ -124,6 +137,49 @@ export async function tirerEtablissement(accessToken: string, folderId: string):
     await appliquerProfilEtablissementActif(JSON.parse(json));
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les types locaux.
+  }
+}
+
+/** Envoie les espèces ajoutées ou modifiées vers Google Drive (elles valent pour tous les établissements). */
+export async function pousserEspeces(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveEspeces();
+  // Rien d'ajouté ni de modifié : rien à envoyer (cela n'écrase pas les espèces d'un autre appareil).
+  if (archive.ajoutees.length === 0 && Object.keys(archive.modifiees).length === 0) return;
+  await deposer(accessToken, FICHIER_ESPECES, folderId, JSON.stringify(archive));
+}
+
+/** Récupère les espèces depuis Google Drive, si elles sont présentes (à faire avant les types de l'établissement). */
+export async function tirerEspeces(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_ESPECES, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveEspeces())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.ajoutees)) await remplacerArchiveEspeces(archive);
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les espèces locales.
+  }
+}
+
+/** Envoie les catégories de recette cochées par espèce (et celles ajoutées) vers Google Drive. */
+export async function pousserGroupesRecette(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveGroupesRecette();
+  if (Object.keys(archive.choix).length === 0 && archive.ajoutees.length === 0) return;
+  await deposer(accessToken, FICHIER_GROUPES_RECETTE, folderId, JSON.stringify(archive));
+}
+
+/** Récupère les catégories de recette depuis Google Drive, si elles sont présentes (remplace les données locales). */
+export async function tirerGroupesRecette(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_GROUPES_RECETTE, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveGroupesRecette())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (archive && typeof archive === 'object' && Array.isArray(archive.ajoutees)) {
+      await remplacerArchiveGroupesRecette(archive);
+    }
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les catégories locales.
   }
 }
 
@@ -236,6 +292,27 @@ export async function tirerStock(accessToken: string, folderId: string): Promise
   try {
     const archive = JSON.parse(json);
     if (Array.isArray(archive?.mouvements)) await remplacerArchiveStock(normaliserArchiveStock(archive));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie les activités annexes du gîte (catégories, articles, prix, stocks, tickets) vers Google Drive. */
+export async function pousserAnnexes(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveAnnexes();
+  // Aucune activité : rien à envoyer (cela n'écrase pas celles d'un autre appareil).
+  if (archive.activites.length === 0) return;
+  await deposer(accessToken, FICHIER_ANNEXES, folderId, JSON.stringify(archive));
+}
+
+/** Récupère les activités annexes depuis Google Drive, si elles sont présentes (remplace les données locales). */
+export async function tirerAnnexes(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_ANNEXES, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveAnnexes())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.activites)) await remplacerArchiveAnnexes(normaliserArchiveAnnexes(archive));
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
   }
@@ -363,6 +440,7 @@ export async function pousserToutesAnnees(
     await pousserAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
   }
   await pousserInfosExploitation(accessToken, folderId);
+  await pousserEspeces(accessToken, folderId);
   await pousserEtablissement(accessToken, folderId);
   await pousserFournisseurs(accessToken, folderId);
   await pousserClients(accessToken, folderId);
@@ -371,8 +449,10 @@ export async function pousserToutesAnnees(
   await pousserTrading(accessToken, folderId);
   await pousserBar(accessToken, folderId);
   await pousserStock(accessToken, folderId);
+  await pousserAnnexes(accessToken, folderId);
   await pousserPieces(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
+  await pousserGroupesRecette(accessToken, folderId);
   return bilan;
 }
 
@@ -403,6 +483,7 @@ export async function tirerToutesAnnees(
     await tirerAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
   }
   await tirerInfosExploitation(accessToken, folderId);
+  await tirerEspeces(accessToken, folderId);
   await tirerEtablissement(accessToken, folderId);
   await tirerFournisseurs(accessToken, folderId);
   await tirerClients(accessToken, folderId);
@@ -411,7 +492,9 @@ export async function tirerToutesAnnees(
   await tirerTrading(accessToken, folderId);
   await tirerBar(accessToken, folderId);
   await tirerStock(accessToken, folderId);
+  await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);
   await tirerComptesPcg(accessToken, folderId);
+  await tirerGroupesRecette(accessToken, folderId);
   return bilan;
 }

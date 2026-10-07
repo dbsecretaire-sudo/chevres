@@ -66,7 +66,7 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
       ) : null}
       {vente.precision ? (
         <Text style={commonStyles.line}>
-          {TEXTES.comptabilite.nouvelleEcriture.precision} : {vente.precision}
+          {TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente} : {vente.precision}
         </Text>
       ) : null}
       <Text style={commonStyles.line}>

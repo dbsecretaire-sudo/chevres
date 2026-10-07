@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
@@ -7,8 +7,10 @@ import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
+import { lireArchiveStock } from '@/features/stock/repository';
 import {
   cleJeunes,
+  prixDesOeufs,
   roleDeLaViande,
   type ArticleAffiche,
   type FiltreStock,
@@ -30,8 +32,8 @@ import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouv
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { TypeAide, TypeFromage } from '@/features/comptabilite/types';
 import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
-import { TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
-import { PREFIXE_FROMAGE_AJOUTE, ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
+import { CATEGORIE_RECETTE, TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
+import { CLE_PRIX_LAIT, PREFIXE_FROMAGE_AJOUTE, ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -49,19 +51,39 @@ const OPTIONS_TYPE_FROMAGE = Object.entries(LABEL_TYPE_FROMAGE).map(([value, lab
 }));
 
 /**
- * Préremplit le prix total d'une vente avec le prix de vente de l'article (fixé dans le stock) × la quantité. Un prix saisi à
- * la main n'est jamais écrasé : seul un prix vide ou celui qu'on avait proposé se met à jour.
+ * Le prix total d'une vente dont le prix vient de l'inventaire : prix défini là × quantité, jamais saisi. Il se recalcule dès que
+ * le prix (modifié à l'inventaire), la quantité ou le détail change ; sans prix défini, le total reste vide (et la vente bloquée).
+ * `actif` faux : un autre calcul s'en charge (le poids d'un animal).
  */
-function useMontantParDefaut(e: EtatNouvelleEcriture) {
-  const derniereProposition = useRef('');
-  return (prixUnitaire: number | undefined, quantite: string) => {
+function useTotalVerrouille(
+  e: EtatNouvelleEcriture,
+  prixUnitaire: number | undefined,
+  quantite: string,
+  actif = true,
+) {
+  const { setMontant } = e;
+  useEffect(() => {
+    if (!actif) return;
     const nombre = parseDecimal(quantite);
-    if (!prixUnitaire || !(nombre > 0)) return;
-    if (e.montant.trim() !== '' && e.montant !== derniereProposition.current) return;
-    const total = (Math.round(prixUnitaire * nombre * 100) / 100).toFixed(2).replace('.', ',');
-    derniereProposition.current = total;
-    e.setMontant(total);
-  };
+    setMontant(
+      prixUnitaire && nombre > 0
+        ? (Math.round(prixUnitaire * nombre * 100) / 100).toFixed(2).replace('.', ',')
+        : '',
+    );
+  }, [actif, prixUnitaire, quantite, setMontant]);
+}
+
+/** Le prix de vente défini à l'inventaire pour le lait (€ le litre) ou l'œuf (€ pièce, 0,50 € d'office). */
+function usePrixInventaire(genre: 'lait' | 'oeufs'): number | undefined {
+  const [prix, setPrix] = useState<number | undefined>();
+  useFocusEffect(
+    useCallback(() => {
+      lireArchiveStock().then((archive) =>
+        setPrix(genre === 'lait' ? archive.prix[CLE_PRIX_LAIT] : prixDesOeufs(archive)),
+      );
+    }, [genre]),
+  );
+  return prix;
 }
 
 function ChampTauxTvaVente({ e }: Props) {
@@ -123,6 +145,8 @@ export function ChampsAide({ e }: Props) {
 
 /** Vente de lait : litrage, prix (facultatif) et TVA. */
 export function ChampsVenteLait({ e }: Props) {
+  const prixDuLitre = usePrixInventaire('lait');
+  useTotalVerrouille(e, prixDuLitre, e.quantite);
   return (
     <>
       <FormField
@@ -139,14 +163,18 @@ export function ChampsVenteLait({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
-            required={false}
-            placeholder={TEXTES.commun.general.facultatif}
+            editable={false}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
+      <Text style={commonStyles.note}>
+        {prixDuLitre
+          ? TEXTES.comptabilite.nouvelleEcriture.prixLitreInventaire(formatMontant(prixDuLitre))
+          : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
+      </Text>
     </>
   );
 }
@@ -162,7 +190,8 @@ export function ChampsVenteFromage({ e }: Props) {
           label: f.libelle,
         }))
       : OPTIONS_TYPE_FROMAGE;
-  const proposerMontant = useMontantParDefaut(e);
+  const router = useRouter();
+  const retour = useAdresseCourante();
   const valeurDe = (f: (typeof fromages)[number]) =>
     f.id ? `${PREFIXE_FROMAGE_AJOUTE}${f.id}` : f.cle.split(':')[1];
   const ajouteChoisi = fromages.find(
@@ -175,14 +204,10 @@ export function ChampsVenteFromage({ e }: Props) {
   const prixDuChoix = fromages.find(
     (f) => valeurDe(f) === (ajouteChoisi ? valeurDe(ajouteChoisi) : e.typeFromage),
   )?.prix;
-  // Dès que le fromage et son prix sont connus, le prix total est proposé (pour 1 tant qu'aucune quantité n'est saisie).
-  useEffect(() => {
-    if (prixDuChoix && e.montant.trim() === '') proposerMontant(prixDuChoix, e.quantite || '1');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prixDuChoix]);
+  // Le prix total est celui de l'inventaire × la quantité : recalculé dès que le fromage, son prix ou la quantité change.
+  useTotalVerrouille(e, prixDuChoix, e.quantite);
   /** Un fromage ajouté se note comme « autre » avec son nom : c'est ainsi que la vente retrouve son stock. */
   const choisirFromage = (valeur: string) => {
-    proposerMontant(fromages.find((f) => valeurDe(f) === valeur)?.prix, e.quantite || '1');
     if (valeur.startsWith(PREFIXE_FROMAGE_AJOUTE)) {
       const ajoute = fromages.find((f) => f.id === valeur.slice(PREFIXE_FROMAGE_AJOUTE.length));
       e.setTypeFromage(TYPE_FROMAGE.AUTRE);
@@ -197,12 +222,21 @@ export function ChampsVenteFromage({ e }: Props) {
     <>
       <View style={commonStyles.row}>
         <View style={commonStyles.flex1}>
-          <SelectField
+          <SelectFieldEditable
             label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}
             required
             value={ajouteChoisi ? `${PREFIXE_FROMAGE_AJOUTE}${ajouteChoisi.id}` : e.typeFromage}
             onChange={choisirFromage}
             options={options}
+            onEdit={() =>
+              router.push(
+                ROUTES.stockDepuis(
+                  retour,
+                  SECTION_STOCK.FROMAGES,
+                  e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
+                ),
+              )
+            }
           />
         </View>
         <View style={commonStyles.flex1}>
@@ -228,10 +262,7 @@ export function ChampsVenteFromage({ e }: Props) {
             label={TEXTES.commun.general.quantite}
             required
             value={e.quantite}
-            onChangeText={(v) => {
-              e.setQuantite(v);
-              proposerMontant(prixDuChoix, v);
-            }}
+            onChangeText={e.setQuantite}
             keyboardType="decimal-pad"
             placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
           />
@@ -241,17 +272,19 @@ export function ChampsVenteFromage({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
+            // Le prix défini à l'inventaire fait le total (quantité × prix) : on ne le saisit pas.
+            editable={false}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
-      {prixDuChoix ? (
-        <Text style={commonStyles.note}>
-          {TEXTES.comptabilite.nouvelleEcriture.prixDuStock(formatMontant(prixDuChoix))}
-        </Text>
-      ) : null}
+      <Text style={commonStyles.note}>
+        {prixDuChoix
+          ? TEXTES.comptabilite.nouvelleEcriture.prixDuStock(formatMontant(prixDuChoix))
+          : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
+      </Text>
     </>
   );
 }
@@ -297,18 +330,6 @@ export function ChampsVenteCabris({ e }: Props) {
   );
 }
 
-/** Commentaire facultatif pour préciser de quoi il s'agissait. */
-function ChampPrecision({ e }: Props) {
-  return (
-    <FormField
-      label={TEXTES.comptabilite.nouvelleEcriture.precision}
-      value={e.precision}
-      onChangeText={e.setPrecision}
-      placeholder={TEXTES.comptabilite.nouvelleEcriture.precisionPlaceholder}
-    />
-  );
-}
-
 /**
  * Vente de viande, de charcuterie ou d'animaux : le détail de la vente se choisit dans la liste du stock (le crayon y mène),
  * avec la quantité, le prix et la TVA. Tant que le stock n'a rien à proposer, la précision reste libre.
@@ -316,13 +337,18 @@ function ChampPrecision({ e }: Props) {
 export function ChampsVenteViande({ e }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
-  const viandes = useViandesDuStock(
+  const toutesViandes = useViandesDuStock(
     e.activite === ACTIVITE_COMMUNE ? undefined : (e.activite as FiltreStock),
   );
-  const proposerMontant = useMontantParDefaut(e);
+  // « Vente viande » : les animaux entiers (liste « Animaux ») ; « Vente boucherie / charcuterie » : les produits et morceaux.
+  const animalEntier = e.categorieRecette === CATEGORIE_RECETTE.VIANDE;
+  const viandes = toutesViandes.filter((v) => (roleDeLaViande(v.cle) !== undefined) === animalEntier);
   const niveaux = useNiveauxStock();
   const choisie = viandes.find((x) => x.libelle === e.precision);
   const prixDuDetail = choisie?.prix;
+  // Un morceau ou un produit : prix de l'inventaire × quantité (un animal se calcule au kilo, avec son poids).
+  const auKiloLigne = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
+  useTotalVerrouille(e, prixDuDetail, e.quantite, !auKiloLigne);
   /** Les animaux (petits, sur pied, vivants) se vendent au kilo ; la charcuterie et les autres lignes, à la quantité. */
   const auKilo = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
   /** Un animal sur pied ou vivant vient d'être choisi : on ouvre la liste des animaux de l'espèce pour désigner celui qui est vendu. */
@@ -339,7 +365,7 @@ export function ChampsVenteViande({ e }: Props) {
   const libelleAnimal = libelleAnimalVendu;
   /** Prix total d'un animal vendu au kilo : le poids × le prix au kilo du stock (pour 1 kg tant qu'aucun poids n'est saisi). */
   const totalAuKilo = (poids: string, prixAuKilo = prixDuDetail) => {
-    if (!prixAuKilo) return;
+    if (!prixAuKilo) return e.setMontant('');
     const kilos = parseDecimal(poids) > 0 ? parseDecimal(poids) : 1;
     e.setMontant((Math.round(prixAuKilo * kilos * 100) / 100).toFixed(2).replace('.', ','));
   };
@@ -367,11 +393,17 @@ export function ChampsVenteViande({ e }: Props) {
   const parAnimal = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
   /** La ligne des petits ne propose que des petits. */
   const lignePetits = !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.JEUNE;
-  /** Les animaux qu'on peut encore ajouter : ceux qui ne sont pas déjà choisis, et du même âge (petits ou adultes) que les autres. */
+  /** Les animaux d'un animal sur pied ou vivant sont des adultes : ceux qui ont l'âge de sevrage de leur espèce, pas les petits. */
+  const ligneAdultes = parAnimal && !lignePetits;
+  /**
+   * Les animaux qu'on peut encore ajouter : ceux de l'espèce de la vente qui ne sont pas déjà choisis, et de la catégorie de la
+   * ligne choisie — les petits pour la ligne des petits, les adultes pour un animal sur pied ou vivant.
+   */
   const animauxProposes = animaux.filter(
     (a) =>
       !e.animaux.includes(a.id) &&
       (!lignePetits || estPetit(a)) &&
+      (!ligneAdultes || !estPetit(a)) &&
       (animauxChoisis.length === 0 || estPetit(a) === estPetit(animauxChoisis[0])),
   );
   const ajouterAnimal = (id: string) => {
@@ -390,6 +422,11 @@ export function ChampsVenteViande({ e }: Props) {
     e.setQuantite(String(Math.max(1, liste.length)));
     if (liste.length === 0) e.setJeune(undefined);
   };
+  // Le prix d'un animal est modifié à l'inventaire : le total (poids × prix au kilo) suit.
+  useEffect(() => {
+    if (auKiloLigne) totalAuKilo(e.poidsKg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prixDuDetail]);
   const maximum = maximumAnimaux(choisie, e.jeune);
   const optionsAnimaux = Array.from(
     { length: Math.max(maximum, Math.round(parseDecimal(e.quantite)) || 1) },
@@ -402,7 +439,7 @@ export function ChampsVenteViande({ e }: Props) {
     <>
       <SelectFieldEditable<string>
         label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
-        required={viandes.length > 0}
+        required
         searchable
         placeholder={TEXTES.comptabilite.nouvelleEcriture.choixDuDetail}
         value={e.precision}
@@ -414,7 +451,6 @@ export function ChampsVenteViande({ e }: Props) {
           if (role && !e.quantite.trim()) e.setQuantite('1');
           if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
           if (role) totalAuKilo(e.poidsKg, nouvelle?.prix);
-          else proposerMontant(nouvelle?.prix, e.quantite || '1');
           if (role) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
           // Un autre détail : les animaux déjà choisis ne valent plus.
@@ -441,6 +477,7 @@ export function ChampsVenteViande({ e }: Props) {
               <View style={commonStyles.rowSpaceBetween}>
                 <Text style={commonStyles.lineSemiBold}>
                   {TEXTES.comptabilite.nouvelleEcriture.animauxVendus}
+                  <Text style={commonStyles.required}> *</Text>
                 </Text>
                 <Pressable
                   style={commonStyles.boutonPastille}
@@ -480,6 +517,7 @@ export function ChampsVenteViande({ e }: Props) {
             <View style={commonStyles.flex1}>
               <FormField
                 label={TEXTES.commun.general.poidsKg}
+                required
                 value={e.poidsKg}
                 onChangeText={(v) => {
                   e.setPoidsKg(v);
@@ -516,11 +554,9 @@ export function ChampsVenteViande({ e }: Props) {
           <View style={commonStyles.flex1}>
             <FormField
               label={TEXTES.commun.general.quantite}
+              required
               value={e.quantite}
-              onChangeText={(v) => {
-                e.setQuantite(v);
-                proposerMontant(prixDuDetail, v || '1');
-              }}
+              onChangeText={e.setQuantite}
               keyboardType="decimal-pad"
               placeholder="1"
             />
@@ -530,6 +566,7 @@ export function ChampsVenteViande({ e }: Props) {
               label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
               value={e.montant}
               onChange={e.setMontant}
+              editable={false}
             />
           </View>
           <View style={commonStyles.flex1}>
@@ -537,12 +574,13 @@ export function ChampsVenteViande({ e }: Props) {
           </View>
         </View>
       )}
-      {prixDuDetail ? (
+      {choisie && !prixDuDetail ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}</Text>
+      ) : prixDuDetail ? (
         <Text style={commonStyles.note}>
           {auKilo ? null : TEXTES.comptabilite.nouvelleEcriture.prixDuStock(formatMontant(prixDuDetail))}
         </Text>
       ) : null}
-      {viandes.length === 0 ? <ChampPrecision e={e} /> : null}
 
       <SelectModal<string>
         visible={!!question}
@@ -559,27 +597,58 @@ export function ChampsVenteViande({ e }: Props) {
 
 /** Vente d'œufs : nombre d'œufs, prix et TVA. */
 export function ChampsVenteOeufs({ e }: Props) {
+  // Choisir « vente d'œufs » lie la vente à la liste des œufs de l'inventaire (0,50 € l'œuf d'office).
+  const router = useRouter();
+  const retour = useAdresseCourante();
+  const prixDeLOeuf = usePrixInventaire('oeufs');
+  useTotalVerrouille(e, prixDeLOeuf, e.quantite);
   return (
     <>
-      <FormField
-        label={TEXTES.comptabilite.nouvelleEcriture.nombreDOeufs}
-        required
-        value={e.quantite}
-        onChangeText={e.setQuantite}
-        keyboardType="decimal-pad"
-        placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
-      />
-      <View style={commonStyles.row}>
+      <View style={styles.row3}>
+        <View style={commonStyles.flex1}>
+          <FormField
+            label={TEXTES.comptabilite.nouvelleEcriture.nombreDOeufs}
+            required
+            value={e.quantite}
+            onChangeText={e.setQuantite}
+            keyboardType="decimal-pad"
+            placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
+          />
+        </View>
         <View style={commonStyles.flex1}>
           <ChampMontantTtc
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
+            editable={false}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
+      </View>
+      {/* Le crayon mène à la liste des œufs de l'inventaire, où se change le prix (le total se recalcule au retour). */}
+      <View style={commonStyles.rowSpaceBetween}>
+        <Text style={[commonStyles.note, commonStyles.flex1]}>
+          {prixDeLOeuf
+            ? TEXTES.comptabilite.nouvelleEcriture.prixOeufInventaire(formatMontant(prixDeLOeuf))
+            : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
+        </Text>
+        <Pressable
+          onPress={() =>
+            router.push(
+              ROUTES.stockDepuis(
+                retour,
+                SECTION_STOCK.OEUFS,
+                e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
+              ),
+            )
+          }
+          hitSlop={8}
+          accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.modifierLePrixOeuf}
+        >
+          <Ionicons name="pencil" size={20} color={colors.ajout} />
+        </Pressable>
       </View>
     </>
   );
@@ -622,7 +691,6 @@ export function ChampsVenteAnimal({ e }: Props) {
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
-      <ChampPrecision e={e} />
     </>
   );
 }
