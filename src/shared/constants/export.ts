@@ -22,6 +22,8 @@ export const NOM_FICHIER_EXPORT_ANNEE = 'troupeau_chevres';
 export const NOM_FICHIER_EXPORT_EXPLOITATION = 'exploitation';
 export const NOM_FICHIER_EXPORT_PLAN_COMPTABLE = 'plan_comptable';
 export const NOM_FICHIER_EXPORT_CHEPTEL = 'cheptel';
+/** Les mouvements de l'inventaire. */
+export const NOM_FICHIER_EXPORT_INVENTAIRE = 'inventaire';
 /** Export de l'année d'une entreprise (prestations de service, association…). */
 export const NOM_FICHIER_EXPORT_ENTREPRISE = 'entreprise';
 

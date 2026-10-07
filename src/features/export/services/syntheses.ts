@@ -28,6 +28,16 @@ export function recapParCompte(factures: Facture[]): RecapCompte[] {
     .map(([numero, v]) => ({ numero, ...v }));
 }
 
+/**
+ * Les factures rangées par n° de compte du plan comptable, puis par date (la plus ancienne d'abord) : celles qui n'ont pas de
+ * compte viennent à la fin.
+ */
+export function facturesParCompteEtDate(factures: Facture[]): Facture[] {
+  // Sans compte : après tous les autres (« ~ » vient après les chiffres).
+  const numero = (f: Facture) => compteDeFacture(f)?.numero ?? '~';
+  return [...factures].sort((a, b) => numero(a).localeCompare(numero(b)) || a.date.localeCompare(b.date));
+}
+
 /** Lignes du récapitulatif par compte ; `formaterSolde` adapte la valeur au format (nombre brut ou texte). */
 export function lignesRecapCompte(recap: RecapCompte[], formaterSolde: (total: number) => string | number) {
   return recap.map((r) => ({

@@ -1,4 +1,6 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { ONGLET_STOCK_BAR } from '@/shared/constants/bar';
+import { SECTION_STOCK } from '@/shared/constants/stock';
 import {
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
@@ -200,4 +202,40 @@ export const TAUX_IMPOSITION_TYPE_AIDE: Record<
   [TYPE_AIDE.ECOREGIME]: 100,
   [TYPE_AIDE.PETITS_RUMINANTS]: 100,
   [TYPE_AIDE.ICHN]: 100,
+};
+
+const COMPTE_EMBALLAGES: CompteComptable = { numero: '602600', libelle: 'Emballages' };
+const COMPTE_BAR_RESTAURANT: CompteComptable = {
+  numero: '607100',
+  libelle: 'Achats de marchandises — Restauration et bar',
+};
+
+/**
+ * Le compte du plan comptable (celui déjà utilisé pour les ventes et les achats) de chaque section de l'inventaire d'une
+ * exploitation : celui où s'enregistre ce qu'elle contient. Le matériel n'a pas de compte d'immobilisation dans ce plan : il
+ * suit la catégorie « Matériel et équipement » des dépenses.
+ */
+export const COMPTE_PAR_SECTION_INVENTAIRE: Record<ValeurDe<typeof SECTION_STOCK>, CompteComptable> = {
+  [SECTION_STOCK.FROMAGES]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.FROMAGE],
+  [SECTION_STOCK.LAIT]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.LAIT],
+  [SECTION_STOCK.VIANDE]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],
+  [SECTION_STOCK.ANIMAUX]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.ANIMAL_SUR_PIED],
+  [SECTION_STOCK.ALIMENTS]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.ALIMENTATION],
+  [SECTION_STOCK.EMBALLAGES]: COMPTE_EMBALLAGES,
+  [SECTION_STOCK.CONDITIONNEMENT]: COMPTE_EMBALLAGES,
+  [SECTION_STOCK.ENTRETIEN]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
+  [SECTION_STOCK.EQUIPEMENT_CONSOMMABLE]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
+  [SECTION_STOCK.EQUIPEMENT]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
+  [SECTION_STOCK.MATERIEL]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
+};
+
+/** Le compte de chaque section de l'inventaire d'un gîte (les boissons et la nourriture du bar, le matériel…). */
+export const COMPTE_PAR_SECTION_INVENTAIRE_GITE: Record<
+  ValeurDe<typeof ONGLET_STOCK_BAR>,
+  CompteComptable
+> = {
+  [ONGLET_STOCK_BAR.CONSOMMABLES]: COMPTE_BAR_RESTAURANT,
+  [ONGLET_STOCK_BAR.CONDITIONNEMENT]: COMPTE_EMBALLAGES,
+  [ONGLET_STOCK_BAR.ENTRETIEN]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
+  [ONGLET_STOCK_BAR.MATERIEL]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
 };

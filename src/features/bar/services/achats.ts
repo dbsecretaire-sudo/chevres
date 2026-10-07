@@ -1,5 +1,6 @@
 import { ajusterStock, lireArchiveBar } from '@/features/bar/repository';
 import type { LigneMarchandise } from '@/features/comptabilite/types';
+import { ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
 
 /** Les quantités achetées par marchandise (son nom), toutes lignes confondues. */
 const quantitesParNom = (lignes: LigneMarchandise[] = []): Map<string, number> => {
@@ -20,6 +21,8 @@ const quantitesParNom = (lignes: LigneMarchandise[] = []): Map<string, number> =
 export async function synchroniserStockAchat(
   avant: LigneMarchandise[] | undefined,
   apres: LigneMarchandise[] | undefined,
+  /** Le jour de la facture : celui des mouvements du journal (aujourd'hui d'office). */
+  date?: string,
 ): Promise<void> {
   const anciennes = quantitesParNom(avant);
   const nouvelles = quantitesParNom(apres);
@@ -32,8 +35,8 @@ export async function synchroniserStockAchat(
     const boisson = bar.boissons.find((b) => b.nom === nom);
     const aliment = bar.aliments.find((a) => a.nom === nom);
     const article = bar.articles.find((a) => a.nom === nom);
-    if (boisson) await ajusterStock('boisson', boisson.id, ecart);
-    else if (aliment) await ajusterStock('aliment', aliment.id, ecart);
-    else if (article) await ajusterStock('article', article.id, ecart);
+    if (boisson) await ajusterStock('boisson', boisson.id, ecart, ORIGINE_MOUVEMENT_GITE.ACHAT, date);
+    else if (aliment) await ajusterStock('aliment', aliment.id, ecart, ORIGINE_MOUVEMENT_GITE.ACHAT, date);
+    else if (article) await ajusterStock('article', article.id, ecart, ORIGINE_MOUVEMENT_GITE.ACHAT, date);
   }
 }

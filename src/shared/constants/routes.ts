@@ -35,6 +35,9 @@ export const ROUTES = {
     return modeEntreprise() ? ('/clients/nouveau' as const) : ('/comptabilite/clients/nouveau' as const);
   },
   COMPTES_PCG: '/comptabilite/comptes-pcg',
+  /** Les comptes du plan comptable, ouverts depuis un écran en cours : `retour` est l'adresse où la flèche de retour ramène. */
+  comptesPcgDepuis: (retour: string) =>
+    `/comptabilite/comptes-pcg?retour=${encodeURIComponent(retour)}` as const,
   COMPTE_PCG_NOUVEAU: '/comptabilite/comptes-pcg/nouveau',
 
   ficheChevre: (id: string) => `/cheptel/${id}` as const,
@@ -61,8 +64,10 @@ export const ROUTES = {
   /** Le stock (onglet du bas), où se gèrent les marchandises, les aliments, les boissons. */
   STOCK: '/stock',
   /** L'historique et les statistiques du stock : deux écrans à part, ouverts depuis le menu du stock. */
-  STOCK_HISTORIQUE: '/stock-historique',
-  STOCK_STATISTIQUES: '/stock-statistiques',
+  STOCK_HISTORIQUE: '/stock/stock-historique',
+  STOCK_STATISTIQUES: '/stock/stock-statistiques',
+  /** La structure des listes de l'inventaire (ajouter des listes aux catégories). */
+  STOCK_STRUCTURE: '/stock/structure',
   /**
    * Le stock ouvert depuis un formulaire en cours : `retour` est l'adresse de ce formulaire (le stock affiche alors une
    * flèche pour y revenir), `onglet` l'onglet à ouvrir (les aliments, par exemple) et `espece` l'animal à regarder.
@@ -70,7 +75,8 @@ export const ROUTES = {
   stockDepuis: (retour: string, onglet?: string, espece?: string) =>
     `/stock?${onglet ? `onglet=${onglet}&` : ''}${espece ? `espece=${espece}&` : ''}retour=${encodeURIComponent(retour)}` as const,
   /** L'historique du stock, ouvert sur un animal (ou sur tous quand `espece` est absent). */
-  stockHistorique: (espece?: string) => `/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
+  stockHistorique: (espece?: string) =>
+    `/stock/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
   repasDuJour: (date: string) => `/clients/repas/${date}` as const,
   jourEcheances: (date: string) => `/clients/echeances/${date}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,

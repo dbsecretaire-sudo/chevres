@@ -68,7 +68,7 @@ export const TEXTES_COMPTABILITE = {
     choixMarchandise: 'Choix de la marchandise',
     quantite: 'Quantité',
     ex10: 'ex: 10',
-    aucuneDansLeStock: 'Ajoutez-les dans le stock (crayon).',
+    aucuneDansLeStock: 'Ajoutez-les dans l’inventaire (crayon).',
   },
   lignesCarburantEditor: {
     detailParCarburant: 'Détail par carburant',
@@ -179,7 +179,7 @@ export const TEXTES_COMPTABILITE = {
     prixTotalTtc: 'Prix total TTC (€)',
     typeDeFromage: 'Type de fromage',
     detailDeLaVente: 'Détail de la vente',
-    choixDuDetail: 'Cabris, saucisson… (liste du stock)',
+    choixDuDetail: 'Cabris, saucisson… (liste de l’inventaire)',
     /** Le titre de la liste des animaux de la vente (animal sur pied, animal vivant). */
     animalVendu: (detail: string) => `${detail} : quel animal ?`,
     /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
@@ -188,16 +188,18 @@ export const TEXTES_COMPTABILITE = {
     animauxVendus: 'Animaux vendus',
     ajouterUnAnimal: 'Ajouter un animal',
     animauxNote:
-      'Chaque animal passe en vendu dans le cheptel, et le stock de viande baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
+      'Chaque animal passe en vendu dans le cheptel, et l’inventaire des animaux baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
     retirerAnimal: 'Retirer cet animal',
+    sansBoucle: 'Sans boucle',
+    sansBoucleNom: (nom: string) => `${nom} (sans boucle)`,
     sexeM: 'M',
     sexeF: 'F',
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
-    prixDuStockKg: (prix: string) => `Prix défini au stock : ${prix} le kg.`,
-    prixDuStock: (prix: string) => `Prix défini au stock : ${prix} l’unité.`,
+    prixDuStockKg: (prix: string) => `Prix défini à l’inventaire : ${prix} le kg.`,
+    prixDuStock: (prix: string) => `Prix défini à l’inventaire : ${prix} l’unité.`,
     aucuneViandeAuStock:
-      'Aucune viande au stock pour cet animal : touchez le crayon pour en ajouter (onglet Viande), ou précisez-la ci-dessous.',
+      'Aucune viande dans l’inventaire pour cet animal : touchez le crayon pour en ajouter, ou précisez-la ci-dessous.',
     preciserLeType: 'Préciser le type',
     ex2: 'ex: 2',
     nombreDeTetes: 'Nombre de têtes',

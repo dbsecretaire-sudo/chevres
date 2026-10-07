@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { TicketBarCarte } from '@/features/bar/components/TicketBarCarte';
 import { ajusterStock } from '@/features/bar/repository';
+import { ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
 import { ajouterAuTicket, lignesDuTicket } from '@/features/bar/services/tickets';
 import { enregistrerVenteBar } from '@/features/bar/services/ventes';
 import type { Boisson, TicketBar } from '@/features/bar/types';
@@ -65,13 +66,14 @@ export function VenteBar({ boissons, tickets, onTickets, onVendu }: Props) {
             const lignes = ajouterAuTicket(ticket.lignes, boissonId, quantite);
             const ajoutees = (lignes.find((l) => l.boissonId === boissonId)?.quantite ?? 0) - avant;
             // Le stock de la boisson baisse tout de suite, de ce qui a été ajouté au ticket.
-            if (ajoutees > 0) await ajusterStock('boisson', boissonId, -ajoutees);
+            if (ajoutees > 0)
+              await ajusterStock('boisson', boissonId, -ajoutees, ORIGINE_MOUVEMENT_GITE.VENTE);
             await modifier(ticket.id, (t) => ({ ...t, lignes }));
           }}
           onRetirer={async (boissonId) => {
             const retiree = ticket.lignes.find((l) => l.boissonId === boissonId)?.quantite ?? 0;
             // Une boisson retirée du ticket revient en stock.
-            if (retiree > 0) await ajusterStock('boisson', boissonId, retiree);
+            if (retiree > 0) await ajusterStock('boisson', boissonId, retiree, ORIGINE_MOUVEMENT_GITE.VENTE);
             await modifier(ticket.id, (t) => ({
               ...t,
               lignes: t.lignes.filter((l) => l.boissonId !== boissonId),

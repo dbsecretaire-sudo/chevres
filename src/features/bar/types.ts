@@ -1,4 +1,4 @@
-import type { CATEGORIE_ARTICLE_GITE } from '@/shared/constants/bar';
+import type { CATEGORIE_ARTICLE_GITE, ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
 import type { RUBRIQUE_MARCHANDISE } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
@@ -48,6 +48,18 @@ export interface TicketBar {
 }
 
 /** Tout ce que contient le bar et la restauration d'un établissement : stocké, sauvegardé et synchronisé ensemble. */
+/** Un mouvement de l'inventaire du gîte : des unités ajoutées (positif) ou retirées (négatif) d'une boisson, d'un aliment ou d'un article. */
+export interface MouvementBar {
+  id: string;
+  genre: 'boisson' | 'aliment' | 'article';
+  /** L'identifiant de la boisson, de l'aliment ou de l'article. */
+  articleId: string;
+  /** AAAA-MM-JJ */
+  date: string;
+  delta: number;
+  origine: ValeurDe<typeof ORIGINE_MOUVEMENT_GITE>;
+}
+
 export interface ArchiveBar {
   boissons: Boisson[];
   aliments: Aliment[];
@@ -60,4 +72,6 @@ export interface ArchiveBar {
    * « conditionnement », « entretien ») : leurs identifiants ; ceux qui n'y sont pas suivent, dans l'ordre de création.
    */
   ordres: Record<string, string[]>;
+  /** Le journal des mouvements (le stock d'un article en est le résultat) : il alimente l'historique de l'inventaire. */
+  mouvements?: MouvementBar[];
 }

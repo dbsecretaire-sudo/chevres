@@ -19,6 +19,8 @@ export const GENRE_ARTICLE = {
   ALIMENT: 'aliment',
   /** Un produit d'entretien (toujours ajouté par l'utilisateur). */
   ENTRETIEN: 'entretien',
+  /** Un article d'une liste que l'utilisateur a créée dans la structure des catégories (voir ListeInventaire). */
+  PERSONNALISE: 'perso',
   /** Un type de viande ou de charcuterie vendu (saucisson, jambon…), toujours ajouté par l'utilisateur. */
   VIANDE: 'viande',
 } as const;
@@ -43,6 +45,8 @@ export const NATURE_PAR_GENRE: Record<ValeurDe<typeof GENRE_ARTICLE>, ValeurDe<t
   [GENRE_ARTICLE.EQUIPEMENT]: NATURE_STOCK.CONSOMMABLE,
   [GENRE_ARTICLE.MATERIEL]: NATURE_STOCK.INVESTISSEMENT,
   [GENRE_ARTICLE.BATIMENT]: NATURE_STOCK.INVESTISSEMENT,
+  // Une liste personnalisée se comporte comme un consommable (retirer, c'est consommer) ; sa vraie nature suit sa catégorie.
+  [GENRE_ARTICLE.PERSONNALISE]: NATURE_STOCK.CONSOMMABLE,
 };
 
 /** Le choix « Matériel » d'une ligne de facture d'alimentation (un achat de matériel, pas d'aliment), dans la liste des cheptels. */
@@ -99,18 +103,89 @@ export const CONDITIONNEMENT_PAR_DEFAUT: Record<TypeFromage, readonly Emballage[
 /** Début de la valeur du choix d'un fromage ajouté dans le stock (suivi de son identifiant), dans le formulaire de vente. */
 export const PREFIXE_FROMAGE_AJOUTE = 'ajoute:';
 
-/** Les trois onglets de l'écran Stock, rangés par nature : ce qui se vend, ce qui se consomme, les investissements. */
-export const ONGLET_STOCK = {
-  VENTE: 'vente',
-  CONSOMMABLES: 'consommables',
-  INVESTISSEMENTS: 'investissements',
+/**
+ * Les catégories de l'inventaire, rangées comme l'organisation comptable : ce qu'on fabrique et vend (produits finis), les
+ * animaux de l'élevage (vendus vivants ou sur pied), ce qui entre dans la fabrication (matières premières : les aliments),
+ * les consommables (autres approvisionnements : emballages, entretien…), ce qu'on achète pour le revendre (marchandises : le
+ * bar du gîte) et le matériel durable (immobilisations).
+ */
+export const CATEGORIE_INVENTAIRE = {
+  PRODUITS_FINIS: 'produits_finis',
+  PRODUITS_ANIMAUX: 'produits_animaux',
+  MATIERES_PREMIERES: 'matieres_premieres',
+  AUTRES_APPROVISIONNEMENTS: 'autres_approvisionnements',
+  MARCHANDISES: 'marchandises',
+  IMMOBILISATIONS: 'immobilisations',
 } as const;
 
-/** Les sections déroulables de chaque onglet. */
+/** La catégorie de l'inventaire de chaque genre d'article (les lignes d'animaux de la viande sont rangées à part). */
+export const CATEGORIE_PAR_GENRE: Record<
+  ValeurDe<typeof GENRE_ARTICLE>,
+  ValeurDe<typeof CATEGORIE_INVENTAIRE>
+> = {
+  [GENRE_ARTICLE.FROMAGE]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+  [GENRE_ARTICLE.VIANDE]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+  [GENRE_ARTICLE.ALIMENT]: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
+  [GENRE_ARTICLE.EMBALLAGE]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  [GENRE_ARTICLE.ENTRETIEN]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  [GENRE_ARTICLE.EQUIPEMENT]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  [GENRE_ARTICLE.MATERIEL]: CATEGORIE_INVENTAIRE.IMMOBILISATIONS,
+  [GENRE_ARTICLE.BATIMENT]: CATEGORIE_INVENTAIRE.IMMOBILISATIONS,
+  // La catégorie d'un article personnalisé est celle de sa liste (voir ListeInventaire) : celle-ci n'est qu'un repli.
+  [GENRE_ARTICLE.PERSONNALISE]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+};
+
+/** La classe du plan comptable de chaque catégorie (35. Produits finis, 33. Produits animaux, 31. Matières premières…). */
+export const CLASSE_INVENTAIRE: Record<ValeurDe<typeof CATEGORIE_INVENTAIRE>, string> = {
+  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: '35',
+  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: '33',
+  [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: '31',
+  [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: '32',
+  [CATEGORIE_INVENTAIRE.MARCHANDISES]: '37',
+  [CATEGORIE_INVENTAIRE.IMMOBILISATIONS]: '21',
+};
+
+/** Le nombre de chiffres d'un compte du plan comptable proposé à une liste. */
+export const CHIFFRES_COMPTE_PCG = 6;
+
+/**
+ * Les comptes qu'une liste d'une catégorie peut avoir : ceux de 6 chiffres qui commencent par l'un de ces nombres. Les produits
+ * finis et les produits animaux sont des ventes (701…), les matières premières des achats stockés (601…), les autres
+ * approvisionnements des achats stockés ou non (602…, 606…), les marchandises des achats ou ventes de marchandises, et les
+ * immobilisations des comptes de la classe 21.
+ */
+export const PREFIXES_COMPTE_PAR_CATEGORIE: Record<
+  ValeurDe<typeof CATEGORIE_INVENTAIRE>,
+  readonly string[]
+> = {
+  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: ['701'],
+  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: ['701'],
+  [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: ['601'],
+  [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: ['602', '606'],
+  [CATEGORIE_INVENTAIRE.MARCHANDISES]: ['607', '707'],
+  [CATEGORIE_INVENTAIRE.IMMOBILISATIONS]: ['21'],
+};
+
+/** La nature (vente, consommable, investissement) des listes de chaque catégorie. */
+export const NATURE_PAR_CATEGORIE: Record<
+  ValeurDe<typeof CATEGORIE_INVENTAIRE>,
+  ValeurDe<typeof NATURE_STOCK>
+> = {
+  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: NATURE_STOCK.VENTE,
+  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: NATURE_STOCK.VENTE,
+  [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: NATURE_STOCK.CONSOMMABLE,
+  [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: NATURE_STOCK.CONSOMMABLE,
+  [CATEGORIE_INVENTAIRE.MARCHANDISES]: NATURE_STOCK.VENTE,
+  [CATEGORIE_INVENTAIRE.IMMOBILISATIONS]: NATURE_STOCK.INVESTISSEMENT,
+};
+
+/** Les sections déroulables de chaque catégorie. */
 export const SECTION_STOCK = {
   FROMAGES: 'fromages',
   LAIT: 'lait',
   VIANDE: 'viande',
+  /** Les petits, l'animal sur pied et l'animal vivant : ils suivent le cheptel. */
+  ANIMAUX: 'animaux',
   ALIMENTS: 'aliments',
   EMBALLAGES: 'emballages',
   CONDITIONNEMENT: 'conditionnement',

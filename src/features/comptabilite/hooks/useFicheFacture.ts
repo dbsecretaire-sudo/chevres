@@ -187,6 +187,7 @@ export function useFicheFacture(id: string | undefined) {
       await synchroniserStockAchat(
         facture?.stockApplique ? facture.lignesMarchandises : undefined,
         lignesAchetees,
+        aEnregistrer.date,
       );
       await synchroniserStockAlimentation(aEnregistrer);
       setFacture(aEnregistrer);
@@ -216,7 +217,8 @@ export function useFicheFacture(id: string | undefined) {
     try {
       await supprimerFacture(facture.id);
       // Supprimer l'achat retire du stock ce qu'il y avait ajouté.
-      if (facture.stockApplique) await synchroniserStockAchat(facture.lignesMarchandises, undefined);
+      if (facture.stockApplique)
+        await synchroniserStockAchat(facture.lignesMarchandises, undefined, facture.date);
       await retirerStockAlimentation(facture.id);
       router.back();
     } catch (error) {

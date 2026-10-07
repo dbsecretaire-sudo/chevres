@@ -14,7 +14,12 @@ import {
   visiteRow,
 } from '@/features/export/services/lignesExport';
 import { construireRegistreCheptel } from '@/features/export/services/registreCheptel';
-import { lignesAlimentation, lignesRecapCompte, recapParCompte } from '@/features/export/services/syntheses';
+import {
+  facturesParCompteEtDate,
+  lignesAlimentation,
+  lignesRecapCompte,
+  recapParCompte,
+} from '@/features/export/services/syntheses';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import {
@@ -114,7 +119,7 @@ export async function exporterPlanComptablePdf(annee: number): Promise<void> {
     <h2>${TEXTES.export.pdfExport.recapitulatifParCompte}</h2>
     ${tableauHtml(lignesRecap, TEXTES.commun.general.aucuneFactureCategoriseePourCette)}
     <h2>${TEXTES.export.pdfExport.detailDesFactures}</h2>
-    ${tableauHtml(factures.map(factureRow), TEXTES.commun.general.aucuneFacturePourCetteAnnee)}
+    ${tableauHtml(facturesParCompteEtDate(factures).map(factureRow), TEXTES.commun.general.aucuneFacturePourCetteAnnee)}
   `;
 
   const titre = TEXTES.commun.general.planComptableAnneeTroupeauChevres(annee);

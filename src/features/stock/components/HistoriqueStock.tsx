@@ -5,9 +5,21 @@ import { Card } from '@/shared/components/Card';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { TitreCarte } from '@/features/cheptel/components/bilan/BilanBriques';
-import { articlesDuGenre, libelleArticle, type FiltreStock } from '@/features/stock/services/stock';
+import {
+  articlesDuGenre,
+  libelleArticle,
+  libelleOrigineMouvement,
+  type FiltreStock,
+} from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle, MouvementStock } from '@/features/stock/types';
-import { FILTRE_STOCK_TOUT, GENRE_ARTICLE, NATURE_STOCK, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
+import {
+  CATEGORIE_INVENTAIRE,
+  CLASSE_INVENTAIRE,
+  FILTRE_STOCK_TOUT,
+  GENRE_ARTICLE,
+  NATURE_STOCK,
+  ORIGINE_MOUVEMENT,
+} from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { LABEL_ACTIVITE_COMPTABLE, NOMS_MOIS } from '@/shared/textes/libelles';
@@ -23,25 +35,85 @@ const T = TEXTES.stock;
 const nombreFR = (n: number): string => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /**
- * Les cartes de l'historique, rangées par nature (ce qui se vend, ce qui se consomme, les investissements) : un titre, et les
+ * Les cartes de l'historique, rangées par catégorie de l'inventaire (35. Produits finis, 31. Matières premières…) : un titre, et les
  * genres d'articles dont elle compte les mouvements.
  */
+/** Le nom de chaque catégorie de l'inventaire. */
+const NOMS_CATEGORIE: Record<ValeurDe<typeof CATEGORIE_INVENTAIRE>, string> = {
+  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: T.categories.produitsFinis,
+  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: T.categories.produitsAnimaux,
+  [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: T.categories.matieresPremieres,
+  [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: T.categories.autresApprovisionnements,
+  [CATEGORIE_INVENTAIRE.MARCHANDISES]: T.categories.marchandises,
+  [CATEGORIE_INVENTAIRE.IMMOBILISATIONS]: T.categories.immobilisations,
+};
+
 const CARTES: {
   titre: string;
   genres: GenreArticle[];
   nature: ValeurDe<typeof NATURE_STOCK>;
+  /** La catégorie de l'inventaire (celle de l'organisation comptable) sous laquelle la carte est rangée. */
+  categorie: ValeurDe<typeof CATEGORIE_INVENTAIRE>;
   lait?: boolean;
+  /** Pour la carte d'une liste personnalisée : cette liste. */
+  listeId?: string;
 }[] = [
-  { titre: T.sections.fromages, genres: [GENRE_ARTICLE.FROMAGE], nature: NATURE_STOCK.VENTE },
+  {
+    titre: T.sections.fromages,
+    genres: [GENRE_ARTICLE.FROMAGE],
+    nature: NATURE_STOCK.VENTE,
+    categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+  },
   // Le lait n'est pas un article du stock : ses « mouvements » viennent du journal de lait, des fabrications et des ventes.
-  { titre: T.onglets.lait, genres: [], nature: NATURE_STOCK.VENTE, lait: true },
-  { titre: T.onglets.viande, genres: [GENRE_ARTICLE.VIANDE], nature: NATURE_STOCK.VENTE },
-  { titre: T.onglets.aliments, genres: [GENRE_ARTICLE.ALIMENT], nature: NATURE_STOCK.CONSOMMABLE },
-  { titre: T.sections.emballages, genres: [GENRE_ARTICLE.EMBALLAGE], nature: NATURE_STOCK.CONSOMMABLE },
-  { titre: T.onglets.entretien, genres: [GENRE_ARTICLE.ENTRETIEN], nature: NATURE_STOCK.CONSOMMABLE },
-  { titre: T.sections.materiel, genres: [GENRE_ARTICLE.EQUIPEMENT], nature: NATURE_STOCK.CONSOMMABLE },
-  { titre: T.sections.materiel, genres: [GENRE_ARTICLE.MATERIEL], nature: NATURE_STOCK.INVESTISSEMENT },
-  { titre: T.onglets.materiel, genres: [GENRE_ARTICLE.BATIMENT], nature: NATURE_STOCK.INVESTISSEMENT },
+  {
+    titre: T.onglets.lait,
+    genres: [],
+    nature: NATURE_STOCK.VENTE,
+    categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+    lait: true,
+  },
+  {
+    titre: T.onglets.viande,
+    genres: [GENRE_ARTICLE.VIANDE],
+    nature: NATURE_STOCK.VENTE,
+    categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+  },
+  {
+    titre: T.onglets.aliments,
+    genres: [GENRE_ARTICLE.ALIMENT],
+    nature: NATURE_STOCK.CONSOMMABLE,
+    categorie: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
+  },
+  {
+    titre: T.sections.emballages,
+    genres: [GENRE_ARTICLE.EMBALLAGE],
+    nature: NATURE_STOCK.CONSOMMABLE,
+    categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  },
+  {
+    titre: T.onglets.entretien,
+    genres: [GENRE_ARTICLE.ENTRETIEN],
+    nature: NATURE_STOCK.CONSOMMABLE,
+    categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  },
+  {
+    titre: T.sections.materiel,
+    genres: [GENRE_ARTICLE.EQUIPEMENT],
+    nature: NATURE_STOCK.CONSOMMABLE,
+    categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  },
+  {
+    titre: T.sections.materiel,
+    genres: [GENRE_ARTICLE.MATERIEL],
+    nature: NATURE_STOCK.INVESTISSEMENT,
+    categorie: CATEGORIE_INVENTAIRE.IMMOBILISATIONS,
+  },
+  {
+    titre: T.onglets.materiel,
+    genres: [GENRE_ARTICLE.BATIMENT],
+    nature: NATURE_STOCK.INVESTISSEMENT,
+    categorie: CATEGORIE_INVENTAIRE.IMMOBILISATIONS,
+  },
 ];
 
 /** L'identifiant du « article » lait des mouvements de l'historique. */
@@ -71,19 +143,25 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }:
     ...new Set([currentYear(), ...archive.mouvements.map((m) => Number(m.date.slice(0, 4)))]),
   ].filter((a) => Number.isFinite(a));
 
+  /** Les cartes : celles d'office, puis une par liste ajoutée dans la structure, rangées par catégorie (celle de la comptabilité). */
+  const ordreCategories = Object.values(CATEGORIE_INVENTAIRE) as string[];
+  const cartes: (typeof CARTES)[number][] = [
+    ...CARTES,
+    ...(archive.listes ?? []).map((l) => ({
+      titre: l.nom,
+      genres: [GENRE_ARTICLE.PERSONNALISE] as GenreArticle[],
+      // Les mouvements d'une liste ajoutée sont des saisies : des entrées et des sorties, comme un consommable (ou un achat).
+      nature:
+        l.categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS
+          ? NATURE_STOCK.INVESTISSEMENT
+          : NATURE_STOCK.CONSOMMABLE,
+      categorie: l.categorie,
+      listeId: l.id,
+    })),
+  ].sort((a, b) => ordreCategories.indexOf(a.categorie) - ordreCategories.indexOf(b.categorie));
+
   const basculer = (cle: string) =>
     setOuverts((actuels) => (actuels.includes(cle) ? actuels.filter((c) => c !== cle) : [...actuels, cle]));
-
-  const origine = (o: string) =>
-    o === ORIGINE_MOUVEMENT.VENTE
-      ? T.vente
-      : o === ORIGINE_MOUVEMENT.NAISSANCE
-        ? T.naissance
-        : o === ORIGINE_MOUVEMENT.ACHAT
-          ? T.achat
-          : o === ORIGINE_MOUVEMENT.CONSOMMATION
-            ? T.consommation
-            : T.manuel;
 
   /** Le lait de l'historique : seulement celui qui a été vendu (les ventes de lait de la comptabilité), en litres sortis. */
   const mouvementsLait = (): MouvementStock[] =>
@@ -100,9 +178,12 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }:
     genres: GenreArticle[],
     avecAutomatiques = false,
     lait = false,
+    listeId?: string,
   ): MouvementStock[] => {
     if (lait) return mouvementsLait();
-    const cles = new Set(genres.flatMap((g) => articlesDuGenre(g, archive, filtre).map((a) => a.cle)));
+    const cles = new Set(
+      genres.flatMap((g) => articlesDuGenre(g, archive, filtre, listeId).map((a) => a.cle)),
+    );
     return archive.mouvements.filter(
       (m) =>
         (avecAutomatiques || !m.automatique) &&
@@ -129,119 +210,123 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait }:
       </LigneFiltres>
       <Text style={commonStyles.note}>{T.historique.comparaison(annee, annee - 1)}</Text>
 
-      {CARTES.filter(({ genres, lait }) =>
-        // Une carte sans article pour cet animal (la fromagerie d'une exploitation de cochons) n'a rien à montrer ; le lait
-        // suit la fromagerie (chèvres et brebis).
-        lait
-          ? articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, filtre).length > 0
-          : genres.some((g) => articlesDuGenre(g, archive, filtre).length > 0),
-      ).map(({ titre, genres, nature, lait }, index, visibles) => {
-        const idCarte = lait ? CLE_LAIT : genres[0];
-        const premiereDeSaNature = index === 0 || visibles[index - 1].nature !== nature;
-        // Ce qui se vend (fromages, lait, viande) ne montre que ce qui a été vendu : en quantités positives.
-        const ventesSeules = nature === NATURE_STOCK.VENTE;
-        const seulementVentes = (liste: MouvementStock[]) =>
-          ventesSeules ? liste.filter((m) => m.origine === ORIGINE_MOUVEMENT.VENTE) : liste;
-        const mouvements = seulementVentes(mouvementsDeLaCarte(genres, false, lait));
-        const unite = lait
-          ? ' L'
-          : genres.includes(GENRE_ARTICLE.ALIMENT)
-            ? ` ${TEXTES.commun.general.kg}`
-            : '';
-        const dansLAnnee = seulementVentes(mouvementsDeLaCarte(genres, true, lait)).filter((m) =>
-          m.date.startsWith(String(annee)),
-        );
-        const entre = dansLAnnee.filter((m) => m.delta > 0).reduce((somme, m) => somme + m.delta, 0);
-        const sortiPar = (origine: string) =>
-          -dansLAnnee
-            .filter((m) => m.origine === origine)
-            .reduce((somme, m) => somme + Math.min(m.delta, 0), 0);
-        const bilan = ventesSeules
-          ? T.historique.bilanVendu(`${nombreFR(sortiPar(ORIGINE_MOUVEMENT.VENTE))}${unite}`)
-          : nature === NATURE_STOCK.CONSOMMABLE
-            ? T.historique.bilanConsommable(
-                `${nombreFR(entre)}${unite}`,
-                `${nombreFR(sortiPar(ORIGINE_MOUVEMENT.CONSOMMATION))}${unite}`,
-              )
-            : T.historique.bilanInvestissement(`${nombreFR(entre)}${unite}`);
-        /** Ce que les mouvements d'un mois ajoutent (ou retirent) au stock ; pour ce qui se vend, les quantités vendues. */
-        const totalDuMois = (an: number, mois: number): string =>
-          nombreFR(
-            (ventesSeules ? -1 : 1) *
-              mouvements
-                .filter((x) => x.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`))
-                .reduce((somme, x) => somme + x.delta, 0),
+      {cartes
+        .filter(({ genres, lait, listeId }) =>
+          // Une carte sans article pour cet animal (la fromagerie d'une exploitation de cochons) n'a rien à montrer ; le lait
+          // suit la fromagerie (chèvres et brebis).
+          lait
+            ? articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, filtre).length > 0
+            : genres.some((g) => articlesDuGenre(g, archive, filtre, listeId).length > 0),
+        )
+        .map(({ titre, genres, nature, categorie, lait, listeId }, index, visibles) => {
+          const idCarte = listeId ?? (lait ? CLE_LAIT : genres[0]);
+          const premiereDeSaNature = index === 0 || visibles[index - 1].categorie !== categorie;
+          // Ce qui se vend (fromages, lait, viande) ne montre que ce qui a été vendu : en quantités positives.
+          const ventesSeules = nature === NATURE_STOCK.VENTE;
+          const seulementVentes = (liste: MouvementStock[]) =>
+            ventesSeules ? liste.filter((m) => m.origine === ORIGINE_MOUVEMENT.VENTE) : liste;
+          const mouvements = seulementVentes(mouvementsDeLaCarte(genres, false, lait, listeId));
+          const unite = lait
+            ? ' L'
+            : genres.includes(GENRE_ARTICLE.ALIMENT)
+              ? ` ${TEXTES.commun.general.kg}`
+              : '';
+          const dansLAnnee = seulementVentes(mouvementsDeLaCarte(genres, true, lait, listeId)).filter((m) =>
+            m.date.startsWith(String(annee)),
           );
-        const duMois = (an: number, mois: number) =>
-          mouvements.filter((m) => m.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`));
-        const dansLAn = (an: number) => mouvements.filter((m) => m.date.startsWith(String(an))).length;
-        const mois = Array.from({ length: 12 }, (_, i) => i + 1).filter(
-          (m) => duMois(annee, m).length > 0 || duMois(annee - 1, m).length > 0,
-        );
-        return (
-          <View key={idCarte} style={commonStyles.gap10}>
-            {premiereDeSaNature ? (
-              <Text style={commonStyles.subheading}>{T.historique.natures[nature]}</Text>
-            ) : null}
-            <Card>
-              <TitreCarte titre={titre} valeur={dansLAn(annee)} comparaison={dansLAn(annee - 1)} />
-              <Text style={commonStyles.note}>{bilan}</Text>
-              {mois.length === 0 ? (
-                <Text style={commonStyles.mutedItalic}>{T.historique.aucun}</Text>
-              ) : (
-                <Pressable onPress={() => basculer(idCarte)}>
-                  <Text style={stylesBilan.voirPlus}>
-                    {ouverts.includes(idCarte) ? T.historique.masquer : T.historique.details}
-                  </Text>
-                </Pressable>
-              )}
-              {(ouverts.includes(idCarte) ? mois : []).map((m) => {
-                const cle = `${idCarte}:${annee}:${m}`;
-                const ouvert = ouverts.includes(cle);
-                const detail = duMois(annee, m).sort((a, b) => b.date.localeCompare(a.date));
-                return (
-                  <View key={cle} style={[commonStyles.gap6, stylesStock.moisHistorique]}>
-                    {/* Le mois est lui-même le lien : il déroule ses mouvements. */}
-                    <View style={stylesBilan.ligne}>
-                      {detail.length > 0 ? (
-                        <Pressable
-                          onPress={() => basculer(cle)}
-                          accessibilityLabel={ouvert ? T.historique.masquer : T.historique.details}
-                        >
-                          <Text style={stylesBilan.voirPlus}>{NOMS_MOIS[m - 1]}</Text>
-                        </Pressable>
-                      ) : (
-                        <Text style={stylesBilan.ligneLabel}>{NOMS_MOIS[m - 1]}</Text>
-                      )}
-                      <View style={stylesBilan.ligneValeurs}>
-                        <Text style={commonStyles.cardTitle}>
-                          {totalDuMois(annee, m)}
-                          {unite}
-                        </Text>
-                        <Text style={commonStyles.muted}>({totalDuMois(annee - 1, m)})</Text>
-                      </View>
-                    </View>
-                    {ouvert
-                      ? detail.map((x) => (
-                          <Text key={x.id} style={commonStyles.muted}>
-                            {T.ligneMouvement(
-                              formatDateShortFR(x.date),
-                              x.article === CLE_LAIT ? T.onglets.lait : libelleArticle(x.article, archive),
-                              ventesSeules
-                                ? `${-x.delta}${lait ? ' L' : ''}`
-                                : `${x.delta > 0 ? '+' : ''}${x.delta}`,
-                              origine(x.origine),
-                            )}
+          const entre = dansLAnnee.filter((m) => m.delta > 0).reduce((somme, m) => somme + m.delta, 0);
+          const sortiPar = (origine: string) =>
+            -dansLAnnee
+              .filter((m) => m.origine === origine)
+              .reduce((somme, m) => somme + Math.min(m.delta, 0), 0);
+          const bilan = ventesSeules
+            ? T.historique.bilanVendu(`${nombreFR(sortiPar(ORIGINE_MOUVEMENT.VENTE))}${unite}`)
+            : nature === NATURE_STOCK.CONSOMMABLE
+              ? T.historique.bilanConsommable(
+                  `${nombreFR(entre)}${unite}`,
+                  `${nombreFR(sortiPar(ORIGINE_MOUVEMENT.CONSOMMATION))}${unite}`,
+                )
+              : T.historique.bilanInvestissement(`${nombreFR(entre)}${unite}`);
+          /** Ce que les mouvements d'un mois ajoutent (ou retirent) au stock ; pour ce qui se vend, les quantités vendues. */
+          const totalDuMois = (an: number, mois: number): string =>
+            nombreFR(
+              (ventesSeules ? -1 : 1) *
+                mouvements
+                  .filter((x) => x.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`))
+                  .reduce((somme, x) => somme + x.delta, 0),
+            );
+          const duMois = (an: number, mois: number) =>
+            mouvements.filter((m) => m.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`));
+          const dansLAn = (an: number) => mouvements.filter((m) => m.date.startsWith(String(an))).length;
+          const mois = Array.from({ length: 12 }, (_, i) => i + 1).filter(
+            (m) => duMois(annee, m).length > 0 || duMois(annee - 1, m).length > 0,
+          );
+          return (
+            <View key={idCarte} style={commonStyles.gap10}>
+              {premiereDeSaNature ? (
+                <Text style={commonStyles.subheading}>
+                  {T.enteteCategorie(CLASSE_INVENTAIRE[categorie], NOMS_CATEGORIE[categorie])}
+                </Text>
+              ) : null}
+              <Card>
+                <TitreCarte titre={titre} valeur={dansLAn(annee)} comparaison={dansLAn(annee - 1)} />
+                <Text style={commonStyles.note}>{bilan}</Text>
+                {mois.length === 0 ? (
+                  <Text style={commonStyles.mutedItalic}>{T.historique.aucun}</Text>
+                ) : (
+                  <Pressable onPress={() => basculer(idCarte)}>
+                    <Text style={stylesBilan.voirPlus}>
+                      {ouverts.includes(idCarte) ? T.historique.masquer : T.historique.details}
+                    </Text>
+                  </Pressable>
+                )}
+                {(ouverts.includes(idCarte) ? mois : []).map((m) => {
+                  const cle = `${idCarte}:${annee}:${m}`;
+                  const ouvert = ouverts.includes(cle);
+                  const detail = duMois(annee, m).sort((a, b) => b.date.localeCompare(a.date));
+                  return (
+                    <View key={cle} style={[commonStyles.gap6, stylesStock.moisHistorique]}>
+                      {/* Le mois est lui-même le lien : il déroule ses mouvements. */}
+                      <View style={stylesBilan.ligne}>
+                        {detail.length > 0 ? (
+                          <Pressable
+                            onPress={() => basculer(cle)}
+                            accessibilityLabel={ouvert ? T.historique.masquer : T.historique.details}
+                          >
+                            <Text style={stylesBilan.voirPlus}>{NOMS_MOIS[m - 1]}</Text>
+                          </Pressable>
+                        ) : (
+                          <Text style={stylesBilan.ligneLabel}>{NOMS_MOIS[m - 1]}</Text>
+                        )}
+                        <View style={stylesBilan.ligneValeurs}>
+                          <Text style={commonStyles.cardTitle}>
+                            {totalDuMois(annee, m)}
+                            {unite}
                           </Text>
-                        ))
-                      : null}
-                  </View>
-                );
-              })}
-            </Card>
-          </View>
-        );
-      })}
+                          <Text style={commonStyles.muted}>({totalDuMois(annee - 1, m)})</Text>
+                        </View>
+                      </View>
+                      {ouvert
+                        ? detail.map((x) => (
+                            <Text key={x.id} style={commonStyles.muted}>
+                              {T.ligneMouvement(
+                                formatDateShortFR(x.date),
+                                x.article === CLE_LAIT ? T.onglets.lait : libelleArticle(x.article, archive),
+                                ventesSeules
+                                  ? `${-x.delta}${lait ? ' L' : ''}`
+                                  : `${x.delta > 0 ? '+' : ''}${x.delta}`,
+                                libelleOrigineMouvement(x),
+                              )}
+                            </Text>
+                          ))
+                        : null}
+                    </View>
+                  );
+                })}
+              </Card>
+            </View>
+          );
+        })}
     </View>
   );
 }

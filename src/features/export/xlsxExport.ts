@@ -16,7 +16,12 @@ import {
   venteRow,
   visiteRow,
 } from '@/features/export/services/lignesExport';
-import { lignesAlimentation, lignesRecapCompte, recapParCompte } from '@/features/export/services/syntheses';
+import {
+  facturesParCompteEtDate,
+  lignesAlimentation,
+  lignesRecapCompte,
+  recapParCompte,
+} from '@/features/export/services/syntheses';
 import type { Categorie } from '@/shared/storage/types';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -143,7 +148,10 @@ export async function exporterPlanComptableExcel(annee: number): Promise<void> {
   );
   XLSX.utils.book_append_sheet(
     workbook,
-    feuilleOuMessage(factures.map(factureRow), TEXTES.commun.general.aucuneFacturePourCetteAnnee),
+    feuilleOuMessage(
+      facturesParCompteEtDate(factures).map(factureRow),
+      TEXTES.commun.general.aucuneFacturePourCetteAnnee,
+    ),
     TEXTES.export.xlsxExport.detailFactures,
   );
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
@@ -21,9 +21,8 @@ import { Card } from '@/shared/components/Card';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { colors } from '@/shared/theme/colors';
 import { estPetitLe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
-import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import { libelleAnimalVendu } from '@/features/comptabilite/utils/animauxVendus';
 import type { Chevre } from '@/features/cheptel/types';
-import { SEXE } from '@/shared/constants/cheptel';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
@@ -32,7 +31,7 @@ import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { TypeAide, TypeFromage } from '@/features/comptabilite/types';
 import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
 import { TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
-import { PREFIXE_FROMAGE_AJOUTE, ROLE_VIANDE } from '@/shared/constants/stock';
+import { PREFIXE_FROMAGE_AJOUTE, ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -337,14 +336,7 @@ export function ChampsVenteViande({ e }: Props) {
     }, [espece]),
   );
   /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
-  const libelleAnimal = (a: Chevre) =>
-    TEXTES.comptabilite.nouvelleEcriture.animalOption(
-      libelleChevre(a),
-      a.sexe === SEXE.MALE
-        ? TEXTES.comptabilite.nouvelleEcriture.sexeM
-        : TEXTES.comptabilite.nouvelleEcriture.sexeF,
-      formatDateFR(a.dateNaissance),
-    );
+  const libelleAnimal = libelleAnimalVendu;
   /** Prix total d'un animal vendu au kilo : le poids × le prix au kilo du stock (pour 1 kg tant qu'aucun poids n'est saisi). */
   const totalAuKilo = (poids: string, prixAuKilo = prixDuDetail) => {
     if (!prixAuKilo) return;
@@ -431,7 +423,11 @@ export function ChampsVenteViande({ e }: Props) {
         options={viandes.map((v) => ({ value: v.libelle, label: v.libelle }))}
         onEdit={() =>
           router.push(
-            ROUTES.stockDepuis(retour, 'viande', e.activite === ACTIVITE_COMMUNE ? undefined : e.activite),
+            ROUTES.stockDepuis(
+              retour,
+              parAnimal ? SECTION_STOCK.ANIMAUX : SECTION_STOCK.VIANDE,
+              e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
+            ),
           )
         }
       />

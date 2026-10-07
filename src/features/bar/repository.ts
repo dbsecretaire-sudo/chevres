@@ -3,6 +3,9 @@ import { generateId } from '@/shared/utils/id';
 import { cleStockage } from '@/features/etablissements/repository';
 import type { Aliment, ArchiveBar, ArticleGite, Boisson, TicketBar } from '@/features/bar/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+import { ORIGINE_MOUVEMENT_GITE } from '@/shared/constants/bar';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { todayISO } from '@/shared/utils/dates';
 
 const cle = () => cleStockage(CLE_STOCKAGE.BAR);
 
@@ -20,6 +23,7 @@ export function normaliserArchiveBar(archive: Partial<ArchiveBar> | undefined): 
     articles: Array.isArray(archive?.articles) ? archive.articles : [],
     tickets: Array.isArray(archive?.tickets) ? archive.tickets : [],
     ordres,
+    mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
   };
 }
 
@@ -123,7 +127,11 @@ export async function renommerArticleGite(
 
 export async function supprimerArticleGite(id: string): Promise<void> {
   const archive = await lireArchiveBar();
-  await remplacerArchiveBar({ ...archive, articles: archive.articles.filter((a) => a.id !== id) });
+  await remplacerArchiveBar({
+    ...archive,
+    articles: archive.articles.filter((a) => a.id !== id),
+    mouvements: (archive.mouvements ?? []).filter((m) => m.articleId !== id),
+  });
 }
 
 /** Remplace les tickets en cours (les boissons et aliments ne bougent pas). */
@@ -159,7 +167,11 @@ export async function enregistrerBoisson(boisson: Omit<Boisson, 'id'> & { id?: s
 
 export async function supprimerBoisson(id: string): Promise<void> {
   const archive = await lireArchiveBar();
-  await remplacerArchiveBar({ ...archive, boissons: archive.boissons.filter((b) => b.id !== id) });
+  await remplacerArchiveBar({
+    ...archive,
+    boissons: archive.boissons.filter((b) => b.id !== id),
+    mouvements: (archive.mouvements ?? []).filter((m) => m.articleId !== id),
+  });
 }
 
 /** Ajoute un aliment au stock avec le nom choisi. */
@@ -186,7 +198,11 @@ export async function renommerAliment(
 
 export async function supprimerAliment(id: string): Promise<void> {
   const archive = await lireArchiveBar();
-  await remplacerArchiveBar({ ...archive, aliments: archive.aliments.filter((a) => a.id !== id) });
+  await remplacerArchiveBar({
+    ...archive,
+    aliments: archive.aliments.filter((a) => a.id !== id),
+    mouvements: (archive.mouvements ?? []).filter((m) => m.articleId !== id),
+  });
 }
 
 /** Ajoute (positif) ou retire (négatif) des unités au stock d'une boisson, d'un aliment ou d'un autre article. */
@@ -194,6 +210,9 @@ export async function ajusterStock(
   genre: 'boisson' | 'aliment' | 'article',
   id: string,
   delta: number,
+  /** D'où vient le mouvement (une saisie d'office), et son jour (aujourd'hui d'office) : ils vont au journal de l'inventaire. */
+  origine: ValeurDe<typeof ORIGINE_MOUVEMENT_GITE> = ORIGINE_MOUVEMENT_GITE.MANUEL,
+  date: string = todayISO(),
 ): Promise<void> {
   const archive = await lireArchiveBar();
   if (genre === 'boisson') {
@@ -204,6 +223,12 @@ export async function ajusterStock(
     archive.aliments = archive.aliments.map((a) => (a.id === id ? { ...a, stock: a.stock + delta } : a));
   } else {
     archive.articles = archive.articles.map((a) => (a.id === id ? { ...a, stock: a.stock + delta } : a));
+  }
+  if (delta !== 0) {
+    archive.mouvements = [
+      ...(archive.mouvements ?? []),
+      { id: generateId(), genre, articleId: id, date, delta, origine },
+    ];
   }
   await remplacerArchiveBar(archive);
 }

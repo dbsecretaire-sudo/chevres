@@ -1,6 +1,14 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { exporterInventaireGitePdf } from '@/features/export/inventaireGitePdf';
+import { ListePersonnalisee } from '@/features/stock/components/ListePersonnalisee';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { ajouterArticle as ajouterArticleInventaire } from '@/features/stock/services/stock';
+import type { ArchiveStock, ListeInventaire } from '@/features/stock/types';
+import { ROUTES } from '@/shared/constants/routes';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { CATEGORIES_GITE, SECTIONS_GITE, type SectionGite } from '@/features/stock/utils/categories';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Fab } from '@/shared/components/Fab';
@@ -9,7 +17,6 @@ import { ListRow } from '@/shared/components/ListRow';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
-import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { BoissonModal } from '@/features/bar/components/BoissonModal';
 import { ChampRubrique } from '@/features/bar/components/ChampRubrique';
 import { NomModal } from '@/features/dossiers/components/NomModal';
@@ -30,7 +37,9 @@ import {
   triesSelonOrdre,
 } from '@/features/bar/repository';
 import type { Aliment, ArchiveBar, ArticleGite, Boisson } from '@/features/bar/types';
-import { FILTRE_RUBRIQUE_TOUT, ONGLET_STOCK_BAR, ONGLET_STOCK_GITE } from '@/shared/constants/bar';
+import { FILTRE_RUBRIQUE_TOUT, ONGLET_STOCK_BAR } from '@/shared/constants/bar';
+import { CATEGORIE_INVENTAIRE, CLASSE_INVENTAIRE, GENRE_ARTICLE } from '@/shared/constants/stock';
+import { COMPTE_PAR_SECTION_INVENTAIRE_GITE } from '@/shared/constants/planComptable';
 import { RUBRIQUE_MARCHANDISE } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
@@ -41,40 +50,15 @@ import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-type Onglet = ValeurDe<typeof ONGLET_STOCK_GITE>;
-type Section = ValeurDe<typeof ONGLET_STOCK_BAR>;
-type Categorie = ArticleGite['categorie'];
+type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
+type Section = SectionGite;
+type CategorieArticle = ArticleGite['categorie'];
 
 const T = TEXTES.bar;
-const PUCES: { valeur: Onglet; label: string }[] = [
-  { valeur: ONGLET_STOCK_GITE.VENTE, label: T.stock.onglets.vente },
-  { valeur: ONGLET_STOCK_GITE.CONSOMMABLES, label: T.stock.onglets.consommables },
-  { valeur: ONGLET_STOCK_GITE.INVESTISSEMENTS, label: T.stock.onglets.investissements },
-];
+const TS = TEXTES.stock;
 
-/** Les sections déroulables de chaque onglet : ce qui se vend (boissons et nourriture), ce qui se consomme, le matériel. */
-const SECTIONS: { section: Section; onglet: Onglet; titre: string }[] = [
-  {
-    section: ONGLET_STOCK_BAR.CONSOMMABLES,
-    onglet: ONGLET_STOCK_GITE.VENTE,
-    titre: T.stock.boissonsNourriture,
-  },
-  {
-    section: ONGLET_STOCK_BAR.CONDITIONNEMENT,
-    onglet: ONGLET_STOCK_GITE.CONSOMMABLES,
-    titre: T.stock.onglets.conditionnement,
-  },
-  {
-    section: ONGLET_STOCK_BAR.ENTRETIEN,
-    onglet: ONGLET_STOCK_GITE.CONSOMMABLES,
-    titre: T.stock.onglets.entretien,
-  },
-  {
-    section: ONGLET_STOCK_BAR.MATERIEL,
-    onglet: ONGLET_STOCK_GITE.INVESTISSEMENTS,
-    titre: T.stock.onglets.materiel,
-  },
-];
+const CATEGORIES = CATEGORIES_GITE;
+const SECTIONS = SECTIONS_GITE;
 
 const PREFIXE_BOISSON = 'boisson:';
 const PREFIXE_ALIMENT = 'aliment:';
@@ -92,7 +76,7 @@ interface LigneStock {
 }
 
 /** Ce qu'on crée avec le bouton « + » : un aliment (consommables), ou un article d'une catégorie. */
-type Ajout = 'aliment' | Categorie;
+type Ajout = 'aliment' | CategorieArticle;
 
 /**
  * Le stock d'un gîte (onglet Stock en bas de l'écran), construit comme celui d'une exploitation agricole : des étiquettes
@@ -101,9 +85,9 @@ type Ajout = 'aliment' | Categorie;
  * en ajouter. Un appui sur la ligne ajoute ou retire des unités (+1, −1).
  */
 export default function StockBar() {
-  const [onglet, setOnglet] = useState<Onglet>(ONGLET_STOCK_GITE.VENTE);
-  /** Les sections qui sont déroulées : aucune au départ, tout est réduit. */
-  const [ouvertes, setOuvertes] = useState<Section[]>([]);
+  const router = useRouter();
+  /** La catégorie qui est déroulée (une seule à la fois) : aucune au départ, tout est réduit. */
+  const [ouvertes, setOuvertes] = useState<Categorie[]>([]);
   /** L'activité du gîte regardée : toutes, ou le bar, le restaurant, une activité annexe. */
   const [filtre, setFiltre] = useState<string>(FILTRE_RUBRIQUE_TOUT);
   /** L'activité choisie à la création ou au renommage d'un article (vide : toutes les activités, d'office). */
@@ -120,12 +104,32 @@ export default function StockBar() {
   const [renomme, setRenomme] = useState<{ genre: 'aliment' | 'article'; id: string; nom: string } | null>(
     null,
   );
+  /** Le menu en haut à droite (burger). */
+  const [menuOuvert, setMenuOuvert] = useState(false);
   const [boissonOuverte, setBoissonOuverte] = useState(false);
   const [boissonModifiee, setBoissonModifiee] = useState<Boisson | undefined>();
   /** Vrai pendant qu'on fait glisser une ligne : la page ne défile alors pas. */
   const [glisse, setGlisse] = useState(false);
 
-  const charger = useCallback(async () => setArchive(await lireArchiveBar()), []);
+  /** L'inventaire des listes ajoutées dans la structure des listes (leurs articles et leurs mouvements). */
+  const [inventaire, setInventaire] = useState<ArchiveStock>({
+    mouvements: [],
+    articles: [],
+    conditionnements: {},
+    ordres: {},
+    noms: {},
+    lait: [],
+    prix: {},
+    listes: [],
+  });
+  /** La liste ajoutée dans laquelle on crée un article (la fenêtre d'ajout est fermée quand elle est absente). */
+  const [ajoutListe, setAjoutListe] = useState<ListeInventaire | null>(null);
+
+  const charger = useCallback(async () => {
+    const [bar, stock] = await Promise.all([lireArchiveBar(), lireArchiveStock()]);
+    setArchive(bar);
+    setInventaire(stock);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -185,10 +189,9 @@ export default function StockBar() {
     return toutes.filter((l) => visible(l.rubrique));
   };
 
-  const basculerSection = (section: Section) =>
-    setOuvertes((actuelles) =>
-      actuelles.includes(section) ? actuelles.filter((x) => x !== section) : [...actuelles, section],
-    );
+  /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
+  const basculerCategorie = (categorie: Categorie) =>
+    setOuvertes((actuelles) => (actuelles.includes(categorie) ? [] : [categorie]));
 
   const valider = async (cle: string, delta: number) => {
     if (cle.startsWith(PREFIXE_BOISSON))
@@ -277,6 +280,45 @@ export default function StockBar() {
 
   return (
     <Screen scroll={false}>
+      {/* Le menu burger, à droite du titre : l'impression de l'inventaire. */}
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              style={commonStyles.boutonEnteteDroite}
+              onPress={() => setMenuOuvert(true)}
+              hitSlop={10}
+              accessibilityLabel={T.stock.menu}
+            >
+              <Ionicons name="menu" size={26} color={colors.blanc} />
+            </Pressable>
+          ),
+        }}
+      />
+      <OptionsModal
+        visible={menuOuvert}
+        onClose={() => setMenuOuvert(false)}
+        options={[
+          {
+            label: TS.historique.titre,
+            icon: 'time' as const,
+            onPress: () => router.push(ROUTES.stockHistorique()),
+          },
+          {
+            label: TS.structure.menu,
+            icon: 'albums' as const,
+            onPress: () => router.push(ROUTES.STOCK_STRUCTURE),
+          },
+          {
+            label: T.stock.exporter.menu,
+            icon: 'print' as const,
+            onPress: () =>
+              exporterInventaireGitePdf().catch((e: Error) =>
+                Alert.alert(TEXTES.commun.general.erreurExport, e?.message ?? String(e)),
+              ),
+          },
+        ]}
+      />
       <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
         <ChoixDeroulant<string>
           titre={TEXTES.commun.choix.activite}
@@ -290,72 +332,104 @@ export default function StockBar() {
           ]}
           onChoisir={setFiltre}
         />
-        <PucesDefilantes<Onglet> puces={PUCES} valeur={onglet} onChoisir={setOnglet} />
-
-        {SECTIONS.filter((x) => x.onglet === onglet).map(({ section, titre }) => {
-          const lignes = lignesDe(section);
-          return (
-            <SectionDeroulante
-              key={section}
-              titre={titre}
-              nombre={lignes.length}
-              ouverte={ouvertes.includes(section)}
-              onBasculer={() => basculerSection(section)}
-            >
-              {lignes.length === 0 ? (
-                <Text style={commonStyles.mutedItalic}>
-                  {section === ONGLET_STOCK_BAR.CONSOMMABLES
-                    ? T.stock.aucunConsommable
-                    : T.stock.aucunArticle}
-                </Text>
-              ) : (
-                <ListeReordonnable
-                  elements={lignes}
-                  cle={(l) => l.cle}
-                  ligne={ligneStock}
-                  onGlisse={setGlisse}
-                  onDeplacer={async (cle, index) => {
-                    await positionnerDansLeStock(
-                      section,
-                      cle.split(':')[1],
-                      index,
-                      lignes.map((l) => l.id),
-                    );
-                    charger();
-                  }}
-                />
-              )}
-            </SectionDeroulante>
-          );
-        })}
+        {CATEGORIES.map(({ categorie, nom }) => (
+          <SectionDeroulante
+            key={categorie}
+            titre={TS.enteteCategorie(CLASSE_INVENTAIRE[categorie], nom)}
+            ouverte={ouvertes.includes(categorie)}
+            onBasculer={() => basculerCategorie(categorie)}
+          >
+            {SECTIONS.filter((x) => x.categorie === categorie).map(({ section, titre }) => {
+              const lignes = lignesDe(section);
+              const compte = COMPTE_PAR_SECTION_INVENTAIRE_GITE[section];
+              return (
+                <View key={section} style={commonStyles.gap10}>
+                  <View style={commonStyles.gap2}>
+                    <Text style={commonStyles.lineBold}>{titre}</Text>
+                    <Text style={commonStyles.note}>{TS.compte(compte.numero, compte.libelle)}</Text>
+                  </View>
+                  {lignes.length === 0 ? (
+                    <Text style={commonStyles.mutedItalic}>
+                      {section === ONGLET_STOCK_BAR.CONSOMMABLES
+                        ? T.stock.aucunConsommable
+                        : T.stock.aucunArticle}
+                    </Text>
+                  ) : (
+                    <ListeReordonnable
+                      elements={lignes}
+                      cle={(l) => l.cle}
+                      ligne={ligneStock}
+                      onGlisse={setGlisse}
+                      onDeplacer={async (cle, index) => {
+                        await positionnerDansLeStock(
+                          section,
+                          cle.split(':')[1],
+                          index,
+                          lignes.map((l) => l.id),
+                        );
+                        charger();
+                      }}
+                    />
+                  )}
+                </View>
+              );
+            })}
+            {(inventaire.listes ?? [])
+              .filter((l) => l.categorie === categorie)
+              .map((l) => (
+                <View key={l.id} style={commonStyles.gap10}>
+                  <View style={commonStyles.gap2}>
+                    <Text style={commonStyles.lineBold}>{l.nom}</Text>
+                    <Text style={commonStyles.note}>{TS.compte(l.compte, l.libelleCompte)}</Text>
+                  </View>
+                  <ListePersonnalisee
+                    liste={l}
+                    archive={inventaire}
+                    onChange={charger}
+                    onGlisse={setGlisse}
+                  />
+                </View>
+              ))}
+          </SectionDeroulante>
+        ))}
       </ScrollView>
 
       <Fab
-        options={SECTIONS.filter((x) => x.onglet === onglet).flatMap(({ section }): Option[] =>
-          section === ONGLET_STOCK_BAR.CONSOMMABLES
-            ? [
-                {
-                  label: T.stock.ajouterBoisson,
-                  icon: 'beer' as const,
-                  onPress: () => {
-                    setBoissonModifiee(undefined);
-                    setBoissonOuverte(true);
+        options={SECTIONS.filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie))
+          .flatMap(({ section }): Option[] =>
+            section === ONGLET_STOCK_BAR.CONSOMMABLES
+              ? [
+                  {
+                    label: T.stock.ajouterBoisson,
+                    icon: 'beer' as const,
+                    onPress: () => {
+                      setBoissonModifiee(undefined);
+                      setBoissonOuverte(true);
+                    },
                   },
-                },
-                {
-                  label: T.stock.ajouterAliment,
-                  icon: 'restaurant' as const,
-                  onPress: () => ouvrirAjout('aliment'),
-                },
-              ]
-            : [
-                {
-                  label: T.stock.ajouterArticle[section as Categorie],
-                  icon: 'add-circle' as const,
-                  onPress: () => ouvrirAjout(section as Categorie),
-                },
-              ],
-        )}
+                  {
+                    label: T.stock.ajouterAliment,
+                    icon: 'restaurant' as const,
+                    onPress: () => ouvrirAjout('aliment'),
+                  },
+                ]
+              : [
+                  {
+                    label: T.stock.ajouterArticle[section as CategorieArticle],
+                    icon: 'add-circle' as const,
+                    onPress: () => ouvrirAjout(section as CategorieArticle),
+                  },
+                ],
+          )
+          .concat(
+            (inventaire.listes ?? [])
+              .filter((l) => ouvertes.length === 0 || ouvertes.includes(l.categorie))
+              .map((l): Option => ({
+                label: TS.ajouter.dansLaListe(l.nom),
+                icon: 'add-circle' as const,
+                onPress: () => setAjoutListe(l),
+              })),
+          )}
       />
 
       <MouvementStockModal
@@ -378,6 +452,18 @@ export default function StockBar() {
         onValider={renommer}
         onAnnuler={() => setRenomme(null)}
         enfants={<ChampRubrique value={rubriqueArticle} onChange={setRubriqueArticle} />}
+      />
+      <NomModal
+        visible={!!ajoutListe}
+        titre={ajoutListe ? TS.ajouter.dansLaListe(ajoutListe.nom) : ''}
+        placeholder={TS.ajouter.exempleArticle}
+        onValider={async (nom) => {
+          if (ajoutListe)
+            await ajouterArticleInventaire(GENRE_ARTICLE.PERSONNALISE, nom, undefined, ajoutListe.id);
+          setAjoutListe(null);
+          charger();
+        }}
+        onAnnuler={() => setAjoutListe(null)}
       />
       <NomModal
         visible={!!ajout}

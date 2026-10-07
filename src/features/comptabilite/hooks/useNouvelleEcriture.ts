@@ -298,7 +298,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
           stockApplique: achat?.length ? true : undefined,
         });
         // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
-        await synchroniserStockAchat(undefined, achat);
+        await synchroniserStockAchat(undefined, achat, enregistree.date);
         await synchroniserStockAlimentation(enregistree);
       }
       router.back();

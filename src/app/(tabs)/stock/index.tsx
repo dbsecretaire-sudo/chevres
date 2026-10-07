@@ -1,6 +1,13 @@
 import { useCallback } from 'react';
 import { Pressable } from 'react-native';
-import { Tabs, useFocusEffect, useLocalSearchParams, useNavigation, useRouter, type Href } from 'expo-router';
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+  type Href,
+} from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import StockBar from '@/features/bar/screens/StockBar';
 import StockFromagerie from '@/features/stock/screens/StockFromagerie';
@@ -29,7 +36,7 @@ export default function StockScreen() {
 
   return (
     <>
-      <Tabs.Screen
+      <Stack.Screen
         options={{
           headerLeft: retour
             ? () => (

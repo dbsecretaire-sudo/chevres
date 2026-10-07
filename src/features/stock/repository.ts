@@ -42,6 +42,11 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     noms,
     lait: Array.isArray(archive?.lait) ? archive.lait : [],
     prix,
+    listes: Array.isArray(archive?.listes)
+      ? archive.listes.filter(
+          (l) => l && typeof l.id === 'string' && typeof l.nom === 'string' && typeof l.compte === 'string',
+        )
+      : [],
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
   };
 }

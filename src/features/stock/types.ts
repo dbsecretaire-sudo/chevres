@@ -1,4 +1,4 @@
-import type { GENRE_ARTICLE, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
+import type { CATEGORIE_INVENTAIRE, GENRE_ARTICLE, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 export type GenreArticle = ValeurDe<typeof GENRE_ARTICLE>;
@@ -31,6 +31,22 @@ export interface ArticleStock {
   nom: string;
   /** L'espèce pour laquelle l'article est tenu ; absente : pour toutes les activités de l'exploitation (le cas d'office). */
   activite?: string;
+  /** Pour un article personnalisé : la liste (de la structure des catégories) qui le contient. */
+  listeId?: string;
+}
+
+/**
+ * Une liste que l'utilisateur ajoute à une catégorie de l'inventaire. Elle correspond impérativement à un compte du plan
+ * comptable (6 chiffres, dont les premiers sont ceux que la catégorie autorise).
+ */
+export interface ListeInventaire {
+  id: string;
+  categorie: ValeurDe<typeof CATEGORIE_INVENTAIRE>;
+  nom: string;
+  /** Le numéro du compte du plan comptable de la liste. */
+  compte: string;
+  /** Le libellé du compte au moment du choix (affiché sous le titre de la liste). */
+  libelleCompte: string;
 }
 
 /** Le lait produit un jour : son litrage (chèvres et brebis). */
@@ -58,6 +74,8 @@ export interface ArchiveStock {
   lait: LaitJour[];
   /** Le prix de vente d'un fromage ou d'une viande (€, par identifiant d'article) : il préremplit le prix d'une vente. */
   prix: Record<string, number>;
+  /** Les listes que l'utilisateur a ajoutées aux catégories de l'inventaire. */
+  listes?: ListeInventaire[];
   /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
   masques?: string[];
 }

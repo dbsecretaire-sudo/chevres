@@ -3,7 +3,12 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { HistoriqueInventaireGite } from '@/features/stock/components/HistoriqueInventaireGite';
 import { HistoriqueStock } from '@/features/stock/components/HistoriqueStock';
+import { lireArchiveBar } from '@/features/bar/repository';
+import type { ArchiveBar } from '@/features/bar/types';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { FiltreStock } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
@@ -21,23 +26,35 @@ export default function HistoriqueStockEcran() {
   const { espece } = useLocalSearchParams<{ espece?: string }>();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [ventesLait, setVentesLait] = useState<VenteLait[]>([]);
+  /** Un gîte a son propre historique (marchandises, autres approvisionnements, immobilisations). */
+  const gite = modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
+  const [bar, setBar] = useState<ArchiveBar | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      Promise.all([lireArchiveStock(), listToutesVentes()]).then(([stock, ventes]) => {
-        setArchive(stock);
-        setVentesLait(
-          ventes
-            .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
-            .map((v) => ({ id: v.id, date: v.date, litres: v.quantite ?? 0 })),
-        );
-      });
+      Promise.all([lireArchiveStock(), listToutesVentes(), lireArchiveBar()]).then(
+        ([stock, ventes, archiveBar]) => {
+          setArchive(stock);
+          setBar(archiveBar);
+          setVentesLait(
+            ventes
+              .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
+              .map((v) => ({ id: v.id, date: v.date, litres: v.quantite ?? 0 })),
+          );
+        },
+      );
     }, []),
   );
 
   const voulu = (espece ?? especeActive) as FiltreStock;
   const filtreInitial: FiltreStock =
     voulu === FILTRE_STOCK_TOUT || especes.includes(voulu) ? voulu : FILTRE_STOCK_TOUT;
+
+  if (gite) {
+    return (
+      <Screen>{archive && bar ? <HistoriqueInventaireGite bar={bar} inventaire={archive} /> : null}</Screen>
+    );
+  }
 
   return (
     <Screen>

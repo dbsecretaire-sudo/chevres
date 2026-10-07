@@ -1,13 +1,14 @@
-/** Textes de l'interface — restauration, bar et stock du gîte. À modifier ici uniquement. */
+/** Textes de l'interface — restauration, bar et inventaire du gîte. À modifier ici uniquement. */
 export const TEXTES_BAR = {
-  titre: 'Restauration, bar et stock',
+  titre: 'Restauration, bar et inventaire',
   onglets: { restauration: 'Restauration', bar: 'Bar' },
   bar: {
     vendre: 'Vendre',
     total: (montant: string) => `Total : ${montant}`,
     enregistrerVente: 'Enregistrer la vente',
     venteEnregistree: (total: string) => `Vente enregistrée : ${total} (en comptabilité, recette « Bar »).`,
-    aucuneBoisson: 'Aucune boisson : ajoutez-les dans le stock (onglet Stock en bas de l’écran, bouton +).',
+    aucuneBoisson:
+      'Aucune boisson : ajoutez-les dans l’inventaire (onglet Inventaire en bas de l’écran, bouton +).',
     nouvelleBoisson: 'Nouvelle boisson',
     modifierBoisson: 'Modifier la boisson',
     supprimerBoisson: 'Supprimer cette boisson',
@@ -25,7 +26,7 @@ export const TEXTES_BAR = {
       replier: 'Replier le ticket',
       deplier: 'Déplier le ticket',
       boisson: 'Boisson',
-      listeDuStock: 'Liste du stock',
+      listeDuStock: 'Liste de l’inventaire',
       quantite: 'Quantité',
       ok: 'OK',
       retirerLigne: 'Retirer cette boisson',
@@ -38,10 +39,16 @@ export const TEXTES_BAR = {
     boissons: 'Boissons',
     nourriture: 'Nourriture',
     boissonsNourriture: 'Boissons et nourriture',
+    /** Le menu de l'inventaire du gîte (burger) : l'impression de l'état actuel. */
+    menu: 'Menu de l’inventaire',
+    exporter: {
+      menu: 'Imprimer l’inventaire (PDF)',
+      titre: 'Inventaire du gîte — état actuel',
+      colonnes: { article: 'Article', activite: 'Activité', quantite: 'Quantité', prix: 'Prix de vente' },
+      aucunArticle: 'Aucun article dans cette liste.',
+      toutesActivites: 'Toutes',
+    },
     onglets: {
-      vente: 'Vente',
-      investissements: 'Investissements',
-      consommables: 'Consommables',
       materiel: 'Matériel',
       conditionnement: 'Conditionnement',
       entretien: 'Entretien',
@@ -66,7 +73,7 @@ export const TEXTES_BAR = {
     ajouterAliment: 'Ajouter un aliment',
     renommerAliment: 'Modifier le nom de l’aliment',
     nomAliment: 'ex : Farine, huile, légumes',
-    negatif: 'Stock négatif : notez l’achat manquant.',
+    negatif: 'Quantité négative : notez l’achat manquant.',
     tout: 'Tout',
     activite: 'Activité concernée',
     toutesActivites: 'Toutes les activités',

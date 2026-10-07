@@ -85,9 +85,16 @@ export default function TabsLayout() {
         name="stock"
         options={{
           title: TEXTES.stock.titre,
+          headerShown: false,
           href: !entreprise || stockGite ? undefined : null,
           tabBarIcon: ({ color, size }) => <Ionicons name="cube" size={size} color={color} />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('stock', { screen: 'index' });
+          },
+        })}
       />
       <Tabs.Screen
         name="rh"
@@ -110,23 +117,6 @@ export default function TabsLayout() {
           title: TEXTES.commun.general.balance,
           // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
           headerLeft: () => <HeaderBackTo to="/" />,
-        }}
-      />
-      <Tabs.Screen
-        name="stock-historique"
-        options={{
-          href: null,
-          title: TEXTES.stock.historique.titre,
-          // Destination fixe : on revient toujours au stock, d'où l'écran est ouvert.
-          headerLeft: () => <HeaderBackTo to={ROUTES.STOCK} />,
-        }}
-      />
-      <Tabs.Screen
-        name="stock-statistiques"
-        options={{
-          href: null,
-          title: TEXTES.stock.statistiques.titre,
-          headerLeft: () => <HeaderBackTo to={ROUTES.STOCK} />,
         }}
       />
       <Tabs.Screen

@@ -94,12 +94,15 @@ export function articlesDuGenre(
   genre: GenreArticle,
   archive: ArchiveStock,
   filtre: FiltreStock = FILTRE_STOCK_TOUT,
+  /** Pour les articles personnalisés : la liste dont on veut les articles (toutes les listes sinon). */
+  listeId?: string,
 ): ArticleAffiche[] {
   const toutes = filtre === FILTRE_STOCK_TOUT;
   const parDefaut: ArticleAffiche[] =
     genre === GENRE_ARTICLE.ENTRETIEN ||
     genre === GENRE_ARTICLE.BATIMENT ||
-    genre === GENRE_ARTICLE.EQUIPEMENT
+    genre === GENRE_ARTICLE.EQUIPEMENT ||
+    genre === GENRE_ARTICLE.PERSONNALISE
       ? []
       : genre === GENRE_ARTICLE.VIANDE
         ? lignesDeViandeDOffice(toutes ? especesActives() : [filtre], archive)
@@ -139,7 +142,12 @@ export function articlesDuGenre(
       ? parDefaut
       : [];
   const ajoutes = archive.articles
-    .filter((a) => a.genre === genre && (toutes || !a.activite || a.activite === filtre))
+    .filter(
+      (a) =>
+        a.genre === genre &&
+        (!listeId || a.listeId === listeId) &&
+        (toutes || !a.activite || a.activite === filtre),
+    )
     .map((a) => ({ cle: cleArticle(genre, a.id), libelle: a.nom, id: a.id }));
   // Un article d'office que l'utilisateur a supprimé n'est plus proposé.
   const tous = [...dOfficeVisibles.filter((a) => !archive.masques?.includes(a.cle)), ...ajoutes];
@@ -165,6 +173,23 @@ export function libelleArticle(cle: string, archive: ArchiveStock): string {
  */
 export function estLigneDuCheptel(cle: string): boolean {
   return roleDeLaViande(cle) !== undefined;
+}
+
+/** Le mot qui dit d'où vient un mouvement (vente, saisie, naissance, achat, consommation). */
+export function libelleOrigineMouvement(m: Pick<MouvementStock, 'origine' | 'automatique'>): string {
+  if (m.automatique) return TEXTES.stock.exporter.remiseAZero;
+  switch (m.origine) {
+    case ORIGINE_MOUVEMENT.VENTE:
+      return TEXTES.stock.vente;
+    case ORIGINE_MOUVEMENT.NAISSANCE:
+      return TEXTES.stock.naissance;
+    case ORIGINE_MOUVEMENT.ACHAT:
+      return TEXTES.stock.achat;
+    case ORIGINE_MOUVEMENT.CONSOMMATION:
+      return TEXTES.stock.consommation;
+    default:
+      return TEXTES.stock.manuel;
+  }
 }
 
 /**
@@ -338,11 +363,17 @@ export async function ajouterMouvementManuel(
 }
 
 /** Ajoute un article (fromage, emballage ou matériel) avec le nom choisi. */
-export async function ajouterArticle(genre: GenreArticle, nom: string, activite?: string): Promise<void> {
+export async function ajouterArticle(
+  genre: GenreArticle,
+  nom: string,
+  activite?: string,
+  /** Pour un article personnalisé : la liste qui le contient. */
+  listeId?: string,
+): Promise<void> {
   const archive = await lireArchiveStock();
   await remplacerArchiveStock({
     ...archive,
-    articles: [...archive.articles, { id: generateId(), genre, nom: nom.trim(), activite }],
+    articles: [...archive.articles, { id: generateId(), genre, nom: nom.trim(), activite, listeId }],
   });
 }
 

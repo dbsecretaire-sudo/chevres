@@ -1,6 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { FlatList, Pressable, View } from 'react-native';
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+  type Href,
+} from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/ScreenList';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -13,6 +22,8 @@ import { TEXTES } from '@/shared/textes';
 
 export default function ComptesPcgIndex() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { retour } = useLocalSearchParams<{ retour?: string }>();
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
   const [recherche, setRecherche] = useState('');
 
@@ -23,7 +34,9 @@ export default function ComptesPcgIndex() {
   useFocusEffect(
     useCallback(() => {
       charger();
-    }, [charger]),
+      // La flèche de retour vers l'écran d'où l'on vient ne vaut que pour cette visite.
+      return () => navigation.setParams({ retour: undefined } as never);
+    }, [charger, navigation]),
   );
 
   const filtres = useMemo(() => {
@@ -34,6 +47,18 @@ export default function ComptesPcgIndex() {
 
   return (
     <Screen scroll={false}>
+      {/* Ouvert depuis un autre écran (la structure de l'inventaire…) : la flèche y ramène. */}
+      <Stack.Screen
+        options={{
+          headerLeft: retour
+            ? () => (
+                <Pressable style={commonStyles.boutonCompact} onPress={() => router.navigate(retour as Href)}>
+                  <Ionicons name="arrow-back" size={24} color={colors.blanc} />
+                </Pressable>
+              )
+            : undefined,
+        }}
+      />
       <View style={commonStyles.topPadded}>
         <FormField
           label={TEXTES.commun.general.rechercher}
