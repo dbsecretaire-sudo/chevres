@@ -7,10 +7,10 @@ import {
   LABEL_TYPE_CARBURANT,
 } from '@/shared/textes/libelles';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
-import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import type { ActiviteComptable, Facture, Vente } from '@/features/comptabilite/types';
-import { listFactures } from '@/features/comptabilite/repository/factures';
-import { listVentes } from '@/features/comptabilite/repository/ventes';
+import { listFactures, listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { listToutesVentes, listVentes } from '@/features/comptabilite/repository/ventes';
 import {
   SENS_TRANSACTION,
   SOURCE_TRANSACTION,
@@ -45,6 +45,8 @@ export interface Transaction {
   categorie?: string;
   /** Pour un achat de marchandises détaillé : les rubriques (gîte, bar, activité) que ses lignes servent. */
   rubriques?: string[];
+  /** Vrai pour une vente dont le client ne souhaite pas la déclaration (sans facture) : elle compte dans le solde, pas dans le RSA ni les impôts. */
+  sansFacture?: boolean;
   /** Le nom de la catégorie de l'écriture (« Alimentation », « Vente de fromage »…), pour la recherche. */
   libelleCategorie?: string;
   /** Ce que la facture détaille (ses aliments, son matériel, ses marchandises, ses carburants), pour la recherche. */
@@ -77,9 +79,15 @@ function titreVente(v: Vente): string {
   return TEXTES.comptabilite.transactions.fromageQuantiteUnite(v.quantite, v.unite);
 }
 
-/** Vue unifiée : ventes (lait/fromage/cabris) + factures (reçues/émises), triée par date décroissante. */
-export async function listTransactions(annee: number): Promise<Transaction[]> {
-  const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+/**
+ * Vue unifiée : ventes (lait/fromage/cabris) + factures (reçues/émises), triée par date décroissante. Sans année, toutes les
+ * années sont regroupées (« Tout »).
+ */
+export async function listTransactions(annee?: number): Promise<Transaction[]> {
+  const [ventes, factures] =
+    annee === undefined
+      ? await Promise.all([listToutesVentes(), listToutesFactures()])
+      : await Promise.all([listVentes(annee), listFactures(annee)]);
 
   const deVentes: Transaction[] = ventes.map((v) => ({
     id: v.id,
@@ -88,13 +96,13 @@ export async function listTransactions(annee: number): Promise<Transaction[]> {
     montantActivite: v.prix,
     montantComptabilise: v.prix,
     sens: SENS_TRANSACTION.ENTREE,
-    titre: titreVente(v),
-    sousTitre: v.precision
-      ? `${TEXTES.comptabilite.transactions.venteDeProduction} · ${v.precision}`
-      : TEXTES.comptabilite.transactions.venteDeProduction,
+    titre: v.precision ? v.precision : TEXTES.comptabilite.transactions.venteDeProduction,
+    sousTitre: `${TEXTES.comptabilite.transactions.typeVente}${titreVente(v)}`,
     source: SOURCE_TRANSACTION.VENTE,
     activite: activiteVente(v),
     libelleCategorie: LABEL_CATEGORIE_VENTE[v.categorie],
+    sansFacture: !venteADeclarer(v),
+    termes: v.numeroFacture ? [v.numeroFacture] : undefined,
   }));
 
   // Une facture d'alimentation répartie entre des cheptels donne une ligne par cheptel : `montant` reste le

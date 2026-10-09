@@ -18,9 +18,13 @@ interface Props {
   onClose: () => void;
   valeur: FiltresTransactions;
   onChange: (v: FiltresTransactions) => void;
+  /** L'année active : les dates du filtre sont de cette année (seuls le mois et le jour se saisissent). */
+  annee: number;
+  /** Vrai quand « Tout » est choisi : l'année des dates du filtre est libre. */
+  anneeLibre: boolean;
 }
 
-export function FiltreTransactionsModal({ visible, onClose, valeur, onChange }: Props) {
+export function FiltreTransactionsModal({ visible, onClose, valeur, onChange, annee, anneeLibre }: Props) {
   const maj = (patch: Partial<FiltresTransactions>) => onChange({ ...valeur, ...patch });
 
   return (
@@ -36,6 +40,8 @@ export function FiltreTransactionsModal({ visible, onClose, valeur, onChange }: 
                 label={TEXTES.comptabilite.filtreTransactionsModal.du}
                 value={valeur.dateDebut}
                 onChange={(v) => maj({ dateDebut: v })}
+                anneeImposee={anneeLibre ? undefined : annee}
+                jourMoisAnnee
               />
             </View>
             <View style={commonStyles.flex1}>
@@ -43,6 +49,8 @@ export function FiltreTransactionsModal({ visible, onClose, valeur, onChange }: 
                 label={TEXTES.comptabilite.filtreTransactionsModal.au}
                 value={valeur.dateFin}
                 onChange={(v) => maj({ dateFin: v })}
+                anneeImposee={anneeLibre ? undefined : annee}
+                jourMoisAnnee
               />
             </View>
           </View>

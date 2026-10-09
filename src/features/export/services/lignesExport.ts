@@ -9,6 +9,7 @@ import {
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { activiteVente, activitesFacture } from '@/features/comptabilite/utils/activite';
+import { venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { plusieursEspeces, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import {
@@ -59,6 +60,10 @@ export function venteRow(v: Vente) {
     [TEXTES.export.colonnes.unite]: v.unite,
     [TEXTES.export.colonnes.prix]: v.prix,
     [TEXTES.export.colonnes.precision]: v.precision ?? '',
+    [TEXTES.export.colonnes.declaree]: venteADeclarer(v)
+      ? TEXTES.export.colonnes.oui
+      : TEXTES.export.colonnes.non,
+    [TEXTES.export.colonnes.nFacture]: v.numeroFacture ?? '',
   };
 }
 

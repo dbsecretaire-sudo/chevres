@@ -5,6 +5,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { CarteDossier } from '@/features/dossiers/components/CarteDossier';
 import { RechercheDossiers } from '@/features/dossiers/components/RechercheDossiers';
+import { lignesDeLaNote } from '@/features/dossiers/services/facturation';
 import { useExplorateur } from '@/features/dossiers/hooks/useExplorateur';
 import { ROUTES } from '@/shared/constants/routes';
 import { nomComplet } from '@/shared/utils/personne';
@@ -38,6 +39,7 @@ export default function ExplorateurClients() {
                     titre={nomComplet(client)}
                     detail={resume ? T.contenus(resume.total) : T.aucunContenu}
                     alerte={resume && resume.aFaire > 0 ? T.aFaire(resume.aFaire) : undefined}
+                    aFacturer={lignesDeLaNote(e.archive.elements, client.id).length > 0}
                     onPress={() => router.push(ROUTES.dossierClient(client.id))}
                   />
                 );

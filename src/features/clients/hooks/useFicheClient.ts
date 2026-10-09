@@ -101,5 +101,6 @@ export function useFicheClient(id: string | undefined) {
     enregistrerModifications,
     annulerModifications,
     supprimerDefinitivement,
+    recharger: charger,
   };
 }

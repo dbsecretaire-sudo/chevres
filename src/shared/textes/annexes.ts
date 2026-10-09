@@ -22,6 +22,7 @@ export const TEXTES_ANNEXES = {
     choixDuCompte: 'Choisir un compte',
     tva: 'Taux de TVA',
     repasGite: 'Montrer le calendrier des repas du gîte',
+    natureUrssaf: 'Nature des ventes (URSSAF)',
     nomRequis: 'Nom requis',
     compteRequis: 'Compte requis',
     resume: (articles: number, categories: number) =>

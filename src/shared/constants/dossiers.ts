@@ -18,3 +18,10 @@ export const FILTRE_DOSSIERS = {
 
 /** Séparateur des étiquettes d'un contenu quand on les saisit dans un seul champ. */
 export const SEPARATEUR_ETIQUETTES = ',';
+
+/** Ce qu'on fait pour facturer un contenu : une facture, un acompte, ou une prestation ajoutée sur la note du client. */
+export const TYPE_FACTURATION = {
+  FACTURE: 'facture',
+  ACOMPTE: 'acompte',
+  NOTE: 'note',
+} as const;

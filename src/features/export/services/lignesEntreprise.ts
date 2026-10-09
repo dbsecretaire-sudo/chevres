@@ -11,9 +11,11 @@ import { statutEffectif } from '@/features/dossiers/services/avancement';
 import { cheminDuDossier } from '@/features/dossiers/services/arborescence';
 import { factureRow } from '@/features/export/services/lignesExport';
 import { nuitsDuSejour } from '@/shared/utils/calendrier';
+import type { Urssaf } from '@/features/entreprise/services/urssaf';
 import { LOCALE } from '@/shared/constants/format';
 import {
   LABEL_ETAT_ESPRIT,
+  LABEL_NATURE_URSSAF,
   LABEL_SENS_TRADE,
   LABEL_STATUT_ELEMENT,
   LABEL_TYPE_INSTRUMENT,
@@ -72,13 +74,60 @@ export function lignesSynthese(fiscalite: FiscaliteEntreprise, avecTva: boolean)
 
 /** Une facture, avec sa TVA et son montant hors taxes quand l'entreprise est assujettie. */
 export function factureEntrepriseRow(f: Facture, avecTva: boolean) {
-  if (!avecTva) return factureRow(f);
+  const base = {
+    ...factureRow(f),
+    [C.natureUrssaf]: f.natureUrssaf ? LABEL_NATURE_URSSAF[f.natureUrssaf] : '',
+  };
+  if (!avecTva) return base;
   const tva = tvaDuTtc(f.montant, f.tauxTva);
   return {
-    ...factureRow(f),
+    ...base,
     [C.dontTva]: arrondi(tva),
     [C.montantHt]: arrondi(f.montant - tva),
   };
+}
+
+/**
+ * Les déclarations URSSAF de l'année : pour chaque mois et chaque nature de recette (celles sans recette ne figurent pas), le
+ * chiffre d'affaires hors taxes à déclarer, le taux et les cotisations ; puis le total de chaque nature et de l'année.
+ */
+export function lignesUrssaf(urssaf: Urssaf): Record<string, unknown>[] {
+  const ligne = (libelle: string, nature: string, ca: number, taux: number | '', cotisations: number) => ({
+    [C.mois]: libelle,
+    [C.natureUrssaf]: nature,
+    [C.caADeclarer]: arrondi(ca),
+    [C.tauxPourcent]: taux,
+    [C.cotisations]: arrondi(cotisations),
+  });
+  const mois = urssaf.mois.flatMap((m) =>
+    m.natures
+      .filter((n) => n.chiffreAffaires !== 0)
+      .map((n) =>
+        ligne(
+          new Date(urssaf.annee, m.mois - 1, 1).toLocaleDateString(LOCALE, { month: 'long' }),
+          LABEL_NATURE_URSSAF[n.nature],
+          n.chiffreAffaires,
+          n.taux,
+          n.cotisations,
+        ),
+      ),
+  );
+  if (mois.length === 0) return [];
+  return [
+    ...mois,
+    ...urssaf.parNature
+      .filter((n) => n.chiffreAffaires !== 0)
+      .map((n) =>
+        ligne(
+          TEXTES.export.entreprise.ligneTotal,
+          LABEL_NATURE_URSSAF[n.nature],
+          n.chiffreAffaires,
+          n.taux,
+          n.cotisations,
+        ),
+      ),
+    ligne(TEXTES.export.entreprise.ligneTotal, '', urssaf.totalChiffreAffaires, '', urssaf.totalCotisations),
+  ];
 }
 
 export function clientRow(c: Client) {
@@ -102,8 +151,26 @@ export function elementRow(e: Element, clients: Client[], sousDossiers: SousDoss
     [C.echeance]: e.echeance ? formatDateShortFR(e.echeance) : '',
     [C.avancement]: LABEL_STATUT_ELEMENT[statutEffectif(e)],
     [C.etiquettes]: (e.etiquettes ?? []).join(', '),
+    [C.facturation]: (e.facturations ?? [])
+      .map((l) =>
+        [
+          `${TEXTES.dossiers.facturation.types[l.type]} ${arrondi(l.montant)} €`,
+          l.numeroFacture ? `N° ${l.numeroFacture}` : '',
+        ]
+          .filter(Boolean)
+          .join(' '),
+      )
+      .join(' ; '),
     [C.notes]: e.texte ?? '',
   };
+}
+
+/** Où en est la réservation : maintenue, abandonnée, avec ou sans le restaurant. */
+function etatDeLaReservation(
+  s: Sejour,
+): 'maintenue' | 'abandonnee' | 'abandonneeRestaurant' | 'sansRestaurant' {
+  if (s.abandonne) return s.restaurantMaintenu ? 'abandonneeRestaurant' : 'abandonnee';
+  return s.sansRestaurant ? 'sansRestaurant' : 'maintenue';
 }
 
 export function sejourRow(s: Sejour) {
@@ -119,6 +186,7 @@ export function sejourRow(s: Sejour) {
     [C.totalPaye]: s.prix,
     [C.paye]: s.paye ? C.oui : C.non,
     [C.datePaiement]: s.paye && s.datePaiement ? formatDateShortFR(s.datePaiement) : '',
+    [C.reservation]: TEXTES.export.entreprise.reservation[etatDeLaReservation(s)],
     [C.notes]: s.notes ?? '',
   };
 }

@@ -13,7 +13,14 @@ export default function ComptabiliteLayout() {
   return (
     <Stack
       // La liste, le Détail et la fiscalité suivent l'espèce active par un simple filtre : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'detail', 'fiscalite-impots', 'fiscalite-rsa', 'tva')}
+      screenLayout={ecranParEspeceSauf(
+        'index',
+        'detail',
+        'fiscalite-impots',
+        'fiscalite-rsa',
+        'urssaf',
+        'tva',
+      )}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -58,6 +65,7 @@ export default function ComptabiliteLayout() {
             : TEXTES.commun.general.declarationRsa,
         }}
       />
+      <Stack.Screen name="urssaf" options={{ title: TEXTES.entreprise.menu.urssaf }} />
       <Stack.Screen name="tva" options={{ title: TEXTES.entreprise.menu.tva }} />
       <Stack.Screen name="fournisseurs/index" options={{ title: TEXTES.commun.general.fournisseurs }} />
       <Stack.Screen

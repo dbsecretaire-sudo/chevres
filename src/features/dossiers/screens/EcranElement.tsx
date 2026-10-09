@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -11,6 +12,18 @@ import { FormField } from '@/shared/components/FormField';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
+import { FacturationModal } from '@/features/dossiers/components/FacturationModal';
+import { SectionFacturation } from '@/features/dossiers/components/SectionFacturation';
+import {
+  ajouterFacturation,
+  retirerFacturation,
+  type SaisieFacturation,
+} from '@/features/dossiers/services/facturation';
+import { natureDesServices } from '@/features/entreprise/services/urssaf';
+import { getClient } from '@/features/clients/repository';
+import type { Client } from '@/features/clients/types';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { nomComplet } from '@/shared/utils/personne';
 import {
   choisirFichiers,
   piecesDisponibles,
@@ -25,10 +38,10 @@ import {
   getSousDossier,
   supprimerElement,
 } from '@/features/dossiers/repository';
-import type { StatutElement } from '@/features/dossiers/types';
+import type { Facturation, StatutElement } from '@/features/dossiers/types';
 import { statutEffectif } from '@/features/dossiers/services/avancement';
 import { estEnRetard } from '@/features/dossiers/services/recherche';
-import { SEPARATEUR_ETIQUETTES, STATUT_ELEMENT } from '@/shared/constants/dossiers';
+import { SEPARATEUR_ETIQUETTES, STATUT_ELEMENT, TYPE_FACTURATION } from '@/shared/constants/dossiers';
 import { LABEL_STATUT_ELEMENT } from '@/shared/textes/libelles';
 import { estDateISO, todayISO } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
@@ -43,6 +56,8 @@ export default function EcranElement() {
   const { id, dossierId: dossierParam } = useLocalSearchParams<{ id?: string; dossierId?: string }>();
   const T = TEXTES.dossiers.element;
   const existant = !!id;
+  const { settings } = useAppSettings();
+  const infos = settings.exploitation?.entreprise;
 
   const [dossierId, setDossierId] = useState(dossierParam ?? '');
   const [titre, setTitre] = useState('');
@@ -56,6 +71,13 @@ export default function EcranElement() {
   const [retires, setRetires] = useState<PieceJointe[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  /** Ce qui est facturé pour ce contenu, le client de son dossier, et la fenêtre de facturation ouverte (facture ou acompte). */
+  const [facturations, setFacturations] = useState<Facturation[]>([]);
+  const [client, setClient] = useState<Client | undefined>();
+  const [facturer, setFacturer] = useState<
+    typeof TYPE_FACTURATION.FACTURE | typeof TYPE_FACTURATION.ACOMPTE | null
+  >(null);
+  const [aRetirer, setARetirer] = useState<Facturation | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -69,8 +91,32 @@ export default function EcranElement() {
       setStatut(statutEffectif(e));
       setEtiquettes((e.etiquettes ?? []).join(`${SEPARATEUR_ETIQUETTES} `));
       setFichiers(e.fichiers ?? []);
+      setFacturations(e.facturations ?? []);
+      getClient(e.clientId).then(setClient);
     });
   }, [id]);
+
+  /** Facture (ou prend l'acompte, ou ajoute sur la note) : enregistré tout de suite, le contenu est relu avec sa facturation. */
+  const validerFacturation = async (saisie: SaisieFacturation) => {
+    setFacturer(null);
+    const element = id ? await getElement(id) : undefined;
+    if (!element || !client) return;
+    try {
+      const mis = await ajouterFacturation(element, saisie, client, infos);
+      setFacturations(mis.facturations ?? []);
+    } catch (e: any) {
+      setErreur(e?.message ?? TEXTES.commun.general.erreur);
+    }
+  };
+
+  const retirerLaFacturation = async () => {
+    const ligne = aRetirer;
+    setARetirer(null);
+    const element = id ? await getElement(id) : undefined;
+    if (!element || !ligne) return;
+    const mis = await retirerFacturation(element, ligne.id);
+    setFacturations(mis.facturations ?? []);
+  };
 
   const ajouterFichiers = async () => {
     if (!piecesDisponibles()) return setErreur(TEXTES.fichiers.indisponibleWeb);
@@ -106,6 +152,7 @@ export default function EcranElement() {
       echeance: echeance || undefined,
       statut,
       fichiers: fichiers.length > 0 ? fichiers : undefined,
+      facturations: facturations.length > 0 ? facturations : undefined,
       etiquettes: etiquettes
         .split(SEPARATEUR_ETIQUETTES)
         .map((e) => e.trim())
@@ -142,16 +189,31 @@ export default function EcranElement() {
           multiline
           style={styles.textareaBasse}
         />
-        <DateField label={T.date} required value={date} onChange={setDate} />
-
-        {echeance ? (
-          <>
-            <DateField label={T.echeance} value={echeance} onChange={setEcheance} />
-            <Button variant="secondary" label={T.retirerEcheance} onPress={() => setEcheance('')} />
-          </>
-        ) : (
-          <Button variant="secondary" label={T.echeance} onPress={() => setEcheance(todayISO())} />
-        )}
+        {/* La date et l'échéance (facultative) côte à côte : un bouton pour l'ajouter, une croix rouge pour la retirer. */}
+        <View style={commonStyles.row}>
+          <View style={commonStyles.flex1}>
+            <DateField label={T.date} required value={date} onChange={setDate} />
+          </View>
+          <View style={[commonStyles.flex1, commonStyles.finDeColonne]}>
+            {echeance ? (
+              <View style={commonStyles.rowFin}>
+                <View style={commonStyles.flex1}>
+                  <DateField label={T.echeance} value={echeance} onChange={setEcheance} />
+                </View>
+                <Pressable
+                  onPress={() => setEcheance('')}
+                  hitSlop={8}
+                  accessibilityLabel={T.retirerEcheance}
+                  style={commonStyles.boutonPastille}
+                >
+                  <Ionicons name="close-circle" size={36} color={colors.danger} />
+                </Pressable>
+              </View>
+            ) : (
+              <Button variant="secondary" label={T.echeance} onPress={() => setEcheance(todayISO())} />
+            )}
+          </View>
+        </View>
 
         <View style={commonStyles.gap6}>
           <Text style={commonStyles.lineSemiBold}>{T.avancement}</Text>
@@ -180,6 +242,16 @@ export default function EcranElement() {
           onRetirer={retirerFichier}
         />
 
+        {existant ? (
+          <SectionFacturation
+            facturations={facturations}
+            termine={statut === STATUT_ELEMENT.TERMINE}
+            onFacturer={() => setFacturer(TYPE_FACTURATION.FACTURE)}
+            onAcompte={() => setFacturer(TYPE_FACTURATION.ACOMPTE)}
+            onRetirer={setARetirer}
+          />
+        ) : null}
+
         <View style={commonStyles.row}>
           <Button
             style={commonStyles.flex1}
@@ -198,6 +270,22 @@ export default function EcranElement() {
         ) : null}
 
         <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
+        <FacturationModal
+          mode={client ? facturer : null}
+          nomClient={client ? nomComplet(client) : ''}
+          titre={titre}
+          natureParDefaut={natureDesServices(infos)}
+          onValider={validerFacturation}
+          onFermer={() => setFacturer(null)}
+        />
+        <ConfirmModal
+          visible={!!aRetirer}
+          title={TEXTES.dossiers.facturation.retirerQuestion}
+          message={TEXTES.dossiers.facturation.retirerMessage}
+          confirmLabel={TEXTES.commun.general.supprimer}
+          onCancel={() => setARetirer(null)}
+          onConfirm={retirerLaFacturation}
+        />
         <ConfirmModal
           visible={suppressionOuverte}
           title={T.supprimerQuestion}

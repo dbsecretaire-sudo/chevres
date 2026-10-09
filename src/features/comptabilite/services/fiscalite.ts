@@ -6,8 +6,11 @@ import type { TypeAide } from '@/features/comptabilite/types';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { correspondAuFiltre } from '@/features/comptabilite/services/detailComptable';
 import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
+import { venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { TYPE_AIDE, TYPE_FACTURE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 
+// Seules les ventes que le client souhaite déclarer (avec facture) entrent dans ces calculs : celles sans facture
+// restent dans le solde, mais ne comptent ni pour le RSA ni pour les impôts.
 // Agrégats calculés à partir des ventes et factures déjà enregistrées (micro-BA, déclaration RSA).
 // Ces calculs organisent vos propres montants, ils ne remplacent pas une confirmation avec votre
 // comptable, la MSA ou la CAF.
@@ -42,7 +45,9 @@ export async function calculerRecettesMicroBA(
   filtre: FiltreActivite = TOUTES_ACTIVITES,
 ): Promise<RecettesMicroBA> {
   const [toutesVentes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
-  const ventes = toutesVentes.filter((v) => correspondAuFiltre(filtre, activiteVente(v)));
+  const ventes = toutesVentes.filter(
+    (v) => venteADeclarer(v) && correspondAuFiltre(filtre, activiteVente(v)),
+  );
 
   const ventesProduits = ventes.reduce((s, v) => s + (v.prix ?? 0), 0);
   const emises = factures.filter(
@@ -98,7 +103,9 @@ export async function calculerRecettesMensuelles(
   filtre: FiltreActivite = TOUTES_ACTIVITES,
 ): Promise<RecettesMois[]> {
   const [toutesVentes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
-  const ventes = toutesVentes.filter((v) => correspondAuFiltre(filtre, activiteVente(v)));
+  const ventes = toutesVentes.filter(
+    (v) => venteADeclarer(v) && correspondAuFiltre(filtre, activiteVente(v)),
+  );
   const emises = factures.filter(
     (f) => f.type === TYPE_FACTURE.EMISE && correspondAuFiltre(filtre, activiteFacture(f)),
   );

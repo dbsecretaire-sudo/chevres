@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
-import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { totalDeLaVente } from '@/features/stock/services/stock';
@@ -15,6 +15,7 @@ import {
   CATEGORIES_VENTE_PRIX_INVENTAIRE,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_VENTE,
+  TYPE_FROMAGE,
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
@@ -62,7 +63,23 @@ export function useFicheVente(id: string | undefined) {
             : form.unite === UNITE_VENTE.KG
               ? UNITE_VENTE.KG
               : UNITE_VENTE.PIECE;
-    setForm({ ...form, categorie, unite });
+    // Un autre produit : le détail, les animaux et le fromage choisis pour le précédent ne valent plus (leurs listes diffèrent).
+    const change = categorie !== form.categorie;
+    setForm({
+      ...form,
+      categorie,
+      unite,
+      ...(change
+        ? {
+            precision: undefined,
+            animaux: undefined,
+            jeune: undefined,
+            ...(categorie === CATEGORIE_VENTE.FROMAGE
+              ? {}
+              : { typeFromage: undefined, typeFromageLibre: undefined, sacs: undefined }),
+          }
+        : {}),
+    });
   };
 
   /** Autorise uniquement des chiffres et une virgule ou un point, et garde le texte saisi tel quel. */
@@ -89,8 +106,20 @@ export function useFicheVente(id: string | undefined) {
       setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.detailRequis });
       return;
     }
+    if (
+      form.categorie === CATEGORIE_VENTE.FROMAGE &&
+      (!form.typeFromage || (form.typeFromage === TYPE_FROMAGE.AUTRE && !form.typeFromageLibre?.trim()))
+    ) {
+      setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.typeFromageRequis });
+      return;
+    }
     if (!form.client?.trim()) {
       setErreur({ titre: TEXTES.commun.general.clientRequis });
+      return;
+    }
+    // Une vente que le client souhaite déclarer a un numéro de facture.
+    if (venteADeclarer(form) && !form.numeroFacture?.trim()) {
+      setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureRequis });
       return;
     }
     if (form.categorie === CATEGORIE_VENTE.VIANDE && !(form.poidsKg && form.poidsKg > 0)) {
@@ -137,6 +166,7 @@ export function useFicheVente(id: string | undefined) {
         quantite,
         client: form.client?.trim() || undefined,
         precision: form.precision?.trim() || undefined,
+        numeroFacture: venteADeclarer(form) ? form.numeroFacture?.trim() : undefined,
       };
       await saveVente(nettoye);
       // Les animaux retirés de la vente redeviennent vivants ; ceux de la vente passent « vendus » à sa date.

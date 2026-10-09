@@ -18,6 +18,8 @@ export const styles = StyleSheet.create({
   carteLarge: { width: '48%' },
   carteTitre: { fontSize: 14, fontWeight: '700', color: colors.text },
   carteDetail: { fontSize: 11, color: colors.textMuted },
+  /** « À facturer » sur la carte d'un client : le point d'exclamation et le mot sur une ligne. */
+  carteAFacturer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   carteAlerte: { fontSize: 11, fontWeight: '700', color: colors.danger },
   titreSection: { fontSize: 15, fontWeight: '800', color: colors.text, marginTop: 6 },
   /** Boutons d'en-tête (menu burger, menu d'un dossier) : icône blanche sur le bandeau vert. */

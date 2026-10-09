@@ -60,6 +60,9 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'typeAideLibre',
     'tauxImposition',
     'compteManuel',
+    'natureUrssaf',
+    'partVenteUrssaf',
+    'partHorsCaUrssaf',
     'tauxTva',
   ],
   [CATEGORIE_STOCKAGE.VENTES]: [
@@ -79,6 +82,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'jeune',
     'animaux',
     'precision',
+    'choixFacture',
+    'numeroFacture',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
@@ -103,6 +108,8 @@ export const CHAMPS_NOMBRE = new Set([
   'renouvellementAnnee',
   'poidsKg',
   'sacs',
+  'partVenteUrssaf',
+  'partHorsCaUrssaf',
 ]);
 
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */

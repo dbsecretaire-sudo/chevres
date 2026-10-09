@@ -13,6 +13,8 @@ import { TEXTES } from '@/shared/textes';
 interface CarteSoldeProps {
   soldes: SoldesTransactions;
   anneeActive: number;
+  /** « Tout » est choisi : le solde regroupe toutes les années. */
+  toutesAnnees?: boolean;
   filtresActifs: boolean;
 }
 
@@ -20,10 +22,15 @@ interface CarteSoldeProps {
  * Solde, rentrées et dépenses. Replié par défaut : le solde
  * et les deux totaux en couleur tiennent sur deux lignes ; un appui déplie le détail.
  */
-export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldeProps) {
+export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }: CarteSoldeProps) {
   const [deplie, setDeplie] = useState(false);
   const couleurSolde = soldes.balance >= 0 ? colors.primary : colors.danger;
   // Le signe « - » seulement s'il y a des dépenses (pas de « -0,00 € »).
+  const periode = filtresActifs
+    ? TEXTES.comptabilite.listeTransactions.filtre
+    : toutesAnnees
+      ? TEXTES.comptabilite.listeTransactions.toutesLesAnnees
+      : anneeActive;
   const depenses = `${soldes.totalDepenses > 0 ? '-' : ''}${formatMontant(soldes.totalDepenses)}`;
 
   if (!deplie) {
@@ -33,7 +40,7 @@ export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldePro
           <View style={styles.soldeCompactLigne}>
             <Text style={commonStyles.lineSemiBold}>
               {TEXTES.comptabilite.listeTransactions.soldeEspace}
-              {filtresActifs ? TEXTES.comptabilite.listeTransactions.filtre : anneeActive}
+              {periode}
             </Text>
             <View style={styles.soldeCompactValeur}>
               <Text style={[styles.soldeCompactMontant, { color: couleurSolde }]}>
@@ -58,7 +65,7 @@ export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldePro
       <Card style={styles.balanceCard}>
         <Text style={commonStyles.caption}>
           {TEXTES.comptabilite.listeTransactions.soldeEspace}
-          {filtresActifs ? TEXTES.comptabilite.listeTransactions.filtre : anneeActive}
+          {periode}
         </Text>
         <Text style={[styles.balanceValeur, { color: couleurSolde }]}>{formatMontant(soldes.balance)}</Text>
 
@@ -74,6 +81,16 @@ export function CarteSolde({ soldes, anneeActive, filtresActifs }: CarteSoldePro
             <Text style={styles.statLabel}>{TEXTES.commun.general.depenses}</Text>
             <Text style={[styles.statValeur, { color: colors.danger }]}>{depenses}</Text>
           </View>
+        </View>
+
+        {/* Les rentrées en deux lignes : celles avec facture (déclarées), puis celles sans facture. */}
+        <View style={commonStyles.rowSpaceBetween}>
+          <Text style={commonStyles.note}>{TEXTES.comptabilite.listeTransactions.rentreesAvecFactures}</Text>
+          <Text style={commonStyles.lineBold}> {formatMontant(soldes.rentreesAvecFactures)}</Text>
+        </View>
+        <View style={commonStyles.rowSpaceBetween}>
+          <Text style={commonStyles.note}>{TEXTES.comptabilite.listeTransactions.rentreesSansFactures}</Text>
+          <Text style={commonStyles.lineBold}> {formatMontant(soldes.rentreesSansFactures)}</Text>
         </View>
       </Card>
     </Pressable>

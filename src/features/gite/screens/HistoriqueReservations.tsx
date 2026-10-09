@@ -54,7 +54,9 @@ function correspond(s: Sejour, requete: string): boolean {
 export default function HistoriqueReservations() {
   const router = useRouter();
   const { sejour: sejourDemande } = useLocalSearchParams<{ sejour?: string }>();
-  const { settings, setAnneeActive } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  /** « Tout » est choisi : les réservations de toutes les années. */
+  const regrouper = !!settings.toutesAnnees;
   const [sejours, setSejours] = useState<Sejour[]>([]);
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const defilement = useRef<ScrollView>(null);
@@ -79,20 +81,31 @@ export default function HistoriqueReservations() {
     const cible = sejours.find((s) => s.id === sejourDemande);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAnneeAdoptee(true);
-    if (cible && anneeDe(cible.arrivee) !== settings.anneeActive) setAnneeActive(anneeDe(cible.arrivee));
-  }, [anneeAdoptee, sejourDemande, sejours, settings.anneeActive, setAnneeActive]);
+    // Avec « Tout », toutes les années sont déjà là : on ne change pas d'année.
+    if (cible && !regrouper && anneeDe(cible.arrivee) !== settings.anneeActive) {
+      setAnneeActive(anneeDe(cible.arrivee));
+    }
+  }, [anneeAdoptee, sejourDemande, sejours, settings.anneeActive, regrouper, setAnneeActive]);
 
   // Sans recherche, les réservations de l'année active ; avec une recherche, celles de toutes les années qui y répondent.
   const recherche = requete.trim().length > 0;
   const reservations = sejours
-    .filter((s) => (recherche ? correspond(s, requete) : anneeDe(s.arrivee) === settings.anneeActive))
+    .filter((s) =>
+      recherche ? correspond(s, requete) : regrouper || anneeDe(s.arrivee) === settings.anneeActive,
+    )
     .sort((a, b) => b.arrivee.localeCompare(a.arrivee));
 
   return (
     <Screen scroll={false}>
       <View style={commonStyles.topBox}>
         <LigneFiltres>
-          <YearPicker annees={annees} value={settings.anneeActive} onChange={setAnneeActive} />
+          <YearPicker
+            annees={annees}
+            value={settings.anneeActive}
+            onChange={setAnneeActive}
+            tout={regrouper}
+            onChoisirTout={choisirToutesAnnees}
+          />
         </LigneFiltres>
         <FormField
           label={TEXTES.commun.general.rechercher}

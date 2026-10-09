@@ -1,8 +1,9 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/dossiers/Dossiers.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
 
 interface Props {
   titre: string;
@@ -10,6 +11,8 @@ interface Props {
   detail?: string;
   /** Une seconde ligne, en rouge (contenus à faire, en retard…). */
   alerte?: string;
+  /** Vrai quand il reste à facturer (la note d'un client) : un point d'exclamation rouge et « À facturer ». */
+  aFacturer?: boolean;
   /** Deux cartes par ligne au lieu de trois : pour des noms plus longs. */
   large?: boolean;
   /** La carte d'un client (une personne) plutôt que celle d'un dossier. */
@@ -18,7 +21,7 @@ interface Props {
 }
 
 /** Une carte de la grille : l'icône d'un dossier ou d'une personne (client), son nom et ce qu'il contient. */
-export function CarteDossier({ titre, detail, alerte, large, client, onPress }: Props) {
+export function CarteDossier({ titre, detail, alerte, aFacturer, large, client, onPress }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [styles.carte, large && styles.carteLarge, pressed && commonStyles.pressed]}
@@ -30,6 +33,12 @@ export function CarteDossier({ titre, detail, alerte, large, client, onPress }: 
       </Text>
       {detail ? <Text style={styles.carteDetail}>{detail}</Text> : null}
       {alerte ? <Text style={styles.carteAlerte}>{alerte}</Text> : null}
+      {aFacturer ? (
+        <View style={styles.carteAFacturer}>
+          <Ionicons name="alert-circle" size={16} color={colors.danger} />
+          <Text style={styles.carteAlerte}>{TEXTES.dossiers.explorateur.aFacturer}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }

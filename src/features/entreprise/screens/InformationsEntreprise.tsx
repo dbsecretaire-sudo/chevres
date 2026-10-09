@@ -10,9 +10,15 @@ import { SelectField } from '@/shared/components/SelectField';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { montantTaxeSejourDe, type InfosEntreprise } from '@/features/settings/settings';
-import { REGIME_TVA_PAR_DEFAUT } from '@/shared/constants/entreprise';
+import { tauxUrssafDe } from '@/features/entreprise/services/urssaf';
+import { NATURE_URSSAF, REGIME_TVA_PAR_DEFAUT, TAUX_URSSAF_PAR_NATURE } from '@/shared/constants/entreprise';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { LABEL_REGIME_FISCAL, LABEL_REGIME_TVA, LABEL_STATUT_JURIDIQUE } from '@/shared/textes/libelles';
+import {
+  LABEL_NATURE_URSSAF,
+  LABEL_REGIME_FISCAL,
+  LABEL_REGIME_TVA,
+  LABEL_STATUT_JURIDIQUE,
+} from '@/shared/textes/libelles';
 import { formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
@@ -20,6 +26,28 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.entreprise.informations;
+
+/** Les natures de recette de la déclaration URSSAF, dans l'ordre de la déclaration. */
+const NATURES_URSSAF = Object.values(NATURE_URSSAF);
+
+/** Les taux URSSAF saisis, en texte (virgule comme séparateur), par nature de recette. */
+const tauxEnTexte = (infos?: InfosEntreprise): Record<string, string> =>
+  Object.fromEntries(
+    NATURES_URSSAF.flatMap((n) => {
+      const taux = infos?.tauxUrssaf?.[n];
+      return taux === undefined ? [] : [[n, String(taux).replace('.', ',')]];
+    }),
+  );
+
+/** Les taux saisis en nombres : ceux qui restent vides gardent le taux indicatif (rien n'est enregistré pour eux). */
+const tauxDesTextes = (textes: Record<string, string>): InfosEntreprise['tauxUrssaf'] => {
+  const taux: NonNullable<InfosEntreprise['tauxUrssaf']> = {};
+  for (const n of NATURES_URSSAF) {
+    const valeur = parseDecimal(textes[n] ?? '');
+    if (valeur > 0) taux[n] = valeur;
+  }
+  return Object.keys(taux).length > 0 ? taux : undefined;
+};
 
 const options = (labels: Record<string, string>) =>
   Object.entries(labels).map(([value, label]) => ({ value, label }));
@@ -37,6 +65,8 @@ export function InformationsEntreprise() {
   const infos = settings.exploitation?.entreprise;
   const [form, setForm] = useState<InfosEntreprise>(infos ?? {});
   const [montantTaxe, setMontantTaxe] = useState(montantEnTexte(montantTaxeSejourDe(infos)));
+  /** Les taux de cotisations URSSAF en cours de saisie, par nature de recette. */
+  const [tauxUrssaf, setTauxUrssaf] = useState(tauxEnTexte(infos));
   const [montantNuit, setMontantNuit] = useState(montantEnTexte(infos?.tarifNuit));
   const [montantRepas, setMontantRepas] = useState(montantEnTexte(infos?.tarifRepas));
   const [editing, setEditing] = useState(false);
@@ -49,6 +79,7 @@ export function InformationsEntreprise() {
   const charger = () => {
     setForm(infos ?? {});
     setMontantTaxe(montantEnTexte(montantTaxeSejourDe(infos)));
+    setTauxUrssaf(tauxEnTexte(infos));
     setMontantNuit(montantEnTexte(infos?.tarifNuit));
     setMontantRepas(montantEnTexte(infos?.tarifRepas));
   };
@@ -70,6 +101,7 @@ export function InformationsEntreprise() {
     try {
       const entreprise: InfosEntreprise = {
         ...form,
+        tauxUrssaf: tauxDesTextes(tauxUrssaf),
         regimeTva: form.tvaApplicable ? (form.regimeTva ?? REGIME_TVA_PAR_DEFAUT) : undefined,
         tarifNuit: concerneTaxeSejour ? parseDecimal(montantNuit) || undefined : undefined,
         tarifRepas: concerneTaxeSejour ? parseDecimal(montantRepas) || undefined : undefined,
@@ -154,6 +186,29 @@ export function InformationsEntreprise() {
               valeur={infos?.regimeFiscal ? LABEL_REGIME_FISCAL[infos.regimeFiscal] : undefined}
             />
           </>
+        )}
+      </Card>
+
+      <Text style={styles.titreSection}>{T.titreTauxUrssaf}</Text>
+      <Text style={styles.aide}>{T.aideTauxUrssaf}</Text>
+      <Card>
+        {NATURES_URSSAF.map((nature) =>
+          editing ? (
+            <FormField
+              key={nature}
+              label={LABEL_NATURE_URSSAF[nature]}
+              value={tauxUrssaf[nature] ?? ''}
+              onChangeText={(texte) => setTauxUrssaf((prev) => ({ ...prev, [nature]: texte }))}
+              keyboardType="decimal-pad"
+              placeholder={String(TAUX_URSSAF_PAR_NATURE[nature]).replace('.', ',')}
+            />
+          ) : (
+            <LigneInfo
+              key={nature}
+              label={LABEL_NATURE_URSSAF[nature]}
+              valeur={`${String(tauxUrssafDe(nature, infos)).replace('.', ',')} %${infos?.tauxUrssaf?.[nature] === undefined ? ` (${T.tauxIndicatif})` : ''}`}
+            />
+          ),
         )}
       </Card>
 

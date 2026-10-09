@@ -19,7 +19,7 @@ import {
   ACTIVITE_SOCIETE,
   TYPE_ANIMAL_ETABLISSEMENT,
 } from '@/shared/constants/etablissements';
-import { REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/shared/constants/entreprise';
+import { NATURE_URSSAF, REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/shared/constants/entreprise';
 import { FILTRE_DOSSIERS, STATUT_ELEMENT } from '@/shared/constants/dossiers';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { SERVICE_REPAS } from '@/shared/constants/gite';
@@ -275,6 +275,13 @@ export const LABEL_REGIME_FISCAL: Record<ValeurDe<typeof REGIME_FISCAL>, string>
   [REGIME_FISCAL.REEL_NORMAL]: 'Réel normal (BIC)',
   [REGIME_FISCAL.IMPOT_SOCIETES]: 'Impôt sur les sociétés',
   [REGIME_FISCAL.NON_FISCALISE]: 'Association non fiscalisée',
+};
+
+/** Les natures de recette de la déclaration URSSAF (les mots de la déclaration d'un micro-entrepreneur). */
+export const LABEL_NATURE_URSSAF: Record<ValeurDe<typeof NATURE_URSSAF>, string> = {
+  [NATURE_URSSAF.VENTE_MARCHANDISES]: 'Vente de marchandises',
+  [NATURE_URSSAF.SERVICES_COMMERCIAUX]: 'Prestations de services commerciales ou artisanales',
+  [NATURE_URSSAF.SERVICES_LIBERAUX]: 'Prestations de services libérales',
 };
 
 export const LABEL_REGIME_TVA: Record<ValeurDe<typeof REGIME_TVA>, string> = {

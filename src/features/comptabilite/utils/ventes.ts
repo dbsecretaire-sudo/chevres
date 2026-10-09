@@ -1,6 +1,6 @@
 import type { Vente } from '@/features/comptabilite/types';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
-import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX, TYPE_CHOIX_FACTURE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { capitaliser, especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
@@ -19,3 +19,7 @@ export function libelleCategorieVente(v: Pick<Vente, 'categorie' | 'activite'>):
 /** Les identifiants des fiches du cheptel des animaux d'une vente (aucun pour une vente sans animal choisi). */
 export const idsDesAnimaux = (vente: Pick<Vente, 'animaux'>): string[] =>
   vente.animaux ? vente.animaux.split(SEPARATEUR_ANIMAUX).filter(Boolean) : [];
+
+/** Vrai quand le client souhaite que la vente soit déclarée (avec facture) : d'office, et pour les ventes d'avant ce choix. */
+export const venteADeclarer = (vente: Pick<Vente, 'choixFacture'>): boolean =>
+  vente.choixFacture !== TYPE_CHOIX_FACTURE.SANS_FACTURE;

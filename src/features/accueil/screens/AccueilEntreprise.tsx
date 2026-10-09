@@ -118,7 +118,7 @@ export default function AccueilEntreprise() {
           valeur={solde === undefined ? '—' : formatMontant(solde)}
           label={T.tuiles.solde}
           couleur={solde !== undefined && solde < 0 ? colors.danger : undefined}
-          onPress={() => router.push(ROUTES.BALANCE)}
+          onPress={() => router.push(ROUTES.COMPTABILITE)}
         />
         <TuileChiffre
           valeur={secondeTuile.valeur}

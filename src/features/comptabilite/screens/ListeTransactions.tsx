@@ -37,11 +37,22 @@ export default function ComptabiliteIndex() {
         ListHeaderComponent={
           <View style={[commonStyles.topBox, styles.entete]}>
             <LigneFiltres>
-              <YearPicker annees={e.annees} value={e.anneeActive} onChange={e.setAnneeActive} />
+              <YearPicker
+                annees={e.annees}
+                value={e.anneeActive}
+                onChange={e.setAnneeActive}
+                tout={e.toutesAnnees}
+                onChoisirTout={e.choisirToutesAnnees}
+              />
               <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
               <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
             </LigneFiltres>
-            <CarteSolde soldes={e.soldes} anneeActive={e.anneeActive} filtresActifs={e.filtresActifs} />
+            <CarteSolde
+              soldes={e.soldes}
+              anneeActive={e.anneeActive}
+              toutesAnnees={e.toutesAnnees}
+              filtresActifs={e.filtresActifs}
+            />
             <BarreRecherche
               recherche={e.recherche}
               onRecherche={e.setRecherche}
@@ -68,6 +79,8 @@ export default function ComptabiliteIndex() {
         onClose={() => e.setFiltreOuvert(false)}
         valeur={e.filtres}
         onChange={e.setFiltres}
+        annee={e.anneeActive}
+        anneeLibre={e.toutesAnnees}
       />
 
       <Fab

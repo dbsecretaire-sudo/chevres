@@ -52,3 +52,42 @@ export function formatMontant(montant?: number): string {
 export function currentYear(): number {
   return new Date().getFullYear();
 }
+
+/** Le même jour dans une autre année (le 29 février devient le 28 si l'année n'est pas bissextile) ; vide reste vide. */
+export function memeJourDansLAnnee(isoDate: string, annee: number): string {
+  if (!estDateISO(isoDate)) return isoDate;
+  const mois = isoDate.slice(5, 7);
+  const jour = Number(isoDate.slice(8, 10));
+  const dernierJour = new Date(annee, Number(mois), 0).getDate();
+  return `${annee}-${mois}-${String(Math.min(jour, dernierJour)).padStart(2, '0')}`;
+}
+
+/** Aujourd'hui, dans l'année donnée (là où s'ouvre le choix d'une date quand aucune n'est saisie). */
+export function aujourdhuiDansLAnnee(annee: number): string {
+  return memeJourDansLAnnee(todayISO(), annee);
+}
+
+/** Une date AAAA-MM-JJ écrite JJ-MM-AAAA (le format des filtres) ; une valeur qui n'en est pas une est rendue telle quelle. */
+export function enJourMoisAnnee(isoDate: string): string {
+  return estDateISO(isoDate)
+    ? `${isoDate.slice(8, 10)}-${isoDate.slice(5, 7)}-${isoDate.slice(0, 4)}`
+    : isoDate;
+}
+
+/** Le jour et le mois d'une date AAAA-MM-JJ, écrits JJ-MM (l'année étant imposée à côté) ; vide pour une valeur qui n'est pas une date. */
+export function jourEtMois(isoDate: string): string {
+  return estDateISO(isoDate) ? `${isoDate.slice(8, 10)}-${isoDate.slice(5, 7)}` : '';
+}
+
+/**
+ * Une date saisie « JJ-MM-AAAA » (ou « J-M-AAAA », avec « - », « / » ou « . ») en AAAA-MM-JJ ; avec `annee`, la saisie est
+ * « JJ-MM » seulement et l'année est celle donnée. Vide quand ce n'est pas une vraie date.
+ */
+export function depuisJourMoisAnnee(texte: string, annee?: number): string {
+  const m = /^(\d{1,2})[-/.](\d{1,2})(?:[-/.](\d{4}))?$/.exec(texte.trim());
+  if (!m) return '';
+  const an = annee ?? (m[3] ? Number(m[3]) : undefined);
+  if (an === undefined) return '';
+  const iso = `${an}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  return estDateISO(iso) ? iso : '';
+}

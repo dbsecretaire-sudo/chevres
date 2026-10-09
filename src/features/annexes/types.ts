@@ -1,3 +1,4 @@
+import type { NatureUrssaf } from '@/features/comptabilite/types';
 /** Une activité annexe du gîte (pizzas, charcuterie, guide touristique…) : son nom, son icône et le compte où ses ventes s'inscrivent. */
 export interface ActiviteAnnexe {
   id: string;
@@ -8,6 +9,8 @@ export interface ActiviteAnnexe {
   compte: string;
   /** Le taux de TVA des ventes (%) ; absent : celui de l'entreprise, ou aucun. */
   tauxTva?: number;
+  /** La nature des ventes pour l'URSSAF (vente de marchandises, prestation…) ; absente : vente de marchandises. */
+  natureUrssaf?: NatureUrssaf;
   /**
    * Vrai : l'activité montre le calendrier des repas du gîte. Un jour ouvre ses tickets, qui comptent déjà les repas réservés et
    * payés de ce jour-là (le restaurant).

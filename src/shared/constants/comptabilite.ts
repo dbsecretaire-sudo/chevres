@@ -530,3 +530,9 @@ export const TAUX_TVA_VENTE_PAR_CATEGORIE = {
 // --- Pourcentages ---
 export const POURCENTAGE_MIN = 0;
 export const POURCENTAGE_MAX = 100;
+
+/** Ce que le client souhaite pour une vente : qu'elle soit déclarée (avec facture), ou non (sans facture). */
+export const TYPE_CHOIX_FACTURE = {
+  AVEC_FACTURE: 'avec_facture',
+  SANS_FACTURE: 'sans_facture',
+} as const;

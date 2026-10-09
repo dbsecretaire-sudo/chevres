@@ -7,6 +7,8 @@ import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/d
 import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_RUBRIQUE_MARCHANDISE,
+  LABEL_NATURE_URSSAF,
+  LABEL_TYPE_AIDE,
   LABEL_TYPE_ALIMENT,
   LABEL_UNITE_MARCHANDISE,
   LABEL_TYPE_CARBURANT,
@@ -103,6 +105,11 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         <Text style={commonStyles.line}>
           {TEXTES.commun.general.comptePcgDeuxPoints}
           {compte.numero} — {compte.libelle}
+        </Text>
+      ) : null}
+      {facture.natureUrssaf ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.comptabilite.nouvelleEcriture.natureUrssaf} : {LABEL_NATURE_URSSAF[facture.natureUrssaf]}
         </Text>
       ) : null}
       {reservation ? (
@@ -202,7 +209,7 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
       {facture.typeAide ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.typeDAideDeuxPoints}
-          {facture.typeAide}
+          {LABEL_TYPE_AIDE[facture.typeAide]}
         </Text>
       ) : null}
       {facture.typeAideLibre ? (

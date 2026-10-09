@@ -42,6 +42,14 @@ export function BalanceEntreprise({ annee, balance, parMois }: Props) {
             </Text>
           </View>
         </View>
+        <View style={commonStyles.rowSpaceBetween}>
+          <Text style={commonStyles.note}>{TEXTES.comptabilite.listeTransactions.rentreesAvecFactures}</Text>
+          <Text style={commonStyles.lineBold}>{montant(balance?.rentreesAvecFactures)}</Text>
+        </View>
+        <View style={commonStyles.rowSpaceBetween}>
+          <Text style={commonStyles.note}>{TEXTES.comptabilite.listeTransactions.rentreesSansFactures}</Text>
+          <Text style={commonStyles.lineBold}>{montant(balance?.rentreesSansFactures)}</Text>
+        </View>
         <Text style={commonStyles.note}>{T.horsAutre}</Text>
       </Card>
 

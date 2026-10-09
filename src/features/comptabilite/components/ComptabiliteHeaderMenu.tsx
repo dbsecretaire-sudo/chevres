@@ -80,6 +80,16 @@ export function ComptabiliteHeaderMenu() {
             icon: 'calendar',
             onPress: () => router.push(ROUTES.FISCALITE_RSA),
           },
+          // Les déclarations URSSAF : pour une entreprise.
+          ...(entreprise
+            ? [
+                {
+                  label: TEXTES.entreprise.menu.urssaf,
+                  icon: 'cash' as const,
+                  onPress: () => router.push(ROUTES.URSSAF),
+                },
+              ]
+            : []),
           // La TVA n'apparaît que pour une entreprise assujettie.
           ...(entreprise && tvaApplicable
             ? [

@@ -67,6 +67,10 @@ export interface SoldesTransactions {
   /** Solde : toutes les écritures, sans exception (alimentation, matériel, « Autre »…). */
   balance: number;
   totalRentrees: number;
+  /** Les rentrées avec facture : les ventes que le client souhaite déclarer, et les factures émises (aides, autres recettes). */
+  rentreesAvecFactures: number;
+  /** Les rentrées des ventes sans facture (le client ne souhaite pas les déclarer). */
+  rentreesSansFactures: number;
   totalDepenses: number;
 }
 
@@ -79,10 +83,16 @@ export function calculerSoldes(transactions: Transaction[]): SoldesTransactions 
   const somme = (liste: Transaction[], valeur: (t: Transaction) => number) =>
     liste.reduce((s, t) => s + valeur(t), 0);
 
+  const rentrees = transactions.filter((t) => t.sens === SENS_TRANSACTION.ENTREE);
   return {
     balance: somme(transactions, (t) => (t.montantComptabilise ?? 0) * signe(t)),
-    totalRentrees: somme(
-      transactions.filter((t) => t.sens === SENS_TRANSACTION.ENTREE),
+    totalRentrees: somme(rentrees, (t) => t.montantComptabilise ?? 0),
+    rentreesAvecFactures: somme(
+      rentrees.filter((t) => !t.sansFacture),
+      (t) => t.montantComptabilise ?? 0,
+    ),
+    rentreesSansFactures: somme(
+      rentrees.filter((t) => t.sansFacture),
       (t) => t.montantComptabilise ?? 0,
     ),
     totalDepenses: somme(

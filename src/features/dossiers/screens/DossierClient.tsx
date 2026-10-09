@@ -7,7 +7,9 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { CarteDossier } from '@/features/dossiers/components/CarteDossier';
 import { NomModal } from '@/features/dossiers/components/NomModal';
+import { NoteAFacturer } from '@/features/dossiers/components/NoteAFacturer';
 import { RechercheDossiers } from '@/features/dossiers/components/RechercheDossiers';
+import { facturerLaNote, lignesDeLaNote } from '@/features/dossiers/services/facturation';
 import { useExplorateur } from '@/features/dossiers/hooks/useExplorateur';
 import { creerSousDossier } from '@/features/dossiers/repository';
 import { dossiersEnfants, resumeDossier } from '@/features/dossiers/services/arborescence';
@@ -57,6 +59,12 @@ export default function DossierClient() {
   };
 
   const dossiers = dossiersEnfants(e.archive.sousDossiers, id);
+  /** La note du client : ses prestations ajoutées sur la note, pas encore facturées. */
+  const note = lignesDeLaNote(e.archive.elements, id);
+  const facturerNote = async (numeroFacture: string, date: string) => {
+    if (client) await facturerLaNote(id, numeroFacture, date, client, settings.exploitation?.entreprise);
+    recharger();
+  };
 
   return (
     <Screen scroll={false}>
@@ -68,6 +76,8 @@ export default function DossierClient() {
             variant="secondary"
             onPress={() => router.push(ROUTES.ficheClient(id))}
           />
+
+          <NoteAFacturer lignes={note} onFacturer={facturerNote} />
 
           {dossiers.length === 0 ? (
             <EmptyState title={T.dossierClient.aucunDossier} subtitle={T.dossierClient.ajoutezUnDossier} />

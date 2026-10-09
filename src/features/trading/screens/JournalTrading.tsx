@@ -55,7 +55,7 @@ const correspondAuFiltre = (t: Trade, filtre: FiltreTrades): boolean => {
  */
 export default function JournalTrading() {
   const router = useRouter();
-  const { settings, setAnneeActive } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [requete, setRequete] = useState('');
   const [filtre, setFiltre] = useState<FiltreTrades>(FILTRE_TRADES.TOUS);
@@ -72,7 +72,9 @@ export default function JournalTrading() {
     new Set([currentYear(), annee, ...trades.map((t) => Number(t.dateEntree.slice(0, 4)))]),
   ).filter((a) => Number.isFinite(a));
 
-  const delAnnee = trades.filter((t) => t.dateEntree.startsWith(String(annee)));
+  // « Tout » : les trades de toutes les années ; sinon ceux de l'année active.
+  const regrouper = !!settings.toutesAnnees;
+  const delAnnee = regrouper ? trades : trades.filter((t) => t.dateEntree.startsWith(String(annee)));
   const stats = calculerStatistiques(delAnnee);
 
   const termes = normaliser(requete).split(/\s+/).filter(Boolean);
@@ -89,7 +91,13 @@ export default function JournalTrading() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listFab}>
-        <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
+        <YearPicker
+          annees={annees}
+          value={annee}
+          onChange={setAnneeActive}
+          tout={regrouper}
+          onChoisirTout={choisirToutesAnnees}
+        />
 
         {delAnnee.length > 0 ? (
           <>

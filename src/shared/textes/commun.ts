@@ -164,7 +164,13 @@ export const TEXTES_COMMUN = {
   },
   /** Le calendrier mensuel (accueil d'une entreprise, gîte). */
   /** Les titres des listes de choix du haut des écrans (l'année, l'animal). */
-  choix: { annee: 'Année', animal: 'Animal', rubrique: 'Rubrique', activite: 'Activité' },
+  choix: {
+    annee: 'Année',
+    toutesAnnees: 'Tout',
+    animal: 'Animal',
+    rubrique: 'Rubrique',
+    activite: 'Activité',
+  },
   calendrier: {
     jours: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
     moisPrecedent: 'Mois précédent',
@@ -172,6 +178,15 @@ export const TEXTES_COMMUN = {
   },
   dateField: {
     aaaaMmJj: 'AAAA-MM-JJ',
+    /** Sous le champ d'une date dont l'année est imposée (le filtre d'une période). */
+    format: 'format : AAAA-MM-JJ',
+    /** Sous le champ d'une date écrite jour d'abord (les filtres). */
+    formatJourMoisAnnee: 'format : JJ-MM-AAAA',
+    /** Quand l'année est imposée (une année active choisie) : seuls le jour et le mois s'écrivent. */
+    formatJourMois: 'format : JJ-MM',
+    jourMois: 'JJ-MM',
+    jourMoisAnnee: 'JJ-MM-AAAA',
+    anneeImposee: 'Pour une autre année, changer l’année active',
     invalide: 'Date invalide : écrivez-la sous la forme AAAA-MM-JJ (ex : 2026-10-04).',
   },
   infoModal: {

@@ -3,28 +3,39 @@ import { Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { Vente } from '@/features/comptabilite/types';
 import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
+import {
+  fromageAjouteChoisi,
+  optionsFromages,
+  typeDuChoix,
+  valeurFromage,
+} from '@/features/comptabilite/utils/fromages';
 import {
   CATEGORIES_VENTE_ANIMAUX,
   CATEGORIES_VENTE_PRIX_INVENTAIRE,
   CATEGORIES_VENTE_VIANDE,
   CATEGORIE_VENTE,
+  TYPE_CHOIX_FACTURE,
+  TYPE_FROMAGE,
 } from '@/shared/constants/comptabilite';
 import { categoriesRecetteActivite, estCategorieVente } from '@/features/comptabilite/utils/recettes';
-import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -51,6 +62,8 @@ interface Props {
   onEnregistrer: () => void;
 }
 
+const T = TEXTES.comptabilite.nouvelleEcriture;
+
 /** Formulaire de modification d'une vente de production. */
 export function VenteFormulaire({
   form,
@@ -63,16 +76,23 @@ export function VenteFormulaire({
 }: Props) {
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
   const estAnimal = (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(form.categorie);
+  const estFromage = form.categorie === CATEGORIE_VENTE.FROMAGE;
   const router = useRouter();
   const retour = useAdresseCourante();
   const activite = activiteVente(form);
+  /** L'espèce du stock regardé : toutes quand la vente est « commune » (comme à la création). */
+  const especeDuStock = activite === ACTIVITE_COMMUNE ? undefined : (activite as FiltreStock);
   /** Les détails de la vente de viande : les lignes de l'inventaire de l'espèce (le détail déjà enregistré y reste). */
-  const viandes = useViandesDuStock(activite as FiltreStock);
+  const viandes = useViandesDuStock(especeDuStock);
   const detailsVente = viandes
     .filter((v) => (roleDeLaViande(v.cle) !== undefined) === (form.categorie === CATEGORIE_VENTE.VIANDE))
     .map((v) => ({ value: v.libelle, label: v.libelle }));
   if (form.precision && !detailsVente.some((d) => d.value === form.precision))
     detailsVente.unshift({ value: form.precision, label: form.precision });
+  /** Les fromages du stock (le type déjà enregistré y reste) : leur menu, avec le crayon vers le stock. */
+  const fromages = useFromagesDuStock();
+  const optionsFromage = optionsFromages(fromages);
+  const ajouteChoisi = fromageAjouteChoisi(fromages, form.typeFromage, form.typeFromageLibre);
   /** L'inventaire (prix de vente) : il fait le prix total de la vente, jamais saisi. */
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   useFocusEffect(
@@ -83,6 +103,7 @@ export function VenteFormulaire({
   const prixInventaire = (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie);
   const totalInventaire = archive ? totalDeLaVente(form, archive) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
+
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{TEXTES.comptabilite.ficheVente.modifierLaVente}</Text>
@@ -106,27 +127,56 @@ export function VenteFormulaire({
         onChange={(date) => onChange({ ...form, date })}
       />
 
+      {estFromage ? (
+        <>
+          <SelectFieldEditable<string>
+            label={T.typeDeFromage}
+            required
+            value={ajouteChoisi ? valeurFromage(ajouteChoisi) : (form.typeFromage ?? '')}
+            onChange={(valeur) => onChange({ ...form, ...typeDuChoix(fromages, valeur) })}
+            options={optionsFromage}
+            placeholder={T.typeDeFromage}
+            onEdit={() => router.push(ROUTES.stockDepuis(retour, SECTION_STOCK.FROMAGES, especeDuStock))}
+          />
+          {form.typeFromage === TYPE_FROMAGE.AUTRE && !ajouteChoisi ? (
+            <FormField
+              label={T.preciserLeType}
+              required
+              value={form.typeFromageLibre ?? ''}
+              onChangeText={(typeFromageLibre) => onChange({ ...form, typeFromageLibre })}
+            />
+          ) : null}
+        </>
+      ) : null}
+
       {estViande && detailsVente.length > 0 ? (
         <SelectFieldEditable<string>
-          label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
+          label={T.detailDeLaVente}
           required
           searchable
-          placeholder={TEXTES.comptabilite.nouvelleEcriture.choixDuDetail}
+          placeholder={T.choixDuDetail}
           value={form.precision ?? ''}
-          onChange={(precision) => onChange({ ...form, precision })}
+          onChange={(precision) =>
+            // Un autre détail : les animaux déjà choisis ne valent plus (comme à la création).
+            onChange({
+              ...form,
+              precision,
+              ...(precision !== form.precision ? { animaux: undefined, jeune: undefined } : {}),
+            })
+          }
           options={detailsVente}
           onEdit={() =>
             router.push(
               ROUTES.stockDepuis(
                 retour,
                 animalEntier ? SECTION_STOCK.ANIMAUX : SECTION_STOCK.VIANDE,
-                activite as FiltreStock,
+                especeDuStock,
               ),
             )
           }
         />
       ) : estViande ? (
-        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucuneViandeAuStock}</Text>
+        <Text style={commonStyles.note}>{T.aucuneViandeAuStock}</Text>
       ) : null}
 
       {animalEntier ? (
@@ -138,7 +188,7 @@ export function VenteFormulaire({
             onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
           }
           keyboardType="decimal-pad"
-          placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
+          placeholder={T.ex2}
         />
       ) : (
         <View style={commonStyles.row}>
@@ -169,10 +219,9 @@ export function VenteFormulaire({
           )}
         </View>
       )}
-
-      {form.categorie === CATEGORIE_VENTE.FROMAGE ? (
+      {estFromage ? (
         <FormField
-          label={TEXTES.comptabilite.nouvelleEcriture.nombreDeSacs}
+          label={T.nombreDeSacs}
           value={form.sacs !== undefined ? String(form.sacs) : ''}
           onChangeText={(valeur) =>
             onChange({ ...form, sacs: Math.round(Number(valeur.replace(',', '.'))) || undefined })
@@ -200,7 +249,7 @@ export function VenteFormulaire({
         placeholder="0,00"
       />
       {prixInventaire && totalInventaire === undefined ? (
-        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}</Text>
+        <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
       ) : null}
 
       <FormField
@@ -209,6 +258,26 @@ export function VenteFormulaire({
         value={form.client ?? ''}
         onChangeText={(client) => onChange({ ...form, client })}
       />
+
+      {/* Le client souhaite-t-il que la vente soit déclarée (avec facture) ? Coché d'office, comme à la création. */}
+      <Checkbox
+        label={T.declarerLaVente}
+        value={venteADeclarer(form)}
+        onChange={(declaree) =>
+          onChange({
+            ...form,
+            choixFacture: declaree ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
+          })
+        }
+      />
+      {venteADeclarer(form) ? (
+        <FormField
+          label={T.nDeFacture}
+          required
+          value={form.numeroFacture ?? ''}
+          onChangeText={(numeroFacture) => onChange({ ...form, numeroFacture })}
+        />
+      ) : null}
 
       <View style={commonStyles.row}>
         <Button

@@ -21,13 +21,17 @@ import {
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { Vente } from '@/features/comptabilite/types';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
+import { Checkbox } from '@/shared/components/Checkbox';
 
 /** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
 export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
@@ -129,17 +133,40 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
       {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampsAide e={e} />}
 
       {e.estProductionVente && (
-        <SelectFieldEditable
-          label={TEXTES.commun.general.client}
-          required
-          searchable
-          placeholder={TEXTES.commun.general.choixDuClient}
-          value={e.clientId}
-          onChange={e.setClientId}
-          options={optionsClients}
-          onEdit={() => router.push(ROUTES.CLIENTS)}
-        />
+        <>
+          <SelectFieldEditable
+            label={TEXTES.commun.general.client}
+            required
+            searchable
+            placeholder={TEXTES.commun.general.choixDuClient}
+            value={e.clientId}
+            onChange={e.setClientId}
+            options={optionsClients}
+            onEdit={() => router.push(ROUTES.CLIENTS)}
+          />
+          <Checkbox
+            label={TEXTES.comptabilite.nouvelleEcriture.declarerLaVente}
+            value={e.avecFacture}
+            onChange={e.setAvecFacture}
+          />
+          {/* Une vente déclarée a un numéro de facture. */}
+          {e.avecFacture ? (
+            <FormField
+              label={TEXTES.comptabilite.nouvelleEcriture.nDeFacture}
+              required
+              value={e.numeroFacture}
+              onChangeText={e.setNumeroFacture}
+            />
+          ) : null}
+        </>
       )}
+
+      {/* Une entreprise : la nature de la recette pour la déclaration URSSAF (selon la catégorie tant qu'on n'en choisit pas). */}
+      {modeEntreprise() &&
+      !e.estProductionVente &&
+      (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(e.categorieRecette) ? (
+        <ChampNatureUrssaf value={e.natureUrssaf} onChange={e.setNatureUrssaf} />
+      ) : null}
 
       {e.categorieRecette === CATEGORIE_RECETTE.LAIT && <ChampsVenteLait e={e} />}
       {e.categorieRecette === CATEGORIE_RECETTE.FROMAGE && <ChampsVenteFromage e={e} />}

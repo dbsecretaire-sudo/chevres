@@ -30,23 +30,25 @@ import { SelectField } from '@/shared/components/SelectField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
-import type { TypeAide, TypeFromage } from '@/features/comptabilite/types';
+import type { TypeAide } from '@/features/comptabilite/types';
 import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
 import { CATEGORIE_RECETTE, TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
-import { CLE_PRIX_LAIT, PREFIXE_FROMAGE_AJOUTE, ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
+import {
+  fromageAjouteChoisi,
+  optionsFromages,
+  typeDuChoix,
+  valeurFromage,
+} from '@/features/comptabilite/utils/fromages';
+import { CLE_PRIX_LAIT, ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_TYPE_AIDE, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
+import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
 
 type Props = { e: EtatNouvelleEcriture };
 
 const OPTIONS_TYPE_AIDE = Object.entries(LABEL_TYPE_AIDE).map(([value, label]) => ({
   value: value as TypeAide,
-  label,
-}));
-const OPTIONS_TYPE_FROMAGE = Object.entries(LABEL_TYPE_FROMAGE).map(([value, label]) => ({
-  value: value as TypeFromage,
   label,
 }));
 
@@ -183,39 +185,21 @@ export function ChampsVenteLait({ e }: Props) {
 export function ChampsVenteFromage({ e }: Props) {
   // Les types de fromage viennent du stock : un fromage ajouté là se vend ici, à sa place dans la liste.
   const fromages = useFromagesDuStock();
-  const options =
-    fromages.length > 0
-      ? fromages.map((f) => ({
-          value: f.id ? `${PREFIXE_FROMAGE_AJOUTE}${f.id}` : f.cle.split(':')[1],
-          label: f.libelle,
-        }))
-      : OPTIONS_TYPE_FROMAGE;
+  const options = optionsFromages(fromages);
   const router = useRouter();
   const retour = useAdresseCourante();
-  const valeurDe = (f: (typeof fromages)[number]) =>
-    f.id ? `${PREFIXE_FROMAGE_AJOUTE}${f.id}` : f.cle.split(':')[1];
-  const ajouteChoisi = fromages.find(
-    (f) =>
-      f.id &&
-      e.typeFromage === TYPE_FROMAGE.AUTRE &&
-      e.typeFromageLibre.trim().toLowerCase() === f.libelle.trim().toLowerCase(),
-  );
+  const ajouteChoisi = fromageAjouteChoisi(fromages, e.typeFromage, e.typeFromageLibre);
   /** Le prix de vente défini au stock pour le fromage choisi (le premier par défaut), s'il y en a un. */
   const prixDuChoix = fromages.find(
-    (f) => valeurDe(f) === (ajouteChoisi ? valeurDe(ajouteChoisi) : e.typeFromage),
+    (f) => valeurFromage(f) === (ajouteChoisi ? valeurFromage(ajouteChoisi) : e.typeFromage),
   )?.prix;
   // Le prix total est celui de l'inventaire × la quantité : recalculé dès que le fromage, son prix ou la quantité change.
   useTotalVerrouille(e, prixDuChoix, e.quantite);
   /** Un fromage ajouté se note comme « autre » avec son nom : c'est ainsi que la vente retrouve son stock. */
   const choisirFromage = (valeur: string) => {
-    if (valeur.startsWith(PREFIXE_FROMAGE_AJOUTE)) {
-      const ajoute = fromages.find((f) => f.id === valeur.slice(PREFIXE_FROMAGE_AJOUTE.length));
-      e.setTypeFromage(TYPE_FROMAGE.AUTRE);
-      e.setTypeFromageLibre(ajoute?.libelle ?? '');
-    } else {
-      e.setTypeFromage(valeur as TypeFromage);
-      e.setTypeFromageLibre('');
-    }
+    const choix = typeDuChoix(fromages, valeur);
+    e.setTypeFromage(choix.typeFromage);
+    e.setTypeFromageLibre(choix.typeFromageLibre);
   };
 
   return (
@@ -225,7 +209,7 @@ export function ChampsVenteFromage({ e }: Props) {
           <SelectFieldEditable
             label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}
             required
-            value={ajouteChoisi ? `${PREFIXE_FROMAGE_AJOUTE}${ajouteChoisi.id}` : e.typeFromage}
+            value={ajouteChoisi ? valeurFromage(ajouteChoisi) : e.typeFromage}
             onChange={choisirFromage}
             options={options}
             onEdit={() =>

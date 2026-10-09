@@ -24,6 +24,7 @@ import type {
   TypeFromage,
   UniteVente,
   Vente,
+  NatureUrssaf,
 } from '@/features/comptabilite/types';
 import type { Client } from '@/features/clients/types';
 import {
@@ -42,6 +43,7 @@ import {
   TYPE_FACTURE,
   TYPE_FROMAGE,
   UNITE_VENTE,
+  TYPE_CHOIX_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { nomComplet } from '@/shared/utils/personne';
 import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
@@ -86,6 +88,12 @@ export interface SaisieEcriture {
   estProductionVente: boolean;
   /** Vrai pour une recette d'entreprise assujettie à la TVA : le taux saisi est alors enregistré sur la facture émise. */
   tvaEmise: boolean;
+  /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
+  avecFacture: boolean;
+  /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
+  natureUrssaf: string;
+  /** Le numéro de la facture d'une vente déclarée (obligatoire quand le client souhaite la déclarer). */
+  numeroFacture: string;
 }
 
 export interface ErreurSaisie {
@@ -103,6 +111,11 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
 
   // Le client est obligatoire pour toute vente.
   if (!s.clientSelectionne) return { erreur: { titre: TEXTES.commun.general.clientRequis } };
+
+  // Une vente que le client souhaite déclarer a un numéro de facture.
+  if (s.avecFacture && !s.numeroFacture.trim()) {
+    return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureRequis } };
+  }
 
   // Le détail de la vente (la ligne de l'inventaire vendue) est obligatoire pour la viande et la boucherie / charcuterie.
   if ((CATEGORIES_VENTE_AVEC_DETAIL as readonly string[]).includes(categorie) && !s.precision.trim()) {
@@ -156,6 +169,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
         ? s.precision.trim() || undefined
         : undefined,
+      choixFacture: s.avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
+      numeroFacture: s.avecFacture ? s.numeroFacture.trim() : undefined,
     },
   };
 }
@@ -239,6 +254,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
         ? Math.min(POURCENTAGE_MAX, Math.max(POURCENTAGE_MIN, parseDecimal(s.tauxImpositionLibre)))
         : undefined,
       lignesCarburant,
+      natureUrssaf: estEmise && s.natureUrssaf ? (s.natureUrssaf as NatureUrssaf) : undefined,
       compteManuel:
         estRecue && s.categorieDepense === CATEGORIE_DEPENSE.AUTRE
           ? s.compteDepenseAutre

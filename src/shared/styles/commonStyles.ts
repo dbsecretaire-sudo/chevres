@@ -12,6 +12,8 @@ export const commonStyles = StyleSheet.create({
   flex2: { flex: 2 },
   row: { flexDirection: 'row', gap: 12 },
   rowFin: { flexDirection: 'row', gap: 8, alignItems: 'flex-end' },
+  /** Une colonne dont le contenu se cale en bas (un bouton à hauteur d'un champ voisin). */
+  finDeColonne: { justifyContent: 'flex-end' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   rowBetweenTight: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
   rowSpaceBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

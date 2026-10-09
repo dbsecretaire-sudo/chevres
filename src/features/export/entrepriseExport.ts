@@ -4,6 +4,7 @@ import { listClients } from '@/features/clients/repository';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { lireArchiveDossiers } from '@/features/dossiers/repository';
 import { calculerFiscaliteEntreprise } from '@/features/entreprise/services/fiscaliteEntreprise';
+import { calculerUrssaf } from '@/features/entreprise/services/urssaf';
 import { lireArchiveGite } from '@/features/gite/repository';
 import { listTrades } from '@/features/trading/repository';
 import { ecrireEtPartager, feuilleOuMessage } from '@/features/export/services/classeurXlsx';
@@ -13,6 +14,7 @@ import {
   elementRow,
   factureEntrepriseRow,
   lignesSynthese,
+  lignesUrssaf,
   sejourRow,
   tradeRow,
 } from '@/features/export/services/lignesEntreprise';
@@ -51,6 +53,11 @@ async function rassemblerDonnees(annee: number): Promise<DonneesEntreprise> {
       nom: T.factures,
       lignes: factures.map((f) => factureEntrepriseRow(f, avecTva)),
       vide: T.aucuneFacture,
+    },
+    {
+      nom: T.urssaf,
+      lignes: lignesUrssaf(await calculerUrssaf(annee, entreprise)),
+      vide: T.aucunUrssaf,
     },
     { nom: T.clients, lignes: clients.map(clientRow), vide: T.aucunClient },
     {

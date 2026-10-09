@@ -4,6 +4,7 @@ import type { ActiviteAnnexe } from '@/features/annexes/types';
 import { getSettings } from '@/features/settings/settings';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { NATURE_URSSAF_DES_ACTIVITES_ANNEXES } from '@/shared/constants/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 /**
@@ -34,6 +35,7 @@ export async function enregistrerVenteAnnexe(
     montant: total,
     categorieRecette: CATEGORIE_RECETTE.AUTRE,
     compteManuel: activite.compte,
+    natureUrssaf: activite.natureUrssaf ?? NATURE_URSSAF_DES_ACTIVITES_ANNEXES,
     tauxTva: settings.exploitation?.entreprise?.tvaApplicable ? (tauxTva ?? activite.tauxTva) : undefined,
   });
   return total;

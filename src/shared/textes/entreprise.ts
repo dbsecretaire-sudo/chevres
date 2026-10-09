@@ -13,6 +13,10 @@ export const TEXTES_ENTREPRISE = {
     aideStatut: 'Vous pouvez les modifier si votre situation change.',
     statut: 'Statut juridique',
     regimeFiscal: 'Régime fiscal',
+    titreTauxUrssaf: 'Taux de cotisations URSSAF (%)',
+    aideTauxUrssaf:
+      'Un taux par nature de recette, pour le calcul des déclarations URSSAF. Laissez vide pour le taux indicatif (12,3 % vente de marchandises, 21,2 % prestations commerciales ou artisanales, 25,6 % prestations libérales).',
+    tauxIndicatif: 'indicatif',
     titreTva: 'TVA',
     assujettiTva: 'Assujetti à la TVA',
     aideTva: 'Décochez si vous facturez sans TVA (franchise en base).',
@@ -33,7 +37,23 @@ export const TEXTES_ENTREPRISE = {
   menu: {
     impots: 'Impôts',
     chiffreAffaires: 'Chiffre d’affaires',
+    urssaf: 'URSSAF',
     tva: 'TVA',
+  },
+  urssaf: {
+    titreMois: (annee: number) => `Déclarations URSSAF par mois — ${annee}`,
+    horsTaxes: 'Chiffre d’affaires hors taxes, par nature de recette. Touchez un mois pour voir son détail.',
+    nature: 'Nature de la recette',
+    chiffreAffaires: 'À déclarer',
+    cotisations: 'Cotisations',
+    totalAnnee: (annee: number) => `Total de l’année ${annee}`,
+    total: 'Total',
+    taux: (taux: string) => `taux ${taux} %`,
+    noticeTitre: 'À savoir',
+    notice:
+      'Chaque mois, déclarez à l’URSSAF le chiffre d’affaires hors taxes encaissé ce mois-là, séparé par nature de recette ; les cotisations sont chaque montant multiplié par son taux. Une prestation prend la nature de son régime (libérale en BNC, commerciale ou artisanale en BIC services) ; le choix se fait sur chaque recette. Les ventes que le client ne souhaite pas déclarer (sans facture) n’y figurent pas.',
+    noticeVerifier:
+      'Taux indicatifs (modifiables dans les informations de l’entreprise), qui changent selon les années et les options (versement libératoire, ACRE, formation professionnelle) : vérifiez sur autoentrepreneur.urssaf.fr ou auprès de votre comptable.',
   },
   chiffreAffaires: {
     titreMois: (annee: number) => `Chiffre d’affaires par mois — ${annee}`,

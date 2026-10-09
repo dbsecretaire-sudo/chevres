@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
 import { ListRow } from '@/shared/components/ListRow';
@@ -86,16 +86,19 @@ export function ClientResume({ resume }: { resume: ResumeClient }) {
 interface EcrituresProps {
   ecritures: EcritureClient[];
   onOuvrir: (ecriture: EcritureClient) => void;
+  /** Ce qui s'affiche sous le titre, avant la liste (la note à facturer du client). */
+  enTete?: ReactNode;
 }
 
 /** Liste des écritures (ventes et factures) liées au client. */
-export function ClientEcritures({ ecritures, onOuvrir }: EcrituresProps) {
+export function ClientEcritures({ ecritures, onOuvrir, enTete }: EcrituresProps) {
   return (
     <View style={commonStyles.gap10}>
       <Text style={commonStyles.cardTitle}>
         {TEXTES.commun.general.ecrituresLiees}
         {ecritures.length > 0 ? ` (${ecritures.length})` : ''}
       </Text>
+      {enTete}
       {ecritures.length === 0 ? (
         <Text style={commonStyles.mutedItalic}>{T.aucuneEcritureLieeACe}</Text>
       ) : (

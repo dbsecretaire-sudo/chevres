@@ -17,6 +17,7 @@ import {
   TYPE_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { NATURE_URSSAF_DE_L_HEBERGEMENT } from '@/shared/constants/entreprise';
 import { TYPE_AJUSTEMENT_SEJOUR } from '@/shared/constants/gite';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
@@ -44,6 +45,11 @@ function tauxTvaDuSejour(
     tvaDuTtc(hebergement, tauxHebergement) +
     tvaDuTtc(restauration, TAUX_TVA_RECETTE_ENTREPRISE[CATEGORIE_RECETTE.RESTAURATION]);
   return total > tva ? Math.round((total / (total - tva) - 1) * 10000) / 100 : 0;
+}
+
+/** La part (€) d'un montant payé qui revient à une partie du séjour (les repas, la taxe) : au prorata de ce qui est payé. */
+function partDuSejour(partie: number, paye: number, total: number): number | undefined {
+  return total > 0 && partie > 0 ? Math.round((partie * paye * 100) / total) / 100 : undefined;
 }
 
 /** Le compte et la TVA de l'hébergement du gîte : ceux choisis dans « Modifier l'activité », sinon ceux d'office. */
@@ -111,6 +117,10 @@ export async function synchroniserFacturesSejour(sejour: Sejour): Promise<Factur
     ),
     montant: solde,
     categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
+    // L'URSSAF : une prestation commerciale, dont les repas sont des ventes et la taxe de séjour n'est pas du chiffre d'affaires.
+    natureUrssaf: existante?.natureUrssaf ?? NATURE_URSSAF_DE_L_HEBERGEMENT,
+    partVenteUrssaf: partDuSejour(tarif.restauration, solde, tarif.total),
+    partHorsCaUrssaf: partDuSejour(tarif.taxe, solde, tarif.total),
     // Une recette déjà inscrite garde son compte et son taux de TVA : un changement des réglages ne la modifie pas après coup.
     compteManuel: existante ? existante.compteManuel : gite.compte,
     tauxTva: existante
@@ -148,6 +158,9 @@ export async function synchroniserAcompte(sejour: Sejour): Promise<AcompteSejour
     description: T.descriptionAcompte(sejourDu),
     montant: acompte.montant,
     categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
+    natureUrssaf: NATURE_URSSAF_DE_L_HEBERGEMENT,
+    partVenteUrssaf: partDuSejour(tarif.restauration, acompte.montant, tarif.total),
+    partHorsCaUrssaf: partDuSejour(tarif.taxe, acompte.montant, tarif.total),
     compteManuel: gite.compte,
     tauxTva: tvaApplicable
       ? tauxTvaDuSejour(tarif.hebergement, tarif.restauration, tarif.total, gite.taux)
@@ -185,12 +198,14 @@ export async function creerFactureAjustement(
           ...base,
           type: TYPE_FACTURE.RECUE,
           categorieDepense: CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT,
+          natureUrssaf: NATURE_URSSAF_DE_L_HEBERGEMENT,
           description: T.descriptionRemboursement(sejourDu, !!ajustement.maintenue),
         }
       : {
           ...base,
           type: TYPE_FACTURE.EMISE,
           categorieRecette: CATEGORIE_RECETTE.HEBERGEMENT,
+          natureUrssaf: NATURE_URSSAF_DE_L_HEBERGEMENT,
           description: T.descriptionPrestation(sejourDu),
           compteManuel: gite.compte,
           tauxTva: tvaApplicable ? gite.taux : undefined,

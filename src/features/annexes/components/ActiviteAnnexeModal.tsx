@@ -7,6 +7,9 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { listComptesPcg } from '@/features/comptes-pcg/repository';
 import type { ActiviteAnnexe } from '@/features/annexes/types';
+import type { NatureUrssaf } from '@/features/comptabilite/types';
+import { NATURE_URSSAF, NATURE_URSSAF_DES_ACTIVITES_ANNEXES } from '@/shared/constants/entreprise';
+import { LABEL_NATURE_URSSAF } from '@/shared/textes/libelles';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ICONES_ANNEXE, PREFIXE_COMPTES_RECETTE_ANNEXE } from '@/shared/constants/annexes';
 import { colors } from '@/shared/theme/colors';
@@ -30,6 +33,7 @@ export function ActiviteAnnexeModal({ visible, activite, onValider, onFermer }: 
   const [compte, setCompte] = useState('');
   const [tva, setTva] = useState('');
   const [repasGite, setRepasGite] = useState(false);
+  const [nature, setNature] = useState<NatureUrssaf>(NATURE_URSSAF_DES_ACTIVITES_ANNEXES);
   const [comptes, setComptes] = useState<{ value: string; label: string; shortLabel: string }[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -42,6 +46,7 @@ export function ActiviteAnnexeModal({ visible, activite, onValider, onFermer }: 
       setCompte(activite?.compte ?? '');
       setTva(activite?.tauxTva !== undefined ? String(activite.tauxTva) : '');
       setRepasGite(activite?.repasGite ?? false);
+      setNature(activite?.natureUrssaf ?? NATURE_URSSAF_DES_ACTIVITES_ANNEXES);
       setErreur(null);
       listComptesPcg().then((liste) =>
         setComptes(
@@ -62,6 +67,7 @@ export function ActiviteAnnexeModal({ visible, activite, onValider, onFermer }: 
       compte,
       tauxTva: tva === '' ? undefined : Number(tva),
       repasGite: repasGite || undefined,
+      natureUrssaf: nature,
     });
   };
 
@@ -114,6 +120,15 @@ export function ActiviteAnnexeModal({ visible, activite, onValider, onFermer }: 
               value={tva}
               onChange={setTva}
               options={[{ value: '', label: '—' }, ...OPTIONS_TAUX_TVA]}
+            />
+            <SelectField<string>
+              label={T.natureUrssaf}
+              value={nature}
+              onChange={(v) => setNature(v as NatureUrssaf)}
+              options={Object.values(NATURE_URSSAF).map((n) => ({
+                value: n as string,
+                label: LABEL_NATURE_URSSAF[n],
+              }))}
             />
             <Checkbox label={T.repasGite} value={repasGite} onChange={setRepasGite} />
           </ScrollView>

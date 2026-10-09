@@ -11,6 +11,7 @@ import { ClientEcritures, ClientResume, estVente } from '@/features/clients/comp
 import { ClientFormulaire, ClientLecture } from '@/features/clients/components/ClientFiche';
 import { ClientReservations } from '@/features/gite/components/ClientReservations';
 import { ClientTaches } from '@/features/dossiers/components/ClientTaches';
+import { NoteDuClient } from '@/features/dossiers/components/NoteDuClient';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { useFicheClient } from '@/features/clients/hooks/useFicheClient';
@@ -99,6 +100,9 @@ export default function FicheClient() {
         {!fiche.editing && (
           <ClientEcritures
             ecritures={fiche.ecritures}
+            enTete={
+              modeEntreprise() ? <NoteDuClient client={client} onFacturee={fiche.recharger} /> : undefined
+            }
             onOuvrir={(e) => router.push(estVente(e) ? ROUTES.ficheVente(e.id) : ROUTES.ficheFacture(e.id))}
           />
         )}

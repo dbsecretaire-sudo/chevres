@@ -14,7 +14,9 @@ import type {
   UNITE_VENTE,
   RUBRIQUE_MARCHANDISE,
   UNITE_MARCHANDISE,
+  TYPE_CHOIX_FACTURE,
 } from '@/shared/constants/comptabilite';
+import type { NATURE_URSSAF } from '@/shared/constants/entreprise';
 
 export type TypeFacture = ValeurDe<typeof TYPE_FACTURE>;
 
@@ -127,6 +129,15 @@ export interface Facture {
    */
   compteManuel?: string;
   /**
+   * Pour une recette d'entreprise : sa nature pour la déclaration URSSAF (vente de marchandises, prestations commerciales ou
+   * libérales) ; absente, elle se déduit de la catégorie.
+   */
+  natureUrssaf?: NatureUrssaf;
+  /** Pour l'URSSAF : la part (€ TTC) de la recette qui est une vente de marchandises (les repas d'un séjour), le reste suivant la nature. */
+  partVenteUrssaf?: number;
+  /** Pour l'URSSAF : la part (€ TTC) de la recette qui n'est pas du chiffre d'affaires (la taxe de séjour collectée). */
+  partHorsCaUrssaf?: number;
+  /**
    * Taux de TVA (%) indiqué sur la facture, tel quel : pour une facture reçue (achat), et pour une facture émise
    * d'une entreprise assujettie à la TVA.
    */
@@ -136,6 +147,8 @@ export interface Facture {
 export type CategorieVente = ValeurDe<typeof CATEGORIE_VENTE>;
 export type TypeFromage = ValeurDe<typeof TYPE_FROMAGE>;
 export type UniteVente = ValeurDe<typeof UNITE_VENTE>;
+export type TypeChoixFacture = ValeurDe<typeof TYPE_CHOIX_FACTURE>;
+export type NatureUrssaf = ValeurDe<typeof NATURE_URSSAF>;
 
 export interface Vente {
   id: string;
@@ -167,4 +180,8 @@ export interface Vente {
   animaux?: string;
   /** Commentaire facultatif précisant de quoi il s'agissait (viande, charcuterie, animal sur pied ou vivant). */
   precision?: string;
+  /** Le client souhaite-t-il que la vente soit déclarée ? Absent (ventes d'avant ce choix) : oui. */
+  choixFacture?: TypeChoixFacture;
+  /** Le numéro de la facture, obligatoire quand le client souhaite que la vente soit déclarée. */
+  numeroFacture?: string;
 }

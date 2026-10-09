@@ -15,10 +15,15 @@ import {
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { RUBRIQUE_COMPTABILITE } from '@/shared/constants/comptabilite';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { memeJourDansLAnnee } from '@/shared/utils/dates';
 
-/** Transactions de l'année active, par activité, filtrées et recherchées, avec leurs soldes. */
+/**
+ * Transactions de l'année active (ou de toutes les années quand « Tout » est choisi), par activité, filtrées et recherchées,
+ * avec leurs soldes. Les dates d'un filtre en cours suivent l'année active ; avec « Tout », leur année est libre.
+ */
 export function useListeTransactions() {
-  const { settings, setAnneeActive } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filtres, setFiltres] = useState<FiltresTransactions>(FILTRES_VIDES);
@@ -26,15 +31,28 @@ export function useListeTransactions() {
   const [recherche, setRecherche] = useState('');
   const [filtreActivite, setFiltreActivite] = useFiltreActivite();
   const [rubrique, setRubrique] = useState<RubriqueComptabilite>(RUBRIQUE_COMPTABILITE.TOUT);
+  // Une année active choisie (ou changée) : les dates du filtre en cours passent dans cette année. Avec « Tout », l'année reste libre.
+  const anneeDuFiltre = regrouper ? undefined : settings.anneeActive;
+  const [anneeVue, setAnneeVue] = useState(anneeDuFiltre);
+  if (anneeVue !== anneeDuFiltre) {
+    setAnneeVue(anneeDuFiltre);
+    if (anneeDuFiltre !== undefined) {
+      setFiltres((f) => ({
+        ...f,
+        dateDebut: memeJourDansLAnnee(f.dateDebut, anneeDuFiltre),
+        dateFin: memeJourDansLAnnee(f.dateFin, anneeDuFiltre),
+      }));
+    }
+  }
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste] = await Promise.all([
       toutesLesAnneesConnues(),
-      listTransactions(settings.anneeActive),
+      listTransactions(regrouper ? undefined : settings.anneeActive),
     ]);
     setAnnees(toutesAnnees);
     setTransactions(liste);
-  }, [settings.anneeActive]);
+  }, [settings.anneeActive, regrouper]);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,6 +77,8 @@ export function useListeTransactions() {
     setRubrique,
     anneeActive: settings.anneeActive,
     setAnneeActive,
+    choisirToutesAnnees,
+    toutesAnnees: regrouper,
     annees,
     filtrees,
     soldes: calculerSoldes(filtrees),

@@ -26,6 +26,7 @@ export const ROUTES = {
   COMPTABILITE_DETAIL: '/comptabilite/detail',
   FISCALITE_IMPOTS: '/comptabilite/fiscalite-impots',
   FISCALITE_RSA: '/comptabilite/fiscalite-rsa',
+  URSSAF: '/comptabilite/urssaf',
   TVA: '/comptabilite/tva',
   FOURNISSEURS: '/comptabilite/fournisseurs',
   FOURNISSEUR_NOUVEAU: '/comptabilite/fournisseurs/nouveau',

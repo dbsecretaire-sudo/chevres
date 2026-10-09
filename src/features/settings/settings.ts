@@ -4,7 +4,12 @@ import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import type { REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/shared/constants/entreprise';
+import type {
+  NATURE_URSSAF,
+  REGIME_FISCAL,
+  REGIME_TVA,
+  STATUT_JURIDIQUE,
+} from '@/shared/constants/entreprise';
 
 const cle = () => cleStockage(CLE_STOCKAGE.SETTINGS);
 
@@ -27,6 +32,8 @@ export interface InfosEntreprise {
   /** Vrai si l'entreprise facture avec TVA ; absent ou faux : sans TVA (franchise en base). */
   tvaApplicable?: boolean;
   regimeTva?: ValeurDe<typeof REGIME_TVA>;
+  /** Le taux de cotisations URSSAF (%) de chaque nature de recette ; absent : le taux indicatif. */
+  tauxUrssaf?: Partial<Record<ValeurDe<typeof NATURE_URSSAF>, number>>;
   /** Noms des sous-dossiers créés dans le dossier de chaque nouveau client (structure type, modifiable). */
   structureDossiers?: string[];
   /** Prix d'une chambre par nuit, en euros (gîte). */
@@ -83,7 +90,10 @@ export const indicatifMarquagePar =
     identificationCheptel(infos, espece).indicatifMarquage?.trim() || undefined;
 
 export interface AppSettings {
+  /** L'année active ; quand « Tout » est choisi (toutesAnnees), c'est l'année en cours (partout où une année précise est nécessaire). */
   anneeActive: number;
+  /** Vrai quand « Tout » est choisi : les listes regroupent toutes les années. */
+  toutesAnnees?: boolean;
   driveFolderId?: string;
   driveFolderName?: string;
   driveAccountEmail?: string;

@@ -14,13 +14,22 @@ import type { EtatFicheFacture } from '@/features/comptabilite/hooks/useFicheFac
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
+import {
+  CATEGORIE_DEPENSE,
+  CATEGORIE_RECETTE,
+  TYPE_AIDE,
+  TYPE_FACTURE,
+} from '@/shared/constants/comptabilite';
+import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import { styles } from '@/shared/styles/comptabilite/FicheFacture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { LABEL_TYPE_AIDE } from '@/shared/textes/libelles';
+import type { TypeAide } from '@/features/comptabilite/types';
 
 /** Formulaire de modification d'une facture (le type, lui, n'est pas modifiable). */
 export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
@@ -39,6 +48,11 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       options={OPTIONS_TAUX_TVA}
     />
   );
+
+  const OPTIONS_TYPE_AIDE = Object.entries(LABEL_TYPE_AIDE).map(([value, label]) => ({
+    value: value as TypeAide,
+    label,
+  }));
 
   return (
     <Card>
@@ -94,6 +108,50 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
           onEdit={() => router.push(ROUTES.CLIENTS)}
         />
+      )}
+
+      {modeEntreprise() &&
+      ((form.type === TYPE_FACTURE.EMISE &&
+        form.categorieRecette &&
+        (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(form.categorieRecette)) ||
+        (form.type === TYPE_FACTURE.RECUE &&
+          form.categorieDepense === CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT)) ? (
+        <ChampNatureUrssaf
+          value={form.natureUrssaf ?? ''}
+          onChange={(valeur) =>
+            f.setForm({ ...form, natureUrssaf: (valeur || undefined) as typeof form.natureUrssaf })
+          }
+        />
+      ) : null}
+
+      {form.type === TYPE_FACTURE.EMISE && form.categorieRecette === CATEGORIE_RECETTE.AIDE && (
+        <>
+          <SelectField
+            label={TEXTES.comptabilite.nouvelleEcriture.typeDAide}
+            value={form.typeAide ?? ''}
+            onChange={(typeAide) =>
+              f.setForm({
+                ...form,
+                typeAide: typeAide as typeof form.typeAide,
+              })
+            }
+            options={OPTIONS_TYPE_AIDE}
+          />
+
+          {form.typeAide === TYPE_AIDE.AUTRE && (
+            <FormField
+              label={TEXTES.comptabilite.nouvelleEcriture.preciserLeTypeDAide}
+              value={form.typeAideLibre ?? ''}
+              onChangeText={(typeAideLibre) =>
+                f.setForm({
+                  ...form,
+                  typeAideLibre,
+                })
+              }
+              placeholder={TEXTES.comptabilite.nouvelleEcriture.exAideGnrGuerreUkrainePoints}
+            />
+          )}
+        </>
       )}
 
       {f.estAlimentation ? (

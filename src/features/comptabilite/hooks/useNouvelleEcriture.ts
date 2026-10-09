@@ -93,6 +93,12 @@ const PREFIXE_COMPTES_RECETTE = '7';
 export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const router = useRouter();
   const { settings } = useAppSettings();
+  /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
+  const [avecFacture, setAvecFacture] = useState(true);
+  /** Le numéro de la facture de la vente (obligatoire quand elle est déclarée). */
+  const [numeroFacture, setNumeroFacture] = useState('');
+  /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
+  const [natureUrssaf, setNatureUrssaf] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
   // s'applique (champ affiché, taux enregistré) que si elle a coché « Assujetti à la TVA » dans ses informations.
   const entreprise = modeEntreprise();
@@ -356,6 +362,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         clientSelectionne,
         estProductionVente,
         tvaEmise: tvaEntreprise && type === TYPE_FACTURE.EMISE && categorieRecette !== CATEGORIE_RECETTE.AIDE,
+        avecFacture,
+        numeroFacture,
+        natureUrssaf,
       });
       if ('erreur' in resultat) {
         setErreur(resultat.erreur);
@@ -482,6 +491,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setClientId,
     // affichage
     compteAffiche,
+    avecFacture,
+    setAvecFacture,
+    numeroFacture,
+    setNumeroFacture,
+    natureUrssaf,
+    setNatureUrssaf,
   };
 }
 

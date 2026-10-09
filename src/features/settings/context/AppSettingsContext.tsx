@@ -7,6 +7,8 @@ interface AppSettingsContextValue {
   settings: AppSettings;
   loaded: boolean;
   setAnneeActive: (annee: number) => Promise<void>;
+  /** Choisit « Tout » : les listes regroupent toutes les années, l'année active devient l'année en cours. */
+  choisirToutesAnnees: () => Promise<void>;
   refreshSettings: () => Promise<void>;
   patchSettings: (patch: Partial<AppSettings>) => Promise<void>;
 }
@@ -31,7 +33,12 @@ export function AppSettingsProvider({ children }: PropsWithChildren) {
   }, [refreshSettings]);
 
   const setAnneeActive = useCallback(async (annee: number) => {
-    const next = await updateSettings({ anneeActive: annee });
+    const next = await updateSettings({ anneeActive: annee, toutesAnnees: false });
+    setSettings(next);
+  }, []);
+
+  const choisirToutesAnnees = useCallback(async () => {
+    const next = await updateSettings({ anneeActive: currentYear(), toutesAnnees: true });
     setSettings(next);
   }, []);
 
@@ -41,7 +48,9 @@ export function AppSettingsProvider({ children }: PropsWithChildren) {
   }, []);
 
   return (
-    <AppSettingsContext.Provider value={{ settings, loaded, setAnneeActive, refreshSettings, patchSettings }}>
+    <AppSettingsContext.Provider
+      value={{ settings, loaded, setAnneeActive, choisirToutesAnnees, refreshSettings, patchSettings }}
+    >
       {children}
     </AppSettingsContext.Provider>
   );

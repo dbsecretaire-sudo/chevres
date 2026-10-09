@@ -97,6 +97,7 @@ export const TEXTES_COMPTABILITE = {
     impossibleDeSupprimerLaVente: 'Impossible de supprimer la vente.',
     venteIntrouvable: 'Vente introuvable.',
     modifierLaVente: 'Modifier la vente',
+    declaree: (declaree: boolean) => `Le client souhaite déclarer la vente : ${declaree ? 'oui' : 'non'}`,
     typeVenteDeProduction: 'Type : Vente de production',
     produitDeuxPoints: 'Produit : ',
     quantiteDeuxPoints: 'Quantité : ',
@@ -153,7 +154,10 @@ export const TEXTES_COMPTABILITE = {
   },
   listeTransactions: {
     soldeEspace: 'Solde ',
+    toutesLesAnnees: 'toutes les années',
     rentrees: 'Rentrées',
+    rentreesAvecFactures: 'Rentrées avec factures',
+    rentreesSansFactures: 'Rentrées sans factures',
     rechercherPoints: 'Rechercher…',
     effacer: 'Effacer',
     aucuneEcriture: 'Aucune écriture',
@@ -177,9 +181,14 @@ export const TEXTES_COMPTABILITE = {
       'Part du montant incluse dans les recettes brutes imposables. Pré-rempli à titre indicatif — à confirmer aide par aide avec votre comptable/CGA (certaines aides d’investissement peuvent être étalées sur plusieurs années, voir notice de l’écran Impôts).',
     litrage: 'Litrage',
     ex125: 'ex: 12.5',
-    prixTotalTtc: 'Prix total TTC (€)',
+    prixTotalTtc: 'Total TTC (€)',
     typeDeFromage: 'Type de fromage',
     detailDeLaVente: 'Détail de la vente',
+    declarerLaVente: 'Le client souhaite déclarer la vente',
+    natureUrssaf: 'Nature de la recette (URSSAF)',
+    natureUrssafAuto: 'Selon la catégorie',
+    numeroFactureRequis: 'Numéro de facture requis',
+    typeFromageRequis: 'Type de fromage requis',
     choixDuDetail: 'Cabris, saucisson… (liste de l’inventaire)',
     /** Le titre de la liste des animaux de la vente (animal sur pied, animal vivant). */
     animalVendu: (detail: string) => `${detail} : quel animal ?`,
@@ -238,6 +247,7 @@ export const TEXTES_COMPTABILITE = {
   },
   transactions: {
     venteDeProduction: 'Vente de production',
+    typeVente: 'Type : ',
     laitQuantiteL: (quantite: number) => `Lait — ${quantite} L`,
     cabrisQuantiteTeteValeur: (libelle: string, quantite: number, valeur: string) =>
       `${libelle} — ${quantite} tête${valeur}`,
