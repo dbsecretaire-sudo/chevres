@@ -6,6 +6,7 @@ import { CabritsChevreForm } from '@/features/cheptel/components/CabritsChevreFo
 import { DateField } from '@/shared/components/DateField';
 import { SelectField } from '@/shared/components/SelectField';
 import { Button } from '@/shared/components/Button';
+import { SectionForm } from '@/shared/components/SectionForm';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { colors } from '@/shared/theme/colors';
 import { currentYear } from '@/shared/utils/dates';
@@ -24,74 +25,91 @@ export default function NouvelleChevre() {
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
       <Screen>
-        <BoucleField
-          label={TEXTES.commun.general.nDeBoucle}
-          value={e.numeroBoucle}
-          onChangeText={e.setNumeroBoucle}
-          placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
-        />
-        {!!e.numeroBoucle.trim() && (
-          <DateField
-            label={TEXTES.commun.general.dateDeBouclage}
-            value={e.dateBouclage}
-            onChange={e.setDateBouclage}
+        <SectionForm titre={TEXTES.commun.formulaire.identite}>
+          <BoucleField
+            label={TEXTES.commun.general.nDeBoucle}
+            value={e.numeroBoucle}
+            onChangeText={e.setNumeroBoucle}
+            erreur={e.erreurBoucle}
+            placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
           />
-        )}
-        <FormField
-          label={TEXTES.commun.general.nom}
-          value={e.nom}
-          onChangeText={e.setNom}
-          placeholder={TEXTES.commun.general.facultatif}
-        />
-        <SelectField
-          label={TEXTES.commun.general.sexe}
-          required
-          value={e.sexe}
-          onChange={e.setSexe}
-          options={OPTIONS_SEXE}
-        />
-        <DateField
-          label={TEXTES.commun.general.dateDeNaissance}
-          required
-          value={e.dateNaissance}
-          onChange={e.setDateNaissance}
-        />
-        <BoucleField
-          label={TEXTES.commun.general.nDeBoucleDeLa}
-          value={e.mereNumeroBoucle}
-          onChangeText={e.setMereNumeroBoucle}
-          placeholder={TEXTES.commun.general.facultatif}
-        />
-        <FormField
-          label={TEXTES.commun.general.notes}
-          value={e.notes}
-          onChangeText={e.setNotes}
-          placeholder={TEXTES.commun.general.facultatif}
-          multiline
-          style={commonStyles.textareaHaute}
-        />
-        <Checkbox
-          label={TEXTES.commun.general.designeEPourLeRenouvellement}
-          value={e.renouvellement}
-          onChange={e.setRenouvellement}
-        />
-        {e.renouvellement && (
+          {!!e.numeroBoucle.trim() && (
+            <DateField
+              label={TEXTES.commun.general.dateDeBouclage}
+              value={e.dateBouclage}
+              onChange={e.setDateBouclage}
+            />
+          )}
           <FormField
-            label={TEXTES.commun.general.anneeDeDesignation}
-            value={e.renouvellementAnnee}
-            onChangeText={e.setRenouvellementAnnee}
-            keyboardType="number-pad"
-            placeholder={String(currentYear())}
+            label={TEXTES.commun.general.nom}
+            value={e.nom}
+            onChangeText={e.setNom}
+            placeholder={TEXTES.commun.general.facultatif}
           />
-        )}
+          <View style={commonStyles.row}>
+            <View style={commonStyles.flex1}>
+              <SelectField
+                label={TEXTES.commun.general.sexe}
+                required
+                value={e.sexe}
+                onChange={e.setSexe}
+                options={OPTIONS_SEXE}
+              />
+            </View>
+            <View style={commonStyles.flex1}>
+              <DateField
+                label={TEXTES.commun.general.dateDeNaissance}
+                required
+                value={e.dateNaissance}
+                onChange={e.setDateNaissance}
+              />
+            </View>
+          </View>
+        </SectionForm>
 
-        {e.sexe === SEXE.FEMELLE && (
-          <Checkbox
-            label={TEXTES.cheptel.nouvelleChevre.cetteChevreADesCabris}
-            value={e.avecCabrits}
-            onChange={e.setAvecCabrits}
+        <SectionForm titre={TEXTES.commun.formulaire.filiation}>
+          <SelectField
+            label={TEXTES.commun.general.nDeBoucleDeLa}
+            searchable
+            value={e.mereNumeroBoucle}
+            onChange={e.setMereNumeroBoucle}
+            options={[{ value: '', label: TEXTES.cheptel.nouvelleChevre.mereInconnue }, ...e.optionsMeres]}
+            placeholder={TEXTES.commun.general.facultatif}
           />
-        )}
+        </SectionForm>
+
+        <SectionForm titre={TEXTES.commun.formulaire.suivi}>
+          <FormField
+            label={TEXTES.commun.general.notes}
+            value={e.notes}
+            onChangeText={e.setNotes}
+            placeholder={TEXTES.commun.general.facultatif}
+            multiline
+            style={commonStyles.textareaHaute}
+          />
+          <Checkbox
+            label={TEXTES.commun.general.designeEPourLeRenouvellement}
+            value={e.renouvellement}
+            onChange={e.setRenouvellement}
+          />
+          {e.renouvellement && (
+            <FormField
+              label={TEXTES.commun.general.anneeDeDesignation}
+              value={e.renouvellementAnnee}
+              onChangeText={e.setRenouvellementAnnee}
+              keyboardType="number-pad"
+              placeholder={String(currentYear())}
+            />
+          )}
+
+          {e.sexe === SEXE.FEMELLE && (
+            <Checkbox
+              label={TEXTES.cheptel.nouvelleChevre.cetteChevreADesCabris}
+              value={e.avecCabrits}
+              onChange={e.setAvecCabrits}
+            />
+          )}
+        </SectionForm>
 
         {e.sexe === SEXE.FEMELLE && e.avecCabrits && <CabritsChevreForm e={e} />}
 

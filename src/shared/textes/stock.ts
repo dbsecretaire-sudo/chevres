@@ -13,7 +13,6 @@ export const TEXTES_STOCK = {
   },
   /** La structure des listes : ajouter des listes aux catégories, chacune avec un compte du plan comptable. */
   structure: {
-    menu: 'Structure des listes',
     titre: 'Structure des listes',
     aide: 'Ajoutez une liste à une catégorie. Elle correspond impérativement à un compte du plan comptable : seuls les comptes autorisés par la catégorie sont proposés.',
     comptesAutorises: (prefixes: string) => `Comptes de 6 chiffres commençant par ${prefixes}`,
@@ -55,7 +54,6 @@ export const TEXTES_STOCK = {
   },
   /** L'impression des mouvements de l'inventaire (PDF) depuis le menu. */
   exporter: {
-    menu: 'Imprimer les mouvements (PDF)',
     titre: 'Inventaire — tous les mouvements',
     colonnes: {
       date: 'Date',
@@ -114,7 +112,7 @@ export const TEXTES_STOCK = {
     supprimer: 'Supprimer ce litrage',
     prixDuLitre: 'Prix de vente du lait',
     prixLitre: (prix: string) => `${prix} € le litre`,
-    prixAFixer: 'À définir (le prix des ventes de lait en vient)',
+    prixAFixer: 'À définir',
     modifierLePrix: 'Modifier le prix du lait',
     restant: 'Lait restant',
     produit: 'Produit',
@@ -135,7 +133,7 @@ export const TEXTES_STOCK = {
     mouvements: (nombre: number) => `${nombre} mouvement${nombre > 1 ? 's' : ''}`,
   },
   /** Le menu en haut de l'inventaire, à droite du titre. */
-  statistiques: { menu: 'Menu de l’inventaire', titre: 'Statistiques', fermer: 'Fermer' },
+  statistiques: { titre: 'Statistiques', fermer: 'Fermer' },
   /** La liste des œufs (poules) : leur prix de vente. */
   oeufs: {
     prixDeLOeuf: 'Prix de vente de l’œuf',
@@ -158,7 +156,7 @@ export const TEXTES_STOCK = {
   parKg: (montant: string) => `${montant} le kg`,
   /** Le niveau d'un aliment : il se compte en kilos. */
   kilos: (nombre: number) => `${nombre} kg`,
-  negatif: 'Quantité négative : notez la production ou l’achat manquant.',
+  negatif: 'Quantité négative',
   lait: {
     titre: 'Lait par fromage',
     aucune:

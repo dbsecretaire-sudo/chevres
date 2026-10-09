@@ -58,6 +58,14 @@ export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
+  /** Un titre propre à l'utilisateur, imprimé en tête de chaque PDF (nom commercial, adresse, mention…). */
+  titrePdf?: string;
+  /**
+   * Vrai : le mode avancé. Absent ou faux, le mode simple cache ce qui demande des notions de comptabilité (comptes du plan
+   * comptable, taux de TVA et nature URSSAF dans une nouvelle écriture) : les valeurs d'office s'appliquent. Propre à chaque
+   * établissement ; sauvegardé avec ses informations.
+   */
+  modeAvance?: boolean;
   numeroExploitation?: string;
   siret?: string;
   nomExploitant?: string;

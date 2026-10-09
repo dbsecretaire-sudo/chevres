@@ -2,11 +2,11 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PanResponder, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
+import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
 import { styles } from '@/shared/styles/components/ListeReordonnable.styles';
-import { commonStyles } from '@/shared/styles/commonStyles';
 
-/** Espace entre deux lignes (celui de `commonStyles.gap10`). */
-const ECART_LIGNES = 10;
+/** Espace entre deux lignes : aucun, elles se suivent dans un seul bloc blanc. */
+const ECART_LIGNES = 0;
 
 /** En dessous de ce déplacement (px), un geste sur la poignée est un simple appui, pas un glissement. */
 const SEUIL_GLISSEMENT = 6;
@@ -102,7 +102,7 @@ export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGliss
   const hauteurActive = actif ? (hauteurs[actif.cle] ?? 0) + ECART_LIGNES : 0;
 
   return (
-    <View style={commonStyles.gap10}>
+    <BlocListe>
       {elements.map((element, i) => {
         const c = cles[i];
         const enDeplacement = actif?.cle === c;
@@ -121,7 +121,11 @@ export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGliss
                 actuelles[c] === hauteur ? actuelles : { ...actuelles, [c]: hauteur },
               );
             }}
-            style={[{ transform: [{ translateY: decalage }] }, enDeplacement && styles.enDeplacement]}
+            style={[
+              { transform: [{ translateY: decalage }] },
+              i > 0 && separationBloc,
+              enDeplacement && styles.enDeplacement,
+            ]}
           >
             {ligne(
               element,
@@ -139,6 +143,6 @@ export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGliss
           </View>
         );
       })}
-    </View>
+    </BlocListe>
   );
 }

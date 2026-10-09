@@ -9,12 +9,20 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
-  searchLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 6,
+  /** Le choix de l'espèce : aligné sur le reste de la liste (mêmes marges que les autres onglets). */
+  choixEspece: { paddingHorizontal: 16 },
+  /** La recherche et le bouton « Filtrer » : une seule ligne. */
+  rechercheLigne: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 4,
   },
+  /** La fenêtre des filtres : elle défile quand il y en a beaucoup. */
+  feuille: { backgroundColor: colors.surface, borderRadius: 16, padding: 16, gap: 10, maxHeight: '85%' },
+  feuilleContenu: { gap: 10 },
+  titreFeuille: { fontSize: 16, fontWeight: '800', color: colors.text },
   search: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -25,9 +33,9 @@ export const styles = StyleSheet.create({
     color: colors.text,
   },
   list: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 160,
-    gap: 10,
   },
   resultatRow: {
     flexDirection: 'row',

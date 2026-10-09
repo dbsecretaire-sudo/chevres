@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
-import { FormField } from '@/shared/components/FormField';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { Fab } from '@/shared/components/Fab';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
@@ -38,8 +38,7 @@ export default function FournisseursIndex() {
   return (
     <Screen scroll={false}>
       <View style={commonStyles.topPadded}>
-        <FormField
-          label={TEXTES.commun.general.rechercher}
+        <ChampRecherche
           value={recherche}
           onChangeText={setRecherche}
           placeholder={TEXTES.fournisseurs.listeFournisseurs.nomEntrepriseSiretPoints}

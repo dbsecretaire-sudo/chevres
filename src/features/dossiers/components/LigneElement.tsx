@@ -27,10 +27,11 @@ export function LigneElement({ element, chemin, onStatut }: Props) {
   const pathname = usePathname();
   const enRetard = estEnRetard(element, todayISO());
 
+  // Ce qu'il faut savoir d'un coup d'œil : où il est rangé, l'échéance (et le retard), le statut quand aucune puce ne l'affiche.
   const infos = [
     chemin,
-    formatDateFR(element.date),
-    statutEffectif(element) ? LABEL_STATUT_ELEMENT[statutEffectif(element)!] : undefined,
+    !element.echeance ? formatDateFR(element.date) : undefined,
+    !onStatut && statutEffectif(element) ? LABEL_STATUT_ELEMENT[statutEffectif(element)!] : undefined,
     enRetard ? TEXTES.dossiers.element.enRetard : undefined,
     element.echeance ? TEXTES.dossiers.element.echeanceLe(formatDateFR(element.echeance)) : undefined,
     element.fichiers && element.fichiers.length > 0

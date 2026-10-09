@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
-import { FormField } from '@/shared/components/FormField';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import type { SoldesTransactions } from '@/features/comptabilite/services/filtresTransactions';
 import { colors } from '@/shared/theme/colors';
 import { formatMontant } from '@/shared/utils/dates';
@@ -25,6 +25,8 @@ interface CarteSoldeProps {
 export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }: CarteSoldeProps) {
   const [deplie, setDeplie] = useState(false);
   const couleurSolde = soldes.balance >= 0 ? colors.primary : colors.danger;
+  // Le fond de la carte dit le résultat d'un coup d'œil : vert clair quand il est positif, rouge clair quand il est négatif.
+  const fondSolde = { backgroundColor: soldes.balance >= 0 ? colors.badgeBg : colors.dangerFond };
   // Le signe « - » seulement s'il y a des dépenses (pas de « -0,00 € »).
   const periode = filtresActifs
     ? TEXTES.comptabilite.listeTransactions.filtre
@@ -36,7 +38,7 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
   if (!deplie) {
     return (
       <Pressable onPress={() => setDeplie(true)}>
-        <Card style={styles.soldeCompact}>
+        <Card style={{ ...styles.soldeCompact, ...fondSolde }}>
           <View style={styles.soldeCompactLigne}>
             <Text style={commonStyles.lineSemiBold}>
               {TEXTES.comptabilite.listeTransactions.soldeEspace}
@@ -62,7 +64,11 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
 
   return (
     <Pressable onPress={() => setDeplie(false)}>
-      <Card style={styles.balanceCard}>
+      <Card style={{ ...styles.balanceCard, ...fondSolde }}>
+        {/* La légende de l'astérisque : les rentrées sans facture (non déclarées) sont marquées d'une étoile rouge. */}
+        <Text style={styles.legendeSansFacture}>
+          <Text style={styles.asterisque}>*</Text> {TEXTES.comptabilite.listeTransactions.sansFacture}
+        </Text>
         <Text style={commonStyles.caption}>
           {TEXTES.comptabilite.listeTransactions.soldeEspace}
           {periode}
@@ -72,25 +78,23 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
         <View style={styles.statsRow}>
           <View style={styles.statBloc}>
             <Text style={styles.statLabel}>{TEXTES.comptabilite.listeTransactions.rentrees}</Text>
-            <Text style={[styles.statValeur, { color: colors.primary }]}>
-              {formatMontant(soldes.totalRentrees)}
-            </Text>
+            {/* Les rentrées en deux montants : avec facture (déclarées, en vert), puis sans facture (en noir, étoilées). */}
+            <View style={styles.rentreesDouble}>
+              <Text style={[styles.statValeur, { color: colors.primary }]}>
+                {formatMontant(soldes.rentreesAvecFactures)}
+              </Text>
+              <View style={styles.statSeparateurFin} />
+              <Text style={styles.statValeur}>
+                {formatMontant(soldes.rentreesSansFactures)}
+                <Text style={styles.asterisque}> *</Text>
+              </Text>
+            </View>
           </View>
           <View style={styles.statSeparateur} />
           <View style={styles.statBloc}>
             <Text style={styles.statLabel}>{TEXTES.commun.general.depenses}</Text>
             <Text style={[styles.statValeur, { color: colors.danger }]}>{depenses}</Text>
           </View>
-        </View>
-
-        {/* Les rentrées en deux lignes : celles avec facture (déclarées), puis celles sans facture. */}
-        <View style={commonStyles.rowSpaceBetween}>
-          <Text style={commonStyles.note}>{TEXTES.comptabilite.listeTransactions.rentreesAvecFactures}</Text>
-          <Text style={commonStyles.lineBold}> {formatMontant(soldes.rentreesAvecFactures)}</Text>
-        </View>
-        <View style={commonStyles.rowSpaceBetween}>
-          <Text style={commonStyles.note}>{TEXTES.comptabilite.listeTransactions.rentreesSansFactures}</Text>
-          <Text style={commonStyles.lineBold}> {formatMontant(soldes.rentreesSansFactures)}</Text>
         </View>
       </Card>
     </Pressable>
@@ -116,7 +120,7 @@ export function BarreRecherche({
   return (
     <View style={styles.rowFiltre}>
       <View style={commonStyles.flex1}>
-        <FormField
+        <ChampRecherche
           value={recherche}
           onChangeText={onRecherche}
           placeholder={TEXTES.comptabilite.listeTransactions.rechercherPoints}

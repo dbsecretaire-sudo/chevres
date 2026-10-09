@@ -14,6 +14,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     gap: 10,
   },
+  /** Une ligne d'un bloc de liste : le cadre et le fond sont ceux du bloc. */
+  rowDansBloc: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
   rowSurlignee: { borderColor: colors.primary, borderWidth: 2 },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
   rowTitleGris: { color: colors.textMuted },

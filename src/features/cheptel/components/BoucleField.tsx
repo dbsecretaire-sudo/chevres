@@ -9,6 +9,7 @@ import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
 import { styles } from '@/shared/styles/cheptel/BoucleField.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { useFondChamp } from '@/shared/theme/FondChampContext';
 
 interface Props {
   label: string;
@@ -16,15 +17,18 @@ interface Props {
   onChangeText: (v: string) => void;
   placeholder?: string;
   required?: boolean;
+  /** Un message d'erreur sous le champ (le n° est déjà utilisé, par exemple) : le champ passe en rouge. */
+  erreur?: string;
 }
 
 /** Champ n° de boucle avec bouton pour le remplir en scannant l'étiquette à la caméra. */
-export function BoucleField({ label, value, onChangeText, placeholder, required }: Props) {
+export function BoucleField({ label, value, onChangeText, placeholder, required, erreur }: Props) {
   const accent = useAccentColor();
   const { settings } = useAppSettings();
   // Les animaux saisis ici sont ceux de l'espèce courante : c'est l'indicatif de son cheptel qui précède la boucle.
   const indicatif = identificationCheptel(settings.exploitation, especeCourante()).indicatifMarquage;
   const [scannerOuvert, setScannerOuvert] = useState(false);
+  const fond = useFondChamp();
 
   return (
     <View style={commonStyles.gap6}>
@@ -39,7 +43,12 @@ export function BoucleField({ label, value, onChangeText, placeholder, required 
           </View>
         ) : null}
         <TextInput
-          style={[commonStyles.input, commonStyles.flex1]}
+          style={[
+            commonStyles.input,
+            commonStyles.flex1,
+            { backgroundColor: fond },
+            erreur && { borderColor: colors.danger },
+          ]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -50,6 +59,8 @@ export function BoucleField({ label, value, onChangeText, placeholder, required 
           <Ionicons name="camera" size={22} color={accent} />
         </Pressable>
       </View>
+
+      {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
 
       <ScannerBoucleModal
         visible={scannerOuvert}

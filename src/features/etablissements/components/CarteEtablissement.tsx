@@ -18,40 +18,40 @@ interface Props {
 }
 
 /**
- * Carte d'un établissement. Toucher la carte l'ouvre ; le bouton crayon (en haut à droite, sur sa propre ligne
- * pour ne jamais gêner le nom) permet de le modifier. Puis : nom, « Dernier utilisé », type.
+ * Un établissement, sur une ligne : son logo, son nom et ses types ; un appui l'ouvre. Le crayon, discret, le modifie. Le
+ * dernier utilisé a un contour vert.
  */
 export function CarteEtablissement({ etablissement, actif, onChoisir, onModifier }: Props) {
   const types = libelleTypesEtablissement(etablissement);
 
   return (
-    <Pressable style={[styles.carte, actif && styles.carteActive]} onPress={onChoisir}>
-      <View style={styles.carteBarre}>
+    <Pressable
+      style={({ pressed }) => [styles.ligne, actif && styles.ligneActive, pressed && styles.lignePressee]}
+      onPress={onChoisir}
+    >
+      <View style={styles.logo}>
         <Ionicons
           name={iconeEtablissement(etablissement) as keyof typeof Ionicons.glyphMap}
-          size={34}
+          size={26}
           color={colors.primary}
         />
-        <Pressable
-          style={styles.carteCrayon}
-          hitSlop={6}
-          onPress={onModifier}
-          accessibilityLabel={TEXTES.etablissements.selecteurEtablissement.modifier}
-        >
-          <Ionicons name="pencil" size={16} color={colors.blanc} />
-        </Pressable>
       </View>
-      <Text style={styles.carteNom} numberOfLines={2}>
-        {etablissement.nom}
-      </Text>
-      {actif && (
-        <Text style={styles.carteSousTitre}>
-          {TEXTES.etablissements.selecteurEtablissement.dernierUtilise}
+      <View style={styles.texte}>
+        <Text style={styles.nom} numberOfLines={1}>
+          {etablissement.nom}
         </Text>
-      )}
-      <Text style={types ? styles.carteType : styles.carteSousTitre}>
-        {types || TEXTES.etablissements.selecteurEtablissement.typeNonRenseigne}
-      </Text>
+        <Text style={styles.types} numberOfLines={1}>
+          {types || TEXTES.etablissements.selecteurEtablissement.typeNonRenseigne}
+        </Text>
+      </View>
+      <Pressable
+        style={styles.crayon}
+        hitSlop={10}
+        onPress={onModifier}
+        accessibilityLabel={TEXTES.etablissements.selecteurEtablissement.modifier}
+      >
+        <Ionicons name="create-outline" size={22} color={colors.textMuted} />
+      </Pressable>
     </Pressable>
   );
 }

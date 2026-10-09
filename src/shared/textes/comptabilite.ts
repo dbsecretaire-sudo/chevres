@@ -15,9 +15,7 @@ export const TEXTES_COMPTABILITE = {
     noteDeclaration:
       'Pour votre déclaration, utilisez « Tout » : un cheptel ou « Commun » ne représente qu’une partie de vos recettes.',
   },
-  comptabiliteHeaderMenu: {
-    genererUnPlanComptable: 'Générer un plan comptable',
-  },
+  comptabiliteHeaderMenu: {},
   factureLecture: {
     reservationLieeDeuxPoints: 'Réservation liée : ',
     typeDeuxPoints: 'Type : ',
@@ -155,6 +153,7 @@ export const TEXTES_COMPTABILITE = {
   listeTransactions: {
     soldeEspace: 'Solde ',
     toutesLesAnnees: 'toutes les années',
+    sansFacture: 'sans facture',
     rentrees: 'Rentrées',
     rentreesAvecFactures: 'Rentrées avec factures',
     rentreesSansFactures: 'Rentrées sans factures',
@@ -165,7 +164,22 @@ export const TEXTES_COMPTABILITE = {
     filtre: '(filtré)',
     filtresActifs: 'Filtres actifs',
   },
+  fiscalite: {
+    titre: 'Fiscalité',
+    aideImpots: 'Le calcul de l’impôt à partir des recettes de l’année.',
+    aideChiffreAffaires: 'Les recettes de l’année, pour la déclaration.',
+    aideUrssaf: 'Les cotisations à déclarer, mois par mois.',
+    aideTva: 'La TVA collectée et déductible à déclarer.',
+    aidePlanComptable: 'Les factures de l’année rangées par compte, en PDF ou en Excel.',
+  },
   nouvelleEcriture: {
+    /** Les notes sous les champs d'une écriture : ce qu'on y met. */
+    aideMontant: 'Le total payé, taxes comprises (TTC).',
+    aideNumeroFacture: 'Facultatif : le numéro de la facture, ou un mot qui retrouvera l’écriture.',
+    aideLitrage: 'Les litres vendus : le prix se calcule avec le prix du lait de l’inventaire.',
+    enregistrerEtAjouter: 'Enregistrer et en ajouter une autre',
+    enchainees: (n: number) =>
+      `${n} ${n > 1 ? 'écritures enregistrées' : 'écriture enregistrée'} — la date, la catégorie et le client sont gardés pour la suivante.`,
     nDeFacture: 'N° de facture',
     precisions: 'Précisions',
     categorieDeDepense: 'Catégorie de dépense',

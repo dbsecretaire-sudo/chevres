@@ -11,6 +11,8 @@ export const commonStyles = StyleSheet.create({
   flex1: { flex: 1 },
   flex2: { flex: 2 },
   row: { flexDirection: 'row', gap: 12 },
+  /** Des éléments sur une ligne, centrés verticalement (un montant et sa pastille, par exemple). */
+  rowCentre: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   rowFin: { flexDirection: 'row', gap: 8, alignItems: 'flex-end' },
   /** Une colonne dont le contenu se cale en bas (un bouton à hauteur d'un champ voisin). */
   finDeColonne: { justifyContent: 'flex-end' },
@@ -95,9 +97,10 @@ export const commonStyles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 48,
     fontSize: 16,
     backgroundColor: colors.surface,
     color: colors.text,
@@ -105,9 +108,11 @@ export const commonStyles = StyleSheet.create({
   inputBox: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     paddingVertical: 12,
+    minHeight: 48,
+    justifyContent: 'center',
     backgroundColor: colors.surface,
   },
   backdrop: {

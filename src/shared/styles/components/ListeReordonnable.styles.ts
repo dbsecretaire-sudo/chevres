@@ -9,6 +9,7 @@ export const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 8,
     opacity: 0.95,
+    backgroundColor: colors.surface,
     shadowColor: colors.noir,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,

@@ -27,7 +27,7 @@ import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entrep
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ROUTES } from '@/shared/constants/routes';
-import { SECTION_STOCK } from '@/shared/constants/stock';
+import { SECTION_STOCK, SECTION_STOCK_PAR_CATEGORIE_RECETTE } from '@/shared/constants/stock';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
@@ -36,7 +36,6 @@ import { Checkbox } from '@/shared/components/Checkbox';
 /** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
 export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
   const router = useRouter();
-  /** La fenêtre des cases à cocher : les catégories de recette proposées pour chaque espèce. */
   const retour = useAdresseCourante();
   const optionsClients = e.clients.map((c) => ({ value: c.id, label: nomComplet(c) }));
 
@@ -50,14 +49,22 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
           value={e.description}
           onChangeText={e.setDescription}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
+          aide={TEXTES.comptabilite.nouvelleEcriture.aideNumeroFacture}
         />
       )}
       <ChampCategorieCompte
         label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
-        // Le libellé est un lien : l'écran des catégories de recette (cases à cocher par espèce).
+        // Le libellé est un lien : l'inventaire, à la section de la catégorie choisie (c'est lui qui tient ses prix et ses lignes).
         onPressLabel={
           !e.entreprise && e.activite !== ACTIVITE_COMMUNE
-            ? () => router.push(ROUTES.CATEGORIES_RECETTE)
+            ? () =>
+                router.push(
+                  ROUTES.stockDepuis(
+                    retour,
+                    SECTION_STOCK_PAR_CATEGORIE_RECETTE[e.categorieRecette],
+                    e.activite,
+                  ),
+                )
             : undefined
         }
         // Une vente d'œufs est liée à la liste des œufs de l'inventaire : le crayon y mène (le prix s'y change).
@@ -100,7 +107,7 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
         />
       )}
 
-      <NoteComptePcg compte={e.compteAffiche} />
+      {e.modeAvance ? <NoteComptePcg compte={e.compteAffiche} /> : null}
 
       {!e.estProductionVente && (
         <SelectFieldEditable
@@ -162,7 +169,8 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
       )}
 
       {/* Une entreprise : la nature de la recette pour la déclaration URSSAF (selon la catégorie tant qu'on n'en choisit pas). */}
-      {modeEntreprise() &&
+      {e.modeAvance &&
+      modeEntreprise() &&
       !e.estProductionVente &&
       (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(e.categorieRecette) ? (
         <ChampNatureUrssaf value={e.natureUrssaf} onChange={e.setNatureUrssaf} />

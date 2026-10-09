@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BlocLignes } from '@/shared/components/BlocListe';
 import { Button } from '@/shared/components/Button';
 import { Screen } from '@/shared/components/Screen';
 import { colors } from '@/shared/theme/colors';
@@ -48,41 +49,45 @@ export default function AjoutRapide() {
         <Screen>
           <Text style={styles.question}>{TEXTES.cheptel.ajoutRapideChevre.deQuiSAgitIlQuestion}</Text>
 
-          <Pressable style={styles.choix} onPress={() => setEtape(ETAPE_AJOUT_RAPIDE.DETAILS_MERE)}>
-            <Ionicons name="paw" size={26} color={colors.ajout} />
-            <View style={commonStyles.textWrap}>
-              <Text style={commonStyles.subheading}>{TEXTES.cheptel.ajoutRapideChevre.laMere}</Text>
-              <Text style={commonStyles.muted}>
-                {TEXTES.cheptel.ajoutRapideChevre.declarerUneNaissancePourCette}
-              </Text>
-            </View>
-          </Pressable>
+          <BlocLignes>
+            <Pressable style={styles.choix} onPress={() => setEtape(ETAPE_AJOUT_RAPIDE.DETAILS_MERE)}>
+              <Ionicons name="paw" size={26} color={colors.ajout} />
+              <View style={commonStyles.textWrap}>
+                <Text style={commonStyles.subheading}>{TEXTES.cheptel.ajoutRapideChevre.laMere}</Text>
+                <Text style={commonStyles.muted}>
+                  {TEXTES.cheptel.ajoutRapideChevre.declarerUneNaissancePourCette}
+                </Text>
+              </View>
+            </Pressable>
 
-          <Pressable
-            style={styles.choix}
-            onPress={() => router.push({ pathname: ROUTES.CHEPTEL_NOUVELLE, params: { sexe: SEXE.FEMELLE } })}
-          >
-            <Ionicons name="female" size={26} color={colors.ajout} />
-            <View style={commonStyles.textWrap}>
-              <Text style={commonStyles.subheading}>{TEXTES.cheptel.ajoutRapideChevre.uneChevre}</Text>
-              <Text style={commonStyles.muted}>
-                {TEXTES.cheptel.ajoutRapideChevre.ajouterCetteFemelleAuCheptel}
-              </Text>
-            </View>
-          </Pressable>
+            <Pressable
+              style={styles.choix}
+              onPress={() =>
+                router.push({ pathname: ROUTES.CHEPTEL_NOUVELLE, params: { sexe: SEXE.FEMELLE } })
+              }
+            >
+              <Ionicons name="female" size={26} color={colors.ajout} />
+              <View style={commonStyles.textWrap}>
+                <Text style={commonStyles.subheading}>{TEXTES.cheptel.ajoutRapideChevre.uneChevre}</Text>
+                <Text style={commonStyles.muted}>
+                  {TEXTES.cheptel.ajoutRapideChevre.ajouterCetteFemelleAuCheptel}
+                </Text>
+              </View>
+            </Pressable>
 
-          <Pressable
-            style={styles.choix}
-            onPress={() => router.push({ pathname: ROUTES.CHEPTEL_NOUVELLE, params: { sexe: SEXE.MALE } })}
-          >
-            <Ionicons name="male" size={26} color={colors.ajout} />
-            <View style={commonStyles.textWrap}>
-              <Text style={commonStyles.subheading}>{TEXTES.cheptel.ajoutRapideChevre.unBouc}</Text>
-              <Text style={commonStyles.muted}>
-                {TEXTES.cheptel.ajoutRapideChevre.ajouterCeMaleAuCheptel}
-              </Text>
-            </View>
-          </Pressable>
+            <Pressable
+              style={styles.choix}
+              onPress={() => router.push({ pathname: ROUTES.CHEPTEL_NOUVELLE, params: { sexe: SEXE.MALE } })}
+            >
+              <Ionicons name="male" size={26} color={colors.ajout} />
+              <View style={commonStyles.textWrap}>
+                <Text style={commonStyles.subheading}>{TEXTES.cheptel.ajoutRapideChevre.unBouc}</Text>
+                <Text style={commonStyles.muted}>
+                  {TEXTES.cheptel.ajoutRapideChevre.ajouterCeMaleAuCheptel}
+                </Text>
+              </View>
+            </Pressable>
+          </BlocLignes>
 
           <Button label={TEXTES.commun.general.annuler} variant="secondary" onPress={() => router.back()} />
         </Screen>
@@ -106,15 +111,17 @@ export default function AjoutRapide() {
         </View>
 
         <Text style={styles.question}>{TEXTES.cheptel.ajoutRapideChevre.sexeDeChaquePetit}</Text>
-        {sexesPetits.map((sexe, index) => (
-          <Pressable key={index} style={styles.choix} onPress={() => basculerSexe(index)}>
-            <Ionicons name={sexe === SEXE.FEMELLE ? 'female' : 'male'} size={24} color={colors.ajout} />
-            <Text style={commonStyles.subheading}>
-              {TEXTES.cheptel.ajoutRapideChevre.petitEspace}
-              {index + 1} — {LABEL_SEXE[sexe]}
-            </Text>
-          </Pressable>
-        ))}
+        <BlocLignes>
+          {sexesPetits.map((sexe, index) => (
+            <Pressable key={index} style={styles.choix} onPress={() => basculerSexe(index)}>
+              <Ionicons name={sexe === SEXE.FEMELLE ? 'female' : 'male'} size={24} color={colors.ajout} />
+              <Text style={commonStyles.subheading}>
+                {TEXTES.cheptel.ajoutRapideChevre.petitEspace}
+                {index + 1} — {LABEL_SEXE[sexe]}
+              </Text>
+            </Pressable>
+          ))}
+        </BlocLignes>
 
         <Button
           label={TEXTES.cheptel.ajoutRapideChevre.continuer}

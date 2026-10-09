@@ -8,6 +8,7 @@ import type { LaitJour } from '@/features/stock/types';
 import { NOMS_MOIS } from '@/shared/textes/libelles';
 import { formatDateFR } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { styles } from '@/shared/styles/stock/Stock.styles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock.laitJour;
@@ -36,15 +37,18 @@ export function JournalLait({
 }) {
   const carteBilan = (
     <Card>
-      <View style={commonStyles.rowSpaceBetween}>
-        <Text style={commonStyles.muted}>{T.prixDuLitre}</Text>
+      {/* Le libellé garde sa place, le prix passe à la ligne plutôt que de déborder de la carte. */}
+      <View style={styles.ligneDuPrix}>
+        <Text style={[commonStyles.muted, styles.libelleDuPrix]}>{T.prixDuLitre}</Text>
         <Pressable
-          style={commonStyles.rowFin}
+          style={styles.prixDuLitre}
           onPress={onModifierPrix}
           hitSlop={8}
           accessibilityLabel={T.modifierLePrix}
         >
-          <Text style={commonStyles.lineBold}>{prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}</Text>
+          <Text style={[commonStyles.lineBold, styles.texteDuPrix]}>
+            {prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}
+          </Text>
           <Ionicons name="pencil" size={18} color={colors.ajout} />
         </Pressable>
       </View>

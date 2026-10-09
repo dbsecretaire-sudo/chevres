@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { SelectModal, type SelectOption } from '@/shared/components/SelectModal';
 import { styles } from '@/shared/styles/components/SelectField.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { useFondChamp } from '@/shared/theme/FondChampContext';
 import { TEXTES } from '@/shared/textes';
 
 export type { SelectOption } from '@/shared/components/SelectModal';
@@ -21,6 +22,8 @@ interface Props<T extends string> {
   libelleCache?: boolean;
   /** Fait du libellé un lien (bleu, souligné) qui mène à ce qui gère la liste. */
   onPressLabel?: () => void;
+  /** Une note sous le champ : ce qu'on y choisit et pourquoi. */
+  aide?: string;
 }
 
 export function SelectField<T extends string>({
@@ -33,9 +36,11 @@ export function SelectField<T extends string>({
   placeholder,
   libelleCache,
   onPressLabel,
+  aide,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
+  const fond = useFondChamp();
 
   return (
     <View style={commonStyles.gap6}>
@@ -51,13 +56,14 @@ export function SelectField<T extends string>({
           {required ? <Text style={commonStyles.required}> *</Text> : null}
         </Text>
       )}
-      <Pressable style={commonStyles.inputBox} onPress={() => setOpen(true)}>
+      <Pressable style={[commonStyles.inputBox, { backgroundColor: fond }]} onPress={() => setOpen(true)}>
         <Text style={current ? commonStyles.valueText : styles.placeholder}>
           {current
             ? (current.shortLabel ?? current.label)
             : (placeholder ?? TEXTES.commun.selectField.selectionnerPoints)}
         </Text>
       </Pressable>
+      {aide ? <Text style={commonStyles.note}>{aide}</Text> : null}
 
       <SelectModal
         visible={open}

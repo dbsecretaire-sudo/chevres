@@ -71,6 +71,20 @@ export function useListeCheptel() {
 
   const majPrecis = (patch: Partial<CriteresPrecis>) => setPrecis((p) => ({ ...p, ...patch }));
 
+  /** Vrai quand un filtre s'écarte de l'affichage d'origine (les vivantes, toutes catégories, triées par boucle). */
+  const filtresActifs =
+    statutFiltre !== FILTRE_STATUT_CHEPTEL.VIVANTE ||
+    categorieFiltre !== FILTRE_CATEGORIE_CHEPTEL.TOUT ||
+    tri !== TRI_CHEPTEL.BOUCLE ||
+    Object.values(precis).some((v) => v !== '');
+  /** Revient à l'affichage d'origine (la recherche reste : elle a son propre champ). */
+  const reinitialiserFiltres = () => {
+    setStatutFiltre(FILTRE_STATUT_CHEPTEL.VIVANTE);
+    setCategorieFiltre(FILTRE_CATEGORIE_CHEPTEL.TOUT);
+    setTri(TRI_CHEPTEL.BOUCLE);
+    setPrecis(CRITERES_PRECIS_VIDES);
+  };
+
   const optionsStatut = OPTIONS_STATUT.map((option) => ({
     ...option,
     label: `${option.label} (${
@@ -109,6 +123,8 @@ export function useListeCheptel() {
     setTri,
     precis,
     majPrecis,
+    filtresActifs,
+    reinitialiserFiltres,
     optionsStatut,
     optionsCategorie,
     titreListeVide,

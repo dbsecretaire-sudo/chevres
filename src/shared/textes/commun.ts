@@ -18,7 +18,7 @@ export const TEXTES_COMMUN = {
     exploitation: 'Exploitation',
     bilanAnnuel: 'Bilan annuel',
     vente: 'Vente',
-    detail: 'Détail',
+    detail: 'Détail par catégorie',
     impotsMicroBa: 'Impôts (micro-BA)',
     declarationRsa: 'Déclaration RSA',
     fournisseurs: 'Fournisseurs',
@@ -61,6 +61,7 @@ export const TEXTES_COMMUN = {
     femelle: 'Femelle',
     male: 'Mâle',
     dateDeNaissance: 'Date de naissance',
+    effacer: 'Effacer',
     nDeBoucleDeLa: 'N° de boucle de la mère',
     notes: 'Notes',
     enregistrer: 'Enregistrer',
@@ -164,6 +165,17 @@ export const TEXTES_COMMUN = {
   },
   /** Le calendrier mensuel (accueil d'une entreprise, gîte). */
   /** Les titres des listes de choix du haut des écrans (l'année, l'animal). */
+  /** Les titres des sections des formulaires. */
+  formulaire: {
+    identite: 'Identité',
+    filiation: 'Filiation',
+    suivi: 'Suivi',
+    naissance: 'Naissance',
+    ecriture: 'Écriture',
+    reservation: 'Réservation',
+    voyageursEtRepas: 'Client et repas',
+    cabris: 'Petits',
+  },
   choix: {
     annee: 'Année',
     toutesAnnees: 'Tout',
@@ -187,6 +199,8 @@ export const TEXTES_COMMUN = {
     jourMois: 'JJ-MM',
     jourMoisAnnee: 'JJ-MM-AAAA',
     anneeImposee: 'Pour une autre année, changer l’année active',
+    /** Une seule note sous une date dont l'année est imposée : le format et l'année. */
+    formatAvecAnnee: (format: string, annee: number) => `${format} · année ${annee}`,
     invalide: 'Date invalide : écrivez-la sous la forme AAAA-MM-JJ (ex : 2026-10-04).',
   },
   infoModal: {

@@ -7,10 +7,6 @@ const Cap = capitaliser;
 
 /** Textes de l'interface — « cheptel ». À modifier ici uniquement. */
 export const TEXTES_CHEPTEL = {
-  cheptelHeaderMenu: {
-    autresVues: 'Autres vues',
-    exporterLeCheptel: 'Exporter le cheptel',
-  },
   scannerBoucleCore: {
     aucunNumeroDetecte: 'Aucun numéro détecté',
     reprenezLaPhotoEnCadrant:
@@ -199,6 +195,7 @@ export const TEXTES_CHEPTEL = {
     sansBoucleSexe: (sexe: unknown) => `sans boucle (${sexe})`,
   },
   nouvelleChevre: {
+    mereInconnue: 'Aucune / inconnue',
     nDeBoucleRequis: 'N° de boucle requis',
     get pourEnregistrerSesCabrisIl() {
       return `Pour enregistrer ses ${V().petit.pluriel}, il faut le n° de boucle de la mère.`;
@@ -213,7 +210,7 @@ export const TEXTES_CHEPTEL = {
     merciDeRenseignerLeN: 'Merci de renseigner le n° de boucle de la mère.',
     leNDoublonlocalEstUtilise: (doublonLocal: string) =>
       `Le n° ${doublonLocal} est utilisé plusieurs fois dans ce formulaire.`,
-    exFr12345678: 'ex: FR12345678',
+    choisirLaMere: 'Choisir la mère',
     get cabris() {
       return `${Cap(V().petit.pluriel)} (`;
     },

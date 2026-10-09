@@ -10,6 +10,19 @@ export const TEXTES_EXPORT = {
     pdf: 'PDF',
     excelXlsx: 'Excel (.xlsx)',
   },
+  /** Les PDF qu'on génère à la demande (Organisation › Export). */
+  catalogue: {
+    exploitation: {
+      titre: 'Rapport d’exploitation',
+      aide: 'Visites du vétérinaire, contrôles et alimentation de l’année.',
+    },
+    cheptel: { titre: 'Registre du cheptel', aide: 'Tous les animaux de l’espèce choisie, par année.' },
+    inventaire: { titre: 'Inventaire', aide: 'Les mouvements de stock, rangés par catégorie.' },
+    inventaireGite: {
+      titre: 'Inventaire du gîte',
+      aide: 'Les articles et les quantités en stock, par catégorie.',
+    },
+  },
   pdfExport: {
     nExploitation: 'N° exploitation',
     nPacage: 'N° pacage',

@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
-import { FormField } from '@/shared/components/FormField';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { ListRow } from '@/shared/components/ListRow';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -107,12 +107,7 @@ export default function JournalTrading() {
             <RepartitionTrading trades={delAnnee} />
             <Text style={commonStyles.note}>{T.avertissement}</Text>
 
-            <FormField
-              label={TEXTES.commun.general.rechercher}
-              value={requete}
-              onChangeText={setRequete}
-              placeholder={T.rechercher}
-            />
+            <ChampRecherche value={requete} onChangeText={setRequete} placeholder={T.rechercher} />
             <PucesDefilantes<FiltreTrades> puces={PUCES_FILTRE} valeur={filtre} onChoisir={setFiltre} />
 
             {affiches.length === 0 ? (

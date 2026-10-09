@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { totalDeLaNote, type LigneDeNote } from '@/features/dossiers/services/facturation';
 import { LABEL_NATURE_URSSAF } from '@/shared/textes/libelles';
-import { estDateISO, formatMontant, todayISO } from '@/shared/utils/dates';
+import { estDateISO, formatMontant } from '@/shared/utils/dates';
+import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -24,17 +26,21 @@ interface Props {
  */
 export function NoteAFacturer({ lignes, onFacturer }: Props) {
   const [ouverte, setOuverte] = useState(false);
+  /** La note est repliée : une ligne (titre, total, pastille rouge) ; un appui déroule ses prestations et « Facturer la note ». */
+  const [depliee, setDepliee] = useState(false);
   const [numero, setNumero] = useState('');
-  const [date, setDate] = useState(todayISO());
+  const { anneeImposee, dateDuJour } = useAnneeImposee();
+  const [date, setDate] = useState(dateDuJour);
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
     if (ouverte) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNumero('');
-      setDate(todayISO());
+      setDate(dateDuJour);
       setErreur(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ouverte]);
 
   if (lignes.length === 0) return null;
@@ -49,20 +55,31 @@ export function NoteAFacturer({ lignes, onFacturer }: Props) {
   return (
     <>
       <Card style={commonStyles.gap6}>
-        <View style={commonStyles.rowSpaceBetween}>
+        <Pressable
+          style={commonStyles.rowSpaceBetween}
+          onPress={() => setDepliee((d) => !d)}
+          accessibilityLabel={T.titre}
+        >
           <Text style={commonStyles.cardTitle}>{T.titre}</Text>
-          <Text style={commonStyles.strongPrimary}>{formatMontant(totalDeLaNote(lignes))}</Text>
-        </View>
-        {lignes.map(({ element, ligne }) => (
-          <View key={ligne.id} style={commonStyles.rowSpaceBetween}>
-            <View style={commonStyles.flex1}>
-              <Text style={commonStyles.line}>{element.titre}</Text>
-              <Text style={commonStyles.note}>{LABEL_NATURE_URSSAF[ligne.nature]}</Text>
-            </View>
-            <Text style={commonStyles.lineBold}>{formatMontant(ligne.montant)}</Text>
+          <View style={commonStyles.rowCentre}>
+            <Text style={commonStyles.strongPrimary}>{formatMontant(totalDeLaNote(lignes))}</Text>
+            <PastilleAlerte />
           </View>
-        ))}
-        <Button label={T.facturer} onPress={() => setOuverte(true)} />
+        </Pressable>
+        {depliee ? (
+          <>
+            {lignes.map(({ element, ligne }) => (
+              <View key={ligne.id} style={commonStyles.rowSpaceBetween}>
+                <View style={commonStyles.flex1}>
+                  <Text style={commonStyles.line}>{element.titre}</Text>
+                  <Text style={commonStyles.note}>{LABEL_NATURE_URSSAF[ligne.nature]}</Text>
+                </View>
+                <Text style={commonStyles.lineBold}>{formatMontant(ligne.montant)}</Text>
+              </View>
+            ))}
+            <Button label={T.facturer} onPress={() => setOuverte(true)} />
+          </>
+        ) : null}
       </Card>
 
       <Modal visible={ouverte} transparent animationType="fade" onRequestClose={() => setOuverte(false)}>
@@ -81,7 +98,14 @@ export function NoteAFacturer({ lignes, onFacturer }: Props) {
                 setErreur(null);
               }}
             />
-            <DateField label={TEXTES.dossiers.facturation.date} required value={date} onChange={setDate} />
+            <DateField
+              label={TEXTES.dossiers.facturation.date}
+              required
+              value={date}
+              onChange={setDate}
+              anneeImposee={anneeImposee}
+              jourMoisAnnee
+            />
             {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
             <View style={commonStyles.row}>
               <Button

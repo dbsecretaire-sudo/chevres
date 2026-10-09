@@ -1,4 +1,4 @@
-import { TYPE_FROMAGE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_RECETTE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /** Valeurs du stock de la fromagerie (fromages, emballages, matériel, conditionnement) — à modifier ici uniquement. */
@@ -223,3 +223,19 @@ export const CLE_PRIX_OEUFS = 'oeufs';
 
 /** Le prix d'un œuf tant qu'on n'en a pas défini un autre dans l'inventaire (€). */
 export const PRIX_OEUF_DEFAUT = 0.5;
+
+/**
+ * La section de l'inventaire qui tient chaque catégorie de recette (le prix de vente, la quantité) : le libellé « Catégorie de
+ * recette » d'une nouvelle écriture y mène. Une catégorie absente d'ici (aide, autre recette) n'a pas de section.
+ */
+export const SECTION_STOCK_PAR_CATEGORIE_RECETTE: Record<string, string> = {
+  [CATEGORIE_RECETTE.LAIT]: SECTION_STOCK.LAIT,
+  [CATEGORIE_RECETTE.FROMAGE]: SECTION_STOCK.FROMAGES,
+  [CATEGORIE_RECETTE.OEUFS]: SECTION_STOCK.OEUFS,
+  [CATEGORIE_RECETTE.VIANDE]: SECTION_STOCK.VIANDE,
+  [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE]: SECTION_STOCK.VIANDE,
+  [CATEGORIE_RECETTE.CABRIS]: SECTION_STOCK.ANIMAUX,
+  [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: SECTION_STOCK.ANIMAUX,
+  [CATEGORIE_RECETTE.ANIMAL_VIVANT]: SECTION_STOCK.ANIMAUX,
+  [CATEGORIE_RECETTE.ANIMAL_MORT]: SECTION_STOCK.ANIMAUX,
+};

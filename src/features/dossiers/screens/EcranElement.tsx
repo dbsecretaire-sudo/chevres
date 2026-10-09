@@ -3,6 +3,10 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { YearPicker } from '@/shared/components/YearPicker';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
 import { Button } from '@/shared/components/Button';
@@ -35,15 +39,18 @@ import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
 import {
   enregistrerElement,
   getElement,
+  lireArchiveDossiers,
   getSousDossier,
   supprimerElement,
 } from '@/features/dossiers/repository';
-import type { Facturation, StatutElement } from '@/features/dossiers/types';
+import type { Facturation, SousDossier, StatutElement } from '@/features/dossiers/types';
 import { statutEffectif } from '@/features/dossiers/services/avancement';
 import { estEnRetard } from '@/features/dossiers/services/recherche';
 import { SEPARATEUR_ETIQUETTES, STATUT_ELEMENT, TYPE_FACTURATION } from '@/shared/constants/dossiers';
 import { LABEL_STATUT_ELEMENT } from '@/shared/textes/libelles';
-import { estDateISO, todayISO } from '@/shared/utils/dates';
+import { cheminDansLeClient } from '@/features/dossiers/services/arborescence';
+import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { currentYear, estDateISO, memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -71,6 +78,10 @@ export default function EcranElement() {
   const [retires, setRetires] = useState<PieceJointe[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  /** Les dossiers du client (où ranger ce contenu) et les années proposées pour sa date. */
+  const [dossiersDuClient, setDossiersDuClient] = useState<SousDossier[]>([]);
+  const [annees, setAnnees] = useState<number[]>([currentYear()]);
   /** Ce qui est facturé pour ce contenu, le client de son dossier, et la fenêtre de facturation ouverte (facture ou acompte). */
   const [facturations, setFacturations] = useState<Facturation[]>([]);
   const [client, setClient] = useState<Client | undefined>();
@@ -95,6 +106,24 @@ export default function EcranElement() {
       getClient(e.clientId).then(setClient);
     });
   }, [id]);
+
+  // Les dossiers du client du dossier actuel : on peut y déplacer le contenu.
+  useEffect(() => {
+    lireArchiveDossiers().then((archive) => {
+      const courant = archive.sousDossiers.find((d) => d.id === dossierId);
+      setDossiersDuClient(courant ? archive.sousDossiers.filter((d) => d.clientId === courant.clientId) : []);
+    });
+  }, [dossierId]);
+
+  // Les années qui ont des écritures, l'année en cours, la précédente et la suivante (pour ce qui se prépare).
+  useEffect(() => {
+    toutesLesAnneesConnues().then((connues) =>
+      setAnnees([...new Set([...connues, currentYear() - 1, currentYear() + 1])]),
+    );
+  }, []);
+
+  /** L'année de la date du contenu : la puce du haut la change, le champ de date ne saisit que le jour et le mois. */
+  const anneeDuContenu = estDateISO(date) ? Number(date.slice(0, 4)) : currentYear();
 
   /** Facture (ou prend l'acompte, ou ajoute sur la note) : enregistré tout de suite, le contenu est relu avec sa facturation. */
   const validerFacturation = async (saisie: SaisieFacturation) => {
@@ -174,7 +203,41 @@ export default function EcranElement() {
       softColor={existant ? colors.badgeBg : colors.ajoutBadgeBg}
     >
       <Screen>
-        <Stack.Screen options={{ title: existant ? titre || T.nouveau : T.nouveau }} />
+        <Stack.Screen
+          options={{
+            title: existant ? titre || T.nouveau : T.nouveau,
+            // Le menu : supprimer le contenu (il n'y a rien à supprimer tant qu'il n'est pas enregistré).
+            headerRight: existant
+              ? () => (
+                  <Pressable
+                    style={commonStyles.boutonEnteteDroite}
+                    onPress={() => setMenuOuvert(true)}
+                    hitSlop={10}
+                    accessibilityLabel={T.menu}
+                  >
+                    <Ionicons name="menu" size={26} color={colors.blanc} />
+                  </Pressable>
+                )
+              : undefined,
+          }}
+        />
+        <LigneFiltres>
+          <YearPicker
+            annees={annees}
+            value={anneeDuContenu}
+            onChange={(annee) => setDate(memeJourDansLAnnee(estDateISO(date) ? date : todayISO(), annee))}
+          />
+          {dossiersDuClient.length > 1 ? (
+            <ChoixDeroulant
+              titre={T.dossier}
+              valeur={dossierId}
+              options={dossiersDuClient
+                .map((d) => ({ value: d.id, label: cheminDansLeClient(d.id, dossiersDuClient) }))
+                .sort((a, b) => a.label.localeCompare(b.label))}
+              onChoisir={setDossierId}
+            />
+          ) : null}
+        </LigneFiltres>
         <FormField
           label={T.titre}
           required
@@ -192,7 +255,14 @@ export default function EcranElement() {
         {/* La date et l'échéance (facultative) côte à côte : un bouton pour l'ajouter, une croix rouge pour la retirer. */}
         <View style={commonStyles.row}>
           <View style={commonStyles.flex1}>
-            <DateField label={T.date} required value={date} onChange={setDate} />
+            <DateField
+              label={T.date}
+              required
+              value={date}
+              onChange={setDate}
+              anneeImposee={anneeDuContenu}
+              jourMoisAnnee
+            />
           </View>
           <View style={[commonStyles.flex1, commonStyles.finDeColonne]}>
             {echeance ? (
@@ -265,9 +335,22 @@ export default function EcranElement() {
             onPress={enregistrer}
           />
         </View>
-        {existant ? (
-          <Button variant="danger" label={T.supprimer} onPress={() => setSuppressionOuverte(true)} />
-        ) : null}
+        <OptionsModal
+          visible={menuOuvert}
+          onClose={() => setMenuOuvert(false)}
+          title={titre || T.nouveau}
+          options={[
+            {
+              label: T.supprimer,
+              icon: 'trash',
+              color: colors.danger,
+              onPress: () => {
+                setMenuOuvert(false);
+                setSuppressionOuverte(true);
+              },
+            },
+          ]}
+        />
 
         <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
         <FacturationModal

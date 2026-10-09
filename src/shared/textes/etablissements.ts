@@ -1,9 +1,7 @@
 /** Textes de l'interface — « etablissements ». À modifier ici uniquement. */
 export const TEXTES_ETABLISSEMENTS = {
   selecteurEtablissement: {
-    choisirUnEtablissement: 'Choisir un établissement',
-    chaqueEtablissementASonPropre:
-      'Chaque établissement a son propre cheptel, sa comptabilité, ses fournisseurs, ses clients et ses informations d’exploitation.',
+    choisirUnEtablissement: 'Mes établissements',
     nomDeLEtablissement: 'Nom de l’établissement',
     nouvelEtablissement: 'Nouvel établissement',
     creationImpossible: 'Impossible de créer l’établissement',
@@ -15,7 +13,6 @@ export const TEXTES_ETABLISSEMENTS = {
     supprimerCetEtablissementQuestion: 'Supprimer cet établissement ?',
     toutesLesDonneesLocalesDe: (valeur: string) =>
       `Toutes les données locales de « ${valeur} » (cheptel, comptabilité, fournisseurs, clients…) seront supprimées définitivement de cet appareil.`,
-    dernierUtilise: 'Dernier utilisé',
     typeNonRenseigne: 'Type non renseigné',
     modifier: 'Modifier',
     ajouterUnEtablissement: 'Ajouter un établissement',

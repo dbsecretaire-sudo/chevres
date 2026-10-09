@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button } from '@/shared/components/Button';
+import { Ionicons } from '@expo/vector-icons';
+import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { CalendrierMois, type MarqueJour } from '@/shared/components/CalendrierMois';
-import { TuileChiffre } from '@/features/accueil/components/TuileChiffre';
+import { GrilleChiffres, TuileChiffre } from '@/features/accueil/components/TuileChiffre';
 import { useAccueilEntreprise } from '@/features/accueil/hooks/useAccueilEntreprise';
 import { LigneElement } from '@/features/dossiers/components/LigneElement';
 import { enregistrerElement } from '@/features/dossiers/repository';
@@ -106,14 +107,14 @@ export default function AccueilEntreprise() {
     <Screen>
       <YearPicker annees={accueil.annees} value={accueil.annee} onChange={changerAnnee} />
 
-      {/* Les informations de l'entreprise : juste sous l'année, avant les deux chiffres et le calendrier (elles ne sont plus dans les Réglages). */}
-      <Button
-        variant="secondary"
-        label={TEXTES.commun.general.informationsDeLEntreprise}
+      {/* Les informations de l'entreprise : juste sous l'année, une simple ligne (le détail est dans l'onglet Organisation). */}
+      <ListRow
+        title={TEXTES.commun.general.informationsDeLEntreprise}
+        trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
         onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
       />
 
-      <View style={commonStyles.row}>
+      <GrilleChiffres>
         <TuileChiffre
           valeur={solde === undefined ? '—' : formatMontant(solde)}
           label={T.tuiles.solde}
@@ -126,7 +127,7 @@ export default function AccueilEntreprise() {
           couleur={'couleur' in secondeTuile ? secondeTuile.couleur : undefined}
           onPress={() => router.push(secondeTuile.vers)}
         />
-      </View>
+      </GrilleChiffres>
 
       {gite ? (
         <CalendrierMois

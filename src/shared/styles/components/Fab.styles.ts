@@ -4,7 +4,6 @@ import { colors } from '@/shared/theme/colors';
 export const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
-    left: 20,
     bottom: 20,
     width: 58,
     height: 58,
@@ -17,4 +16,6 @@ export const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 6,
   },
+  droite: { right: 20 },
+  gauche: { left: 20 },
 });

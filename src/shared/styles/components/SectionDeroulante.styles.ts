@@ -6,11 +6,23 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
     borderRadius: 14,
-    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
     paddingVertical: 14,
+    gap: 10,
   },
-  /** Le titre d'une section : blanc sur le bandeau vert. */
-  titre: { fontSize: 15, fontWeight: '700', color: colors.blanc },
+  /** Une section déroulée : un seul panneau vert clair, cerclé de vert, qui contient l'entête puis toutes ses sous-sections. */
+  panneau: {
+    backgroundColor: colors.badgeBg,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    padding: 10,
+  },
+  /** L'entête d'une section déroulée : sans cadre ni fond propres, c'est celui du panneau. */
+  enteteOuverte: { backgroundColor: 'transparent', borderWidth: 0, paddingHorizontal: 6, paddingVertical: 8 },
+  titre: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.text },
 });

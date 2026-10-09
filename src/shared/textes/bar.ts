@@ -12,10 +12,7 @@ export const TEXTES_BAR = {
   },
   stock: {
     boissonsNourriture: 'Boissons et nourriture',
-    /** Le menu de l'inventaire du gîte (burger) : l'impression de l'état actuel. */
-    menu: 'Menu de l’inventaire',
     exporter: {
-      menu: 'Imprimer l’inventaire (PDF)',
       titre: 'Inventaire du gîte — état actuel',
       colonnes: { article: 'Article', activite: 'Activité', quantite: 'Quantité', prix: 'Prix de vente' },
       aucunArticle: 'Aucun article dans cette liste.',

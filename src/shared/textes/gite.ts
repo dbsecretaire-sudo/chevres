@@ -21,6 +21,7 @@ export const TEXTES_GITE = {
     parDefaut: 'Compte d’office',
   },
   activites: {
+    titre: 'Activités',
     gite: 'Gîte',
     dossiersClients: 'Dossiers clients',
     bientot: 'Bientôt disponible',

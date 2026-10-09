@@ -16,6 +16,7 @@ export function ChevreSortieFab({ chevre, onChoisir }: Props) {
     <Fab
       color={colors.danger}
       icon="remove"
+      cote="gauche"
       options={[
         {
           label: statutLabel(STATUT_CHEVRE.MORTE, chevre.sexe),

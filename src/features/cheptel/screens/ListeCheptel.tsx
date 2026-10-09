@@ -1,9 +1,10 @@
-import { FlatList } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { FiltresCheptel } from '@/features/cheptel/components/FiltresCheptel';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { useListeCheptel } from '@/features/cheptel/hooks/useListeCheptel';
@@ -17,7 +18,9 @@ export default function CheptelIndex() {
 
   return (
     <Screen scroll={false}>
-      <SelecteurEspece />
+      <View style={styles.choixEspece}>
+        <SelecteurEspece />
+      </View>
       <FiltresCheptel e={e} />
 
       <FlatList
@@ -30,8 +33,10 @@ export default function CheptelIndex() {
             subtitle={TEXTES.cheptel.listeCheptel.aucunAnimalNeCorrespondAux}
           />
         }
-        renderItem={({ item }) => (
-          <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+        renderItem={({ item, index }) => (
+          <LigneDeBloc index={index} total={e.filtrees.length}>
+            <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+          </LigneDeBloc>
         )}
       />
 

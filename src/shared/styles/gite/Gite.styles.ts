@@ -2,15 +2,11 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
-  /** Les tuiles d'activité de l'association : fixes, elles s'empilent sur toute la largeur de la page. */
-  grilleTuiles: { gap: 14 },
+  /** Une activité : une ligne du bloc des activités (le cadre est celui du bloc). */
   tuile: {
-    minHeight: 150,
+    minHeight: 110,
     backgroundColor: colors.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 18,
+    padding: 16,
     gap: 6,
   },
   tuileInactive: { opacity: 0.55 },

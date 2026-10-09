@@ -3,14 +3,12 @@ import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
   question: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 6 },
+  /** Un choix : une ligne du bloc blanc qui les réunit (le cadre est celui du bloc). */
   choix: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
     padding: 16,
   },
   stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24 },

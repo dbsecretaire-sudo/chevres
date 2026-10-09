@@ -1,7 +1,7 @@
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { identificationCheptel, type InfosExploitation } from '@/features/settings/settings';
+import { getSettings, identificationCheptel, type InfosExploitation } from '@/features/settings/settings';
 import { especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { MIME_PDF, UTI_PDF } from '@/shared/constants/export';
@@ -90,6 +90,7 @@ export function documentHtml(
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: ${colors.text}; padding: 24px; }
   h1 { font-size: 20px; margin: 0 0 4px; color: ${colors.primaryDark}; }
   h2 { font-size: 14px; margin: 20px 0 8px; border-bottom: 2px solid ${colors.primary}; padding-bottom: 4px; color: ${colors.primaryDark}; }
+  .titre-perso { font-size: 13px; font-weight: 700; color: ${colors.textMuted}; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
   .exploitation { font-size: 11px; color: ${colors.textMuted}; margin: 8px 0 16px; line-height: 1.5; border-bottom: 1px solid ${colors.border}; padding-bottom: 10px; }
   .exploitation-grid { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 4px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
@@ -108,7 +109,12 @@ export function documentHtml(
 }
 
 /** Génère le PDF depuis le HTML, le copie sous `nomFichier` et ouvre le menu de partage. */
-export async function ecrireEtPartagerPdf(html: string, nomFichier: string, titre: string): Promise<void> {
+export async function ecrireEtPartagerPdf(source: string, nomFichier: string, titre: string): Promise<void> {
+  // Le titre personnalisé de l'utilisateur (Organisation › Export) s'imprime en tête de tous les PDF.
+  const titrePerso = (await getSettings()).exploitation?.titrePdf?.trim();
+  const html = titrePerso
+    ? source.replace('<body>', `<body>\n  <div class="titre-perso">${echapper(titrePerso)}</div>`)
+    : source;
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
   await FileSystem.copyAsync({ from: uri, to: destination });

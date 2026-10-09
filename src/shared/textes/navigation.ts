@@ -6,7 +6,7 @@ const V = vocabulaire;
 export const TEXTES_NAVIGATION = {
   layout: {
     accueil: 'Accueil',
-    reglages: 'Réglages',
+    reglages: 'Organisation',
     get ficheChevre() {
       return `Fiche ${V().femelle.singulier}`;
     },

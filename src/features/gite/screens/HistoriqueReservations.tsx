@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { EmptyState } from '@/shared/components/EmptyState';
-import { FormField } from '@/shared/components/FormField';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -107,12 +107,7 @@ export default function HistoriqueReservations() {
             onChoisirTout={choisirToutesAnnees}
           />
         </LigneFiltres>
-        <FormField
-          label={TEXTES.commun.general.rechercher}
-          value={requete}
-          onChangeText={setRequete}
-          placeholder={T.historique.rechercher}
-        />
+        <ChampRecherche value={requete} onChangeText={setRequete} placeholder={T.historique.rechercher} />
       </View>
       <ScrollView ref={defilement} contentContainerStyle={commonStyles.listBottom}>
         {reservations.length === 0 ? (

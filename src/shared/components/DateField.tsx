@@ -14,6 +14,7 @@ import {
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { HEURE_MIDI } from '@/shared/constants/temps';
 import { TEXTES } from '@/shared/textes';
+import { useFondChamp } from '@/shared/theme/FondChampContext';
 
 const T = TEXTES.commun.dateField;
 
@@ -33,6 +34,7 @@ interface Props {
 
 export function DateField({ label, value, onChange, required, anneeImposee, jourMoisAnnee }: Props) {
   const [showPicker, setShowPicker] = useState(false);
+  const fond = useFondChamp();
   // Sur le web on tape la date : le texte en cours de saisie reste ici, et seule une vraie date remonte au formulaire.
   /** Ce que le champ montre d'une valeur : « JJ-MM » (année imposée), « JJ-MM-AAAA », ou la date telle quelle. */
   const affichageDe = (iso: string) =>
@@ -44,16 +46,22 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
     setValeurVue(value);
     setSaisie(affichageDe(value));
   }
+  // L'année imposée apparaît ou change (l'année active, « Tout ») : la saisie reprend la forme du champ (« JJ-MM » ou « JJ-MM-AAAA »).
+  const [anneeVue, setAnneeVue] = useState(anneeImposee);
+  if (anneeVue !== anneeImposee) {
+    setAnneeVue(anneeImposee);
+    setSaisie(affichageDe(value));
+  }
   /** Le début d'une date de l'année imposée (« 2025- »), qu'on ne peut pas effacer. */
   const prefixe = anneeImposee ? `${anneeImposee}-` : '';
 
   const aide = anneeImposee ? (
-    <>
-      <Text style={commonStyles.note}>
-        {jourMoisAnnee ? (anneeImposee ? T.formatJourMois : T.formatJourMoisAnnee) : T.format}
-      </Text>
-      <Text style={commonStyles.note}>{T.anneeImposee}</Text>
-    </>
+    <Text style={commonStyles.note}>
+      {T.formatAvecAnnee(
+        jourMoisAnnee ? (anneeImposee ? T.formatJourMois : T.formatJourMoisAnnee) : T.format,
+        anneeImposee,
+      )}
+    </Text>
   ) : null;
 
   if (Platform.OS === 'web' && jourMoisAnnee) {
@@ -83,7 +91,7 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           {required ? <Text style={commonStyles.required}> *</Text> : null}
         </Text>
         <TextInput
-          style={[commonStyles.inputBox, bordure]}
+          style={[commonStyles.inputBox, { backgroundColor: fond }, bordure]}
           value={saisie}
           onChangeText={surChangement}
           placeholder={anneeImposee ? T.jourMois : T.jourMoisAnnee}
@@ -91,11 +99,8 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           maxLength={anneeImposee ? 5 : undefined}
         />
         <Text style={invalide ? commonStyles.required : commonStyles.note}>
-          {anneeImposee ? T.formatJourMois : T.formatJourMoisAnnee}
+          {anneeImposee ? T.formatAvecAnnee(T.formatJourMois, anneeImposee) : T.formatJourMoisAnnee}
         </Text>
-        {anneeImposee ? (
-          <Text style={invalide ? commonStyles.required : commonStyles.note}>{T.anneeImposee}</Text>
-        ) : null}
       </View>
     );
   }
@@ -111,7 +116,11 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           {required ? <Text style={commonStyles.required}> *</Text> : null}
         </Text>
         <TextInput
-          style={[commonStyles.inputBox, invalide && { borderColor: colors.danger }]}
+          style={[
+            commonStyles.inputBox,
+            { backgroundColor: fond },
+            invalide && { borderColor: colors.danger },
+          ]}
           value={affiche}
           onChangeText={(texte) => {
             // L'année imposée reste : ce qu'on écrit avant ou à la place de « 2025- » est ramené à l'année choisie.
@@ -124,10 +133,9 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           placeholderTextColor={colors.textMuted}
         />
         {anneeImposee ? (
-          <>
-            <Text style={invalide ? commonStyles.required : commonStyles.note}>{T.format}</Text>
-            <Text style={invalide ? commonStyles.required : commonStyles.note}>{T.anneeImposee}</Text>
-          </>
+          <Text style={invalide ? commonStyles.required : commonStyles.note}>
+            {T.formatAvecAnnee(T.format, anneeImposee)}
+          </Text>
         ) : invalide ? (
           <Text style={commonStyles.required}>{T.invalide}</Text>
         ) : null}
@@ -147,7 +155,10 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
         {label}
         {required ? <Text style={commonStyles.required}> *</Text> : null}
       </Text>
-      <Pressable style={commonStyles.inputBox} onPress={() => setShowPicker(true)}>
+      <Pressable
+        style={[commonStyles.inputBox, { backgroundColor: fond }]}
+        onPress={() => setShowPicker(true)}
+      >
         <Text style={commonStyles.valueText}>
           {value
             ? jourMoisAnnee

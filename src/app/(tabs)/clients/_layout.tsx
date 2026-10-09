@@ -1,5 +1,7 @@
 import { Stack } from 'expo-router';
 import { MenuActivite } from '@/features/dossiers/components/MenuActivite';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -18,7 +20,13 @@ export default function ClientsLayout() {
     >
       <Stack.Screen
         name="index"
-        options={{ title: TEXTES.dossiers.explorateur.titre, headerRight: () => <MenuActivite /> }}
+        options={{
+          // Une association (gîte) y voit ses activités ; un secrétariat, ses dossiers.
+          title: activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION)
+            ? TEXTES.gite.activites.titre
+            : TEXTES.dossiers.explorateur.titre,
+          headerRight: () => <MenuActivite />,
+        }}
       />
       <Stack.Screen name="liste" options={{ title: TEXTES.commun.general.clients }} />
       <Stack.Screen

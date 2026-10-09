@@ -13,17 +13,20 @@ export const ROUTES = {
   CHEPTEL_NOUVELLE: '/cheptel/nouvelle',
   CHEPTEL_NAISSANCE_NOUVELLE: '/cheptel/naissance-nouvelle',
 
-  CHEPTEL_ALIMENTATION: '/cheptel/alimentation',
-  CHEPTEL_VETERINAIRE: '/cheptel/veterinaire',
-  CHEPTEL_VISITE_NOUVELLE: '/cheptel/veterinaire/nouvelle',
-  CHEPTEL_CONTROLES: '/cheptel/controles',
-  CHEPTEL_CONTROLE_NOUVEAU: '/cheptel/controles/nouvelle',
+  // L'onglet Santé d'un élevage : alimentation, vétérinaire, contrôles
+  SANTE: '/sante',
+  SANTE_ALIMENTATION: '/sante/alimentation',
+  SANTE_VETERINAIRE: '/sante/veterinaire',
+  SANTE_VISITE_NOUVELLE: '/sante/veterinaire/nouvelle',
+  SANTE_CONTROLES: '/sante/controles',
+  SANTE_CONTROLE_NOUVEAU: '/sante/controles/nouvelle',
 
   COMPTABILITE: '/comptabilite',
   COMPTABILITE_NOUVELLE: '/comptabilite/nouvelle',
   /** Les catégories de recette cochées pour chaque espèce (et celles qu'on ajoute). */
   CATEGORIES_RECETTE: '/comptabilite/categories-recette',
   COMPTABILITE_DETAIL: '/comptabilite/detail',
+  FISCALITE: '/comptabilite/fiscalite',
   FISCALITE_IMPOTS: '/comptabilite/fiscalite-impots',
   FISCALITE_RSA: '/comptabilite/fiscalite-rsa',
   URSSAF: '/comptabilite/urssaf',
@@ -52,6 +55,15 @@ export const ROUTES = {
   // Explorateur de dossiers d'une entreprise
   CLIENTS_EXPLORATEUR: '/clients',
   STRUCTURE_DOSSIERS: '/structure-dossiers',
+  // Les données (écrans ouverts depuis l'onglet Organisation)
+  ORGANISATION_ETABLISSEMENT: '/organisation-etablissement',
+  ORGANISATION_COMPTABILITE: '/organisation-comptabilite',
+  ORGANISATION_INVENTAIRE: '/organisation-inventaire',
+  ORGANISATION_DONNEES: '/organisation-donnees',
+  EXPORT_DONNEES: '/export-donnees',
+  PDF_DONNEES: '/pdf-donnees',
+  SAUVEGARDE_LOCALE: '/sauvegarde-locale',
+  GOOGLE_DRIVE: '/google-drive',
   dossierClient: (id: string) => `/clients/dossiers/${id}` as const,
   sousDossier: (id: string) => `/clients/sous-dossier/${id}` as const,
   elementNouveau: (dossierId: string) => `/clients/element/nouveau?dossierId=${dossierId}` as const,

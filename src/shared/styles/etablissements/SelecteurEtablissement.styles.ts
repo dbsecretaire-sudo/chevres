@@ -2,36 +2,41 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
-  top: { paddingTop: 48, gap: 6 },
-  /** flexGrow : « Retour » reste en bas de l'écran quand la liste est courte. */
-  contenu: { flexGrow: 1, gap: 12 },
-  /** Une tuile par établissement, l'une sous l'autre, comme les activités du gîte. */
-  grille: { gap: 14 },
-  carte: {
-    minHeight: 110,
+  top: { paddingTop: 40, paddingBottom: 4 },
+  /** flexGrow : « Supprimer » reste en bas de l'écran quand la liste est courte. */
+  contenu: { flexGrow: 1, gap: 12, paddingHorizontal: 16, paddingBottom: 96 },
+  /** Les établissements, l'un sous l'autre. */
+  grille: { gap: 10 },
+  /** Un établissement : une ligne basse (logo, nom et types, crayon). */
+  ligne: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 72,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     backgroundColor: colors.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 18,
-    gap: 6,
+    // Un liseré (transparent, vert pour le dernier utilisé) : tous les logos restent alignés.
+    borderLeftWidth: 4,
+    borderLeftColor: 'transparent',
   },
-  carteActive: { borderColor: colors.primary },
-  /** Le logo à gauche, le bouton crayon à droite, sur leur propre ligne. */
-  carteBarre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  carteCrayon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: colors.ajout,
+  /** Le dernier établissement utilisé : un liseré vert à gauche. */
+  ligneActive: { borderLeftWidth: 4, borderLeftColor: colors.primary },
+  lignePressee: { backgroundColor: colors.background },
+  logo: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.badgeBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  carteNom: { fontSize: 22, fontWeight: '800', color: colors.text },
-  carteSousTitre: { fontSize: 14, color: colors.textMuted },
-  carteType: { fontSize: 14, color: colors.primaryDark, fontWeight: '600' },
+  texte: { flex: 1, gap: 2 },
+  nom: { fontSize: 17, fontWeight: '700', color: colors.text },
+  types: { fontSize: 13, color: colors.textMuted },
+  crayon: { padding: 4 },
+  /** Le titre d'un groupe de choix du formulaire d'établissement. */
   groupeTitre: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
-  /** « Supprimer cet établissement » : épinglé en bas de l'écran, comme « Retour ». */
+  /** « Supprimer cet établissement » : épinglé en bas de l'écran. */
   supprimer: { marginTop: 'auto' },
-  /** Espace sous « Retour » pour que le bouton « + » flottant ne le cache pas. */
 });

@@ -1,12 +1,10 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { exporterInventaireGitePdf } from '@/features/export/inventaireGitePdf';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ListePersonnalisee } from '@/features/stock/components/ListePersonnalisee';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { ajouterArticle as ajouterArticleInventaire } from '@/features/stock/services/stock';
 import type { ArchiveStock, ListeInventaire } from '@/features/stock/types';
 import { ROUTES } from '@/shared/constants/routes';
-import { OptionsModal } from '@/shared/components/OptionsModal';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   CATEGORIES_GITE,
@@ -132,7 +130,6 @@ export default function StockBar() {
     null,
   );
   /** Le menu en haut à droite (burger). */
-  const [menuOuvert, setMenuOuvert] = useState(false);
   const [boissonOuverte, setBoissonOuverte] = useState(false);
   const [boissonModifiee, setBoissonModifiee] = useState<Boisson | undefined>();
   /** Vrai pendant qu'on fait glisser une ligne : la page ne défile alors pas. */
@@ -380,44 +377,20 @@ export default function StockBar() {
 
   return (
     <Screen scroll={false}>
-      {/* Le menu burger, à droite du titre : l'impression de l'inventaire. */}
+      {/* À droite du titre : l'historique des mouvements (l'impression est dans Organisation › PDF). */}
       <Stack.Screen
         options={{
           headerRight: () => (
             <Pressable
               style={commonStyles.boutonEnteteDroite}
-              onPress={() => setMenuOuvert(true)}
+              onPress={() => router.push(ROUTES.stockHistorique())}
               hitSlop={10}
-              accessibilityLabel={T.stock.menu}
+              accessibilityLabel={TS.historique.titre}
             >
-              <Ionicons name="menu" size={26} color={colors.blanc} />
+              <Ionicons name="time" size={24} color={colors.blanc} />
             </Pressable>
           ),
         }}
-      />
-      <OptionsModal
-        visible={menuOuvert}
-        onClose={() => setMenuOuvert(false)}
-        options={[
-          {
-            label: TS.historique.titre,
-            icon: 'time' as const,
-            onPress: () => router.push(ROUTES.stockHistorique()),
-          },
-          {
-            label: TS.structure.menu,
-            icon: 'albums' as const,
-            onPress: () => router.push(ROUTES.STOCK_STRUCTURE),
-          },
-          {
-            label: T.stock.exporter.menu,
-            icon: 'print' as const,
-            onPress: () =>
-              exporterInventaireGitePdf().catch((e: Error) =>
-                Alert.alert(TEXTES.commun.general.erreurExport, e?.message ?? String(e)),
-              ),
-          },
-        ]}
       />
       <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
         <ChoixDeroulant<string>

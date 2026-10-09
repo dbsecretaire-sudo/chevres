@@ -46,6 +46,7 @@ import {
   TYPE_CHOIX_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { nomComplet } from '@/shared/utils/personne';
+import { estDateISO } from '@/shared/utils/dates';
 import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
 import { TEXTES } from '@/shared/textes';
 
@@ -272,5 +273,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
 
 /** Valide la saisie et la convertit en vente ou en facture prête à enregistrer (ou renvoie l'erreur à afficher). */
 export function construireEcriture(saisie: SaisieEcriture): ResultatSaisie {
+  // La date est obligatoire : une année imposée vide (« 2026- » seul) n'est pas une date.
+  if (!estDateISO(saisie.date)) return { erreur: { titre: TEXTES.commun.dateField.invalide } };
   return saisie.estProductionVente ? construireVente(saisie) : construireFacture(saisie);
 }

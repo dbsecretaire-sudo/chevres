@@ -42,7 +42,8 @@ import type {
 } from '@/features/comptabilite/types';
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
-import { todayISO } from '@/shared/utils/dates';
+import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
+import { memeJourDansLAnnee } from '@/shared/utils/dates';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import {
   categoriesGroupe,
@@ -92,7 +93,8 @@ const PREFIXE_COMPTES_RECETTE = '7';
 /** État, valeurs calculées et actions du formulaire « Nouvelle écriture » (débit/crédit). */
 export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const router = useRouter();
-  const { settings } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const { anneeImposee, dateDuJour } = useAnneeImposee();
   /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
   const [avecFacture, setAvecFacture] = useState(true);
   /** Le numéro de la facture de la vente (obligatoire quand elle est déclarée). */
@@ -103,7 +105,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   // s'applique (champ affiché, taux enregistré) que si elle a coché « Assujetti à la TVA » dans ses informations.
   const entreprise = modeEntreprise();
   const tvaEntreprise = entreprise && !!settings.exploitation?.entreprise?.tvaApplicable;
-  const afficherTva = !entreprise || tvaEntreprise;
+  const modeAvance = !!settings.exploitation?.modeAvance;
+  // Le mode simple cache le taux de TVA (le taux d'office s'applique) ; le mode avancé le montre quand la TVA s'applique.
+  const afficherTva = modeAvance && (!entreprise || tvaEntreprise);
   const activiteInitiale: ActiviteComptable = entreprise ? ACTIVITE_COMMUNE : especeCourante();
   const tauxTvaEntreprise = (categorie: CategorieRecette): string =>
     tvaEntreprise
@@ -115,11 +119,19 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   );
   // Activité : l'espèce courante par défaut (visible seulement si l'établissement en élève plusieurs).
   const [activite, setActivite] = useState<ActiviteComptable>(activiteInitiale);
-  const [date, setDate] = useState(todayISO());
+  const [date, setDate] = useState(dateDuJour);
+  // Une autre année active (choisie ici) : la date passe dans cette année ; avec « Tout », elle reste libre.
+  const [anneeVue, setAnneeVue] = useState(anneeImposee);
+  if (anneeVue !== anneeImposee) {
+    setAnneeVue(anneeImposee);
+    if (anneeImposee !== undefined) setDate(memeJourDansLAnnee(date, anneeImposee));
+  }
   const [tiers, setTiers] = useState('');
   const [description, setDescription] = useState('');
   const [montant, setMontant] = useState('');
   const [enregistrement, setEnregistrement] = useState(false);
+  /** Le nombre d'écritures enregistrées avec « en ajouter une autre » depuis l'ouverture de l'écran. */
+  const [enchainees, setEnchainees] = useState(0);
   const [erreur, setErreur] = useState<ErreurSaisie | null>(null);
 
   // Débit (facture reçue)
@@ -306,7 +318,27 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionGroupes]);
 
-  const enregistrer = async () => {
+  /**
+   * Vide ce qui est propre à une écriture (montant, description, numéro, lignes) et garde ce qui se répète d'une saisie à
+   * l'autre : le type, la date, l'activité, la catégorie, le client ou le fournisseur, la TVA, la nature URSSAF.
+   */
+  const repartir = () => {
+    setDescription('');
+    setMontant('');
+    setNumeroFacture('');
+    setQuantite('');
+    setPoidsKg('');
+    setSacs('');
+    setAnimaux([]);
+    setPrecision('');
+    setJeune(undefined);
+    setLignesAlimentation([ligneAlimentVide()]);
+    setLignesMarchandises([ligneMarchandiseVide()]);
+    setLignesCarburant([ligneCarburantVide()]);
+  };
+
+  /** Enregistre l'écriture, puis ferme l'écran ; avec `enchainer`, reste dessus pour saisir la suivante. */
+  const enregistrer = async (enchainer = false) => {
     setEnregistrement(true);
     try {
       // Un animal sur pied, vivant ou un petit ne se vend pas sans dire lesquels ni leur poids : les fiches du cheptel et le poids
@@ -385,7 +417,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         await synchroniserStockAchat(undefined, achat, enregistree.date);
         await synchroniserStockAlimentation(enregistree);
       }
-      router.back();
+      if (enchainer) {
+        repartir();
+        setEnchainees((n) => n + 1);
+      } else router.back();
     } finally {
       setEnregistrement(false);
     }
@@ -398,10 +433,16 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     avecCommunActivite,
     entreprise,
     afficherTva,
+    modeAvance,
     type,
     setType,
     date,
     setDate,
+    anneeImposee,
+    anneeActive: settings.anneeActive,
+    toutesAnnees: !!settings.toutesAnnees,
+    setAnneeActive,
+    choisirToutesAnnees,
     description,
     setDescription,
     montant,
@@ -410,6 +451,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     erreur,
     setErreur,
     enregistrer,
+    enchainees,
     annuler: () => router.back(),
     // débit
     categorieDepense,

@@ -19,7 +19,7 @@ export default function TabsLayout() {
   const stockGite = entreprise && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
   return (
     <Tabs
-      screenLayout={ecranParEspeceSauf('cheptel', 'comptabilite', 'index')}
+      screenLayout={ecranParEspeceSauf('cheptel', 'sante', 'comptabilite', 'index')}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -71,6 +71,22 @@ export default function TabsLayout() {
         })}
       />
       <Tabs.Screen
+        name="sante"
+        options={{
+          title: TEXTES.sante.titre,
+          headerShown: false,
+          // La santé (alimentation, vétérinaire, contrôles) est celle d'un élevage.
+          href: entreprise ? null : undefined,
+          tabBarIcon: ({ color, size }) => <Ionicons name="medkit" size={size} color={color} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('sante', { screen: 'index' });
+          },
+        })}
+      />
+      <Tabs.Screen
         name="comptabilite"
         options={{
           title: TEXTES.commun.general.comptabilite,
@@ -100,17 +116,10 @@ export default function TabsLayout() {
         })}
       />
       <Tabs.Screen
-        name="rh"
-        options={{
-          title: TEXTES.rh.ressourcesHumaines.titre,
-          tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="reglages"
         options={{
           title: TEXTES.navigation.layout.reglages,
-          tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="options" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -122,13 +131,34 @@ export default function TabsLayout() {
           headerLeft: () => <HeaderBackTo to="/" />,
         }}
       />
+      {/* Les pages de l'organisation : une par rubrique, puis les écrans de chaque rubrique (la flèche remonte d'un niveau). */}
+      {[
+        ['organisation-etablissement', TEXTES.settings.reglages.sectionEtablissement, ROUTES.REGLAGES],
+        ['organisation-comptabilite', TEXTES.settings.reglages.sectionComptabilite, ROUTES.REGLAGES],
+        ['organisation-inventaire', TEXTES.settings.reglages.sectionInventaire, ROUTES.REGLAGES],
+        ['organisation-donnees', TEXTES.settings.reglages.sectionDonnees, ROUTES.REGLAGES],
+        ['export-donnees', TEXTES.settings.reglages.export, ROUTES.ORGANISATION_DONNEES],
+        ['pdf-donnees', TEXTES.settings.reglages.pdf, ROUTES.ORGANISATION_DONNEES],
+        ['sauvegarde-locale', TEXTES.settings.reglages.sauvegardeLocale, ROUTES.ORGANISATION_DONNEES],
+        ['google-drive', TEXTES.settings.reglages.googleDrive, ROUTES.ORGANISATION_DONNEES],
+      ].map(([name, title, retour]) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            href: null,
+            title,
+            headerLeft: () => <HeaderBackTo to={retour} />,
+          }}
+        />
+      ))}
       <Tabs.Screen
         name="structure-dossiers"
         options={{
           href: null,
           title: TEXTES.dossiers.structure.titre,
           // Destination fixe : on revient toujours aux Réglages, d'où l'écran est ouvert.
-          headerLeft: () => <HeaderBackTo to={ROUTES.REGLAGES} />,
+          headerLeft: () => <HeaderBackTo to={ROUTES.ORGANISATION_ETABLISSEMENT} />,
         }}
       />
       <Tabs.Screen

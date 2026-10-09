@@ -1,19 +1,28 @@
-import { View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { DateField } from '@/shared/components/DateField';
 import { SelectField } from '@/shared/components/SelectField';
 import { Button } from '@/shared/components/Button';
+import { SectionForm } from '@/shared/components/SectionForm';
 import { InfoModal } from '@/shared/components/InfoModal';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
-import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
 import { SectionDepense } from '@/features/comptabilite/components/ecriture/SectionDepense';
 import { SectionRecette } from '@/features/comptabilite/components/ecriture/SectionRecette';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { TypeFacture } from '@/features/comptabilite/types';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
+import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
+import { currentYear } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -26,29 +35,74 @@ export default function NouvelleFacture() {
   useAjoutTabBarBleu();
   const params = useLocalSearchParams<{ type?: TypeFacture }>();
   const e = useNouvelleEcriture(params.type);
+  /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
+  const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
+  useFocusEffect(
+    useCallback(() => {
+      toutesLesAnneesConnues().then((connues) => setAnnees([...new Set([...connues, currentYear() - 1])]));
+    }, []),
+  );
+  // L'activité se choisit par une puce (comme dans la liste) ; elle n'apparaît que pour un établissement à plusieurs espèces.
+  const activites = [...especesActives(), ...(e.avecCommunActivite ? [ACTIVITE_COMMUNE] : [])];
 
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
       <Screen>
-        <View style={commonStyles.row}>
-          <View style={commonStyles.flex1}>
-            <SelectField
-              label={TEXTES.commun.general.type}
-              required
-              value={e.type}
-              onChange={e.setType}
-              options={OPTIONS_TYPE}
+        <LigneFiltres>
+          <YearPicker
+            annees={annees}
+            value={e.anneeActive}
+            onChange={e.setAnneeActive}
+            tout={e.toutesAnnees}
+            onChoisirTout={e.choisirToutesAnnees}
+          />
+          {plusieursEspeces() ? (
+            <ChoixDeroulant
+              titre={TEXTES.comptabilite.activite.activite}
+              valeur={e.activite}
+              options={activites.map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
+              onChoisir={e.changerActivite}
             />
+          ) : null}
+        </LigneFiltres>
+
+        <SectionForm titre={TEXTES.commun.formulaire.ecriture}>
+          <View style={commonStyles.row}>
+            <View style={commonStyles.flex1}>
+              <SelectField
+                label={TEXTES.commun.general.type}
+                required
+                value={e.type}
+                onChange={e.setType}
+                options={OPTIONS_TYPE}
+              />
+            </View>
+            <View style={commonStyles.flex1}>
+              <DateField
+                label={TEXTES.commun.general.date}
+                required
+                value={e.date}
+                onChange={e.setDate}
+                anneeImposee={e.anneeImposee}
+                jourMoisAnnee
+              />
+            </View>
           </View>
-          <View style={commonStyles.flex1}>
-            <DateField label={TEXTES.commun.general.date} required value={e.date} onChange={e.setDate} />
-          </View>
-        </View>
 
-        <ChampActivite value={e.activite} onChange={e.changerActivite} avecCommun={e.avecCommunActivite} />
+          {e.type === TYPE_FACTURE.RECUE ? <SectionDepense e={e} /> : <SectionRecette e={e} />}
+        </SectionForm>
 
-        {e.type === TYPE_FACTURE.RECUE ? <SectionDepense e={e} /> : <SectionRecette e={e} />}
-
+        {e.enchainees > 0 ? (
+          <Text style={commonStyles.note}>
+            {TEXTES.comptabilite.nouvelleEcriture.enchainees(e.enchainees)}
+          </Text>
+        ) : null}
+        <Button
+          variant="secondary"
+          label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
+          onPress={() => e.enregistrer(true)}
+          loading={e.enregistrement}
+        />
         <View style={commonStyles.row}>
           <Button
             style={commonStyles.flex1}
@@ -59,7 +113,7 @@ export default function NouvelleFacture() {
           <Button
             style={commonStyles.flex1}
             label={TEXTES.commun.general.enregistrer}
-            onPress={e.enregistrer}
+            onPress={() => e.enregistrer()}
             loading={e.enregistrement}
           />
         </View>

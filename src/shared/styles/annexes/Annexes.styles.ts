@@ -3,11 +3,6 @@ import { colors } from '@/shared/theme/colors';
 
 /** Le ticket d'une activité annexe : ses lignes, le bloc d'ajout d'une ligne et le pied avec la TVA et le total. */
 export const styles = StyleSheet.create({
-  /** L'inventaire des annexes : une activité est un peu décalée, sa catégorie davantage, et ses articles encore. */
-  niveauActivite: { paddingLeft: 12 },
-  niveauCategorie: { paddingLeft: 12 },
-  niveauArticle: { paddingLeft: 12 },
-
   /** Les repas déjà réservés et payés : un bandeau d'information, hors du total. */
   bandeauRepas: {
     flexDirection: 'row',
@@ -43,16 +38,22 @@ export const styles = StyleSheet.create({
 
   /** Le bloc d'ajout d'une ligne (bleu, comme tout ajout) : un fond doux, l'article puis la quantité et le bouton. */
   ajout: {
-    backgroundColor: colors.ajoutBadgeBg,
+    backgroundColor: colors.background,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 12,
     gap: 10,
   },
   /** La flèche à droite de la ligne des repas : elle mène à la réservation. */
   flecheBandeau: { marginLeft: 'auto' },
-  titreAjout: { fontSize: 13, fontWeight: '700', color: colors.ajout },
-  /** L'étoile rouge dans le coin du champ de l'article. */
-  etoile: { position: 'absolute', right: 10, top: 2, zIndex: 1, color: colors.danger, fontSize: 16 },
+  titreAjout: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
+  },
   rangeeAjout: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   compteur: {
     flexDirection: 'row',

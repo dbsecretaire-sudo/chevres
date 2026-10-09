@@ -161,8 +161,6 @@ export function TicketAnnexeCarte({
                   />
                 ) : null}
                 <View>
-                  {/* L'étoile rouge : l'article est obligatoire pour ajouter une ligne. */}
-                  <Text style={stylesTicket.etoile}>*</Text>
                   <SelectFieldEditable<string>
                     label={T.article}
                     libelleCache

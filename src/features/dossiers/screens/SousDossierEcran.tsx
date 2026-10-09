@@ -48,7 +48,7 @@ export default function SousDossierEcran() {
 
   const dossier = e.archive.sousDossiers.find((d) => d.id === id);
   const enfants = dossier ? dossiersEnfants(e.archive.sousDossiers, dossier.clientId, id) : [];
-  const contenus = e.archive.elements
+  const contenus = e.archiveAffichee.elements
     .filter((el) => el.dossierId === id)
     .sort((a, b) => b.date.localeCompare(a.date));
   const resume = resumeDossier(e.archive.sousDossiers, e.archive.elements, id);
@@ -125,7 +125,7 @@ export default function SousDossierEcran() {
           {enfants.length > 0 ? (
             <View style={styles.grille}>
               {enfants.map((enfant) => {
-                const sien = resumeDossier(e.archive.sousDossiers, e.archive.elements, enfant.id);
+                const sien = resumeDossier(e.archive.sousDossiers, e.archiveAffichee.elements, enfant.id);
                 return (
                   <CarteDossier
                     key={enfant.id}

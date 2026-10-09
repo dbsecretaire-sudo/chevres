@@ -3,7 +3,11 @@ export const TEXTES_DOSSIERS = {
   /** Les sous-dossiers créés dans le dossier de chaque nouveau client tant que la structure type n'a pas été modifiée. */
   structureParDefaut: ['Administratif', 'Factures et devis', 'Courriers', 'Divers'],
   explorateur: {
-    titre: 'Activité',
+    titre: 'Dossiers',
+    /** Le bandeau qui rappelle que l'année active cache des contenus. */
+    masques: (annee: number, n: number) =>
+      `Année ${annee} · ${n} ${n > 1 ? 'contenus masqués' : 'contenu masqué'}`,
+    toutVoir: 'tout voir',
     rechercher: 'N’importe quel terme d’un dossier ou contenu',
     aucunClient: 'Aucun client',
     ajoutezUnClient: 'Ajoutez un client : son dossier apparaît ici.',
@@ -54,6 +58,9 @@ export const TEXTES_DOSSIERS = {
   },
   element: {
     nouveau: 'Nouveau contenu',
+    /** Le choix du dossier (le contenu s'y range, on peut le déplacer) et le menu de l'écran. */
+    dossier: 'Dossier',
+    menu: 'Menu',
     titre: 'Titre',
     exempleTitre: 'ex : Devis déménagement',
     texte: 'Notes',

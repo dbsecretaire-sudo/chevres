@@ -5,6 +5,7 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import { SectionForm } from '@/shared/components/SectionForm';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
@@ -425,111 +426,115 @@ export default function EcranSejour() {
         ) : null}
         {!abandonne && sansRestaurant ? <Text style={commonStyles.muted}>{T.sansRestaurantInfo}</Text> : null}
 
-        <View style={[commonStyles.gap6, verrou]} pointerEvents={evenements}>
-          <Text style={commonStyles.lineSemiBold}>
-            {T.chambres}
-            <Text style={commonStyles.required}> *</Text>
-          </Text>
-          <PucesMultiples<number>
-            puces={pucesChambres}
-            valeurs={chambres}
-            desactivees={[...indisponibles]}
-            onChange={(choisies) => {
-              setChambres(choisies);
-              // Moins de chambres, moins de lits : le nombre de personnes suit.
-              const lits = LITS_PAR_CHAMBRE * choisies.length;
-              if (Math.round(parseDecimal(personnes)) > lits) setPersonnes(enTexte(lits));
-            }}
-          />
-        </View>
-
-        <View style={commonStyles.row}>
-          <View style={commonStyles.flex1}>
-            <DateField
-              label={T.arrivee}
-              required
-              value={arrivee}
-              onChange={(valeur) => {
-                setArrivee(valeur);
-                // Payé, seule l'arrivée se change : le départ suit, avec le même nombre de nuits.
-                if (payeEnregistre) setDepart(ajouterJours(valeur, nuits));
-                // Le départ reste après l'arrivée : on le repousse au lendemain s'il la précède.
-                else if (depart <= valeur) setDepart(ajouterJours(valeur, 1));
+        <SectionForm titre={TEXTES.commun.formulaire.reservation}>
+          <View style={[commonStyles.gap6, verrou]} pointerEvents={evenements}>
+            <Text style={commonStyles.lineSemiBold}>
+              {T.chambres}
+              <Text style={commonStyles.required}> *</Text>
+            </Text>
+            <PucesMultiples<number>
+              puces={pucesChambres}
+              valeurs={chambres}
+              desactivees={[...indisponibles]}
+              onChange={(choisies) => {
+                setChambres(choisies);
+                // Moins de chambres, moins de lits : le nombre de personnes suit.
+                const lits = LITS_PAR_CHAMBRE * choisies.length;
+                if (Math.round(parseDecimal(personnes)) > lits) setPersonnes(enTexte(lits));
               }}
             />
           </View>
-          <View style={[commonStyles.flex1, verrou]} pointerEvents={evenements}>
-            <DateField
-              label={T.depart}
-              required
-              value={depart}
-              onChange={(valeur) => {
-                setDepart(valeur);
-              }}
-            />
-          </View>
-        </View>
-        {nuits > 0 ? <Text style={commonStyles.note}>{T.nuits(nuits)}</Text> : null}
 
-        <SelectFieldEditable<string>
-          label={T.client}
-          verrouille={payeEnregistre}
-          actions={
-            <BoutonsContact
-              telephone={client?.telephone}
-              email={client?.email}
-              couleur={colors.ajout}
-              fond={colors.ajoutBadgeBg}
-            />
-          }
-          required
-          searchable
-          placeholder={T.aucuneFiche}
-          value={clientId}
-          options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
-          onChange={setClientId}
-          onEdit={() => router.push(ROUTES.CLIENTS)}
-        />
-        {coordonnees ? <Text style={commonStyles.note}>{coordonnees}</Text> : null}
-
-        <View style={[commonStyles.row, verrou]} pointerEvents={evenements}>
-          <View style={commonStyles.flex1}>
-            <SelectField<string>
-              label={T.personnes}
-              value={personnes}
-              options={[
-                { value: '', label: T.personnesNonPrecisees },
-                ...Array.from({ length: maximumPersonnes }, (_, i) => ({
-                  value: String(i + 1),
-                  label: String(i + 1),
-                })),
-              ]}
-              onChange={setPersonnes}
-            />
+          <View style={commonStyles.row}>
+            <View style={commonStyles.flex1}>
+              <DateField
+                label={T.arrivee}
+                required
+                value={arrivee}
+                onChange={(valeur) => {
+                  setArrivee(valeur);
+                  // Payé, seule l'arrivée se change : le départ suit, avec le même nombre de nuits.
+                  if (payeEnregistre) setDepart(ajouterJours(valeur, nuits));
+                  // Le départ reste après l'arrivée : on le repousse au lendemain s'il la précède.
+                  else if (depart <= valeur) setDepart(ajouterJours(valeur, 1));
+                }}
+              />
+            </View>
+            <View style={[commonStyles.flex1, verrou]} pointerEvents={evenements}>
+              <DateField
+                label={T.depart}
+                required
+                value={depart}
+                onChange={(valeur) => {
+                  setDepart(valeur);
+                }}
+              />
+            </View>
           </View>
-          <View style={commonStyles.flex1}>
-            <FormField
-              label={T.repas}
-              value={repas}
-              onChangeText={setRepas}
-              keyboardType="number-pad"
-              placeholder="0"
-            />
-          </View>
-        </View>
+          {nuits > 0 ? <Text style={commonStyles.note}>{T.nuits(nuits)}</Text> : null}
+        </SectionForm>
 
-        <View style={[commonStyles.gap6, verrou]} pointerEvents={evenements}>
-          <Text style={commonStyles.lineSemiBold}>{T.service}</Text>
-          <PucesDefilantes<ValeurDe<typeof SERVICE_REPAS>>
-            puces={Object.values(SERVICE_REPAS).map((valeur) => ({
-              valeur,
-              label: LABEL_SERVICE_REPAS[valeur],
-            }))}
-            valeur={service}
-            onChoisir={setService}
+        <SectionForm titre={TEXTES.commun.formulaire.voyageursEtRepas}>
+          <SelectFieldEditable<string>
+            label={T.client}
+            verrouille={payeEnregistre}
+            actions={
+              <BoutonsContact
+                telephone={client?.telephone}
+                email={client?.email}
+                couleur={colors.ajout}
+                fond={colors.ajoutBadgeBg}
+              />
+            }
+            required
+            searchable
+            placeholder={T.aucuneFiche}
+            value={clientId}
+            options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+            onChange={setClientId}
+            onEdit={() => router.push(ROUTES.CLIENTS)}
           />
-        </View>
-        <Text style={commonStyles.note}>{T.repasCalcules}</Text>
+          {coordonnees ? <Text style={commonStyles.note}>{coordonnees}</Text> : null}
+
+          <View style={[commonStyles.row, verrou]} pointerEvents={evenements}>
+            <View style={commonStyles.flex1}>
+              <SelectField<string>
+                label={T.personnes}
+                value={personnes}
+                options={[
+                  { value: '', label: T.personnesNonPrecisees },
+                  ...Array.from({ length: maximumPersonnes }, (_, i) => ({
+                    value: String(i + 1),
+                    label: String(i + 1),
+                  })),
+                ]}
+                onChange={setPersonnes}
+              />
+            </View>
+            <View style={commonStyles.flex1}>
+              <FormField
+                label={T.repas}
+                value={repas}
+                onChangeText={setRepas}
+                keyboardType="number-pad"
+                placeholder="0"
+              />
+            </View>
+          </View>
+
+          <View style={[commonStyles.gap6, verrou]} pointerEvents={evenements}>
+            <Text style={commonStyles.lineSemiBold}>{T.service}</Text>
+            <PucesDefilantes<ValeurDe<typeof SERVICE_REPAS>>
+              puces={Object.values(SERVICE_REPAS).map((valeur) => ({
+                valeur,
+                label: LABEL_SERVICE_REPAS[valeur],
+              }))}
+              valeur={service}
+              onChoisir={setService}
+            />
+          </View>
+          <Text style={commonStyles.note}>{T.repasCalcules}</Text>
+        </SectionForm>
 
         {/* Payé, le détail du prix est figé : il perd son fond blanc, et c'est le paiement qui reste sur fond blanc. */}
         <Card style={payeEnregistre ? commonStyles.carteTransparente : undefined}>

@@ -9,7 +9,8 @@ import type { SaisieFacturation } from '@/features/dossiers/services/facturation
 import { NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { TYPE_FACTURATION } from '@/shared/constants/dossiers';
 import { LABEL_NATURE_URSSAF } from '@/shared/textes/libelles';
-import { estDateISO, todayISO } from '@/shared/utils/dates';
+import { estDateISO } from '@/shared/utils/dates';
+import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -36,7 +37,8 @@ interface Props {
  */
 export function FacturationModal({ mode, nomClient, titre, natureParDefaut, onValider, onFermer }: Props) {
   const [montant, setMontant] = useState('');
-  const [date, setDate] = useState(todayISO());
+  const { anneeImposee, dateDuJour } = useAnneeImposee();
+  const [date, setDate] = useState(dateDuJour);
   const [nature, setNature] = useState<NatureUrssaf>(natureParDefaut);
   const [numero, setNumero] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
@@ -46,11 +48,12 @@ export function FacturationModal({ mode, nomClient, titre, natureParDefaut, onVa
     if (mode) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMontant('');
-      setDate(todayISO());
+      setDate(dateDuJour);
       setNature(natureParDefaut);
       setNumero('');
       setErreur(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, natureParDefaut]);
 
   const acompte = mode === TYPE_FACTURATION.ACOMPTE;
@@ -93,7 +96,14 @@ export function FacturationModal({ mode, nomClient, titre, natureParDefaut, onVa
                 />
               </View>
               <View style={commonStyles.flex1}>
-                <DateField label={T.date} required value={date} onChange={setDate} />
+                <DateField
+                  label={T.date}
+                  required
+                  value={date}
+                  onChange={setDate}
+                  anneeImposee={anneeImposee}
+                  jourMoisAnnee
+                />
               </View>
             </View>
             <SelectField<string>

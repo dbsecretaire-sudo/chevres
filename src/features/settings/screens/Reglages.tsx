@@ -1,38 +1,50 @@
 import { Text } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Button } from '@/shared/components/Button';
-import { ROUTES } from '@/shared/constants/routes';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
 import { Screen } from '@/shared/components/Screen';
-import { CarteExport, CarteSauvegarde } from '@/features/settings/components/CartesDonnees';
-import { CarteGoogleDrive } from '@/features/settings/components/CarteGoogleDrive';
-import { useExportEtSauvegarde } from '@/features/settings/hooks/useExportEtSauvegarde';
-import { useGoogleDrive } from '@/features/settings/hooks/useGoogleDrive';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
+import { ROUTES } from '@/shared/constants/routes';
+import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { styles } from '@/shared/styles/settings/Reglages.styles';
 import { TEXTES } from '@/shared/textes';
 
-export default function Reglages() {
-  const router = useRouter();
-  // La structure type des dossiers ne sert qu'au secrétariat (dossiers clients) : ni à un gîte, ni à une activité financière, ni à une exploitation agricole.
-  const avecDossiersClients = activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE);
-  const donnees = useExportEtSauvegarde();
-  const drive = useGoogleDrive();
+const T = TEXTES.settings.reglages;
 
+/**
+ * L'onglet Organisation : un menu de rubriques (l'établissement, la comptabilité, l'inventaire, les données), comme l'onglet
+ * Santé. Chaque rubrique ouvre sa page, où se trouvent ses options.
+ */
+export default function Reglages() {
   return (
     <Screen>
-      {avecDossiersClients ? (
-        <Button
-          variant="secondary"
-          label={TEXTES.dossiers.structure.titre}
-          onPress={() => router.push(ROUTES.STRUCTURE_DOSSIERS)}
+      <BlocLignes>
+        <LigneRubrique
+          titre={T.sectionEtablissement}
+          aide={T.aideRubriqueEtablissement}
+          icone="business"
+          route={ROUTES.ORGANISATION_ETABLISSEMENT}
         />
-      ) : null}
-      <CarteExport d={donnees} />
-      <CarteSauvegarde d={donnees} />
-      <CarteGoogleDrive drive={drive} />
-
-      <Text style={styles.footer}>{TEXTES.settings.reglages.troupeauChevresToutesLesDonnees}</Text>
+        <LigneRubrique
+          titre={T.sectionComptabilite}
+          aide={T.aideRubriqueComptabilite}
+          icone="calculator"
+          route={ROUTES.ORGANISATION_COMPTABILITE}
+        />
+        {inventaireAccessible() ? (
+          <LigneRubrique
+            titre={T.sectionInventaire}
+            aide={T.aideRubriqueInventaire}
+            icone="cube"
+            route={ROUTES.ORGANISATION_INVENTAIRE}
+          />
+        ) : null}
+        <LigneRubrique
+          titre={T.sectionDonnees}
+          aide={T.aideRubriqueDonnees}
+          icone="server"
+          route={ROUTES.ORGANISATION_DONNEES}
+        />
+      </BlocLignes>
+      <Text style={styles.footer}>{T.troupeauChevresToutesLesDonnees}</Text>
     </Screen>
   );
 }

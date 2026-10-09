@@ -6,6 +6,8 @@ export const colors = {
   /** Voile plus sombre posé sur la caméra du scanner. */
   voileCamera: 'rgba(0,0,0,0.4)',
   background: '#F6F4EE',
+  /** Le fond d'un champ posé sur une carte blanche (une section de formulaire) : il ressort sans cadre épais. */
+  champ: '#F5F3EC',
   surface: '#FFFFFF',
   primary: '#3F6B3A',
   primaryDark: '#2C4D29',
@@ -22,6 +24,8 @@ export const colors = {
   textMuted: '#6B6F63',
   border: '#E1DDD0',
   danger: '#B3432B',
+  /** Fond d'une carte en négatif (un solde déficitaire) : le rouge, très clair. */
+  dangerFond: '#F6E2DC',
   success: '#3F6B3A',
   warning: '#C97B3D',
   badgeBg: '#EAF0E4',

@@ -3,9 +3,10 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
+import { BlocLignes } from '@/shared/components/BlocListe';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
-import { FormField } from '@/shared/components/FormField';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { ListRow } from '@/shared/components/ListRow';
 import { ActiviteAnnexeModal } from '@/features/annexes/components/ActiviteAnnexeModal';
 import { enregistrerActivite, lireArchiveAnnexes } from '@/features/annexes/repository';
@@ -156,15 +157,10 @@ export default function ActivitesAssociation() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listFab}>
-        <FormField
-          label={TEXTES.commun.general.rechercher}
-          value={requete}
-          onChangeText={setRequete}
-          placeholder={T.rechercher}
-        />
+        <ChampRecherche value={requete} onChangeText={setRequete} placeholder={T.rechercher} />
 
         {termes.length === 0 ? (
-          <View style={styles.grilleTuiles}>
+          <BlocLignes>
             <Tuile
               icone="bed"
               titre={T.gite}
@@ -192,13 +188,13 @@ export default function ActivitesAssociation() {
                 onPress={() => router.push(ROUTES.CLIENTS_DOSSIERS)}
               />
             ) : null}
-          </View>
+          </BlocLignes>
         ) : trouves.length === 0 && activitesTrouvees.length === 0 ? (
           <EmptyState title={T.aucunResultat} subtitle={T.modifiezLaRecherche} />
         ) : (
           <>
             {activitesTrouvees.length > 0 ? (
-              <View style={styles.grilleTuiles}>{activitesTrouvees.map((a) => tuileActivite(a.id))}</View>
+              <BlocLignes>{activitesTrouvees.map((a) => tuileActivite(a.id))}</BlocLignes>
             ) : null}
             {trouves.map((sejour) => (
               <ListRow

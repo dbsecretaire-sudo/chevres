@@ -56,3 +56,14 @@ export function cheminDuDossier(dossierId: string, sousDossiers: SousDossier[], 
   if (client) noms.unshift(nomComplet(client));
   return noms.join(TEXTES.dossiers.explorateur.separateurChemin);
 }
+
+/** Le chemin d'un dossier dans le dossier de son client, sans le nom du client : « Santé › Fertilité ». */
+export function cheminDansLeClient(dossierId: string, sousDossiers: SousDossier[]): string {
+  const noms: string[] = [];
+  let courant = sousDossiers.find((d) => d.id === dossierId);
+  while (courant) {
+    noms.unshift(courant.nom);
+    courant = courant.parentId ? sousDossiers.find((d) => d.id === courant!.parentId) : undefined;
+  }
+  return noms.join(TEXTES.dossiers.explorateur.separateurChemin);
+}

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ListRow } from '@/shared/components/ListRow';
-import { TuileChiffre } from '@/features/accueil/components/TuileChiffre';
+import { GrilleChiffres, TuileChiffre } from '@/features/accueil/components/TuileChiffre';
 import { CourbeCumul } from '@/features/trading/components/CourbeCumul';
 import { calculerStatistiques, resultatTrade, tradesDeLAnnee } from '@/features/trading/services/calculs';
 import { resultatSigne } from '@/features/trading/services/observations';
@@ -38,7 +38,7 @@ export function AccueilTrading({ trades, annee }: { trades: Trade[]; annee: stri
   return (
     <View style={commonStyles.gap10}>
       <CourbeCumul trades={delAnnee} />
-      <View style={commonStyles.row}>
+      <GrilleChiffres>
         <TuileChiffre
           valeur={stats.tauxReussite === undefined ? '—' : `${stats.tauxReussite} %`}
           label={T.statistiques.tauxReussite}
@@ -49,7 +49,7 @@ export function AccueilTrading({ trades, annee }: { trades: Trade[]; annee: stri
           label={T.accueil.tradesClos}
           onPress={() => router.push(ROUTES.JOURNAL_TRADING)}
         />
-      </View>
+      </GrilleChiffres>
 
       <Text style={stylesAccueil.sectionTitle}>{T.accueil.derniersTrades}</Text>
       {recents.map((t) => {

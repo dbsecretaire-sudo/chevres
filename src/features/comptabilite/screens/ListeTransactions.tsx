@@ -6,6 +6,7 @@ import { Screen } from '@/shared/components/ScreenList';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { Fab } from '@/shared/components/Fab';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { FiltreTransactionsModal } from '@/features/comptabilite/components/FiltreTransactionsModal';
 import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
 import { PucesRubrique } from '@/features/comptabilite/components/PucesRubrique';
@@ -71,7 +72,11 @@ export default function ComptabiliteIndex() {
             subtitle={TEXTES.comptabilite.listeTransactions.ventesEtFacturesDeL}
           />
         }
-        renderItem={({ item }) => <LigneTransaction item={item} />}
+        renderItem={({ item, index }) => (
+          <LigneDeBloc index={index} total={e.filtrees.length}>
+            <LigneTransaction item={item} />
+          </LigneDeBloc>
+        )}
       />
 
       <FiltreTransactionsModal

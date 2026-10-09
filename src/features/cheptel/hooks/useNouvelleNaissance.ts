@@ -3,10 +3,12 @@ import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { enregistrerNaissance } from '@/features/cheptel/repository/naissances';
 import { numeroBoucleExiste } from '@/features/cheptel/repository/chevres';
+import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import type { Sexe } from '@/features/cheptel/types';
 import { currentYear, todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
 import { SEXE } from '@/shared/constants/cheptel';
+import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 export interface CabritNaissanceForm {
@@ -50,6 +52,7 @@ export function useNouvelleNaissance() {
   const [notes, setNotes] = useState('');
   const [cabrits, setCabrits] = useState<CabritNaissanceForm[]>(cabritsInitiaux(params.sexes));
   const [enregistrement, setEnregistrement] = useState(false);
+  const optionsMeres = useMeresPossibles(date, params.mereNumeroBoucle);
 
   const majCabrit = (key: string, patch: Partial<CabritNaissanceForm>) => {
     setCabrits((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
@@ -107,7 +110,8 @@ export function useNouvelleNaissance() {
         })),
         notes: notes.trim() || undefined,
       });
-      router.back();
+      // On revient à la liste des animaux (et non à l'écran d'où la naissance a été déclarée).
+      router.dismissTo(ROUTES.CHEPTEL);
     } finally {
       setEnregistrement(false);
     }
@@ -118,6 +122,7 @@ export function useNouvelleNaissance() {
     setDate,
     mereNumeroBoucle,
     setMereNumeroBoucle,
+    optionsMeres,
     notes,
     setNotes,
     cabrits,

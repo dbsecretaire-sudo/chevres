@@ -19,6 +19,8 @@ import {
   type DonneesEtablissement,
   type Etablissement,
 } from '@/features/etablissements/repository';
+import { ROUTES } from '@/shared/constants/routes';
+import { destinationDe } from '@/features/a-traiter/services/destination';
 import { SelecteurEtablissement } from '@/features/etablissements/components/SelecteurEtablissement';
 import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
@@ -56,19 +58,24 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const entrer = useCallback(async (id: string) => {
+  /** Ouvre un établissement sur son accueil, ou directement sur un écran (`destination`, calculée une fois l'établissement ouvert). */
+  const entrer = useCallback(async (id: string, destination?: () => string) => {
     await choisirEtablissementActif(id);
     setActifId(id);
     setEspece(especeCourante());
     setSelecteurOuvert(false);
-    setTimeout(() => router.replace('/'), 0);
+    setTimeout(() => {
+      router.replace('/');
+      if (destination) router.push(destination() as never);
+    }, 0);
   }, []);
 
   const creer = useCallback(
     async (donnees: DonneesEtablissement) => {
       const nouveau = await creerEtablissement(donnees);
       setListe((prev) => [...prev, nouveau]);
-      await entrer(nouveau.id);
+      // Un nouvel établissement s'ouvre sur ses informations : on les remplit d'abord (statut, régime, TVA, tarifs).
+      await entrer(nouveau.id, () => ROUTES.INFORMATIONS_EXPLOITATION);
     },
     [entrer],
   );
@@ -107,7 +114,8 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
       <SelecteurEtablissement
         etablissements={liste}
         actifId={actif.id}
-        onChoisir={entrer}
+        onChoisir={(id) => entrer(id)}
+        onOuvrirATraiter={(item) => entrer(item.etablissementId, () => destinationDe(item))}
         onCreer={creer}
         onModifier={modifier}
         onSupprimer={supprimer}

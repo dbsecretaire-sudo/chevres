@@ -10,4 +10,6 @@ export const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 8,
   },
+  /** Une carte posée dans un bloc de liste : le cadre et le fond sont ceux du bloc. */
+  dansBloc: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
 });

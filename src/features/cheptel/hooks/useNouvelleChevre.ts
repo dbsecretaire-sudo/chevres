@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import { creerChevre, numeroBoucleExiste } from '@/features/cheptel/repository/chevres';
 import { enregistrerNaissance } from '@/features/cheptel/repository/naissances';
 import type { Sexe } from '@/features/cheptel/types';
@@ -40,6 +41,22 @@ export function useNouvelleChevre() {
   const [renouvellementAnnee, setRenouvellementAnnee] = useState(String(currentYear()));
   const [enregistrement, setEnregistrement] = useState(false);
 
+  /** Le message sous le n° de boucle quand il est déjà attribué à un autre animal (vérifié dès la saisie). */
+  const [erreurBoucle, setErreurBoucle] = useState('');
+  useEffect(() => {
+    const boucle = numeroBoucle.trim();
+    let actif = true;
+    (boucle ? numeroBoucleExiste(boucle) : Promise.resolve(false)).then((existe) => {
+      if (actif) setErreurBoucle(existe ? TEXTES.commun.general.leNBoucleEstDeja(boucle) : '');
+    });
+    return () => {
+      actif = false;
+    };
+  }, [numeroBoucle]);
+
+  /** La mère se choisit parmi les femelles qui avaient atteint la maturité sexuelle à la naissance du petit (facultatif). */
+  const optionsMeres = useMeresPossibles(dateNaissance, mereNumeroBoucle || undefined);
+
   const [avecCabrits, setAvecCabrits] = useState(false);
   const [dateMiseBas, setDateMiseBas] = useState(todayISO());
   const [cabrits, setCabrits] = useState<CabritForm[]>([nouveauCabrit()]);
@@ -57,6 +74,8 @@ export function useNouvelleChevre() {
   const annuler = () => router.replace(ROUTES.CHEPTEL);
 
   const enregistrer = async () => {
+    // Le n° de boucle est déjà celui d'un autre animal : le message est sous le champ, rien n'est enregistré.
+    if (erreurBoucle) return;
     if (avecCabrits && !numeroBoucle.trim()) {
       Alert.alert(
         TEXTES.cheptel.nouvelleChevre.nDeBoucleRequis,
@@ -126,6 +145,7 @@ export function useNouvelleChevre() {
   return {
     numeroBoucle,
     setNumeroBoucle,
+    erreurBoucle,
     dateBouclage,
     setDateBouclage,
     nom,
@@ -136,6 +156,7 @@ export function useNouvelleChevre() {
     setDateNaissance,
     mereNumeroBoucle,
     setMereNumeroBoucle,
+    optionsMeres,
     notes,
     setNotes,
     renouvellement,

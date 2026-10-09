@@ -11,6 +11,12 @@ export const styles = StyleSheet.create({
   },
   filtreEffacerTexte: { fontSize: 13, fontWeight: '700', color: colors.danger },
   balanceCard: { alignItems: 'center' },
+  /** « * sans facture » : en haut à droite de la carte du solde déplié. */
+  legendeSansFacture: { alignSelf: 'flex-end', fontSize: 12, fontStyle: 'italic', color: colors.textMuted },
+  asterisque: { color: colors.danger, fontWeight: '800' },
+  /** Les deux montants des rentrées (avec facture, sans facture), côte à côte. */
+  rentreesDouble: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  statSeparateurFin: { width: 1, height: 18, backgroundColor: colors.border },
   soldeCompact: { gap: 4, paddingVertical: 10 },
   soldeCompactLigne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   soldeCompactValeur: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -21,8 +27,8 @@ export const styles = StyleSheet.create({
   statSeparateur: { width: 1, height: 28, backgroundColor: colors.border },
   statLabel: { fontSize: 11, color: colors.textMuted, marginBottom: 2 },
   statValeur: { fontSize: 15, fontWeight: '700' },
-  list: { paddingHorizontal: 16, paddingBottom: 160, gap: 10 },
-  /** En-tête de la liste : annule le retrait horizontal de la liste, déjà compris dans le padding du bloc. */
+  list: { paddingHorizontal: 16, paddingBottom: 160 },
+  /** En-tête de la liste : pas de retrait propre, annule le retrait horizontal de la liste, déjà compris dans le padding du bloc. */
   entete: { marginHorizontal: -16 },
   montant: { fontSize: 15, fontWeight: '700' },
 });

@@ -25,14 +25,11 @@ export function ChoixDeroulant<T extends string>({ titre, valeur, options, onCho
 
   return (
     <>
-      <Pressable
-        style={[styles.puce, styles.puceListe, { backgroundColor: accent, borderColor: accent }]}
-        onPress={() => setOuvert(true)}
-      >
-        <Text style={[styles.texte, { color: colors.blanc }]}>
+      <Pressable style={[styles.puce, styles.puceListe, styles.puceNeutre]} onPress={() => setOuvert(true)}>
+        <Text style={[styles.texte, { color: colors.text }]}>
           {courant?.shortLabel ?? courant?.label ?? ''}
         </Text>
-        <Ionicons name="pencil" size={14} color={colors.blanc} />
+        <Ionicons name="chevron-down" size={14} color={accent} />
       </Pressable>
       <SelectModal
         visible={ouvert}

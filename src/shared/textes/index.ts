@@ -1,3 +1,4 @@
+import { TEXTES_A_TRAITER } from '@/shared/textes/aTraiter';
 import { TEXTES_ACCUEIL } from '@/shared/textes/accueil';
 import { TEXTES_ANNEXES } from '@/shared/textes/annexes';
 import { TEXTES_BAR } from '@/shared/textes/bar';
@@ -17,7 +18,7 @@ import { TEXTES_FICHIERS } from '@/shared/textes/fichiers';
 import { TEXTES_FOURNISSEURS } from '@/shared/textes/fournisseurs';
 import { TEXTES_GITE } from '@/shared/textes/gite';
 import { TEXTES_NAVIGATION } from '@/shared/textes/navigation';
-import { TEXTES_RH } from '@/shared/textes/rh';
+import { TEXTES_SANTE } from '@/shared/textes/sante';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
 import { TEXTES_STOCK } from '@/shared/textes/stock';
@@ -26,6 +27,7 @@ import { TEXTES_TRADING } from '@/shared/textes/trading';
 /** Tous les textes de l'application, groupés par domaine puis par écran. */
 export const TEXTES = {
   accueil: TEXTES_ACCUEIL,
+  aTraiter: TEXTES_A_TRAITER,
   annexes: TEXTES_ANNEXES,
   bar: TEXTES_BAR,
   cheptel: TEXTES_CHEPTEL,
@@ -44,7 +46,7 @@ export const TEXTES = {
   fournisseurs: TEXTES_FOURNISSEURS,
   gite: TEXTES_GITE,
   navigation: TEXTES_NAVIGATION,
-  rh: TEXTES_RH,
+  sante: TEXTES_SANTE,
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,
   stock: TEXTES_STOCK,

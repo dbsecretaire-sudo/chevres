@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useDansBloc } from '@/shared/components/BlocListe';
 import { styles } from '@/shared/styles/components/ListRow.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
@@ -15,11 +16,13 @@ interface Props {
 }
 
 export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee }: Props) {
+  const dansBloc = useDansBloc();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.rowCard,
+        dansBloc && styles.rowDansBloc,
         surlignee && styles.rowSurlignee,
         pressed && onPress ? commonStyles.pressed : null,
       ]}

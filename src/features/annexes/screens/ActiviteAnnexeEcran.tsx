@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text } from 'react-native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { Fab } from '@/shared/components/Fab';
 import { OptionsModal } from '@/shared/components/OptionsModal';
+import { BlocLignes } from '@/shared/components/BlocListe';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ActiviteAnnexeModal } from '@/features/annexes/components/ActiviteAnnexeModal';
 import { TicketAnnexeCarte } from '@/features/annexes/components/TicketAnnexeCarte';
@@ -198,7 +199,7 @@ export default function ActiviteAnnexeEcran() {
             onJour={(j) => router.push(ROUTES.annexeJour(activite.id, j))}
           />
         ) : (
-          <View style={commonStyles.gap10}>
+          <BlocLignes>
             {tickets.map((ticket) => (
               <TicketAnnexeCarte
                 key={ticket.id}
@@ -246,7 +247,7 @@ export default function ActiviteAnnexeEcran() {
               />
             ))}
             {message ? <Text style={commonStyles.note}>{message}</Text> : null}
-          </View>
+          </BlocLignes>
         )}
       </ScrollView>
 

@@ -1,10 +1,11 @@
 import { Text, View } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { FormField } from '@/shared/components/FormField';
-import { BoucleField } from '@/features/cheptel/components/BoucleField';
+import { SelectField } from '@/shared/components/SelectField';
 import { CabritNaissanceBloc } from '@/features/cheptel/components/CabritNaissanceForm';
 import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
+import { SectionForm } from '@/shared/components/SectionForm';
 import { colors } from '@/shared/theme/colors';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -20,19 +21,24 @@ export default function NouvelleNaissance() {
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
       <Screen>
-        <DateField
-          label={TEXTES.commun.general.dateDeLaMiseBas}
-          required
-          value={e.date}
-          onChange={e.setDate}
-        />
-        <BoucleField
-          label={TEXTES.commun.general.nDeBoucleDeLa}
-          required
-          value={e.mereNumeroBoucle}
-          onChangeText={e.setMereNumeroBoucle}
-          placeholder={TEXTES.cheptel.nouvelleNaissance.exFr12345678}
-        />
+        <SectionForm titre={TEXTES.commun.formulaire.naissance}>
+          <DateField
+            label={TEXTES.commun.general.dateDeLaMiseBas}
+            required
+            value={e.date}
+            onChange={e.setDate}
+          />
+          {/* La mère se choisit parmi les femelles vivantes qui avaient atteint la maturité sexuelle à la date de la mise bas. */}
+          <SelectField
+            label={TEXTES.commun.general.nDeBoucleDeLa}
+            required
+            searchable
+            value={e.mereNumeroBoucle}
+            onChange={e.setMereNumeroBoucle}
+            options={e.optionsMeres}
+            placeholder={TEXTES.cheptel.nouvelleNaissance.choisirLaMere}
+          />
+        </SectionForm>
 
         <Text style={styles.sectionTitle}>
           {TEXTES.cheptel.nouvelleNaissance.cabris}

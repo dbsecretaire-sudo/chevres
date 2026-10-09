@@ -34,6 +34,7 @@ export function ChampMontantTtc({
       onChangeText={onChange}
       keyboardType="decimal-pad"
       placeholder={placeholder}
+      aide={editable ? TEXTES.comptabilite.nouvelleEcriture.aideMontant : undefined}
       editable={editable}
       style={editable ? undefined : commonStyles.verrouille}
     />

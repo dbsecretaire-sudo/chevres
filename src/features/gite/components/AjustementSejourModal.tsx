@@ -7,7 +7,7 @@ import { FormField } from '@/shared/components/FormField';
 import { remboursementPropose } from '@/features/gite/services/tarifSejour';
 import { TYPE_AJUSTEMENT_SEJOUR } from '@/shared/constants/gite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { todayISO } from '@/shared/utils/dates';
+import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -47,7 +47,8 @@ export function AjustementSejourModal({
   onFermer,
 }: Props) {
   const [montant, setMontant] = useState('');
-  const [date, setDate] = useState(todayISO());
+  const { anneeImposee, dateDuJour } = useAnneeImposee();
+  const [date, setDate] = useState(dateDuJour);
   const [maintenue, setMaintenue] = useState(true);
   const [restaurantMaintenu, setRestaurantMaintenu] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -71,7 +72,7 @@ export function AjustementSejourModal({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMontant(type === TYPE_AJUSTEMENT_SEJOUR.REMBOURSEMENT ? proposition(true, true) : '');
       setMontantSaisi(false);
-      setDate(todayISO());
+      setDate(dateDuJour);
       setMaintenue(true);
       setRestaurantMaintenu(true);
       setErreur(null);
@@ -108,7 +109,14 @@ export function AjustementSejourModal({
               />
             </View>
             <View style={commonStyles.flex1}>
-              <DateField label={T.date} required value={date} onChange={setDate} />
+              <DateField
+                label={T.date}
+                required
+                value={date}
+                onChange={setDate}
+                anneeImposee={anneeImposee}
+                jourMoisAnnee
+              />
             </View>
           </View>
           {remboursement ? (

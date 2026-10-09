@@ -89,6 +89,8 @@ function usePrixInventaire(genre: 'lait' | 'oeufs'): number | undefined {
 }
 
 function ChampTauxTvaVente({ e }: Props) {
+  // Le mode simple cache le taux : celui d'office de la catégorie s'applique.
+  if (!e.modeAvance) return null;
   return (
     <SelectField
       label={TEXTES.commun.general.tauxDeTva}
@@ -158,6 +160,7 @@ export function ChampsVenteLait({ e }: Props) {
         onChangeText={e.setQuantite}
         keyboardType="decimal-pad"
         placeholder={TEXTES.comptabilite.nouvelleEcriture.ex125}
+        aide={TEXTES.comptabilite.nouvelleEcriture.aideLitrage}
       />
       <View style={commonStyles.row}>
         <View style={commonStyles.flex1}>

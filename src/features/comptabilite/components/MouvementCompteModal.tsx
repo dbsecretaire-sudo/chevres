@@ -10,7 +10,8 @@ import { SENS_MOUVEMENT } from '@/shared/constants/trading';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
-import { todayISO } from '@/shared/utils/dates';
+import { estDateISO } from '@/shared/utils/dates';
+import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -33,7 +34,8 @@ export function MouvementCompteModal({ sens, onFermer, onEnregistre }: Props) {
   const T = TEXTES.trading.compte;
   const depot = sens !== SENS_MOUVEMENT.RETRAIT;
   const [montant, setMontant] = useState('');
-  const [date, setDate] = useState(todayISO());
+  const { anneeImposee, dateDuJour } = useAnneeImposee();
+  const [date, setDate] = useState(dateDuJour);
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,14 +43,16 @@ export function MouvementCompteModal({ sens, onFermer, onEnregistre }: Props) {
     if (sens) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMontant('');
-      setDate(todayISO());
+      setDate(dateDuJour);
       setErreur(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sens]);
 
   const enregistrer = async () => {
     const valeur = parseDecimal(montant);
     if (!(valeur > 0)) return setErreur(T.montantInvalide);
+    if (!estDateISO(date)) return setErreur(TEXTES.commun.dateField.invalide);
     await enregistrerFacture({
       activite: ACTIVITE_COMMUNE,
       date,
@@ -84,7 +88,14 @@ export function MouvementCompteModal({ sens, onFermer, onEnregistre }: Props) {
               keyboardType="decimal-pad"
               placeholder="0,00"
             />
-            <DateField label={T.date} required value={date} onChange={setDate} />
+            <DateField
+              label={T.date}
+              required
+              value={date}
+              onChange={setDate}
+              anneeImposee={anneeImposee}
+              jourMoisAnnee
+            />
             {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
             <View style={commonStyles.row}>
               <Button

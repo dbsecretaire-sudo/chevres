@@ -24,7 +24,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
       style={({ pressed }) => [
         styles.base,
         variant === 'primary' && { backgroundColor: accent },
-        variant === 'secondary' && { backgroundColor: accentSoft },
+        variant === 'secondary' && [styles.secondaire, { backgroundColor: accentSoft, borderColor: accent }],
         variant === 'danger' && styles.danger,
         style,
         isDisabled && styles.disabled,
@@ -32,9 +32,19 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'secondary' ? accent : colors.blanc} />
+        <ActivityIndicator
+          color={variant === 'primary' ? colors.blanc : variant === 'danger' ? colors.danger : accent}
+        />
       ) : (
-        <Text style={[styles.text, variant === 'secondary' && { color: accent }]}>{label}</Text>
+        <Text
+          style={[
+            styles.text,
+            variant === 'secondary' && { color: accent },
+            variant === 'danger' && styles.texteDanger,
+          ]}
+        >
+          {label}
+        </Text>
       )}
     </Pressable>
   );

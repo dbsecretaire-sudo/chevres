@@ -1,6 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { exporterInventairePdf } from '@/features/export/inventairePdf';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { chargerChoixGroupesRecette } from '@/features/comptabilite/repository/groupesRecette';
 import { groupesActifsEspece, laiterieActive } from '@/features/comptabilite/utils/recettes';
 import {
@@ -20,8 +19,9 @@ import { ROUTES } from '@/shared/constants/routes';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { Fab } from '@/shared/components/Fab';
 import { ListRow } from '@/shared/components/ListRow';
+import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
+import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
-import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
@@ -180,7 +180,6 @@ export default function StockFromagerie() {
   /** Vrai pendant qu'on fait glisser une ligne : la page ne défile alors pas. */
   const [glisse, setGlisse] = useState(false);
   /** Le menu en haut à droite (burger) et la feuille des statistiques qu'il ouvre. */
-  const [menuOuvert, setMenuOuvert] = useState(false);
 
   /** Les litres de lait vendus (les ventes de lait en comptabilité), pour le lait restant. */
   const [ventesLait, setVentesLait] = useState<{ id: string; date: string; litres: number }[]>([]);
@@ -209,6 +208,8 @@ export default function StockFromagerie() {
   );
 
   const niveaux = niveauxDeStock(archive.mouvements, effectifs);
+  /** Vrai quand un des articles de la liste a une quantité négative (une production ou un achat n'a pas été noté). */
+  const aUnNegatif = (articles: ArticleAffiche[]) => articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
 
   const ligne = (a: ArticleAffiche, poignee: ReactNode) => {
     const niveau = niveaux.get(a.cle) ?? 0;
@@ -217,13 +218,15 @@ export default function StockFromagerie() {
         key={a.cle}
         title={a.libelle}
         subtitle={
-          niveau < 0
-            ? T.negatif
-            : a.prix
-              ? roleDeLaViande(a.cle)
-                ? T.parKg(formatMontant(a.prix))
-                : formatMontant(a.prix)
-              : undefined
+          niveau < 0 ? (
+            <Text style={styles.perte}>{T.negatif}</Text>
+          ) : a.prix ? (
+            roleDeLaViande(a.cle) ? (
+              T.parKg(formatMontant(a.prix))
+            ) : (
+              formatMontant(a.prix)
+            )
+          ) : undefined
         }
         trailing={
           <View style={stylesStock.fin}>
@@ -256,7 +259,16 @@ export default function StockFromagerie() {
   /** La liste glissable des articles d'une section (les lignes des animaux suivent le cheptel : elles ne se déplacent pas). */
   const liste = (genre: GenreArticle, section?: Section, listeId?: string) => {
     const elements = articlesDeLaListe(genre, section, listeId);
-    if (section === SECTION_STOCK.ANIMAUX) return <>{elements.map((a) => ligne(a, null))}</>;
+    if (section === SECTION_STOCK.ANIMAUX)
+      return (
+        <BlocListe>
+          {elements.map((a, i) => (
+            <View key={a.cle} style={i > 0 ? separationBloc : undefined}>
+              {ligne(a, null)}
+            </View>
+          ))}
+        </BlocListe>
+      );
     return (
       <ListeReordonnable
         elements={elements}
@@ -448,14 +460,36 @@ export default function StockFromagerie() {
               titre={T.enteteCategorie(classe, nom)}
               ouverte={ouvertes.includes(categorie)}
               onBasculer={() => basculerCategorie(categorie)}
+              alerte={
+                listes.some(
+                  ({ section, genre }) => !!genre && aUnNegatif(articlesDeLaListe(genre, section)),
+                ) ||
+                listesPerso.some((l) =>
+                  aUnNegatif(articlesDeLaListe(GENRE_ARTICLE.PERSONNALISE, undefined, l.id)),
+                )
+              }
             >
               {listes.map(({ section, titre, genre }) => {
                 const compte = COMPTE_PAR_SECTION_INVENTAIRE[section];
                 return (
                   <View key={section} style={commonStyles.gap10}>
-                    <View style={commonStyles.gap2}>
-                      <Text style={commonStyles.lineBold}>{titre}</Text>
-                      <Text style={commonStyles.note}>{T.compte(compte.numero, compte.libelle)}</Text>
+                    <View style={commonStyles.rowSpaceBetween}>
+                      <View style={commonStyles.gap2}>
+                        <Text style={commonStyles.lineBold}>{titre}</Text>
+                        <Text style={commonStyles.note}>{T.compte(compte.numero, compte.libelle)}</Text>
+                      </View>
+                      <View style={commonStyles.row}>
+                        {genre && aUnNegatif(articlesDeLaListe(genre, section)) ? <PastilleAlerte /> : null}
+                        {section === SECTION_STOCK.FROMAGES && fromagerie ? (
+                          <Pressable
+                            onPress={() => router.push(ROUTES.STOCK_STATISTIQUES)}
+                            hitSlop={10}
+                            accessibilityLabel={T.statistiques.titre}
+                          >
+                            <Ionicons name="stats-chart" size={24} color={colors.primary} />
+                          </Pressable>
+                        ) : null}
+                      </View>
                     </View>
                     {genre ? (
                       liste(genre, section)
@@ -512,56 +546,24 @@ export default function StockFromagerie() {
         })}
       </ScrollView>
 
-      {/* Le menu burger, à droite du titre : les statistiques de la fromagerie (lait par fromage) et l'historique. */}
+      {/* À droite du titre : l'historique des mouvements (les statistiques sont sur Fromages, le PDF dans Organisation › PDF). */}
       <Stack.Screen
         options={{
           headerRight: () => (
             <Pressable
               style={commonStyles.boutonEnteteDroite}
-              onPress={() => setMenuOuvert(true)}
+              onPress={() =>
+                router.push(
+                  ROUTES.stockHistorique(filtreCourant === FILTRE_STOCK_TOUT ? undefined : filtreCourant),
+                )
+              }
               hitSlop={10}
-              accessibilityLabel={T.statistiques.menu}
+              accessibilityLabel={T.historique.titre}
             >
-              <Ionicons name="menu" size={26} color={colors.blanc} />
+              <Ionicons name="time" size={24} color={colors.blanc} />
             </Pressable>
           ),
         }}
-      />
-      <OptionsModal
-        visible={menuOuvert}
-        onClose={() => setMenuOuvert(false)}
-        options={[
-          {
-            label: T.historique.titre,
-            icon: 'time' as const,
-            onPress: () =>
-              router.push(
-                ROUTES.stockHistorique(filtreCourant === FILTRE_STOCK_TOUT ? undefined : filtreCourant),
-              ),
-          },
-          ...(fromagerie
-            ? [
-                {
-                  label: T.statistiques.titre,
-                  icon: 'stats-chart' as const,
-                  onPress: () => router.push(ROUTES.STOCK_STATISTIQUES),
-                },
-              ]
-            : []),
-          {
-            label: T.structure.menu,
-            icon: 'albums' as const,
-            onPress: () => router.push(ROUTES.STOCK_STRUCTURE),
-          },
-          {
-            label: T.exporter.menu,
-            icon: 'print' as const,
-            onPress: () =>
-              exporterInventairePdf().catch((e: Error) =>
-                Alert.alert(TEXTES.commun.general.erreurExport, e?.message ?? String(e)),
-              ),
-          },
-        ]}
       />
 
       <Fab options={[...optionsAjout, ...optionsListes]} />

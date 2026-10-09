@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
-import { Button } from '@/shared/components/Button';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { CarteDossier } from '@/features/dossiers/components/CarteDossier';
@@ -18,6 +18,7 @@ import { getClient } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ROUTES } from '@/shared/constants/routes';
+import { colors } from '@/shared/theme/colors';
 import { nomComplet } from '@/shared/utils/personne';
 import { styles } from '@/shared/styles/dossiers/Dossiers.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -68,15 +69,24 @@ export default function DossierClient() {
 
   return (
     <Screen scroll={false}>
-      <Stack.Screen options={{ title: client ? nomComplet(client) : T.dossierClient.clientIntrouvable }} />
+      <Stack.Screen
+        options={{
+          title: client ? nomComplet(client) : T.dossierClient.clientIntrouvable,
+          // La fiche du client : une icône à droite du titre (plus de grand bouton dans la page).
+          headerRight: () => (
+            <Pressable
+              style={commonStyles.boutonEnteteDroite}
+              onPress={() => router.push(ROUTES.ficheClient(id))}
+              hitSlop={10}
+              accessibilityLabel={T.dossierClient.ficheClient}
+            >
+              <Ionicons name="person" size={24} color={colors.blanc} />
+            </Pressable>
+          ),
+        }}
+      />
       <ScrollView contentContainerStyle={commonStyles.listFab}>
         <RechercheDossiers etat={e} dansUnDossier>
-          <Button
-            label={T.dossierClient.ficheClient}
-            variant="secondary"
-            onPress={() => router.push(ROUTES.ficheClient(id))}
-          />
-
           <NoteAFacturer lignes={note} onFacturer={facturerNote} />
 
           {dossiers.length === 0 ? (
@@ -84,7 +94,7 @@ export default function DossierClient() {
           ) : (
             <View style={styles.grille}>
               {dossiers.map((dossier) => {
-                const resume = resumeDossier(e.archive.sousDossiers, e.archive.elements, dossier.id);
+                const resume = resumeDossier(e.archive.sousDossiers, e.archiveAffichee.elements, dossier.id);
                 return (
                   <CarteDossier
                     key={dossier.id}

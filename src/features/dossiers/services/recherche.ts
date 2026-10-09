@@ -24,6 +24,12 @@ export const correspondAuFiltre = (element: Element, filtre: FiltreDossiers, auj
   return statutEffectif(element) === filtre;
 };
 
+/** Les contenus d'une année : ceux dont la date ou l'échéance y tombe ; tous quand « Tout » est choisi (`annee` absente). */
+export const contenusDeLAnnee = (elements: Element[], annee?: number): Element[] =>
+  annee === undefined
+    ? elements
+    : elements.filter((e) => e.date.startsWith(String(annee)) || !!e.echeance?.startsWith(String(annee)));
+
 export interface Sources {
   clients: Client[];
   sousDossiers: SousDossier[];

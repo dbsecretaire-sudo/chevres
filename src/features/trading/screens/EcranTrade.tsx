@@ -37,6 +37,7 @@ import {
   LABEL_TYPE_INSTRUMENT,
 } from '@/shared/textes/libelles';
 import { estDateISO, formatMontant, todayISO } from '@/shared/utils/dates';
+import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { styles as stylesTrading } from '@/shared/styles/trading/Trading.styles';
@@ -78,7 +79,9 @@ export default function EcranTrade() {
   const [objectif, setObjectif] = useState('');
   const [frais, setFrais] = useState('');
   const [clos, setClos] = useState(false);
-  const [dateSortie, setDateSortie] = useState(todayISO());
+  // La clôture d'un nouveau trade crée une écriture : sa date est dans l'année active (libre avec « Tout »).
+  const { anneeImposee, dateDuJour } = useAnneeImposee();
+  const [dateSortie, setDateSortie] = useState(id ? todayISO() : dateDuJour);
   const [prixSortie, setPrixSortie] = useState('');
   const [strategie, setStrategie] = useState('');
   const [plan, setPlan] = useState('');
@@ -296,7 +299,14 @@ export default function EcranTrade() {
 
         {clos ? (
           <>
-            <DateField label={T.dateSortie} required value={dateSortie} onChange={setDateSortie} />
+            <DateField
+              label={T.dateSortie}
+              required
+              value={dateSortie}
+              onChange={setDateSortie}
+              anneeImposee={existant ? undefined : anneeImposee}
+              jourMoisAnnee
+            />
             <FormField
               label={T.prixSortie}
               required

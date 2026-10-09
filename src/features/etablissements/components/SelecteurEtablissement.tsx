@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { BackHandler, ScrollView, Text, View } from 'react-native';
 import { Screen } from '@/shared/components/ScreenList';
+import { BlocLignes } from '@/shared/components/BlocListe';
 import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { Fab } from '@/shared/components/Fab';
+import { CarteATraiter } from '@/features/a-traiter/components/CarteATraiter';
+import { useATraiter } from '@/features/a-traiter/hooks/useATraiter';
+import type { ATraiter } from '@/features/a-traiter/types';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
 import { FormulaireEtablissement } from '@/features/etablissements/components/FormulaireEtablissement';
 import type { DonneesEtablissement, Etablissement } from '@/features/etablissements/repository';
@@ -16,6 +20,8 @@ interface Props {
   etablissements: Etablissement[];
   actifId: string;
   onChoisir: (id: string) => void;
+  /** Ouvre l'établissement d'une chose à traiter, sur l'écran qui la concerne. */
+  onOuvrirATraiter: (item: ATraiter) => void;
   onCreer: (donnees: DonneesEtablissement) => Promise<void>;
   onModifier: (id: string, donnees: DonneesEtablissement) => Promise<void>;
   onSupprimer: (id: string) => Promise<void>;
@@ -30,6 +36,7 @@ export function SelecteurEtablissement({
   etablissements,
   actifId,
   onChoisir,
+  onOuvrirATraiter,
   onCreer,
   onModifier,
   onSupprimer,
@@ -39,6 +46,7 @@ export function SelecteurEtablissement({
   const [aSupprimer, setASupprimer] = useState<Etablissement | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [creationEnCours, setCreationEnCours] = useState(false);
+  const aTraiter = useATraiter(etablissements);
 
   // Plus de bouton « Retour » : le bouton retour d'Android revient à la liste, puis ferme l'écran.
   useEffect(() => {
@@ -64,7 +72,6 @@ export function SelecteurEtablissement({
       >
         <View style={styles.top}>
           <Text style={commonStyles.heading}>{t.choisirUnEtablissement}</Text>
-          <Text style={commonStyles.muted}>{t.chaqueEtablissementASonPropre}</Text>
         </View>
 
         {mode.type === 'creation' && (
@@ -112,7 +119,8 @@ export function SelecteurEtablissement({
 
         {mode.type === 'liste' && (
           <>
-            <View style={styles.grille}>
+            <CarteATraiter items={aTraiter} onOuvrir={onOuvrirATraiter} />
+            <BlocLignes>
               {etablissements.map((e) => (
                 <CarteEtablissement
                   key={e.id}
@@ -122,7 +130,7 @@ export function SelecteurEtablissement({
                   onModifier={() => setMode({ type: 'edition', id: e.id })}
                 />
               ))}
-            </View>
+            </BlocLignes>
           </>
         )}
       </ScrollView>

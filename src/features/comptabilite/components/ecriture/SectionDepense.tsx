@@ -44,6 +44,7 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
         value={e.description}
         onChangeText={e.setDescription}
         placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
+        aide={TEXTES.comptabilite.nouvelleEcriture.aideNumeroFacture}
       />
       <ChampCategorieCompte
         label={TEXTES.comptabilite.nouvelleEcriture.categorieDeDepense}
@@ -57,7 +58,7 @@ export function SectionDepense({ e }: { e: EtatNouvelleEcriture }) {
         onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
       />
 
-      <NoteComptePcg compte={e.compteAffiche} />
+      {e.modeAvance ? <NoteComptePcg compte={e.compteAffiche} /> : null}
 
       <SelectFieldEditable
         label={TEXTES.commun.general.fournisseur}
