@@ -11,6 +11,7 @@ import {
   ETAT_BOUCLE,
   GENRE_ARTICLE,
   ORIGINE_MOUVEMENT,
+  PREFIXE_TIPTAG,
   TRI_BOUCLE,
 } from '@/shared/constants/stock';
 import { loadAllYears } from '@/shared/storage/localStore';
@@ -22,9 +23,13 @@ import { generateId } from '@/shared/utils/id';
 /** Au plus ce nombre de chiffres dans un numéro de boucle : au-delà, les additions ne sont plus exactes. */
 const CHIFFRES_MAX = 15;
 
-/** Vrai pour un article de l'inventaire qui est une boucle d'identification (« boucle:boucles », « boucle:rouges »). */
+/** Vrai pour un article de l'inventaire qui est une boucle d'identification (« boucle:boucles », « boucle:rouges », « boucle:tiptag »). */
 export const estArticleBoucle = (cle: string | undefined): boolean =>
   !!cle && cle.startsWith(`${GENRE_ARTICLE.BOUCLE}:`);
+
+/** « Boucles », « Boucles rouges » ou « Tiptag » d'après l'article de l'inventaire (« boucle:rouges »). */
+export const libelleDeLaSorte = (article: string | undefined): string =>
+  TEXTES.stock.boucles.sorte[(article?.split(':')[1] ?? '') as keyof typeof TEXTES.stock.boucles.sorte] ?? '';
 
 /** Un numéro coupé en son début (des lettres, éventuellement) et sa fin (les chiffres, qui se comptent). */
 function decouper(numero: string): { tete: string; chiffres: string } | undefined {
@@ -132,11 +137,20 @@ type AnimalBouclable = Pick<
 
 const ARTICLE_BOUCLES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.BOUCLES}`;
 const ARTICLE_ROUGES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`;
+const ARTICLE_TIPTAG = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.TIPTAG}`;
 
-/** Les boucles qu'un animal porte : sa boucle et, quand il en a une, sa boucle rouge (avec leur date de pose). */
+/** La sorte d'une boucle d'après son numéro : un numéro qui commence par 00 est un tiptag, les autres sont des boucles normales. */
+export const articleDeLaBoucle = (numero: string): string =>
+  numero.trim().startsWith(PREFIXE_TIPTAG) ? ARTICLE_TIPTAG : ARTICLE_BOUCLES;
+
+/** Les boucles qu'un animal porte : sa boucle (ou son tiptag) et, quand il en a une, sa boucle rouge (avec leur date de pose). */
 const bouclesPortees = (animal: AnimalBouclable): { article: string; numero: string; date?: string }[] =>
   [
-    { article: ARTICLE_BOUCLES, numero: animal.numeroBoucle?.trim(), date: animal.dateBouclage },
+    {
+      article: articleDeLaBoucle(animal.numeroBoucle ?? ''),
+      numero: animal.numeroBoucle?.trim(),
+      date: animal.dateBouclage,
+    },
     { article: ARTICLE_ROUGES, numero: animal.numeroBoucleRouge?.trim(), date: animal.dateBoucleRouge },
   ].filter((b): b is { article: string; numero: string; date: string | undefined } => !!b.numero);
 

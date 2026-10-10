@@ -76,11 +76,15 @@ export const ARTICLE_EMBALLAGE = {
 /** Les espèces dont les animaux n'ont pas de boucle d'identification : leur numéro ne va pas à l'inventaire des boucles. */
 export const ESPECES_SANS_BOUCLE: readonly string[] = ['poules', 'domestiques'];
 
-/** Les deux sortes de boucles tenues d'office dans l'inventaire (on ne peut ni en ajouter ni en retirer). */
+/** Les sortes de boucles tenues d'office dans l'inventaire : boucles, boucles rouges et tiptag (on ne peut ni en ajouter ni en retirer). */
 export const ARTICLE_BOUCLE = {
   BOUCLES: 'boucles',
   ROUGES: 'rouges',
+  TIPTAG: 'tiptag',
 } as const;
+
+/** Une boucle dont le numéro commence par ces chiffres est un tiptag ; les autres numéros sont ceux de boucles normales. */
+export const PREFIXE_TIPTAG = '00';
 
 /** Le filtre des boucles de l'inventaire : toutes, celles déjà posées sur un animal, ou celles encore à poser. */
 export const ETAT_BOUCLE = {
@@ -112,9 +116,6 @@ export const TRI_LOT = {
 
 /** Le nombre de fromages le plus grand qu'une seule fabrication peut contenir (une plage de numéros de lot). */
 export const LOTS_MAX_PAR_FABRICATION = 5000;
-
-/** Le choix « toutes les sortes » de la liste des boucles (sinon : l'identifiant d'un article de boucles). */
-export const SORTE_BOUCLES_TOUTES = 'tout';
 
 /** Les colonnes d'après lesquelles on trie la liste des boucles. */
 export const TRI_BOUCLE = {

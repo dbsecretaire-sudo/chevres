@@ -42,7 +42,10 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
   const indicatif = rouge
     ? undefined
     : identificationCheptel(settings.exploitation, especeCourante()).indicatifMarquage;
-  const sorte = `${GENRE_ARTICLE.BOUCLE}:${rouge ? ARTICLE_BOUCLE.ROUGES : ARTICLE_BOUCLE.BOUCLES}`;
+  /** Les sortes proposées : les boucles rouges, ou les boucles et les tiptag (le numéro d'un tiptag commence par 00). */
+  const sortes = (rouge ? [ARTICLE_BOUCLE.ROUGES] : [ARTICLE_BOUCLE.BOUCLES, ARTICLE_BOUCLE.TIPTAG]).map(
+    (code) => `${GENRE_ARTICLE.BOUCLE}:${code}`,
+  );
   const [scannerOuvert, setScannerOuvert] = useState(false);
   const [listeOuverte, setListeOuverte] = useState(false);
   /** Les boucles de l'inventaire qui ne sont pas encore posées, avec « Aucune » en premier. */
@@ -51,13 +54,14 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
     lireArchiveStock().then((archive) =>
       setDisponibles(
         trierBoucles(
-          bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE, sorte),
+          bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE).filter((b) => sortes.includes(b.article)),
           TRI_BOUCLE.NUMERO,
           true,
         ).map((b) => ({ value: b.numero, label: b.numero })),
       ),
     );
-  }, [sorte]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rouge]);
   const fond = useFondChamp();
 
   return (

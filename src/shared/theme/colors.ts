@@ -39,3 +39,21 @@ export const statutColors: Record<string, string> = {
   autoconsommee: '#8A5A44',
   mortne: '#9B8F7A',
 };
+
+/** Les couleurs des courbes d'un graphique à plusieurs séries (une par série, dans cet ordre). */
+export const COULEURS_COURBES: readonly string[] = [
+  '#3F6B3A',
+  '#2D6CA6',
+  '#C97B3D',
+  '#B3432B',
+  '#7A5C9E',
+  '#2F8F83',
+  '#B04F7A',
+  '#8A5A44',
+  '#B8A02E',
+  '#5B6B7A',
+  '#7C8A2F',
+  '#1F3F66',
+  '#D1805F',
+  '#4F9D5B',
+];

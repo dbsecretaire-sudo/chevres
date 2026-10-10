@@ -366,6 +366,7 @@ export const LABEL_EMBALLAGE: Record<ValeurDe<typeof ARTICLE_EMBALLAGE>, string>
 export const LABEL_BOUCLE: Record<ValeurDe<typeof ARTICLE_BOUCLE>, string> = {
   [ARTICLE_BOUCLE.BOUCLES]: 'Boucles',
   [ARTICLE_BOUCLE.ROUGES]: 'Boucles rouges',
+  [ARTICLE_BOUCLE.TIPTAG]: 'Tiptag',
 };
 
 export const LABEL_MATERIEL: Record<ValeurDe<typeof ARTICLE_MATERIEL>, string> = {

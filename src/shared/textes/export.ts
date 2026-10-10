@@ -124,8 +124,7 @@ export const TEXTES_EXPORT = {
     /** La liste des boucles d'identification, telle que les filtres de l'écran la montrent. */
     boucles: {
       titre: 'Boucles d’identification',
-      filtres: (sorte: string, etat: string) => `Sorte : ${sorte} · État : ${etat}`,
-      sorte: 'Sorte',
+      filtres: (etat: string) => `État : ${etat}`,
       oui: 'Oui',
       total: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
     },

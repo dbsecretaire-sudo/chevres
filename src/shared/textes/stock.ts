@@ -123,8 +123,7 @@ export const TEXTES_STOCK = {
   boucles: {
     titre: (nom: string) => `Inventaire : ${nom}`,
     titreEtat: 'Boucles',
-    titreSorte: 'Sorte de boucles',
-    sorte: { tout: 'Tout', boucles: 'Boucles', rouges: 'Boucles rouges' },
+    sorte: { boucles: 'Boucles', rouges: 'Boucles rouges', tiptag: 'Tiptag' },
     imprimer: 'Imprimer les boucles',
     etat: { tout: 'Tout', posee: 'Posée', non_posee: 'Non posée' },
     aucuneBoucle: 'Aucune boucle.',

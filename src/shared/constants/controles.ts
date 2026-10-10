@@ -8,7 +8,7 @@ export const FAMILLE_CONTROLE = {
   ANIMAUX: 'animaux',
   /** Le contrôle laitier. */
   LAITIER: 'laitier',
-  /** Les boucles d'identification de l'inventaire (celles à poser, les posées), dans le contrôle des animaux. */
+  /** Les boucles d'identification de l'inventaire (boucles, boucles rouges, tiptag : trois listes l'une sous l'autre), dans le contrôle des animaux. */
   BOUCLES: 'boucles',
   /** Les terrains (parcelles) suivis dans le volet des contrôles de surface. */
   TERRAIN: 'terrain',
@@ -25,9 +25,9 @@ export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique'] a
 
 /** Les onglets de chaque volet : ses contrôles, puis ce qu'il a de plus (terrains et résumé, boucles, analyses). */
 export const ONGLETS_VOLET = {
-  [FAMILLE_CONTROLE.SURFACE]: [FAMILLE_CONTROLE.SURFACE, FAMILLE_CONTROLE.TERRAIN, FAMILLE_CONTROLE.RESUME],
-  [FAMILLE_CONTROLE.ANIMAUX]: [FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES],
-  [FAMILLE_CONTROLE.LAITIER]: [FAMILLE_CONTROLE.LAITIER, FAMILLE_CONTROLE.ANALYSE],
+  [FAMILLE_CONTROLE.SURFACE]: [FAMILLE_CONTROLE.TERRAIN, FAMILLE_CONTROLE.RESUME, FAMILLE_CONTROLE.SURFACE],
+  [FAMILLE_CONTROLE.ANIMAUX]: [FAMILLE_CONTROLE.BOUCLES, FAMILLE_CONTROLE.ANIMAUX],
+  [FAMILLE_CONTROLE.LAITIER]: [FAMILLE_CONTROLE.ANALYSE, FAMILLE_CONTROLE.RESUME, FAMILLE_CONTROLE.LAITIER],
   [FAMILLE_CONTROLE.GROUPEMENT]: [FAMILLE_CONTROLE.GROUPEMENT],
 } as const;
 

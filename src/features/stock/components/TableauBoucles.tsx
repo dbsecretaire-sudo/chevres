@@ -2,13 +2,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
-import {
-  ARTICLE_BOUCLE,
-  ETAT_BOUCLE,
-  GENRE_ARTICLE,
-  SORTE_BOUCLES_TOUTES,
-  TRI_BOUCLE,
-} from '@/shared/constants/stock';
+import { ETAT_BOUCLE, TRI_BOUCLE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
 import { formatDateShortFR } from '@/shared/utils/dates';
@@ -18,26 +12,10 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock.boucles;
 
-const ARTICLE_ROUGES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`;
-
-/** Les choix de la liste des boucles : la sorte (quand l'écran la laisse choisir) et l'état, avec le nombre de boucles montrées. */
+/** Le choix de la liste des boucles (l'état : toutes, posées ou à poser), avec le nombre de boucles montrées. */
 export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
   return (
     <View style={styles.choix}>
-      {liste.sorteChoisie ? (
-        <ChoixDeroulant<string>
-          titre={T.titreSorte}
-          valeur={liste.sorte}
-          options={[
-            { value: SORTE_BOUCLES_TOUTES, label: T.sorte.tout },
-            ...Object.values(ARTICLE_BOUCLE).map((code) => ({
-              value: `${GENRE_ARTICLE.BOUCLE}:${code}`,
-              label: T.sorte[code],
-            })),
-          ]}
-          onChoisir={liste.setSorte}
-        />
-      ) : null}
       <ChoixDeroulant<ValeurDe<typeof ETAT_BOUCLE>>
         titre={T.titreEtat}
         valeur={liste.etat}
@@ -55,7 +33,7 @@ export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
  * dans les contrôles : l'inventaire des boucles ne se modifie qu'en comptabilité (achat) et au cheptel (pose).
  */
 export function TableauBoucles({ liste }: { liste: ListeBoucles }) {
-  const { lignes, tri, croissant, trierPar, morts, etat, sorte } = liste;
+  const { lignes, tri, croissant, trierPar, morts, etat } = liste;
 
   const titreColonne = (colonne: ValeurDe<typeof TRI_BOUCLE>, style: object) => (
     <Pressable
@@ -93,13 +71,7 @@ export function TableauBoucles({ liste }: { liste: ListeBoucles }) {
         <ScrollView style={styles.liste} nestedScrollEnabled>
           {lignes.map((b, i) => (
             <View key={b.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
-              <Text style={[styles.texteLigne, styles.colonneNumero]}>
-                {b.numero}
-                {/* Toutes les sortes ensemble : une boucle rouge se reconnaît à son mot. */}
-                {sorte === SORTE_BOUCLES_TOUTES && b.article === ARTICLE_ROUGES ? (
-                  <Text style={commonStyles.muted}>{` ${T.rouge}`}</Text>
-                ) : null}
-              </Text>
+              <Text style={[styles.texteLigne, styles.colonneNumero]}>{b.numero}</Text>
               <Text style={[styles.datePose, styles.colonneDate]}>
                 {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}
               </Text>
