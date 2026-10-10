@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { erreurAchatBoucles } from '@/features/stock/services/boucles';
 import {
   enregistrerFacture,
   getFacture,
@@ -176,6 +178,16 @@ export function useFicheFacture(id: string | undefined) {
       aEnregistrer = { ...form, montant: totalMarchandises, lignesMarchandises: lignesRetenues };
     } else if (!form.montant || form.montant <= 0) {
       setErreur({ titre: TEXTES.commun.general.montantInvalide });
+      return;
+    }
+
+    if (aEnregistrer.stockArticle && !(aEnregistrer.stockQuantite && aEnregistrer.stockQuantite > 0)) {
+      setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise });
+      return;
+    }
+    const erreurBoucles = erreurAchatBoucles(await lireArchiveStock(), aEnregistrer);
+    if (erreurBoucles) {
+      setErreur({ titre: erreurBoucles });
       return;
     }
 

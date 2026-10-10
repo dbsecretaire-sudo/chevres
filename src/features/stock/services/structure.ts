@@ -1,13 +1,19 @@
 import { listComptesPcg } from '@/features/comptes-pcg/repository';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
-import type { CategorieInventairePerso, ListeInventaire } from '@/features/stock/types';
-import { idCategoriePerso, infosCategorie } from '@/features/stock/utils/categories';
+import type {
+  ArticleStock,
+  CategorieInventairePerso,
+  ListeInventaire,
+  ReglageCategorie,
+} from '@/features/stock/types';
+import { categoriesAvecAjoutees, idCategoriePerso, infosCategorie } from '@/features/stock/utils/categories';
 import type { CompteComptable } from '@/shared/constants/planComptable';
 import {
   CHIFFRES_CLASSE_CATEGORIE,
   CHIFFRES_COMPTE_PCG,
+  CATEGORIE_INVENTAIRE,
   CHIFFRES_MIN_PREFIXE_COMPTE,
-  CLASSE_INVENTAIRE,
+  GENRE_ARTICLE,
 } from '@/shared/constants/stock';
 import { generateId } from '@/shared/utils/id';
 
@@ -16,10 +22,11 @@ export function compteAutorise(
   categorie: string,
   numero: string,
   ajoutees: CategorieInventairePerso[] = [],
+  personnalises: Record<string, ReglageCategorie> = {},
 ): boolean {
   return (
     new RegExp(`^\\d{${CHIFFRES_COMPTE_PCG}}$`).test(numero) &&
-    infosCategorie(categorie, ajoutees).prefixes.some((prefixe) => numero.startsWith(prefixe))
+    infosCategorie(categorie, ajoutees, personnalises).prefixes.some((prefixe) => numero.startsWith(prefixe))
   );
 }
 
@@ -27,7 +34,7 @@ export function compteAutorise(
 export async function comptesAutorises(categorie: string): Promise<CompteComptable[]> {
   const [comptes, archive] = await Promise.all([listComptesPcg(), lireArchiveStock()]);
   return comptes
-    .filter((c) => compteAutorise(categorie, c.numero, archive.categories))
+    .filter((c) => compteAutorise(categorie, c.numero, archive.categories, archive.reglagesCategories))
     .map(({ numero, libelle }) => ({ numero, libelle }));
 }
 
@@ -38,7 +45,11 @@ export async function ajouterListe(
   compte: CompteComptable,
 ): Promise<boolean> {
   const archive = await lireArchiveStock();
-  if (!nom.trim() || !compteAutorise(categorie, compte.numero, archive.categories)) return false;
+  if (
+    !nom.trim() ||
+    !compteAutorise(categorie, compte.numero, archive.categories, archive.reglagesCategories)
+  )
+    return false;
   const liste: ListeInventaire = {
     id: generateId(),
     categorie,
@@ -46,8 +57,42 @@ export async function ajouterListe(
     compte: compte.numero,
     libelleCompte: compte.libelle,
   };
-  await remplacerArchiveStock({ ...archive, listes: [...(archive.listes ?? []), liste] });
+  // Le premier article porte le nom de la liste : elle se compte tout de suite (on en ajoute d'autres, ou on le renomme).
+  const article: ArticleStock = {
+    id: generateId(),
+    genre: GENRE_ARTICLE.PERSONNALISE,
+    nom: liste.nom,
+    listeId: liste.id,
+  };
+  await remplacerArchiveStock({
+    ...archive,
+    listes: [...(archive.listes ?? []), liste],
+    articles: [...archive.articles, article],
+  });
   return true;
+}
+
+/** Les listes de l'inventaire qui ont ce compte (un compte inventorié en a une). */
+export const listesDuCompte = (archive: Awaited<ReturnType<typeof lireArchiveStock>>, numero: string) =>
+  (archive.listes ?? []).filter((l) => l.compte === numero);
+
+/** Le compte d'un compte inventorié a changé de numéro ou de libellé : ses listes le suivent. */
+export async function suivreLeCompte(ancienNumero: string, compte: CompteComptable): Promise<void> {
+  const archive = await lireArchiveStock();
+  if (listesDuCompte(archive, ancienNumero).length === 0) return;
+  await remplacerArchiveStock({
+    ...archive,
+    listes: (archive.listes ?? []).map((l) =>
+      l.compte === ancienNumero ? { ...l, compte: compte.numero, libelleCompte: compte.libelle } : l,
+    ),
+  });
+}
+
+/** Un compte n'est plus inventorié : ses listes sont retirées de l'inventaire, avec leurs articles et leurs mouvements. */
+export async function retirerDeLInventaire(numero: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  const ids = new Set(listesDuCompte(archive, numero).map((l) => l.id));
+  if (ids.size > 0) await remplacerArchiveStock({ ...archive, ...sansLesListes(archive, ids) });
 }
 
 /** Renomme une liste. */
@@ -97,22 +142,28 @@ export interface DonneesCategorie {
   comptes: string;
 }
 
-/** Contrôle une catégorie : un nom, une classe de 2 chiffres que nulle autre catégorie n'a, au moins un début de compte valable. */
+/** Les numéros de classe des autres catégories (celles d'office, personnalisées ou non, et celles ajoutées). */
+function classesDesAutres(
+  archive: Awaited<ReturnType<typeof lireArchiveStock>>,
+  categorie?: string,
+): string[] {
+  const base = Object.values(CATEGORIE_INVENTAIRE).map((c) => ({ categorie: c, nom: '' }));
+  return categoriesAvecAjoutees(base, archive.categories ?? [], archive.reglagesCategories ?? {})
+    .filter((c) => c.categorie !== categorie)
+    .map((c) => c.classe);
+}
+
+/** Contrôle une catégorie : un nom, une classe de 2 chiffres que nulle autre catégorie n'a, et (si demandé) un début de compte valable. */
 export function controlerCategorie(
   donnees: DonneesCategorie,
-  existantes: CategorieInventairePerso[],
-  /** La catégorie qu'on modifie (sa classe n'est pas « déjà prise » par elle-même), et si ses comptes sont à contrôler. */
-  modifiee?: string,
+  /** Les classes des autres catégories. */
+  classesPrises: string[],
+  avecComptes: boolean,
 ): ErreurCategorie | null {
   if (!donnees.nom.trim()) return 'nom';
   if (!new RegExp(`^\\d{${CHIFFRES_CLASSE_CATEGORIE}}$`).test(donnees.classe.trim())) return 'classe';
-  const classe = donnees.classe.trim();
-  const prises = [
-    ...Object.values(CLASSE_INVENTAIRE),
-    ...existantes.filter((c) => c.id !== modifiee).map((c) => c.classe),
-  ];
-  if (prises.includes(classe)) return 'classeUtilisee';
-  if (!modifiee && analyserPrefixes(donnees.comptes).length === 0) return 'comptes';
+  if (classesPrises.includes(donnees.classe.trim())) return 'classeUtilisee';
+  if (avecComptes && analyserPrefixes(donnees.comptes).length === 0) return 'comptes';
   return null;
 }
 
@@ -121,7 +172,7 @@ export async function ajouterCategorie(
   donnees: DonneesCategorie,
 ): Promise<{ categorie: string } | { erreur: ErreurCategorie }> {
   const archive = await lireArchiveStock();
-  const erreur = controlerCategorie(donnees, archive.categories ?? []);
+  const erreur = controlerCategorie(donnees, classesDesAutres(archive), true);
   if (erreur) return { erreur };
   const categorie: CategorieInventairePerso = {
     id: generateId(),
@@ -133,22 +184,50 @@ export async function ajouterCategorie(
   return { categorie: idCategoriePerso(categorie) };
 }
 
-/** Renomme une catégorie ajoutée et change sa classe (ses comptes autorisés ne changent pas : ses listes les ont déjà). */
+/**
+ * Change le nom, le numéro de classe et les débuts de compte d'une catégorie, d'office ou ajoutée (les listes déjà faites ne
+ * bougent pas). Pour une catégorie d'office, seul ce qui diffère de l'origine est gardé : tout remettre à l'origine efface le
+ * réglage.
+ */
 export async function modifierCategorie(
   categorie: string,
-  donnees: Pick<DonneesCategorie, 'nom' | 'classe'>,
+  donnees: Pick<DonneesCategorie, 'nom' | 'classe'> & { comptes?: string },
 ): Promise<ErreurCategorie | null> {
   const archive = await lireArchiveStock();
-  const cible = (archive.categories ?? []).find((c) => idCategoriePerso(c) === categorie);
-  if (!cible) return null;
-  const erreur = controlerCategorie({ ...donnees, comptes: '' }, archive.categories ?? [], cible.id);
+  const erreur = controlerCategorie(
+    { ...donnees, comptes: donnees.comptes ?? '' },
+    classesDesAutres(archive, categorie),
+    false,
+  );
   if (erreur) return erreur;
-  await remplacerArchiveStock({
-    ...archive,
-    categories: (archive.categories ?? []).map((c) =>
-      c.id === cible.id ? { ...c, nom: donnees.nom.trim(), classe: donnees.classe.trim() } : c,
-    ),
-  });
+  const actuelle = infosCategorie(categorie, archive.categories, archive.reglagesCategories);
+  // Sans débuts de compte donnés, ceux de la catégorie ne changent pas.
+  const prefixes = donnees.comptes === undefined ? [...actuelle.prefixes] : analyserPrefixes(donnees.comptes);
+  if (prefixes.length === 0) return 'comptes';
+  const nom = donnees.nom.trim();
+  const classe = donnees.classe.trim();
+
+  const perso = (archive.categories ?? []).find((c) => idCategoriePerso(c) === categorie);
+  if (perso) {
+    await remplacerArchiveStock({
+      ...archive,
+      categories: (archive.categories ?? []).map((c) =>
+        c.id === perso.id ? { ...c, nom, classe, prefixes } : c,
+      ),
+    });
+    return null;
+  }
+  const origine = infosCategorie(categorie);
+  const reglage: ReglageCategorie = {};
+  if (nom !== origine.nom) reglage.nom = nom;
+  if (classe !== origine.classe) reglage.classe = classe;
+  if (prefixes.length !== origine.prefixes.length || !prefixes.every((p) => origine.prefixes.includes(p))) {
+    reglage.prefixes = prefixes;
+  }
+  const reglages = { ...(archive.reglagesCategories ?? {}) };
+  if (Object.keys(reglage).length === 0) delete reglages[categorie];
+  else reglages[categorie] = reglage;
+  await remplacerArchiveStock({ ...archive, reglagesCategories: reglages });
   return null;
 }
 

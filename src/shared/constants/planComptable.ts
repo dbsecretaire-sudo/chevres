@@ -92,6 +92,12 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   [CATEGORIE_RECETTE.DEPOT]: { numero: '108000', libelle: 'Compte de l’exploitant — Apports' },
 };
 
+/** Le compte des boucles d'identification (la section des boucles de l'inventaire). */
+export const COMPTE_BOUCLES: CompteComptable = {
+  numero: '601500',
+  libelle: 'Boucles d’identification',
+};
+
 /**
  * Liste élargie de comptes PCG courants pour une petite exploitation agricole, proposée dans le
  * sélecteur manuel (catégorie "Autre") en plus des comptes déjà affectés automatiquement ci-dessus.
@@ -101,6 +107,7 @@ export const COMPTES_PCG_DEPENSE: CompteComptable[] = [
   { numero: '601100', libelle: 'Aliments du bétail' },
   { numero: '601200', libelle: 'Engrais et amendements' },
   { numero: '601300', libelle: 'Semences et plants' },
+  { numero: COMPTE_BOUCLES.numero, libelle: COMPTE_BOUCLES.libelle },
   { numero: '602600', libelle: 'Emballages' },
   { numero: '604000', libelle: 'Études et prestations de services' },
   { numero: '606100', libelle: 'Eau, électricité' },
@@ -224,7 +231,7 @@ export const COMPTE_PAR_SECTION_INVENTAIRE: Record<ValeurDe<typeof SECTION_STOCK
   [SECTION_STOCK.ANIMAUX]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.ANIMAL_SUR_PIED],
   [SECTION_STOCK.ALIMENTS]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.ALIMENTATION],
   [SECTION_STOCK.EMBALLAGES]: COMPTE_EMBALLAGES,
-  [SECTION_STOCK.CONDITIONNEMENT]: COMPTE_EMBALLAGES,
+  [SECTION_STOCK.BOUCLES]: COMPTE_BOUCLES,
   [SECTION_STOCK.ENTRETIEN]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
   [SECTION_STOCK.EQUIPEMENT_CONSOMMABLE]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],
   [SECTION_STOCK.EQUIPEMENT]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.MATERIEL],

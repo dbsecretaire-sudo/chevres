@@ -1,6 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { chargerChoixGroupesRecette } from '@/features/comptabilite/repository/groupesRecette';
 import { groupesActifsEspece, laiterieActive } from '@/features/comptabilite/utils/recettes';
 import {
   CATEGORIES,
@@ -13,7 +12,6 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Card } from '@/shared/components/Card';
-import { Checkbox } from '@/shared/components/Checkbox';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ROUTES } from '@/shared/constants/routes';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
@@ -26,6 +24,7 @@ import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
+import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesModal';
 import { JournalLait } from '@/features/stock/components/JournalLait';
 import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
@@ -40,8 +39,6 @@ import {
   articlesDuGenre,
   bilanLait,
   cleArticle,
-  conditionnementDe,
-  definirConditionnement,
   definirPrixArticle,
   prixDesOeufs,
   enregistrerLaitJour,
@@ -49,7 +46,6 @@ import {
   supprimerLaitJour,
   renommerArticle,
   roleDeLaViande,
-  libelleArticle,
   estLigneDuCheptel,
   niveauxDeStock,
   masquerArticle,
@@ -61,7 +57,6 @@ import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/fe
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
 import {
-  ARTICLE_EMBALLAGE,
   CLE_PRIX_LAIT,
   CLE_PRIX_OEUFS,
   FILTRE_STOCK_TOUT,
@@ -80,7 +75,10 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
 
-const TEXTES_AJOUT: Record<GenreArticle, { titre: string; exemple: string }> = {
+/** Les boucles d'identification ne s'ajoutent pas à la main : elles entrent par un achat en comptabilité. */
+type GenreAjoutable = Exclude<GenreArticle, typeof GENRE_ARTICLE.BOUCLE>;
+
+const TEXTES_AJOUT: Record<GenreAjoutable, { titre: string; exemple: string }> = {
   [GENRE_ARTICLE.FROMAGE]: { titre: T.ajouter.fromage, exemple: T.ajouter.exempleFromage },
   [GENRE_ARTICLE.EMBALLAGE]: { titre: T.ajouter.emballages, exemple: T.ajouter.exempleEmballage },
   [GENRE_ARTICLE.MATERIEL]: { titre: T.ajouter.materiel, exemple: T.ajouter.exempleMateriel },
@@ -99,9 +97,6 @@ const TEXTES_AJOUT: Record<GenreArticle, { titre: string; exemple: string }> = {
 const seVend = (cle: string): boolean =>
   cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) || cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`);
 
-/** Le code d'un article (« fromage:frais » → « frais »). */
-const codeDe = (cle: string): string => cle.split(':')[1];
-
 /**
  * Le stock d'une exploitation agricole, en trois onglets rangés par nature : ce qui se vend (fromages, lait, viande), ce qui se
  * consomme (aliments, emballages et leur conditionnement, entretien) et les investissements (équipement de fromagerie,
@@ -119,12 +114,11 @@ export default function StockFromagerie() {
   const voulu: FiltreStock = filtre ?? especeActive;
   const filtreCourant: FiltreStock =
     voulu === FILTRE_STOCK_TOUT || especes.includes(voulu) ? voulu : FILTRE_STOCK_TOUT;
-  // La fromagerie et le lait : les chèvres et les brebis d'office, les autres espèces (les vaches) si la laiterie est cochée.
+  // La fromagerie et le lait : les chèvres, les brebis et les vaches.
   const fromagerie = (filtreCourant === FILTRE_STOCK_TOUT ? especes : [filtreCourant]).some((espece) =>
     laiterieActive(espece),
   );
-  // Les œufs : la liste des espèces pour lesquelles la vente d'œufs est cochée (les poules, d'office).
-  const [, setVersionGroupes] = useState(0);
+  // Les œufs : les espèces qui en vendent (les poules).
   const poules = (filtreCourant === FILTRE_STOCK_TOUT ? especes : [filtreCourant]).some((espece) =>
     groupesActifsEspece(espece).includes(GROUPE_RECETTE.OEUFS),
   );
@@ -164,7 +158,10 @@ export default function StockFromagerie() {
   });
   const [article, setArticle] = useState<ArticleAffiche | null>(null);
   /** Le genre d'article qu'on est en train d'ajouter (la fenêtre de saisie est fermée quand il est absent). */
-  const [ajout, setAjout] = useState<GenreArticle | null>(null);
+  const [ajout, setAjout] = useState<GenreAjoutable | null>(null);
+  /** La sorte de boucles dont on regarde le détail, et si sa fenêtre est ouverte. */
+  const [boucleOuverte, setBoucleOuverte] = useState<ArticleAffiche | null>(null);
+  const [boucleVisible, setBoucleVisible] = useState(false);
   /** Pour un ajout dans une liste personnalisée : cette liste. */
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
@@ -175,8 +172,6 @@ export default function StockFromagerie() {
   const [prixLaitOuvert, setPrixLaitOuvert] = useState(false);
   const [prixOeufsOuvert, setPrixOeufsOuvert] = useState(false);
   const [laitOuvert, setLaitOuvert] = useState<LaitJour | 'nouveau' | null>(null);
-  /** Le fromage dont on modifie le conditionnement. */
-  const [enEdition, setEnEdition] = useState<string | null>(null);
   /** Vrai pendant qu'on fait glisser une ligne : la page ne défile alors pas. */
   const [glisse, setGlisse] = useState(false);
   /** Le menu en haut à droite (burger) et la feuille des statistiques qu'il ouvre. */
@@ -190,7 +185,6 @@ export default function StockFromagerie() {
       lireArchiveStock(),
       listToutesVentes(),
       effectifsVivants(),
-      chargerChoixGroupesRecette().then(() => setVersionGroupes((v) => v + 1)),
     ]);
     setArchive(stock);
     setEffectifs(vivants);
@@ -245,6 +239,29 @@ export default function StockFromagerie() {
     );
   };
 
+  /** Une sorte de boucles : le nombre de boucles à poser ; un appui ouvre le détail des numéros (ni renommer, ni déplacer). */
+  const ligneBoucles = (a: ArticleAffiche) => {
+    const niveau = niveaux.get(a.cle) ?? 0;
+    return (
+      <ListRow
+        key={a.cle}
+        title={a.libelle}
+        trailing={
+          <View style={stylesStock.fin}>
+            <Text style={[styles.resultatLigne, niveau < 0 ? styles.perte : undefined]}>
+              {T.unites(niveau)}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </View>
+        }
+        onPress={() => {
+          setBoucleOuverte(a);
+          setBoucleVisible(true);
+        }}
+      />
+    );
+  };
+
   /** La liste glissable des articles d'un genre (filtrée par activité). */
   /** Les articles d'une liste : un genre (filtré par activité), dont les lignes de viande se partagent entre deux catégories. */
   const articlesDeLaListe = (genre: GenreArticle, section?: Section, listeId?: string) =>
@@ -259,6 +276,16 @@ export default function StockFromagerie() {
   /** La liste glissable des articles d'une section (les lignes des animaux suivent le cheptel : elles ne se déplacent pas). */
   const liste = (genre: GenreArticle, section?: Section, listeId?: string) => {
     const elements = articlesDeLaListe(genre, section, listeId);
+    if (genre === GENRE_ARTICLE.BOUCLE)
+      return (
+        <BlocListe>
+          {elements.map((a, i) => (
+            <View key={a.cle} style={i > 0 ? separationBloc : undefined}>
+              {ligneBoucles(a)}
+            </View>
+          ))}
+        </BlocListe>
+      );
     if (section === SECTION_STOCK.ANIMAUX)
       return (
         <BlocListe>
@@ -313,7 +340,7 @@ export default function StockFromagerie() {
     charger();
   };
 
-  const ouvrirAjout = (genre: GenreArticle, liste?: ListeInventaire) => {
+  const ouvrirAjout = (genre: GenreAjoutable, liste?: ListeInventaire) => {
     setListeAjout(liste ?? null);
     // L'article est proposé pour l'animal actif ; on peut le passer à une autre activité, ou à toutes.
     setActiviteAjout(especes.includes(especeActive) ? especeActive : '');
@@ -337,93 +364,30 @@ export default function StockFromagerie() {
     charger();
   };
 
-  const basculerEmballage = async (fromage: string, code: string) => {
-    const actuels = conditionnementDe(fromage, archive);
-    await definirConditionnement(
-      fromage,
-      actuels.includes(code) ? actuels.filter((c) => c !== code) : [...actuels, code],
-    );
-    charger();
-  };
-
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
   const basculerCategorie = (categorie: string) =>
     setOuvertes((actuelles) => (actuelles.includes(categorie) ? [] : [categorie]));
-
-  const emballages = articlesDuGenre(GENRE_ARTICLE.EMBALLAGE, archive, filtreCourant);
-  const fromages = articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, filtreCourant);
-
-  /** Le conditionnement : pour chaque fromage, les emballages qu'une vente consomme (un crayon les modifie un par un). */
-  const conditionnement = (
-    <>
-      <Text style={commonStyles.note}>{T.conditionnement.aide}</Text>
-      {fromages.map((f) => {
-        const code = codeDe(f.cle);
-        const codes = conditionnementDe(code, archive);
-        const edition = enEdition === code;
-        return (
-          <Card key={f.cle}>
-            <View style={stylesStock.enteteCarte}>
-              <Text style={commonStyles.cardTitle}>{f.libelle}</Text>
-              <Pressable
-                onPress={() => setEnEdition(edition ? null : code)}
-                hitSlop={8}
-                accessibilityLabel={T.conditionnement.modifier}
-              >
-                <Ionicons name={edition ? 'checkmark' : 'pencil'} size={20} color={colors.primary} />
-              </Pressable>
-            </View>
-            {edition ? (
-              <>
-                <Text style={commonStyles.note}>{T.conditionnement.choisirLesEmballages}</Text>
-                {emballages.map((e) => {
-                  const emballage = codeDe(e.cle);
-                  // Les sacs se saisissent à la vente : on ne les coche pas ici.
-                  const sac = emballage === ARTICLE_EMBALLAGE.SAC_PLASTIQUE;
-                  return (
-                    <Checkbox
-                      key={e.cle}
-                      label={e.libelle}
-                      value={!sac && codes.includes(emballage)}
-                      disabled={sac}
-                      onChange={() => basculerEmballage(code, emballage)}
-                    />
-                  );
-                })}
-              </>
-            ) : (
-              <Text style={commonStyles.muted}>
-                {codes.length === 0
-                  ? T.conditionnement.aucun
-                  : codes
-                      .map((c) => libelleArticle(cleArticle(GENRE_ARTICLE.EMBALLAGE, c), archive))
-                      .join(' + ')}
-              </Text>
-            )}
-          </Card>
-        );
-      })}
-    </>
-  );
 
   /** Ce que le bouton « + » propose : un ajout pour chaque liste des catégories déroulées (toutes si aucune ne l'est). */
   const optionsAjout = sectionsVisibles
     .filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie))
     .filter((x) => x.section !== SECTION_STOCK.ANIMAUX)
     .map(({ section, genre }) =>
-      genre
-        ? {
-            label: TEXTES_AJOUT[genre].titre,
-            icon: 'add-circle' as const,
-            onPress: () => ouvrirAjout(genre),
-          }
-        : section === SECTION_STOCK.LAIT
+      genre === GENRE_ARTICLE.BOUCLE
+        ? null
+        : genre
           ? {
-              label: T.laitJour.ajouter,
+              label: TEXTES_AJOUT[genre].titre,
               icon: 'add-circle' as const,
-              onPress: () => setLaitOuvert('nouveau'),
+              onPress: () => ouvrirAjout(genre),
             }
-          : null,
+          : section === SECTION_STOCK.LAIT
+            ? {
+                label: T.laitJour.ajouter,
+                icon: 'add-circle' as const,
+                onPress: () => setLaitOuvert('nouveau'),
+              }
+            : null,
     )
     .filter((x) => x !== null);
   const optionsListes = (archive.listes ?? [])
@@ -449,119 +413,133 @@ export default function StockFromagerie() {
           />
         ) : null}
 
-        {categoriesAvecAjoutees(CATEGORIES, archive.categories).map(({ categorie, nom, classe, perso }) => {
-          const listes = sectionsVisibles.filter((x) => x.categorie === categorie);
-          const listesPerso = (archive.listes ?? []).filter((l) => l.categorie === categorie);
-          // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
-          if (listes.length === 0 && listesPerso.length === 0 && !perso) return null;
-          return (
-            <SectionDeroulante
-              key={categorie}
-              titre={T.enteteCategorie(classe, nom)}
-              ouverte={ouvertes.includes(categorie)}
-              onBasculer={() => basculerCategorie(categorie)}
-              alerte={
-                listes.some(
-                  ({ section, genre }) => !!genre && aUnNegatif(articlesDeLaListe(genre, section)),
-                ) ||
-                listesPerso.some((l) =>
-                  aUnNegatif(articlesDeLaListe(GENRE_ARTICLE.PERSONNALISE, undefined, l.id)),
-                )
-              }
-            >
-              {listes.map(({ section, titre, genre }) => {
-                const compte = COMPTE_PAR_SECTION_INVENTAIRE[section];
-                return (
-                  <View key={section} style={commonStyles.gap10}>
-                    <View style={commonStyles.rowSpaceBetween}>
-                      <View style={commonStyles.gap2}>
-                        <Text style={commonStyles.lineBold}>{titre}</Text>
-                        <Text style={commonStyles.note}>{T.compte(compte.numero, compte.libelle)}</Text>
-                      </View>
-                      <View style={commonStyles.row}>
-                        {genre && aUnNegatif(articlesDeLaListe(genre, section)) ? <PastilleAlerte /> : null}
-                        {section === SECTION_STOCK.FROMAGES && fromagerie ? (
-                          <Pressable
-                            onPress={() => router.push(ROUTES.STOCK_STATISTIQUES)}
-                            hitSlop={10}
-                            accessibilityLabel={T.statistiques.titre}
-                          >
-                            <Ionicons name="stats-chart" size={24} color={colors.primary} />
-                          </Pressable>
-                        ) : null}
-                      </View>
-                    </View>
-                    {genre ? (
-                      liste(genre, section)
-                    ) : section === SECTION_STOCK.LAIT ? (
-                      <JournalLait
-                        lait={archive.lait}
-                        bilan={bilanLait(archive, litresVendus)}
-                        prix={archive.prix[CLE_PRIX_LAIT]}
-                        onModifierPrix={() => setPrixLaitOuvert(true)}
-                        onOuvrir={setLaitOuvert}
-                      />
-                    ) : section === SECTION_STOCK.OEUFS ? (
-                      <Card>
-                        <View style={commonStyles.rowSpaceBetween}>
-                          <Text style={commonStyles.muted}>{T.oeufs.prixDeLOeuf}</Text>
-                          <Pressable
-                            style={commonStyles.rowFin}
-                            onPress={() => setPrixOeufsOuvert(true)}
-                            hitSlop={8}
-                            accessibilityLabel={T.oeufs.modifierLePrix}
-                          >
-                            <Text style={commonStyles.lineBold}>
-                              {T.oeufs.prixOeuf(formatMontant(prixDesOeufs(archive)))}
-                            </Text>
-                            <Ionicons name="pencil" size={18} color={colors.ajout} />
-                          </Pressable>
+        {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
+          ({ categorie, nom, classe, perso }) => {
+            const listes = sectionsVisibles.filter((x) => x.categorie === categorie);
+            const listesPerso = (archive.listes ?? []).filter((l) => l.categorie === categorie);
+            // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
+            if (listes.length === 0 && listesPerso.length === 0 && !perso) return null;
+            return (
+              <SectionDeroulante
+                key={categorie}
+                titre={T.enteteCategorie(classe, nom)}
+                ouverte={ouvertes.includes(categorie)}
+                onBasculer={() => basculerCategorie(categorie)}
+                alerte={
+                  listes.some(
+                    ({ section, genre }) => !!genre && aUnNegatif(articlesDeLaListe(genre, section)),
+                  ) ||
+                  listesPerso.some((l) =>
+                    aUnNegatif(articlesDeLaListe(GENRE_ARTICLE.PERSONNALISE, undefined, l.id)),
+                  )
+                }
+              >
+                {listes.map(({ section, titre, genre }) => {
+                  const compte = COMPTE_PAR_SECTION_INVENTAIRE[section];
+                  return (
+                    <View key={section} style={commonStyles.gap10}>
+                      <View style={commonStyles.rowSpaceBetween}>
+                        <View style={commonStyles.gap2}>
+                          <Text style={commonStyles.lineBold}>{titre}</Text>
+                          <Text style={commonStyles.note}>{T.compte(compte.numero, compte.libelle)}</Text>
                         </View>
-                        <Text style={commonStyles.note}>{T.oeufs.note}</Text>
-                      </Card>
+                        <View style={commonStyles.row}>
+                          {genre && aUnNegatif(articlesDeLaListe(genre, section)) ? <PastilleAlerte /> : null}
+                          {section === SECTION_STOCK.FROMAGES && fromagerie ? (
+                            <Pressable
+                              onPress={() => router.push(ROUTES.STOCK_STATISTIQUES)}
+                              hitSlop={10}
+                              accessibilityLabel={T.statistiques.titre}
+                            >
+                              <Ionicons name="stats-chart" size={24} color={colors.primary} />
+                            </Pressable>
+                          ) : null}
+                        </View>
+                      </View>
+                      {genre ? (
+                        liste(genre, section)
+                      ) : section === SECTION_STOCK.LAIT ? (
+                        <JournalLait
+                          lait={archive.lait}
+                          bilan={bilanLait(archive, litresVendus)}
+                          prix={archive.prix[CLE_PRIX_LAIT]}
+                          onModifierPrix={() => setPrixLaitOuvert(true)}
+                          onOuvrir={setLaitOuvert}
+                        />
+                      ) : section === SECTION_STOCK.OEUFS ? (
+                        <Card>
+                          <View style={commonStyles.rowSpaceBetween}>
+                            <Text style={commonStyles.muted}>{T.oeufs.prixDeLOeuf}</Text>
+                            <Pressable
+                              style={commonStyles.rowFin}
+                              onPress={() => setPrixOeufsOuvert(true)}
+                              hitSlop={8}
+                              accessibilityLabel={T.oeufs.modifierLePrix}
+                            >
+                              <Text style={commonStyles.lineBold}>
+                                {T.oeufs.prixOeuf(formatMontant(prixDesOeufs(archive)))}
+                              </Text>
+                              <Ionicons name="pencil" size={18} color={colors.ajout} />
+                            </Pressable>
+                          </View>
+                          <Text style={commonStyles.note}>{T.oeufs.note}</Text>
+                        </Card>
+                      ) : null}
+                    </View>
+                  );
+                })}
+                {listesPerso.map((l) => (
+                  <View key={l.id} style={commonStyles.gap10}>
+                    <View style={commonStyles.gap2}>
+                      <Text style={commonStyles.lineBold}>{l.nom}</Text>
+                      <Text style={commonStyles.note}>{T.compte(l.compte, l.libelleCompte)}</Text>
+                    </View>
+                    {articlesDeLaListe(GENRE_ARTICLE.PERSONNALISE, undefined, l.id).length === 0 ? (
+                      <Text style={commonStyles.mutedItalic}>{T.ajouter.listeVide}</Text>
                     ) : (
-                      conditionnement
+                      liste(GENRE_ARTICLE.PERSONNALISE, undefined, l.id)
                     )}
                   </View>
-                );
-              })}
-              {listesPerso.map((l) => (
-                <View key={l.id} style={commonStyles.gap10}>
-                  <View style={commonStyles.gap2}>
-                    <Text style={commonStyles.lineBold}>{l.nom}</Text>
-                    <Text style={commonStyles.note}>{T.compte(l.compte, l.libelleCompte)}</Text>
-                  </View>
-                  {articlesDeLaListe(GENRE_ARTICLE.PERSONNALISE, undefined, l.id).length === 0 ? (
-                    <Text style={commonStyles.mutedItalic}>{T.ajouter.listeVide}</Text>
-                  ) : (
-                    liste(GENRE_ARTICLE.PERSONNALISE, undefined, l.id)
-                  )}
-                </View>
-              ))}
-              {perso && listesPerso.length === 0 ? (
-                <Text style={commonStyles.mutedItalic}>{T.structure.categorieVide}</Text>
-              ) : null}
-            </SectionDeroulante>
-          );
-        })}
+                ))}
+                {perso && listesPerso.length === 0 ? (
+                  <Text style={commonStyles.mutedItalic}>{T.structure.categorieVide}</Text>
+                ) : null}
+              </SectionDeroulante>
+            );
+          },
+        )}
       </ScrollView>
 
-      {/* À droite du titre : l'historique des mouvements (les statistiques sont sur Fromages, le PDF dans Organisation › PDF). */}
+      {/* À droite du titre : la structure des listes et l'historique des mouvements (les statistiques sont sur Fromages, le PDF dans Organisation › PDF). */}
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Pressable
-              style={commonStyles.boutonEnteteDroite}
-              onPress={() =>
-                router.push(
-                  ROUTES.stockHistorique(filtreCourant === FILTRE_STOCK_TOUT ? undefined : filtreCourant),
-                )
-              }
-              hitSlop={10}
-              accessibilityLabel={T.historique.titre}
+            <View
+              style={[
+                commonStyles.headerDroite,
+                commonStyles.boutonEnteteDroite,
+                commonStyles.headerDroiteEspacee,
+              ]}
             >
-              <Ionicons name="time" size={24} color={colors.blanc} />
-            </Pressable>
+              <Pressable
+                onPress={() => router.push(ROUTES.STOCK_STRUCTURE)}
+                hitSlop={10}
+                accessibilityLabel={T.structure.titre}
+              >
+                <Ionicons name="albums" size={24} color={colors.blanc} />
+              </Pressable>
+              <Pressable
+                onPress={() =>
+                  router.push(
+                    ROUTES.stockHistorique(filtreCourant === FILTRE_STOCK_TOUT ? undefined : filtreCourant),
+                  )
+                }
+                hitSlop={10}
+                accessibilityLabel={T.historique.titre}
+              >
+                <Ionicons name="time" size={24} color={colors.blanc} />
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -610,6 +588,13 @@ export default function StockFromagerie() {
           charger();
         }}
         onFermer={() => setLaitOuvert(null)}
+      />
+
+      <DetailBouclesModal
+        visible={boucleVisible}
+        article={boucleOuverte}
+        boucles={archive.boucles ?? []}
+        onFermer={() => setBoucleVisible(false)}
       />
 
       <MouvementStockModal

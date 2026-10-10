@@ -38,6 +38,18 @@ export default function Reglages() {
           />
         ) : null}
         <LigneRubrique
+          titre={T.sectionTiers}
+          aide={T.aideRubriqueTiers}
+          icone="person"
+          route={ROUTES.ORGANISATION_TIERS}
+        />
+        <LigneRubrique
+          titre={TEXTES.comptabilite.fiscalite.titre}
+          aide={T.aideRubriqueFiscalite}
+          icone="receipt"
+          route={ROUTES.FISCALITE}
+        />
+        <LigneRubrique
           titre={T.sectionDonnees}
           aide={T.aideRubriqueDonnees}
           icone="server"

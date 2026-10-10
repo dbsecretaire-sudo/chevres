@@ -16,6 +16,13 @@ export interface LigneMensuelleEntreprise {
   tvaDeductible: number;
 }
 
+/** La TVA d'un taux (en %) : collectée sur les recettes, déductible sur les achats. */
+export interface LigneTauxTva {
+  taux: number;
+  collectee: number;
+  deductible: number;
+}
+
 export interface FiscaliteEntreprise {
   annee: number;
   mois: LigneMensuelleEntreprise[];
@@ -23,6 +30,8 @@ export interface FiscaliteEntreprise {
   caTtc: number;
   tvaCollectee: number;
   tvaDeductible: number;
+  /** La TVA de l'année, taux par taux (du plus bas au plus haut). */
+  parTaux: LigneTauxTva[];
   /** Aides et subventions encaissées : suivies à part, elles n'entrent pas dans le chiffre d'affaires. */
   aides: number;
 }
@@ -104,19 +113,30 @@ export async function calculerFiscaliteEntreprise(annee: number): Promise<Fiscal
     tvaDeductible: 0,
   }));
   let aides = 0;
+  const parTaux = new Map<number, LigneTauxTva>();
+  const ligneDuTaux = (taux?: number): LigneTauxTva | undefined => {
+    if (!taux) return undefined;
+    if (!parTaux.has(taux)) parTaux.set(taux, { taux, collectee: 0, deductible: 0 });
+    return parTaux.get(taux);
+  };
 
   for (const r of recettes) {
     const ligne = mois[r.mois - 1];
     ligne.caTtc += r.ttc;
     ligne.caHt += r.ttc - r.tva;
     ligne.tvaCollectee += r.tva;
+    const duTaux = ligneDuTaux(r.vente?.tauxTva ?? r.facture?.tauxTva);
+    if (duTaux) duTaux.collectee += r.tva;
   }
 
   for (const f of factures) {
     const m = indexMois(f.date);
     if (m < 0 || m > 11) continue;
-    if (f.type === TYPE_FACTURE.RECUE) mois[m].tvaDeductible += tvaDuTtc(f.montant, f.tauxTva);
-    else if (f.categorieRecette === CATEGORIE_RECETTE.AIDE) aides += f.montant;
+    if (f.type === TYPE_FACTURE.RECUE) {
+      mois[m].tvaDeductible += tvaDuTtc(f.montant, f.tauxTva);
+      const duTaux = ligneDuTaux(f.tauxTva);
+      if (duTaux) duTaux.deductible += tvaDuTtc(f.montant, f.tauxTva);
+    } else if (f.categorieRecette === CATEGORIE_RECETTE.AIDE) aides += f.montant;
   }
 
   const somme = (cle: keyof Omit<LigneMensuelleEntreprise, 'mois'>) => mois.reduce((s, l) => s + l[cle], 0);
@@ -127,6 +147,7 @@ export async function calculerFiscaliteEntreprise(annee: number): Promise<Fiscal
     caTtc: somme('caTtc'),
     tvaCollectee: somme('tvaCollectee'),
     tvaDeductible: somme('tvaDeductible'),
+    parTaux: [...parTaux.values()].sort((a, b) => a.taux - b.taux),
     aides,
   };
 }

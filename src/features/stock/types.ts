@@ -20,6 +20,8 @@ export interface MouvementStock {
    * consommé) : elle compte dans le « consommé » mais n'encombre pas la liste de l'historique.
    */
   automatique?: boolean;
+  /** La boucle posée qui a créé ce mouvement (un retrait d'une boucle) : il se refait à chaque synchronisation avec le cheptel. */
+  boucleId?: string;
   /** Pour des fromages fabriqués : les litres de lait qu'il a fallu (facultatif), pour connaître le lait par fromage. */
   litres?: number;
 }
@@ -63,6 +65,32 @@ export interface CategorieInventairePerso {
   prefixes: string[];
 }
 
+/** Ce qu'on a changé d'une catégorie d'office : seulement ce qui diffère de l'origine. */
+export interface ReglageCategorie {
+  nom?: string;
+  classe?: string;
+  /** Les débuts de compte que ses listes peuvent avoir. */
+  prefixes?: string[];
+}
+
+/** Une boucle de l'inventaire : son numéro, d'où elle vient (l'achat) et, quand elle est posée, sur quel animal. */
+export interface BoucleStock {
+  id: string;
+  /** L'article de l'inventaire (« boucle:boucles » ou « boucle:rouges »). */
+  article: string;
+  /** Le numéro, tel qu'il s'écrit sur l'animal (sans l'indicatif de marquage). */
+  numero: string;
+  /** La date de l'achat (celle de la facture) ; absente d'une boucle ajoutée depuis la fiche d'un animal. */
+  dateAchat?: string;
+  /** Vrai pour une boucle ajoutée toute seule quand un animal a été enregistré avec un numéro absent de l'inventaire. */
+  depuisCheptel?: boolean;
+  /** La facture d'achat qui a créé la boucle : la boucle suit ses modifications et disparaît avec elle. */
+  factureId?: string;
+  /** Posée : la date de pose (celle du bouclage de l'animal) et l'animal qui la porte. */
+  datePose?: string;
+  chevreId?: string;
+}
+
 /** Le lait produit un jour : son litrage (chèvres et brebis). */
 export interface LaitJour {
   id: string;
@@ -92,6 +120,10 @@ export interface ArchiveStock {
   listes?: ListeInventaire[];
   /** Les catégories que l'utilisateur a ajoutées à l'inventaire (avec leurs propres listes). */
   categories?: CategorieInventairePerso[];
+  /** Ce que l'utilisateur a personnalisé d'une catégorie d'office (par identifiant) : il remplace le nom, le numéro ou les comptes d'origine. */
+  reglagesCategories?: Record<string, ReglageCategorie>;
+  /** Les boucles d'identification de l'inventaire, une par numéro. */
+  boucles?: BoucleStock[];
   /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
   masques?: string[];
 }

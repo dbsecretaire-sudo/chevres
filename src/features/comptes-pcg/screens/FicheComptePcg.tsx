@@ -14,10 +14,18 @@ import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
 import {
   getComptePcg,
+  listComptesPcg,
   enregistrerComptePcg,
   supprimerComptePcg,
   type CompteComptableEnregistre,
 } from '@/features/comptes-pcg/repository';
+import { ChoixSuiviCompte, useSuiviCompte } from '@/features/comptes-pcg/components/ChoixSuiviCompte';
+import {
+  ajouterListe,
+  listesDuCompte,
+  retirerDeLInventaire,
+  suivreLeCompte,
+} from '@/features/stock/services/structure';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -32,12 +40,15 @@ export default function FicheComptePcg() {
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  /** Les numéros des autres comptes : un compte n'y figure qu'une fois. */
+  const [autresNumeros, setAutresNumeros] = useState<string[]>([]);
 
   const charger = useCallback(async () => {
     if (!id) return;
     const c = await getComptePcg(id);
     setCompte(c ?? null);
     setForm(c ?? null);
+    setAutresNumeros((await listComptesPcg()).filter((x) => x.id !== id).map((x) => x.numero));
   }, [id]);
 
   useFocusEffect(
@@ -46,8 +57,22 @@ export default function FicheComptePcg() {
     }, [charger]),
   );
 
-  const enregistrerModifications = async () => {
-    if (!form) return;
+  const dejaEnregistre = !!form && autresNumeros.includes(form.numero.trim());
+  const suiviCompte = useSuiviCompte(form?.numero ?? '');
+  const { archive } = suiviCompte;
+  /** Le compte est inventorié aujourd'hui (il a une liste) : le type affiché au départ de la modification. */
+  const inventorieAvant = !!compte && !!archive && listesDuCompte(archive, compte.numero).length > 0;
+  /** Le retrait de l'inventaire (avec les articles de ses listes) attend la confirmation. */
+  const [retraitOuvert, setRetraitOuvert] = useState(false);
+  // On modifie un compte inventorié : la puce « Inventaire » est celle choisie au départ.
+  const [editingVu, setEditingVu] = useState(false);
+  if (editing !== editingVu) {
+    setEditingVu(editing);
+    if (editing) suiviCompte.setSuivi(inventorieAvant ? 'inventaire' : 'service');
+  }
+
+  const enregistrerModifications = async (retraitConfirme = false) => {
+    if (!form || dejaEnregistre || suiviCompte.impossible) return;
     if (!form.numero.trim()) return setErreur(TEXTES.commun.general.nRequis);
     if (!form.libelle.trim()) return setErreur(TEXTES.commun.general.descriptionRequise);
 
@@ -56,7 +81,20 @@ export default function FicheComptePcg() {
       numero: form.numero.trim(),
       libelle: form.libelle.trim(),
     };
+    // Un compte qui n'est plus inventorié perd sa liste, avec ses articles : on le confirme d'abord.
+    if (suiviCompte.suivi === 'service' && inventorieAvant && !retraitConfirme) return setRetraitOuvert(true);
     await enregistrerComptePcg(nettoye);
+    if (suiviCompte.suivi === 'service') {
+      await retirerDeLInventaire(compte!.numero);
+    } else if (inventorieAvant) {
+      await suivreLeCompte(compte!.numero, { numero: nettoye.numero, libelle: nettoye.libelle });
+    } else if (suiviCompte.categorie) {
+      await ajouterListe(suiviCompte.categorie.categorie, nettoye.libelle, {
+        numero: nettoye.numero,
+        libelle: nettoye.libelle,
+      });
+    }
+    setRetraitOuvert(false);
     setCompte(nettoye);
     setForm(nettoye);
     setEditing(false);
@@ -118,6 +156,10 @@ export default function FicheComptePcg() {
           <Card>
             <Text style={commonStyles.line}>N° : {compte.numero}</Text>
             <Text style={commonStyles.line}>
+              {TEXTES.comptesPcg.ficheComptePcg.typeDeuxPoints}
+              {TEXTES.comptesPcg.nouveauComptePcg.suivi[inventorieAvant ? 'inventaire' : 'service']}
+            </Text>
+            <Text style={commonStyles.line}>
               {TEXTES.comptesPcg.ficheComptePcg.descriptionDeuxPoints}
               {compte.libelle}
             </Text>
@@ -138,6 +180,7 @@ export default function FicheComptePcg() {
               value={form.numero}
               onChangeText={(v) => setForm({ ...form, numero: v })}
               keyboardType="number-pad"
+              erreur={dejaEnregistre ? TEXTES.comptesPcg.numeroDejaEnregistre : undefined}
             />
             <FormField
               label={TEXTES.commun.general.description}
@@ -145,6 +188,7 @@ export default function FicheComptePcg() {
               value={form.libelle}
               onChangeText={(v) => setForm({ ...form, libelle: v })}
             />
+            <ChoixSuiviCompte etat={suiviCompte} numero={form.numero} />
 
             <View style={commonStyles.row}>
               <Button
@@ -159,7 +203,7 @@ export default function FicheComptePcg() {
               <Button
                 style={commonStyles.flex1}
                 label={TEXTES.commun.general.enregistrer}
-                onPress={enregistrerModifications}
+                onPress={() => enregistrerModifications()}
               />
             </View>
           </Card>
@@ -176,6 +220,15 @@ export default function FicheComptePcg() {
         confirmLabel={TEXTES.commun.general.supprimerDefinitivement}
         onCancel={() => setSuppressionOuverte(false)}
         onConfirm={supprimerDefinitivement}
+      />
+
+      <ConfirmModal
+        visible={retraitOuvert}
+        title={TEXTES.comptesPcg.ficheComptePcg.retirerDeLInventaire}
+        message={TEXTES.comptesPcg.ficheComptePcg.retraitMessage}
+        confirmLabel={TEXTES.comptesPcg.ficheComptePcg.retirer}
+        onCancel={() => setRetraitOuvert(false)}
+        onConfirm={() => enregistrerModifications(true)}
       />
 
       <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />

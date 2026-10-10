@@ -1,85 +1,56 @@
-import { useState } from 'react';
-import { Alert, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import { BlocLignes } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
-import { ExportChoiceModal } from '@/features/export/components/ExportChoiceModal';
-import { exporterPlanComptablePdf } from '@/features/export/pdfExport';
-import { exporterPlanComptableExcel } from '@/features/export/xlsxExport';
-import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { FORMAT_EXPORT, type FormatExport } from '@/shared/constants/export';
+import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { ROUTES } from '@/shared/constants/routes';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { colors } from '@/shared/theme/colors';
-import { commonStyles } from '@/shared/styles/commonStyles';
+import { styles } from '@/shared/styles/comptabilite/Fiscalite.styles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.comptabilite.fiscalite;
 
-type IconeNom = keyof typeof Ionicons.glyphMap;
-
 /**
- * La fiscalité, au même endroit : les impôts, la déclaration du chiffre d'affaires (RSA pour un élevage), les déclarations
- * URSSAF et de TVA d'une entreprise, et le plan comptable de l'année à générer.
+ * La fiscalité : d'abord les déclarations à valider (RSA trimestriel, URSSAF mensuel), puis chaque déclaration — les impôts,
+ * le chiffre d'affaires (RSA pour un élevage), l'URSSAF et la TVA d'une entreprise.
  */
 export default function Fiscalite() {
   const router = useRouter();
-  const { settings } = useAppSettings();
   const entreprise = modeEntreprise();
-  const tvaApplicable = !!settings.exploitation?.entreprise?.tvaApplicable;
-  const [choixFormat, setChoixFormat] = useState(false);
-
-  const exporterPlanComptable = async (format: FormatExport) => {
-    try {
-      if (format === FORMAT_EXPORT.PDF) await exporterPlanComptablePdf(settings.anneeActive);
-      else await exporterPlanComptableExcel(settings.anneeActive);
-    } catch (e: any) {
-      Alert.alert(TEXTES.commun.general.erreurExport, e?.message ?? String(e));
-    }
-  };
-
-  const ligne = (titre: string, aide: string, icone: IconeNom, onPress: () => void) => (
-    <ListRow
-      key={titre}
-      title={titre}
-      subtitle={aide}
-      trailing={<Ionicons name={icone} size={24} color={colors.primary} />}
-      onPress={onPress}
-    />
-  );
 
   return (
     <Screen>
-      <View style={commonStyles.gap10}>
-        {ligne(
-          entreprise ? TEXTES.entreprise.menu.impots : TEXTES.commun.general.impotsMicroBa,
-          T.aideImpots,
-          'receipt',
-          () => router.push(ROUTES.FISCALITE_IMPOTS),
-        )}
-        {ligne(
-          entreprise ? TEXTES.entreprise.menu.chiffreAffaires : TEXTES.commun.general.declarationRsa,
-          T.aideChiffreAffaires,
-          'calendar',
-          () => router.push(ROUTES.FISCALITE_RSA),
-        )}
-        {entreprise
-          ? ligne(TEXTES.entreprise.menu.urssaf, T.aideUrssaf, 'cash', () => router.push(ROUTES.URSSAF))
-          : null}
-        {entreprise && tvaApplicable
-          ? ligne(TEXTES.entreprise.menu.tva, T.aideTva, 'calculator', () => router.push(ROUTES.TVA))
-          : null}
-        {ligne(TEXTES.commun.general.planComptable, T.aidePlanComptable, 'document-text', () =>
-          setChoixFormat(true),
-        )}
-      </View>
-      <ExportChoiceModal
-        visible={choixFormat}
-        onClose={() => setChoixFormat(false)}
-        titre={TEXTES.commun.general.planComptable}
-        onChoisir={exporterPlanComptable}
-      />
+      <BlocRappels avecTitre={false} />
+      <Text style={styles.titreSection}>{T.declarations}</Text>
+      <BlocLignes>
+        <ListRow
+          title={entreprise ? TEXTES.entreprise.menu.impots : TEXTES.commun.general.impotsMicroBa}
+          subtitle={T.aideImpots}
+          icone="receipt"
+          onPress={() => router.push(ROUTES.FISCALITE_IMPOTS)}
+        />
+        <ListRow
+          title={entreprise ? TEXTES.entreprise.menu.chiffreAffaires : TEXTES.commun.general.declarationRsa}
+          subtitle={T.aideChiffreAffaires}
+          icone="calendar"
+          onPress={() => router.push(ROUTES.FISCALITE_RSA)}
+        />
+        {entreprise ? (
+          <ListRow
+            title={TEXTES.entreprise.menu.urssaf}
+            subtitle={T.aideUrssaf}
+            icone="cash"
+            onPress={() => router.push(ROUTES.URSSAF)}
+          />
+        ) : null}
+        <ListRow
+          title={TEXTES.entreprise.menu.tva}
+          subtitle={T.aideTva}
+          icone="calculator"
+          onPress={() => router.push(ROUTES.TVA)}
+        />
+      </BlocLignes>
     </Screen>
   );
 }

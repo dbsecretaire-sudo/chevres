@@ -9,9 +9,11 @@ interface Props extends TextInputProps {
   required?: boolean;
   /** Une note sous le champ : ce qu'on y met, dans quel format, pourquoi. */
   aide?: string;
+  /** Ce qui ne va pas, en rouge sous le champ (le contour devient rouge aussi). */
+  erreur?: string;
 }
 
-export function FormField({ label, required, aide, style, ...rest }: Props) {
+export function FormField({ label, required, aide, erreur, style, ...rest }: Props) {
   const fond = useFondChamp();
   return (
     <View style={commonStyles.gap6}>
@@ -22,11 +24,17 @@ export function FormField({ label, required, aide, style, ...rest }: Props) {
         </Text>
       ) : null}
       <TextInput
-        style={[commonStyles.input, { backgroundColor: fond }, style]}
+        style={[
+          commonStyles.input,
+          { backgroundColor: fond },
+          erreur ? { borderColor: colors.danger } : null,
+          style,
+        ]}
         placeholderTextColor={colors.textMuted}
         {...rest}
       />
-      {aide ? <Text style={commonStyles.note}>{aide}</Text> : null}
+      {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
+      {aide && !erreur ? <Text style={commonStyles.note}>{aide}</Text> : null}
     </View>
   );
 }

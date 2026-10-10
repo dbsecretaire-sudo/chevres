@@ -6,7 +6,6 @@ import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { Fab } from '@/shared/components/Fab';
-import { CarteATraiter } from '@/features/a-traiter/components/CarteATraiter';
 import { useATraiter } from '@/features/a-traiter/hooks/useATraiter';
 import type { ATraiter } from '@/features/a-traiter/types';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
@@ -47,6 +46,10 @@ export function SelecteurEtablissement({
   const [erreur, setErreur] = useState<string | null>(null);
   const [creationEnCours, setCreationEnCours] = useState(false);
   const aTraiter = useATraiter(etablissements);
+  /** Les établissements dont on a déplié la cloche : tout est replié au départ. */
+  const [ouverts, setOuverts] = useState<Record<string, boolean>>({});
+  const duEtablissement = (id: string) => aTraiter.filter((i) => i.etablissementId === id);
+  const estOuvert = (id: string) => ouverts[id] ?? false;
 
   // Plus de bouton « Retour » : le bouton retour d'Android revient à la liste, puis ferme l'écran.
   useEffect(() => {
@@ -72,6 +75,9 @@ export function SelecteurEtablissement({
       >
         <View style={styles.top}>
           <Text style={commonStyles.heading}>{t.choisirUnEtablissement}</Text>
+          {aTraiter.length > 0 ? (
+            <Text style={commonStyles.muted}>{TEXTES.aTraiter.resume(aTraiter.length)}</Text>
+          ) : null}
         </View>
 
         {mode.type === 'creation' && (
@@ -119,7 +125,6 @@ export function SelecteurEtablissement({
 
         {mode.type === 'liste' && (
           <>
-            <CarteATraiter items={aTraiter} onOuvrir={onOuvrirATraiter} />
             <BlocLignes>
               {etablissements.map((e) => (
                 <CarteEtablissement
@@ -128,6 +133,10 @@ export function SelecteurEtablissement({
                   actif={e.id === actifId}
                   onChoisir={() => onChoisir(e.id)}
                   onModifier={() => setMode({ type: 'edition', id: e.id })}
+                  aTraiter={duEtablissement(e.id)}
+                  ouvert={estOuvert(e.id)}
+                  onBasculer={() => setOuverts((actuels) => ({ ...actuels, [e.id]: !estOuvert(e.id) }))}
+                  onOuvrirATraiter={onOuvrirATraiter}
                 />
               ))}
             </BlocLignes>

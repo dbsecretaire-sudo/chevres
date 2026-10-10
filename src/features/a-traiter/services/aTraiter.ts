@@ -3,6 +3,9 @@ import type { Client } from '@/features/clients/types';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
 import { lignesDeLaNote, totalDeLaNote } from '@/features/dossiers/services/facturation';
 import { cleStockagePour, type Etablissement } from '@/features/etablissements/repository';
+import { estEntreprise, iconeEtablissement } from '@/features/etablissements/utils/typesEtablissement';
+import { rappelsDus } from '@/features/rappels/services/rappels';
+import type { AppSettings, InfosExploitation } from '@/features/settings/settings';
 import { normaliserArchiveGite } from '@/features/gite/repository';
 import type { ArchiveGite } from '@/features/gite/types';
 import type { ATraiter } from '@/features/a-traiter/types';
@@ -88,6 +91,28 @@ export function aTraiterGite(
     }));
 }
 
+/** Les déclarations à valider d'un établissement (RSA trimestriel, URSSAF mensuel), d'après ses réglages. */
+export function aTraiterRappels(
+  infos: InfosExploitation | undefined,
+  aujourdhui: string,
+  etablissement: Pick<Etablissement, 'id' | 'nom' | 'animaux' | 'activites'>,
+): ATraiter[] {
+  return rappelsDus(aujourdhui, {
+    elevage: !estEntreprise(etablissement),
+    activites: etablissement.activites ?? [],
+    desactives: infos?.rappelsDesactives,
+    valides: infos?.rappelsValides,
+  }).map((r) => ({
+    id: `rappel:${etablissement.id}:${r.id}`,
+    etablissementId: etablissement.id,
+    etablissementNom: etablissement.nom,
+    genre: GENRE_A_TRAITER.RAPPEL_FISCAL,
+    enRetard: r.enRetard,
+    libelle: r.libelle,
+    cibleId: r.genre,
+  }));
+}
+
 async function lireJson<T>(etablissementId: string, suffixe: string): Promise<T | undefined> {
   const brut = await AsyncStorage.getItem(cleStockagePour(etablissementId, suffixe));
   if (!brut) return undefined;
@@ -105,10 +130,11 @@ async function lireJson<T>(etablissementId: string, suffixe: string): Promise<T 
 export async function lireATraiter(etablissements: Etablissement[], aujourdhui: string): Promise<ATraiter[]> {
   const groupes = await Promise.all(
     etablissements.map(async (etablissement) => {
-      const [dossiers, gite, clients] = await Promise.all([
+      const [dossiers, gite, clients, reglages] = await Promise.all([
         lireJson<Partial<ArchiveDossiers>>(etablissement.id, CLE_STOCKAGE.DOSSIERS),
         lireJson<Parameters<typeof normaliserArchiveGite>[0]>(etablissement.id, CLE_STOCKAGE.GITE),
         lireJson<Client[]>(etablissement.id, CLE_STOCKAGE.CLIENTS),
+        lireJson<AppSettings>(etablissement.id, CLE_STOCKAGE.SETTINGS),
       ]);
       const archive: ArchiveDossiers = {
         sousDossiers: Array.isArray(dossiers?.sousDossiers) ? dossiers.sousDossiers : [],
@@ -116,12 +142,19 @@ export async function lireATraiter(etablissements: Etablissement[], aujourdhui: 
       };
       const lignes = [
         ...aTraiterDossiers(archive, Array.isArray(clients) ? clients : [], aujourdhui, etablissement),
+        ...aTraiterRappels(reglages?.exploitation, aujourdhui, etablissement),
         // Un établissement sans séjour n'a pas de gîte : rien à encaisser.
         ...(gite ? aTraiterGite(normaliserArchiveGite(gite), aujourdhui, etablissement) : []),
       ];
       // Le retard d'abord, puis les genres dans l'ordre des constantes (le tri garde l'ordre des dates dans un genre).
       const ordre: string[] = Object.values(GENRE_A_TRAITER);
-      return lignes.sort((a, b) => ordre.indexOf(a.genre) - ordre.indexOf(b.genre));
+      return lignes
+        .map((ligne) => ({
+          ...ligne,
+          icone: iconeEtablissement(etablissement),
+          enRetard: ligne.enRetard ?? ligne.genre === GENRE_A_TRAITER.TACHE_EN_RETARD,
+        }))
+        .sort((a, b) => ordre.indexOf(a.genre) - ordre.indexOf(b.genre));
     }),
   );
   return groupes.flat();

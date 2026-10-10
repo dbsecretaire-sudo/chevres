@@ -301,7 +301,8 @@ export const ORDRE_CATEGORIE_DEPENSE = [
  * contiennent plusieurs recettes ouvrent une seconde liste (lait ou fromage ; petits, animal sur pied ou vivant…).
  */
 export const GROUPE_RECETTE = {
-  LAITERIE: 'laiterie',
+  FROMAGES: 'fromages',
+  LAIT: 'lait',
   OEUFS: 'oeufs',
   VIANDE: 'viande',
   BOUCHERIE: 'boucherie',
@@ -341,35 +342,16 @@ const GROUPE_BOUCHERIE: GroupeRecetteDefinition = {
   categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],
 };
 
-/**
- * Toutes les ventes qu'un élevage peut cocher pour une espèce, dans l'ordre de la liste « Catégorie de recette » : la laiterie
- * (seulement pour les chèvres et les brebis, les seules à avoir lait et fromages à l'inventaire), les œufs, la viande, la
- * boucherie / charcuterie, l'aide et le reste.
- */
-export const TOUS_GROUPES_RECETTE_ANIMAUX: GroupeRecetteDefinition[] = [
-  { groupe: GROUPE_RECETTE.LAITERIE, categories: [CATEGORIE_RECETTE.LAIT, CATEGORIE_RECETTE.FROMAGE] },
-  { groupe: GROUPE_RECETTE.OEUFS, categories: [CATEGORIE_RECETTE.OEUFS] },
-  { groupe: GROUPE_RECETTE.VIANDE, categories: [CATEGORIE_RECETTE.VIANDE] },
-  { groupe: GROUPE_RECETTE.BOUCHERIE, categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE] },
-  ...AIDE_ET_AUTRE,
-];
-
-/** Les espèces dont l'inventaire a du lait et des fromages : seules à pouvoir cocher la laiterie. */
-export const ESPECES_LAITIERES: readonly string[] = [
-  TYPE_ANIMAL_ETABLISSEMENT.CHEVRES,
-  TYPE_ANIMAL_ETABLISSEMENT.BREBIS,
-  TYPE_ANIMAL_ETABLISSEMENT.VACHES,
-];
-
-/** Chèvres et brebis : laiterie / fromagerie, puis la viande. */
+/** Chèvres, brebis et vaches : les fromages et le lait, puis la viande. */
 const GROUPES_RECETTE_LAITIERS: GroupeRecetteDefinition[] = [
-  { groupe: GROUPE_RECETTE.LAITERIE, categories: [CATEGORIE_RECETTE.LAIT, CATEGORIE_RECETTE.FROMAGE] },
+  { groupe: GROUPE_RECETTE.FROMAGES, categories: [CATEGORIE_RECETTE.FROMAGE] },
+  { groupe: GROUPE_RECETTE.LAIT, categories: [CATEGORIE_RECETTE.LAIT] },
   GROUPE_VIANDE,
   GROUPE_BOUCHERIE,
   ...AIDE_ET_AUTRE,
 ];
 
-/** Vaches et cochons : pas de laiterie ; la viande, l'aide et le reste. */
+/** Cochons : pas de laiterie ; la viande, l'aide et le reste. */
 const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [GROUPE_VIANDE, GROUPE_BOUCHERIE, ...AIDE_ET_AUTRE];
 
 /** Poules : les œufs, puis la viande, l'aide et le reste. */
@@ -384,7 +366,7 @@ const GROUPES_RECETTE_POULES: GroupeRecetteDefinition[] = [
 export const GROUPES_RECETTE_PAR_ESPECE: Record<string, GroupeRecetteDefinition[]> = {
   [TYPE_ANIMAL_ETABLISSEMENT.CHEVRES]: GROUPES_RECETTE_LAITIERS,
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: GROUPES_RECETTE_LAITIERS,
-  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: GROUPES_RECETTE_VIANDE,
+  [TYPE_ANIMAL_ETABLISSEMENT.VACHES]: GROUPES_RECETTE_LAITIERS,
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: GROUPES_RECETTE_VIANDE,
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: GROUPES_RECETTE_POULES,
   // Des animaux de compagnie : pas de production à vendre, seulement l'aide et le reste.

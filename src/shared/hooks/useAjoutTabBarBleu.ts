@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useFocusEffect, useNavigation } from 'expo-router';
+import { definirBarreAjoutBleue } from '@/shared/navigation/barreAjout';
 import { colors } from '@/shared/theme/colors';
 
 /**
@@ -13,12 +14,14 @@ export function useAjoutTabBarBleu() {
   useFocusEffect(
     useCallback(() => {
       const tabs = navigation.getParent();
+      definirBarreAjoutBleue(true);
       tabs?.setOptions({
         tabBarStyle: { backgroundColor: colors.ajout },
         tabBarActiveTintColor: colors.ajoutIconActif,
         tabBarInactiveTintColor: colors.ajoutIconInactif,
       } as never);
-      return () =>
+      return () => {
+        definirBarreAjoutBleue(false);
         tabs?.setOptions({
           // undefined ne fait pas retomber sur le vert de screenOptions : il retombe sur le bleu
           // par défaut de React Navigation. On remet donc explicitement les vraies valeurs normales.
@@ -26,6 +29,7 @@ export function useAjoutTabBarBleu() {
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
         } as never);
+      };
     }, [navigation]),
   );
 }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ListRow } from '@/shared/components/ListRow';
+import { BoutonInformations } from '@/features/accueil/components/BoutonInformations';
+import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { Screen } from '@/shared/components/Screen';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -31,7 +31,7 @@ import { TEXTES } from '@/shared/textes';
  * Accueil d'une entreprise : l'année active, deux chiffres, puis selon l'activité — le calendrier des chambres occupées
  * pour un gîte, le calendrier des résultats de trading pour une activité financière, la liste des tâches à faire (avec
  * un lien vers chacune) pour le secrétariat. Le solde ouvre la balance mois par mois ; les informations de l'entreprise
- * s'ouvrent par un bouton sous les deux chiffres.
+ * s'ouvrent par un bouton à côté de l'année, et les rappels viennent sous les deux chiffres.
  */
 export default function AccueilEntreprise() {
   const router = useRouter();
@@ -105,14 +105,10 @@ export default function AccueilEntreprise() {
 
   return (
     <Screen>
-      <YearPicker annees={accueil.annees} value={accueil.annee} onChange={changerAnnee} />
-
-      {/* Les informations de l'entreprise : juste sous l'année, une simple ligne (le détail est dans l'onglet Organisation). */}
-      <ListRow
-        title={TEXTES.commun.general.informationsDeLEntreprise}
-        trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
-        onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
-      />
+      <View style={stylesAccueil.ligneAnnee}>
+        <YearPicker annees={accueil.annees} value={accueil.annee} onChange={changerAnnee} />
+        <BoutonInformations titre={TEXTES.commun.general.informationsDeLEntreprise} />
+      </View>
 
       <GrilleChiffres>
         <TuileChiffre
@@ -128,6 +124,8 @@ export default function AccueilEntreprise() {
           onPress={() => router.push(secondeTuile.vers)}
         />
       </GrilleChiffres>
+
+      <BlocRappels />
 
       {gite ? (
         <CalendrierMois

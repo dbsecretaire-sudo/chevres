@@ -35,7 +35,7 @@ export function CategorieModal({ ouverte, categorie, onValider, onFermer }: Prop
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNom(categorie?.nom ?? '');
       setClasse(categorie?.classe ?? '');
-      setComptes('');
+      setComptes(categorie?.prefixes.join(', ') ?? '');
       setErreur(null);
     }
   }, [ouverte, categorie]);
@@ -47,42 +47,40 @@ export function CategorieModal({ ouverte, categorie, onValider, onFermer }: Prop
       <Pressable style={commonStyles.backdrop} onPress={onFermer}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{categorie ? T.modifierCategorie : T.ajouterCategorie}</Text>
+          <>
+            <FormField
+              label={T.categorie.nom}
+              required
+              value={nom}
+              onChangeText={(texte) => {
+                setNom(texte);
+                setErreur(null);
+              }}
+              placeholder={T.categorie.exempleNom}
+            />
+            <FormField
+              label={T.categorie.classe}
+              required
+              value={classe}
+              onChangeText={(texte) => {
+                setClasse(texte);
+                setErreur(null);
+              }}
+              keyboardType="number-pad"
+              placeholder={T.categorie.exempleClasse}
+            />
+          </>
           <FormField
-            label={T.categorie.nom}
+            label={T.categorie.comptes}
             required
-            value={nom}
+            value={comptes}
             onChangeText={(texte) => {
-              setNom(texte);
+              setComptes(texte);
               setErreur(null);
             }}
-            placeholder={T.categorie.exempleNom}
+            placeholder={T.categorie.exempleComptes}
           />
-          <FormField
-            label={T.categorie.classe}
-            required
-            value={classe}
-            onChangeText={(texte) => {
-              setClasse(texte);
-              setErreur(null);
-            }}
-            keyboardType="number-pad"
-            placeholder={T.categorie.exempleClasse}
-          />
-          {categorie ? null : (
-            <>
-              <FormField
-                label={T.categorie.comptes}
-                required
-                value={comptes}
-                onChangeText={(texte) => {
-                  setComptes(texte);
-                  setErreur(null);
-                }}
-                placeholder={T.categorie.exempleComptes}
-              />
-              <Text style={commonStyles.note}>{T.categorie.aideComptes}</Text>
-            </>
-          )}
+          <Text style={commonStyles.note}>{T.categorie.aideComptes}</Text>
           {erreur ? <Text style={commonStyles.required}>{T.categorie.erreurs[erreur]}</Text> : null}
           <View style={commonStyles.row}>
             <Button

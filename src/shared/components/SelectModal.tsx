@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, Text, TextInput } from 'react-native';
+import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { colors } from '@/shared/theme/colors';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
 import { styles } from '@/shared/styles/components/SelectField.styles';
@@ -24,6 +25,12 @@ interface Props<T extends string> {
   onClose: () => void;
   /** Affiche un champ de recherche (filtre sur la valeur et le libellé) — utile pour les longues listes. */
   searchable?: boolean;
+  /** Les groupes (leurs titres) qui se choisissent par des puces sous la recherche, l'une ou l'autre, au lieu d'être des titres dans la liste. */
+  puces?: string[];
+  /** Le texte du champ de recherche quand il diffère du texte d'office. */
+  placeholderRecherche?: string;
+  /** Quand il est donné, ce qu'on tape dans la recherche, s'il n'est pas dans la liste, se propose comme valeur (« Utiliser le n° 123 »). */
+  libelleSaisieLibre?: (texte: string) => string;
 }
 
 /** Fenêtre de choix dans une liste, partagée par SelectField (champ) et SelectLien (lien souligné). */
@@ -35,18 +42,31 @@ export function SelectModal<T extends string>({
   onSelect,
   onClose,
   searchable,
+  puces,
+  placeholderRecherche,
+  libelleSaisieLibre,
 }: Props<T>) {
   const accent = useAccentColor();
   const [recherche, setRecherche] = useState('');
+  /** La puce choisie (aucune : tous les groupes). */
+  const [groupeChoisi, setGroupeChoisi] = useState<string | null>(null);
+  const groupes = puces ?? [];
+  const avecPuces = groupes.length > 0;
 
   const optionsFiltrees = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
-  }, [options, recherche]);
+    const duGroupe = groupeChoisi ? options.filter((o) => o.groupe === groupeChoisi) : options;
+    if (!q) return duGroupe;
+    return duGroupe.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
+  }, [options, recherche, groupeChoisi]);
+
+  /** Ce qu'on tape n'est pas dans la liste : on le propose comme valeur (quand la saisie libre est permise). */
+  const propositionLibre =
+    !!libelleSaisieLibre && !!recherche.trim() && !options.some((o) => o.value === recherche.trim());
 
   const fermer = () => {
     setRecherche('');
+    setGroupeChoisi(null);
     onClose();
   };
 
@@ -55,29 +75,49 @@ export function SelectModal<T extends string>({
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           {/* Une liste en groupes porte déjà ses titres : celui de la fenêtre ferait doublon. */}
-          {options.some((o) => o.groupe) ? null : <Text style={styles.sheetTitle}>{titre}</Text>}
+          {options.some((o) => o.groupe) && !avecPuces ? null : (
+            <Text style={styles.sheetTitle}>{titre}</Text>
+          )}
           {searchable && (
             <TextInput
               style={styles.recherche}
-              placeholder={TEXTES.commun.selectField.rechercherParNOuLibellePoints}
+              placeholder={placeholderRecherche ?? TEXTES.commun.selectField.rechercherParNOuLibellePoints}
               placeholderTextColor={colors.textMuted}
               value={recherche}
               onChangeText={setRecherche}
             />
           )}
+          {groupes.length > 0 ? (
+            <View style={styles.puces}>
+              <FiltresExclusifs choix={groupes} valeur={groupeChoisi} onChoisir={setGroupeChoisi} />
+            </View>
+          ) : null}
+          {propositionLibre ? (
+            <Pressable
+              style={styles.option}
+              onPress={() => {
+                onSelect(recherche.trim() as T);
+                fermer();
+              }}
+            >
+              <Text style={[commonStyles.valueText, { color: accent, fontWeight: '700' }]}>
+                {libelleSaisieLibre?.(recherche.trim())}
+              </Text>
+            </Pressable>
+          ) : null}
           <FlatList
             style={styles.liste}
             data={optionsFiltrees}
-            keyExtractor={(item) => item.value}
+            keyExtractor={(item, index) => `${item.value}|${index}`}
             renderItem={({ item, index }) => (
               <>
-                {item.groupe && item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
+                {!avecPuces && item.groupe && item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
                   <Text style={[commonStyles.lineBold, styles.groupe]}>{item.groupe}</Text>
                 ) : null}
                 <Pressable
                   style={[
                     styles.option,
-                    item.groupe && styles.optionGroupee,
+                    item.groupe && !avecPuces && styles.optionGroupee,
                     item.value === value && styles.optionSelected,
                   ]}
                   onPress={() => {
@@ -97,7 +137,9 @@ export function SelectModal<T extends string>({
               </>
             )}
             ListEmptyComponent={
-              <Text style={styles.aucunResultat}>{TEXTES.commun.selectField.aucunResultat}</Text>
+              propositionLibre ? null : (
+                <Text style={styles.aucunResultat}>{TEXTES.commun.selectField.aucunResultat}</Text>
+              )
             }
           />
         </Pressable>

@@ -4,6 +4,8 @@ import { CATEGORIES_STOCKAGE } from '@/shared/constants/csv';
 import { getYears, loadYear } from '@/shared/storage/localStore';
 import { getSettings, indicatifMarquagePar } from '@/features/settings/settings';
 import { listFactures } from '@/features/comptabilite/repository/factures';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { libelleArticle } from '@/features/stock/services/stock';
 import { listVisitesVeterinaire } from '@/features/exploitation/repository/visitesVeterinaire';
 import { listControles } from '@/features/exploitation/repository/controles';
 import { calculerBilanAlimentation } from '@/features/exploitation/services/bilanAlimentation';
@@ -37,19 +39,25 @@ import { TEXTES } from '@/shared/textes';
 
 const ROW_BUILDERS: Record<
   Categorie,
-  (items: any[], indicatif?: IndicatifParEspece) => Record<string, unknown>[]
+  (
+    items: any[],
+    indicatif?: IndicatifParEspece,
+    libelleStock?: (cle: string) => string,
+  ) => Record<string, unknown>[]
 > = {
   [CATEGORIE_STOCKAGE.CHEPTEL]: (items, indicatif) => items.map((c) => chevreRow(c, indicatif)),
   [CATEGORIE_STOCKAGE.VENTES]: (items) => items.map(venteRow),
-  [CATEGORIE_STOCKAGE.FACTURES]: (items) => items.map(factureRow),
+  [CATEGORIE_STOCKAGE.FACTURES]: (items, _indicatif, libelleStock) =>
+    items.map((f) => factureRow(f, libelleStock)),
   [CATEGORIE_STOCKAGE.VISITES_VETERINAIRE]: (items, indicatif) => items.map((v) => visiteRow(v, indicatif)),
-  [CATEGORIE_STOCKAGE.CONTROLES]: (items, indicatif) => items.map((c) => controleRow(c, indicatif)),
+  [CATEGORIE_STOCKAGE.CONTROLES]: (items, indicatif) => items.map((c) => controleRow(c, indicatif, true)),
 };
 
 /** Génère un classeur Excel (un onglet par catégorie) pour l'année donnée et ouvre le menu de partage. */
 export async function exporterAnneeExcel(annee: number): Promise<void> {
-  const settings = await getSettings();
+  const [settings, stock] = await Promise.all([getSettings(), lireArchiveStock()]);
   const indicatif = indicatifMarquagePar(settings.exploitation);
+  const libelleStock = (cle: string) => libelleArticle(cle, stock);
   const workbook = XLSX.utils.book_new();
 
   for (const categorie of CATEGORIES_STOCKAGE) {
@@ -57,7 +65,7 @@ export async function exporterAnneeExcel(annee: number): Promise<void> {
     XLSX.utils.book_append_sheet(
       workbook,
       feuilleOuMessage(
-        ROW_BUILDERS[categorie](items, indicatif),
+        ROW_BUILDERS[categorie](items, indicatif, libelleStock),
         TEXTES.export.xlsxExport.aucuneDonneePourCetteAnnee,
       ),
       LABEL_CATEGORIE_STOCKAGE[categorie].slice(0, LONGUEUR_MAX_NOM_ONGLET),
@@ -93,7 +101,7 @@ export async function exporterExploitationExcel(annee: number): Promise<void> {
   XLSX.utils.book_append_sheet(
     workbook,
     feuilleOuMessage(
-      controles.map((c) => controleRow(c, indicatif)),
+      controles.map((c) => controleRow(c, indicatif, true)),
       TEXTES.commun.general.aucunControlePourCetteAnnee,
     ),
     TEXTES.commun.general.controles,
@@ -135,7 +143,8 @@ export async function exporterExploitationExcel(annee: number): Promise<void> {
  * confirmer avant tout usage officiel.
  */
 export async function exporterPlanComptableExcel(annee: number): Promise<void> {
-  const factures = await listFactures(annee);
+  const [factures, stock] = await Promise.all([listFactures(annee), lireArchiveStock()]);
+  const libelleStock = (cle: string) => libelleArticle(cle, stock);
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(
@@ -149,7 +158,7 @@ export async function exporterPlanComptableExcel(annee: number): Promise<void> {
   XLSX.utils.book_append_sheet(
     workbook,
     feuilleOuMessage(
-      facturesParCompteEtDate(factures).map(factureRow),
+      facturesParCompteEtDate(factures).map((f) => factureRow(f, libelleStock)),
       TEXTES.commun.general.aucuneFacturePourCetteAnnee,
     ),
     TEXTES.export.xlsxExport.detailFactures,

@@ -59,6 +59,11 @@ export interface SaisieEcriture {
   description: string;
   montant: string;
   categorieDepense: CategorieDepense;
+  /** Achat de production : l'article du stock acheté (vide : hors stock) et sa quantité. */
+  stockArticle?: string;
+  stockQuantite?: number;
+  /** Un achat de boucles : le numéro de la première. */
+  bouclesDebut?: string;
   lignesAlimentation: LigneAlimentForm[];
   /** Le détail des marchandises, quand l'achat est un achat de marchandises d'un gîte. */
   lignesMarchandises?: LigneMarchandiseForm[];
@@ -76,8 +81,6 @@ export interface SaisieEcriture {
   tauxTvaVente: string;
   tauxTvaAchat: string;
   poidsKg: string;
-  /** Nombre de sacs en plastique emportés (vente de fromage). */
-  sacs: string;
   /** Commentaire facultatif (viande, charcuterie, animal sur pied ou vivant). */
   precision: string;
   /** Pour un animal sur pied ou vivant : vrai si c'est un petit, faux si c'est un adulte. */
@@ -166,7 +169,6 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
         (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
       jeune: estViande && s.jeune ? true : undefined,
       animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
-      sacs: estFromage && s.sacs.trim() ? Math.round(parseDecimal(s.sacs)) || undefined : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
         ? s.precision.trim() || undefined
         : undefined,
@@ -236,6 +238,14 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     if (montantFinal <= 0) return { erreur: { titre: TEXTES.commun.general.montantInvalide } };
   }
 
+  const stockProduction =
+    estRecue &&
+    (s.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION || s.categorieDepense === CATEGORIE_DEPENSE.AUTRE) &&
+    !!s.stockArticle;
+  if (stockProduction && !(s.stockQuantite && s.stockQuantite > 0)) {
+    return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
+  }
+
   return {
     facture: {
       activite: s.activite,
@@ -247,6 +257,9 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       lignesAlimentation,
       lignesMarchandises,
+      stockArticle: stockProduction ? s.stockArticle : undefined,
+      stockQuantite: stockProduction ? s.stockQuantite : undefined,
+      bouclesDebut: stockProduction && s.bouclesDebut ? s.bouclesDebut : undefined,
       categorieRecette: estEmise ? s.categorieRecette : undefined,
       typeAide: estAide ? s.typeAide : undefined,
       typeAideLibre:

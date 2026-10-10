@@ -9,13 +9,10 @@ import {
   GROUPES_RECETTE_FINANCE,
   GROUPES_RECETTE_PAR_ESPECE,
   GROUPES_RECETTE_SERVICES,
-  ESPECES_LAITIERES,
-  TOUS_GROUPES_RECETTE_ANIMAUX,
-  type GROUPE_RECETTE,
+  GROUPE_RECETTE,
   type GroupeRecetteDefinition,
 } from '@/shared/constants/comptabilite';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { choixGroupesRecette } from '@/features/comptabilite/utils/choixGroupesRecette';
 import { ACTIVITE_COMMUNE, ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import {
@@ -87,29 +84,19 @@ export function libelleRecetteEtablissement(categorie: CategorieRecette): string
 
 export type GroupeRecette = ValeurDe<typeof GROUPE_RECETTE>;
 
-/** Les groupes qu'une espèce peut cocher : tous ceux des ventes existantes, sauf la laiterie si elle n'a ni lait ni fromages. */
-export const groupesCochables = (espece: string): GroupeRecetteDefinition[] =>
-  TOUS_GROUPES_RECETTE_ANIMAUX.filter((g) => g.groupe !== 'laiterie' || ESPECES_LAITIERES.includes(espece));
-
 /**
- * Les groupes de recettes (et leurs recettes) proposés pour une activité : ceux que l'utilisateur a cochés pour son espèce,
- * sinon ceux d'office.
+ * Les groupes de recettes (et leurs recettes) proposés pour une activité : ceux de son espèce, qui reprennent les listes de
+ * l'inventaire (fromages et lait, œufs, animaux, viande et charcuterie), puis l'aide et le reste. Les listes que l'utilisateur
+ * ajoute à l'inventaire s'y ajoutent (voir categoriesRecetteInventaire).
  */
-const groupesDe = (activite: ActiviteComptable): GroupeRecetteDefinition[] => {
-  if (activite === ACTIVITE_COMMUNE) return groupesCommuns();
-  const coches = choixGroupesRecette()[activite];
-  if (!coches) return GROUPES_RECETTE_PAR_ESPECE[activite];
-  const choisis = groupesCochables(activite).filter((g) => coches.includes(g.groupe));
-  // Seules des catégories ajoutées sont cochées : « Autre recette » reste, il faut toujours une recette d'office.
-  return choisis.length > 0
-    ? choisis
-    : GROUPES_RECETTE_PAR_ESPECE[activite].filter((g) => g.groupe === 'autre');
-};
+const groupesDe = (activite: ActiviteComptable): GroupeRecetteDefinition[] =>
+  activite === ACTIVITE_COMMUNE ? groupesCommuns() : GROUPES_RECETTE_PAR_ESPECE[activite];
 
-/** Vrai quand la laiterie / fromagerie est proposée à l'espèce : d'office aux chèvres et aux brebis, aux autres si elle est cochée. */
-export const laiterieActive = (espece: string): boolean => groupesActifsEspece(espece).includes('laiterie');
+/** Vrai quand la laiterie / fromagerie est proposée à l'espèce : aux chèvres, aux brebis et aux vaches. */
+export const laiterieActive = (espece: string): boolean =>
+  groupesActifsEspece(espece).includes(GROUPE_RECETTE.LAIT);
 
-/** Les groupes proposés pour une espèce (ses catégories de recette cochées, ou celles d'office). */
+/** Les groupes proposés pour une espèce. */
 export const groupesActifsEspece = (espece: string): GroupeRecette[] =>
   groupesDe(espece as ActiviteComptable).map((g) => g.groupe);
 

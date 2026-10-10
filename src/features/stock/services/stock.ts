@@ -9,6 +9,7 @@ import {
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
 import {
+  ARTICLE_BOUCLE,
   ARTICLE_EMBALLAGE,
   ARTICLE_MATERIEL,
   CONDITIONNEMENT_PAR_DEFAUT,
@@ -21,6 +22,7 @@ import {
   ROLE_VIANDE,
 } from '@/shared/constants/stock';
 import {
+  LABEL_BOUCLE,
   LABEL_EMBALLAGE,
   LABEL_MATERIEL,
   LABEL_TYPE_ALIMENT,
@@ -38,6 +40,8 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
+import { COMPTE_BOUCLES } from '@/shared/constants/planComptable';
+import { bouclesApresAchat, synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 
 /** L'identifiant d'un article de stock : son genre puis son code (« fromage:frais », « emballage:sac_plastique »). */
 export const cleArticle = (genre: GenreArticle, code: string): string => `${genre}:${code}`;
@@ -107,38 +111,47 @@ export function articlesDuGenre(
     genre === GENRE_ARTICLE.EQUIPEMENT ||
     genre === GENRE_ARTICLE.PERSONNALISE
       ? []
-      : genre === GENRE_ARTICLE.VIANDE
-        ? lignesDeViandeDOffice(toutes ? especesActives() : [filtre], archive)
-        : genre === GENRE_ARTICLE.FROMAGE
-          ? Object.values(TYPE_FROMAGE).map((code) => ({
-              cle: cleArticle(genre, code),
-              libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_TYPE_FROMAGE[code],
-            }))
-          : genre === GENRE_ARTICLE.ALIMENT
-            ? [
-                ...new Set(
-                  (toutes ? especesActives() : [filtre]).flatMap(
-                    (e) => typesAlimentEspece(e) as readonly string[],
-                  ),
-                ),
-              ].map((type) => ({
-                cle: cleArticle(genre, type),
-                libelle:
-                  archive.noms[cleArticle(genre, type)] ??
-                  LABEL_TYPE_ALIMENT[type as keyof typeof LABEL_TYPE_ALIMENT],
+      : genre === GENRE_ARTICLE.BOUCLE
+        ? Object.values(ARTICLE_BOUCLE).map((code) => ({
+            cle: cleArticle(genre, code),
+            libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_BOUCLE[code],
+          }))
+        : genre === GENRE_ARTICLE.VIANDE
+          ? lignesDeViandeDOffice(toutes ? especesActives() : [filtre], archive)
+          : genre === GENRE_ARTICLE.FROMAGE
+            ? Object.values(TYPE_FROMAGE).map((code) => ({
+                cle: cleArticle(genre, code),
+                libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_TYPE_FROMAGE[code],
               }))
-            : genre === GENRE_ARTICLE.EMBALLAGE
-              ? Object.values(ARTICLE_EMBALLAGE).map((code) => ({
-                  cle: cleArticle(genre, code),
-                  libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_EMBALLAGE[code],
+            : genre === GENRE_ARTICLE.ALIMENT
+              ? [
+                  ...new Set(
+                    (toutes ? especesActives() : [filtre]).flatMap(
+                      (e) => typesAlimentEspece(e) as readonly string[],
+                    ),
+                  ),
+                ].map((type) => ({
+                  cle: cleArticle(genre, type),
+                  libelle:
+                    archive.noms[cleArticle(genre, type)] ??
+                    LABEL_TYPE_ALIMENT[type as keyof typeof LABEL_TYPE_ALIMENT],
                 }))
-              : Object.values(ARTICLE_MATERIEL).map((code) => ({
-                  cle: cleArticle(genre, code),
-                  libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_MATERIEL[code],
-                }));
+              : genre === GENRE_ARTICLE.EMBALLAGE
+                ? Object.values(ARTICLE_EMBALLAGE).map((code) => ({
+                    cle: cleArticle(genre, code),
+                    libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_EMBALLAGE[code],
+                  }))
+                : Object.values(ARTICLE_MATERIEL).map((code) => ({
+                    cle: cleArticle(genre, code),
+                    libelle: archive.noms[cleArticle(genre, code)] ?? LABEL_MATERIEL[code],
+                  }));
   // Les articles d'office des fromages, emballages et matériel ne sont pas ceux d'un élevage qui ne fait pas de fromage.
   const dOfficeVisibles =
-    genre === GENRE_ARTICLE.ALIMENT || genre === GENRE_ARTICLE.VIANDE || toutes || laiterieActive(filtre)
+    genre === GENRE_ARTICLE.ALIMENT ||
+    genre === GENRE_ARTICLE.VIANDE ||
+    genre === GENRE_ARTICLE.BOUCLE ||
+    toutes ||
+    laiterieActive(filtre)
       ? parDefaut
       : [];
   const ajoutes = archive.articles
@@ -176,8 +189,11 @@ export function estLigneDuCheptel(cle: string): boolean {
 }
 
 /** Le mot qui dit d'où vient un mouvement (vente, saisie, naissance, achat, consommation). */
-export function libelleOrigineMouvement(m: Pick<MouvementStock, 'origine' | 'automatique'>): string {
+export function libelleOrigineMouvement(
+  m: Pick<MouvementStock, 'origine' | 'automatique' | 'boucleId' | 'delta'>,
+): string {
   if (m.automatique) return TEXTES.stock.exporter.remiseAZero;
+  if (m.boucleId) return m.delta > 0 ? TEXTES.stock.entreeBoucle : TEXTES.stock.pose;
   switch (m.origine) {
     case ORIGINE_MOUVEMENT.VENTE:
       return TEXTES.stock.vente;
@@ -239,8 +255,8 @@ export function fromagesVendus(vente: Vente): number {
 }
 
 /**
- * Ce que la vente d'un fromage consomme : le fromage lui-même, les emballages de son conditionnement et les sacs en
- * plastique indiqués dans la vente. Rien pour une autre vente.
+ * Ce que la vente d'un fromage consomme : le fromage lui-même et les emballages de son conditionnement. Rien pour une
+ * autre vente.
  */
 export function consommationDeLaVente(
   vente: Vente,
@@ -267,12 +283,6 @@ export function consommationDeLaVente(
   const lignes = [{ article: cleArticle(GENRE_ARTICLE.FROMAGE, fromage), quantite: nombre }];
   for (const code of conditionnementDe(fromage, archive)) {
     lignes.push({ article: cleArticle(GENRE_ARTICLE.EMBALLAGE, code), quantite: nombre });
-  }
-  if ((vente.sacs ?? 0) > 0) {
-    lignes.push({
-      article: cleArticle(GENRE_ARTICLE.EMBALLAGE, ARTICLE_EMBALLAGE.SAC_PLASTIQUE),
-      quantite: vente.sacs!,
-    });
   }
   return lignes;
 }
@@ -322,16 +332,57 @@ export async function synchroniserStockAlimentation(facture: Facture): Promise<v
       factureId: facture.id,
     });
   }
-  if (nouveaux.length === 0 && autres.length === archive.mouvements.length) return;
-  await remplacerArchiveStock({ ...archive, mouvements: [...autres, ...nouveaux] });
+  // Un achat de production (sel, emballages, boucles…) : la quantité entre au stock de l'article choisi.
+  if (facture.stockArticle && facture.stockQuantite && facture.stockQuantite > 0) {
+    nouveaux.push({
+      id: generateId(),
+      article: facture.stockArticle,
+      date: facture.date,
+      delta: facture.stockQuantite,
+      origine: ORIGINE_MOUVEMENT.ACHAT,
+      factureId: facture.id,
+    });
+  }
+  // Un achat de boucles : chacune entre dans l'inventaire avec son numéro (de la première, à la suite).
+  const boucles = bouclesApresAchat(archive.boucles ?? [], facture);
+  const bouclesChangees = JSON.stringify(boucles) !== JSON.stringify(archive.boucles ?? []);
+  if (nouveaux.length === 0 && autres.length === archive.mouvements.length && !bouclesChangees) return;
+  await remplacerArchiveStock({ ...archive, mouvements: [...autres, ...nouveaux], boucles });
+  // Des animaux portent peut-être déjà certaines de ces boucles : elles sont alors posées.
+  if (bouclesChangees) await synchroniserPoseBoucles();
 }
+
+/**
+ * Les articles que l'on peut acheter pour la production (emballages, matériel, équipement, bâtiment, entretien et les
+ * articles des listes ajoutées) : ceux dont un achat augmente le stock.
+ */
+export const articlesAchetables = (archive: ArchiveStock): ArticleAffiche[] =>
+  [
+    GENRE_ARTICLE.EMBALLAGE,
+    GENRE_ARTICLE.MATERIEL,
+    GENRE_ARTICLE.EQUIPEMENT,
+    GENRE_ARTICLE.BATIMENT,
+    GENRE_ARTICLE.ENTRETIEN,
+    GENRE_ARTICLE.BOUCLE,
+    GENRE_ARTICLE.PERSONNALISE,
+  ].flatMap((genre) => articlesDuGenre(genre, archive));
+
+/** Les comptes qui ont une liste dans l'inventaire : ceux des listes ajoutées, et celui des boucles d'identification. */
+export const comptesDeLInventaire = (archive: Pick<ArchiveStock, 'listes'>): string[] => [
+  ...(archive.listes ?? []).map((l) => l.compte),
+  COMPTE_BOUCLES.numero,
+];
 
 /** Retire du stock ce qu'une facture d'alimentation supprimée y avait ajouté. */
 export async function retirerStockAlimentation(factureId: string): Promise<void> {
   const archive = await lireArchiveStock();
-  const restants = archive.mouvements.filter((m) => m.factureId !== factureId);
-  if (restants.length !== archive.mouvements.length) {
-    await remplacerArchiveStock({ ...archive, mouvements: restants });
+  const boucles = (archive.boucles ?? []).filter((b) => b.factureId !== factureId);
+  const parties = new Set((archive.boucles ?? []).filter((b) => b.factureId === factureId).map((b) => b.id));
+  const restants = archive.mouvements.filter(
+    (m) => m.factureId !== factureId && !parties.has(m.boucleId ?? ''),
+  );
+  if (restants.length !== archive.mouvements.length || boucles.length !== (archive.boucles ?? []).length) {
+    await remplacerArchiveStock({ ...archive, mouvements: restants, boucles });
   }
 }
 
@@ -389,14 +440,11 @@ export async function supprimerArticle(id: string): Promise<void> {
     ordres[genre as GenreArticle] = (cles ?? []).filter((cle) => cle.split(':')[1] !== id);
   }
   await remplacerArchiveStock({
+    ...archive,
     mouvements: archive.mouvements.filter((m) => m.article.split(':')[1] !== id),
     articles: archive.articles.filter((a) => a.id !== id),
     conditionnements,
     ordres,
-    noms: archive.noms,
-    lait: archive.lait,
-    prix: archive.prix,
-    masques: archive.masques,
   });
 }
 

@@ -22,6 +22,8 @@ export const commonStyles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   /** Un bouton à droite d'un en-tête d'écran : décollé du bord, comme la flèche de retour à gauche. */
   boutonEnteteDroite: { marginRight: 16 },
+  /** Les boutons de l'en-tête, plus espacés (deux icônes côte à côte). */
+  headerDroiteEspacee: { gap: 18 },
   headerDroite: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   gap2: { gap: 2 },
   gap6: { gap: 6 },
@@ -29,11 +31,17 @@ export const commonStyles = StyleSheet.create({
   gap10: { gap: 10 },
   textWrap: { flex: 1, gap: 2 },
   scrollContent: { paddingBottom: 100, gap: 12 },
-  topPadded: { paddingHorizontal: 16, paddingTop: 16 },
   topBox: { padding: 16, gap: 12 },
-  listBox: { padding: 16, gap: 10 },
+  /** L'en-tête d'une liste d'un écran qui a déjà sa marge (Screen) : filtres, recherche. */
+  enteteListe: { gap: 12 },
+  /** Le contenu d'une liste d'un écran qui a déjà sa marge (Screen) : rien sur les côtés. */
+  listeSimple: { paddingBottom: 24, gap: 10 },
+  /** Le contenu d'une liste d'un écran pleine largeur (ScreenList) : sa marge de 16 de chaque côté, avec la place du bouton « + ». */
   listFab: { paddingHorizontal: 16, paddingBottom: 160, paddingTop: 4, gap: 10 },
-  listBottom: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
+  /** Idem pour un écran qui a déjà sa marge (Screen) : rien sur les côtés. */
+  listeAvecFab: { paddingBottom: 160, paddingTop: 4, gap: 10 },
+  /** Le haut d'une liste d'un écran pleine largeur : recherche et filtres avec leur marge de 16. */
+  topPadded: { paddingHorizontal: 16, paddingTop: 16, gap: 10 },
   screenBg: { flex: 1, backgroundColor: colors.background },
   separateur: { borderTopWidth: 1, borderTopColor: colors.border, marginVertical: 4 },
   pressed: { opacity: 0.7 },
@@ -64,6 +72,10 @@ export const commonStyles = StyleSheet.create({
   paraGras: { fontSize: 13, color: colors.text, lineHeight: 19, fontWeight: '600' },
   caption: { fontSize: 12, color: colors.textMuted },
   captionTop: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  /** Le libellé d'un champ et, à sa droite, sa note : sur une même ligne. */
+  enteteChamp: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 },
+  /** Une note alignée à droite, qui passe à la ligne plutôt que de pousser le libellé. */
+  noteDroite: { flexShrink: 1, textAlign: 'right' },
   note: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic' },
   noteMarge: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', marginTop: 4 },
   notFound: { fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 40 },

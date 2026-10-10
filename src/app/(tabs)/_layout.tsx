@@ -1,5 +1,7 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Tabs, useSegments } from 'expo-router';
+import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
+import { useBarreAjoutBleue } from '@/shared/navigation/barreAjout';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
@@ -10,7 +12,30 @@ import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/en
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
+/** Les pages (cachées de la barre) qui font partie de l'Organisation : son onglet y reste en couleur. */
+const PAGES_ORGANISATION = [
+  'reglages',
+  'organisation-',
+  'export-donnees',
+  'pdf-donnees',
+  'sauvegarde-locale',
+  'google-drive',
+  'structure-dossiers',
+  'informations-exploitation',
+];
+
 export default function TabsLayout() {
+  const segments: string[] = useSegments();
+  const page = segments[1] ?? '';
+  const retourContexte = useRetourContexte();
+  // Pendant un ajout, la barre est bleue : les onglets gardent alors les couleurs de la barre, pas celles de leur page.
+  const barreBleue = useBarreAjoutBleue();
+  // Les écrans de santé font partie du cheptel : son onglet y reste en couleur.
+  const dansSante = page === 'sante' && !barreBleue;
+  // Un écran de la comptabilité ouvert depuis l'Organisation : c'est l'onglet Organisation qui reste en couleur.
+  const depuisOrganisation = retourContexte !== null && page !== 'sante' && !barreBleue;
+  const dansOrganisation =
+    !barreBleue && (depuisOrganisation || PAGES_ORGANISATION.some((p) => page.startsWith(p)));
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
   useEtablissement();
   // Une entreprise a un onglet Clients à la place du Cheptel ; un élevage l'inverse.
@@ -19,6 +44,9 @@ export default function TabsLayout() {
   const stockGite = entreprise && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
   return (
     <Tabs
+      // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
+      backBehavior="history"
+      screenListeners={{ tabPress: () => quitterRetour() }}
       screenLayout={ecranParEspeceSauf('cheptel', 'sante', 'comptabilite', 'index')}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
@@ -43,7 +71,15 @@ export default function TabsLayout() {
           title: TEXTES.commun.general.cheptel,
           headerShown: false,
           href: entreprise ? null : undefined,
-          tabBarIcon: ({ color, size }) => <Ionicons name="paw" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="paw"
+              size={size}
+              color={
+                dansSante ? colors.primary : barreBleue && page === 'sante' ? colors.ajoutIconActif : color
+              }
+            />
+          ),
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
@@ -60,7 +96,11 @@ export default function TabsLayout() {
           href: entreprise ? undefined : null,
           // Un gîte : le logo de ses activités annexes ; un secrétariat : le dossier.
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={stockGite ? 'storefront' : 'folder-open'} size={size} color={color} />
+            <Ionicons
+              name={stockGite ? 'storefront' : 'folder-open'}
+              size={size}
+              color={depuisOrganisation ? colors.textMuted : color}
+            />
           ),
         }}
         listeners={({ navigation }) => ({
@@ -70,28 +110,16 @@ export default function TabsLayout() {
           },
         })}
       />
-      <Tabs.Screen
-        name="sante"
-        options={{
-          title: TEXTES.sante.titre,
-          headerShown: false,
-          // La santé (alimentation, vétérinaire, contrôles) est celle d'un élevage.
-          href: entreprise ? null : undefined,
-          tabBarIcon: ({ color, size }) => <Ionicons name="medkit" size={size} color={color} />,
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('sante', { screen: 'index' });
-          },
-        })}
-      />
+      {/* La santé (alimentation, visites, contrôles) s'ouvre depuis l'en-tête du Cheptel : l'onglet du Cheptel y reste en couleur. */}
+      <Tabs.Screen name="sante" options={{ href: null, headerShown: false }} />
       <Tabs.Screen
         name="comptabilite"
         options={{
           title: TEXTES.commun.general.comptabilite,
           headerShown: false,
-          tabBarIcon: ({ color, size }) => <Ionicons name="cash" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calculator" size={size} color={depuisOrganisation ? colors.textMuted : color} />
+          ),
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
@@ -106,7 +134,9 @@ export default function TabsLayout() {
           title: TEXTES.stock.titre,
           headerShown: false,
           href: !entreprise || stockGite ? undefined : null,
-          tabBarIcon: ({ color, size }) => <Ionicons name="cube" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="clipboard-list" size={size} color={color} />
+          ),
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
@@ -119,7 +149,22 @@ export default function TabsLayout() {
         name="reglages"
         options={{
           title: TEXTES.navigation.layout.reglages,
-          tabBarIcon: ({ color, size }) => <Ionicons name="options" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="sitemap-outline"
+              size={size}
+              color={dansOrganisation ? colors.primary : color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="rappels-historique"
+        options={{
+          href: null,
+          title: TEXTES.rappels.historique.titre,
+          // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to="/" />,
         }}
       />
       <Tabs.Screen
@@ -136,6 +181,8 @@ export default function TabsLayout() {
         ['organisation-etablissement', TEXTES.settings.reglages.sectionEtablissement, ROUTES.REGLAGES],
         ['organisation-comptabilite', TEXTES.settings.reglages.sectionComptabilite, ROUTES.REGLAGES],
         ['organisation-inventaire', TEXTES.settings.reglages.sectionInventaire, ROUTES.REGLAGES],
+        ['organisation-conditionnement', TEXTES.stock.conditionnement.titre, ROUTES.ORGANISATION_INVENTAIRE],
+        ['organisation-tiers', TEXTES.settings.reglages.sectionTiers, ROUTES.REGLAGES],
         ['organisation-donnees', TEXTES.settings.reglages.sectionDonnees, ROUTES.REGLAGES],
         ['export-donnees', TEXTES.settings.reglages.export, ROUTES.ORGANISATION_DONNEES],
         ['pdf-donnees', TEXTES.settings.reglages.pdf, ROUTES.ORGANISATION_DONNEES],

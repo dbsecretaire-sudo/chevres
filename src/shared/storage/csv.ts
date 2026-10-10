@@ -1,10 +1,13 @@
 import Papa from 'papaparse';
 import type { Categorie, RecordMap } from '@/shared/storage/types';
+import type { PieceJointe } from '@/features/fichiers/types';
 import type { LigneAlimentation, LigneCarburant, LigneMarchandise } from '@/features/comptabilite/types';
 
 import {
   CHAMPS_BOOLEEN,
   CHAMPS_BOOLEEN_TROIS_ETATS,
+  CHAMPS_FICHIERS,
+  CHAMPS_JSON,
   CHAMPS_LIGNES_ALIMENTATION,
   CHAMPS_LIGNES_CARBURANT,
   CHAMPS_LIGNES_MARCHANDISES,
@@ -51,6 +54,12 @@ function serializeValue(key: string, value: unknown): string {
           SEPARATEUR_CHAMPS,
         ),
       )
+      .join(SEPARATEUR_LIGNES);
+  }
+  if (CHAMPS_JSON.has(key)) return JSON.stringify(value);
+  if (CHAMPS_FICHIERS.has(key)) {
+    return (value as PieceJointe[])
+      .map((p) => [p.id, proteger(p.nom), p.extension, p.mime, p.ajoutLe].join(SEPARATEUR_CHAMPS))
       .join(SEPARATEUR_LIGNES);
   }
   if (CHAMPS_LIGNES_CARBURANT.has(key)) {
@@ -117,6 +126,26 @@ function deserializeValue(key: string, raw: string): unknown {
       })
       .filter((l): l is LigneMarchandise => !!l);
     return lignes.length > 0 ? lignes : undefined;
+  }
+  if (CHAMPS_JSON.has(key)) {
+    try {
+      const valeur: unknown = JSON.parse(raw);
+      return Array.isArray(valeur) && valeur.length > 0 ? valeur : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  if (CHAMPS_FICHIERS.has(key)) {
+    const pieces = raw
+      .split(SEPARATEUR_LIGNES)
+      .map((part) => {
+        const [id, nom, extension, mime, ajoutLe] = part.split(SEPARATEUR_CHAMPS);
+        return id && extension
+          ? ({ id, nom: nom ?? '', extension, mime: mime ?? '', ajoutLe: ajoutLe ?? '' } as PieceJointe)
+          : undefined;
+      })
+      .filter((p): p is PieceJointe => !!p);
+    return pieces.length > 0 ? pieces : undefined;
   }
   if (CHAMPS_LIGNES_CARBURANT.has(key)) {
     const lignes = raw

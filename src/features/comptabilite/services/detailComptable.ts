@@ -3,6 +3,7 @@ import { listVentes } from '@/features/comptabilite/repository/ventes';
 import type { CategorieDepense, CategorieRecette, TypeAliment } from '@/features/comptabilite/types';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
+import { venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
@@ -19,6 +20,8 @@ import {
 export interface DetailCategorie<C extends string> {
   categorie: C;
   montant: number;
+  /** Dont les ventes sans facture (le client ne souhaite pas les déclarer) : pour les recettes. */
+  sansFacture?: number;
 }
 
 export interface DetailComptable {
@@ -28,6 +31,8 @@ export interface DetailComptable {
   alimentationParType: Record<TypeAliment, number>;
   totalDepenses: number;
   totalRecettes: number;
+  /** Dans le total des recettes, la part des ventes sans facture. */
+  totalRecettesSansFacture: number;
 }
 
 /**
@@ -61,9 +66,16 @@ export async function calculerDetailComptable(
 
   const depensesParCategorie = new Map<CategorieDepense, number>();
   const recettesParCategorie = new Map<CategorieRecette, number>();
+  const sansFactureParCategorie = new Map<CategorieRecette, number>();
 
   for (const v of ventes) {
     recettesParCategorie.set(v.categorie, (recettesParCategorie.get(v.categorie) ?? 0) + (v.prix ?? 0));
+    if (!venteADeclarer(v)) {
+      sansFactureParCategorie.set(
+        v.categorie,
+        (sansFactureParCategorie.get(v.categorie) ?? 0) + (v.prix ?? 0),
+      );
+    }
   }
   for (const f of factures) {
     if (f.type === TYPE_FACTURE.RECUE && f.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION) {
@@ -98,6 +110,7 @@ export async function calculerDetailComptable(
   ).map((categorie) => ({
     categorie,
     montant: recettesParCategorie.get(categorie) ?? 0,
+    sansFacture: sansFactureParCategorie.get(categorie) ?? 0,
   }));
 
   return {
@@ -106,5 +119,6 @@ export async function calculerDetailComptable(
     alimentationParType,
     totalDepenses: depenses.reduce((s, d) => s + d.montant, 0),
     totalRecettes: recettes.reduce((s, r) => s + r.montant, 0),
+    totalRecettesSansFacture: recettes.reduce((s, r) => s + (r.sansFacture ?? 0), 0),
   };
 }

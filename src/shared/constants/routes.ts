@@ -5,6 +5,7 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
   BALANCE: '/balance',
+  RAPPELS_HISTORIQUE: '/rappels-historique',
   REGLAGES: '/reglages',
 
   CHEPTEL: '/cheptel',
@@ -14,17 +15,25 @@ export const ROUTES = {
   CHEPTEL_NAISSANCE_NOUVELLE: '/cheptel/naissance-nouvelle',
 
   // L'onglet Santé d'un élevage : alimentation, vétérinaire, contrôles
-  SANTE: '/sante',
   SANTE_ALIMENTATION: '/sante/alimentation',
   SANTE_VETERINAIRE: '/sante/veterinaire',
   SANTE_VISITE_NOUVELLE: '/sante/veterinaire/nouvelle',
   SANTE_CONTROLES: '/sante/controles',
-  SANTE_CONTROLE_NOUVEAU: '/sante/controles/nouvelle',
+  /** La liste des contrôles d'une famille (surface, animaux, laitier). */
+  santeControles: (famille: string) => `/sante/controles/liste?famille=${famille}` as const,
+  /** Un nouveau contrôle, de la famille donnée. */
+  santeControleNouveau: (famille: string) => `/sante/controles/nouvelle?famille=${famille}` as const,
+  /** Un groupement : ses contenus. */
+  santeGroupement: (id: string) => `/sante/controles/groupement?id=${id}` as const,
+  /** Un contenu d'un groupement (nouveau sans identifiant, sinon modifié). */
+  santeContenuGroupement: (groupementId: string, id?: string) =>
+    `/sante/controles/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
+  /** Un contrôle (un terrain…) qu'on modifie. */
+  santeControleModifier: (famille: string, id: string) =>
+    `/sante/controles/nouvelle?famille=${famille}&id=${id}` as const,
 
   COMPTABILITE: '/comptabilite',
   COMPTABILITE_NOUVELLE: '/comptabilite/nouvelle',
-  /** Les catégories de recette cochées pour chaque espèce (et celles qu'on ajoute). */
-  CATEGORIES_RECETTE: '/comptabilite/categories-recette',
   COMPTABILITE_DETAIL: '/comptabilite/detail',
   FISCALITE: '/comptabilite/fiscalite',
   FISCALITE_IMPOTS: '/comptabilite/fiscalite-impots',
@@ -41,9 +50,9 @@ export const ROUTES = {
     return modeEntreprise() ? ('/clients/nouveau' as const) : ('/comptabilite/clients/nouveau' as const);
   },
   COMPTES_PCG: '/comptabilite/comptes-pcg',
-  /** Les comptes du plan comptable, ouverts depuis un écran en cours : `retour` est l'adresse où la flèche de retour ramène. */
-  comptesPcgDepuis: (retour: string) =>
-    `/comptabilite/comptes-pcg?retour=${encodeURIComponent(retour)}` as const,
+  /** Les comptes du plan comptable, ouverts depuis un écran en cours : `retour` est l'adresse où la flèche de retour ramène ; `categorie` (une catégorie de l'inventaire) limite la liste aux comptes qu'elle autorise. */
+  comptesPcgDepuis: (retour: string, categorie?: string) =>
+    `/comptabilite/comptes-pcg?retour=${encodeURIComponent(retour)}${categorie ? `&categorie=${encodeURIComponent(categorie)}` : ''}` as const,
   COMPTE_PCG_NOUVEAU: '/comptabilite/comptes-pcg/nouveau',
 
   ficheChevre: (id: string) => `/cheptel/${id}` as const,
@@ -59,7 +68,9 @@ export const ROUTES = {
   ORGANISATION_ETABLISSEMENT: '/organisation-etablissement',
   ORGANISATION_COMPTABILITE: '/organisation-comptabilite',
   ORGANISATION_INVENTAIRE: '/organisation-inventaire',
+  ORGANISATION_CONDITIONNEMENT: '/organisation-conditionnement',
   ORGANISATION_DONNEES: '/organisation-donnees',
+  ORGANISATION_TIERS: '/organisation-tiers',
   EXPORT_DONNEES: '/export-donnees',
   PDF_DONNEES: '/pdf-donnees',
   SAUVEGARDE_LOCALE: '/sauvegarde-locale',

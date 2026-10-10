@@ -2,12 +2,15 @@
 export const TEXTES_A_TRAITER = {
   titre: 'À traiter',
   rienATraiter: 'Rien à traiter pour le moment.',
-  voirPlus: (n: number) => `Voir ${n} de plus`,
-  voirMoins: 'Voir moins',
+  /** Le total, sous le titre de l'écran d'accueil. */
+  resume: (n: number) => `${n} à traiter`,
+  /** Le logo d'un établissement qui a des choses à traiter : un appui les affiche ou les masque. */
+  logo: (n: number) => `${n} à traiter : afficher ou masquer`,
   /** Le titre d'un groupe par genre de chose à traiter. */
   genre: {
     tache_en_retard: 'En retard',
     tache_proche: 'À faire bientôt',
+    rappel_fiscal: 'À déclarer',
     sejour_a_encaisser: 'À encaisser',
     note_a_facturer: 'À facturer',
   },

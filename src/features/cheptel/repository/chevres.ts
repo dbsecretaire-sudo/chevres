@@ -8,6 +8,7 @@ import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { PARAMETRES_ESPECE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { deEspeceCourante, especeDe } from '@/features/cheptel/utils/espece';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 
 /** Animaux vivants de l'espèce courante. */
 export async function listChevresVivantes(): Promise<Chevre[]> {
@@ -88,6 +89,9 @@ export async function saveChevre(chevre: Chevre): Promise<void> {
       )?.id
     : undefined;
   await upsertRecord(CATEGORIE_STOCKAGE.CHEPTEL, yearOf(chevre.dateNaissance), { ...chevre, mereId });
+  // Une boucle de l'inventaire est posée dès qu'un animal la porte (et à poser de nouveau quand plus aucun ne la porte) ; le numéro
+  // d'un animal qui n'est pas dans l'inventaire y est ajouté.
+  await synchroniserPoseBoucles(chevre);
 }
 
 export async function creerChevre(input: {
@@ -134,6 +138,7 @@ export async function creerChevre(input: {
  */
 export async function supprimerChevre(id: string): Promise<void> {
   await deleteRecord(CATEGORIE_STOCKAGE.CHEPTEL, id);
+  await synchroniserPoseBoucles();
 }
 
 export async function declarerStatutChevre(

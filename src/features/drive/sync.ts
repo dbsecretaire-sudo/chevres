@@ -23,10 +23,6 @@ import {
 import { listComptesPcg, remplacerTousComptesPcg } from '@/features/comptes-pcg/repository';
 import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
 import {
-  lireArchiveGroupesRecette,
-  remplacerArchiveGroupesRecette,
-} from '@/features/comptabilite/repository/groupesRecette';
-import {
   createFileBase64,
   type DriveFile,
   downloadFileBase64,
@@ -56,7 +52,6 @@ import {
   FICHIER_ESPECES,
   FICHIER_ETABLISSEMENT,
   FICHIER_EXPLOITATION,
-  FICHIER_GROUPES_RECETTE,
   FICHIER_FOURNISSEURS,
   FICHIER_GITE,
   FICHIER_BAR,
@@ -158,28 +153,6 @@ export async function tirerEspeces(accessToken: string, folderId: string): Promi
     if (Array.isArray(archive?.ajoutees)) await remplacerArchiveEspeces(archive);
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les espèces locales.
-  }
-}
-
-/** Envoie les catégories de recette cochées par espèce (et celles ajoutées) vers Google Drive. */
-export async function pousserGroupesRecette(accessToken: string, folderId: string): Promise<void> {
-  const archive = await lireArchiveGroupesRecette();
-  if (Object.keys(archive.choix).length === 0 && archive.ajoutees.length === 0) return;
-  await deposer(accessToken, FICHIER_GROUPES_RECETTE, folderId, JSON.stringify(archive));
-}
-
-/** Récupère les catégories de recette depuis Google Drive, si elles sont présentes (remplace les données locales). */
-export async function tirerGroupesRecette(accessToken: string, folderId: string): Promise<void> {
-  const file = await findFile(accessToken, FICHIER_GROUPES_RECETTE, folderId);
-  if (!file || (await identique(file, JSON.stringify(await lireArchiveGroupesRecette())))) return;
-  const json = await downloadFileText(accessToken, file.id);
-  try {
-    const archive = JSON.parse(json);
-    if (archive && typeof archive === 'object' && Array.isArray(archive.ajoutees)) {
-      await remplacerArchiveGroupesRecette(archive);
-    }
-  } catch {
-    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les catégories locales.
   }
 }
 
@@ -452,7 +425,6 @@ export async function pousserToutesAnnees(
   await pousserAnnexes(accessToken, folderId);
   await pousserPieces(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
-  await pousserGroupesRecette(accessToken, folderId);
   return bilan;
 }
 
@@ -495,6 +467,5 @@ export async function tirerToutesAnnees(
   await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);
   await tirerComptesPcg(accessToken, folderId);
-  await tirerGroupesRecette(accessToken, folderId);
   return bilan;
 }

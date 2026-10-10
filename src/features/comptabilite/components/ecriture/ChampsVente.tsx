@@ -184,7 +184,7 @@ export function ChampsVenteLait({ e }: Props) {
   );
 }
 
-/** Vente de fromage (à la pièce) : type, nombre de sacs, quantité, prix et TVA. */
+/** Vente de fromage (à la pièce) : type, quantité, prix et TVA. */
 export function ChampsVenteFromage({ e }: Props) {
   // Les types de fromage viennent du stock : un fromage ajouté là se vend ici, à sa place dans la liste.
   const fromages = useFromagesDuStock();
@@ -207,35 +207,22 @@ export function ChampsVenteFromage({ e }: Props) {
 
   return (
     <>
-      <View style={commonStyles.row}>
-        <View style={commonStyles.flex1}>
-          <SelectFieldEditable
-            label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}
-            required
-            value={ajouteChoisi ? valeurFromage(ajouteChoisi) : e.typeFromage}
-            onChange={choisirFromage}
-            options={options}
-            onEdit={() =>
-              router.push(
-                ROUTES.stockDepuis(
-                  retour,
-                  SECTION_STOCK.FROMAGES,
-                  e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
-                ),
-              )
-            }
-          />
-        </View>
-        <View style={commonStyles.flex1}>
-          <FormField
-            label={TEXTES.comptabilite.nouvelleEcriture.nombreDeSacs}
-            value={e.sacs}
-            onChangeText={e.setSacs}
-            keyboardType="number-pad"
-            placeholder={TEXTES.commun.general.facultatif}
-          />
-        </View>
-      </View>
+      <SelectFieldEditable
+        label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}
+        required
+        value={ajouteChoisi ? valeurFromage(ajouteChoisi) : e.typeFromage}
+        onChange={choisirFromage}
+        options={options}
+        onEdit={() =>
+          router.push(
+            ROUTES.stockDepuis(
+              retour,
+              SECTION_STOCK.FROMAGES,
+              e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
+            ),
+          )
+        }
+      />
       {e.typeFromage === TYPE_FROMAGE.AUTRE && !ajouteChoisi && (
         <FormField
           label={TEXTES.comptabilite.nouvelleEcriture.preciserLeType}

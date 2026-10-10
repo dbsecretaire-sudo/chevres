@@ -23,7 +23,7 @@ import { NATURE_URSSAF, REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/sh
 import { FILTRE_DOSSIERS, STATUT_ELEMENT } from '@/shared/constants/dossiers';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { SERVICE_REPAS } from '@/shared/constants/gite';
-import { ARTICLE_EMBALLAGE, ARTICLE_MATERIEL } from '@/shared/constants/stock';
+import { ARTICLE_BOUCLE, ARTICLE_EMBALLAGE, ARTICLE_MATERIEL } from '@/shared/constants/stock';
 import {
   ANGLE_ANALYSE,
   ETAT_ESPRIT,
@@ -238,10 +238,12 @@ export const LABEL_ACTIVITE_COMPTABLE: Record<string, string> = {
 
 /** Premier niveau du choix d'une recette. */
 export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, string> = {
-  [GROUPE_RECETTE.LAITERIE]: 'Vente laiterie / fromagerie',
-  [GROUPE_RECETTE.OEUFS]: 'Vente œufs',
-  [GROUPE_RECETTE.VIANDE]: 'Vente viande',
-  [GROUPE_RECETTE.BOUCHERIE]: 'Vente boucherie / charcuterie',
+  // Les titres des listes de l'inventaire (35. Produits finis, 33. Produits animaux).
+  [GROUPE_RECETTE.FROMAGES]: 'Fromages',
+  [GROUPE_RECETTE.LAIT]: 'Lait',
+  [GROUPE_RECETTE.OEUFS]: 'Œufs',
+  [GROUPE_RECETTE.VIANDE]: 'Animaux',
+  [GROUPE_RECETTE.BOUCHERIE]: 'Viande et charcuterie',
   [GROUPE_RECETTE.AIDE]: 'Aide / subvention',
   [GROUPE_RECETTE.AUTRE]: 'Autre recette',
   [GROUPE_RECETTE.PRESTATIONS]: 'Prestations de services',
@@ -359,6 +361,11 @@ export const LABEL_EMBALLAGE: Record<ValeurDe<typeof ARTICLE_EMBALLAGE>, string>
   [ARTICLE_EMBALLAGE.PAPIER_CROTTIN]: 'Papier alimentaire (taille crottin)',
   [ARTICLE_EMBALLAGE.ETIQUETTE_CROTTIN]: 'Étiquette (taille crottin)',
   [ARTICLE_EMBALLAGE.SAC_PLASTIQUE]: 'Sac en plastique',
+};
+
+export const LABEL_BOUCLE: Record<ValeurDe<typeof ARTICLE_BOUCLE>, string> = {
+  [ARTICLE_BOUCLE.BOUCLES]: 'Boucles',
+  [ARTICLE_BOUCLE.ROUGES]: 'Boucles rouges',
 };
 
 export const LABEL_MATERIEL: Record<ValeurDe<typeof ARTICLE_MATERIEL>, string> = {

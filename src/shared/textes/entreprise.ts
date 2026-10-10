@@ -89,6 +89,12 @@ export const TEXTES_ENTREPRISE = {
     total: 'Total de l’année',
     nonAssujetti:
       'Votre entreprise n’est pas assujettie à la TVA. Cochez « Assujetti à la TVA » dans les informations de l’entreprise pour suivre la TVA.',
+    parTaux: {
+      titre: (annee: number) => `TVA par taux — ${annee}`,
+      taux: (taux: number) => `${String(taux).replace('.', ',')} %`,
+      aucun: 'Aucune TVA indiquée cette année : saisissez le taux sur les ventes et les factures.',
+      legende: 'TVA collectée · TVA déductible, pour chaque taux.',
+    },
     regime: 'Régime de TVA',
     noticeTitre: 'À savoir',
     notice:

@@ -31,8 +31,6 @@ export const CLE_STOCKAGE = {
   DOSSIERS: 'dossiers',
   GITE: 'gite',
   TRADING: 'trading',
-  /** Les catégories de recette cochées pour chaque espèce (la liste « Catégorie de recette » d'une nouvelle écriture). */
-  GROUPES_RECETTE: 'groupes-recette',
   BAR: 'bar',
   /** Les activités annexes du gîte (pizza, charcuterie, guide…) : leurs catégories, leurs articles et leurs tickets. */
   ANNEXES: 'annexes',

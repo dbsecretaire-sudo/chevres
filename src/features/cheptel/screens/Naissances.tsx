@@ -37,7 +37,7 @@ export default function Naissances() {
       <FlatList
         data={portees}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}
-        contentContainerStyle={commonStyles.listBox}
+        contentContainerStyle={commonStyles.listeSimple}
         ListEmptyComponent={
           <EmptyState
             title={TEXTES.cheptel.naissances.aucuneNaissanceEnregistree}

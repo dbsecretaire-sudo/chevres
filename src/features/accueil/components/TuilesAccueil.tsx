@@ -5,6 +5,7 @@ import { colors } from '@/shared/theme/colors';
 import { formatMontant } from '@/shared/utils/dates';
 import { DECIMALES_QUANTITE_MAX, LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
+import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
 import { styles } from '@/shared/styles/accueil/Accueil.styles';
 import { TEXTES } from '@/shared/textes';
 
@@ -25,7 +26,11 @@ function Stat({ route, valeur, libelle, detail, couleur }: StatProps) {
   return (
     <Pressable
       style={({ pressed }) => [styles.stat, pressed && styles.statAppuyee]}
-      onPress={() => router.push(route)}
+      onPress={() => {
+        // L'alimentation est un écran de santé : sa flèche de retour ramène ici, à l'accueil.
+        if (route === ROUTES.SANTE_ALIMENTATION) entrerAvecRetour('/');
+        router.push(route);
+      }}
     >
       <Text style={styles.statLibelle} numberOfLines={2}>
         {libelle}

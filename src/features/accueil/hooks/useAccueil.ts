@@ -7,7 +7,6 @@ import { calculerBilanAlimentation } from '@/features/exploitation/services/bila
 import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
-import { listVisitesVeterinaire } from '@/features/exploitation/repository/visitesVeterinaire';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 
 /** Statistiques de l'écran d'accueil pour l'année active, rechargées à chaque retour sur l'écran. */
@@ -20,16 +19,15 @@ export function useAccueil() {
 
   const charger = useCallback(async () => {
     const annee = settings.anneeActive;
-    const [toutesAnnees, vivantes, ventes, factures, visites, alimentation] = await Promise.all([
+    const [toutesAnnees, vivantes, ventes, factures, alimentation] = await Promise.all([
       toutesLesAnneesConnues(),
       listChevresVivantes(),
       listVentes(annee),
       listFactures(annee),
-      listVisitesVeterinaire(annee),
       calculerBilanAlimentation(annee),
     ]);
     setAnnees(toutesAnnees);
-    setStats(calculerStatsAccueil({ annee, vivantes, ventes, factures, visites, alimentation }));
+    setStats(calculerStatsAccueil({ annee, vivantes, ventes, factures, alimentation }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.anneeActive, espece]);
 

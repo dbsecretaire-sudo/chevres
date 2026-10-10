@@ -23,6 +23,8 @@ export const GENRE_ARTICLE = {
   PERSONNALISE: 'perso',
   /** Un type de viande ou de charcuterie vendu (saucisson, jambon…), toujours ajouté par l'utilisateur. */
   VIANDE: 'viande',
+  /** Les boucles d'identification (et les boucles rouges) : chacune a son numéro, achetées par plages de numéros. */
+  BOUCLE: 'boucle',
 } as const;
 
 /**
@@ -47,6 +49,7 @@ export const NATURE_PAR_GENRE: Record<ValeurDe<typeof GENRE_ARTICLE>, ValeurDe<t
   [GENRE_ARTICLE.BATIMENT]: NATURE_STOCK.INVESTISSEMENT,
   // Une liste personnalisée se comporte comme un consommable (retirer, c'est consommer) ; sa vraie nature suit sa catégorie.
   [GENRE_ARTICLE.PERSONNALISE]: NATURE_STOCK.CONSOMMABLE,
+  [GENRE_ARTICLE.BOUCLE]: NATURE_STOCK.CONSOMMABLE,
 };
 
 /** Le choix « Matériel » d'une ligne de facture d'alimentation (un achat de matériel, pas d'aliment), dans la liste des cheptels. */
@@ -70,6 +73,32 @@ export const ARTICLE_EMBALLAGE = {
   SAC_PLASTIQUE: 'sac_plastique',
 } as const;
 
+/** Les espèces dont les animaux n'ont pas de boucle d'identification : leur numéro ne va pas à l'inventaire des boucles. */
+export const ESPECES_SANS_BOUCLE: readonly string[] = ['poules', 'domestiques'];
+
+/** Les deux sortes de boucles tenues d'office dans l'inventaire (on ne peut ni en ajouter ni en retirer). */
+export const ARTICLE_BOUCLE = {
+  BOUCLES: 'boucles',
+  ROUGES: 'rouges',
+} as const;
+
+/** Le filtre des boucles de l'inventaire : toutes, celles déjà posées sur un animal, ou celles encore à poser. */
+export const ETAT_BOUCLE = {
+  TOUT: 'tout',
+  POSEE: 'posee',
+  NON_POSEE: 'non_posee',
+} as const;
+
+/** Les colonnes d'après lesquelles on trie la liste des boucles. */
+export const TRI_BOUCLE = {
+  NUMERO: 'numero',
+  POSE: 'pose',
+  ACHAT: 'achat',
+} as const;
+
+/** Le nombre de boucles le plus grand qu'un seul achat peut contenir (une plage de numéros). */
+export const BOUCLES_MAX_PAR_ACHAT = 5000;
+
 /** Le matériel et les consommables de fabrication tenus en stock d'office (on peut en ajouter d'autres). */
 export const ARTICLE_MATERIEL = {
   BONBONNE_GAZ: 'bonbonne_gaz',
@@ -86,7 +115,7 @@ type Emballage = ValeurDe<typeof ARTICLE_EMBALLAGE>;
 /**
  * Les emballages consommés, par fromage vendu, avec chaque type de fromage tant qu'on n'a pas personnalisé : un fromage
  * frais ou affiné dans du papier alimentaire, un crottin avec son papier et son étiquette, le brocciu dans un pot de
- * 500 g avec son couvercle et une faisselle. Les sacs en plastique, eux, se saisissent à la vente.
+ * 500 g avec son couvercle et une faisselle.
  */
 export const CONDITIONNEMENT_PAR_DEFAUT: Record<TypeFromage, readonly Emballage[]> = {
   [TYPE_FROMAGE.FRAIS]: [ARTICLE_EMBALLAGE.PAPIER_ALIMENTAIRE],
@@ -133,6 +162,7 @@ export const CATEGORIE_PAR_GENRE: Record<
   [GENRE_ARTICLE.BATIMENT]: CATEGORIE_INVENTAIRE.IMMOBILISATIONS,
   // La catégorie d'un article personnalisé est celle de sa liste (voir ListeInventaire) : celle-ci n'est qu'un repli.
   [GENRE_ARTICLE.PERSONNALISE]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
+  [GENRE_ARTICLE.BOUCLE]: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
 };
 
 /** La classe du plan comptable de chaque catégorie (35. Produits finis, 33. Produits animaux, 31. Matières premières…). */
@@ -170,8 +200,8 @@ export const PREFIXES_COMPTE_PAR_CATEGORIE: Record<
   ValeurDe<typeof CATEGORIE_INVENTAIRE>,
   readonly string[]
 > = {
-  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: ['701'],
-  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: ['701'],
+  [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: ['701', '702', '703'],
+  [CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX]: ['701', '702', '703'],
   [CATEGORIE_INVENTAIRE.MATIERES_PREMIERES]: ['601'],
   [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS]: ['602', '606'],
   [CATEGORIE_INVENTAIRE.MARCHANDISES]: ['607', '707'],
@@ -189,7 +219,8 @@ export const SECTION_STOCK = {
   ANIMAUX: 'animaux',
   ALIMENTS: 'aliments',
   EMBALLAGES: 'emballages',
-  CONDITIONNEMENT: 'conditionnement',
+  /** Les boucles d'identification, avec le numéro de chacune. */
+  BOUCLES: 'boucles',
   ENTRETIEN: 'entretien',
   EQUIPEMENT: 'equipement',
   EQUIPEMENT_CONSOMMABLE: 'equipementConsommable',

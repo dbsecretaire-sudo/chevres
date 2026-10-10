@@ -15,8 +15,8 @@ export const colors = {
   ajout: '#2D6CA6',
   /** Icônes de la barre d'onglets quand elle est bleue (ajout) : blanc pour les onglets inactifs… */
   ajoutIconInactif: '#FFFFFF',
-  /** …et blanc-gris pour l'onglet actif. */
-  ajoutIconActif: '#D6DEE6',
+  /** …et bleu clair pour l'onglet actif. */
+  ajoutIconActif: '#A8D1FF',
   /** Fond des boutons secondaires (ex: Annuler) pendant un ajout, teinté bleu au lieu du vert habituel. */
   ajoutBadgeBg: '#DCE8F2',
   accent: '#C97B3D',

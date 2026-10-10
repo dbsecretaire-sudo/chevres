@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import type { SoldesTransactions } from '@/features/comptabilite/services/filtresTransactions';
 import { colors } from '@/shared/theme/colors';
+import { ROUTES } from '@/shared/constants/routes';
 import { formatMontant } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/comptabilite/ListeTransactions.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -19,11 +21,12 @@ interface CarteSoldeProps {
 }
 
 /**
- * Solde, rentrées et dépenses. Replié par défaut : le solde
- * et les deux totaux en couleur tiennent sur deux lignes ; un appui déplie le détail.
+ * Solde, rentrées et dépenses, avec le lien « Détails » vers le détail par catégorie. Déplié d'office ; un appui sur la carte
+ * la replie : le solde et les deux totaux en couleur tiennent alors sur deux lignes.
  */
 export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }: CarteSoldeProps) {
-  const [deplie, setDeplie] = useState(false);
+  const router = useRouter();
+  const [deplie, setDeplie] = useState(true);
   const couleurSolde = soldes.balance >= 0 ? colors.primary : colors.danger;
   // Le fond de la carte dit le résultat d'un coup d'œil : vert clair quand il est positif, rouge clair quand il est négatif.
   const fondSolde = { backgroundColor: soldes.balance >= 0 ? colors.badgeBg : colors.dangerFond };
@@ -65,10 +68,13 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
   return (
     <Pressable onPress={() => setDeplie(false)}>
       <Card style={{ ...styles.balanceCard, ...fondSolde }}>
-        {/* La légende de l'astérisque : les rentrées sans facture (non déclarées) sont marquées d'une étoile rouge. */}
-        <Text style={styles.legendeSansFacture}>
-          <Text style={styles.asterisque}>*</Text> {TEXTES.comptabilite.listeTransactions.sansFacture}
-        </Text>
+        <Pressable
+          style={styles.soldeDetails}
+          hitSlop={8}
+          onPress={() => router.push(ROUTES.COMPTABILITE_DETAIL)}
+        >
+          <Text style={styles.soldeDetailsTexte}>{TEXTES.comptabilite.listeTransactions.details}</Text>
+        </Pressable>
         <Text style={commonStyles.caption}>
           {TEXTES.comptabilite.listeTransactions.soldeEspace}
           {periode}
@@ -78,17 +84,9 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
         <View style={styles.statsRow}>
           <View style={styles.statBloc}>
             <Text style={styles.statLabel}>{TEXTES.comptabilite.listeTransactions.rentrees}</Text>
-            {/* Les rentrées en deux montants : avec facture (déclarées, en vert), puis sans facture (en noir, étoilées). */}
-            <View style={styles.rentreesDouble}>
-              <Text style={[styles.statValeur, { color: colors.primary }]}>
-                {formatMontant(soldes.rentreesAvecFactures)}
-              </Text>
-              <View style={styles.statSeparateurFin} />
-              <Text style={styles.statValeur}>
-                {formatMontant(soldes.rentreesSansFactures)}
-                <Text style={styles.asterisque}> *</Text>
-              </Text>
-            </View>
+            <Text style={[styles.statValeur, { color: colors.primary }]}>
+              {formatMontant(soldes.totalRentrees)}
+            </Text>
           </View>
           <View style={styles.statSeparateur} />
           <View style={styles.statBloc}>

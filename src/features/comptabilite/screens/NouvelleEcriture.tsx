@@ -3,9 +3,7 @@ import { Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { DateField } from '@/shared/components/DateField';
-import { SelectField } from '@/shared/components/SelectField';
 import { Button } from '@/shared/components/Button';
-import { SectionForm } from '@/shared/components/SectionForm';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
@@ -45,6 +43,18 @@ export default function NouvelleFacture() {
   // L'activité se choisit par une puce (comme dans la liste) ; elle n'apparaît que pour un établissement à plusieurs espèces.
   const activites = [...especesActives(), ...(e.avecCommunActivite ? [ACTIVITE_COMMUNE] : [])];
 
+  /** La date de l'écriture : en tête de la première section (l'identification), pour un débit comme pour un crédit. */
+  const champDate = (
+    <DateField
+      label={TEXTES.commun.general.date}
+      required
+      value={e.date}
+      onChange={e.setDate}
+      anneeImposee={e.anneeImposee}
+      jourMoisAnnee
+    />
+  );
+
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
       <Screen>
@@ -56,6 +66,12 @@ export default function NouvelleFacture() {
             tout={e.toutesAnnees}
             onChoisirTout={e.choisirToutesAnnees}
           />
+          <ChoixDeroulant
+            titre={TEXTES.commun.general.type}
+            valeur={e.type}
+            options={OPTIONS_TYPE}
+            onChoisir={e.setType}
+          />
           {plusieursEspeces() ? (
             <ChoixDeroulant
               titre={TEXTES.comptabilite.activite.activite}
@@ -66,31 +82,11 @@ export default function NouvelleFacture() {
           ) : null}
         </LigneFiltres>
 
-        <SectionForm titre={TEXTES.commun.formulaire.ecriture}>
-          <View style={commonStyles.row}>
-            <View style={commonStyles.flex1}>
-              <SelectField
-                label={TEXTES.commun.general.type}
-                required
-                value={e.type}
-                onChange={e.setType}
-                options={OPTIONS_TYPE}
-              />
-            </View>
-            <View style={commonStyles.flex1}>
-              <DateField
-                label={TEXTES.commun.general.date}
-                required
-                value={e.date}
-                onChange={e.setDate}
-                anneeImposee={e.anneeImposee}
-                jourMoisAnnee
-              />
-            </View>
-          </View>
-
-          {e.type === TYPE_FACTURE.RECUE ? <SectionDepense e={e} /> : <SectionRecette e={e} />}
-        </SectionForm>
+        {e.type === TYPE_FACTURE.RECUE ? (
+          <SectionDepense e={e} date={champDate} />
+        ) : (
+          <SectionRecette e={e} date={champDate} />
+        )}
 
         {e.enchainees > 0 ? (
           <Text style={commonStyles.note}>

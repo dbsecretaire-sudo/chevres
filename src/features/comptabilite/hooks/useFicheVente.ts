@@ -76,7 +76,7 @@ export function useFicheVente(id: string | undefined) {
             jeune: undefined,
             ...(categorie === CATEGORIE_VENTE.FROMAGE
               ? {}
-              : { typeFromage: undefined, typeFromageLibre: undefined, sacs: undefined }),
+              : { typeFromage: undefined, typeFromageLibre: undefined }),
           }
         : {}),
     });

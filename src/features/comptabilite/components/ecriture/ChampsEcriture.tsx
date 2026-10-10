@@ -52,6 +52,8 @@ interface CategorieProps<T extends string> {
   onCompteChange: (numero: string) => void;
   optionsCompte: SelectOption<string>[];
   onGererComptes: () => void;
+  /** Les puces (Inventaire, Service) qui filtrent la liste des comptes, quand ses options sont en groupes. */
+  pucesCompte?: string[];
   /** Fait du libellé un lien (la gestion de la liste : les catégories cochées par espèce). */
   onPressLabel?: () => void;
   /** Un crayon à droite de la liste, vers ce qui gère la valeur choisie (la liste des œufs de l'inventaire). */
@@ -69,6 +71,7 @@ export function ChampCategorieCompte<T extends string>({
   onCompteChange,
   optionsCompte,
   onGererComptes,
+  pucesCompte,
   onPressLabel,
   onEdit,
 }: CategorieProps<T>) {
@@ -101,6 +104,7 @@ export function ChampCategorieCompte<T extends string>({
           label={TEXTES.commun.general.comptePcg}
           required
           searchable
+          puces={pucesCompte}
           value={compte}
           onChange={onCompteChange}
           options={optionsCompte}

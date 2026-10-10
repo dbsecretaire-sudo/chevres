@@ -39,6 +39,14 @@ export const TYPES_CAPTURES_ACCEPTES: string[] = [
   'image/*',
 ];
 
+/** Les analyses du contrôle laitier : un PDF ou une image. */
+export const TYPES_ANALYSES_ACCEPTES: string[] = [
+  MIME_FICHIER.PDF,
+  MIME_FICHIER.PNG,
+  MIME_FICHIER.JPEG,
+  'image/*',
+];
+
 export const EXTENSION_PDF = 'pdf';
 
 /** Le type d'un fichier d'après son extension (quand le sélecteur de fichiers ne le donne pas). */

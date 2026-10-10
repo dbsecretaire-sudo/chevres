@@ -17,7 +17,14 @@ export const TEXTES_EXPORT = {
       aide: 'Visites du vétérinaire, contrôles et alimentation de l’année.',
     },
     cheptel: { titre: 'Registre du cheptel', aide: 'Tous les animaux de l’espèce choisie, par année.' },
-    inventaire: { titre: 'Inventaire', aide: 'Les mouvements de stock, rangés par catégorie.' },
+    inventaire: {
+      titre: 'Inventaire',
+      aide: 'L’état du stock par catégorie : quantités, entrées et sorties de l’année.',
+    },
+    planComptable: {
+      titre: 'Plan comptable',
+      aide: 'Les factures de l’année rangées par compte, en PDF ou en Excel.',
+    },
     inventaireGite: {
       titre: 'Inventaire du gîte',
       aide: 'Les articles et les quantités en stock, par catégorie.',
@@ -38,6 +45,102 @@ export const TEXTES_EXPORT = {
     detailDesFactures: 'Détail des factures',
     get noteRegroupementCheptel() {
       return `Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. La colonne « Descendance » indique le nombre total de petits de chaque mère (les ${V().petit.pluriel} pas encore bouclés n'ont pas de ligne propre mais sont comptés ici).`;
+    },
+  },
+  /** Les PDF : bandeau, chiffres clés, tableaux de synthèse (le détail ligne à ligne est dans les exports Excel). */
+  pdf: {
+    edite: (date: string) => `Édité le ${date}`,
+    annee: {
+      sousTitre: (annee: number) => `Année ${annee}`,
+      cartes: {
+        recettes: 'Recettes',
+        recettesDetail: (ventes: number) => `${ventes} ${ventes > 1 ? 'ventes' : 'vente'} et factures émises`,
+        depenses: 'Dépenses',
+        depensesDetail: (factures: number) =>
+          `${factures} ${factures > 1 ? 'factures reçues' : 'facture reçue'}`,
+        resultat: 'Résultat',
+        animaux: 'Animaux de l’année',
+        visites: 'Visites vétérinaires',
+        coutVisites: (montant: string) => `Coût : ${montant}`,
+        controles: 'Contrôles',
+      },
+      sections: {
+        cheptel: 'Cheptel',
+        ventes: 'Ventes par catégorie',
+        recettes: 'Autres recettes par catégorie',
+        depenses: 'Dépenses par catégorie',
+      },
+      colonnes: {
+        femelles: 'Femelles',
+        males: 'Mâles',
+        total: 'Total',
+        nombre: 'Nombre',
+        totalTtc: 'Total TTC (€)',
+        sansCategorie: 'Sans catégorie',
+        parametre: 'Paramètre',
+      },
+      aucuneRecette: 'Aucune autre recette cette année',
+      aucuneDepense: 'Aucune dépense cette année',
+      detailExcel:
+        'Ce document résume l’année ; le détail ligne à ligne de chaque tableau est dans l’export Excel.',
+    },
+    exploitation: {
+      cartes: {
+        visites: 'Visites vétérinaires',
+        coutVisites: (montant: string) => `Coût : ${montant}`,
+        controles: 'Contrôles',
+        alimentation: 'Alimentation',
+        kgAchetes: (kg: number) => `${String(Math.round(kg)).replace(/B(?=(d{3})+(?!d))/g, ' ')} kg achetés`,
+        coutParAnimal: 'Coût par animal',
+        effectif: (nombre: number) => `Effectif : ${nombre}`,
+      },
+    },
+    entreprise: {
+      cartes: {
+        caHt: 'Chiffre d’affaires HT',
+        caTtc: (montant: string) => `TTC : ${montant}`,
+        tvaCollectee: 'TVA collectée',
+        tvaDeductible: 'TVA déductible',
+        aides: 'Aides et subventions',
+        factures: 'Factures',
+        sejours: 'Séjours',
+      },
+      colonnes: { montantTtc: 'Montant TTC (€)', tva: 'dont TVA (€)' },
+      clients: (n: number) => `Clients enregistrés : ${n}.`,
+      contenus: (n: number, termines: number) =>
+        `Contenus des dossiers de l’année : ${n} (dont ${termines} terminé${termines > 1 ? 's' : ''}).`,
+      detailExcel:
+        'Ce document résume l’année ; la liste des clients, des contenus de dossiers et le détail ligne à ligne sont dans l’export Excel.',
+    },
+    planComptable: {
+      total: 'Total',
+      sansCompte: 'Sans compte',
+      totalDuCompte: 'Total du compte',
+      debit: 'Débit (€)',
+      credit: 'Crédit (€)',
+      avertissement:
+        'Correspondance indicative entre vos factures et les comptes du plan comptable, non validée par un expert-comptable : à confirmer avant tout usage officiel.',
+    },
+    inventaire: {
+      colonnes: {
+        stock: 'Stock actuel',
+        entrees: (annee: number) => `Entrées ${annee}`,
+        sorties: (annee: number) => `Sorties ${annee}`,
+      },
+      cartes: {
+        articles: 'Articles suivis',
+        mouvements: (annee: number) => `Mouvements ${annee}`,
+      },
+      lait: {
+        mois: 'Mois',
+        produit: 'Produit (L)',
+        fabrique: 'Versé en fromagerie (L)',
+        vendu: 'Vendu (L)',
+      },
+      note: 'Le stock actuel additionne tous les mouvements depuis le début ; le journal détaillé se consulte dans l’historique de l’inventaire.',
+    },
+    cheptel: {
+      sousTitre: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux bouclés' : 'animal bouclé'}`,
     },
   },
   entreprise: {
@@ -115,6 +218,14 @@ export const TEXTES_EXPORT = {
     description: 'Description',
     cout: 'Coût (€)',
     resultat: 'Résultat',
+    famille: 'Famille',
+    surfaceGraphique: 'Surface graphique (ha)',
+    surfaceAdmissible: 'Surface admissible (ha)',
+    surfaceFourragere: 'Surface fourragère (ha)',
+    surfaceIrriguee: 'Surface irriguée (ha)',
+    articleStock: 'Article du stock',
+    quantiteStock: 'Quantité au stock',
+    premiereBoucle: 'N° de la première boucle',
     aliment: 'Aliment',
     quantiteKg: 'Quantité (kg)',
     kgParAnimal: 'Kg par animal',

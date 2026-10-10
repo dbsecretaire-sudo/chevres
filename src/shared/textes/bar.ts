@@ -17,6 +17,8 @@ export const TEXTES_BAR = {
       colonnes: { article: 'Article', activite: 'Activité', quantite: 'Quantité', prix: 'Prix de vente' },
       aucunArticle: 'Aucun article dans cette liste.',
       toutesActivites: 'Toutes',
+      cartes: { articles: 'Articles suivis' },
+      sousTitre: (date: string) => `Quantités au ${date}`,
     },
     onglets: {
       materiel: 'Matériel',

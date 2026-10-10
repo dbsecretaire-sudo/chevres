@@ -24,11 +24,6 @@ import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from 
 import type { ArchiveStock } from '@/features/stock/types';
 import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
 import type { ArchiveEspeces } from '@/features/especes/types';
-import {
-  lireArchiveGroupesRecette,
-  remplacerArchiveGroupesRecette,
-  type ArchiveGroupesRecette,
-} from '@/features/comptabilite/repository/groupesRecette';
 import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
 import {
   ecrirePieceBase64,
@@ -92,8 +87,6 @@ interface FichierSauvegarde {
   etablissement?: ProfilEtablissement;
   /** Les espèces ajoutées ou modifiées, communes à tous les établissements (absent des anciennes sauvegardes). */
   especes?: ArchiveEspeces;
-  /** Les catégories de recette cochées par espèce et celles ajoutées (absent des anciennes sauvegardes). */
-  groupesRecette?: ArchiveGroupesRecette;
 }
 
 /**
@@ -124,7 +117,6 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     settings,
     etablissement,
     especes,
-    groupesRecette,
     annexes,
   ] = await Promise.all([
     listFournisseurs(),
@@ -138,7 +130,6 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     getSettings(),
     profilEtablissementActif(),
     lireArchiveEspeces(),
-    lireArchiveGroupesRecette(),
     lireArchiveAnnexes(),
   ]);
 
@@ -165,7 +156,6 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     exploitation: settings.exploitation,
     etablissement,
     especes,
-    groupesRecette,
     annexes,
   };
 
@@ -359,12 +349,6 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   if (sauvegarde.especes && Array.isArray(sauvegarde.especes.ajoutees)) {
     await appliquerSiDifferent(await lireArchiveEspeces(), sauvegarde.especes, () =>
       remplacerArchiveEspeces(sauvegarde.especes!),
-    );
-  }
-
-  if (sauvegarde.groupesRecette && typeof sauvegarde.groupesRecette === 'object') {
-    await appliquerSiDifferent(await lireArchiveGroupesRecette(), sauvegarde.groupesRecette, () =>
-      remplacerArchiveGroupesRecette(sauvegarde.groupesRecette!),
     );
   }
 

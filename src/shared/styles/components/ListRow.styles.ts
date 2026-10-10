@@ -16,6 +16,15 @@ export const styles = StyleSheet.create({
   },
   /** Une ligne d'un bloc de liste : le cadre et le fond sont ceux du bloc. */
   rowDansBloc: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
+  /** La pastille teintée qui porte l'icône d'une ligne de menu. */
+  pastille: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.badgeBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   rowSurlignee: { borderColor: colors.primary, borderWidth: 2 },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
   rowTitleGris: { color: colors.textMuted },

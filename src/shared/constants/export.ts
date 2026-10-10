@@ -18,6 +18,10 @@ export const UTI_XLSX = 'org.openxmlformats.spreadsheetml.sheet';
 export const LONGUEUR_MAX_NOM_ONGLET = 31;
 
 /** Début des noms de fichiers d'export (l'extension dépend du format). */
+/** Une page A4 en points (595 × 842) : la taille du PDF, en portrait ou en paysage. */
+export const LARGEUR_PAGE_A4 = 595;
+export const HAUTEUR_PAGE_A4 = 842;
+
 export const NOM_FICHIER_EXPORT_ANNEE = 'troupeau_chevres';
 export const NOM_FICHIER_EXPORT_EXPLOITATION = 'exploitation';
 export const NOM_FICHIER_EXPORT_PLAN_COMPTABLE = 'plan_comptable';

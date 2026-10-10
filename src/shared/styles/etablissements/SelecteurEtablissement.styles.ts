@@ -35,6 +35,20 @@ export const styles = StyleSheet.create({
   nom: { fontSize: 17, fontWeight: '700', color: colors.text },
   types: { fontSize: 13, color: colors.textMuted },
   crayon: { padding: 4 },
+  /** Le badge rouge posé sur le logo d'un établissement : le nombre de choses à traiter. */
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeTexte: { color: colors.blanc, fontSize: 10, fontWeight: '800' },
   /** Le titre d'un groupe de choix du formulaire d'établissement. */
   groupeTitre: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
   /** « Supprimer cet établissement » : épinglé en bas de l'écran. */

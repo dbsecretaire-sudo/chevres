@@ -97,7 +97,7 @@ export default function HistoriqueReservations() {
 
   return (
     <Screen scroll={false}>
-      <View style={commonStyles.topBox}>
+      <View style={commonStyles.enteteListe}>
         <LigneFiltres>
           <YearPicker
             annees={annees}
@@ -109,7 +109,7 @@ export default function HistoriqueReservations() {
         </LigneFiltres>
         <ChampRecherche value={requete} onChangeText={setRequete} placeholder={T.historique.rechercher} />
       </View>
-      <ScrollView ref={defilement} contentContainerStyle={commonStyles.listBottom}>
+      <ScrollView ref={defilement} contentContainerStyle={commonStyles.listeSimple}>
         {reservations.length === 0 ? (
           <EmptyState
             title={recherche ? T.historique.aucuneRecherche : T.historique.aucune(settings.anneeActive)}

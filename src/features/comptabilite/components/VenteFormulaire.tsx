@@ -219,18 +219,6 @@ export function VenteFormulaire({
           )}
         </View>
       )}
-      {estFromage ? (
-        <FormField
-          label={T.nombreDeSacs}
-          value={form.sacs !== undefined ? String(form.sacs) : ''}
-          onChangeText={(valeur) =>
-            onChange({ ...form, sacs: Math.round(Number(valeur.replace(',', '.'))) || undefined })
-          }
-          keyboardType="number-pad"
-          placeholder={TEXTES.commun.general.facultatif}
-        />
-      ) : null}
-
       {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
       <FormField
         label={TEXTES.comptabilite.ficheVente.prixTotal}

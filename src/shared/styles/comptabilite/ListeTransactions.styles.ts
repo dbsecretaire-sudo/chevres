@@ -11,12 +11,9 @@ export const styles = StyleSheet.create({
   },
   filtreEffacerTexte: { fontSize: 13, fontWeight: '700', color: colors.danger },
   balanceCard: { alignItems: 'center' },
-  /** « * sans facture » : en haut à droite de la carte du solde déplié. */
-  legendeSansFacture: { alignSelf: 'flex-end', fontSize: 12, fontStyle: 'italic', color: colors.textMuted },
-  asterisque: { color: colors.danger, fontWeight: '800' },
-  /** Les deux montants des rentrées (avec facture, sans facture), côte à côte. */
-  rentreesDouble: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  statSeparateurFin: { width: 1, height: 18, backgroundColor: colors.border },
+  /** Le lien vers le détail par catégorie, en haut à droite de la carte dépliée. */
+  soldeDetails: { position: 'absolute', top: 12, right: 14 },
+  soldeDetailsTexte: { fontSize: 13, color: colors.primary, textDecorationLine: 'underline' },
   soldeCompact: { gap: 4, paddingVertical: 10 },
   soldeCompactLigne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   soldeCompactValeur: { flexDirection: 'row', alignItems: 'center', gap: 6 },

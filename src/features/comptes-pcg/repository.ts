@@ -3,6 +3,7 @@ import { generateId } from '@/shared/utils/id';
 import {
   COMPTES_PCG_DEPENSE,
   COMPTES_PCG_RECETTE,
+  COMPTE_BOUCLES,
   COMPTE_PAR_DEPENSE,
   COMPTE_PAR_RECETTE,
   type CompteComptable,
@@ -33,13 +34,15 @@ function comptesInitiaux(): CompteComptableEnregistre[] {
  */
 function avecComptesAutomatiques(comptes: CompteComptableEnregistre[]): CompteComptableEnregistre[] {
   const numeros = new Set(comptes.map((c) => c.numero));
-  const manquants = [...Object.values(COMPTE_PAR_DEPENSE), ...Object.values(COMPTE_PAR_RECETTE)].filter(
-    (c) => {
-      if (numeros.has(c.numero)) return false;
-      numeros.add(c.numero);
-      return true;
-    },
-  );
+  const manquants = [
+    COMPTE_BOUCLES,
+    ...Object.values(COMPTE_PAR_DEPENSE),
+    ...Object.values(COMPTE_PAR_RECETTE),
+  ].filter((c) => {
+    if (numeros.has(c.numero)) return false;
+    numeros.add(c.numero);
+    return true;
+  });
   return manquants.length > 0 ? [...comptes, ...manquants.map((c) => ({ id: generateId(), ...c }))] : comptes;
 }
 

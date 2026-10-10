@@ -83,6 +83,12 @@ const CARTES: {
     categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
   },
   {
+    titre: T.sections.boucles,
+    genres: [GENRE_ARTICLE.BOUCLE],
+    nature: NATURE_STOCK.CONSOMMABLE,
+    categorie: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
+  },
+  {
     titre: T.onglets.entretien,
     genres: [GENRE_ARTICLE.ENTRETIEN],
     nature: NATURE_STOCK.CONSOMMABLE,
@@ -161,7 +167,7 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
       titre: l.nom,
       genres: [GENRE_ARTICLE.PERSONNALISE] as GenreArticle[],
       // Les mouvements d'une liste ajoutée sont des saisies : des entrées et des sorties, comme un consommable (ou un achat).
-      nature: infosCategorie(l.categorie, archive.categories).prefixes.some((p) =>
+      nature: infosCategorie(l.categorie, archive.categories, archive.reglagesCategories).prefixes.some((p) =>
         p.startsWith(CHIFFRE_COMPTE_IMMOBILISATION),
       )
         ? NATURE_STOCK.INVESTISSEMENT
@@ -298,8 +304,8 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
               {premiereDeSaNature ? (
                 <Text style={commonStyles.subheading}>
                   {T.enteteCategorie(
-                    infosCategorie(categorie, archive.categories).classe,
-                    infosCategorie(categorie, archive.categories).nom,
+                    infosCategorie(categorie, archive.categories, archive.reglagesCategories).classe,
+                    infosCategorie(categorie, archive.categories, archive.reglagesCategories).nom,
                   )}
                 </Text>
               ) : null}

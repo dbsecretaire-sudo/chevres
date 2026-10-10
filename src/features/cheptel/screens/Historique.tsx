@@ -75,7 +75,7 @@ export default function Historique() {
       <FlatList
         data={triees}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={commonStyles.listBox}
+        contentContainerStyle={commonStyles.listeSimple}
         ListEmptyComponent={
           <EmptyState
             title={TEXTES.cheptel.historique.aucunHistorique}

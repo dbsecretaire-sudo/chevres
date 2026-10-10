@@ -405,7 +405,7 @@ export default function StockBar() {
           ]}
           onChoisir={setFiltre}
         />
-        {categoriesAvecAjoutees(CATEGORIES, inventaire.categories).map(
+        {categoriesAvecAjoutees(CATEGORIES, inventaire.categories, inventaire.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => (
             <SectionDeroulante
               key={categorie}

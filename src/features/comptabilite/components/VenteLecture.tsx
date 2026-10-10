@@ -68,11 +68,6 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
           {vente.poidsKg} {TEXTES.commun.general.kg}
         </Text>
       ) : null}
-      {vente.sacs !== undefined ? (
-        <Text style={commonStyles.line}>
-          {TEXTES.comptabilite.nouvelleEcriture.nombreDeSacs} : {vente.sacs}
-        </Text>
-      ) : null}
       {vente.precision ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente} : {vente.precision}

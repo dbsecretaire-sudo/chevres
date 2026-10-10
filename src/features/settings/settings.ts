@@ -66,6 +66,10 @@ export interface InfosExploitation {
    * établissement ; sauvegardé avec ses informations.
    */
   modeAvance?: boolean;
+  /** Les rappels de déclaration que l'utilisateur a désactivés (voir GENRE_RAPPEL). */
+  rappelsDesactives?: string[];
+  /** Les rappels déjà validés (« rsa:2026-T3 », « urssaf:2026-09 »). */
+  rappelsValides?: string[];
   numeroExploitation?: string;
   siret?: string;
   nomExploitant?: string;

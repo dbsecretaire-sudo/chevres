@@ -24,6 +24,8 @@ interface Props<T extends string> {
   onPressLabel?: () => void;
   /** Une note sous le champ : ce qu'on y choisit et pourquoi. */
   aide?: string;
+  /** Les groupes des options qui se choisissent par des puces (voir SelectModal). */
+  puces?: string[];
 }
 
 export function SelectField<T extends string>({
@@ -37,6 +39,7 @@ export function SelectField<T extends string>({
   libelleCache,
   onPressLabel,
   aide,
+  puces,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
@@ -71,6 +74,7 @@ export function SelectField<T extends string>({
         value={value}
         options={options}
         searchable={searchable}
+        puces={puces}
         onSelect={onChange}
         onClose={() => setOpen(false)}
       />

@@ -22,17 +22,14 @@ import {
   type DonneesCategorie,
   type ErreurCategorie,
 } from '@/features/stock/services/structure';
-import type { CategorieInventairePerso, ListeInventaire } from '@/features/stock/types';
+import type { CategorieInventairePerso, ListeInventaire, ReglageCategorie } from '@/features/stock/types';
 import {
-  CATEGORIES,
-  CATEGORIES_GITE,
   SECTIONS,
   SECTIONS_GITE,
-  categoriesAvecAjoutees,
+  categoriesDeLEtablissement,
+  etablissementGite,
   type InfosCategorie,
 } from '@/features/stock/utils/categories';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import {
   COMPTE_PAR_SECTION_INVENTAIRE,
   COMPTE_PAR_SECTION_INVENTAIRE_GITE,
@@ -59,6 +56,8 @@ export default function StructureListes() {
   const [listes, setListes] = useState<ListeInventaire[]>([]);
   /** Les catégories que l'utilisateur a ajoutées. */
   const [ajoutees, setAjoutees] = useState<CategorieInventairePerso[]>([]);
+  /** Les débuts de compte personnalisés des catégories d'office. */
+  const [reglagesCategories, setReglagesCategories] = useState<Record<string, ReglageCategorie>>({});
   /** La catégorie à laquelle on ajoute une liste (la fenêtre d'ajout est fermée quand elle est absente). */
   const [ajout, setAjout] = useState<string | null>(null);
   /** Les comptes que la catégorie de l'ajout autorise, et celui qui est choisi. */
@@ -71,8 +70,8 @@ export default function StructureListes() {
   const [categorieASupprimer, setCategorieASupprimer] = useState<InfosCategorie | null>(null);
 
   /** Un gîte a ses propres catégories (marchandises, autres approvisionnements, immobilisations) et ses listes d'office. */
-  const gite = modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
-  const categories = categoriesAvecAjoutees(gite ? CATEGORIES_GITE : CATEGORIES, ajoutees);
+  const gite = etablissementGite();
+  const categories = categoriesDeLEtablissement(ajoutees, reglagesCategories);
   const listesDOffice = (categorie: string) =>
     gite
       ? SECTIONS_GITE.filter((x) => x.categorie === categorie).map((x) => ({
@@ -90,6 +89,7 @@ export default function StructureListes() {
     const archive = await lireArchiveStock();
     setListes(archive.listes ?? []);
     setAjoutees(archive.categories ?? []);
+    setReglagesCategories(archive.reglagesCategories ?? {});
   }, []);
 
   useFocusEffect(
@@ -154,7 +154,7 @@ export default function StructureListes() {
 
   return (
     <Screen scroll={false}>
-      <ScrollView contentContainerStyle={commonStyles.listFab}>
+      <ScrollView contentContainerStyle={commonStyles.listeAvecFab}>
         <Text style={commonStyles.muted}>{T.structure.aide}</Text>
 
         {categories.map((infos) => {
@@ -166,15 +166,15 @@ export default function StructureListes() {
                 <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>
                   {T.enteteCategorie(classe, nom)}
                 </Text>
-                {perso ? (
-                  <View style={commonStyles.headerDroite}>
-                    <Pressable
-                      onPress={() => setFenetreCategorie(infos)}
-                      hitSlop={8}
-                      accessibilityLabel={T.structure.modifierCategorie}
-                    >
-                      <Ionicons name="pencil" size={20} color={colors.primary} />
-                    </Pressable>
+                <View style={commonStyles.headerDroite}>
+                  <Pressable
+                    onPress={() => setFenetreCategorie(infos)}
+                    hitSlop={8}
+                    accessibilityLabel={T.structure.modifierCategorie}
+                  >
+                    <Ionicons name="create-outline" size={22} color={colors.primary} />
+                  </Pressable>
+                  {perso ? (
                     <Pressable
                       onPress={() => setCategorieASupprimer(infos)}
                       hitSlop={8}
@@ -182,8 +182,8 @@ export default function StructureListes() {
                     >
                       <Ionicons name="trash" size={20} color={colors.danger} />
                     </Pressable>
-                  </View>
-                ) : null}
+                  ) : null}
+                </View>
               </View>
               <Text style={commonStyles.note}>{T.structure.comptesAutorises(prefixes.join(', '))}</Text>
 
@@ -281,6 +281,7 @@ export default function StructureListes() {
                 router.push(
                   ROUTES.comptesPcgDepuis(
                     `${ROUTES.STOCK_STRUCTURE}${categorie ? `?ajout=${encodeURIComponent(categorie)}` : ''}`,
+                    categorie ?? undefined,
                   ),
                 );
               }}

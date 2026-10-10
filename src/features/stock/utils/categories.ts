@@ -1,4 +1,4 @@
-import type { CategorieInventairePerso, GenreArticle } from '@/features/stock/types';
+import type { CategorieInventairePerso, GenreArticle, ReglageCategorie } from '@/features/stock/types';
 import { ONGLET_STOCK_BAR } from '@/shared/constants/bar';
 import {
   CATEGORIE_INVENTAIRE,
@@ -9,6 +9,8 @@ import {
   SECTION_STOCK,
 } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 export type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
@@ -26,8 +28,7 @@ export const CATEGORIES: { categorie: Categorie; nom: string }[] = [
 ];
 
 /**
- * Les listes d'office de chaque catégorie : leur titre, le genre d'article qu'elles listent (le lait et le conditionnement
- * n'en ont pas), et si elles ne valent que pour la fromagerie (chèvres et brebis). Les petits, l'animal sur pied et l'animal
+ * Les listes d'office de chaque catégorie : leur titre, le genre d'article qu'elles listent (le lait n'en a pas), et si elles ne valent que pour la fromagerie (chèvres et brebis). Les petits, l'animal sur pied et l'animal
  * vivant forment la catégorie des produits animaux ; les autres lignes de viande, celle des produits finis.
  */
 export const SECTIONS: {
@@ -77,16 +78,16 @@ export const SECTIONS: {
     genre: GENRE_ARTICLE.ALIMENT,
   },
   {
+    section: SECTION_STOCK.BOUCLES,
+    categorie: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
+    titre: T.sections.boucles,
+    genre: GENRE_ARTICLE.BOUCLE,
+  },
+  {
     section: SECTION_STOCK.EMBALLAGES,
     categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
     titre: T.sections.emballages,
     genre: GENRE_ARTICLE.EMBALLAGE,
-    fromagerie: true,
-  },
-  {
-    section: SECTION_STOCK.CONDITIONNEMENT,
-    categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
-    titre: T.sections.conditionnement,
     fromagerie: true,
   },
   {
@@ -181,13 +182,18 @@ export const idCategoriePerso = (categorie: CategorieInventairePerso): string =>
 const estDOffice = (categorie: string): categorie is Categorie => categorie in NOMS_CATEGORIE;
 
 /** Ce qu'on sait d'une catégorie (d'office ou ajoutée) ; une catégorie inconnue est rangée avec les autres approvisionnements. */
-export function infosCategorie(categorie: string, ajoutees: CategorieInventairePerso[] = []): InfosCategorie {
+export function infosCategorie(
+  categorie: string,
+  ajoutees: CategorieInventairePerso[] = [],
+  /** Ce que l'utilisateur a personnalisé des catégories d'office (voir ArchiveStock.reglagesCategories). */
+  personnalises: Record<string, ReglageCategorie> = {},
+): InfosCategorie {
   if (estDOffice(categorie)) {
     return {
       categorie,
-      nom: NOMS_CATEGORIE[categorie],
-      classe: CLASSE_INVENTAIRE[categorie],
-      prefixes: PREFIXES_COMPTE_PAR_CATEGORIE[categorie],
+      nom: personnalises[categorie]?.nom ?? NOMS_CATEGORIE[categorie],
+      classe: personnalises[categorie]?.classe ?? CLASSE_INVENTAIRE[categorie],
+      prefixes: personnalises[categorie]?.prefixes ?? PREFIXES_COMPTE_PAR_CATEGORIE[categorie],
       perso: false,
     };
   }
@@ -195,16 +201,28 @@ export function infosCategorie(categorie: string, ajoutees: CategorieInventaireP
   if (perso) {
     return { categorie, nom: perso.nom, classe: perso.classe, prefixes: perso.prefixes, perso: true };
   }
-  return infosCategorie(CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS);
+  return infosCategorie(CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS, [], personnalises);
 }
 
 /** Les catégories d'un inventaire : celles d'office données, puis celles que l'utilisateur a ajoutées (dans l'ordre d'ajout). */
 export function categoriesAvecAjoutees(
   base: { categorie: Categorie; nom: string }[],
   ajoutees: CategorieInventairePerso[] = [],
+  personnalises: Record<string, ReglageCategorie> = {},
 ): InfosCategorie[] {
   return [
-    ...base.map(({ categorie }) => infosCategorie(categorie)),
-    ...ajoutees.map((c) => infosCategorie(idCategoriePerso(c), ajoutees)),
+    ...base.map(({ categorie }) => infosCategorie(categorie, [], personnalises)),
+    ...ajoutees.map((c) => infosCategorie(idCategoriePerso(c), ajoutees, personnalises)),
   ];
 }
+
+/** Vrai pour un établissement qui est un gîte : il a ses propres catégories d'inventaire (marchandises, immobilisations…). */
+export const etablissementGite = (): boolean =>
+  modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
+
+/** Les catégories de l'inventaire de l'établissement, celles d'office puis celles que l'utilisateur a ajoutées. */
+export const categoriesDeLEtablissement = (
+  ajoutees: CategorieInventairePerso[] = [],
+  personnalises: Record<string, ReglageCategorie> = {},
+): InfosCategorie[] =>
+  categoriesAvecAjoutees(etablissementGite() ? CATEGORIES_GITE : CATEGORIES, ajoutees, personnalises);

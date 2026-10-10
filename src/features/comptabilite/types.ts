@@ -98,6 +98,12 @@ export interface Facture {
    * stock ne l'a pas : la première fois qu'on l'enregistre de nouveau, ses quantités sont ajoutées (une seule fois).
    */
   stockApplique?: boolean;
+  /** Achat de production : l'article de l'inventaire (voir cleArticle) qui reçoit la quantité achetée. */
+  stockArticle?: string;
+  /** Achat de production : la quantité achetée, ajoutée au stock de stockArticle. */
+  stockQuantite?: number;
+  /** Achat de boucles : le numéro de la première (les suivantes se numérotent à la suite, selon la quantité). */
+  bouclesDebut?: string;
   /** Uniquement pour type === 'emise'. */
   categorieRecette?: CategorieRecette;
   /**
@@ -172,8 +178,6 @@ export interface Vente {
   client?: string;
   /** Pour les ventes d'animaux (cabris, animal sur pied, animal vivant) : poids total vendu, facultatif. */
   poidsKg?: number;
-  /** Pour une vente de fromage : nombre de sacs en plastique emportés par le client, décompté du stock d'emballages. */
-  sacs?: number;
   /** Pour la vente d'un animal sur pied ou vivant : vrai si c'est un petit (cabri, agneau…), faux ou absent pour un adulte. */
   jeune?: boolean;
   /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */

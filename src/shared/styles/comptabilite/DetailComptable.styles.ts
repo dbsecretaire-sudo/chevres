@@ -2,6 +2,8 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
+  /** L'étoile rouge des ventes sans facture. */
+  asterisque: { color: colors.danger, fontWeight: '800' },
   titreSection: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 4 },
   groupe: { borderBottomWidth: 1, borderBottomColor: colors.border },
   ligne: {

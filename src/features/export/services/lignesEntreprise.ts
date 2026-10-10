@@ -166,7 +166,7 @@ export function elementRow(e: Element, clients: Client[], sousDossiers: SousDoss
 }
 
 /** Où en est la réservation : maintenue, abandonnée, avec ou sans le restaurant. */
-function etatDeLaReservation(
+export function etatDeLaReservation(
   s: Sejour,
 ): 'maintenue' | 'abandonnee' | 'abandonneeRestaurant' | 'sansRestaurant' {
   if (s.abandonne) return s.restaurantMaintenu ? 'abandonneeRestaurant' : 'abandonnee';

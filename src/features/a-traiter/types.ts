@@ -12,6 +12,10 @@ export interface ATraiter {
   id: string;
   etablissementId: string;
   etablissementNom: string;
+  /** Vrai pour ce qui est en retard (une tâche dépassée, une déclaration non faite à temps) : seul le retard est en rouge. */
+  enRetard?: boolean;
+  /** Le logo de l'établissement (la patte, le lit, le dossier…) : à côté de chaque ligne, on voit tout de suite de quel établissement elle vient. */
+  icone?: string;
   genre: GenreATraiter;
   libelle: string;
   cibleId: string;

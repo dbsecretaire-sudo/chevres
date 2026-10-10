@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
@@ -32,86 +33,26 @@ import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
 import { Checkbox } from '@/shared/components/Checkbox';
+import { SectionForm } from '@/shared/components/SectionForm';
 
 /** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
-export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
+export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const optionsClients = e.clients.map((c) => ({ value: c.id, label: nomComplet(c) }));
 
   return (
     <>
-      {/* Une aide se décrit par son type (DPB, ICHN…) ; une autre facture par son numéro. */}
-      {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampTypeAide e={e} />}
-      {!e.estProductionVente && e.categorieRecette !== CATEGORIE_RECETTE.AIDE && (
-        <FormField
-          label={TEXTES.comptabilite.nouvelleEcriture.nDeFacture}
-          value={e.description}
-          onChangeText={e.setDescription}
-          placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
-          aide={TEXTES.comptabilite.nouvelleEcriture.aideNumeroFacture}
-        />
-      )}
-      <ChampCategorieCompte
-        label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
-        // Le libellé est un lien : l'inventaire, à la section de la catégorie choisie (c'est lui qui tient ses prix et ses lignes).
-        onPressLabel={
-          !e.entreprise && e.activite !== ACTIVITE_COMMUNE
-            ? () =>
-                router.push(
-                  ROUTES.stockDepuis(
-                    retour,
-                    SECTION_STOCK_PAR_CATEGORIE_RECETTE[e.categorieRecette],
-                    e.activite,
-                  ),
-                )
-            : undefined
-        }
-        // Une vente d'œufs est liée à la liste des œufs de l'inventaire : le crayon y mène (le prix s'y change).
-        onEdit={
-          e.categorieRecette === CATEGORIE_RECETTE.OEUFS
-            ? () =>
-                router.push(
-                  ROUTES.stockDepuis(
-                    retour,
-                    SECTION_STOCK.OEUFS,
-                    e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
-                  ),
-                )
-            : undefined
-        }
-        value={e.groupeRecetteAffiche}
-        onChange={e.choisirGroupeRecette}
-        options={e.optionsGroupesRecette}
-        demanderCompte={e.categorieRecette === CATEGORIE_RECETTE.AUTRE && !e.categorieAjoutee}
-        compte={e.compteRecetteAutre}
-        onCompteChange={e.setCompteRecetteAutre}
-        optionsCompte={e.optionsCompteRecette}
-        onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
-      />
-
-      {/* Seconde liste : lait ou fromage ; boucherie, petits, animal sur pied ou vivant. */}
-      {e.categoriesDuGroupe.length > 1 && (
-        <SelectField
-          label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
-          required
-          value={e.categorieRecette}
-          onChange={e.changerCategorieRecette}
-          options={e.categoriesDuGroupe.map((categorie) => ({
-            value: categorie,
-            label: libelleCategorieVente({
-              categorie: categorie as Vente['categorie'],
-              activite: e.activite,
-            }),
-          }))}
-        />
-      )}
-
-      {e.modeAvance ? <NoteComptePcg compte={e.compteAffiche} /> : null}
-
-      {!e.estProductionVente && (
+      {/* L'identification : la date, le client, et pour une vente de production s'il souhaite la déclarer (numéro de facture). */}
+      <SectionForm>
+        {date}
+        {/* D'abord à qui : le client, et pour une vente de production s'il souhaite la déclarer (numéro de facture). */}
         <SelectFieldEditable
-          label={TEXTES.comptabilite.nouvelleEcriture.clientOrganisme}
+          label={
+            e.estProductionVente
+              ? TEXTES.commun.general.client
+              : TEXTES.comptabilite.nouvelleEcriture.clientOrganisme
+          }
           required
           searchable
           placeholder={TEXTES.commun.general.choixDuClient}
@@ -120,71 +61,130 @@ export function SectionRecette({ e }: { e: EtatNouvelleEcriture }) {
           options={optionsClients}
           onEdit={() => router.push(ROUTES.CLIENTS)}
         />
-      )}
-
-      {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
-        (e.entreprise && e.categorieRecette !== CATEGORIE_RECETTE.AIDE)) && (
-        <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
-      )}
-
-      {/* Une entreprise assujettie à la TVA indique le taux de chaque recette (hors aide). */}
-      {e.entreprise && e.afficherTva && e.categorieRecette !== CATEGORIE_RECETTE.AIDE && (
-        <SelectField
-          label={TEXTES.commun.general.tauxDeTva}
-          value={e.tauxTvaVente}
-          onChange={e.setTauxTvaVente}
-          options={OPTIONS_TAUX_TVA}
-        />
-      )}
-
-      {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampsAide e={e} />}
-
-      {e.estProductionVente && (
-        <>
-          <SelectFieldEditable
-            label={TEXTES.commun.general.client}
-            required
-            searchable
-            placeholder={TEXTES.commun.general.choixDuClient}
-            value={e.clientId}
-            onChange={e.setClientId}
-            options={optionsClients}
-            onEdit={() => router.push(ROUTES.CLIENTS)}
-          />
-          <Checkbox
-            label={TEXTES.comptabilite.nouvelleEcriture.declarerLaVente}
-            value={e.avecFacture}
-            onChange={e.setAvecFacture}
-          />
-          {/* Une vente déclarée a un numéro de facture. */}
-          {e.avecFacture ? (
-            <FormField
-              label={TEXTES.comptabilite.nouvelleEcriture.nDeFacture}
-              required
-              value={e.numeroFacture}
-              onChangeText={e.setNumeroFacture}
+        {e.estProductionVente ? (
+          <>
+            <Checkbox
+              label={TEXTES.comptabilite.nouvelleEcriture.declarerLaVente}
+              value={e.avecFacture}
+              onChange={e.setAvecFacture}
             />
-          ) : null}
-        </>
-      )}
+            {/* Une vente déclarée a un numéro de facture. */}
+            {e.avecFacture ? (
+              <FormField
+                label={TEXTES.comptabilite.nouvelleEcriture.nDeFacture}
+                required
+                value={e.numeroFacture}
+                onChangeText={e.setNumeroFacture}
+              />
+            ) : null}
+          </>
+        ) : e.categorieRecette !== CATEGORIE_RECETTE.AIDE ? (
+          <FormField
+            label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
+            value={e.description}
+            onChangeText={e.setDescription}
+            placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
+          />
+        ) : null}
+      </SectionForm>
 
-      {/* Une entreprise : la nature de la recette pour la déclaration URSSAF (selon la catégorie tant qu'on n'en choisit pas). */}
-      {e.modeAvance &&
-      modeEntreprise() &&
-      !e.estProductionVente &&
-      (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(e.categorieRecette) ? (
-        <ChampNatureUrssaf value={e.natureUrssaf} onChange={e.setNatureUrssaf} />
-      ) : null}
+      {/* Les informations : la catégorie, ce qui est vendu et son montant. */}
+      <SectionForm>
+        <ChampCategorieCompte
+          label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
+          // Le libellé est un lien : l'inventaire, à la section de la catégorie choisie (c'est lui qui tient ses prix et ses lignes).
+          onPressLabel={
+            !e.entreprise && e.activite !== ACTIVITE_COMMUNE
+              ? () =>
+                  router.push(
+                    ROUTES.stockDepuis(
+                      retour,
+                      SECTION_STOCK_PAR_CATEGORIE_RECETTE[e.categorieRecette],
+                      e.activite,
+                    ),
+                  )
+              : undefined
+          }
+          // Une vente d'œufs est liée à la liste des œufs de l'inventaire : le crayon y mène (le prix s'y change).
+          onEdit={
+            e.categorieRecette === CATEGORIE_RECETTE.OEUFS
+              ? () =>
+                  router.push(
+                    ROUTES.stockDepuis(
+                      retour,
+                      SECTION_STOCK.OEUFS,
+                      e.activite === ACTIVITE_COMMUNE ? undefined : e.activite,
+                    ),
+                  )
+              : undefined
+          }
+          value={e.groupeRecetteAffiche}
+          onChange={e.choisirGroupeRecette}
+          options={e.optionsGroupesRecette}
+          demanderCompte={e.categorieRecette === CATEGORIE_RECETTE.AUTRE && !e.categorieAjoutee}
+          compte={e.compteRecetteAutre}
+          onCompteChange={e.setCompteRecetteAutre}
+          optionsCompte={e.optionsCompteRecette}
+          onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
+        />
 
-      {e.categorieRecette === CATEGORIE_RECETTE.LAIT && <ChampsVenteLait e={e} />}
-      {e.categorieRecette === CATEGORIE_RECETTE.FROMAGE && <ChampsVenteFromage e={e} />}
-      {e.categorieRecette === CATEGORIE_RECETTE.CABRIS && <ChampsVenteCabris e={e} />}
-      {(e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_SUR_PIED ||
-        e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_VIVANT ||
-        e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_MORT) && <ChampsVenteAnimal e={e} />}
-      {e.categorieRecette === CATEGORIE_RECETTE.OEUFS && <ChampsVenteOeufs e={e} />}
-      {(e.categorieRecette === CATEGORIE_RECETTE.VIANDE ||
-        e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) && <ChampsVenteViande e={e} />}
+        {/* Seconde liste : lait ou fromage ; boucherie, petits, animal sur pied ou vivant. */}
+        {e.categoriesDuGroupe.length > 1 && (
+          <SelectField
+            label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
+            required
+            value={e.categorieRecette}
+            onChange={e.changerCategorieRecette}
+            options={e.categoriesDuGroupe.map((categorie) => ({
+              value: categorie,
+              label: libelleCategorieVente({
+                categorie: categorie as Vente['categorie'],
+                activite: e.activite,
+              }),
+            }))}
+          />
+        )}
+
+        {e.modeAvance ? <NoteComptePcg compte={e.compteAffiche} /> : null}
+
+        {/* Une aide se décrit par son type (DPB, ICHN…). */}
+        {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampTypeAide e={e} />}
+
+        {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
+          (e.entreprise && e.categorieRecette !== CATEGORIE_RECETTE.AIDE)) && (
+          <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+        )}
+
+        {/* Une entreprise assujettie à la TVA indique le taux de chaque recette (hors aide). */}
+        {e.entreprise && e.afficherTva && e.categorieRecette !== CATEGORIE_RECETTE.AIDE && (
+          <SelectField
+            label={TEXTES.commun.general.tauxDeTva}
+            value={e.tauxTvaVente}
+            onChange={e.setTauxTvaVente}
+            options={OPTIONS_TAUX_TVA}
+          />
+        )}
+
+        {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampsAide e={e} />}
+
+        {/* Une entreprise : la nature de la recette pour la déclaration URSSAF (selon la catégorie tant qu'on n'en choisit pas). */}
+        {e.modeAvance &&
+        modeEntreprise() &&
+        !e.estProductionVente &&
+        (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(e.categorieRecette) ? (
+          <ChampNatureUrssaf value={e.natureUrssaf} onChange={e.setNatureUrssaf} />
+        ) : null}
+
+        {e.categorieRecette === CATEGORIE_RECETTE.LAIT && <ChampsVenteLait e={e} />}
+        {e.categorieRecette === CATEGORIE_RECETTE.FROMAGE && <ChampsVenteFromage e={e} />}
+        {e.categorieRecette === CATEGORIE_RECETTE.CABRIS && <ChampsVenteCabris e={e} />}
+        {(e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_SUR_PIED ||
+          e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_VIVANT ||
+          e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_MORT) && <ChampsVenteAnimal e={e} />}
+        {e.categorieRecette === CATEGORIE_RECETTE.OEUFS && <ChampsVenteOeufs e={e} />}
+        {(e.categorieRecette === CATEGORIE_RECETTE.VIANDE ||
+          e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) && <ChampsVenteViande e={e} />}
+      </SectionForm>
     </>
   );
 }

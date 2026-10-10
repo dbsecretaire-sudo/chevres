@@ -1,4 +1,6 @@
-import { Stack } from 'expo-router';
+import { Stack, type Href } from 'expo-router';
+import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { MenuActivite } from '@/features/dossiers/components/MenuActivite';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
@@ -10,6 +12,7 @@ import { TEXTES } from '@/shared/textes';
  * la fiche et la liste des clients, le dossier d'un client, ses sous-dossiers et leurs contenus.
  */
 export default function ClientsLayout() {
+  const retourOrganisation = useRetourContexte();
   return (
     <Stack
       screenOptions={{
@@ -28,7 +31,16 @@ export default function ClientsLayout() {
           headerRight: () => <MenuActivite />,
         }}
       />
-      <Stack.Screen name="liste" options={{ title: TEXTES.commun.general.clients }} />
+      <Stack.Screen
+        name="liste"
+        options={{
+          title: TEXTES.commun.general.clients,
+          // Ouverte depuis Organisation › Clients et fournisseurs : la flèche y ramène.
+          headerLeft: retourOrganisation
+            ? () => <HeaderBackTo to={retourOrganisation as Href} onBack={quitterRetour} />
+            : undefined,
+        }}
+      />
       <Stack.Screen
         name="nouveau"
         options={{

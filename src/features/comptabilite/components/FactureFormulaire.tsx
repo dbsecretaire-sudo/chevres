@@ -25,6 +25,8 @@ import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entrep
 import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
+import { estArticleBoucle } from '@/features/stock/services/boucles';
+import { ChampStockProduction } from '@/features/comptabilite/components/ecriture/ChampStockProduction';
 import { styles } from '@/shared/styles/comptabilite/FicheFacture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -194,6 +196,25 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           </View>
           <View style={commonStyles.flex1}>{champTauxTva}</View>
         </View>
+      )}
+
+      {(form.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
+        form.categorieDepense === CATEGORIE_DEPENSE.AUTRE) && (
+        <ChampStockProduction
+          compte={form.categorieDepense === CATEGORIE_DEPENSE.AUTRE ? form.compteManuel : undefined}
+          article={form.stockArticle ?? ''}
+          quantite={form.stockQuantite}
+          debut={form.bouclesDebut}
+          onChangeDebut={(debut) => f.setForm({ ...form, bouclesDebut: debut || undefined })}
+          onChange={(article, quantite) =>
+            f.setForm({
+              ...form,
+              stockArticle: article || undefined,
+              stockQuantite: article ? quantite : undefined,
+              bouclesDebut: estArticleBoucle(article) ? form.bouclesDebut : undefined,
+            })
+          }
+        />
       )}
 
       <View style={commonStyles.row}>

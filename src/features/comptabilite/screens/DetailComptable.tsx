@@ -40,6 +40,7 @@ const VIDE: DetailComptable = {
   alimentationParType: {} as DetailComptable['alimentationParType'],
   totalDepenses: 0,
   totalRecettes: 0,
+  totalRecettesSansFacture: 0,
 };
 
 interface SousPoste {
@@ -141,13 +142,27 @@ export default function DetailComptabilite() {
       <Text style={styles.titreSection}>{TEXTES.comptabilite.detailComptable.recettes}</Text>
       <Card style={commonStyles.gap2}>
         {detail.recettes.map((r) => (
-          <View key={r.categorie} style={styles.ligne}>
-            <Text style={commonStyles.body}>
-              {filtre === TOUTES_ACTIVITES || filtre === ACTIVITE_COMMUNE
-                ? libelleRecetteEtablissement(r.categorie)
-                : libelleRecetteActivite(r.categorie, filtre)}
-            </Text>
-            <Text style={[styles.montant, { color: colors.primary }]}>{formatMontant(r.montant)}</Text>
+          <View key={r.categorie} style={styles.groupe}>
+            <View style={styles.ligneInterne}>
+              <Text style={commonStyles.body}>
+                {filtre === TOUTES_ACTIVITES || filtre === ACTIVITE_COMMUNE
+                  ? libelleRecetteEtablissement(r.categorie)
+                  : libelleRecetteActivite(r.categorie, filtre)}
+              </Text>
+              <Text style={[styles.montant, { color: colors.primary }]}>{formatMontant(r.montant)}</Text>
+            </View>
+            {/* Les ventes sans facture (non déclarées) : la part de la catégorie, étoilée. */}
+            {r.sansFacture ? (
+              <View style={styles.sousDetail}>
+                <View style={commonStyles.rowBetween}>
+                  <Text style={commonStyles.muted}>
+                    {TEXTES.comptabilite.detailComptable.dontSansFacture}{' '}
+                    <Text style={styles.asterisque}>*</Text>
+                  </Text>
+                  <Text style={commonStyles.mutedBold}>{formatMontant(r.sansFacture)}</Text>
+                </View>
+              </View>
+            ) : null}
           </View>
         ))}
         <View style={[styles.ligne, styles.ligneTotal]}>
@@ -156,6 +171,14 @@ export default function DetailComptabilite() {
             {formatMontant(detail.totalRecettes)}
           </Text>
         </View>
+        {detail.totalRecettesSansFacture ? (
+          <View style={commonStyles.rowBetween}>
+            <Text style={commonStyles.muted}>
+              {TEXTES.comptabilite.detailComptable.dontSansFacture} <Text style={styles.asterisque}>*</Text>
+            </Text>
+            <Text style={commonStyles.mutedBold}>{formatMontant(detail.totalRecettesSansFacture)}</Text>
+          </View>
+        ) : null}
       </Card>
     </Screen>
   );

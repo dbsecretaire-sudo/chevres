@@ -1,11 +1,18 @@
 import type { Chevre } from '@/features/cheptel/types';
-import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
+import type { Controle, FamilleControle, VisiteVeterinaire } from '@/features/exploitation/types';
+import { FAMILLE_CONTROLE, PARAMETRES_LAIT, SURFACES_TERRAIN } from '@/shared/constants/controles';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_CATEGORIE_DEPENSE,
   LABEL_CATEGORIE_RECETTE,
+  LABEL_CATEGORIE_VENTE,
+  LABEL_SEXE,
+  LABEL_TYPE_FROMAGE,
+  LABEL_UNITE_VENTE_COURT,
+  LIBELLES_STATUT_CHEVRE,
 } from '@/shared/textes/libelles';
+import { SEXE } from '@/shared/constants/cheptel';
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { activiteVente, activitesFacture } from '@/features/comptabilite/utils/activite';
@@ -35,10 +42,10 @@ export function chevreRow(c: Chevre, indicatif?: IndicatifParEspece) {
     [TEXTES.export.colonnes.nBoucle]: avecIndicatif(c.numeroBoucle, indicatif?.(especeDe(c))),
     [TEXTES.export.colonnes.dateDeBouclage]: formatDateShortFR(c.dateBouclage),
     [TEXTES.export.colonnes.nom]: c.nom ?? '',
-    [TEXTES.export.colonnes.sexe]: c.sexe,
+    [TEXTES.export.colonnes.sexe]: LABEL_SEXE[c.sexe],
     [TEXTES.export.colonnes.dateDeNaissance]: formatDateShortFR(c.dateNaissance),
     [TEXTES.export.colonnes.mereNBoucle]: avecIndicatif(c.mereNumeroBoucle, indicatif?.(especeDe(c))),
-    [TEXTES.export.colonnes.statut]: c.statut,
+    [TEXTES.export.colonnes.statut]: LIBELLES_STATUT_CHEVRE[c.statut][c.sexe === SEXE.MALE ? 1 : 0],
     [TEXTES.export.colonnes.dateMort]: formatDateShortFR(c.dateStatut),
     [TEXTES.export.colonnes.renouvellement]: c.renouvellement
       ? TEXTES.export.xlsxExport.ouiValeur(c.renouvellementAnnee ?? '—')
@@ -53,11 +60,15 @@ export function venteRow(v: Vente) {
       ? { [TEXTES.export.colonnes.activite]: LABEL_ACTIVITE_COMPTABLE[activiteVente(v)] }
       : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(v.date),
-    [TEXTES.export.colonnes.categorie]: v.categorie,
+    [TEXTES.export.colonnes.categorie]: LABEL_CATEGORIE_VENTE[v.categorie],
     [TEXTES.export.colonnes.typeFromage]:
-      v.typeFromage === TYPE_FROMAGE.AUTRE ? v.typeFromageLibre : (v.typeFromage ?? ''),
+      v.typeFromage === TYPE_FROMAGE.AUTRE
+        ? (v.typeFromageLibre ?? '')
+        : v.typeFromage
+          ? LABEL_TYPE_FROMAGE[v.typeFromage]
+          : '',
     [TEXTES.export.colonnes.quantite]: v.quantite,
-    [TEXTES.export.colonnes.unite]: v.unite,
+    [TEXTES.export.colonnes.unite]: LABEL_UNITE_VENTE_COURT[v.unite],
     [TEXTES.export.colonnes.prix]: v.prix,
     [TEXTES.export.colonnes.precision]: v.precision ?? '',
     [TEXTES.export.colonnes.declaree]: venteADeclarer(v)
@@ -87,7 +98,7 @@ export function compteDeFacture(f: Facture): { numero: string; libelle: string }
   return undefined;
 }
 
-export function factureRow(f: Facture) {
+export function factureRow(f: Facture, libelleStock: (cle: string) => string = (cle) => cle) {
   const compte = compteDeFacture(f);
   return {
     ...(plusieursEspeces()
@@ -113,6 +124,9 @@ export function factureRow(f: Facture) {
     [TEXTES.export.colonnes.nComptePcg]: compte?.numero ?? '',
     [TEXTES.export.colonnes.libelleCompte]: compte?.libelle ?? '',
     [TEXTES.export.colonnes.montant]: f.montant,
+    [TEXTES.export.colonnes.articleStock]: f.stockArticle ? libelleStock(f.stockArticle) : '',
+    [TEXTES.export.colonnes.quantiteStock]: f.stockQuantite ?? '',
+    [TEXTES.export.colonnes.premiereBoucle]: f.bouclesDebut ?? '',
   };
 }
 
@@ -129,15 +143,48 @@ export function visiteRow(v: VisiteVeterinaire, indicatif?: IndicatifParEspece) 
   };
 }
 
-export function controleRow(c: Controle, indicatif?: IndicatifParEspece) {
+export function controleRow(c: Controle, indicatif?: IndicatifParEspece, avecDetails = false) {
   return {
     ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
     [TEXTES.export.colonnes.date]: formatDateShortFR(c.date),
     [TEXTES.export.colonnes.nBoucle]: c.chevreNumeroBoucle
       ? avecIndicatif(c.chevreNumeroBoucle, indicatif?.(especeDe(c)))
       : TEXTES.commun.general.troupeauEntier,
+    [TEXTES.export.colonnes.famille]:
+      TEXTES.exploitation.controles.familles[(c.famille ?? FAMILLE_CONTROLE.ANIMAUX) as FamilleControle]
+        .titre,
     [TEXTES.export.colonnes.type]: c.type,
     [TEXTES.export.colonnes.resultat]: c.resultat ?? '',
     [TEXTES.export.colonnes.notes]: c.notes ?? '',
+    ...(avecDetails
+      ? {
+          ...Object.fromEntries(SURFACES_TERRAIN.map((cle) => [TEXTES.export.colonnes[cle], c[cle] ?? ''])),
+          ...resultatsLaitParColonne(c),
+        }
+      : {}),
   };
+}
+
+/** Les résultats d'une analyse de lait, une colonne par paramètre (et une pour le grade de ceux qui en ont un). */
+function resultatsLaitParColonne(c: Controle): Record<string, string | number> {
+  const L = TEXTES.exploitation.controles.lait;
+  return Object.fromEntries(
+    PARAMETRES_LAIT.flatMap((p) => {
+      const nom = L.parametres[p.cle];
+      if (p.format === 'choix') {
+        return [
+          [
+            nom,
+            c.antibiotique ? (L.antibiotique[c.antibiotique as 'negatif' | 'positif'] ?? c.antibiotique) : '',
+          ],
+        ];
+      }
+      return [
+        [nom, c[p.cle] ?? ''],
+        ...('grade' in p && p.grade
+          ? [[`${nom} (${L.grade.toLowerCase()})`, c[`${p.cle}Grade` as 'floreTotaleGrade'] ?? '']]
+          : []),
+      ];
+    }),
+  );
 }

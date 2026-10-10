@@ -1,6 +1,5 @@
 import type { Chevre } from '@/features/cheptel/types';
 import type { Facture, Vente } from '@/features/comptabilite/types';
-import type { VisiteVeterinaire } from '@/features/exploitation/types';
 import type { BilanAlimentation } from '@/features/exploitation/services/bilanAlimentation';
 import { categorieAnimal, type CategorieAnimal } from '@/features/cheptel/utils/chevreLabel';
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
@@ -18,7 +17,6 @@ export interface StatsAccueil {
   soldeFactures: number;
   kgParAnimalAlimentation?: number;
   gParAnimalParJour: number | undefined;
-  derniereVisite?: string;
 }
 
 /** Petit = moins que l’âge limite OU pas encore bouclé (même si plus âgé) ; sinon femelle/mâle adulte selon le sexe. */
@@ -32,12 +30,11 @@ interface Sources {
   vivantes: Chevre[];
   ventes: Vente[];
   factures: Facture[];
-  visites: VisiteVeterinaire[];
   alimentation: BilanAlimentation;
 }
 
 /**
- * Statistiques de l'Accueil pour l'activité (espèce) active : effectifs, alimentation, visites, et solde des
+ * Statistiques de l'Accueil pour l'activité (espèce) active : effectifs, alimentation et solde des
  * ventes et factures de cette activité (les écritures « commun » n'y sont pas, voir l'écran Comptabilité).
  */
 export function calculerStatsAccueil({
@@ -45,7 +42,6 @@ export function calculerStatsAccueil({
   vivantes,
   ventes: toutesVentes,
   factures: toutesFactures,
-  visites,
   alimentation,
 }: Sources): StatsAccueil {
   const espece = especeCourante();
@@ -79,6 +75,5 @@ export function calculerStatsAccueil({
     soldeFactures: ventesTotal + totalFactures(TYPE_FACTURE.EMISE) - totalFactures(TYPE_FACTURE.RECUE),
     kgParAnimalAlimentation: alimentation.kgParAnimal,
     gParAnimalParJour: alimentation.gParAnimalParJour,
-    derniereVisite: visites[0]?.date,
   };
 }

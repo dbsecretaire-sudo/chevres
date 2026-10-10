@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '@/shared/theme/colors';
@@ -55,8 +55,19 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
   /** Le début d'une date de l'année imposée (« 2025- »), qu'on ne peut pas effacer. */
   const prefixe = anneeImposee ? `${anneeImposee}-` : '';
 
+  /** Le libellé, et à sa droite la note (le format attendu) : sur une même ligne, au-dessus du champ. */
+  const entete = (note: ReactNode) => (
+    <View style={commonStyles.enteteChamp}>
+      <Text style={commonStyles.lineSemiBold}>
+        {label}
+        {required ? <Text style={commonStyles.required}> *</Text> : null}
+      </Text>
+      {note}
+    </View>
+  );
+
   const aide = anneeImposee ? (
-    <Text style={commonStyles.note}>
+    <Text style={[commonStyles.note, commonStyles.noteDroite]}>
       {T.formatAvecAnnee(
         jourMoisAnnee ? (anneeImposee ? T.formatJourMois : T.formatJourMoisAnnee) : T.format,
         anneeImposee,
@@ -86,10 +97,11 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
     };
     return (
       <View style={commonStyles.gap6}>
-        <Text style={commonStyles.lineSemiBold}>
-          {label}
-          {required ? <Text style={commonStyles.required}> *</Text> : null}
-        </Text>
+        {entete(
+          <Text style={[invalide ? commonStyles.required : commonStyles.note, commonStyles.noteDroite]}>
+            {anneeImposee ? T.formatAvecAnnee(T.formatJourMois, anneeImposee) : T.formatJourMoisAnnee}
+          </Text>,
+        )}
         <TextInput
           style={[commonStyles.inputBox, { backgroundColor: fond }, bordure]}
           value={saisie}
@@ -98,9 +110,6 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           placeholderTextColor={colors.textMuted}
           maxLength={anneeImposee ? 5 : undefined}
         />
-        <Text style={invalide ? commonStyles.required : commonStyles.note}>
-          {anneeImposee ? T.formatAvecAnnee(T.formatJourMois, anneeImposee) : T.formatJourMoisAnnee}
-        </Text>
       </View>
     );
   }
@@ -111,10 +120,15 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
     const invalide = affiche !== '' && affiche !== prefixe && !estDateISO(affiche);
     return (
       <View style={commonStyles.gap6}>
-        <Text style={commonStyles.lineSemiBold}>
-          {label}
-          {required ? <Text style={commonStyles.required}> *</Text> : null}
-        </Text>
+        {entete(
+          anneeImposee ? (
+            <Text style={[invalide ? commonStyles.required : commonStyles.note, commonStyles.noteDroite]}>
+              {T.formatAvecAnnee(T.format, anneeImposee)}
+            </Text>
+          ) : invalide ? (
+            <Text style={[commonStyles.required, commonStyles.noteDroite]}>{T.invalide}</Text>
+          ) : null,
+        )}
         <TextInput
           style={[
             commonStyles.inputBox,
@@ -132,13 +146,6 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           placeholder={T.aaaaMmJj}
           placeholderTextColor={colors.textMuted}
         />
-        {anneeImposee ? (
-          <Text style={invalide ? commonStyles.required : commonStyles.note}>
-            {T.formatAvecAnnee(T.format, anneeImposee)}
-          </Text>
-        ) : invalide ? (
-          <Text style={commonStyles.required}>{T.invalide}</Text>
-        ) : null}
       </View>
     );
   }
@@ -151,10 +158,7 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
 
   return (
     <View style={commonStyles.gap6}>
-      <Text style={commonStyles.lineSemiBold}>
-        {label}
-        {required ? <Text style={commonStyles.required}> *</Text> : null}
-      </Text>
+      {entete(aide)}
       <Pressable
         style={[commonStyles.inputBox, { backgroundColor: fond }]}
         onPress={() => setShowPicker(true)}
@@ -169,7 +173,6 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
               : prefixe}
         </Text>
       </Pressable>
-      {aide}
       {showPicker && (
         <DateTimePicker
           value={dateValue}

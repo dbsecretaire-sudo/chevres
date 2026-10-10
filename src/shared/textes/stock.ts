@@ -54,7 +54,7 @@ export const TEXTES_STOCK = {
   },
   /** L'impression des mouvements de l'inventaire (PDF) depuis le menu. */
   exporter: {
-    titre: 'Inventaire — tous les mouvements',
+    titre: 'Inventaire',
     colonnes: {
       date: 'Date',
       article: 'Article',
@@ -63,7 +63,7 @@ export const TEXTES_STOCK = {
       litres: 'Litres',
     },
     aucunMouvement: 'Aucun mouvement dans cette catégorie.',
-    lait: 'Lait (journal, fabrications et ventes)',
+    lait: 'Lait (production, fabrications et ventes)',
     aucunLait: 'Aucun litrage ni vente de lait.',
     production: 'production',
     fabrication: 'fabrication de fromage',
@@ -119,6 +119,29 @@ export const TEXTES_STOCK = {
     utilise: 'Utilisé en fromagerie',
     vendu: 'Vendu',
   },
+  /** Les boucles d'identification : une ligne par numéro, achetées par plages et posées sur les animaux. */
+  boucles: {
+    titre: (nom: string) => `Inventaire : ${nom}`,
+    titreEtat: 'Boucles',
+    etat: { tout: 'Tout', posee: 'Posée', non_posee: 'Non posée' },
+    aucuneBoucle: 'Aucune boucle.',
+    colonnes: { numero: 'N°', pose: 'Date de pose', achat: 'Date d’achat' },
+    aucuneNonPosee: 'Aucune boucle à poser.',
+    aucunePosee: 'Aucune boucle posée.',
+    /** Rappel : l'inventaire des boucles ne se modifie pas à la main. */
+    rappel:
+      'Les ajouts et les suppressions des boucles se font dans Comptabilité (ajout par dépenses), et dans Cheptel (suppression par pose).',
+    ok: 'OK',
+    triPar: (colonne: string) => `Trier par ${colonne.toLowerCase()}`,
+    nombre: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
+    /** Le choix d'une boucle de l'inventaire pour un animal. */
+    /** Le choix du numéro de boucle d'un animal : une boucle de l'inventaire, ou un autre numéro qu'on tape. */
+    choisir: 'N° de boucle à poser',
+    rechercher: 'Rechercher par n°',
+    aucune: 'Aucune',
+    utiliser: (numero: string) => `Utiliser le n° ${numero}`,
+    rouge: 'rouge',
+  },
   /** L'historique de l'inventaire : les mouvements, mois par mois. */
   historique: {
     titre: 'Historique',
@@ -146,8 +169,8 @@ export const TEXTES_STOCK = {
     fromages: 'Fromages',
     oeufs: 'Œufs',
     emballages: 'Emballages',
+    boucles: 'Boucles d’identification',
     materiel: 'Équipement',
-    conditionnement: 'Conditionnement',
     viande: 'Viande et charcuterie',
     animaux: 'Animaux',
   },
@@ -201,7 +224,8 @@ export const TEXTES_STOCK = {
   },
   renommer: { titre: 'Modifier le nom', modifier: 'Modifier le nom de l’article' },
   conditionnement: {
-    aide: 'À chaque vente d’un fromage, le fromage et ses emballages baissent tout seul. Les sacs en plastique se saisissent à la vente.',
+    titre: 'Conditionnement',
+    aide: 'À chaque vente d’un fromage, le fromage et ses emballages baissent tout seul.',
     aucun: 'Aucun emballage',
     modifier: 'Modifier le conditionnement',
     choisirLesEmballages: 'Emballages consommés par fromage vendu :',
@@ -211,6 +235,8 @@ export const TEXTES_STOCK = {
   naissance: 'naissance',
   achat: 'achat',
   consommation: 'consommation',
+  pose: 'pose',
+  entreeBoucle: 'ajout depuis le cheptel',
   ligneMouvement: (date: string, article: string, delta: string, origine: string) =>
     `${date} · ${article} · ${delta} (${origine})`,
   modal: {

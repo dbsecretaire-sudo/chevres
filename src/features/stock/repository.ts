@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
-import type { ArchiveStock } from '@/features/stock/types';
+import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
 const cle = () => cleStockage(CLE_STOCKAGE.STOCK);
@@ -15,6 +15,26 @@ const VIDE: ArchiveStock = {
   lait: [],
   prix: {},
 };
+
+/** Ce qui est personnalisé d'une catégorie d'office : les réglages bien formés. */
+function reglagesValides(brut: ArchiveStock['reglagesCategories']): Record<string, ReglageCategorie> {
+  const reglages: Record<string, ReglageCategorie> = {};
+  for (const [categorie, r] of Object.entries(brut ?? {})) {
+    if (!r || typeof r !== 'object') continue;
+    const reglage: ReglageCategorie = {};
+    if (typeof r.nom === 'string' && r.nom.trim()) reglage.nom = r.nom;
+    if (typeof r.classe === 'string' && r.classe.trim()) reglage.classe = r.classe;
+    if (
+      Array.isArray(r.prefixes) &&
+      r.prefixes.length > 0 &&
+      r.prefixes.every((p) => typeof p === 'string')
+    ) {
+      reglage.prefixes = r.prefixes;
+    }
+    if (Object.keys(reglage).length > 0) reglages[categorie] = reglage;
+  }
+  return reglages;
+}
 
 /** Remet une archive lue (ou reçue d'une sauvegarde) dans sa forme : rien ne manque, un conditionnement est une liste. */
 export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefined): ArchiveStock {
@@ -55,6 +75,13 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
             typeof c.nom === 'string' &&
             typeof c.classe === 'string' &&
             Array.isArray(c.prefixes),
+        )
+      : [],
+    reglagesCategories: reglagesValides(archive?.reglagesCategories),
+    boucles: Array.isArray(archive?.boucles)
+      ? archive.boucles.filter(
+          (b) =>
+            b && typeof b.id === 'string' && typeof b.numero === 'string' && typeof b.article === 'string',
         )
       : [],
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],

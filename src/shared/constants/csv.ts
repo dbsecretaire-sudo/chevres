@@ -51,6 +51,9 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'lignesAlimentation',
     'lignesMarchandises',
     'stockApplique',
+    'stockArticle',
+    'stockQuantite',
+    'bouclesDebut',
     'litrage',
     'typeCarburant',
     'lignesCarburant',
@@ -78,7 +81,6 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'tauxTva',
     'client',
     'poidsKg',
-    'sacs',
     'jeune',
     'animaux',
     'precision',
@@ -87,6 +89,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
+    'famille',
     'espece',
     'date',
     'chevreId',
@@ -94,6 +97,29 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'type',
     'resultat',
     'notes',
+    'fichiers',
+    'surfaceGraphique',
+    'surfaceAdmissible',
+    'surfaceFourragere',
+    'surfaceIrriguee',
+    'matiereGrasse',
+    'matiereProteique',
+    'antibiotique',
+    'floreTotale',
+    'floreTotaleGrade',
+    'cellules',
+    'butyriques',
+    'cryoscopie',
+    'cryoscopieGrade',
+    'lipolyse',
+    'staphylocoques',
+    'coliformes',
+    'coliformesGrade',
+    'ecoli',
+    'pseudomonas',
+    'uree',
+    'igg',
+    'contenus',
   ],
 };
 
@@ -107,9 +133,26 @@ export const CHAMPS_NOMBRE = new Set([
   'tauxTva',
   'renouvellementAnnee',
   'poidsKg',
-  'sacs',
   'partVenteUrssaf',
   'partHorsCaUrssaf',
+  'stockQuantite',
+  'surfaceGraphique',
+  'surfaceAdmissible',
+  'surfaceFourragere',
+  'surfaceIrriguee',
+  'matiereGrasse',
+  'matiereProteique',
+  'floreTotale',
+  'cellules',
+  'butyriques',
+  'cryoscopie',
+  'lipolyse',
+  'staphylocoques',
+  'coliformes',
+  'ecoli',
+  'pseudomonas',
+  'uree',
+  'igg',
 ]);
 
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */
@@ -125,6 +168,12 @@ export const GENRE_EQUIPEMENT = 'e';
 export const CHAMPS_LIGNES_ALIMENTATION = new Set(['lignesAlimentation']);
 
 export const CHAMPS_LIGNES_CARBURANT = new Set(['lignesCarburant']);
+
+/** Les fichiers joints d'un contrôle : id, nom, extension, type et date d'ajout de chacun. */
+export const CHAMPS_FICHIERS = new Set(['fichiers']);
+
+/** Les champs écrits tels quels en JSON dans leur cellule (les contenus d'un groupement, avec leurs fichiers). */
+export const CHAMPS_JSON = new Set(['contenus']);
 
 export const CHAMPS_LIGNES_MARCHANDISES = new Set(['lignesMarchandises']);
 

@@ -98,59 +98,66 @@ export function HistoriqueInventaireGite({ bar, inventaire }: Props) {
       <YearPicker annees={annees} value={annee} onChange={setAnnee} />
       <Text style={commonStyles.note}>{T.historique.comparaison(annee, annee - 1)}</Text>
 
-      {categoriesAvecAjoutees(CATEGORIES_GITE, inventaire.categories).map(({ categorie, nom, classe }) => {
-        const titre = T.enteteCategorie(classe, nom);
-        const deLaCategorie = entrees.filter((e) => e.categorie === categorie);
-        const duMois = (an: number, mois: number) =>
-          deLaCategorie.filter((e) => e.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`));
-        const dansLAn = (an: number) => deLaCategorie.filter((e) => e.date.startsWith(String(an))).length;
-        const mois = Array.from({ length: 12 }, (_, i) => i + 1).filter(
-          (m) => duMois(annee, m).length > 0 || duMois(annee - 1, m).length > 0,
-        );
-        return (
-          <Card key={categorie}>
-            <TitreCarte titre={titre} valeur={dansLAn(annee)} comparaison={dansLAn(annee - 1)} />
-            {mois.length === 0 ? (
-              <Text style={commonStyles.mutedItalic}>{T.exporter.aucunMouvement}</Text>
-            ) : (
-              <Pressable onPress={() => basculer(categorie)}>
-                <Text style={stylesBilan.voirPlus}>
-                  {ouverts.includes(categorie) ? T.historique.masquer : T.historique.details}
-                </Text>
-              </Pressable>
-            )}
-            {(ouverts.includes(categorie) ? mois : []).map((m) => {
-              const cle = `${categorie}:${annee}:${m}`;
-              const detail = duMois(annee, m).sort((a, b) => b.date.localeCompare(a.date));
-              const total = (liste: Entree[]) => liste.reduce((somme, e) => somme + e.delta, 0);
-              return (
-                <View key={cle} style={[commonStyles.gap6, stylesStock.moisHistorique]}>
-                  <View style={stylesBilan.ligne}>
-                    {detail.length > 0 ? (
-                      <Pressable onPress={() => basculer(cle)}>
-                        <Text style={stylesBilan.voirPlus}>{NOMS_MOIS[m - 1]}</Text>
-                      </Pressable>
-                    ) : (
-                      <Text style={stylesBilan.ligneLabel}>{NOMS_MOIS[m - 1]}</Text>
-                    )}
-                    <View style={stylesBilan.ligneValeurs}>
-                      <Text style={commonStyles.cardTitle}>{signe(total(detail))}</Text>
-                      <Text style={commonStyles.muted}>({signe(total(duMois(annee - 1, m)))})</Text>
+      {categoriesAvecAjoutees(CATEGORIES_GITE, inventaire.categories, inventaire.reglagesCategories).map(
+        ({ categorie, nom, classe }) => {
+          const titre = T.enteteCategorie(classe, nom);
+          const deLaCategorie = entrees.filter((e) => e.categorie === categorie);
+          const duMois = (an: number, mois: number) =>
+            deLaCategorie.filter((e) => e.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`));
+          const dansLAn = (an: number) => deLaCategorie.filter((e) => e.date.startsWith(String(an))).length;
+          const mois = Array.from({ length: 12 }, (_, i) => i + 1).filter(
+            (m) => duMois(annee, m).length > 0 || duMois(annee - 1, m).length > 0,
+          );
+          return (
+            <Card key={categorie}>
+              <TitreCarte titre={titre} valeur={dansLAn(annee)} comparaison={dansLAn(annee - 1)} />
+              {mois.length === 0 ? (
+                <Text style={commonStyles.mutedItalic}>{T.exporter.aucunMouvement}</Text>
+              ) : (
+                <Pressable onPress={() => basculer(categorie)}>
+                  <Text style={stylesBilan.voirPlus}>
+                    {ouverts.includes(categorie) ? T.historique.masquer : T.historique.details}
+                  </Text>
+                </Pressable>
+              )}
+              {(ouverts.includes(categorie) ? mois : []).map((m) => {
+                const cle = `${categorie}:${annee}:${m}`;
+                const detail = duMois(annee, m).sort((a, b) => b.date.localeCompare(a.date));
+                const total = (liste: Entree[]) => liste.reduce((somme, e) => somme + e.delta, 0);
+                return (
+                  <View key={cle} style={[commonStyles.gap6, stylesStock.moisHistorique]}>
+                    <View style={stylesBilan.ligne}>
+                      {detail.length > 0 ? (
+                        <Pressable onPress={() => basculer(cle)}>
+                          <Text style={stylesBilan.voirPlus}>{NOMS_MOIS[m - 1]}</Text>
+                        </Pressable>
+                      ) : (
+                        <Text style={stylesBilan.ligneLabel}>{NOMS_MOIS[m - 1]}</Text>
+                      )}
+                      <View style={stylesBilan.ligneValeurs}>
+                        <Text style={commonStyles.cardTitle}>{signe(total(detail))}</Text>
+                        <Text style={commonStyles.muted}>({signe(total(duMois(annee - 1, m)))})</Text>
+                      </View>
                     </View>
+                    {ouverts.includes(cle)
+                      ? detail.map((e) => (
+                          <Text key={e.id} style={commonStyles.muted}>
+                            {T.ligneMouvement(
+                              formatDateShortFR(e.date),
+                              e.article,
+                              signe(e.delta),
+                              e.origine,
+                            )}
+                          </Text>
+                        ))
+                      : null}
                   </View>
-                  {ouverts.includes(cle)
-                    ? detail.map((e) => (
-                        <Text key={e.id} style={commonStyles.muted}>
-                          {T.ligneMouvement(formatDateShortFR(e.date), e.article, signe(e.delta), e.origine)}
-                        </Text>
-                      ))
-                    : null}
-                </View>
-              );
-            })}
-          </Card>
-        );
-      })}
+                );
+              })}
+            </Card>
+          );
+        },
+      )}
     </View>
   );
 }

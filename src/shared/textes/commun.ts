@@ -123,6 +123,7 @@ export const TEXTES_COMMUN = {
     credit: 'Crédit',
     description: 'Description',
     supprimer: 'Supprimer',
+    modifier: 'Modifier',
     nDeBoucleConcerne: 'N° de boucle concerné',
     videTroupeauEntier: 'Vide = troupeau entier',
     nomDEntreprise: 'Nom d’entreprise',

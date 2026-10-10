@@ -10,6 +10,8 @@ import {
   type FiltreStock,
 } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { comptesDeLInventaire } from '@/features/stock/services/stock';
+import { erreurAchatBoucles } from '@/features/stock/services/boucles';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
@@ -17,10 +19,10 @@ import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import {
   PREFIXE_CATEGORIE_AJOUTEE,
-  categoriesAjouteesEspece,
-} from '@/features/comptabilite/utils/choixGroupesRecette';
+  categoriesAjoutees,
+} from '@/features/comptabilite/utils/categoriesRecetteInventaire';
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
-import { chargerChoixGroupesRecette } from '@/features/comptabilite/repository/groupesRecette';
+import { chargerCategoriesRecetteInventaire } from '@/features/comptabilite/repository/categoriesRecetteInventaire';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
@@ -155,6 +157,11 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   );
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [fournisseurId, setFournisseurId] = useState('');
+  /** Achat de production : l'article du stock acheté et sa quantité. */
+  const [stockArticle, setStockArticle] = useState('');
+  const [stockQuantite, setStockQuantite] = useState<number | undefined>();
+  /** Un achat de boucles : le numéro de la première. */
+  const [bouclesDebut, setBouclesDebut] = useState('');
 
   // Crédit (facture émise ou vente de production)
   // Première recette de l'espèce courante : le lait pour les chèvres, la charcuterie pour les cochons…
@@ -166,7 +173,6 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [quantite, setQuantite] = useState('');
   const [unite, setUnite] = useState<UniteVente>(UNITE_VENTE.PIECE);
   const [poidsKg, setPoidsKg] = useState('');
-  const [sacs, setSacs] = useState('');
   const [jeune, setJeune] = useState<boolean | undefined>();
   /** Les fiches des animaux sur pied ou vivants vendus (vide : aucun choisi). */
   const [animaux, setAnimaux] = useState<string[]>([]);
@@ -189,14 +195,17 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
 
-  // Les catégories de recette cochées pour chaque espèce : relues à chaque ouverture, et à chaque enregistrement du choix.
+  /** Les comptes des listes de l'inventaire : un achat sur l'un d'eux entre au stock. */
+  const [comptesInventaire, setComptesInventaire] = useState<string[]>([]);
+  // Les listes ajoutées à l'inventaire (35. Produits finis, 33. Produits animaux) : relues à chaque ouverture.
   const [versionGroupes, setVersionGroupes] = useState(0);
   useFocusEffect(
     useCallback(() => {
-      chargerChoixGroupesRecette().then(() => setVersionGroupes((v) => v + 1));
+      chargerCategoriesRecetteInventaire().then(() => setVersionGroupes((v) => v + 1));
       listFournisseurs().then(setFournisseurs);
       listClients().then(setClients);
       listComptesPcg().then(setComptes);
+      lireArchiveStock().then((archive) => setComptesInventaire(comptesDeLInventaire(archive)));
     }, []),
   );
 
@@ -223,7 +232,16 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     label: `${c.numero} — ${c.libelle}`,
     shortLabel: c.numero,
   });
-  const optionsCompteDepense = comptesDepense.map(versOptionCompte);
+  // Les comptes de l'inventaire d'abord, sous leur titre, pour les retrouver dans toute la liste.
+  const optionsCompteDepense = comptesDepense
+    .map((c) => ({ ...versOptionCompte(c), inventaire: comptesInventaire.includes(c.numero) }))
+    .sort((a, b) => Number(b.inventaire) - Number(a.inventaire))
+    .map(({ inventaire, ...option }) => ({
+      ...option,
+      groupe: inventaire
+        ? TEXTES.comptabilite.nouvelleEcriture.groupeInventaire
+        : TEXTES.comptabilite.nouvelleEcriture.groupeAutresComptes,
+    }));
   const optionsCompteRecette = comptesRecette.map(versOptionCompte);
 
   const compteAffiche =
@@ -282,6 +300,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   const changerCategorieDepense = (v: CategorieDepense) => {
     setCategorieDepense(v);
+    setStockArticle('');
+    setStockQuantite(undefined);
+    setBouclesDebut('');
     if (v === CATEGORIE_DEPENSE.ALIMENTATION) rattacherSiCommun();
     // Une entreprise garde le taux choisi (ou l'absence de TVA) ; un élevage a un taux par défaut selon la catégorie.
     if (!entreprise) {
@@ -291,8 +312,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   // Une catégorie ajoutée par l'utilisateur : une recette « autre » dont le compte est celui qu'il a choisi.
   const [categorieAjouteeId, setCategorieAjouteeId] = useState<string | undefined>();
-  const categoriesAjouteesActivite =
-    activite === ACTIVITE_COMMUNE || entreprise ? [] : categoriesAjouteesEspece(activite);
+  const categoriesAjouteesActivite = activite === ACTIVITE_COMMUNE || entreprise ? [] : categoriesAjoutees();
   const categorieAjoutee =
     categorieRecette === CATEGORIE_RECETTE.AUTRE
       ? categoriesAjouteesActivite.find((c) => c.id === categorieAjouteeId)
@@ -327,8 +347,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setMontant('');
     setNumeroFacture('');
     setQuantite('');
+    setStockQuantite(undefined);
+    setBouclesDebut('');
     setPoidsKg('');
-    setSacs('');
     setAnimaux([]);
     setPrecision('');
     setJeune(undefined);
@@ -371,6 +392,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         description: description.trim() || categorieAjoutee?.nom || '',
         montant,
         categorieDepense,
+        stockArticle,
+        stockQuantite,
+        bouclesDebut,
         lignesAlimentation,
         lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
         lignesCarburant,
@@ -387,7 +411,6 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         tauxTvaVente,
         tauxTvaAchat,
         poidsKg,
-        sacs,
         jeune,
         animaux,
         precision,
@@ -401,6 +424,13 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
       if ('erreur' in resultat) {
         setErreur(resultat.erreur);
         return;
+      }
+      if ('facture' in resultat) {
+        const message = erreurAchatBoucles(await lireArchiveStock(), resultat.facture);
+        if (message) {
+          setErreur({ titre: message });
+          return;
+        }
       }
       if ('vente' in resultat) {
         const vente = await enregistrerVente(resultat.vente);
@@ -456,6 +486,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     // débit
     categorieDepense,
     changerCategorieDepense,
+    stockArticle,
+    setStockArticle,
+    stockQuantite,
+    setStockQuantite,
+    bouclesDebut,
+    setBouclesDebut,
     lignesAlimentation,
     setLignesAlimentation,
     lignesMarchandises,
@@ -488,8 +524,6 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setUnite,
     poidsKg,
     setPoidsKg,
-    sacs,
-    setSacs,
     jeune,
     setJeune,
     animaux,
