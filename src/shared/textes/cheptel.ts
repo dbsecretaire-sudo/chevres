@@ -105,6 +105,8 @@ export const TEXTES_CHEPTEL = {
     },
     nDeBoucleDeuxPoints: 'N° de boucle : ',
     dateDeBouclageDeuxPoints: 'Date de bouclage : ',
+    nDeBoucleRougeDeuxPoints: 'N° de boucle rouge : ',
+    dateDeBoucleRougeDeuxPoints: 'Date de la boucle rouge : ',
     sexeDeuxPoints: 'Sexe : ',
     dateDeNaissanceDeuxPoints: 'Date de naissance : ',
     nDeBoucleDeLaDeuxPoints: 'N° de boucle de la mère :',
@@ -141,6 +143,8 @@ export const TEXTES_CHEPTEL = {
       "Les animaux morts, envoyés à l'abattoir ou vendus apparaîtront ici, tout en restant enregistrés.",
   },
   listeCheptel: {
+    /** Le titre de l'écran (ouvert depuis la ligne « Cheptel » de l'onglet). */
+    titre: 'Cheptel actif',
     vivantes: 'Vivantes',
     autoConsommees: 'Auto-consommées',
     mortNees: 'Mort-nées',

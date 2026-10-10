@@ -18,6 +18,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'espece',
     'numeroBoucle',
     'dateBouclage',
+    'numeroBoucleRouge',
+    'dateBoucleRouge',
     'nom',
     'sexe',
     'dateNaissance',
@@ -38,6 +40,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'motif',
     'description',
     'cout',
+    'fichiers',
+    'factureId',
   ],
   [CATEGORIE_STOCKAGE.FACTURES]: [
     'id',
@@ -54,6 +58,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'stockArticle',
     'stockQuantite',
     'bouclesDebut',
+    'motifVisite',
+    'visiteVeterinaire',
     'litrage',
     'typeCarburant',
     'lignesCarburant',
@@ -83,6 +89,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'poidsKg',
     'jeune',
     'animaux',
+    'fromages',
+    'dateAbattoir',
     'precision',
     'choixFacture',
     'numeroFacture',
@@ -156,7 +164,7 @@ export const CHAMPS_NOMBRE = new Set([
 ]);
 
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */
-export const CHAMPS_BOOLEEN = new Set(['renouvellement', 'stockApplique', 'jeune']);
+export const CHAMPS_BOOLEEN = new Set(['renouvellement', 'stockApplique', 'jeune', 'visiteVeterinaire']);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
 export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable']);

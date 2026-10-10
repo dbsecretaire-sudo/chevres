@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
+import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { estPetitLe, getChevre, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
@@ -10,7 +11,7 @@ import type { Vente } from '@/features/comptabilite/types';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { libelleAnimalVendu, roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
-import { SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROLE_VIANDE } from '@/shared/constants/stock';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
@@ -98,6 +99,13 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
             </View>
           ))}
         </Card>
+      ) : null}
+      {ids.length > 0 && form.categorie === CATEGORIE_VENTE.VIANDE ? (
+        <ChampDateAbattoir
+          dateVente={form.date}
+          value={form.dateAbattoir}
+          onChange={(dateAbattoir) => onChange({ ...form, dateAbattoir })}
+        />
       ) : null}
       <SelectModal<string>
         visible={ouvert}

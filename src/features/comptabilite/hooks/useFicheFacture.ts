@@ -3,7 +3,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { erreurAchatBoucles } from '@/features/stock/services/boucles';
+import {
+  retirerVisiteFacture,
+  synchroniserVisiteFacture,
+} from '@/features/exploitation/services/visitesFacture';
 import {
   enregistrerFacture,
   getFacture,
@@ -131,17 +136,21 @@ export function useFicheFacture(id: string | undefined) {
     setForm({ ...form, montant: texte === '' || texte === '.' ? 0 : Number(texte) || 0 });
   };
 
-  const enregistrerModifications = async () => {
-    if (!form) return;
+  /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
+  const enregistrerModifications = async (auto = false): Promise<boolean> => {
+    if (!form) return false;
+    const refuser = (e: { titre: string; message?: string }) => {
+      if (!auto) setErreur(e);
+      return false;
+    };
 
     if (!form.tiers.trim()) {
-      setErreur({
+      return refuser({
         titre:
           form.type === TYPE_FACTURE.RECUE
             ? TEXTES.commun.general.fournisseurRequis
             : TEXTES.commun.general.clientRequis,
       });
-      return;
     }
 
     let aEnregistrer = form;
@@ -149,46 +158,47 @@ export function useFicheFacture(id: string | undefined) {
     if (estAlimentation) {
       const lignesFinales = lignesAlimentationFinales(lignes, activiteForm);
       if (lignesFinales.length === 0) {
-        setErreur({
+        return refuser({
           titre: TEXTES.commun.general.montantInvalide,
           message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
         });
-        return;
       }
       aEnregistrer = { ...form, montant: totalAlimentation, lignesAlimentation: lignesFinales };
     } else if (estCarburant) {
       const lignesRetenues = lignesCarburantFinales(lignesCarburant);
       if (lignesRetenues.length === 0) {
-        setErreur({
+        return refuser({
           titre: TEXTES.commun.general.montantInvalide,
           message: TEXTES.commun.general.ajoutezAuMoinsUnMontantPour,
         });
-        return;
       }
       aEnregistrer = { ...form, montant: totalCarburant, lignesCarburant: lignesRetenues };
     } else if (estMarchandises) {
       const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises);
       if (lignesRetenues.length === 0) {
-        setErreur({
+        return refuser({
           titre: TEXTES.commun.general.montantInvalide,
           message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
         });
-        return;
       }
       aEnregistrer = { ...form, montant: totalMarchandises, lignesMarchandises: lignesRetenues };
     } else if (!form.montant || form.montant <= 0) {
-      setErreur({ titre: TEXTES.commun.general.montantInvalide });
-      return;
+      return refuser({ titre: TEXTES.commun.general.montantInvalide });
     }
 
     if (aEnregistrer.stockArticle && !(aEnregistrer.stockQuantite && aEnregistrer.stockQuantite > 0)) {
-      setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise });
-      return;
+      return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise });
+    }
+    if (
+      aEnregistrer.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE &&
+      aEnregistrer.visiteVeterinaire &&
+      !aEnregistrer.motifVisite?.trim()
+    ) {
+      return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.visite.motifRequis });
     }
     const erreurBoucles = erreurAchatBoucles(await lireArchiveStock(), aEnregistrer);
     if (erreurBoucles) {
-      setErreur({ titre: erreurBoucles });
-      return;
+      return refuser({ titre: erreurBoucles });
     }
 
     try {
@@ -202,32 +212,34 @@ export function useFicheFacture(id: string | undefined) {
         aEnregistrer.date,
       );
       await synchroniserStockAlimentation(aEnregistrer);
+      await synchroniserVisiteFacture(aEnregistrer);
       setFacture(aEnregistrer);
-      setForm(aEnregistrer);
-      setEditing(false);
+      if (!auto) {
+        setForm(aEnregistrer);
+        setEditing(false);
+      }
+      return true;
     } catch (error) {
       console.error(error);
-      setErreur({
+      return refuser({
         titre: TEXTES.commun.general.erreur,
         message: TEXTES.commun.general.impossibleDEnregistrerLesModifications,
       });
     }
   };
 
-  const annulerModifications = () => {
-    if (!facture) return;
-    setForm(facture);
-    setLignes(versLignesAlimentationForm(facture));
-    setLignesCarburant(versLignesCarburantForm(facture));
-    setLignesMarchandises(versLignesMarchandisesForm(facture));
-    setMontantTexte(montantEnTexte(facture));
-    setEditing(false);
-  };
+  // Tout changement de la fiche s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: editing,
+    signature: JSON.stringify([form, lignes, lignesCarburant, lignesMarchandises]),
+    enregistrer: () => enregistrerModifications(true),
+  });
 
   const supprimerDefinitivement = async () => {
     if (!facture) return;
     try {
       await supprimerFacture(facture.id);
+      await retirerVisiteFacture(facture.id);
       // Supprimer l'achat retire du stock ce qu'il y avait ajouté.
       if (facture.stockApplique)
         await synchroniserStockAchat(facture.lignesMarchandises, undefined, facture.date);
@@ -294,7 +306,6 @@ export function useFicheFacture(id: string | undefined) {
     changerTauxTva,
     changerMontant,
     enregistrerModifications,
-    annulerModifications,
     supprimerDefinitivement,
   };
 }

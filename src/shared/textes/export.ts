@@ -121,6 +121,14 @@ export const TEXTES_EXPORT = {
       avertissement:
         'Correspondance indicative entre vos factures et les comptes du plan comptable, non validée par un expert-comptable : à confirmer avant tout usage officiel.',
     },
+    /** La liste des boucles d'identification, telle que les filtres de l'écran la montrent. */
+    boucles: {
+      titre: 'Boucles d’identification',
+      filtres: (sorte: string, etat: string) => `Sorte : ${sorte} · État : ${etat}`,
+      sorte: 'Sorte',
+      oui: 'Oui',
+      total: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
+    },
     inventaire: {
       colonnes: {
         stock: 'Stock actuel',
@@ -226,6 +234,8 @@ export const TEXTES_EXPORT = {
     articleStock: 'Article du stock',
     quantiteStock: 'Quantité au stock',
     premiereBoucle: 'N° de la première boucle',
+    nBoucleRouge: 'N° de boucle rouge',
+    dateBoucleRouge: 'Date de la boucle rouge',
     aliment: 'Aliment',
     quantiteKg: 'Quantité (kg)',
     kgParAnimal: 'Kg par animal',

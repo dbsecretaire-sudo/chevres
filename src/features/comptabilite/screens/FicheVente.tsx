@@ -12,10 +12,11 @@ import { VenteFormulaire } from '@/features/comptabilite/components/VenteFormula
 import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
 import { AnimauxDeLaVente } from '@/features/comptabilite/components/AnimauxDeLaVente';
 import { AnimauxVendusEdition } from '@/features/comptabilite/components/AnimauxVendusEdition';
+import { FromagesVendusEdition } from '@/features/comptabilite/components/FromagesVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 
 export default function FicheVente() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -82,8 +83,7 @@ export default function FicheVente() {
             onChangerCategorie={fiche.changerCategorie}
             montantTexte={fiche.montantTexte}
             onChangerMontant={fiche.changerMontant}
-            onAnnuler={fiche.annulerModifications}
-            onEnregistrer={fiche.enregistrerModifications}
+            onEnregistrer={() => fiche.enregistrerModifications()}
           />
         ) : (
           <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} />
@@ -91,7 +91,23 @@ export default function FicheVente() {
 
         {/* Les animaux vendus (cabris, adultes…) : leur boucle, M ou F et leur naissance, comme dans le formulaire de vente. */}
         {fiche.editing ? (
-          <AnimauxVendusEdition form={form} onChange={fiche.setForm} />
+          <>
+            <AnimauxVendusEdition form={form} onChange={fiche.setForm} />
+            {/* Les fromages d'une vente, désignés par leur n° de lot quand le fromage en a. */}
+            <FromagesVendusEdition
+              typeFromage={form.typeFromage}
+              typeFromageLibre={form.typeFromageLibre}
+              venteId={form.id}
+              ids={idsDesFromages(form)}
+              onChange={(ids) =>
+                fiche.setForm({
+                  ...form,
+                  fromages: ids.length > 0 ? ids.join(';') : undefined,
+                  quantite: ids.length > 0 ? ids.length : form.quantite,
+                })
+              }
+            />
+          </>
         ) : (
           <AnimauxDeLaVente vente={vente} />
         )}

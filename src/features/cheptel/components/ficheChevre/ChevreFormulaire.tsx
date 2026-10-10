@@ -19,21 +19,13 @@ interface Props {
   chevre: Chevre;
   form: Chevre;
   onChange: (form: Chevre) => void;
-  onAnnuler: () => void;
   onEnregistrer: () => void;
   /** Enregistre la fiche puis ouvre la déclaration d'une naissance pour cette mère. */
   onAjouterCabri: () => void;
 }
 
 /** Formulaire de modification d'une chèvre. */
-export function ChevreFormulaire({
-  chevre,
-  form,
-  onChange,
-  onAnnuler,
-  onEnregistrer,
-  onAjouterCabri,
-}: Props) {
+export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer, onAjouterCabri }: Props) {
   const meres = useMeresPossibles(form.dateNaissance, form.mereNumeroBoucle);
   const peutAvoirDesCabris =
     chevre.sexe === SEXE.FEMELLE &&
@@ -110,6 +102,21 @@ export function ChevreFormulaire({
           </View>
         </View>
       </SectionForm>
+      {/* La boucle rouge (de remplacement) : son numéro, pris dans les boucles rouges de l'inventaire, et sa date de pose. */}
+      <SectionForm>
+        <BoucleField
+          rouge
+          label={TEXTES.commun.general.nDeBoucle}
+          value={form.numeroBoucleRouge ?? ''}
+          onChangeText={(v) => onChange({ ...form, numeroBoucleRouge: v || undefined })}
+          placeholder={TEXTES.cheptel.nouvelleChevre.mereInconnue}
+        />
+        <DateField
+          label={TEXTES.commun.general.dateDeBouclage}
+          value={form.dateBoucleRouge ?? ''}
+          onChange={(v) => onChange({ ...form, dateBoucleRouge: v || undefined })}
+        />
+      </SectionForm>
       <SectionForm titre={TEXTES.commun.formulaire.filiation}>
         <SelectField
           label={TEXTES.commun.general.nDeBoucleDeLa}
@@ -129,19 +136,7 @@ export function ChevreFormulaire({
           style={commonStyles.textarea}
         />
       </SectionForm>
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={onAnnuler}
-        />
-        <Button
-          style={commonStyles.flex1}
-          label={TEXTES.commun.general.enregistrer}
-          onPress={onEnregistrer}
-        />
-      </View>
+      <Button label={TEXTES.commun.general.enregistrer} onPress={onEnregistrer} />
     </View>
   );
 }

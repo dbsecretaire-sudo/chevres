@@ -41,6 +41,8 @@ export function chevreRow(c: Chevre, indicatif?: IndicatifParEspece) {
     ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
     [TEXTES.export.colonnes.nBoucle]: avecIndicatif(c.numeroBoucle, indicatif?.(especeDe(c))),
     [TEXTES.export.colonnes.dateDeBouclage]: formatDateShortFR(c.dateBouclage),
+    [TEXTES.export.colonnes.nBoucleRouge]: c.numeroBoucleRouge ?? '',
+    [TEXTES.export.colonnes.dateBoucleRouge]: formatDateShortFR(c.dateBoucleRouge),
     [TEXTES.export.colonnes.nom]: c.nom ?? '',
     [TEXTES.export.colonnes.sexe]: LABEL_SEXE[c.sexe],
     [TEXTES.export.colonnes.dateDeNaissance]: formatDateShortFR(c.dateNaissance),

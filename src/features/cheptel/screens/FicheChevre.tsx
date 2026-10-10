@@ -102,8 +102,7 @@ export default function FicheChevre() {
             chevre={chevre}
             form={form}
             onChange={fiche.setForm}
-            onAnnuler={fiche.annulerModifications}
-            onEnregistrer={fiche.enregistrerModifications}
+            onEnregistrer={() => fiche.enregistrerModifications()}
             onAjouterCabri={ajouterUnCabri}
           />
         ) : (

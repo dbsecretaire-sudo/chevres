@@ -40,6 +40,9 @@ export const commonStyles = StyleSheet.create({
   listFab: { paddingHorizontal: 16, paddingBottom: 160, paddingTop: 4, gap: 10 },
   /** Idem pour un écran qui a déjà sa marge (Screen) : rien sur les côtés. */
   listeAvecFab: { paddingBottom: 160, paddingTop: 4, gap: 10 },
+  /** Une liste dont les lignes forment un seul bloc (LigneDeBloc) : aucun espace entre elles. */
+  listeBloc: { paddingBottom: 24, paddingTop: 4 },
+  listeBlocAvecFab: { paddingBottom: 160, paddingTop: 4 },
   /** Le haut d'une liste d'un écran pleine largeur : recherche et filtres avec leur marge de 16. */
   topPadded: { paddingHorizontal: 16, paddingTop: 16, gap: 10 },
   screenBg: { flex: 1, backgroundColor: colors.background },

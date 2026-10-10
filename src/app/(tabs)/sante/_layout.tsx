@@ -18,12 +18,7 @@ export default function SanteLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf(
-        'alimentation',
-        'veterinaire/index',
-        'controles/index',
-        'controles/liste',
-      )}
+      screenLayout={ecranParEspeceSauf('alimentation', 'veterinaire/index', 'controles/liste')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -47,20 +42,15 @@ export default function SanteLayout() {
         }}
       />
       <Stack.Screen
-        name="controles/index"
-        options={{ title: TEXTES.commun.general.controles, headerLeft: flecheCheptel }}
-      />
-      <Stack.Screen
         name="controles/liste"
         options={({ route }) => ({
+          headerLeft: flecheCheptel,
           title:
             TEXTES.exploitation.controles.familles[
               ((route.params as { famille?: string } | undefined)?.famille ?? 'animaux') as FamilleControle
             ].titre,
         })}
       />
-      <Stack.Screen name="controles/groupement" />
-      <Stack.Screen name="controles/contenu" />
       <Stack.Screen
         name="controles/nouvelle"
         options={{

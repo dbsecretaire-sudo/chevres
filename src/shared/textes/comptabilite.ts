@@ -200,6 +200,13 @@ export const TEXTES_COMPTABILITE = {
       tropDeBoucles: (max: number) => `Un achat ne peut pas dépasser ${max} boucles.`,
       dejaEnStock: (numero: string) => `La boucle ${numero} est déjà dans l’inventaire.`,
     },
+    /** Une dépense vétérinaire : le motif, et l'inscription de la visite dans les visites vétérinaires. */
+    visite: {
+      motif: 'Motif de la visite',
+      exemple: 'ex : Prophylaxie',
+      ajouter: 'Ajouter aux visites vétérinaires',
+      motifRequis: 'Motif de la visite requis pour l’ajouter aux visites vétérinaires',
+    },
     nDeFacture: 'N° de facture',
     nDeFactureOuObjet: 'N° de facture / objet',
     precisions: 'Précisions',
@@ -231,6 +238,13 @@ export const TEXTES_COMPTABILITE = {
     animalOption: (libelle: string, sexe: string, naissance: string) =>
       `${libelle} · ${sexe} · né(e) le ${naissance}`,
     animauxVendus: 'Animaux vendus',
+    dateAbattoir: 'Date d’abattoir',
+    /** Les fromages d'une vente, désignés par leur numéro de lot. */
+    fromagesVendus: 'Fromages vendus (n° de lot)',
+    ajouterUnFromage: 'Ajouter un fromage',
+    retirerFromage: 'Retirer ce fromage',
+    fromageVendu: 'Fromage vendu',
+    fromagesRequis: 'Fromages vendus requis (choisissez leurs n° de lot)',
     animauxRequis: 'Animaux vendus requis',
     modifierLePrixOeuf: 'Modifier le prix de l’œuf (inventaire)',
     detailRequis: 'Détail de la vente requis',

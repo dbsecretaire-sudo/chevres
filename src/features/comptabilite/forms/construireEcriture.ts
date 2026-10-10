@@ -64,6 +64,9 @@ export interface SaisieEcriture {
   stockQuantite?: number;
   /** Un achat de boucles : le numéro de la première. */
   bouclesDebut?: string;
+  /** Une dépense vétérinaire : le motif de la visite, et son inscription dans les visites vétérinaires. */
+  motifVisite?: string;
+  ajouterVisite?: boolean;
   lignesAlimentation: LigneAlimentForm[];
   /** Le détail des marchandises, quand l'achat est un achat de marchandises d'un gîte. */
   lignesMarchandises?: LigneMarchandiseForm[];
@@ -87,6 +90,10 @@ export interface SaisieEcriture {
   jeune?: boolean;
   /** Les fiches des animaux vendus (animal sur pied ou vivant). */
   animaux: string[];
+  /** Les lots des fromages vendus (un fromage qui a des lots se vend lot par lot). */
+  fromages: string[];
+  /** La date d'abattoir des animaux d'une vente de viande (vide : la date de la vente). */
+  dateAbattoir?: string;
   clientSelectionne?: Client;
   /** Vrai si l'écriture est une vente de production (lait, fromage, cabris) plutôt qu'une facture. */
   estProductionVente: boolean;
@@ -127,10 +134,11 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   // La quantité est toujours obligatoire ; celle d'une vente de viande est le nombre d'animaux choisis.
+  const lotsDeFromages = categorie === CATEGORIE_VENTE.FROMAGE ? s.fromages.length : 0;
   const quantiteNum =
     categorie === CATEGORIE_VENTE.VIANDE
       ? s.animaux.length || parseDecimal(s.quantite)
-      : parseDecimal(s.quantite);
+      : lotsDeFromages || parseDecimal(s.quantite);
   if (quantiteNum <= 0) return { erreur: { titre: TEXTES.commun.general.quantiteInvalide } };
 
   // Le prix total est obligatoire pour toute vente ; quand il vient de l'inventaire, c'est qu'il n'y est pas défini.
@@ -169,6 +177,11 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
         (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
       jeune: estViande && s.jeune ? true : undefined,
       animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
+      fromages: lotsDeFromages > 0 ? s.fromages.join(SEPARATEUR_ANIMAUX) : undefined,
+      dateAbattoir:
+        estViande && s.animaux.length > 0 && s.dateAbattoir && s.dateAbattoir !== s.date
+          ? s.dateAbattoir
+          : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)
         ? s.precision.trim() || undefined
         : undefined,
@@ -246,6 +259,11 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
   }
 
+  const visite = estRecue && s.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE;
+  if (visite && s.ajouterVisite && !s.motifVisite?.trim()) {
+    return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.visite.motifRequis } };
+  }
+
   return {
     facture: {
       activite: s.activite,
@@ -260,6 +278,8 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       stockArticle: stockProduction ? s.stockArticle : undefined,
       stockQuantite: stockProduction ? s.stockQuantite : undefined,
       bouclesDebut: stockProduction && s.bouclesDebut ? s.bouclesDebut : undefined,
+      motifVisite: visite && s.motifVisite?.trim() ? s.motifVisite.trim() : undefined,
+      visiteVeterinaire: visite && s.ajouterVisite ? true : undefined,
       categorieRecette: estEmise ? s.categorieRecette : undefined,
       typeAide: estAide ? s.typeAide : undefined,
       typeAideLibre:

@@ -10,13 +10,14 @@ import {
   type FiltreStock,
 } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { fromagesRequis } from '@/features/stock/services/lots';
 import { comptesDeLInventaire } from '@/features/stock/services/stock';
 import { erreurAchatBoucles } from '@/features/stock/services/boucles';
+import { synchroniserVisiteFacture } from '@/features/exploitation/services/visitesFacture';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
-import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
-import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { sortieDesAnimauxDeLaVente, idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import {
   PREFIXE_CATEGORIE_AJOUTEE,
   categoriesAjoutees,
@@ -162,6 +163,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [stockQuantite, setStockQuantite] = useState<number | undefined>();
   /** Un achat de boucles : le numéro de la première. */
   const [bouclesDebut, setBouclesDebut] = useState('');
+  /** Une dépense vétérinaire : le motif de la visite, et son inscription dans les visites vétérinaires. */
+  const [motifVisite, setMotifVisite] = useState('');
+  const [ajouterVisite, setAjouterVisite] = useState(true);
 
   // Crédit (facture émise ou vente de production)
   // Première recette de l'espèce courante : le lait pour les chèvres, la charcuterie pour les cochons…
@@ -176,6 +180,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [jeune, setJeune] = useState<boolean | undefined>();
   /** Les fiches des animaux sur pied ou vivants vendus (vide : aucun choisi). */
   const [animaux, setAnimaux] = useState<string[]>([]);
+  /** Les lots des fromages vendus (vide : aucun choisi, ou un fromage sans lot). */
+  const [fromages, setFromages] = useState<string[]>([]);
+  /** Une vente de viande avec des animaux : leur date d'abattoir (vide : la date de la vente). */
+  const [dateAbattoir, setDateAbattoir] = useState('');
   const [precision, setPrecision] = useState('');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
@@ -349,6 +357,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setQuantite('');
     setStockQuantite(undefined);
     setBouclesDebut('');
+    setMotifVisite('');
     setPoidsKg('');
     setAnimaux([]);
     setPrecision('');
@@ -384,6 +393,21 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
           }
         }
       }
+      // Un fromage qui a des lots en stock se vend lot par lot : on les désigne.
+      if (
+        estProductionVente &&
+        categorieRecette === CATEGORIE_RECETTE.FROMAGE &&
+        fromagesRequis(await lireArchiveStock(), {
+          id: '',
+          categorie: 'fromage',
+          typeFromage,
+          typeFromageLibre,
+          fromages: fromages.join(';'),
+        })
+      ) {
+        setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.fromagesRequis });
+        return;
+      }
       const resultat = construireEcriture({
         activite,
         type,
@@ -395,6 +419,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         stockArticle,
         stockQuantite,
         bouclesDebut,
+        motifVisite,
+        ajouterVisite,
         lignesAlimentation,
         lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
         lignesCarburant,
@@ -413,6 +439,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         poidsKg,
         jeune,
         animaux,
+        fromages,
+        dateAbattoir,
         precision,
         clientSelectionne,
         estProductionVente,
@@ -434,9 +462,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
       }
       if ('vente' in resultat) {
         const vente = await enregistrerVente(resultat.vente);
-        // Les animaux vendus quittent le cheptel : leur fiche passe en « vendue » à la date de la vente.
-        for (const id of idsDesAnimaux(vente))
-          await declarerStatutChevre(id, STATUT_CHEVRE.VENDUE, vente.date);
+        // Les animaux vendus quittent le cheptel : leur fiche passe en « abattoir » (vente de viande, à la date d'abattoir) ou en « vendue ».
+        const sortie = sortieDesAnimauxDeLaVente(vente);
+        for (const id of idsDesAnimaux(vente)) await declarerStatutChevre(id, sortie.statut, sortie.date);
       } else {
         const achat = resultat.facture.lignesMarchandises;
         const enregistree = await enregistrerFacture({
@@ -446,6 +474,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
         await synchroniserStockAchat(undefined, achat, enregistree.date);
         await synchroniserStockAlimentation(enregistree);
+        // Une dépense vétérinaire peut inscrire sa visite dans les visites vétérinaires.
+        await synchroniserVisiteFacture(enregistree);
       }
       if (enchainer) {
         repartir();
@@ -492,6 +522,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setStockQuantite,
     bouclesDebut,
     setBouclesDebut,
+    motifVisite,
+    setMotifVisite,
+    ajouterVisite,
+    setAjouterVisite,
     lignesAlimentation,
     setLignesAlimentation,
     lignesMarchandises,
@@ -527,6 +561,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     jeune,
     setJeune,
     animaux,
+    fromages,
+    setFromages,
+    dateAbattoir,
+    setDateAbattoir,
     setAnimaux,
     precision,
     setPrecision,

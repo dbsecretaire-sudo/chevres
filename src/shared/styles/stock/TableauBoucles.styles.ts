@@ -21,8 +21,12 @@ export const styles = StyleSheet.create({
   /** Le titre d'une colonne : un appui trie la liste d'après elle. */
   titreColonne: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   colonneNumero: { flex: 1 },
-  colonneDate: { width: 104 },
-  texteEntete: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  colonneDate: { width: 92 },
+  /** La colonne « Morte » : une case, centrée sous son titre. */
+  colonneMorte: { width: 44, alignItems: 'center' },
+  titreMorte: { fontSize: 11, color: colors.text },
+  /** Le titre d'une colonne : il passe à la ligne plutôt que de déborder sur la colonne voisine. */
+  texteEntete: { fontSize: 12, fontWeight: '700', color: colors.textMuted, flexShrink: 1 },
   liste: { maxHeight: 280 },
   ligne: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   ligneSeparee: { borderTopWidth: 1, borderTopColor: colors.border },

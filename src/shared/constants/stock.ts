@@ -89,6 +89,27 @@ export const ETAT_BOUCLE = {
   NON_POSEE: 'non_posee',
 } as const;
 
+/** Le filtre des lots de fromage de l'inventaire : tous, ceux en stock, ceux vendus, ou ceux rappelés. */
+export const ETAT_LOT = {
+  TOUT: 'tout',
+  EN_STOCK: 'en_stock',
+  VENDU: 'vendu',
+  RAPPELE: 'rappele',
+} as const;
+
+/** Les colonnes d'après lesquelles on trie la liste des lots. */
+export const TRI_LOT = {
+  NUMERO: 'numero',
+  FABRICATION: 'fabrication',
+  VENTE: 'vente',
+} as const;
+
+/** Le nombre de fromages le plus grand qu'une seule fabrication peut contenir (une plage de numéros de lot). */
+export const LOTS_MAX_PAR_FABRICATION = 5000;
+
+/** Le choix « toutes les sortes » de la liste des boucles (sinon : l'identifiant d'un article de boucles). */
+export const SORTE_BOUCLES_TOUTES = 'tout';
+
 /** Les colonnes d'après lesquelles on trie la liste des boucles. */
 export const TRI_BOUCLE = {
   NUMERO: 'numero',
@@ -237,6 +258,8 @@ export const ORIGINE_MOUVEMENT = {
   ACHAT: 'achat',
   /** Ce que les animaux ont mangé ou ce qui a servi (retrait d'un consommable : aliment, emballage, entretien). */
   CONSOMMATION: 'consommation',
+  /** Des fromages rappelés (retirés de la vente) : ils sortent du stock. */
+  RAPPEL: 'rappel',
 } as const;
 
 /** Les lignes de viande tenues d'office pour chaque espèce : ses petits, puis l'animal sur pied et l'animal vivant. */

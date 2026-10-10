@@ -58,7 +58,6 @@ interface Props {
   /** Texte tel que saisi pour le prix (évite de perdre la virgule en cours de frappe). */
   montantTexte: string;
   onChangerMontant: (valeur: string) => void;
-  onAnnuler: () => void;
   onEnregistrer: () => void;
 }
 
@@ -71,7 +70,6 @@ export function VenteFormulaire({
   onChangerCategorie,
   montantTexte,
   onChangerMontant,
-  onAnnuler,
   onEnregistrer,
 }: Props) {
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
@@ -133,7 +131,10 @@ export function VenteFormulaire({
             label={T.typeDeFromage}
             required
             value={ajouteChoisi ? valeurFromage(ajouteChoisi) : (form.typeFromage ?? '')}
-            onChange={(valeur) => onChange({ ...form, ...typeDuChoix(fromages, valeur) })}
+            // Un autre fromage : les lots déjà choisis sont ceux d'un autre fromage.
+            onChange={(valeur) =>
+              onChange({ ...form, ...typeDuChoix(fromages, valeur), fromages: undefined })
+            }
             options={optionsFromage}
             placeholder={T.typeDeFromage}
             onEdit={() => router.push(ROUTES.stockDepuis(retour, SECTION_STOCK.FROMAGES, especeDuStock))}
@@ -143,7 +144,9 @@ export function VenteFormulaire({
               label={T.preciserLeType}
               required
               value={form.typeFromageLibre ?? ''}
-              onChangeText={(typeFromageLibre) => onChange({ ...form, typeFromageLibre })}
+              onChangeText={(typeFromageLibre) =>
+                onChange({ ...form, typeFromageLibre, fromages: undefined })
+              }
             />
           ) : null}
         </>
@@ -197,6 +200,8 @@ export function VenteFormulaire({
               label={TEXTES.commun.general.quantite}
               required
               value={String(form.quantite)}
+              // Des fromages désignés par leur lot : leur nombre fait la quantité.
+              editable={!form.fromages}
               onChangeText={(valeur) =>
                 onChange({ ...form, quantite: Number(valeur.replace(',', '.')) || 0 })
               }
@@ -267,19 +272,7 @@ export function VenteFormulaire({
         />
       ) : null}
 
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={onAnnuler}
-        />
-        <Button
-          style={commonStyles.flex1}
-          label={TEXTES.commun.general.enregistrer}
-          onPress={onEnregistrer}
-        />
-      </View>
+      <Button label={TEXTES.commun.general.enregistrer} onPress={onEnregistrer} />
     </Card>
   );
 }

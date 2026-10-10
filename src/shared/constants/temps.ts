@@ -21,3 +21,6 @@ export const UNITE_DUREE = {
   SEMAINES: 'semaines',
   MOIS: 'mois',
 } as const;
+
+/** Le temps (ms) sans nouvelle saisie après lequel une modification s'enregistre toute seule. */
+export const DELAI_ENREGISTREMENT_AUTO = 800;

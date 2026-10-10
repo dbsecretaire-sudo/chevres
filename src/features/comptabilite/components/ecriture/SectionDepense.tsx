@@ -10,6 +10,7 @@ import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
 import { LignesMarchandisesEditor } from '@/features/comptabilite/components/LignesMarchandisesEditor';
 import { ChampStockProduction } from '@/features/comptabilite/components/ecriture/ChampStockProduction';
+import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import {
   ChampCategorieCompte,
@@ -140,6 +141,15 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
 
         {!estAlimentation && !estCarburant && !e.estMarchandisesGite && (
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+        )}
+
+        {e.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
+          <ChampVisite
+            motif={e.motifVisite}
+            ajouter={e.ajouterVisite}
+            onMotif={e.setMotifVisite}
+            onAjouter={e.setAjouterVisite}
+          />
         )}
 
         {(e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||

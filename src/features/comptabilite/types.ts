@@ -102,6 +102,10 @@ export interface Facture {
   stockArticle?: string;
   /** Achat de production : la quantité achetée, ajoutée au stock de stockArticle. */
   stockQuantite?: number;
+  /** Dépense vétérinaire : le motif de la visite. */
+  motifVisite?: string;
+  /** Dépense vétérinaire : la visite (date et motif) est aussi inscrite dans les visites vétérinaires. */
+  visiteVeterinaire?: boolean;
   /** Achat de boucles : le numéro de la première (les suivantes se numérotent à la suite, selon la quantité). */
   bouclesDebut?: string;
   /** Uniquement pour type === 'emise'. */
@@ -182,6 +186,10 @@ export interface Vente {
   jeune?: boolean;
   /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */
   animaux?: string;
+  /** Pour une vente de viande avec des animaux : la date d'abattoir (celle de la sortie du cheptel) ; absente : la date de la vente. */
+  dateAbattoir?: string;
+  /** Pour la vente de fromages identifiés : les lots vendus (leurs identifiants séparés par « ; »). */
+  fromages?: string;
   /** Commentaire facultatif précisant de quoi il s'agissait (viande, charcuterie, animal sur pied ou vivant). */
   precision?: string;
   /** Le client souhaite-t-il que la vente soit déclarée ? Absent (ventes d'avant ce choix) : oui. */

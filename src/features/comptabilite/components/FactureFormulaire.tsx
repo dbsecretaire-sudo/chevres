@@ -26,6 +26,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import { estArticleBoucle } from '@/features/stock/services/boucles';
+import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { ChampStockProduction } from '@/features/comptabilite/components/ecriture/ChampStockProduction';
 import { styles } from '@/shared/styles/comptabilite/FicheFacture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -198,6 +199,15 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         </View>
       )}
 
+      {form.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
+        <ChampVisite
+          motif={form.motifVisite ?? ''}
+          ajouter={!!form.visiteVeterinaire}
+          onMotif={(motif) => f.setForm({ ...form, motifVisite: motif || undefined })}
+          onAjouter={(ajouter) => f.setForm({ ...form, visiteVeterinaire: ajouter || undefined })}
+        />
+      )}
+
       {(form.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
         form.categorieDepense === CATEGORIE_DEPENSE.AUTRE) && (
         <ChampStockProduction
@@ -217,19 +227,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         />
       )}
 
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={f.annulerModifications}
-        />
-        <Button
-          style={commonStyles.flex1}
-          label={TEXTES.commun.general.enregistrer}
-          onPress={f.enregistrerModifications}
-        />
-      </View>
+      <Button label={TEXTES.commun.general.enregistrer} onPress={() => f.enregistrerModifications()} />
     </Card>
   );
 }

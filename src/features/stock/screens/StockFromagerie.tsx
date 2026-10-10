@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { groupesActifsEspece, laiterieActive } from '@/features/comptabilite/utils/recettes';
 import {
   CATEGORIES,
@@ -25,6 +25,10 @@ import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
 import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesModal';
+import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
+import { estArticleFromage, lotsDeLInventaire } from '@/features/stock/services/lots';
+import { Button } from '@/shared/components/Button';
+import { bouclesDuCheptelAReprendre, reprendreLesBouclesDuCheptel } from '@/features/stock/services/boucles';
 import { JournalLait } from '@/features/stock/components/JournalLait';
 import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
@@ -162,6 +166,11 @@ export default function StockFromagerie() {
   /** La sorte de boucles dont on regarde le détail, et si sa fenêtre est ouverte. */
   const [boucleOuverte, setBoucleOuverte] = useState<ArticleAffiche | null>(null);
   const [boucleVisible, setBoucleVisible] = useState(false);
+  /** Le fromage dont on regarde les lots (par numéro de lot), et si sa fenêtre est ouverte. */
+  const [fromageOuvert, setFromageOuvert] = useState<ArticleAffiche | null>(null);
+  const [fromageVisible, setFromageVisible] = useState(false);
+  /** REPRISE UNIQUE : le nombre de boucles posées au cheptel qui ne sont pas dans l'inventaire (0 : rien à proposer). */
+  const [bouclesAReprendre, setBouclesAReprendre] = useState(0);
   /** Pour un ajout dans une liste personnalisée : cette liste. */
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
@@ -188,6 +197,7 @@ export default function StockFromagerie() {
     ]);
     setArchive(stock);
     setEffectifs(vivants);
+    setBouclesAReprendre(await bouclesDuCheptelAReprendre());
     setVentesLait(
       ventes
         .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
@@ -234,7 +244,16 @@ export default function StockFromagerie() {
           </View>
         }
         // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
-        onPress={estLigneDuCheptel(a.cle) ? undefined : () => setArticle(a)}
+        onPress={
+          estLigneDuCheptel(a.cle)
+            ? undefined
+            : estArticleFromage(a.cle)
+              ? () => {
+                  setFromageOuvert(a);
+                  setFromageVisible(true);
+                }
+              : () => setArticle(a)
+        }
       />
     );
   };
@@ -246,6 +265,10 @@ export default function StockFromagerie() {
       <ListRow
         key={a.cle}
         title={a.libelle}
+        subtitle={T.boucles.resume(
+          (archive.boucles ?? []).filter((b) => b.article === a.cle).length,
+          (archive.boucles ?? []).filter((b) => b.article === a.cle && !!b.chevreId).length,
+        )}
         trailing={
           <View style={stylesStock.fin}>
             <Text style={[styles.resultatLigne, niveau < 0 ? styles.perte : undefined]}>
@@ -315,6 +338,12 @@ export default function StockFromagerie() {
         }}
       />
     );
+  };
+
+  const reprendreLesBoucles = async () => {
+    const ajoutees = await reprendreLesBouclesDuCheptel();
+    await charger();
+    Alert.alert(T.boucles.reprise.fait(ajoutees));
   };
 
   const valider = async (cle: string, delta: number, litres?: number) => {
@@ -457,7 +486,22 @@ export default function StockFromagerie() {
                         </View>
                       </View>
                       {genre ? (
-                        liste(genre, section)
+                        <>
+                          {genre === GENRE_ARTICLE.BOUCLE && bouclesAReprendre > 0 ? (
+                            <Card>
+                              <Text style={commonStyles.lineBold}>{T.boucles.reprise.titre}</Text>
+                              <Text style={commonStyles.muted}>
+                                {T.boucles.reprise.message(bouclesAReprendre)}
+                              </Text>
+                              <Button
+                                variant="secondary"
+                                label={T.boucles.reprise.bouton}
+                                onPress={reprendreLesBoucles}
+                              />
+                            </Card>
+                          ) : null}
+                          {liste(genre, section)}
+                        </>
                       ) : section === SECTION_STOCK.LAIT ? (
                         <JournalLait
                           lait={archive.lait}
@@ -588,6 +632,23 @@ export default function StockFromagerie() {
           charger();
         }}
         onFermer={() => setLaitOuvert(null)}
+      />
+
+      <DetailLotsModal
+        visible={fromageVisible}
+        article={fromageOuvert}
+        lots={archive.lots ?? []}
+        sansLot={
+          fromageOuvert
+            ? Math.max(
+                0,
+                (niveaux.get(fromageOuvert.cle) ?? 0) -
+                  lotsDeLInventaire(archive, 'en_stock', fromageOuvert.cle).length,
+              )
+            : 0
+        }
+        onChange={charger}
+        onFermer={() => setFromageVisible(false)}
       />
 
       <DetailBouclesModal

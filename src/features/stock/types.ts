@@ -86,9 +86,29 @@ export interface BoucleStock {
   depuisCheptel?: boolean;
   /** La facture d'achat qui a créé la boucle : la boucle suit ses modifications et disparaît avec elle. */
   factureId?: string;
-  /** Posée : la date de pose (celle du bouclage de l'animal) et l'animal qui la porte. */
-  datePose?: string;
+  /** Posée : l'animal qui la porte, et la date de pose (celle du bouclage de l'animal, quand elle est renseignée). */
   chevreId?: string;
+  datePose?: string;
+}
+
+/**
+ * Un fromage identifié, comme une chèvre : son numéro de lot, sa fabrication et, quand il est sorti du stock, sa vente (la date et
+ * la vente) ou son rappel. Un fromage est contrôlé avant d'être vendu : la case « contrôle ok ».
+ */
+export interface LotFromage {
+  id: string;
+  /** L'article de l'inventaire (« fromage:frais »…). */
+  article: string;
+  /** Le numéro du lot : celui du fromage. */
+  numero: string;
+  dateFabrication: string;
+  /** Vendu : la date de la vente et la vente (les fromages d'une vente se choisissent dans son formulaire). */
+  dateVente?: string;
+  venteId?: string;
+  /** Rappelé : la date du rappel. Un fromage rappelé n'est plus au stock. */
+  dateRappel?: string;
+  /** Le contrôle du fromage est bon. */
+  controleOk?: boolean;
 }
 
 /** Le lait produit un jour : son litrage (chèvres et brebis). */
@@ -124,6 +144,10 @@ export interface ArchiveStock {
   reglagesCategories?: Record<string, ReglageCategorie>;
   /** Les boucles d'identification de l'inventaire, une par numéro. */
   boucles?: BoucleStock[];
+  /** Les fromages identifiés (un par numéro de lot), fabriqués puis vendus ou rappelés. */
+  lots?: LotFromage[];
+  /** Vrai quand la reprise unique des boucles déjà posées au cheptel a été faite (voir synchroniserBouclesDuCheptel). */
+  bouclesDuCheptelReprises?: boolean;
   /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
   masques?: string[];
 }

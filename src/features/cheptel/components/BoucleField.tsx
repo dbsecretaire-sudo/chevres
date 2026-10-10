@@ -26,6 +26,8 @@ interface Props {
   required?: boolean;
   /** Un message d'erreur sous le champ (le n° est déjà utilisé, par exemple) : le champ passe en rouge. */
   erreur?: string;
+  /** La boucle rouge (de remplacement) : la liste propose les boucles rouges, sans l'indicatif du cheptel. */
+  rouge?: boolean;
 }
 
 /**
@@ -33,11 +35,14 @@ interface Props {
  * dès qu'il est enregistré ; « Aucune » vide le champ) ; un numéro qui n'y est pas se tape dans la recherche de la liste. Le
  * bouton à droite remplit le champ en scannant l'étiquette à la caméra.
  */
-export function BoucleField({ label, value, onChangeText, placeholder, required, erreur }: Props) {
+export function BoucleField({ label, value, onChangeText, placeholder, required, erreur, rouge }: Props) {
   const accent = useAccentColor();
   const { settings } = useAppSettings();
   // Les animaux saisis ici sont ceux de l'espèce courante : c'est l'indicatif de son cheptel qui précède la boucle.
-  const indicatif = identificationCheptel(settings.exploitation, especeCourante()).indicatifMarquage;
+  const indicatif = rouge
+    ? undefined
+    : identificationCheptel(settings.exploitation, especeCourante()).indicatifMarquage;
+  const sorte = `${GENRE_ARTICLE.BOUCLE}:${rouge ? ARTICLE_BOUCLE.ROUGES : ARTICLE_BOUCLE.BOUCLES}`;
   const [scannerOuvert, setScannerOuvert] = useState(false);
   const [listeOuverte, setListeOuverte] = useState(false);
   /** Les boucles de l'inventaire qui ne sont pas encore posées, avec « Aucune » en premier. */
@@ -45,18 +50,14 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
   useEffect(() => {
     lireArchiveStock().then((archive) =>
       setDisponibles(
-        trierBoucles(bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE), TRI_BOUCLE.NUMERO, true).map(
-          (b) => ({
-            value: b.numero,
-            label:
-              b.article === `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`
-                ? `${b.numero} · ${T.rouge}`
-                : b.numero,
-          }),
-        ),
+        trierBoucles(
+          bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE, sorte),
+          TRI_BOUCLE.NUMERO,
+          true,
+        ).map((b) => ({ value: b.numero, label: b.numero })),
       ),
     );
-  }, []);
+  }, [sorte]);
   const fond = useFondChamp();
 
   return (
@@ -64,6 +65,7 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
       <Text style={commonStyles.lineSemiBold}>
         {label}
         {required ? <Text style={commonStyles.required}> *</Text> : null}
+        {rouge ? <Text style={commonStyles.muted}>{`  ${T.rougeEtiquette}`}</Text> : null}
       </Text>
       <View style={styles.rowStretch}>
         {indicatif ? (

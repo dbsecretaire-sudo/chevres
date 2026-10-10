@@ -24,6 +24,8 @@ import { SelectModal } from '@/shared/components/SelectModal';
 import { colors } from '@/shared/theme/colors';
 import { estPetitLe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
 import { libelleAnimalVendu } from '@/features/comptabilite/utils/animauxVendus';
+import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
+import { FromagesVendusEdition } from '@/features/comptabilite/components/FromagesVendusEdition';
 import type { Chevre } from '@/features/cheptel/types';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -203,6 +205,8 @@ export function ChampsVenteFromage({ e }: Props) {
     const choix = typeDuChoix(fromages, valeur);
     e.setTypeFromage(choix.typeFromage);
     e.setTypeFromageLibre(choix.typeFromageLibre);
+    // Les lots choisis sont ceux d'un autre fromage.
+    e.setFromages([]);
   };
 
   return (
@@ -227,9 +231,22 @@ export function ChampsVenteFromage({ e }: Props) {
         <FormField
           label={TEXTES.comptabilite.nouvelleEcriture.preciserLeType}
           value={e.typeFromageLibre}
-          onChangeText={e.setTypeFromageLibre}
+          onChangeText={(texte) => {
+            e.setTypeFromageLibre(texte);
+            e.setFromages([]);
+          }}
         />
       )}
+      {/* Un fromage qui a des lots se vend lot par lot : le nombre de fromages est celui des lots choisis. */}
+      <FromagesVendusEdition
+        typeFromage={e.typeFromage}
+        typeFromageLibre={e.typeFromageLibre}
+        ids={e.fromages}
+        onChange={(ids) => {
+          e.setFromages(ids);
+          if (ids.length > 0) e.setQuantite(String(ids.length));
+        }}
+      />
       <View style={styles.row3}>
         <View style={commonStyles.flex1}>
           <FormField
@@ -237,6 +254,7 @@ export function ChampsVenteFromage({ e }: Props) {
             required
             value={e.quantite}
             onChangeText={e.setQuantite}
+            editable={e.fromages.length === 0}
             keyboardType="decimal-pad"
             placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
           />
@@ -476,6 +494,9 @@ export function ChampsVenteViande({ e }: Props) {
                     </View>
                   ))}
                 </Card>
+              ) : null}
+              {animauxChoisis.length > 0 ? (
+                <ChampDateAbattoir dateVente={e.date} value={e.dateAbattoir} onChange={e.setDateAbattoir} />
               ) : null}
               <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.animauxNote}</Text>
             </View>

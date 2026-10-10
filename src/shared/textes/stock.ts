@@ -123,9 +123,14 @@ export const TEXTES_STOCK = {
   boucles: {
     titre: (nom: string) => `Inventaire : ${nom}`,
     titreEtat: 'Boucles',
+    titreSorte: 'Sorte de boucles',
+    sorte: { tout: 'Tout', boucles: 'Boucles', rouges: 'Boucles rouges' },
+    imprimer: 'Imprimer les boucles',
     etat: { tout: 'Tout', posee: 'Posée', non_posee: 'Non posée' },
     aucuneBoucle: 'Aucune boucle.',
     colonnes: { numero: 'N°', pose: 'Date de pose', achat: 'Date d’achat' },
+    /** La colonne cochée quand l'animal qui porte la boucle est mort. */
+    morte: 'Morte',
     aucuneNonPosee: 'Aucune boucle à poser.',
     aucunePosee: 'Aucune boucle posée.',
     /** Rappel : l'inventaire des boucles ne se modifie pas à la main. */
@@ -141,6 +146,42 @@ export const TEXTES_STOCK = {
     aucune: 'Aucune',
     utiliser: (numero: string) => `Utiliser le n° ${numero}`,
     rouge: 'rouge',
+    /** Le mot qui suit le libellé du champ d'une boucle rouge. */
+    rougeEtiquette: 'Rouge',
+    /** Une boucle posée dont l'animal n'a pas de date de bouclage : on le dit à la place de la date. */
+    posee: 'Posée',
+    /** Le détail d'une sorte de boucles sur sa ligne de l'inventaire : le total, les posées, celles à poser. */
+    resume: (total: number, posees: number) =>
+      `${total} au total · ${posees} posée${posees > 1 ? 's' : ''} · ${total - posees} à poser`,
+    /** La reprise unique des boucles déjà posées au cheptel (à retirer une fois faite). */
+    reprise: {
+      titre: 'Boucles du cheptel à reprendre',
+      message: (nombre: number) =>
+        `${nombre} boucle${nombre > 1 ? 's' : ''} posée${nombre > 1 ? 's' : ''} sur vos animaux ${nombre > 1 ? 'ne sont' : 'n’est'} pas encore dans l’inventaire. Elles y seront ajoutées comme boucles posées (avec leur date de pose quand l’animal en a une). Cette reprise ne se fait qu’une fois.`,
+      bouton: 'Ajouter ces boucles à l’inventaire',
+      fait: (nombre: number) =>
+        `${nombre} boucle${nombre > 1 ? 's' : ''} ajoutée${nombre > 1 ? 's' : ''} à l’inventaire.`,
+    },
+  },
+  /** Les fromages identifiés par lot : une ligne par fromage, fabriqué, vendu ou rappelé. */
+  lots: {
+    titre: (nom: string) => `Inventaire : Fromage ${nom}`,
+    etat: { tout: 'Tout', en_stock: 'En stock', vendu: 'Vendu', rappele: 'Rappelé' },
+    colonnes: { numero: 'N° lot', fabrication: 'Date fabrication', vente: 'Date vente' },
+    controle: 'Contrôle ok ?',
+    nombre: (nombre: number) => `${nombre} lot${nombre > 1 ? 's' : ''}`,
+    titreEtat: 'État des lots',
+    triPar: (colonne: string) => `Trier par ${colonne.toLowerCase()}`,
+    aucun: 'Aucun lot.',
+    rappele: 'Rappelé',
+    /** Rappel : l'inventaire des fromages ne se modifie pas à la main. */
+    rappel:
+      'Les ajouts et les suppressions des fromages se font dans Comptabilité (suppression par vente), et dans Production › Fromages (ajout par fabrication, rappels).',
+    ok: 'OK',
+    /** Les fromages en stock saisis avant le suivi par lot : ils n'ont pas de numéro. */
+    sansLot: (nombre: number) =>
+      `${nombre} fromage${nombre > 1 ? 's' : ''} sans n° de lot (saisi${nombre > 1 ? 's' : ''} avant le suivi par lot).`,
+    resume: (total: number, enStock: number) => `${total} lot${total > 1 ? 's' : ''} · ${enStock} en stock`,
   },
   /** L'historique de l'inventaire : les mouvements, mois par mois. */
   historique: {
@@ -236,6 +277,7 @@ export const TEXTES_STOCK = {
   achat: 'achat',
   consommation: 'consommation',
   pose: 'pose',
+  rappel: 'rappel',
   entreeBoucle: 'ajout depuis le cheptel',
   ligneMouvement: (date: string, article: string, delta: string, origine: string) =>
     `${date} · ${article} · ${delta} (${origine})`,

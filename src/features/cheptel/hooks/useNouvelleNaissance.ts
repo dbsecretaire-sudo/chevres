@@ -111,7 +111,7 @@ export function useNouvelleNaissance() {
         notes: notes.trim() || undefined,
       });
       // On revient à la liste des animaux (et non à l'écran d'où la naissance a été déclarée).
-      router.dismissTo(ROUTES.CHEPTEL);
+      router.dismissTo(ROUTES.CHEPTEL_LISTE);
     } finally {
       setEnregistrement(false);
     }

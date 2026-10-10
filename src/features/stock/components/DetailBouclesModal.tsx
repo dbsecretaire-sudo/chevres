@@ -1,6 +1,7 @@
-import { Modal, Pressable, Text } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
-import { TableauBoucles } from '@/features/stock/components/TableauBoucles';
+import { FiltresBoucles, TableauBoucles } from '@/features/stock/components/TableauBoucles';
+import { useListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import type { BoucleStock } from '@/features/stock/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -20,12 +21,18 @@ interface Props {
  * un achat en comptabilité et sortent par une pose au cheptel), ni suppression de l'article.
  */
 export function DetailBouclesModal({ visible, article, boucles, onFermer }: Props) {
+  const liste = useListeBoucles(boucles, article?.cle);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onFermer}>
       <Pressable style={commonStyles.backdrop} onPress={onFermer}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{T.titre(article?.libelle ?? '')}</Text>
-          {article ? <TableauBoucles boucles={boucles} article={article.cle} /> : null}
+          {article ? (
+            <View style={commonStyles.gap10}>
+              <FiltresBoucles liste={liste} />
+              <TableauBoucles liste={liste} />
+            </View>
+          ) : null}
           <Text style={[commonStyles.note, commonStyles.required]}>{T.rappel}</Text>
           <Button label={T.ok} onPress={onFermer} />
         </Pressable>

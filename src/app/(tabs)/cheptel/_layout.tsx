@@ -2,8 +2,9 @@ import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
-import { CheptelHeaderMenu } from '@/features/cheptel/components/CheptelHeaderMenu';
+import { BoutonBilanCheptel } from '@/features/cheptel/components/BoutonBilanCheptel';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 export default function CheptelLayout() {
@@ -12,16 +13,17 @@ export default function CheptelLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'bilan', 'historique', 'naissances')}
+      screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
       }}
     >
+      <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />
       <Stack.Screen
-        name="index"
-        options={{ title: TEXTES.commun.general.cheptel, headerRight: () => <CheptelHeaderMenu /> }}
+        name="liste"
+        options={{ title: TEXTES.cheptel.listeCheptel.titre, headerRight: () => <BoutonBilanCheptel /> }}
       />
       <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
       <Stack.Screen
@@ -30,7 +32,7 @@ export default function CheptelLayout() {
           title: TEXTES.navigation.layout.nouvelleChevre,
           presentation: 'modal',
           headerStyle: { backgroundColor: colors.ajout },
-          headerLeft: () => <HeaderBackTo to="/cheptel" />,
+          headerLeft: () => <HeaderBackTo to={ROUTES.CHEPTEL_LISTE} />,
         }}
       />
       <Stack.Screen

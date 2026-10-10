@@ -28,6 +28,15 @@ export function libelleAnimalVendu(
 }
 
 /**
+ * L'animal vendu tel que le bilan annuel le liste : son n° de boucle (ou son nom) et M ou F, sans date de naissance ; un petit sans
+ * boucle ni nom n'a que M ou F.
+ */
+export function libelleAnimalVenduBilan(a: Pick<Chevre, 'numeroBoucle' | 'nom' | 'sexe'>): string {
+  const identifiant = a.numeroBoucle ? (a.nom ? `${a.numeroBoucle} — ${a.nom}` : a.numeroBoucle) : a.nom;
+  return [identifiant, a.sexe === SEXE.MALE ? T.sexeM : T.sexeF].filter(Boolean).join(' · ');
+}
+
+/**
  * Le rôle de la ligne de viande qu'une vente a choisie comme détail (les petits, l'animal sur pied, l'animal vivant) ; rien pour
  * la charcuterie et les autres lignes. Une vente de ces lignes se fait animal par animal : elle désigne ses fiches du cheptel.
  */

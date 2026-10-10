@@ -71,7 +71,7 @@ export function useNouvelleChevre() {
     setCabrits((prev) => (prev.length > 1 ? prev.filter((c) => c.key !== key) : prev));
   };
 
-  const annuler = () => router.replace(ROUTES.CHEPTEL);
+  const annuler = () => router.replace(ROUTES.CHEPTEL_LISTE);
 
   const enregistrer = async () => {
     // Le n° de boucle est déjà celui d'un autre animal : le message est sous le champ, rien n'est enregistré.
@@ -136,7 +136,7 @@ export function useNouvelleChevre() {
           })),
         });
       }
-      router.replace(ROUTES.CHEPTEL);
+      router.replace(ROUTES.CHEPTEL_LISTE);
     } finally {
       setEnregistrement(false);
     }

@@ -1,6 +1,6 @@
 import { yearOf } from '@/shared/utils/dates';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
-import { libelleAnimalVendu } from '@/features/comptabilite/utils/animauxVendus';
+import { libelleAnimalVenduBilan } from '@/features/comptabilite/utils/animauxVendus';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { CATEGORIE_VENTE, CATEGORIES_VENTE_ANIMAUX } from '@/shared/constants/comptabilite';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
@@ -213,7 +213,7 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
   const venduesSansBoucle = (sexe: Sexe) => venduesAnnee(sexe).filter((c) => !c.numeroBoucle);
   const decrire = (liste: Chevre[]): AnimalVenduBilan[] =>
     liste
-      .map((c) => ({ date: c.dateStatut ?? '', libelle: libelleAnimalVendu(c) }))
+      .map((c) => ({ date: c.dateStatut ?? '', libelle: libelleAnimalVenduBilan(c) }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
   const cabritsVendusListe = avecVendusSansBoucle.filter(

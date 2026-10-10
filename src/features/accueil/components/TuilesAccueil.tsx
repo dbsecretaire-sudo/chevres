@@ -56,7 +56,7 @@ export function TuilesAccueil({ stats, annee }: Props) {
     <View style={styles.grille}>
       <View style={styles.rangee}>
         <Stat
-          route={ROUTES.CHEPTEL}
+          route={ROUTES.CHEPTEL_LISTE}
           libelle={T.animauxVivants}
           valeur={String(stats?.totalVivantes ?? '—')}
           detail={stats ? T.repartitionAnimaux(stats.chevres, stats.boucs, stats.cabrits) : undefined}

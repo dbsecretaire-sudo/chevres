@@ -2,13 +2,23 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 
 /** Adresses (routes) de navigation de l'application — à modifier ici uniquement. */
 
+/** Les familles de contrôles qui relèvent de la Production (le reste est dans le Cheptel). */
+const FAMILLES_DE_PRODUCTION = ['laitier', 'analyse', 'groupement'];
+
+/** Le dossier des écrans de contrôle d'une famille : Production pour le lait et les groupements, Cheptel (santé) pour le reste. */
+const baseControles = (famille: string): string =>
+  FAMILLES_DE_PRODUCTION.includes(famille) ? '/production/controles' : '/sante/controles';
+
 export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
   BALANCE: '/balance',
   RAPPELS_HISTORIQUE: '/rappels-historique',
   REGLAGES: '/reglages',
 
+  /** L'onglet Cheptel : le cheptel (la liste des animaux) et ce qui s'y rapporte. */
   CHEPTEL: '/cheptel',
+  /** La liste des animaux vivants. */
+  CHEPTEL_LISTE: '/cheptel/liste',
   CHEPTEL_BILAN: '/cheptel/bilan',
   CHEPTEL_AJOUT_RAPIDE: '/cheptel/ajout-rapide',
   CHEPTEL_NOUVELLE: '/cheptel/nouvelle',
@@ -18,19 +28,28 @@ export const ROUTES = {
   SANTE_ALIMENTATION: '/sante/alimentation',
   SANTE_VETERINAIRE: '/sante/veterinaire',
   SANTE_VISITE_NOUVELLE: '/sante/veterinaire/nouvelle',
-  SANTE_CONTROLES: '/sante/controles',
-  /** La liste des contrôles d'une famille (surface, animaux, laitier). */
-  santeControles: (famille: string) => `/sante/controles/liste?famille=${famille}` as const,
+  /** La fiche d'une visite vétérinaire (son formulaire, avec ses fichiers). */
+  santeVisite: (id: string) => `/sante/veterinaire/nouvelle?id=${id}` as const,
+  /** La liste des contrôles d'une famille (surface, animaux : dans le Cheptel ; laitier, analyses, groupements : dans Production). */
+  santeControles: (famille: string) => `${baseControles(famille)}/liste?famille=${famille}` as const,
   /** Un nouveau contrôle, de la famille donnée. */
-  santeControleNouveau: (famille: string) => `/sante/controles/nouvelle?famille=${famille}` as const,
+  santeControleNouveau: (famille: string) => `${baseControles(famille)}/nouvelle?famille=${famille}` as const,
   /** Un groupement : ses contenus. */
-  santeGroupement: (id: string) => `/sante/controles/groupement?id=${id}` as const,
+  santeGroupement: (id: string) => `/production/controles/groupement?id=${id}` as const,
   /** Un contenu d'un groupement (nouveau sans identifiant, sinon modifié). */
   santeContenuGroupement: (groupementId: string, id?: string) =>
-    `/sante/controles/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
+    `/production/controles/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
   /** Un contrôle (un terrain…) qu'on modifie. */
   santeControleModifier: (famille: string, id: string) =>
-    `/sante/controles/nouvelle?famille=${famille}&id=${id}` as const,
+    `${baseControles(famille)}/nouvelle?famille=${famille}&id=${id}` as const,
+
+  // L'onglet Production d'un élevage : fromages, viande vendue, contrôle laitier, groupements
+  PRODUCTION: '/production',
+  PRODUCTION_FROMAGES: '/production/fromages',
+  PRODUCTION_FABRICATION: '/production/fabrication',
+  PRODUCTION_RAPPEL: '/production/rappel',
+  PRODUCTION_VIANDE: '/production/viande',
+  PRODUCTION_STATISTIQUES: '/production/statistiques',
 
   COMPTABILITE: '/comptabilite',
   COMPTABILITE_NOUVELLE: '/comptabilite/nouvelle',

@@ -18,6 +18,7 @@ import { TEXTES_FICHIERS } from '@/shared/textes/fichiers';
 import { TEXTES_FOURNISSEURS } from '@/shared/textes/fournisseurs';
 import { TEXTES_GITE } from '@/shared/textes/gite';
 import { TEXTES_NAVIGATION } from '@/shared/textes/navigation';
+import { TEXTES_PRODUCTION } from '@/shared/textes/production';
 import { TEXTES_RAPPELS } from '@/shared/textes/rappels';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
@@ -46,6 +47,7 @@ export const TEXTES = {
   fournisseurs: TEXTES_FOURNISSEURS,
   gite: TEXTES_GITE,
   navigation: TEXTES_NAVIGATION,
+  production: TEXTES_PRODUCTION,
   rappels: TEXTES_RAPPELS,
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,

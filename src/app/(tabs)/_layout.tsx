@@ -47,7 +47,7 @@ export default function TabsLayout() {
       // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
       backBehavior="history"
       screenListeners={{ tabPress: () => quitterRetour() }}
-      screenLayout={ecranParEspeceSauf('cheptel', 'sante', 'comptabilite', 'index')}
+      screenLayout={ecranParEspeceSauf('cheptel', 'sante', 'production', 'comptabilite', 'index')}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -107,6 +107,22 @@ export default function TabsLayout() {
           tabPress: (e) => {
             e.preventDefault();
             navigation.navigate('clients', { screen: 'index' });
+          },
+        })}
+      />
+      {/* La production d'un élevage : fromages, viande vendue, contrôle laitier, groupements (le stock y est branché). */}
+      <Tabs.Screen
+        name="production"
+        options={{
+          title: TEXTES.production.titre,
+          headerShown: false,
+          href: entreprise ? null : undefined,
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="cheese" size={size} color={color} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('production', { screen: 'index' });
           },
         })}
       />

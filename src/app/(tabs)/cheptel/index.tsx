@@ -1,1 +1,1 @@
-export { default } from '@/features/cheptel/screens/ListeCheptel';
+export { default } from '@/features/cheptel/screens/AccueilCheptel';

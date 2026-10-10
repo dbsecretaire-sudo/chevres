@@ -84,6 +84,13 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
             b && typeof b.id === 'string' && typeof b.numero === 'string' && typeof b.article === 'string',
         )
       : [],
+    lots: Array.isArray(archive?.lots)
+      ? archive.lots.filter(
+          (l) =>
+            l && typeof l.id === 'string' && typeof l.numero === 'string' && typeof l.article === 'string',
+        )
+      : [],
+    bouclesDuCheptelReprises: archive?.bouclesDuCheptelReprises === true ? true : undefined,
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
   };
 }

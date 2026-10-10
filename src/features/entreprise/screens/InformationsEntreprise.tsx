@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { Text, View } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
@@ -91,13 +92,9 @@ export function InformationsEntreprise() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
 
-  const annuler = () => {
-    charger();
-    setEditing(false);
-  };
-
-  const enregistrer = async () => {
-    setEnregistrement(true);
+  /** Enregistré tout seul (`auto`), il laisse l'écran en modification. */
+  const enregistrer = async (auto = false) => {
+    if (!auto) setEnregistrement(true);
     try {
       const entreprise: InfosEntreprise = {
         ...form,
@@ -110,11 +107,18 @@ export function InformationsEntreprise() {
         taxeSejourParNuit: undefined,
       };
       await patchSettings({ exploitation: { ...settings.exploitation, entreprise } });
-      setEditing(false);
+      if (!auto) setEditing(false);
     } finally {
       setEnregistrement(false);
     }
   };
+
+  // Tout changement s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: editing,
+    signature: JSON.stringify([form, montantTaxe, tauxUrssaf, montantNuit, montantRepas]),
+    enregistrer: () => enregistrer(true),
+  });
 
   const maj = (patch: Partial<InfosEntreprise>) => setForm((prev) => ({ ...prev, ...patch }));
   const champ = (label: string, cle: keyof InfosEntreprise, extra?: object) => (
@@ -317,14 +321,8 @@ export function InformationsEntreprise() {
         <View style={styles.rowSimple}>
           <Button
             style={commonStyles.flex1}
-            variant="secondary"
-            label={TEXTES.commun.general.annuler}
-            onPress={annuler}
-          />
-          <Button
-            style={commonStyles.flex1}
             label={TEXTES.commun.general.enregistrer}
-            onPress={enregistrer}
+            onPress={() => enregistrer()}
             loading={enregistrement}
           />
         </View>

@@ -95,9 +95,13 @@ export function numeroDejaEnStock(
   archive: Pick<ArchiveStock, 'boucles'>,
   numeros: string[],
   factureId?: string,
+  /** La sorte de boucles de l'achat : un même numéro peut exister en boucle et en boucle rouge. */
+  article?: string,
 ): string | undefined {
   const pris = new Set(
-    (archive.boucles ?? []).filter((b) => b.factureId !== factureId && !b.depuisCheptel).map((b) => b.numero),
+    (archive.boucles ?? [])
+      .filter((b) => b.factureId !== factureId && !b.depuisCheptel && (!article || b.article === article))
+      .map((b) => b.numero),
   );
   return numeros.find((numero) => pris.has(numero));
 }
@@ -116,12 +120,27 @@ export function erreurAchatBoucles(
   if (quantite > BOUCLES_MAX_PAR_ACHAT) return T.tropDeBoucles(BOUCLES_MAX_PAR_ACHAT);
   const numeros = plageDeBoucles(achat.bouclesDebut ?? '', quantite);
   if (!numeros) return T.premiereBoucleRequise;
-  const pris = numeroDejaEnStock(archive, numeros, achat.id);
+  const pris = numeroDejaEnStock(archive, numeros, achat.id, achat.stockArticle);
   return pris ? T.dejaEnStock(pris) : undefined;
 }
 
 /** Un animal enregistré avec son numéro de boucle (ce que l'inventaire des boucles lit du cheptel). */
-type AnimalBouclable = Pick<Chevre, 'id' | 'numeroBoucle' | 'dateBouclage' | 'espece'>;
+type AnimalBouclable = Pick<
+  Chevre,
+  'id' | 'numeroBoucle' | 'dateBouclage' | 'numeroBoucleRouge' | 'dateBoucleRouge' | 'espece'
+>;
+
+const ARTICLE_BOUCLES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.BOUCLES}`;
+const ARTICLE_ROUGES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`;
+
+/** Les boucles qu'un animal porte : sa boucle et, quand il en a une, sa boucle rouge (avec leur date de pose). */
+const bouclesPortees = (animal: AnimalBouclable): { article: string; numero: string; date?: string }[] =>
+  [
+    { article: ARTICLE_BOUCLES, numero: animal.numeroBoucle?.trim(), date: animal.dateBouclage },
+    { article: ARTICLE_ROUGES, numero: animal.numeroBoucleRouge?.trim(), date: animal.dateBoucleRouge },
+  ].filter((b): b is { article: string; numero: string; date: string | undefined } => !!b.numero);
+
+const cleBoucle = (article: string, numero: string): string => `${article}|${numero}`;
 
 /** Vrai quand les animaux de cette espèce portent des boucles (pas les poules, ni les animaux domestiques). */
 const porteDesBoucles = (animal: Pick<Chevre, 'espece'>): boolean =>
@@ -130,55 +149,49 @@ const porteDesBoucles = (animal: Pick<Chevre, 'espece'>): boolean =>
 /**
  * L'inventaire avec les poses d'après le cheptel : une boucle est posée quand un animal porte son numéro (à la date de bouclage
  * de l'animal), et redevient à poser quand plus aucun ne le porte. Chaque pose est un retrait de l'article, qui se refait à
- * chaque fois : le niveau d'une boucle est donc le nombre de boucles non posées. Avec `enregistre` (l'animal qu'on vient
- * d'enregistrer), son numéro est ajouté à l'inventaire quand il n'y est pas : c'est une boucle posée, entrée en même temps.
+ * chaque fois : le niveau d'une boucle est donc le nombre de boucles non posées. Avec `aAjouter` (les animaux qu'on vient
+ * d'enregistrer), leur numéro est ajouté à l'inventaire quand il n'y est pas : c'est une boucle posée, entrée en même temps,
+ * avec la date de pose seulement si l'animal a une date de bouclage.
  */
 export function avecPoses(
   archive: ArchiveStock,
   animaux: AnimalBouclable[],
-  enregistre?: AnimalBouclable,
+  aAjouter: AnimalBouclable[] = [],
 ): ArchiveStock {
-  const parNumero = new Map<string, AnimalBouclable>();
+  const portees = new Map<string, { animal: AnimalBouclable; date?: string }>();
   for (const animal of animaux) {
-    const numero = animal.numeroBoucle?.trim();
-    if (numero && !parNumero.has(numero)) parNumero.set(numero, animal);
+    for (const b of bouclesPortees(animal)) {
+      if (!portees.has(cleBoucle(b.article, b.numero)))
+        portees.set(cleBoucle(b.article, b.numero), { animal, date: b.date });
+    }
   }
   let inventaire = archive.boucles ?? [];
-  const numeroEnregistre = enregistre?.numeroBoucle?.trim();
-  if (
-    enregistre &&
-    numeroEnregistre &&
-    porteDesBoucles(enregistre) &&
-    !inventaire.some((b) => b.numero === numeroEnregistre)
-  ) {
-    inventaire = [
-      ...inventaire,
-      {
-        id: generateId(),
-        article: `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.BOUCLES}`,
-        numero: numeroEnregistre,
-        depuisCheptel: true,
-      },
-    ];
+  for (const animal of aAjouter) {
+    if (!porteDesBoucles(animal)) continue;
+    for (const portee of bouclesPortees(animal)) {
+      if (inventaire.some((x) => x.article === portee.article && x.numero === portee.numero)) continue;
+      inventaire = [
+        ...inventaire,
+        { id: generateId(), article: portee.article, numero: portee.numero, depuisCheptel: true },
+      ];
+    }
   }
   const boucles = inventaire
     // Une boucle ajoutée depuis une fiche n'existe que tant qu'un animal la porte.
-    .filter((b) => !b.depuisCheptel || parNumero.has(b.numero))
+    .filter((x) => !x.depuisCheptel || portees.has(cleBoucle(x.article, x.numero)))
     .map((boucle): BoucleStock => {
-      const animal = parNumero.get(boucle.numero);
-      if (!animal) return { ...boucle, datePose: undefined, chevreId: undefined };
-      return {
-        ...boucle,
-        chevreId: animal.id,
-        datePose: animal.dateBouclage ?? boucle.datePose ?? todayISO(),
-      };
+      const portee = portees.get(cleBoucle(boucle.article, boucle.numero));
+      if (!portee) return { ...boucle, datePose: undefined, chevreId: undefined };
+      return { ...boucle, chevreId: portee.animal.id, datePose: portee.date ?? boucle.datePose };
     });
   const mouvements = boucles.flatMap((b) => {
-    if (!b.datePose) return [];
+    if (!b.chevreId) return [];
+    // Sans date de bouclage, la pose se range à la date d'achat (ou, à défaut, à aujourd'hui) dans l'historique.
+    const date = b.datePose ?? b.dateAchat ?? todayISO();
     const pose = {
       id: `pose-${b.id}`,
       article: b.article,
-      date: b.datePose,
+      date,
       delta: -1,
       origine: ORIGINE_MOUVEMENT.CONSOMMATION,
       boucleId: b.id,
@@ -205,10 +218,10 @@ let file: Promise<unknown> = Promise.resolve();
 export function synchroniserPoseBoucles(enregistre?: AnimalBouclable): Promise<void> {
   const suite = file.then(async () => {
     const archive = await lireArchiveStock();
-    const aVerifier = !!enregistre?.numeroBoucle?.trim() && porteDesBoucles(enregistre);
+    const aVerifier = !!enregistre && porteDesBoucles(enregistre) && bouclesPortees(enregistre).length > 0;
     if (!archive.boucles?.length && !aVerifier) return;
     const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
-    const nouvelle = avecPoses(archive, animaux, enregistre);
+    const nouvelle = avecPoses(archive, animaux, enregistre ? [enregistre] : []);
     const etat = (a: ArchiveStock) => JSON.stringify([a.boucles, a.mouvements.filter((m) => m.boucleId)]);
     if (etat(nouvelle) !== etat(archive)) await remplacerArchiveStock(nouvelle);
   });
@@ -225,7 +238,7 @@ export const bouclesDeLInventaire = (
   (archive.boucles ?? []).filter(
     (b) =>
       (!article || b.article === article) &&
-      (etat === ETAT_BOUCLE.TOUT || !!b.datePose === (etat === ETAT_BOUCLE.POSEE)),
+      (etat === ETAT_BOUCLE.TOUT || !!b.chevreId === (etat === ETAT_BOUCLE.POSEE)),
   );
 
 /** Les boucles triées d'après une colonne (le numéro, la date de pose ou la date d'achat) ; les sans-date à la fin. */
@@ -245,4 +258,28 @@ export function trierBoucles(
           : 0;
     return dates || comparerNumeros(a.numero, b.numero) * sens;
   });
+}
+
+/**
+ * REPRISE UNIQUE — à retirer une fois faite : les animaux du cheptel qui portent déjà une boucle absente de l'inventaire
+ * (saisies avant l'inventaire des boucles) y sont ajoutés, comme des boucles posées. Garde sa trace pour ne plus être proposée.
+ */
+export async function bouclesDuCheptelAReprendre(): Promise<number> {
+  const archive = await lireArchiveStock();
+  if (archive.bouclesDuCheptelReprises) return 0;
+  const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  return (avecPoses(archive, animaux, animaux).boucles ?? []).length - (archive.boucles ?? []).length;
+}
+
+/** Fait la reprise unique (voir bouclesDuCheptelAReprendre) et rend le nombre de boucles ajoutées. */
+export function reprendreLesBouclesDuCheptel(): Promise<number> {
+  const suite = file.then(async () => {
+    const archive = await lireArchiveStock();
+    const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+    const nouvelle = avecPoses(archive, animaux, animaux);
+    await remplacerArchiveStock({ ...nouvelle, bouclesDuCheptelReprises: true });
+    return (nouvelle.boucles ?? []).length - (archive.boucles ?? []).length;
+  });
+  file = suite.catch(() => undefined);
+  return suite;
 }

@@ -203,6 +203,8 @@ export function libelleOrigineMouvement(
       return TEXTES.stock.achat;
     case ORIGINE_MOUVEMENT.CONSOMMATION:
       return TEXTES.stock.consommation;
+    case ORIGINE_MOUVEMENT.RAPPEL:
+      return TEXTES.stock.rappel;
     default:
       return TEXTES.stock.manuel;
   }

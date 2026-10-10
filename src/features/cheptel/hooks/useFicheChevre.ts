@@ -14,6 +14,7 @@ import { listVisitesPourChevre } from '@/features/exploitation/repository/visite
 import { especeDe } from '@/features/cheptel/utils/espece';
 import type { Chevre, StatutChevre } from '@/features/cheptel/types';
 import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { todayISO } from '@/shared/utils/dates';
 import { STATUT_CHEVRE, VUE_FICHE_CHEVRE } from '@/shared/constants/cheptel';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -56,24 +57,33 @@ export function useFicheChevre(id: string | undefined) {
     }, [charger]),
   );
 
-  /** Retourne true si l'enregistrement a réussi (utile pour enchaîner une navigation, ex : ajout d'un cabri). */
-  const enregistrerModifications = async (): Promise<boolean> => {
+  /**
+   * Retourne true si l'enregistrement a réussi (utile pour enchaîner une navigation, ex : ajout d'un cabri). Enregistré tout seul
+   * (`auto`), il ne dit rien d'une saisie refusée et laisse la fiche en modification.
+   */
+  const enregistrerModifications = async (auto = false): Promise<boolean> => {
     if (!form) return false;
     const boucle = form.numeroBoucle?.trim();
     if (boucle && (await numeroBoucleExiste(boucle, form.id, especeDe(form)))) {
-      setErreur(TEXTES.cheptel.ficheChevre.leNBoucleEstDeja(boucle));
+      if (!auto) setErreur(TEXTES.cheptel.ficheChevre.leNBoucleEstDeja(boucle));
       return false;
     }
     await saveChevre(form);
+    if (auto) {
+      setChevre(form);
+      return true;
+    }
     setEditing(false);
     charger();
     return true;
   };
 
-  const annulerModifications = () => {
-    setForm(chevre);
-    setEditing(false);
-  };
+  // Tout changement de la fiche s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: editing,
+    signature: JSON.stringify(form),
+    enregistrer: () => enregistrerModifications(true),
+  });
 
   const supprimerDefinitivement = async () => {
     if (!chevre) return;
@@ -128,7 +138,6 @@ export function useFicheChevre(id: string | undefined) {
     erreur,
     setErreur,
     enregistrerModifications,
-    annulerModifications,
     supprimerDefinitivement,
     choisirStatut,
     enregistrerStatut,

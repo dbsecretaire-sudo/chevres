@@ -28,6 +28,8 @@ export const NOM_FICHIER_EXPORT_PLAN_COMPTABLE = 'plan_comptable';
 export const NOM_FICHIER_EXPORT_CHEPTEL = 'cheptel';
 /** Les mouvements de l'inventaire. */
 export const NOM_FICHIER_EXPORT_INVENTAIRE = 'inventaire';
+/** La liste des boucles d'identification (celle que les filtres de l'écran montrent). */
+export const NOM_FICHIER_EXPORT_BOUCLES = 'boucles';
 /** Export de l'année d'une entreprise (prestations de service, association…). */
 export const NOM_FICHIER_EXPORT_ENTREPRISE = 'entreprise';
 
