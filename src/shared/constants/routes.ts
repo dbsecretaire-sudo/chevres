@@ -46,8 +46,11 @@ export const ROUTES = {
   // L'onglet Production d'un élevage : fromages, viande vendue, contrôle laitier, groupements
   PRODUCTION: '/production',
   PRODUCTION_FROMAGES: '/production/fromages',
-  PRODUCTION_FABRICATION: '/production/fabrication',
-  PRODUCTION_RAPPEL: '/production/rappel',
+  PRODUCTION_CHARCUTERIE: '/production/charcuterie',
+  /** La fabrication et le rappel d'un produit suivi par lot (`produit` : fromage ou charcuterie). */
+  productionFabrication: (produit: string) => `/production/fabrication?produit=${produit}` as const,
+  productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,
+  PRODUCTION_RAPPELS_LOTS: '/production/rappels-lots',
   PRODUCTION_VIANDE: '/production/viande',
   PRODUCTION_STATISTIQUES: '/production/statistiques',
 

@@ -6,6 +6,10 @@ export const GENRE_A_TRAITER = {
   TACHE_PROCHE: 'tache_proche',
   /** Une déclaration (RSA, URSSAF) à valider. */
   RAPPEL_FISCAL: 'rappel_fiscal',
+  /** Des lots vendus dont le contrôle n'est pas ok : à rappeler. */
+  LOTS_A_RAPPELER: 'lots_a_rappeler',
+  /** Le rappel d'un lot déjà lancé, à valider quand il est fait. */
+  RAPPEL_LOT_A_VALIDER: 'rappel_lot_a_valider',
   SEJOUR_A_ENCAISSER: 'sejour_a_encaisser',
   NOTE_A_FACTURER: 'note_a_facturer',
 } as const;

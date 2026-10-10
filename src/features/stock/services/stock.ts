@@ -272,10 +272,15 @@ export function consommationDeLaVente(
       (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
     );
     if (!article || !(vente.quantite > 0)) return [];
+    // Les emballages du conditionnement de la ligne vendue baissent avec elle (la quantité vendue de chacun).
+    const emballages = conditionnementDe(article.cle.split(':')[1], archive).map((code) => ({
+      article: cleArticle(GENRE_ARTICLE.EMBALLAGE, code),
+      quantite: vente.quantite,
+    }));
     // Les petits, l'animal sur pied et l'animal vivant suivent le cheptel (voir estLigneDuCheptel) : la vente n'y touche pas, ce
-    // sont les fiches des animaux vendus qui passent en « vendue ».
-    if (estLigneDuCheptel(article.cle)) return [];
-    return [{ article: article.cle, quantite: vente.quantite }];
+    // sont les fiches des animaux vendus qui changent de statut : seuls leurs emballages baissent.
+    if (estLigneDuCheptel(article.cle)) return emballages;
+    return [{ article: article.cle, quantite: vente.quantite }, ...emballages];
   }
   const fromage = codeFromageDeLaVente(vente, archive);
   if (vente.categorie !== CATEGORIE_VENTE.FROMAGE || !fromage) return [];
@@ -510,6 +515,14 @@ export async function definirConditionnement(code: string, emballages: string[])
     ...archive,
     conditionnements: { ...archive.conditionnements, [code]: emballages },
   });
+}
+
+/** Retire le conditionnement choisi d'un élément (un fromage retrouve celui d'office, une autre ligne n'en a plus). */
+export async function retirerConditionnement(code: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  const conditionnements = { ...archive.conditionnements };
+  delete conditionnements[code];
+  await remplacerArchiveStock({ ...archive, conditionnements });
 }
 
 /** Place un article à un index précis de la liste de son genre (après l'avoir glissé à cet endroit). */

@@ -1,9 +1,4 @@
 import { yearOf } from '@/shared/utils/dates';
-import { listVentes } from '@/features/comptabilite/repository/ventes';
-import { libelleAnimalVenduBilan } from '@/features/comptabilite/utils/animauxVendus';
-import { activiteVente } from '@/features/comptabilite/utils/activite';
-import { CATEGORIE_VENTE, CATEGORIES_VENTE_ANIMAUX } from '@/shared/constants/comptabilite';
-import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ageAtteint } from '@/shared/utils/age';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { loadAllYears } from '@/shared/storage/localStore';
@@ -18,12 +13,6 @@ export interface DateEtNombre {
   nombre: number;
 }
 
-/** Un animal vendu dans l'année : la date de la vente et sa description (boucle, M ou F, date de naissance). */
-export interface AnimalVenduBilan {
-  date: string;
-  libelle: string;
-}
-
 export interface Bilan {
   annee: number;
   cabritsTotal: number;
@@ -34,10 +23,6 @@ export interface Bilan {
   cabritsRenouvellement: number;
   /** Petits vendus dans l'année qui ont une boucle : ils comptent dans les naissances. */
   cabritsVendusBoucles: number;
-  /** Petits vendus sans boucle (ou sans fiche) : à titre d'information seulement. */
-  cabritsVendusNonBoucles: number;
-  cabritsVendusBouclesListe: AnimalVenduBilan[];
-  cabritsVendusNonBouclesListe: AnimalVenduBilan[];
   cabritsAbattoir: number;
   cabritsAbattoirDates: DateEtNombre[];
   cabritsAutoconsommes: number;
@@ -49,10 +34,6 @@ export interface Bilan {
   chevresAbattoirDates: DateEtNombre[];
   /** Chèvres vendues dans l'année qui ont une boucle : déjà retirées du nombre de chèvres. */
   chevresVenduesBouclees: number;
-  /** Vendues sans boucle (une chevrette, une vente sans fiche…) : à titre d'information seulement. */
-  chevresVenduesNonBouclees: number;
-  chevresVenduesBoucleesListe: AnimalVenduBilan[];
-  chevresVenduesNonBoucleesListe: AnimalVenduBilan[];
   chevresAutoconsommeesAnnee: number;
   chevresVivantesFinAnnee: number;
   /** Parmi les chèvres vivantes ci-dessus, celles désignées pour le renouvellement cette année-là précisément. */
@@ -61,9 +42,6 @@ export interface Bilan {
   boucsAbattoirAnnee: number;
   boucsAbattoirDates: DateEtNombre[];
   boucsVendusBoucles: number;
-  boucsVendusNonBoucles: number;
-  boucsVendusBouclesListe: AnimalVenduBilan[];
-  boucsVendusNonBouclesListe: AnimalVenduBilan[];
   boucsAutoconsommesAnnee: number;
   boucsVivantsFinAnnee: number;
   /** Parmi les boucs vivants ci-dessus, ceux désignés pour le renouvellement cette année-là précisément. */
@@ -184,37 +162,8 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
   ).length;
 
   // Un animal vendu passe en « vendue » sur sa fiche quand la vente le désigne : il est compté par son statut, comme avant.
-  // Une vente d'animaux sans fiche choisie (cabris, animal sur pied ou vivant) s'ajoute : un petit d'un côté, les adultes de
-  // l'autre (chèvres, une vente sans fiche ne dit pas le sexe).
-  const ventesSansFiche = (await listVentes(annee)).filter(
-    (v) =>
-      activiteVente(v) === especeCourante() &&
-      !v.animaux &&
-      (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(v.categorie),
-  );
-  const venduesSansFiche = (petits: boolean) =>
-    ventesSansFiche
-      .filter((v) => (v.categorie === CATEGORIE_VENTE.CABRIS || !!v.jeune) === petits)
-      .reduce((total, v) => total + v.quantite, 0);
-
-  // Adultes vendus dans l'année : avec boucle, ils sont comptés dans l'effectif ; sans boucle, seulement dans cette information.
-  // Les petits (moins que l'âge de sevrage au jour de la vente) relèvent de la carte des cabris, jamais de celle-ci.
-  const venduesAnnee = (sexe: Sexe) =>
-    avecVendusSansBoucle.filter(
-      (c) =>
-        c.sexe === sexe &&
-        c.statut === STATUT_CHEVRE.VENDUE &&
-        anneeStatut(c) === annee &&
-        !!c.dateStatut &&
-        estAdulteLe(c.dateNaissance, c.dateStatut),
-    );
   const venduesAvecBoucle = (sexe: Sexe) =>
     sortiesPreexistantesListe(sexe, STATUT_CHEVRE.VENDUE).filter((c) => !!c.numeroBoucle);
-  const venduesSansBoucle = (sexe: Sexe) => venduesAnnee(sexe).filter((c) => !c.numeroBoucle);
-  const decrire = (liste: Chevre[]): AnimalVenduBilan[] =>
-    liste
-      .map((c) => ({ date: c.dateStatut ?? '', libelle: libelleAnimalVenduBilan(c) }))
-      .sort((a, b) => a.date.localeCompare(b.date));
 
   const cabritsVendusListe = avecVendusSansBoucle.filter(
     (c) => c.statut === STATUT_CHEVRE.VENDUE && sortiCommeCabrit(c),
@@ -232,10 +181,6 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     cabritsSecondSemestre: cabrits.filter((c) => !premierSemestre(c)).length,
     cabritsRenouvellement: renouvellementDesignes,
     cabritsVendusBoucles: cabritsVendusListe.filter((c) => !!c.numeroBoucle).length,
-    cabritsVendusNonBoucles:
-      cabritsVendusListe.filter((c) => !c.numeroBoucle).length + venduesSansFiche(true),
-    cabritsVendusBouclesListe: decrire(cabritsVendusListe.filter((c) => !!c.numeroBoucle)),
-    cabritsVendusNonBouclesListe: decrire(cabritsVendusListe.filter((c) => !c.numeroBoucle)),
     cabritsAbattoir: cabritsAbattoirListe.length,
     cabritsAbattoirDates: grouperParDate(cabritsAbattoirListe),
     cabritsAutoconsommes: toutes.filter(
@@ -248,9 +193,6 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     chevresAbattoirAnnee: chevresAbattoirListe.length,
     chevresAbattoirDates: grouperParDate(chevresAbattoirListe),
     chevresVenduesBouclees: venduesAvecBoucle(SEXE.FEMELLE).length,
-    chevresVenduesNonBouclees: venduesSansBoucle(SEXE.FEMELLE).length + venduesSansFiche(false),
-    chevresVenduesBoucleesListe: decrire(venduesAvecBoucle(SEXE.FEMELLE)),
-    chevresVenduesNonBoucleesListe: decrire(venduesSansBoucle(SEXE.FEMELLE)),
     chevresAutoconsommeesAnnee: sortiesPreexistantes(SEXE.FEMELLE, STATUT_CHEVRE.AUTOCONSOMMEE),
     chevresVivantesFinAnnee,
     chevresRenouvellementFinAnnee,
@@ -258,9 +200,6 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     boucsAbattoirAnnee: boucsAbattoirListe.length,
     boucsAbattoirDates: grouperParDate(boucsAbattoirListe),
     boucsVendusBoucles: venduesAvecBoucle(SEXE.MALE).length,
-    boucsVendusNonBoucles: venduesSansBoucle(SEXE.MALE).length,
-    boucsVendusBouclesListe: decrire(venduesAvecBoucle(SEXE.MALE)),
-    boucsVendusNonBouclesListe: decrire(venduesSansBoucle(SEXE.MALE)),
     boucsAutoconsommesAnnee: sortiesPreexistantes(SEXE.MALE, STATUT_CHEVRE.AUTOCONSOMMEE),
     boucsVivantsFinAnnee,
     boucsRenouvellementFinAnnee,

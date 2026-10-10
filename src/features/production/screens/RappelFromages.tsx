@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -9,10 +9,10 @@ import { SelectField } from '@/shared/components/SelectField';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { etatDuLot, rappelerLots, trierLots } from '@/features/stock/services/lots';
-import { articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
+import { articlesDuProduit, lotsARappeler, rappelerLots, trierLots } from '@/features/stock/services/lots';
+import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
-import { ETAT_LOT, GENRE_ARTICLE, TRI_LOT } from '@/shared/constants/stock';
+import { PRODUIT_A_LOTS, TRI_LOT } from '@/shared/constants/stock';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { colors } from '@/shared/theme/colors';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -20,12 +20,14 @@ import { formatDateShortFR, todayISO } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-const T = TEXTES.production.rappel;
-
-/** Le rappel de fromages : on choisit un fromage, puis ses lots à retirer de la vente (en stock ou déjà vendus), à une date. */
+/** Le rappel de fromages ou de charcuterie (paramètre `produit`) : on choisit un produit, puis ses lots à retirer de la vente, à une date. */
 export default function RappelFromages() {
   useAjoutTabBarBleu();
   const router = useRouter();
+  const { produit: param } = useLocalSearchParams<{ produit?: string }>();
+  const produit = param === PRODUIT_A_LOTS.CHARCUTERIE ? PRODUIT_A_LOTS.CHARCUTERIE : PRODUIT_A_LOTS.FROMAGE;
+  const T =
+    produit === PRODUIT_A_LOTS.FROMAGE ? TEXTES.production.rappel : TEXTES.production.rappelCharcuterie;
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
@@ -36,21 +38,15 @@ export default function RappelFromages() {
 
   useEffect(() => {
     lireArchiveStock().then((a) => {
-      const proposes = articlesDuGenre(GENRE_ARTICLE.FROMAGE, a, espece);
+      const proposes = articlesDuProduit(produit, a, espece);
       setArchive(a);
       setArticles(proposes);
       if (proposes[0]) setArticle(proposes[0].cle);
     });
-  }, [espece]);
+  }, [espece, produit]);
 
   // Les lots qu'on peut rappeler : ceux du fromage qui ont été vendus et dont le contrôle n'est pas bon (pas déjà rappelés).
-  const lots = trierLots(
-    (archive?.lots ?? []).filter(
-      (l) => l.article === article && etatDuLot(l) === ETAT_LOT.VENDU && !l.controleOk,
-    ),
-    TRI_LOT.NUMERO,
-    true,
-  );
+  const lots = trierLots(lotsARappeler({ lots: archive?.lots }, article), TRI_LOT.NUMERO, true);
 
   const basculer = (id: string) =>
     setChoisis((actuels) => (actuels.includes(id) ? actuels.filter((x) => x !== id) : [...actuels, id]));

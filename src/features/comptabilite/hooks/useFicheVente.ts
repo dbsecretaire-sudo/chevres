@@ -125,7 +125,7 @@ export function useFicheVente(id: string | undefined) {
     }
     // Un fromage qui a des lots en stock se vend lot par lot : on les désigne.
     if (fromagesRequis(await lireArchiveStock(), form)) {
-      return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.fromagesRequis });
+      return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.lotsRequis });
     }
     // Une vente que le client souhaite déclarer a un numéro de facture.
     if (venteADeclarer(form) && !form.numeroFacture?.trim()) {
@@ -173,13 +173,15 @@ export function useFicheVente(id: string | undefined) {
         client: form.client?.trim() || undefined,
         precision: form.precision?.trim() || undefined,
         numeroFacture: venteADeclarer(form) ? form.numeroFacture?.trim() : undefined,
+        // Pas de date d'abattoir quand la vente n'est pas déclarée : l'animal passe en « morte ».
+        dateAbattoir: venteADeclarer(form) ? form.dateAbattoir : undefined,
       };
       await saveVente(nettoye);
       // Les animaux retirés de la vente redeviennent vivants ; ceux de la vente passent « vendus » à sa date.
       if (vente) {
         for (const id of idsDesAnimaux(vente)) if (!animauxForm.includes(id)) await reactiverChevre(id);
       }
-      // Les animaux vendus : « abattoir » pour une vente de viande (à la date d'abattoir), « vendus » sinon.
+      // Les animaux vendus : « abattoir » pour une vente de viande déclarée (à la date d'abattoir), « morte » si elle ne l'est pas, « vendus » sinon.
       const sortie = sortieDesAnimauxDeLaVente(nettoye);
       for (const id of animauxForm) await declarerStatutChevre(id, sortie.statut, sortie.date);
       setVente(nettoye);

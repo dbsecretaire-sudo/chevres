@@ -10,7 +10,7 @@ import type { Chevre } from '@/features/cheptel/types';
 import type { Vente } from '@/features/comptabilite/types';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { libelleAnimalVendu, roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
-import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROLE_VIANDE } from '@/shared/constants/stock';
@@ -59,7 +59,11 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
 
   if (!role) return null;
   const petits = role === ROLE_VIANDE.JEUNE;
-  const proposes = vivants.filter((a) => !ids.includes(a.id) && estPetitLe(a, form.date) === petits);
+  // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
+  const proposes = vivants.filter(
+    (a) =>
+      !ids.includes(a.id) && estPetitLe(a, form.date) === petits && !!a.numeroBoucle === venteADeclarer(form),
+  );
 
   const appliquer = (liste: Chevre[]) =>
     onChange({
@@ -100,7 +104,7 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
           ))}
         </Card>
       ) : null}
-      {ids.length > 0 && form.categorie === CATEGORIE_VENTE.VIANDE ? (
+      {ids.length > 0 && form.categorie === CATEGORIE_VENTE.VIANDE && venteADeclarer(form) ? (
         <ChampDateAbattoir
           dateVente={form.date}
           value={form.dateAbattoir}

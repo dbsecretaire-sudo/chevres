@@ -2,13 +2,23 @@ import type { Vente } from '@/features/comptabilite/types';
 import { idsDesFromages } from '@/features/comptabilite/utils/ventes';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import { plageDeBoucles } from '@/features/stock/services/boucles';
-import { cleArticle, codeFromageDeLaVente } from '@/features/stock/services/stock';
+import {
+  articlesDuGenre,
+  cleArticle,
+  codeFromageDeLaVente,
+  estLigneDuCheptel,
+  type ArticleAffiche,
+} from '@/features/stock/services/stock';
 import type { ArchiveStock, LotFromage, MouvementStock } from '@/features/stock/types';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ETAT_LOT,
   GENRE_ARTICLE,
   LOTS_MAX_PAR_FABRICATION,
   ORIGINE_MOUVEMENT,
+  PRODUIT_A_LOTS,
   TRI_LOT,
 } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -18,6 +28,24 @@ import { TEXTES } from '@/shared/textes';
 /** Vrai pour un article de l'inventaire qui est un fromage (« fromage:frais »). */
 export const estArticleFromage = (cle: string | undefined): boolean =>
   !!cle && cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`);
+
+/**
+ * Vrai pour un article dont les produits sont identifiés un par un (par lot) : les fromages, et la charcuterie (les lignes de viande
+ * ajoutées à l'inventaire, pas les animaux du cheptel).
+ */
+export const estArticleAvecLots = (cle: string | undefined): boolean =>
+  estArticleFromage(cle) || (!!cle && cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`) && !estLigneDuCheptel(cle));
+
+/** Les articles de l'inventaire d'un produit suivi par lot : les fromages, ou les lignes de charcuterie (hors cheptel). */
+export function articlesDuProduit(
+  produit: ValeurDe<typeof PRODUIT_A_LOTS>,
+  archive: ArchiveStock,
+  espece: EspeceAnimale,
+): ArticleAffiche[] {
+  return produit === PRODUIT_A_LOTS.FROMAGE
+    ? articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, espece)
+    : articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter((a) => estArticleAvecLots(a.cle));
+}
 
 /** L'état d'un lot : en stock, vendu ou rappelé (un fromage rappelé n'est plus à vendre, même s'il avait été vendu). */
 export const etatDuLot = (
@@ -34,6 +62,14 @@ export const lotsDeLInventaire = (
   (archive.lots ?? []).filter(
     (l) => (!article || l.article === article) && (etat === ETAT_LOT.TOUT || etatDuLot(l) === etat),
   );
+
+/** Les lots à rappeler : vendus (pas encore rappelés) dont le contrôle n'est pas ok. */
+export const lotsARappeler = (archive: Pick<ArchiveStock, 'lots'>, article?: string): LotFromage[] =>
+  lotsDeLInventaire(archive, ETAT_LOT.VENDU, article).filter((l) => !l.controleOk);
+
+/** Les lots rappelés dont le rappel n'est pas encore validé (fait). */
+export const lotsRappelesAValider = (archive: Pick<ArchiveStock, 'lots'>): LotFromage[] =>
+  (archive.lots ?? []).filter((l) => l.dateRappel && !l.dateRappelValide);
 
 /** Les lots triés d'après une colonne (le numéro, la date de fabrication ou la date de vente) ; les sans-date à la fin. */
 export function trierLots(
@@ -60,13 +96,27 @@ export function trierLots(
   });
 }
 
-/** Le fromage (son article de l'inventaire) d'une vente de fromage, d'après le type et le nom notés dans la vente. */
+/**
+ * Le produit identifié (son article de l'inventaire) d'une vente : le fromage d'une vente de fromage (d'après son type et son nom),
+ * ou la ligne de charcuterie d'une vente de boucherie / charcuterie (d'après son détail). Rien pour une autre vente.
+ */
 export function articleDeLaVente(
-  vente: Pick<Vente, 'typeFromage' | 'typeFromageLibre'>,
+  vente: Pick<Vente, 'categorie' | 'typeFromage' | 'typeFromageLibre' | 'precision' | 'activite'>,
   archive: ArchiveStock,
 ): string | undefined {
-  const code = codeFromageDeLaVente(vente as Vente, archive);
-  return code ? cleArticle(GENRE_ARTICLE.FROMAGE, code) : undefined;
+  if (vente.categorie === CATEGORIE_VENTE.FROMAGE) {
+    const code = codeFromageDeLaVente(vente as Vente, archive);
+    return code ? cleArticle(GENRE_ARTICLE.FROMAGE, code) : undefined;
+  }
+  if (vente.categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE && vente.precision) {
+    const espece =
+      vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
+    const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).find(
+      (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
+    );
+    return ligne && estArticleAvecLots(ligne.cle) ? ligne.cle : undefined;
+  }
+  return undefined;
 }
 
 /** Les lots qu'une vente de ce fromage peut choisir : ceux en stock, et ceux de la vente elle-même quand on la modifie. */
@@ -79,12 +129,15 @@ export const lotsAChoisir = (
     (l) => l.article === article && !l.dateRappel && (!l.venteId || l.venteId === venteId),
   );
 
-/** Vrai quand la vente d'un fromage doit désigner ses lots (le fromage en a en stock) et qu'elle n'en désigne aucun. */
+/** Vrai quand la vente d'un produit identifié doit désigner ses lots (il en a en stock) et qu'elle n'en désigne aucun. */
 export function fromagesRequis(
   archive: ArchiveStock,
-  vente: Pick<Vente, 'id' | 'categorie' | 'typeFromage' | 'typeFromageLibre' | 'fromages'>,
+  vente: Pick<
+    Vente,
+    'id' | 'categorie' | 'typeFromage' | 'typeFromageLibre' | 'precision' | 'activite' | 'fromages'
+  >,
 ): boolean {
-  if (vente.categorie !== 'fromage' || idsDesFromages(vente).length > 0) return false;
+  if (idsDesFromages(vente).length > 0) return false;
   const article = articleDeLaVente(vente, archive);
   return !!article && lotsAChoisir(archive, article, vente.id).length > 0;
 }
@@ -190,6 +243,19 @@ export function rappelerLots(ids: string[], date: string): Promise<void> {
         aRappeler.some((x) => x.id === l.id) ? { ...l, dateRappel: date } : l,
       ),
       mouvements: [...archive.mouvements, ...mouvements],
+    });
+  });
+}
+
+/** Valide le rappel d'un lot (le rappel est fait) à la date donnée. */
+export function validerRappelLot(id: string, date: string): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).map((l) =>
+        l.id === id && l.dateRappel ? { ...l, dateRappelValide: date } : l,
+      ),
     });
   });
 }

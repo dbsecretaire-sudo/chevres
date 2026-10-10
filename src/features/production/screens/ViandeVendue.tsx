@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen } from '@/shared/components/Screen';
+import { Screen } from '@/shared/components/ScreenList';
+import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
@@ -14,9 +15,10 @@ import { listToutesVentes, listVentes } from '@/features/comptabilite/repository
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import type { Vente } from '@/features/comptabilite/types';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import { CATEGORIES_VENTE_VIANDE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
+import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -24,7 +26,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.viande;
 
-/** La viande et la charcuterie vendues de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
+/** La viande vendue de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
 export default function ViandeVendue() {
   const router = useRouter();
   const { espece } = useEtablissement();
@@ -42,7 +44,7 @@ export default function ViandeVendue() {
     setVentes(
       liste.filter(
         (v) =>
-          (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie) &&
+          v.categorie === CATEGORIE_VENTE.VIANDE &&
           [espece as string, ACTIVITE_COMMUNE as string].includes(activiteVente(v)),
       ),
     );
@@ -76,7 +78,7 @@ export default function ViandeVendue() {
       <FlatList
         data={ventes}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={commonStyles.listeBloc}
+        contentContainerStyle={commonStyles.listeBlocAvecFab}
         ListEmptyComponent={<EmptyState title={T.aucune} />}
         renderItem={({ item, index }) => (
           <LigneDeBloc index={index} total={ventes.length}>
@@ -88,6 +90,16 @@ export default function ViandeVendue() {
             />
           </LigneDeBloc>
         )}
+      />
+      {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
+      <Fab
+        options={[
+          {
+            label: T.rappeler,
+            icon: 'alert-circle',
+            onPress: () => router.push(ROUTES.productionRappel(PRODUIT_A_LOTS.CHARCUTERIE)),
+          },
+        ]}
       />
     </Screen>
   );

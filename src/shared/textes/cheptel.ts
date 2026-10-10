@@ -59,13 +59,6 @@ export const TEXTES_CHEPTEL = {
     /** Les ventes déclarées dans la comptabilité : la fiche de l'animal passe en vendu. */
     vendusStock: 'Vendus (inventaire)',
     venduesStock: 'Vendues (inventaire)',
-    bouclee: 'bouclée',
-    nonBouclee: 'non bouclée',
-    boucle: 'bouclé',
-    nonBoucle: 'non bouclé',
-    priseEnCompteFeminin: '(prise en compte)',
-    priseEnCompteMasculin: '(pris en compte)',
-    pourInformation: '(pour information)',
     autoConsommation: 'Auto-consommation',
     mortNes: 'Mort-nés',
     get totalCabris() {

@@ -23,8 +23,8 @@ export const FAMILLE_CONTROLE = {
 /** Les volets proposés dans l'écran Contrôles du Cheptel, dans l'ordre (le contrôle laitier et les groupements sont dans Production). */
 export const VOLETS_CONTROLE = [FAMILLE_CONTROLE.SURFACE, FAMILLE_CONTROLE.ANIMAUX] as const;
 
-/** La nature d'un groupement, choisie à la saisie (stockée comme résultat). */
-export const NATURE_GROUPEMENT = ['adhesion', 'achat_groupe', 'action_specifique'] as const;
+/** La nature d'un contenu de groupement (la note ou la démarche qu'il range). */
+export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique'] as const;
 
 /** Les onglets de chaque volet : ses contrôles, puis ce qu'il a de plus (terrains et résumé, boucles, analyses). */
 export const ONGLETS_VOLET = {

@@ -20,5 +20,7 @@ export const TEXTES_NAVIGATION = {
     nouvelleEcriture: 'Nouvelle écriture',
     nouvelleVisite: 'Nouvelle visite',
     nouveauControle: 'Nouveau contrôle',
+    nouveauGroupement: 'Nouveau groupement',
+    modificationControle: 'Modification',
   },
 } as const;

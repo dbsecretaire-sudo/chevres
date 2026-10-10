@@ -90,7 +90,7 @@ export interface SaisieEcriture {
   jeune?: boolean;
   /** Les fiches des animaux vendus (animal sur pied ou vivant). */
   animaux: string[];
-  /** Les lots des fromages vendus (un fromage qui a des lots se vend lot par lot). */
+  /** Les lots vendus (un fromage ou une charcuterie qui a des lots se vend lot par lot). */
   fromages: string[];
   /** La date d'abattoir des animaux d'une vente de viande (vide : la date de la vente). */
   dateAbattoir?: string;
@@ -134,7 +134,10 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   // La quantité est toujours obligatoire ; celle d'une vente de viande est le nombre d'animaux choisis.
-  const lotsDeFromages = categorie === CATEGORIE_VENTE.FROMAGE ? s.fromages.length : 0;
+  const lotsDeFromages =
+    categorie === CATEGORIE_VENTE.FROMAGE || categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE
+      ? s.fromages.length
+      : 0;
   const quantiteNum =
     categorie === CATEGORIE_VENTE.VIANDE
       ? s.animaux.length || parseDecimal(s.quantite)
@@ -179,7 +182,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
       fromages: lotsDeFromages > 0 ? s.fromages.join(SEPARATEUR_ANIMAUX) : undefined,
       dateAbattoir:
-        estViande && s.animaux.length > 0 && s.dateAbattoir && s.dateAbattoir !== s.date
+        estViande && s.avecFacture && s.animaux.length > 0 && s.dateAbattoir && s.dateAbattoir !== s.date
           ? s.dateAbattoir
           : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)

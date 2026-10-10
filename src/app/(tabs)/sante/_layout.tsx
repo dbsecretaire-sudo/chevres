@@ -4,6 +4,7 @@ import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRe
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
+import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import type { FamilleControle } from '@/features/exploitation/types';
 import { TEXTES } from '@/shared/textes';
 
@@ -51,14 +52,7 @@ export default function SanteLayout() {
             ].titre,
         })}
       />
-      <Stack.Screen
-        name="controles/nouvelle"
-        options={{
-          title: TEXTES.navigation.layout.nouveauControle,
-          presentation: 'modal',
-          headerStyle: { backgroundColor: colors.ajout },
-        }}
-      />
+      <Stack.Screen name="controles/nouvelle" options={({ route }) => enteteControle(route.params)} />
     </Stack>
   );
 }

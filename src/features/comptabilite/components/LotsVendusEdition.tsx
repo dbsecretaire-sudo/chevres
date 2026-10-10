@@ -7,7 +7,7 @@ import { SelectModal } from '@/shared/components/SelectModal';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articleDeLaVente, lotsAChoisir } from '@/features/stock/services/lots';
 import type { ArchiveStock } from '@/features/stock/types';
-import type { TypeFromage } from '@/features/comptabilite/types';
+import type { Vente } from '@/features/comptabilite/types';
 import { colors } from '@/shared/theme/colors';
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -16,9 +16,9 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.comptabilite.nouvelleEcriture;
 
 interface Props {
-  typeFromage?: TypeFromage;
-  typeFromageLibre?: string;
-  /** La vente qu'on modifie : ses fromages restent proposés (ils sont à elle). */
+  /** Ce que la vente vend : un fromage (son type) ou de la charcuterie (son détail). */
+  vente: Pick<Vente, 'categorie' | 'typeFromage' | 'typeFromageLibre' | 'precision' | 'activite'>;
+  /** La vente qu'on modifie : ses lots restent proposés (ils sont à elle). */
   venteId?: string;
   /** Les lots vendus. */
   ids: string[];
@@ -26,11 +26,11 @@ interface Props {
 }
 
 /**
- * Les fromages d'une vente de fromage, désignés un par un par leur numéro de lot (comme les animaux d'une vente d'animaux) quand
- * le stock de ce fromage a des lots : obligatoires (étoile rouge), on en ajoute avec le + et on en retire avec la croix. Le
- * nombre de fromages de la vente est leur nombre. Rien quand le fromage n'a pas de lot en stock.
+ * Les produits d'une vente de fromage ou de charcuterie, désignés un par un par leur numéro de lot (comme les animaux d'une vente
+ * d'animaux) quand le stock de ce produit a des lots : obligatoires (étoile rouge), on en ajoute avec le + et on en retire avec la
+ * croix. Le nombre de produits de la vente est leur nombre. Rien quand le produit n'a pas de lot en stock.
  */
-export function FromagesVendusEdition({ typeFromage, typeFromageLibre, venteId, ids, onChange }: Props) {
+export function LotsVendusEdition({ vente, venteId, ids, onChange }: Props) {
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [ouvert, setOuvert] = useState(false);
 
@@ -40,7 +40,7 @@ export function FromagesVendusEdition({ typeFromage, typeFromageLibre, venteId, 
     }, []),
   );
 
-  const article = archive ? articleDeLaVente({ typeFromage, typeFromageLibre }, archive) : undefined;
+  const article = archive ? articleDeLaVente(vente, archive) : undefined;
   const lots = archive && article ? lotsAChoisir(archive, article, venteId) : [];
   const choisis = lots.filter((l) => ids.includes(l.id));
   const proposes = lots.filter((l) => !ids.includes(l.id));
@@ -51,13 +51,13 @@ export function FromagesVendusEdition({ typeFromage, typeFromageLibre, venteId, 
     <View style={commonStyles.gap6}>
       <View style={commonStyles.rowSpaceBetween}>
         <Text style={commonStyles.lineSemiBold}>
-          {T.fromagesVendus}
+          {T.lotsVendus}
           <Text style={commonStyles.required}> *</Text>
         </Text>
         <Pressable
           style={commonStyles.boutonPastille}
           onPress={() => setOuvert(true)}
-          accessibilityLabel={T.ajouterUnFromage}
+          accessibilityLabel={T.ajouterUnLot}
         >
           <Ionicons name="add-circle" size={28} color={colors.ajout} />
         </Pressable>
@@ -72,7 +72,7 @@ export function FromagesVendusEdition({ typeFromage, typeFromageLibre, venteId, 
               <Pressable
                 onPress={() => onChange(ids.filter((id) => id !== lot.id))}
                 hitSlop={8}
-                accessibilityLabel={T.retirerFromage}
+                accessibilityLabel={T.retirerLot}
               >
                 <Ionicons name="close-circle" size={22} color={colors.danger} />
               </Pressable>
@@ -82,7 +82,7 @@ export function FromagesVendusEdition({ typeFromage, typeFromageLibre, venteId, 
       ) : null}
       <SelectModal<string>
         visible={ouvert}
-        titre={T.fromageVendu}
+        titre={T.lotVendu}
         value=""
         options={proposes.map((l) => ({
           value: l.id,

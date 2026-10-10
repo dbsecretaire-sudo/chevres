@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
@@ -9,10 +9,15 @@ import { SelectField } from '@/shared/components/SelectField';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle } from '@/features/stock/services/boucles';
-import { erreurFabrication, fabriquerFromages, numeroSuivant } from '@/features/stock/services/lots';
-import { articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
+import {
+  articlesDuProduit,
+  erreurFabrication,
+  fabriquerFromages,
+  numeroSuivant,
+} from '@/features/stock/services/lots';
+import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
-import { GENRE_ARTICLE } from '@/shared/constants/stock';
+import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { colors } from '@/shared/theme/colors';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -21,12 +26,17 @@ import { todayISO } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-const T = TEXTES.production.fabrication;
-
-/** La fabrication de fromages : un lot par fromage, numérotés à la suite du premier, qui entrent au stock (avec les litres de lait). */
+/**
+ * La fabrication de fromages ou de charcuterie (paramètre `produit`) : un lot par produit, numérotés à la suite du premier, qui
+ * entrent au stock (avec les litres de lait pour un fromage).
+ */
 export default function FabricationFromage() {
   useAjoutTabBarBleu();
   const router = useRouter();
+  const { produit: param } = useLocalSearchParams<{ produit?: string }>();
+  const produit = param === PRODUIT_A_LOTS.CHARCUTERIE ? PRODUIT_A_LOTS.CHARCUTERIE : PRODUIT_A_LOTS.FROMAGE;
+  const fromage = produit === PRODUIT_A_LOTS.FROMAGE;
+  const T = fromage ? TEXTES.production.fabrication : TEXTES.production.fabricationCharcuterie;
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
@@ -39,7 +49,7 @@ export default function FabricationFromage() {
 
   useEffect(() => {
     lireArchiveStock().then((a) => {
-      const proposes = articlesDuGenre(GENRE_ARTICLE.FROMAGE, a, espece);
+      const proposes = articlesDuProduit(produit, a, espece);
       setArchive(a);
       setArticles(proposes);
       if (proposes[0]) {
@@ -47,7 +57,7 @@ export default function FabricationFromage() {
         setPremier(numeroSuivant(a, proposes[0].cle));
       }
     });
-  }, [espece]);
+  }, [espece, produit]);
 
   const choisirArticle = (cle: string) => {
     setArticle(cle);
@@ -68,7 +78,7 @@ export default function FabricationFromage() {
         date,
         quantite: nombre,
         debut: premier,
-        litres: litres.trim() ? parseDecimal(litres) : undefined,
+        litres: fromage && litres.trim() ? parseDecimal(litres) : undefined,
       });
       router.back();
     } finally {
@@ -96,13 +106,15 @@ export default function FabricationFromage() {
         />
         <FormField label={T.premier} required value={premier} onChangeText={(v) => setPremier(v.trim())} />
         <Text style={commonStyles.note}>{dernier ? T.dernier(dernier) : T.premierAide}</Text>
-        <FormField
-          label={T.litres}
-          value={litres}
-          onChangeText={setLitres}
-          keyboardType="decimal-pad"
-          placeholder="0"
-        />
+        {fromage ? (
+          <FormField
+            label={TEXTES.production.fabrication.litres}
+            value={litres}
+            onChangeText={setLitres}
+            keyboardType="decimal-pad"
+            placeholder="0"
+          />
+        ) : null}
         <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
       </Screen>
     </AccentColorProvider>

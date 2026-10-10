@@ -66,7 +66,11 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             <Checkbox
               label={TEXTES.comptabilite.nouvelleEcriture.declarerLaVente}
               value={e.avecFacture}
-              onChange={e.setAvecFacture}
+              onChange={(declaree) => {
+                e.setAvecFacture(declaree);
+                // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
+                e.setAnimaux([]);
+              }}
             />
             {/* Une vente déclarée a un numéro de facture. */}
             {e.avecFacture ? (

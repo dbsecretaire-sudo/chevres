@@ -164,7 +164,9 @@ export function VenteFormulaire({
             onChange({
               ...form,
               precision,
-              ...(precision !== form.precision ? { animaux: undefined, jeune: undefined } : {}),
+              ...(precision !== form.precision
+                ? { animaux: undefined, jeune: undefined, fromages: undefined }
+                : {}),
             })
           }
           options={detailsVente}
@@ -260,6 +262,9 @@ export function VenteFormulaire({
           onChange({
             ...form,
             choixFacture: declaree ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
+            // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
+            animaux: undefined,
+            jeune: undefined,
           })
         }
       />

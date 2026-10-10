@@ -89,6 +89,12 @@ export const ETAT_BOUCLE = {
   NON_POSEE: 'non_posee',
 } as const;
 
+/** Les produits suivis lot par lot, dans l'onglet Production (paramètre `produit` des écrans). */
+export const PRODUIT_A_LOTS = {
+  FROMAGE: 'fromage',
+  CHARCUTERIE: 'charcuterie',
+} as const;
+
 /** Le filtre des lots de fromage de l'inventaire : tous, ceux en stock, ceux vendus, ou ceux rappelés. */
 export const ETAT_LOT = {
   TOUT: 'tout',

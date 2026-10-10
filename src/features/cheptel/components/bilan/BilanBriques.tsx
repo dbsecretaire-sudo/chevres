@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import type { AnimalVenduBilan, DateEtNombre } from '@/features/cheptel/services/bilanCheptel';
+import type { DateEtNombre } from '@/features/cheptel/services/bilanCheptel';
 import { formatDateFR } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -31,21 +31,6 @@ export function DatesAbattoir({ dates }: { dates: DateEtNombre[] }) {
         <View key={d.date} style={styles.ligneDateAbattoir}>
           <Text style={commonStyles.caption}>{formatDateFR(d.date)}</Text>
           <Text style={styles.dateAbattoirNombre}>{d.nombre}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-/** Les animaux vendus sous une ligne : la date de la vente à gauche, l'animal (boucle, M ou F, naissance) à droite. */
-export function AnimauxVendus({ animaux }: { animaux: AnimalVenduBilan[] }) {
-  if (animaux.length === 0) return null;
-  return (
-    <View style={styles.datesAbattoir}>
-      {animaux.map((a, i) => (
-        <View key={`${a.date}:${i}`} style={styles.ligneDateAbattoir}>
-          <Text style={commonStyles.caption}>{formatDateFR(a.date)}</Text>
-          <Text style={styles.animalVendu}>{a.libelle}</Text>
         </View>
       ))}
     </View>

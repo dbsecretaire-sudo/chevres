@@ -2,6 +2,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FiltresLots, TableauLots } from '@/features/stock/components/TableauLots';
 import { useListeLots } from '@/features/stock/hooks/useListeLots';
+import { estArticleFromage } from '@/features/stock/services/lots';
 import type { LotFromage } from '@/features/stock/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -30,7 +31,11 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onFermer}>
       <Pressable style={commonStyles.backdrop} onPress={onFermer}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <Text style={commonStyles.subheading}>{T.titre(article?.libelle ?? '')}</Text>
+          <Text style={commonStyles.subheading}>
+            {estArticleFromage(article?.cle)
+              ? T.titreFromage(article?.libelle ?? '')
+              : T.titre(article?.libelle ?? '')}
+          </Text>
           {article ? (
             <View style={commonStyles.gap10}>
               <FiltresLots liste={liste} />

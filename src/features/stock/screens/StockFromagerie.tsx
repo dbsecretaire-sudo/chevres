@@ -26,7 +26,7 @@ import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
 import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesModal';
 import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
-import { estArticleFromage, lotsDeLInventaire } from '@/features/stock/services/lots';
+import { estArticleAvecLots, lotsDeLInventaire } from '@/features/stock/services/lots';
 import { Button } from '@/shared/components/Button';
 import { bouclesDuCheptelAReprendre, reprendreLesBouclesDuCheptel } from '@/features/stock/services/boucles';
 import { JournalLait } from '@/features/stock/components/JournalLait';
@@ -247,7 +247,7 @@ export default function StockFromagerie() {
         onPress={
           estLigneDuCheptel(a.cle)
             ? undefined
-            : estArticleFromage(a.cle)
+            : estArticleAvecLots(a.cle)
               ? () => {
                   setFromageOuvert(a);
                   setFromageVisible(true);
@@ -385,13 +385,17 @@ export default function StockFromagerie() {
 
   const renommer = async (nom: string, prix?: number) => {
     if (renomme) {
-      await renommerArticle(renomme.cle, nom);
+      if (nom) await renommerArticle(renomme.cle, nom);
       // Seuls les fromages et les viandes se vendent : eux seuls ont un prix.
       if (seVend(renomme.cle)) await definirPrixArticle(renomme.cle, prix);
     }
     setRenomme(null);
     charger();
   };
+
+  /** Vrai quand le crayon modifie un fromage ou une viande (produit fini ou animal) : on n'y change que le prix. */
+  const produitFiniModifie =
+    !!renomme && [GENRE_ARTICLE.FROMAGE, GENRE_ARTICLE.VIANDE].some((g) => renomme.cle.startsWith(`${g}:`));
 
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
   const basculerCategorie = (categorie: string) =>
@@ -400,7 +404,9 @@ export default function StockFromagerie() {
   /** Ce que le bouton « + » propose : un ajout pour chaque liste des catégories déroulées (toutes si aucune ne l'est). */
   const optionsAjout = sectionsVisibles
     .filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie))
-    .filter((x) => x.section !== SECTION_STOCK.ANIMAUX)
+    // Les fromages et la viande (produits finis et produits animaux) entrent par la Production et sortent par les ventes : on n'en
+    // ajoute pas ici.
+    .filter((x) => x.genre !== GENRE_ARTICLE.FROMAGE && x.genre !== GENRE_ARTICLE.VIANDE)
     .map(({ section, genre }) =>
       genre === GENRE_ARTICLE.BOUCLE
         ? null
@@ -679,16 +685,28 @@ export default function StockFromagerie() {
       />
       <ArticleStockModal
         visible={!!renomme}
-        titre={T.renommer.titre}
+        titre={produitFiniModifie ? (renomme?.libelle ?? '') : T.renommer.titre}
         nom={renomme?.libelle}
         prix={renomme?.prix}
         avecPrix={!!renomme && seVend(renomme.cle)}
         parKg={!!renomme && roleDeLaViande(renomme.cle) !== undefined}
+        // Un produit fini ou animal : seul son prix de vente se modifie (ni nom, ni suppression).
+        libellePrix={
+          produitFiniModifie
+            ? renomme && roleDeLaViande(renomme.cle)
+              ? T.articleModal.prixKg
+              : T.articleModal.prix
+            : undefined
+        }
         onValider={renommer}
-        onSupprimer={() => {
-          setASupprimer(renomme);
-          setRenomme(null);
-        }}
+        onSupprimer={
+          produitFiniModifie
+            ? undefined
+            : () => {
+                setASupprimer(renomme);
+                setRenomme(null);
+              }
+        }
         onAnnuler={() => setRenomme(null)}
       />
       <ConfirmModal

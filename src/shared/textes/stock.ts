@@ -165,7 +165,8 @@ export const TEXTES_STOCK = {
   },
   /** Les fromages identifiés par lot : une ligne par fromage, fabriqué, vendu ou rappelé. */
   lots: {
-    titre: (nom: string) => `Inventaire : Fromage ${nom}`,
+    titre: (nom: string) => `Inventaire : ${nom}`,
+    titreFromage: (nom: string) => `Inventaire : Fromage ${nom}`,
     etat: { tout: 'Tout', en_stock: 'En stock', vendu: 'Vendu', rappele: 'Rappelé' },
     colonnes: { numero: 'N° lot', fabrication: 'Date fabrication', vente: 'Date vente' },
     controle: 'Contrôle ok ?',
@@ -176,7 +177,7 @@ export const TEXTES_STOCK = {
     rappele: 'Rappelé',
     /** Rappel : l'inventaire des fromages ne se modifie pas à la main. */
     rappel:
-      'Les ajouts et les suppressions des fromages se font dans Comptabilité (suppression par vente), et dans Production › Fromages (ajout par fabrication, rappels).',
+      'Les ajouts et les suppressions se font dans Comptabilité (suppression par vente), et dans Production (ajout par fabrication, rappels).',
     ok: 'OK',
     /** Les fromages en stock saisis avant le suivi par lot : ils n'ont pas de numéro. */
     sansLot: (nombre: number) =>
@@ -266,10 +267,15 @@ export const TEXTES_STOCK = {
   renommer: { titre: 'Modifier le nom', modifier: 'Modifier le nom de l’article' },
   conditionnement: {
     titre: 'Conditionnement',
-    aide: 'À chaque vente d’un fromage, le fromage et ses emballages baissent tout seul.',
+    aide: 'À chaque vente d’un fromage ou d’un produit, le produit et ses emballages baissent tout seul.',
     aucun: 'Aucun emballage',
     modifier: 'Modifier le conditionnement',
-    choisirLesEmballages: 'Emballages consommés par fromage vendu :',
+    choisirLesEmballages: 'Emballages consommés par produit vendu :',
+    /** L'ajout du conditionnement d'un autre élément de l'inventaire (produits finis, produits animaux). */
+    ajouter: 'Ajouter un conditionnement',
+    element: 'Élément de l’inventaire',
+    tousAjoutes: 'Tous les éléments de l’inventaire ont déjà leur conditionnement.',
+    retirer: 'Retirer ce conditionnement',
   },
   vente: 'vente',
   manuel: 'saisie',

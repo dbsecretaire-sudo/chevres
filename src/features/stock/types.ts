@@ -107,6 +107,8 @@ export interface LotFromage {
   venteId?: string;
   /** Rappelé : la date du rappel. Un fromage rappelé n'est plus au stock. */
   dateRappel?: string;
+  /** Le rappel est validé (fait) : la date de la validation. */
+  dateRappelValide?: string;
   /** Le contrôle du fromage est bon. */
   controleOk?: boolean;
 }

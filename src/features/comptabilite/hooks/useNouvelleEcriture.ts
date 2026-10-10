@@ -66,6 +66,7 @@ import {
   CATEGORIES_DEPENSE_ENTREPRISE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
+  CATEGORIE_VENTE,
   POURCENTAGE_MIN,
   TAUX_TVA_ACHAT_DEFAUT,
   TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT,
@@ -393,19 +394,25 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
           }
         }
       }
-      // Un fromage qui a des lots en stock se vend lot par lot : on les désigne.
+      // Un fromage ou une charcuterie qui a des lots en stock se vend lot par lot : on les désigne.
       if (
         estProductionVente &&
-        categorieRecette === CATEGORIE_RECETTE.FROMAGE &&
+        (categorieRecette === CATEGORIE_RECETTE.FROMAGE ||
+          categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) &&
         fromagesRequis(await lireArchiveStock(), {
           id: '',
-          categorie: 'fromage',
+          categorie:
+            categorieRecette === CATEGORIE_RECETTE.FROMAGE
+              ? CATEGORIE_VENTE.FROMAGE
+              : CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
           typeFromage,
           typeFromageLibre,
+          precision,
+          activite,
           fromages: fromages.join(';'),
         })
       ) {
-        setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.fromagesRequis });
+        setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.lotsRequis });
         return;
       }
       const resultat = construireEcriture({
@@ -462,7 +469,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
       }
       if ('vente' in resultat) {
         const vente = await enregistrerVente(resultat.vente);
-        // Les animaux vendus quittent le cheptel : leur fiche passe en « abattoir » (vente de viande, à la date d'abattoir) ou en « vendue ».
+        // Les animaux vendus quittent le cheptel : leur fiche passe en « abattoir » (vente de viande déclarée, à la date d'abattoir), en « morte » (non déclarée) ou en « vendue ».
         const sortie = sortieDesAnimauxDeLaVente(vente);
         for (const id of idsDesAnimaux(vente)) await declarerStatutChevre(id, sortie.statut, sortie.date);
       } else {

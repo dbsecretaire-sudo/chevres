@@ -1,7 +1,6 @@
 /** Textes de l'interface — « rappels » de déclarations. À modifier ici uniquement. */
 export const TEXTES_RAPPELS = {
   titre: 'Rappels',
-  titreFiscalite: 'À valider',
   aucun: 'Rien à valider pour le moment.',
   genre: {
     rsa: 'Déclaration RSA',
@@ -17,6 +16,17 @@ export const TEXTES_RAPPELS = {
     aucun: 'Aucun rappel validé pour le moment.',
     valide: 'Validé',
     rouvrir: 'Remettre à valider',
+  },
+  /** Les lots vendus dont le contrôle n'est pas ok : à rappeler (ligne du bloc de l'accueil). */
+  lots: {
+    libelle: (n: number) => `${n} lot${n > 1 ? 's' : ''} à rappeler`,
+    detail: 'Vendus, contrôle non ok : ouvrir les rappels de lots',
+    /** Un rappel de lot lancé, à valider quand il est fait. */
+    rappel: (lot: string) => `Rappel de lot · ${lot}`,
+    rappele: (date: string) => `Rappelé le ${date}`,
+    validerQuestion: (lot: string) => `Valider le rappel du lot ${lot} ?`,
+    validerMessage: 'Le rappel sera marqué comme fait.',
+    valider: 'Valider',
   },
   validerLeRappel: 'Marquer comme fait',
   reglages: {

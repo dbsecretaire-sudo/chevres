@@ -25,7 +25,7 @@ import { colors } from '@/shared/theme/colors';
 import { estPetitLe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
 import { libelleAnimalVendu } from '@/features/comptabilite/utils/animauxVendus';
 import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
-import { FromagesVendusEdition } from '@/features/comptabilite/components/FromagesVendusEdition';
+import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import type { Chevre } from '@/features/cheptel/types';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -34,7 +34,7 @@ import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouv
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { TypeAide } from '@/features/comptabilite/types';
 import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
-import { CATEGORIE_RECETTE, TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_RECETTE, CATEGORIE_VENTE, TYPE_AIDE, TYPE_FROMAGE } from '@/shared/constants/comptabilite';
 import {
   fromageAjouteChoisi,
   optionsFromages,
@@ -238,9 +238,13 @@ export function ChampsVenteFromage({ e }: Props) {
         />
       )}
       {/* Un fromage qui a des lots se vend lot par lot : le nombre de fromages est celui des lots choisis. */}
-      <FromagesVendusEdition
-        typeFromage={e.typeFromage}
-        typeFromageLibre={e.typeFromageLibre}
+      <LotsVendusEdition
+        vente={{
+          categorie: CATEGORIE_VENTE.FROMAGE,
+          typeFromage: e.typeFromage,
+          typeFromageLibre: e.typeFromageLibre,
+          activite: e.activite,
+        }}
         ids={e.fromages}
         onChange={(ids) => {
           e.setFromages(ids);
@@ -394,6 +398,8 @@ export function ChampsVenteViande({ e }: Props) {
   const animauxProposes = animaux.filter(
     (a) =>
       !e.animaux.includes(a.id) &&
+      // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
+      !!a.numeroBoucle === e.avecFacture &&
       (!lignePetits || estPetit(a)) &&
       (!ligneAdultes || !estPetit(a)) &&
       (animauxChoisis.length === 0 || estPetit(a) === estPetit(animauxChoisis[0])),
@@ -445,8 +451,9 @@ export function ChampsVenteViande({ e }: Props) {
           if (role) totalAuKilo(e.poidsKg, nouvelle?.prix);
           if (role) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
-          // Un autre détail : les animaux déjà choisis ne valent plus.
+          // Un autre détail : les animaux et les lots déjà choisis ne valent plus.
           e.setAnimaux([]);
+          e.setFromages([]);
         }}
         options={viandes.map((v) => ({ value: v.libelle, label: v.libelle }))}
         onEdit={() =>
@@ -495,7 +502,7 @@ export function ChampsVenteViande({ e }: Props) {
                   ))}
                 </Card>
               ) : null}
-              {animauxChoisis.length > 0 ? (
+              {animauxChoisis.length > 0 && e.avecFacture ? (
                 <ChampDateAbattoir dateVente={e.date} value={e.dateAbattoir} onChange={e.setDateAbattoir} />
               ) : null}
               <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.animauxNote}</Text>
@@ -545,29 +552,45 @@ export function ChampsVenteViande({ e }: Props) {
           />
         </>
       ) : (
-        <View style={styles.row3}>
-          <View style={commonStyles.flex1}>
-            <FormField
-              label={TEXTES.commun.general.quantite}
-              required
-              value={e.quantite}
-              onChangeText={e.setQuantite}
-              keyboardType="decimal-pad"
-              placeholder="1"
-            />
+        <>
+          {/* La charcuterie est identifiée lot par lot : le nombre de produits est celui des lots choisis. */}
+          <LotsVendusEdition
+            vente={{
+              categorie: CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+              precision: e.precision,
+              activite: e.activite,
+            }}
+            ids={e.fromages}
+            onChange={(ids) => {
+              e.setFromages(ids);
+              if (ids.length > 0) e.setQuantite(String(ids.length));
+            }}
+          />
+          <View style={styles.row3}>
+            <View style={commonStyles.flex1}>
+              <FormField
+                label={TEXTES.commun.general.quantite}
+                required
+                value={e.quantite}
+                onChangeText={e.setQuantite}
+                editable={e.fromages.length === 0}
+                keyboardType="decimal-pad"
+                placeholder="1"
+              />
+            </View>
+            <View style={commonStyles.flex1}>
+              <ChampMontantTtc
+                label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
+                value={e.montant}
+                onChange={e.setMontant}
+                editable={false}
+              />
+            </View>
+            <View style={commonStyles.flex1}>
+              <ChampTauxTvaVente e={e} />
+            </View>
           </View>
-          <View style={commonStyles.flex1}>
-            <ChampMontantTtc
-              label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
-              value={e.montant}
-              onChange={e.setMontant}
-              editable={false}
-            />
-          </View>
-          <View style={commonStyles.flex1}>
-            <ChampTauxTvaVente e={e} />
-          </View>
-        </View>
+        </>
       )}
       {choisie && !prixDuDetail ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}</Text>

@@ -2,8 +2,14 @@ import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
+import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import type { FamilleControle } from '@/features/exploitation/types';
+import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
+
+/** Vrai quand l'écran s'ouvre pour la charcuterie (paramètre `produit`) plutôt que pour les fromages. */
+const charcuterie = (params: object | undefined): boolean =>
+  (params as { produit?: string } | undefined)?.produit === PRODUIT_A_LOTS.CHARCUTERIE;
 
 export default function ProductionLayout() {
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
@@ -11,7 +17,7 @@ export default function ProductionLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'fromages', 'controles/liste')}
+      screenLayout={ecranParEspeceSauf('index', 'fromages', 'charcuterie', 'rappels-lots', 'controles/liste')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -20,22 +26,28 @@ export default function ProductionLayout() {
     >
       <Stack.Screen name="index" options={{ title: TEXTES.production.titre }} />
       <Stack.Screen name="fromages" options={{ title: TEXTES.production.fromages.titre }} />
+      <Stack.Screen name="charcuterie" options={{ title: TEXTES.production.charcuterie.titre }} />
       <Stack.Screen
         name="fabrication"
-        options={{
-          title: TEXTES.production.fabrication.titre,
+        options={({ route }) => ({
+          title: charcuterie(route.params)
+            ? TEXTES.production.fabricationCharcuterie.titre
+            : TEXTES.production.fabrication.titre,
           presentation: 'modal',
           headerStyle: { backgroundColor: colors.ajout },
-        }}
+        })}
       />
       <Stack.Screen
         name="rappel"
-        options={{
-          title: TEXTES.production.rappel.titre,
+        options={({ route }) => ({
+          title: charcuterie(route.params)
+            ? TEXTES.production.rappelCharcuterie.titre
+            : TEXTES.production.rappel.titre,
           presentation: 'modal',
           headerStyle: { backgroundColor: colors.ajout },
-        }}
+        })}
       />
+      <Stack.Screen name="rappels-lots" options={{ title: TEXTES.production.rappelsLots.titre }} />
       <Stack.Screen name="viande" options={{ title: TEXTES.production.viande.titre }} />
       <Stack.Screen name="statistiques" options={{ title: TEXTES.stock.statistiques.titre }} />
       <Stack.Screen
@@ -47,14 +59,7 @@ export default function ProductionLayout() {
             ].titre,
         })}
       />
-      <Stack.Screen
-        name="controles/nouvelle"
-        options={{
-          title: TEXTES.navigation.layout.nouveauControle,
-          presentation: 'modal',
-          headerStyle: { backgroundColor: colors.ajout },
-        }}
-      />
+      <Stack.Screen name="controles/nouvelle" options={({ route }) => enteteControle(route.params)} />
       <Stack.Screen name="controles/groupement" />
       <Stack.Screen name="controles/contenu" />
     </Stack>

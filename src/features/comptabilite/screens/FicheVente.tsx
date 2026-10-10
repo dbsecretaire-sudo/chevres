@@ -12,7 +12,7 @@ import { VenteFormulaire } from '@/features/comptabilite/components/VenteFormula
 import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
 import { AnimauxDeLaVente } from '@/features/comptabilite/components/AnimauxDeLaVente';
 import { AnimauxVendusEdition } from '@/features/comptabilite/components/AnimauxVendusEdition';
-import { FromagesVendusEdition } from '@/features/comptabilite/components/FromagesVendusEdition';
+import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -93,10 +93,9 @@ export default function FicheVente() {
         {fiche.editing ? (
           <>
             <AnimauxVendusEdition form={form} onChange={fiche.setForm} />
-            {/* Les fromages d'une vente, désignés par leur n° de lot quand le fromage en a. */}
-            <FromagesVendusEdition
-              typeFromage={form.typeFromage}
-              typeFromageLibre={form.typeFromageLibre}
+            {/* Les fromages et la charcuterie d'une vente, désignés par leur n° de lot quand le produit en a. */}
+            <LotsVendusEdition
+              vente={form}
               venteId={form.id}
               ids={idsDesFromages(form)}
               onChange={(ids) =>
