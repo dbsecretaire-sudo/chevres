@@ -40,6 +40,3 @@ export const VERSION_SAUVEGARDE = 1;
 export const NOM_FICHIER_SAUVEGARDE = 'troupeau_chevres_sauvegarde';
 export const NOM_FICHIER_SAUVEGARDE_ENTREPRISE = 'entreprise_sauvegarde';
 export const EXTENSION_SAUVEGARDE = 'json';
-
-/** Classe CSS qui force un saut de page dans les rapports PDF. */
-export const CLASSE_CSS_SAUT_PAGE = 'page-break';

@@ -11,7 +11,6 @@ export const TEXTES_COMMUN = {
     separateurListe: ', ',
     informationsDeLExploitation: 'Informations de l’exploitation',
     informationsDeLEntreprise: 'Informations de l’entreprise',
-    balance: 'Balance',
     nonRenseigne: 'Non renseigné',
     cheptel: 'Cheptel',
     comptabilite: 'Comptabilité',

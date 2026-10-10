@@ -11,7 +11,6 @@ const baseControles = (famille: string): string =>
 
 export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
-  BALANCE: '/balance',
   RAPPELS_HISTORIQUE: '/rappels-historique',
   REGLAGES: '/reglages',
 
@@ -127,7 +126,6 @@ export const ROUTES = {
   /** L'historique du stock, ouvert sur un animal (ou sur tous quand `espece` est absent). */
   stockHistorique: (espece?: string) =>
     `/stock/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
-  jourEcheances: (date: string) => `/clients/echeances/${date}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,
   sejourNouveau: (chambre: number, date: string) =>
     `/clients/gite/sejour/nouveau?chambre=${chambre}&date=${date}` as const,

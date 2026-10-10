@@ -124,11 +124,6 @@ export const TEXTES_DOSSIERS = {
     resume: (aFaire: number, enCours: number, termine: number, enRetard: number) =>
       `${aFaire} à faire · ${enCours} en cours · ${termine} terminé(s)${enRetard > 0 ? ` · ${enRetard} en retard` : ''}`,
   },
-  echeances: {
-    titre: (date: string) => `Tâches du ${date}`,
-    aucune: 'Aucune tâche ce jour-là',
-    aucuneDetail: 'Les contenus avec une échéance à cette date apparaissent ici.',
-  },
   structure: {
     titre: 'Structure des dossiers',
     aide: 'Ces dossiers sont créés dans le dossier de chaque nouveau client. Les dossiers déjà créés ne changent pas.',

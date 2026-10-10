@@ -183,15 +183,6 @@ export default function TabsLayout() {
           headerLeft: () => <HeaderBackTo to="/" />,
         }}
       />
-      <Tabs.Screen
-        name="balance"
-        options={{
-          href: null,
-          title: TEXTES.commun.general.balance,
-          // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
-          headerLeft: () => <HeaderBackTo to="/" />,
-        }}
-      />
       {/* Les pages de l'organisation : une par rubrique, puis les écrans de chaque rubrique (la flèche remonte d'un niveau). */}
       {[
         ['organisation-etablissement', TEXTES.settings.reglages.sectionEtablissement, ROUTES.REGLAGES],

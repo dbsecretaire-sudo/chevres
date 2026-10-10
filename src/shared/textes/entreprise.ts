@@ -121,7 +121,6 @@ export const TEXTES_ENTREPRISE = {
       solde: (annee: number) => `Solde ${annee}`,
       recettes: 'Recettes',
       depenses: 'Dépenses',
-      horsAutre: 'Hors recettes et dépenses classées « Autre ».',
       parMois: 'Solde mois par mois',
     },
   },

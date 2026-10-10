@@ -15,7 +15,6 @@ export const TEXTES_COMPTABILITE = {
     noteDeclaration:
       'Pour votre déclaration, utilisez « Tout » : un cheptel ou « Commun » ne représente qu’une partie de vos recettes.',
   },
-  comptabiliteHeaderMenu: {},
   factureLecture: {
     reservationLieeDeuxPoints: 'Réservation liée : ',
     typeDeuxPoints: 'Type : ',

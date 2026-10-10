@@ -1,7 +1,6 @@
 /** Textes de l'interface — « à traiter ». À modifier ici uniquement. */
 export const TEXTES_A_TRAITER = {
   titre: 'À traiter',
-  rienATraiter: 'Rien à traiter pour le moment.',
   /** Le total, sous le titre de l'écran d'accueil. */
   resume: (n: number) => `${n} à traiter`,
   /** Le logo d'un établissement qui a des choses à traiter : un appui les affiche ou les masque. */
