@@ -1,0 +1,87 @@
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Button } from '@/shared/components/Button';
+import { formaterUgb, type LignePrime } from '@/features/cheptel/services/ugb';
+import { ROUTES } from '@/shared/constants/routes';
+import { formatMontant } from '@/shared/utils/dates';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.cheptel.bilanAnnuel.effectifEtUgb.detail;
+const P = TEXTES.cheptel.ugbPrimes;
+
+interface Props {
+  visible: boolean;
+  onFermer: () => void;
+  effectif: { petits: number; sevres: number };
+  coefficients: { adulte: number; petit: number };
+  ugb: number;
+  hectares: number;
+  lignes: LignePrime[];
+  total: number;
+}
+
+/**
+ * Le détail du calcul de l'UGB prévisionnel (animaux sevrés et petits, avec leurs coefficients) et de la prime prévisionnelle (chaque
+ * prime cochée : quantité × montant), avec un accès aux réglages d'Organisation › Cheptel.
+ */
+export function DetailUgbPrimes({
+  visible,
+  onFermer,
+  effectif,
+  coefficients,
+  ugb,
+  hectares,
+  lignes,
+  total,
+}: Props) {
+  const router = useRouter();
+  const coef = (n: number) => String(n).replace('.', ',');
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onFermer}>
+      <Pressable style={commonStyles.backdrop} onPress={onFermer}>
+        <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
+          <Text style={commonStyles.subheading}>{T.titre}</Text>
+          <ScrollView style={commonStyles.listeDeFenetre} contentContainerStyle={commonStyles.gap10}>
+            <View style={commonStyles.gap2}>
+              <Text style={commonStyles.line}>{T.sevres(effectif.sevres, coef(coefficients.adulte))}</Text>
+              {effectif.petits > 0 || coefficients.petit > 0 ? (
+                <Text style={commonStyles.line}>{T.petits(effectif.petits, coef(coefficients.petit))}</Text>
+              ) : null}
+              <Text style={commonStyles.lineBold}>{T.ugb(formaterUgb(ugb))}</Text>
+              <Text style={commonStyles.note}>{T.hectares(coef(hectares))}</Text>
+            </View>
+            {lignes.length === 0 ? (
+              <Text style={commonStyles.mutedItalic}>{T.aucunePrime}</Text>
+            ) : (
+              <View style={commonStyles.gap6}>
+                {lignes.map((l) => (
+                  <Text key={l.cle} style={commonStyles.line}>
+                    {T.ligne(
+                      l.nom,
+                      coef(l.quantite),
+                      P.unitesQuantite[l.base],
+                      formatMontant(l.taux),
+                      formatMontant(l.montant),
+                    )}
+                  </Text>
+                ))}
+                <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
+              </View>
+            )}
+            <Text style={commonStyles.mutedItalic}>{T.note}</Text>
+          </ScrollView>
+          <Button
+            variant="secondary"
+            label={T.parametrer}
+            onPress={() => {
+              onFermer();
+              router.push(ROUTES.ORGANISATION_CHEPTEL as never);
+            }}
+          />
+          <Button label={T.fermer} onPress={onFermer} />
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}

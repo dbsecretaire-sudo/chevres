@@ -196,4 +196,6 @@ export interface Vente {
   choixFacture?: TypeChoixFacture;
   /** Le numéro de la facture, obligatoire quand le client souhaite que la vente soit déclarée. */
   numeroFacture?: string;
+  /** Un réajustement (vente de lait d'un récolteur) : sans litrage ni numéro de facture saisis. */
+  reajustement?: boolean;
 }

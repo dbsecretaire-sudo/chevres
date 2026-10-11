@@ -77,3 +77,12 @@ export const LARGEUR_IMAGE_PDF = '100%';
 
 /** Les extensions de fichiers qui sont des images : on en montre un aperçu. */
 export const EXTENSIONS_IMAGE: readonly string[] = ['jpg', 'jpeg', 'png'];
+
+/** Les agrandissements de la visionneuse d'image en plein écran (1 : l'image tient dans l'écran), du plus petit au plus grand. */
+export const NIVEAUX_ZOOM_IMAGE: readonly number[] = [1, 1.5, 2, 3, 4];
+
+/** L'agrandissement qu'un double appui donne à l'image (un second double appui revient à 1). */
+export const ZOOM_DOUBLE_APPUI = 2;
+
+/** Deux appuis qui se suivent en moins de ce temps (ms) forment un double appui. */
+export const DELAI_DOUBLE_APPUI_MS = 300;

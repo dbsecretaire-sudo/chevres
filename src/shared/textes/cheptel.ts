@@ -84,13 +84,84 @@ export const TEXTES_CHEPTEL = {
     renouvellementDesignesCetteAnnee: 'Renouvellement (désignés cette année)',
     plusAnciens: 'Plus anciens',
     morts: 'Morts',
-    effectifDuTroupeau: 'Effectif du troupeau',
-    au0101Annee: (annee: number) => `Au 01/01/${annee}`,
-    effectifActuelFinAnnee: (annee: number) => `Effectif actuel / fin ${annee}`,
-    get chevresBoucsEtCabrisConfondus() {
-      return `${Cap(V().femelle.pluriel)}, ${V().male.pluriel} et ${V().petit.pluriel} confondus, vivants (ou sortis après le 31/12/`;
+    /** La carte de l'effectif : l'effectif de fin d'année, l'UGB et la prime prévisionnelle. */
+    effectifEtUgb: {
+      titre: 'Effectif et UGB prévisionnel',
+      effectifActuel: 'Effectif actuel',
+      ugbPrevisionnel: 'UGB prévisionnel',
+      primePrevisionnelle: 'Prime prévisionnelle',
+      formule: '(UGB × taux €)',
+      detail: {
+        titre: 'Calcul de l’UGB et des primes',
+        sevres: (nombre: number, coefficient: string) => `Animaux sevrés : ${nombre} × ${coefficient}`,
+        petits: (nombre: number, coefficient: string) => `Petits non sevrés : ${nombre} × ${coefficient}`,
+        ugb: (valeur: string) => `UGB prévisionnel : ${valeur}`,
+        hectares: (valeur: string) => `Hectares admissibles : ${valeur} ha`,
+        ligne: (nom: string, quantite: string, unite: string, taux: string, montant: string) =>
+          `${nom} : ${quantite} ${unite} × ${taux} = ${montant}`,
+        total: (montant: string) => `Total : ${montant}`,
+        aucunePrime:
+          'Aucune prime renseignée : cochez-les et saisissez leur montant dans Organisation › Cheptel.',
+        note: 'Une indication d’après vos coefficients et vos montants : les conditions d’éligibilité et les plafonds ne sont pas calculés.',
+        parametrer: 'Paramétrer l’UGB et les primes',
+        fermer: 'Fermer',
+      },
     },
-    dApresLesStatutsActuels: ') d’après les statuts actuels.',
+    /** « UGB actuel » du contrôle des animaux. */
+    ugbActuel: (valeur: string) => `UGB actuel : ${valeur}`,
+  },
+  /** Organisation › Cheptel : les coefficients UGB et les primes. */
+  ugbPrimes: {
+    ugbTitre: 'UGB',
+    ugbAide:
+      'L’UGB (unité de gros bétail) convertit vos animaux en une unité commune. Les coefficients proposés sont indicatifs : adaptez-les à votre notice PAC.',
+    coefAdulte: 'Coefficient par animal sevré',
+    coefPetit: 'Coefficient par petit non sevré',
+    primesTitre: 'Primes',
+    primesAide:
+      'Cochez les aides que vous touchez et saisissez leur montant : le bilan en déduit une prime prévisionnelle. Les montants changent chaque année (prenez ceux de votre notification), et les conditions (plafonds, éligibilité) ne sont pas calculées.',
+    compter: 'Compter dans la prime prévisionnelle',
+    ajouter: '+ Ajouter une aide',
+    nomAide: 'Nom de l’aide',
+    exempleNom: 'ex : Aide à l’installation',
+    renommer: 'Modifier le nom de l’aide',
+    supprimer: 'Supprimer cette aide',
+    supprimerQuestion: 'Supprimer cette aide ?',
+    supprimerMessage: 'Elle ne comptera plus dans la prime prévisionnelle.',
+    personnalisee: 'Aide ajoutée par vous : son montant se calcule comme les autres.',
+    taux: 'Montant (€)',
+    calculeSur: 'Calculé sur',
+    bases: { ugb: 'l’UGB', tete: 'l’animal sevré', hectare: 'l’hectare admissible' },
+    /** L'unité du montant (« par … ») et celle de la quantité dans le détail du calcul. */
+    unites: { ugb: 'UGB', tete: 'animal', hectare: 'hectare' },
+    unitesQuantite: { ugb: 'UGB', tete: 'animaux', hectare: 'ha' },
+    primes: {
+      dpb: {
+        court: 'DPB',
+        titre: 'Aides découplées — Paiement de base (DPB)',
+        aide: 'PAC : paiement de base, à l’hectare admissible.',
+      },
+      redistributif: {
+        court: 'Paiement redistributif',
+        titre: 'Aides découplées — Paiement redistributif',
+        aide: 'PAC : majoration sur les premiers hectares.',
+      },
+      ecoregime: {
+        court: 'Écorégime',
+        titre: 'Aides découplées — Écorégime',
+        aide: 'PAC : paiement pour les pratiques favorables à l’environnement.',
+      },
+      couplee_petits_ruminants: {
+        court: 'Aide couplée petits ruminants',
+        titre: 'Aide couplée aux petits ruminants',
+        aide: 'PAC : par brebis ou chèvre éligible.',
+      },
+      ichn: {
+        court: 'ICHN',
+        titre: 'ICHN — Indemnité compensatoire de handicaps naturels',
+        aide: 'Zones défavorisées : à l’hectare, selon le chargement en UGB.',
+      },
+    },
   },
   ficheChevre: {
     menu: 'Menu de la fiche',

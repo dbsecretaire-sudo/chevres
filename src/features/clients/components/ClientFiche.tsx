@@ -2,7 +2,10 @@ import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
+import { ChampCategorieClient } from '@/features/clients/components/ChampCategorieClient';
+import { categorieDuClient } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
+import { LABEL_CATEGORIE_CLIENT } from '@/shared/textes/libelles';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -14,6 +17,10 @@ export function ClientLecture({ client, onModifier }: { client: Client; onModifi
       <Text style={commonStyles.line}>
         {TEXTES.commun.general.nomDeuxPoints}
         {nomComplet(client)}
+      </Text>
+      <Text style={commonStyles.line}>
+        {TEXTES.clients.ficheClient.categorieDeuxPoints}
+        {LABEL_CATEGORIE_CLIENT[categorieDuClient(client)]}
       </Text>
       {client.telephone ? (
         <Text style={commonStyles.line}>
@@ -56,6 +63,10 @@ export function ClientFormulaire({ form, onChange, onAnnuler, onEnregistrer }: F
         required
         value={form.nom}
         onChangeText={(v) => onChange({ ...form, nom: v })}
+      />
+      <ChampCategorieClient
+        value={categorieDuClient(form)}
+        onChange={(categorie) => onChange({ ...form, categorie })}
       />
       <FormField
         label={TEXTES.commun.general.prenom}

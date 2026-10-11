@@ -17,6 +17,9 @@ import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/sto
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/clients/services/categorie';
+import type { Client } from '@/features/clients/types';
+import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import type { Vente } from '@/features/comptabilite/types';
 import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
@@ -53,6 +56,8 @@ function optionsProduit(vente: Vente) {
 
 interface Props {
   form: Vente;
+  /** La fiche du client de la vente : sa catégorie (récolteur) rend le prix et le numéro de facture libres. */
+  client?: Client;
   onChange: (form: Vente) => void;
   onChangerCategorie: (categorie: Vente['categorie']) => void;
   /** Texte tel que saisi pour le prix (évite de perdre la virgule en cours de frappe). */
@@ -66,6 +71,7 @@ const T = TEXTES.comptabilite.nouvelleEcriture;
 /** Formulaire de modification d'une vente de production. */
 export function VenteFormulaire({
   form,
+  client,
   onChange,
   onChangerCategorie,
   montantTexte,
@@ -98,9 +104,13 @@ export function VenteFormulaire({
       lireArchiveStock().then(setArchive);
     }, []),
   );
-  const prixInventaire = (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie);
+  const prixInventaire =
+    (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibre(client);
   const totalInventaire = archive ? totalDeLaVente(form, archive) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
+  /** Un récolteur peut cocher « Réajustement » (vente de lait déclarée) : plus de litrage ni de numéro de facture saisis. */
+  const peutReajuster = reajustementPossible(client, form.categorie, venteADeclarer(form));
+  const reajustement = peutReajuster && !!form.reajustement;
 
   return (
     <Card>
@@ -197,20 +207,22 @@ export function VenteFormulaire({
         />
       ) : (
         <View style={commonStyles.row}>
-          <View style={commonStyles.flex1}>
-            <FormField
-              label={TEXTES.commun.general.quantite}
-              required
-              value={String(form.quantite)}
-              // Des fromages désignés par leur lot : leur nombre fait la quantité.
-              editable={!form.fromages}
-              onChangeText={(valeur) =>
-                onChange({ ...form, quantite: Number(valeur.replace(',', '.')) || 0 })
-              }
-              keyboardType="decimal-pad"
-              placeholder="0"
-            />
-          </View>
+          {reajustement ? null : (
+            <View style={commonStyles.flex1}>
+              <FormField
+                label={TEXTES.commun.general.quantite}
+                required
+                value={String(form.quantite)}
+                // Des fromages désignés par leur lot : leur nombre fait la quantité.
+                editable={!form.fromages}
+                onChangeText={(valeur) =>
+                  onChange({ ...form, quantite: Number(valeur.replace(',', '.')) || 0 })
+                }
+                keyboardType="decimal-pad"
+                placeholder="0"
+              />
+            </View>
+          )}
           {estAnimal && (
             <View style={commonStyles.flex1}>
               <FormField
@@ -269,11 +281,15 @@ export function VenteFormulaire({
         }
       />
       {venteADeclarer(form) ? (
-        <FormField
-          label={T.nDeFacture}
-          required
+        <ChampNumeroFacture
           value={form.numeroFacture ?? ''}
-          onChangeText={(numeroFacture) => onChange({ ...form, numeroFacture })}
+          onChange={(numeroFacture) => onChange({ ...form, numeroFacture })}
+          libre={numeroFactureLibre(client)}
+          reajustementPossible={peutReajuster}
+          reajustement={reajustement}
+          onReajustement={(coche) =>
+            onChange({ ...form, reajustement: coche ? true : undefined, quantite: coche ? 0 : form.quantite })
+          }
         />
       ) : null}
 

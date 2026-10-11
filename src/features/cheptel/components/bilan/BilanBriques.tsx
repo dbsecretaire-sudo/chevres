@@ -72,7 +72,7 @@ export function TitreCarte({
   onBasculer,
 }: {
   titre: string;
-  valeur: number;
+  valeur?: number;
   comparaison?: number;
   ouverte?: boolean;
   onBasculer?: () => void;
@@ -81,7 +81,7 @@ export function TitreCarte({
     <>
       <Text style={[commonStyles.cardTitle, styles.titreTexte]}>{titre}</Text>
       <View style={styles.ligneValeurs}>
-        <Text style={styles.cardTitreValeur}>{valeur}</Text>
+        {valeur !== undefined ? <Text style={styles.cardTitreValeur}>{valeur}</Text> : null}
         {comparaison !== undefined && <Text style={commonStyles.muted}>({comparaison})</Text>}
         {onBasculer ? (
           <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />

@@ -186,6 +186,7 @@ export default function TabsLayout() {
       {/* Les pages de l'organisation : une par rubrique, puis les écrans de chaque rubrique (la flèche remonte d'un niveau). */}
       {[
         ['organisation-etablissement', TEXTES.settings.reglages.sectionEtablissement, ROUTES.REGLAGES],
+        ['organisation-cheptel', TEXTES.settings.reglages.sectionCheptel, ROUTES.REGLAGES],
         ['organisation-comptabilite', TEXTES.settings.reglages.sectionComptabilite, ROUTES.REGLAGES],
         ['organisation-inventaire', TEXTES.settings.reglages.sectionInventaire, ROUTES.REGLAGES],
         ['organisation-conditionnement', TEXTES.stock.conditionnement.titre, ROUTES.ORGANISATION_INVENTAIRE],

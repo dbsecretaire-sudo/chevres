@@ -3,6 +3,15 @@ import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
   titreLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  /** Le libellé d'une ligne qui ouvre un détail : souligné, comme un lien. */
+  libelleLien: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.ajout,
+    textDecorationLine: 'underline',
+  },
+  /** Le montant d'une aide sous la prime prévisionnelle : en retrait. */
+  ligneDetail: { paddingLeft: 16 },
   titreTexte: { flexShrink: 1 },
   cardTitreValeur: { fontSize: 15, fontWeight: '800', color: colors.text },
   ligne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 2 },

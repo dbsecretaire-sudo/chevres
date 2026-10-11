@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import { ETAT_BOUCLE, TRI_BOUCLE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -33,20 +35,50 @@ export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
  * dans les contrôles : l'inventaire des boucles ne se modifie qu'en comptabilité (achat) et au cheptel (pose).
  */
 export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBoucles; pleinePage?: boolean }) {
-  const { lignes, tri, croissant, trierPar, morts, etat } = liste;
+  const { lignes, tri, trierPar, morts, etat, filtres } = liste;
+  /** La colonne dont le menu de filtre est ouvert. */
+  const [menu, setMenu] = useState<'numero' | 'pose' | 'achat' | 'morte' | null>(null);
+  const nomsColonnes = {
+    numero: T.colonnes.numero,
+    pose: T.colonnes.pose,
+    achat: T.colonnes.achat,
+    morte: T.morte,
+  };
+  const triDeLaColonne = {
+    numero: TRI_BOUCLE.NUMERO,
+    pose: TRI_BOUCLE.POSE,
+    achat: TRI_BOUCLE.ACHAT,
+  } as const;
+
+  /** Le bouton de filtre d'une colonne : coloré quand un filtre est posé. */
+  const boutonFiltre = (colonne: 'numero' | 'pose' | 'achat' | 'morte') => (
+    <Pressable
+      onPress={() => setMenu(colonne)}
+      hitSlop={6}
+      accessibilityLabel={TEXTES.commun.filtreColonne.filtrer(nomsColonnes[colonne])}
+    >
+      <Ionicons
+        name="arrow-down"
+        size={filtres.actif(colonne) ? 14 : 12}
+        color={filtres.actif(colonne) ? colors.primary : colors.textMuted}
+      />
+    </Pressable>
+  );
 
   const titreColonne = (colonne: ValeurDe<typeof TRI_BOUCLE>, style: object) => (
-    <Pressable
-      style={[styles.titreColonne, style]}
-      onPress={() => trierPar(colonne)}
-      hitSlop={6}
-      accessibilityLabel={T.triPar(T.colonnes[colonne])}
-    >
-      <Text style={styles.texteEntete}>{T.colonnes[colonne]}</Text>
-      {tri === colonne ? (
-        <Ionicons name={croissant ? 'arrow-up' : 'arrow-down'} size={12} color={colors.textMuted} />
-      ) : null}
-    </Pressable>
+    <View style={[styles.celluleEntete, style]}>
+      <Pressable
+        style={styles.titreColonne}
+        onPress={() => trierPar(colonne)}
+        hitSlop={6}
+        accessibilityLabel={T.triPar(T.colonnes[colonne])}
+      >
+        <Text style={[styles.texteEntete, tri === colonne && styles.texteEnteteTrie]}>
+          {T.colonnes[colonne]}
+        </Text>
+      </Pressable>
+      {boutonFiltre(colonne)}
+    </View>
   );
 
   return (
@@ -55,8 +87,9 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
         {titreColonne(TRI_BOUCLE.NUMERO, styles.colonneNumero)}
         {titreColonne(TRI_BOUCLE.POSE, styles.colonneDate)}
         {titreColonne(TRI_BOUCLE.ACHAT, styles.colonneDate)}
-        <View style={styles.colonneMorte}>
+        <View style={[styles.celluleEntete, styles.colonneMorte]}>
           <Text style={styles.titreMorte}>{T.morte}</Text>
+          {boutonFiltre('morte')}
         </View>
       </View>
       {lignes.length === 0 ? (
@@ -88,6 +121,22 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
           ))}
         </ScrollView>
       )}
+      {menu ? (
+        <FiltreColonne
+          key={menu}
+          visible
+          colonne={nomsColonnes[menu]}
+          valeurs={liste.valeursDeLaColonne(menu)}
+          gardees={filtres.gardees(menu)}
+          onAppliquer={(gardees) => filtres.appliquer(menu, gardees)}
+          onTrier={
+            menu === 'morte'
+              ? undefined
+              : (sensCroissant) => liste.trierEn(triDeLaColonne[menu], sensCroissant)
+          }
+          onFermer={() => setMenu(null)}
+        />
+      ) : null}
     </View>
   );
 }

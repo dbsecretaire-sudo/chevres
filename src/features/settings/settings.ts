@@ -69,6 +69,16 @@ export interface InfosExploitation {
   modeAvance?: boolean;
   /** Les rappels de déclaration que l'utilisateur a désactivés (voir GENRE_RAPPEL). */
   rappelsDesactives?: string[];
+  /**
+   * Le paramétrage du cheptel : les coefficients UGB choisis par espèce (à défaut ceux d'UGB_PAR_DEFAUT) et, pour chaque prime
+   * (PRIMES), si elle compte dans la prime prévisionnelle, son taux en euros et ce sur quoi il s'applique (par UGB, par animal ou par hectare ; à défaut, la base d'office de la prime) ; `nom` renomme une aide d'office.
+   */
+  ugbPrimes?: {
+    coefficients?: Partial<Record<EspeceAnimale, { adulte?: number; petit?: number }>>;
+    primes?: Record<string, { actif?: boolean; taux?: number; base?: string; nom?: string }>;
+    /** Les aides ajoutées par l'utilisateur (en plus de PRIMES) : elles comptent dans la prime prévisionnelle comme les autres. */
+    personnalisees?: { id: string; nom: string; actif?: boolean; taux?: number; base?: string }[];
+  };
   /** Les rappels déjà validés (« rsa:2026-T3 », « urssaf:2026-09 »). */
   rappelsValides?: string[];
   /**

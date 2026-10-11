@@ -2,6 +2,9 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { calculerBilan, type Bilan } from '@/features/cheptel/services/bilanCheptel';
+import { listControles } from '@/features/exploitation/repository/controles';
+import { totauxSurfaces } from '@/features/exploitation/services/surfaces';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 
@@ -15,16 +18,21 @@ export function useBilanAnnuel() {
   const [annees, setAnnees] = useState<number[]>([annee]);
   const [bilan, setBilan] = useState<Bilan | null>(null);
   const [bilanPrecedent, setBilanPrecedent] = useState<Bilan | null>(null);
+  /** Les hectares admissibles des parcelles de l'année (espèce active) : la base des primes à l'hectare. */
+  const [hectares, setHectares] = useState(0);
 
   const charger = useCallback(async () => {
-    const [b, bPrec, toutesAnnees] = await Promise.all([
+    const [b, bPrec, toutesAnnees, controles] = await Promise.all([
       calculerBilan(annee),
       calculerBilan(annee - 1),
       toutesLesAnneesConnues(),
+      listControles(annee),
     ]);
     setBilan(b);
     setBilanPrecedent(bPrec);
     setAnnees(toutesAnnees);
+    const parcelles = controles.filter((c) => c.famille === FAMILLE_CONTROLE.TERRAIN && !c.typeDocument);
+    setHectares(totauxSurfaces(parcelles).surfaceAdmissible);
     // L'espèce n'est pas lue dans le chargement : elle sert à le relancer quand elle change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annee, espece]);
@@ -35,5 +43,5 @@ export function useBilanAnnuel() {
     }, [charger]),
   );
 
-  return { annee, annees, setAnneeActive, bilan, bilanPrecedent };
+  return { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares };
 }

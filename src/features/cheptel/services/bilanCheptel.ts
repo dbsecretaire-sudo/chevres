@@ -4,7 +4,13 @@ import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
-import { SEXE, STATUT_CHEVRE, agePetitMax, DERNIER_MOIS_PREMIER_SEMESTRE } from '@/shared/constants/cheptel';
+import {
+  SEXE,
+  STATUT_CHEVRE,
+  agePetitMax,
+  ageSevrage,
+  DERNIER_MOIS_PREMIER_SEMESTRE,
+} from '@/shared/constants/cheptel';
 import { FIN_ANNEE_MOIS_JOUR } from '@/shared/constants/temps';
 
 /** Une date de sortie avec le nombre d'animaux concernés ce jour-là (plusieurs abattages groupés le même jour, par exemple). */
@@ -46,8 +52,9 @@ export interface Bilan {
   boucsVivantsFinAnnee: number;
   /** Parmi les boucs vivants ci-dessus, ceux désignés pour le renouvellement cette année-là précisément. */
   boucsRenouvellementFinAnnee: number;
-  stockDebutAnnee: number;
   stockFinAnnee: number;
+  /** L'effectif de fin d'année (celui de stockFinAnnee) partagé entre sevrés et petits non sevrés, pour l'UGB. */
+  effectifFinAnnee: { petits: number; sevres: number };
 }
 
 /**
@@ -126,14 +133,19 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
       .sort((a, b) => a.date.localeCompare(b.date));
   };
 
-  const stockDebutAnnee = toutes.filter(
-    (c) => neeAvant(c) && (c.statut === STATUT_CHEVRE.VIVANTE || (anneeStatut(c) ?? Infinity) >= annee),
-  ).length;
-
   const stockFinAnnee = toutes.filter(
     (c) =>
       yearOf(c.dateNaissance) <= annee &&
       (c.statut === STATUT_CHEVRE.VIVANTE || (anneeStatut(c) ?? -Infinity) > annee),
+  ).length;
+
+  const presentsFinAnnee = toutes.filter(
+    (c) =>
+      yearOf(c.dateNaissance) <= annee &&
+      (c.statut === STATUT_CHEVRE.VIVANTE || (anneeStatut(c) ?? -Infinity) > annee),
+  );
+  const sevresFinAnnee = presentsFinAnnee.filter((c) =>
+    ageAtteint(c.dateNaissance, ageSevrage(), finAnnee),
   ).length;
 
   // Adultes (âge limite du petit dépassé) d'un sexe donné, vivant(e)s au 31/12 de l'année N, reconstitué comme stockFinAnnee.
@@ -203,7 +215,7 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
     boucsAutoconsommesAnnee: sortiesPreexistantes(SEXE.MALE, STATUT_CHEVRE.AUTOCONSOMMEE),
     boucsVivantsFinAnnee,
     boucsRenouvellementFinAnnee,
-    stockDebutAnnee,
     stockFinAnnee,
+    effectifFinAnnee: { petits: presentsFinAnnee.length - sevresFinAnnee, sevres: sevresFinAnnee },
   };
 }

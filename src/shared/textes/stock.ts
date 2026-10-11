@@ -129,16 +129,20 @@ export const TEXTES_STOCK = {
     reduire: 'Fermer la pleine page',
     etat: { tout: 'Tout', posee: 'Posée', non_posee: 'Non posée' },
     aucuneBoucle: 'Aucune boucle.',
-    colonnes: { numero: 'N°', pose: 'Date de pose', achat: 'Date d’achat' },
+    /** Les titres des colonnes : les dates sur deux lignes, pour tenir dans la largeur. */
+    colonnes: { numero: 'N°', pose: 'Date de\npose', achat: 'Date d’\nachat' },
     /** La colonne cochée quand l'animal qui porte la boucle est mort. */
     morte: 'Morte',
+    /** Les deux valeurs de la colonne « Morte » dans son filtre. */
+    morteOui: 'oui',
+    morteNon: 'non',
     aucuneNonPosee: 'Aucune boucle à poser.',
     aucunePosee: 'Aucune boucle posée.',
     /** Rappel : l'inventaire des boucles ne se modifie pas à la main. */
     rappel:
       'Les ajouts et les suppressions des boucles se font dans Comptabilité (ajout par dépenses), et dans Cheptel (suppression par pose).',
     ok: 'OK',
-    triPar: (colonne: string) => `Trier par ${colonne.toLowerCase()}`,
+    triPar: (colonne: string) => `Trier par ${colonne.replace(/\n/g, ' ').toLowerCase()}`,
     nombre: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
     /** Le choix d'une boucle de l'inventaire pour un animal. */
     /** Le choix du numéro de boucle d'un animal : une boucle de l'inventaire, ou un autre numéro qu'on tape. */
@@ -169,11 +173,14 @@ export const TEXTES_STOCK = {
     titre: (nom: string) => `Inventaire : ${nom}`,
     titreFromage: (nom: string) => `Inventaire : Fromage ${nom}`,
     etat: { tout: 'Tout', en_stock: 'En stock', vendu: 'Vendu', rappele: 'Rappelé' },
-    colonnes: { numero: 'N° lot', fabrication: 'Date fabrication', vente: 'Date vente' },
-    controle: 'Contrôle ok ?',
+    colonnes: { numero: 'N° lot', fabrication: 'Date de\nfabrication', vente: 'Date de\nvente' },
+    /** Les deux valeurs de la colonne du contrôle dans son filtre. */
+    controleOui: 'ok',
+    controleNon: 'non',
+    controle: 'Contrôle\nok ?',
     nombre: (nombre: number) => `${nombre} lot${nombre > 1 ? 's' : ''}`,
     titreEtat: 'État des lots',
-    triPar: (colonne: string) => `Trier par ${colonne.toLowerCase()}`,
+    triPar: (colonne: string) => `Trier par ${colonne.replace(/\n/g, ' ').toLowerCase()}`,
     aucun: 'Aucun lot.',
     rappele: 'Rappelé',
     /** Rappel : l'inventaire des fromages ne se modifie pas à la main. */

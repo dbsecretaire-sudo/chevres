@@ -4,6 +4,7 @@ import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
 import { ROUTES } from '@/shared/constants/routes';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { styles } from '@/shared/styles/settings/Reglages.styles';
 import { TEXTES } from '@/shared/textes';
 
@@ -23,6 +24,14 @@ export default function Reglages() {
           icone="business"
           route={ROUTES.ORGANISATION_ETABLISSEMENT}
         />
+        {modeEntreprise() ? null : (
+          <LigneRubrique
+            titre={T.sectionCheptel}
+            aide={T.aideRubriqueCheptel}
+            icone="paw"
+            route={ROUTES.ORGANISATION_CHEPTEL}
+          />
+        )}
         <LigneRubrique
           titre={T.sectionComptabilite}
           aide={T.aideRubriqueComptabilite}

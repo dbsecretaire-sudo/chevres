@@ -1,5 +1,8 @@
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
+import { formaterUgb } from '@/features/cheptel/services/ugb';
+import { formatMontant } from '@/shared/utils/dates';
+import { styles } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import type { Bilan } from '@/features/cheptel/services/bilanCheptel';
 import {
   DatesAbattoir,
@@ -233,30 +236,48 @@ export function CarteBoucs({ bilan, precedent, annee, ouverte, onBasculer }: Car
 
 export function CarteEffectif({
   bilan,
-  annee,
+  ugb,
+  prime,
+  lignesPrime,
   ouverte,
   onBasculer,
-}: Pick<CarteProps, 'bilan' | 'annee' | 'ouverte' | 'onBasculer'>) {
+  onVoirDetail,
+}: {
+  bilan: Bilan;
+  /** L'UGB prévisionnel (celui de l'effectif de fin d'année, avec les coefficients de l'exploitation). */
+  ugb: number;
+  /** La prime prévisionnelle : son total, ou rien quand aucun taux n'est renseigné. */
+  prime?: number;
+  /** Le montant de chaque aide comptée dans la prime prévisionnelle, avec son nom court. */
+  lignesPrime: { cle: string; nomCourt: string; montant: number }[];
+  ouverte: boolean;
+  onBasculer: () => void;
+  /** Un appui sur l'UGB ouvre le détail du calcul. */
+  onVoirDetail: () => void;
+}) {
+  const T = TEXTES.cheptel.bilanAnnuel.effectifEtUgb;
   return (
     <Card>
-      <TitreCarte
-        titre={TEXTES.cheptel.bilanAnnuel.effectifDuTroupeau}
-        valeur={bilan.stockFinAnnee}
-        ouverte={ouverte}
-        onBasculer={onBasculer}
-      />
+      <TitreCarte titre={T.titre} ouverte={ouverte} onBasculer={onBasculer} />
       {ouverte ? (
         <>
-          <Ligne label={TEXTES.cheptel.bilanAnnuel.au0101Annee(annee)} valeur={bilan.stockDebutAnnee} />
-          <Ligne
-            label={TEXTES.cheptel.bilanAnnuel.effectifActuelFinAnnee(annee)}
-            valeur={bilan.stockFinAnnee}
-          />
-          <Text style={commonStyles.noteMarge}>
-            {TEXTES.cheptel.bilanAnnuel.chevresBoucsEtCabrisConfondus}
-            {annee}
-            {TEXTES.cheptel.bilanAnnuel.dApresLesStatutsActuels}
-          </Text>
+          <Ligne label={T.effectifActuel} valeur={bilan.stockFinAnnee} />
+          <Pressable style={styles.ligne} onPress={onVoirDetail} accessibilityLabel={T.detail.titre}>
+            <Text style={styles.libelleLien}>{T.ugbPrevisionnel}</Text>
+            <Text style={styles.cardTitreValeur}>{formaterUgb(ugb)}</Text>
+          </Pressable>
+          <View style={styles.ligne}>
+            <Text style={styles.ligneLabel}>{T.primePrevisionnelle}</Text>
+            <Text style={prime === undefined ? commonStyles.muted : styles.cardTitreValeur}>
+              {prime === undefined ? T.formule : formatMontant(prime)}
+            </Text>
+          </View>
+          {lignesPrime.map((l) => (
+            <View key={l.cle} style={[styles.ligne, styles.ligneDetail]}>
+              <Text style={commonStyles.muted}>{l.nomCourt}</Text>
+              <Text style={commonStyles.muted}>{formatMontant(l.montant)}</Text>
+            </View>
+          ))}
         </>
       ) : null}
     </Card>

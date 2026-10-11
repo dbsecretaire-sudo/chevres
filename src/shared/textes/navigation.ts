@@ -21,6 +21,7 @@ export const TEXTES_NAVIGATION = {
     nouvelleVisite: 'Nouvelle visite',
     nouveauControle: 'Nouveau contrôle',
     nouveauGroupement: 'Nouveau groupement',
+    nouveauTerrain: 'Nouveau terrain',
     modificationControle: 'Modification',
   },
 } as const;

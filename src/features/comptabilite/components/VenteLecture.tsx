@@ -55,7 +55,9 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
         {TEXTES.commun.general.dateDeuxPoints}
         {formatDateFR(vente.date)}
       </Text>
-      {(CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) ? null : (
+      {vente.reajustement ? (
+        <Text style={commonStyles.line}>{TEXTES.comptabilite.nouvelleEcriture.reajustement}</Text>
+      ) : (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) ? null : (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.ficheVente.quantiteDeuxPoints}
           {libelleQuantite(vente)}

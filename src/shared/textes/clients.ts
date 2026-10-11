@@ -8,6 +8,7 @@ export const TEXTES_CLIENTS = {
   contact: { appeler: 'Appeler le client', ecrire: 'Écrire un e-mail au client' },
   ficheClient: {
     clientIntrouvable: 'Client introuvable.',
+    categorieDeuxPoints: 'Catégorie : ',
     telephoneDeuxPoints: 'Téléphone : ',
     emailDeuxPoints: 'Email : ',
     resume: 'Résumé',
@@ -33,6 +34,9 @@ export const TEXTES_CLIENTS = {
   },
   nouveauClient: {
     nomDuClient: 'Nom du client',
+    categorieDuClient: 'Catégorie de client',
+    aideCategorie:
+      'Récolteur : prix et n° de facture libres. Organisme ou entreprise : vente déclarée d’office. Particulier : non.',
   },
   importClient: {
     importerDepuisUnAutreEtablissement: 'Importer un client depuis un autre établissement',

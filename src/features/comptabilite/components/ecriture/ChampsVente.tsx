@@ -65,16 +65,17 @@ function useTotalVerrouille(
   quantite: string,
   actif = true,
 ) {
-  const { setMontant } = e;
+  const { setMontant, prixLibre } = e;
   useEffect(() => {
-    if (!actif) return;
+    // Le prix d'un récolteur est libre : il se saisit, l'inventaire ne le fixe pas.
+    if (!actif || prixLibre) return;
     const nombre = parseDecimal(quantite);
     setMontant(
       prixUnitaire && nombre > 0
         ? (Math.round(prixUnitaire * nombre * 100) / 100).toFixed(2).replace('.', ',')
         : '',
     );
-  }, [actif, prixUnitaire, quantite, setMontant]);
+  }, [actif, prixLibre, prixUnitaire, quantite, setMontant]);
 }
 
 /** Le prix de vente défini à l'inventaire pour le lait (€ le litre) ou l'œuf (€ pièce, 0,50 € d'office). */
@@ -155,33 +156,40 @@ export function ChampsVenteLait({ e }: Props) {
   useTotalVerrouille(e, prixDuLitre, e.quantite);
   return (
     <>
-      <FormField
-        label={TEXTES.comptabilite.nouvelleEcriture.litrage}
-        required
-        value={e.quantite}
-        onChangeText={e.setQuantite}
-        keyboardType="decimal-pad"
-        placeholder={TEXTES.comptabilite.nouvelleEcriture.ex125}
-        aide={TEXTES.comptabilite.nouvelleEcriture.aideLitrage}
-      />
+      {/* Un réajustement n'a pas de litrage. */}
+      {e.reajustement ? null : (
+        <FormField
+          label={TEXTES.comptabilite.nouvelleEcriture.litrage}
+          required
+          value={e.quantite}
+          onChangeText={e.setQuantite}
+          keyboardType="decimal-pad"
+          placeholder={TEXTES.comptabilite.nouvelleEcriture.ex125}
+          aide={e.prixLibre ? undefined : TEXTES.comptabilite.nouvelleEcriture.aideLitrage}
+        />
+      )}
       <View style={commonStyles.row}>
         <View style={commonStyles.flex1}>
           <ChampMontantTtc
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
-            editable={false}
+            editable={e.prixLibre}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
-      <Text style={commonStyles.note}>
-        {prixDuLitre
-          ? TEXTES.comptabilite.nouvelleEcriture.prixLitreInventaire(formatMontant(prixDuLitre))
-          : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
-      </Text>
+      {e.prixLibre ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
+      ) : (
+        <Text style={commonStyles.note}>
+          {prixDuLitre
+            ? TEXTES.comptabilite.nouvelleEcriture.prixLitreInventaire(formatMontant(prixDuLitre))
+            : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
+        </Text>
+      )}
     </>
   );
 }
@@ -269,18 +277,22 @@ export function ChampsVenteFromage({ e }: Props) {
             value={e.montant}
             onChange={e.setMontant}
             // Le prix défini à l'inventaire fait le total (quantité × prix) : on ne le saisit pas.
-            editable={false}
+            editable={e.prixLibre}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
-      <Text style={commonStyles.note}>
-        {prixDuChoix
-          ? TEXTES.comptabilite.nouvelleEcriture.prixDuStock(formatMontant(prixDuChoix))
-          : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
-      </Text>
+      {e.prixLibre ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
+      ) : (
+        <Text style={commonStyles.note}>
+          {prixDuChoix
+            ? TEXTES.comptabilite.nouvelleEcriture.prixDuStock(formatMontant(prixDuChoix))
+            : TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}
+        </Text>
+      )}
     </>
   );
 }
@@ -361,6 +373,7 @@ export function ChampsVenteViande({ e }: Props) {
   const libelleAnimal = libelleAnimalVendu;
   /** Prix total d'un animal vendu au kilo : le poids × le prix au kilo du stock (pour 1 kg tant qu'aucun poids n'est saisi). */
   const totalAuKilo = (poids: string, prixAuKilo = prixDuDetail) => {
+    if (e.prixLibre) return;
     if (!prixAuKilo) return e.setMontant('');
     const kilos = parseDecimal(poids) > 0 ? parseDecimal(poids) : 1;
     e.setMontant((Math.round(prixAuKilo * kilos * 100) / 100).toFixed(2).replace('.', ','));
@@ -547,8 +560,10 @@ export function ChampsVenteViande({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             required
             value={e.montant}
-            editable={false}
-            style={commonStyles.verrouille}
+            onChangeText={e.setMontant}
+            editable={e.prixLibre}
+            keyboardType="decimal-pad"
+            style={e.prixLibre ? undefined : commonStyles.verrouille}
           />
         </>
       ) : (
@@ -583,7 +598,7 @@ export function ChampsVenteViande({ e }: Props) {
                 label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
                 value={e.montant}
                 onChange={e.setMontant}
-                editable={false}
+                editable={e.prixLibre}
               />
             </View>
             <View style={commonStyles.flex1}>
@@ -592,7 +607,9 @@ export function ChampsVenteViande({ e }: Props) {
           </View>
         </>
       )}
-      {choisie && !prixDuDetail ? (
+      {e.prixLibre ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
+      ) : choisie && !prixDuDetail ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}</Text>
       ) : prixDuDetail ? (
         <Text style={commonStyles.note}>
@@ -638,7 +655,7 @@ export function ChampsVenteOeufs({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
-            editable={false}
+            editable={e.prixLibre}
           />
         </View>
         <View style={commonStyles.flex1}>

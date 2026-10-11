@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { bouclesDeLInventaire, trierBoucles } from '@/features/stock/services/boucles';
+import { useFiltresColonnes } from '@/shared/hooks/useFiltresColonnes';
+import { formatDateShortFR } from '@/shared/utils/dates';
+import { TEXTES } from '@/shared/textes';
 import type { BoucleStock } from '@/features/stock/types';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ARTICLE_BOUCLE, ETAT_BOUCLE, GENRE_ARTICLE, TRI_BOUCLE } from '@/shared/constants/stock';
@@ -24,7 +27,16 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
     );
   }, [boucles]);
 
-  const lignes = trierBoucles(bouclesDeLInventaire({ boucles }, etat, article), tri, croissant);
+  const triees = trierBoucles(bouclesDeLInventaire({ boucles }, etat, article), tri, croissant);
+  /** Le filtre de chaque colonne, comme dans Excel : les valeurs sont celles qu'affiche le tableau. */
+  const filtres = useFiltresColonnes<BoucleStock, 'numero' | 'pose' | 'achat' | 'morte'>({
+    numero: (b) => b.numero,
+    pose: (b) => (b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? TEXTES.stock.boucles.posee : ''),
+    achat: (b) => formatDateShortFR(b.dateAchat),
+    morte: (b) =>
+      b.chevreId && morts.has(b.chevreId) ? TEXTES.stock.boucles.morteOui : TEXTES.stock.boucles.morteNon,
+  });
+  const lignes = filtres.filtrer(triees);
 
   const trierPar = (colonne: ValeurDe<typeof TRI_BOUCLE>) => {
     if (colonne === tri) setCroissant(!croissant);
@@ -34,9 +46,19 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
     }
   };
 
+  /** Trie d'après une colonne dans le sens voulu (le menu d'une colonne : tri croissant, tri décroissant). */
+  const trierEn = (colonne: ValeurDe<typeof TRI_BOUCLE>, sensCroissant: boolean) => {
+    setTri(colonne);
+    setCroissant(sensCroissant);
+  };
+
   return {
     etat,
     setEtat,
+    filtres,
+    /** Les valeurs d'une colonne pour son filtre : celles de toutes les boucles de l'état choisi. */
+    valeursDeLaColonne: (colonne: 'numero' | 'pose' | 'achat' | 'morte') => filtres.valeurs(triees, colonne),
+    trierEn,
     /** La sorte de boucles montrée (son article de l'inventaire). */
     article,
     tri,

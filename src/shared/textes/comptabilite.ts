@@ -228,7 +228,11 @@ export const TEXTES_COMPTABILITE = {
     declarerLaVente: 'Le client souhaite déclarer la vente',
     natureUrssaf: 'Nature de la recette (URSSAF)',
     natureUrssafAuto: 'Selon la catégorie',
+    prixLibreRecolteur: 'Client récolteur : le prix est libre, saisissez le total.',
+    reajustement: 'Réajustement',
     numeroFactureRequis: 'Numéro de facture requis',
+    numeroFactureNumerique:
+      'Le numéro de facture ne contient que des chiffres (seul un récolteur peut y mettre des lettres)',
     typeFromageRequis: 'Type de fromage requis',
     choixDuDetail: 'Cabris, saucisson… (liste de l’inventaire)',
     /** Le titre de la liste des animaux de la vente (animal sur pied, animal vivant). */

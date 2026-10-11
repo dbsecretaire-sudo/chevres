@@ -7,6 +7,20 @@ const Cap = capitaliser;
 
 /** Textes de l'interface — « commun ». À modifier ici uniquement. */
 export const TEXTES_COMMUN = {
+  /** Le filtre d'une colonne de tableau, comme dans Excel : tri, recherche et cases à cocher. */
+  filtreColonne: {
+    titre: (colonne: string) => `Filtrer : ${colonne.replace(/\n/g, ' ')}`,
+    triCroissant: 'Tri croissant',
+    triDecroissant: 'Tri décroissant',
+    rechercher: 'Rechercher…',
+    tout: 'Tout',
+    vide: '(vides)',
+    aucun: 'Aucune valeur',
+    ok: 'OK',
+    annuler: 'Annuler',
+    effacer: 'Effacer le filtre',
+    filtrer: (colonne: string) => `Filtrer la colonne ${colonne.replace(/\n/g, ' ')}`,
+  },
   general: {
     separateurListe: ', ',
     informationsDeLExploitation: 'Informations de l’exploitation',

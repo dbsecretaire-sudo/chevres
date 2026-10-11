@@ -1,5 +1,6 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import {
   GROUPE_RECETTE,
   CATEGORIE_DEPENSE,
@@ -52,6 +53,13 @@ export const LIBELLES_STATUT_CHEVRE: Record<
   [STATUT_CHEVRE.VENDUE]: ['Vendue', 'Vendu'],
   [STATUT_CHEVRE.AUTOCONSOMMEE]: ['Auto-consommée', 'Auto-consommé'],
   [STATUT_CHEVRE.MORT_NE]: ['Mort-née', 'Mort-né'],
+};
+
+export const LABEL_CATEGORIE_CLIENT: Record<ValeurDe<typeof CATEGORIE_CLIENT>, string> = {
+  [CATEGORIE_CLIENT.PARTICULIER]: 'Particulier',
+  [CATEGORIE_CLIENT.RECOLTEUR]: 'Récolteur',
+  [CATEGORIE_CLIENT.ORGANISME]: 'Organisme',
+  [CATEGORIE_CLIENT.ENTREPRISE]: 'Entreprise',
 };
 
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {

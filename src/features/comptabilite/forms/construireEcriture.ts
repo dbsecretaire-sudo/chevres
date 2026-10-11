@@ -26,7 +26,9 @@ import type {
   Vente,
   NatureUrssaf,
 } from '@/features/comptabilite/types';
+import { numeroFactureLibre, prixLibre } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
+import { MOTIF_NUMERO_FACTURE_NUMERIQUE } from '@/shared/constants/clients';
 import {
   CATEGORIES_VENTE_ANIMAUX,
   CATEGORIES_VENTE_AVEC_PRECISION,
@@ -105,6 +107,8 @@ export interface SaisieEcriture {
   natureUrssaf: string;
   /** Le numéro de la facture d'une vente déclarée (obligatoire quand le client souhaite la déclarer). */
   numeroFacture: string;
+  /** La vente est un réajustement (récolteur) : ni litrage ni numéro de facture. */
+  reajustement?: boolean;
 }
 
 export interface ErreurSaisie {
@@ -124,8 +128,18 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   if (!s.clientSelectionne) return { erreur: { titre: TEXTES.commun.general.clientRequis } };
 
   // Une vente que le client souhaite déclarer a un numéro de facture.
-  if (s.avecFacture && !s.numeroFacture.trim()) {
+  if (s.avecFacture && !s.reajustement && !s.numeroFacture.trim()) {
     return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureRequis } };
+  }
+
+  // Hors récolteur, le numéro de facture est fait de chiffres (et de tirets, barres, points).
+  if (
+    s.avecFacture &&
+    !s.reajustement &&
+    !numeroFactureLibre(s.clientSelectionne) &&
+    !MOTIF_NUMERO_FACTURE_NUMERIQUE.test(s.numeroFacture)
+  ) {
+    return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureNumerique } };
   }
 
   // Le détail de la vente (la ligne de l'inventaire vendue) est obligatoire pour la viande et la boucherie / charcuterie.
@@ -142,18 +156,22 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
     categorie === CATEGORIE_VENTE.VIANDE
       ? s.animaux.length || parseDecimal(s.quantite)
       : lotsDeFromages || parseDecimal(s.quantite);
-  if (quantiteNum <= 0) return { erreur: { titre: TEXTES.commun.general.quantiteInvalide } };
+  if (!s.reajustement && quantiteNum <= 0) {
+    return { erreur: { titre: TEXTES.commun.general.quantiteInvalide } };
+  }
 
   // Le prix total est obligatoire pour toute vente ; quand il vient de l'inventaire, c'est qu'il n'y est pas défini.
   const prixNum = parseDecimal(s.montant);
   if (!prixNum || prixNum < 0) {
     return {
-      erreur: (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(categorie)
-        ? {
-            titre: TEXTES.comptabilite.nouvelleEcriture.prixAFixerTitre,
-            message: TEXTES.comptabilite.nouvelleEcriture.prixAFixerMessage,
-          }
-        : { titre: TEXTES.commun.general.prixInvalide },
+      erreur:
+        (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(categorie) &&
+        !prixLibre(s.clientSelectionne)
+          ? {
+              titre: TEXTES.comptabilite.nouvelleEcriture.prixAFixerTitre,
+              message: TEXTES.comptabilite.nouvelleEcriture.prixAFixerMessage,
+            }
+          : { titre: TEXTES.commun.general.prixInvalide },
     };
   }
 
@@ -166,7 +184,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       typeFromage: estFromage ? s.typeFromage : undefined,
       typeFromageLibre:
         estFromage && s.typeFromage === TYPE_FROMAGE.AUTRE ? s.typeFromageLibre.trim() : undefined,
-      quantite: quantiteNum,
+      quantite: s.reajustement ? 0 : quantiteNum,
       unite:
         s.categorieRecette === CATEGORIE_RECETTE.LAIT
           ? UNITE_VENTE.LITRES
@@ -189,7 +207,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
         ? s.precision.trim() || undefined
         : undefined,
       choixFacture: s.avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
-      numeroFacture: s.avecFacture ? s.numeroFacture.trim() : undefined,
+      numeroFacture: s.avecFacture && !s.reajustement ? s.numeroFacture.trim() : undefined,
+      reajustement: s.reajustement ? true : undefined,
     },
   };
 }

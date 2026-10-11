@@ -87,6 +87,7 @@ export const ROUTES = {
   STRUCTURE_DOSSIERS: '/structure-dossiers',
   // Les données (écrans ouverts depuis l'onglet Organisation)
   ORGANISATION_ETABLISSEMENT: '/organisation-etablissement',
+  ORGANISATION_CHEPTEL: '/organisation-cheptel',
   ORGANISATION_COMPTABILITE: '/organisation-comptabilite',
   ORGANISATION_INVENTAIRE: '/organisation-inventaire',
   ORGANISATION_CONDITIONNEMENT: '/organisation-conditionnement',

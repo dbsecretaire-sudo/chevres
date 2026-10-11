@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeLots } from '@/features/stock/hooks/useListeLots';
 import { basculerControleLot, etatDuLot } from '@/features/stock/services/lots';
 import { ETAT_LOT, TRI_LOT } from '@/shared/constants/stock';
@@ -34,20 +36,50 @@ export function FiltresLots({ liste }: { liste: ListeLots }) {
  * par une fabrication (Production › Fromages) et sortent par une vente (Comptabilité) ou un rappel.
  */
 export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: () => void }) {
-  const { lignes, tri, croissant, trierPar } = liste;
+  const { lignes, tri, trierPar, filtres } = liste;
+  /** La colonne dont le menu de filtre est ouvert. */
+  const [menu, setMenu] = useState<'numero' | 'fabrication' | 'vente' | 'controle' | null>(null);
+  const nomsColonnes = {
+    numero: T.colonnes.numero,
+    fabrication: T.colonnes.fabrication,
+    vente: T.colonnes.vente,
+    controle: T.controle,
+  };
+  const triDeLaColonne = {
+    numero: TRI_LOT.NUMERO,
+    fabrication: TRI_LOT.FABRICATION,
+    vente: TRI_LOT.VENTE,
+  } as const;
+
+  /** Le bouton de filtre d'une colonne : coloré quand un filtre est posé. */
+  const boutonFiltre = (colonne: 'numero' | 'fabrication' | 'vente' | 'controle') => (
+    <Pressable
+      onPress={() => setMenu(colonne)}
+      hitSlop={6}
+      accessibilityLabel={TEXTES.commun.filtreColonne.filtrer(nomsColonnes[colonne])}
+    >
+      <Ionicons
+        name="arrow-down"
+        size={filtres.actif(colonne) ? 14 : 12}
+        color={filtres.actif(colonne) ? colors.primary : colors.textMuted}
+      />
+    </Pressable>
+  );
 
   const titreColonne = (colonne: ValeurDe<typeof TRI_LOT>, style: object) => (
-    <Pressable
-      style={[styles.titreColonne, style]}
-      onPress={() => trierPar(colonne)}
-      hitSlop={6}
-      accessibilityLabel={T.triPar(T.colonnes[colonne])}
-    >
-      <Text style={styles.texteEntete}>{T.colonnes[colonne]}</Text>
-      {tri === colonne ? (
-        <Ionicons name={croissant ? 'arrow-up' : 'arrow-down'} size={12} color={colors.textMuted} />
-      ) : null}
-    </Pressable>
+    <View style={[styles.celluleEntete, style]}>
+      <Pressable
+        style={styles.titreColonne}
+        onPress={() => trierPar(colonne)}
+        hitSlop={6}
+        accessibilityLabel={T.triPar(T.colonnes[colonne])}
+      >
+        <Text style={[styles.texteEntete, tri === colonne && styles.texteEnteteTrie]}>
+          {T.colonnes[colonne]}
+        </Text>
+      </Pressable>
+      {boutonFiltre(colonne)}
+    </View>
   );
 
   return (
@@ -56,8 +88,9 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
         {titreColonne(TRI_LOT.NUMERO, styles.colonneNumero)}
         {titreColonne(TRI_LOT.FABRICATION, styles.colonneDate)}
         {titreColonne(TRI_LOT.VENTE, styles.colonneDate)}
-        <View style={styles.colonneMorte}>
+        <View style={[styles.celluleEntete, styles.colonneMorte]}>
           <Text style={styles.titreMorte}>{T.controle}</Text>
+          {boutonFiltre('controle')}
         </View>
       </View>
       {lignes.length === 0 ? (
@@ -96,6 +129,22 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
           ))}
         </ScrollView>
       )}
+      {menu ? (
+        <FiltreColonne
+          key={menu}
+          visible
+          colonne={nomsColonnes[menu]}
+          valeurs={liste.valeursDeLaColonne(menu)}
+          gardees={filtres.gardees(menu)}
+          onAppliquer={(gardees) => filtres.appliquer(menu, gardees)}
+          onTrier={
+            menu === 'controle'
+              ? undefined
+              : (sensCroissant) => liste.trierEn(triDeLaColonne[menu], sensCroissant)
+          }
+          onFermer={() => setMenu(null)}
+        />
+      ) : null}
     </View>
   );
 }

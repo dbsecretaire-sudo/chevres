@@ -4,6 +4,9 @@ import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/Button';
+import { ChampCategorieClient } from '@/features/clients/components/ChampCategorieClient';
+import { CATEGORIE_CLIENT_PAR_DEFAUT } from '@/shared/constants/clients';
+import type { CategorieClient } from '@/features/clients/services/categorie';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -18,6 +21,7 @@ import { TEXTES } from '@/shared/textes';
 export default function NouveauClient() {
   const router = useRouter();
   const [nom, setNom] = useState('');
+  const [categorie, setCategorie] = useState<CategorieClient>(CATEGORIE_CLIENT_PAR_DEFAUT);
   const [prenom, setPrenom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
@@ -38,6 +42,7 @@ export default function NouveauClient() {
     try {
       await creerClient({
         nom: nom.trim(),
+        categorie,
         prenom: prenom.trim() || undefined,
         telephone: telephone.trim() || undefined,
         email: email.trim() || undefined,
@@ -76,6 +81,7 @@ export default function NouveauClient() {
               onChangeText={setNom}
               placeholder={TEXTES.clients.nouveauClient.nomDuClient}
             />
+            <ChampCategorieClient value={categorie} onChange={setCategorie} />
             <FormField
               label={TEXTES.commun.general.prenom}
               value={prenom}

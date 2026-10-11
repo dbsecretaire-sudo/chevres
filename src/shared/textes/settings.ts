@@ -22,6 +22,8 @@ export const TEXTES_SETTINGS = {
   },
   reglages: {
     sectionEtablissement: 'Mon établissement',
+    sectionCheptel: 'Cheptel',
+    aideRubriqueCheptel: 'Paramétrage UGB, primes, etc.',
     sectionInventaire: 'Inventaire',
     sectionTiers: 'Clients et fournisseurs',
     aideRubriqueTiers: 'Les carnets d’adresses de vos clients et de vos fournisseurs.',

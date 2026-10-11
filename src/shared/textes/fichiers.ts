@@ -10,6 +10,15 @@ export const TEXTES_FICHIERS = {
   aide: 'Word, Excel, PDF et images (PNG, JPEG). Ils sont rangés dans l’application et envoyés aussi sur Google Drive.',
   indisponibleWeb: 'Les fichiers joints ne sont disponibles que dans l’application mobile.',
   erreurAjout: 'Impossible d’ajouter le fichier',
+  /** La visionneuse d'une image en plein écran. */
+  visionneuse: {
+    agrandir: 'Voir en plein écran',
+    fermer: 'Fermer',
+    zoomPlus: 'Agrandir',
+    zoomMoins: 'Réduire',
+    ajuster: 'Ajuster à l’écran',
+    niveau: (zoom: number) => `${Math.round(zoom * 100)} %`,
+  },
   captures: {
     titre: 'Captures du trade',
     ajouter: 'Ajouter une capture',

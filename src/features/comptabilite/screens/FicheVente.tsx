@@ -81,6 +81,7 @@ export default function FicheVente() {
             form={form}
             onChange={fiche.setForm}
             onChangerCategorie={fiche.changerCategorie}
+            client={fiche.clientDeLaVente}
             montantTexte={fiche.montantTexte}
             onChangerMontant={fiche.changerMontant}
             onEnregistrer={() => fiche.enregistrerModifications()}

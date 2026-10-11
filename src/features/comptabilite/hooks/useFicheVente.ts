@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { listClients } from '@/features/clients/repository';
+import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/clients/services/categorie';
+import type { Client } from '@/features/clients/types';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
 import {
@@ -22,7 +25,9 @@ import {
   TYPE_FROMAGE,
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
+import { MOTIF_NUMERO_FACTURE_NUMERIQUE } from '@/shared/constants/clients';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
+import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
 
 const montantEnTexte = (v: Vente | null | undefined) =>
@@ -38,6 +43,7 @@ export function useFicheVente(id: string | undefined) {
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
   const [montantTexte, setMontantTexte] = useState('');
+  const [clients, setClients] = useState<Client[]>([]);
   const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
 
   const charger = useCallback(async () => {
@@ -46,6 +52,7 @@ export function useFicheVente(id: string | undefined) {
     setVente(v ?? null);
     setForm(v ?? null);
     setMontantTexte(montantEnTexte(v));
+    setClients(await listClients());
   }, [id]);
 
   useFocusEffect(
@@ -53,6 +60,10 @@ export function useFicheVente(id: string | undefined) {
       charger();
     }, [charger]),
   );
+
+  /** La fiche du client de la vente (retrouvée par son nom) : sa catégorie règle le prix et le numéro de facture. */
+  const clientDeLaVente = clients.find((c) => nomComplet(c) === form?.client?.trim());
+  const prixLibreVente = prixLibre(clientDeLaVente);
 
   /** L'unité est fixe pour lait/cabris, comme à la création. */
   const changerCategorie = (categorie: Vente['categorie']) => {
@@ -105,7 +116,9 @@ export function useFicheVente(id: string | undefined) {
 
     // La quantité d'une vente de viande (animaux entiers) est le nombre d'animaux choisis : on ne la saisit pas.
     const sansQuantite = form.categorie === CATEGORIE_VENTE.VIANDE;
-    if (!sansQuantite && (!form.quantite || form.quantite <= 0)) {
+    const reajustement =
+      !!form.reajustement && reajustementPossible(clientDeLaVente, form.categorie, venteADeclarer(form));
+    if (!sansQuantite && !reajustement && (!form.quantite || form.quantite <= 0)) {
       return refuser({ titre: TEXTES.commun.general.quantiteInvalide });
     }
     if (
@@ -128,8 +141,16 @@ export function useFicheVente(id: string | undefined) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.lotsRequis });
     }
     // Une vente que le client souhaite déclarer a un numéro de facture.
-    if (venteADeclarer(form) && !form.numeroFacture?.trim()) {
+    if (venteADeclarer(form) && !reajustement && !form.numeroFacture?.trim()) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureRequis });
+    }
+    if (
+      venteADeclarer(form) &&
+      !reajustement &&
+      !numeroFactureLibre(clientDeLaVente) &&
+      !MOTIF_NUMERO_FACTURE_NUMERIQUE.test(form.numeroFacture ?? '')
+    ) {
+      return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureNumerique });
     }
     if (form.categorie === CATEGORIE_VENTE.VIANDE && !(form.poidsKg && form.poidsKg > 0)) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.poidsRequis });
@@ -151,12 +172,14 @@ export function useFicheVente(id: string | undefined) {
     // Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : il n'est jamais saisi.
     const quantite = sansQuantite ? Math.max(1, animauxForm.length) : form.quantite;
     let prix = form.prix;
-    if ((CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie)) {
+    const prixDeLInventaire =
+      (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente;
+    if (prixDeLInventaire) {
       prix = totalDeLaVente({ ...form, quantite }, await lireArchiveStock());
     }
     if (!prix || prix < 0) {
       return refuser(
-        (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie)
+        prixDeLInventaire
           ? {
               titre: TEXTES.comptabilite.nouvelleEcriture.prixAFixerTitre,
               message: TEXTES.comptabilite.nouvelleEcriture.prixAFixerMessage,
@@ -169,10 +192,11 @@ export function useFicheVente(id: string | undefined) {
       const nettoye: Vente = {
         ...form,
         prix,
-        quantite,
+        quantite: reajustement ? 0 : quantite,
+        reajustement: reajustement ? true : undefined,
         client: form.client?.trim() || undefined,
         precision: form.precision?.trim() || undefined,
-        numeroFacture: venteADeclarer(form) ? form.numeroFacture?.trim() : undefined,
+        numeroFacture: venteADeclarer(form) && !reajustement ? form.numeroFacture?.trim() : undefined,
         // Pas de date d'abattoir quand la vente n'est pas déclarée : l'animal passe en « morte ».
         dateAbattoir: venteADeclarer(form) ? form.dateAbattoir : undefined,
       };
@@ -234,6 +258,7 @@ export function useFicheVente(id: string | undefined) {
     setSuppressionOuverte,
     montantTexte,
     changerMontant,
+    clientDeLaVente,
     changerCategorie,
     enregistrerModifications,
     supprimerDefinitivement,

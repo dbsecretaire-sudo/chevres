@@ -24,6 +24,7 @@ import type { Vente } from '@/features/comptabilite/types';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
@@ -57,7 +58,7 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           searchable
           placeholder={TEXTES.commun.general.choixDuClient}
           value={e.clientId}
-          onChange={e.setClientId}
+          onChange={e.choisirClient}
           options={optionsClients}
           onEdit={() => router.push(ROUTES.CLIENTS)}
         />
@@ -74,11 +75,13 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             />
             {/* Une vente déclarée a un numéro de facture. */}
             {e.avecFacture ? (
-              <FormField
-                label={TEXTES.comptabilite.nouvelleEcriture.nDeFacture}
-                required
+              <ChampNumeroFacture
                 value={e.numeroFacture}
-                onChangeText={e.setNumeroFacture}
+                onChange={e.setNumeroFacture}
+                libre={e.numeroFactureLibre}
+                reajustementPossible={e.reajustementPossible}
+                reajustement={e.reajustement}
+                onReajustement={e.setReajustement}
               />
             ) : null}
           </>

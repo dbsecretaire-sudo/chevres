@@ -26,6 +26,12 @@ import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { chargerCategoriesRecetteInventaire } from '@/features/comptabilite/repository/categoriesRecetteInventaire';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
+import {
+  numeroFactureLibre as numeroFactureLibreDuClient,
+  reajustementPossible as reajustementPossibleDuClient,
+  prixLibre as prixLibreDuClient,
+  venteDeclareeParDefaut,
+} from '@/features/clients/services/categorie';
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
 import { ligneAlimentVide, type LigneAlimentForm } from '@/features/comptabilite/forms/lignesAlimentation';
@@ -103,6 +109,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [avecFacture, setAvecFacture] = useState(true);
   /** Le numéro de la facture de la vente (obligatoire quand elle est déclarée). */
   const [numeroFacture, setNumeroFacture] = useState('');
+  /** Le récolteur coche « Réajustement » : décoché d'office. */
+  const [reajustementCoche, setReajustement] = useState(false);
   /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
   const [natureUrssaf, setNatureUrssaf] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
@@ -220,6 +228,22 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   // --- Valeurs calculées ---
   const clientSelectionne = clients.find((c) => c.id === clientId);
+  /** Le prix d'un récolteur est libre (saisi) ; son numéro de facture peut avoir des lettres, celui des autres seulement des chiffres. */
+  const prixLibre = prixLibreDuClient(clientSelectionne);
+  const numeroFactureLibre = numeroFactureLibreDuClient(clientSelectionne);
+  /** « Réajustement » : une vente de lait déclarée d'un récolteur ; coché, elle n'a ni litrage ni numéro de facture. */
+  const reajustementPossible = reajustementPossibleDuClient(clientSelectionne, categorieRecette, avecFacture);
+  const reajustement = reajustementPossible && reajustementCoche;
+  /** Choisit le client, et règle d'office « le client souhaite déclarer la vente » selon sa catégorie. */
+  const choisirClient = (id: string) => {
+    setClientId(id);
+    const declaree = venteDeclareeParDefaut(clients.find((c) => c.id === id));
+    if (declaree !== avecFacture) {
+      setAvecFacture(declaree);
+      // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
+      setAnimaux([]);
+    }
+  };
   const estProductionVente = type === TYPE_FACTURE.EMISE && estCategorieVente(categorieRecette);
   const estAlimentationDebit =
     type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
@@ -454,6 +478,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         tvaEmise: tvaEntreprise && type === TYPE_FACTURE.EMISE && categorieRecette !== CATEGORIE_RECETTE.AIDE,
         avecFacture,
         numeroFacture,
+        reajustement,
         natureUrssaf,
       });
       if ('erreur' in resultat) {
@@ -610,6 +635,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     clients,
     clientId,
     setClientId,
+    choisirClient,
+    prixLibre,
+    numeroFactureLibre,
+    reajustementPossible,
+    reajustement,
+    setReajustement,
     // affichage
     compteAffiche,
     avecFacture,
