@@ -56,15 +56,60 @@ export function DetailUgbPrimes({
             ) : (
               <View style={commonStyles.gap6}>
                 {lignes.map((l) => (
-                  <Text key={l.cle} style={commonStyles.line}>
-                    {T.ligne(
-                      l.nom,
-                      coef(l.quantite),
-                      P.unitesQuantite[l.base],
-                      formatMontant(l.taux),
-                      formatMontant(l.montant),
+                  <View key={l.cle} style={commonStyles.gap2}>
+                    {l.partFixe > 0 ? (
+                      <>
+                        <Text style={commonStyles.line}>
+                          {T.ligneTotale(l.nom, formatMontant(l.montant))}
+                        </Text>
+                        <Text style={commonStyles.note}>
+                          {T.partFixe(
+                            coef(l.quantite),
+                            P.unitesQuantite[l.base],
+                            formatMontant(l.partFixe),
+                            formatMontant(l.montantFixe),
+                          )}
+                        </Text>
+                        <Text style={commonStyles.note}>
+                          {T.partZone(
+                            coef(Math.round(l.quantitePleine * 100) / 100),
+                            P.unitesQuantite[l.base],
+                            formatMontant(l.tauxRetenu),
+                            formatMontant(l.montantZone),
+                          )}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={commonStyles.line}>
+                        {T.ligne(
+                          l.nom,
+                          coef(l.quantite),
+                          P.unitesQuantite[l.base],
+                          formatMontant(l.tauxRetenu),
+                          formatMontant(l.montant),
+                        )}
+                      </Text>
                     )}
-                  </Text>
+                    {/* Ce qui a joué dans le calcul : plafond, seuil non atteint, montant limité, tranches. */}
+                    {[
+                      l.minimum !== undefined
+                        ? T.sousMinimum(coef(l.minimum), P.unitesQuantite[l.base])
+                        : undefined,
+                      l.plafonnee
+                        ? T.plafonne(coef(l.quantite), coef(l.quantiteBrute), P.unitesQuantite[l.base])
+                        : undefined,
+                      l.tauxRetenu < l.taux
+                        ? T.tauxLimite(formatMontant(l.tauxRetenu), P.unites[l.base])
+                        : undefined,
+                      l.degressive ? T.degressif : undefined,
+                    ]
+                      .filter(Boolean)
+                      .map((note) => (
+                        <Text key={note} style={commonStyles.note}>
+                          {note}
+                        </Text>
+                      ))}
+                  </View>
                 ))}
                 <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
               </View>

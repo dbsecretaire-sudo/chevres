@@ -259,6 +259,7 @@ export function useFicheVente(id: string | undefined) {
     montantTexte,
     changerMontant,
     clientDeLaVente,
+    clients,
     changerCategorie,
     enregistrerModifications,
     supprimerDefinitivement,

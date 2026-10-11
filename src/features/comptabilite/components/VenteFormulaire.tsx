@@ -39,6 +39,7 @@ import {
 } from '@/shared/constants/comptabilite';
 import { categoriesRecetteActivite, estCategorieVente } from '@/features/comptabilite/utils/recettes';
 import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
+import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -58,6 +59,8 @@ interface Props {
   form: Vente;
   /** La fiche du client de la vente : sa catégorie (récolteur) rend le prix et le numéro de facture libres. */
   client?: Client;
+  /** Les clients de l'établissement : le client de la vente se choisit dans cette liste. */
+  clients: Client[];
   onChange: (form: Vente) => void;
   onChangerCategorie: (categorie: Vente['categorie']) => void;
   /** Texte tel que saisi pour le prix (évite de perdre la virgule en cours de frappe). */
@@ -68,10 +71,14 @@ interface Props {
 
 const T = TEXTES.comptabilite.nouvelleEcriture;
 
+/** La valeur de la liste pour un client de la vente qui n'est plus dans les fiches : il reste affiché sous son nom. */
+const CLIENT_HORS_LISTE = '__hors_liste__';
+
 /** Formulaire de modification d'une vente de production. */
 export function VenteFormulaire({
   form,
   client,
+  clients,
   onChange,
   onChangerCategorie,
   montantTexte,
@@ -259,11 +266,22 @@ export function VenteFormulaire({
         <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
       ) : null}
 
-      <FormField
+      {/* Le client : la liste des clients, avec le crayon qui mène aux fiches ; un client qui n'y est plus reste choisi sous son nom. */}
+      <SelectFieldEditable
         label={TEXTES.commun.general.client}
         required
-        value={form.client ?? ''}
-        onChangeText={(client) => onChange({ ...form, client })}
+        searchable
+        placeholder={TEXTES.commun.general.choixDuClient}
+        value={client?.id ?? (form.client ? CLIENT_HORS_LISTE : '')}
+        onChange={(id) => {
+          const choisi = clients.find((c) => c.id === id);
+          if (choisi) onChange({ ...form, client: nomComplet(choisi) });
+        }}
+        options={[
+          ...clients.map((c) => ({ value: c.id, label: nomComplet(c) })),
+          ...(client || !form.client ? [] : [{ value: CLIENT_HORS_LISTE, label: form.client }]),
+        ]}
+        onEdit={() => router.push(ROUTES.CLIENTS)}
       />
 
       {/* Le client souhaite-t-il que la vente soit déclarée (avec facture) ? Coché d'office, comme à la création. */}

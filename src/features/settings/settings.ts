@@ -21,6 +21,18 @@ export interface IdentificationCheptel {
   indicatifMarquage?: string;
 }
 
+/** Les réglages d'une aide : si elle compte, son montant, sa base et ses plafonds (voir InfosExploitation.ugbPrimes). */
+export interface ReglagePrime {
+  actif?: boolean;
+  taux?: number;
+  base?: string;
+  plafond?: number;
+  minimum?: number;
+  plafondTaux?: number;
+  partFixe?: number;
+  tranchesZone?: { jusqua: number; pourcentage: number }[];
+}
+
 /** Informations d'une entreprise (hors élevage) ; tout est modifiable : statut, régimes, TVA, taxe de séjour. */
 export interface InfosEntreprise {
   nomEntreprise?: string;
@@ -73,15 +85,18 @@ export interface InfosExploitation {
   /**
    * Le paramétrage du cheptel : les coefficients UGB choisis par espèce (à défaut ceux d'UGB_PAR_DEFAUT) et, pour chaque prime
    * (PRIMES), si elle compte dans la prime prévisionnelle, son taux en euros et ce sur quoi il s'applique (par UGB, par animal ou par hectare ; à défaut, la base d'office de la prime) ; `nom` renomme une aide d'office.
+   * Les plafonds d'une aide (`plafond`, `minimum`, `plafondTaux`, `partFixe`, `tranchesZone`) remplacent ceux d'office (REGLES_PRIMES) ; 0 veut dire « sans ».
    */
+  ugbPrimes?: {
+    /** Le nombre d'associés d'un GAEC : il multiplie les plafonds des aides en transparence (1 hors GAEC). */
+    associes?: number;
+    coefficients?: Partial<Record<EspeceAnimale, { adulte?: number; petit?: number }>>;
+    primes?: Record<string, ReglagePrime & { nom?: string }>;
+    /** Les aides ajoutées par l'utilisateur (en plus de PRIMES) : elles comptent dans la prime prévisionnelle comme les autres. */
+    personnalisees?: (ReglagePrime & { id: string; nom: string })[];
+  };
   /** Les catégories de client de l'établissement (celles d'office à défaut) : voir dictionnaire/categoriesClient. */
   categoriesClient?: CategorieClientReglage[];
-  ugbPrimes?: {
-    coefficients?: Partial<Record<EspeceAnimale, { adulte?: number; petit?: number }>>;
-    primes?: Record<string, { actif?: boolean; taux?: number; base?: string; nom?: string }>;
-    /** Les aides ajoutées par l'utilisateur (en plus de PRIMES) : elles comptent dans la prime prévisionnelle comme les autres. */
-    personnalisees?: { id: string; nom: string; actif?: boolean; taux?: number; base?: string }[];
-  };
   /** Les rappels déjà validés (« rsa:2026-T3 », « urssaf:2026-09 »). */
   rappelsValides?: string[];
   /**

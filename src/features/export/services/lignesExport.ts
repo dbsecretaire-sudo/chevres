@@ -77,6 +77,7 @@ export function venteRow(v: Vente) {
       ? TEXTES.export.colonnes.oui
       : TEXTES.export.colonnes.non,
     [TEXTES.export.colonnes.nFacture]: v.numeroFacture ?? '',
+    [TEXTES.export.colonnes.reajustement]: v.reajustement ? TEXTES.export.colonnes.oui : '',
   };
 }
 

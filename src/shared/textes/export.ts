@@ -269,6 +269,8 @@ export const TEXTES_EXPORT = {
     oui: 'Oui',
     non: 'Non',
     nFacture: 'N° de facture',
+    reajustement: 'Réajustement',
+    categorieClient: 'Catégorie',
     declaree: 'Vente déclarée',
     natureUrssaf: 'Nature (URSSAF)',
     facturation: 'Facturation',

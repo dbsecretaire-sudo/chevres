@@ -1,4 +1,5 @@
 import type { Client } from '@/features/clients/types';
+import { categorieClientDe } from '@/shared/dictionnaire/categoriesClient';
 import type { Facture } from '@/features/comptabilite/types';
 import type { Element, SousDossier } from '@/features/dossiers/types';
 import type { FiscaliteEntreprise } from '@/features/entreprise/services/fiscaliteEntreprise';
@@ -133,6 +134,7 @@ export function lignesUrssaf(urssaf: Urssaf): Record<string, unknown>[] {
 export function clientRow(c: Client) {
   return {
     [C.nom]: nomComplet(c),
+    [C.categorieClient]: categorieClientDe(c.categorie).nom,
     [C.telephone]: c.telephone ?? '',
     [C.email]: c.email ?? '',
     [C.adresse]: c.adressePostale ?? '',

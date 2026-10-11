@@ -102,7 +102,18 @@ export const TEXTES_CHEPTEL = {
         total: (montant: string) => `Total : ${montant}`,
         aucunePrime:
           'Aucune prime renseignée : cochez-les et saisissez leur montant dans Organisation › Cheptel.',
-        note: 'Une indication d’après vos coefficients et vos montants : les conditions d’éligibilité et les plafonds ne sont pas calculés.',
+        note: 'Une indication d’après vos coefficients, vos montants et vos plafonds (réglables dans Organisation › Cheptel) : les autres conditions d’éligibilité ne sont pas calculées.',
+        plafonne: (compte: string, brut: string, unite: string) =>
+          `Plafonné : ${compte} ${unite} comptés sur ${brut}`,
+        sousMinimum: (minimum: string, unite: string) =>
+          `Seuil non atteint (${minimum} ${unite} au moins) : aucune aide`,
+        degressif: 'Zone dégressive par tranches',
+        partFixe: (quantite: string, unite: string, taux: string, montant: string) =>
+          `Part fixe : ${quantite} ${unite} × ${taux} = ${montant}`,
+        partZone: (quantite: string, unite: string, taux: string, montant: string) =>
+          `Zone : ${quantite} ${unite} pleins × ${taux} = ${montant}`,
+        ligneTotale: (nom: string, montant: string) => `${nom} : ${montant}`,
+        tauxLimite: (taux: string, unite: string) => `Montant limité à ${taux} par ${unite}`,
         parametrer: 'Paramétrer l’UGB et les primes',
         fermer: 'Fermer',
       },
@@ -119,7 +130,19 @@ export const TEXTES_CHEPTEL = {
     coefPetit: 'Coefficient par petit non sevré',
     primesTitre: 'Primes',
     primesAide:
-      'Cochez les aides que vous touchez et saisissez leur montant : le bilan en déduit une prime prévisionnelle. Les montants changent chaque année (prenez ceux de votre notification), et les conditions (plafonds, éligibilité) ne sont pas calculées.',
+      'Cochez les aides que vous touchez et saisissez leur montant : le bilan en déduit une prime prévisionnelle. Les montants et les plafonds changent chaque année (prenez ceux de votre notification) ; les plafonds proposés sont indicatifs et modifiables.',
+    associes: 'Nombre d’associés (GAEC)',
+    associesAide:
+      'En GAEC, les plafonds du paiement redistributif et de l’ICHN se multiplient par le nombre d’associés. Laissez 1 hors GAEC.',
+    plafond: 'Plafond',
+    minimum: 'Seuil minimum',
+    plafondTaux: 'Montant unitaire maximum (€)',
+    sansPlafond: 'Vide : sans plafond',
+    tranchesTitre: 'Montant de la zone : dégressivité par tranches',
+    partFixe: 'Part fixe (€ par hectare)',
+    tauxZone: 'Montant de la zone (€)',
+    jusqua: 'Jusqu’à (ha)',
+    partPayee: 'Part payée (%)',
     compter: 'Compter dans la prime prévisionnelle',
     ajouter: '+ Ajouter une aide',
     nomAide: 'Nom de l’aide',
@@ -140,26 +163,36 @@ export const TEXTES_CHEPTEL = {
         court: 'DPB',
         titre: 'Aides découplées — Paiement de base (DPB)',
         aide: 'PAC : paiement de base, à l’hectare admissible.',
+        plafondAide:
+          'Plafond : le nombre de droits (DPB) de votre portefeuille Telepac ; au-delà, les hectares ne touchent plus l’aide. La valeur d’un DPB est aussi limitée (144,52 € en Corse en 2026).',
       },
       redistributif: {
         court: 'Paiement redistributif',
         titre: 'Aides découplées — Paiement redistributif',
         aide: 'PAC : majoration sur les premiers hectares.',
+        plafondAide:
+          'Versé sur les 52 premiers hectares admissibles ; ce plafond se multiplie par le nombre d’associés d’un GAEC.',
       },
       ecoregime: {
         court: 'Écorégime',
         titre: 'Aides découplées — Écorégime',
         aide: 'PAC : paiement pour les pratiques favorables à l’environnement.',
+        plafondAide:
+          'Sans plafond : tous les hectares admissibles. Montants 2026 : 45,46 € (base), 62,05 € (supérieur), 110 € (bio), +20 € (haies).',
       },
       couplee_petits_ruminants: {
         court: 'Aide couplée petits ruminants',
         titre: 'Aide couplée aux petits ruminants',
         aide: 'PAC : par brebis ou chèvre éligible.',
+        plafondAide:
+          'Au moins 10 femelles éligibles (seuil modifiable). Montants 2026 en Corse : chèvre 15,43 € (30,87 € majoré), brebis 22,23 € (44,46 € majoré). Pas de plafond de têtes en Corse.',
       },
       ichn: {
         court: 'ICHN',
         titre: 'ICHN — Indemnité compensatoire de handicaps naturels',
         aide: 'Zones défavorisées : à l’hectare, selon le chargement en UGB.',
+        plafondAide:
+          'Plafonnée à 75 hectares : une part fixe (70 € par hectare) plus le montant de votre zone, payé à 100 % sur les 25 premiers hectares puis aux 2/3 de 25 à 50 ha. Les seuils se multiplient par le nombre d’associés d’un GAEC.',
       },
     },
   },
