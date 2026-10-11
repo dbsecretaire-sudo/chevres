@@ -85,6 +85,18 @@ export const commonStyles = StyleSheet.create({
   strongPrimary: { fontWeight: '800', color: colors.primary },
   required: { color: colors.danger },
   /** Une liste qui défile dans une fenêtre : elle ne dépasse pas cette hauteur. */
+  /** L'aperçu d'une image jointe, au-dessus de sa ligne. */
+  apercuImage: { width: '100%', height: 180, borderRadius: 12, backgroundColor: colors.champ },
+  /** Le cadre d'aperçu d'un document qui n'est pas une image (PDF, Word, Excel). */
+  apercuDocument: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    backgroundColor: colors.champ,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
   listeDeFenetre: { maxHeight: 420 },
   /** Un libellé qui mène ailleurs : bleu et souligné. */
   lien: { color: colors.ajout, textDecorationLine: 'underline' },

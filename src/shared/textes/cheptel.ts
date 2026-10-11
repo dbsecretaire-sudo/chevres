@@ -59,6 +59,13 @@ export const TEXTES_CHEPTEL = {
     /** Les ventes déclarées dans la comptabilité : la fiche de l'animal passe en vendu. */
     vendusStock: 'Vendus (inventaire)',
     venduesStock: 'Vendues (inventaire)',
+    /** La déclaration à la Chambre d'agriculture, jointe au bilan de l'année (fichier rangé avec la sauvegarde et sur Drive). */
+    declaration: {
+      titre: (annee: number) => `Déclaration à la Chambre d’agriculture ${annee}`,
+      aucune: 'Aucune déclaration jointe pour cette année.',
+      joindre: 'Joindre un fichier',
+      remplacer: 'Remplacer le fichier',
+    },
     autoConsommation: 'Auto-consommation',
     mortNes: 'Mort-nés',
     get totalCabris() {

@@ -103,6 +103,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'chevreId',
     'chevreNumeroBoucle',
     'type',
+    'typeDocument',
     'resultat',
     'notes',
     'fichiers',

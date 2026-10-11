@@ -2,6 +2,7 @@
 export const TEXTES_FICHIERS = {
   titre: 'Fichiers',
   ajouter: 'Ajouter un fichier',
+  remplacer: 'Remplacer le fichier',
   aucun: 'Aucun fichier joint',
   retirer: 'Retirer',
   importerUnFichier: 'Importer un fichier',

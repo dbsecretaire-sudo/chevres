@@ -74,3 +74,6 @@ export const EXTENSION_PAR_MIME: Record<string, string> = {
 
 /** Largeur maximale (%) d'une image dans le PDF qui la contient. */
 export const LARGEUR_IMAGE_PDF = '100%';
+
+/** Les extensions de fichiers qui sont des images : on en montre un aperçu. */
+export const EXTENSIONS_IMAGE: readonly string[] = ['jpg', 'jpeg', 'png'];

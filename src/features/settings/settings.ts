@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+import type { PieceJointe } from '@/features/fichiers/types';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type {
@@ -70,6 +71,11 @@ export interface InfosExploitation {
   rappelsDesactives?: string[];
   /** Les rappels déjà validés (« rsa:2026-T3 », « urssaf:2026-09 »). */
   rappelsValides?: string[];
+  /**
+   * Le fichier de la déclaration à la Chambre d'agriculture jointe au bilan annuel, par année et par espèce (« 2025:chevres »).
+   * Les premières versions rangeaient une liste de fichiers : les deux formes se lisent (voir piecesDeLaDeclaration).
+   */
+  declarationsChambre?: Record<string, PieceJointe | PieceJointe[]>;
   numeroExploitation?: string;
   siret?: string;
   nomExploitant?: string;
@@ -133,3 +139,7 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
   await AsyncStorage.setItem(cle(), JSON.stringify(next));
   return next;
 }
+
+/** Les fichiers d'une déclaration à la Chambre, qu'elle soit rangée comme un fichier ou comme une liste (ancien format). */
+export const piecesDeLaDeclaration = (valeur: PieceJointe | PieceJointe[] | undefined): PieceJointe[] =>
+  Array.isArray(valeur) ? valeur : valeur ? [valeur] : [];

@@ -1,5 +1,7 @@
 /** Valeurs des contrôles de l'exploitation (surface, animaux, lait) — à modifier ici uniquement. */
 
+import type { ValeurDe } from '@/shared/constants/valeurDe';
+
 /** Les familles de contrôles : les volets de l'écran Contrôles, et leurs onglets. */
 export const FAMILLE_CONTROLE = {
   /** Les contrôles de surface (déclaration PAC, contrôle sur place…). */
@@ -20,8 +22,70 @@ export const FAMILLE_CONTROLE = {
   GROUPEMENT: 'groupement',
 } as const;
 
+/**
+ * Ce qu'un nouvel élément du volet Terrains peut être : une parcelle (le formulaire des surfaces), ou un document de l'exploitation
+ * (assurance récolte PAC, registre parcellaire, récapitulatif des assolements) qu'on joint en image avec sa date.
+ */
+export const TYPE_DOCUMENT_TERRAIN = {
+  PARCELLE: 'parcelle',
+  ASSURANCE_RECOLTE: 'assurance_recolte',
+  REGISTRE_PARCELLAIRE: 'registre_parcellaire',
+  RECAPITULATIF_ASSOLEMENTS: 'recapitulatif_assolements',
+} as const;
+
 /** La nature d'un contenu de groupement (la note ou la démarche qu'il range). */
 export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique'] as const;
+
+/** La hauteur du graphique du résumé du contrôle laitier quand il s'affiche en plein écran (px). */
+export const HAUTEUR_COURBE_PLEIN_ECRAN = 340;
+
+/** Les niveaux de vigilance d'un résultat d'analyse. */
+export const NIVEAU_VIGILANCE = {
+  VIGILANCE: 'vigilance',
+  CRITIQUE: 'critique',
+} as const;
+
+/** Le niveau de chaque grade du rapport : A est excellent (aucun niveau), B demande de la vigilance (orange), C est critique (rouge). */
+export const VIGILANCE_PAR_GRADE: Record<string, ValeurDe<typeof NIVEAU_VIGILANCE> | undefined> = {
+  B: NIVEAU_VIGILANCE.VIGILANCE,
+  C: NIVEAU_VIGILANCE.CRITIQUE,
+};
+
+/**
+ * Les seuils qui font signaler un résultat chiffré du lait comme point de vigilance (en plus des grades B et C des rapports),
+ * chacun avec les mêmes unités que la saisie. Hors de [vigilanceMin, vigilanceMax], le point demande de la vigilance (orange) ; hors de
+ * [critiqueMin, critiqueMax], il est critique (rouge). Les paramètres absents n'ont pas de seuil.
+ * - Flore totale : 500 000 germes/ml pour un lait destiné à des produits au lait cru sans traitement thermique, 1 500 000 sinon
+ *   (règlement CE 853/2004, annexe III, section IX, pour les espèces autres que la vache). Le règlement juge une moyenne
+ *   géométrique glissante sur deux mois ; ici, chaque analyse est comparée aux seuils.
+ * - Cryoscopie : un point de congélation au-dessus de −0,520 °C fait craindre de l'eau dans le lait (repère de réponses
+ *   consultées, non vérifié dans une norme).
+ * - Urée : de 150 à 300 mg/l (repère de conseil en élevage, non vérifié dans un document officiel).
+ */
+export const SEUILS_VIGILANCE_LAIT: Partial<
+  Record<
+    'floreTotale' | 'cryoscopie' | 'uree',
+    { vigilanceMin?: number; vigilanceMax?: number; critiqueMin?: number; critiqueMax?: number }
+  >
+> = {
+  floreTotale: { vigilanceMax: 500000, critiqueMax: 1500000 },
+  cryoscopie: { critiqueMax: -0.52 },
+  uree: { vigilanceMin: 150, vigilanceMax: 300 },
+};
+
+/**
+ * Les actions conseillées après des points de vigilance ou critiques, dans l'ordre où les mener, chacune avec les paramètres dont
+ * elle peut corriger les points. Une action n'apparaît au rapport que si un de ses paramètres est signalé. S'y ajoute toujours, en
+ * dernier, une nouvelle analyse pour confirmer l'amélioration.
+ */
+export const ACTIONS_LAIT = [
+  { cle: 'hygiene', parametres: ['floreTotale', 'coliformes'] },
+  { cle: 'installation', parametres: ['floreTotale', 'cryoscopie'] },
+  { cle: 'ration', parametres: ['uree', 'cryoscopie'] },
+] as const;
+
+/** Le résultat « antibiotique » d'une analyse qui est positif : toujours critique. */
+export const ANTIBIOTIQUE_POSITIF = 'positif';
 
 /** Les onglets de chaque volet : ses contrôles, puis ce qu'il a de plus (terrains et résumé, boucles, analyses). */
 export const ONGLETS_VOLET = {

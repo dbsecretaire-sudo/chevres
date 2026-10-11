@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { DateEtNombre } from '@/features/cheptel/services/bilanCheptel';
 import { formatDateFR } from '@/shared/utils/dates';
+import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -58,23 +60,44 @@ export function Ligne({
   );
 }
 
-/** En-tête d'une carte : titre à gauche, total (et total précédent) à droite. */
+/**
+ * En-tête d'une carte : titre à gauche, total (et total précédent) à droite. Avec `onBasculer`, il déroule ou enroule la carte
+ * (flèche à droite) ; sans, c'est un simple titre.
+ */
 export function TitreCarte({
   titre,
   valeur,
   comparaison,
+  ouverte = false,
+  onBasculer,
 }: {
   titre: string;
   valeur: number;
   comparaison?: number;
+  ouverte?: boolean;
+  onBasculer?: () => void;
 }) {
-  return (
-    <View style={styles.titreLigne}>
-      <Text style={commonStyles.cardTitle}>{titre}</Text>
+  const contenu = (
+    <>
+      <Text style={[commonStyles.cardTitle, styles.titreTexte]}>{titre}</Text>
       <View style={styles.ligneValeurs}>
         <Text style={styles.cardTitreValeur}>{valeur}</Text>
         {comparaison !== undefined && <Text style={commonStyles.muted}>({comparaison})</Text>}
+        {onBasculer ? (
+          <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+        ) : null}
       </View>
-    </View>
+    </>
+  );
+  return onBasculer ? (
+    <Pressable
+      style={styles.titreLigne}
+      onPress={onBasculer}
+      accessibilityLabel={ouverte ? TEXTES.commun.general.voirMoins : TEXTES.commun.general.voirPlus}
+    >
+      {contenu}
+    </Pressable>
+  ) : (
+    <View style={styles.titreLigne}>{contenu}</View>
   );
 }

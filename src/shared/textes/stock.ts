@@ -125,6 +125,8 @@ export const TEXTES_STOCK = {
     titreEtat: 'Boucles',
     sorte: { boucles: 'Boucles', rouges: 'Boucles rouges', tiptag: 'Tiptag' },
     imprimer: 'Imprimer les boucles',
+    agrandir: 'Afficher la liste en pleine page',
+    reduire: 'Fermer la pleine page',
     etat: { tout: 'Tout', posee: 'Posée', non_posee: 'Non posée' },
     aucuneBoucle: 'Aucune boucle.',
     colonnes: { numero: 'N°', pose: 'Date de pose', achat: 'Date d’achat' },

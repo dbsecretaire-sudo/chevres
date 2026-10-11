@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
+import { NIVEAU_VIGILANCE } from '@/shared/constants/controles';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/components/Courbe.styles';
 
 /** Hauteur du dessin et marge intérieure (px). */
@@ -12,9 +15,13 @@ export interface SerieCourbe {
   couleur: string;
   /** Une valeur par libellé de l'axe (rien quand la série n'a pas de valeur à ce point). */
   valeurs: (number | undefined)[];
+  /** Les points à surveiller (un cercle les entoure : orange pour la vigilance, rouge pour le critique), par position. */
+  vigilances?: Record<number, ValeurDe<typeof NIVEAU_VIGILANCE>>;
 }
 
 interface Props {
+  /** La hauteur du dessin (px) ; plus grande en plein écran. */
+  hauteur?: number;
   /** Les libellés de l'axe, un par point (les mois). */
   libelles: string[];
   series: SerieCourbe[];
@@ -26,7 +33,7 @@ interface Props {
  * eux, et le libellé des points est écrit dessous (le premier et le dernier seulement quand il y en a beaucoup). Tracé avec de
  * simples vues, sans bibliothèque.
  */
-export function Courbe({ libelles, series }: Props) {
+export function Courbe({ libelles, series, hauteur = HAUTEUR }: Props) {
   const [largeur, setLargeur] = useState(0);
   const utile = Math.max(largeur - 2 * MARGE, 1);
   const x = (i: number) =>
@@ -36,7 +43,7 @@ export function Courbe({ libelles, series }: Props) {
   return (
     <View>
       <View
-        style={[styles.zone, { height: HAUTEUR }]}
+        style={[styles.zone, { height: hauteur }]}
         onLayout={(e) => setLargeur(e.nativeEvent.layout.width)}
       >
         {largeur > 0
@@ -51,8 +58,8 @@ export function Courbe({ libelles, series }: Props) {
               // Une série constante se range au milieu du dessin.
               const y = (valeur: number) =>
                 ecart === 0
-                  ? HAUTEUR / 2
-                  : HAUTEUR - MARGE - ((valeur - plusBas) / ecart) * (HAUTEUR - 2 * MARGE);
+                  ? hauteur / 2
+                  : hauteur - MARGE - ((valeur - plusBas) / ecart) * (hauteur - 2 * MARGE);
               return (
                 <View key={`serie-${k}`} style={styles.serie} pointerEvents="none">
                   {presents.slice(1).map((p, j) => {
@@ -75,15 +82,32 @@ export function Courbe({ libelles, series }: Props) {
                       />
                     );
                   })}
-                  {presents.map((p) => (
-                    <View
-                      key={`point-${p.i}`}
-                      style={[
-                        styles.point,
-                        { left: x(p.i) - 4, top: y(p.valeur) - 4, backgroundColor: serie.couleur },
-                      ]}
-                    />
-                  ))}
+                  {presents.map((p) => {
+                    const niveau = serie.vigilances?.[p.i];
+                    return (
+                      <View key={`point-${p.i}`}>
+                        {niveau ? (
+                          <View
+                            style={[
+                              styles.vigilance,
+                              {
+                                left: x(p.i) - 10,
+                                top: y(p.valeur) - 10,
+                                borderColor:
+                                  niveau === NIVEAU_VIGILANCE.CRITIQUE ? colors.danger : colors.warning,
+                              },
+                            ]}
+                          />
+                        ) : null}
+                        <View
+                          style={[
+                            styles.point,
+                            { left: x(p.i) - 4, top: y(p.valeur) - 4, backgroundColor: serie.couleur },
+                          ]}
+                        />
+                      </View>
+                    );
+                  })}
                 </View>
               );
             })

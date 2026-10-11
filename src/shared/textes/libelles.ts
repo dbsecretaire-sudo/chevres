@@ -83,6 +83,22 @@ export const LABEL_UNITE_VENTE_COURT: Record<ValeurDe<typeof UNITE_VENTE>, strin
   [UNITE_VENTE.KG]: 'kg',
 };
 
+/** Les mois en court, sous les points d'un graphique (juin et juillet restent distincts). */
+export const NOMS_MOIS_COURTS = [
+  'janv.',
+  'févr.',
+  'mars',
+  'avr.',
+  'mai',
+  'juin',
+  'juil.',
+  'août',
+  'sept.',
+  'oct.',
+  'nov.',
+  'déc.',
+] as const;
+
 export const NOMS_MOIS = [
   'Janvier',
   'Février',

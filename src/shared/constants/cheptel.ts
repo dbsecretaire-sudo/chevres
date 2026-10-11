@@ -126,3 +126,11 @@ export const ETAPE_AJOUT_RAPIDE = {
 
 /** Nombre minimal de petits déclarables en une seule mise bas (le maximum dépend de l'espèce : voir nbPetitsMax). */
 export const NB_PETITS_MIN = 1;
+
+/** Les cartes du bilan annuel : une seule est déroulée à la fois (aucune au départ). */
+export const CARTE_BILAN = {
+  CABRIS: 'cabris',
+  CHEVRES: 'chevres',
+  BOUCS: 'boucs',
+  EFFECTIF: 'effectif',
+} as const;

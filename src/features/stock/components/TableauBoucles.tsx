@@ -32,7 +32,7 @@ export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
  * porte n'est plus vivant. Un appui sur le titre d'une colonne trie la liste d'après elle. C'est la même vue dans l'inventaire et
  * dans les contrôles : l'inventaire des boucles ne se modifie qu'en comptabilité (achat) et au cheptel (pose).
  */
-export function TableauBoucles({ liste }: { liste: ListeBoucles }) {
+export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBoucles; pleinePage?: boolean }) {
   const { lignes, tri, croissant, trierPar, morts, etat } = liste;
 
   const titreColonne = (colonne: ValeurDe<typeof TRI_BOUCLE>, style: object) => (
@@ -68,7 +68,7 @@ export function TableauBoucles({ liste }: { liste: ListeBoucles }) {
               : T.aucuneBoucle}
         </Text>
       ) : (
-        <ScrollView style={styles.liste} nestedScrollEnabled>
+        <ScrollView style={pleinePage ? undefined : styles.liste} nestedScrollEnabled>
           {lignes.map((b, i) => (
             <View key={b.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
               <Text style={[styles.texteLigne, styles.colonneNumero]}>{b.numero}</Text>
