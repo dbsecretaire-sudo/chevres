@@ -191,6 +191,11 @@ export default function TabsLayout() {
         ['organisation-inventaire', TEXTES.settings.reglages.sectionInventaire, ROUTES.REGLAGES],
         ['organisation-conditionnement', TEXTES.stock.conditionnement.titre, ROUTES.ORGANISATION_INVENTAIRE],
         ['organisation-tiers', TEXTES.settings.reglages.sectionTiers, ROUTES.REGLAGES],
+        [
+          'organisation-categories-client',
+          TEXTES.settings.reglages.sectionCategoriesClient,
+          ROUTES.ORGANISATION_TIERS,
+        ],
         ['organisation-donnees', TEXTES.settings.reglages.sectionDonnees, ROUTES.REGLAGES],
         ['export-donnees', TEXTES.settings.reglages.export, ROUTES.ORGANISATION_DONNEES],
         ['pdf-donnees', TEXTES.settings.reglages.pdf, ROUTES.ORGANISATION_DONNEES],

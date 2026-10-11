@@ -284,10 +284,11 @@ export const TEXTES_COMPTABILITE = {
   },
   transactions: {
     venteDeProduction: 'Vente de production',
-    typeVente: 'Type : ',
-    laitQuantiteL: (quantite: number) => `Lait — ${quantite} L`,
+    /** Le poids d'une vente d'animal ou de viande, après son libellé : « Viande · 25 kg ». */
+    poidsKg: (poids: number) => `${String(poids).replace('.', ',')} kg`,
+    laitQuantiteL: (quantite: number) => `Lait · ${quantite} L`,
     cabrisQuantiteTeteValeur: (libelle: string, quantite: number, valeur: string) =>
-      `${libelle} — ${quantite} tête${valeur}`,
-    fromageQuantiteUnite: (quantite: number, unite: unknown) => `Fromage — ${quantite} ${unite}`,
+      `${libelle} · ${quantite} tête${valeur}`,
+    fromageQuantiteUnite: (quantite: number, unite: unknown) => `Fromage · ${quantite} ${unite}`,
   },
 } as const;

@@ -64,19 +64,39 @@ function termesDeFacture(f: Facture): string[] {
   ].filter(Boolean);
 }
 
+/** Le libellé suivi du poids en kg quand la vente en a un : « Viande · 25 kg ». */
+const avecPoids = (libelle: string, v: Vente): string =>
+  v.poidsKg ? `${libelle} · ${TEXTES.comptabilite.transactions.poidsKg(v.poidsKg)}` : libelle;
+
 /** Titre d'une vente dans la liste : « Lait — 12 L », « Veaux — 2 têtes », « Charcuterie »… */
 function titreVente(v: Vente): string {
   if (v.categorie === CATEGORIE_VENTE.LAIT) return TEXTES.comptabilite.transactions.laitQuantiteL(v.quantite);
   if ((CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(v.categorie)) {
-    return TEXTES.comptabilite.transactions.cabrisQuantiteTeteValeur(
-      libelleCategorieVente(v),
-      v.quantite,
-      v.quantite > 1 ? 's' : '',
+    return avecPoids(
+      TEXTES.comptabilite.transactions.cabrisQuantiteTeteValeur(
+        libelleCategorieVente(v),
+        v.quantite,
+        v.quantite > 1 ? 's' : '',
+      ),
+      v,
     );
   }
-  if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie)) return libelleCategorieVente(v);
-  if (v.categorie === CATEGORIE_VENTE.OEUFS) return `${libelleCategorieVente(v)} — ${v.quantite}`;
+  if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(v.categorie)) {
+    return avecPoids(libelleCategorieVente(v), v);
+  }
+  if (v.categorie === CATEGORIE_VENTE.OEUFS) return `${libelleCategorieVente(v)} · ${v.quantite}`;
   return TEXTES.comptabilite.transactions.fromageQuantiteUnite(v.quantite, v.unite);
+}
+
+/**
+ * La ligne sous le titre d'une vente (la date s'affiche devant) : le n° de facture quand il y en a un, puis « Lait · 535 L »,
+ * ou « Lait · Réajustement » pour un réajustement (qui n'a ni litrage ni numéro).
+ */
+function sousTitreVente(v: Vente): string {
+  const produit = v.reajustement
+    ? `${libelleCategorieVente(v)} · ${TEXTES.comptabilite.nouvelleEcriture.reajustement}`
+    : titreVente(v);
+  return [v.numeroFacture, produit].filter(Boolean).join(' · ');
 }
 
 /**
@@ -97,7 +117,7 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
     montantComptabilise: v.prix,
     sens: SENS_TRANSACTION.ENTREE,
     titre: v.precision ? v.precision : TEXTES.comptabilite.transactions.venteDeProduction,
-    sousTitre: `${TEXTES.comptabilite.transactions.typeVente}${titreVente(v)}`,
+    sousTitre: sousTitreVente(v),
     source: SOURCE_TRANSACTION.VENTE,
     activite: activiteVente(v),
     libelleCategorie: LABEL_CATEGORIE_VENTE[v.categorie],

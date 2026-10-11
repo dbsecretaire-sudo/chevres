@@ -35,8 +35,21 @@ export const TEXTES_CLIENTS = {
   nouveauClient: {
     nomDuClient: 'Nom du client',
     categorieDuClient: 'Catégorie de client',
-    aideCategorie:
-      'Récolteur : prix et n° de facture libres. Organisme ou entreprise : vente déclarée d’office. Particulier : non.',
+    aideCategorie: 'Elle règle le prix, le n° de facture et la déclaration des ventes de ce client.',
+  },
+  /** Organisation › Clients et fournisseurs › Catégories de client. */
+  categories: {
+    aide: 'Renommez, ajoutez ou retirez des catégories, et réglez ce qu’elles changent dans les ventes.',
+    renommer: 'Modifier le nom de la catégorie',
+    nomCategorie: 'Nom de la catégorie',
+    exempleNom: 'ex : Coopérative',
+    ajouter: '+ Ajouter une catégorie',
+    declaree: 'Vente déclarée d’office (avec facture)',
+    prixLibre: 'Prix libre, n° de facture avec lettres, réajustement',
+    parDefaut: 'Catégorie d’office des clients : elle ne se retire pas.',
+    supprimer: 'Retirer cette catégorie',
+    supprimerQuestion: 'Retirer cette catégorie ?',
+    supprimerMessage: 'Les clients qui l’avaient passent en « Particulier » dans leur fiche.',
   },
   importClient: {
     importerDepuisUnAutreEtablissement: 'Importer un client depuis un autre établissement',

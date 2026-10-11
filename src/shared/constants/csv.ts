@@ -112,6 +112,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'surfaceAdmissible',
     'surfaceFourragere',
     'surfaceIrriguee',
+    'codeCulture',
     'matiereGrasse',
     'matiereProteique',
     'antibiotique',

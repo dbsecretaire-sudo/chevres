@@ -1,33 +1,25 @@
 import type { Client } from '@/features/clients/types';
-import {
-  CATEGORIE_CLIENT,
-  CATEGORIE_CLIENT_PAR_DEFAUT,
-  CATEGORIE_CLIENT_PRIX_LIBRE,
-  CATEGORIES_CLIENT_VENTE_DECLAREE,
-} from '@/shared/constants/clients';
+import { categorieClientDe } from '@/shared/dictionnaire/categoriesClient';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
 
-export type CategorieClient = ValeurDe<typeof CATEGORIE_CLIENT>;
+/** L'identifiant de la catégorie d'un client : celle de sa fiche, à défaut (ou si elle a été retirée) particulier. */
+export const categorieDuClient = (client: Pick<Client, 'categorie'> | undefined): string =>
+  categorieClientDe(client?.categorie).id;
 
-/** La catégorie d'un client : celle de sa fiche, à défaut particulier (aucun client choisi : particulier aussi). */
-export const categorieDuClient = (client: Pick<Client, 'categorie'> | undefined): CategorieClient =>
-  client?.categorie ?? CATEGORIE_CLIENT_PAR_DEFAUT;
-
-/** Vrai quand le prix de la vente est libre (récolteur) : on le saisit, il n'est pas tiré de l'inventaire. */
+/** Vrai quand le prix de la vente est libre (récolteur, ou toute catégorie réglée ainsi) : on le saisit, il n'est pas tiré de l'inventaire. */
 export const prixLibre = (client: Pick<Client, 'categorie'> | undefined): boolean =>
-  categorieDuClient(client) === CATEGORIE_CLIENT_PRIX_LIBRE;
+  categorieClientDe(client?.categorie).prixLibre;
 
-/** Vrai quand le numéro de facture peut contenir des lettres (récolteur) ; sinon chiffres, tirets et barres seulement. */
+/** Vrai quand le numéro de facture peut contenir des lettres ; sinon chiffres, tirets et barres seulement. */
 export const numeroFactureLibre = prixLibre;
 
-/** La valeur d'office de « le client souhaite déclarer la vente » : décochée pour un particulier, cochée pour les autres. */
+/** La valeur d'office de « le client souhaite déclarer la vente », selon la catégorie du client. */
 export const venteDeclareeParDefaut = (client: Pick<Client, 'categorie'> | undefined): boolean =>
-  CATEGORIES_CLIENT_VENTE_DECLAREE.includes(categorieDuClient(client));
+  categorieClientDe(client?.categorie).declaree;
 
 /**
- * Vrai quand la vente peut être un réajustement : la vente de lait déclarée d'un récolteur. Un réajustement n'a ni litrage ni numéro
- * de facture saisis.
+ * Vrai quand la vente peut être un réajustement : la vente de lait déclarée d'un client à prix libre. Un réajustement n'a ni litrage ni
+ * numéro de facture saisis.
  */
 export const reajustementPossible = (
   client: Pick<Client, 'categorie'> | undefined,

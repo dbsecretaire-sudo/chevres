@@ -2,7 +2,7 @@ import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ListRow } from '@/shared/components/ListRow';
 import type { Transaction } from '@/features/comptabilite/services/transactions';
-import { SENS_TRANSACTION, SOURCE_TRANSACTION } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, SENS_TRANSACTION, SOURCE_TRANSACTION } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
@@ -16,8 +16,9 @@ export function LigneTransaction({ item }: { item: Transaction }) {
   const estEntree = item.sens === SENS_TRANSACTION.ENTREE;
   const signe = estEntree ? '+' : '-';
   const estFacture = item.source === SOURCE_TRANSACTION.FACTURE;
-  /** Le montant de la facture se lit dans le sous-titre pour un achat d'exploitation (le montant comptabilisé reste à droite). */
-  const montantDansLeSousTitre = estFacture && !estEntree && !modeEntreprise();
+  /** Le total de la facture se lit dans le sous-titre pour une facture d'alimentation (répartie entre cheptels : à droite, la part comptabilisée). */
+  const montantDansLeSousTitre =
+    estFacture && !estEntree && !modeEntreprise() && item.categorie === CATEGORIE_DEPENSE.ALIMENTATION;
 
   return (
     <ListRow

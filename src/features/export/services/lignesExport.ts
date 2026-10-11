@@ -161,6 +161,7 @@ export function controleRow(c: Controle, indicatif?: IndicatifParEspece, avecDet
     ...(avecDetails
       ? {
           ...Object.fromEntries(SURFACES_TERRAIN.map((cle) => [TEXTES.export.colonnes[cle], c[cle] ?? ''])),
+          [TEXTES.export.colonnes.codeCulture]: c.codeCulture ?? '',
           ...resultatsLaitParColonne(c),
         }
       : {}),

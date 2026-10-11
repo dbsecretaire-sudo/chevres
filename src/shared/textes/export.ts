@@ -230,6 +230,7 @@ export const TEXTES_EXPORT = {
     surfaceAdmissible: 'Surface admissible (ha)',
     surfaceFourragere: 'Surface fourragère (ha)',
     surfaceIrriguee: 'Surface irriguée (ha)',
+    codeCulture: 'Code de la culture',
     articleStock: 'Article du stock',
     quantiteStock: 'Quantité au stock',
     premiereBoucle: 'N° de la première boucle',

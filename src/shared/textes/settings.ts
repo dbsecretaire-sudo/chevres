@@ -29,6 +29,8 @@ export const TEXTES_SETTINGS = {
     aideRubriqueTiers: 'Les carnets d’adresses de vos clients et de vos fournisseurs.',
     aideRubriqueFiscalite: 'Déclarations à valider, impôts, RSA, URSSAF, TVA.',
     aideClients: 'Les fiches de vos clients.',
+    sectionCategoriesClient: 'Catégories de client',
+    aideCategoriesClient: 'Particulier, récolteur, organisme… et ce qu’elles changent dans les ventes.',
     aideFournisseurs: 'Les fiches de vos fournisseurs.',
     aideRubriqueEtablissement: 'Informations, statut, dossiers des clients.',
     aideRubriqueComptabilite: 'Plan comptable, mode simple ou avancé, rappels de déclarations.',

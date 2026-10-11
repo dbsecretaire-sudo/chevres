@@ -4,6 +4,7 @@ import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import { definirCategoriesClient, type CategorieClientReglage } from '@/shared/dictionnaire/categoriesClient';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type {
   NATURE_URSSAF,
@@ -73,6 +74,8 @@ export interface InfosExploitation {
    * Le paramétrage du cheptel : les coefficients UGB choisis par espèce (à défaut ceux d'UGB_PAR_DEFAUT) et, pour chaque prime
    * (PRIMES), si elle compte dans la prime prévisionnelle, son taux en euros et ce sur quoi il s'applique (par UGB, par animal ou par hectare ; à défaut, la base d'office de la prime) ; `nom` renomme une aide d'office.
    */
+  /** Les catégories de client de l'établissement (celles d'office à défaut) : voir dictionnaire/categoriesClient. */
+  categoriesClient?: CategorieClientReglage[];
   ugbPrimes?: {
     coefficients?: Partial<Record<EspeceAnimale, { adulte?: number; petit?: number }>>;
     primes?: Record<string, { actif?: boolean; taux?: number; base?: string; nom?: string }>;
@@ -135,18 +138,24 @@ const DEFAULTS: AppSettings = {
 
 export async function getSettings(): Promise<AppSettings> {
   const raw = await AsyncStorage.getItem(cle());
-  if (!raw) return { ...DEFAULTS };
-  try {
-    return { ...DEFAULTS, ...(JSON.parse(raw) as AppSettings) };
-  } catch {
-    return { ...DEFAULTS };
+  let reglages: AppSettings = { ...DEFAULTS };
+  if (raw) {
+    try {
+      reglages = { ...DEFAULTS, ...(JSON.parse(raw) as AppSettings) };
+    } catch {
+      // Des réglages illisibles : ceux d'office.
+    }
   }
+  // Les catégories de client servent hors des écrans (calcul d'une vente) : elles sont posées à chaque lecture des réglages.
+  definirCategoriesClient(reglages.exploitation?.categoriesClient);
+  return reglages;
 }
 
 export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const current = await getSettings();
   const next = { ...current, ...patch };
   await AsyncStorage.setItem(cle(), JSON.stringify(next));
+  definirCategoriesClient(next.exploitation?.categoriesClient);
   return next;
 }
 

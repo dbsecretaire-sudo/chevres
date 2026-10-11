@@ -93,6 +93,7 @@ export const ROUTES = {
   ORGANISATION_CONDITIONNEMENT: '/organisation-conditionnement',
   ORGANISATION_DONNEES: '/organisation-donnees',
   ORGANISATION_TIERS: '/organisation-tiers',
+  ORGANISATION_CATEGORIES_CLIENT: '/organisation-categories-client',
   EXPORT_DONNEES: '/export-donnees',
   PDF_DONNEES: '/pdf-donnees',
   SAUVEGARDE_LOCALE: '/sauvegarde-locale',

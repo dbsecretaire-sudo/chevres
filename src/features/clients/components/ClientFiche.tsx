@@ -3,9 +3,9 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
 import { ChampCategorieClient } from '@/features/clients/components/ChampCategorieClient';
+import { categorieClientDe } from '@/shared/dictionnaire/categoriesClient';
 import { categorieDuClient } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
-import { LABEL_CATEGORIE_CLIENT } from '@/shared/textes/libelles';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -20,7 +20,7 @@ export function ClientLecture({ client, onModifier }: { client: Client; onModifi
       </Text>
       <Text style={commonStyles.line}>
         {TEXTES.clients.ficheClient.categorieDeuxPoints}
-        {LABEL_CATEGORIE_CLIENT[categorieDuClient(client)]}
+        {categorieClientDe(client.categorie).nom}
       </Text>
       {client.telephone ? (
         <Text style={commonStyles.line}>

@@ -6,7 +6,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.settings.reglages;
 
-/** Organisation › Clients et fournisseurs : les deux carnets d'adresses de l'établissement. */
+/** Organisation › Clients et fournisseurs : les deux carnets d'adresses de l'établissement et les catégories de client. */
 export default function RubriqueTiers() {
   return (
     <Screen>
@@ -23,6 +23,13 @@ export default function RubriqueTiers() {
           aide={T.aideFournisseurs}
           icone="people"
           route={ROUTES.FOURNISSEURS}
+          retour={ROUTES.ORGANISATION_TIERS}
+        />
+        <LigneRubrique
+          titre={T.sectionCategoriesClient}
+          aide={T.aideCategoriesClient}
+          icone="pricetags"
+          route={ROUTES.ORGANISATION_CATEGORIES_CLIENT}
           retour={ROUTES.ORGANISATION_TIERS}
         />
       </BlocLignes>

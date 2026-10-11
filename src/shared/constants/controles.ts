@@ -111,6 +111,12 @@ export const SURFACES_TERRAIN = [
   SURFACE_TERRAIN.IRRIGUEE,
 ] as const;
 
+/**
+ * Les codes de culture d'une parcelle (déclaration PAC) : prairie de 6 ans et plus, prairie avec herbe prédominante, surface pastorale,
+ * châtaigneraie et chênaie entretenues par des porcins ou des petits ruminants.
+ */
+export const CODES_CULTURE = ['PPH', 'SPH', 'SPL', 'CAE', 'CEE'] as const;
+
 /** Un grade de qualité du lait (A, B ou C). */
 export const GRADES_LAIT = ['A', 'B', 'C'] as const;
 
