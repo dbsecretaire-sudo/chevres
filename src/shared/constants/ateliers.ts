@@ -31,4 +31,4 @@ export const ATELIER_PAR_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE
 };
 
 /** Les ateliers du lait : le coût de production du litre se calcule sur leurs charges. */
-export const ATELIERS_DU_LAIT: readonly Atelier[] = [ATELIER.LAIT, ATELIER.FROMAGE];
+

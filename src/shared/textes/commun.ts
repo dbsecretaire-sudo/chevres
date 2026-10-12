@@ -167,6 +167,9 @@ export const TEXTES_COMMUN = {
     get cheptelTroupeauChevres() {
       return `Cheptel — ${V().troupeau}`;
     },
+    get registreCompletTroupeauChevres() {
+      return `Registre complet du cheptel — ${V().troupeau}`;
+    },
     nomDEntrepriseRequis: 'Nom d’entreprise requis',
     siretRequis: 'SIRET requis',
     adressePostaleRequise: 'Adresse postale requise',

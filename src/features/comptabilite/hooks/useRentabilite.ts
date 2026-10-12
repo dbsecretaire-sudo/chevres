@@ -8,7 +8,6 @@ import { rentabilite, type Rentabilite } from '@/features/comptabilite/services/
 import { TOUTES_ACTIVITES } from '@/features/comptabilite/services/filtresTransactions';
 import { reglagesTva } from '@/features/comptabilite/utils/reglagesTva';
 import { calculerBilan } from '@/features/cheptel/services/bilanCheptel';
-import { effectifDeclare } from '@/features/cheptel/services/ugb';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
@@ -28,24 +27,22 @@ export function useRentabilite() {
     regime === REGIME_TVA_PILOTAGE.REEL_SIMPLIFIE || regime === REGIME_TVA_PILOTAGE.REEL_NORMAL;
 
   const charger = useCallback(async () => {
-    // L'effectif ne se connaît que pour un cheptel : celui qu'on a déclaré, à défaut celui de fin d'année. Un établissement qui
-    // n'élève qu'une espèce n'a qu'un cheptel, même quand « Tout » est affiché.
+    // Le coût par animal ne se calcule que pour un cheptel, sur le nombre de femelles (les chèvres, de 6 mois et plus) vivantes au
+    // 31/12, comme le bilan annuel. Un établissement qui n'élève qu'une espèce n'a qu'un cheptel, même quand « Tout » est affiché.
     const cheptel =
       filtre !== TOUTES_ACTIVITES && filtre !== ACTIVITE_COMMUNE
         ? filtre
         : filtre === TOUTES_ACTIVITES && !plusieursEspeces()
           ? espece
           : undefined;
-    const effectif = cheptel
-      ? (effectifDeclare(infos, annee, cheptel) ?? (await calculerBilan(annee)).effectifFinAnnee.sevres)
-      : undefined;
+    const effectif = cheptel ? (await calculerBilan(annee)).chevresVivantesFinAnnee : undefined;
     const [toutesAnnees, r] = await Promise.all([
       toutesLesAnneesConnues(),
       rentabilite(annee, { filtre, horsTaxes, effectif }),
     ]);
     setAnnees(toutesAnnees);
     setResultat(r);
-  }, [annee, filtre, horsTaxes, infos, espece]);
+  }, [annee, filtre, horsTaxes, espece]);
 
   useFocusEffect(
     useCallback(() => {

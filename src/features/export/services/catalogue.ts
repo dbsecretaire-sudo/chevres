@@ -1,6 +1,7 @@
 import {
   exporterExploitationPdf,
   exporterCheptelPdf,
+  exporterRegistreCompletPdf,
   exporterPlanComptablePdf,
 } from '@/features/export/pdfExport';
 import {
@@ -53,6 +54,12 @@ export function pdfsDisponibles(): PdfDisponible[] {
         aide: T.cheptel.aide,
         generer: () => exporterCheptelPdf(),
         genererExcel: () => exporterCheptelExcel(),
+      },
+      {
+        id: 'registre-complet',
+        titre: T.registreComplet.titre,
+        aide: T.registreComplet.aide,
+        generer: () => exporterRegistreCompletPdf(),
       },
       {
         id: 'inventaire',

@@ -26,6 +26,7 @@ export const NOM_FICHIER_EXPORT_ANNEE = 'troupeau_chevres';
 export const NOM_FICHIER_EXPORT_EXPLOITATION = 'exploitation';
 export const NOM_FICHIER_EXPORT_PLAN_COMPTABLE = 'plan_comptable';
 export const NOM_FICHIER_EXPORT_CHEPTEL = 'cheptel';
+export const NOM_FICHIER_EXPORT_REGISTRE_COMPLET = 'registre_cheptel_complet';
 /** Les mouvements de l'inventaire. */
 export const NOM_FICHIER_EXPORT_INVENTAIRE = 'inventaire';
 /** La liste des boucles d'identification (celle que les filtres de l'écran montrent). */

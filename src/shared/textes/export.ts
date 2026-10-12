@@ -16,7 +16,14 @@ export const TEXTES_EXPORT = {
       titre: 'Rapport d’exploitation',
       aide: 'Visites du vétérinaire, contrôles et alimentation de l’année.',
     },
-    cheptel: { titre: 'Registre du cheptel', aide: 'Tous les animaux de l’espèce choisie, par année.' },
+    cheptel: {
+      titre: 'Registre du cheptel',
+      aide: 'Les animaux vivants et bouclés de l’espèce choisie, par année.',
+    },
+    registreComplet: {
+      titre: 'Registre complet du cheptel',
+      aide: 'Tous les animaux bouclés de l’espèce choisie — vivants, morts, vendus, abattus, autoconsommés — avec leur statut, par année.',
+    },
     inventaire: {
       titre: 'Inventaire',
       aide: 'L’état du stock par catégorie : quantités, entrées et sorties de l’année.',
@@ -43,8 +50,10 @@ export const TEXTES_EXPORT = {
     factures: 'Factures',
     recapitulatifParCompte: 'Récapitulatif par compte',
     detailDesFactures: 'Détail des factures',
+    noteRegistreComplet:
+      'Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. Tous les animaux bouclés figurent dans ce registre, avec leur statut ; les animaux autoconsommés sans boucle y figurent aussi, avec un trait à la place du numéro. Les autres animaux sans boucle n’y figurent pas.',
     get noteRegroupementCheptel() {
-      return `Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. La colonne « Descendance » indique le nombre total de petits de chaque mère (les ${V().petit.pluriel} pas encore bouclés n'ont pas de ligne propre mais sont comptés ici).`;
+      return `Regroupement par année de désignation au renouvellement quand elle est indiquée, sinon par année de naissance. Seuls les animaux vivants et bouclés figurent dans ce registre.`;
     },
   },
   /** Les PDF : bandeau, chiffres clés, tableaux de synthèse (le détail ligne à ligne est dans les exports Excel). */
@@ -147,7 +156,10 @@ export const TEXTES_EXPORT = {
       note: 'Le stock actuel additionne tous les mouvements depuis le début ; le journal détaillé se consulte dans l’historique de l’inventaire.',
     },
     cheptel: {
-      sousTitre: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux bouclés' : 'animal bouclé'}`,
+      sousTitre: (nombre: number) =>
+        `${nombre} ${nombre > 1 ? 'animaux bouclés vivants' : 'animal bouclé vivant'}`,
+      sousTitreComplet: (nombre: number) =>
+        `${nombre} ${nombre > 1 ? 'animaux enregistrés' : 'animal enregistré'}`,
     },
   },
   entreprise: {
@@ -240,7 +252,6 @@ export const TEXTES_EXPORT = {
     aliment: 'Aliment',
     quantiteKg: 'Quantité (kg)',
     kgParAnimal: 'Kg par animal',
-    descendance: 'Descendance',
     mois: 'Mois',
     caHt: 'Chiffre d’affaires HT (€)',
     caTtc: 'Chiffre d’affaires TTC (€)',

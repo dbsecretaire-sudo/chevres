@@ -35,6 +35,8 @@ export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] 
     nom: LABEL_CATEGORIE_FOURNISSEUR[id],
     depenses: [...DEPENSES_PAR_CATEGORIE_FOURNISSEUR[id]],
   })),
+  // Un groupement n'a pas de limite : une cotisation (autre), un achat groupé (alimentation, production…).
+  { id: CATEGORIE_FOURNISSEUR.GROUPEMENT, nom: LABEL_CATEGORIE_FOURNISSEUR.groupement },
 ];
 
 let liste: CategorieFournisseurReglage[] = categoriesFournisseurParDefaut();

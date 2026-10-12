@@ -33,6 +33,7 @@ import {
   FORMAT_EXPORT,
   NOM_FICHIER_EXPORT_ANNEE,
   NOM_FICHIER_EXPORT_CHEPTEL,
+  NOM_FICHIER_EXPORT_REGISTRE_COMPLET,
   NOM_FICHIER_EXPORT_EXPLOITATION,
   NOM_FICHIER_EXPORT_PLAN_COMPTABLE,
 } from '@/shared/constants/export';
@@ -285,18 +286,20 @@ export async function exporterPlanComptablePdf(annee: number): Promise<void> {
 
 /**
  * Registre du cheptel en PDF, en paysage : une section par année de désignation (renouvellement si connue, sinon naissance), les
- * unes à la suite des autres. La colonne Descendance indique le nombre total de petits de chaque mère ; les cabris pas encore
- * bouclés n'ont pas de ligne propre mais restent comptés dans cette colonne.
+ * unes à la suite des autres. `complet` : tous les animaux avec leur statut ; sinon les seuls animaux vivants et bouclés.
  */
-export async function exporterCheptelPdf(): Promise<void> {
+async function exporterRegistrePdf(complet: boolean): Promise<void> {
   const [settings, toutes] = await Promise.all([
     getSettings(),
     loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then(deEspeceCourante),
   ]);
   const indicatif = indicatifMarquagePar(settings.exploitation);
-  const registre = construireRegistreCheptel(toutes, indicatif);
+  const registre = construireRegistreCheptel(toutes, indicatif, { complet });
   const anneesTriees = [...registre.keys()].sort((a, b) => a - b);
   const nombre = [...registre.values()].reduce((t, lignes) => t + lignes.length, 0);
+  const note = complet
+    ? TEXTES.export.pdfExport.noteRegistreComplet
+    : TEXTES.export.pdfExport.noteRegroupementCheptel;
 
   const corps =
     anneesTriees.length === 0
@@ -311,15 +314,23 @@ export async function exporterCheptelPdf(): Promise<void> {
               tableauHtml(registre.get(annee) ?? [], TEXTES.commun.general.aucunAnimalPourCetteAnnee),
             ),
           )
-          .join('') + noteHtml(TEXTES.export.pdfExport.noteRegroupementCheptel);
+          .join('') + noteHtml(note);
 
-  const titre = TEXTES.commun.general.cheptelTroupeauChevres;
+  const titre = complet
+    ? TEXTES.commun.general.registreCompletTroupeauChevres
+    : TEXTES.commun.general.cheptelTroupeauChevres;
   await ecrireEtPartagerPdf(
     documentHtml(titre, settings.exploitation, corps, [especeCourante()], undefined, {
-      sousTitre: P.cheptel.sousTitre(nombre),
+      sousTitre: complet ? P.cheptel.sousTitreComplet(nombre) : P.cheptel.sousTitre(nombre),
     }),
-    `${NOM_FICHIER_EXPORT_CHEPTEL}.${FORMAT_EXPORT.PDF}`,
+    `${complet ? NOM_FICHIER_EXPORT_REGISTRE_COMPLET : NOM_FICHIER_EXPORT_CHEPTEL}.${FORMAT_EXPORT.PDF}`,
     titre,
     { paysage: true },
   );
 }
+
+/** Le registre du cheptel : les animaux vivants et bouclés. */
+export const exporterCheptelPdf = (): Promise<void> => exporterRegistrePdf(false);
+
+/** Le registre complet du cheptel : tous les animaux, vivants ou non, bouclés ou non, avec leur statut. */
+export const exporterRegistreCompletPdf = (): Promise<void> => exporterRegistrePdf(true);

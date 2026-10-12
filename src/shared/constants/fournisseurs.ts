@@ -16,6 +16,8 @@ export const CATEGORIE_FOURNISSEUR = {
   GARAGE: 'garage',
   /** Un organisme (MSA, GDS, chambre d'agriculture…) : des cotisations ou une dépense à part. */
   ORGANISME: 'organisme',
+  /** Un groupement (GDS, achats groupés…) : ses factures sont des cotisations ou des achats, de n'importe quelle dépense. */
+  GROUPEMENT: 'groupement',
   ASSUREUR: 'assureur',
   BANQUE: 'banque',
 } as const;

@@ -8,7 +8,6 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import {
   ATELIER,
   ATELIER_PAR_CATEGORIE_VENTE,
-  ATELIERS_DU_LAIT,
   type Atelier,
 } from '@/shared/constants/ateliers';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
@@ -60,9 +59,7 @@ export interface Rentabilite {
   postes: PosteCharges[];
   /** Le lait produit dans l'année (litres), s'il est tenu au stock. */
   litresProduits: number;
-  /** Les charges des ateliers du lait (lait et fromage), directes et réparties. */
-  chargesDuLait: number;
-  /** Le coût de production d'un litre de lait : les charges du lait par litre produit (rien sans litres). */
+  /** Le coût de production d'un litre de lait : toutes les charges par litre produit (rien sans litres ni sans charges). */
   coutParLitre?: number;
   /** Les charges totales par animal présent (rien sans effectif). */
   coutParAnimal?: number;
@@ -152,9 +149,6 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
 
   // Sans recettes pour les répartir, les charges communes restent à part : elles comptent dans le total.
   const chargesTotal = [...postes.values()].reduce((t, x) => t + x, 0);
-  const chargesDuLait = lignes
-    .filter((l) => ATELIERS_DU_LAIT.includes(l.atelier))
-    .reduce((t, l) => t + l.charges, 0);
   const litresProduits = entree.litresProduits ?? 0;
   const effectif = entree.effectif && entree.effectif > 0 ? entree.effectif : undefined;
 
@@ -175,8 +169,7 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
       }))
       .sort((a, b) => b.montant - a.montant),
     litresProduits,
-    chargesDuLait: arrondi(chargesDuLait),
-    coutParLitre: litresProduits > 0 && chargesDuLait > 0 ? chargesDuLait / litresProduits : undefined,
+    coutParLitre: litresProduits > 0 && chargesTotal > 0 ? chargesTotal / litresProduits : undefined,
     coutParAnimal: effectif ? chargesTotal / effectif : undefined,
     effectif,
   };

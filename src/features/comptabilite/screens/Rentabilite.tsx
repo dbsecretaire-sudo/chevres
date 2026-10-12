@@ -106,9 +106,11 @@ export default function Rentabilite() {
             </Text>
           </View>
           <Text style={commonStyles.note}>
-            {resultat.coutParLitre === undefined
-              ? T.couts.parLitreAbsent
-              : T.couts.parLitreAide(nombre(resultat.litresProduits), formatMontant(resultat.chargesDuLait))}
+            {resultat.coutParLitre !== undefined
+              ? T.couts.parLitreAide(nombre(resultat.litresProduits), formatMontant(resultat.charges))
+              : resultat.litresProduits > 0
+                ? T.couts.parLitreSansCharges(nombre(resultat.litresProduits))
+                : T.couts.parLitreSansLait(annee)}
           </Text>
         </View>
         <View style={commonStyles.gap2}>

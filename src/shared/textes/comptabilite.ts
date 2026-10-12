@@ -304,18 +304,23 @@ export const TEXTES_COMPTABILITE = {
       titre: 'Coûts de production',
       parLitre: 'Coût du litre de lait',
       parLitreAide: (litres: string, charges: string) =>
-        `${charges} de charges du lait et du fromage pour ${litres} L produits`,
-      parLitreAbsent: 'Le lait produit n’est pas renseigné cette année (inventaire › lait produit).',
+        `${charges} de charges (toutes) pour ${litres} L de lait produit`,
+      parLitreSansLait: (annee: number) =>
+        `Aucun lait produit n’est noté en ${annee} (inventaire › lait produit).`,
+      parLitreSansCharges: (litres: string) =>
+        `${litres} L de lait produit, mais aucune charge enregistrée cette année.`,
       parAnimal: (nom: string) => `Coût par ${nom}`,
       parAnimalAide: (effectif: string, charges: string) =>
-        `${charges} de charges pour ${effectif} animaux présents`,
-      parAnimalAbsent: 'Choisissez un cheptel et saisissez son effectif (bilan annuel › effectif déclaré).',
+        `${charges} de charges pour ${effectif} ${V().femelle.pluriel} vivantes au 31/12`,
+      get parAnimalAbsent() {
+        return `Choisissez un cheptel pour calculer le coût par ${V().femelle.singulier}.`;
+      },
     },
     postes: {
       titre: 'Poids des charges',
       aucun: 'Aucune charge cette année.',
       part: (part: number) => `${Math.round(part * 100)} %`,
-      parAnimal: (montant: string) => `${montant} par animal`,
+      parAnimal: (montant: string) => `${montant} par ${V().femelle.singulier}`,
       parLitre: (montant: string) => `${montant} par litre`,
     },
     notice:

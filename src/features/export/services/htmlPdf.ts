@@ -21,6 +21,10 @@ export function echapper(v: unknown): string {
 const estNumerique = (v: unknown): boolean =>
   typeof v === 'number' || (typeof v === 'string' && /^[-+−]?\d[\d\s.,]*\s?(€|%|kg|L|l)?$/.test(v.trim()));
 
+/** Un numéro d'identification (une boucle : « FR 21228200701 ») : il ne se coupe pas en deux lignes, sa colonne s'élargit. */
+const estIdentifiant = (v: unknown): boolean =>
+  typeof v === 'string' && /^[A-Za-z]{0,3}\s?\d{6,}$/.test(v.trim());
+
 export interface OptionsTableau {
   /** La dernière ligne est un total : en gras, sur un fond teinté. */
   totaux?: boolean;
@@ -41,6 +45,13 @@ export function tableauHtml(
     const valeurs = rows.map((r) => r[c]).filter((v) => v !== '' && v !== undefined && v !== null);
     return valeurs.length > 0 && valeurs.every(estNumerique);
   });
+  // Une colonne de numéros d'identification (n° de boucle, boucle de la mère) : ses cellules ne passent pas à la ligne.
+  const identifiant = colonnes.map((c, i) => {
+    const valeurs = rows
+      .map((r) => r[c])
+      .filter((v) => v !== '' && v !== undefined && v !== null && v !== '—');
+    return !numerique[i] && valeurs.length > 0 && valeurs.every(estIdentifiant);
+  });
   const entetes = colonnes
     .map((c, i) => `<th${numerique[i] ? ' class="num"' : ''}>${echapper(c)}</th>`)
     .join('');
@@ -48,7 +59,10 @@ export function tableauHtml(
     .map((r, index) => {
       const classe = options.totaux && index === rows.length - 1 ? ' class="total"' : '';
       const cellules = colonnes
-        .map((c, i) => `<td${numerique[i] ? ' class="num"' : ''}>${echapper(r[c])}</td>`)
+        .map(
+          (c, i) =>
+            `<td${numerique[i] ? ' class="num"' : identifiant[i] ? ' class="id"' : ''}>${echapper(r[c])}</td>`,
+        )
         .join('');
       return `<tr${classe}>${cellules}</tr>`;
     })
@@ -169,9 +183,10 @@ export function documentHtml(
   thead { display: table-header-group; }
   tr { page-break-inside: avoid; }
   th, td { border-bottom: 1px solid ${colors.border}; padding: 3px 6px; font-size: 9px; text-align: left; vertical-align: top; }
-  th { background: ${colors.badgeBg}; font-weight: 700; color: ${colors.primaryDark}; border-bottom: 2px solid ${colors.primary}; }
+  th { overflow-wrap: break-word; background: ${colors.badgeBg}; font-weight: 700; color: ${colors.primaryDark}; border-bottom: 2px solid ${colors.primary}; }
   tbody tr:nth-child(even) td { background: ${colors.background}; }
   th.num, td.num { text-align: right; white-space: nowrap; }
+  td.id { white-space: nowrap; }
   tr.total td { font-weight: 800; background: ${colors.badgeBg}; border-top: 2px solid ${colors.primary}; }
   .vide { font-size: 10px; color: ${colors.textMuted}; font-style: italic; margin: 4px 0 8px; }
   .liste-titre { margin: 6px 0 2px; font-size: 10px; page-break-after: avoid; }
