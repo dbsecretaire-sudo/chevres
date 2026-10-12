@@ -158,14 +158,22 @@ export const TEXTES_STOCK = {
     /** Le détail d'une sorte de boucles sur sa ligne de l'inventaire : le total, les posées, celles à poser. */
     resume: (total: number, posees: number) =>
       `${total} au total · ${posees} posée${posees > 1 ? 's' : ''} · ${total - posees} à poser`,
-    /** La reprise unique des boucles déjà posées au cheptel (à retirer une fois faite). */
-    reprise: {
-      titre: 'Boucles du cheptel à reprendre',
+    /** La synchronisation avec le cheptel : le réglage (Comptabilité › Réglages) et la fenêtre où l'on choisit les tiptag. */
+    synchro: {
+      option: 'Synchroniser les boucles avec le cheptel',
+      optionAide:
+        'Les boucles posées sur les animaux sortent du stock et les numéros du cheptel entrent dans l’inventaire. Désactivée, l’inventaire des boucles et le cheptel ne se parlent plus.',
+      titre: 'Synchronisation avec le cheptel',
       message: (nombre: number) =>
-        `${nombre} boucle${nombre > 1 ? 's' : ''} posée${nombre > 1 ? 's' : ''} sur vos animaux ${nombre > 1 ? 'ne sont' : 'n’est'} pas encore dans l’inventaire. Elles y seront ajoutées comme boucles posées (avec leur date de pose quand l’animal en a une). Cette reprise ne se fait qu’une fois.`,
-      bouton: 'Ajouter ces boucles à l’inventaire',
-      fait: (nombre: number) =>
-        `${nombre} boucle${nombre > 1 ? 's' : ''} ajoutée${nombre > 1 ? 's' : ''} à l’inventaire.`,
+        `${nombre} numéro${nombre > 1 ? 's' : ''} de boucle porté${nombre > 1 ? 's' : ''} par vos animaux. Vous choisissez lesquels sont des tiptag : les autres entrent dans les boucles.`,
+      bouton: 'Synchroniser les boucles',
+      titreModal: 'Boucles du cheptel',
+      consigne:
+        'Voici les numéros de boucle portés par vos animaux. Cochez les tiptag : les boucles non cochées sont intégrées dans les boucles.',
+      suppression:
+        'Les boucles déjà reprises du cheptel sont supprimées de l’inventaire, puis reprises selon ce choix. Les boucles achetées (par une dépense) ne changent pas.',
+      valider: 'Synchroniser',
+      fait: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''} du cheptel dans l’inventaire.`,
     },
   },
   /** Les fromages identifiés par lot : une ligne par fromage, fabriqué, vendu ou rappelé. */

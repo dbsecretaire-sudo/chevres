@@ -44,9 +44,14 @@ export const TEXTES_CLIENTS = {
     nomCategorie: 'Nom de la catégorie',
     exempleNom: 'ex : Coopérative',
     ajouter: '+ Ajouter une catégorie',
+    recettes: 'Recettes proposées',
+    aideRecettes:
+      'Seul un organisme a l’aide / subvention d’office (ou une facture de prestations) ; les autres catégories ne la proposent pas tant que vous ne la cochez pas.',
     declaree: 'Vente déclarée d’office (avec facture)',
     prixLibre: 'Prix libre, n° de facture avec lettres, réajustement',
     parDefaut: 'Catégorie d’office des clients : elle ne se retire pas.',
+    protegee:
+      'Les groupements (Production) se choisissent parmi les clients de cette catégorie : elle ne se retire pas.',
     supprimer: 'Retirer cette catégorie',
     supprimerQuestion: 'Retirer cette catégorie ?',
     supprimerMessage: 'Les clients qui l’avaient passent en « Particulier » dans leur fiche.',

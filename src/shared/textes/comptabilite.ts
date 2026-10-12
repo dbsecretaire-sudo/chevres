@@ -84,8 +84,6 @@ export const TEXTES_COMPTABILITE = {
     factureIntrouvable: 'Facture introuvable.',
     nonModifiableLaCategorieLe:
       'Non modifiable : la catégorie, le compte comptable et les rapports sont liés au type choisi à la création. Supprimez la facture et recréez-la si le type est erroné.',
-    nFacture: 'N° Facture',
-    montant: 'Montant',
     cetteActionSupprimeraDefinitivementLa: (tiers: string) =>
       `Cette action supprimera définitivement la facture de ${tiers}.`,
     emise: 'Émise',
@@ -102,7 +100,6 @@ export const TEXTES_COMPTABILITE = {
     poidsDeuxPoints: 'Poids : ',
     oeufs: 'œufs',
     clientDeuxPoints: 'Client : ',
-    produit: 'Produit',
     lait: 'Lait',
     fromage: 'Fromage',
     prixTotal: 'Prix total (€)',
@@ -165,15 +162,224 @@ export const TEXTES_COMPTABILITE = {
     filtre: '(filtré)',
     filtresActifs: 'Filtres actifs',
   },
+  /** Le pilotage de la TVA : par période et par taux, avec le contrôle de cohérence. */
+  pilotageTva: {
+    regime: 'Régime',
+    periodicite: 'Périodicité',
+    modifierLeRegime: 'Modifier le régime et la périodicité',
+    parPeriode: (annee: number) => `TVA par période — ${annee}`,
+    periodeMois: (mois: string) => mois,
+    periodeTrimestre: (numero: number) => `${numero}${numero === 1 ? 'er' : 'e'} trimestre`,
+    periodeAnnee: (annee: number) => `Année ${annee}`,
+    collectee: 'TVA collectée',
+    deductible: 'TVA déductible',
+    aPayer: 'À reverser',
+    credit: 'Crédit de TVA',
+    total: 'Total de l’année',
+    parTaux: {
+      titre: (annee: number) => `TVA par taux — ${annee}`,
+      taux: (taux: number) => `${String(taux).replace('.', ',')} %`,
+      ligne: (base: string, collectee: string, deductible: string) =>
+        `Recettes HT ${base} · collectée ${collectee} · déductible ${deductible}`,
+      aucun: 'Aucune TVA indiquée cette année : saisissez le taux sur les ventes et les factures.',
+    },
+    franchise:
+      'En franchise en base, vous ne facturez pas de TVA et n’en récupérez pas : il n’y a rien à déclarer. Changez de régime dans les réglages si ce n’est pas votre cas.',
+    rfa: {
+      titre: 'Remboursement forfaitaire agricole (RFA)',
+      base: 'Recettes déclarées, hors taxes',
+      taux: (taux: number) => `Taux : ${String(taux).replace('.', ',')} %`,
+      montant: 'Remboursement estimé',
+      sansTaux: 'Saisissez le taux du RFA dans les réglages pour estimer le remboursement.',
+      note: 'Au RFA, vous ne déclarez pas de TVA : vos acheteurs assujettis vous versent un remboursement forfaitaire en plus du prix. Estimation d’après vos ventes déclarées.',
+    },
+    controle: {
+      titre: 'Contrôle de cohérence',
+      aucune: 'Aucune anomalie repérée.',
+      nombre: (n: number) => `${n} anomalie${n > 1 ? 's' : ''} à vérifier`,
+      venteSansTaux: 'Vente sans taux de TVA',
+      venteTauxInhabituel: (taux: number, attendu: number) =>
+        `Taux de ${String(taux).replace('.', ',')} % (usuel : ${String(attendu).replace('.', ',')} %)`,
+      recetteSansTaux: 'Facture émise sans taux de TVA',
+      achatSansTva: 'Facture sans TVA : la TVA n’est pas récupérée',
+      sansNom: 'Sans nom',
+    },
+    notice:
+      'La TVA est calculée à partir du taux saisi sur chaque vente et chaque facture : collectée sur les recettes, déductible sur les achats. Les dates de déclaration et de paiement dépendent de votre régime. Une aide à la déclaration, à vérifier avec votre comptable.',
+    reglages: {
+      titre: 'TVA',
+      regime: 'Régime de TVA',
+      periodicite: 'Périodicité du suivi',
+      tauxRfa: 'Taux du RFA (%)',
+      aideTauxRfa: 'Le taux en vigueur, à prendre sur impots.gouv.fr ou auprès de votre comptable.',
+      aide: 'Le régime et la périodicité règlent le pilotage de la TVA.',
+    },
+  },
+  /** La trésorerie : courbe mensuelle, échéancier, emprunts, alertes. */
+  tresorerie: {
+    courbeTitre: (annee: number) => `Trésorerie — ${annee}`,
+    soldeActuel: 'Solde actuel',
+    pointBas: (mois: string) => `Point bas en ${mois}`,
+    legende: 'Trait plein : réalisé · trait clair : prévision (échéances et emprunts à venir).',
+    sansSolde:
+      'Saisissez le solde de votre compte pour que la courbe parte de la bonne valeur ; sans lui, elle part de zéro.',
+    saisirLeSolde: 'Saisir le solde de départ',
+    reglages: 'Régler la trésorerie (solde, seuil, emprunts)',
+    alertes: {
+      titre: 'Alertes',
+      aucune: 'Le solde reste au-dessus du seuil toute l’année.',
+      souslesSeuil: (seuil: string) => `Solde sous ${seuil} en :`,
+      ligne: (mois: string, solde: string) => `${mois} : ${solde}`,
+    },
+    echeancier: {
+      titre: 'Échéancier',
+      aucune:
+        'Aucune échéance à venir : marquez une vente ou une facture « pas encore payée » pour la suivre ici.',
+      aEncaisser: 'À encaisser',
+      aPayer: 'À payer',
+      emprunts: 'Emprunts',
+      enRetard: 'En retard',
+      sansNom: 'Sans nom',
+      mensualite: 'Mensualité',
+    },
+    flux: {
+      titre: 'Flux par mois',
+      encaisse: 'Encaissé',
+      paye: 'Payé',
+      aucun: '—',
+      ligne: (encaisse: string, paye: string) => `+${encaisse} · −${paye}`,
+    },
+    notice:
+      'La trésorerie est calculée d’après les dates de paiement saisies : une vente ou une facture est payée à sa date, sauf si vous indiquez une autre date ou qu’elle n’est pas encore payée. Les mensualités d’emprunt déjà passées sont supposées saisies comme des dépenses. Une aide de gestion, pas un relevé de banque.',
+    paiement: {
+      pasEncaissee: 'Pas encore encaissée',
+      pasPayee: 'Pas encore payée',
+      echeance: 'Date d’échéance',
+      enAttente: (date: string) => `En attente de paiement · échéance ${date}`,
+      enAttenteSansDate: 'En attente de paiement',
+    },
+    reglagesEcran: {
+      soldeTitre: 'Solde du compte',
+      soldeAide:
+        'Le solde de votre compte à une date : c’est le départ des courbes. Les paiements saisis depuis cette date s’y ajoutent.',
+      soldeDepart: 'Solde (€)',
+      dateSolde: 'Date du solde',
+      seuil: 'Seuil d’alerte (€)',
+      seuilAide:
+        'Une alerte s’affiche quand le solde passe sous ce seuil (0 : quand le compte est à découvert).',
+      empruntsTitre: 'Emprunts',
+      empruntsAide:
+        'La mensualité de chaque emprunt entre dans l’échéancier et dans la prévision, une par mois.',
+      aucunEmprunt: 'Aucun emprunt.',
+      ajouter: '+ Ajouter un emprunt',
+      nomEmprunt: 'Nom de l’emprunt',
+      exempleNom: 'ex : Tracteur',
+      mensualite: 'Mensualité (€)',
+      premiereEcheance: 'Première échéance',
+      nombreEcheances: 'Nombre d’échéances',
+      supprimer: 'Supprimer cet emprunt',
+      supprimerQuestion: 'Supprimer cet emprunt ?',
+      supprimerMessage: 'Ses mensualités ne figureront plus dans l’échéancier.',
+    },
+  },
+  /** La rentabilité : marge par atelier, coûts de production, poids des charges, résultat sans les aides. */
+  rentabilite: {
+    resultatTitre: (annee: number) => `Résultat — ${annee}`,
+    horsTaxes: 'Montants hors taxes (régime de TVA réel).',
+    toutesTaxes: 'Montants toutes taxes comprises.',
+    recettes: 'Recettes',
+    charges: 'Charges',
+    aides: 'Aides',
+    resultat: 'Résultat',
+    resultatSansAides: 'Résultat sans les aides',
+    ateliers: {
+      titre: 'Marge par atelier',
+      aucun: 'Aucune recette cette année.',
+      recettesCharges: (recettes: string, charges: string) => `Recettes ${recettes} · charges ${charges}`,
+      dontCommunes: (montant: string) => `dont ${montant} de charges communes réparties`,
+      marge: (taux: number) => `${Math.round(taux * 100)} %`,
+      aide: 'Une charge se rattache à un atelier dans la facture ; les charges sans atelier se répartissent entre les ateliers, au prorata de leurs recettes.',
+    },
+    couts: {
+      titre: 'Coûts de production',
+      parLitre: 'Coût du litre de lait',
+      parLitreAide: (litres: string, charges: string) =>
+        `${charges} de charges du lait et du fromage pour ${litres} L produits`,
+      parLitreAbsent: 'Le lait produit n’est pas renseigné cette année (inventaire › lait produit).',
+      parAnimal: (nom: string) => `Coût par ${nom}`,
+      parAnimalAide: (effectif: string, charges: string) =>
+        `${charges} de charges pour ${effectif} animaux présents`,
+      parAnimalAbsent: 'Choisissez un cheptel et saisissez son effectif (bilan annuel › effectif déclaré).',
+    },
+    postes: {
+      titre: 'Poids des charges',
+      aucun: 'Aucune charge cette année.',
+      part: (part: number) => `${Math.round(part * 100)} %`,
+      parAnimal: (montant: string) => `${montant} par animal`,
+      parLitre: (montant: string) => `${montant} par litre`,
+    },
+    notice:
+      'Calculé d’après vos ventes et vos factures : une indication de gestion, pas une comptabilité analytique. Les coûts par litre et par animal dépendent du lait produit et de l’effectif renseignés.',
+  },
+  /** La page d'accueil de l'onglet Comptabilité. */
+  accueil: {
+    groupes: {
+      ecritures: 'Écritures et inventaire',
+      pilotage: 'Pilotage',
+      declarations: 'Déclarations et comptes',
+      technique: 'Technique',
+    },
+    ecritures: 'Écritures',
+    tresorerie: {
+      titre: 'Trésorerie',
+      aide: 'Solde mois par mois, échéancier, emprunts, alertes.',
+    },
+    inventaire: {
+      titre: 'Inventaire',
+      aide: 'Les stocks et le conditionnement des fromages.',
+      stocks: 'Stocks',
+      stocksAide: 'Les listes de l’inventaire et leurs quantités.',
+    },
+    rentabilite: {
+      titre: 'Rentabilité',
+      aide: 'Marge par atelier, coût du litre, poids des charges, résultat sans les aides.',
+    },
+    tva: {
+      titre: 'Pilotage de la TVA',
+      aide: 'La TVA collectée et déductible, par période et par taux.',
+    },
+    declarationsAide: 'Impôts, chiffre d’affaires, URSSAF : les déclarations à faire.',
+    reglages: {
+      titre: 'Réglages',
+      aide: 'TVA (régime, périodicité), boucles du cheptel, trésorerie, rappels de déclarations.',
+    },
+  },
+  /** Comptabilité › Réglages › Taux par produit. */
+  tauxParProduit: {
+    titre: 'Taux par produit',
+    aide: 'La TVA des ventes et l’imposition des aides.',
+    tva: 'TVA des ventes',
+    aideTva: 'Le taux de TVA proposé quand vous saisissez la vente de chaque produit.',
+    imposition: 'Imposition des aides',
+    aideImposition:
+      'La part de chaque aide incluse dans les recettes imposables (à confirmer avec votre comptable/CGA). Le crayon modifie la liste des taux proposés.',
+    note: 'Ces taux sont ceux d’une nouvelle écriture ; chaque écriture peut encore avoir le sien.',
+    retablir: 'Rétablir les taux d’office',
+  },
   fiscalite: {
     titre: 'Fiscalité',
     declarations: 'Déclarations',
     aideImpots: 'Le calcul de l’impôt à partir des recettes de l’année.',
     aideChiffreAffaires: 'Les recettes de l’année, pour la déclaration.',
     aideUrssaf: 'Les cotisations à déclarer, mois par mois.',
-    aideTva: 'La TVA collectée et déductible, par mois et par taux.',
   },
   nouvelleEcriture: {
+    /** L'atelier d'une charge, pour la marge par atelier. */
+    atelier: {
+      label: 'Atelier concerné',
+      commun: 'Charge commune (répartie entre les ateliers)',
+      aide: 'Facultatif : sert à la marge par atelier (Comptabilité › Rentabilité).',
+    },
     /** Les notes sous les champs d'une écriture : ce qu'on y met. */
     aideMontant: 'Le total payé, taxes comprises (TTC).',
     aideLitrage: 'Les litres vendus : le prix se calcule avec le prix du lait de l’inventaire.',
@@ -202,7 +408,6 @@ export const TEXTES_COMPTABILITE = {
     /** Une dépense vétérinaire : le motif, et l'inscription de la visite dans les visites vétérinaires. */
     visite: {
       motif: 'Motif de la visite',
-      exemple: 'ex : Prophylaxie',
       ajouter: 'Ajouter aux visites vétérinaires',
       motifRequis: 'Motif de la visite requis pour l’ajouter aux visites vétérinaires',
     },
@@ -217,6 +422,7 @@ export const TEXTES_COMPTABILITE = {
     typeDAide: 'Type d’aide',
     preciserLeTypeDAide: 'Préciser le type d’aide',
     exAideGnrGuerreUkrainePoints: 'ex: Aide GNR (guerre Ukraine), Aide gros rouleurs…',
+    titreTauxImposition: 'Taux d’imposition proposés',
     tauxDImposition: 'Taux d’imposition (%)',
     partDuMontantIncluseDans:
       'Part du montant incluse dans les recettes brutes imposables. Pré-rempli à titre indicatif — à confirmer aide par aide avec votre comptable/CGA (certaines aides d’investissement peuvent être étalées sur plusieurs années, voir notice de l’écran Impôts).',

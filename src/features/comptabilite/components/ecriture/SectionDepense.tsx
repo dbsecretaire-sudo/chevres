@@ -21,20 +21,31 @@ import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouv
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { CategorieDepense } from '@/features/comptabilite/types';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
+import { categorieDepenseAutorisee, depenseImposee } from '@/features/fournisseurs/services/categorie';
+import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
+import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
+import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
+import { todayISO } from '@/shared/utils/dates';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 
 /** Les catégories proposées : celles d'une entreprise, ou celles d'un élevage. */
-const optionsCategorieDepense = () =>
-  categoriesDepenseDuMode().map((value) => ({
+const optionsCategorieDepense = (fournisseur: Fournisseur | undefined) => {
+  const toutes = categoriesDepenseDuMode();
+  const permises = toutes.filter((value) => categorieDepenseAutorisee(fournisseur, value));
+  // Aucune des dépenses permises n'existe dans ce mode (une activité financière, par exemple) : le choix reste entier.
+  return (permises.length > 0 ? permises : toutes).map((value) => ({
     value: value as CategorieDepense,
     label: LABEL_CATEGORIE_DEPENSE[value],
   }));
+};
 
 /** Champs d'un débit (facture reçue) : catégorie, fournisseur, TVA et détail des montants. */
 export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
@@ -64,6 +75,17 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           onChangeText={e.setDescription}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
+        {/* Le paiement : payée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
+        <ChampPaiement
+          libelle={TEXTES.comptabilite.tresorerie.paiement.pasPayee}
+          enAttente={e.enAttente}
+          onEnAttente={(attente) => {
+            e.setEnAttente(attente);
+            if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+          }}
+          echeance={e.echeance}
+          onEcheance={e.setEcheance}
+        />
       </SectionForm>
 
       {/* Les informations : la catégorie, la TVA et les montants. */}
@@ -72,7 +94,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           label={TEXTES.comptabilite.nouvelleEcriture.categorieDeDepense}
           value={e.categorieDepense}
           onChange={e.changerCategorieDepense}
-          options={optionsCategorieDepense()}
+          options={optionsCategorieDepense(e.fournisseurSelectionne)}
           demanderCompte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE}
           compte={e.compteDepenseAutre}
           onCompteChange={(numero) => {
@@ -88,17 +110,33 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
         />
 
-        {e.modeAvance ? <NoteComptePcg compte={e.compteAffiche} /> : null}
+        <NoteComptePcg compte={e.compteAffiche} />
 
-        {e.afficherTva && (
-          <SelectField
-            label={TEXTES.commun.general.tauxDeTva}
-            value={e.tauxTvaAchat}
-            onChange={e.setTauxTvaAchat}
-            options={OPTIONS_TAUX_TVA}
+        {/* Ce qui est propre à la catégorie, puis le montant, la TVA et l'atelier : le même ordre qu'à la modification d'une facture. */}
+        {e.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
+          <ChampVisite
+            motif={e.motifVisite}
+            ajouter={e.ajouterVisite}
+            onMotif={e.setMotifVisite}
+            onAjouter={e.setAjouterVisite}
           />
         )}
 
+        {(e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
+          e.categorieDepense === CATEGORIE_DEPENSE.AUTRE) && (
+          <ChampStockProduction
+            compte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE ? e.compteDepenseAutre : undefined}
+            article={e.stockArticle}
+            quantite={e.stockQuantite}
+            debut={e.bouclesDebut}
+            onChangeDebut={e.setBouclesDebut}
+            onChange={(article, quantite) => {
+              e.setStockArticle(article);
+              e.setStockQuantite(quantite);
+              if (!estArticleBoucle(article)) e.setBouclesDebut('');
+            }}
+          />
+        )}
         {estAlimentation && (
           <>
             <LignesAlimentationEditor
@@ -143,29 +181,19 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
         )}
 
-        {e.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
-          <ChampVisite
-            motif={e.motifVisite}
-            ajouter={e.ajouterVisite}
-            onMotif={e.setMotifVisite}
-            onAjouter={e.setAjouterVisite}
+        {e.afficherTva && (
+          <SelectField
+            label={TEXTES.commun.general.tauxDeTva}
+            value={e.tauxTvaAchat}
+            onChange={e.setTauxTvaAchat}
+            options={OPTIONS_TAUX_TVA}
           />
         )}
 
-        {(e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
-          e.categorieDepense === CATEGORIE_DEPENSE.AUTRE) && (
-          <ChampStockProduction
-            compte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE ? e.compteDepenseAutre : undefined}
-            article={e.stockArticle}
-            quantite={e.stockQuantite}
-            debut={e.bouclesDebut}
-            onChangeDebut={e.setBouclesDebut}
-            onChange={(article, quantite) => {
-              e.setStockArticle(article);
-              e.setStockQuantite(quantite);
-              if (!estArticleBoucle(article)) e.setBouclesDebut('');
-            }}
-          />
+        {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
+        {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
+        {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
+          <ChampAtelier value={e.atelier} onChange={e.setAtelier} />
         )}
       </SectionForm>
     </>

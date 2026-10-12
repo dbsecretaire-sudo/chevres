@@ -42,7 +42,7 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
   const indicatif = rouge
     ? undefined
     : identificationCheptel(settings.exploitation, especeCourante()).indicatifMarquage;
-  /** Les sortes proposées : les boucles rouges, ou les boucles et les tiptag (le numéro d'un tiptag commence par 00). */
+  /** Les sortes proposées : les boucles rouges, ou les boucles et les tiptag. */
   const sortes = (rouge ? [ARTICLE_BOUCLE.ROUGES] : [ARTICLE_BOUCLE.BOUCLES, ARTICLE_BOUCLE.TIPTAG]).map(
     (code) => `${GENRE_ARTICLE.BOUCLE}:${code}`,
   );

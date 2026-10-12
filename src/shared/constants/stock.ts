@@ -83,9 +83,6 @@ export const ARTICLE_BOUCLE = {
   TIPTAG: 'tiptag',
 } as const;
 
-/** Une boucle dont le numéro commence par ces chiffres est un tiptag ; les autres numéros sont ceux de boucles normales. */
-export const PREFIXE_TIPTAG = '00';
-
 /** Le filtre des boucles de l'inventaire : toutes, celles déjà posées sur un animal, ou celles encore à poser. */
 export const ETAT_BOUCLE = {
   TOUT: 'tout',

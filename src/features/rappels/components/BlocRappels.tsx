@@ -42,7 +42,7 @@ export function BlocRappels() {
             <Ionicons name="time-outline" size={24} color={colors.textMuted} />
           </Pressable>
           <Pressable
-            onPress={() => router.push(ROUTES.ORGANISATION_COMPTABILITE as never)}
+            onPress={() => router.push(ROUTES.COMPTABILITE_REGLAGES as never)}
             hitSlop={10}
             accessibilityLabel={T.gerer}
           >

@@ -1,6 +1,7 @@
 import type { Chevre } from '@/features/cheptel/types';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import type { Facture } from '@/features/comptabilite/types';
+import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock, BoucleStock } from '@/features/stock/types';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -11,7 +12,6 @@ import {
   ETAT_BOUCLE,
   GENRE_ARTICLE,
   ORIGINE_MOUVEMENT,
-  PREFIXE_TIPTAG,
   TRI_BOUCLE,
 } from '@/shared/constants/stock';
 import { loadAllYears } from '@/shared/storage/localStore';
@@ -139,15 +139,27 @@ const ARTICLE_BOUCLES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.BOUCLES}`;
 const ARTICLE_ROUGES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`;
 const ARTICLE_TIPTAG = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.TIPTAG}`;
 
-/** La sorte d'une boucle d'après son numéro : un numéro qui commence par 00 est un tiptag, les autres sont des boucles normales. */
-export const articleDeLaBoucle = (numero: string): string =>
-  numero.trim().startsWith(PREFIXE_TIPTAG) ? ARTICLE_TIPTAG : ARTICLE_BOUCLES;
+/**
+ * La sorte d'un numéro de boucle : celle de l'inventaire quand il l'y trouve (acheté, ou repris d'une synchronisation), sinon un
+ * tiptag si l'utilisateur l'a désigné, sinon une boucle normale. Rien ne se devine d'après le numéro.
+ */
+type SorteDuNumero = (numero: string) => string;
+
+const sorteDesNumeros = (boucles: BoucleStock[], tiptags?: ReadonlySet<string>): SorteDuNumero => {
+  const connues = new Map(
+    boucles.filter((b) => b.article !== ARTICLE_ROUGES).map((b) => [b.numero, b.article]),
+  );
+  return (numero) => connues.get(numero) ?? (tiptags?.has(numero) ? ARTICLE_TIPTAG : ARTICLE_BOUCLES);
+};
 
 /** Les boucles qu'un animal porte : sa boucle (ou son tiptag) et, quand il en a une, sa boucle rouge (avec leur date de pose). */
-const bouclesPortees = (animal: AnimalBouclable): { article: string; numero: string; date?: string }[] =>
+const bouclesPortees = (
+  animal: AnimalBouclable,
+  sorteDe: SorteDuNumero,
+): { article: string; numero: string; date?: string }[] =>
   [
     {
-      article: articleDeLaBoucle(animal.numeroBoucle ?? ''),
+      article: sorteDe(animal.numeroBoucle?.trim() ?? ''),
       numero: animal.numeroBoucle?.trim(),
       date: animal.dateBouclage,
     },
@@ -165,16 +177,18 @@ const porteDesBoucles = (animal: Pick<Chevre, 'espece'>): boolean =>
  * de l'animal), et redevient à poser quand plus aucun ne le porte. Chaque pose est un retrait de l'article, qui se refait à
  * chaque fois : le niveau d'une boucle est donc le nombre de boucles non posées. Avec `aAjouter` (les animaux qu'on vient
  * d'enregistrer), leur numéro est ajouté à l'inventaire quand il n'y est pas : c'est une boucle posée, entrée en même temps,
- * avec la date de pose seulement si l'animal a une date de bouclage.
+ * avec la date de pose seulement si l'animal a une date de bouclage. Les numéros que `tiptags` désigne entrent comme tiptag.
  */
 export function avecPoses(
   archive: ArchiveStock,
   animaux: AnimalBouclable[],
   aAjouter: AnimalBouclable[] = [],
+  tiptags?: ReadonlySet<string>,
 ): ArchiveStock {
+  const sorteDe = sorteDesNumeros(archive.boucles ?? [], tiptags);
   const portees = new Map<string, { animal: AnimalBouclable; date?: string }>();
   for (const animal of animaux) {
-    for (const b of bouclesPortees(animal)) {
+    for (const b of bouclesPortees(animal, sorteDe)) {
       if (!portees.has(cleBoucle(b.article, b.numero)))
         portees.set(cleBoucle(b.article, b.numero), { animal, date: b.date });
     }
@@ -182,7 +196,7 @@ export function avecPoses(
   let inventaire = archive.boucles ?? [];
   for (const animal of aAjouter) {
     if (!porteDesBoucles(animal)) continue;
-    for (const portee of bouclesPortees(animal)) {
+    for (const portee of bouclesPortees(animal, sorteDe)) {
       if (inventaire.some((x) => x.article === portee.article && x.numero === portee.numero)) continue;
       inventaire = [
         ...inventaire,
@@ -231,8 +245,13 @@ let file: Promise<unknown> = Promise.resolve();
  */
 export function synchroniserPoseBoucles(enregistre?: AnimalBouclable): Promise<void> {
   const suite = file.then(async () => {
+    // Désactivée dans les réglages de la comptabilité : l'inventaire et le cheptel ne se parlent plus.
+    if (!synchroBouclesActive((await getSettings()).exploitation)) return;
     const archive = await lireArchiveStock();
-    const aVerifier = !!enregistre && porteDesBoucles(enregistre) && bouclesPortees(enregistre).length > 0;
+    const aVerifier =
+      !!enregistre &&
+      porteDesBoucles(enregistre) &&
+      !!(enregistre.numeroBoucle?.trim() || enregistre.numeroBoucleRouge?.trim());
     if (!archive.boucles?.length && !aVerifier) return;
     const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
     const nouvelle = avecPoses(archive, animaux, enregistre ? [enregistre] : []);
@@ -274,25 +293,50 @@ export function trierBoucles(
   });
 }
 
-/**
- * REPRISE UNIQUE — à retirer une fois faite : les animaux du cheptel qui portent déjà une boucle absente de l'inventaire
- * (saisies avant l'inventaire des boucles) y sont ajoutés, comme des boucles posées. Garde sa trace pour ne plus être proposée.
- */
-export async function bouclesDuCheptelAReprendre(): Promise<number> {
-  const archive = await lireArchiveStock();
-  if (archive.bouclesDuCheptelReprises) return 0;
-  const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
-  return (avecPoses(archive, animaux, animaux).boucles ?? []).length - (archive.boucles ?? []).length;
+/** Un numéro de boucle porté par un animal, à ranger parmi les tiptag ou les boucles normales lors de la synchronisation. */
+export interface BouclePossible {
+  numero: string;
+  /** Vrai quand l'inventaire le tient déjà pour un tiptag (d'une synchronisation précédente). */
+  tiptag: boolean;
 }
 
-/** Fait la reprise unique (voir bouclesDuCheptelAReprendre) et rend le nombre de boucles ajoutées. */
-export function reprendreLesBouclesDuCheptel(): Promise<number> {
+/**
+ * Les numéros de boucle (hors boucles rouges) que portent les animaux du cheptel, sans ceux que l'inventaire a achetés : ce sont
+ * ceux dont l'utilisateur dit, à la synchronisation, lesquels sont des tiptag. Triés comme on les lit.
+ */
+export async function bouclesPossiblesDuCheptel(): Promise<BouclePossible[]> {
+  const [archive, animaux] = await Promise.all([
+    lireArchiveStock(),
+    loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL),
+  ]);
+  const inventaire = archive.boucles ?? [];
+  const achetees = new Set(
+    inventaire.filter((b) => !b.depuisCheptel && b.article !== ARTICLE_ROUGES).map((b) => b.numero),
+  );
+  const tiptags = new Set(
+    inventaire.filter((b) => b.depuisCheptel && b.article === ARTICLE_TIPTAG).map((b) => b.numero),
+  );
+  const numeros = new Set<string>();
+  for (const animal of animaux.filter(porteDesBoucles)) {
+    const numero = animal.numeroBoucle?.trim();
+    if (numero && !achetees.has(numero)) numeros.add(numero);
+  }
+  return [...numeros].sort(comparerNumeros).map((numero) => ({ numero, tiptag: tiptags.has(numero) }));
+}
+
+/**
+ * La synchronisation de l'inventaire avec le cheptel : les boucles déjà reprises du cheptel sont supprimées de l'inventaire, puis
+ * reprises d'après les animaux — les numéros de `tiptags` entrent comme tiptag, les autres comme boucles normales (les boucles
+ * rouges suivent leur fiche). Les boucles achetées par une dépense ne changent pas. Rend le nombre de boucles reprises.
+ */
+export function synchroniserBouclesDuCheptel(tiptags: string[]): Promise<number> {
   const suite = file.then(async () => {
     const archive = await lireArchiveStock();
     const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
-    const nouvelle = avecPoses(archive, animaux, animaux);
-    await remplacerArchiveStock({ ...nouvelle, bouclesDuCheptelReprises: true });
-    return (nouvelle.boucles ?? []).length - (archive.boucles ?? []).length;
+    const sansReprises = { ...archive, boucles: (archive.boucles ?? []).filter((b) => !b.depuisCheptel) };
+    const nouvelle = avecPoses(sansReprises, animaux, animaux, new Set(tiptags));
+    await remplacerArchiveStock(nouvelle);
+    return (nouvelle.boucles ?? []).filter((b) => b.depuisCheptel).length;
   });
   file = suite.catch(() => undefined);
   return suite;

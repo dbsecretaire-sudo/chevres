@@ -1,4 +1,9 @@
 import { useEffect, useState } from 'react';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { YearPicker } from '@/shared/components/YearPicker';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
@@ -11,7 +16,13 @@ import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { InfosExploitation } from '@/features/settings/settings';
-import { baseDeLaPrime, coefficientsUgb, plafondsDeLAide } from '@/features/cheptel/services/ugb';
+import {
+  baseDeLaPrime,
+  cleAides,
+  coefficientsUgb,
+  infosPourAnnee,
+  plafondsDeLAide,
+} from '@/features/cheptel/services/ugb';
 import { BASE_PRIME, PRIMES, REGLES_PRIMES } from '@/shared/constants/primes';
 import { especesActives } from '@/shared/dictionnaire/animaux';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -88,18 +99,25 @@ const plafondsEnNombres = (p: SaisieAide) => ({
 type Renommage = { cle: string; personnalisee: boolean; nom: string } | null;
 
 /**
- * Organisation › Cheptel : les coefficients UGB de chaque espèce de l'exploitation (ceux proposés sont indicatifs) et les aides (PAC,
+ * Cheptel › Réglages : les coefficients UGB de chaque espèce de l'exploitation (ceux proposés sont indicatifs) et les aides (PAC,
  * ICHN…) : on coche celles qu'on touche, avec leur montant et ce sur quoi il s'applique (l'UGB, l'animal ou l'hectare). Chaque aide se
  * renomme d'un crayon, et on peut en ajouter d'autres, qui comptent comme les autres dans la prime prévisionnelle. Tout s'enregistre
- * tout seul ; le bilan annuel en tire l'UGB et la prime prévisionnels.
+ * tout seul ; le bilan annuel en tire l'UGB et la prime prévisionnels. Les aides sont propres à l'année et à l'espèce choisies (les
+ * montants changent chaque année) : elles se reprennent de l'année précédente tant qu'on ne les modifie pas.
  */
-export default function RubriqueCheptel() {
-  const { settings, loaded, patchSettings } = useAppSettings();
+function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
+  const { settings, loaded, patchSettings, setAnneeActive } = useAppSettings();
   const infos = settings.exploitation;
+  /** Les aides de l'année et de l'espèce choisies : ce qu'on voit et modifie. */
+  const infosAides = infosPourAnnee(infos, annee, espece);
   const especes = especesActives();
+  const [annees, setAnnees] = useState<number[]>([annee]);
+  useEffect(() => {
+    toutesLesAnneesConnues().then(setAnnees);
+  }, []);
 
   const depart = (): Saisie => ({
-    associes: enTexte(infos?.ugbPrimes?.associes ?? 1),
+    associes: enTexte(infosAides?.ugbPrimes?.associes ?? 1),
     coefficients: Object.fromEntries(
       especes.map((e) => {
         const choisis = infos?.ugbPrimes?.coefficients?.[e];
@@ -108,31 +126,35 @@ export default function RubriqueCheptel() {
     ),
     primes: Object.fromEntries(
       PRIMES.map((p) => {
-        const reglage = infos?.ugbPrimes?.primes?.[p.cle];
+        const reglage = infosAides?.ugbPrimes?.primes?.[p.cle];
         return [
           p.cle,
           {
             actif: !!reglage?.actif,
             taux: enTexte(reglage?.taux),
-            base: baseDeLaPrime(infos, p.cle),
+            base: baseDeLaPrime(infosAides, p.cle),
             nom: reglage?.nom ?? '',
-            ...plafondsEnTexte(infos, p.cle),
+            ...plafondsEnTexte(infosAides, p.cle),
           },
         ];
       }),
     ),
-    personnalisees: (infos?.ugbPrimes?.personnalisees ?? []).map((p) => ({
+    personnalisees: (infosAides?.ugbPrimes?.personnalisees ?? []).map((p) => ({
       id: p.id,
       nom: p.nom,
       actif: !!p.actif,
       taux: enTexte(p.taux),
-      base: baseDeLaPrime(infos, p.id),
-      ...plafondsEnTexte(infos, p.id),
+      base: baseDeLaPrime(infosAides, p.id),
+      ...plafondsEnTexte(infosAides, p.id),
     })),
   });
   const [saisie, setSaisie] = useState<Saisie>(depart);
   const [renommage, setRenommage] = useState<Renommage>(null);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  /** L'aide dépliée (son identifiant) : toutes sont enroulées au départ, et une seule est visible à la fois. */
+  const [aideOuverte, setAideOuverte] = useState<string | null>(null);
+  /** L'espèce dont les coefficients sont dépliés : toutes sont enroulées au départ, et une seule est visible à la fois. */
+  const [especeOuverte, setEspeceOuverte] = useState<string | null>(null);
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
 
   useEffect(() => {
@@ -147,33 +169,39 @@ export default function RubriqueCheptel() {
       exploitation: {
         ...infos,
         ugbPrimes: {
-          associes: Math.max(1, Math.round(nombreOuRien(saisie.associes) ?? 1)),
+          ...infos?.ugbPrimes,
           coefficients: Object.fromEntries(
             Object.entries(saisie.coefficients).map(([e, c]) => [
               e,
               { adulte: nombreOuRien(c.adulte), petit: nombreOuRien(c.petit) },
             ]),
           ),
-          primes: Object.fromEntries(
-            Object.entries(saisie.primes).map(([cle, p]) => [
-              cle,
-              {
+          parAnnee: {
+            ...infos?.ugbPrimes?.parAnnee,
+            [cleAides(annee, espece)]: {
+              associes: Math.max(1, Math.round(nombreOuRien(saisie.associes) ?? 1)),
+              primes: Object.fromEntries(
+                Object.entries(saisie.primes).map(([cle, p]) => [
+                  cle,
+                  {
+                    actif: p.actif,
+                    taux: nombreOuRien(p.taux),
+                    base: p.base,
+                    nom: p.nom.trim() || undefined,
+                    ...plafondsEnNombres(p),
+                  },
+                ]),
+              ),
+              personnalisees: saisie.personnalisees.map((p) => ({
+                id: p.id,
+                nom: p.nom,
                 actif: p.actif,
                 taux: nombreOuRien(p.taux),
                 base: p.base,
-                nom: p.nom.trim() || undefined,
                 ...plafondsEnNombres(p),
-              },
-            ]),
-          ),
-          personnalisees: saisie.personnalisees.map((p) => ({
-            id: p.id,
-            nom: p.nom,
-            actif: p.actif,
-            taux: nombreOuRien(p.taux),
-            base: p.base,
-            ...plafondsEnNombres(p),
-          })),
+              })),
+            },
+          },
         },
       },
     });
@@ -222,125 +250,163 @@ export default function RubriqueCheptel() {
     nom: string,
     aide: string | undefined,
     aideSaisie: SaisieAide,
-  ) => (
-    <Card key={cle}>
-      <View style={commonStyles.rowSpaceBetween}>
-        <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{nom}</Text>
-        <Pressable
-          onPress={() => setRenommage({ cle, personnalisee, nom })}
-          hitSlop={8}
-          accessibilityLabel={T.renommer}
-        >
-          <Ionicons name="create-outline" size={24} color={colors.primary} />
-        </Pressable>
-      </View>
-      {aide ? <Text style={commonStyles.note}>{aide}</Text> : null}
-      <Checkbox
-        label={T.compter}
-        value={aideSaisie.actif}
-        onChange={(actif) => majAide(cle, personnalisee, { actif })}
-      />
-      {aideSaisie.actif ? (
-        <>
-          <SelectField
-            label={T.calculeSur}
-            value={aideSaisie.base}
-            onChange={(base) => majAide(cle, personnalisee, { base })}
-            options={Object.values(BASE_PRIME).map((valeur) => ({ value: valeur, label: T.bases[valeur] }))}
-          />
-          <FormField
-            label={`${!personnalisee && REGLES_PRIMES[cle as keyof typeof REGLES_PRIMES]?.tranchesZone ? T.tauxZone : T.taux} par ${T.unites[aideSaisie.base as keyof typeof T.unites]}`}
-            value={aideSaisie.taux}
-            onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && majAide(cle, personnalisee, { taux: v })}
-            keyboardType="decimal-pad"
-            placeholder="0"
-          />
-          {/* Les plafonds : quantité maximale comptée, seuil minimal et montant unitaire maximal (vide : sans). */}
-          {champPlafond(
-            `${T.plafond} (${T.unitesQuantite[aideSaisie.base as keyof typeof T.unitesQuantite]})`,
-            aideSaisie.plafond,
-            (plafond) => majAide(cle, personnalisee, { plafond }),
-            personnalisee ? undefined : T.primes[cle as keyof typeof T.primes].plafondAide,
-          )}
-          {champPlafond(
-            `${T.minimum} (${T.unitesQuantite[aideSaisie.base as keyof typeof T.unitesQuantite]})`,
-            aideSaisie.minimum,
-            (minimum) => majAide(cle, personnalisee, { minimum }),
-          )}
-          {champPlafond(T.plafondTaux, aideSaisie.plafondTaux, (plafondTaux) =>
-            majAide(cle, personnalisee, { plafondTaux }),
-          )}
-          {/* Une aide dégressive (l'ICHN) : la part payée par tranche d'hectares. */}
-          {!personnalisee && REGLES_PRIMES[cle as keyof typeof REGLES_PRIMES]?.tranchesZone ? (
-            <View style={commonStyles.gap6}>
-              {champPlafond(T.partFixe, aideSaisie.partFixe, (partFixe) =>
-                majAide(cle, personnalisee, { partFixe }),
-              )}
-              <Text style={commonStyles.lineSemiBold}>{T.tranchesTitre}</Text>
-              {aideSaisie.tranchesZone.map((tranche, index) => (
-                <View key={index} style={commonStyles.row}>
-                  <View style={commonStyles.flex1}>
-                    <FormField
-                      label={T.jusqua}
-                      value={tranche.jusqua}
-                      onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && majTranche(cle, index, { jusqua: v })}
-                      keyboardType="decimal-pad"
-                    />
+  ) => {
+    const ouverte = aideOuverte === cle;
+    return (
+      <Card key={cle}>
+        <View style={commonStyles.rowSpaceBetween}>
+          <Pressable
+            style={[commonStyles.rowCentre, commonStyles.flex1]}
+            onPress={() => setAideOuverte((actuelle) => (actuelle === cle ? null : cle))}
+          >
+            <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{nom}</Text>
+            {aideSaisie.actif ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : null}
+            <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+          </Pressable>
+          <Pressable
+            onPress={() => setRenommage({ cle, personnalisee, nom })}
+            hitSlop={8}
+            accessibilityLabel={T.renommer}
+          >
+            <Ionicons name="create-outline" size={24} color={colors.primary} />
+          </Pressable>
+        </View>
+        {ouverte ? (
+          <>
+            {aide ? <Text style={commonStyles.note}>{aide}</Text> : null}
+            <Checkbox
+              label={T.compter}
+              value={aideSaisie.actif}
+              onChange={(actif) => majAide(cle, personnalisee, { actif })}
+            />
+            {aideSaisie.actif ? (
+              <>
+                <SelectField
+                  label={T.calculeSur}
+                  value={aideSaisie.base}
+                  onChange={(base) => majAide(cle, personnalisee, { base })}
+                  options={Object.values(BASE_PRIME).map((valeur) => ({
+                    value: valeur,
+                    label: T.bases[valeur],
+                  }))}
+                />
+                <FormField
+                  label={`${!personnalisee && REGLES_PRIMES[cle as keyof typeof REGLES_PRIMES]?.tranchesZone ? T.tauxZone : T.taux} par ${T.unites[aideSaisie.base as keyof typeof T.unites]}`}
+                  value={aideSaisie.taux}
+                  onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && majAide(cle, personnalisee, { taux: v })}
+                  keyboardType="decimal-pad"
+                  placeholder="0"
+                />
+                {/* Les plafonds : quantité maximale comptée, seuil minimal et montant unitaire maximal (vide : sans). */}
+                {champPlafond(
+                  `${T.plafond} (${T.unitesQuantite[aideSaisie.base as keyof typeof T.unitesQuantite]})`,
+                  aideSaisie.plafond,
+                  (plafond) => majAide(cle, personnalisee, { plafond }),
+                  personnalisee ? undefined : T.primes[cle as keyof typeof T.primes].plafondAide,
+                )}
+                {champPlafond(
+                  `${T.minimum} (${T.unitesQuantite[aideSaisie.base as keyof typeof T.unitesQuantite]})`,
+                  aideSaisie.minimum,
+                  (minimum) => majAide(cle, personnalisee, { minimum }),
+                )}
+                {champPlafond(T.plafondTaux, aideSaisie.plafondTaux, (plafondTaux) =>
+                  majAide(cle, personnalisee, { plafondTaux }),
+                )}
+                {/* Une aide dégressive (l'ICHN) : la part payée par tranche d'hectares. */}
+                {!personnalisee && REGLES_PRIMES[cle as keyof typeof REGLES_PRIMES]?.tranchesZone ? (
+                  <View style={commonStyles.gap6}>
+                    {champPlafond(T.partFixe, aideSaisie.partFixe, (partFixe) =>
+                      majAide(cle, personnalisee, { partFixe }),
+                    )}
+                    <Text style={commonStyles.lineSemiBold}>{T.tranchesTitre}</Text>
+                    {aideSaisie.tranchesZone.map((tranche, index) => (
+                      <View key={index} style={commonStyles.row}>
+                        <View style={commonStyles.flex1}>
+                          <FormField
+                            label={T.jusqua}
+                            value={tranche.jusqua}
+                            onChangeText={(v) =>
+                              /^\d*[.,]?\d*$/.test(v) && majTranche(cle, index, { jusqua: v })
+                            }
+                            keyboardType="decimal-pad"
+                          />
+                        </View>
+                        <View style={commonStyles.flex1}>
+                          <FormField
+                            label={T.partPayee}
+                            value={tranche.pourcentage}
+                            onChangeText={(v) =>
+                              /^\d*[.,]?\d*$/.test(v) && majTranche(cle, index, { pourcentage: v })
+                            }
+                            keyboardType="decimal-pad"
+                          />
+                        </View>
+                      </View>
+                    ))}
                   </View>
-                  <View style={commonStyles.flex1}>
-                    <FormField
-                      label={T.partPayee}
-                      value={tranche.pourcentage}
-                      onChangeText={(v) =>
-                        /^\d*[.,]?\d*$/.test(v) && majTranche(cle, index, { pourcentage: v })
-                      }
-                      keyboardType="decimal-pad"
-                    />
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </>
-      ) : null}
-      {personnalisee ? (
-        <Button variant="danger" label={T.supprimer} onPress={() => setASupprimer(cle)} />
-      ) : null}
-    </Card>
-  );
+                ) : null}
+              </>
+            ) : null}
+            {personnalisee ? (
+              <Button variant="danger" label={T.supprimer} onPress={() => setASupprimer(cle)} />
+            ) : null}
+          </>
+        ) : null}
+      </Card>
+    );
+  };
 
   return (
-    <Screen>
+    <>
       <Text style={styles.titreSection}>{T.ugbTitre}</Text>
       <Text style={styles.aide}>{T.ugbAide}</Text>
-      {especes.map((espece) => {
-        const parDefaut = coefficientsUgb(undefined, espece);
-        const c = saisie.coefficients[espece] ?? { adulte: '', petit: '' };
+      {especes.map((especeCoef) => {
+        const parDefaut = coefficientsUgb(undefined, especeCoef);
+        const c = saisie.coefficients[especeCoef] ?? { adulte: '', petit: '' };
         const maj = (patch: Partial<{ adulte: string; petit: string }>) =>
-          setSaisie((s) => ({ ...s, coefficients: { ...s.coefficients, [espece]: { ...c, ...patch } } }));
+          setSaisie((s) => ({ ...s, coefficients: { ...s.coefficients, [especeCoef]: { ...c, ...patch } } }));
+        const ouverte = especeOuverte === especeCoef;
         return (
-          <Card key={espece}>
-            <Text style={commonStyles.cardTitle}>{LABEL_ACTIVITE_COMPTABLE[espece]}</Text>
-            <FormField
-              label={T.coefAdulte}
-              value={c.adulte}
-              onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && maj({ adulte: v })}
-              keyboardType="decimal-pad"
-              placeholder={String(parDefaut.adulte).replace('.', ',')}
-            />
-            <FormField
-              label={T.coefPetit}
-              value={c.petit}
-              onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && maj({ petit: v })}
-              keyboardType="decimal-pad"
-              placeholder={String(parDefaut.petit).replace('.', ',')}
-            />
+          <Card key={especeCoef}>
+            <Pressable
+              style={commonStyles.rowCentre}
+              onPress={() => setEspeceOuverte((actuelle) => (actuelle === especeCoef ? null : especeCoef))}
+            >
+              <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>
+                {LABEL_ACTIVITE_COMPTABLE[especeCoef]}
+              </Text>
+              <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+            </Pressable>
+            {ouverte ? (
+              <>
+                <FormField
+                  label={T.coefAdulte}
+                  value={c.adulte}
+                  onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && maj({ adulte: v })}
+                  keyboardType="decimal-pad"
+                  placeholder={String(parDefaut.adulte).replace('.', ',')}
+                />
+                <FormField
+                  label={T.coefPetit}
+                  value={c.petit}
+                  onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && maj({ petit: v })}
+                  keyboardType="decimal-pad"
+                  placeholder={String(parDefaut.petit).replace('.', ',')}
+                />
+              </>
+            ) : null}
           </Card>
         );
       })}
 
       <Text style={styles.titreSection}>{T.primesTitre}</Text>
       <Text style={styles.aide}>{T.primesAide}</Text>
+      {/* Les aides sont propres à l'année et à l'espèce : leurs montants changent chaque année. */}
+      <LigneFiltres>
+        <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
+        <SelecteurEspece />
+      </LigneFiltres>
+      <Text style={styles.aide}>{T.parAnnee}</Text>
       <Card>
         <FormField
           label={T.associes}
@@ -416,6 +482,24 @@ export default function RubriqueCheptel() {
           setSaisie((s) => ({ ...s, personnalisees: s.personnalisees.filter((p) => p.id !== aSupprimer) }));
           setASupprimer(null);
         }}
+      />
+    </>
+  );
+}
+
+/**
+ * Organisation › Cheptel : l'écran, dont le contenu est refait à chaque changement d'année ou d'espèce (chacune a ses aides, et
+ * l'enregistrement automatique repart de ce qui est affiché).
+ */
+export default function ReglagesCheptel() {
+  const { settings } = useAppSettings();
+  const { espece } = useEtablissement();
+  return (
+    <Screen>
+      <ContenuCheptel
+        key={`${settings.anneeActive}:${espece}`}
+        annee={settings.anneeActive}
+        espece={espece}
       />
     </Screen>
   );

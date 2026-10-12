@@ -87,10 +87,13 @@ export const ACTIONS_LAIT = [
 /** Le résultat « antibiotique » d'une analyse qui est positif : toujours critique. */
 export const ANTIBIOTIQUE_POSITIF = 'positif';
 
+/** L'onglet « Santé » du volet des animaux : les visites vétérinaires (ce n'est pas une famille de contrôles). */
+export const ONGLET_SANTE = 'sante';
+
 /** Les onglets de chaque volet : ses contrôles, puis ce qu'il a de plus (terrains et résumé, boucles, analyses). */
 export const ONGLETS_VOLET = {
   [FAMILLE_CONTROLE.SURFACE]: [FAMILLE_CONTROLE.TERRAIN, FAMILLE_CONTROLE.RESUME, FAMILLE_CONTROLE.SURFACE],
-  [FAMILLE_CONTROLE.ANIMAUX]: [FAMILLE_CONTROLE.BOUCLES, FAMILLE_CONTROLE.ANIMAUX],
+  [FAMILLE_CONTROLE.ANIMAUX]: [FAMILLE_CONTROLE.BOUCLES, FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE],
   [FAMILLE_CONTROLE.LAITIER]: [FAMILLE_CONTROLE.ANALYSE, FAMILLE_CONTROLE.RESUME, FAMILLE_CONTROLE.LAITIER],
   [FAMILLE_CONTROLE.GROUPEMENT]: [FAMILLE_CONTROLE.GROUPEMENT],
 } as const;
@@ -116,6 +119,13 @@ export const SURFACES_TERRAIN = [
  * châtaigneraie et chênaie entretenues par des porcins ou des petits ruminants.
  */
 export const CODES_CULTURE = ['PPH', 'SPH', 'SPL', 'CAE', 'CEE'] as const;
+
+/** Les listes de valeurs que l'utilisateur modifie (le crayon d'une liste déroulante) : la clé de chacune dans les réglages. */
+export const CLE_LISTE_PERSONNALISEE = {
+  MOTIFS_VISITE: 'motifsVisite',
+  CODES_CULTURE: 'codesCulture',
+  TAUX_IMPOSITION: 'tauxImposition',
+} as const;
 
 /** Un grade de qualité du lait (A, B ou C). */
 export const GRADES_LAIT = ['A', 'B', 'C'] as const;

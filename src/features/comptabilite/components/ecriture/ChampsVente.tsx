@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { ChampTauxImposition } from '@/features/comptabilite/components/ChampTauxImposition';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
@@ -92,8 +93,6 @@ function usePrixInventaire(genre: 'lait' | 'oeufs'): number | undefined {
 }
 
 function ChampTauxTvaVente({ e }: Props) {
-  // Le mode simple cache le taux : celui d'office de la catégorie s'applique.
-  if (!e.modeAvance) return null;
   return (
     <SelectField
       label={TEXTES.commun.general.tauxDeTva}
@@ -136,13 +135,7 @@ export function ChampsAide({ e }: Props) {
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
         </View>
         <View style={commonStyles.flex1}>
-          <FormField
-            label={TEXTES.comptabilite.nouvelleEcriture.tauxDImposition}
-            value={e.tauxImpositionLibre}
-            onChangeText={e.setTauxImpositionLibre}
-            keyboardType="decimal-pad"
-            placeholder="0-100"
-          />
+          <ChampTauxImposition value={e.tauxImpositionLibre} onChange={e.setTauxImpositionLibre} />
         </View>
       </View>
       <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.partDuMontantIncluseDans}</Text>

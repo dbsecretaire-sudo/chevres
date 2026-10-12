@@ -3,16 +3,15 @@ import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
 import { ROUTES } from '@/shared/constants/routes';
-import { inventaireAccessible } from '@/features/settings/utils/rubriques';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { styles } from '@/shared/styles/settings/Reglages.styles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.settings.reglages;
 
 /**
- * L'onglet Organisation : un menu de rubriques (l'établissement, la comptabilité, l'inventaire, les données), comme l'onglet
- * Santé. Chaque rubrique ouvre sa page, où se trouvent ses options.
+ * L'onglet Organisation : ce qui est commun à toute l'exploitation — l'établissement, les carnets d'adresses (clients et
+ * fournisseurs) et les données (export, sauvegardes). Chaque rubrique ouvre sa page. Les réglages propres à un onglet sont dans cet
+ * onglet : le cheptel dans Cheptel › Réglages ; la comptabilité, l'inventaire (conditionnement) et la fiscalité dans Comptabilité.
  */
 export default function Reglages() {
   return (
@@ -24,39 +23,11 @@ export default function Reglages() {
           icone="business"
           route={ROUTES.ORGANISATION_ETABLISSEMENT}
         />
-        {modeEntreprise() ? null : (
-          <LigneRubrique
-            titre={T.sectionCheptel}
-            aide={T.aideRubriqueCheptel}
-            icone="paw"
-            route={ROUTES.ORGANISATION_CHEPTEL}
-          />
-        )}
-        <LigneRubrique
-          titre={T.sectionComptabilite}
-          aide={T.aideRubriqueComptabilite}
-          icone="calculator"
-          route={ROUTES.ORGANISATION_COMPTABILITE}
-        />
-        {inventaireAccessible() ? (
-          <LigneRubrique
-            titre={T.sectionInventaire}
-            aide={T.aideRubriqueInventaire}
-            icone="cube"
-            route={ROUTES.ORGANISATION_INVENTAIRE}
-          />
-        ) : null}
         <LigneRubrique
           titre={T.sectionTiers}
           aide={T.aideRubriqueTiers}
           icone="person"
           route={ROUTES.ORGANISATION_TIERS}
-        />
-        <LigneRubrique
-          titre={TEXTES.comptabilite.fiscalite.titre}
-          aide={T.aideRubriqueFiscalite}
-          icone="receipt"
-          route={ROUTES.FISCALITE}
         />
         <LigneRubrique
           titre={T.sectionDonnees}

@@ -8,6 +8,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ListRow } from '@/shared/components/ListRow';
+import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
@@ -82,6 +83,8 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                   subtitle={TEXTES.production.fromages.ligne(enStock(a.cle), total)}
                   trailing={
                     <View style={commonStyles.row}>
+                      {/* Un stock en négatif (plus vendu que fabriqué) : toujours la pastille rouge. */}
+                      {(niveaux.get(a.cle) ?? 0) < 0 ? <PastilleAlerte /> : null}
                       <Text style={commonStyles.lineBold}>{niveaux.get(a.cle) ?? 0}</Text>
                       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                     </View>

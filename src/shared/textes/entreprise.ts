@@ -38,7 +38,6 @@ export const TEXTES_ENTREPRISE = {
     impots: 'Impôts',
     chiffreAffaires: 'Chiffre d’affaires',
     urssaf: 'URSSAF',
-    tva: 'TVA',
   },
   urssaf: {
     titreMois: (annee: number) => `Déclarations URSSAF par mois — ${annee}`,
@@ -81,24 +80,8 @@ export const TEXTES_ENTREPRISE = {
       'Ce que l’application NE calcule PAS : l’impôt à payer, les cotisations sociales, ni le barème de votre foyer. Vérifiez chaque chiffre sur impots.gouv.fr ou avec votre comptable.',
   },
   tva: {
-    titreMois: (annee: number) => `TVA par mois — ${annee}`,
-    collectee: 'TVA collectée',
-    deductible: 'TVA déductible',
-    solde: 'TVA à reverser',
-    creditDeTva: 'Crédit de TVA',
-    total: 'Total de l’année',
     nonAssujetti:
       'Votre entreprise n’est pas assujettie à la TVA. Cochez « Assujetti à la TVA » dans les informations de l’entreprise pour suivre la TVA.',
-    parTaux: {
-      titre: (annee: number) => `TVA par taux — ${annee}`,
-      taux: (taux: number) => `${String(taux).replace('.', ',')} %`,
-      aucun: 'Aucune TVA indiquée cette année : saisissez le taux sur les ventes et les factures.',
-      legende: 'TVA collectée · TVA déductible, pour chaque taux.',
-    },
-    regime: 'Régime de TVA',
-    noticeTitre: 'À savoir',
-    notice:
-      'La TVA est calculée à partir du taux saisi sur chaque facture : collectée sur vos recettes, déductible sur vos achats. Les dates de déclaration et de paiement dépendent de votre régime (réel simplifié : déclaration annuelle avec acomptes ; réel normal : déclaration mensuelle). À vérifier avec votre comptable.',
   },
   accueil: {
     tuiles: {

@@ -24,9 +24,13 @@ import {
 } from '@/features/comptabilite/utils/categoriesRecetteInventaire';
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { chargerCategoriesRecetteInventaire } from '@/features/comptabilite/repository/categoriesRecetteInventaire';
+import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
+import { categorieDepenseAutorisee } from '@/features/fournisseurs/services/categorie';
+import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import { listClients } from '@/features/clients/repository';
 import {
+  groupeRecetteAutorise,
   numeroFactureLibre as numeroFactureLibreDuClient,
   reajustementPossible as reajustementPossibleDuClient,
   prixLibre as prixLibreDuClient,
@@ -72,13 +76,13 @@ import {
   CATEGORIES_DEPENSE_ENTREPRISE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
+  GROUPE_RECETTE,
   CATEGORIE_VENTE,
   POURCENTAGE_MIN,
   TAUX_TVA_ACHAT_DEFAUT,
   TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT,
   TAUX_TVA_RECETTE_ENTREPRISE,
   TAUX_TVA_CARBURANT,
-  TAUX_TVA_VENTE_PAR_CATEGORIE,
   TYPE_AIDE,
   TYPE_ALIMENT,
   TYPE_FACTURE,
@@ -86,15 +90,11 @@ import {
   TYPE_FROMAGE,
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
-import {
-  COMPTE_PAR_DEPENSE,
-  COMPTE_PAR_RECETTE,
-  TAUX_IMPOSITION_TYPE_AIDE,
-} from '@/shared/constants/planComptable';
+import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 
 /** Taux de TVA proposé pour une recette (celui de la vente de production, 0 pour une aide ou autre). */
 const tauxTvaParDefaut = (categorie: CategorieRecette): number =>
-  estCategorieVente(categorie) ? TAUX_TVA_VENTE_PAR_CATEGORIE[categorie] : 0;
+  estCategorieVente(categorie) ? tauxTvaDeLaVente(categorie) : 0;
 
 /** Préfixes des comptes PCG de charges (6…) et de produits (7…) proposés dans les listes. */
 const PREFIXE_COMPTES_DEPENSE = '6';
@@ -113,13 +113,17 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [reajustementCoche, setReajustement] = useState(false);
   /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
   const [natureUrssaf, setNatureUrssaf] = useState('');
+  /** Le paiement n'a pas encore eu lieu : sa date prévue (la trésorerie la compte à cette date). */
+  const [enAttente, setEnAttente] = useState(false);
+  const [echeance, setEcheance] = useState('');
+  /** L'atelier d'une charge (vide : commune, répartie entre les ateliers). */
+  const [atelier, setAtelier] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
   // s'applique (champ affiché, taux enregistré) que si elle a coché « Assujetti à la TVA » dans ses informations.
   const entreprise = modeEntreprise();
   const tvaEntreprise = entreprise && !!settings.exploitation?.entreprise?.tvaApplicable;
-  const modeAvance = !!settings.exploitation?.modeAvance;
-  // Le mode simple cache le taux de TVA (le taux d'office s'applique) ; le mode avancé le montre quand la TVA s'applique.
-  const afficherTva = modeAvance && (!entreprise || tvaEntreprise);
+  // Le taux de TVA se montre quand la TVA s'applique (un élevage, ou une entreprise assujettie).
+  const afficherTva = !entreprise || tvaEntreprise;
   const activiteInitiale: ActiviteComptable = entreprise ? ACTIVITE_COMMUNE : especeCourante();
   const tauxTvaEntreprise = (categorie: CategorieRecette): string =>
     tvaEntreprise
@@ -197,7 +201,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
   const [tauxImpositionLibre, setTauxImpositionLibre] = useState(
-    String(TAUX_IMPOSITION_TYPE_AIDE[TYPE_AIDE.PAIEMENT_BASE]),
+    String(tauxImpositionDeLAide(TYPE_AIDE.PAIEMENT_BASE)),
   );
   const [compteRecetteAutre, setCompteRecetteAutre] = useState(
     COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.AUTRE].numero,
@@ -237,6 +241,16 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   /** Choisit le client, et règle d'office « le client souhaite déclarer la vente » selon sa catégorie. */
   const choisirClient = (id: string) => {
     setClientId(id);
+    const client = clients.find((c) => c.id === id);
+    // La catégorie du client règle les recettes possibles : une recette qu'elle ne propose pas laisse la place à la première qui l'est.
+    if (
+      type === TYPE_FACTURE.EMISE &&
+      !categorieAjoutee &&
+      !groupeRecetteAutorise(client, groupeRecette(categorieRecette, activite))
+    ) {
+      const permis = groupesRecetteActivite(activite).find((g) => groupeRecetteAutorise(client, g));
+      if (permis) changerCategorieRecette(categoriesGroupe(permis, activite)[0]);
+    }
     const declaree = venteDeclareeParDefaut(clients.find((c) => c.id === id));
     if (declaree !== avecFacture) {
       setAvecFacture(declaree);
@@ -305,14 +319,21 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   /** Une écriture propre à une espèce ne peut pas rester « commune » : on revient à l'espèce courante. */
   const rattacherSiCommun = () => setActivite((a) => (a === ACTIVITE_COMMUNE ? especeCourante() : a));
 
+  const fournisseurSelectionne = fournisseurs.find((x) => x.id === fournisseurId);
   const changerFournisseur = (id: string) => {
     setFournisseurId(id);
-    setTiers(fournisseurs.find((f) => f.id === id)?.nomEntreprise ?? '');
+    const choisi = fournisseurs.find((x) => x.id === id);
+    setTiers(choisi?.nomEntreprise ?? '');
+    // La catégorie du fournisseur règle les dépenses possibles : celle qu'elle ne permet pas laisse la place à la première qui l'est.
+    if (!categorieDepenseAutorisee(choisi, categorieDepense)) {
+      const permise = categoriesDepenseDuMode().find((c) => categorieDepenseAutorisee(choisi, c));
+      if (permise) changerCategorieDepense(permise as CategorieDepense);
+    }
   };
 
   const changerTypeAide = (v: TypeAide) => {
     setTypeAide(v);
-    setTauxImpositionLibre(String(v === TYPE_AIDE.AUTRE ? POURCENTAGE_MIN : TAUX_IMPOSITION_TYPE_AIDE[v]));
+    setTauxImpositionLibre(String(v === TYPE_AIDE.AUTRE ? POURCENTAGE_MIN : tauxImpositionDeLAide(v)));
   };
 
   const changerCategorieRecette = (v: CategorieRecette) => {
@@ -324,7 +345,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
       setJeune(undefined);
     }
     if (estCategorieVente(v)) {
-      setTauxTvaVente(String(TAUX_TVA_VENTE_PAR_CATEGORIE[v]));
+      setTauxTvaVente(String(tauxTvaDeLaVente(v)));
       rattacherSiCommun();
     } else if (entreprise) {
       setTauxTvaVente(tauxTvaEntreprise(v));
@@ -379,6 +400,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setDescription('');
     setMontant('');
     setNumeroFacture('');
+    setEnAttente(false);
+    setEcheance('');
     setQuantite('');
     setStockQuantite(undefined);
     setBouclesDebut('');
@@ -478,6 +501,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         tvaEmise: tvaEntreprise && type === TYPE_FACTURE.EMISE && categorieRecette !== CATEGORIE_RECETTE.AIDE,
         avecFacture,
         numeroFacture,
+        enAttente,
+        echeance,
+        atelier,
         reajustement,
         natureUrssaf,
       });
@@ -525,7 +551,6 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     avecCommunActivite,
     entreprise,
     afficherTva,
-    modeAvance,
     type,
     setType,
     date,
@@ -575,6 +600,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     optionsCompteDepense,
     fournisseurs,
     fournisseurId,
+    fournisseurSelectionne,
     changerFournisseur,
     // crédit
     categorieRecette,
@@ -604,11 +630,16 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     groupesRecette: groupesRecetteActivite(activite),
     /** Les choix de la liste « Catégorie de recette » : celles d'office, puis celles que l'utilisateur a ajoutées. */
     optionsGroupesRecette: [
-      ...groupesRecetteActivite(activite).map((g) => ({
-        value: g as string,
-        label: LABEL_GROUPE_RECETTE[g],
-      })),
-      ...categoriesAjouteesActivite.map((c) => ({
+      ...groupesRecetteActivite(activite)
+        .filter((g) => groupeRecetteAutorise(clientSelectionne, g))
+        .map((g) => ({
+          value: g as string,
+          label: LABEL_GROUPE_RECETTE[g],
+        })),
+      ...(groupeRecetteAutorise(clientSelectionne, GROUPE_RECETTE.AUTRE)
+        ? categoriesAjouteesActivite
+        : []
+      ).map((c) => ({
         value: `${PREFIXE_CATEGORIE_AJOUTEE}${c.id}`,
         label: c.nom,
       })),
@@ -645,6 +676,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     compteAffiche,
     avecFacture,
     setAvecFacture,
+    atelier,
+    setAtelier,
+    enAttente,
+    setEnAttente,
+    echeance,
+    setEcheance,
     numeroFacture,
     setNumeroFacture,
     natureUrssaf,

@@ -1,1 +1,1 @@
-export { default } from '@/features/entreprise/screens/DeclarationTva';
+export { default } from '@/features/comptabilite/screens/PilotageTva';

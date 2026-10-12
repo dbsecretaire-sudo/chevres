@@ -28,7 +28,14 @@ import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesMod
 import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
 import { estArticleAvecLots, lotsDeLInventaire } from '@/features/stock/services/lots';
 import { Button } from '@/shared/components/Button';
-import { bouclesDuCheptelAReprendre, reprendreLesBouclesDuCheptel } from '@/features/stock/services/boucles';
+import {
+  bouclesPossiblesDuCheptel,
+  synchroniserBouclesDuCheptel,
+  type BouclePossible,
+} from '@/features/stock/services/boucles';
+import { ModalSynchroBoucles } from '@/features/stock/components/ModalSynchroBoucles';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { synchroBouclesActive } from '@/features/settings/settings';
 import { JournalLait } from '@/features/stock/components/JournalLait';
 import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
@@ -169,8 +176,10 @@ export default function StockFromagerie() {
   /** Le fromage dont on regarde les lots (par numéro de lot), et si sa fenêtre est ouverte. */
   const [fromageOuvert, setFromageOuvert] = useState<ArticleAffiche | null>(null);
   const [fromageVisible, setFromageVisible] = useState(false);
-  /** REPRISE UNIQUE : le nombre de boucles posées au cheptel qui ne sont pas dans l'inventaire (0 : rien à proposer). */
-  const [bouclesAReprendre, setBouclesAReprendre] = useState(0);
+  /** La synchronisation des boucles avec le cheptel : les numéros que portent les animaux, et si sa fenêtre est ouverte. */
+  const [possibles, setPossibles] = useState<BouclePossible[]>([]);
+  const [synchroOuverte, setSynchroOuverte] = useState(false);
+  const synchro = synchroBouclesActive(useAppSettings().settings.exploitation);
   /** Pour un ajout dans une liste personnalisée : cette liste. */
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
@@ -197,7 +206,7 @@ export default function StockFromagerie() {
     ]);
     setArchive(stock);
     setEffectifs(vivants);
-    setBouclesAReprendre(await bouclesDuCheptelAReprendre());
+    setPossibles(await bouclesPossiblesDuCheptel());
     setVentesLait(
       ventes
         .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
@@ -340,10 +349,11 @@ export default function StockFromagerie() {
     );
   };
 
-  const reprendreLesBoucles = async () => {
-    const ajoutees = await reprendreLesBouclesDuCheptel();
+  const synchroniserLesBoucles = async (tiptags: string[]) => {
+    setSynchroOuverte(false);
+    const reprises = await synchroniserBouclesDuCheptel(tiptags);
     await charger();
-    Alert.alert(T.boucles.reprise.fait(ajoutees));
+    Alert.alert(T.boucles.synchro.fait(reprises));
   };
 
   const valider = async (cle: string, delta: number, litres?: number) => {
@@ -493,16 +503,16 @@ export default function StockFromagerie() {
                       </View>
                       {genre ? (
                         <>
-                          {genre === GENRE_ARTICLE.BOUCLE && bouclesAReprendre > 0 ? (
+                          {genre === GENRE_ARTICLE.BOUCLE && synchro && possibles.length > 0 ? (
                             <Card>
-                              <Text style={commonStyles.lineBold}>{T.boucles.reprise.titre}</Text>
+                              <Text style={commonStyles.lineBold}>{T.boucles.synchro.titre}</Text>
                               <Text style={commonStyles.muted}>
-                                {T.boucles.reprise.message(bouclesAReprendre)}
+                                {T.boucles.synchro.message(possibles.length)}
                               </Text>
                               <Button
                                 variant="secondary"
-                                label={T.boucles.reprise.bouton}
-                                onPress={reprendreLesBoucles}
+                                label={T.boucles.synchro.bouton}
+                                onPress={() => setSynchroOuverte(true)}
                               />
                             </Card>
                           ) : null}
@@ -595,6 +605,13 @@ export default function StockFromagerie() {
       />
 
       <Fab options={[...optionsAjout, ...optionsListes]} />
+
+      <ModalSynchroBoucles
+        visible={synchroOuverte}
+        possibles={possibles}
+        onValider={synchroniserLesBoucles}
+        onAnnuler={() => setSynchroOuverte(false)}
+      />
 
       <ArticleStockModal
         visible={prixLaitOuvert}

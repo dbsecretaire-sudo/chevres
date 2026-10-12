@@ -88,12 +88,18 @@ export const TEXTES_CHEPTEL = {
     effectifEtUgb: {
       titre: 'Effectif et UGB prévisionnel',
       effectifActuel: 'Effectif actuel',
+      effectifDeclare: 'Effectif déclaré',
+      primeDifferente: (debut: string, fin: string) =>
+        `La prime ne correspond pas au montant perçu entre le ${debut} et le ${fin}`,
+      percu: (montant: string, debut: string, fin: string) => `Perçu du ${debut} au ${fin} : ${montant}`,
+      effectifDeclarePlaceholder: 'à saisir',
       ugbPrevisionnel: 'UGB prévisionnel',
       primePrevisionnelle: 'Prime prévisionnelle',
       formule: '(UGB × taux €)',
       detail: {
         titre: 'Calcul de l’UGB et des primes',
         sevres: (nombre: number, coefficient: string) => `Animaux sevrés : ${nombre} × ${coefficient}`,
+        declare: (nombre: number, coefficient: string) => `Effectif déclaré : ${nombre} × ${coefficient}`,
         petits: (nombre: number, coefficient: string) => `Petits non sevrés : ${nombre} × ${coefficient}`,
         ugb: (valeur: string) => `UGB prévisionnel : ${valeur}`,
         hectares: (valeur: string) => `Hectares admissibles : ${valeur} ha`,
@@ -118,10 +124,22 @@ export const TEXTES_CHEPTEL = {
         fermer: 'Fermer',
       },
     },
-    /** « UGB actuel » du contrôle des animaux. */
-    ugbActuel: (valeur: string) => `UGB actuel : ${valeur}`,
   },
-  /** Organisation › Cheptel : les coefficients UGB et les primes. */
+  /** La page d'accueil du Cheptel : la ligne des réglages (UGB, primes, effectif déclaré). */
+  /** Les groupes de l'accueil du Cheptel. */
+  accueil: {
+    groupes: {
+      troupeau: 'Gestion du troupeau',
+      terrains: 'Terrains et identification',
+      statistiques: 'Statistiques',
+      technique: 'Technique',
+    },
+  },
+  reglages: {
+    titre: 'Réglages',
+    aide: 'Paramétrage UGB, primes, etc.',
+  },
+  /** Cheptel › Réglages : les coefficients UGB et les primes. */
   ugbPrimes: {
     ugbTitre: 'UGB',
     ugbAide:
@@ -131,6 +149,8 @@ export const TEXTES_CHEPTEL = {
     primesTitre: 'Primes',
     primesAide:
       'Cochez les aides que vous touchez et saisissez leur montant : le bilan en déduit une prime prévisionnelle. Les montants et les plafonds changent chaque année (prenez ceux de votre notification) ; les plafonds proposés sont indicatifs et modifiables.',
+    parAnnee:
+      'Les aides sont enregistrées pour l’année et l’espèce choisies : leurs montants changent chaque année. Une aide non modifiée est reprise de l’année précédente.',
     associes: 'Nombre d’associés (GAEC)',
     associesAide:
       'En GAEC, les plafonds du paiement redistributif et de l’ICHN se multiplient par le nombre d’associés. Laissez 1 hors GAEC.',

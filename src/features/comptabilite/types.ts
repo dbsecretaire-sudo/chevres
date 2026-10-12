@@ -89,6 +89,14 @@ export interface Facture {
   montant: number;
   /** Uniquement pour type === 'recue'. */
   categorieDepense?: CategorieDepense;
+  /** Le paiement : faux = pas encore réglé ou encaissé (voir echeance) ; absent : réglé à la date de la facture (le cas d'office). */
+  payee?: boolean;
+  /** Pour une facture pas encore réglée ou encaissée : la date prévue du paiement. */
+  echeance?: string;
+  /** La date où la facture a été réglée ou encaissée, quand elle diffère de sa date (la trésorerie s'en sert). */
+  datePaiement?: string;
+  /** Pour une facture reçue : l'atelier qu'elle concerne (voir ATELIER) ; absent : une charge commune, répartie entre les ateliers. */
+  atelier?: string;
   /** Uniquement si categorieDepense === 'alimentation' : une facture peut regrouper plusieurs aliments. */
   lignesAlimentation?: LigneAlimentation[];
   /** Uniquement si categorieDepense === 'achats_marchandises' dans un gîte : le détail des marchandises achetées. */
@@ -198,4 +206,10 @@ export interface Vente {
   numeroFacture?: string;
   /** Un réajustement (vente de lait d'un récolteur) : sans litrage ni numéro de facture saisis. */
   reajustement?: boolean;
+  /** Le paiement : faux = pas encore encaissé (voir echeance) ; absent : encaissé à la date de la vente (le cas d'office). */
+  payee?: boolean;
+  /** Pour une vente pas encore encaissée : la date prévue du paiement. */
+  echeance?: string;
+  /** La date où la vente a été encaissée, quand elle diffère de sa date (la trésorerie s'en sert). */
+  datePaiement?: string;
 }

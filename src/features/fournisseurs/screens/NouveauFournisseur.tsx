@@ -15,6 +15,8 @@ import {
 import { ImportEtablissement } from '@/features/etablissements/components/ImportEtablissement';
 import { useImportDepuisEtablissement } from '@/features/etablissements/hooks/useImportDepuisEtablissement';
 import type { Fournisseur } from '@/features/fournisseurs/types';
+import { ChampCategorieFournisseur } from '@/features/fournisseurs/components/ChampCategorieFournisseur';
+import { CATEGORIE_FOURNISSEUR_PAR_DEFAUT } from '@/shared/constants/fournisseurs';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -27,6 +29,7 @@ export default function NouveauFournisseur() {
   const [tva, setTva] = useState('');
   const [rib, setRib] = useState('');
   const [adressePostale, setAdressePostale] = useState('');
+  const [categorie, setCategorie] = useState<string>(CATEGORIE_FOURNISSEUR_PAR_DEFAUT);
   const [enregistrement, setEnregistrement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [importer, setImporter] = useState(false);
@@ -52,6 +55,7 @@ export default function NouveauFournisseur() {
         tva: tva.trim() || undefined,
         rib: rib.trim() || undefined,
         adressePostale: adressePostale.trim(),
+        categorie,
       });
       router.back();
     } finally {
@@ -83,6 +87,7 @@ export default function NouveauFournisseur() {
         {/* Le formulaire est enroulé quand on choisit d'importer un fournisseur d'un autre établissement. */}
         {!importer && (
           <>
+            <ChampCategorieFournisseur value={categorie} onChange={setCategorie} />
             <FormField
               label={TEXTES.commun.general.nomDEntreprise}
               required

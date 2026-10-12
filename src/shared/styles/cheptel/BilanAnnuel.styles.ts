@@ -12,6 +12,10 @@ export const styles = StyleSheet.create({
   },
   /** Le montant d'une aide sous la prime prévisionnelle : en retrait. */
   ligneDetail: { paddingLeft: 16 },
+  /** La légende de l'alerte des primes : en italique, après un astérisque rouge. */
+  legendePrime: { fontSize: 13, fontStyle: 'italic', color: colors.text },
+  /** Le champ de l'effectif déclaré : étroit, à droite de son libellé. */
+  champDeclare: { width: 110 },
   titreTexte: { flexShrink: 1 },
   cardTitreValeur: { fontSize: 15, fontWeight: '800', color: colors.text },
   ligne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 2 },

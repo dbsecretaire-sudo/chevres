@@ -13,7 +13,7 @@ export default function CheptelLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances')}
+      screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances', 'reglages')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -57,6 +57,7 @@ export default function CheptelLayout() {
         options={{ title: TEXTES.navigation.layout.historiqueMortesAbattoirVendues }}
       />
       <Stack.Screen name="bilan" options={{ title: TEXTES.commun.general.bilanAnnuel }} />
+      <Stack.Screen name="reglages" options={{ title: TEXTES.cheptel.reglages.titre }} />
     </Stack>
   );
 }

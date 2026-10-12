@@ -1,1 +1,1 @@
-export { default } from '@/features/comptabilite/screens/ListeTransactions';
+export { default } from '@/features/comptabilite/screens/AccueilComptabilite';

@@ -5,7 +5,6 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
-import { ComptabiliteHeaderMenu } from '@/features/comptabilite/components/ComptabiliteHeaderMenu';
 import { TEXTES } from '@/shared/textes';
 
 export default function ComptabiliteLayout() {
@@ -21,12 +20,15 @@ export default function ComptabiliteLayout() {
       // La liste, le Détail et la fiscalité suivent l'espèce active par un simple filtre : ils ne sont pas recréés.
       screenLayout={ecranParEspeceSauf(
         'index',
+        'liste',
         'detail',
         'fiscalite',
         'fiscalite-impots',
         'fiscalite-rsa',
         'urssaf',
         'tva',
+        'rentabilite',
+        'tresorerie',
       )}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
@@ -34,13 +36,16 @@ export default function ComptabiliteLayout() {
         headerTitleStyle: { fontWeight: '700' },
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: TEXTES.commun.general.comptabilite,
-          headerRight: () => <ComptabiliteHeaderMenu />,
-        }}
-      />
+      <Stack.Screen name="index" options={{ title: TEXTES.commun.general.comptabilite }} />
+      <Stack.Screen name="liste" options={{ title: TEXTES.comptabilite.accueil.ecritures }} />
+      <Stack.Screen name="inventaire" options={{ title: TEXTES.comptabilite.accueil.inventaire.titre }} />
+      <Stack.Screen name="stocks" options={{ title: TEXTES.comptabilite.accueil.inventaire.stocks }} />
+      <Stack.Screen name="stock-historique" options={{ title: TEXTES.stock.historique.titre }} />
+      <Stack.Screen name="stock-statistiques" options={{ title: TEXTES.stock.statistiques.titre }} />
+      <Stack.Screen name="stock-structure" options={{ title: TEXTES.stock.structure.titre }} />
+      <Stack.Screen name="conditionnement" options={{ title: TEXTES.stock.conditionnement.titre }} />
+      <Stack.Screen name="reglages" options={{ title: TEXTES.comptabilite.accueil.reglages.titre }} />
+      <Stack.Screen name="taux" options={{ title: TEXTES.comptabilite.tauxParProduit.titre }} />
       <Stack.Screen
         name="nouvelle"
         options={{
@@ -68,7 +73,13 @@ export default function ComptabiliteLayout() {
         }}
       />
       <Stack.Screen name="urssaf" options={{ title: TEXTES.entreprise.menu.urssaf }} />
-      <Stack.Screen name="tva" options={{ title: TEXTES.entreprise.menu.tva }} />
+      <Stack.Screen name="tresorerie" options={{ title: TEXTES.comptabilite.accueil.tresorerie.titre }} />
+      <Stack.Screen
+        name="tresorerie-reglages"
+        options={{ title: TEXTES.comptabilite.tresorerie.reglagesEcran.soldeTitre }}
+      />
+      <Stack.Screen name="rentabilite" options={{ title: TEXTES.comptabilite.accueil.rentabilite.titre }} />
+      <Stack.Screen name="tva" options={{ title: TEXTES.comptabilite.accueil.tva.titre }} />
       <Stack.Screen
         name="fournisseurs/index"
         options={{ title: TEXTES.commun.general.fournisseurs, headerLeft: flecheOrganisation }}

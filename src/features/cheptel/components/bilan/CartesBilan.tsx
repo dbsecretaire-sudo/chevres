@@ -1,7 +1,9 @@
 import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
+import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
+import { FormField } from '@/shared/components/FormField';
 import { formaterUgb } from '@/features/cheptel/services/ugb';
-import { formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import type { Bilan } from '@/features/cheptel/services/bilanCheptel';
 import {
@@ -236,20 +238,28 @@ export function CarteBoucs({ bilan, precedent, annee, ouverte, onBasculer }: Car
 
 export function CarteEffectif({
   bilan,
+  effectifDeclare,
+  onChangerEffectifDeclare,
   ugb,
   prime,
   lignesPrime,
+  saison,
   ouverte,
   onBasculer,
   onVoirDetail,
 }: {
   bilan: Bilan;
-  /** L'UGB prévisionnel (celui de l'effectif de fin d'année, avec les coefficients de l'exploitation). */
+  /** L'effectif déclaré, tel qu'on le saisit (vide : non saisi) : l'UGB et la prime en dépendent quand il est saisi. */
+  effectifDeclare: string;
+  onChangerEffectifDeclare: (valeur: string) => void;
+  /** L'UGB prévisionnel (celui de l'effectif déclaré, à défaut de l'effectif de fin d'année, avec les coefficients de l'exploitation). */
   ugb: number;
   /** La prime prévisionnelle : son total, ou rien quand aucun taux n'est renseigné. */
   prime?: number;
   /** Le montant de chaque aide comptée dans la prime prévisionnelle, avec son nom court. */
-  lignesPrime: { cle: string; nomCourt: string; montant: number }[];
+  lignesPrime: { cle: string; nomCourt: string; montant: number; ecart?: boolean }[];
+  /** La saison où l'on compte les aides perçues (de septembre à août). */
+  saison: { debut: string; fin: string };
   ouverte: boolean;
   onBasculer: () => void;
   /** Un appui sur l'UGB ouvre le détail du calcul. */
@@ -262,6 +272,19 @@ export function CarteEffectif({
       {ouverte ? (
         <>
           <Ligne label={T.effectifActuel} valeur={bilan.stockFinAnnee} />
+          {/* L'effectif déclaré (à la PAC) : enregistré pour l'année et l'espèce, il sert de base à l'UGB et aux primes. */}
+          <View style={styles.ligne}>
+            <Text style={styles.ligneLabel}>{T.effectifDeclare}</Text>
+            <View style={styles.champDeclare}>
+              <FormField
+                value={effectifDeclare}
+                onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && onChangerEffectifDeclare(v)}
+                keyboardType="number-pad"
+                placeholder={T.effectifDeclarePlaceholder}
+                accessibilityLabel={T.effectifDeclare}
+              />
+            </View>
+          </View>
           <Pressable style={styles.ligne} onPress={onVoirDetail} accessibilityLabel={T.detail.titre}>
             <Text style={styles.libelleLien}>{T.ugbPrevisionnel}</Text>
             <Text style={styles.cardTitreValeur}>{formaterUgb(ugb)}</Text>
@@ -274,10 +297,26 @@ export function CarteEffectif({
           </View>
           {lignesPrime.map((l) => (
             <View key={l.cle} style={[styles.ligne, styles.ligneDetail]}>
-              <Text style={commonStyles.muted}>{l.nomCourt}</Text>
+              <View style={commonStyles.rowCentre}>
+                <Text style={commonStyles.muted}>{l.nomCourt}</Text>
+                {/* La prime calculée ne correspond pas à ce qui a été perçu sur la saison. */}
+                {l.ecart ? (
+                  <Pressable onPress={onVoirDetail} hitSlop={8}>
+                    <PastilleAlerte taille={18} />
+                  </Pressable>
+                ) : null}
+              </View>
               <Text style={commonStyles.muted}>{formatMontant(l.montant)}</Text>
             </View>
           ))}
+          {lignesPrime.some((l) => l.ecart) ? (
+            <View style={commonStyles.rowCentre}>
+              <Text style={commonStyles.required}>*</Text>
+              <Text style={styles.legendePrime}>
+                {T.primeDifferente(formatDateFR(saison.debut), formatDateFR(saison.fin))}
+              </Text>
+            </View>
+          ) : null}
         </>
       ) : null}
     </Card>

@@ -19,7 +19,7 @@ export default function SanteLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('alimentation', 'veterinaire/index', 'controles/liste')}
+      screenLayout={ecranParEspeceSauf('alimentation', 'controles/liste')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -31,16 +31,8 @@ export default function SanteLayout() {
         options={{ title: TEXTES.commun.general.alimentation, headerLeft: flecheCheptel }}
       />
       <Stack.Screen
-        name="veterinaire/index"
-        options={{ title: TEXTES.commun.general.visitesVeterinaire, headerLeft: flecheCheptel }}
-      />
-      <Stack.Screen
-        name="veterinaire/nouvelle"
-        options={{
-          title: TEXTES.navigation.layout.nouvelleVisite,
-          presentation: 'modal',
-          headerStyle: { backgroundColor: colors.ajout },
-        }}
+        name="veterinaire/visite"
+        options={{ title: TEXTES.exploitation.nouvelleVisite.titreFiche }}
       />
       <Stack.Screen
         name="controles/liste"

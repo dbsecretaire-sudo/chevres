@@ -32,6 +32,13 @@ export default function RubriqueTiers() {
           route={ROUTES.ORGANISATION_CATEGORIES_CLIENT}
           retour={ROUTES.ORGANISATION_TIERS}
         />
+        <LigneRubrique
+          titre={T.sectionCategoriesTiers}
+          aide={T.aideCategoriesTiers}
+          icone="pricetags"
+          route={ROUTES.ORGANISATION_CATEGORIES_TIERS}
+          retour={ROUTES.ORGANISATION_TIERS}
+        />
       </BlocLignes>
     </Screen>
   );

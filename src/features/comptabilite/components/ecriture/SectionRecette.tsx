@@ -35,6 +35,9 @@ import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { SectionForm } from '@/shared/components/SectionForm';
+import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
+import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
+import { todayISO } from '@/shared/utils/dates';
 
 /** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
 export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
@@ -93,6 +96,17 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
           />
         ) : null}
+        {/* Le paiement : encaissée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
+        <ChampPaiement
+          libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+          enAttente={e.enAttente}
+          onEnAttente={(attente) => {
+            e.setEnAttente(attente);
+            if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+          }}
+          echeance={e.echeance}
+          onEcheance={e.setEcheance}
+        />
       </SectionForm>
 
       {/* Les informations : la catégorie, ce qui est vendu et son montant. */}
@@ -152,12 +166,13 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           />
         )}
 
-        {e.modeAvance ? <NoteComptePcg compte={e.compteAffiche} /> : null}
+        <NoteComptePcg compte={e.compteAffiche} />
 
         {/* Une aide se décrit par son type (DPB, ICHN…). */}
         {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampTypeAide e={e} />}
 
         {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
+          e.categorieRecette === CATEGORIE_RECETTE.PRESTATIONS ||
           (e.entreprise && e.categorieRecette !== CATEGORIE_RECETTE.AIDE)) && (
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
         )}
@@ -175,8 +190,7 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
         {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampsAide e={e} />}
 
         {/* Une entreprise : la nature de la recette pour la déclaration URSSAF (selon la catégorie tant qu'on n'en choisit pas). */}
-        {e.modeAvance &&
-        modeEntreprise() &&
+        {modeEntreprise() &&
         !e.estProductionVente &&
         (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(e.categorieRecette) ? (
           <ChampNatureUrssaf value={e.natureUrssaf} onChange={e.setNatureUrssaf} />

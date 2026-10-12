@@ -1,3 +1,4 @@
+import { TYPE_AIDE } from '@/shared/constants/comptabilite';
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 
@@ -20,6 +21,21 @@ export const PRIMES = [
   { cle: 'couplee_petits_ruminants', base: BASE_PRIME.TETE },
   { cle: 'ichn', base: BASE_PRIME.HECTARE },
 ] as const;
+
+/** Le type d'aide de la comptabilité (TYPE_AIDE) qui correspond à chaque aide d'office : ce qu'on a perçu s'y retrouve. */
+export const TYPE_AIDE_PAR_PRIME: Record<(typeof PRIMES)[number]['cle'], string> = {
+  dpb: TYPE_AIDE.PAIEMENT_BASE,
+  redistributif: TYPE_AIDE.PAIEMENT_REDISTRIBUTIF,
+  ecoregime: TYPE_AIDE.ECOREGIME,
+  couplee_petits_ruminants: TYPE_AIDE.PETITS_RUMINANTS,
+  ichn: TYPE_AIDE.ICHN,
+};
+
+/** La saison d'une prime : de septembre de l'année au dernier jour d'août de l'année suivante (les acomptes d'automne, le solde de l'hiver). */
+export const MOIS_DEBUT_SAISON_PRIME = 9;
+
+/** L'écart (€) en dessous duquel une prime calculée est tenue pour égale à celle perçue. */
+export const TOLERANCE_PRIME_PERCUE = 1;
 
 /** Une tranche d'une aide dégressive : jusqu'à tant d'hectares, la part du montant qui est payée (en %). */
 export interface TranchePrime {

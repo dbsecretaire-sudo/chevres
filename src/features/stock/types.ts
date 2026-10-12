@@ -148,8 +148,6 @@ export interface ArchiveStock {
   boucles?: BoucleStock[];
   /** Les fromages identifiés (un par numéro de lot), fabriqués puis vendus ou rappelés. */
   lots?: LotFromage[];
-  /** Vrai quand la reprise unique des boucles déjà posées au cheptel a été faite (voir synchroniserBouclesDuCheptel). */
-  bouclesDuCheptelReprises?: boolean;
   /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
   masques?: string[];
 }

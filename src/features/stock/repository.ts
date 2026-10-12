@@ -90,7 +90,6 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
             l && typeof l.id === 'string' && typeof l.numero === 'string' && typeof l.article === 'string',
         )
       : [],
-    bouclesDuCheptelReprises: archive?.bouclesDuCheptelReprises === true ? true : undefined,
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
   };
 }

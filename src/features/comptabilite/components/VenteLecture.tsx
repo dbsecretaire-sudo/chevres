@@ -80,6 +80,13 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
         {vente.prix?.toFixed(2)} €
       </Text>
       <Text style={commonStyles.line}>{TEXTES.comptabilite.ficheVente.declaree(venteADeclarer(vente))}</Text>
+      {vente.payee === false ? (
+        <Text style={commonStyles.line}>
+          {vente.echeance
+            ? TEXTES.comptabilite.tresorerie.paiement.enAttente(formatDateFR(vente.echeance))
+            : TEXTES.comptabilite.tresorerie.paiement.enAttenteSansDate}
+        </Text>
+      ) : null}
       {vente.numeroFacture ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.nDeFactureDeuxPoints}

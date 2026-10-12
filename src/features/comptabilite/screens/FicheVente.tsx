@@ -86,31 +86,31 @@ export default function FicheVente() {
             montantTexte={fiche.montantTexte}
             onChangerMontant={fiche.changerMontant}
             onEnregistrer={() => fiche.enregistrerModifications()}
+            // Les animaux vendus (cabris, adultes…) : leur boucle, M ou F et leur naissance ; les fromages et la charcuterie, désignés
+            // par leur n° de lot quand le produit en a — comme dans le formulaire de vente.
+            complement={
+              <>
+                <AnimauxVendusEdition form={form} onChange={fiche.setForm} />
+                <LotsVendusEdition
+                  vente={form}
+                  venteId={form.id}
+                  ids={idsDesFromages(form)}
+                  onChange={(ids) =>
+                    fiche.setForm({
+                      ...form,
+                      fromages: ids.length > 0 ? ids.join(';') : undefined,
+                      quantite: ids.length > 0 ? ids.length : form.quantite,
+                    })
+                  }
+                />
+              </>
+            }
           />
         ) : (
-          <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} />
-        )}
-
-        {/* Les animaux vendus (cabris, adultes…) : leur boucle, M ou F et leur naissance, comme dans le formulaire de vente. */}
-        {fiche.editing ? (
           <>
-            <AnimauxVendusEdition form={form} onChange={fiche.setForm} />
-            {/* Les fromages et la charcuterie d'une vente, désignés par leur n° de lot quand le produit en a. */}
-            <LotsVendusEdition
-              vente={form}
-              venteId={form.id}
-              ids={idsDesFromages(form)}
-              onChange={(ids) =>
-                fiche.setForm({
-                  ...form,
-                  fromages: ids.length > 0 ? ids.join(';') : undefined,
-                  quantite: ids.length > 0 ? ids.length : form.quantite,
-                })
-              }
-            />
+            <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} />
+            <AnimauxDeLaVente vente={vente} />
           </>
-        ) : (
-          <AnimauxDeLaVente vente={vente} />
         )}
       </ScrollView>
 

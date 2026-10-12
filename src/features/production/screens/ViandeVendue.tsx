@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen } from '@/shared/components/ScreenList';
+import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { LigneDeBloc } from '@/shared/components/BlocListe';

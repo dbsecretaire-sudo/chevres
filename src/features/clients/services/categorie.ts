@@ -1,6 +1,7 @@
 import type { Client } from '@/features/clients/types';
-import { categorieClientDe } from '@/shared/dictionnaire/categoriesClient';
+import { categorieClientDe, groupesRecetteDeLaCategorie } from '@/shared/dictionnaire/categoriesClient';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
 
 /** L'identifiant de la catégorie d'un client : celle de sa fiche, à défaut (ou si elle a été retirée) particulier. */
 export const categorieDuClient = (client: Pick<Client, 'categorie'> | undefined): string =>
@@ -26,3 +27,14 @@ export const reajustementPossible = (
   categorie: string,
   declaree: boolean,
 ): boolean => prixLibre(client) && categorie === CATEGORIE_VENTE.LAIT && declaree;
+
+/**
+ * Vrai quand un client peut recevoir ce groupe de recette : la catégorie du client le règle (un organisme n'a que l'aide ou les
+ * prestations, et l'aide n'est proposée qu'à un organisme). Sans client choisi, tout sauf l'aide est permis.
+ */
+export const groupeRecetteAutorise = (
+  client: Pick<Client, 'categorie'> | undefined,
+  groupe: string,
+): boolean =>
+  GROUPES_RECETTE_SANS_CLIENT.includes(groupe) ||
+  groupesRecetteDeLaCategorie(categorieClientDe(client?.categorie)).includes(groupe);

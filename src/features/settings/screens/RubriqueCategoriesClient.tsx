@@ -8,11 +8,15 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { CATEGORIE_CLIENT_PAR_DEFAUT } from '@/shared/constants/clients';
+import { CATEGORIE_CLIENT_PAR_DEFAUT, CATEGORIES_CLIENT_PROTEGEES } from '@/shared/constants/clients';
 import {
   categoriesClientParDefaut,
+  groupesRecetteDeLaCategorie,
   type CategorieClientReglage,
 } from '@/shared/dictionnaire/categoriesClient';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { groupesRecetteProposes } from '@/features/comptabilite/utils/recettes';
+import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
 import { generateId } from '@/shared/utils/id';
@@ -37,6 +41,9 @@ export default function RubriqueCategoriesClient() {
   /** La catégorie qu'on renomme (son identifiant), ou rien. */
   const [renommage, setRenommage] = useState<string | null>(null);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  /** La catégorie déroulée (une seule à la fois) : toutes sont enroulées au départ. */
+  const [ouverte, setOuverte] = useState<string | null>(null);
+  const groupesProposes = groupesRecetteProposes();
   const [aRetirer, setARetirer] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,27 +65,58 @@ export default function RubriqueCategoriesClient() {
   return (
     <Screen>
       <Text style={styles.aide}>{T.aide}</Text>
-      {categories.map((c) => (
-        <Card key={c.id}>
-          <View style={commonStyles.rowSpaceBetween}>
-            <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{c.nom}</Text>
-            <Pressable onPress={() => setRenommage(c.id)} hitSlop={8} accessibilityLabel={T.renommer}>
-              <Ionicons name="create-outline" size={24} color={colors.primary} />
-            </Pressable>
-          </View>
-          <Checkbox label={T.declaree} value={c.declaree} onChange={(declaree) => maj(c.id, { declaree })} />
-          <Checkbox
-            label={T.prixLibre}
-            value={c.prixLibre}
-            onChange={(prixLibre) => maj(c.id, { prixLibre })}
-          />
-          {c.id === CATEGORIE_CLIENT_PAR_DEFAUT ? (
-            <Text style={commonStyles.note}>{T.parDefaut}</Text>
-          ) : (
-            <Button variant="danger" label={T.supprimer} onPress={() => setARetirer(c.id)} />
-          )}
-        </Card>
-      ))}
+      {categories.map((c) => {
+        const recettes = groupesRecetteDeLaCategorie(c);
+        return (
+          <SectionDeroulante
+            key={c.id}
+            titre={c.nom}
+            ouverte={ouverte === c.id}
+            onBasculer={() => setOuverte((actuelle) => (actuelle === c.id ? null : c.id))}
+          >
+            <Card>
+              <View style={commonStyles.rowSpaceBetween}>
+                <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{c.nom}</Text>
+                <Pressable onPress={() => setRenommage(c.id)} hitSlop={8} accessibilityLabel={T.renommer}>
+                  <Ionicons name="create-outline" size={24} color={colors.primary} />
+                </Pressable>
+              </View>
+              <Checkbox
+                label={T.declaree}
+                value={c.declaree}
+                onChange={(declaree) => maj(c.id, { declaree })}
+              />
+              <Checkbox
+                label={T.prixLibre}
+                value={c.prixLibre}
+                onChange={(prixLibre) => maj(c.id, { prixLibre })}
+              />
+              {/* Les recettes que ses clients peuvent recevoir : l'aide n'est cochée que pour un organisme, d'office. */}
+              <Text style={commonStyles.lineSemiBold}>{T.recettes}</Text>
+              {groupesProposes.map((g) => (
+                <Checkbox
+                  key={g}
+                  label={LABEL_GROUPE_RECETTE[g]}
+                  value={recettes.includes(g)}
+                  onChange={(cochee) =>
+                    maj(c.id, {
+                      recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g),
+                    })
+                  }
+                />
+              ))}
+              <Text style={commonStyles.note}>{T.aideRecettes}</Text>
+              {CATEGORIES_CLIENT_PROTEGEES.includes(c.id) ? (
+                <Text style={commonStyles.note}>
+                  {c.id === CATEGORIE_CLIENT_PAR_DEFAUT ? T.parDefaut : T.protegee}
+                </Text>
+              ) : (
+                <Button variant="danger" label={T.supprimer} onPress={() => setARetirer(c.id)} />
+              )}
+            </Card>
+          </SectionDeroulante>
+        );
+      })}
       <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />
 
       <NomModal

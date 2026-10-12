@@ -1,4 +1,8 @@
 import type { ActiviteComptable, CategorieRecette, CategorieVente } from '@/features/comptabilite/types';
+import { groupeRecetteAutorise } from '@/features/clients/services/categorie';
+import { GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
+import type { Client } from '@/features/clients/types';
+import { nomComplet } from '@/shared/utils/personne';
 import {
   CATEGORIES_RECETTE_COMMUNES,
   CATEGORIES_RECETTE_PAR_ESPECE,
@@ -116,3 +120,28 @@ export const groupeRecette = (categorie: CategorieRecette, activite: ActiviteCom
 /** La recette proposée d'abord pour une activité : la première de son premier groupe. */
 export const premiereCategorieRecette = (activite: ActiviteComptable): CategorieRecette =>
   groupesDe(activite)[0].categories[0];
+
+/**
+ * Les clients qui peuvent recevoir une recette déjà saisie (sa catégorie ne change pas) : celle de leur catégorie de client. L'aide est
+ * celle des organismes ; le client déjà inscrit sur l'écriture reste proposé, même si sa catégorie a changé depuis.
+ */
+export const clientsPourLaRecette = (
+  clients: Client[],
+  categorie: CategorieRecette | undefined,
+  activite: ActiviteComptable,
+  actuel?: string,
+): Client[] => {
+  if (!categorie) return clients;
+  const groupe = groupeRecette(categorie, activite);
+  return clients.filter((c) => nomComplet(c) === actuel || groupeRecetteAutorise(c, groupe));
+};
+
+/** Les groupes de recette que l'établissement propose (ceux de son mode et de ses espèces), hors opérations de trading : les choix d'une catégorie de client. */
+export const groupesRecetteProposes = (): GroupeRecette[] => {
+  const groupes = modeEntreprise()
+    ? groupesRecetteEntreprise()
+    : Object.values(GROUPES_RECETTE_PAR_ESPECE).flat();
+  return groupes
+    .map((g) => g.groupe)
+    .filter((g, i, tous) => tous.indexOf(g) === i && !GROUPES_RECETTE_SANS_CLIENT.includes(g));
+};

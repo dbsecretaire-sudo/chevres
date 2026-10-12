@@ -1,7 +1,17 @@
+import { useCallback, useState } from 'react';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { articlesDuProduit, estArticleAvecLots } from '@/features/stock/services/lots';
+import { articlesDuGenre, niveauxDeStock, type ArticleAffiche } from '@/features/stock/services/stock';
+import { GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
+import { colors } from '@/shared/theme/colors';
+import { commonStyles } from '@/shared/styles/commonStyles';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -11,14 +21,34 @@ import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.accueil;
+const G = T.groupes;
 
 /**
- * L'onglet Production d'un élevage, à côté du Cheptel : un premier groupe (fromages et charcuterie par lot, viande vendue), puis
- * le contrôle laitier et les groupements. Le stock y est branché : les lots sont ceux de l'inventaire.
+ * L'onglet Production d'un élevage, à côté du Cheptel : des groupes titrés — le produit (fromages et charcuterie par lot, viande
+ * vendue), l'analyse et le contrôle du lait, les collectifs (groupements), les produits dangereux (rappels de lots). Le stock y est branché : les lots sont ceux de l'inventaire.
  */
 export default function ProductionAccueil() {
   const router = useRouter();
   const { espece } = useEtablissement();
+  // Un stock en négatif (plus vendu que fabriqué) : la ligne du produit porte la pastille rouge.
+  const [negatifs, setNegatifs] = useState<Record<string, boolean>>({});
+  useFocusEffect(
+    useCallback(() => {
+      lireArchiveStock().then((archive) => {
+        const niveaux = niveauxDeStock(archive.mouvements);
+        const aUnNegatif = (articles: ArticleAffiche[]) =>
+          articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
+        setNegatifs({
+          fromages: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.FROMAGE, archive, espece)),
+          charcuterie: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.CHARCUTERIE, archive, espece)),
+          // La viande vendue : les animaux entiers de l'inventaire (les produits de charcuterie ont leur ligne à part).
+          viande: aUnNegatif(
+            articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter((a) => !estArticleAvecLots(a.cle)),
+          ),
+        });
+      });
+    }, [espece]),
+  );
   // Le lait, les fromages et son contrôle ne concernent que les espèces qui ont une laiterie (chèvres, brebis, vaches).
   const laiterie = laiterieActive(espece);
   type Ligne = {
@@ -36,46 +66,59 @@ export default function ProductionAccueil() {
     { cle: 'viande', ...T.viande, icone: 'restaurant', route: ROUTES.PRODUCTION_VIANDE },
     { cle: 'charcuterie', ...T.charcuterie, icone: 'cut', route: ROUTES.PRODUCTION_CHARCUTERIE },
   ];
-  /** Le second groupe : les contrôles et les groupements. */
-  const suivi: Ligne[] = [
-    ...(laiterie
-      ? [
-          {
-            cle: 'laitier',
-            ...T.laitier,
-            icone: 'flask' as const,
-            route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
-          },
-        ]
-      : []),
+  /** L'analyse et le contrôle du lait (une laiterie seulement), les collectifs et les rappels de lots : un groupe titré chacun. */
+  const laitier: Ligne[] = laiterie
+    ? [
+        {
+          cle: 'laitier',
+          ...T.laitier,
+          icone: 'flask' as const,
+          route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
+        },
+      ]
+    : [];
+  const collectifs: Ligne[] = [
     {
       cle: 'groupements',
       ...T.groupements,
       icone: 'people',
       route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
     },
-    {
-      cle: 'rappels',
-      ...T.rappels,
-      icone: 'notifications',
-      route: ROUTES.PRODUCTION_RAPPELS_LOTS,
-    },
   ];
+  const dangereux: Ligne[] = [
+    { cle: 'rappels', ...T.rappels, icone: 'notifications', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
+  ];
+  const groupes = [
+    { titre: G.produit, lignes: produits },
+    { titre: G.laitier, lignes: laitier },
+    { titre: G.collectifs, lignes: collectifs },
+    { titre: G.dangereux, lignes: dangereux },
+  ].filter((g) => g.lignes.length > 0);
   return (
     <Screen>
       <SelecteurEspece />
-      {[produits, suivi].map((groupe) => (
-        <BlocLignes key={groupe[0].cle}>
-          {groupe.map((l) => (
-            <ListRow
-              key={l.cle}
-              title={l.titre}
-              subtitle={l.aide}
-              icone={l.icone}
-              onPress={() => router.push(l.route as never)}
-            />
-          ))}
-        </BlocLignes>
+      {groupes.map((groupe) => (
+        <GroupeAccueil key={groupe.titre} titre={groupe.titre}>
+          <BlocLignes>
+            {groupe.lignes.map((l) => (
+              <ListRow
+                key={l.cle}
+                title={l.titre}
+                subtitle={l.aide}
+                icone={l.icone}
+                trailing={
+                  negatifs[l.cle] ? (
+                    <View style={commonStyles.row}>
+                      <PastilleAlerte />
+                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    </View>
+                  ) : undefined
+                }
+                onPress={() => router.push(l.route as never)}
+              />
+            ))}
+          </BlocLignes>
+        </GroupeAccueil>
       ))}
     </Screen>
   );

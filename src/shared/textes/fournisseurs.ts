@@ -1,5 +1,24 @@
 /** Textes de l'interface — « fournisseurs ». À modifier ici uniquement. */
 export const TEXTES_FOURNISSEURS = {
+  /** Catégories de tiers (fournisseurs) : le champ de leur fiche et l'écran Organisation › Clients et fournisseurs › Catégories de tiers. */
+  categories: {
+    champ: 'Catégorie',
+    aideChamp: 'Elle règle les catégories de dépense que ses factures peuvent avoir.',
+    aide: 'Renommez, ajoutez ou retirez des catégories, et réglez les dépenses que leurs fournisseurs peuvent avoir.',
+    renommer: 'Modifier le nom de la catégorie',
+    nomCategorie: 'Nom de la catégorie',
+    exempleNom: 'ex : Maréchal-ferrant',
+    ajouter: '+ Ajouter une catégorie',
+    ajouterManquantes: (nombre: number) => `Ajouter les catégories d’office manquantes (${nombre})`,
+    depenses: 'Dépenses proposées',
+    aideDepenses:
+      'Un fournisseur ne propose que les dépenses cochées : un vétérinaire n’a que la dépense vétérinaire, l’État que les impôts et taxes, et ni l’un ni l’autre n’a à choisir l’atelier.',
+    parDefaut: 'Catégorie d’office des fournisseurs : elle ne se retire pas.',
+    protegee: 'Catégorie proposée d’office (dépenses vétérinaires, impôts et taxes) : elle ne se retire pas.',
+    supprimer: 'Retirer cette catégorie',
+    supprimerQuestion: 'Retirer cette catégorie ?',
+    supprimerMessage: 'Les fournisseurs qui l’avaient passent dans la catégorie d’office dans leur fiche.',
+  },
   ficheFournisseur: {
     fournisseurIntrouvable: 'Fournisseur introuvable.',
     nomDEntrepriseDeuxPoints: 'Nom d’entreprise : ',

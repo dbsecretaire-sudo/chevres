@@ -1,4 +1,4 @@
-import type { InfosExploitation } from '@/features/settings/settings';
+import type { InfosExploitation, ReglagesAides } from '@/features/settings/settings';
 import {
   BASE_PRIME,
   PRIMES,
@@ -9,6 +9,58 @@ import {
 import { TEXTES } from '@/shared/textes';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+
+/** La clé des aides d'une année et d'une espèce (« 2026:chevres »). */
+export const cleAides = (annee: number, espece: EspeceAnimale | string): string => `${annee}:${espece}`;
+
+/**
+ * Les aides d'une année et d'une espèce : celles enregistrées pour elles, à défaut celles de l'année précédente la plus proche de
+ * la même espèce (un montant se reprend d'une année à l'autre tant qu'on ne le change pas), à défaut les réglages d'avant les années.
+ */
+export function reglagesDesAides(
+  infos: InfosExploitation | undefined,
+  annee: number,
+  espece: EspeceAnimale | string,
+): ReglagesAides {
+  const parAnnee = infos?.ugbPrimes?.parAnnee ?? {};
+  const exacte = parAnnee[cleAides(annee, espece)];
+  if (exacte) return exacte;
+  const precedente = Object.keys(parAnnee)
+    .filter((cle) => cle.endsWith(`:${espece}`) && Number(cle.split(':')[0]) < annee)
+    .sort((a, b) => Number(b.split(':')[0]) - Number(a.split(':')[0]))[0];
+  if (precedente) return parAnnee[precedente];
+  return {
+    associes: infos?.ugbPrimes?.associes,
+    primes: infos?.ugbPrimes?.primes,
+    personnalisees: infos?.ugbPrimes?.personnalisees,
+  };
+}
+
+/** L'effectif déclaré d'une année et d'une espèce (rien quand il n'est pas saisi). */
+export const effectifDeclare = (
+  infos: InfosExploitation | undefined,
+  annee: number,
+  espece: EspeceAnimale | string,
+): number | undefined => infos?.ugbPrimes?.effectifsDeclares?.[cleAides(annee, espece)];
+
+/** Les informations de l'exploitation avec les aides d'une année et d'une espèce : de quoi calculer la prime de cette année-là. */
+export function infosPourAnnee(
+  infos: InfosExploitation | undefined,
+  annee: number,
+  espece: EspeceAnimale | string,
+): InfosExploitation | undefined {
+  if (!infos) return infos;
+  const aides = reglagesDesAides(infos, annee, espece);
+  return {
+    ...infos,
+    ugbPrimes: {
+      ...infos.ugbPrimes,
+      associes: aides.associes,
+      primes: aides.primes,
+      personnalisees: aides.personnalisees,
+    },
+  };
+}
 
 /** Ce sur quoi une prime se calcule : la base choisie dans les réglages, à défaut celle d'office de la prime (l'hectare pour une aide ajoutée). */
 export function baseDeLaPrime(

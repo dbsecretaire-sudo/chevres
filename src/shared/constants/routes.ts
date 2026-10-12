@@ -19,16 +19,16 @@ export const ROUTES = {
   /** La liste des animaux vivants. */
   CHEPTEL_LISTE: '/cheptel/liste',
   CHEPTEL_BILAN: '/cheptel/bilan',
+  /** Les réglages du cheptel : UGB, primes, effectif déclaré. */
+  CHEPTEL_REGLAGES: '/cheptel/reglages',
   CHEPTEL_AJOUT_RAPIDE: '/cheptel/ajout-rapide',
   CHEPTEL_NOUVELLE: '/cheptel/nouvelle',
   CHEPTEL_NAISSANCE_NOUVELLE: '/cheptel/naissance-nouvelle',
 
   // L'onglet Santé d'un élevage : alimentation, vétérinaire, contrôles
   SANTE_ALIMENTATION: '/sante/alimentation',
-  SANTE_VETERINAIRE: '/sante/veterinaire',
-  SANTE_VISITE_NOUVELLE: '/sante/veterinaire/nouvelle',
-  /** La fiche d'une visite vétérinaire (son formulaire, avec ses fichiers). */
-  santeVisite: (id: string) => `/sante/veterinaire/nouvelle?id=${id}` as const,
+  /** La fiche d'une visite vétérinaire (son formulaire, avec ses fichiers) : les visites viennent des dépenses vétérinaires. */
+  santeVisite: (id: string) => `/sante/veterinaire/visite?id=${id}` as const,
   /** La liste des contrôles d'une famille (surface, animaux : dans le Cheptel ; laitier, analyses, groupements : dans Production). */
   santeControles: (famille: string) => `${baseControles(famille)}/liste?famille=${famille}` as const,
   /** Un nouveau contrôle, de la famille donnée. */
@@ -54,6 +54,17 @@ export const ROUTES = {
   PRODUCTION_STATISTIQUES: '/production/statistiques',
 
   COMPTABILITE: '/comptabilite',
+  /** La liste des écritures (la page d'accueil de la comptabilité est le menu `COMPTABILITE`). */
+  COMPTABILITE_LISTE: '/comptabilite/liste',
+  /** Le conditionnement des fromages : les emballages consommés à chaque vente (réglage de l'inventaire). */
+  COMPTABILITE_CONDITIONNEMENT: '/comptabilite/conditionnement',
+  /** L'inventaire : le menu des stocks et du conditionnement des fromages (dans la comptabilité). */
+  COMPTABILITE_INVENTAIRE: '/comptabilite/inventaire',
+  /** Les stocks (la liste de l'inventaire) ; `stockDepuis` les ouvre depuis un formulaire en cours. */
+  COMPTABILITE_STOCKS: '/comptabilite/stocks',
+  /** Les réglages de la comptabilité : plan comptable, mode simple ou avancé, rappels de déclaration. */
+  COMPTABILITE_REGLAGES: '/comptabilite/reglages',
+  COMPTABILITE_TAUX: '/comptabilite/taux',
   COMPTABILITE_NOUVELLE: '/comptabilite/nouvelle',
   COMPTABILITE_DETAIL: '/comptabilite/detail',
   FISCALITE: '/comptabilite/fiscalite',
@@ -61,6 +72,9 @@ export const ROUTES = {
   FISCALITE_RSA: '/comptabilite/fiscalite-rsa',
   URSSAF: '/comptabilite/urssaf',
   TVA: '/comptabilite/tva',
+  RENTABILITE: '/comptabilite/rentabilite',
+  COMPTABILITE_TRESORERIE: '/comptabilite/tresorerie',
+  COMPTABILITE_TRESORERIE_REGLAGES: '/comptabilite/tresorerie-reglages',
   FOURNISSEURS: '/comptabilite/fournisseurs',
   FOURNISSEUR_NOUVEAU: '/comptabilite/fournisseurs/nouveau',
   // Les clients d'une entreprise ont leur propre onglet ; ceux d'un élevage restent dans le menu de la comptabilité.
@@ -87,13 +101,10 @@ export const ROUTES = {
   STRUCTURE_DOSSIERS: '/structure-dossiers',
   // Les données (écrans ouverts depuis l'onglet Organisation)
   ORGANISATION_ETABLISSEMENT: '/organisation-etablissement',
-  ORGANISATION_CHEPTEL: '/organisation-cheptel',
-  ORGANISATION_COMPTABILITE: '/organisation-comptabilite',
-  ORGANISATION_INVENTAIRE: '/organisation-inventaire',
-  ORGANISATION_CONDITIONNEMENT: '/organisation-conditionnement',
   ORGANISATION_DONNEES: '/organisation-donnees',
   ORGANISATION_TIERS: '/organisation-tiers',
   ORGANISATION_CATEGORIES_CLIENT: '/organisation-categories-client',
+  ORGANISATION_CATEGORIES_TIERS: '/organisation-categories-tiers',
   EXPORT_DONNEES: '/export-donnees',
   PDF_DONNEES: '/pdf-donnees',
   SAUVEGARDE_LOCALE: '/sauvegarde-locale',
@@ -116,18 +127,18 @@ export const ROUTES = {
   annexe: (id: string) => `/clients/annexe/${id}` as const,
   /** Les tickets d'un jour d'une activité qui a le calendrier des repas (le restaurant). */
   annexeJour: (id: string, jour: string) => `/clients/annexe/${id}?jour=${jour}` as const,
-  STOCK_STATISTIQUES: '/stock/stock-statistiques',
+  STOCK_STATISTIQUES: '/comptabilite/stock-statistiques',
   /** La structure des listes de l'inventaire (ajouter des listes aux catégories). */
-  STOCK_STRUCTURE: '/stock/structure',
+  STOCK_STRUCTURE: '/comptabilite/stock-structure',
   /**
    * Le stock ouvert depuis un formulaire en cours : `retour` est l'adresse de ce formulaire (le stock affiche alors une
    * flèche pour y revenir), `onglet` l'onglet à ouvrir (les aliments, par exemple) et `espece` l'animal à regarder.
    */
   stockDepuis: (retour: string, onglet?: string, espece?: string) =>
-    `/stock?${onglet ? `onglet=${onglet}&` : ''}${espece ? `espece=${espece}&` : ''}retour=${encodeURIComponent(retour)}` as const,
+    `/comptabilite/stocks?${onglet ? `onglet=${onglet}&` : ''}${espece ? `espece=${espece}&` : ''}retour=${encodeURIComponent(retour)}` as const,
   /** L'historique du stock, ouvert sur un animal (ou sur tous quand `espece` est absent). */
   stockHistorique: (espece?: string) =>
-    `/stock/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
+    `/comptabilite/stock-historique${espece ? `?espece=${espece}` : ''}` as const,
   giteJour: (date: string) => `/clients/gite/jour/${date}` as const,
   sejourNouveau: (chambre: number, date: string) =>
     `/clients/gite/sejour/nouveau?chambre=${chambre}&date=${date}` as const,

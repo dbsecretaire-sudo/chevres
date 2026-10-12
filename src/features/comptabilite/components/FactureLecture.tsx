@@ -50,6 +50,13 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
 
   return (
     <Card>
+      {facture.payee === false ? (
+        <Text style={commonStyles.lineBold}>
+          {facture.echeance
+            ? TEXTES.comptabilite.tresorerie.paiement.enAttente(formatDateFR(facture.echeance))
+            : TEXTES.comptabilite.tresorerie.paiement.enAttenteSansDate}
+        </Text>
+      ) : null}
       {plusieursEspeces() ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.activite.activiteDeuxPoints}

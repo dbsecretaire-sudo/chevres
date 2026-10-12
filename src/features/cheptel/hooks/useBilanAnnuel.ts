@@ -5,6 +5,7 @@ import { calculerBilan, type Bilan } from '@/features/cheptel/services/bilanChep
 import { listControles } from '@/features/exploitation/repository/controles';
 import { totauxSurfaces } from '@/features/exploitation/services/surfaces';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { primesPercues, type PrimesPercues } from '@/features/cheptel/services/primesPercues';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 
@@ -20,14 +21,18 @@ export function useBilanAnnuel() {
   const [bilanPrecedent, setBilanPrecedent] = useState<Bilan | null>(null);
   /** Les hectares admissibles des parcelles de l'année (espèce active) : la base des primes à l'hectare. */
   const [hectares, setHectares] = useState(0);
+  /** Les aides perçues pendant la saison (septembre de l'année → août suivant) : elles se comparent aux primes calculées. */
+  const [percues, setPercues] = useState<PrimesPercues>({});
 
   const charger = useCallback(async () => {
-    const [b, bPrec, toutesAnnees, controles] = await Promise.all([
+    const [b, bPrec, toutesAnnees, controles, aidesPercues] = await Promise.all([
       calculerBilan(annee),
       calculerBilan(annee - 1),
       toutesLesAnneesConnues(),
       listControles(annee),
+      primesPercues(annee),
     ]);
+    setPercues(aidesPercues);
     setBilan(b);
     setBilanPrecedent(bPrec);
     setAnnees(toutesAnnees);
@@ -43,5 +48,5 @@ export function useBilanAnnuel() {
     }, [charger]),
   );
 
-  return { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares };
+  return { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares, percues };
 }

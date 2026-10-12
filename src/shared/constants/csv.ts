@@ -52,6 +52,10 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'description',
     'montant',
     'categorieDepense',
+    'atelier',
+    'payee',
+    'echeance',
+    'datePaiement',
     'lignesAlimentation',
     'lignesMarchandises',
     'stockApplique',
@@ -95,6 +99,9 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'choixFacture',
     'numeroFacture',
     'reajustement',
+    'payee',
+    'echeance',
+    'datePaiement',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
@@ -176,7 +183,7 @@ export const CHAMPS_BOOLEEN = new Set([
 ]);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
-export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable']);
+export const CHAMPS_BOOLEEN_TROIS_ETATS = new Set(['imposable', 'payee']);
 
 /** Le genre d'une ligne d'alimentation qui n'est pas un aliment, dans le fichier (7e champ de la ligne). */
 export const GENRE_MATERIEL = 'm';

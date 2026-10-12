@@ -42,12 +42,6 @@ export default function Fiscalite() {
             onPress={() => router.push(ROUTES.URSSAF)}
           />
         ) : null}
-        <ListRow
-          title={TEXTES.entreprise.menu.tva}
-          subtitle={T.aideTva}
-          icone="calculator"
-          onPress={() => router.push(ROUTES.TVA)}
-        />
       </BlocLignes>
     </Screen>
   );

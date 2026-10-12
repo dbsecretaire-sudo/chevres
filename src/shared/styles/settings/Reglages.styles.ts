@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
-  /** Le titre d'un groupe de l'écran d'organisation. */
+  /** Le titre d'un groupe de l'écran des PDF. */
   titreGroupe: {
     fontSize: 13,
     fontWeight: '800',

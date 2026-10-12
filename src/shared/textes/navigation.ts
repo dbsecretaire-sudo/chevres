@@ -18,7 +18,6 @@ export const TEXTES_NAVIGATION = {
     naissances: 'Naissances',
     historiqueMortesAbattoirVendues: 'Historique (mortes, abattoir, vendues)',
     nouvelleEcriture: 'Nouvelle écriture',
-    nouvelleVisite: 'Nouvelle visite',
     nouveauControle: 'Nouveau contrôle',
     nouveauGroupement: 'Nouveau groupement',
     nouveauTerrain: 'Nouveau terrain',

@@ -330,6 +330,16 @@ const AIDE_ET_AUTRE: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.AUTRE, categories: [CATEGORIE_RECETTE.AUTRE] },
 ];
 
+/**
+ * L'aide, les prestations de services puis l'autre recette : ce que propose un élevage en plus de sa production. Les prestations
+ * y sont pour les organismes, qui n'ont que l'aide ou une facture de prestations (voir GROUPES_RECETTE_ORGANISME).
+ */
+const AIDE_PRESTATIONS_ET_AUTRE: GroupeRecetteDefinition[] = [
+  AIDE_ET_AUTRE[0],
+  { groupe: GROUPE_RECETTE.PRESTATIONS, categories: [CATEGORIE_RECETTE.PRESTATIONS] },
+  AIDE_ET_AUTRE[1],
+];
+
 /** La viande : un animal entier, dont le détail (petits, animal sur pied, animal vivant) se choisit dans la liste « Animaux ». */
 const GROUPE_VIANDE: GroupeRecetteDefinition = {
   groupe: GROUPE_RECETTE.VIANDE,
@@ -348,18 +358,22 @@ const GROUPES_RECETTE_LAITIERS: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.LAIT, categories: [CATEGORIE_RECETTE.LAIT] },
   GROUPE_VIANDE,
   GROUPE_BOUCHERIE,
-  ...AIDE_ET_AUTRE,
+  ...AIDE_PRESTATIONS_ET_AUTRE,
 ];
 
 /** Cochons : pas de laiterie ; la viande, l'aide et le reste. */
-const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [GROUPE_VIANDE, GROUPE_BOUCHERIE, ...AIDE_ET_AUTRE];
+const GROUPES_RECETTE_VIANDE: GroupeRecetteDefinition[] = [
+  GROUPE_VIANDE,
+  GROUPE_BOUCHERIE,
+  ...AIDE_PRESTATIONS_ET_AUTRE,
+];
 
 /** Poules : les œufs, puis la viande, l'aide et le reste. */
 const GROUPES_RECETTE_POULES: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.OEUFS, categories: [CATEGORIE_RECETTE.OEUFS] },
   GROUPE_VIANDE,
   GROUPE_BOUCHERIE,
-  ...AIDE_ET_AUTRE,
+  ...AIDE_PRESTATIONS_ET_AUTRE,
 ];
 
 /** Les groupes de recettes (et leurs recettes) proposés selon l'espèce de l'activité. */
@@ -370,7 +384,7 @@ export const GROUPES_RECETTE_PAR_ESPECE: Record<string, GroupeRecetteDefinition[
   [TYPE_ANIMAL_ETABLISSEMENT.COCHONS]: GROUPES_RECETTE_VIANDE,
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: GROUPES_RECETTE_POULES,
   // Des animaux de compagnie : pas de production à vendre, seulement l'aide et le reste.
-  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: AIDE_ET_AUTRE,
+  [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: AIDE_PRESTATIONS_ET_AUTRE,
 };
 
 // --- Entreprise (hors élevage) ---
@@ -428,7 +442,7 @@ export const CATEGORIES_DEPENSE_ENTREPRISE = [
 ] as const;
 
 /** Groupes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
-export const GROUPES_RECETTE_COMMUNS = AIDE_ET_AUTRE;
+export const GROUPES_RECETTE_COMMUNS = AIDE_PRESTATIONS_ET_AUTRE;
 
 const aplatir = (groupes: GroupeRecetteDefinition[]) => groupes.flatMap((g) => g.categories);
 
@@ -471,6 +485,9 @@ export const ORDRE_CATEGORIE_RECETTE = [
 // --- TVA (taux en %) ---
 /** Taux de TVA proposés dans les formulaires (taux normal, intermédiaire, réduits, particulier et taux zéro). */
 export const TAUX_TVA_DISPONIBLES = [0, 2.1, 5.5, 10, 13, 20] as const;
+
+/** Les taux d'imposition (part d'une aide incluse dans les recettes imposables) proposés d'office : l'utilisateur modifie la liste. */
+export const TAUX_IMPOSITION_PROPOSES = [0, 25, 50, 75, 100] as const;
 
 /** Taux pré-rempli pour une facture d'achat. */
 export const TAUX_TVA_ACHAT_DEFAUT = 2.1;

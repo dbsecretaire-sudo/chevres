@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
-import { Card } from '@/shared/components/Card';
+import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
+import { avecPaiement } from '@/features/comptabilite/utils/paiement';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
@@ -21,7 +22,11 @@ import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/
 import type { Client } from '@/features/clients/types';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import type { Vente } from '@/features/comptabilite/types';
-import { ChampActivite } from '@/features/comptabilite/components/ChampActivite';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { SectionForm } from '@/shared/components/SectionForm';
+import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
+import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import {
   fromageAjouteChoisi,
@@ -37,7 +42,11 @@ import {
   TYPE_CHOIX_FACTURE,
   TYPE_FROMAGE,
 } from '@/shared/constants/comptabilite';
-import { categoriesRecetteActivite, estCategorieVente } from '@/features/comptabilite/utils/recettes';
+import {
+  categoriesRecetteActivite,
+  clientsPourLaRecette,
+  estCategorieVente,
+} from '@/features/comptabilite/utils/recettes';
 import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -67,6 +76,8 @@ interface Props {
   montantTexte: string;
   onChangerMontant: (valeur: string) => void;
   onEnregistrer: () => void;
+  /** Ce que la vente a de plus (les animaux vendus, les lots) : à la fin du bloc des informations, avant le bouton. */
+  complement?: ReactNode;
 }
 
 const T = TEXTES.comptabilite.nouvelleEcriture;
@@ -84,6 +95,7 @@ export function VenteFormulaire({
   montantTexte,
   onChangerMontant,
   onEnregistrer,
+  complement,
 }: Props) {
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
   const estAnimal = (CATEGORIES_VENTE_ANIMAUX as readonly string[]).includes(form.categorie);
@@ -120,198 +132,226 @@ export function VenteFormulaire({
   const reajustement = peutReajuster && !!form.reajustement;
 
   return (
-    <Card>
-      <Text style={commonStyles.cardTitle}>{TEXTES.comptabilite.ficheVente.modifierLaVente}</Text>
-
-      <ChampActivite
-        value={activiteVente(form)}
-        onChange={(activite) => onChange({ ...form, activite })}
-        avecCommun={false}
-      />
-
-      <SelectField
-        label={TEXTES.comptabilite.ficheVente.produit}
-        value={form.categorie}
-        onChange={onChangerCategorie}
-        options={optionsProduit(form)}
-      />
-
-      <DateField
-        label={TEXTES.commun.general.date}
-        value={form.date}
-        onChange={(date) => onChange({ ...form, date })}
-      />
-
-      {estFromage ? (
-        <>
-          <SelectFieldEditable<string>
-            label={T.typeDeFromage}
-            required
-            value={ajouteChoisi ? valeurFromage(ajouteChoisi) : (form.typeFromage ?? '')}
-            // Un autre fromage : les lots déjà choisis sont ceux d'un autre fromage.
-            onChange={(valeur) =>
-              onChange({ ...form, ...typeDuChoix(fromages, valeur), fromages: undefined })
-            }
-            options={optionsFromage}
-            placeholder={T.typeDeFromage}
-            onEdit={() => router.push(ROUTES.stockDepuis(retour, SECTION_STOCK.FROMAGES, especeDuStock))}
+    <>
+      {/* Comme à la création : l'activité en tête, d'une puce (un établissement à plusieurs espèces seulement). */}
+      {plusieursEspeces() ? (
+        <LigneFiltres>
+          <ChoixDeroulant
+            titre={TEXTES.comptabilite.activite.activite}
+            valeur={activite}
+            options={especesActives().map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
+            onChoisir={(nouvelle) => onChange({ ...form, activite: nouvelle })}
           />
-          {form.typeFromage === TYPE_FROMAGE.AUTRE && !ajouteChoisi ? (
-            <FormField
-              label={T.preciserLeType}
-              required
-              value={form.typeFromageLibre ?? ''}
-              onChangeText={(typeFromageLibre) =>
-                onChange({ ...form, typeFromageLibre, fromages: undefined })
-              }
-            />
-          ) : null}
-        </>
+        </LigneFiltres>
       ) : null}
 
-      {estViande && detailsVente.length > 0 ? (
-        <SelectFieldEditable<string>
-          label={T.detailDeLaVente}
+      {/* L'identification : la date, le client, la déclaration de la vente (n° de facture) et le paiement — comme à la création. */}
+      <SectionForm>
+        <DateField
+          label={TEXTES.commun.general.date}
+          required
+          value={form.date}
+          onChange={(date) => onChange({ ...form, date })}
+        />
+
+        {/* Le client : la liste des clients, avec le crayon qui mène aux fiches ; un client qui n'y est plus reste choisi sous son nom. */}
+        <SelectFieldEditable
+          label={T.clientOrganisme}
           required
           searchable
-          placeholder={T.choixDuDetail}
-          value={form.precision ?? ''}
-          onChange={(precision) =>
-            // Un autre détail : les animaux déjà choisis ne valent plus (comme à la création).
+          placeholder={TEXTES.commun.general.choixDuClient}
+          value={client?.id ?? (form.client ? CLIENT_HORS_LISTE : '')}
+          onChange={(id) => {
+            const choisi = clients.find((c) => c.id === id);
+            if (choisi) onChange({ ...form, client: nomComplet(choisi) });
+          }}
+          options={[
+            ...clientsPourLaRecette(clients, form.categorie, activite, form.client).map((c) => ({
+              value: c.id,
+              label: nomComplet(c),
+            })),
+            ...(client || !form.client ? [] : [{ value: CLIENT_HORS_LISTE, label: form.client }]),
+          ]}
+          onEdit={() => router.push(ROUTES.CLIENTS)}
+        />
+
+        {/* Le client souhaite-t-il que la vente soit déclarée (avec facture) ? Coché d'office, comme à la création. */}
+        <Checkbox
+          label={T.declarerLaVente}
+          value={venteADeclarer(form)}
+          onChange={(declaree) =>
             onChange({
               ...form,
-              precision,
-              ...(precision !== form.precision
-                ? { animaux: undefined, jeune: undefined, fromages: undefined }
-                : {}),
+              choixFacture: declaree ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
+              // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
+              animaux: undefined,
+              jeune: undefined,
             })
           }
-          options={detailsVente}
-          onEdit={() =>
-            router.push(
-              ROUTES.stockDepuis(
-                retour,
-                animalEntier ? SECTION_STOCK.ANIMAUX : SECTION_STOCK.VIANDE,
-                especeDuStock,
-              ),
-            )
-          }
         />
-      ) : estViande ? (
-        <Text style={commonStyles.note}>{T.aucuneViandeAuStock}</Text>
-      ) : null}
+        {venteADeclarer(form) ? (
+          <ChampNumeroFacture
+            value={form.numeroFacture ?? ''}
+            onChange={(numeroFacture) => onChange({ ...form, numeroFacture })}
+            libre={numeroFactureLibre(client)}
+            reajustementPossible={peutReajuster}
+            reajustement={reajustement}
+            onReajustement={(coche) =>
+              onChange({
+                ...form,
+                reajustement: coche ? true : undefined,
+                quantite: coche ? 0 : form.quantite,
+              })
+            }
+          />
+        ) : null}
 
-      {animalEntier ? (
-        <FormField
-          label={TEXTES.commun.general.poidsKg}
-          required
-          value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
-          onChangeText={(valeur) =>
-            onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
-          }
-          keyboardType="decimal-pad"
-          placeholder={T.ex2}
+        {/* Le paiement : encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
+        <ChampPaiement
+          libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+          enAttente={form.payee === false}
+          onEnAttente={(attente) => onChange(avecPaiement(form, attente))}
+          echeance={form.echeance ?? ''}
+          onEcheance={(echeance) => onChange({ ...form, echeance })}
         />
-      ) : (
-        <View style={commonStyles.row}>
-          {reajustement ? null : (
-            <View style={commonStyles.flex1}>
+      </SectionForm>
+
+      {/* Les informations : la catégorie, ce qui est vendu et son prix. */}
+      <SectionForm>
+        <SelectField
+          label={T.categorieDeRecette}
+          value={form.categorie}
+          onChange={onChangerCategorie}
+          options={optionsProduit(form)}
+        />
+        {estFromage ? (
+          <>
+            <SelectFieldEditable<string>
+              label={T.typeDeFromage}
+              required
+              value={ajouteChoisi ? valeurFromage(ajouteChoisi) : (form.typeFromage ?? '')}
+              // Un autre fromage : les lots déjà choisis sont ceux d'un autre fromage.
+              onChange={(valeur) =>
+                onChange({ ...form, ...typeDuChoix(fromages, valeur), fromages: undefined })
+              }
+              options={optionsFromage}
+              placeholder={T.typeDeFromage}
+              onEdit={() => router.push(ROUTES.stockDepuis(retour, SECTION_STOCK.FROMAGES, especeDuStock))}
+            />
+            {form.typeFromage === TYPE_FROMAGE.AUTRE && !ajouteChoisi ? (
               <FormField
-                label={TEXTES.commun.general.quantite}
+                label={T.preciserLeType}
                 required
-                value={String(form.quantite)}
-                // Des fromages désignés par leur lot : leur nombre fait la quantité.
-                editable={!form.fromages}
-                onChangeText={(valeur) =>
-                  onChange({ ...form, quantite: Number(valeur.replace(',', '.')) || 0 })
+                value={form.typeFromageLibre ?? ''}
+                onChangeText={(typeFromageLibre) =>
+                  onChange({ ...form, typeFromageLibre, fromages: undefined })
                 }
-                keyboardType="decimal-pad"
-                placeholder="0"
               />
-            </View>
-          )}
-          {estAnimal && (
-            <View style={commonStyles.flex1}>
-              <FormField
-                label={TEXTES.commun.general.poidsKg}
-                value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
-                onChangeText={(valeur) =>
-                  onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
-                }
-                keyboardType="decimal-pad"
-                placeholder={TEXTES.commun.general.facultatif}
-              />
-            </View>
-          )}
-        </View>
-      )}
-      {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
-      <FormField
-        label={TEXTES.comptabilite.ficheVente.prixTotal}
-        required
-        value={
-          prixInventaire
-            ? totalInventaire !== undefined
-              ? String(totalInventaire).replace('.', ',')
-              : ''
-            : montantTexte
-        }
-        onChangeText={onChangerMontant}
-        editable={!prixInventaire}
-        style={prixInventaire ? commonStyles.verrouille : undefined}
-        keyboardType="decimal-pad"
-        placeholder="0,00"
-      />
-      {prixInventaire && totalInventaire === undefined ? (
-        <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
-      ) : null}
+            ) : null}
+          </>
+        ) : null}
 
-      {/* Le client : la liste des clients, avec le crayon qui mène aux fiches ; un client qui n'y est plus reste choisi sous son nom. */}
-      <SelectFieldEditable
-        label={TEXTES.commun.general.client}
-        required
-        searchable
-        placeholder={TEXTES.commun.general.choixDuClient}
-        value={client?.id ?? (form.client ? CLIENT_HORS_LISTE : '')}
-        onChange={(id) => {
-          const choisi = clients.find((c) => c.id === id);
-          if (choisi) onChange({ ...form, client: nomComplet(choisi) });
-        }}
-        options={[
-          ...clients.map((c) => ({ value: c.id, label: nomComplet(c) })),
-          ...(client || !form.client ? [] : [{ value: CLIENT_HORS_LISTE, label: form.client }]),
-        ]}
-        onEdit={() => router.push(ROUTES.CLIENTS)}
-      />
+        {estViande && detailsVente.length > 0 ? (
+          <SelectFieldEditable<string>
+            label={T.detailDeLaVente}
+            required
+            searchable
+            placeholder={T.choixDuDetail}
+            value={form.precision ?? ''}
+            onChange={(precision) =>
+              // Un autre détail : les animaux déjà choisis ne valent plus (comme à la création).
+              onChange({
+                ...form,
+                precision,
+                ...(precision !== form.precision
+                  ? { animaux: undefined, jeune: undefined, fromages: undefined }
+                  : {}),
+              })
+            }
+            options={detailsVente}
+            onEdit={() =>
+              router.push(
+                ROUTES.stockDepuis(
+                  retour,
+                  animalEntier ? SECTION_STOCK.ANIMAUX : SECTION_STOCK.VIANDE,
+                  especeDuStock,
+                ),
+              )
+            }
+          />
+        ) : estViande ? (
+          <Text style={commonStyles.note}>{T.aucuneViandeAuStock}</Text>
+        ) : null}
 
-      {/* Le client souhaite-t-il que la vente soit déclarée (avec facture) ? Coché d'office, comme à la création. */}
-      <Checkbox
-        label={T.declarerLaVente}
-        value={venteADeclarer(form)}
-        onChange={(declaree) =>
-          onChange({
-            ...form,
-            choixFacture: declaree ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
-            // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
-            animaux: undefined,
-            jeune: undefined,
-          })
-        }
-      />
-      {venteADeclarer(form) ? (
-        <ChampNumeroFacture
-          value={form.numeroFacture ?? ''}
-          onChange={(numeroFacture) => onChange({ ...form, numeroFacture })}
-          libre={numeroFactureLibre(client)}
-          reajustementPossible={peutReajuster}
-          reajustement={reajustement}
-          onReajustement={(coche) =>
-            onChange({ ...form, reajustement: coche ? true : undefined, quantite: coche ? 0 : form.quantite })
+        {animalEntier ? (
+          <FormField
+            label={TEXTES.commun.general.poidsKg}
+            required
+            value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
+            onChangeText={(valeur) =>
+              onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
+            }
+            keyboardType="decimal-pad"
+            placeholder={T.ex2}
+          />
+        ) : (
+          <View style={commonStyles.row}>
+            {reajustement ? null : (
+              <View style={commonStyles.flex1}>
+                <FormField
+                  label={TEXTES.commun.general.quantite}
+                  required
+                  value={String(form.quantite)}
+                  // Des fromages désignés par leur lot : leur nombre fait la quantité.
+                  editable={!form.fromages}
+                  onChangeText={(valeur) =>
+                    onChange({ ...form, quantite: Number(valeur.replace(',', '.')) || 0 })
+                  }
+                  keyboardType="decimal-pad"
+                  placeholder="0"
+                />
+              </View>
+            )}
+            {estAnimal && (
+              <View style={commonStyles.flex1}>
+                <FormField
+                  label={TEXTES.commun.general.poidsKg}
+                  value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
+                  onChangeText={(valeur) =>
+                    onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
+                  }
+                  keyboardType="decimal-pad"
+                  placeholder={TEXTES.commun.general.facultatif}
+                />
+              </View>
+            )}
+          </View>
+        )}
+        {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
+        <FormField
+          label={TEXTES.comptabilite.ficheVente.prixTotal}
+          required
+          value={
+            prixInventaire
+              ? totalInventaire !== undefined
+                ? String(totalInventaire).replace('.', ',')
+                : ''
+              : montantTexte
           }
+          onChangeText={onChangerMontant}
+          editable={!prixInventaire}
+          style={prixInventaire ? commonStyles.verrouille : undefined}
+          keyboardType="decimal-pad"
+          placeholder="0,00"
         />
-      ) : null}
+        {prixInventaire && totalInventaire === undefined ? (
+          <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
+        ) : null}
+
+        {complement}
+      </SectionForm>
 
       <Button label={TEXTES.commun.general.enregistrer} onPress={onEnregistrer} />
-    </Card>
+    </>
   );
 }

@@ -9,4 +9,6 @@ export interface Fournisseur {
   tva?: string;
   rib?: string;
   adressePostale: string;
+  /** La catégorie du fournisseur (voir categoriesFournisseur) : elle règle les dépenses possibles ; à défaut, la catégorie d'office. */
+  categorie?: string;
 }

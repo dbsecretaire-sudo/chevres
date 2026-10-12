@@ -3,6 +3,12 @@ export const TEXTES_PRODUCTION = {
   titre: 'Production',
   /** Les lignes de l'écran d'accueil de l'onglet. */
   accueil: {
+    groupes: {
+      produit: 'Produit',
+      laitier: 'Analyses et contrôle du lait',
+      collectifs: 'Collectifs',
+      dangereux: 'Gestion des produits dangereux',
+    },
     fromages: { titre: 'Fromages', aide: 'Les fromages par lot : fabrication, vente, rappels.' },
     viande: { titre: 'Viande', aide: 'Les ventes de viande de l’année.' },
     charcuterie: {

@@ -3,6 +3,8 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
 import type { Fournisseur } from '@/features/fournisseurs/types';
+import { ChampCategorieFournisseur } from '@/features/fournisseurs/components/ChampCategorieFournisseur';
+import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -16,6 +18,9 @@ export function FournisseurLecture({
 }) {
   return (
     <Card>
+      <Text style={commonStyles.line}>
+        {TEXTES.fournisseurs.categories.champ} : {categorieFournisseurDe(fournisseur.categorie).nom}
+      </Text>
       <Text style={commonStyles.line}>
         {TEXTES.fournisseurs.ficheFournisseur.nomDEntrepriseDeuxPoints}
         {fournisseur.nomEntreprise}
@@ -64,6 +69,10 @@ export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer
     <Card>
       <Text style={commonStyles.cardTitle}>{TEXTES.commun.general.modifierLaFiche}</Text>
 
+      <ChampCategorieFournisseur
+        value={categorieFournisseurDe(form.categorie).id}
+        onChange={(categorie) => onChange({ ...form, categorie })}
+      />
       <FormField
         label={TEXTES.commun.general.nomDEntreprise}
         required

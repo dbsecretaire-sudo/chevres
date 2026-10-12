@@ -220,6 +220,13 @@ export const TEXTES_COMMUN = {
   infoModal: {
     ok: 'OK',
   },
+  /** La fenêtre qui modifie une liste de valeurs (le crayon d'une liste déroulante). */
+  listeModifiable: {
+    valeur: 'Valeur',
+    ajouter: 'Ajouter une valeur',
+    retirer: 'Retirer la valeur',
+    retablir: 'Rétablir la liste d’origine',
+  },
   selectField: {
     rechercherParNOuLibellePoints: 'Rechercher par n° ou libellé…',
     aucunResultat: 'Aucun résultat.',

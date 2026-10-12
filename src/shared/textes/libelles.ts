@@ -1,6 +1,9 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { ATELIER } from '@/shared/constants/ateliers';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { PERIODICITE_TVA, REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import {
   GROUPE_RECETTE,
   CATEGORIE_DEPENSE,
@@ -60,6 +63,19 @@ export const LABEL_CATEGORIE_CLIENT: Record<ValeurDe<typeof CATEGORIE_CLIENT>, s
   [CATEGORIE_CLIENT.RECOLTEUR]: 'Récolteur',
   [CATEGORIE_CLIENT.ORGANISME]: 'Organisme',
   [CATEGORIE_CLIENT.ENTREPRISE]: 'Entreprise',
+  [CATEGORIE_CLIENT.GROUPEMENT]: 'Groupement',
+};
+
+export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURNISSEUR>, string> = {
+  [CATEGORIE_FOURNISSEUR.GENERAL]: 'Fournisseur',
+  [CATEGORIE_FOURNISSEUR.VETERINAIRE]: 'Vétérinaire',
+  [CATEGORIE_FOURNISSEUR.ETAT]: 'État',
+  [CATEGORIE_FOURNISSEUR.ALIMENTS]: 'Fournisseur d’aliments',
+  [CATEGORIE_FOURNISSEUR.CARBURANT]: 'Distributeur de carburant',
+  [CATEGORIE_FOURNISSEUR.GARAGE]: 'Garage / réparateur',
+  [CATEGORIE_FOURNISSEUR.ORGANISME]: 'Organisme',
+  [CATEGORIE_FOURNISSEUR.ASSUREUR]: 'Assureur',
+  [CATEGORIE_FOURNISSEUR.BANQUE]: 'Banque',
 };
 
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {
@@ -313,6 +329,31 @@ export const LABEL_NATURE_URSSAF: Record<ValeurDe<typeof NATURE_URSSAF>, string>
 export const LABEL_REGIME_TVA: Record<ValeurDe<typeof REGIME_TVA>, string> = {
   [REGIME_TVA.REEL_SIMPLIFIE]: 'Réel simplifié',
   [REGIME_TVA.REEL_NORMAL]: 'Réel normal',
+};
+
+export const LABEL_REGIME_TVA_PILOTAGE: Record<ValeurDe<typeof REGIME_TVA_PILOTAGE>, string> = {
+  [REGIME_TVA_PILOTAGE.FRANCHISE]: 'Franchise en base (pas de TVA)',
+  [REGIME_TVA_PILOTAGE.RFA]: 'Remboursement forfaitaire agricole (RFA)',
+  [REGIME_TVA_PILOTAGE.REEL_SIMPLIFIE]: 'Réel simplifié (CA12)',
+  [REGIME_TVA_PILOTAGE.REEL_NORMAL]: 'Réel normal (CA3)',
+};
+
+export const LABEL_PERIODICITE_TVA: Record<ValeurDe<typeof PERIODICITE_TVA>, string> = {
+  [PERIODICITE_TVA.MENSUELLE]: 'Mensuelle',
+  [PERIODICITE_TVA.TRIMESTRIELLE]: 'Trimestrielle',
+  [PERIODICITE_TVA.ANNUELLE]: 'Annuelle',
+};
+
+export const LABEL_ATELIER: Record<ValeurDe<typeof ATELIER>, string> = {
+  [ATELIER.LAIT]: 'Lait',
+  [ATELIER.FROMAGE]: 'Fromage',
+  get [ATELIER.PETITS]() {
+    return capitaliser(vocabulaire().petit.pluriel);
+  },
+  [ATELIER.ANIMAUX]: 'Reproducteurs et réformes',
+  [ATELIER.VIANDE]: 'Viande et charcuterie',
+  [ATELIER.OEUFS]: 'Œufs',
+  [ATELIER.AUTRES]: 'Autres recettes',
 };
 
 export const LABEL_STATUT_ELEMENT: Record<ValeurDe<typeof STATUT_ELEMENT>, string> = {

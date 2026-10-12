@@ -107,6 +107,11 @@ export interface SaisieEcriture {
   natureUrssaf: string;
   /** Le numéro de la facture d'une vente déclarée (obligatoire quand le client souhaite la déclarer). */
   numeroFacture: string;
+  /** L'atelier d'une facture reçue (vide : une charge commune). */
+  atelier?: string;
+  /** Le paiement n'a pas encore eu lieu (faux : payée à la date de l'écriture), et sa date prévue. */
+  enAttente?: boolean;
+  echeance?: string;
   /** La vente est un réajustement (récolteur) : ni litrage ni numéro de facture. */
   reajustement?: boolean;
 }
@@ -209,6 +214,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       choixFacture: s.avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
       numeroFacture: s.avecFacture && !s.reajustement ? s.numeroFacture.trim() : undefined,
       reajustement: s.reajustement ? true : undefined,
+      payee: s.enAttente ? false : undefined,
+      echeance: s.enAttente && s.echeance ? s.echeance : undefined,
     },
   };
 }
@@ -295,6 +302,9 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       description: s.description.trim(),
       montant: montantFinal,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
+      atelier: estRecue && s.atelier ? s.atelier : undefined,
+      payee: s.enAttente ? false : undefined,
+      echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       lignesAlimentation,
       lignesMarchandises,
       stockArticle: stockProduction ? s.stockArticle : undefined,
