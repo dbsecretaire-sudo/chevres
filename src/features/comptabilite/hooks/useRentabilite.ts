@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
 import { rentabilite, type Rentabilite } from '@/features/comptabilite/services/rentabilite';
 import { TOUTES_ACTIVITES } from '@/features/comptabilite/services/filtresTransactions';
@@ -16,7 +15,7 @@ import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 export function useRentabilite() {
   const { settings, setAnneeActive } = useAppSettings();
   const { espece } = useEtablissement();
-  const [filtre, setFiltre] = useFiltreActivite(true);
+  const [filtre, setFiltre] = useFiltreActivite();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [resultat, setResultat] = useState<Rentabilite | null>(null);
   const annee = settings.anneeActive;
@@ -27,15 +26,11 @@ export function useRentabilite() {
     regime === REGIME_TVA_PILOTAGE.REEL_SIMPLIFIE || regime === REGIME_TVA_PILOTAGE.REEL_NORMAL;
 
   const charger = useCallback(async () => {
-    // Le coût par animal ne se calcule que pour un cheptel, sur le nombre de femelles (les chèvres, de 6 mois et plus) vivantes au
-    // 31/12, comme le bilan annuel. Un établissement qui n'élève qu'une espèce n'a qu'un cheptel, même quand « Tout » est affiché.
-    const cheptel =
-      filtre !== TOUTES_ACTIVITES && filtre !== ACTIVITE_COMMUNE
-        ? filtre
-        : filtre === TOUTES_ACTIVITES && !plusieursEspeces()
-          ? espece
-          : undefined;
-    const effectif = cheptel ? (await calculerBilan(annee)).chevresVivantesFinAnnee : undefined;
+    // Le coût par animal se calcule sur le nombre de femelles (les chèvres, de 6 mois et plus) vivantes au 31/12 de l'espèce
+    // active, comme le bilan annuel : avec « Tout » ou « Commun », toutes les charges s'y rapportent ; avec l'activité d'une autre
+    // espèce, ce nombre ne la concerne pas.
+    const autreEspece = filtre !== TOUTES_ACTIVITES && filtre !== ACTIVITE_COMMUNE && filtre !== espece;
+    const effectif = autreEspece ? undefined : (await calculerBilan(annee)).chevresVivantesFinAnnee;
     const [toutesAnnees, r] = await Promise.all([
       toutesLesAnneesConnues(),
       rentabilite(annee, { filtre, horsTaxes, effectif }),

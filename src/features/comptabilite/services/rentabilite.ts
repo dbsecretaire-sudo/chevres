@@ -5,12 +5,14 @@ import { activiteFacture, activiteVente, partsDeFacture } from '@/features/compt
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { bilanLait } from '@/features/stock/services/stock';
+import { ATELIER, ATELIER_PAR_CATEGORIE_VENTE, type Atelier } from '@/shared/constants/ateliers';
 import {
-  ATELIER,
-  ATELIER_PAR_CATEGORIE_VENTE,
-  type Atelier,
-} from '@/shared/constants/ateliers';
-import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+  CATEGORIE_DEPENSE,
+  CATEGORIE_RECETTE,
+  CATEGORIE_VENTE,
+  TYPE_FACTURE,
+} from '@/shared/constants/comptabilite';
 import { yearOf } from '@/shared/utils/dates';
 
 // La rentabilité : les recettes et les charges de l'année, atelier par atelier, d'après les ventes et les factures saisies. Une charge
@@ -175,10 +177,24 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
   };
 }
 
-/** Le lait produit dans l'année (litres), d'après le stock. */
-export async function litresProduitsDeLAnnee(annee: number): Promise<number> {
+/**
+ * Le lait produit dans l'année (litres), comme l'inventaire le compte : les litres notés, ou au moins ce qui a servi aux
+ * fabrications et ce qui s'est vendu (le lait vendu ou utilisé a forcément été produit).
+ */
+export async function litresProduitsDeLAnnee(annee: number, ventes: Vente[]): Promise<number> {
   const archive = await lireArchiveStock();
-  return (archive.lait ?? []).filter((l) => yearOf(l.date) === annee).reduce((t, l) => t + l.litres, 0);
+  const deLAnnee = (date: string) => yearOf(date) === annee;
+  const litresVendus = ventes
+    .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && deLAnnee(v.date))
+    .reduce((t, v) => t + (v.quantite ?? 0), 0);
+  return bilanLait(
+    {
+      ...archive,
+      lait: (archive.lait ?? []).filter((l) => deLAnnee(l.date)),
+      mouvements: archive.mouvements.filter((m) => deLAnnee(m.date)),
+    },
+    litresVendus,
+  ).produit;
 }
 
 /** La rentabilité d'une année, d'après les ventes et factures enregistrées. */
@@ -186,10 +202,7 @@ export async function rentabilite(
   annee: number,
   options: { filtre: FiltreActivite; horsTaxes: boolean; effectif?: number },
 ): Promise<Rentabilite> {
-  const [ventes, factures, litresProduits] = await Promise.all([
-    listVentes(annee),
-    listFactures(annee),
-    litresProduitsDeLAnnee(annee),
-  ]);
+  const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+  const litresProduits = await litresProduitsDeLAnnee(annee, ventes);
   return calculerRentabilite({ annee, ventes, factures, litresProduits, ...options });
 }

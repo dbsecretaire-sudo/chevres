@@ -306,14 +306,14 @@ export const TEXTES_COMPTABILITE = {
       parLitreAide: (litres: string, charges: string) =>
         `${charges} de charges (toutes) pour ${litres} L de lait produit`,
       parLitreSansLait: (annee: number) =>
-        `Aucun lait produit n’est noté en ${annee} (inventaire › lait produit).`,
+        `Aucun lait produit en ${annee} : ni vendu, ni utilisé pour des fromages, ni noté dans l’inventaire.`,
       parLitreSansCharges: (litres: string) =>
         `${litres} L de lait produit, mais aucune charge enregistrée cette année.`,
       parAnimal: (nom: string) => `Coût par ${nom}`,
       parAnimalAide: (effectif: string, charges: string) =>
         `${charges} de charges pour ${effectif} ${V().femelle.pluriel} vivantes au 31/12`,
       get parAnimalAbsent() {
-        return `Choisissez un cheptel pour calculer le coût par ${V().femelle.singulier}.`;
+        return `Le coût par ${V().femelle.singulier} se calcule sur le cheptel de l’espèce active : choisissez-la ou « Tout ».`;
       },
     },
     postes: {

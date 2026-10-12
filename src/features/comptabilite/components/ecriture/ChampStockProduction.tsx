@@ -35,10 +35,17 @@ export function ChampStockProduction({ compte, article, quantite, debut, onChang
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
   /** Pour un compte de l'inventaire : il a des listes (sinon aucune quantité à noter). */
   const [avecListe, setAvecListe] = useState(true);
+  /** Le compte dont les articles sont chargés : tant qu'il n'est pas le compte choisi, les articles sont ceux du compte précédent. */
+  const [compteCharge, setCompteCharge] = useState<string | undefined>(undefined);
   const [texte, setTexte] = useState(quantite === undefined ? '' : String(quantite));
   useEffect(() => {
+    let actif = true;
     lireArchiveStock().then((archive) => {
-      if (!compte) return setArticles(articlesAchetables(archive));
+      if (!actif) return;
+      if (!compte) {
+        setArticles(articlesAchetables(archive));
+        return setCompteCharge(compte);
+      }
       const listes = (archive.listes ?? []).filter((l) => l.compte === compte);
       // Le compte des boucles a sa liste d'office : les deux sortes de boucles.
       const boucles = compte === COMPTE_BOUCLES.numero;
@@ -49,13 +56,20 @@ export function ChampStockProduction({ compte, article, quantite, debut, onChang
         ),
         ...(boucles ? articlesDuGenre(GENRE_ARTICLE.BOUCLE, archive) : []),
       ]);
+      setCompteCharge(compte);
     });
+    return () => {
+      actif = false;
+    };
   }, [compte]);
-  // Un seul article possible : il est choisi d'office.
+  const aJour = compteCharge === compte;
+  // Un seul article possible : il est choisi d'office. Un compte sans liste n'en garde aucun (le champ n'est pas affiché).
   useEffect(() => {
-    if (compte && !article && articles.length === 1) onChange(articles[0].cle, quantite);
+    if (!compte || !aJour) return;
+    if (!article && articles.length === 1) onChange(articles[0].cle, quantite);
+    else if (article && !avecListe) onChange('', undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [compte, articles]);
+  }, [compte, articles, aJour]);
   // Quand la saisie est vidée de l'extérieur (écriture suivante), le champ se vide aussi.
   const affiche =
     (quantite ?? 0) === (enNombre(texte) ?? 0) ? texte : quantite === undefined ? '' : String(quantite);
