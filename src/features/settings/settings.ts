@@ -137,6 +137,11 @@ export interface InfosExploitation {
      * quand il est saisi, à défaut l'effectif de fin d'année. Il ne se reprend pas d'une année à l'autre.
      */
     effectifsDeclares?: Record<string, number>;
+    /**
+     * Le stabilisateur (%) du paiement de base (DPB) d'une année (« 2025 ») : le paiement perçu est la valeur calculée multipliée par ce
+     * coefficient ; à défaut, celui d'office de l'année (STABILISATEUR_DPB_PAR_ANNEE).
+     */
+    stabilisateurs?: Record<string, number>;
   };
   /** La trésorerie : le solde du compte à une date (le départ des courbes), le seuil sous lequel alerter, et les emprunts en cours. */
   tresorerie?: ReglagesTresorerie;

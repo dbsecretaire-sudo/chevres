@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
@@ -22,8 +23,16 @@ import {
   coefficientsUgb,
   infosPourAnnee,
   plafondsDeLAide,
+  primesPrevisionnelles,
+  reductionDuStabilisateur,
+  stabilisateurDpb,
 } from '@/features/cheptel/services/ugb';
-import { BASE_PRIME, PRIMES, REGLES_PRIMES } from '@/shared/constants/primes';
+import { LibelleChamp } from '@/shared/components/LibelleChamp';
+import { listControles } from '@/features/exploitation/repository/controles';
+import { totauxSurfaces } from '@/features/exploitation/services/surfaces';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { formatMontant } from '@/shared/utils/dates';
+import { BASE_PRIME, PRIMES, REGLES_PRIMES, STABILISATEUR_NEUTRE } from '@/shared/constants/primes';
 import { especesActives } from '@/shared/dictionnaire/animaux';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
@@ -56,6 +65,8 @@ interface SaisieAide {
 interface Saisie {
   /** Le nombre d'associés d'un GAEC, en texte (1 hors GAEC). */
   associes: string;
+  /** Le stabilisateur (%) du paiement de base de l'année, en texte (vide : aucun). */
+  stabilisateur: string;
   coefficients: Record<string, { adulte: string; petit: string }>;
   primes: Record<string, SaisieAide>;
   personnalisees: (SaisieAide & { id: string })[];
@@ -118,6 +129,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
 
   const depart = (): Saisie => ({
     associes: enTexte(infosAides?.ugbPrimes?.associes ?? 1),
+    stabilisateur: enTexte(stabilisateurDpb(infos, annee)),
     coefficients: Object.fromEntries(
       especes.map((e) => {
         const choisis = infos?.ugbPrimes?.coefficients?.[e];
@@ -148,6 +160,19 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
       ...plafondsEnTexte(infosAides, p.id),
     })),
   });
+  /** Les hectares admissibles de l'année (les parcelles des contrôles de surface) : de quoi calculer le paiement de base avant réduction. */
+  const [hectares, setHectares] = useState(0);
+  // Relues à chaque retour sur l'écran : des parcelles modifiées entre-temps changent le paiement de base.
+  useFocusEffect(
+    useCallback(() => {
+      listControles(annee).then((controles) =>
+        setHectares(
+          totauxSurfaces(controles.filter((c) => c.famille === FAMILLE_CONTROLE.TERRAIN && !c.typeDocument))
+            .surfaceAdmissible,
+        ),
+      );
+    }, [annee]),
+  );
   const [saisie, setSaisie] = useState<Saisie>(depart);
   const [renommage, setRenommage] = useState<Renommage>(null);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
@@ -176,6 +201,10 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
               { adulte: nombreOuRien(c.adulte), petit: nombreOuRien(c.petit) },
             ]),
           ),
+          stabilisateurs: {
+            ...infos?.ugbPrimes?.stabilisateurs,
+            [String(annee)]: nombreOuRien(saisie.stabilisateur) ?? STABILISATEUR_NEUTRE,
+          },
           parAnnee: {
             ...infos?.ugbPrimes?.parAnnee,
             [cleAides(annee, espece)]: {
@@ -210,6 +239,34 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
 
   useEnregistrementAuto({ actif: loaded, signature: JSON.stringify(saisie), enregistrer });
 
+  /** Les aides telles qu'on les saisit à l'instant (avant même leur enregistrement) : ce qui se calcule à l'écran suit chaque frappe. */
+  const infosSaisies: InfosExploitation = {
+    ...infos,
+    ugbPrimes: {
+      ...infos?.ugbPrimes,
+      associes: Math.max(1, Math.round(nombreOuRien(saisie.associes) ?? 1)),
+      primes: Object.fromEntries(
+        Object.entries(saisie.primes).map(([cle, p]) => [
+          cle,
+          { actif: p.actif, taux: nombreOuRien(p.taux), base: p.base, ...plafondsEnNombres(p) },
+        ]),
+      ),
+      personnalisees: [],
+    },
+  };
+  /** Le paiement de base de l'année avant toute réduction (il se calcule à l'hectare, d'après la saisie en cours) : la réduction pour plafonnement budgétaire s'en déduit, à chaque frappe. */
+  const dpbAvantReduction = primesPrevisionnelles(infosSaisies, { ugb: 0, tetes: 0, hectares }).lignes.find(
+    (l) => l.cle === 'dpb' && l.base === BASE_PRIME.HECTARE,
+  )?.montantAvantStabilisateur;
+  /** Ce que le stabilisateur retire du paiement de base : la réduction pour plafonnement budgétaire, calculée (non modifiable). */
+  const reductionDuStabilisateurSaisi =
+    dpbAvantReduction === undefined
+      ? undefined
+      : reductionDuStabilisateur(
+          dpbAvantReduction,
+          nombreOuRien(saisie.stabilisateur) ?? STABILISATEUR_NEUTRE,
+        );
+
   const majAide = (cle: string, personnalisee: boolean, patch: Partial<SaisieAide>) =>
     setSaisie((s) =>
       personnalisee
@@ -231,7 +288,12 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
     }));
 
   /** Un champ de plafond : un nombre, vide pour « sans plafond ». */
-  const champPlafond = (label: string, valeur: string, onChange: (valeur: string) => void, aide?: string) => (
+  const champPlafond = (
+    label: string,
+    valeur: string,
+    onChange: (valeur: string) => void,
+    explication?: string,
+  ) => (
     <FormField
       key={label}
       label={label}
@@ -239,7 +301,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
       onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && onChange(v)}
       keyboardType="decimal-pad"
       placeholder={T.sansPlafond}
-      aide={aide}
+      explication={explication}
     />
   );
 
@@ -296,7 +358,34 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
                   onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && majAide(cle, personnalisee, { taux: v })}
                   keyboardType="decimal-pad"
                   placeholder="0"
+                  explication={personnalisee ? undefined : T.primes[cle as keyof typeof T.primes].ouTrouver}
                 />
+                {/* Le paiement de base : le stabilisateur de l'année se règle ; la réduction pour plafonnement budgétaire s'en déduit. */}
+                {!personnalisee && cle === 'dpb' ? (
+                  <>
+                    <FormField
+                      label={T.stabilisateur}
+                      value={saisie.stabilisateur}
+                      onChangeText={(v) =>
+                        /^\d*[.,]?\d*$/.test(v) && setSaisie((x) => ({ ...x, stabilisateur: v }))
+                      }
+                      keyboardType="decimal-pad"
+                      placeholder="100"
+                      explication={T.stabilisateurAide}
+                    />
+                    <View style={commonStyles.gap6}>
+                      <LibelleChamp label={T.reductionBudgetaire} explication={T.reductionBudgetaireAide} />
+                      <View style={commonStyles.rowSpaceBetween}>
+                        <Text style={commonStyles.note}>{T.calculeSurStabilisateur}</Text>
+                        <Text style={commonStyles.note}>
+                          {reductionDuStabilisateurSaisi === undefined
+                            ? '—'
+                            : formatMontant(reductionDuStabilisateurSaisi)}
+                        </Text>
+                      </View>
+                    </View>
+                  </>
+                ) : null}
                 {/* Les plafonds : quantité maximale comptée, seuil minimal et montant unitaire maximal (vide : sans). */}
                 {champPlafond(
                   `${T.plafond} (${T.unitesQuantite[aideSaisie.base as keyof typeof T.unitesQuantite]})`,
@@ -414,7 +503,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
           onChangeText={(v) => /^\d*$/.test(v) && setSaisie((s) => ({ ...s, associes: v }))}
           keyboardType="number-pad"
           placeholder="1"
-          aide={T.associesAide}
+          explication={T.associesAide}
         />
       </Card>
       {PRIMES.map((p) => {

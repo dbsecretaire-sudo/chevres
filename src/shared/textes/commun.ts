@@ -50,6 +50,8 @@ export const TEXTES_COMMUN = {
       return `${Cap(V().petit.pluriel)} nés en `;
     },
     erreurExport: 'Erreur export',
+    fermer: 'Fermer',
+    agrandirLImage: 'Agrandir l’image',
     annuler: 'Annuler',
     retour: 'Retour',
     abattoir: 'Abattoir',

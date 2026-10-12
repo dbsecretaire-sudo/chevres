@@ -93,3 +93,14 @@ export const UGB_PAR_DEFAUT: Record<EspeceAnimale, { adulte: number; petit: numb
   [TYPE_ANIMAL_ETABLISSEMENT.POULES]: { adulte: 0.014, petit: 0 },
   [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: { adulte: 0, petit: 0 },
 };
+
+/** Le stabilisateur neutre (%) : le paiement n'est pas réduit. */
+export const STABILISATEUR_NEUTRE = 100;
+
+/**
+ * Le stabilisateur des paiements de fin de campagne (%) par année : le paiement de base (DPB) perçu est la valeur calculée
+ * multipliée par ce coefficient. Il ne change pas la valeur des DPB, seulement le montant payé. 2025 : 97,0805 %. Une année absente
+ * n'en a pas ; il se modifie année par année dans Cheptel › Réglages. Quand on saisit la « réduction pour plafonnement budgétaire »
+ * du relevé de situation, c'est elle qui compte (elle est ce que l'ASP a retenu), à la place de ce coefficient.
+ */
+export const STABILISATEUR_DPB_PAR_ANNEE: Record<number, number> = { 2025: 97.0805 };

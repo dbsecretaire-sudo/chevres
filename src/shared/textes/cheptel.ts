@@ -119,6 +119,8 @@ export const TEXTES_CHEPTEL = {
         partZone: (quantite: string, unite: string, taux: string, montant: string) =>
           `Zone : ${quantite} ${unite} pleins × ${taux} = ${montant}`,
         ligneTotale: (nom: string, montant: string) => `${nom} : ${montant}`,
+        stabilisateur: (pourcentage: string, avant: string, reduction: string) =>
+          `Réduction pour plafonnement budgétaire : − ${reduction} (stabilisateur de ${pourcentage} %, ${avant} avant réduction)`,
         tauxLimite: (taux: string, unite: string) => `Montant limité à ${taux} par ${unite}`,
         parametrer: 'Paramétrer l’UGB et les primes',
         fermer: 'Fermer',
@@ -154,6 +156,13 @@ export const TEXTES_CHEPTEL = {
     associes: 'Nombre d’associés (GAEC)',
     associesAide:
       'En GAEC, les plafonds du paiement redistributif et de l’ICHN se multiplient par le nombre d’associés. Laissez 1 hors GAEC.',
+    stabilisateur: 'Stabilisateur de l’année (%)',
+    stabilisateurAide:
+      'Appliqué au paiement de base (DPB) de fin de campagne : vous percevez ce pourcentage du montant calculé (97,0805 % en 2025, d’après la lettre de la DDT du 14/01/2026). Il ne change pas la valeur des DPB, seulement le montant payé. Vide ou 100 : aucun.',
+    reductionBudgetaire: 'Réduction pour plafonnement budgétaire',
+    calculeSurStabilisateur: 'calculé sur base du stabilisateur',
+    reductionBudgetaireAide:
+      'Ce que le stabilisateur retire du paiement de base : le paiement avant réduction multiplié par (100 − stabilisateur) %. Elle se calcule seule et ne se modifie pas : changez le stabilisateur. Sur le relevé de situation 2025, la ligne « Réduction pour plafonnement budgétaire » (386,65 €) additionne cette réduction (225,19 € pour un stabilisateur de 97,7046 %) et celle du coefficient de réduction de la réserve (1,70 %, soit 161,46 €), qui est déjà dans la valeur unitaire des DPB de la lettre de la DDT (142,18 € au lieu de 144,52 € de valeur moyenne avant coefficient).',
     plafond: 'Plafond',
     minimum: 'Seuil minimum',
     plafondTaux: 'Montant unitaire maximum (€)',
@@ -183,6 +192,19 @@ export const TEXTES_CHEPTEL = {
         court: 'DPB',
         titre: 'Aides découplées — Paiement de base (DPB)',
         aide: 'PAC : paiement de base, à l’hectare admissible.',
+        ouTrouver: [
+          {
+            texte: [
+              'Où trouver ce montant : la lettre de la DDT « portefeuille de droits à paiement de base (DPB) » donne la valeur unitaire de vos DPB pour la campagne (142,18 € en 2025) ; le détail est dans Télépac, Données et documents › Campagne › onglet « DPB ».',
+            ],
+          },
+          {
+            texte: [
+              'Ne saisissez pas ici la « valeur moyenne des DPB déclarés » de l’annexe du relevé de situation (144,52 € en 2025) : elle est d’avant le coefficient de réduction de la réserve (1,70 %). L’annexe du relevé (page 4) ressemble à ceci :',
+            ],
+          },
+          { image: 'releveAnnexe' },
+        ],
         plafondAide:
           'Plafond : le nombre de droits (DPB) de votre portefeuille Telepac ; au-delà, les hectares ne touchent plus l’aide. La valeur d’un DPB est aussi limitée (144,52 € en Corse en 2026).',
       },
@@ -190,6 +212,29 @@ export const TEXTES_CHEPTEL = {
         court: 'Paiement redistributif',
         titre: 'Aides découplées — Paiement redistributif',
         aide: 'PAC : majoration sur les premiers hectares.',
+        ouTrouver: [
+          {
+            texte: [
+              'Où trouver ce montant : dans votre relevé de situation. Télépac › Mes données et documents › Paiements par date, puis la loupe de la colonne « Relevé de situation » ouvre le relevé (sa première page ressemble à ceci) :',
+            ],
+          },
+          { image: 'relevePage1' },
+          {
+            texte: [
+              'L’annexe « Valorisation du montant de vos aides » est en page 4 du relevé. Le montant unitaire est dans la colonne « Montant unitaire (€/ha) » de la rubrique « Aide redistributive au revenu » : 50,20 € en 2025.',
+            ],
+          },
+          { image: 'releveAnnexe' },
+          {
+            texte: [
+              'Avant le solde, c’est le montant de l’arrêté ministériel de l’année (48,58 € en novembre 2025), publié au Journal officiel (',
+              { libelle: 'Légifrance', lien: 'legifrance' },
+              ') et sur ',
+              { libelle: 'agriculture.gouv.fr', lien: 'agriculture' },
+              ' ; il peut être réajusté au solde.',
+            ],
+          },
+        ],
         plafondAide:
           'Versé sur les 52 premiers hectares admissibles ; ce plafond se multiplie par le nombre d’associés d’un GAEC.',
       },
@@ -197,6 +242,23 @@ export const TEXTES_CHEPTEL = {
         court: 'Écorégime',
         titre: 'Aides découplées — Écorégime',
         aide: 'PAC : paiement pour les pratiques favorables à l’environnement.',
+        ouTrouver: [
+          {
+            texte: [
+              'Où trouver ce montant : dans l’annexe de votre relevé de situation : Télépac › Mes données et documents › Paiements par date, puis la loupe de la colonne « Relevé de situation ». L’annexe « Valorisation du montant de vos aides » est en page 4 du relevé. Le montant unitaire est dans la colonne « Montant unitaire (€/ha) » du tableau « Aide écorégime », pour le niveau retenu (voie des pratiques, niveau supérieur : 63,39 € en 2025).',
+            ],
+          },
+          { image: 'releveAnnexe' },
+          {
+            texte: [
+              'Avant le paiement, ce sont les montants de l’arrêté ministériel de l’année (base, supérieur, bio), publiés au Journal officiel (',
+              { libelle: 'Légifrance', lien: 'legifrance' },
+              ') et sur ',
+              { libelle: 'agriculture.gouv.fr', lien: 'agriculture' },
+              '.',
+            ],
+          },
+        ],
         plafondAide:
           'Sans plafond : tous les hectares admissibles. Montants 2026 : 45,46 € (base), 62,05 € (supérieur), 110 € (bio), +20 € (haies).',
       },
@@ -204,6 +266,28 @@ export const TEXTES_CHEPTEL = {
         court: 'Aide couplée petits ruminants',
         titre: 'Aide couplée aux petits ruminants',
         aide: 'PAC : par brebis ou chèvre éligible.',
+        ouTrouver: [
+          {
+            texte: [
+              'Où trouver ce montant : dans l’annexe de votre relevé de situation : Télépac › Mes données et documents › Paiements par date, puis la loupe de la colonne « Relevé de situation ». L’annexe « Valorisation du montant de vos aides » est en page 4 du relevé. Le montant unitaire est dans la colonne « Montant unitaire (€/animal) » de la rubrique « Aides couplées animales › Aide aux petits ruminants (APR) », sur la ligne « APR supérieur caprin » (ou « ovin ») :',
+            ],
+          },
+          { image: 'releveApr' },
+          {
+            texte: [
+              'Ce montant se réajuste d’un relevé à l’autre : 32,51 € sur le relevé du 14/01/2026 (150 caprins : 4 876,50 €), puis 34,72 € sur celui du 17/06/2026 (5 208,00 €). Saisissez celui du dernier relevé.',
+            ],
+          },
+          {
+            texte: [
+              'Il dépend du nombre d’animaux éligibles : il n’est connu qu’au paiement ; avant, voyez les notes de la DRAAF Corse et les arrêtés de l’année, publiés au Journal officiel (',
+              { libelle: 'Légifrance', lien: 'legifrance' },
+              ') et sur ',
+              { libelle: 'agriculture.gouv.fr', lien: 'agriculture' },
+              '.',
+            ],
+          },
+        ],
         plafondAide:
           'Au moins 10 femelles éligibles (seuil modifiable). Montants 2026 en Corse : chèvre 15,43 € (30,87 € majoré), brebis 22,23 € (44,46 € majoré). Pas de plafond de têtes en Corse.',
       },
@@ -211,6 +295,32 @@ export const TEXTES_CHEPTEL = {
         court: 'ICHN',
         titre: 'ICHN — Indemnité compensatoire de handicaps naturels',
         aide: 'Zones défavorisées : à l’hectare, selon le chargement en UGB.',
+        ouTrouver: [
+          {
+            texte: [
+              'Où trouver ce montant : en Corse, l’ICHN est payée par l’ODARC (Office du développement agricole et rural de la Corse). La note de cadrage et les décisions sont sur la page ',
+              { libelle: 'Interventions ICHN (71.04, 71.05, 71.06) du PSN', lien: 'odarcIchn' },
+              '.',
+            ],
+          },
+          {
+            texte: [
+              'Le montant par hectare dépend de la zone de votre commune : montagne (71.04, haute montagne sèche ou montagne sèche), zone à contraintes naturelles (71.05) ou à contraintes spécifiques (71.06). La « Liste des communes classées en zones défavorisées au 1er janvier 2017 » se télécharge sur la page du ministère ',
+              { libelle: 'Classement en zone défavorisée', lien: 'zoneDefavorisee' },
+              ' : cherchez votre commune dans ce fichier, et regardez dans quelle colonne figure sa zone (Montagne, Zone défavorisée simple, Zone à handicap spécifique). Extrait, avec une commune de montagne repérée par un M :',
+            ],
+          },
+          { image: 'classementCommunes' },
+          {
+            texte: ['La note de cadrage donne, pour les 25 premiers hectares admissibles :'],
+          },
+          { image: 'ichnZones' },
+          {
+            texte: [
+              'L’ICHN est versée dans la limite de 50 hectares de surfaces admissibles, plafond global pour 71.04, 71.05 et 71.06 réunies. C’est une aide du second pilier : elle ne figure pas sur le relevé de situation des aides directes de la PAC (ASP).',
+            ],
+          },
+        ],
         plafondAide:
           'Plafonnée à 75 hectares : une part fixe (70 € par hectare) plus le montant de votre zone, payé à 100 % sur les 25 premiers hectares puis aux 2/3 de 25 à 50 ha. Les seuils se multiplient par le nombre d’associés d’un GAEC.',
       },

@@ -10,6 +10,7 @@ import {
   coefficientsUgb,
   effectifDeclare,
   infosPourAnnee,
+  stabilisateurDpb,
   primesPrevisionnelles,
   ugbDe,
 } from '@/features/cheptel/services/ugb';
@@ -82,11 +83,11 @@ export default function BilanAnnuel() {
   const effectifCalcul =
     declareSaisi === undefined ? bilan.effectifFinAnnee : { sevres: declareSaisi, petits: 0 };
   const ugb = ugbDe(effectifCalcul, coefficients);
-  const primes = primesPrevisionnelles(infosPourAnnee(infos, annee, espece), {
-    ugb,
-    tetes: effectifCalcul.sevres,
-    hectares,
-  });
+  const primes = primesPrevisionnelles(
+    infosPourAnnee(infos, annee, espece),
+    { ugb, tetes: effectifCalcul.sevres, hectares },
+    stabilisateurDpb(infos, annee),
+  );
 
   /** Les primes calculées, avec ce qui en a été perçu sur la saison : une alerte sur celles qui diffèrent. */
   const lignesPrime = comparerAuxPercues(primes.lignes, percues);

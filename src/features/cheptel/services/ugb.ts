@@ -3,6 +3,8 @@ import {
   BASE_PRIME,
   PRIMES,
   REGLES_PRIMES,
+  STABILISATEUR_DPB_PAR_ANNEE,
+  STABILISATEUR_NEUTRE,
   UGB_PAR_DEFAUT,
   type TranchePrime,
 } from '@/shared/constants/primes';
@@ -35,6 +37,16 @@ export function reglagesDesAides(
     personnalisees: infos?.ugbPrimes?.personnalisees,
   };
 }
+
+/** Le stabilisateur (%) du paiement de base d'une année : celui des réglages, à défaut celui d'office de l'année, sinon aucun (100 %). */
+export const stabilisateurDpb = (infos: InfosExploitation | undefined, annee: number): number =>
+  infos?.ugbPrimes?.stabilisateurs?.[String(annee)] ??
+  STABILISATEUR_DPB_PAR_ANNEE[annee] ??
+  STABILISATEUR_NEUTRE;
+
+/** La réduction (€) que représente un stabilisateur (%) sur un paiement avant réduction : 365 € pour 97,0805 % de 12 500 €. */
+export const reductionDuStabilisateur = (brut: number, stabilisateur: number): number =>
+  Math.round(((brut * (100 - stabilisateur)) / 100) * 100) / 100;
 
 /** L'effectif déclaré d'une année et d'une espèce (rien quand il n'est pas saisi). */
 export const effectifDeclare = (
@@ -166,6 +178,9 @@ export interface LignePrime {
   montantFixe: number;
   quantitePleine: number;
   montantZone: number;
+  /** Le stabilisateur appliqué (% ; 100 : aucun, comme pour toute aide autre que le paiement de base) et le montant d'avant. */
+  stabilisateur: number;
+  montantAvantStabilisateur: number;
   montant: number;
 }
 
@@ -177,14 +192,22 @@ export interface LignePrime {
 export function primesPrevisionnelles(
   infos: InfosExploitation | undefined,
   quantites: QuantitesPrimes,
+  /** Le stabilisateur (%) du paiement de base de l'année (voir stabilisateurDpb) : il réduit seulement ce paiement. */
+  stabilisateurDuDpb: number = STABILISATEUR_NEUTRE,
 ): { lignes: LignePrime[]; total: number } {
   const quantiteDe = (base: ValeurDe<typeof BASE_PRIME>) =>
     base === BASE_PRIME.UGB ? quantites.ugb : base === BASE_PRIME.TETE ? quantites.tetes : quantites.hectares;
   const associes = associesGaec(infos);
+  /** Les hectares des DPB activés (la quantité comptée du paiement de base) : le paiement redistributif ne peut pas en compter plus. */
+  let dpbActives: number | undefined;
   const ligne = (cle: string, nom: string, nomCourt: string, taux?: number): LignePrime[] => {
     if (!(taux && taux > 0)) return [];
     const base = baseDeLaPrime(infos, cle);
-    const quantiteBrute = quantiteDe(base);
+    // Le paiement redistributif porte sur les DPB activés (plafonnés à 52 ha), pas sur toute la surface admissible.
+    const quantiteBrute =
+      cle === 'redistributif' && base === BASE_PRIME.HECTARE && dpbActives !== undefined
+        ? Math.min(quantiteDe(base), dpbActives)
+        : quantiteDe(base);
     const regles = plafondsDeLAide(infos, cle);
     const multiple = regles.transparenceGaec ? associes : 1;
     const tranchesZone = regles.tranchesZone.map((t) => ({ ...t, jusqua: t.jusqua * multiple }));
@@ -204,7 +227,10 @@ export function primesPrevisionnelles(
     }
     const montantZone = quantitePleine * tauxRetenu;
     const montantFixe = quantite * regles.partFixe;
-    const montant = montantFixe + montantZone;
+    if (cle === 'dpb') dpbActives = quantite;
+    const montantBrut = montantFixe + montantZone;
+    const stabilisateur = cle === 'dpb' ? stabilisateurDuDpb : STABILISATEUR_NEUTRE;
+    const montant = (montantBrut * stabilisateur) / 100;
     return [
       {
         cle,
@@ -222,6 +248,8 @@ export function primesPrevisionnelles(
         montantFixe: Math.round(montantFixe * 100) / 100,
         quantitePleine,
         montantZone: Math.round(montantZone * 100) / 100,
+        stabilisateur,
+        montantAvantStabilisateur: Math.round(montantBrut * 100) / 100,
         montant: Math.round(montant * 100) / 100,
       },
     ];

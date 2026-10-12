@@ -4,6 +4,7 @@ import { Button } from '@/shared/components/Button';
 import { formaterUgb } from '@/features/cheptel/services/ugb';
 import { saisonDePrime, type LignePrimeComparee } from '@/features/cheptel/services/primesPercues';
 import { ROUTES } from '@/shared/constants/routes';
+import { STABILISATEUR_NEUTRE } from '@/shared/constants/primes';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -123,6 +124,13 @@ export function DetailUgbPrimes({
                         ? T.tauxLimite(formatMontant(l.tauxRetenu), P.unites[l.base])
                         : undefined,
                       l.degressive ? T.degressif : undefined,
+                      l.stabilisateur !== STABILISATEUR_NEUTRE
+                        ? T.stabilisateur(
+                            coef(l.stabilisateur),
+                            formatMontant(l.montantAvantStabilisateur),
+                            formatMontant(l.montantAvantStabilisateur - l.montant),
+                          )
+                        : undefined,
                     ]
                       .filter(Boolean)
                       .map((note) => (

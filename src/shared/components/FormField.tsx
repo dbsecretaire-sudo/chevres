@@ -1,4 +1,6 @@
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
+import type { Explication } from '@/shared/components/ExplicationModal';
+import { LibelleChamp } from '@/shared/components/LibelleChamp';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { useFondChamp } from '@/shared/theme/FondChampContext';
@@ -9,20 +11,17 @@ interface Props extends TextInputProps {
   required?: boolean;
   /** Une note sous le champ : ce qu'on y met, dans quel format, pourquoi. */
   aide?: string;
+  /** Une explication longue : un « ? » à côté du nom du champ l'ouvre dans une fenêtre (plutôt qu'un long texte sous le champ). */
+  explication?: Explication;
   /** Ce qui ne va pas, en rouge sous le champ (le contour devient rouge aussi). */
   erreur?: string;
 }
 
-export function FormField({ label, required, aide, erreur, style, ...rest }: Props) {
+export function FormField({ label, required, aide, explication, erreur, style, ...rest }: Props) {
   const fond = useFondChamp();
   return (
     <View style={commonStyles.gap6}>
-      {label ? (
-        <Text style={commonStyles.lineSemiBold}>
-          {label}
-          {required ? <Text style={commonStyles.required}> *</Text> : null}
-        </Text>
-      ) : null}
+      {label ? <LibelleChamp label={label} required={required} explication={explication} /> : null}
       <TextInput
         style={[
           commonStyles.input,
