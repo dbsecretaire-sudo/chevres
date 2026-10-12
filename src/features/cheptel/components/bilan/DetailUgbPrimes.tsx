@@ -136,10 +136,21 @@ export function DetailUgbPrimes({
                           coef(l.quantite),
                           P.unitesQuantite[l.base],
                           formatMontant(l.tauxRetenu),
-                          formatMontant(l.montant),
+                          formatMontant(l.montant - l.primeSupplementaire),
                         )}
                       </Text>
                     )}
+                    {/* Une prime supplémentaire saisie : elle s'ajoute au montant de l'aide, avant le total de la ligne. */}
+                    {l.primeSupplementaire > 0 ? (
+                      <>
+                        <Text style={commonStyles.note}>
+                          {T.primeSupplementaire(formatMontant(l.primeSupplementaire))}
+                        </Text>
+                        <Text style={commonStyles.line}>
+                          {T.ligneTotale(l.nom, formatMontant(l.montant))}
+                        </Text>
+                      </>
+                    ) : null}
                     {l.percu !== undefined ? (
                       <Text style={l.ecart ? commonStyles.lineBold : commonStyles.note}>
                         {l.ecart ? '! ' : ''}
