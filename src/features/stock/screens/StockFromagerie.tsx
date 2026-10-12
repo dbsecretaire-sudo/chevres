@@ -1,6 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { groupesActifsEspece, laiterieActive } from '@/features/comptabilite/utils/recettes';
 import {
   CATEGORIES,
   SECTIONS,
@@ -8,19 +7,20 @@ import {
   type Section,
 } from '@/features/stock/utils/categories';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Card } from '@/shared/components/Card';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ROUTES } from '@/shared/constants/routes';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { Fab } from '@/shared/components/Fab';
 import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { listeValablePour } from '@/features/stock/utils/listesEspece';
+import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
+import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
@@ -29,6 +29,7 @@ import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
 import { estArticleAvecLots, lotsDeLInventaire } from '@/features/stock/services/lots';
 import { Button } from '@/shared/components/Button';
 import {
+  bouclesDeLEspece,
   bouclesPossiblesDuCheptel,
   synchroniserBouclesDuCheptel,
   type BouclePossible,
@@ -43,7 +44,7 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { effectifsVivants, type EffectifVivant } from '@/features/cheptel/repository/chevres';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { CATEGORIE_VENTE, GROUPE_RECETTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ajouterArticle,
   ajouterMouvementManuel,
@@ -118,21 +119,8 @@ export default function StockFromagerie() {
   // La fromagerie n'existe que pour des chèvres ou des brebis ; les aliments et l'entretien sont là pour toute exploitation.
   // Un lien peut ouvrir directement un onglet.
   const router = useRouter();
-  const { especes, espece: especeActive } = useEtablissement();
-  // Le stock se regarde pour un animal (l'animal actif d'office, quand l'exploitation en élève plusieurs) ou pour toutes les
-  // activités. Un choix explicite l'emporte ; sans choix, le filtre suit l'animal actif.
-  const [filtre, setFiltre] = useState<FiltreStock | null>(null);
-  const voulu: FiltreStock = filtre ?? especeActive;
-  const filtreCourant: FiltreStock =
-    voulu === FILTRE_STOCK_TOUT || especes.includes(voulu) ? voulu : FILTRE_STOCK_TOUT;
-  // La fromagerie et le lait : les chèvres, les brebis et les vaches.
-  const fromagerie = (filtreCourant === FILTRE_STOCK_TOUT ? especes : [filtreCourant]).some((espece) =>
-    laiterieActive(espece),
-  );
-  // Les œufs : les espèces qui en vendent (les poules).
-  const poules = (filtreCourant === FILTRE_STOCK_TOUT ? especes : [filtreCourant]).some((espece) =>
-    groupesActifsEspece(espece).includes(GROUPE_RECETTE.OEUFS),
-  );
+  const { especes, especeActive, filtreCourant, setFiltre, concernees, fromagerie, poules } =
+    useFiltreEspeceStock();
   const sectionsVisibles = SECTIONS.filter((x) => (fromagerie || !x.fromagerie) && (poules || !x.poules));
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
@@ -221,6 +209,8 @@ export default function StockFromagerie() {
   );
 
   const niveaux = niveauxDeStock(archive.mouvements, effectifs);
+  /** Les boucles de l'espèce active : chaque espèce a les siennes. */
+  const bouclesEspece = bouclesDeLEspece(archive.boucles);
   /** Vrai quand un des articles de la liste a une quantité négative (une production ou un achat n'a pas été noté). */
   const aUnNegatif = (articles: ArticleAffiche[]) => articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
 
@@ -269,14 +259,15 @@ export default function StockFromagerie() {
 
   /** Une sorte de boucles : le nombre de boucles à poser ; un appui ouvre le détail des numéros (ni renommer, ni déplacer). */
   const ligneBoucles = (a: ArticleAffiche) => {
-    const niveau = niveaux.get(a.cle) ?? 0;
+    // Le niveau : les boucles de l'espèce qui ne sont pas posées (celles des chèvres ne sont pas celles des cochons).
+    const niveau = bouclesEspece.filter((b) => b.article === a.cle && !b.chevreId).length;
     return (
       <ListRow
         key={a.cle}
         title={a.libelle}
         subtitle={T.boucles.resume(
-          (archive.boucles ?? []).filter((b) => b.article === a.cle).length,
-          (archive.boucles ?? []).filter((b) => b.article === a.cle && !!b.chevreId).length,
+          bouclesEspece.filter((b) => b.article === a.cle).length,
+          bouclesEspece.filter((b) => b.article === a.cle && !!b.chevreId).length,
         )}
         trailing={
           <View style={stylesStock.fin}>
@@ -435,7 +426,9 @@ export default function StockFromagerie() {
             : null,
     )
     .filter((x) => x !== null);
-  const optionsListes = (archive.listes ?? [])
+  // Les listes de ventes ne valent que pour les espèces qui les vendent (pas de lait ni de fromage pour des cochons).
+  const listesVisibles = (archive.listes ?? []).filter((l) => listeValablePour(l.compte, concernees));
+  const optionsListes = listesVisibles
     .filter((l) => ouvertes.length === 0 || ouvertes.includes(l.categorie))
     .map((l) => ({
       label: T.ajouter.dansLaListe(l.nom),
@@ -446,22 +439,12 @@ export default function StockFromagerie() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
-        {especes.length > 1 ? (
-          <ChoixDeroulant<FiltreStock>
-            titre={TEXTES.commun.choix.animal}
-            valeur={filtreCourant}
-            options={[
-              { value: FILTRE_STOCK_TOUT, label: TEXTES.comptabilite.parActivite.toutes },
-              ...especes.map((e) => ({ value: e as FiltreStock, label: LABEL_ACTIVITE_COMPTABLE[e] })),
-            ]}
-            onChoisir={setFiltre}
-          />
-        ) : null}
+        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={setFiltre} />
 
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
             const listes = sectionsVisibles.filter((x) => x.categorie === categorie);
-            const listesPerso = (archive.listes ?? []).filter((l) => l.categorie === categorie);
+            const listesPerso = listesVisibles.filter((l) => l.categorie === categorie);
             // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
             if (listes.length === 0 && listesPerso.length === 0 && !perso) return null;
             return (
@@ -677,7 +660,7 @@ export default function StockFromagerie() {
       <DetailBouclesModal
         visible={boucleVisible}
         article={boucleOuverte}
-        boucles={archive.boucles ?? []}
+        boucles={bouclesEspece}
         onFermer={() => setBoucleVisible(false)}
       />
 

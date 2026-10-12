@@ -80,6 +80,8 @@ export interface BoucleStock {
   article: string;
   /** Le numéro, tel qu'il s'écrit sur l'animal (sans l'indicatif de marquage). */
   numero: string;
+  /** L'espèce dont la boucle est (chaque espèce a ses boucles) ; absente d'une ancienne boucle : l'espèce par défaut de l'établissement. */
+  espece?: string;
   /** La date de l'achat (celle de la facture) ; absente d'une boucle ajoutée depuis la fiche d'un animal. */
   dateAchat?: string;
   /** Vrai pour une boucle ajoutée toute seule quand un animal a été enregistré avec un numéro absent de l'inventaire. */

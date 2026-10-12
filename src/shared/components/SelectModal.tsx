@@ -27,6 +27,8 @@ interface Props<T extends string> {
   searchable?: boolean;
   /** Les groupes (leurs titres) qui se choisissent par des puces sous la recherche, l'une ou l'autre, au lieu d'être des titres dans la liste. */
   puces?: string[];
+  /** La puce choisie à chaque ouverture (celle du groupe de la valeur déjà choisie, à défaut celle-ci) ; sans elle, toutes les lignes. */
+  puceParDefaut?: string;
   /** Le texte du champ de recherche quand il diffère du texte d'office. */
   placeholderRecherche?: string;
   /** Quand il est donné, ce qu'on tape dans la recherche, s'il n'est pas dans la liste, se propose comme valeur (« Utiliser le n° 123 »). */
@@ -43,6 +45,7 @@ export function SelectModal<T extends string>({
   onClose,
   searchable,
   puces,
+  puceParDefaut,
   placeholderRecherche,
   libelleSaisieLibre,
 }: Props<T>) {
@@ -50,6 +53,14 @@ export function SelectModal<T extends string>({
   const [recherche, setRecherche] = useState('');
   /** La puce choisie (aucune : tous les groupes). */
   const [groupeChoisi, setGroupeChoisi] = useState<string | null>(null);
+  // À chaque ouverture, la puce par défaut (ou celle de la valeur déjà choisie, pour la retrouver dans la liste).
+  const [dejaOuverte, setDejaOuverte] = useState(false);
+  if (visible !== dejaOuverte) {
+    setDejaOuverte(visible);
+    if (visible && puceParDefaut) {
+      setGroupeChoisi(options.find((o) => o.value === value)?.groupe ?? puceParDefaut);
+    }
+  }
   const groupes = puces ?? [];
   const avecPuces = groupes.length > 0;
 

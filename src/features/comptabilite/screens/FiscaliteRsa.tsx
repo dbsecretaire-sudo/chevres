@@ -30,7 +30,7 @@ function RsaElevage() {
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [mois, setMois] = useState<RecettesMois[]>([]);
   // Tout par défaut : la déclaration porte sur l'ensemble des recettes.
-  const [filtre, setFiltre] = useFiltreActivite(true);
+  const [filtre, setFiltre] = useFiltreActivite();
 
   const charger = useCallback(async () => {
     const [toutesAnnees, m] = await Promise.all([

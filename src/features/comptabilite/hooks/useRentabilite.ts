@@ -5,6 +5,7 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
 import { rentabilite, type Rentabilite } from '@/features/comptabilite/services/rentabilite';
 import { TOUTES_ACTIVITES } from '@/features/comptabilite/services/filtresTransactions';
+import { laiterieActive } from '@/features/comptabilite/utils/recettes';
 import { reglagesTva } from '@/features/comptabilite/utils/reglagesTva';
 import { calculerBilan } from '@/features/cheptel/services/bilanCheptel';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
@@ -14,7 +15,7 @@ import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 /** La rentabilité de l'année active et de l'activité choisie, rechargée à chaque retour sur l'écran. */
 export function useRentabilite() {
   const { settings, setAnneeActive } = useAppSettings();
-  const { espece } = useEtablissement();
+  const { espece, especes } = useEtablissement();
   const [filtre, setFiltre] = useFiltreActivite();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [resultat, setResultat] = useState<Rentabilite | null>(null);
@@ -25,6 +26,11 @@ export function useRentabilite() {
   const horsTaxes =
     regime === REGIME_TVA_PILOTAGE.REEL_SIMPLIFIE || regime === REGIME_TVA_PILOTAGE.REEL_NORMAL;
 
+  /** Le lait ne concerne que les espèces laitières (chèvres, brebis, vaches) : pas de coût du litre pour des cochons ou des poules. */
+  const laitier = (filtre === TOUTES_ACTIVITES || filtre === ACTIVITE_COMMUNE ? especes : [filtre]).some(
+    laiterieActive,
+  );
+
   const charger = useCallback(async () => {
     // Le coût par animal se calcule sur le nombre de femelles (les chèvres, de 6 mois et plus) vivantes au 31/12 de l'espèce
     // active, comme le bilan annuel : avec « Tout » ou « Commun », toutes les charges s'y rapportent ; avec l'activité d'une autre
@@ -33,11 +39,11 @@ export function useRentabilite() {
     const effectif = autreEspece ? undefined : (await calculerBilan(annee)).chevresVivantesFinAnnee;
     const [toutesAnnees, r] = await Promise.all([
       toutesLesAnneesConnues(),
-      rentabilite(annee, { filtre, horsTaxes, effectif }),
+      rentabilite(annee, { filtre, horsTaxes, effectif, laitier }),
     ]);
     setAnnees(toutesAnnees);
     setResultat(r);
-  }, [annee, filtre, horsTaxes, espece]);
+  }, [annee, filtre, horsTaxes, espece, laitier]);
 
   useFocusEffect(
     useCallback(() => {
@@ -45,5 +51,5 @@ export function useRentabilite() {
     }, [charger]),
   );
 
-  return { annee, annees, setAnneeActive, filtre, setFiltre, resultat };
+  return { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier };
 }

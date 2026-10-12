@@ -28,7 +28,7 @@ const nombre = (valeur: number) =>
  * litre de lait et de l'animal, et le poids de chaque poste de charges.
  */
 export default function Rentabilite() {
-  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat } = useRentabilite();
+  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier } = useRentabilite();
   if (!resultat) return null;
 
   return (
@@ -98,21 +98,23 @@ export default function Rentabilite() {
 
       <Text style={stylesFiscalite.titreSection}>{T.couts.titre}</Text>
       <Card>
-        <View style={commonStyles.gap2}>
-          <View style={styles.ligne}>
-            <Text style={commonStyles.lineBold}>{T.couts.parLitre}</Text>
-            <Text style={commonStyles.lineBold}>
-              {resultat.coutParLitre === undefined ? '—' : formatMontant(resultat.coutParLitre)}
+        {laitier ? (
+          <View style={commonStyles.gap2}>
+            <View style={styles.ligne}>
+              <Text style={commonStyles.lineBold}>{T.couts.parLitre}</Text>
+              <Text style={commonStyles.lineBold}>
+                {resultat.coutParLitre === undefined ? '—' : formatMontant(resultat.coutParLitre)}
+              </Text>
+            </View>
+            <Text style={commonStyles.note}>
+              {resultat.coutParLitre !== undefined
+                ? T.couts.parLitreAide(nombre(resultat.litresProduits), formatMontant(resultat.charges))
+                : resultat.litresProduits > 0
+                  ? T.couts.parLitreSansCharges(nombre(resultat.litresProduits))
+                  : T.couts.parLitreSansLait(annee)}
             </Text>
           </View>
-          <Text style={commonStyles.note}>
-            {resultat.coutParLitre !== undefined
-              ? T.couts.parLitreAide(nombre(resultat.litresProduits), formatMontant(resultat.charges))
-              : resultat.litresProduits > 0
-                ? T.couts.parLitreSansCharges(nombre(resultat.litresProduits))
-                : T.couts.parLitreSansLait(annee)}
-          </Text>
-        </View>
+        ) : null}
         <View style={commonStyles.gap2}>
           <View style={styles.ligne}>
             <Text style={commonStyles.lineBold}>{T.couts.parAnimal(vocabulaire().femelle.singulier)}</Text>
@@ -139,19 +141,21 @@ export default function Rentabilite() {
             <View key={p.categorie} style={commonStyles.gap2}>
               <View style={styles.ligne}>
                 <Text style={commonStyles.line}>
-                  {LABEL_CATEGORIE_DEPENSE[p.categorie as CategorieDepense] ?? p.categorie}
+                  {p.libelle ??
+                    LABEL_CATEGORIE_DEPENSE[p.categorie.split(':')[0] as CategorieDepense] ??
+                    p.categorie}
                 </Text>
                 <Text style={commonStyles.lineBold}>
                   {formatMontant(p.montant)} · {T.postes.part(p.part)}
                 </Text>
               </View>
-              {resultat.effectif !== undefined || resultat.litresProduits > 0 ? (
+              {resultat.effectif !== undefined || (laitier && resultat.litresProduits > 0) ? (
                 <Text style={commonStyles.note}>
                   {[
                     resultat.effectif
                       ? T.postes.parAnimal(formatMontant(p.montant / resultat.effectif))
                       : undefined,
-                    resultat.litresProduits > 0
+                    laitier && resultat.litresProduits > 0
                       ? T.postes.parLitre(formatMontant(p.montant / resultat.litresProduits))
                       : undefined,
                   ]

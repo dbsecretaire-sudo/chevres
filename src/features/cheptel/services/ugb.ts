@@ -7,6 +7,7 @@ import {
   REDUCTION_BUDGETAIRE_DPB_PAR_ANNEE,
   STABILISATEUR_DPB_PAR_ANNEE,
   MONTANT_ICHN_PAR_ZONE,
+  primeValablePour,
   STABILISATEUR_NEUTRE,
   UGB_PAR_DEFAUT,
   type TranchePrime,
@@ -75,7 +76,10 @@ export function infosPourAnnee(
     ugbPrimes: {
       ...infos.ugbPrimes,
       associes: aides.associes,
-      primes: aides.primes,
+      // Une aide qui ne concerne pas l'espèce (petits ruminants pour des cochons) ne compte pas.
+      primes: aides.primes
+        ? Object.fromEntries(Object.entries(aides.primes).filter(([cle]) => primeValablePour(cle, espece)))
+        : aides.primes,
       personnalisees: aides.personnalisees,
     },
   };

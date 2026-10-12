@@ -116,7 +116,8 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
     montantActivite: v.prix,
     montantComptabilise: v.prix,
     sens: SENS_TRANSACTION.ENTREE,
-    titre: v.precision ? v.precision : TEXTES.comptabilite.transactions.venteDeProduction,
+    // Le nom du client ; à défaut, la précision de la vente, sinon « Vente de production ».
+    titre: v.client?.trim() || v.precision || TEXTES.comptabilite.transactions.venteDeProduction,
     sousTitre: sousTitreVente(v),
     source: SOURCE_TRANSACTION.VENTE,
     activite: activiteVente(v),

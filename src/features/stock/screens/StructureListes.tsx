@@ -10,6 +10,9 @@ import { Screen } from '@/shared/components/Screen';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { CategorieModal } from '@/features/stock/components/CategorieModal';
+import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
+import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
+import { listeValablePour } from '@/features/stock/utils/listesEspece';
 import { lireArchiveStock } from '@/features/stock/repository';
 import {
   ajouterCategorie,
@@ -51,6 +54,8 @@ const T = TEXTES.stock;
 export default function StructureListes() {
   const router = useRouter();
   const navigation = useNavigation();
+  // Les listes se voient pour une espèce, comme l'inventaire : pas de lait ni de fromage pour des cochons.
+  const { especes, filtreCourant, setFiltre, concernees, fromagerie, poules } = useFiltreEspeceStock();
   /** Au retour des comptes du plan comptable : la catégorie dont on créait une liste (la fenêtre d'ajout se rouvre). */
   const { ajout: ajoutDemande } = useLocalSearchParams<{ ajout?: string }>();
   const [listes, setListes] = useState<ListeInventaire[]>([]);
@@ -79,7 +84,9 @@ export default function StructureListes() {
           titre: x.titre,
           compte: COMPTE_PAR_SECTION_INVENTAIRE_GITE[x.section],
         }))
-      : SECTIONS.filter((x) => x.categorie === categorie).map((x) => ({
+      : SECTIONS.filter(
+          (x) => x.categorie === categorie && (fromagerie || !x.fromagerie) && (poules || !x.poules),
+        ).map((x) => ({
           cle: x.section,
           titre: x.titre,
           compte: COMPTE_PAR_SECTION_INVENTAIRE[x.section],
@@ -155,6 +162,7 @@ export default function StructureListes() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listeAvecFab}>
+        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={setFiltre} />
         <Text style={commonStyles.muted}>{T.structure.aide}</Text>
 
         {categories.map((infos) => {
@@ -199,7 +207,7 @@ export default function StructureListes() {
               ) : null}
 
               {listes
-                .filter((l) => l.categorie === categorie)
+                .filter((l) => l.categorie === categorie && listeValablePour(l.compte, concernees))
                 .map((l) => (
                   <View key={l.id} style={commonStyles.rowSpaceBetween}>
                     <View style={commonStyles.flex1}>

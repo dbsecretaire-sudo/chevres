@@ -36,6 +36,7 @@ import {
   BASE_PRIME,
   MONTANT_ICHN_PAR_ZONE,
   PRIMES,
+  primeValablePour,
   REGLES_PRIMES,
   STABILISATEUR_NEUTRE,
 } from '@/shared/constants/primes';
@@ -166,7 +167,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
       }),
     ),
     primes: Object.fromEntries(
-      PRIMES.map((p) => {
+      PRIMES.filter((p) => primeValablePour(p.cle, espece)).map((p) => {
         const reglage = infosAides?.ugbPrimes?.primes?.[p.cle];
         return [
           p.cle,
@@ -599,7 +600,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
           explication={T.associesAide}
         />
       </Card>
-      {PRIMES.map((p) => {
+      {PRIMES.filter((p) => primeValablePour(p.cle, espece)).map((p) => {
         const aide = saisie.primes[p.cle] ?? {
           actif: false,
           taux: '',

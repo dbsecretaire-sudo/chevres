@@ -1,4 +1,5 @@
 import { listFactures } from '@/features/comptabilite/repository/factures';
+import { listComptesPcg } from '@/features/comptes-pcg/repository';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import { activiteFacture, activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
@@ -13,6 +14,8 @@ import {
   CATEGORIE_VENTE,
   TYPE_FACTURE,
 } from '@/shared/constants/comptabilite';
+import { COMPTE_PAR_DEPENSE } from '@/shared/constants/planComptable';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { yearOf } from '@/shared/utils/dates';
 
 // La rentabilité : les recettes et les charges de l'année, atelier par atelier, d'après les ventes et les factures saisies. Une charge
@@ -41,7 +44,10 @@ export interface LigneAtelier {
 }
 
 export interface PosteCharges {
+  /** La catégorie de dépense ; pour « Autre », le numéro du compte choisi (« autre:645100 »), un poste par compte. */
   categorie: string;
+  /** Le nom du compte comptable d'un poste « Autre » (« Cotisations MSA »), quand on le connaît. */
+  libelle?: string;
   montant: number;
   /** Sa part des charges totales (0 à 1). */
   part: number;
@@ -79,6 +85,8 @@ export interface EntreeRentabilite {
   /** Le lait produit dans l'année (litres), et le nombre d'animaux présents (pour les coûts par litre et par animal). */
   litresProduits?: number;
   effectif?: number;
+  /** Les noms des comptes comptables par numéro, pour nommer les postes « Autre » d'après leur compte. */
+  comptes?: Record<string, string>;
 }
 
 const arrondi = (valeur: number) => Math.round(valeur * 100) / 100;
@@ -119,11 +127,16 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
     for (const part of partsDeFacture(f)) {
       if (!retenue(part.activite)) continue;
       const charge = montant(part.facture.montant, f.tauxTva);
-      postes.set(
-        f.categorieDepense ?? CATEGORIE_DEPENSE.AUTRE,
-        (postes.get(f.categorieDepense ?? CATEGORIE_DEPENSE.AUTRE) ?? 0) + charge,
-      );
-      const atelier = f.atelier as Atelier | undefined;
+      const categorie = f.categorieDepense ?? CATEGORIE_DEPENSE.AUTRE;
+      // Une dépense « Autre » a son compte comptable (celui par défaut, à défaut d'un autre) : chaque compte est un poste à part.
+      const poste =
+        categorie === CATEGORIE_DEPENSE.AUTRE
+          ? `${categorie}:${f.compteManuel ?? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero}`
+          : categorie;
+      postes.set(poste, (postes.get(poste) ?? 0) + charge);
+      // L'atelier de la facture ne vaut que pour les lignes de son activité : l'aliment d'un autre cheptel (porcs…) est une charge commune.
+      const dansSonActivite = part.activite === activiteFacture(f) || activiteFacture(f) === ACTIVITE_COMMUNE;
+      const atelier = dansSonActivite ? (f.atelier as Atelier | undefined) : undefined;
       if (atelier) directes.set(atelier, (directes.get(atelier) ?? 0) + charge);
       else communes += charge;
     }
@@ -152,6 +165,17 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
   // Sans recettes pour les répartir, les charges communes restent à part : elles comptent dans le total.
   const chargesTotal = [...postes.values()].reduce((t, x) => t + x, 0);
   const litresProduits = entree.litresProduits ?? 0;
+  /** Le nom du compte d'un poste « Autre » (celui du plan comptable, à défaut son numéro) ; rien pour les autres catégories. */
+  const libelleDuCompte = (poste: string): string | undefined => {
+    const numero = poste.split(':')[1];
+    if (!numero) return undefined;
+    return (
+      entree.comptes?.[numero] ??
+      (numero === COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero
+        ? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].libelle
+        : numero)
+    );
+  };
   const effectif = entree.effectif && entree.effectif > 0 ? entree.effectif : undefined;
 
   return {
@@ -166,6 +190,7 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
     postes: [...postes.entries()]
       .map(([categorie, m]) => ({
         categorie,
+        libelle: libelleDuCompte(categorie),
         montant: arrondi(m),
         part: chargesTotal > 0 ? m / chargesTotal : 0,
       }))
@@ -200,9 +225,11 @@ export async function litresProduitsDeLAnnee(annee: number, ventes: Vente[]): Pr
 /** La rentabilité d'une année, d'après les ventes et factures enregistrées. */
 export async function rentabilite(
   annee: number,
-  options: { filtre: FiltreActivite; horsTaxes: boolean; effectif?: number },
+  options: { filtre: FiltreActivite; horsTaxes: boolean; effectif?: number; laitier?: boolean },
 ): Promise<Rentabilite> {
   const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
-  const litresProduits = await litresProduitsDeLAnnee(annee, ventes);
-  return calculerRentabilite({ annee, ventes, factures, litresProduits, ...options });
+  // Pas de lait pour une espèce qui n'en produit pas (cochons, poules) : le coût du litre n'a pas de sens.
+  const litresProduits = options.laitier === false ? 0 : await litresProduitsDeLAnnee(annee, ventes);
+  const comptes = Object.fromEntries((await listComptesPcg()).map((c) => [c.numero, c.libelle]));
+  return calculerRentabilite({ annee, ventes, factures, litresProduits, comptes, ...options });
 }

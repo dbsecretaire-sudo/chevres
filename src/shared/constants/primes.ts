@@ -22,6 +22,16 @@ export const PRIMES = [
   { cle: 'ichn', base: BASE_PRIME.HECTARE },
 ] as const;
 
+/** Les espèces qui touchent l'aide couplée aux petits ruminants : les chèvres et les brebis. */
+export const ESPECES_PETITS_RUMINANTS: readonly string[] = [
+  TYPE_ANIMAL_ETABLISSEMENT.CHEVRES,
+  TYPE_ANIMAL_ETABLISSEMENT.BREBIS,
+];
+
+/** Vrai quand l'aide d'office concerne l'espèce : l'aide aux petits ruminants n'est pas pour des cochons ou des vaches. */
+export const primeValablePour = (cle: string, espece: string): boolean =>
+  cle !== 'couplee_petits_ruminants' || ESPECES_PETITS_RUMINANTS.includes(espece);
+
 /** Le type d'aide de la comptabilité (TYPE_AIDE) qui correspond à chaque aide d'office : ce qu'on a perçu s'y retrouve. */
 export const TYPE_AIDE_PAR_PRIME: Record<(typeof PRIMES)[number]['cle'], string> = {
   dpb: TYPE_AIDE.PAIEMENT_BASE,

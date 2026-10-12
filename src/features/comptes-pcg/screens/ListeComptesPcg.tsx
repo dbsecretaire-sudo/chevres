@@ -18,6 +18,9 @@ import { Fab } from '@/shared/components/Fab';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
+import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
+import { listeValablePour } from '@/features/stock/utils/listesEspece';
 import { comptesDeLInventaire } from '@/features/stock/services/stock';
 import { compteAutorise } from '@/features/stock/services/structure';
 import type { ArchiveStock } from '@/features/stock/types';
@@ -38,7 +41,9 @@ export default function ComptesPcgIndex() {
   const [recherche, setRecherche] = useState('');
   /** Les comptes qui ont une liste dans l'inventaire (« Inventaire »), les autres sont « Service » ; un seul filtre à la fois. */
   const [comptesInventaire, setComptesInventaire] = useState<string[]>([]);
-  const [suivi, setSuivi] = useState<string | null>(null);
+  const [suivi, setSuivi] = useState<string | null>(TEXTES.comptesPcg.nouveauComptePcg.suivi.service);
+  // Les comptes se voient pour une espèce, comme l'inventaire : pas de compte du lait ni du fromage pour des cochons.
+  const { especes, filtreCourant, setFiltre, concernees } = useFiltreEspeceStock();
   /** Les catégories de l'inventaire et ce qu'on y a personnalisé : pour trier les comptes selon une catégorie. */
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
 
@@ -68,16 +73,17 @@ export default function ComptesPcgIndex() {
           compteAutorise(regles.categorie, c.numero, archive?.categories, archive?.reglagesCategories),
         )
       : comptes;
+    const deLEspece = duCategorie.filter((c) => listeValablePour(c.numero, concernees));
     const duSuivi = suivi
-      ? duCategorie.filter(
+      ? deLEspece.filter(
           (c) =>
             comptesInventaire.includes(c.numero) ===
             (suivi === TEXTES.comptesPcg.nouveauComptePcg.suivi.inventaire),
         )
-      : duCategorie;
+      : deLEspece;
     if (!q) return duSuivi;
     return duSuivi.filter((c) => [c.numero, c.libelle].some((v) => v?.toLowerCase().includes(q)));
-  }, [comptes, comptesInventaire, recherche, suivi, regles, archive]);
+  }, [comptes, comptesInventaire, recherche, suivi, regles, archive, concernees]);
 
   return (
     <Screen scroll={false}>
@@ -115,14 +121,17 @@ export default function ComptesPcgIndex() {
             </Text>
           </View>
         ) : (
-          <FiltresExclusifs
-            choix={[
-              TEXTES.comptesPcg.nouveauComptePcg.suivi.inventaire,
-              TEXTES.comptesPcg.nouveauComptePcg.suivi.service,
-            ]}
-            valeur={suivi}
-            onChoisir={setSuivi}
-          />
+          <>
+            <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={setFiltre} />
+            <FiltresExclusifs
+              choix={[
+                TEXTES.comptesPcg.nouveauComptePcg.suivi.inventaire,
+                TEXTES.comptesPcg.nouveauComptePcg.suivi.service,
+              ]}
+              valeur={suivi}
+              onChoisir={setSuivi}
+            />
+          </>
         )}
       </View>
 

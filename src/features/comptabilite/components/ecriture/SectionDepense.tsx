@@ -107,6 +107,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             TEXTES.comptabilite.nouvelleEcriture.groupeInventaire,
             TEXTES.comptabilite.nouvelleEcriture.groupeAutresComptes,
           ]}
+          puceCompteParDefaut={TEXTES.comptabilite.nouvelleEcriture.groupeAutresComptes}
           onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
         />
 

@@ -11,15 +11,10 @@ type VuePropre = typeof TOUTES_ACTIVITES | typeof ACTIVITE_COMMUNE;
  * l'espèce active de toute l'application. Le filtre suit donc l'espèce active sans recréer l'écran : choisir un animal
  * ne fait que changer le filtre, comme « Commun ».
  */
-export function useFiltreActivite(
-  /** Démarrer sur « Tout » plutôt que sur l'espèce active (impôts, RSA : la déclaration porte sur l'ensemble). */
-  departTout = false,
-): [FiltreActivite, (filtre: FiltreActivite) => void] {
+export function useFiltreActivite(): [FiltreActivite, (filtre: FiltreActivite) => void] {
   const { espece } = useEtablissement();
   // null : on suit l'espèce active (ou « Tout » quand l'établissement n'en élève qu'une).
-  const [vue, setVue] = useState<VuePropre | null>(
-    departTout || !plusieursEspeces() ? TOUTES_ACTIVITES : null,
-  );
+  const [vue, setVue] = useState<VuePropre | null>(!plusieursEspeces() ? TOUTES_ACTIVITES : null);
 
   const filtre: FiltreActivite = vue ?? espece;
   const choisir = (nouveau: FiltreActivite) =>

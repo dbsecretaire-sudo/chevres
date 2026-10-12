@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
+import { sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
@@ -99,7 +100,7 @@ export async function lireArchiveStock(): Promise<ArchiveStock> {
   const raw = await AsyncStorage.getItem(cle());
   if (!raw) return { ...VIDE };
   try {
-    const archive = normaliserArchiveStock(JSON.parse(raw));
+    const archive = sansDoublonsDOffice(normaliserArchiveStock(JSON.parse(raw)));
     return { ...archive, mouvements: avecRemisesAZero(archive.mouvements) };
   } catch {
     return { ...VIDE };

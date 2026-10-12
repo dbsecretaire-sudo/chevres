@@ -1,5 +1,8 @@
 import type { Chevre } from '@/features/cheptel/types';
 import { especeDe } from '@/features/cheptel/utils/espece';
+import { activiteFacture } from '@/features/comptabilite/utils/activite';
+import { especeCourante, especeParDefaut } from '@/shared/dictionnaire/animaux';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { Facture } from '@/features/comptabilite/types';
 import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
@@ -22,6 +25,13 @@ import { generateId } from '@/shared/utils/id';
 
 /** Au plus ce nombre de chiffres dans un numéro de boucle : au-delà, les additions ne sont plus exactes. */
 const CHIFFRES_MAX = 15;
+
+/** L'espèce d'une boucle : la sienne, ou l'espèce par défaut de l'établissement pour une ancienne boucle. */
+export const especeDeLaBoucle = (b: Pick<BoucleStock, 'espece'>): string => b.espece ?? especeParDefaut();
+
+/** Les boucles de l'espèce active (chaque espèce a les siennes : les boucles des chèvres ne sont pas celles des cochons). */
+export const bouclesDeLEspece = (boucles: BoucleStock[] | undefined): BoucleStock[] =>
+  (boucles ?? []).filter((b) => especeDeLaBoucle(b) === especeCourante());
 
 /** Vrai pour un article de l'inventaire qui est une boucle d'identification (« boucle:boucles », « boucle:rouges », « boucle:tiptag »). */
 export const estArticleBoucle = (cle: string | undefined): boolean =>
@@ -69,8 +79,14 @@ function comparerNumeros(a: string, b: string): number {
 /** Les boucles d'un achat, d'après sa facture : celles de l'ancien enregistrement gardent leur pose. */
 export function bouclesApresAchat(
   boucles: BoucleStock[],
-  facture: Pick<Facture, 'id' | 'date' | 'stockArticle' | 'stockQuantite' | 'bouclesDebut'>,
+  facture: Pick<
+    Facture,
+    'id' | 'date' | 'stockArticle' | 'stockQuantite' | 'bouclesDebut' | 'activite' | 'categorieDepense'
+  >,
 ): BoucleStock[] {
+  // Les boucles sont celles de l'espèce de la dépense (celle de l'espèce active pour une dépense commune).
+  const activite = activiteFacture(facture);
+  const espece = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
   const numeros =
     estArticleBoucle(facture.stockArticle) && facture.bouclesDebut
       ? plageDeBoucles(facture.bouclesDebut, facture.stockQuantite ?? 0)
@@ -88,6 +104,7 @@ export function bouclesApresAchat(
       depuisCheptel: undefined,
       id: anciennes.get(numero)?.id ?? generateId(),
       article: facture.stockArticle as string,
+      espece,
       numero,
       dateAchat: facture.date,
       factureId: facture.id,
@@ -200,7 +217,13 @@ export function avecPoses(
       if (inventaire.some((x) => x.article === portee.article && x.numero === portee.numero)) continue;
       inventaire = [
         ...inventaire,
-        { id: generateId(), article: portee.article, numero: portee.numero, depuisCheptel: true },
+        {
+          id: generateId(),
+          article: portee.article,
+          numero: portee.numero,
+          espece: especeDe(animal),
+          depuisCheptel: true,
+        },
       ];
     }
   }
@@ -210,7 +233,13 @@ export function avecPoses(
     .map((boucle): BoucleStock => {
       const portee = portees.get(cleBoucle(boucle.article, boucle.numero));
       if (!portee) return { ...boucle, datePose: undefined, chevreId: undefined };
-      return { ...boucle, chevreId: portee.animal.id, datePose: portee.date ?? boucle.datePose };
+      // Posée sur un animal : la boucle est de son espèce.
+      return {
+        ...boucle,
+        espece: boucle.espece ?? especeDe(portee.animal),
+        chevreId: portee.animal.id,
+        datePose: portee.date ?? boucle.datePose,
+      };
     });
   const mouvements = boucles.flatMap((b) => {
     if (!b.chevreId) return [];
@@ -268,7 +297,7 @@ export const bouclesDeLInventaire = (
   etat: ValeurDe<typeof ETAT_BOUCLE>,
   article?: string,
 ): BoucleStock[] =>
-  (archive.boucles ?? []).filter(
+  bouclesDeLEspece(archive.boucles).filter(
     (b) =>
       (!article || b.article === article) &&
       (etat === ETAT_BOUCLE.TOUT || !!b.chevreId === (etat === ETAT_BOUCLE.POSEE)),

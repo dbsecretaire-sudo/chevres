@@ -383,7 +383,7 @@ export const TEXTES_COMPTABILITE = {
     atelier: {
       label: 'Atelier concerné',
       commun: 'Charge commune (répartie entre les ateliers)',
-      aide: 'Facultatif : sert à la marge par atelier (Comptabilité › Rentabilité).',
+      aide: 'Facultatif : sert à la marge par atelier (Comptabilité › Rentabilité). Ne concerne que l’activité de la facture : l’aliment d’un autre cheptel reste une charge commune.',
     },
     /** Les notes sous les champs d'une écriture : ce qu'on y met. */
     aideMontant: 'Le total payé, taxes comprises (TTC).',

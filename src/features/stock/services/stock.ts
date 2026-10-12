@@ -41,6 +41,7 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
 import { COMPTE_BOUCLES } from '@/shared/constants/planComptable';
+import { listesDOffice } from '@/features/stock/utils/doublonsListes';
 import { bouclesApresAchat, synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 
 /** L'identifiant d'un article de stock : son genre puis son code (« fromage:frais », « emballage:sac_plastique »). */
@@ -374,10 +375,13 @@ export const articlesAchetables = (archive: ArchiveStock): ArticleAffiche[] =>
     GENRE_ARTICLE.PERSONNALISE,
   ].flatMap((genre) => articlesDuGenre(genre, archive));
 
-/** Les comptes qui ont une liste dans l'inventaire : ceux des listes ajoutées, et celui des boucles d'identification. */
+/** Les comptes qui ont une liste dans l'inventaire : ceux des listes d'office et des listes ajoutées, et celui des boucles d'identification. */
 export const comptesDeLInventaire = (archive: Pick<ArchiveStock, 'listes'>): string[] => [
-  ...(archive.listes ?? []).map((l) => l.compte),
-  COMPTE_BOUCLES.numero,
+  ...new Set([
+    ...(archive.listes ?? []).map((l) => l.compte),
+    ...listesDOffice().map((l) => l.compte),
+    COMPTE_BOUCLES.numero,
+  ]),
 ];
 
 /** Retire du stock ce qu'une facture d'alimentation supprimée y avait ajouté. */

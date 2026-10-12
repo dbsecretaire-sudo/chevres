@@ -29,7 +29,7 @@ function ImpotsElevage() {
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [recettes, setRecettes] = useState<RecettesMicroBA | null>(null);
   // Tout par défaut : la déclaration porte sur l'ensemble des recettes.
-  const [filtre, setFiltre] = useFiltreActivite(true);
+  const [filtre, setFiltre] = useFiltreActivite();
 
   const charger = useCallback(async () => {
     const [toutesAnnees, r] = await Promise.all([
