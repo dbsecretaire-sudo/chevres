@@ -91,6 +91,8 @@ export interface Facture {
   categorieDepense?: CategorieDepense;
   /** Le paiement : faux = pas encore réglé ou encaissé (voir echeance) ; absent : réglé à la date de la facture (le cas d'office). */
   payee?: boolean;
+  /** Une dépense qui n'a pas été facturée : pas de facture, donc pas de TVA à déduire. Elle reste dans la trésorerie et la rentabilité. */
+  sansFacture?: boolean;
   /** Pour une facture pas encore réglée ou encaissée : la date prévue du paiement. */
   echeance?: string;
   /** La date où la facture a été réglée ou encaissée, quand elle diffère de sa date (la trésorerie s'en sert). */

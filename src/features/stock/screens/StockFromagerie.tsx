@@ -18,7 +18,7 @@ import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
-import { listeValablePour } from '@/features/stock/utils/listesEspece';
+import { listeValablePour, retireePourToutes } from '@/features/stock/utils/listesEspece';
 import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { SelectField } from '@/shared/components/SelectField';
@@ -119,7 +119,7 @@ export default function StockFromagerie() {
   // La fromagerie n'existe que pour des chèvres ou des brebis ; les aliments et l'entretien sont là pour toute exploitation.
   // Un lien peut ouvrir directement un onglet.
   const router = useRouter();
-  const { especes, especeActive, filtreCourant, setFiltre, concernees, fromagerie, poules } =
+  const { especes, especeActive, filtreCourant, setFiltre, choisirFiltre, concernees, fromagerie, poules } =
     useFiltreEspeceStock();
   const sectionsVisibles = SECTIONS.filter((x) => (fromagerie || !x.fromagerie) && (poules || !x.poules));
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
@@ -402,8 +402,17 @@ export default function StockFromagerie() {
   const basculerCategorie = (categorie: string) =>
     setOuvertes((actuelles) => (actuelles.includes(categorie) ? [] : [categorie]));
 
+  // Les listes de ventes ne valent que pour les espèces qui les vendent (pas de lait ni de fromage pour des cochons).
+  const listesVisibles = (archive.listes ?? []).filter(
+    (l) => listeValablePour(l.compte, concernees) && !retireePourToutes(l.masquePour, concernees),
+  );
+  /** Les listes d'office dont le compte n'a pas été retiré pour l'espèce. */
+  const sectionsAffichees = sectionsVisibles.filter(
+    (x) => !retireePourToutes(archive.sectionsMasquees?.[x.section], concernees),
+  );
+
   /** Ce que le bouton « + » propose : un ajout pour chaque liste des catégories déroulées (toutes si aucune ne l'est). */
-  const optionsAjout = sectionsVisibles
+  const optionsAjout = sectionsAffichees
     .filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie))
     // Les fromages et la viande (produits finis et produits animaux) entrent par la Production et sortent par les ventes : on n'en
     // ajoute pas ici.
@@ -426,8 +435,6 @@ export default function StockFromagerie() {
             : null,
     )
     .filter((x) => x !== null);
-  // Les listes de ventes ne valent que pour les espèces qui les vendent (pas de lait ni de fromage pour des cochons).
-  const listesVisibles = (archive.listes ?? []).filter((l) => listeValablePour(l.compte, concernees));
   const optionsListes = listesVisibles
     .filter((l) => ouvertes.length === 0 || ouvertes.includes(l.categorie))
     .map((l) => ({
@@ -439,11 +446,11 @@ export default function StockFromagerie() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
-        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={setFiltre} />
+        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={choisirFiltre} />
 
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
-            const listes = sectionsVisibles.filter((x) => x.categorie === categorie);
+            const listes = sectionsAffichees.filter((x) => x.categorie === categorie);
             const listesPerso = listesVisibles.filter((l) => l.categorie === categorie);
             // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
             if (listes.length === 0 && listesPerso.length === 0 && !perso) return null;

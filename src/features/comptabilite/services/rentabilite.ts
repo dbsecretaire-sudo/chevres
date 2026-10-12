@@ -89,6 +89,9 @@ export interface EntreeRentabilite {
   comptes?: Record<string, string>;
 }
 
+/** Ce qui sépare le groupe d'un compte de son détail dans son nom (« Assurance — Multirisques »). */
+const SEPARATEUR_GROUPE_COMPTE = ' — ';
+
 const arrondi = (valeur: number) => Math.round(valeur * 100) / 100;
 
 /** La rentabilité d'une année, d'après les ventes et les factures données (calcul pur). */
@@ -97,6 +100,18 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
   const retenue = (activite: string) => filtre === TOUTES_ACTIVITES || activite === filtre;
   /** Un montant TTC, hors taxes quand le régime le veut et que le taux est connu. */
   const montant = (ttc: number, taux?: number) => (horsTaxes && taux ? ttc - tvaDuTtc(ttc, taux) : ttc);
+
+  /** Le nom d'un compte (celui du plan comptable, à défaut son numéro). */
+  const nomDuCompte = (numero: string): string =>
+    entree.comptes?.[numero] ??
+    (numero === COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero
+      ? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].libelle
+      : numero);
+  /** Le groupe d'un compte : ce qui précède « — » dans son nom (« Assurance »), à défaut son numéro. */
+  const groupeDuCompte = (numero: string): string => {
+    const [debut, suite] = nomDuCompte(numero).split(SEPARATEUR_GROUPE_COMPTE);
+    return suite !== undefined && debut.trim() ? debut.trim() : numero;
+  };
 
   const recettes = new Map<Atelier, number>();
   const directes = new Map<Atelier, number>();
@@ -128,10 +143,11 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
       if (!retenue(part.activite)) continue;
       const charge = montant(part.facture.montant, f.tauxTva);
       const categorie = f.categorieDepense ?? CATEGORIE_DEPENSE.AUTRE;
-      // Une dépense « Autre » a son compte comptable (celui par défaut, à défaut d'un autre) : chaque compte est un poste à part.
+      // Une dépense « Autre » a son compte comptable (celui par défaut, à défaut d'un autre) : chaque compte est un poste à part, et
+      // les comptes dont le nom commence pareil avant « — » (« Assurance — Multirisques », « Assurance — Responsabilité civile ») n'en font qu'un.
       const poste =
         categorie === CATEGORIE_DEPENSE.AUTRE
-          ? `${categorie}:${f.compteManuel ?? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero}`
+          ? `${categorie}:${groupeDuCompte(f.compteManuel ?? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero)}`
           : categorie;
       postes.set(poste, (postes.get(poste) ?? 0) + charge);
       // L'atelier de la facture ne vaut que pour les lignes de son activité : l'aliment d'un autre cheptel (porcs…) est une charge commune.
@@ -165,16 +181,10 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
   // Sans recettes pour les répartir, les charges communes restent à part : elles comptent dans le total.
   const chargesTotal = [...postes.values()].reduce((t, x) => t + x, 0);
   const litresProduits = entree.litresProduits ?? 0;
-  /** Le nom du compte d'un poste « Autre » (celui du plan comptable, à défaut son numéro) ; rien pour les autres catégories. */
+  /** Le nom d'un poste « Autre » : son groupe (« Assurance »), ou le nom de son compte quand il est seul ; rien pour les autres catégories. */
   const libelleDuCompte = (poste: string): string | undefined => {
-    const numero = poste.split(':')[1];
-    if (!numero) return undefined;
-    return (
-      entree.comptes?.[numero] ??
-      (numero === COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero
-        ? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].libelle
-        : numero)
-    );
+    const groupe = poste.split(':')[1];
+    return groupe === undefined ? undefined : /^\d+$/.test(groupe) ? nomDuCompte(groupe) : groupe;
   };
   const effectif = entree.effectif && entree.effectif > 0 ? entree.effectif : undefined;
 

@@ -37,6 +37,8 @@ export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] 
   })),
   // Un groupement n'a pas de limite : une cotisation (autre), un achat groupé (alimentation, production…).
   { id: CATEGORIE_FOURNISSEUR.GROUPEMENT, nom: LABEL_CATEGORIE_FOURNISSEUR.groupement },
+  // Un fournisseur qui ne remet pas de facture : aucune limite de dépense, mais ses dépenses se notent « non facturées ».
+  { id: CATEGORIE_FOURNISSEUR.NON_FACTURABLE, nom: LABEL_CATEGORIE_FOURNISSEUR.non_facturable },
 ];
 
 let liste: CategorieFournisseurReglage[] = categoriesFournisseurParDefaut();

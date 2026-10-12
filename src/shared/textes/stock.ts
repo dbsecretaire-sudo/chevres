@@ -22,7 +22,7 @@ export const TEXTES_STOCK = {
     supprimerCategorie: 'Supprimer cette catégorie',
     supprimerCategorieTitre: 'Supprimer cette catégorie ?',
     supprimerCategorieMessage: (nom: string) =>
-      `« ${nom} » disparaît avec toutes ses listes, leurs articles et leurs mouvements.`,
+      `« ${nom} » disparaît avec toutes ses listes et leurs articles (aucun mouvement n’y est enregistré), et leurs comptes du plan comptable quand aucune autre liste ne les utilise.`,
     /** Dans le stock : une catégorie ajoutée qui n'a encore aucune liste. */
     categorieVide: 'Aucune liste : ajoutez-en une depuis « Structure des listes ».',
     categorie: {
@@ -49,7 +49,15 @@ export const TEXTES_STOCK = {
     listesDOffice: 'Listes d’office',
     supprimerListe: 'Supprimer cette liste',
     supprimerTitre: 'Supprimer cette liste ?',
-    supprimerMessage: (nom: string) => `« ${nom} » disparaît avec tous ses articles et leurs mouvements.`,
+    supprimerMessage: (nom: string) =>
+      `« ${nom} » disparaît avec ses articles (aucun mouvement n’y est enregistré), et son compte du plan comptable avec elle quand aucune autre liste ne l’utilise.`,
+    suppressionImpossible: 'Suppression impossible',
+    listeAvecMouvements: (nom: string) =>
+      `« ${nom} » ne peut pas être supprimée : des mouvements de stock sont enregistrés sur ses articles.`,
+    categorieAvecMouvements: (nom: string) =>
+      `« ${nom} » ne peut pas être supprimée : des mouvements de stock sont enregistrés sur les articles de ses listes.`,
+    supprimerMessageEspece: (nom: string, espece: string) =>
+      `« ${nom} » disparaît pour ${espece}, avec ses articles propres (aucun mouvement n’y est enregistré), et son compte du plan comptable avec elle quand aucune autre liste ne l’utilise. Les autres espèces la gardent.`,
     renommer: 'Renommer la liste',
   },
   /** L'impression des mouvements de l'inventaire (PDF) depuis le menu. */
@@ -222,6 +230,25 @@ export const TEXTES_STOCK = {
     modifierLePrix: 'Modifier le prix de l’œuf',
     prixLabel: 'Prix de vente (€ l’œuf)',
     note: 'Une vente d’œufs en comptabilité est liée à cette liste : son prix total est le nombre d’œufs × ce prix.',
+  },
+  /**
+   * Les titres des listes d'office de l'inventaire : « Ventes — … » pour ce qui se vend (produits finis et produits animaux), « Achat — … »
+   * pour ce qui s'achète. Une liste ajoutée à partir d'un compte reçoit le même préfixe.
+   */
+  titresListes: {
+    prefixeVentes: 'Ventes — ',
+    prefixeAchat: 'Achat — ',
+    fromages: 'Ventes — Fromages',
+    lait: 'Ventes — Lait',
+    oeufs: 'Ventes — Œufs',
+    viande: 'Ventes — Viande et charcuterie',
+    animaux: 'Ventes — Animaux',
+    aliments: 'Achat — Aliment',
+    boucles: 'Achat — Boucles',
+    emballages: 'Achat — Emballages',
+    entretien: 'Achat — Entretien',
+    equipement: 'Achat — Équipement',
+    materiel: 'Achat — Matériel',
   },
   sections: {
     fromages: 'Fromages',

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
-import { sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
+import { avecNomsHarmonises, sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
@@ -16,6 +16,15 @@ const VIDE: ArchiveStock = {
   lait: [],
   prix: {},
 };
+
+/** Les listes d'office retirées pour des espèces : celles bien formées (section → liste d'espèces). */
+function sectionsMasqueesValides(brut: ArchiveStock['sectionsMasquees']): Record<string, string[]> {
+  const sections: Record<string, string[]> = {};
+  for (const [section, especes] of Object.entries(brut ?? {})) {
+    if (Array.isArray(especes)) sections[section] = especes.filter((e) => typeof e === 'string');
+  }
+  return sections;
+}
 
 /** Ce qui est personnalisé d'une catégorie d'office : les réglages bien formés. */
 function reglagesValides(brut: ArchiveStock['reglagesCategories']): Record<string, ReglageCategorie> {
@@ -92,6 +101,7 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
         )
       : [],
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
+    sectionsMasquees: sectionsMasqueesValides(archive?.sectionsMasquees),
   };
 }
 
@@ -100,7 +110,7 @@ export async function lireArchiveStock(): Promise<ArchiveStock> {
   const raw = await AsyncStorage.getItem(cle());
   if (!raw) return { ...VIDE };
   try {
-    const archive = sansDoublonsDOffice(normaliserArchiveStock(JSON.parse(raw)));
+    const archive = avecNomsHarmonises(sansDoublonsDOffice(normaliserArchiveStock(JSON.parse(raw))));
     return { ...archive, mouvements: avecRemisesAZero(archive.mouvements) };
   } catch {
     return { ...VIDE };

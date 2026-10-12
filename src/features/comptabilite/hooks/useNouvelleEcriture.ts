@@ -27,6 +27,7 @@ import { chargerCategoriesRecetteInventaire } from '@/features/comptabilite/repo
 import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { categorieDepenseAutorisee } from '@/features/fournisseurs/services/categorie';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import { listClients } from '@/features/clients/repository';
 import {
@@ -36,7 +37,11 @@ import {
   prixLibre as prixLibreDuClient,
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
-import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
+import {
+  compteProposePour,
+  listComptesPcg,
+  type CompteComptableEnregistre,
+} from '@/features/comptes-pcg/repository';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
 import { ligneAlimentVide, type LigneAlimentForm } from '@/features/comptabilite/forms/lignesAlimentation';
 import {
@@ -115,6 +120,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [natureUrssaf, setNatureUrssaf] = useState('');
   /** Le paiement n'a pas encore eu lieu : sa date prévue (la trésorerie la compte à cette date). */
   const [enAttente, setEnAttente] = useState(false);
+  /** Une dépense qui n'a pas été facturée (pas de TVA à déduire). */
+  const [sansFacture, setSansFacture] = useState(false);
   const [echeance, setEcheance] = useState('');
   /** L'atelier d'une charge (vide : commune, répartie entre les ateliers). */
   const [atelier, setAtelier] = useState('');
@@ -272,8 +279,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
 
-  const comptesDepense = comptes.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_DEPENSE));
-  const comptesRecette = comptes.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_RECETTE));
+  // Les comptes retirés pour l'espèce de l'écriture n'y sont plus proposés (une écriture commune les garde tous).
+  const comptesDeLActivite = comptes.filter((c) =>
+    compteProposePour(c, activite === ACTIVITE_COMMUNE ? [] : [activite]),
+  );
+  const comptesDepense = comptesDeLActivite.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_DEPENSE));
+  const comptesRecette = comptesDeLActivite.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_RECETTE));
   const versOptionCompte = (c: CompteComptableEnregistre) => ({
     value: c.numero,
     label: `${c.numero} — ${c.libelle}`,
@@ -324,6 +335,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setFournisseurId(id);
     const choisi = fournisseurs.find((x) => x.id === id);
     setTiers(choisi?.nomEntreprise ?? '');
+    // Un fournisseur qui ne remet pas de facture : la dépense se note « non facturée » d'office (on peut décocher).
+    setSansFacture(choisi?.categorie === CATEGORIE_FOURNISSEUR.NON_FACTURABLE);
     // La catégorie du fournisseur règle les dépenses possibles : celle qu'elle ne permet pas laisse la place à la première qui l'est.
     if (!categorieDepenseAutorisee(choisi, categorieDepense)) {
       const permise = categoriesDepenseDuMode().find((c) => categorieDepenseAutorisee(choisi, c));
@@ -502,6 +515,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         avecFacture,
         numeroFacture,
         enAttente,
+        sansFacture,
         echeance,
         atelier,
         reajustement,
@@ -680,6 +694,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setAtelier,
     enAttente,
     setEnAttente,
+    sansFacture,
+    setSansFacture,
     echeance,
     setEcheance,
     numeroFacture,

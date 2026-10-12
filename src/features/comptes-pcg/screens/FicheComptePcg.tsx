@@ -16,6 +16,8 @@ import {
   getComptePcg,
   listComptesPcg,
   enregistrerComptePcg,
+  retablirCompte,
+  retirerComptePourEspece,
   supprimerComptePcg,
   type CompteComptableEnregistre,
 } from '@/features/comptes-pcg/repository';
@@ -23,14 +25,18 @@ import { ChoixSuiviCompte, useSuiviCompte } from '@/features/comptes-pcg/compone
 import {
   ajouterListe,
   listesDuCompte,
+  compteAvecMouvements,
+  retablirDansLInventaire,
   retirerDeLInventaire,
+  retirerDeLInventairePourEspece,
   suivreLeCompte,
 } from '@/features/stock/services/structure';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 
 export default function FicheComptePcg() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, espece } = useLocalSearchParams<{ id: string; espece?: string }>();
   const router = useRouter();
 
   const [compte, setCompte] = useState<CompteComptableEnregistre | null>(null);
@@ -81,7 +87,10 @@ export default function FicheComptePcg() {
       numero: form.numero.trim(),
       libelle: form.libelle.trim(),
     };
-    // Un compte qui n'est plus inventorié perd sa liste, avec ses articles : on le confirme d'abord.
+    // Un compte dont l'inventaire a des mouvements y reste ; sinon il perd sa liste, avec ses articles : on le confirme d'abord.
+    if (suiviCompte.suivi === 'service' && inventorieAvant && (await compteAvecMouvements(compte!.numero))) {
+      return setErreur(TEXTES.comptesPcg.ficheComptePcg.compteAvecMouvements(compte!.numero));
+    }
     if (suiviCompte.suivi === 'service' && inventorieAvant && !retraitConfirme) return setRetraitOuvert(true);
     await enregistrerComptePcg(nettoye);
     if (suiviCompte.suivi === 'service') {
@@ -100,10 +109,32 @@ export default function FicheComptePcg() {
     setEditing(false);
   };
 
+  /** Ouverte depuis la liste d'une espèce : le compte n'est retiré que pour elle, les autres espèces le gardent. */
+  const pourUneEspece = !!espece;
+  const nomEspece = espece ? LABEL_ACTIVITE_COMPTABLE[espece as keyof typeof LABEL_ACTIVITE_COMPTABLE] : '';
+
   const supprimerDefinitivement = async () => {
     if (!compte) return;
-    await supprimerComptePcg(compte.id);
+    // Des mouvements de stock sont enregistrés sur son inventaire : le compte reste.
+    if (await compteAvecMouvements(compte.numero, espece)) {
+      setSuppressionOuverte(false);
+      return setErreur(TEXTES.comptesPcg.ficheComptePcg.compteAvecMouvements(compte.numero));
+    }
+    if (espece) {
+      await retirerComptePourEspece(compte.id, espece);
+      await retirerDeLInventairePourEspece(compte.numero, espece);
+    } else {
+      await retirerDeLInventaire(compte.numero);
+      await supprimerComptePcg(compte.id);
+    }
     router.back();
+  };
+
+  const retablir = async () => {
+    if (!compte) return;
+    await retablirCompte(compte.id);
+    await retablirDansLInventaire(compte.numero);
+    await charger();
   };
 
   if (!compte || !form) {
@@ -141,7 +172,9 @@ export default function FicheComptePcg() {
               },
             },
             {
-              label: TEXTES.commun.general.supprimerDefinitivement,
+              label: pourUneEspece
+                ? TEXTES.comptesPcg.ficheComptePcg.retirerPourEspece(nomEspece)
+                : TEXTES.commun.general.supprimerDefinitivement,
               icon: 'trash',
               color: colors.danger,
               onPress: () => {
@@ -163,6 +196,22 @@ export default function FicheComptePcg() {
               {TEXTES.comptesPcg.ficheComptePcg.descriptionDeuxPoints}
               {compte.libelle}
             </Text>
+            {compte.masquePour?.length ? (
+              <>
+                <Text style={commonStyles.note}>
+                  {TEXTES.comptesPcg.ficheComptePcg.retireePour(
+                    compte.masquePour
+                      .map((e) => LABEL_ACTIVITE_COMPTABLE[e as keyof typeof LABEL_ACTIVITE_COMPTABLE] ?? e)
+                      .join(', '),
+                  )}
+                </Text>
+                <Button
+                  label={TEXTES.comptesPcg.ficheComptePcg.retablir}
+                  variant="secondary"
+                  onPress={retablir}
+                />
+              </>
+            ) : null}
 
             <Button
               label={TEXTES.commun.general.modifierLaFiche}
@@ -212,12 +261,28 @@ export default function FicheComptePcg() {
 
       <ConfirmModal
         visible={suppressionOuverte}
-        title={TEXTES.commun.general.supprimerDefinitivementQuestion}
-        message={TEXTES.comptesPcg.ficheComptePcg.cetteActionSupprimeraDefinitivementLe(
-          compte.numero,
-          compte.libelle,
-        )}
-        confirmLabel={TEXTES.commun.general.supprimerDefinitivement}
+        title={
+          pourUneEspece
+            ? TEXTES.comptesPcg.ficheComptePcg.retirerPourEspeceQuestion(nomEspece)
+            : TEXTES.commun.general.supprimerDefinitivementQuestion
+        }
+        message={
+          pourUneEspece
+            ? TEXTES.comptesPcg.ficheComptePcg.retirerPourEspeceMessage(
+                compte.numero,
+                compte.libelle,
+                nomEspece,
+              )
+            : TEXTES.comptesPcg.ficheComptePcg.cetteActionSupprimeraDefinitivementLe(
+                compte.numero,
+                compte.libelle,
+              )
+        }
+        confirmLabel={
+          pourUneEspece
+            ? TEXTES.comptesPcg.ficheComptePcg.retirerPourEspece(nomEspece)
+            : TEXTES.commun.general.supprimerDefinitivement
+        }
         onCancel={() => setSuppressionOuverte(false)}
         onConfirm={supprimerDefinitivement}
       />

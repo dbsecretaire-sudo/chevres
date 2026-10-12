@@ -15,3 +15,9 @@ export function listeValablePour(compte: string, especes: readonly string[]): bo
     recettes.some((categorie) => (CATEGORIES_RECETTE_PAR_ESPECE[espece] ?? []).some((c) => c === categorie)),
   );
 }
+
+/** Vrai quand toutes les espèces concernées ont retiré la liste (son compte a été retiré pour elles) : elle n'est plus montrée. */
+export const retireePourToutes = (
+  masquePour: readonly string[] | undefined,
+  especes: readonly string[],
+): boolean => especes.length > 0 && especes.every((e) => (masquePour ?? []).includes(e));

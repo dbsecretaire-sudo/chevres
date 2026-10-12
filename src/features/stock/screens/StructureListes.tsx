@@ -6,13 +6,14 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { Fab } from '@/shared/components/Fab';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { InfoModal } from '@/shared/components/InfoModal';
 import { Screen } from '@/shared/components/Screen';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { CategorieModal } from '@/features/stock/components/CategorieModal';
 import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
-import { listeValablePour } from '@/features/stock/utils/listesEspece';
+import { listeValablePour, retireePourToutes } from '@/features/stock/utils/listesEspece';
 import { lireArchiveStock } from '@/features/stock/repository';
 import {
   ajouterCategorie,
@@ -39,8 +40,10 @@ import {
   type CompteComptable,
 } from '@/shared/constants/planComptable';
 import { ROUTES } from '@/shared/constants/routes';
+import { FILTRE_STOCK_TOUT } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
@@ -55,10 +58,12 @@ export default function StructureListes() {
   const router = useRouter();
   const navigation = useNavigation();
   // Les listes se voient pour une espèce, comme l'inventaire : pas de lait ni de fromage pour des cochons.
-  const { especes, filtreCourant, setFiltre, concernees, fromagerie, poules } = useFiltreEspeceStock();
+  const { especes, filtreCourant, choisirFiltre, concernees, fromagerie, poules } = useFiltreEspeceStock();
   /** Au retour des comptes du plan comptable : la catégorie dont on créait une liste (la fenêtre d'ajout se rouvre). */
   const { ajout: ajoutDemande } = useLocalSearchParams<{ ajout?: string }>();
   const [listes, setListes] = useState<ListeInventaire[]>([]);
+  /** Les listes d'office retirées pour des espèces (voir ArchiveStock.sectionsMasquees). */
+  const [sectionsMasquees, setSectionsMasquees] = useState<Record<string, string[]>>({});
   /** Les catégories que l'utilisateur a ajoutées. */
   const [ajoutees, setAjoutees] = useState<CategorieInventairePerso[]>([]);
   /** Les débuts de compte personnalisés des catégories d'office. */
@@ -70,6 +75,8 @@ export default function StructureListes() {
   const [compteChoisi, setCompteChoisi] = useState('');
   const [renomme, setRenomme] = useState<ListeInventaire | null>(null);
   const [aSupprimer, setASupprimer] = useState<ListeInventaire | null>(null);
+  /** Pourquoi une suppression est refusée (des mouvements sont enregistrés). */
+  const [refus, setRefus] = useState<string | null>(null);
   /** La fenêtre d'une catégorie : une nouvelle (« nouvelle »), ou celle qu'on modifie. */
   const [fenetreCategorie, setFenetreCategorie] = useState<'nouvelle' | InfosCategorie | null>(null);
   const [categorieASupprimer, setCategorieASupprimer] = useState<InfosCategorie | null>(null);
@@ -85,7 +92,11 @@ export default function StructureListes() {
           compte: COMPTE_PAR_SECTION_INVENTAIRE_GITE[x.section],
         }))
       : SECTIONS.filter(
-          (x) => x.categorie === categorie && (fromagerie || !x.fromagerie) && (poules || !x.poules),
+          (x) =>
+            x.categorie === categorie &&
+            (fromagerie || !x.fromagerie) &&
+            (poules || !x.poules) &&
+            !retireePourToutes(sectionsMasquees[x.section], concernees),
         ).map((x) => ({
           cle: x.section,
           titre: x.titre,
@@ -95,6 +106,7 @@ export default function StructureListes() {
   const charger = useCallback(async () => {
     const archive = await lireArchiveStock();
     setListes(archive.listes ?? []);
+    setSectionsMasquees(archive.sectionsMasquees ?? {});
     setAjoutees(archive.categories ?? []);
     setReglagesCategories(archive.reglagesCategories ?? {});
   }, []);
@@ -132,8 +144,14 @@ export default function StructureListes() {
     charger();
   };
 
+  /** L'espèce choisie dans le filtre (la liste et son compte ne sont retirés que pour elle) ; rien avec « Tout ». */
+  const especeDeLaSuppression =
+    especes.length > 1 && filtreCourant !== FILTRE_STOCK_TOUT ? filtreCourant : undefined;
+
   const retirer = async () => {
-    if (aSupprimer) await supprimerListe(aSupprimer.id);
+    // Une espèce choisie : la liste (et son compte) n'est retirée que pour elle ; avec « Tout », pour toutes.
+    const ok = aSupprimer ? await supprimerListe(aSupprimer.id, especeDeLaSuppression) : true;
+    if (!ok) setRefus(T.structure.listeAvecMouvements(aSupprimer?.nom ?? ''));
     setASupprimer(null);
     charger();
   };
@@ -154,7 +172,8 @@ export default function StructureListes() {
   };
 
   const supprimerLaCategorie = async () => {
-    if (categorieASupprimer) await supprimerCategorie(categorieASupprimer.categorie);
+    const ok = categorieASupprimer ? await supprimerCategorie(categorieASupprimer.categorie) : true;
+    if (!ok) setRefus(T.structure.categorieAvecMouvements(categorieASupprimer?.nom ?? ''));
     setCategorieASupprimer(null);
     charger();
   };
@@ -162,7 +181,7 @@ export default function StructureListes() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listeAvecFab}>
-        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={setFiltre} />
+        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={choisirFiltre} />
         <Text style={commonStyles.muted}>{T.structure.aide}</Text>
 
         {categories.map((infos) => {
@@ -207,7 +226,12 @@ export default function StructureListes() {
               ) : null}
 
               {listes
-                .filter((l) => l.categorie === categorie && listeValablePour(l.compte, concernees))
+                .filter(
+                  (l) =>
+                    l.categorie === categorie &&
+                    listeValablePour(l.compte, concernees) &&
+                    !retireePourToutes(l.masquePour, concernees),
+                )
                 .map((l) => (
                   <View key={l.id} style={commonStyles.rowSpaceBetween}>
                     <View style={commonStyles.flex1}>
@@ -323,10 +347,24 @@ export default function StructureListes() {
       <ConfirmModal
         visible={!!aSupprimer}
         title={T.structure.supprimerTitre}
-        message={T.structure.supprimerMessage(aSupprimer?.nom ?? '')}
+        message={
+          especeDeLaSuppression
+            ? T.structure.supprimerMessageEspece(
+                aSupprimer?.nom ?? '',
+                LABEL_ACTIVITE_COMPTABLE[especeDeLaSuppression],
+              )
+            : T.structure.supprimerMessage(aSupprimer?.nom ?? '')
+        }
         confirmLabel={TEXTES.commun.general.supprimer}
         onCancel={() => setASupprimer(null)}
         onConfirm={retirer}
+      />
+
+      <InfoModal
+        visible={!!refus}
+        title={T.structure.suppressionImpossible}
+        message={refus ?? ''}
+        onClose={() => setRefus(null)}
       />
     </Screen>
   );

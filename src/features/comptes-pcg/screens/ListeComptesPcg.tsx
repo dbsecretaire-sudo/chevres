@@ -25,7 +25,12 @@ import { comptesDeLInventaire } from '@/features/stock/services/stock';
 import { compteAutorise } from '@/features/stock/services/structure';
 import type { ArchiveStock } from '@/features/stock/types';
 import { infosCategorie } from '@/features/stock/utils/categories';
-import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
+import {
+  compteProposePour,
+  listComptesPcg,
+  type CompteComptableEnregistre,
+} from '@/features/comptes-pcg/repository';
+import { FILTRE_STOCK_TOUT } from '@/shared/constants/stock';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -43,7 +48,7 @@ export default function ComptesPcgIndex() {
   const [comptesInventaire, setComptesInventaire] = useState<string[]>([]);
   const [suivi, setSuivi] = useState<string | null>(TEXTES.comptesPcg.nouveauComptePcg.suivi.service);
   // Les comptes se voient pour une espèce, comme l'inventaire : pas de compte du lait ni du fromage pour des cochons.
-  const { especes, filtreCourant, setFiltre, concernees } = useFiltreEspeceStock();
+  const { especes, filtreCourant, choisirFiltre, concernees } = useFiltreEspeceStock();
   /** Les catégories de l'inventaire et ce qu'on y a personnalisé : pour trier les comptes selon une catégorie. */
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
 
@@ -73,7 +78,9 @@ export default function ComptesPcgIndex() {
           compteAutorise(regles.categorie, c.numero, archive?.categories, archive?.reglagesCategories),
         )
       : comptes;
-    const deLEspece = duCategorie.filter((c) => listeValablePour(c.numero, concernees));
+    const deLEspece = duCategorie.filter(
+      (c) => listeValablePour(c.numero, concernees) && compteProposePour(c, concernees),
+    );
     const duSuivi = suivi
       ? deLEspece.filter(
           (c) =>
@@ -122,7 +129,7 @@ export default function ComptesPcgIndex() {
           </View>
         ) : (
           <>
-            <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={setFiltre} />
+            <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={choisirFiltre} />
             <FiltresExclusifs
               choix={[
                 TEXTES.comptesPcg.nouveauComptePcg.suivi.inventaire,
@@ -149,7 +156,14 @@ export default function ComptesPcgIndex() {
           <ListRow
             title={item.numero}
             subtitle={item.libelle}
-            onPress={() => router.push(ROUTES.ficheComptePcg(item.id))}
+            onPress={() =>
+              router.push(
+                ROUTES.ficheComptePcg(
+                  item.id,
+                  especes.length > 1 && filtreCourant !== FILTRE_STOCK_TOUT ? filtreCourant : undefined,
+                ),
+              )
+            }
           />
         )}
       />

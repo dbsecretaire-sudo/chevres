@@ -133,6 +133,8 @@ export async function calculerFiscaliteEntreprise(annee: number): Promise<Fiscal
     const m = indexMois(f.date);
     if (m < 0 || m > 11) continue;
     if (f.type === TYPE_FACTURE.RECUE) {
+      // Sans facture, pas de TVA à déduire.
+      if (f.sansFacture) continue;
       mois[m].tvaDeductible += tvaDuTtc(f.montant, f.tauxTva);
       const duTaux = ligneDuTaux(f.tauxTva);
       if (duTaux) duTaux.deductible += tvaDuTtc(f.montant, f.tauxTva);

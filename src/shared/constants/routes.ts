@@ -145,5 +145,7 @@ export const ROUTES = {
   /** Un nouveau séjour prérempli d'après un séjour existant (sans son historique de paiement). */
   sejourCopie: (id: string) => `/clients/gite/sejour/nouveau?copie=${id}` as const,
   sejour: (id: string) => `/clients/gite/sejour/${id}` as const,
-  ficheComptePcg: (id: string) => `/comptabilite/comptes-pcg/${id}` as const,
+  /** La fiche d'un compte ; `espece` : l'espèce que la liste filtrait (retirer le compte ne vaut alors que pour elle). */
+  ficheComptePcg: (id: string, espece?: string) =>
+    `/comptabilite/comptes-pcg/${id}${espece ? `?espece=${espece}` : ''}` as const,
 } as const;

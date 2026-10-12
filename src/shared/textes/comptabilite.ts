@@ -418,6 +418,9 @@ export const TEXTES_COMPTABILITE = {
     },
     nDeFacture: 'N° de facture',
     nDeFactureOuObjet: 'N° de facture / objet',
+    depenseNonFacturee: 'Cette dépense n’a pas été facturée',
+    depenseNonFactureeAide:
+      'Sans facture, la TVA de cette dépense n’est pas déductible. Elle reste dans la trésorerie et dans la rentabilité.',
     precisions: 'Précisions',
     categorieDeDepense: 'Catégorie de dépense',
     categorieDeRecette: 'Catégorie de recette',

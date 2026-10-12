@@ -15,7 +15,15 @@ const cle = () => cleStockage(CLE_STOCKAGE.COMPTES_PCG);
 
 export interface CompteComptableEnregistre extends CompteComptable {
   id: string;
+  /** Les espèces pour lesquelles le compte est retiré (il n'y est plus proposé) ; il reste pour les autres. */
+  masquePour?: string[];
 }
+
+/** Vrai quand le compte est proposé à l'une de ces espèces (au moins une ne l'a pas retiré). */
+export const compteProposePour = (
+  c: Pick<CompteComptableEnregistre, 'masquePour'>,
+  especes: readonly string[],
+): boolean => especes.length === 0 || especes.some((e) => !(c.masquePour ?? []).includes(e));
 
 function comptesInitiaux(): CompteComptableEnregistre[] {
   const numeros = new Set<string>();
@@ -99,6 +107,22 @@ export async function enregistrerComptePcg(compte: CompteComptableEnregistre): P
 export async function supprimerComptePcg(id: string): Promise<void> {
   const items = await lireTous();
   await ecrireTous(items.filter((c) => c.id !== id));
+}
+
+/** Retire le compte pour une espèce seulement : il n'y est plus proposé, et reste pour les autres. */
+export async function retirerComptePourEspece(id: string, espece: string): Promise<void> {
+  const items = await lireTous();
+  await ecrireTous(
+    items.map((c) =>
+      c.id === id ? { ...c, masquePour: [...new Set([...(c.masquePour ?? []), espece])] } : c,
+    ),
+  );
+}
+
+/** Rend le compte à toutes les espèces. */
+export async function retablirCompte(id: string): Promise<void> {
+  const items = await lireTous();
+  await ecrireTous(items.map((c) => (c.id === id ? { ...c, masquePour: undefined } : c)));
 }
 
 /** Remplace intégralement la liste locale — utilisé lors d'un tirage depuis Google Drive. */

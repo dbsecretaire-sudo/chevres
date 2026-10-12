@@ -1,4 +1,8 @@
-import { listComptesPcg } from '@/features/comptes-pcg/repository';
+import {
+  listComptesPcg,
+  retirerComptePourEspece,
+  supprimerComptePcg,
+} from '@/features/comptes-pcg/repository';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type {
   ArticleStock,
@@ -6,14 +10,20 @@ import type {
   ListeInventaire,
   ReglageCategorie,
 } from '@/features/stock/types';
-import { categoriesAvecAjoutees, idCategoriePerso, infosCategorie } from '@/features/stock/utils/categories';
-import type { CompteComptable } from '@/shared/constants/planComptable';
+import {
+  SECTIONS,
+  categoriesAvecAjoutees,
+  idCategoriePerso,
+  infosCategorie,
+} from '@/features/stock/utils/categories';
+import { COMPTE_PAR_SECTION_INVENTAIRE, type CompteComptable } from '@/shared/constants/planComptable';
 import {
   CHIFFRES_CLASSE_CATEGORIE,
   CHIFFRES_COMPTE_PCG,
   CATEGORIE_INVENTAIRE,
   CHIFFRES_MIN_PREFIXE_COMPTE,
   GENRE_ARTICLE,
+  SECTION_STOCK,
 } from '@/shared/constants/stock';
 import { generateId } from '@/shared/utils/id';
 
@@ -88,11 +98,95 @@ export async function suivreLeCompte(ancienNumero: string, compte: CompteComptab
   });
 }
 
-/** Un compte n'est plus inventorié : ses listes sont retirées de l'inventaire, avec leurs articles et leurs mouvements. */
-export async function retirerDeLInventaire(numero: string): Promise<void> {
+/**
+ * Le compte est retiré pour une espèce : ses listes (ajoutées et d'office) sont retirées de l'inventaire de cette espèce, avec ses
+ * articles propres (ceux tenus pour elle seule) et leurs mouvements. Les autres espèces gardent leurs listes.
+ */
+export async function retirerDeLInventairePourEspece(numero: string, espece: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  const listes = listesDuCompte(archive, numero);
+  const ids = new Set(listes.map((l) => l.id));
+  const articlesRetires = new Set(
+    archive.articles.filter((a) => a.listeId && ids.has(a.listeId) && a.activite === espece).map((a) => a.id),
+  );
+  const sections = Object.entries(COMPTE_PAR_SECTION_INVENTAIRE)
+    .filter(([, c]) => c.numero === numero)
+    .map(([section]) => section);
+  const sectionsMasquees = { ...(archive.sectionsMasquees ?? {}) };
+  for (const section of sections) {
+    sectionsMasquees[section] = [...new Set([...(sectionsMasquees[section] ?? []), espece])];
+  }
+  await remplacerArchiveStock({
+    ...archive,
+    listes: (archive.listes ?? []).map((l) =>
+      ids.has(l.id) ? { ...l, masquePour: [...new Set([...(l.masquePour ?? []), espece])] } : l,
+    ),
+    articles: archive.articles.filter((a) => !articlesRetires.has(a.id)),
+    mouvements: archive.mouvements.filter((m) => !articlesRetires.has(m.article.split(':')[1])),
+    sectionsMasquees,
+  });
+}
+
+/** Le compte est rétabli pour toutes les espèces : ses listes reviennent dans l'inventaire (les articles retirés ne reviennent pas). */
+export async function retablirDansLInventaire(numero: string): Promise<void> {
+  const archive = await lireArchiveStock();
+  const sections = Object.entries(COMPTE_PAR_SECTION_INVENTAIRE)
+    .filter(([, c]) => c.numero === numero)
+    .map(([section]) => section);
+  await remplacerArchiveStock({
+    ...archive,
+    listes: (archive.listes ?? []).map((l) => (l.compte === numero ? { ...l, masquePour: undefined } : l)),
+    sectionsMasquees: Object.fromEntries(
+      Object.entries(archive.sectionsMasquees ?? {}).filter(([section]) => !sections.includes(section)),
+    ),
+  });
+}
+
+/** Vrai quand des mouvements sont enregistrés sur les articles de ces listes (ceux tenus pour l'espèce seule, quand elle est donnée). */
+function listesAvecMouvements(
+  archive: Awaited<ReturnType<typeof lireArchiveStock>>,
+  ids: Set<string>,
+  espece?: string,
+): boolean {
+  const avecMouvement = new Set(archive.mouvements.map((m) => m.article.split(':')[1]));
+  return archive.articles.some(
+    (a) => a.listeId && ids.has(a.listeId) && (!espece || a.activite === espece) && avecMouvement.has(a.id),
+  );
+}
+
+/** Vrai quand des mouvements sont enregistrés sur les listes d'office de ce compte (pour l'espèce, ceux de ses articles propres). */
+function mouvementsDesListesDOffice(
+  archive: Awaited<ReturnType<typeof lireArchiveStock>>,
+  numero: string,
+  espece?: string,
+): boolean {
+  return SECTIONS.filter((x) => COMPTE_PAR_SECTION_INVENTAIRE[x.section].numero === numero).some((x) =>
+    x.section === SECTION_STOCK.LAIT
+      ? !espece && (archive.lait ?? []).length > 0
+      : !!x.genre &&
+        archive.mouvements.some(
+          (m) => m.article.startsWith(`${x.genre}:`) && (!espece || m.article.includes(`:${espece}_`)),
+        ),
+  );
+}
+
+/**
+ * Vrai quand l'inventaire de ce compte a des mouvements enregistrés (sur ses listes ajoutées ou d'office) : le compte ne peut alors ni
+ * être supprimé ni quitter l'inventaire. Avec une espèce, seuls comptent les articles tenus pour elle.
+ */
+export async function compteAvecMouvements(numero: string, espece?: string): Promise<boolean> {
   const archive = await lireArchiveStock();
   const ids = new Set(listesDuCompte(archive, numero).map((l) => l.id));
+  return listesAvecMouvements(archive, ids, espece) || mouvementsDesListesDOffice(archive, numero, espece);
+}
+
+/** Un compte n'est plus inventorié : ses listes sont retirées de l'inventaire, avec leurs articles et leurs mouvements. */
+export async function retirerDeLInventaire(numero: string): Promise<boolean> {
+  const archive = await lireArchiveStock();
+  const ids = new Set(listesDuCompte(archive, numero).map((l) => l.id));
+  if (listesAvecMouvements(archive, ids)) return false;
   if (ids.size > 0) await remplacerArchiveStock({ ...archive, ...sansLesListes(archive, ids) });
+  return true;
 }
 
 /** Renomme une liste. */
@@ -117,10 +211,70 @@ function sansLesListes(archive: Awaited<ReturnType<typeof lireArchiveStock>>, id
   };
 }
 
-/** Supprime une liste avec ses articles et leurs mouvements. */
-export async function supprimerListe(id: string): Promise<void> {
+/**
+ * Vrai quand une autre liste de l'inventaire (ajoutée ou d'office) utilise encore ce compte, pour l'espèce donnée (ou pour une espèce
+ * quelconque, sans espèce) : il faut alors le garder dans le plan comptable.
+ */
+function compteEncoreUtilise(
+  archive: Awaited<ReturnType<typeof lireArchiveStock>>,
+  numero: string,
+  sauf: Set<string>,
+  espece?: string,
+): boolean {
+  const pourEspece = (masque?: string[]) => !espece || !(masque ?? []).includes(espece);
+  const parUneListe = (archive.listes ?? []).some(
+    (l) => l.compte === numero && !sauf.has(l.id) && pourEspece(l.masquePour),
+  );
+  const parUneListeDOffice = Object.entries(COMPTE_PAR_SECTION_INVENTAIRE).some(
+    ([section, c]) => c.numero === numero && pourEspece(archive.sectionsMasquees?.[section]),
+  );
+  return parUneListe || parUneListeDOffice;
+}
+
+/** Le compte du plan comptable d'une liste supprimée : retiré pour l'espèce, ou supprimé, quand plus aucune liste ne l'utilise. */
+async function suivreLaSuppressionDuCompte(
+  archive: Awaited<ReturnType<typeof lireArchiveStock>>,
+  listes: ListeInventaire[],
+  espece?: string,
+): Promise<void> {
+  const comptes = await listComptesPcg();
+  const ids = new Set(listes.map((l) => l.id));
+  for (const numero of new Set(listes.map((l) => l.compte))) {
+    if (compteEncoreUtilise(archive, numero, ids, espece)) continue;
+    for (const compte of comptes.filter((c) => c.numero === numero)) {
+      if (espece) await retirerComptePourEspece(compte.id, espece);
+      else await supprimerComptePcg(compte.id);
+    }
+  }
+}
+
+/**
+ * Supprime une liste avec ses articles et leurs mouvements, et le compte du plan comptable qu'elle portait quand plus rien ne l'utilise.
+ * Avec une espèce, la liste n'est retirée que pour elle (avec ses articles propres) : les autres espèces la gardent.
+ */
+export async function supprimerListe(id: string, espece?: string): Promise<boolean> {
   const archive = await lireArchiveStock();
-  await remplacerArchiveStock({ ...archive, ...sansLesListes(archive, new Set([id])) });
+  const liste = (archive.listes ?? []).find((l) => l.id === id);
+  if (!liste) return true;
+  // Des mouvements sont enregistrés sur ses articles : on ne la supprime pas.
+  if (listesAvecMouvements(archive, new Set([id]), espece)) return false;
+  if (espece) {
+    const articlesRetires = new Set(
+      archive.articles.filter((a) => a.listeId === id && a.activite === espece).map((a) => a.id),
+    );
+    await remplacerArchiveStock({
+      ...archive,
+      listes: (archive.listes ?? []).map((l) =>
+        l.id === id ? { ...l, masquePour: [...new Set([...(l.masquePour ?? []), espece])] } : l,
+      ),
+      articles: archive.articles.filter((a) => !articlesRetires.has(a.id)),
+      mouvements: archive.mouvements.filter((m) => !articlesRetires.has(m.article.split(':')[1])),
+    });
+  } else {
+    await remplacerArchiveStock({ ...archive, ...sansLesListes(archive, new Set([id])) });
+  }
+  await suivreLaSuppressionDuCompte(archive, [liste], espece);
+  return true;
 }
 
 /** Les débuts de compte saisis (« 701, 706 ») : de 2 à 6 chiffres, sans doublon ; vide si l'un d'eux n'est pas valable. */
@@ -232,12 +386,18 @@ export async function modifierCategorie(
 }
 
 /** Supprime une catégorie ajoutée, avec ses listes, leurs articles et leurs mouvements. */
-export async function supprimerCategorie(categorie: string): Promise<void> {
+export async function supprimerCategorie(categorie: string): Promise<boolean> {
   const archive = await lireArchiveStock();
-  const ids = new Set((archive.listes ?? []).filter((l) => l.categorie === categorie).map((l) => l.id));
+  const listes = (archive.listes ?? []).filter((l) => l.categorie === categorie);
+  const ids = new Set(listes.map((l) => l.id));
+  // Des mouvements sont enregistrés sur les articles de ses listes : on ne la supprime pas.
+  if (listesAvecMouvements(archive, ids)) return false;
   await remplacerArchiveStock({
     ...archive,
     ...sansLesListes(archive, ids),
     categories: (archive.categories ?? []).filter((c) => idCategoriePerso(c) !== categorie),
   });
+  // Les comptes de ses listes, quand plus aucune liste ne les utilise, quittent aussi le plan comptable.
+  await suivreLaSuppressionDuCompte(archive, listes);
+  return true;
 }

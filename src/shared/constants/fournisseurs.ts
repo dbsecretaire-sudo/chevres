@@ -20,6 +20,8 @@ export const CATEGORIE_FOURNISSEUR = {
   GROUPEMENT: 'groupement',
   ASSUREUR: 'assureur',
   BANQUE: 'banque',
+  /** Un fournisseur qui ne remet pas de facture : ses dépenses sont notées « non facturées » (pas de TVA à déduire). */
+  NON_FACTURABLE: 'non_facturable',
 } as const;
 
 /** La catégorie d'un fournisseur dont la fiche n'en a pas (ou dont la catégorie a été retirée) : elle ne se retire pas de la liste. */

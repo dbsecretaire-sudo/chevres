@@ -77,6 +77,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'partVenteUrssaf',
     'partHorsCaUrssaf',
     'tauxTva',
+    'sansFacture',
   ],
   [CATEGORIE_STOCKAGE.VENTES]: [
     'id',

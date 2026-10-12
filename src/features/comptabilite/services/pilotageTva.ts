@@ -183,7 +183,8 @@ export function calculerPilotageTva(entree: EntreePilotageTva): PilotageTva {
         l.baseHtRecettes += r.ttc - tva;
       }
     }
-    for (const f of factures.filter((x) => x.type === TYPE_FACTURE.RECUE)) {
+    // Une dépense non facturée n'a pas de TVA à déduire.
+    for (const f of factures.filter((x) => x.type === TYPE_FACTURE.RECUE && !x.sansFacture)) {
       const m = moisDe(f.date);
       if (m < 1 || m > 12 || !f.tauxTva) continue;
       const tva = tvaDuTtc(f.montant, f.tauxTva);

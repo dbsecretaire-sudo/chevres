@@ -85,6 +85,7 @@ export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURN
   [CATEGORIE_FOURNISSEUR.GROUPEMENT]: 'Groupement',
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: 'Assureur',
   [CATEGORIE_FOURNISSEUR.BANQUE]: 'Banque',
+  [CATEGORIE_FOURNISSEUR.NON_FACTURABLE]: 'Fournisseur non facturable',
 };
 
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {

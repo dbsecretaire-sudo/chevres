@@ -152,6 +152,7 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
           ? LABEL_CATEGORIE_DEPENSE[f.categorieDepense]
           : undefined,
       termes: termesDeFacture(f),
+      sansFacture: f.type === TYPE_FACTURE.RECUE && f.sansFacture ? true : undefined,
       rubriques: f.lignesMarchandises?.length
         ? [...new Set(f.lignesMarchandises.map((l) => RUBRIQUE_COMPTABLE_DE_MARCHANDISE[l.rubrique]))]
         : undefined,

@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { Checkbox } from '@/shared/components/Checkbox';
 import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
@@ -190,6 +191,20 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           echeance={form.echeance ?? ''}
           onEcheance={(echeance) => f.setForm({ ...form, echeance })}
         />
+        {estEmise ? null : (
+          <>
+            <Checkbox
+              label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+              value={!!form.sansFacture}
+              onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
+            />
+            {form.sansFacture ? (
+              <Text style={commonStyles.note}>
+                {TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
+              </Text>
+            ) : null}
+          </>
+        )}
       </SectionForm>
 
       {/* Les informations : la catégorie (fixe), ce qui lui est propre, le montant, la TVA, l'atelier. */}

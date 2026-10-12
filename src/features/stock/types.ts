@@ -50,6 +50,8 @@ export interface ListeInventaire {
   compte: string;
   /** Le libellé du compte au moment du choix (affiché sous le titre de la liste). */
   libelleCompte: string;
+  /** Les espèces pour lesquelles la liste est retirée de l'inventaire (le compte a été retiré pour elles) ; elle reste pour les autres. */
+  masquePour?: string[];
 }
 
 /**
@@ -152,4 +154,6 @@ export interface ArchiveStock {
   lots?: LotFromage[];
   /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
   masques?: string[];
+  /** Les listes d'office retirées pour des espèces (section → espèces) : le compte de la liste a été retiré pour elles. */
+  sectionsMasquees?: Record<string, string[]>;
 }

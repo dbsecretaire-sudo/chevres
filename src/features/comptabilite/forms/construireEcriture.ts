@@ -64,6 +64,8 @@ export interface SaisieEcriture {
   /** Achat de production : l'article du stock acheté (vide : hors stock) et sa quantité. */
   stockArticle?: string;
   stockQuantite?: number;
+  /** Une dépense qui n'a pas été facturée (pas de TVA à déduire). */
+  sansFacture?: boolean;
   /** Un achat de boucles : le numéro de la première. */
   bouclesDebut?: string;
   /** Une dépense vétérinaire : le motif de la visite, et son inscription dans les visites vétérinaires. */
@@ -304,6 +306,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       atelier: estRecue && s.atelier ? s.atelier : undefined,
       payee: s.enAttente ? false : undefined,
+      sansFacture: estRecue && s.sansFacture ? true : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       lignesAlimentation,
       lignesMarchandises,

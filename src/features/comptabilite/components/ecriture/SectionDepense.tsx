@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/shared/components/Card';
+import { Checkbox } from '@/shared/components/Checkbox';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -86,6 +87,14 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           echeance={e.echeance}
           onEcheance={e.setEcheance}
         />
+        <Checkbox
+          label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+          value={e.sansFacture}
+          onChange={e.setSansFacture}
+        />
+        {e.sansFacture ? (
+          <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
+        ) : null}
       </SectionForm>
 
       {/* Les informations : la catégorie, la TVA et les montants. */}

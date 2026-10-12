@@ -6,8 +6,17 @@ export const TEXTES_COMPTES_PCG = {
     typeDeuxPoints: 'Type : ',
     retirerDeLInventaire: 'Retirer de l’inventaire ?',
     retraitMessage:
-      'Le compte devient un compte de service : sa liste de l’inventaire est supprimée, avec ses articles et leurs mouvements.',
+      'Le compte devient un compte de service : sa liste de l’inventaire est supprimée, avec ses articles (aucun mouvement n’y est enregistré).',
     retirer: 'Retirer',
+    compteAvecMouvements: (numero: string) =>
+      `Le compte ${numero} ne peut pas être supprimé ni retiré de l’inventaire : des mouvements de stock sont enregistrés sur ses listes.`,
+    suppressionImpossible: 'Suppression impossible',
+    retirerPourEspece: (espece: string) => `Retirer pour ${espece}`,
+    retirerPourEspeceQuestion: (espece: string) => `Retirer ce compte pour ${espece} ?`,
+    retirerPourEspeceMessage: (numero: string, libelle: string, espece: string) =>
+      `Le compte ${numero} — ${libelle} ne sera plus proposé pour ${espece}. Il reste disponible pour les autres espèces.`,
+    retireePour: (especes: string) => `Retiré pour : ${especes}`,
+    retablir: 'Rétablir pour toutes les espèces',
     cetteActionSupprimeraDefinitivementLe: (numero: string, libelle: string) =>
       `Cette action supprimera définitivement le compte ${numero} — ${libelle}.`,
   },
