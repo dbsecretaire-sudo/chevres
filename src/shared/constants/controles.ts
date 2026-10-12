@@ -127,6 +127,20 @@ export const CLE_LISTE_PERSONNALISEE = {
   TAUX_IMPOSITION: 'tauxImposition',
 } as const;
 
+/**
+ * La zone ICHN d'une parcelle (note de cadrage de l'ODARC, Corse) : la haute montagne sèche et la montagne sèche (intervention 71.04), les
+ * zones soumises à des contraintes naturelles (71.05, ZSCN) ou spécifiques (71.06, ZSCS). Une parcelle sans zone est en montagne sèche.
+ */
+export const ZONE_ICHN = {
+  HAUTE_MONTAGNE_SECHE: 'haute_montagne_seche',
+  MONTAGNE_SECHE: 'montagne_seche',
+  ZSCN: 'zscn',
+  ZSCS: 'zscs',
+} as const;
+
+/** La zone d'une parcelle qui n'en a pas. */
+export const ZONE_ICHN_PAR_DEFAUT = ZONE_ICHN.MONTAGNE_SECHE;
+
 /** Un grade de qualité du lait (A, B ou C). */
 export const GRADES_LAIT = ['A', 'B', 'C'] as const;
 

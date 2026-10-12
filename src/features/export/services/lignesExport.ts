@@ -11,6 +11,7 @@ import {
   LABEL_TYPE_FROMAGE,
   LABEL_UNITE_VENTE_COURT,
   LIBELLES_STATUT_CHEVRE,
+  LABEL_ZONE_ICHN,
 } from '@/shared/textes/libelles';
 import { SEXE } from '@/shared/constants/cheptel';
 import { formatDateShortFR } from '@/shared/utils/dates';
@@ -163,6 +164,9 @@ export function controleRow(c: Controle, indicatif?: IndicatifParEspece, avecDet
       ? {
           ...Object.fromEntries(SURFACES_TERRAIN.map((cle) => [TEXTES.export.colonnes[cle], c[cle] ?? ''])),
           [TEXTES.export.colonnes.codeCulture]: c.codeCulture ?? '',
+          [TEXTES.export.colonnes.zoneIchn]: c.zoneIchn
+            ? (LABEL_ZONE_ICHN[c.zoneIchn as keyof typeof LABEL_ZONE_ICHN] ?? c.zoneIchn)
+            : '',
           ...resultatsLaitParColonne(c),
         }
       : {}),

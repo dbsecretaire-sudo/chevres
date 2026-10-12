@@ -70,6 +70,10 @@ export interface ReglagePrime {
   plafondTaux?: number;
   partFixe?: number;
   tranchesZone?: { jusqua: number; pourcentage: number }[];
+  /** L'ICHN par zone : le montant (€/ha) de chaque zone autre que la montagne sèche (`taux`) ; les hectares de chaque zone sont ceux des parcelles (Contrôles de surface). */
+  tauxParZone?: Record<string, number>;
+  /** La majoration (%) des montants de l'ICHN pour un cheptel de petits ruminants (+10 % en montagne, +30 % en zones à contraintes, d'après l'ODARC). */
+  majorationPetitsRuminants?: number;
 }
 
 /** Informations d'une entreprise (hors élevage) ; tout est modifiable : statut, régimes, TVA, taxe de séjour. */
@@ -142,6 +146,12 @@ export interface InfosExploitation {
      * coefficient ; à défaut, celui d'office de l'année (STABILISATEUR_DPB_PAR_ANNEE).
      */
     stabilisateurs?: Record<string, number>;
+    /**
+     * La « réduction pour plafonnement budgétaire » (%) du paiement de base d'une année (« 2025 ») : elle n'est pas appliquée chaque
+     * année ; quand elle l'est, c'est la plus élevée des deux réductions (celle-ci ou celle du stabilisateur) qui s'applique. À défaut,
+     * celle d'office de l'année (REDUCTION_BUDGETAIRE_DPB_PAR_ANNEE) ; 0 : aucune.
+     */
+    reductionsBudgetaires?: Record<string, number>;
   };
   /** La trésorerie : le solde du compte à une date (le départ des courbes), le seuil sous lequel alerter, et les emprunts en cours. */
   tresorerie?: ReglagesTresorerie;

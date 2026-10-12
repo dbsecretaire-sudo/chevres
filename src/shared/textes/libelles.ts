@@ -3,6 +3,7 @@ import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { ZONE_ICHN } from '@/shared/constants/controles';
 import { PERIODICITE_TVA, REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import {
   GROUPE_RECETTE,
@@ -64,6 +65,13 @@ export const LABEL_CATEGORIE_CLIENT: Record<ValeurDe<typeof CATEGORIE_CLIENT>, s
   [CATEGORIE_CLIENT.ORGANISME]: 'Organisme',
   [CATEGORIE_CLIENT.ENTREPRISE]: 'Entreprise',
   [CATEGORIE_CLIENT.GROUPEMENT]: 'Groupement',
+};
+
+export const LABEL_ZONE_ICHN: Record<ValeurDe<typeof ZONE_ICHN>, string> = {
+  [ZONE_ICHN.HAUTE_MONTAGNE_SECHE]: 'Haute montagne sèche',
+  [ZONE_ICHN.MONTAGNE_SECHE]: 'Montagne sèche',
+  [ZONE_ICHN.ZSCN]: 'Zone à contraintes naturelles (ZSCN)',
+  [ZONE_ICHN.ZSCS]: 'Zone à contraintes spécifiques (ZSCS)',
 };
 
 export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURNISSEUR>, string> = {

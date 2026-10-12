@@ -10,6 +10,7 @@ import {
   coefficientsUgb,
   effectifDeclare,
   infosPourAnnee,
+  reductionBudgetaireDpb,
   stabilisateurDpb,
   primesPrevisionnelles,
   ugbDe,
@@ -32,7 +33,8 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 export default function BilanAnnuel() {
-  const { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares, percues } = useBilanAnnuel();
+  const { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares, hectaresParZone, percues } =
+    useBilanAnnuel();
   const { settings, loaded, patchSettings } = useAppSettings();
   const { espece } = useEtablissement();
   const [detailUgb, setDetailUgb] = useState(false);
@@ -85,8 +87,9 @@ export default function BilanAnnuel() {
   const ugb = ugbDe(effectifCalcul, coefficients);
   const primes = primesPrevisionnelles(
     infosPourAnnee(infos, annee, espece),
-    { ugb, tetes: effectifCalcul.sevres, hectares },
+    { ugb, tetes: effectifCalcul.sevres, hectares, hectaresParZone },
     stabilisateurDpb(infos, annee),
+    reductionBudgetaireDpb(infos, annee),
   );
 
   /** Les primes calculées, avec ce qui en a été perçu sur la saison : une alerte sur celles qui diffèrent. */

@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/Button';
 import { formaterUgb } from '@/features/cheptel/services/ugb';
 import { saisonDePrime, type LignePrimeComparee } from '@/features/cheptel/services/primesPercues';
 import { ROUTES } from '@/shared/constants/routes';
-import { STABILISATEUR_NEUTRE } from '@/shared/constants/primes';
+import { LABEL_ZONE_ICHN } from '@/shared/textes/libelles';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -26,6 +26,44 @@ interface Props {
   total: number;
   /** L'année du bilan : la saison où l'on compte les aides perçues. */
   annee: number;
+}
+
+/** Les notes des deux réductions du paiement de base (celle du stabilisateur et celle du plafonnement budgétaire) : la plus élevée est retenue. */
+function notesReductions(l: LignePrimeComparee): string[] {
+  const coef = (n: number) => String(n).replace('.', ',');
+  const pourcentageStabilisateur = Math.round((100 - l.stabilisateur) * 10000) / 10000;
+  const avant = formatMontant(l.montantAvantStabilisateur);
+  const budgetaireRetenue = l.reductionBudgetaire > l.reductionDuStabilisateur;
+  const notes: string[] = [];
+  if (l.pourcentageReductionBudgetaire > 0)
+    notes.push(
+      budgetaireRetenue
+        ? T.reductionBudgetaireRetenue(
+            coef(l.pourcentageReductionBudgetaire),
+            avant,
+            formatMontant(l.reductionBudgetaire),
+          )
+        : T.reductionBudgetaireNonRetenue(
+            coef(l.pourcentageReductionBudgetaire),
+            formatMontant(l.reductionBudgetaire),
+          ),
+    );
+  if (pourcentageStabilisateur > 0)
+    notes.push(
+      budgetaireRetenue
+        ? T.stabilisateurNonRetenu(
+            coef(l.stabilisateur),
+            coef(pourcentageStabilisateur),
+            formatMontant(l.reductionDuStabilisateur),
+          )
+        : T.stabilisateurRetenu(
+            coef(l.stabilisateur),
+            coef(pourcentageStabilisateur),
+            avant,
+            formatMontant(l.reductionDuStabilisateur),
+          ),
+    );
+  return notes;
 }
 
 /**
@@ -124,13 +162,18 @@ export function DetailUgbPrimes({
                         ? T.tauxLimite(formatMontant(l.tauxRetenu), P.unites[l.base])
                         : undefined,
                       l.degressive ? T.degressif : undefined,
-                      l.stabilisateur !== STABILISATEUR_NEUTRE
-                        ? T.stabilisateur(
-                            coef(l.stabilisateur),
-                            formatMontant(l.montantAvantStabilisateur),
-                            formatMontant(l.montantAvantStabilisateur - l.montant),
+                      l.zones.length > 1
+                        ? T.zones(
+                            l.zones
+                              .map(
+                                (z) =>
+                                  `${LABEL_ZONE_ICHN[z.zone as keyof typeof LABEL_ZONE_ICHN] ?? z.zone} ${coef(Math.round(z.hectares * 100) / 100)} ha à ${formatMontant(z.taux)}`,
+                              )
+                              .join(' · '),
                           )
                         : undefined,
+                      // Les deux réductions du paiement de base : la plus élevée est retenue, l'autre est rappelée, sans effet.
+                      ...notesReductions(l),
                     ]
                       .filter(Boolean)
                       .map((note) => (

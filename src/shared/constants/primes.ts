@@ -60,8 +60,9 @@ export interface ReglesPrime {
 }
 
 /**
- * Les règles d'office : le paiement redistributif est limité aux 52 premiers hectares admissibles ; l'ICHN à 75 hectares, avec une part
- * fixe de 70 € par hectare plus le montant de la zone, payé à 100 % sur les 25 premiers hectares, aux 2/3 de 25 à 50 ha, puis plus rien ; l'aide couplée aux petits ruminants demande au moins 10 femelles ; la
+ * Les règles d'office : le paiement redistributif est limité aux 52 premiers hectares admissibles ; l'ICHN (note de cadrage de l'ODARC, Corse) à 50 hectares
+ * de surfaces admissibles, plafond global pour 71.04, 71.05 et 71.06 réunies, avec le montant de la zone payé à 100 % sur les 25 premiers
+ * hectares, aux 2/3 de 25 à 50 ha, puis plus rien (pas de part fixe) ; l'aide couplée aux petits ruminants demande au moins 10 femelles ; la
  * valeur d'un DPB est limitée (144,52 € en Corse en 2026). Le DPB est aussi limité par le nombre de droits du portefeuille (à saisir).
  * Indicatif : à vérifier chaque année dans la notice PAC.
  */
@@ -72,11 +73,10 @@ export const REGLES_PRIMES: Record<(typeof PRIMES)[number]['cle'], ReglesPrime> 
   couplee_petits_ruminants: { minimum: 10 },
   ichn: {
     transparenceGaec: true,
-    plafond: 75,
-    partFixe: 70,
+    plafond: 50,
     tranchesZone: [
       { jusqua: 25, pourcentage: 100 },
-      { jusqua: 50, pourcentage: 67 },
+      { jusqua: 50, pourcentage: 66.6667 },
     ],
   },
 };
@@ -104,3 +104,21 @@ export const STABILISATEUR_NEUTRE = 100;
  * du relevé de situation, c'est elle qui compte (elle est ce que l'ASP a retenu), à la place de ce coefficient.
  */
 export const STABILISATEUR_DPB_PAR_ANNEE: Record<number, number> = { 2025: 97.0805 };
+
+/**
+ * Les montants de l'ICHN en Corse par zone, pour les 25 premiers hectares de surfaces animales (note de cadrage de l'ODARC) : ceux des zones
+ * autres que la montagne sèche, dont le montant se saisit avec l'aide, tant qu'on n'en a pas saisi d'autre. Indicatif : à vérifier chaque année.
+ */
+export const MONTANT_ICHN_PAR_ZONE: Record<string, number> = {
+  haute_montagne_seche: 334,
+  montagne_seche: 274,
+  zscn: 192,
+  zscs: 192,
+};
+
+/**
+ * La réduction pour plafonnement budgétaire du paiement de base (%) par année : elle ne s'applique que lorsque le total des DPB demandés
+ * dépasse le budget prévu, d'un pourcentage fixé chaque année (une année absente n'en a pas). 2025 : 3,8774 %, soit 386,65 € sur
+ * 9 971,88 € d'après le relevé de situation du 17/06/2026. Elle se modifie année par année dans Cheptel › Réglages.
+ */
+export const REDUCTION_BUDGETAIRE_DPB_PAR_ANNEE: Record<number, number> = { 2025: 3.8774 };

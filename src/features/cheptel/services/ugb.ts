@@ -1,9 +1,12 @@
+import { ZONE_ICHN_PAR_DEFAUT } from '@/shared/constants/controles';
 import type { InfosExploitation, ReglagesAides } from '@/features/settings/settings';
 import {
   BASE_PRIME,
   PRIMES,
   REGLES_PRIMES,
+  REDUCTION_BUDGETAIRE_DPB_PAR_ANNEE,
   STABILISATEUR_DPB_PAR_ANNEE,
+  MONTANT_ICHN_PAR_ZONE,
   STABILISATEUR_NEUTRE,
   UGB_PAR_DEFAUT,
   type TranchePrime,
@@ -43,6 +46,10 @@ export const stabilisateurDpb = (infos: InfosExploitation | undefined, annee: nu
   infos?.ugbPrimes?.stabilisateurs?.[String(annee)] ??
   STABILISATEUR_DPB_PAR_ANNEE[annee] ??
   STABILISATEUR_NEUTRE;
+
+/** La réduction pour plafonnement budgétaire (%) d'une année : celle des réglages, à défaut celle d'office de l'année, sinon aucune (0). */
+export const reductionBudgetaireDpb = (infos: InfosExploitation | undefined, annee: number): number =>
+  infos?.ugbPrimes?.reductionsBudgetaires?.[String(annee)] ?? REDUCTION_BUDGETAIRE_DPB_PAR_ANNEE[annee] ?? 0;
 
 /** La réduction (€) que représente un stabilisateur (%) sur un paiement avant réduction : 365 € pour 97,0805 % de 12 500 €. */
 export const reductionDuStabilisateur = (brut: number, stabilisateur: number): number =>
@@ -155,6 +162,8 @@ export interface QuantitesPrimes {
   ugb: number;
   tetes: number;
   hectares: number;
+  /** Les hectares admissibles des parcelles par zone ICHN : le montant de l'ICHN est la moyenne des montants des zones, pondérée par ces hectares. */
+  hectaresParZone?: Record<string, number>;
 }
 
 export interface LignePrime {
@@ -178,9 +187,16 @@ export interface LignePrime {
   montantFixe: number;
   quantitePleine: number;
   montantZone: number;
+  /** Les zones de l'ICHN avec leurs hectares et leur montant (vide : une seule zone). */
+  zones: { zone: string; hectares: number; taux: number }[];
   /** Le stabilisateur appliqué (% ; 100 : aucun, comme pour toute aide autre que le paiement de base) et le montant d'avant. */
   stabilisateur: number;
   montantAvantStabilisateur: number;
+  /** La réduction retenue (€, la plus élevée de celle du stabilisateur et de celle du plafonnement budgétaire), celle du stabilisateur seul, et celle du plafonnement budgétaire (en € et en %). */
+  reduction: number;
+  reductionDuStabilisateur: number;
+  reductionBudgetaire: number;
+  pourcentageReductionBudgetaire: number;
   montant: number;
 }
 
@@ -194,6 +210,8 @@ export function primesPrevisionnelles(
   quantites: QuantitesPrimes,
   /** Le stabilisateur (%) du paiement de base de l'année (voir stabilisateurDpb) : il réduit seulement ce paiement. */
   stabilisateurDuDpb: number = STABILISATEUR_NEUTRE,
+  /** La réduction pour plafonnement budgétaire (%) de l'année : si elle est plus élevée que celle du stabilisateur, c'est elle qui s'applique au paiement de base. */
+  reductionBudgetaireDuDpb = 0,
 ): { lignes: LignePrime[]; total: number } {
   const quantiteDe = (base: ValeurDe<typeof BASE_PRIME>) =>
     base === BASE_PRIME.UGB ? quantites.ugb : base === BASE_PRIME.TETE ? quantites.tetes : quantites.hectares;
@@ -225,12 +243,43 @@ export function primesPrevisionnelles(
         debut = t.jusqua;
       }
     }
-    const montantZone = quantitePleine * tauxRetenu;
+    // Plusieurs zones (l'ICHN) : le montant est la moyenne des montants de chaque zone, pondérée par ses hectares (comme le fait l'ODARC).
+    const reglageZone = infos?.ugbPrimes?.primes?.[cle];
+    const parZone = Object.entries(quantites.hectaresParZone ?? {}).filter(([, hectares]) => hectares > 0);
+    const totalParZone = parZone.reduce((total, [, hectares]) => total + hectares, 0);
+    const plafonne = (montant: number) =>
+      regles.plafondTaux > 0 ? Math.min(montant, regles.plafondTaux) : montant;
+    const zones =
+      regles.tranchesZone.length > 0 && totalParZone > 0
+        ? parZone.map(([zone, hectares]) => ({
+            zone,
+            hectares,
+            // La montagne sèche porte le montant de l'aide ; les autres zones le leur (saisi, à défaut celui de la note de l'ODARC).
+            taux: plafonne(
+              zone === ZONE_ICHN_PAR_DEFAUT
+                ? tauxRetenu
+                : (reglageZone?.tauxParZone?.[zone] ?? MONTANT_ICHN_PAR_ZONE[zone] ?? tauxRetenu),
+            ),
+          }))
+        : [];
+    const tauxPondere =
+      zones.length > 0
+        ? zones.reduce((total, z) => total + z.hectares * z.taux, 0) / totalParZone
+        : tauxRetenu;
+    // La majoration pour un cheptel de petits ruminants (ICHN) : (1 + B) sur le montant de la zone, comme dans la formule de l'ODARC.
+    const tauxZone = tauxPondere * (1 + (reglageZone?.majorationPetitsRuminants ?? 0) / 100);
+    const montantZone = quantitePleine * tauxZone;
     const montantFixe = quantite * regles.partFixe;
     if (cle === 'dpb') dpbActives = quantite;
+    // Une prime supplémentaire saisie (€) : elle s'ajoute au montant de l'aide, après les parts fixe et de zone.
     const montantBrut = montantFixe + montantZone;
     const stabilisateur = cle === 'dpb' ? stabilisateurDuDpb : STABILISATEUR_NEUTRE;
-    const montant = (montantBrut * stabilisateur) / 100;
+    // Le paiement de base : la réduction la plus élevée s'applique, celle du stabilisateur ou celle du plafonnement budgétaire (deux pourcentages).
+    const pourcentageBudgetaire = cle === 'dpb' ? reductionBudgetaireDuDpb : 0;
+    const reductionStabilisateur = (montantBrut * (100 - stabilisateur)) / 100;
+    const reductionBudgetaire = (montantBrut * pourcentageBudgetaire) / 100;
+    const reduction = Math.min(montantBrut, Math.max(reductionStabilisateur, reductionBudgetaire));
+    const montant = montantBrut - reduction;
     return [
       {
         cle,
@@ -240,7 +289,8 @@ export function primesPrevisionnelles(
         taux,
         quantite,
         quantiteBrute,
-        tauxRetenu,
+        tauxRetenu: tauxZone,
+        zones,
         plafonnee: !sousMinimum && quantite < quantiteBrute,
         minimum: sousMinimum ? regles.minimum : undefined,
         degressive: tranchesZone.length > 0,
@@ -250,6 +300,10 @@ export function primesPrevisionnelles(
         montantZone: Math.round(montantZone * 100) / 100,
         stabilisateur,
         montantAvantStabilisateur: Math.round(montantBrut * 100) / 100,
+        reduction: Math.round(reduction * 100) / 100,
+        reductionDuStabilisateur: Math.round(reductionStabilisateur * 100) / 100,
+        reductionBudgetaire: Math.round(reductionBudgetaire * 100) / 100,
+        pourcentageReductionBudgetaire: pourcentageBudgetaire,
         montant: Math.round(montant * 100) / 100,
       },
     ];

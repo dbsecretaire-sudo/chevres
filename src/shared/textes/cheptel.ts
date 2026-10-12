@@ -119,8 +119,16 @@ export const TEXTES_CHEPTEL = {
         partZone: (quantite: string, unite: string, taux: string, montant: string) =>
           `Zone : ${quantite} ${unite} pleins × ${taux} = ${montant}`,
         ligneTotale: (nom: string, montant: string) => `${nom} : ${montant}`,
-        stabilisateur: (pourcentage: string, avant: string, reduction: string) =>
-          `Réduction pour plafonnement budgétaire : − ${reduction} (stabilisateur de ${pourcentage} %, ${avant} avant réduction)`,
+        zones: (detail: string) => `Zones de l’ICHN : ${detail}`,
+        /** Les deux réductions du paiement de base : la plus élevée est retenue, l'autre reste enregistrée et ne change rien. */
+        reductionBudgetaireRetenue: (pourcentage: string, avant: string, reduction: string) =>
+          `Réduction pour plafonnement budgétaire : ${pourcentage} % de ${avant} = − ${reduction} (le taux le plus élevé est retenu)`,
+        reductionBudgetaireNonRetenue: (pourcentage: string, reduction: string) =>
+          `Réduction pour plafonnement budgétaire de ${pourcentage} % (− ${reduction}) : moins élevée que celle du stabilisateur, sans effet`,
+        stabilisateurRetenu: (stabilisateur: string, pourcentage: string, avant: string, reduction: string) =>
+          `Stabilisateur de ${stabilisateur} % : réduction de ${pourcentage} % de ${avant} = − ${reduction} (le taux le plus élevé est retenu)`,
+        stabilisateurNonRetenu: (stabilisateur: string, pourcentage: string, reduction: string) =>
+          `Stabilisateur de ${stabilisateur} % (réduction de ${pourcentage} %, − ${reduction}) : moins élevé que la réduction pour plafonnement budgétaire, sans effet`,
         tauxLimite: (taux: string, unite: string) => `Montant limité à ${taux} par ${unite}`,
         parametrer: 'Paramétrer l’UGB et les primes',
         fermer: 'Fermer',
@@ -157,12 +165,33 @@ export const TEXTES_CHEPTEL = {
     associesAide:
       'En GAEC, les plafonds du paiement redistributif et de l’ICHN se multiplient par le nombre d’associés. Laissez 1 hors GAEC.',
     stabilisateur: 'Stabilisateur de l’année (%)',
-    stabilisateurAide:
-      'Appliqué au paiement de base (DPB) de fin de campagne : vous percevez ce pourcentage du montant calculé (97,0805 % en 2025, d’après la lettre de la DDT du 14/01/2026). Il ne change pas la valeur des DPB, seulement le montant payé. Vide ou 100 : aucun.',
-    reductionBudgetaire: 'Réduction pour plafonnement budgétaire',
-    calculeSurStabilisateur: 'calculé sur base du stabilisateur',
-    reductionBudgetaireAide:
-      'Ce que le stabilisateur retire du paiement de base : le paiement avant réduction multiplié par (100 − stabilisateur) %. Elle se calcule seule et ne se modifie pas : changez le stabilisateur. Sur le relevé de situation 2025, la ligne « Réduction pour plafonnement budgétaire » (386,65 €) additionne cette réduction (225,19 € pour un stabilisateur de 97,7046 %) et celle du coefficient de réduction de la réserve (1,70 %, soit 161,46 €), qui est déjà dans la valeur unitaire des DPB de la lettre de la DDT (142,18 € au lieu de 144,52 € de valeur moyenne avant coefficient).',
+    stabilisateurAide: [
+      {
+        texte: [
+          'Appliqué au paiement de base (DPB) de fin de campagne : vous percevez ce pourcentage du montant calculé (97,0805 % en 2025, d’après la lettre de la DDT du 14/01/2026). Il ne change pas la valeur des DPB, seulement le montant payé. Vide ou 100 : aucun. Il figure dans la lettre de la DDT sur votre portefeuille de DPB :',
+        ],
+      },
+      { image: 'lettreDdt' },
+    ],
+    reductionBudgetaire: 'Réduction pour plafonnement budgétaire (%)',
+    calculeSurStabilisateur: 'Réduction du stabilisateur (calculée)',
+    calculeSurPlafonnement: 'Réduction du plafonnement budgétaire (calculée)',
+    reductionRetenue: 'Réduction retenue (la plus élevée des deux)',
+    reductionBudgetaireAide: [
+      {
+        texte: [
+          'Le taux de réduction pour plafonnement budgétaire du paiement de base (article D. 614-67 du code rural et de la pêche maritime) est fixé chaque année par arrêté : au titre de la campagne 2025, 3,8774 % (arrêté du 5 juin 2026, article 3). C’est le pourcentage de la ligne « Réduction pour plafonnement budgétaire » de votre relevé de situation (386,65 € sur 9 971,88 € avant réduction). Il est distinct du stabilisateur : les deux s’enregistrent, et c’est le plus élevé des deux pourcentages de réduction qui s’applique (le stabilisateur de 97,0805 % réduit de 2,9195 %) ; l’autre reste enregistré, sans effet. Vide ou 0 : aucune réduction pour plafonnement cette année. Texte de référence : ',
+          { libelle: 'Légifrance', lien: 'plafonnementBudgetaire' },
+        ],
+      },
+    ],
+    tauxDeLaZone: (zone: string) => `Montant de la zone « ${zone} » (€) par hectare`,
+    majoration: 'Majoration petits ruminants (%)',
+    sansMajoration: 'Vide : aucune',
+    majorationAide:
+      'L’ODARC majore le montant de l’ICHN pour un cheptel de petits ruminants : +10 % en zone de montagne et +30 % en zones soumises à des contraintes (colonne « Majoration petits ruminants » de son tableau de valorisation ; la fiche de la zone 71.05 précise qu’il faut plus de la moitié d’ovins ou de caprins). Saisissez ici 10 pour la montagne : le montant de la zone est multiplié par (1 + majoration).',
+    zonesAide:
+      'En Corse, la note de cadrage de l’ODARC donne un montant par zone pour les 25 premiers hectares de surfaces animales : haute montagne sèche 334 €, montagne sèche 274 €, zones à contraintes naturelles (ZSCN) et spécifiques (ZSCS) 192 €. Le montant du dessus est celui de la montagne sèche ; saisissez ici ceux des autres zones (vide : celui de la note). Les hectares de chaque zone sont ceux des parcelles : choisissez la zone de chacune dans Cheptel › Contrôles de surface. Le calcul pondère les montants par la surface de chaque zone, comme le fait l’ODARC, puis applique 100 % aux 25 premiers hectares et les deux tiers de 25 à 50 ha.',
     plafond: 'Plafond',
     minimum: 'Seuil minimum',
     plafondTaux: 'Montant unitaire maximum (€)',
@@ -195,15 +224,15 @@ export const TEXTES_CHEPTEL = {
         ouTrouver: [
           {
             texte: [
-              'Où trouver ce montant : la lettre de la DDT « portefeuille de droits à paiement de base (DPB) » donne la valeur unitaire de vos DPB pour la campagne (142,18 € en 2025) ; le détail est dans Télépac, Données et documents › Campagne › onglet « DPB ».',
+              'Où trouver ce montant : dans Télépac › Données et documents › Campagne › onglet « DPB » (Portefeuille DPB), qui donne la valeur unitaire de vos DPB pour l’année :',
             ],
           },
+          { image: 'dpbTelepac' },
           {
             texte: [
-              'Ne saisissez pas ici la « valeur moyenne des DPB déclarés » de l’annexe du relevé de situation (144,52 € en 2025) : elle est d’avant le coefficient de réduction de la réserve (1,70 %). L’annexe du relevé (page 4) ressemble à ceci :',
+              'Cette valeur (144,52 € pour les DPB finaux au 15 mai 2025) est d’avant le coefficient de réduction de la réserve (1,70 %). La lettre de la DDT « portefeuille de droits à paiement de base (DPB) » donne la valeur après ce coefficient (142,18 € en 2025) : c’est celle à saisir ici, avec le stabilisateur, pour retrouver ce qui est payé.',
             ],
           },
-          { image: 'releveAnnexe' },
         ],
         plafondAide:
           'Plafond : le nombre de droits (DPB) de votre portefeuille Telepac ; au-delà, les hectares ne touchent plus l’aide. La valeur d’un DPB est aussi limitée (144,52 € en Corse en 2026).',
@@ -322,7 +351,7 @@ export const TEXTES_CHEPTEL = {
           },
         ],
         plafondAide:
-          'Plafonnée à 75 hectares : une part fixe (70 € par hectare) plus le montant de votre zone, payé à 100 % sur les 25 premiers hectares puis aux 2/3 de 25 à 50 ha. Les seuils se multiplient par le nombre d’associés d’un GAEC.',
+          'Versée dans la limite de 50 hectares de surfaces admissibles (note de cadrage de l’ODARC) : le montant de votre zone, payé à 100 % sur les 25 premiers hectares puis aux 2/3 de 25 à 50 ha, sans part fixe. Les seuils se multiplient par le nombre d’associés d’un GAEC.',
       },
     },
   },

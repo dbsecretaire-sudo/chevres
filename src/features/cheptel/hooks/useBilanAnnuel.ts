@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { calculerBilan, type Bilan } from '@/features/cheptel/services/bilanCheptel';
 import { listControles } from '@/features/exploitation/repository/controles';
-import { totauxSurfaces } from '@/features/exploitation/services/surfaces';
+import { hectaresParZoneIchn, totauxSurfaces } from '@/features/exploitation/services/surfaces';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { primesPercues, type PrimesPercues } from '@/features/cheptel/services/primesPercues';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
@@ -21,6 +21,8 @@ export function useBilanAnnuel() {
   const [bilanPrecedent, setBilanPrecedent] = useState<Bilan | null>(null);
   /** Les hectares admissibles des parcelles de l'année (espèce active) : la base des primes à l'hectare. */
   const [hectares, setHectares] = useState(0);
+  /** Ceux des parcelles par zone ICHN. */
+  const [hectaresParZone, setHectaresParZone] = useState<Record<string, number>>({});
   /** Les aides perçues pendant la saison (septembre de l'année → août suivant) : elles se comparent aux primes calculées. */
   const [percues, setPercues] = useState<PrimesPercues>({});
 
@@ -38,6 +40,7 @@ export function useBilanAnnuel() {
     setAnnees(toutesAnnees);
     const parcelles = controles.filter((c) => c.famille === FAMILLE_CONTROLE.TERRAIN && !c.typeDocument);
     setHectares(totauxSurfaces(parcelles).surfaceAdmissible);
+    setHectaresParZone(hectaresParZoneIchn(parcelles));
     // L'espèce n'est pas lue dans le chargement : elle sert à le relancer quand elle change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annee, espece]);
@@ -48,5 +51,5 @@ export function useBilanAnnuel() {
     }, [charger]),
   );
 
-  return { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares, percues };
+  return { annee, annees, setAnneeActive, bilan, bilanPrecedent, hectares, hectaresParZone, percues };
 }

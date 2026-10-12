@@ -8,6 +8,8 @@ export const LIEN_AIDE = {
   ODARC_ICHN: 'odarcIchn',
   /** La page du ministère sur le classement des communes en zone défavorisée (le fichier des communes classées). */
   ZONE_DEFAVORISEE: 'zoneDefavorisee',
+  /** Le texte (Légifrance) qui fixe le pourcentage de la réduction pour plafonnement budgétaire du paiement de base. */
+  PLAFONNEMENT_BUDGETAIRE: 'plafonnementBudgetaire',
 } as const;
 
 export const URL_LIEN_AIDE: Record<(typeof LIEN_AIDE)[keyof typeof LIEN_AIDE], string> = {
@@ -15,6 +17,8 @@ export const URL_LIEN_AIDE: Record<(typeof LIEN_AIDE)[keyof typeof LIEN_AIDE], s
   [LIEN_AIDE.AGRICULTURE]: 'https://agriculture.gouv.fr/',
   [LIEN_AIDE.ZONE_DEFAVORISEE]:
     'https://agriculture.gouv.fr/aides-aux-exploitations-classement-en-zone-defavorisee',
+  [LIEN_AIDE.PLAFONNEMENT_BUDGETAIRE]:
+    'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000052328766/2026-10-12',
   [LIEN_AIDE.ODARC_ICHN]: 'https://www.odarc.corsica/Interventions-ICHN-71-04-71-05-71-06-du-PSN_a351.html',
 };
 
@@ -30,6 +34,10 @@ export const IMAGE_AIDE = {
   ICHN_ZONES: 'ichnZones',
   /** Un extrait du fichier de classement des communes : la zone de chaque commune (montagne, zone défavorisée simple, handicap spécifique). */
   CLASSEMENT_COMMUNES: 'classementCommunes',
+  /** L'onglet « DPB » de Télépac (portefeuille DPB) : la valeur unitaire des DPB de la campagne (le numéro Pacage et les générateurs y sont masqués). */
+  DPB_TELEPAC: 'dpbTelepac',
+  /** La lettre de la DDT sur le portefeuille de DPB : le coefficient de réduction, le stabilisateur et la valeur unitaire après coefficient. */
+  LETTRE_DDT: 'lettreDdt',
 } as const;
 
 export const IMAGES_AIDES: Record<
@@ -55,5 +63,13 @@ export const IMAGES_AIDES: Record<
   [IMAGE_AIDE.CLASSEMENT_COMMUNES]: {
     source: require('../../../assets/aides/classement-communes-zones.webp'),
     rapport: 2000 / 557,
+  },
+  [IMAGE_AIDE.DPB_TELEPAC]: {
+    source: require('../../../assets/aides/telepac-dpb-portefeuille-2025.png'),
+    rapport: 825 / 857,
+  },
+  [IMAGE_AIDE.LETTRE_DDT]: {
+    source: require('../../../assets/aides/lettre-ddt-dpb-stabilisateur-2025.png'),
+    rapport: 884 / 625,
   },
 };

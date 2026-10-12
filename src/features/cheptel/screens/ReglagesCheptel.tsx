@@ -24,26 +24,35 @@ import {
   infosPourAnnee,
   plafondsDeLAide,
   primesPrevisionnelles,
+  reductionBudgetaireDpb,
   reductionDuStabilisateur,
   stabilisateurDpb,
 } from '@/features/cheptel/services/ugb';
-import { LibelleChamp } from '@/shared/components/LibelleChamp';
 import { listControles } from '@/features/exploitation/repository/controles';
 import { totauxSurfaces } from '@/features/exploitation/services/surfaces';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, ZONE_ICHN } from '@/shared/constants/controles';
 import { formatMontant } from '@/shared/utils/dates';
-import { BASE_PRIME, PRIMES, REGLES_PRIMES, STABILISATEUR_NEUTRE } from '@/shared/constants/primes';
+import {
+  BASE_PRIME,
+  MONTANT_ICHN_PAR_ZONE,
+  PRIMES,
+  REGLES_PRIMES,
+  STABILISATEUR_NEUTRE,
+} from '@/shared/constants/primes';
 import { especesActives } from '@/shared/dictionnaire/animaux';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
 import { generateId } from '@/shared/utils/id';
 import { parseDecimal } from '@/shared/utils/nombres';
-import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
+import { LABEL_ACTIVITE_COMPTABLE, LABEL_ZONE_ICHN } from '@/shared/textes/libelles';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.cheptel.ugbPrimes;
+
+/** Les zones de l'ICHN dont le montant se saisit à côté de celui de la montagne sèche (celui de l'aide). */
+const ZONES_ICHN_A_MONTANT = [ZONE_ICHN.HAUTE_MONTAGNE_SECHE, ZONE_ICHN.ZSCN, ZONE_ICHN.ZSCS];
 
 /** Une aide à l'écran : sa case, son montant (en texte) et sa base ; `nom` seulement pour une aide ajoutée ou renommée. */
 interface SaisieAide {
@@ -57,6 +66,10 @@ interface SaisieAide {
   plafondTaux: string;
   /** La part fixe par hectare (l'ICHN : en plus du montant de la zone). */
   partFixe: string;
+  /** L'ICHN sur deux niveaux de montagne : le montant (€/ha) du second niveau et ses hectares, en texte (vides : aucun). */
+  tauxParZone: Record<string, string>;
+  /** La majoration (%) pour un cheptel de petits ruminants (l'ICHN), en texte (vide : aucune). */
+  majoration: string;
   /** Les tranches d'une aide dégressive (l'ICHN) : jusqu'à tant d'hectares, la part payée. */
   tranchesZone: { jusqua: string; pourcentage: string }[];
 }
@@ -67,6 +80,8 @@ interface Saisie {
   associes: string;
   /** Le stabilisateur (%) du paiement de base de l'année, en texte (vide : aucun). */
   stabilisateur: string;
+  /** La réduction pour plafonnement budgétaire (%) de l'année, en texte (vide : aucune). */
+  reductionBudgetaire: string;
   coefficients: Record<string, { adulte: string; petit: string }>;
   primes: Record<string, SaisieAide>;
   personnalisees: (SaisieAide & { id: string })[];
@@ -83,6 +98,13 @@ const plafondEnTexte = (valeur: number): string => (valeur > 0 ? enTexte(valeur)
 const plafondsEnTexte = (infos: InfosExploitation | undefined, cle: string) => {
   const p = plafondsDeLAide(infos, cle);
   return {
+    tauxParZone: Object.fromEntries(
+      ZONES_ICHN_A_MONTANT.map((zone) => [
+        zone,
+        enTexte(infos?.ugbPrimes?.primes?.[cle]?.tauxParZone?.[zone]),
+      ]),
+    ),
+    majoration: enTexte(infos?.ugbPrimes?.primes?.[cle]?.majorationPetitsRuminants),
     plafond: plafondEnTexte(p.plafond),
     minimum: plafondEnTexte(p.minimum),
     plafondTaux: plafondEnTexte(p.plafondTaux),
@@ -96,6 +118,12 @@ const plafondsEnTexte = (infos: InfosExploitation | undefined, cle: string) => {
 
 /** Les plafonds saisis en nombres : un champ vide s'enregistre 0 (« sans plafond »), pour ne pas retomber sur le plafond d'office. */
 const plafondsEnNombres = (p: SaisieAide) => ({
+  tauxParZone: Object.fromEntries(
+    Object.entries(p.tauxParZone)
+      .map(([zone, texte]) => [zone, nombreOuRien(texte)])
+      .filter(([, montant]) => montant !== undefined),
+  ),
+  majorationPetitsRuminants: nombreOuRien(p.majoration),
   plafond: nombreOuRien(p.plafond) ?? 0,
   minimum: nombreOuRien(p.minimum) ?? 0,
   plafondTaux: nombreOuRien(p.plafondTaux) ?? 0,
@@ -130,6 +158,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
   const depart = (): Saisie => ({
     associes: enTexte(infosAides?.ugbPrimes?.associes ?? 1),
     stabilisateur: enTexte(stabilisateurDpb(infos, annee)),
+    reductionBudgetaire: enTexte(reductionBudgetaireDpb(infos, annee) || undefined),
     coefficients: Object.fromEntries(
       especes.map((e) => {
         const choisis = infos?.ugbPrimes?.coefficients?.[e];
@@ -205,6 +234,10 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
             ...infos?.ugbPrimes?.stabilisateurs,
             [String(annee)]: nombreOuRien(saisie.stabilisateur) ?? STABILISATEUR_NEUTRE,
           },
+          reductionsBudgetaires: {
+            ...infos?.ugbPrimes?.reductionsBudgetaires,
+            [String(annee)]: nombreOuRien(saisie.reductionBudgetaire) ?? 0,
+          },
           parAnnee: {
             ...infos?.ugbPrimes?.parAnnee,
             [cleAides(annee, espece)]: {
@@ -266,6 +299,14 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
           dpbAvantReduction,
           nombreOuRien(saisie.stabilisateur) ?? STABILISATEUR_NEUTRE,
         );
+
+  /** Ce que retirerait la réduction pour plafonnement budgétaire saisie (un pourcentage du paiement avant réduction). */
+  const reductionBudgetaireSaisie =
+    dpbAvantReduction === undefined
+      ? undefined
+      : Math.round(((dpbAvantReduction * (nombreOuRien(saisie.reductionBudgetaire) ?? 0)) / 100) * 100) / 100;
+  const montantOuTiret = (montant: number | undefined) =>
+    montant === undefined ? '—' : formatMontant(montant);
 
   const majAide = (cle: string, personnalisee: boolean, patch: Partial<SaisieAide>) =>
     setSaisie((s) =>
@@ -360,6 +401,37 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
                   placeholder="0"
                   explication={personnalisee ? undefined : T.primes[cle as keyof typeof T.primes].ouTrouver}
                 />
+                {/* L'ICHN : un second niveau de montagne (très haute montagne), avec ses hectares ; le calcul pondère les deux zones par leur surface. */}
+                {!personnalisee && REGLES_PRIMES[cle as keyof typeof REGLES_PRIMES]?.tranchesZone ? (
+                  <>
+                    {ZONES_ICHN_A_MONTANT.map((zone) => (
+                      <FormField
+                        key={zone}
+                        label={T.tauxDeLaZone(LABEL_ZONE_ICHN[zone])}
+                        value={aideSaisie.tauxParZone[zone] ?? ''}
+                        onChangeText={(v) =>
+                          /^\d*[.,]?\d*$/.test(v) &&
+                          majAide(cle, personnalisee, {
+                            tauxParZone: { ...aideSaisie.tauxParZone, [zone]: v },
+                          })
+                        }
+                        keyboardType="decimal-pad"
+                        placeholder={String(MONTANT_ICHN_PAR_ZONE[zone]).replace('.', ',')}
+                        explication={zone === ZONE_ICHN.HAUTE_MONTAGNE_SECHE ? T.zonesAide : undefined}
+                      />
+                    ))}
+                    <FormField
+                      label={T.majoration}
+                      value={aideSaisie.majoration}
+                      onChangeText={(v) =>
+                        /^\d*[.,]?\d*$/.test(v) && majAide(cle, personnalisee, { majoration: v })
+                      }
+                      keyboardType="decimal-pad"
+                      placeholder={T.sansMajoration}
+                      explication={T.majorationAide}
+                    />
+                  </>
+                ) : null}
                 {/* Le paiement de base : le stabilisateur de l'année se règle ; la réduction pour plafonnement budgétaire s'en déduit. */}
                 {!personnalisee && cle === 'dpb' ? (
                   <>
@@ -373,14 +445,35 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
                       placeholder="100"
                       explication={T.stabilisateurAide}
                     />
+                    {/* La réduction du relevé : la plus élevée des deux, d'elle et de celle du stabilisateur, s'applique. */}
+                    <FormField
+                      label={T.reductionBudgetaire}
+                      value={saisie.reductionBudgetaire}
+                      onChangeText={(v) =>
+                        /^\d*[.,]?\d*$/.test(v) && setSaisie((x) => ({ ...x, reductionBudgetaire: v }))
+                      }
+                      keyboardType="decimal-pad"
+                      placeholder="0"
+                      explication={T.reductionBudgetaireAide}
+                    />
                     <View style={commonStyles.gap6}>
-                      <LibelleChamp label={T.reductionBudgetaire} explication={T.reductionBudgetaireAide} />
                       <View style={commonStyles.rowSpaceBetween}>
                         <Text style={commonStyles.note}>{T.calculeSurStabilisateur}</Text>
-                        <Text style={commonStyles.note}>
-                          {reductionDuStabilisateurSaisi === undefined
-                            ? '—'
-                            : formatMontant(reductionDuStabilisateurSaisi)}
+                        <Text style={commonStyles.note}>{montantOuTiret(reductionDuStabilisateurSaisi)}</Text>
+                      </View>
+                      <View style={commonStyles.rowSpaceBetween}>
+                        <Text style={commonStyles.note}>{T.calculeSurPlafonnement}</Text>
+                        <Text style={commonStyles.note}>{montantOuTiret(reductionBudgetaireSaisie)}</Text>
+                      </View>
+                      <View style={commonStyles.rowSpaceBetween}>
+                        <Text style={commonStyles.lineSemiBold}>{T.reductionRetenue}</Text>
+                        <Text style={commonStyles.lineSemiBold}>
+                          {montantOuTiret(
+                            reductionDuStabilisateurSaisi === undefined ||
+                              reductionBudgetaireSaisie === undefined
+                              ? undefined
+                              : Math.max(reductionDuStabilisateurSaisi, reductionBudgetaireSaisie),
+                          )}
                         </Text>
                       </View>
                     </View>
@@ -553,6 +646,8 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
                 minimum: '',
                 plafondTaux: '',
                 partFixe: '',
+                tauxParZone: {},
+                majoration: '',
                 tranchesZone: [],
               },
             ],
