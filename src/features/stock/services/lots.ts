@@ -198,14 +198,16 @@ export function fabriquerFromages(saisie: {
     const erreur = erreurFabrication(archive, saisie.article, saisie.debut, saisie.quantite);
     if (erreur) throw new Error(erreur);
     const numeros = plageDeBoucles(saisie.debut, saisie.quantite) as string[];
+    const mouvementId = generateId();
     const lots: LotFromage[] = numeros.map((numero) => ({
       id: generateId(),
       article: saisie.article,
       numero,
       dateFabrication: saisie.date,
+      mouvementId,
     }));
     const mouvement: MouvementStock = {
-      id: generateId(),
+      id: mouvementId,
       article: saisie.article,
       date: saisie.date,
       delta: numeros.length,
@@ -216,6 +218,62 @@ export function fabriquerFromages(saisie: {
       ...archive,
       lots: [...(archive.lots ?? []), ...lots],
       mouvements: [...archive.mouvements, mouvement],
+    });
+  });
+}
+
+/**
+ * Change la date de fabrication d'un lot : celle de toute sa fabrication (ses lots sont nés ensemble, d'un seul mouvement de stock),
+ * et la date de ce mouvement — le lait utilisé pour les fromages suit. Un lot d'avant ce suivi retrouve son mouvement d'après son
+ * article et sa date de fabrication. Rien ne change pour les ventes ni les rappels des lots.
+ */
+export function modifierDateFabrication(id: string, date: string): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const lot = (archive.lots ?? []).find((l) => l.id === id);
+    if (!lot || !date || lot.dateFabrication === date) return;
+    const groupe = lotsDeLaFabrication(archive.lots ?? [], lot);
+    const candidats = archive.mouvements.filter(
+      (m) =>
+        m.origine === ORIGINE_MOUVEMENT.MANUEL &&
+        m.delta > 0 &&
+        (lot.mouvementId
+          ? m.id === lot.mouvementId
+          : m.article === lot.article && m.date === lot.dateFabrication),
+    );
+    // Plusieurs fabrications le même jour (lots d'avant le suivi) : celle qui a fait entrer autant de fromages.
+    const mouvement = candidats.find((m) => m.delta === groupe.length) ?? candidats[0];
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).map((l) =>
+        groupe.some((g) => g.id === l.id)
+          ? { ...l, dateFabrication: date, mouvementId: mouvement?.id ?? l.mouvementId }
+          : l,
+      ),
+      mouvements: archive.mouvements.map((m) => (m.id === mouvement?.id ? { ...m, date } : m)),
+    });
+  });
+}
+
+/** Le nombre de lots d'une même fabrication que ce lot (lui compris) : ceux dont la date change avec la sienne. */
+export function lotsDeLaFabrication(lots: LotFromage[], lot: LotFromage): LotFromage[] {
+  return lots.filter((l) =>
+    lot.mouvementId
+      ? l.mouvementId === lot.mouvementId
+      : !l.mouvementId && l.article === lot.article && l.dateFabrication === lot.dateFabrication,
+  );
+}
+
+/** Coche ou décoche le contrôle de plusieurs fromages d'un coup (« tout sélectionner »). */
+export function controlerLots(ids: string[], controleOk: boolean): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const choisis = new Set(ids);
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).map((l) =>
+        choisis.has(l.id) ? { ...l, controleOk: controleOk || undefined } : l,
+      ),
     });
   });
 }

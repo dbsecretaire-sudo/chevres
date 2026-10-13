@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { Fab } from '@/shared/components/Fab';
+import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
 import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -14,6 +15,8 @@ import { TEXTES } from '@/shared/textes';
 
 export default function ClientsIndex() {
   const router = useRouter();
+  /** Ouverte depuis un formulaire en cours (le crayon du champ) : la flèche y ramène. */
+  const { retour } = useLocalSearchParams<{ retour?: string }>();
   const [clients, setClients] = useState<Client[]>([]);
   const [recherche, setRecherche] = useState('');
 
@@ -37,6 +40,7 @@ export default function ClientsIndex() {
 
   return (
     <Screen scroll={false}>
+      <FlecheRetourDepuis retour={retour} />
       <View style={commonStyles.topPadded}>
         <ChampRecherche
           value={recherche}

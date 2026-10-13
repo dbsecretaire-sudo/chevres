@@ -264,6 +264,12 @@ export const ORIGINE_MOUVEMENT = {
   CONSOMMATION: 'consommation',
   /** Des fromages rappelés (retirés de la vente) : ils sortent du stock. */
   RAPPEL: 'rappel',
+  /** Du lait produit (noté dans le journal, ou déduit de ce qui en est sorti) : une entrée de l'historique du lait. */
+  PRODUCTION: 'production',
+  /** Du lait utilisé pour fabriquer des fromages : une sortie de l'historique du lait. */
+  FABRICATION: 'fabrication',
+  /** Le lait produit que la balance automatique ajoute pour une sortie (vente, fabrication) que le journal de lait ne couvre pas. */
+  BALANCE: 'balance',
 } as const;
 
 /** Les lignes de viande tenues d'office pour chaque espèce : ses petits, puis l'animal sur pied et l'animal vivant. */

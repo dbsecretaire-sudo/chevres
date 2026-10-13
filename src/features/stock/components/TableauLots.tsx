@@ -4,7 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeLots } from '@/features/stock/hooks/useListeLots';
-import { basculerControleLot, etatDuLot } from '@/features/stock/services/lots';
+import { DateFabricationModal } from '@/features/stock/components/DateFabricationModal';
+import {
+  basculerControleLot,
+  controlerLots,
+  etatDuLot,
+  lotsDeLaFabrication,
+  modifierDateFabrication,
+} from '@/features/stock/services/lots';
+import type { LotFromage } from '@/features/stock/types';
 import { ETAT_LOT, TRI_LOT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
@@ -36,7 +44,11 @@ export function FiltresLots({ liste }: { liste: ListeLots }) {
  * par une fabrication (Production › Fromages) et sortent par une vente (Comptabilité) ou un rappel.
  */
 export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: () => void }) {
-  const { lignes, tri, trierPar, filtres } = liste;
+  const { lignes, tri, trierPar, filtres, tousLesLots } = liste;
+  /** Le lot dont on modifie la date de fabrication. */
+  const [lotADater, setLotADater] = useState<LotFromage | undefined>();
+  /** Tous les lots montrés sont contrôlés : « Tout cocher » devient « Tout décocher ». */
+  const toutControle = lignes.length > 0 && lignes.every((l) => l.controleOk);
   /** La colonne dont le menu de filtre est ouvert. */
   const [menu, setMenu] = useState<'numero' | 'fabrication' | 'vente' | 'controle' | null>(null);
   const nomsColonnes = {
@@ -93,6 +105,24 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
           {boutonFiltre('controle')}
         </View>
       </View>
+      {lignes.length > 0 ? (
+        <View style={styles.barreActions}>
+          <Pressable
+            hitSlop={8}
+            onPress={async () => {
+              await controlerLots(
+                lignes.map((l) => l.id),
+                !toutControle,
+              );
+              onChange();
+            }}
+          >
+            <Text style={commonStyles.lien}>
+              {toutControle ? T.toutDecontroler : T.toutControler(lignes.length)}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
       {lignes.length === 0 ? (
         <Text style={[commonStyles.mutedItalic, styles.vide]}>{T.aucun}</Text>
       ) : (
@@ -100,9 +130,11 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
           {lignes.map((lot, i) => (
             <View key={lot.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
               <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>
-              <Text style={[styles.texteLigne, styles.colonneDate]}>
-                {formatDateShortFR(lot.dateFabrication)}
-              </Text>
+              <Pressable style={styles.colonneDate} hitSlop={6} onPress={() => setLotADater(lot)}>
+                <Text style={[styles.texteLigne, styles.dateModifiable]}>
+                  {formatDateShortFR(lot.dateFabrication)}
+                </Text>
+              </Pressable>
               {etatDuLot(lot) === ETAT_LOT.RAPPELE ? (
                 <Text style={[styles.datePose, styles.colonneDate]}>{T.rappele}</Text>
               ) : (
@@ -129,6 +161,17 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
           ))}
         </ScrollView>
       )}
+      <DateFabricationModal
+        visible={!!lotADater}
+        lot={lotADater}
+        nombreDeLots={lotADater ? lotsDeLaFabrication(tousLesLots, lotADater).length : 0}
+        onValider={async (date) => {
+          if (lotADater) await modifierDateFabrication(lotADater.id, date);
+          setLotADater(undefined);
+          onChange();
+        }}
+        onFermer={() => setLotADater(undefined)}
+      />
       {menu ? (
         <FiltreColonne
           key={menu}

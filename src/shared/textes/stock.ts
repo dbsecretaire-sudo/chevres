@@ -203,6 +203,18 @@ export const TEXTES_STOCK = {
     rappel:
       'Les ajouts et les suppressions se font dans Comptabilité (suppression par vente), et dans Production (ajout par fabrication, rappels).',
     ok: 'OK',
+    /** Cocher le contrôle de tous les lots montrés (selon les filtres), ou le retirer. */
+    toutControler: (nombre: number) => `Tout cocher (${nombre})`,
+    toutDecontroler: 'Tout décocher',
+    /** La date de fabrication d'un lot : elle se modifie d'un appui, pour toute sa fabrication. */
+    modifierDate: {
+      titre: (numero: string) => `Date de fabrication du lot ${numero}`,
+      date: 'Date de fabrication',
+      note: (nombre: number) =>
+        nombre > 1
+          ? `La date change pour les ${nombre} lots de cette fabrication, et le mouvement de stock du lait suit.`
+          : 'Le mouvement de stock du lait de cette fabrication suit la nouvelle date.',
+    },
     /** Les fromages en stock saisis avant le suivi par lot : ils n'ont pas de numéro. */
     sansLot: (nombre: number) =>
       `${nombre} fromage${nombre > 1 ? 's' : ''} sans n° de lot (saisi${nombre > 1 ? 's' : ''} avant le suivi par lot).`,
@@ -217,6 +229,11 @@ export const TEXTES_STOCK = {
     details: 'Détails',
     masquer: 'Masquer',
     bilanVendu: (vendu: string) => `Vendu ${vendu}`,
+    bilanFromage: (fabrique: string, vendu: string) => `Fabriqué ${fabrique} · Vendu ${vendu}`,
+    bilanLait: (produit: string, utilise: string, vendu: string) =>
+      `Produit ${produit} · Utilisé en fabrication ${utilise} · Vendu ${vendu}`,
+    noteLait:
+      'Le lait utilisé ou vendu a forcément été produit : à chaque sortie que le journal de lait ne couvre pas, une balance automatique ajoute la même quantité en production, à la même date.',
     bilanConsommable: (achete: string, consomme: string) => `Acheté ${achete} · Consommé ${consomme}`,
     bilanInvestissement: (achete: string) => `Acheté ${achete}`,
     mouvements: (nombre: number) => `${nombre} mouvement${nombre > 1 ? 's' : ''}`,
@@ -327,14 +344,18 @@ export const TEXTES_STOCK = {
   consommation: 'consommation',
   pose: 'pose',
   rappel: 'rappel',
+  productionLait: 'lait produit',
+  balanceLait: 'lait produit (balance automatique)',
+  fabrication: 'fabrication',
   entreeBoucle: 'ajout depuis le cheptel',
   ligneMouvement: (date: string, article: string, delta: string, origine: string) =>
     `${date} · ${article} · ${delta} (${origine})`,
   modal: {
     titre: (article: string) => `Inventaire : ${article}`,
     quantite: 'Quantité',
-    litres: 'Litres de lait utilisés (facultatif)',
-    litresBrocciu: 'Litres de lait versés dans le lactosérum (facultatif)',
+    litres: 'Litres de lait utilisés',
+    litresBrocciu: 'Litres de lait versés dans le lactosérum',
+    litresRequis: 'Indiquez les litres de lait utilisés : ils entrent dans l’inventaire avec les fromages.',
     quantiteInvalide: 'Indiquez une quantité : +1 pour un ajout, −1 pour un retrait.',
     aide: '+1 pour un ajout, −1 pour un retrait.',
     aideConsommable: '+1 pour un achat, −1 pour ce qui a été consommé.',

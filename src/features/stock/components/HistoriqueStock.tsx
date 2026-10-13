@@ -9,6 +9,7 @@ import {
   articlesDuGenre,
   libelleArticle,
   libelleOrigineMouvement,
+  productionDeduite,
   type FiltreStock,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle, MouvementStock } from '@/features/stock/types';
@@ -47,6 +48,8 @@ const CARTES: {
   /** La catégorie de l'inventaire (celle de l'organisation comptable) sous laquelle la carte est rangée. */
   categorie: string;
   lait?: boolean;
+  /** Une carte de ce qui se vend qui montre aussi ses entrées (les fabrications de fromages, le lait produit). */
+  entrees?: boolean;
   /** Pour la carte d'une liste personnalisée : cette liste. */
   listeId?: string;
 }[] = [
@@ -55,6 +58,7 @@ const CARTES: {
     genres: [GENRE_ARTICLE.FROMAGE],
     nature: NATURE_STOCK.VENTE,
     categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+    entrees: true,
   },
   // Le lait n'est pas un article du stock : ses « mouvements » viennent du journal de lait, des fabrications et des ventes.
   {
@@ -63,6 +67,7 @@ const CARTES: {
     nature: NATURE_STOCK.VENTE,
     categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
     lait: true,
+    entrees: true,
   },
   {
     titre: T.onglets.viande,
@@ -180,15 +185,47 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
   const basculer = (cle: string) =>
     setOuverts((actuels) => (actuels.includes(cle) ? actuels.filter((c) => c !== cle) : [...actuels, cle]));
 
-  /** Le lait de l'historique : seulement celui qui a été vendu (les ventes de lait de la comptabilité), en litres sortis. */
-  const mouvementsLait = (): MouvementStock[] =>
-    ventesLait.map((v) => ({
+  /**
+   * Le lait de l'historique : ce qui a été produit (le journal de lait), utilisé pour les fromages et vendu. Tout ce qui est sorti a
+   * forcément été produit : la balance automatique ajoute en production ce que le journal ne couvre pas, à la date de chaque sortie.
+   */
+  const mouvementsLait = (): MouvementStock[] => {
+    const ventes: MouvementStock[] = ventesLait.map((v) => ({
       id: v.id,
       article: CLE_LAIT,
       date: v.date,
       delta: -v.litres,
       origine: ORIGINE_MOUVEMENT.VENTE,
     }));
+    const fabrications: MouvementStock[] = archive.mouvements
+      .filter((m) => m.origine === ORIGINE_MOUVEMENT.MANUEL && m.delta > 0 && (m.litres ?? 0) > 0)
+      .map((m) => ({
+        id: `${m.id}:lait`,
+        article: CLE_LAIT,
+        date: m.date,
+        delta: -(m.litres ?? 0),
+        origine: ORIGINE_MOUVEMENT.FABRICATION,
+      }));
+    const notes: MouvementStock[] = archive.lait.map((l) => ({
+      id: l.id,
+      article: CLE_LAIT,
+      date: l.date,
+      delta: l.litres,
+      origine: ORIGINE_MOUVEMENT.PRODUCTION,
+    }));
+    // La balance automatique : ce qui est sorti sans que le journal le couvre est ajouté en production, sortie par sortie.
+    const deduits: MouvementStock[] = productionDeduite(
+      archive.lait.reduce((total, l) => total + l.litres, 0),
+      [...ventes, ...fabrications].map((m) => ({ id: m.id, date: m.date, litres: -m.delta })),
+    ).map((d) => ({
+      id: `balance:${d.id}`,
+      article: CLE_LAIT,
+      date: d.date,
+      delta: d.litres,
+      origine: ORIGINE_MOUVEMENT.BALANCE,
+    }));
+    return [...notes, ...deduits, ...fabrications, ...ventes];
+  };
 
   /**
    * Les animaux vendus qui ne passent par aucun article du stock (cabris, animal sur pied, vivant : ces lignes suivent le cheptel) :
@@ -256,11 +293,11 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
             ? articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, filtre).length > 0
             : genres.some((g) => articlesDuGenre(g, archive, filtre, listeId).length > 0),
         )
-        .map(({ titre, genres, nature, categorie, lait, listeId }, index, visibles) => {
+        .map(({ titre, genres, nature, categorie, lait, listeId, entrees }, index, visibles) => {
           const idCarte = listeId ?? (lait ? CLE_LAIT : genres[0]);
           const premiereDeSaNature = index === 0 || visibles[index - 1].categorie !== categorie;
           // Ce qui se vend (fromages, lait, viande) ne montre que ce qui a été vendu : en quantités positives.
-          const ventesSeules = nature === NATURE_STOCK.VENTE;
+          const ventesSeules = nature === NATURE_STOCK.VENTE && !entrees;
           const seulementVentes = (liste: MouvementStock[]) =>
             ventesSeules ? liste.filter((m) => m.origine === ORIGINE_MOUVEMENT.VENTE) : liste;
           const mouvements = seulementVentes(mouvementsDeLaCarte(genres, false, lait, listeId));
@@ -269,22 +306,30 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
             : genres.includes(GENRE_ARTICLE.ALIMENT)
               ? ` ${TEXTES.commun.general.kg}`
               : '';
-          const dansLAnnee = seulementVentes(mouvementsDeLaCarte(genres, true, lait, listeId)).filter((m) =>
-            m.date.startsWith(String(annee)),
+          const dansLAnnee = seulementVentes(mouvementsDeLaCarte(genres, true, lait, listeId)).filter(
+            (m) => m.date.startsWith(String(annee)) && !(entrees && m.automatique),
           );
           const entre = dansLAnnee.filter((m) => m.delta > 0).reduce((somme, m) => somme + m.delta, 0);
           const sortiPar = (origine: string) =>
             -dansLAnnee
               .filter((m) => m.origine === origine)
               .reduce((somme, m) => somme + Math.min(m.delta, 0), 0);
-          const bilan = ventesSeules
-            ? T.historique.bilanVendu(`${nombreFR(sortiPar(ORIGINE_MOUVEMENT.VENTE))}${unite}`)
-            : nature === NATURE_STOCK.CONSOMMABLE
-              ? T.historique.bilanConsommable(
+          const bilan = entrees
+            ? lait
+              ? T.historique.bilanLait(
                   `${nombreFR(entre)}${unite}`,
-                  `${nombreFR(sortiPar(ORIGINE_MOUVEMENT.CONSOMMATION))}${unite}`,
+                  `${nombreFR(sortiPar(ORIGINE_MOUVEMENT.FABRICATION))}${unite}`,
+                  `${nombreFR(sortiPar(ORIGINE_MOUVEMENT.VENTE))}${unite}`,
                 )
-              : T.historique.bilanInvestissement(`${nombreFR(entre)}${unite}`);
+              : T.historique.bilanFromage(nombreFR(entre), nombreFR(sortiPar(ORIGINE_MOUVEMENT.VENTE)))
+            : ventesSeules
+              ? T.historique.bilanVendu(`${nombreFR(sortiPar(ORIGINE_MOUVEMENT.VENTE))}${unite}`)
+              : nature === NATURE_STOCK.CONSOMMABLE
+                ? T.historique.bilanConsommable(
+                    `${nombreFR(entre)}${unite}`,
+                    `${nombreFR(sortiPar(ORIGINE_MOUVEMENT.CONSOMMATION))}${unite}`,
+                  )
+                : T.historique.bilanInvestissement(`${nombreFR(entre)}${unite}`);
           /** Ce que les mouvements d'un mois ajoutent (ou retirent) au stock ; pour ce qui se vend, les quantités vendues. */
           const totalDuMois = (an: number, mois: number): string =>
             nombreFR(
@@ -312,6 +357,7 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
               <Card>
                 <TitreCarte titre={titre} valeur={dansLAn(annee)} comparaison={dansLAn(annee - 1)} />
                 <Text style={commonStyles.note}>{bilan}</Text>
+                {lait ? <Text style={commonStyles.note}>{T.historique.noteLait}</Text> : null}
                 {mois.length === 0 ? (
                   <Text style={commonStyles.mutedItalic}>{T.historique.aucun}</Text>
                 ) : (
@@ -355,7 +401,7 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
                                 nomArticle(x.article, archive),
                                 ventesSeules
                                   ? `${-x.delta}${lait ? ' L' : ''}`
-                                  : `${x.delta > 0 ? '+' : ''}${x.delta}`,
+                                  : `${x.delta > 0 ? '+' : ''}${nombreFR(x.delta)}${lait ? ' L' : ''}`,
                                 libelleOrigineMouvement(x),
                               )}
                             </Text>

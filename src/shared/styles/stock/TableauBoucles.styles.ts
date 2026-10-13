@@ -35,6 +35,17 @@ export const styles = StyleSheet.create({
   ligne: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   ligneSeparee: { borderTopWidth: 1, borderTopColor: colors.border },
   texteLigne: { fontSize: 13, color: colors.text },
+  /** Une date qui se modifie d'un appui (la date de fabrication d'un lot) : soulignée. */
+  dateModifiable: { textDecorationLine: 'underline' },
+  /** La ligne « Tout cocher » sous l'en-tête du tableau. */
+  barreActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   /** Une date de pose : en rouge, comme ce qui sort du stock. */
   datePose: { fontSize: 14, color: colors.danger },
   vide: { padding: 16, textAlign: 'center' },

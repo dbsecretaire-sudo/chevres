@@ -71,6 +71,9 @@ export default function FabricationFromage() {
     if (!archive) return;
     const erreur = erreurFabrication(archive, article, premier, nombre);
     if (erreur) return Alert.alert(erreur);
+    // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
+    if (fromage && !(parseDecimal(litres) > 0))
+      return Alert.alert(TEXTES.production.fabrication.litresRequis);
     setEnregistrement(true);
     try {
       await fabriquerFromages({
@@ -78,7 +81,7 @@ export default function FabricationFromage() {
         date,
         quantite: nombre,
         debut: premier,
-        litres: fromage && litres.trim() ? parseDecimal(litres) : undefined,
+        litres: fromage ? parseDecimal(litres) : undefined,
       });
       router.back();
     } finally {
@@ -109,6 +112,7 @@ export default function FabricationFromage() {
         {fromage ? (
           <FormField
             label={TEXTES.production.fabrication.litres}
+            required
             value={litres}
             onChangeText={setLitres}
             keyboardType="decimal-pad"

@@ -191,7 +191,7 @@ export function estLigneDuCheptel(cle: string): boolean {
 
 /** Le mot qui dit d'où vient un mouvement (vente, saisie, naissance, achat, consommation). */
 export function libelleOrigineMouvement(
-  m: Pick<MouvementStock, 'origine' | 'automatique' | 'boucleId' | 'delta'>,
+  m: Pick<MouvementStock, 'origine' | 'automatique' | 'boucleId' | 'delta' | 'litres'>,
 ): string {
   if (m.automatique) return TEXTES.stock.exporter.remiseAZero;
   if (m.boucleId) return m.delta > 0 ? TEXTES.stock.entreeBoucle : TEXTES.stock.pose;
@@ -206,8 +206,15 @@ export function libelleOrigineMouvement(
       return TEXTES.stock.consommation;
     case ORIGINE_MOUVEMENT.RAPPEL:
       return TEXTES.stock.rappel;
+    case ORIGINE_MOUVEMENT.PRODUCTION:
+      return TEXTES.stock.productionLait;
+    case ORIGINE_MOUVEMENT.FABRICATION:
+      return TEXTES.stock.fabrication;
+    case ORIGINE_MOUVEMENT.BALANCE:
+      return TEXTES.stock.balanceLait;
     default:
-      return TEXTES.stock.manuel;
+      // Des fromages entrés avec les litres de lait utilisés : une fabrication.
+      return m.delta > 0 && (m.litres ?? 0) > 0 ? TEXTES.stock.fabrication : TEXTES.stock.manuel;
   }
 }
 
@@ -577,6 +584,31 @@ export function bilanLait(archive: ArchiveStock, litresVendus: number): BilanLai
     vendu: arrondi(litresVendus),
     restant: arrondi(produit - utilise - litresVendus),
   };
+}
+
+/** Une sortie de lait (vente au récolteur, fabrication de fromages) : son identifiant, sa date et ses litres. */
+export interface SortieLait {
+  id: string;
+  date: string;
+  litres: number;
+}
+
+/**
+ * La balance automatique du lait : tout ce qui est sorti (vendu, utilisé en fromagerie) a forcément été produit. Les sorties, de la
+ * plus ancienne à la plus récente, puisent d'abord dans le lait noté au journal ; ce qui n'est pas couvert est ajouté en production,
+ * pour la même quantité et à la même date que la sortie. Le total produit est ainsi le plus grand du lait noté et du lait sorti,
+ * comme dans le bilan du lait.
+ */
+export function productionDeduite(litresNotes: number, sorties: SortieLait[]): SortieLait[] {
+  let reserve = litresNotes;
+  const deduites: SortieLait[] = [];
+  for (const sortie of [...sorties].sort((a, b) => a.date.localeCompare(b.date))) {
+    const couvert = Math.min(reserve, sortie.litres);
+    reserve -= couvert;
+    const reste = Math.round((sortie.litres - couvert) * 100) / 100;
+    if (reste > 0) deduites.push({ ...sortie, litres: reste });
+  }
+  return deduites;
 }
 
 /** Le lait utilisé pour les fabrications d'un fromage sur une année : par fromage, et mois par mois. */

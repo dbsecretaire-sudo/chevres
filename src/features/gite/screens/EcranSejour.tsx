@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -72,6 +73,7 @@ const enTexte = (nombre: number | undefined): string => (nombre ? String(nombre)
  */
 export default function EcranSejour() {
   const router = useRouter();
+  const retour = useAdresseCourante();
   const {
     id,
     chambre: chambreParam,
@@ -492,7 +494,7 @@ export default function EcranSejour() {
             value={clientId}
             options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
             onChange={setClientId}
-            onEdit={() => router.push(ROUTES.CLIENTS)}
+            onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
           />
           {coordonnees ? <Text style={commonStyles.note}>{coordonnees}</Text> : null}
 

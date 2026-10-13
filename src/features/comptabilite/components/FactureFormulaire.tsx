@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
@@ -66,6 +67,7 @@ const T = TEXTES.comptabilite.nouvelleEcriture;
  */
 export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   const router = useRouter();
+  const retour = useAdresseCourante();
   const { settings } = useAppSettings();
   const { form, fournisseurs, clients } = f;
   if (!form) return null;
@@ -168,7 +170,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             options={clientsPourLaRecette(clients, form.categorieRecette, f.activiteForm, form.tiers).map(
               (c) => ({ value: c.id, label: nomComplet(c) }),
             )}
-            onEdit={() => router.push(ROUTES.CLIENTS)}
+            onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
           />
         ) : (
           <SelectFieldEditable
@@ -182,7 +184,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
               value: x.id,
               label: x.nomEntreprise,
             }))}
-            onEdit={() => router.push(ROUTES.FOURNISSEURS)}
+            onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
           />
         )}
         {/* Une aide n'a pas de numéro de facture : le tiers et le type d'aide la décrivent. */}

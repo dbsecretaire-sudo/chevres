@@ -172,7 +172,7 @@ export function VenteFormulaire({
             })),
             ...(client || !form.client ? [] : [{ value: CLIENT_HORS_LISTE, label: form.client }]),
           ]}
-          onEdit={() => router.push(ROUTES.CLIENTS)}
+          onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
         />
 
         {/* Le client souhaite-t-il que la vente soit déclarée (avec facture) ? Coché d'office, comme à la création. */}

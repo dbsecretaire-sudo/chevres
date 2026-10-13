@@ -1,4 +1,5 @@
 import { estArticleBoucle } from '@/features/stock/services/boucles';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -56,6 +57,7 @@ const optionsCategorieDepense = (fournisseur: Fournisseur | undefined) => {
 /** Champs d'un débit (facture reçue) : catégorie, fournisseur, TVA et détail des montants. */
 export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
   const router = useRouter();
+  const retour = useAdresseCourante();
   const estAlimentation = e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   /** La catégorie du fournisseur choisi : elle dit quelles cases (paiement, non facturée) s'affichent. */
@@ -76,7 +78,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           value={e.fournisseurId}
           onChange={e.changerFournisseur}
           options={e.fournisseurs.map((f) => ({ value: f.id, label: f.nomEntreprise }))}
-          onEdit={() => router.push(ROUTES.FOURNISSEURS)}
+          onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
         />
 
         <FormField

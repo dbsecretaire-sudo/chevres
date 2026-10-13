@@ -20,6 +20,10 @@ export const TEXTES_PRODUCTION = {
       titre: 'Contrôle laitier',
       aide: 'Les contrôles de la production et de la qualité du lait, et les analyses.',
     },
+    productionLait: {
+      titre: 'Production du lait',
+      aide: 'Le lait produit par animal et par traite, d’après l’inventaire.',
+    },
     officiel: {
       titre: 'Contrôles officiels et autocontrôles',
       aide: 'Les contrôles de l’abattoir (services de l’État) et vos propres autocontrôles.',
@@ -77,7 +81,7 @@ export const TEXTES_PRODUCTION = {
   fromages: {
     titre: 'Fromages',
     aucun: 'Aucun fromage suivi : fabriquez-en avec le bouton +.',
-    ajouter: { titre: 'Ajouter un fromage', exemple: 'ex : Tomme' },
+    ajouter: { titre: 'Ajouter une variété de fromage', exemple: 'ex : Tomme' },
     fabriquer: 'Fabriquer des fromages',
     rappeler: 'Rappeler des fromages',
     statistiques: 'Statistiques de lait',
@@ -91,6 +95,10 @@ export const TEXTES_PRODUCTION = {
     fabriquer: 'Fabriquer des produits',
     rappeler: 'Rappeler des produits',
   },
+  /** La page de la production de lait. */
+  productionLait: {
+    nonCalcule: 'Le lait par animal se calcule pour les chèvres et les brebis.',
+  },
   /** La fabrication : des fromages numérotés à la suite, qui entrent au stock. */
   fabrication: {
     titre: 'Fabriquer des fromages',
@@ -100,7 +108,8 @@ export const TEXTES_PRODUCTION = {
     premier: 'N° du premier lot',
     premierAide: 'Chaque fromage a son numéro de lot, à la suite du premier.',
     dernier: (numero: string) => `Dernier lot : ${numero}`,
-    litres: 'Litres de lait utilisés (facultatif)',
+    litres: 'Litres de lait utilisés',
+    litresRequis: 'Indiquez les litres de lait utilisés : ils entrent dans l’inventaire avec les fromages.',
     enregistrer: 'Fabriquer',
     quantiteRequise: 'Indiquez le nombre de produits fabriqués.',
     premierRequis: 'Indiquez le n° du premier lot (il se termine par un chiffre).',

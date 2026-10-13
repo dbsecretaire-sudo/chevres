@@ -106,6 +106,8 @@ export interface LotFromage {
   /** Le numéro du lot : celui du fromage. */
   numero: string;
   dateFabrication: string;
+  /** Le mouvement de stock de la fabrication (celui qui a fait entrer ses lots, avec le lait utilisé) : sa date suit celle de la fabrication. */
+  mouvementId?: string;
   /** Vendu : la date de la vente et la vente (les fromages d'une vente se choisissent dans son formulaire). */
   dateVente?: string;
   venteId?: string;

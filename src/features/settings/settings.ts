@@ -113,6 +113,13 @@ export interface InfosEntreprise {
 export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined =>
   infos?.montantTaxeSejour ?? infos?.taxeSejourParNuit;
 
+/** Ce que l'utilisateur saisit d'une année de traite : les dates de début et de fin, et le nombre d'animaux à traire. */
+export interface ReglagesTraite {
+  debut?: string;
+  fin?: string;
+  chevres?: number;
+}
+
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
   /** Un titre propre à l'utilisateur, imprimé en tête de chaque PDF (nom commercial, adresse, mention…). */
@@ -153,6 +160,11 @@ export interface InfosExploitation {
      */
     reductionsBudgetaires?: Record<string, number>;
   };
+  /**
+   * La traite d'une année et d'une espèce (« 2026:chevres ») : les dates de début et de fin de traite et le nombre d'animaux à traire,
+   * pour un lait par animal plus précis que celui déduit de l'inventaire. Ils ne se reprennent pas d'une année à l'autre.
+   */
+  traites?: Record<string, ReglagesTraite>;
   /** La trésorerie : le solde du compte à une date (le départ des courbes), le seuil sous lequel alerter, et les emprunts en cours. */
   tresorerie?: ReglagesTresorerie;
   emprunts?: Emprunt[];

@@ -17,7 +17,14 @@ export default function ProductionLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'fromages', 'charcuterie', 'rappels-lots', 'controles/liste')}
+      screenLayout={ecranParEspeceSauf(
+        'index',
+        'fromages',
+        'lait',
+        'charcuterie',
+        'rappels-lots',
+        'controles/liste',
+      )}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -26,6 +33,7 @@ export default function ProductionLayout() {
     >
       <Stack.Screen name="index" options={{ title: TEXTES.production.titre }} />
       <Stack.Screen name="fromages" options={{ title: TEXTES.production.fromages.titre }} />
+      <Stack.Screen name="lait" options={{ title: TEXTES.production.accueil.productionLait.titre }} />
       <Stack.Screen name="charcuterie" options={{ title: TEXTES.production.charcuterie.titre }} />
       <Stack.Screen
         name="fabrication"

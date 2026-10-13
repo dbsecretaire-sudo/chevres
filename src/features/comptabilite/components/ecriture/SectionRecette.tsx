@@ -64,7 +64,7 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           value={e.clientId}
           onChange={e.choisirClient}
           options={optionsClients}
-          onEdit={() => router.push(ROUTES.CLIENTS)}
+          onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
         />
         {e.estProductionVente ? (
           <>

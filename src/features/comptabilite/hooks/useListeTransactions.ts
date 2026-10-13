@@ -14,6 +14,8 @@ import {
 } from '@/features/comptabilite/services/filtresTransactions';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { RUBRIQUE_COMPTABILITE } from '@/shared/constants/comptabilite';
+import { ETAT_CONSERVE } from '@/shared/constants/etatConserve';
+import { useEtatConserve } from '@/shared/hooks/useEtatConserve';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { memeJourDansLAnnee } from '@/shared/utils/dates';
 
@@ -26,11 +28,18 @@ export function useListeTransactions() {
   const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filtres, setFiltres] = useState<FiltresTransactions>(FILTRES_VIDES);
+  // La recherche, les filtres et la rubrique restent quand on quitte l'écran (ouvrir une écriture, changer de menu).
+  const [filtres, setFiltres] = useEtatConserve<FiltresTransactions>(
+    ETAT_CONSERVE.COMPTABILITE_FILTRES,
+    FILTRES_VIDES,
+  );
   const [filtreOuvert, setFiltreOuvert] = useState(false);
-  const [recherche, setRecherche] = useState('');
+  const [recherche, setRecherche] = useEtatConserve(ETAT_CONSERVE.COMPTABILITE_RECHERCHE, '');
   const [filtreActivite, setFiltreActivite] = useFiltreActivite();
-  const [rubrique, setRubrique] = useState<RubriqueComptabilite>(RUBRIQUE_COMPTABILITE.TOUT);
+  const [rubrique, setRubrique] = useEtatConserve<RubriqueComptabilite>(
+    ETAT_CONSERVE.COMPTABILITE_RUBRIQUE,
+    RUBRIQUE_COMPTABILITE.TOUT,
+  );
   // Une année active choisie (ou changée) : les dates du filtre en cours passent dans cette année. Avec « Tout », l'année reste libre.
   const anneeDuFiltre = regrouper ? undefined : settings.anneeActive;
   const [anneeVue, setAnneeVue] = useState(anneeDuFiltre);

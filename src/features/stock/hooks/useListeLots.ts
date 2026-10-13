@@ -54,6 +54,8 @@ export function useListeLots(lots: LotFromage[], article?: string) {
     valeursDeLaColonne: (colonne: 'numero' | 'fabrication' | 'vente' | 'controle') =>
       filtres.valeurs(triees, colonne),
     lignes,
+    /** Tous les lots du fromage (ceux d'une même fabrication changent de date ensemble). */
+    tousLesLots: lots,
   };
 }
 

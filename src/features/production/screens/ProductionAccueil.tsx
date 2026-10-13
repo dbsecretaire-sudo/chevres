@@ -17,6 +17,7 @@ import { SelecteurEspece } from '@/features/etablissements/components/SelecteurE
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { laiterieActive } from '@/features/comptabilite/utils/recettes';
 import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/controles';
+import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
@@ -75,6 +76,17 @@ export default function ProductionAccueil() {
           icone: 'flask' as const,
           route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
         },
+        // Le lait par chèvre (ou brebis) et par traite : une page à part du contrôle laitier, pour les petits ruminants.
+        ...(ESPECES_PETITS_RUMINANTS.includes(espece)
+          ? [
+              {
+                cle: 'productionLait',
+                ...T.productionLait,
+                icone: 'water' as const,
+                route: ROUTES.PRODUCTION_LAIT,
+              },
+            ]
+          : []),
       ]
     : [];
   /** Les analyses des autres espèces : l'abattoir et les autocontrôles (cochons, vaches), la salmonelle des fientes (poules). */

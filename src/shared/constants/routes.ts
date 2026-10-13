@@ -44,6 +44,8 @@ export const ROUTES = {
 
   // L'onglet Production d'un élevage : fromages, viande vendue, contrôle laitier, groupements
   PRODUCTION: '/production',
+  /** La page de la production de lait : le lait par animal et par traite. */
+  PRODUCTION_LAIT: '/production/lait',
   PRODUCTION_FROMAGES: '/production/fromages',
   PRODUCTION_CHARCUTERIE: '/production/charcuterie',
   /** La fabrication et le rappel d'un produit suivi par lot (`produit` : fromage ou charcuterie). */
@@ -77,10 +79,15 @@ export const ROUTES = {
   COMPTABILITE_TRESORERIE_REGLAGES: '/comptabilite/tresorerie-reglages',
   FOURNISSEURS: '/comptabilite/fournisseurs',
   FOURNISSEUR_NOUVEAU: '/comptabilite/fournisseurs/nouveau',
+  /** Les fournisseurs, ouverts depuis un formulaire en cours : `retour` est l'adresse où la flèche de retour ramène. */
+  fournisseursDepuis: (retour: string) =>
+    `/comptabilite/fournisseurs?retour=${encodeURIComponent(retour)}` as const,
   // Les clients d'une entreprise ont leur propre onglet ; ceux d'un élevage restent dans le menu de la comptabilité.
   get CLIENTS() {
     return modeEntreprise() ? ('/clients/liste' as const) : ('/comptabilite/clients' as const);
   },
+  /** Les clients, ouverts depuis un formulaire en cours : `retour` est l'adresse où la flèche de retour ramène. */
+  clientsDepuis: (retour: string): string => `${ROUTES.CLIENTS}?retour=${encodeURIComponent(retour)}`,
   get CLIENT_NOUVEAU() {
     return modeEntreprise() ? ('/clients/nouveau' as const) : ('/comptabilite/clients/nouveau' as const);
   },

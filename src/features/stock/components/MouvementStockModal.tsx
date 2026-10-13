@@ -64,6 +64,8 @@ export function MouvementStockModal({
     if (!article) return;
     if (nombre === 0) return setErreur(T.quantiteInvalide);
     const litresUtilises = litres.trim() ? parseDecimal(litres) : undefined;
+    // Des fromages ajoutés : le lait utilisé est une entrée de l'inventaire, il est requis.
+    if (avecLitres && nombre > 0 && !(litresUtilises && litresUtilises > 0)) return setErreur(T.litresRequis);
     onValider(
       article.cle,
       nombre,
@@ -98,6 +100,7 @@ export function MouvementStockModal({
           {avecLitres && nombre >= 0 ? (
             <FormField
               label={libelleLitres ?? T.litres}
+              required={nombre > 0}
               value={litres}
               onChangeText={setLitres}
               keyboardType="decimal-pad"
