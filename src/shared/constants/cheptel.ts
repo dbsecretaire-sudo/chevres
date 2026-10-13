@@ -113,8 +113,6 @@ export const TRI_HISTORIQUE = {
 
 /** Sections repliables de la fiche d'une chèvre. */
 export const VUE_FICHE_CHEVRE = {
-  VISITES: 'visites',
-  CONTROLES: 'controles',
   SUPPRESSION: 'suppression',
 } as const;
 

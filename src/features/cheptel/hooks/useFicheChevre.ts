@@ -46,8 +46,8 @@ export function useFicheChevre(id: string | undefined) {
     setForm(c ?? null);
     if (c) {
       setDescendance(await listDescendance(c.id));
-      setVisites(await listVisitesPourChevre(c.id));
-      setControles(await listControlesPourChevre(c.id));
+      setVisites(await listVisitesPourChevre(c));
+      setControles(await listControlesPourChevre(c));
     }
   }, [id]);
 
@@ -113,9 +113,6 @@ export function useFicheChevre(id: string | undefined) {
     charger();
   };
 
-  const basculerVue = (vue: ValeurDe<typeof VUE_FICHE_CHEVRE>) =>
-    setVueSecondaire((actuelle) => (actuelle === vue ? null : vue));
-
   return {
     chevre,
     form,
@@ -129,7 +126,6 @@ export function useFicheChevre(id: string | undefined) {
     setMenuOuvert,
     vueSecondaire,
     setVueSecondaire,
-    basculerVue,
     statutForm,
     dateStatutForm,
     setDateStatutForm,

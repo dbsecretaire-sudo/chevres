@@ -361,8 +361,14 @@ export const TEXTES_CHEPTEL = {
       return `${Cap(V().femelle.singulier)} introuvable.`;
     },
     le: 'le',
-    visitesVeterinairesLength: (length: number) => `Visites vétérinaires (${length})`,
-    controlesLength: (length: number) => `Contrôles (${length})`,
+    /** La section Santé de la fiche : les visites vétérinaires et les contrôles de l'animal. */
+    sante: {
+      titre: (nombre: number) => `Santé (${nombre})`,
+      aucun: (animal: string) => `Aucune visite vétérinaire ni aucun contrôle enregistré pour ${animal}.`,
+      visite: 'Visite',
+      controle: 'Contrôle',
+      rapportEssais: (numero?: string) => (numero ? `Rapport d’essais n° ${numero}` : 'Rapport d’essais'),
+    },
     get ajouterUnCabriNouvelleNaissance() {
       return `Ajouter un ${V().petit.singulier} (nouvelle naissance)`;
     },
@@ -378,10 +384,6 @@ export const TEXTES_CHEPTEL = {
     declarerDeuxPoints: 'Déclarer : ',
     remettreDansLeCheptelActif: 'Remettre dans le cheptel actif',
     descendance: 'Descendance (',
-    visitesVeterinaires: 'Visites vétérinaires (',
-    aucuneVisiteEnregistreePourEspace: 'Aucune visite enregistrée pour ',
-    controles: 'Contrôles (',
-    aucunControleEnregistrePourEspace: 'Aucun contrôle enregistré pour ',
     contrairementAValeurAbattoirValeur2: (
       valeur: string,
       valeur2: string,

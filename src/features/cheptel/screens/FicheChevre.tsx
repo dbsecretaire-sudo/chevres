@@ -18,9 +18,9 @@ import {
   ChevreStatutDeclaration,
 } from '@/features/cheptel/components/ficheChevre/ChevreStatut';
 import {
-  ChevreControles,
   ChevreDescendance,
-  ChevreVisites,
+  ChevreSante,
+  familleDuControle,
 } from '@/features/cheptel/components/ficheChevre/ChevreHistorique';
 import { ChevreSortieFab } from '@/features/cheptel/components/ficheChevre/ChevreSortieFab';
 import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
@@ -80,16 +80,6 @@ export default function FicheChevre() {
           title={libelleChevre(chevre)}
           options={[
             {
-              label: TEXTES.cheptel.ficheChevre.visitesVeterinairesLength(fiche.visites.length),
-              icon: 'medkit',
-              onPress: () => fiche.basculerVue(VUE_FICHE_CHEVRE.VISITES),
-            },
-            {
-              label: TEXTES.cheptel.ficheChevre.controlesLength(fiche.controles.length),
-              icon: 'clipboard',
-              onPress: () => fiche.basculerVue(VUE_FICHE_CHEVRE.CONTROLES),
-            },
-            {
               label: TEXTES.commun.general.supprimerDefinitivement,
               icon: 'trash',
               onPress: () => fiche.setVueSecondaire(VUE_FICHE_CHEVRE.SUPPRESSION),
@@ -126,18 +116,19 @@ export default function FicheChevre() {
 
         {!estVivante && <ChevreReactivation onReactiver={fiche.reactiver} />}
 
+        <ChevreSante
+          chevre={chevre}
+          visites={fiche.visites}
+          controles={fiche.controles}
+          onOuvrirVisite={(v) => router.push(ROUTES.santeVisite(v.id))}
+          onOuvrirControle={(c) => router.push(ROUTES.santeControleModifier(familleDuControle(c), c.id))}
+        />
+
         {fiche.descendance.length > 0 && (
           <ChevreDescendance
             descendance={fiche.descendance}
             onOuvrir={(idPetit) => router.push(ROUTES.ficheChevre(idPetit))}
           />
-        )}
-
-        {fiche.vueSecondaire === VUE_FICHE_CHEVRE.VISITES && (
-          <ChevreVisites chevre={chevre} visites={fiche.visites} />
-        )}
-        {fiche.vueSecondaire === VUE_FICHE_CHEVRE.CONTROLES && (
-          <ChevreControles chevre={chevre} controles={fiche.controles} />
         )}
       </ScrollView>
 

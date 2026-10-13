@@ -1,14 +1,14 @@
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { Badge } from '@/shared/components/Badge';
 import { Card } from '@/shared/components/Card';
 import { ListRow } from '@/shared/components/ListRow';
-import { statutColors } from '@/shared/theme/colors';
+import { colors, statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
 import { demonstratifAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { SEXE } from '@/shared/constants/cheptel';
-import { styles } from '@/shared/styles/cheptel/FicheChevre.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -42,56 +42,63 @@ export function ChevreDescendance({
   );
 }
 
-/** Visites vétérinaires concernant l'animal. */
-export function ChevreVisites({ chevre, visites }: { chevre: Chevre; visites: VisiteVeterinaire[] }) {
+/**
+ * La santé de l'animal : ses visites vétérinaires et ses contrôles, les plus récents d'abord. Un appui ouvre la visite ou le contrôle.
+ * Une visite ou un contrôle qui nomme plusieurs boucles figure sur la fiche de chacun des animaux.
+ */
+export function ChevreSante({
+  chevre,
+  visites,
+  controles,
+  onOuvrirVisite,
+  onOuvrirControle,
+}: {
+  chevre: Chevre;
+  visites: VisiteVeterinaire[];
+  controles: Controle[];
+  onOuvrirVisite: (visite: VisiteVeterinaire) => void;
+  onOuvrirControle: (controle: Controle) => void;
+}) {
+  const T = TEXTES.cheptel.ficheChevre.sante;
+  const lignes = [
+    ...visites.map((v) => ({
+      cle: `visite:${v.id}`,
+      date: v.date,
+      titre: v.motif,
+      detail: [v.rapportEssais ? T.rapportEssais(v.numeroRapport) : undefined, v.description]
+        .filter(Boolean)
+        .join(' · '),
+      badge: <Badge label={T.visite} color={colors.primary} />,
+      ouvrir: () => onOuvrirVisite(v),
+    })),
+    ...controles.map((c) => ({
+      cle: `controle:${c.id}`,
+      date: c.date,
+      titre: c.type,
+      detail: c.resultat ?? '',
+      badge: <Badge label={T.controle} color={colors.accent} />,
+      ouvrir: () => onOuvrirControle(c),
+    })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
   return (
     <Card>
-      <Text style={commonStyles.cardTitle}>
-        {TEXTES.cheptel.ficheChevre.visitesVeterinaires}
-        {visites.length})
-      </Text>
-      {visites.length === 0 ? (
-        <Text style={commonStyles.muted}>
-          {TEXTES.cheptel.ficheChevre.aucuneVisiteEnregistreePourEspace}
-          {demonstratifAnimal(chevre)}.
-        </Text>
+      <Text style={commonStyles.cardTitle}>{T.titre(lignes.length)}</Text>
+      {lignes.length === 0 ? (
+        <Text style={commonStyles.muted}>{T.aucun(demonstratifAnimal(chevre))}</Text>
       ) : (
-        visites.map((v) => (
-          <View key={v.id} style={styles.entry}>
-            <Text style={commonStyles.lineSemiBold}>
-              {formatDateFR(v.date)} — {v.motif}
-            </Text>
-            {v.description ? <Text style={commonStyles.muted}>{v.description}</Text> : null}
-          </View>
+        lignes.map((l) => (
+          <ListRow
+            key={l.cle}
+            title={`${formatDateFR(l.date)} — ${l.titre}`}
+            subtitle={l.detail || undefined}
+            trailing={l.badge}
+            onPress={l.ouvrir}
+          />
         ))
       )}
     </Card>
   );
 }
 
-/** Contrôles concernant l'animal. */
-export function ChevreControles({ chevre, controles }: { chevre: Chevre; controles: Controle[] }) {
-  return (
-    <Card>
-      <Text style={commonStyles.cardTitle}>
-        {TEXTES.cheptel.ficheChevre.controles}
-        {controles.length})
-      </Text>
-      {controles.length === 0 ? (
-        <Text style={commonStyles.muted}>
-          {TEXTES.cheptel.ficheChevre.aucunControleEnregistrePourEspace}
-          {demonstratifAnimal(chevre)}.
-        </Text>
-      ) : (
-        controles.map((c) => (
-          <View key={c.id} style={styles.entry}>
-            <Text style={commonStyles.lineSemiBold}>
-              {formatDateFR(c.date)} — {c.type}
-            </Text>
-            {c.resultat ? <Text style={commonStyles.muted}>{c.resultat}</Text> : null}
-          </View>
-        ))
-      )}
-    </Card>
-  );
-}
+/** La famille d'un contrôle (sans famille : un contrôle des animaux), pour ouvrir sa fiche. */
+export const familleDuControle = (c: Controle): string => c.famille ?? FAMILLE_CONTROLE.ANIMAUX;
