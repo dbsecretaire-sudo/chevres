@@ -31,6 +31,7 @@ import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK, SECTION_STOCK_PAR_CATEGORIE_RECETTE } from '@/shared/constants/stock';
 import { nomComplet } from '@/shared/utils/personne';
+import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
 import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -97,16 +98,20 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           />
         ) : null}
         {/* Le paiement : encaissée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
-        <ChampPaiement
-          libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
-          enAttente={e.enAttente}
-          onEnAttente={(attente) => {
-            e.setEnAttente(attente);
-            if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
-          }}
-          echeance={e.echeance}
-          onEcheance={e.setEcheance}
-        />
+        {pasEncaisseeAffichee(
+          e.clientSelectionne ? categorieClientDe(e.clientSelectionne.categorie) : undefined,
+        ) ? (
+          <ChampPaiement
+            libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+            enAttente={e.enAttente}
+            onEnAttente={(attente) => {
+              e.setEnAttente(attente);
+              if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+            }}
+            echeance={e.echeance}
+            onEcheance={e.setEcheance}
+          />
+        ) : null}
       </SectionForm>
 
       {/* Les informations : la catégorie, ce qui est vendu et son montant. */}

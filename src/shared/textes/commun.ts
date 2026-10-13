@@ -236,5 +236,11 @@ export const TEXTES_COMMUN = {
     rechercherParNOuLibellePoints: 'Rechercher par n° ou libellé…',
     aucunResultat: 'Aucun résultat.',
     selectionnerPoints: 'Sélectionner…',
+    /** La liste où l'on coche plusieurs lignes : la recherche, une plage de numéros, tout cocher. */
+    rechercherOuPlage: 'Rechercher, ou une plage de n° (ex : 12-30)',
+    cocherLaPlage: (debut: string, fin: string, nombre: number) =>
+      `Cocher du n° ${debut} au n° ${fin} (${nombre})`,
+    toutCocher: (nombre: number) => `Tout cocher (${nombre})`,
+    toutDecocher: 'Tout décocher',
   },
 } as const;

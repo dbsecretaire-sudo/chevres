@@ -300,6 +300,38 @@ export const TEXTES_COMPTABILITE = {
       marge: (taux: number) => `${Math.round(taux * 100)} %`,
       aide: 'Une charge se rattache à un atelier dans la facture ; les charges sans atelier se répartissent entre les ateliers, au prorata de leurs recettes.',
     },
+    /** Le plan d'économies : des pistes chiffrées d'après les charges, le lait de l'inventaire et les analyses du lait. */
+    plan: {
+      titre: 'Plan d’économies',
+      aide: 'Des pistes calculées sur vos charges de l’année, le lait de l’inventaire et les analyses du lait. Les pourcentages sont des hypothèses de départ à discuter, pas des promesses.',
+      economie: (montant: string) => `Économie estimée : ${montant} par an`,
+      aucuneEconomie: 'Aucune économie à chiffrer pour ce poste.',
+      poste: (libelle: string, montant: string) => `${libelle} · ${montant}`,
+      negociable: (pourcentage: string) =>
+        `Poste négociable : une mise en concurrence ou un achat groupé (GDS, groupement) peut faire gagner environ ${pourcentage} (hypothèse de départ).`,
+      alimentUreeHaute: (uree: string, pourcentage: string) =>
+        `Urée du lait à ${uree} mg/l, au-dessus de la limite : un excès d’azote est probable. Réduire la part azotée du concentré (tourteau) peut faire gagner environ ${pourcentage} du poste, à suivre sur les taux du lait (hypothèse de départ).`,
+      alimentHausse: (cout: string, avant: string, lait: string, laitAvant: string) =>
+        `L’aliment coûte ${cout} par litre contre ${avant} l’an dernier, sans que chaque traite donne plus de lait (${lait} contre ${laitAvant}). Revenir au coût de l’an dernier suffirait : ajuster le concentré au stade de lactation, par lots.`,
+      alimentPrudence: (uree: string) =>
+        `Urée du lait à ${uree} mg/l, au-dessous de la limite : l’apport azoté manque. Couper dans l’alimentation ferait baisser le lait : ne pas toucher à ce poste avant d’avoir corrigé la ration.`,
+      veterinairePrudence: (n: number) =>
+        `${n} résultat${n > 1 ? 's' : ''} d’analyse critique${n > 1 ? 's' : ''} : ne pas économiser sur la santé du troupeau. Les analyses d’abord, selon les actions proposées dans le contrôle laitier.`,
+      incompressible: 'Ce poste est dû (impôts, cotisations) : il ne se compresse pas.',
+      resume: 'Si les pistes aboutissaient',
+      economieTotale: 'Économie totale estimée',
+      coutLitreApres: (avant: string, apres: string) => `Coût du litre : ${avant} → ${apres}`,
+      prixLitre: (prix: string) => `Prix moyen de vente du lait : ${prix} le litre (hors aides)`,
+      ecart: (avant: string, apres: string) => `Écart avec le prix de vente : ${avant} → ${apres} le litre`,
+      couvre: (pourcentage: string) =>
+        `Les pistes couvrent environ ${pourcentage} de l’écart entre le coût du litre et son prix de vente.`,
+      couvreTout: 'Les pistes suffiraient à couvrir l’écart entre le coût du litre et son prix de vente.',
+      sansEcart: 'Le prix de vente du lait couvre déjà son coût : les pistes améliorent la marge.',
+      sansLait: 'Aucun lait produit cette année : pas de plan par litre.',
+      prixDuLait:
+        'Au-delà des charges, le prix du lait reste le premier levier : chaque centime de plus par litre rapporte autant que les pistes ci-dessus sur ce volume.',
+      centimeLitre: (montant: string) => `1 centime de plus par litre : ${montant} par an`,
+    },
     couts: {
       titre: 'Coûts de production',
       parLitre: 'Coût du litre de lait',
@@ -461,6 +493,7 @@ export const TEXTES_COMPTABILITE = {
     ajouterUnLot: 'Ajouter un produit',
     retirerLot: 'Retirer ce produit',
     lotVendu: 'Produit vendu',
+    ajouterLesLots: (nombre: number) => `Ajouter ${nombre} produit${nombre > 1 ? 's' : ''}`,
     lotsRequis: 'Produits vendus requis (choisissez leurs n° de lot)',
     animauxRequis: 'Animaux vendus requis',
     modifierLePrixOeuf: 'Modifier le prix de l’œuf (inventaire)',

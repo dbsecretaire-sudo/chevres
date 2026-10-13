@@ -3,6 +3,7 @@ import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
+import { PlanEconomies } from '@/features/comptabilite/components/PlanEconomies';
 import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
 import { useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
 import { vocabulaire } from '@/shared/dictionnaire/animaux';
@@ -28,7 +29,7 @@ const nombre = (valeur: number) =>
  * litre de lait et de l'animal, et le poids de chaque poste de charges.
  */
 export default function Rentabilite() {
-  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier } = useRentabilite();
+  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier, plan } = useRentabilite();
   if (!resultat) return null;
 
   return (
@@ -129,6 +130,8 @@ export default function Rentabilite() {
           </Text>
         </View>
       </Card>
+
+      {plan ? <PlanEconomies plan={plan} litresProduits={resultat.litresProduits} /> : null}
 
       <Text style={stylesFiscalite.titreSection}>{T.postes.titre}</Text>
       {resultat.postes.length === 0 ? (

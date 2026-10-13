@@ -23,6 +23,11 @@ import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { CategorieDepense } from '@/features/comptabilite/types';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import { categorieDepenseAutorisee, depenseImposee } from '@/features/fournisseurs/services/categorie';
+import {
+  categorieFournisseurDe,
+  pasPayeeAffichee,
+  sansFactureAffichee,
+} from '@/shared/dictionnaire/categoriesFournisseur';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
@@ -53,6 +58,10 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
   const router = useRouter();
   const estAlimentation = e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
+  /** La catégorie du fournisseur choisi : elle dit quelles cases (paiement, non facturée) s'affichent. */
+  const categorieDuTiers = e.fournisseurSelectionne
+    ? categorieFournisseurDe(e.fournisseurSelectionne.categorie)
+    : undefined;
 
   return (
     <>
@@ -77,22 +86,26 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
         {/* Le paiement : payée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
-        <ChampPaiement
-          libelle={TEXTES.comptabilite.tresorerie.paiement.pasPayee}
-          enAttente={e.enAttente}
-          onEnAttente={(attente) => {
-            e.setEnAttente(attente);
-            if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
-          }}
-          echeance={e.echeance}
-          onEcheance={e.setEcheance}
-        />
-        <Checkbox
-          label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
-          value={e.sansFacture}
-          onChange={e.setSansFacture}
-        />
-        {e.sansFacture ? (
+        {pasPayeeAffichee(categorieDuTiers) ? (
+          <ChampPaiement
+            libelle={TEXTES.comptabilite.tresorerie.paiement.pasPayee}
+            enAttente={e.enAttente}
+            onEnAttente={(attente) => {
+              e.setEnAttente(attente);
+              if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+            }}
+            echeance={e.echeance}
+            onEcheance={e.setEcheance}
+          />
+        ) : null}
+        {sansFactureAffichee(categorieDuTiers) ? (
+          <Checkbox
+            label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+            value={e.sansFacture}
+            onChange={e.setSansFacture}
+          />
+        ) : null}
+        {e.sansFacture && sansFactureAffichee(categorieDuTiers) ? (
           <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
         ) : null}
       </SectionForm>

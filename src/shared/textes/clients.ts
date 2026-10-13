@@ -42,6 +42,8 @@ export const TEXTES_CLIENTS = {
     aide: 'Renommez, ajoutez ou retirez des catégories, et réglez ce qu’elles changent dans les ventes.',
     renommer: 'Modifier le nom de la catégorie',
     nomCategorie: 'Nom de la catégorie',
+    affichage: 'Afficher dans les factures de ses clients',
+    aideAffichage: 'Décochée, la case n’apparaît plus dans la facture d’un client de cette catégorie.',
     exempleNom: 'ex : Coopérative',
     ajouter: '+ Ajouter une catégorie',
     recettes: 'Recettes proposées',

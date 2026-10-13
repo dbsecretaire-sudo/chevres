@@ -7,6 +7,8 @@ export const TEXTES_FOURNISSEURS = {
     aide: 'Renommez, ajoutez ou retirez des catégories, et réglez les dépenses que leurs fournisseurs peuvent avoir.',
     renommer: 'Modifier le nom de la catégorie',
     nomCategorie: 'Nom de la catégorie',
+    affichage: 'Afficher dans les factures de ses fournisseurs',
+    aideAffichage: 'Décochée, la case n’apparaît plus dans la facture d’un fournisseur de cette catégorie.',
     exempleNom: 'ex : Maréchal-ferrant',
     ajouter: '+ Ajouter une catégorie',
     ajouterManquantes: (nombre: number) => `Ajouter les catégories d’office manquantes (${nombre})`,

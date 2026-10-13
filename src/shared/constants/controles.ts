@@ -20,6 +20,12 @@ export const FAMILLE_CONTROLE = {
   RESUME: 'resume',
   /** Les groupements (adhésion, achats groupés, actions spécifiques : GDS, Casgiu Casanu…). */
   GROUPEMENT: 'groupement',
+  /** Les contrôles officiels des services de l'État, à l'abattoir (cochons, vaches). */
+  OFFICIEL: 'officiel',
+  /** Les autocontrôles de l'éleveur (cochons, vaches) : ses propres analyses et vérifications. */
+  AUTOCONTROLE: 'autocontrole',
+  /** Le dépistage de la salmonelle dans les fientes (poules). */
+  SALMONELLE: 'salmonelle',
 } as const;
 
 /**
@@ -96,7 +102,23 @@ export const ONGLETS_VOLET = {
   [FAMILLE_CONTROLE.ANIMAUX]: [FAMILLE_CONTROLE.BOUCLES, FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE],
   [FAMILLE_CONTROLE.LAITIER]: [FAMILLE_CONTROLE.ANALYSE, FAMILLE_CONTROLE.RESUME, FAMILLE_CONTROLE.LAITIER],
   [FAMILLE_CONTROLE.GROUPEMENT]: [FAMILLE_CONTROLE.GROUPEMENT],
+  [FAMILLE_CONTROLE.OFFICIEL]: [FAMILLE_CONTROLE.OFFICIEL, FAMILLE_CONTROLE.AUTOCONTROLE],
+  [FAMILLE_CONTROLE.SALMONELLE]: [FAMILLE_CONTROLE.SALMONELLE],
 } as const;
+
+/**
+ * Le volet d'analyses que suit chaque espèce, en plus de ce que la Production lui propose déjà : les cochons et les vaches ont les
+ * contrôles officiels (abattoir) et leurs autocontrôles, les poules le dépistage de la salmonelle dans les fientes. Les chèvres et les
+ * brebis ont les analyses du lait (le volet du contrôle laitier) ; les animaux de compagnie n'en ont pas.
+ */
+export const VOLET_ANALYSES_PAR_ESPECE: Record<
+  string,
+  typeof FAMILLE_CONTROLE.OFFICIEL | typeof FAMILLE_CONTROLE.SALMONELLE
+> = {
+  cochons: FAMILLE_CONTROLE.OFFICIEL,
+  vaches: FAMILLE_CONTROLE.OFFICIEL,
+  poules: FAMILLE_CONTROLE.SALMONELLE,
+};
 
 /** Les quatre surfaces d'un terrain (en hectares), comme sur TelePAC : le nom du champ de chaque surface. */
 export const SURFACE_TERRAIN = {

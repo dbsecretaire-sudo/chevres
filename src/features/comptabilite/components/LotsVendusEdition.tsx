@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
-import { SelectModal } from '@/shared/components/SelectModal';
+import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articleDeLaVente, lotsAChoisir } from '@/features/stock/services/lots';
 import type { ArchiveStock } from '@/features/stock/types';
@@ -14,6 +14,12 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.comptabilite.nouvelleEcriture;
+
+/** Le nombre qui termine un n° de lot (« 12 » pour « 12 » ou « F12 ») : de quoi choisir une plage de lots. */
+const numeroDuLot = (numero: string | undefined): number | undefined => {
+  const chiffres = /(\d+)$/.exec(numero ?? '');
+  return chiffres ? Number(chiffres[1]) : undefined;
+};
 
 interface Props {
   /** Ce que la vente vend : un fromage (son type) ou de la charcuterie (son détail). */
@@ -80,20 +86,18 @@ export function LotsVendusEdition({ vente, venteId, ids, onChange }: Props) {
           ))}
         </Card>
       ) : null}
-      <SelectModal<string>
+      {/* On coche plusieurs produits d'un coup (ou une plage de n° de lot), puis on les ajoute ensemble. */}
+      <SelectModalMultiple<string>
         visible={ouvert}
-        titre={T.lotVendu}
-        value=""
+        titre={T.lotsVendus}
         options={proposes.map((l) => ({
           value: l.id,
           label: `${l.numero} · ${formatDateShortFR(l.dateFabrication)}`,
         }))}
-        onSelect={(id) => {
-          onChange([...ids, id]);
-          setOuvert(false);
-        }}
+        libelleValider={T.ajouterLesLots}
+        onValider={(nouveaux) => onChange([...ids, ...nouveaux])}
         onClose={() => setOuvert(false)}
-        searchable
+        numeroDe={(id) => numeroDuLot(proposes.find((l) => l.id === id)?.numero)}
       />
     </View>
   );

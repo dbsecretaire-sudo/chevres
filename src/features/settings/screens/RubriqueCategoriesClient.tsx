@@ -12,6 +12,7 @@ import { CATEGORIE_CLIENT_PAR_DEFAUT, CATEGORIES_CLIENT_PROTEGEES } from '@/shar
 import {
   categoriesClientParDefaut,
   groupesRecetteDeLaCategorie,
+  pasEncaisseeAffichee,
   type CategorieClientReglage,
 } from '@/shared/dictionnaire/categoriesClient';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
@@ -91,6 +92,13 @@ export default function RubriqueCategoriesClient() {
                 value={c.prixLibre}
                 onChange={(prixLibre) => maj(c.id, { prixLibre })}
               />
+              <Text style={commonStyles.lineSemiBold}>{T.affichage}</Text>
+              <Checkbox
+                label={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+                value={pasEncaisseeAffichee(c)}
+                onChange={(pasEncaissee) => maj(c.id, { pasEncaissee })}
+              />
+              <Text style={commonStyles.note}>{T.aideAffichage}</Text>
               {/* Les recettes que ses clients peuvent recevoir : l'aide n'est cochée que pour un organisme, d'office. */}
               <Text style={commonStyles.lineSemiBold}>{T.recettes}</Text>
               {groupesProposes.map((g) => (

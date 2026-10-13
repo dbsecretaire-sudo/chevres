@@ -28,6 +28,12 @@ import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/t
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { categorieDepenseAutorisee } from '@/features/fournisseurs/services/categorie';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import {
+  categorieFournisseurDe,
+  pasPayeeAffichee,
+  sansFactureAffichee,
+} from '@/shared/dictionnaire/categoriesFournisseur';
+import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import { listClients } from '@/features/clients/repository';
 import {
@@ -258,6 +264,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
       const permis = groupesRecetteActivite(activite).find((g) => groupeRecetteAutorise(client, g));
       if (permis) changerCategorieRecette(categoriesGroupe(permis, activite)[0]);
     }
+    const clientChoisi = clients.find((c) => c.id === id);
+    // Une case que la catégorie du client n'affiche pas ne reste pas cochée.
+    if (clientChoisi && !pasEncaisseeAffichee(categorieClientDe(clientChoisi.categorie))) setEnAttente(false);
     const declaree = venteDeclareeParDefaut(clients.find((c) => c.id === id));
     if (declaree !== avecFacture) {
       setAvecFacture(declaree);
@@ -336,7 +345,12 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     const choisi = fournisseurs.find((x) => x.id === id);
     setTiers(choisi?.nomEntreprise ?? '');
     // Un fournisseur qui ne remet pas de facture : la dépense se note « non facturée » d'office (on peut décocher).
-    setSansFacture(choisi?.categorie === CATEGORIE_FOURNISSEUR.NON_FACTURABLE);
+    const categorieTiers = choisi ? categorieFournisseurDe(choisi.categorie) : undefined;
+    setSansFacture(
+      sansFactureAffichee(categorieTiers) && choisi?.categorie === CATEGORIE_FOURNISSEUR.NON_FACTURABLE,
+    );
+    // Une case que la catégorie n'affiche pas ne reste pas cochée.
+    if (!pasPayeeAffichee(categorieTiers)) setEnAttente(false);
     // La catégorie du fournisseur règle les dépenses possibles : celle qu'elle ne permet pas laisse la place à la première qui l'est.
     if (!categorieDepenseAutorisee(choisi, categorieDepense)) {
       const permise = categoriesDepenseDuMode().find((c) => categorieDepenseAutorisee(choisi, c));
@@ -692,6 +706,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setAvecFacture,
     atelier,
     setAtelier,
+    clientSelectionne,
     enAttente,
     setEnAttente,
     sansFacture,

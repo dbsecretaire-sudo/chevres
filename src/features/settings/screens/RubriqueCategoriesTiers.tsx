@@ -18,6 +18,8 @@ import {
   categoriesFournisseurManquantes,
   categoriesFournisseurParDefaut,
   depensesDeLaCategorie,
+  pasPayeeAffichee,
+  sansFactureAffichee,
   type CategorieFournisseurReglage,
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -88,6 +90,18 @@ export default function RubriqueCategoriesTiers() {
                   <Ionicons name="create-outline" size={24} color={colors.primary} />
                 </Pressable>
               </View>
+              <Text style={commonStyles.lineSemiBold}>{T.affichage}</Text>
+              <Checkbox
+                label={TEXTES.comptabilite.tresorerie.paiement.pasPayee}
+                value={pasPayeeAffichee(c)}
+                onChange={(pasPayee) => maj(c.id, { pasPayee })}
+              />
+              <Checkbox
+                label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+                value={sansFactureAffichee(c)}
+                onChange={(sansFacture) => maj(c.id, { sansFacture })}
+              />
+              <Text style={commonStyles.note}>{T.aideAffichage}</Text>
               <Text style={commonStyles.lineSemiBold}>{T.depenses}</Text>
               {depensesProposees.map((d) => (
                 <Checkbox

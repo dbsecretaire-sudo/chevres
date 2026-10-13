@@ -33,6 +33,12 @@ import { ROUTES } from '@/shared/constants/routes';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
+import {
+  categorieFournisseurDe,
+  pasPayeeAffichee,
+  sansFactureAffichee,
+} from '@/shared/dictionnaire/categoriesFournisseur';
+import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
 import { estArticleBoucle } from '@/features/stock/services/boucles';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
@@ -65,6 +71,15 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   if (!form) return null;
 
   const estEmise = form.type === TYPE_FACTURE.EMISE;
+  // Les cases que la catégorie du tiers de la facture affiche (toutes, quand on ne retrouve pas le tiers).
+  const fournisseurDuTiers = f.fournisseurs.find((x) => x.nomEntreprise === form.tiers);
+  const clientDuTiers = f.clients.find((x) => nomComplet(x) === form.tiers);
+  const categorieFournisseurDuTiers = fournisseurDuTiers
+    ? categorieFournisseurDe(fournisseurDuTiers.categorie)
+    : undefined;
+  const paiementAffiche = estEmise
+    ? pasEncaisseeAffichee(clientDuTiers ? categorieClientDe(clientDuTiers.categorie) : undefined)
+    : pasPayeeAffichee(categorieFournisseurDuTiers);
   const estAide = estEmise && form.categorieRecette === CATEGORIE_RECETTE.AIDE;
   const fournisseur = fournisseurs.find((x) => x.nomEntreprise === form.tiers);
   // Une entreprise non assujettie à la TVA n'a pas de taux à saisir.
@@ -180,18 +195,20 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           />
         )}
         {/* Le paiement : réglée ou encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
-        <ChampPaiement
-          libelle={
-            estEmise
-              ? TEXTES.comptabilite.tresorerie.paiement.pasEncaissee
-              : TEXTES.comptabilite.tresorerie.paiement.pasPayee
-          }
-          enAttente={form.payee === false}
-          onEnAttente={(attente) => f.setForm(avecPaiement(form, attente))}
-          echeance={form.echeance ?? ''}
-          onEcheance={(echeance) => f.setForm({ ...form, echeance })}
-        />
-        {estEmise ? null : (
+        {paiementAffiche ? (
+          <ChampPaiement
+            libelle={
+              estEmise
+                ? TEXTES.comptabilite.tresorerie.paiement.pasEncaissee
+                : TEXTES.comptabilite.tresorerie.paiement.pasPayee
+            }
+            enAttente={form.payee === false}
+            onEnAttente={(attente) => f.setForm(avecPaiement(form, attente))}
+            echeance={form.echeance ?? ''}
+            onEcheance={(echeance) => f.setForm({ ...form, echeance })}
+          />
+        ) : null}
+        {estEmise || !sansFactureAffichee(categorieFournisseurDuTiers) ? null : (
           <>
             <Checkbox
               label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}

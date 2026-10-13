@@ -6,6 +6,7 @@ export const TEXTES_PRODUCTION = {
     groupes: {
       produit: 'Produit',
       laitier: 'Analyses et contrôle du lait',
+      analyses: 'Analyses et contrôles',
       collectifs: 'Collectifs',
       dangereux: 'Gestion des produits dangereux',
     },
@@ -18,6 +19,14 @@ export const TEXTES_PRODUCTION = {
     laitier: {
       titre: 'Contrôle laitier',
       aide: 'Les contrôles de la production et de la qualité du lait, et les analyses.',
+    },
+    officiel: {
+      titre: 'Contrôles officiels et autocontrôles',
+      aide: 'Les contrôles de l’abattoir (services de l’État) et vos propres autocontrôles.',
+    },
+    salmonelle: {
+      titre: 'Dépistage de la salmonelle',
+      aide: 'Les prélèvements de fientes analysés pour la salmonelle.',
     },
     groupements: { titre: 'Groupements', aide: 'Adhésion, achats groupés, actions spécifiques.' },
     rappels: {

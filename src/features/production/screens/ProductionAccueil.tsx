@@ -16,7 +16,7 @@ import { ListRow } from '@/shared/components/ListRow';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { laiterieActive } from '@/features/comptabilite/utils/recettes';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
@@ -77,6 +77,25 @@ export default function ProductionAccueil() {
         },
       ]
     : [];
+  /** Les analyses des autres espèces : l'abattoir et les autocontrôles (cochons, vaches), la salmonelle des fientes (poules). */
+  const voletAnalyses = VOLET_ANALYSES_PAR_ESPECE[espece];
+  const analyses: Ligne[] = voletAnalyses
+    ? [
+        voletAnalyses === FAMILLE_CONTROLE.OFFICIEL
+          ? {
+              cle: 'officiel',
+              ...T.officiel,
+              icone: 'shield-checkmark' as const,
+              route: ROUTES.santeControles(voletAnalyses),
+            }
+          : {
+              cle: 'salmonelle',
+              ...T.salmonelle,
+              icone: 'flask' as const,
+              route: ROUTES.santeControles(voletAnalyses),
+            },
+      ]
+    : [];
   const collectifs: Ligne[] = [
     {
       cle: 'groupements',
@@ -91,6 +110,7 @@ export default function ProductionAccueil() {
   const groupes = [
     { titre: G.produit, lignes: produits },
     { titre: G.laitier, lignes: laitier },
+    { titre: G.analyses, lignes: analyses },
     { titre: G.collectifs, lignes: collectifs },
     { titre: G.dangereux, lignes: dangereux },
   ].filter((g) => g.lignes.length > 0);

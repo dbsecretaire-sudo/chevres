@@ -3,7 +3,7 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 /** Adresses (routes) de navigation de l'application — à modifier ici uniquement. */
 
 /** Les familles de contrôles qui relèvent de la Production (le reste est dans le Cheptel). */
-const FAMILLES_DE_PRODUCTION = ['laitier', 'analyse', 'groupement'];
+const FAMILLES_DE_PRODUCTION = ['laitier', 'analyse', 'groupement', 'officiel', 'autocontrole', 'salmonelle'];
 
 /** Le dossier des écrans de contrôle d'une famille : Production pour le lait et les groupements, Cheptel (santé) pour le reste. */
 const baseControles = (famille: string): string =>

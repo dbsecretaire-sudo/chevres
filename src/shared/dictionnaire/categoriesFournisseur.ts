@@ -16,7 +16,19 @@ export interface CategorieFournisseurReglage {
   id: string;
   nom: string;
   depenses?: string[];
+  /** Afficher la case « Pas encore payée » dans les factures de ses fournisseurs (d'office : oui). */
+  pasPayee?: boolean;
+  /** Afficher la case « Cette dépense n'a pas été facturée » dans les factures de ses fournisseurs (d'office : oui). */
+  sansFacture?: boolean;
 }
+
+/** Vrai quand la case « Pas encore payée » s'affiche pour les fournisseurs de cette catégorie (sans catégorie connue : oui). */
+export const pasPayeeAffichee = (categorie?: CategorieFournisseurReglage): boolean =>
+  categorie?.pasPayee !== false;
+
+/** Vrai quand la case « Cette dépense n'a pas été facturée » s'affiche pour les fournisseurs de cette catégorie (sans catégorie connue : oui). */
+export const sansFactureAffichee = (categorie?: CategorieFournisseurReglage): boolean =>
+  categorie?.sansFacture !== false;
 
 /** Les catégories proposées d'office. */
 export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] => [

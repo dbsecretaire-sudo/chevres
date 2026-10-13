@@ -22,7 +22,13 @@ export interface CategorieClientReglage {
    * organisme, et toutes les recettes sauf l'aide pour les autres catégories. Seul un organisme a une aide, sauf réglage contraire.
    */
   recettes?: string[];
+  /** Afficher la case « Pas encore encaissée » dans les factures de ses clients (d'office : oui). */
+  pasEncaissee?: boolean;
 }
+
+/** Vrai quand la case « Pas encore encaissée » s'affiche pour les clients de cette catégorie (sans catégorie connue : oui). */
+export const pasEncaisseeAffichee = (categorie?: CategorieClientReglage): boolean =>
+  categorie?.pasEncaissee !== false;
 
 /** Les catégories proposées d'office : un particulier n'est pas déclaré ; le récolteur facture lui-même, à prix libre. */
 export const categoriesClientParDefaut = (): CategorieClientReglage[] => [
