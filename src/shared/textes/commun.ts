@@ -141,6 +141,10 @@ export const TEXTES_COMMUN = {
     modifier: 'Modifier',
     nDeBoucleConcerne: 'N° de boucle concerné',
     videTroupeauEntier: 'Vide = troupeau entier',
+    /** Le choix des boucles dans la liste des animaux vivants du cheptel (contrôles, visites vétérinaires). */
+    choisirBoucles: 'Choisir dans le cheptel',
+    titreBoucles: 'Boucles du cheptel',
+    ajouterLesBoucles: (nombre: number) => `Ajouter ${nombre} boucle${nombre > 1 ? 's' : ''}`,
     nomDEntreprise: 'Nom d’entreprise',
     siret: 'SIRET',
     tvaIntracommunautaire: 'TVA intracommunautaire',
