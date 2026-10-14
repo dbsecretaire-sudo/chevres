@@ -13,6 +13,7 @@ import { Card } from '@/shared/components/Card';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ROUTES } from '@/shared/constants/routes';
 import { Fab } from '@/shared/components/Fab';
+import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
@@ -30,6 +31,7 @@ import { estArticleAvecLots, lotsDeLInventaire } from '@/features/stock/services
 import { Button } from '@/shared/components/Button';
 import {
   bouclesDeLEspece,
+  estBoucleDeRemplacement,
   bouclesPossiblesDuCheptel,
   synchroniserBouclesDuCheptel,
   type BouclePossible,
@@ -41,6 +43,9 @@ import { JournalLait } from '@/features/stock/components/JournalLait';
 import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { coutsUnitairesAchats } from '@/features/comptabilite/services/repartitionLait';
+import { montantsHorsTaxes } from '@/features/comptabilite/utils/reglagesTva';
 import { effectifsVivants, type EffectifVivant } from '@/features/cheptel/repository/chevres';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -131,6 +136,8 @@ export default function StockFromagerie() {
   }>();
   /** La catégorie qui est déroulée (une seule à la fois) : aucune au départ, tout est réduit. */
   const [ouvertes, setOuvertes] = useState<string[]>([]);
+  /** Le menu des ajouts d'une catégorie, ouvert depuis le bouton « + » quand plusieurs catégories sont en vue. */
+  const [menuAjout, setMenuAjout] = useState<{ titre: string; options: Option[] } | null>(null);
   // Un lien (le crayon d'un formulaire) peut ouvrir une liste et un animal précis, même si l'inventaire était déjà ouvert.
   const demande = `${ongletDemande ?? ''}|${especeDemandee ?? ''}`;
   const [demandeVue, setDemandeVue] = useState('|');
@@ -168,7 +175,12 @@ export default function StockFromagerie() {
   /** La synchronisation des boucles avec le cheptel : les numéros que portent les animaux, et si sa fenêtre est ouverte. */
   const [possibles, setPossibles] = useState<BouclePossible[]>([]);
   const [synchroOuverte, setSynchroOuverte] = useState(false);
-  const synchro = synchroBouclesActive(useAppSettings().settings.exploitation);
+  const infosExploitation = useAppSettings().settings.exploitation;
+  const synchro = synchroBouclesActive(infosExploitation);
+  /** Le prix moyen d'une unité de chaque fourniture, d'après les factures d'achat qui l'ont ajoutée à l'inventaire. */
+  const [achats, setAchats] = useState<Awaited<ReturnType<typeof listToutesFactures>>>([]);
+  const horsTaxes = montantsHorsTaxes(infosExploitation);
+  const coutsAchats = coutsUnitairesAchats(achats, horsTaxes);
   /** Pour un ajout dans une liste personnalisée : cette liste. */
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
@@ -188,12 +200,14 @@ export default function StockFromagerie() {
   const litresVendus = ventesLait.reduce((total, v) => total + v.litres, 0);
 
   const charger = useCallback(async () => {
-    const [stock, ventes, vivants] = await Promise.all([
+    const [stock, ventes, vivants, factures] = await Promise.all([
       lireArchiveStock(),
       listToutesVentes(),
       effectifsVivants(),
+      listToutesFactures(),
     ]);
     setArchive(stock);
+    setAchats(factures);
     setEffectifs(vivants);
     setPossibles(await bouclesPossiblesDuCheptel());
     setVentesLait(
@@ -222,8 +236,15 @@ export default function StockFromagerie() {
         key={a.cle}
         title={a.libelle}
         subtitle={
-          niveau < 0 ? (
-            <Text style={styles.perte}>{T.negatif}</Text>
+          niveau < 0 || (!a.prix && coutsAchats[a.cle]) ? (
+            <>
+              {/* Le prix d'une unité d'une fourniture, d'après ses achats, sous son nom */}
+              {!a.prix && coutsAchats[a.cle] ? (
+                <Text>{T.prixAchat(formatMontant(coutsAchats[a.cle]), horsTaxes)}</Text>
+              ) : null}
+              {niveau < 0 && !a.prix && coutsAchats[a.cle] ? '\n' : null}
+              {niveau < 0 ? <Text style={styles.perte}>{T.negatif}</Text> : null}
+            </>
           ) : a.prix ? (
             roleDeLaViande(a.cle) ? (
               T.parKg(formatMontant(a.prix))
@@ -261,15 +282,22 @@ export default function StockFromagerie() {
   /** Une sorte de boucles : le nombre de boucles à poser ; un appui ouvre le détail des numéros (ni renommer, ni déplacer). */
   const ligneBoucles = (a: ArticleAffiche) => {
     // Le niveau : les boucles de l'espèce qui ne sont pas posées (celles des chèvres ne sont pas celles des cochons).
-    const niveau = bouclesEspece.filter((b) => b.article === a.cle && !b.chevreId).length;
+    // Une boucle de remplacement (rouge, rebouclage) n'a pas de numéro à l'achat : son niveau est sa quantité en stock, et les
+    // poses (avec leur numéro de remplacement) sont celles du cheptel.
+    const remplacement = estBoucleDeRemplacement(a.cle);
+    const posees = bouclesEspece.filter((b) => b.article === a.cle && !!b.chevreId).length;
+    const niveau = remplacement
+      ? (niveaux.get(a.cle) ?? 0)
+      : bouclesEspece.filter((b) => b.article === a.cle && !b.chevreId).length;
     return (
       <ListRow
         key={a.cle}
         title={a.libelle}
-        subtitle={T.boucles.resume(
-          bouclesEspece.filter((b) => b.article === a.cle).length,
-          bouclesEspece.filter((b) => b.article === a.cle && !!b.chevreId).length,
-        )}
+        subtitle={
+          remplacement
+            ? T.boucles.resumeRemplacement(niveau, posees)
+            : T.boucles.resume(bouclesEspece.filter((b) => b.article === a.cle).length, posees)
+        }
         trailing={
           <View style={stylesStock.fin}>
             <Text style={[styles.resultatLigne, niveau < 0 ? styles.perte : undefined]}>
@@ -415,37 +443,59 @@ export default function StockFromagerie() {
     (x) => !retireePourToutes(archive.sectionsMasquees?.[x.section], concernees),
   );
 
-  /** Ce que le bouton « + » propose : un ajout pour chaque liste des catégories déroulées (toutes si aucune ne l'est). */
-  const optionsAjout = sectionsAffichees
-    .filter((x) => ouvertes.length === 0 || ouvertes.includes(x.categorie))
-    // Les fromages et la viande (produits finis et produits animaux) entrent par la Production et sortent par les ventes : on n'en
-    // ajoute pas ici.
-    .filter((x) => x.genre !== GENRE_ARTICLE.FROMAGE && x.genre !== GENRE_ARTICLE.VIANDE)
-    .map(({ section, genre }) =>
-      genre === GENRE_ARTICLE.BOUCLE
-        ? null
-        : genre
-          ? {
-              label: TEXTES_AJOUT[genre].titre,
-              icon: 'add-circle' as const,
-              onPress: () => ouvrirAjout(genre),
-            }
-          : section === SECTION_STOCK.LAIT
+  /** Les ajouts d'une catégorie : un pour chacune de ses listes d'office (l'ajout d'un article, du lait) et pour chaque liste ajoutée. */
+  const ajoutsDeLaCategorie = (categorie: string): Option[] => [
+    ...sectionsAffichees
+      .filter((x) => x.categorie === categorie)
+      // Les fromages et la viande (produits finis et produits animaux) entrent par la Production et sortent par les ventes : on n'en
+      // ajoute pas ici.
+      .filter((x) => x.genre !== GENRE_ARTICLE.FROMAGE && x.genre !== GENRE_ARTICLE.VIANDE)
+      .map(({ section, genre }): Option | null =>
+        genre === GENRE_ARTICLE.BOUCLE
+          ? null
+          : genre
             ? {
-                label: T.laitJour.ajouter,
-                icon: 'add-circle' as const,
-                onPress: () => setLaitOuvert('nouveau'),
+                label: TEXTES_AJOUT[genre].titre,
+                icon: 'add-circle',
+                onPress: () => ouvrirAjout(genre),
               }
-            : null,
-    )
-    .filter((x) => x !== null);
-  const optionsListes = listesVisibles
-    .filter((l) => ouvertes.length === 0 || ouvertes.includes(l.categorie))
-    .map((l) => ({
-      label: T.ajouter.dansLaListe(l.nom),
-      icon: 'add-circle' as const,
-      onPress: () => ouvrirAjout(GENRE_ARTICLE.PERSONNALISE, l),
-    }));
+            : section === SECTION_STOCK.LAIT
+              ? {
+                  label: T.laitJour.ajouter,
+                  icon: 'add-circle',
+                  onPress: () => setLaitOuvert('nouveau'),
+                }
+              : null,
+      )
+      .filter((x): x is Option => x !== null),
+    ...listesVisibles
+      .filter((l) => l.categorie === categorie)
+      .map((l): Option => ({
+        label: T.ajouter.dansLaListe(l.nom),
+        icon: 'add-circle',
+        onPress: () => ouvrirAjout(GENRE_ARTICLE.PERSONNALISE, l),
+      })),
+  ];
+  /** Les catégories qui ont de quoi ajouter, avec leurs ajouts (celles déroulées seulement, toutes si aucune ne l'est). */
+  const groupesAjout = categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories)
+    .filter((c) => ouvertes.length === 0 || ouvertes.includes(c.categorie))
+    // Classées par numéro de catégorie (21, 31, 32, 33…).
+    .sort((x, y) => x.classe.localeCompare(y.classe, undefined, { numeric: true }))
+    .map((c) => ({
+      categorie: c.categorie,
+      titre: T.enteteCategorie(c.classe, c.nom),
+      options: ajoutsDeLaCategorie(c.categorie),
+    }))
+    .filter((g) => g.options.length > 0);
+  /** Ce que le bouton « + » propose : les ajouts de la catégorie quand il n'y en a qu'une ; sinon une ligne par catégorie, qui ouvre ses ajouts. */
+  const optionsAjout: Option[] =
+    groupesAjout.length === 1
+      ? groupesAjout[0].options
+      : groupesAjout.map((g) => ({
+          label: g.titre,
+          icon: 'folder-open',
+          onPress: () => setMenuAjout({ titre: g.titre, options: g.options }),
+        }));
 
   return (
     <Screen scroll={false}>
@@ -598,7 +648,13 @@ export default function StockFromagerie() {
         }}
       />
 
-      <Fab options={[...optionsAjout, ...optionsListes]} />
+      <Fab options={optionsAjout} />
+      <OptionsModal
+        visible={menuAjout !== null}
+        onClose={() => setMenuAjout(null)}
+        title={menuAjout?.titre}
+        options={menuAjout?.options ?? []}
+      />
 
       <ModalSynchroBoucles
         visible={synchroOuverte}
@@ -718,10 +774,19 @@ export default function StockFromagerie() {
             : undefined
         }
         onValider={renommer}
+        // Une viande ne se supprime pas ici ; un fromage, oui — sauf s'il a déjà des mouvements ou des lots.
         onSupprimer={
-          produitFiniModifie
+          produitFiniModifie && !renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)
             ? undefined
             : () => {
+                if (!renomme) return;
+                const utilise =
+                  archive.mouvements.some((m) => m.article === renomme.cle) ||
+                  (archive.lots ?? []).some((l) => l.article === renomme.cle);
+                if (renomme.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) && utilise) {
+                  Alert.alert(T.suppression.fromageUtilise(renomme.libelle));
+                  return;
+                }
                 setASupprimer(renomme);
                 setRenomme(null);
               }

@@ -4,7 +4,7 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesAchetables, articlesDuGenre } from '@/features/stock/services/stock';
-import { derniereBoucle, estArticleBoucle } from '@/features/stock/services/boucles';
+import { derniereBoucle, estArticleBoucle, estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { COMPTE_BOUCLES } from '@/shared/constants/planComptable';
 import { FILTRE_STOCK_TOUT, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -76,6 +76,8 @@ export function ChampStockProduction({ compte, article, quantite, debut, onChang
 
   /** Des boucles : leur quantité est un nombre entier, et chacune a son numéro. */
   const boucles = estArticleBoucle(article);
+  /** Une boucle rouge n'a pas de numéro à l'achat : seulement sa quantité. */
+  const numerotee = estBoucleNumerotee(article);
   const dernier = boucles && debut && quantite ? derniereBoucle(debut, quantite) : undefined;
 
   if (compte && !avecListe) return null;
@@ -108,7 +110,7 @@ export function ChampStockProduction({ compte, article, quantite, debut, onChang
           keyboardType={boucles ? 'number-pad' : 'decimal-pad'}
         />
       ) : null}
-      {boucles ? (
+      {numerotee ? (
         <>
           <FormField
             label={T.premiereBoucle}

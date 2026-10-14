@@ -10,6 +10,11 @@ import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/
 import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
 import {
+  lireArchiveCommercial,
+  normaliserArchiveCommercial,
+  remplacerArchiveCommercial,
+} from '@/features/commercial/repository';
+import {
   lireArchiveAnnexes,
   normaliserArchiveAnnexes,
   remplacerArchiveAnnexes,
@@ -55,6 +60,7 @@ import {
   FICHIER_FOURNISSEURS,
   FICHIER_GITE,
   FICHIER_BAR,
+  FICHIER_COMMERCIAL,
   FICHIER_STOCK,
   FICHIER_TRADING,
   MOTIF_FICHIER_ANNEE,
@@ -227,6 +233,26 @@ export async function tirerGite(accessToken: string, folderId: string): Promise<
   try {
     const archive = JSON.parse(json);
     if (Array.isArray(archive?.sejours)) await remplacerArchiveGite(normaliserArchiveGite(archive));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie les commandes et les tarifs du volet commercial vers Google Drive. */
+export async function pousserCommercial(accessToken: string, folderId: string): Promise<void> {
+  const archive = await lireArchiveCommercial();
+  await deposer(accessToken, FICHIER_COMMERCIAL, folderId, JSON.stringify(archive));
+}
+
+/** Récupère les commandes et les tarifs depuis Google Drive, s'ils sont présents (remplace les données locales). */
+export async function tirerCommercial(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_COMMERCIAL, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireArchiveCommercial())))) return;
+  const json = await downloadFileText(accessToken, file.id);
+  try {
+    const archive = JSON.parse(json);
+    if (Array.isArray(archive?.commandes))
+      await remplacerArchiveCommercial(normaliserArchiveCommercial(archive));
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
   }
@@ -421,6 +447,7 @@ export async function pousserToutesAnnees(
   await pousserGite(accessToken, folderId);
   await pousserTrading(accessToken, folderId);
   await pousserBar(accessToken, folderId);
+  await pousserCommercial(accessToken, folderId);
   await pousserStock(accessToken, folderId);
   await pousserAnnexes(accessToken, folderId);
   await pousserPieces(accessToken, folderId);
@@ -463,6 +490,7 @@ export async function tirerToutesAnnees(
   await tirerGite(accessToken, folderId);
   await tirerTrading(accessToken, folderId);
   await tirerBar(accessToken, folderId);
+  await tirerCommercial(accessToken, folderId);
   await tirerStock(accessToken, folderId);
   await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);

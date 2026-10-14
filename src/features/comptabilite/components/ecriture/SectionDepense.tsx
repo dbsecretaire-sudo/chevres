@@ -1,4 +1,5 @@
-import { estArticleBoucle } from '@/features/stock/services/boucles';
+import { estBoucleNumerotee } from '@/features/stock/services/boucles';
+import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import type { ReactNode } from 'react';
 import { Text } from 'react-native';
@@ -23,7 +24,11 @@ import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouv
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { CategorieDepense } from '@/features/comptabilite/types';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
-import { categorieDepenseAutorisee, depenseImposee } from '@/features/fournisseurs/services/categorie';
+import {
+  categorieDepenseAutorisee,
+  depenseImposee,
+  fournituresSeulementBoucles,
+} from '@/features/fournisseurs/services/categorie';
 import {
   categorieFournisseurDe,
   pasPayeeAffichee,
@@ -59,6 +64,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
   const router = useRouter();
   const retour = useAdresseCourante();
   const estAlimentation = e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
+  const estProduction = e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
   const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   /** La catégorie du fournisseur choisi : elle dit quelles cases (paiement, non facturée) s'affichent. */
   const categorieDuTiers = e.fournisseurSelectionne
@@ -147,10 +153,9 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           />
         )}
 
-        {(e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
-          e.categorieDepense === CATEGORIE_DEPENSE.AUTRE) && (
+        {e.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
           <ChampStockProduction
-            compte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE ? e.compteDepenseAutre : undefined}
+            compte={e.compteDepenseAutre}
             article={e.stockArticle}
             quantite={e.stockQuantite}
             debut={e.bouclesDebut}
@@ -158,9 +163,24 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             onChange={(article, quantite) => {
               e.setStockArticle(article);
               e.setStockQuantite(quantite);
-              if (!estArticleBoucle(article)) e.setBouclesDebut('');
+              if (!estBoucleNumerotee(article)) e.setBouclesDebut('');
             }}
           />
+        )}
+        {estProduction && (
+          <>
+            <LignesProductionEditor
+              lignes={e.lignesProduction}
+              onChange={e.setLignesProduction}
+              seulementBoucles={fournituresSeulementBoucles(e.fournisseurSelectionne)}
+            />
+            <Card style={commonStyles.gap10}>
+              <Text style={styles.total}>
+                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+                {formatTotalEuros(e.totalProduction)}
+              </Text>
+            </Card>
+          </>
         )}
         {estAlimentation && (
           <>
@@ -202,7 +222,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           </>
         )}
 
-        {!estAlimentation && !estCarburant && !e.estMarchandisesGite && (
+        {!estAlimentation && !estProduction && !estCarburant && !e.estMarchandisesGite && (
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
         )}
 

@@ -1,3 +1,4 @@
+import { CIRCUIT_NON_RENSEIGNE, CIRCUIT_VENTE, STATUT_COMMANDE } from '@/shared/constants/commercial';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ATELIER } from '@/shared/constants/ateliers';
@@ -82,6 +83,7 @@ export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURN
   [CATEGORIE_FOURNISSEUR.CARBURANT]: 'Distributeur de carburant',
   [CATEGORIE_FOURNISSEUR.GARAGE]: 'Garage / réparateur',
   [CATEGORIE_FOURNISSEUR.ORGANISME]: 'Organisme',
+  [CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE]: 'Chambre d’agriculture',
   [CATEGORIE_FOURNISSEUR.GROUPEMENT]: 'Groupement',
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: 'Assureur',
   [CATEGORIE_FOURNISSEUR.BANQUE]: 'Banque',
@@ -104,7 +106,7 @@ export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, str
 
 export const LABEL_TYPE_FROMAGE: Record<ValeurDe<typeof TYPE_FROMAGE>, string> = {
   [TYPE_FROMAGE.FRAIS]: 'Frais',
-  [TYPE_FROMAGE.AFFINE]: 'Affiné (vieux)',
+  [TYPE_FROMAGE.AFFINE]: 'Affiné',
   [TYPE_FROMAGE.CROTTIN]: 'Crottin',
   [TYPE_FROMAGE.BROCCIU]: 'Brocciu',
   [TYPE_FROMAGE.AUTRE]: 'Autre',
@@ -441,6 +443,7 @@ export const LABEL_EMBALLAGE: Record<ValeurDe<typeof ARTICLE_EMBALLAGE>, string>
 export const LABEL_BOUCLE: Record<ValeurDe<typeof ARTICLE_BOUCLE>, string> = {
   [ARTICLE_BOUCLE.BOUCLES]: 'Boucles',
   [ARTICLE_BOUCLE.ROUGES]: 'Boucles rouges',
+  [ARTICLE_BOUCLE.REBOUCLAGE]: 'Boucles de rebouclage',
   [ARTICLE_BOUCLE.TIPTAG]: 'Tiptag',
 };
 
@@ -458,4 +461,28 @@ export const LABEL_SERVICE_REPAS: Record<ValeurDe<typeof SERVICE_REPAS>, string>
   [SERVICE_REPAS.MIDI]: 'Midi',
   [SERVICE_REPAS.SOIR]: 'Soir',
   [SERVICE_REPAS.MIDI_SOIR]: 'Midi et soir',
+};
+
+/** Les circuits de vente. */
+export const LABEL_CIRCUIT_VENTE: Record<
+  ValeurDe<typeof CIRCUIT_VENTE> | typeof CIRCUIT_NON_RENSEIGNE,
+  string
+> = {
+  [CIRCUIT_VENTE.FERME]: 'Vente à la ferme',
+  [CIRCUIT_VENTE.MARCHE]: 'Marché',
+  [CIRCUIT_VENTE.PANIER]: 'Paniers et AMAP',
+  [CIRCUIT_VENTE.RESTAURATEUR]: 'Restaurateurs',
+  [CIRCUIT_VENTE.MAGASIN]: 'Magasins et épiceries',
+  [CIRCUIT_VENTE.GROSSISTE]: 'Grossiste ou coopérative',
+  [CIRCUIT_VENTE.EN_LIGNE]: 'Vente en ligne',
+  [CIRCUIT_VENTE.AUTRE]: 'Autre circuit',
+  [CIRCUIT_NON_RENSEIGNE]: 'Circuit non renseigné',
+};
+
+/** Les étapes d'une commande. */
+export const LABEL_STATUT_COMMANDE: Record<ValeurDe<typeof STATUT_COMMANDE>, string> = {
+  [STATUT_COMMANDE.A_PREPARER]: 'À préparer',
+  [STATUT_COMMANDE.PREPAREE]: 'Préparée',
+  [STATUT_COMMANDE.LIVREE]: 'Livrée',
+  [STATUT_COMMANDE.ANNULEE]: 'Annulée',
 };

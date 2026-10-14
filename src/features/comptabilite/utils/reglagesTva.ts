@@ -11,6 +11,12 @@ import {
 const REGIMES: readonly string[] = Object.values(REGIME_TVA_PILOTAGE);
 const PERIODICITES: readonly string[] = Object.values(PERIODICITE_TVA);
 
+/** Vrai quand les montants de l'analyse s'entendent hors taxes : la TVA est déclarée (réel simplifié ou normal). */
+export const montantsHorsTaxes = (infos: InfosExploitation | undefined): boolean => {
+  const { regime } = reglagesTva(infos);
+  return regime === REGIME_TVA_PILOTAGE.REEL_SIMPLIFIE || regime === REGIME_TVA_PILOTAGE.REEL_NORMAL;
+};
+
 /**
  * Les réglages de TVA qui s'appliquent : ceux de la comptabilité, à défaut le régime d'une entreprise (ses informations), à défaut le
  * réel simplifié mois par mois. Une entreprise qui n'est pas assujettie à la TVA est en franchise.

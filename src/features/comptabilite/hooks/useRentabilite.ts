@@ -21,9 +21,20 @@ import { calculerBilan } from '@/features/cheptel/services/bilanCheptel';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { calculerBilanAlimentation } from '@/features/exploitation/services/bilanAlimentation';
+import { cleArticle, conditionnementDe, libelleArticle } from '@/features/stock/services/stock';
+import { GRAMMES_PAR_KILO } from '@/shared/constants/format';
+import { ALIMENTS_EN_SILO } from '@/shared/constants/economies';
+import { reglageInvestissement } from '@/features/settings/settings';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import {
+  coutsUnitairesAchats,
+  coutsUnitairesEmballages,
+  partsReelles,
+} from '@/features/comptabilite/services/repartitionLait';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuProduit } from '@/features/stock/services/lots';
-import { CLE_PRIX_LAIT, PRODUIT_A_LOTS } from '@/shared/constants/stock';
+import { CLE_PRIX_LAIT, GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import type { InfosExploitation } from '@/features/settings/settings';
 
@@ -54,17 +65,44 @@ async function construirePlanDeLAnnee(
   espece: EspeceAnimale,
   investissements: InfosExploitation['investissementsEconomie'],
 ): Promise<PlanEconomies> {
-  const [controles, production, precedente, stock] = await Promise.all([
+  const [controles, production, precedente, stock, alimentation, factures] = await Promise.all([
     listControles(options.annee),
     productionLaitiere(options.annee),
     anneePrecedente(options),
     lireArchiveStock(),
+    calculerBilanAlimentation(options.annee),
+    listToutesFactures(),
   ]);
+  // Les grains achetés (ce que le silo touche) : les aliments de l'espèce qui se stockent en silo.
+  const clesGrains = new Set(ALIMENTS_EN_SILO.map((type) => cleArticle(GENRE_ARTICLE.ALIMENT, type)));
+  const grains = alimentation.lignes
+    .filter((l) => clesGrains.has(l.cle))
+    .reduce((t, l) => ({ montant: t.montant + l.montant, quantiteKg: t.quantiteKg + l.quantiteKg }), {
+      montant: 0,
+      quantiteKg: 0,
+    });
   const analyses = controles.filter((c) => c.famille === FAMILLE_CONTROLE.ANALYSE);
   // Les fromages de l'inventaire qui ont un prix de vente et les litres de lait qu'il faut pour les faire.
+  const couts = coutsUnitairesEmballages(factures, options.horsTaxes);
+  // Le sel : l'article de l'inventaire qui s'appelle « sel », au prix moyen de ses achats (au kilo) ; il entre dans les frais du brocciu.
+  const coutsAchats = coutsUnitairesAchats(factures, options.horsTaxes);
+  const cleSel = Object.keys(coutsAchats).find((cle) => /^sel\b/i.test(libelleArticle(cle, stock)));
+  const coutSelParGramme = cleSel ? coutsAchats[cleSel] / GRAMMES_PAR_KILO : undefined;
   const fromages = articlesDuProduit(PRODUIT_A_LOTS.FROMAGE, stock, espece).flatMap((a) =>
     a.prix && a.prix > 0 && a.litresParFromage && a.litresParFromage > 0
-      ? [{ libelle: a.libelle, prix: a.prix, litresParFromage: a.litresParFromage }]
+      ? [
+          {
+            cle: a.cle,
+            libelle: a.libelle,
+            prix: a.prix,
+            litresParFromage: a.litresParFromage,
+            // Les emballages d'un fromage vendu : ceux de son conditionnement, au prix moyen de leurs achats.
+            coutEmballage: conditionnementDe(a.id ?? a.cle.split(':')[1], stock, options.annee).reduce(
+              (t, code) => t + (couts[cleArticle(GENRE_ARTICLE.EMBALLAGE, code)] ?? 0),
+              0,
+            ),
+          },
+        ]
       : [],
   );
   return construirePlan({
@@ -72,9 +110,14 @@ async function construirePlanDeLAnnee(
     production,
     precedente,
     analyses,
-    investissements,
+    investissements: Object.fromEntries(
+      Object.entries(investissements ?? {}).map(([cle, valeur]) => [cle, reglageInvestissement(valeur)]),
+    ),
+    grains,
     fromages,
     prixLaitInventaire: stock.prix[CLE_PRIX_LAIT],
+    partsReelles: partsReelles(stock.mouvements, r.litresProduits, options.annee),
+    coutSelParGramme,
   });
 }
 

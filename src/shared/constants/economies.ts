@@ -1,6 +1,6 @@
 /** Le plan d'économies de la rentabilité : ce qui se négocie, ce qui ne se compresse pas, et les hypothèses de départ — à modifier ici uniquement. */
 
-import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, TYPE_ALIMENT } from '@/shared/constants/comptabilite';
 
 /**
  * Les hypothèses de départ du plan : ce ne sont pas des données de l'exploitation, mais des points de départ à discuter (une mise en
@@ -24,11 +24,20 @@ export const INVESTISSEMENT = {
  * moins de trajets pour livrer, carburant acheté par volume), à vérifier sur devis. Le temps gagné n'est pas chiffré.
  */
 export const HYPOTHESES_INVESTISSEMENT = {
-  /** Silo à grain : l'aliment acheté en vrac coûte moins cher qu'en sacs, et les livraisons groupées font moins de trajets. */
+  /** Silo à grain : les grains achetés en vrac coûtent moins cher qu'en sacs (part des grains), et les livraisons groupées font moins de trajets (part du carburant). */
   [INVESTISSEMENT.SILO]: { alimentation: 0.05, carburant: 0.05 },
   /** Cuve à gazole : le carburant acheté par volume coûte moins cher qu'à la pompe. */
   [INVESTISSEMENT.CUVE]: { carburant: 0.05 },
 } as const;
+
+/** Les aliments qui se stockent en silo (des grains) : le silo ne touche ni le foin, ni la paille, ni la luzerne en balles. */
+export const ALIMENTS_EN_SILO: readonly string[] = [
+  TYPE_ALIMENT.MAIS,
+  TYPE_ALIMENT.CEREALES,
+  TYPE_ALIMENT.MAIS_CONCASSE,
+  TYPE_ALIMENT.MAIS_PONTE,
+  TYPE_ALIMENT.PORC_CROISSANCE,
+];
 
 /** Les catégories de dépense qui se négocient (assureur, fournisseur de carburant, achats groupés). */
 export const CATEGORIES_NEGOCIABLES: readonly string[] = [

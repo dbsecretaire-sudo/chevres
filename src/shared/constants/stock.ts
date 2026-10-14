@@ -80,6 +80,8 @@ export const ESPECES_SANS_BOUCLE: readonly string[] = ['poules', 'domestiques'];
 export const ARTICLE_BOUCLE = {
   BOUCLES: 'boucles',
   ROUGES: 'rouges',
+  /** La boucle de rebouclage (à l'identique) : elle remplace une boucle perdue ou cassée, avec un n° et une date de rebouclage. */
+  REBOUCLAGE: 'rebouclage',
   TIPTAG: 'tiptag',
 } as const;
 

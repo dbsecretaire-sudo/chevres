@@ -121,6 +121,42 @@ export interface ReglagesTraite {
   chevres?: number;
 }
 
+/**
+ * Ce que l'utilisateur indique d'un investissement du plan d'économies : son coût (pour le remboursement) et deux prix d'après devis —
+ * la tonne de grain en sacs et en vrac pour un silo, le litre de gazole à la pompe et en cuve pour une cuve.
+ */
+export interface ReglageInvestissement {
+  cout?: number;
+  /** Le prix d'aujourd'hui : la tonne en sacs, ou le litre à la pompe. */
+  prixActuel?: number;
+  /** Le prix avec l'investissement : la tonne en vrac, ou le litre en cuve. */
+  prixAvecInvestissement?: number;
+}
+
+/** Un élément de la fromagerie amorti dans la simulation du lait : son nom, son montant (€) et sa durée d'amortissement (années). */
+export interface ElementAmortissement {
+  id: string;
+  libelle: string;
+  montant?: number;
+  duree?: number;
+}
+
+/** L'amortissement de la fromagerie dans la simulation : un montant unique ou le détail de ses éléments, inclus ou non. */
+export interface ReglageAmortissementFromagerie {
+  /** La fromagerie est incluse dans la simulation (et son PDF). */
+  inclure?: boolean;
+  /** Le détail par élément plutôt qu'un montant unique. */
+  detaille?: boolean;
+  montant?: number;
+  duree?: number;
+  elements?: ElementAmortissement[];
+}
+
+/** Un investissement lu dans les réglages (l'ancien format était le coût seul). */
+export const reglageInvestissement = (
+  valeur: ReglageInvestissement | number | undefined,
+): ReglageInvestissement => (typeof valeur === 'number' ? { cout: valeur } : (valeur ?? {}));
+
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
   /** Un titre propre à l'utilisateur, imprimé en tête de chaque PDF (nom commercial, adresse, mention…). */
@@ -166,8 +202,14 @@ export interface InfosExploitation {
    * pour un lait par animal plus précis que celui déduit de l'inventaire. Ils ne se reprennent pas d'une année à l'autre.
    */
   traites?: Record<string, ReglagesTraite>;
-  /** Le coût estimé (€) des investissements du plan d'économies (silo à grain, cuve à gazole), pour en calculer le remboursement. */
-  investissementsEconomie?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, number>>;
+  /** La répartition du lait choisie dans le plan d'économies : la part (en %) du lait de l'année de chaque fromage, par identifiant d'article ; le reste est vendu tel quel. Absent : la répartition réelle. */
+  repartitionLait?: Record<string, number>;
+  /** Le brocciu fait partie de la répartition (fabriqué avec le petit-lait des autres fromages) : coché ou non. Absent : coché quand il a été fabriqué. */
+  repartitionBrocciu?: boolean;
+  /** L'amortissement de la fromagerie de la simulation du lait en fromage. */
+  amortissementFromagerie?: ReglageAmortissementFromagerie;
+  /** Les investissements du plan d'économies (silo à grain, cuve à gazole) : leur coût et les prix d'après devis (un nombre est l'ancien format : le coût seul). */
+  investissementsEconomie?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, ReglageInvestissement | number>>;
   /** La trésorerie : le solde du compte à une date (le départ des courbes), le seuil sous lequel alerter, et les emprunts en cours. */
   tresorerie?: ReglagesTresorerie;
   emprunts?: Emprunt[];

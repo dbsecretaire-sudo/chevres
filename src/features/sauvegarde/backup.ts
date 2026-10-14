@@ -15,6 +15,12 @@ import type { ArchiveTrading } from '@/features/trading/types';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
 import type { ArchiveBar } from '@/features/bar/types';
 import {
+  lireArchiveCommercial,
+  normaliserArchiveCommercial,
+  remplacerArchiveCommercial,
+} from '@/features/commercial/repository';
+import type { ArchiveCommercial } from '@/features/commercial/types';
+import {
   lireArchiveAnnexes,
   normaliserArchiveAnnexes,
   remplacerArchiveAnnexes,
@@ -75,6 +81,8 @@ interface FichierSauvegarde {
   trading?: ArchiveTrading;
   /** Boissons du bar (absent des anciennes sauvegardes). */
   bar?: ArchiveBar;
+  /** Commandes des clients et tarifs par catégorie de client (absent des anciennes sauvegardes). */
+  commercial?: ArchiveCommercial;
   /** Stock de la fromagerie (absent des anciennes sauvegardes). */
   stock?: ArchiveStock;
   /** Les activités annexes du gîte : catégories, articles, prix, stocks, tickets (absent des anciennes sauvegardes). */
@@ -112,6 +120,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     gite,
     trading,
     bar,
+    commercial,
     stock,
     comptesPcg,
     settings,
@@ -125,6 +134,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     lireArchiveGite(),
     lireArchiveTrading(),
     lireArchiveBar(),
+    lireArchiveCommercial(),
     lireArchiveStock(),
     listComptesPcg(),
     getSettings(),
@@ -150,6 +160,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     gite,
     trading,
     bar,
+    commercial,
     stock,
     pieces,
     comptesPcg,
@@ -308,6 +319,13 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   if (sauvegarde.bar && Array.isArray(sauvegarde.bar.boissons)) {
     const bar = normaliserArchiveBar(sauvegarde.bar);
     await appliquerSiDifferent(await lireArchiveBar(), bar, () => remplacerArchiveBar(bar));
+  }
+
+  if (sauvegarde.commercial && Array.isArray(sauvegarde.commercial.commandes)) {
+    const commercial = normaliserArchiveCommercial(sauvegarde.commercial);
+    await appliquerSiDifferent(await lireArchiveCommercial(), commercial, () =>
+      remplacerArchiveCommercial(commercial),
+    );
   }
 
   if (sauvegarde.stock && Array.isArray(sauvegarde.stock.mouvements)) {

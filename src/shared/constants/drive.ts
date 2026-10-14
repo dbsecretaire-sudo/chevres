@@ -9,6 +9,7 @@ export const FICHIER_DOSSIERS = 'dossiers.json';
 export const FICHIER_GITE = 'gite.json';
 export const FICHIER_TRADING = 'trading.json';
 export const FICHIER_BAR = 'bar.json';
+export const FICHIER_COMMERCIAL = 'commercial.json';
 export const FICHIER_STOCK = 'stock.json';
 export const FICHIER_ANNEXES = 'annexes.json';
 /** Espèces et activités de l'établissement. */

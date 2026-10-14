@@ -130,6 +130,50 @@ export const TEXTES_EXPORT = {
       avertissement:
         'Correspondance indicative entre vos factures et les comptes du plan comptable, non validée par un expert-comptable : à confirmer avant tout usage officiel.',
     },
+    /** La simulation du lait en fromage : chiffres clés, histogramme, tableau de répartition, brocciu. */
+    simulationLait: {
+      titre: 'Simulation : le lait en fromage',
+      sousTitre: (annee: number) => `Lait de l’année ${annee}`,
+      cartes: {
+        lait: 'Lait de l’année',
+        laitDetail: (toutVendu: string) => `Tout vendu tel quel : ${toutVendu}`,
+        resultat: 'Recettes nettes',
+        plus: (ecart: string) => `${ecart} de plus que le lait vendu tel quel`,
+        moins: (ecart: string) => `${ecart} de moins que le lait vendu tel quel`,
+        prix: 'Prix du lait devenu',
+        leLitre: (prix: string) => `${prix} le litre`,
+        contre: (prix: string) => `contre ${prix} vendu tel quel`,
+        brocciu: 'Brocciu',
+        pots: (nombre: string) => `${nombre} pots`,
+        brocciuDetail: (petitLait: string, sel: string) => `Petit-lait : ${petitLait} L · sel : ${sel} g`,
+      },
+      /** Le résultat final : les recettes nettes, moins les charges du lait et l'amortissement de la fromagerie. */
+      resultatFinal: {
+        poste: 'Poste',
+        montant: 'Montant',
+        recettes: 'Recettes nettes (lait et fromages, emballages déduits)',
+        charges: 'Charges du lait de l’année',
+        amortissement: 'Amortissement de la fromagerie',
+        final: 'Résultat final',
+        detail: (charges: string, amortissement?: string) =>
+          amortissement ? `Charges ${charges} · amortissement ${amortissement}` : `Charges ${charges}`,
+        note: 'Les charges sont celles de l’année, toutes ensemble (comme le coût du litre de lait). Les autres frais de fabrication ne sont pas déduits.',
+      },
+      amortissement: {
+        element: 'Élément',
+        montant: 'Montant',
+        duree: 'Durée',
+        parAn: 'Par an',
+        ans: (n: number) => `${n} ans`,
+        fromagerie: 'Fromagerie',
+      },
+      sections: {
+        resume: 'En un coup d’œil',
+        repartition: 'Répartition du lait',
+        amortissement: 'Amortissement de la fromagerie',
+        resultat: 'Résultat final',
+      },
+    },
     /** La liste des boucles d'identification, telle que les filtres de l'écran la montrent. */
     boucles: {
       titre: 'Boucles d’identification',
@@ -247,8 +291,9 @@ export const TEXTES_EXPORT = {
     articleStock: 'Article du stock',
     quantiteStock: 'Quantité au stock',
     premiereBoucle: 'N° de la première boucle',
-    nBoucleRouge: 'N° de boucle rouge',
-    dateBoucleRouge: 'Date de la boucle rouge',
+    /** Les boucles de remplacement : des dates (la date de pose), sans numéro. */
+    dateBoucleRouge: 'Boucle rouge',
+    dateRebouclage: 'Boucle rebouclage',
     aliment: 'Aliment',
     quantiteKg: 'Quantité (kg)',
     kgParAnimal: 'Kg par animal',

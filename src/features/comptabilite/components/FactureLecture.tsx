@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import type { ArchiveStock } from '@/features/stock/types';
+import { libelleArticle } from '@/features/stock/services/stock';
+import { lireArchiveStock } from '@/features/stock/repository';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
@@ -41,6 +44,11 @@ interface Props {
 /** Fiche d'une facture en lecture seule : informations générales puis détail par aliment/carburant. */
 export function FactureLecture({ facture, compte, onModifier }: Props) {
   const nomsMateriel = useNomsMateriel();
+  /** L'inventaire, pour nommer les fournitures d'un achat de production. */
+  const [archiveLecture, setArchiveLecture] = useState<ArchiveStock | null>(null);
+  useEffect(() => {
+    if (facture.lignesProduction?.length) lireArchiveStock().then(setArchiveLecture);
+  }, [facture.lignesProduction]);
   const router = useRouter();
   /** La réservation du gîte dont cette écriture est le paiement (hébergement, repas, acompte, remboursement). */
   const [reservation, setReservation] = useState<Sejour | undefined>();
@@ -158,6 +166,23 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
                     : plusieursEspeces() && activitesFacture(facture).length > 1
                       ? ` (${LABEL_ACTIVITE_COMPTABLE[activiteLigne(facture, ligne)]})`
                       : ''}
+              </Text>
+              <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {facture.lignesProduction && facture.lignesProduction.length > 0 ? (
+        <View style={commonStyles.gap2}>
+          <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.factureLecture.detailsDeuxPoints}</Text>
+          {facture.lignesProduction.map((ligne, index) => (
+            <View key={index} style={commonStyles.rowBetween}>
+              <Text style={commonStyles.line}>
+                {ligne.article && archiveLecture
+                  ? libelleArticle(ligne.article, archiveLecture)
+                  : TEXTES.comptabilite.lignesProductionEditor.horsStock}
+                {ligne.quantite ? ` — ${String(ligne.quantite).replace('.', ',')}` : ''}
               </Text>
               <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>
             </View>

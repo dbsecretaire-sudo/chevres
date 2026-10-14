@@ -71,6 +71,14 @@ export interface LigneMarchandise {
   montant: number;
 }
 
+/** Une fourniture d'un achat de production : l'article de l'inventaire (voir cleArticle), sa quantité, son montant TTC et, pour des boucles, le numéro de la première. */
+export interface LigneProduction {
+  article: string;
+  quantite?: number;
+  montant: number;
+  bouclesDebut?: string;
+}
+
 export interface LigneCarburant {
   type: TypeCarburant;
   montant: number;
@@ -103,6 +111,8 @@ export interface Facture {
   lignesAlimentation?: LigneAlimentation[];
   /** Uniquement si categorieDepense === 'achats_marchandises' dans un gîte : le détail des marchandises achetées. */
   lignesMarchandises?: LigneMarchandise[];
+  /** Achat de production : le détail par fourniture (chacune entre au stock). Les anciennes factures n'ont que stockArticle, stockQuantite et bouclesDebut (voir lignesProductionDe). */
+  lignesProduction?: LigneProduction[];
   /**
    * Vrai quand les quantités de lignesMarchandises ont été ajoutées au stock du gîte. Une facture d'avant cette gestion du
    * stock ne l'a pas : la première fois qu'on l'enregistre de nouveau, ses quantités sont ajoutées (une seule fois).
@@ -214,4 +224,8 @@ export interface Vente {
   echeance?: string;
   /** La date où la vente a été encaissée, quand elle diffère de sa date (la trésorerie s'en sert). */
   datePaiement?: string;
+  /** Le circuit par lequel la vente est passée (voir CIRCUIT_VENTE) ; absent : non précisé. */
+  circuit?: string;
+  /** La commande dont la livraison a créé la vente : son prix est celui de la commande, pas celui de l'inventaire. */
+  commandeId?: string;
 }

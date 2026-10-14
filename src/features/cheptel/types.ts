@@ -14,9 +14,11 @@ export interface Chevre {
   numeroBoucle?: string;
   /** Date de pose de la boucle — souvent postérieure à la naissance. */
   dateBouclage?: string; // YYYY-MM-DD
-  /** La boucle rouge posée en plus (boucle de remplacement) : son numéro et la date de sa pose. */
+  /** La boucle rouge posée en plus (remplacement provisoire d'une boucle cassée) : la date de sa pose, sans numéro (`numeroBoucleRouge` ne vient que des anciennes fiches). */
   numeroBoucleRouge?: string;
   dateBoucleRouge?: string; // YYYY-MM-DD
+  /** Le rebouclage (boucle de rebouclage, qui remplace une boucle perdue ou cassée) : la date seulement, sans numéro. */
+  dateRebouclage?: string; // YYYY-MM-DD
   nom?: string;
   sexe: Sexe;
   dateNaissance: string; // YYYY-MM-DD

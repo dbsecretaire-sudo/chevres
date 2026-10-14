@@ -55,6 +55,16 @@ export const ROUTES = {
   PRODUCTION_VIANDE: '/production/viande',
   PRODUCTION_STATISTIQUES: '/production/statistiques',
 
+  /** L'onglet Commercial d'un élevage : ventes et clients, tarifs, commandes et livraisons, circuits de vente. */
+  COMMERCIAL: '/commercial',
+  COMMERCIAL_VENTES: '/commercial/ventes',
+  COMMERCIAL_TARIFS: '/commercial/tarifs',
+  COMMERCIAL_COMMANDES: '/commercial/commandes',
+  COMMERCIAL_CIRCUITS: '/commercial/circuits',
+  /** Une nouvelle commande, ou celle dont on donne l'identifiant. */
+  COMMERCIAL_COMMANDE: '/commercial/commande',
+  commande: (id: string) => `/commercial/commande?id=${id}` as const,
+
   COMPTABILITE: '/comptabilite',
   /** La liste des écritures (la page d'accueil de la comptabilité est le menu `COMPTABILITE`). */
   COMPTABILITE_LISTE: '/comptabilite/liste',

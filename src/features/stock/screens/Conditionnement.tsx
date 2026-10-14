@@ -8,8 +8,13 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { Fab } from '@/shared/components/Fab';
 import { Screen } from '@/shared/components/ScreenList';
 import { SelectModal } from '@/shared/components/SelectModal';
+import { YearPicker } from '@/shared/components/YearPicker';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { lireArchiveStock } from '@/features/stock/repository';
 import {
+  anneeDuConditionnement,
   articlesDuGenre,
   cleArticle,
   conditionnementDe,
@@ -39,6 +44,19 @@ export default function Conditionnement() {
   /** L'élément dont on modifie le conditionnement. */
   const [enEdition, setEnEdition] = useState<string | null>(null);
   const [choixOuvert, setChoixOuvert] = useState(false);
+  /** L'année dont on voit et modifie le conditionnement (celle de l'application d'office). */
+  const { settings } = useAppSettings();
+  const [annee, setAnnee] = useState(settings.anneeActive);
+  const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
+  useFocusEffect(
+    useCallback(() => {
+      toutesLesAnneesConnues().then((connues) =>
+        setAnnees(
+          [...new Set([...connues, settings.anneeActive, settings.anneeActive + 1])].sort((a, b) => b - a),
+        ),
+      );
+    }, [settings.anneeActive]),
+  );
 
   const charger = useCallback(async () => setArchive(await lireArchiveStock()), []);
   useFocusEffect(
@@ -60,10 +78,11 @@ export default function Conditionnement() {
   ];
 
   const basculer = async (code: string, emballage: string) => {
-    const actuels = conditionnementDe(code, archive);
+    const actuels = conditionnementDe(code, archive, annee);
     await definirConditionnement(
       code,
       actuels.includes(emballage) ? actuels.filter((c) => c !== emballage) : [...actuels, emballage],
+      annee,
     );
     charger();
   };
@@ -85,12 +104,18 @@ export default function Conditionnement() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listFab}>
+        <LigneFiltres>
+          <YearPicker annees={annees} value={annee} onChange={setAnnee} />
+        </LigneFiltres>
         <Text style={commonStyles.note}>{T.aide}</Text>
+        <Text style={commonStyles.note}>{T.aideAnnee}</Text>
         <BlocLignes>
           {lignes.map(({ article, retirable }) => {
             const code = codeDe(article.cle);
-            const codes = conditionnementDe(code, archive);
+            const codes = conditionnementDe(code, archive, annee);
             const edition = enEdition === code;
+            /** L'année de la personnalisation qui vaut pour l'année affichée (rien : le conditionnement de base). */
+            const depuis = anneeDuConditionnement(code, archive, annee);
             return (
               <ListRow
                 key={article.cle}
@@ -107,18 +132,35 @@ export default function Conditionnement() {
                           onChange={() => basculer(code, codeDe(e.cle))}
                         />
                       ))}
+                      {depuis === annee ? (
+                        <Pressable
+                          onPress={() => retirerConditionnement(code, annee).then(charger)}
+                          hitSlop={8}
+                        >
+                          <Text style={commonStyles.required}>{T.revenir}</Text>
+                        </Pressable>
+                      ) : null}
                       {retirable ? (
                         <Pressable onPress={() => retirer(code)} hitSlop={8}>
                           <Text style={commonStyles.required}>{T.retirer}</Text>
                         </Pressable>
                       ) : null}
                     </View>
-                  ) : codes.length === 0 ? (
-                    T.aucun
                   ) : (
-                    codes
-                      .map((c) => libelleArticle(cleArticle(GENRE_ARTICLE.EMBALLAGE, c), archive))
-                      .join(' + ')
+                    <View style={commonStyles.gap2}>
+                      <Text style={commonStyles.muted}>
+                        {codes.length === 0
+                          ? T.aucun
+                          : codes
+                              .map((c) => libelleArticle(cleArticle(GENRE_ARTICLE.EMBALLAGE, c), archive))
+                              .join(' + ')}
+                      </Text>
+                      {depuis !== undefined ? (
+                        <Text style={commonStyles.note}>
+                          {depuis === annee ? T.personnalise(depuis) : T.herite(depuis)}
+                        </Text>
+                      ) : null}
+                    </View>
                   )
                 }
                 trailing={

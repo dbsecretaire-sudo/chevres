@@ -52,6 +52,15 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
   for (const [code, emballages] of Object.entries(archive?.conditionnements ?? {})) {
     if (Array.isArray(emballages)) conditionnements[code] = emballages;
   }
+  const conditionnementsParAnnee: Record<string, Record<string, string[]>> = {};
+  for (const [annee, parCode] of Object.entries(archive?.conditionnementsParAnnee ?? {})) {
+    if (!parCode || typeof parCode !== 'object') continue;
+    const valides: Record<string, string[]> = {};
+    for (const [code, emballages] of Object.entries(parCode)) {
+      if (Array.isArray(emballages)) valides[code] = emballages;
+    }
+    if (Object.keys(valides).length > 0) conditionnementsParAnnee[annee] = valides;
+  }
   const ordres: ArchiveStock['ordres'] = {};
   for (const [genre, cles] of Object.entries(archive?.ordres ?? {})) {
     if (Array.isArray(cles)) ordres[genre as keyof ArchiveStock['ordres']] = cles;
@@ -72,6 +81,7 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
     articles: Array.isArray(archive?.articles) ? archive.articles : [],
     conditionnements,
+    conditionnementsParAnnee,
     ordres,
     noms,
     lait: Array.isArray(archive?.lait) ? archive.lait : [],

@@ -102,19 +102,17 @@ export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer, onAjou
           </View>
         </View>
       </SectionForm>
-      {/* La boucle rouge (de remplacement) : son numéro, pris dans les boucles rouges de l'inventaire, et sa date de pose. */}
+      {/* La boucle rouge (remplacement provisoire) et la boucle de rebouclage : seulement leur date de pose, elles n'ont pas de numéro. */}
       <SectionForm>
-        <BoucleField
-          rouge
-          label={TEXTES.commun.general.nDeBoucle}
-          value={form.numeroBoucleRouge ?? ''}
-          onChangeText={(v) => onChange({ ...form, numeroBoucleRouge: v || undefined })}
-          placeholder={TEXTES.cheptel.nouvelleChevre.mereInconnue}
-        />
         <DateField
-          label={TEXTES.commun.general.dateDeBouclage}
+          label={TEXTES.cheptel.ficheChevre.dateBouclageRouge}
           value={form.dateBoucleRouge ?? ''}
           onChange={(v) => onChange({ ...form, dateBoucleRouge: v || undefined })}
+        />
+        <DateField
+          label={TEXTES.cheptel.ficheChevre.dateRebouclage}
+          value={form.dateRebouclage ?? ''}
+          onChange={(v) => onChange({ ...form, dateRebouclage: v || undefined })}
         />
       </SectionForm>
       <SectionForm titre={TEXTES.commun.formulaire.filiation}>

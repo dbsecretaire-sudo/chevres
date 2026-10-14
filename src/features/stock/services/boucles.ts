@@ -1,4 +1,5 @@
 import type { Chevre } from '@/features/cheptel/types';
+import { lignesProductionDe } from '@/features/comptabilite/utils/lignesProduction';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { activiteFacture } from '@/features/comptabilite/utils/activite';
 import { especeCourante, especeParDefaut } from '@/shared/dictionnaire/animaux';
@@ -36,6 +37,22 @@ export const bouclesDeLEspece = (boucles: BoucleStock[] | undefined): BoucleStoc
 /** Vrai pour un article de l'inventaire qui est une boucle d'identification (« boucle:boucles », « boucle:rouges », « boucle:tiptag »). */
 export const estArticleBoucle = (cle: string | undefined): boolean =>
   !!cle && cle.startsWith(`${GENRE_ARTICLE.BOUCLE}:`);
+
+/** Vrai pour la boucle rouge : une boucle de remplacement provisoire, sans numéro à elle (elle se compte seulement en quantité). */
+export const estArticleBoucleRouge = (cle: string | undefined): boolean =>
+  cle === `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`;
+
+/** Vrai pour la boucle de rebouclage : elle remplace une boucle perdue ou cassée ; elle s'achète en quantité, sans numéro. */
+export const estArticleRebouclage = (cle: string | undefined): boolean =>
+  cle === `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.REBOUCLAGE}`;
+
+/** Vrai pour une boucle de remplacement (rouge ou de rebouclage) : sans numéro à l'achat, avec un numéro de remplacement noté à la pose. */
+export const estBoucleDeRemplacement = (cle: string | undefined): boolean =>
+  estArticleBoucleRouge(cle) || estArticleRebouclage(cle);
+
+/** Vrai pour une boucle d'identification qui a son numéro à l'achat (la boucle et le tiptag, pas les boucles de remplacement). */
+export const estBoucleNumerotee = (cle: string | undefined): boolean =>
+  estArticleBoucle(cle) && !estBoucleDeRemplacement(cle);
 
 /** « Boucles », « Boucles rouges » ou « Tiptag » d'après l'article de l'inventaire (« boucle:rouges »). */
 export const libelleDeLaSorte = (article: string | undefined): string =>
@@ -81,34 +98,49 @@ export function bouclesApresAchat(
   boucles: BoucleStock[],
   facture: Pick<
     Facture,
-    'id' | 'date' | 'stockArticle' | 'stockQuantite' | 'bouclesDebut' | 'activite' | 'categorieDepense'
+    | 'id'
+    | 'date'
+    | 'stockArticle'
+    | 'stockQuantite'
+    | 'bouclesDebut'
+    | 'lignesProduction'
+    | 'montant'
+    | 'activite'
+    | 'categorieDepense'
   >,
 ): BoucleStock[] {
   // Les boucles sont celles de l'espèce de la dépense (celle de l'espèce active pour une dépense commune).
   const activite = activiteFacture(facture);
   const espece = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
-  const numeros =
-    estArticleBoucle(facture.stockArticle) && facture.bouclesDebut
-      ? plageDeBoucles(facture.bouclesDebut, facture.stockQuantite ?? 0)
-      : undefined;
+  // Les boucles de chaque fourniture de l'achat qui en est une (une plage à partir de son premier numéro).
+  const achetees = lignesProductionDe(facture).flatMap((ligne) => {
+    const plage =
+      estBoucleNumerotee(ligne.article) && ligne.bouclesDebut
+        ? plageDeBoucles(ligne.bouclesDebut, ligne.quantite ?? 0)
+        : undefined;
+    return (plage ?? []).map((numero) => ({ numero, article: ligne.article }));
+  });
+  const tousLesNumeros = new Set(achetees.map((x) => x.numero));
   // Celles de l'ancien enregistrement de la facture, et celles que le cheptel avait déjà ajoutées sous ces numéros : l'achat les reprend.
   const reprises = (b: BoucleStock) =>
-    b.factureId === facture.id || (!!b.depuisCheptel && !!numeros?.includes(b.numero));
-  const anciennes = new Map(boucles.filter(reprises).map((b) => [b.numero, b]));
+    b.factureId === facture.id || (!!b.depuisCheptel && tousLesNumeros.has(b.numero));
+  const anciennes = new Map(boucles.filter(reprises).map((b) => [`${b.article}|${b.numero}`, b]));
   const autres = boucles.filter((b) => !reprises(b));
-  if (!numeros) return autres;
   return [
     ...autres,
-    ...numeros.map((numero): BoucleStock => ({
-      ...anciennes.get(numero),
-      depuisCheptel: undefined,
-      id: anciennes.get(numero)?.id ?? generateId(),
-      article: facture.stockArticle as string,
-      espece,
-      numero,
-      dateAchat: facture.date,
-      factureId: facture.id,
-    })),
+    ...achetees.map(({ numero, article }): BoucleStock => {
+      const ancienne = anciennes.get(`${article}|${numero}`);
+      return {
+        ...ancienne,
+        depuisCheptel: undefined,
+        id: ancienne?.id ?? generateId(),
+        article,
+        espece,
+        numero,
+        dateAchat: facture.date,
+        factureId: facture.id,
+      };
+    }),
   ];
 }
 
@@ -134,27 +166,39 @@ export function numeroDejaEnStock(
  */
 export function erreurAchatBoucles(
   archive: Pick<ArchiveStock, 'boucles'>,
-  achat: Pick<Facture, 'stockArticle' | 'stockQuantite' | 'bouclesDebut'> & { id?: string },
+  achat: Pick<Facture, 'stockArticle' | 'stockQuantite' | 'bouclesDebut' | 'lignesProduction' | 'montant'> & {
+    id?: string;
+  },
 ): string | undefined {
-  if (!estArticleBoucle(achat.stockArticle)) return undefined;
   const T = TEXTES.comptabilite.nouvelleEcriture.stockProduction;
-  const quantite = Math.round(achat.stockQuantite ?? 0);
-  if (quantite > BOUCLES_MAX_PAR_ACHAT) return T.tropDeBoucles(BOUCLES_MAX_PAR_ACHAT);
-  const numeros = plageDeBoucles(achat.bouclesDebut ?? '', quantite);
-  if (!numeros) return T.premiereBoucleRequise;
-  const pris = numeroDejaEnStock(archive, numeros, achat.id, achat.stockArticle);
-  return pris ? T.dejaEnStock(pris) : undefined;
+  for (const ligne of lignesProductionDe(achat)) {
+    if (!estBoucleNumerotee(ligne.article)) continue;
+    const quantite = Math.round(ligne.quantite ?? 0);
+    if (quantite > BOUCLES_MAX_PAR_ACHAT) return T.tropDeBoucles(BOUCLES_MAX_PAR_ACHAT);
+    const numeros = plageDeBoucles(ligne.bouclesDebut ?? '', quantite);
+    if (!numeros) return T.premiereBoucleRequise;
+    const pris = numeroDejaEnStock(archive, numeros, achat.id, ligne.article);
+    if (pris) return T.dejaEnStock(pris);
+  }
+  return undefined;
 }
 
 /** Un animal enregistré avec son numéro de boucle (ce que l'inventaire des boucles lit du cheptel). */
 type AnimalBouclable = Pick<
   Chevre,
-  'id' | 'numeroBoucle' | 'dateBouclage' | 'numeroBoucleRouge' | 'dateBoucleRouge' | 'espece'
+  | 'id'
+  | 'numeroBoucle'
+  | 'dateBouclage'
+  | 'numeroBoucleRouge'
+  | 'dateBoucleRouge'
+  | 'dateRebouclage'
+  | 'espece'
 >;
 
 const ARTICLE_BOUCLES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.BOUCLES}`;
 const ARTICLE_ROUGES = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.ROUGES}`;
 const ARTICLE_TIPTAG = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.TIPTAG}`;
+const ARTICLE_REBOUCLAGE = `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.REBOUCLAGE}`;
 
 /**
  * La sorte d'un numéro de boucle : celle de l'inventaire quand il l'y trouve (acheté, ou repris d'une synchronisation), sinon un
@@ -164,7 +208,7 @@ type SorteDuNumero = (numero: string) => string;
 
 const sorteDesNumeros = (boucles: BoucleStock[], tiptags?: ReadonlySet<string>): SorteDuNumero => {
   const connues = new Map(
-    boucles.filter((b) => b.article !== ARTICLE_ROUGES).map((b) => [b.numero, b.article]),
+    boucles.filter((b) => !estBoucleDeRemplacement(b.article)).map((b) => [b.numero, b.article]),
   );
   return (numero) => connues.get(numero) ?? (tiptags?.has(numero) ? ARTICLE_TIPTAG : ARTICLE_BOUCLES);
 };
@@ -180,7 +224,20 @@ const bouclesPortees = (
       numero: animal.numeroBoucle?.trim(),
       date: animal.dateBouclage,
     },
-    { article: ARTICLE_ROUGES, numero: animal.numeroBoucleRouge?.trim(), date: animal.dateBoucleRouge },
+    {
+      article: ARTICLE_ROUGES,
+      // La boucle rouge n'a pas de numéro : la liste montre celui de la boucle de l'animal (la boucle cassée remplacée).
+      numero:
+        animal.numeroBoucleRouge?.trim() ||
+        (animal.dateBoucleRouge ? animal.numeroBoucle?.trim() : undefined),
+      date: animal.dateBoucleRouge,
+    },
+    {
+      article: ARTICLE_REBOUCLAGE,
+      // La boucle de rebouclage n'a pas de numéro : la liste montre celui de la boucle de l'animal (la boucle remplacée).
+      numero: animal.dateRebouclage ? animal.numeroBoucle?.trim() : undefined,
+      date: animal.dateRebouclage,
+    },
   ].filter((b): b is { article: string; numero: string; date: string | undefined } => !!b.numero);
 
 const cleBoucle = (article: string, numero: string): string => `${article}|${numero}`;
@@ -253,8 +310,8 @@ export function avecPoses(
       origine: ORIGINE_MOUVEMENT.CONSOMMATION,
       boucleId: b.id,
     };
-    // Une boucle ajoutée depuis une fiche entre au stock le jour où elle est posée.
-    return b.depuisCheptel
+    // Une boucle ajoutée depuis une fiche entre au stock le jour où elle est posée (pas une boucle rouge : elle s'est achetée en quantité).
+    return b.depuisCheptel && !estBoucleDeRemplacement(b.article)
       ? [{ ...pose, id: `entree-${b.id}`, delta: 1, origine: ORIGINE_MOUVEMENT.ACHAT }, pose]
       : [pose];
   });
@@ -280,7 +337,12 @@ export function synchroniserPoseBoucles(enregistre?: AnimalBouclable): Promise<v
     const aVerifier =
       !!enregistre &&
       porteDesBoucles(enregistre) &&
-      !!(enregistre.numeroBoucle?.trim() || enregistre.numeroBoucleRouge?.trim());
+      !!(
+        enregistre.numeroBoucle?.trim() ||
+        enregistre.numeroBoucleRouge?.trim() ||
+        enregistre.dateBoucleRouge ||
+        enregistre.dateRebouclage
+      );
     if (!archive.boucles?.length && !aVerifier) return;
     const animaux = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
     const nouvelle = avecPoses(archive, animaux, enregistre ? [enregistre] : []);
@@ -340,7 +402,7 @@ export async function bouclesPossiblesDuCheptel(): Promise<BouclePossible[]> {
   ]);
   const inventaire = archive.boucles ?? [];
   const achetees = new Set(
-    inventaire.filter((b) => !b.depuisCheptel && b.article !== ARTICLE_ROUGES).map((b) => b.numero),
+    inventaire.filter((b) => !b.depuisCheptel && !estBoucleDeRemplacement(b.article)).map((b) => b.numero),
   );
   const tiptags = new Set(
     inventaire.filter((b) => b.depuisCheptel && b.article === ARTICLE_TIPTAG).map((b) => b.numero),

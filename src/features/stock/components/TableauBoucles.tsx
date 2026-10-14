@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
+import { estArticleRebouclage, estBoucleDeRemplacement } from '@/features/stock/services/boucles';
 import { ETAT_BOUCLE, TRI_BOUCLE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
@@ -36,11 +37,16 @@ export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
  */
 export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBoucles; pleinePage?: boolean }) {
   const { lignes, tri, trierPar, morts, etat, filtres } = liste;
+  /** La boucle rouge n'a pas de numéro ni d'achat à elle : son numéro est celui de remplacement, et il n'y a pas de date d'achat. */
+  const rouge = estBoucleDeRemplacement(liste.article);
+  const rebouclage = estArticleRebouclage(liste.article);
+  const titreNumero = rouge ? T.numeroRemplacement : T.colonnes.numero;
+  const titrePose = rebouclage ? T.poseRebouclage : rouge ? T.poseRouge : T.colonnes.pose;
   /** La colonne dont le menu de filtre est ouvert. */
   const [menu, setMenu] = useState<'numero' | 'pose' | 'achat' | 'morte' | null>(null);
   const nomsColonnes = {
-    numero: T.colonnes.numero,
-    pose: T.colonnes.pose,
+    numero: titreNumero,
+    pose: titrePose,
     achat: T.colonnes.achat,
     morte: T.morte,
   };
@@ -74,7 +80,11 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
         accessibilityLabel={T.triPar(T.colonnes[colonne])}
       >
         <Text style={[styles.texteEntete, tri === colonne && styles.texteEnteteTrie]}>
-          {T.colonnes[colonne]}
+          {colonne === TRI_BOUCLE.NUMERO
+            ? titreNumero
+            : colonne === TRI_BOUCLE.POSE
+              ? titrePose
+              : T.colonnes[colonne]}
         </Text>
       </Pressable>
       {boutonFiltre(colonne)}
@@ -86,7 +96,7 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
       <View style={styles.entete}>
         {titreColonne(TRI_BOUCLE.NUMERO, styles.colonneNumero)}
         {titreColonne(TRI_BOUCLE.POSE, styles.colonneDate)}
-        {titreColonne(TRI_BOUCLE.ACHAT, styles.colonneDate)}
+        {rouge ? null : titreColonne(TRI_BOUCLE.ACHAT, styles.colonneDate)}
         <View style={[styles.celluleEntete, styles.colonneMorte]}>
           <Text style={styles.titreMorte}>{T.morte}</Text>
           {boutonFiltre('morte')}
@@ -108,7 +118,9 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
               <Text style={[styles.datePose, styles.colonneDate]}>
                 {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}
               </Text>
-              <Text style={[styles.texteLigne, styles.colonneDate]}>{formatDateShortFR(b.dateAchat)}</Text>
+              {rouge ? null : (
+                <Text style={[styles.texteLigne, styles.colonneDate]}>{formatDateShortFR(b.dateAchat)}</Text>
+              )}
               <View style={styles.colonneMorte}>
                 <Ionicons
                   name={b.chevreId && morts.has(b.chevreId) ? 'checkbox' : 'square-outline'}

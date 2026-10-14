@@ -136,6 +136,11 @@ export interface ArchiveStock {
   articles: ArticleStock[];
   /** Par fromage (son code, ou l'identifiant d'un fromage ajouté) : les emballages consommés par fromage vendu. */
   conditionnements: Record<string, string[]>;
+  /**
+   * Le conditionnement personnalisé pour une année : année → code du fromage → ses emballages. Il vaut pour cette année et les suivantes,
+   * jusqu'à une nouvelle personnalisation ; les années d'avant gardent leur conditionnement (celui-ci, d'office, sinon).
+   */
+  conditionnementsParAnnee?: Record<string, Record<string, string[]>>;
   /** L'ordre choisi des articles de chaque genre (leurs identifiants) : ceux qui n'y sont pas suivent, dans l'ordre d'office. */
   ordres: Partial<Record<GenreArticle, string[]>>;
   /** Le nom choisi pour un article d'office (fromage, emballage ou matériel de départ), par identifiant d'article. */

@@ -54,6 +54,10 @@ import {
   ligneMarchandiseVide,
   type LigneMarchandiseForm,
 } from '@/features/comptabilite/forms/lignesMarchandises';
+import {
+  ligneProductionVide,
+  type LigneProductionForm,
+} from '@/features/comptabilite/forms/lignesProduction';
 import { ligneCarburantVide, type LigneCarburantForm } from '@/features/comptabilite/forms/lignesCarburant';
 import type {
   ActiviteComptable,
@@ -129,6 +133,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   /** Une dépense qui n'a pas été facturée (pas de TVA à déduire). */
   const [sansFacture, setSansFacture] = useState(false);
   const [echeance, setEcheance] = useState('');
+  /** Le circuit de vente d'une vente (vide : non précisé). */
+  const [circuit, setCircuit] = useState('');
   /** L'atelier d'une charge (vide : commune, répartie entre les ateliers). */
   const [atelier, setAtelier] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
@@ -172,6 +178,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     ligneMarchandiseVide(),
   ]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
+  /** Achat de production : le détail par fourniture. */
+  const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([ligneProductionVide()]);
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise
       ? tvaEntreprise
@@ -287,6 +295,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const totalMarchandises = totalMontants(lignesMarchandises);
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
+  const totalProduction = totalMontants(lignesProduction);
 
   // Les comptes retirés pour l'espèce de l'écriture n'y sont plus proposés (une écriture commune les garde tous).
   const comptesDeLActivite = comptes.filter((c) =>
@@ -440,6 +449,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setLignesAlimentation([ligneAlimentVide()]);
     setLignesMarchandises([ligneMarchandiseVide()]);
     setLignesCarburant([ligneCarburantVide()]);
+    setLignesProduction([ligneProductionVide()]);
   };
 
   /** Enregistre l'écriture, puis ferme l'écran ; avec `enchainer`, reste dessus pour saisir la suivante. */
@@ -504,6 +514,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         ajouterVisite,
         lignesAlimentation,
         lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
+        lignesProduction,
         lignesCarburant,
         categorieRecette,
         typeFromage,
@@ -534,6 +545,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         atelier,
         reajustement,
         natureUrssaf,
+        circuit,
       });
       if ('erreur' in resultat) {
         setErreur(resultat.erreur);
@@ -619,6 +631,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     totalMarchandises,
     lignesCarburant,
     setLignesCarburant,
+    lignesProduction,
+    setLignesProduction,
+    totalProduction,
     totalAlimentation,
     totalCarburant,
     tauxTvaAchat,
@@ -713,6 +728,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setSansFacture,
     echeance,
     setEcheance,
+    circuit,
+    setCircuit,
     numeroFacture,
     setNumeroFacture,
     natureUrssaf,

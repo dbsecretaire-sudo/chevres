@@ -7,6 +7,7 @@ import {
 } from '@/features/exploitation/services/analysesLait';
 import type { Controle } from '@/features/exploitation/types';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import type { ReglageInvestissement } from '@/features/settings/settings';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { SEUILS_VIGILANCE_LAIT, NIVEAU_VIGILANCE } from '@/shared/constants/controles';
@@ -64,13 +65,25 @@ export interface AnneePrecedente {
   litresParChevreParTraite?: number;
 }
 
+/** Un poste qu'un investissement touche : les grains de l'alimentation, toute l'alimentation (quand les grains ne se distinguent pas) ou le carburant. */
+export interface PostePisteInvestissement {
+  cle: 'grains' | 'alimentation' | 'carburant';
+  /** Ce que le poste a coûté dans l'année. */
+  montant: number;
+  /** Ce que l'investissement en ferait gagner par an. */
+  economie: number;
+  /** D'après les deux prix indiqués par l'utilisateur, ou d'après l'hypothèse de départ (`part`). */
+  source: 'prix' | 'hypothese';
+  part?: number;
+}
+
 /** Une piste d'investissement : ce qu'il ferait gagner par an sur les postes qu'il touche, et son remboursement quand le coût est connu. */
 export interface PisteInvestissement {
   investissement: ValeurDe<typeof INVESTISSEMENT>;
   /** Ce que l'investissement ferait gagner par an. */
   economie: number;
-  /** Les postes touchés : leur catégorie, ce qu'ils ont coûté et la part que l'investissement en fait gagner. */
-  postes: { categorie: string; montant: number; part: number }[];
+  /** Les postes touchés : ce qu'ils ont coûté, ce que l'investissement en fait gagner, et d'où vient ce gain. */
+  postes: PostePisteInvestissement[];
   /** Le coût estimé par l'utilisateur (€). */
   cout?: number;
   /** Le temps de remboursement, en années (coût / gain annuel). */
@@ -79,9 +92,13 @@ export interface PisteInvestissement {
 
 /** Un fromage de l'inventaire qui a un prix de vente et des litres de lait : de quoi le comparer à la vente du lait. */
 export interface FromagePrixLitres {
+  /** L'identifiant de l'article de l'inventaire (« fromage:frais »). */
+  cle: string;
   libelle: string;
   prix: number;
   litresParFromage: number;
+  /** Ce que coûtent les emballages d'un fromage vendu (€), d'après les achats. */
+  coutEmballage: number;
 }
 
 /** Ce que rapporte le litre de lait transformé en un fromage, face au litre vendu. */
@@ -97,17 +114,27 @@ export interface LigneValorisation extends FromagePrixLitres {
 export interface ValorisationLait {
   /** Le prix du litre de lait vendu : celui de l'inventaire, à défaut le prix moyen des recettes. */
   prixLait?: number;
+  /** Le total des paiements des récolteurs de l'année (les recettes de l'atelier lait) : ce que vaut le lait vendu tel quel, base des pourcentages. */
+  recettesLait?: number;
+  /** La part du lait que chaque fromage a réellement utilisée (en %, par clé de fromage) : le départ du tableau de répartition. */
+  partsReelles?: Record<string, number>;
+  /** Ce que coûte un gramme de sel, d'après ses achats : il entre dans les frais du brocciu. */
+  coutSelParGramme?: number;
   litres: number;
   lignes: LigneValorisation[];
 }
 
 export interface EntreePlan {
   rentabilite: Rentabilite;
-  /** Le coût estimé des investissements (€), par investissement. */
-  investissements?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, number>>;
+  /** Ce que l'utilisateur a indiqué de chaque investissement (coût, prix d'après devis). */
+  investissements?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, ReglageInvestissement>>;
+  /** Les grains achetés dans l'année (maïs, céréales…) : ce que le silo touche de l'alimentation. */
+  grains?: { montant: number; quantiteKg: number };
   /** Les fromages de l'inventaire qui ont un prix et des litres de lait, et le prix du litre de lait de l'inventaire. */
   fromages?: FromagePrixLitres[];
   prixLaitInventaire?: number;
+  partsReelles?: Record<string, number>;
+  coutSelParGramme?: number;
   /** Le lait par chèvre et par traite, d'après l'inventaire. */
   production?: ProductionLaitiere;
   precedente?: AnneePrecedente;
@@ -116,6 +143,8 @@ export interface EntreePlan {
 }
 
 export interface PlanEconomies {
+  /** Les charges de l'année (toutes) : ce que le coût du litre de lait répartit. */
+  charges: number;
   pistes: Piste[];
   /** Les investissements examinés (silo à grain, cuve à gazole) : hors du total des économies, qui ne compte que ce qui se fait sans capital. */
   investissements: PisteInvestissement[];
@@ -285,12 +314,52 @@ export function construirePlan(entree: EntreePlan): PlanEconomies {
   const investissements: PisteInvestissement[] = [];
   for (const investissement of Object.values(INVESTISSEMENT)) {
     const parts: Record<string, number> = HYPOTHESES_INVESTISSEMENT[investissement];
-    const postes = Object.entries(parts)
-      .map(([categorie, part]) => ({ categorie, montant: montantDe(categorie), part }))
-      .filter((p) => p.montant > 0);
-    const economie = arrondi(postes.reduce((t, p) => t + p.montant * p.part, 0));
+    const reglage = entree.investissements?.[investissement] ?? {};
+    // Deux prix d'après devis (sacs et vrac, pompe et cuve) donnent le gain : l'écart, en part du poste, remplace l'hypothèse.
+    const ecart =
+      reglage.prixActuel &&
+      reglage.prixAvecInvestissement &&
+      reglage.prixAvecInvestissement < reglage.prixActuel
+        ? 1 - reglage.prixAvecInvestissement / reglage.prixActuel
+        : undefined;
+    const postes: PostePisteInvestissement[] = [];
+    const ajouter = (
+      cle: PostePisteInvestissement['cle'],
+      montant: number,
+      part: number | undefined,
+      avecPrix: boolean,
+    ) => {
+      if (!(montant > 0)) return;
+      const source = avecPrix && ecart !== undefined ? 'prix' : 'hypothese';
+      const taux = source === 'prix' ? ecart : part;
+      if (taux === undefined) return;
+      postes.push({
+        cle,
+        montant,
+        economie: arrondi(montant * taux),
+        source,
+        part: source === 'hypothese' ? part : undefined,
+      });
+    };
+    if (investissement === INVESTISSEMENT.SILO) {
+      const alimentation = montantDe(CATEGORIE_DEPENSE.ALIMENTATION);
+      const grains = entree.grains && entree.grains.montant > 0 ? entree.grains.montant : undefined;
+      // Le silo ne touche que les grains ; quand ils ne se distinguent pas, c'est toute l'alimentation (hypothèse prudente à vérifier).
+      if (grains !== undefined)
+        ajouter(
+          'grains',
+          alimentation > 0 ? Math.min(grains, alimentation) : grains,
+          parts.alimentation,
+          true,
+        );
+      else ajouter('alimentation', alimentation, parts.alimentation, true);
+      ajouter('carburant', montantDe(CATEGORIE_DEPENSE.CARBURANT), parts.carburant, false);
+    } else {
+      ajouter('carburant', montantDe(CATEGORIE_DEPENSE.CARBURANT), parts.carburant, true);
+    }
+    const economie = arrondi(postes.reduce((t, x) => t + x.economie, 0));
     if (!(economie > 0)) continue;
-    const cout = entree.investissements?.[investissement];
+    const cout = reglage.cout;
     investissements.push({
       investissement,
       economie,
@@ -306,6 +375,9 @@ export function construirePlan(entree: EntreePlan): PlanEconomies {
     entree.fromages && entree.fromages.length > 0
       ? {
           prixLait,
+          partsReelles: entree.partsReelles,
+          coutSelParGramme: entree.coutSelParGramme,
+          recettesLait: lait?.recettes,
           litres: litresProduits,
           lignes: entree.fromages.map((f) => {
             const prixParLitre = f.prix / f.litresParFromage;
@@ -320,6 +392,7 @@ export function construirePlan(entree: EntreePlan): PlanEconomies {
         }
       : undefined;
   return {
+    charges: r.charges,
     pistes,
     investissements,
     valorisation,

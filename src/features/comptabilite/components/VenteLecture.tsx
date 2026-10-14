@@ -12,7 +12,7 @@ import {
 import { COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_ACTIVITE_COMPTABLE, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
+import { LABEL_ACTIVITE_COMPTABLE, LABEL_CIRCUIT_VENTE, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
 import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
@@ -85,6 +85,13 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
           {vente.echeance
             ? TEXTES.comptabilite.tresorerie.paiement.enAttente(formatDateFR(vente.echeance))
             : TEXTES.comptabilite.tresorerie.paiement.enAttenteSansDate}
+        </Text>
+      ) : null}
+      {vente.circuit ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.commercial.circuit.deLaVente(
+            LABEL_CIRCUIT_VENTE[vente.circuit as keyof typeof LABEL_CIRCUIT_VENTE] ?? vente.circuit,
+          )}
         </Text>
       ) : null}
       {vente.numeroFacture ? (

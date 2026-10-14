@@ -20,6 +20,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'dateBouclage',
     'numeroBoucleRouge',
     'dateBoucleRouge',
+    'dateRebouclage',
     'nom',
     'sexe',
     'dateNaissance',
@@ -58,6 +59,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'datePaiement',
     'lignesAlimentation',
     'lignesMarchandises',
+    'lignesProduction',
     'stockApplique',
     'stockArticle',
     'stockQuantite',
@@ -199,7 +201,7 @@ export const CHAMPS_LIGNES_CARBURANT = new Set(['lignesCarburant']);
 export const CHAMPS_FICHIERS = new Set(['fichiers']);
 
 /** Les champs écrits tels quels en JSON dans leur cellule (les contenus d'un groupement, avec leurs fichiers). */
-export const CHAMPS_JSON = new Set(['contenus']);
+export const CHAMPS_JSON = new Set(['contenus', 'lignesProduction']);
 
 export const CHAMPS_LIGNES_MARCHANDISES = new Set(['lignesMarchandises']);
 

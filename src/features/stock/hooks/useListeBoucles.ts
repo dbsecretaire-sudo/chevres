@@ -71,11 +71,12 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
 
 export type ListeBoucles = ReturnType<typeof useListeBoucles>;
 
-/** Les trois listes de boucles du contrôle des animaux (boucles, boucles rouges, tiptag), chacune avec son état et son tri. */
+/** Les listes de boucles du contrôle des animaux (boucles, boucles rouges, rebouclage, tiptag), chacune avec son état et son tri. */
 export function useListesBoucles(boucles: BoucleStock[]): ListeBoucles[] {
   const cle = (code: ValeurDe<typeof ARTICLE_BOUCLE>) => `${GENRE_ARTICLE.BOUCLE}:${code}`;
   const normales = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.BOUCLES));
   const rouges = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.ROUGES));
+  const rebouclage = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.REBOUCLAGE));
   const tiptag = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.TIPTAG));
-  return [normales, rouges, tiptag];
+  return [normales, rouges, rebouclage, tiptag];
 }

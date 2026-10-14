@@ -7,6 +7,10 @@ import {
   type LigneMarchandiseForm,
 } from '@/features/comptabilite/forms/lignesMarchandises';
 import {
+  lignesProductionFinales,
+  type LigneProductionForm,
+} from '@/features/comptabilite/forms/lignesProduction';
+import {
   lignesCarburantFinales,
   type LigneCarburantForm,
 } from '@/features/comptabilite/forms/lignesCarburant';
@@ -18,6 +22,7 @@ import type {
   Facture,
   LigneAlimentation,
   LigneMarchandise,
+  LigneProduction,
   LigneCarburant,
   TypeAide,
   TypeFacture,
@@ -75,6 +80,8 @@ export interface SaisieEcriture {
   /** Le détail des marchandises, quand l'achat est un achat de marchandises d'un gîte. */
   lignesMarchandises?: LigneMarchandiseForm[];
   lignesCarburant: LigneCarburantForm[];
+  /** Le détail par fourniture d'un achat de production. */
+  lignesProduction?: LigneProductionForm[];
   categorieRecette: CategorieRecette;
   typeFromage: TypeFromage;
   typeFromageLibre: string;
@@ -116,6 +123,8 @@ export interface SaisieEcriture {
   echeance?: string;
   /** La vente est un réajustement (récolteur) : ni litrage ni numéro de facture. */
   reajustement?: boolean;
+  /** Le circuit de vente d'une vente (vide : non précisé). */
+  circuit?: string;
 }
 
 export interface ErreurSaisie {
@@ -218,6 +227,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       reajustement: s.reajustement ? true : undefined,
       payee: s.enAttente ? false : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
+      circuit: s.circuit || undefined,
     },
   };
 }
@@ -243,6 +253,9 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
   let lignesAlimentation: LigneAlimentation[] | undefined;
   let lignesCarburant: LigneCarburant[] | undefined;
   let lignesMarchandises: LigneMarchandise[] | undefined;
+  let lignesProduction: LigneProduction[] | undefined;
+  const estProduction =
+    estRecue && s.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION && !!s.lignesProduction;
 
   if (estAlimentation) {
     lignesAlimentation = lignesAlimentationFinales(s.lignesAlimentation, s.activite);
@@ -255,6 +268,21 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       };
     }
     montantFinal = totalMontants(s.lignesAlimentation);
+  } else if (estProduction && s.lignesProduction) {
+    lignesProduction = lignesProductionFinales(s.lignesProduction);
+    if (lignesProduction.length === 0) {
+      return {
+        erreur: {
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        },
+      };
+    }
+    // Une fourniture du stock a sa quantité : c'est elle qui entre dans l'inventaire.
+    if (lignesProduction.some((l) => l.article && !(l.quantite && l.quantite > 0))) {
+      return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
+    }
+    montantFinal = totalMontants(s.lignesProduction);
   } else if (estRecue && s.lignesMarchandises) {
     lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises);
     if (lignesMarchandises.length === 0) {
@@ -282,10 +310,8 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     if (montantFinal <= 0) return { erreur: { titre: TEXTES.commun.general.montantInvalide } };
   }
 
-  const stockProduction =
-    estRecue &&
-    (s.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION || s.categorieDepense === CATEGORIE_DEPENSE.AUTRE) &&
-    !!s.stockArticle;
+  // Un achat classé « Autre » dans une liste de l'inventaire garde son article unique ; la production a son détail par fourniture.
+  const stockProduction = estRecue && s.categorieDepense === CATEGORIE_DEPENSE.AUTRE && !!s.stockArticle;
   if (stockProduction && !(s.stockQuantite && s.stockQuantite > 0)) {
     return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
   }
@@ -310,6 +336,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       lignesAlimentation,
       lignesMarchandises,
+      lignesProduction,
       stockArticle: stockProduction ? s.stockArticle : undefined,
       stockQuantite: stockProduction ? s.stockQuantite : undefined,
       bouclesDebut: stockProduction && s.bouclesDebut ? s.bouclesDebut : undefined,

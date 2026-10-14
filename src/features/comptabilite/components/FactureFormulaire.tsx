@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { useRouter } from 'expo-router';
@@ -18,7 +19,11 @@ import { ChampMontantTtc, NoteComptePcg } from '@/features/comptabilite/componen
 import type { EtatFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { clientsPourLaRecette } from '@/features/comptabilite/utils/recettes';
-import { depenseImposee, fournisseursPourLaDepense } from '@/features/fournisseurs/services/categorie';
+import {
+  depenseImposee,
+  fournisseursPourLaDepense,
+  fournituresSeulementBoucles,
+} from '@/features/fournisseurs/services/categorie';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
@@ -40,7 +45,7 @@ import {
   sansFactureAffichee,
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
-import { estArticleBoucle } from '@/features/stock/services/boucles';
+import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
@@ -123,6 +128,18 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       <Text style={styles.total}>
         {TEXTES.commun.general.totalFactureTtcDeuxPoints}
         {formatTotalEuros(f.totalMarchandises)}
+      </Text>
+    </>
+  ) : f.estProduction ? (
+    <>
+      <LignesProductionEditor
+        lignes={f.lignesProduction}
+        onChange={f.setLignesProduction}
+        seulementBoucles={fournituresSeulementBoucles(fournisseur)}
+      />
+      <Text style={styles.total}>
+        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+        {formatTotalEuros(f.totalProduction)}
       </Text>
     </>
   ) : f.estCarburant ? (
@@ -267,10 +284,9 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             onAjouter={(ajouter) => f.setForm({ ...form, visiteVeterinaire: ajouter || undefined })}
           />
         )}
-        {(form.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
-          form.categorieDepense === CATEGORIE_DEPENSE.AUTRE) && (
+        {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
           <ChampStockProduction
-            compte={form.categorieDepense === CATEGORIE_DEPENSE.AUTRE ? form.compteManuel : undefined}
+            compte={form.compteManuel}
             article={form.stockArticle ?? ''}
             quantite={form.stockQuantite}
             debut={form.bouclesDebut}
@@ -280,7 +296,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
                 ...form,
                 stockArticle: article || undefined,
                 stockQuantite: article ? quantite : undefined,
-                bouclesDebut: estArticleBoucle(article) ? form.bouclesDebut : undefined,
+                bouclesDebut: estBoucleNumerotee(article) ? form.bouclesDebut : undefined,
               })
             }
           />

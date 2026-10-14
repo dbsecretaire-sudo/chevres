@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
+import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { avecPaiement } from '@/features/comptabilite/utils/paiement';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
@@ -124,7 +125,9 @@ export function VenteFormulaire({
     }, []),
   );
   const prixInventaire =
-    (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibre(client);
+    (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) &&
+    !prixLibre(client) &&
+    !form.commandeId;
   const totalInventaire = archive ? totalDeLaVente(form, archive) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
   /** Un récolteur peut cocher « Réajustement » (vente de lait déclarée) : plus de litrage ni de numéro de facture saisis. */
@@ -213,6 +216,10 @@ export function VenteFormulaire({
           onEnAttente={(attente) => onChange(avecPaiement(form, attente))}
           echeance={form.echeance ?? ''}
           onEcheance={(echeance) => onChange({ ...form, echeance })}
+        />
+        <ChampCircuit
+          value={form.circuit ?? ''}
+          onChange={(circuit) => onChange({ ...form, circuit: circuit || undefined })}
         />
       </SectionForm>
 

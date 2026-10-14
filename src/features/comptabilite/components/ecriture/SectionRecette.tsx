@@ -37,6 +37,7 @@ import { SelectField } from '@/shared/components/SelectField';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
+import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { todayISO } from '@/shared/utils/dates';
 
@@ -112,6 +113,8 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             onEcheance={e.setEcheance}
           />
         ) : null}
+        {/* Le circuit par lequel la vente passe (facultatif) : le volet Commercial en fait le bilan. */}
+        {e.estProductionVente ? <ChampCircuit value={e.circuit} onChange={e.setCircuit} /> : null}
       </SectionForm>
 
       {/* Les informations : la catégorie, ce qui est vendu et son montant. */}

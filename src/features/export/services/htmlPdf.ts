@@ -42,7 +42,9 @@ export function tableauHtml(
   if (rows.length === 0) return `<p class="vide">${echapper(messageVide)}</p>`;
   const colonnes = Object.keys(rows[0]);
   const numerique = colonnes.map((c) => {
-    const valeurs = rows.map((r) => r[c]).filter((v) => v !== '' && v !== undefined && v !== null);
+    const valeurs = rows
+      .map((r) => r[c])
+      .filter((v) => v !== '' && v !== undefined && v !== null && v !== '—');
     return valeurs.length > 0 && valeurs.every(estNumerique);
   });
   // Une colonne de numéros d'identification (n° de boucle, boucle de la mère) : ses cellules ne passent pas à la ligne.
@@ -87,6 +89,19 @@ export function sectionHtml(titre: string, contenu: string): string {
 /** Le titre d'une liste d'articles (en gras) et, en gris, son compte du plan comptable. */
 export const listeTitreHtml = (titre: string, detail: string): string =>
   `<div class="liste-titre"><strong>${echapper(titre)}</strong><span>${echapper(detail)}</span></div>`;
+
+/**
+ * Un histogramme en colonnes (de simples blocs) : une barre par valeur — pleine pour la référence, cernée pour les autres — avec son nom,
+ * sa valeur et une ligne de détail dessous. La plus grande valeur donne la hauteur du dessin.
+ */
+export function histogrammeHtml(
+  colonnes: { libelle: string; valeur: number; texte: string; detail?: string; pleine?: boolean }[],
+): string {
+  const max = Math.max(...colonnes.map((c) => c.valeur), 1);
+  const colonne = (c: (typeof colonnes)[number]) =>
+    `<div class="histo-col"><div class="histo-zone"><div class="histo-barre${c.pleine ? ' pleine' : ''}" style="height:${Math.max(2, Math.round((Math.max(0, c.valeur) / max) * 100))}%"></div></div><div class="histo-libelle">${echapper(c.libelle)}</div><div class="histo-valeur">${echapper(c.texte)}</div>${c.detail ? `<div class="histo-detail">${echapper(c.detail)}</div>` : ''}</div>`;
+  return `<div class="histo">${colonnes.map(colonne).join('')}</div>`;
+}
 
 /** Une petite note en italique (d'où viennent les chiffres, ce qui n'est pas calculé…). */
 export const noteHtml = (texte: string): string => `<p class="note">${echapper(texte)}</p>`;
@@ -194,6 +209,14 @@ export function documentHtml(
   .note { font-size: 8.5px; color: ${colors.textMuted}; font-style: italic; margin: 2px 0 8px; }
   .groupe { font-weight: 800; background: ${colors.badgeBg}; }
   .pied { position: fixed; bottom: 0; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 8px; color: ${colors.textMuted}; border-top: 1px solid ${colors.border}; padding: 3px 0; background: ${colors.surface}; }
+  .histo { display: flex; align-items: flex-end; gap: 10px; margin: 8px 0 10px; border-left: 1px solid ${colors.primary}; padding-left: 8px; page-break-inside: avoid; }
+  .histo-col { flex: 1; text-align: center; }
+  .histo-zone { height: 110px; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid ${colors.primary}; }
+  .histo-barre { width: 60%; max-width: 54px; border: 2px solid ${colors.primary}; border-bottom: none; background: transparent; }
+  .histo-barre.pleine { background: ${colors.primary}; }
+  .histo-libelle { font-weight: 700; font-size: 9px; margin-top: 3px; }
+  .histo-valeur { font-size: 9px; }
+  .histo-detail { font-size: 8px; color: ${colors.textMuted}; }
   .page-break { page-break-before: always; }
 </style>
 </head>

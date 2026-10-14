@@ -4,6 +4,7 @@ import { TEXTES_ANNEXES } from '@/shared/textes/annexes';
 import { TEXTES_BAR } from '@/shared/textes/bar';
 import { TEXTES_CHEPTEL } from '@/shared/textes/cheptel';
 import { TEXTES_CLIENTS } from '@/shared/textes/clients';
+import { TEXTES_COMMERCIAL } from '@/shared/textes/commercial';
 import { TEXTES_COMMUN } from '@/shared/textes/commun';
 import { TEXTES_COMPTABILITE } from '@/shared/textes/comptabilite';
 import { TEXTES_COMPTES_PCG } from '@/shared/textes/comptesPcg';
@@ -33,6 +34,7 @@ export const TEXTES = {
   bar: TEXTES_BAR,
   cheptel: TEXTES_CHEPTEL,
   clients: TEXTES_CLIENTS,
+  commercial: TEXTES_COMMERCIAL,
   commun: TEXTES_COMMUN,
   comptabilite: TEXTES_COMPTABILITE,
   comptesPcg: TEXTES_COMPTES_PCG,

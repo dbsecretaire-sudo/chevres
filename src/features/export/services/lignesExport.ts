@@ -1,4 +1,5 @@
 import type { Chevre } from '@/features/cheptel/types';
+import { lignesProductionDe } from '@/features/comptabilite/utils/lignesProduction';
 import type { Controle, FamilleControle, VisiteVeterinaire } from '@/features/exploitation/types';
 import { FAMILLE_CONTROLE, PARAMETRES_LAIT, SURFACES_TERRAIN } from '@/shared/constants/controles';
 import type { Facture, Vente } from '@/features/comptabilite/types';
@@ -42,8 +43,8 @@ export function chevreRow(c: Chevre, indicatif?: IndicatifParEspece) {
     ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(c)] } : {}),
     [TEXTES.export.colonnes.nBoucle]: avecIndicatif(c.numeroBoucle, indicatif?.(especeDe(c))),
     [TEXTES.export.colonnes.dateDeBouclage]: formatDateShortFR(c.dateBouclage),
-    [TEXTES.export.colonnes.nBoucleRouge]: c.numeroBoucleRouge ?? '',
     [TEXTES.export.colonnes.dateBoucleRouge]: formatDateShortFR(c.dateBoucleRouge),
+    [TEXTES.export.colonnes.dateRebouclage]: formatDateShortFR(c.dateRebouclage),
     [TEXTES.export.colonnes.nom]: c.nom ?? '',
     [TEXTES.export.colonnes.sexe]: LABEL_SEXE[c.sexe],
     [TEXTES.export.colonnes.dateDeNaissance]: formatDateShortFR(c.dateNaissance),
@@ -128,9 +129,16 @@ export function factureRow(f: Facture, libelleStock: (cle: string) => string = (
     [TEXTES.export.colonnes.nComptePcg]: compte?.numero ?? '',
     [TEXTES.export.colonnes.libelleCompte]: compte?.libelle ?? '',
     [TEXTES.export.colonnes.montant]: f.montant,
-    [TEXTES.export.colonnes.articleStock]: f.stockArticle ? libelleStock(f.stockArticle) : '',
-    [TEXTES.export.colonnes.quantiteStock]: f.stockQuantite ?? '',
-    [TEXTES.export.colonnes.premiereBoucle]: f.bouclesDebut ?? '',
+    [TEXTES.export.colonnes.articleStock]: lignesProductionDe(f)
+      .map((l) => libelleStock(l.article))
+      .join(TEXTES.commun.general.separateurListe),
+    [TEXTES.export.colonnes.quantiteStock]: lignesProductionDe(f)
+      .map((l) => l.quantite ?? '')
+      .join(TEXTES.commun.general.separateurListe),
+    [TEXTES.export.colonnes.premiereBoucle]: lignesProductionDe(f)
+      .map((l) => l.bouclesDebut ?? '')
+      .filter(Boolean)
+      .join(TEXTES.commun.general.separateurListe),
   };
 }
 

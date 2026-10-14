@@ -47,7 +47,14 @@ export default function TabsLayout() {
       // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
       backBehavior="history"
       screenListeners={{ tabPress: () => quitterRetour() }}
-      screenLayout={ecranParEspeceSauf('cheptel', 'sante', 'production', 'comptabilite', 'index')}
+      screenLayout={ecranParEspeceSauf(
+        'cheptel',
+        'sante',
+        'production',
+        'commercial',
+        'comptabilite',
+        'index',
+      )}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -123,6 +130,22 @@ export default function TabsLayout() {
           tabPress: (e) => {
             e.preventDefault();
             navigation.navigate('production', { screen: 'index' });
+          },
+        })}
+      />
+      {/* Le volet commercial d'un élevage : ventes et clients, tarifs, commandes et livraisons, circuits de vente. */}
+      <Tabs.Screen
+        name="commercial"
+        options={{
+          title: TEXTES.commercial.titre,
+          headerShown: false,
+          href: entreprise ? null : undefined,
+          tabBarIcon: ({ color, size }) => <Ionicons name="cart" size={size} color={color} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('commercial', { screen: 'index' });
           },
         })}
       />

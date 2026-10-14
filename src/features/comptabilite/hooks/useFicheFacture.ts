@@ -1,4 +1,9 @@
 import { useCallback, useState } from 'react';
+import {
+  lignesProductionFinales,
+  versLignesProductionForm,
+  type LigneProductionForm,
+} from '@/features/comptabilite/forms/lignesProduction';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
@@ -61,6 +66,7 @@ export function useFicheFacture(id: string | undefined) {
   const [lignes, setLignes] = useState<LigneAlimentForm[]>([]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([]);
   const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([]);
+  const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([]);
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
   const [montantTexte, setMontantTexte] = useState('');
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
@@ -73,6 +79,8 @@ export function useFicheFacture(id: string | undefined) {
 
   const estAlimentation = facture?.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   const estCarburant = facture?.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
+  /** Un achat de production : le détail par fourniture (une ancienne facture n'a qu'un article, repris comme première fourniture). */
+  const estProduction = facture?.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
   /** Un achat de marchandises d'un gîte détaillé par marchandise (les anciens achats gardent un seul montant). */
   const estMarchandises =
     facture?.categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
@@ -82,6 +90,7 @@ export function useFicheFacture(id: string | undefined) {
   const totalAlimentation = totalMontants(lignes);
   const totalCarburant = totalMontants(lignesCarburant);
   const totalMarchandises = totalMontants(lignesMarchandises);
+  const totalProduction = totalMontants(lignesProduction);
 
   const charger = useCallback(async () => {
     if (!id) return;
@@ -91,6 +100,7 @@ export function useFicheFacture(id: string | undefined) {
     setLignes(f ? versLignesAlimentationForm(f) : []);
     setLignesCarburant(f ? versLignesCarburantForm(f) : []);
     setLignesMarchandises(f ? versLignesMarchandisesForm(f) : []);
+    setLignesProduction(f ? versLignesProductionForm(f) : []);
     setMontantTexte(f ? montantEnTexte(f) : '');
     setComptes(await listComptesPcg());
   }, [id]);
@@ -173,6 +183,26 @@ export function useFicheFacture(id: string | undefined) {
         });
       }
       aEnregistrer = { ...form, montant: totalCarburant, lignesCarburant: lignesRetenues };
+    } else if (estProduction) {
+      const lignesRetenues = lignesProductionFinales(lignesProduction);
+      if (lignesRetenues.length === 0) {
+        return refuser({
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        });
+      }
+      if (lignesRetenues.some((l) => l.article && !(l.quantite && l.quantite > 0))) {
+        return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise });
+      }
+      // Le détail remplace l'article unique des anciennes factures.
+      aEnregistrer = {
+        ...form,
+        montant: totalProduction,
+        lignesProduction: lignesRetenues,
+        stockArticle: undefined,
+        stockQuantite: undefined,
+        bouclesDebut: undefined,
+      };
     } else if (estMarchandises) {
       const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises);
       if (lignesRetenues.length === 0) {
@@ -231,7 +261,7 @@ export function useFicheFacture(id: string | undefined) {
   // Tout changement de la fiche s'enregistre tout seul.
   useEnregistrementAuto({
     actif: editing,
-    signature: JSON.stringify([form, lignes, lignesCarburant, lignesMarchandises]),
+    signature: JSON.stringify([form, lignes, lignesCarburant, lignesMarchandises, lignesProduction]),
     enregistrer: () => enregistrerModifications(true),
   });
 
@@ -281,6 +311,10 @@ export function useFicheFacture(id: string | undefined) {
     setLignesCarburant,
     lignesMarchandises,
     setLignesMarchandises,
+    lignesProduction,
+    setLignesProduction,
+    estProduction,
+    totalProduction,
     estMarchandises,
     totalMarchandises,
     fournisseurs,

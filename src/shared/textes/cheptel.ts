@@ -374,8 +374,11 @@ export const TEXTES_CHEPTEL = {
     },
     nDeBoucleDeuxPoints: 'N° de boucle : ',
     dateDeBouclageDeuxPoints: 'Date de bouclage : ',
-    nDeBoucleRougeDeuxPoints: 'N° de boucle rouge : ',
-    dateDeBoucleRougeDeuxPoints: 'Date de la boucle rouge : ',
+    /** La boucle rouge et le rebouclage n'ont pas de numéro : seulement la date. */
+    dateBouclageRouge: 'Date bouclage (boucle rouge)',
+    dateBouclageRougeDeuxPoints: 'Date bouclage (boucle rouge) : ',
+    dateRebouclage: 'Date rebouclage (boucle de rebouclage)',
+    dateRebouclageDeuxPoints: 'Date rebouclage (boucle de rebouclage) : ',
     sexeDeuxPoints: 'Sexe : ',
     dateDeNaissanceDeuxPoints: 'Date de naissance : ',
     nDeBoucleDeLaDeuxPoints: 'N° de boucle de la mère :',

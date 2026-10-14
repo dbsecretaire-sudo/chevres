@@ -16,6 +16,8 @@ export const CATEGORIE_FOURNISSEUR = {
   GARAGE: 'garage',
   /** Un organisme (MSA, GDS, chambre d'agriculture…) : des cotisations ou une dépense à part. */
   ORGANISME: 'organisme',
+  /** La chambre d'agriculture : ses factures sont des dépenses à part (« Autre ») ou des achats de production (les boucles d'identification qu'elle fournit). */
+  CHAMBRE_AGRICULTURE: 'chambre_agriculture',
   /** Un groupement (GDS, achats groupés…) : ses factures sont des cotisations ou des achats, de n'importe quelle dépense. */
   GROUPEMENT: 'groupement',
   ASSUREUR: 'assureur',
@@ -53,6 +55,7 @@ export const DEPENSES_PAR_CATEGORIE_FOURNISSEUR: Record<string, readonly string[
     CATEGORIE_DEPENSE.IMPOTS,
     CATEGORIE_DEPENSE.AUTRE,
   ],
+  [CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE]: [CATEGORIE_DEPENSE.AUTRE, CATEGORIE_DEPENSE.PRODUCTION],
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: [CATEGORIE_DEPENSE.ASSURANCES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.BANQUE]: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES, CATEGORIE_DEPENSE.AUTRE],
 };

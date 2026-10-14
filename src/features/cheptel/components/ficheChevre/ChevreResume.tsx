@@ -30,17 +30,17 @@ export function ChevreResume({ chevre, indicatif, onModifier }: Props) {
           {formatDateFR(chevre.dateBouclage)}
         </Text>
       )}
-      {chevre.numeroBoucleRouge && (
-        <>
-          <Text style={commonStyles.line}>
-            {TEXTES.cheptel.ficheChevre.nDeBoucleRougeDeuxPoints}
-            {chevre.numeroBoucleRouge}
-          </Text>
-          <Text style={commonStyles.line}>
-            {TEXTES.cheptel.ficheChevre.dateDeBoucleRougeDeuxPoints}
-            {formatDateFR(chevre.dateBoucleRouge)}
-          </Text>
-        </>
+      {(chevre.dateBoucleRouge || chevre.numeroBoucleRouge) && (
+        <Text style={commonStyles.line}>
+          {TEXTES.cheptel.ficheChevre.dateBouclageRougeDeuxPoints}
+          {formatDateFR(chevre.dateBoucleRouge)}
+        </Text>
+      )}
+      {chevre.dateRebouclage && (
+        <Text style={commonStyles.line}>
+          {TEXTES.cheptel.ficheChevre.dateRebouclageDeuxPoints}
+          {formatDateFR(chevre.dateRebouclage)}
+        </Text>
       )}
       <Text style={commonStyles.line}>
         {TEXTES.commun.general.nomDeuxPoints}

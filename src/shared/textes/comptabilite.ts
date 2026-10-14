@@ -59,6 +59,20 @@ export const TEXTES_COMPTABILITE = {
     ex3: 'ex: 3',
     choixAliment: 'Choix de l’aliment',
   },
+  /** Le détail par fourniture d'un achat de production (emballages, matériel, boucles…). */
+  lignesProductionEditor: {
+    detailParFourniture: 'Détail par fourniture',
+    fournitureValeur: (valeur: number) => `Fourniture ${valeur}`,
+    choixFourniture: 'Choix de la fourniture',
+    horsStock: 'Aucune (hors stock)',
+    quantiteCourt: 'Qté',
+    montantTtcCourt: '€ TTC',
+    ex100: 'ex: 100',
+    ex120: 'ex: 12,00',
+    premiereBoucle: 'N° de la première boucle',
+    premiereBoucleAide: 'Les suivantes se numérotent à la suite, selon la quantité.',
+    derniereBoucle: (numero: string) => `Dernière boucle : ${numero}`,
+  },
   lignesMarchandisesEditor: {
     detailParMarchandise: 'Détail par marchandise',
     marchandiseValeur: (valeur: number) => `Marchandise ${valeur}`,
@@ -303,14 +317,21 @@ export const TEXTES_COMPTABILITE = {
     /** Le plan d'économies : des pistes chiffrées d'après les charges, le lait de l'inventaire et les analyses du lait. */
     plan: {
       titre: 'Plan d’économies',
-      aide: 'Des pistes calculées sur vos charges de l’année, le lait de l’inventaire et les analyses du lait. Les pourcentages sont des hypothèses de départ à discuter, pas des promesses.',
+      aide: 'Des pistes calculées sur vos charges, votre lait et vos analyses : des hypothèses de départ, à vérifier.',
+      /** Les quatre vues du plan : le résumé d'abord, le reste à la demande. */
+      onglets: {
+        resume: 'Résumé',
+        charges: 'Charges',
+        investissements: 'Investissements',
+        lait: 'Lait en fromage',
+      },
       economie: (montant: string) => `Économie estimée : ${montant} par an`,
       aucuneEconomie: 'Aucune économie à chiffrer pour ce poste.',
       poste: (libelle: string, montant: string) => `${libelle} · ${montant}`,
       negociable: (pourcentage: string) =>
         `Poste négociable : une mise en concurrence ou un achat groupé (GDS, groupement) peut faire gagner environ ${pourcentage} (hypothèse de départ).`,
       alimentUreeHaute: (uree: string, pourcentage: string) =>
-        `Urée du lait à ${uree} mg/l, au-dessus de la limite : un excès d’azote est probable. Réduire la part azotée du concentré (tourteau) peut faire gagner environ ${pourcentage} du poste, à suivre sur les taux du lait (hypothèse de départ).`,
+        `Urée du lait à ${uree} mg/l, au-dessus de la limite : un excès d’azote est probable. D’où vient-il ? Du concentré (tourteau), mais aussi d’un feuillage frais riche en azote (feuilles d’arbres coupés sur le parcours) ou d’un manque d’énergie dans la ration : à voir avec votre vétérinaire avant de toucher aux achats. Si le concentré est en cause, le réduire peut faire gagner environ ${pourcentage} du poste, à suivre sur les taux du lait (hypothèse de départ).`,
       alimentHausse: (cout: string, avant: string, lait: string, laitAvant: string) =>
         `L’aliment coûte ${cout} par litre contre ${avant} l’an dernier, sans que chaque traite donne plus de lait (${lait} contre ${laitAvant}). Revenir au coût de l’an dernier suffirait : ajuster le concentré au stade de lactation, par lots.`,
       alimentPrudence: (uree: string) =>
@@ -328,27 +349,65 @@ export const TEXTES_COMPTABILITE = {
       couvreTout: 'Les pistes suffiraient à couvrir l’écart entre le coût du litre et son prix de vente.',
       sansEcart: 'Le prix de vente du lait couvre déjà son coût : les pistes améliorent la marge.',
       sansLait: 'Aucun lait produit cette année : pas de plan par litre.',
+      details: 'Détails',
+      masquer: 'Masquer',
+      /** Les deux présentations du lait en fromage : en tableau ou en graphique. */
+      vues: { tableau: 'Tableau', graphique: 'Graphique' },
+      /** Les graphiques du plan : chiffres clés, litre de lait, postes, investissements, lait en fromage. */
+      graphiques: {
+        economie: 'Économie estimée',
+        parAn: 'par an',
+        coutLitre: 'Coût du litre',
+        fleche: (avant: string, apres: string) => `${avant} → ${apres}`,
+        leLitre: 'le litre',
+        prixVente: 'Prix de vente du lait',
+        titreLitre: 'Le litre de lait',
+        coutAujourdhui: 'Coût aujourd’hui',
+        coutApres: 'Coût après les pistes',
+        titrePostes: 'Où se trouvent les économies',
+        legendePostes: 'Gris : ce que coûte le poste. Vert : ce que la piste ferait gagner.',
+        aPreserver: 'À ne pas toucher',
+        gainParAn: 'Gain par an',
+        toucherDetail: 'Touchez pour le détail',
+        coutInvestissement: 'Coût de l’investissement',
+        laitVendu: 'Lait vendu tel quel',
+      },
       prixDuLait:
         'Au-delà des charges, le prix du lait reste le premier levier : chaque centime de plus par litre rapporte autant que les pistes ci-dessus sur ce volume.',
       centimeLitre: (montant: string) => `1 centime de plus par litre : ${montant} par an`,
       /** Les investissements examinés : ce qu'ils feraient gagner, et en combien de temps ils se rembourseraient. */
       investissements: {
         titre: 'Pistes d’investissement',
-        aide: 'Ce que ferait gagner un équipement, d’après vos charges de l’année. Ce sont des hypothèses de départ à vérifier sur devis, pas des promesses ; le temps gagné n’est pas chiffré. Ces gains ne sont pas comptés dans le total ci-dessus.',
+        aide: 'Des hypothèses à vérifier sur devis ; ces gains ne sont pas dans l’économie totale.',
         silo: {
           titre: 'Silo à grain',
-          texte: (alimentation: string, carburant: string) =>
-            `Acheter l’aliment en vrac plutôt qu’en sacs (environ ${alimentation} de l’alimentation) et grouper les livraisons (environ ${carburant} du carburant). Moins de manutention et de trajets : du temps gagné.`,
+          texte:
+            'Acheter les grains (maïs, céréales) en vrac plutôt qu’en sacs, et grouper les livraisons : moins de trajets, moins de manutention, du temps gagné. Le foin, la paille et la luzerne en balles ne passent pas par le silo.',
+          prixActuel: 'Prix de la tonne de grain en sacs (€)',
+          prixAvecInvestissement: 'Prix de la tonne de grain en vrac (€)',
         },
         cuve: {
           titre: 'Cuve à gazole',
-          texte: (carburant: string) =>
-            `Acheter le gazole par volume, moins cher qu’à la pompe (environ ${carburant} du carburant), et faire le plein sur place : du temps gagné.`,
+          texte:
+            'Acheter le gazole par volume, moins cher qu’à la pompe, et faire le plein sur place : du temps gagné.',
+          prixActuel: 'Prix du litre de gazole à la pompe (€)',
+          prixAvecInvestissement: 'Prix du litre de gazole en cuve (€)',
         },
+        /** Les postes touchés par un investissement, et d’où vient le gain de chacun. */
+        poste: {
+          grains: 'Grains (maïs, céréales…)',
+          alimentation: 'Alimentation (grains non distingués dans les factures)',
+          carburant: 'Carburant',
+        },
+        ligne: (poste: string, depense: string, gain: string, source: string) =>
+          `${poste} : ${depense} dépensés, − ${gain} (${source})`,
+        sourcePrix: (actuel: string, avec: string, ecart: string) =>
+          `d’après vos prix : ${actuel} → ${avec}, soit ${ecart} de moins`,
+        sourceHypothese: (part: string) => `hypothèse de départ : ${part}`,
         gain: (montant: string) => `Gain estimé : ${montant} par an`,
         cout: (montant: string) => `Coût estimé de l’investissement : ${montant}`,
-        indiquerCout: 'Indiquer le coût de l’investissement',
-        modifierCout: 'Modifier le coût',
+        indiquerCout: 'Indiquer mes prix et le coût',
+        modifierCout: 'Modifier mes prix et le coût',
         remboursement: (duree: string) => `Remboursé en ${duree}`,
         /** Un temps de remboursement : « 8 mois », « 2 ans », « 2 ans et 3 mois ». */
         duree: (mois: number) => {
@@ -358,13 +417,85 @@ export const TEXTES_COMPTABILITE = {
           return `${annees} an${annees > 1 ? 's' : ''}${reste > 0 ? ` et ${reste} mois` : ''}`;
         },
         coutLabel: 'Coût de l’investissement (€)',
-        coutAide: 'Le devis ou l’estimation, installation comprise. Vide : pas de calcul de remboursement.',
-        coutInvalide: 'Indiquez un montant supérieur à 0, ou laissez le champ vide.',
+        coutAide:
+          'Le coût : le devis, installation comprise (pour le temps de remboursement). Les deux prix, d’après vos devis : leur écart remplace l’hypothèse de départ. Champs vides : hypothèse de départ.',
+        montantInvalide: 'Indiquez des montants supérieurs à 0, ou laissez les champs vides.',
+        deuxPrix: 'Indiquez les deux prix, ou aucun.',
+        prixIncoherents: 'Le prix avec l’investissement doit être plus bas que le prix actuel.',
+        hypotheses: 'Revenir aux hypothèses de départ',
+      },
+      /** L'amortissement de la fromagerie dans la simulation : un montant unique ou détaillé, à inclure ou non. */
+      amortissement: {
+        titre: 'Amortissement de la fromagerie',
+        masquer: 'Masquer l’amortissement de la fromagerie',
+        inclure: 'Inclure l’amortissement de la fromagerie dans la simulation',
+        modes: { unique: 'Montant unique', detail: 'Détaillé' },
+        montant: 'Montant de la fromagerie (€)',
+        montantElement: 'Montant (€)',
+        duree: 'Durée (ans)',
+        element: 'Élément',
+        exemple: 'ex : local, cuve, presse, matériel',
+        ajouter: 'Ajouter un élément',
+        annuel: (parAn: string, total: string) => `Amortissement : ${parAn} par an (sur ${total} investis)`,
+        apres: (parAn: string, resultat: string, prix: string) =>
+          `Après l’amortissement de la fromagerie (${parAn} par an) : résultat ${resultat}, le prix du lait deviendrait ${prix} le litre.`,
+        aide: 'Amortissement linéaire : chaque montant divisé par sa durée. La durée est à fixer avec votre comptable ; elle vaut 10 ans tant que vous n’en donnez pas.',
+      },
+      /** Le tableau de répartition du lait entre les fromages et le lait vendu. */
+      repartition: {
+        titre: 'Répartition du lait',
+        aide: (litres: string) =>
+          `Choisissez la part des ${litres} L qui devient chaque fromage ; le reste est vendu tel quel.`,
+        colonnes: {
+          type: 'Type',
+          part: 'Part',
+          lait: 'Lait',
+          nombre: 'Nombre',
+          recette: 'Recette',
+          emballages: 'Emballages',
+          net: 'Net',
+        },
+        laitVendu: 'Lait',
+        total: 'Total',
+        /** Le brocciu : fabriqué avec le petit-lait des autres fromages, ses quantités se calculent d'elles-mêmes. */
+        brocciu: {
+          caseACocher: 'Brocciu fabriqué avec le petit-lait des autres fromages',
+          detail: (utilise: string, disponible: string, sel: string, coutSel: string) =>
+            `Petit-lait : ${utilise} L sur ${disponible} L disponibles · sel : ${sel} g (${coutSel})`,
+          recette: (petitLait: number, laitCaille: number, laitEntier: string, sel: number) =>
+            `Recette : ${petitLait} L de petit-lait (issus de ${laitCaille} L de lait caillé), ${laitEntier} de lait entier ajouté, ${sel} g de sel par litre de petit-lait. Seul le petit-lait du fromage frais et de l’affiné sert au brocciu. Ces proportions sont celles de votre recette : le cahier des charges AOP ne les chiffre pas.`,
+          sansSel: 'Aucun achat de sel trouvé dans l’inventaire : le sel compte pour 0 €.',
+        },
+        depasse: 'Les parts des fromages dépassent 100 % : il ne reste plus de lait à vendre.',
+        compare: {
+          plus: (ecart: string, prixLitre: string) =>
+            `Cette répartition rapporte ${ecart} de plus : le prix du lait deviendrait ${prixLitre} le litre.`,
+          moins: (ecart: string, prixLitre: string) =>
+            `Cette répartition rapporte ${ecart} de moins : le prix du lait deviendrait ${prixLitre} le litre.`,
+        },
+        aideEmballages:
+          'Emballages : prix moyen de vos achats (0 € s’ils n’ont jamais été achetés). Les autres frais de fabrication ne sont pas déduits.',
+        reel: 'Revenir à la répartition réelle',
+        telecharger: 'Télécharger cette simulation',
+        /** Le résultat final : les recettes nettes, moins les charges du lait et l'amortissement de la fromagerie. */
+        final: {
+          titre: 'Résultat final',
+          recettes: 'Recettes nettes (lait et fromages)',
+          charges: 'Charges du lait',
+          amortissement: 'Amortissement de la fromagerie',
+          resultat: 'Résultat final',
+        },
+        axe: '€',
+        detailVendu: (litres: string, recette: string) => `${litres} L vendus tels quels : ${recette}.`,
+        detailFromage: (litres: string, nombre: string, recette: string, emballages: string, net: string) =>
+          `${litres} L · ${nombre} fromages · recette ${recette} · emballages − ${emballages} · net ${net}`,
       },
       /** Le lait en fromage face au lait vendu, d'après les prix et les litres par fromage de l'inventaire. */
       valorisation: {
         titre: 'Le lait en fromage ou vendu tel quel',
-        aide: 'D’après le prix de vente et les litres de lait par fromage de l’inventaire. Indicatif : les frais de fabrication (emballage, main-d’œuvre, affinage) ne sont pas déduits.',
+        aide: 'Ce que rapporterait le lait de l’année tout transformé en un seul fromage, face au lait vendu tel quel. Indicatif : sans les frais de fabrication.',
+        simuler: 'Simuler une répartition du lait',
+        masquerSimulation: 'Masquer la simulation',
         aucun:
           'Indiquez dans l’inventaire (crayon du fromage) le prix de vente et les litres de lait par fromage, pour comparer avec la vente du lait.',
         fromage: (nom: string, prix: string, litres: string) => `${nom} · ${prix} pour ${litres} L`,
@@ -375,6 +506,23 @@ export const TEXTES_COMPTABILITE = {
         plus: (montant: string) => `${montant} de plus que le lait vendu`,
         moins: (montant: string) => `${montant} de moins que le lait vendu`,
         sansPrixLait: 'Le prix de vente du lait n’est pas défini : pas de comparaison.',
+        tuileLait: 'Lait',
+        colonnes: {
+          type: 'Type',
+          tout: 'Tout le lait',
+          pourcent: '% du lait vendu',
+          litre: 'Le litre',
+          emballages: 'Emballages',
+          net: 'Net',
+        },
+        axe: '€',
+        baseRecolteurs:
+          'Le lait de l’année tout transformé en chaque fromage ; 100 % = le lait vendu tel quel (paiements des récolteurs). Touchez une colonne pour le détail.',
+        toucher: 'Touchez une colonne pour le détail.',
+        recettesLait: (litres: string, total: string) =>
+          `${litres} L de lait cette année : ${total} versés par les récolteurs.`,
+        nombreEmballages: (nombre: string, emballages: string, net: string) =>
+          `${nombre} fromages · emballages − ${emballages} · net ${net}`,
       },
     },
     couts: {

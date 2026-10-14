@@ -34,6 +34,8 @@ export const CLE_STOCKAGE = {
   BAR: 'bar',
   /** Les activités annexes du gîte (pizza, charcuterie, guide…) : leurs catégories, leurs articles et leurs tickets. */
   ANNEXES: 'annexes',
+  /** L'onglet Commercial : les commandes des clients et les tarifs par catégorie de client. */
+  COMMERCIAL: 'commercial',
   STOCK: 'stock',
   COMPTES_PCG: 'comptes-pcg',
   SETTINGS: 'settings',

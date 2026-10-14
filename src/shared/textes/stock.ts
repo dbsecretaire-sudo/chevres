@@ -110,6 +110,9 @@ export const TEXTES_STOCK = {
   suppression: {
     titre: 'Supprimer cet article ?',
     message: (nom: string) => `« ${nom} » disparaît de la liste, avec ses mouvements.`,
+    /** Un fromage qui a déjà des mouvements de stock ou des lots ne se supprime pas : son historique en dépend. */
+    fromageUtilise: (nom: string) =>
+      `« ${nom} » a déjà des mouvements ou des lots dans l’inventaire : il ne peut pas être supprimé.`,
   },
   /** Le lait produit : un litrage par jour (chèvres et brebis). */
   laitJour: {
@@ -135,7 +138,12 @@ export const TEXTES_STOCK = {
   boucles: {
     titre: (nom: string) => `Inventaire : ${nom}`,
     titreEtat: 'Boucles',
-    sorte: { boucles: 'Boucles', rouges: 'Boucles rouges', tiptag: 'Tiptag' },
+    sorte: {
+      boucles: 'Boucles',
+      rouges: 'Boucles rouges',
+      rebouclage: 'Boucles de rebouclage',
+      tiptag: 'Tiptag',
+    },
     imprimer: 'Imprimer les boucles',
     agrandir: 'Afficher la liste en pleine page',
     reduire: 'Fermer la pleine page',
@@ -143,6 +151,10 @@ export const TEXTES_STOCK = {
     aucuneBoucle: 'Aucune boucle.',
     /** Les titres des colonnes : les dates sur deux lignes, pour tenir dans la largeur. */
     colonnes: { numero: 'N°', pose: 'Date de\npose', achat: 'Date d’\nachat' },
+    /** Les listes des boucles rouges et de rebouclage : le numéro de la boucle remplacée (celui de l'animal) et la date de la pose. */
+    numeroRemplacement: 'N° de\nremplac.',
+    poseRouge: 'Date de\nbouclage',
+    poseRebouclage: 'Date de\nrebouclage',
     /** La colonne cochée quand l'animal qui porte la boucle est mort. */
     morte: 'Morte',
     /** Les deux valeurs de la colonne « Morte » dans son filtre. */
@@ -170,6 +182,9 @@ export const TEXTES_STOCK = {
     /** Le détail d'une sorte de boucles sur sa ligne de l'inventaire : le total, les posées, celles à poser. */
     resume: (total: number, posees: number) =>
       `${total} au total · ${posees} posée${posees > 1 ? 's' : ''} · ${total - posees} à poser`,
+    /** Le détail d'une boucle de remplacement (rouge, rebouclage) : la quantité en stock et les poses notées sur les fiches. */
+    resumeRemplacement: (enStock: number, posees: number) =>
+      `${enStock} en stock · ${posees} pose${posees > 1 ? 's' : ''} notée${posees > 1 ? 's' : ''}`,
     /** La synchronisation avec le cheptel : le réglage (Comptabilité › Réglages) et la fenêtre où l'on choisit les tiptag. */
     synchro: {
       option: 'Synchroniser les boucles avec le cheptel',
@@ -286,6 +301,9 @@ export const TEXTES_STOCK = {
   /** Le niveau d'un aliment : il se compte en kilos. */
   kilos: (nombre: number) => `${nombre} kg`,
   negatif: 'Quantité négative',
+  /** Le prix moyen d'une unité d'une fourniture, d'après ses achats : sous son nom dans l'inventaire. */
+  prixAchat: (prix: string, horsTaxes: boolean) =>
+    `${prix} l’unité · prix moyen des achats ${horsTaxes ? 'HT' : 'TTC'}`,
   lait: {
     titre: 'Lait par fromage',
     aucune:
@@ -306,10 +324,10 @@ export const TEXTES_STOCK = {
   ajouter: {
     fromage: 'Ajouter un fromage',
     emballages: 'Ajouter un emballage',
-    materiel: 'Ajouter un équipement',
-    equipementConsommable: 'Ajouter un équipement',
+    materiel: 'Ajouter un équipement de fromagerie',
+    equipementConsommable: 'Ajouter un petit équipement',
     exempleEquipementConsommable: 'ex : Gants, filtres',
-    batiment: 'Ajouter du matériel',
+    batiment: 'Ajouter du matériel de bâtiment',
     exempleBatiment: 'ex : Grillage, poteaux',
     aliment: 'Ajouter un aliment',
     article: 'Ajouter un article',
@@ -340,6 +358,12 @@ export const TEXTES_STOCK = {
     element: 'Élément de l’inventaire',
     tousAjoutes: 'Tous les éléments de l’inventaire ont déjà leur conditionnement.',
     retirer: 'Retirer ce conditionnement',
+    /** Le conditionnement par année : celui qu'on choisit vaut pour l'année et les suivantes. */
+    aideAnnee:
+      'Le conditionnement que vous choisissez vaut pour l’année affichée et les suivantes, jusqu’à une nouvelle personnalisation. Les années d’avant gardent le leur.',
+    personnalise: (annee: number) => `Personnalisé pour ${annee}`,
+    herite: (annee: number) => `Défini en ${annee}`,
+    revenir: 'Revenir au conditionnement d’avant',
   },
   vente: 'vente',
   manuel: 'saisie',

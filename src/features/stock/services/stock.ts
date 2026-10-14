@@ -1,4 +1,6 @@
 import type { Facture, TypeFromage, Vente } from '@/features/comptabilite/types';
+import { infosCategorie } from '@/features/stock/utils/categories';
+import { lignesProductionDe } from '@/features/comptabilite/utils/lignesProduction';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock, GenreArticle, LaitJour, MouvementStock } from '@/features/stock/types';
 import {
@@ -12,6 +14,8 @@ import {
   ARTICLE_BOUCLE,
   ARTICLE_EMBALLAGE,
   ARTICLE_MATERIEL,
+  CATEGORIE_INVENTAIRE,
+  CATEGORIE_PAR_GENRE,
   CONDITIONNEMENT_PAR_DEFAUT,
   FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
@@ -43,6 +47,7 @@ import { generateId } from '@/shared/utils/id';
 import { COMPTE_BOUCLES } from '@/shared/constants/planComptable';
 import { listesDOffice } from '@/features/stock/utils/doublonsListes';
 import { bouclesApresAchat, synchroniserPoseBoucles } from '@/features/stock/services/boucles';
+import { yearOf } from '@/shared/utils/dates';
 
 /** L'identifiant d'un article de stock : son genre puis son code (« fromage:frais », « emballage:sac_plastique »). */
 export const cleArticle = (genre: GenreArticle, code: string): string => `${genre}:${code}`;
@@ -245,8 +250,27 @@ export function niveauxDeStock(
  * Les emballages consommés par fromage vendu : ceux choisis, sinon ceux d'office pour ce type de fromage (aucun pour un
  * fromage ajouté). `code` est le code d'un type de fromage ou l'identifiant d'un fromage ajouté.
  */
-export function conditionnementDe(code: string, archive: ArchiveStock): string[] {
-  return archive.conditionnements[code] ?? [...(CONDITIONNEMENT_PAR_DEFAUT[code as TypeFromage] ?? [])];
+export function conditionnementDe(code: string, archive: ArchiveStock, annee?: number): string[] {
+  const personnalise = annee === undefined ? undefined : anneeDuConditionnement(code, archive, annee);
+  return (
+    (personnalise === undefined ? undefined : archive.conditionnementsParAnnee?.[personnalise]?.[code]) ??
+    archive.conditionnements[code] ?? [...(CONDITIONNEMENT_PAR_DEFAUT[code as TypeFromage] ?? [])]
+  );
+}
+
+/**
+ * L'année de la personnalisation du conditionnement qui vaut pour `annee` : la plus récente jusqu'à cette année (une personnalisation
+ * vaut pour l'année choisie et les suivantes). Rien quand aucune ne s'y applique : c'est alors le conditionnement de base.
+ */
+export function anneeDuConditionnement(
+  code: string,
+  archive: ArchiveStock,
+  annee: number,
+): number | undefined {
+  return Object.entries(archive.conditionnementsParAnnee ?? {})
+    .filter(([a, parCode]) => Number(a) <= annee && code in parCode)
+    .map(([a]) => Number(a))
+    .sort((x, y) => y - x)[0];
 }
 
 /**
@@ -285,10 +309,12 @@ export function consommationDeLaVente(
     );
     if (!article || !(vente.quantite > 0)) return [];
     // Les emballages du conditionnement de la ligne vendue baissent avec elle (la quantité vendue de chacun).
-    const emballages = conditionnementDe(article.cle.split(':')[1], archive).map((code) => ({
-      article: cleArticle(GENRE_ARTICLE.EMBALLAGE, code),
-      quantite: vente.quantite,
-    }));
+    const emballages = conditionnementDe(article.cle.split(':')[1], archive, yearOf(vente.date)).map(
+      (code) => ({
+        article: cleArticle(GENRE_ARTICLE.EMBALLAGE, code),
+        quantite: vente.quantite,
+      }),
+    );
     // Les petits, l'animal sur pied et l'animal vivant suivent le cheptel (voir estLigneDuCheptel) : la vente n'y touche pas, ce
     // sont les fiches des animaux vendus qui changent de statut : seuls leurs emballages baissent.
     if (estLigneDuCheptel(article.cle)) return emballages;
@@ -300,7 +326,7 @@ export function consommationDeLaVente(
   if (nombre <= 0) return [];
 
   const lignes = [{ article: cleArticle(GENRE_ARTICLE.FROMAGE, fromage), quantite: nombre }];
-  for (const code of conditionnementDe(fromage, archive)) {
+  for (const code of conditionnementDe(fromage, archive, yearOf(vente.date))) {
     lignes.push({ article: cleArticle(GENRE_ARTICLE.EMBALLAGE, code), quantite: nombre });
   }
   return lignes;
@@ -351,13 +377,14 @@ export async function synchroniserStockAlimentation(facture: Facture): Promise<v
       factureId: facture.id,
     });
   }
-  // Un achat de production (sel, emballages, boucles…) : la quantité entre au stock de l'article choisi.
-  if (facture.stockArticle && facture.stockQuantite && facture.stockQuantite > 0) {
+  // Un achat de production (sel, emballages, boucles…) : la quantité de chaque fourniture entre au stock de son article.
+  for (const ligne of lignesProductionDe(facture)) {
+    if (!ligne.article || !(ligne.quantite && ligne.quantite > 0)) continue;
     nouveaux.push({
       id: generateId(),
-      article: facture.stockArticle,
+      article: ligne.article,
       date: facture.date,
-      delta: facture.stockQuantite,
+      delta: ligne.quantite,
       origine: ORIGINE_MOUVEMENT.ACHAT,
       factureId: facture.id,
     });
@@ -385,6 +412,33 @@ export const articlesAchetables = (archive: ArchiveStock): ArticleAffiche[] =>
     GENRE_ARTICLE.BOUCLE,
     GENRE_ARTICLE.PERSONNALISE,
   ].flatMap((genre) => articlesDuGenre(genre, archive));
+
+/**
+ * Les fournitures d'un achat de production : les articles des sections « autres approvisionnements » (classe 32 : emballages,
+ * entretien, équipement consommable) et « immobilisations » (classe 21 : matériel, bâtiment) de l'inventaire, avec les listes ajoutées
+ * rangées dans l'une de ces sections. Ni les produits finis (35), ni les matières premières (31 : aliments, boucles).
+ */
+export function articlesDeFournitures(archive: ArchiveStock): ArticleAffiche[] {
+  const classeDe = (categorie: string) =>
+    infosCategorie(categorie, archive.categories, archive.reglagesCategories).classe;
+  const classes = [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS, CATEGORIE_INVENTAIRE.IMMOBILISATIONS].map(
+    classeDe,
+  );
+  const fourniture = (categorie: string) => classes.includes(classeDe(categorie));
+  const genres = [
+    GENRE_ARTICLE.EMBALLAGE,
+    GENRE_ARTICLE.EQUIPEMENT,
+    GENRE_ARTICLE.ENTRETIEN,
+    GENRE_ARTICLE.MATERIEL,
+    GENRE_ARTICLE.BATIMENT,
+  ].filter((g) => fourniture(CATEGORIE_PAR_GENRE[g]));
+  return [
+    ...genres.flatMap((genre) => articlesDuGenre(genre, archive)),
+    ...(archive.listes ?? [])
+      .filter((l) => fourniture(l.categorie))
+      .flatMap((l) => articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive, FILTRE_STOCK_TOUT, l.id)),
+  ];
+}
 
 /** Les comptes qui ont une liste dans l'inventaire : ceux des listes d'office et des listes ajoutées, et celui des boucles d'identification. */
 export const comptesDeLInventaire = (archive: Pick<ArchiveStock, 'listes'>): string[] => [
@@ -457,6 +511,13 @@ export async function supprimerArticle(id: string): Promise<void> {
   for (const [code, emballages] of Object.entries(archive.conditionnements)) {
     if (code !== id) conditionnements[code] = emballages.filter((e) => e !== id);
   }
+  const conditionnementsParAnnee: Record<string, Record<string, string[]>> = {};
+  for (const [annee, parCode] of Object.entries(archive.conditionnementsParAnnee ?? {})) {
+    conditionnementsParAnnee[annee] = {};
+    for (const [code, emballages] of Object.entries(parCode)) {
+      if (code !== id) conditionnementsParAnnee[annee][code] = emballages.filter((e) => e !== id);
+    }
+  }
   const ordres: ArchiveStock['ordres'] = {};
   for (const [genre, cles] of Object.entries(archive.ordres)) {
     ordres[genre as GenreArticle] = (cles ?? []).filter((cle) => cle.split(':')[1] !== id);
@@ -466,6 +527,7 @@ export async function supprimerArticle(id: string): Promise<void> {
     mouvements: archive.mouvements.filter((m) => m.article.split(':')[1] !== id),
     articles: archive.articles.filter((a) => a.id !== id),
     conditionnements,
+    conditionnementsParAnnee,
     ordres,
   });
 }
@@ -538,20 +600,46 @@ export async function renommerArticle(cle: string, nom: string): Promise<void> {
 }
 
 /** Choisit les emballages consommés par fromage vendu pour un fromage (son code, ou l'identifiant d'un fromage ajouté). */
-export async function definirConditionnement(code: string, emballages: string[]): Promise<void> {
+export async function definirConditionnement(
+  code: string,
+  emballages: string[],
+  /** Avec une année : le conditionnement vaut à partir de cette année (les années d'avant gardent le leur). */
+  annee?: number,
+): Promise<void> {
   const archive = await lireArchiveStock();
-  await remplacerArchiveStock({
-    ...archive,
-    conditionnements: { ...archive.conditionnements, [code]: emballages },
-  });
+  if (annee === undefined) {
+    await remplacerArchiveStock({
+      ...archive,
+      conditionnements: { ...archive.conditionnements, [code]: emballages },
+    });
+    return;
+  }
+  const parAnnee = { ...(archive.conditionnementsParAnnee ?? {}) };
+  parAnnee[String(annee)] = { ...(parAnnee[String(annee)] ?? {}), [code]: emballages };
+  await remplacerArchiveStock({ ...archive, conditionnementsParAnnee: parAnnee });
 }
 
 /** Retire le conditionnement choisi d'un élément (un fromage retrouve celui d'office, une autre ligne n'en a plus). */
-export async function retirerConditionnement(code: string): Promise<void> {
+export async function retirerConditionnement(code: string, annee?: number): Promise<void> {
   const archive = await lireArchiveStock();
+  if (annee !== undefined) {
+    // Seule la personnalisation de cette année est retirée : l'année retrouve le conditionnement d'avant.
+    const parAnnee = { ...(archive.conditionnementsParAnnee ?? {}) };
+    const { [code]: _retire, ...reste } = parAnnee[String(annee)] ?? {};
+    if (Object.keys(reste).length > 0) parAnnee[String(annee)] = reste;
+    else delete parAnnee[String(annee)];
+    await remplacerArchiveStock({ ...archive, conditionnementsParAnnee: parAnnee });
+    return;
+  }
   const conditionnements = { ...archive.conditionnements };
   delete conditionnements[code];
-  await remplacerArchiveStock({ ...archive, conditionnements });
+  // Le conditionnement retiré l'est aussi de toutes les années.
+  const parAnnee: Record<string, Record<string, string[]>> = {};
+  for (const [a, parCode] of Object.entries(archive.conditionnementsParAnnee ?? {})) {
+    const { [code]: _retire, ...reste } = parCode;
+    if (Object.keys(reste).length > 0) parAnnee[a] = reste;
+  }
+  await remplacerArchiveStock({ ...archive, conditionnements, conditionnementsParAnnee: parAnnee });
 }
 
 /** Place un article à un index précis de la liste de son genre (après l'avoir glissé à cet endroit). */

@@ -1,5 +1,9 @@
 import { getSettings } from '@/features/settings/settings';
-import { libelleDeLaSorte } from '@/features/stock/services/boucles';
+import {
+  estArticleRebouclage,
+  estBoucleDeRemplacement,
+  libelleDeLaSorte,
+} from '@/features/stock/services/boucles';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import {
   documentHtml,
@@ -20,10 +24,16 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
   const settings = await getSettings();
   const corps = listes
     .map((liste) => {
+      const rouge = estBoucleDeRemplacement(liste.article);
+      const rebouclage = estArticleRebouclage(liste.article);
       const lignes = liste.lignes.map((b) => ({
-        [T.colonnes.numero]: b.numero,
-        [T.colonnes.pose]: b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : '',
-        [T.colonnes.achat]: b.dateAchat ? formatDateShortFR(b.dateAchat) : '',
+        [rouge ? T.numeroRemplacement : T.colonnes.numero]: b.numero,
+        [rebouclage ? T.poseRebouclage : rouge ? T.poseRouge : T.colonnes.pose]: b.datePose
+          ? formatDateShortFR(b.datePose)
+          : b.chevreId
+            ? T.posee
+            : '',
+        ...(rouge ? {} : { [T.colonnes.achat]: b.dateAchat ? formatDateShortFR(b.dateAchat) : '' }),
         [T.morte]: b.chevreId && liste.morts.has(b.chevreId) ? P.oui : '',
       }));
       return sectionHtml(
