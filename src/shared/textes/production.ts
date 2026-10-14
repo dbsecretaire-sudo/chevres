@@ -108,8 +108,13 @@ export const TEXTES_PRODUCTION = {
     premier: 'N° du premier lot',
     premierAide: 'Chaque fromage a son numéro de lot, à la suite du premier.',
     dernier: (numero: string) => `Dernier lot : ${numero}`,
-    litres: 'Litres de lait utilisés',
-    litresRequis: 'Indiquez les litres de lait utilisés : ils entrent dans l’inventaire avec les fromages.',
+    litresParFromage: 'Litres de lait par fromage',
+    litresParFromageAide:
+      'À indiquer une seule fois : il est gardé dans l’inventaire (crayon du fromage), et le lait utilisé se calcule ensuite d’après le nombre de fromages.',
+    litresRequis:
+      'Indiquez les litres de lait qu’il faut pour un fromage : ils sont gardés dans l’inventaire.',
+    laitUtilise: (nombre: number, par: string, total: string) =>
+      `Lait utilisé : ${nombre} × ${par} L = ${total} L`,
     enregistrer: 'Fabriquer',
     quantiteRequise: 'Indiquez le nombre de produits fabriqués.',
     premierRequis: 'Indiquez le n° du premier lot (il se termine par un chiffre).',

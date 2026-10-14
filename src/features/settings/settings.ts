@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { INVESTISSEMENT } from '@/shared/constants/economies';
 import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
@@ -165,6 +166,8 @@ export interface InfosExploitation {
    * pour un lait par animal plus précis que celui déduit de l'inventaire. Ils ne se reprennent pas d'une année à l'autre.
    */
   traites?: Record<string, ReglagesTraite>;
+  /** Le coût estimé (€) des investissements du plan d'économies (silo à grain, cuve à gazole), pour en calculer le remboursement. */
+  investissementsEconomie?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, number>>;
   /** La trésorerie : le solde du compte à une date (le départ des courbes), le seuil sous lequel alerter, et les emprunts en cours. */
   tresorerie?: ReglagesTresorerie;
   emprunts?: Emprunt[];

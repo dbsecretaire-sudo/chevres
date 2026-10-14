@@ -13,6 +13,23 @@ export const HYPOTHESES_ECONOMIE = {
   alimentUreeHaute: 0.05,
 } as const;
 
+/** Les investissements que le plan examine : un silo à grain, une cuve à gazole. */
+export const INVESTISSEMENT = {
+  SILO: 'silo',
+  CUVE: 'cuve',
+} as const;
+
+/**
+ * Ce que chaque investissement fait gagner, en part des postes qu'il touche : des hypothèses de départ (achat en vrac plutôt qu'en sacs,
+ * moins de trajets pour livrer, carburant acheté par volume), à vérifier sur devis. Le temps gagné n'est pas chiffré.
+ */
+export const HYPOTHESES_INVESTISSEMENT = {
+  /** Silo à grain : l'aliment acheté en vrac coûte moins cher qu'en sacs, et les livraisons groupées font moins de trajets. */
+  [INVESTISSEMENT.SILO]: { alimentation: 0.05, carburant: 0.05 },
+  /** Cuve à gazole : le carburant acheté par volume coûte moins cher qu'à la pompe. */
+  [INVESTISSEMENT.CUVE]: { carburant: 0.05 },
+} as const;
+
 /** Les catégories de dépense qui se négocient (assureur, fournisseur de carburant, achats groupés). */
 export const CATEGORIES_NEGOCIABLES: readonly string[] = [
   CATEGORIE_DEPENSE.CARBURANT,

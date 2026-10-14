@@ -331,6 +331,51 @@ export const TEXTES_COMPTABILITE = {
       prixDuLait:
         'Au-delà des charges, le prix du lait reste le premier levier : chaque centime de plus par litre rapporte autant que les pistes ci-dessus sur ce volume.',
       centimeLitre: (montant: string) => `1 centime de plus par litre : ${montant} par an`,
+      /** Les investissements examinés : ce qu'ils feraient gagner, et en combien de temps ils se rembourseraient. */
+      investissements: {
+        titre: 'Pistes d’investissement',
+        aide: 'Ce que ferait gagner un équipement, d’après vos charges de l’année. Ce sont des hypothèses de départ à vérifier sur devis, pas des promesses ; le temps gagné n’est pas chiffré. Ces gains ne sont pas comptés dans le total ci-dessus.',
+        silo: {
+          titre: 'Silo à grain',
+          texte: (alimentation: string, carburant: string) =>
+            `Acheter l’aliment en vrac plutôt qu’en sacs (environ ${alimentation} de l’alimentation) et grouper les livraisons (environ ${carburant} du carburant). Moins de manutention et de trajets : du temps gagné.`,
+        },
+        cuve: {
+          titre: 'Cuve à gazole',
+          texte: (carburant: string) =>
+            `Acheter le gazole par volume, moins cher qu’à la pompe (environ ${carburant} du carburant), et faire le plein sur place : du temps gagné.`,
+        },
+        gain: (montant: string) => `Gain estimé : ${montant} par an`,
+        cout: (montant: string) => `Coût estimé de l’investissement : ${montant}`,
+        indiquerCout: 'Indiquer le coût de l’investissement',
+        modifierCout: 'Modifier le coût',
+        remboursement: (duree: string) => `Remboursé en ${duree}`,
+        /** Un temps de remboursement : « 8 mois », « 2 ans », « 2 ans et 3 mois ». */
+        duree: (mois: number) => {
+          if (mois < 12) return `${mois} mois`;
+          const annees = Math.floor(mois / 12);
+          const reste = mois % 12;
+          return `${annees} an${annees > 1 ? 's' : ''}${reste > 0 ? ` et ${reste} mois` : ''}`;
+        },
+        coutLabel: 'Coût de l’investissement (€)',
+        coutAide: 'Le devis ou l’estimation, installation comprise. Vide : pas de calcul de remboursement.',
+        coutInvalide: 'Indiquez un montant supérieur à 0, ou laissez le champ vide.',
+      },
+      /** Le lait en fromage face au lait vendu, d'après les prix et les litres par fromage de l'inventaire. */
+      valorisation: {
+        titre: 'Le lait en fromage ou vendu tel quel',
+        aide: 'D’après le prix de vente et les litres de lait par fromage de l’inventaire. Indicatif : les frais de fabrication (emballage, main-d’œuvre, affinage) ne sont pas déduits.',
+        aucun:
+          'Indiquez dans l’inventaire (crayon du fromage) le prix de vente et les litres de lait par fromage, pour comparer avec la vente du lait.',
+        fromage: (nom: string, prix: string, litres: string) => `${nom} · ${prix} pour ${litres} L`,
+        parLitre: (valeur: string) => `${valeur} par litre de lait`,
+        lait: (prix: string) => `Lait vendu tel quel : ${prix} le litre`,
+        production: (litres: string, montant: string) =>
+          `Les ${litres} L de l’année, tout en fromage : ${montant}`,
+        plus: (montant: string) => `${montant} de plus que le lait vendu`,
+        moins: (montant: string) => `${montant} de moins que le lait vendu`,
+        sansPrixLait: 'Le prix de vente du lait n’est pas défini : pas de comparaison.',
+      },
     },
     couts: {
       titre: 'Coûts de production',

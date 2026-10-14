@@ -98,6 +98,10 @@ export const TEXTES_STOCK = {
     prix: 'Prix de vente (€)',
     prixKg: 'Prix de vente (€ le kg)',
     prixLitre: 'Prix de vente (€ le litre)',
+    /** Les litres de lait qu'il faut pour un fromage : sous le prix de vente, dans la fenêtre du fromage. */
+    litresFromage: 'Litres de lait par fromage',
+    litresBrocciu: 'Litres de lait versés dans le lactosérum par fromage',
+    litresInvalide: 'Indiquez un nombre de litres supérieur à 0, ou laissez le champ vide.',
     nomRequis: 'Nom requis',
     prixInvalide: 'Le prix doit être supérieur à zéro.',
     supprimer: 'Supprimer cet article',
@@ -355,6 +359,8 @@ export const TEXTES_STOCK = {
     quantite: 'Quantité',
     litres: 'Litres de lait utilisés',
     litresBrocciu: 'Litres de lait versés dans le lactosérum',
+    laitUtilise: (nombre: number, par: string, total: string) =>
+      `Lait utilisé : ${nombre} × ${par} L = ${total} L`,
     litresRequis: 'Indiquez les litres de lait utilisés : ils entrent dans l’inventaire avec les fromages.',
     quantiteInvalide: 'Indiquez une quantité : +1 pour un ajout, −1 pour un retrait.',
     aide: '+1 pour un ajout, −1 pour un retrait.',

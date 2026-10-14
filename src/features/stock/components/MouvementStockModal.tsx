@@ -13,6 +13,8 @@ interface Props {
   avecLitres?: boolean;
   /** Le nom du champ des litres quand il diffère (brocciu : le lait versé dans le lactosérum). */
   libelleLitres?: string;
+  /** Les litres de lait qu'il faut pour un fromage (indiqués dans l'inventaire) : le lait utilisé s'en déduit, le champ n'est plus demandé. */
+  litresParFromage?: number;
   /** Le stock se consomme (aliment, emballage, entretien) : un bouton le remet à zéro, et un retrait est une consommation. */
   consommable?: boolean;
   /** Ce qu'il reste de l'article (pour le remettre à zéro). */
@@ -36,6 +38,7 @@ export function MouvementStockModal({
   article,
   avecLitres,
   libelleLitres,
+  litresParFromage,
   unite,
   consommable,
   niveau,
@@ -63,7 +66,11 @@ export function MouvementStockModal({
   const valider = () => {
     if (!article) return;
     if (nombre === 0) return setErreur(T.quantiteInvalide);
-    const litresUtilises = litres.trim() ? parseDecimal(litres) : undefined;
+    const litresUtilises = litresParFromage
+      ? Math.round(nombre * litresParFromage * 100) / 100
+      : litres.trim()
+        ? parseDecimal(litres)
+        : undefined;
     // Des fromages ajoutés : le lait utilisé est une entrée de l'inventaire, il est requis.
     if (avecLitres && nombre > 0 && !(litresUtilises && litresUtilises > 0)) return setErreur(T.litresRequis);
     onValider(
@@ -97,7 +104,16 @@ export function MouvementStockModal({
               onPress={() => onValider(article.cle, -niveau)}
             />
           ) : null}
-          {avecLitres && nombre >= 0 ? (
+          {avecLitres && litresParFromage && nombre > 0 ? (
+            <Text style={commonStyles.note}>
+              {T.laitUtilise(
+                nombre,
+                String(litresParFromage).replace('.', ','),
+                String(Math.round(nombre * litresParFromage * 100) / 100).replace('.', ','),
+              )}
+            </Text>
+          ) : null}
+          {avecLitres && !litresParFromage && nombre >= 0 ? (
             <FormField
               label={libelleLitres ?? T.litres}
               required={nombre > 0}

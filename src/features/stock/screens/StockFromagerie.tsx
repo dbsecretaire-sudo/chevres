@@ -51,6 +51,7 @@ import {
   articlesDuGenre,
   bilanLait,
   cleArticle,
+  definirLitresParFromage,
   definirPrixArticle,
   prixDesOeufs,
   enregistrerLaitJour,
@@ -384,11 +385,14 @@ export default function StockFromagerie() {
     charger();
   };
 
-  const renommer = async (nom: string, prix?: number) => {
+  const renommer = async (nom: string, prix?: number, litres?: number) => {
     if (renomme) {
       if (nom) await renommerArticle(renomme.cle, nom);
       // Seuls les fromages et les viandes se vendent : eux seuls ont un prix.
       if (seVend(renomme.cle)) await definirPrixArticle(renomme.cle, prix);
+      // Un fromage garde aussi les litres de lait qu'il faut pour le faire.
+      if (renomme.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`))
+        await definirLitresParFromage(renomme.cle, litres);
     }
     setRenomme(null);
     charger();
@@ -680,6 +684,7 @@ export default function StockFromagerie() {
         }
         niveau={article ? niveaux.get(article.cle) : undefined}
         avecLitres={article?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
+        litresParFromage={article ? archive.litresParFromage?.[article.cle] : undefined}
         libelleLitres={
           article?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu') ? T.modal.litresBrocciu : undefined
         }
@@ -696,6 +701,13 @@ export default function StockFromagerie() {
         nom={renomme?.libelle}
         prix={renomme?.prix}
         avecPrix={!!renomme && seVend(renomme.cle)}
+        avecLitres={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
+        litresParFromage={renomme?.litresParFromage}
+        libelleLitres={
+          renomme?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu')
+            ? T.articleModal.litresBrocciu
+            : undefined
+        }
         parKg={!!renomme && roleDeLaViande(renomme.cle) !== undefined}
         // Un produit fini ou animal : seul son prix de vente se modifie (ni nom, ni suppression).
         libellePrix={

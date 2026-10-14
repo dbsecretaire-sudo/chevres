@@ -6,6 +6,7 @@ import {
   vigilancesParParametre,
 } from '@/features/exploitation/services/analysesLait';
 import type { Controle } from '@/features/exploitation/types';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { SEUILS_VIGILANCE_LAIT, NIVEAU_VIGILANCE } from '@/shared/constants/controles';
@@ -15,6 +16,8 @@ import {
   HAUSSE_COUT_ALIMENT_SIGNALEE,
   HAUSSE_LAIT_PAR_TRAITE_JUSTIFIEE,
   HYPOTHESES_ECONOMIE,
+  HYPOTHESES_INVESTISSEMENT,
+  INVESTISSEMENT,
   MOTS_POSTE_INCOMPRESSIBLE,
   MOTS_POSTE_NEGOCIABLE,
 } from '@/shared/constants/economies';
@@ -61,8 +64,50 @@ export interface AnneePrecedente {
   litresParChevreParTraite?: number;
 }
 
+/** Une piste d'investissement : ce qu'il ferait gagner par an sur les postes qu'il touche, et son remboursement quand le coût est connu. */
+export interface PisteInvestissement {
+  investissement: ValeurDe<typeof INVESTISSEMENT>;
+  /** Ce que l'investissement ferait gagner par an. */
+  economie: number;
+  /** Les postes touchés : leur catégorie, ce qu'ils ont coûté et la part que l'investissement en fait gagner. */
+  postes: { categorie: string; montant: number; part: number }[];
+  /** Le coût estimé par l'utilisateur (€). */
+  cout?: number;
+  /** Le temps de remboursement, en années (coût / gain annuel). */
+  remboursementAnnees?: number;
+}
+
+/** Un fromage de l'inventaire qui a un prix de vente et des litres de lait : de quoi le comparer à la vente du lait. */
+export interface FromagePrixLitres {
+  libelle: string;
+  prix: number;
+  litresParFromage: number;
+}
+
+/** Ce que rapporte le litre de lait transformé en un fromage, face au litre vendu. */
+export interface LigneValorisation extends FromagePrixLitres {
+  /** Ce que rapporte un litre de lait transformé en ce fromage (€). */
+  prixParLitre: number;
+  /** Ce que rapporterait le lait produit de l'année s'il était tout transformé en ce fromage (indicatif : sans les frais de fabrication). */
+  productionPotentielle: number;
+  /** Ce que cela rapporte de plus (ou de moins) que de vendre ce lait tel quel ; rien sans prix du lait. */
+  gainSurLait?: number;
+}
+
+export interface ValorisationLait {
+  /** Le prix du litre de lait vendu : celui de l'inventaire, à défaut le prix moyen des recettes. */
+  prixLait?: number;
+  litres: number;
+  lignes: LigneValorisation[];
+}
+
 export interface EntreePlan {
   rentabilite: Rentabilite;
+  /** Le coût estimé des investissements (€), par investissement. */
+  investissements?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, number>>;
+  /** Les fromages de l'inventaire qui ont un prix et des litres de lait, et le prix du litre de lait de l'inventaire. */
+  fromages?: FromagePrixLitres[];
+  prixLaitInventaire?: number;
   /** Le lait par chèvre et par traite, d'après l'inventaire. */
   production?: ProductionLaitiere;
   precedente?: AnneePrecedente;
@@ -72,6 +117,10 @@ export interface EntreePlan {
 
 export interface PlanEconomies {
   pistes: Piste[];
+  /** Les investissements examinés (silo à grain, cuve à gazole) : hors du total des économies, qui ne compte que ce qui se fait sans capital. */
+  investissements: PisteInvestissement[];
+  /** Le lait en fromage face au lait vendu (rien sans fromage ayant prix et litres). */
+  valorisation?: ValorisationLait;
   /** Ce que toutes les pistes feraient gagner par an. */
   economieTotale: number;
   coutParLitre?: number;
@@ -230,8 +279,50 @@ export function construirePlan(entree: EntreePlan): PlanEconomies {
     ecartParLitre !== undefined && ecartParLitre > 0 && litresProduits > 0
       ? Math.min(1, economieTotale / (ecartParLitre * litresProduits))
       : undefined;
+  // Les investissements : ce qu'ils feraient gagner sur les postes qu'ils touchent (alimentation, carburant)
+  const montantDe = (categorie: string): number =>
+    r.postes.filter((p) => p.categorie.split(':')[0] === categorie).reduce((t, p) => t + p.montant, 0);
+  const investissements: PisteInvestissement[] = [];
+  for (const investissement of Object.values(INVESTISSEMENT)) {
+    const parts: Record<string, number> = HYPOTHESES_INVESTISSEMENT[investissement];
+    const postes = Object.entries(parts)
+      .map(([categorie, part]) => ({ categorie, montant: montantDe(categorie), part }))
+      .filter((p) => p.montant > 0);
+    const economie = arrondi(postes.reduce((t, p) => t + p.montant * p.part, 0));
+    if (!(economie > 0)) continue;
+    const cout = entree.investissements?.[investissement];
+    investissements.push({
+      investissement,
+      economie,
+      postes,
+      cout,
+      remboursementAnnees: cout && cout > 0 ? cout / economie : undefined,
+    });
+  }
+
+  // Le lait en fromage face au lait vendu
+  const prixLait = entree.prixLaitInventaire ?? prixLitre;
+  const valorisation: ValorisationLait | undefined =
+    entree.fromages && entree.fromages.length > 0
+      ? {
+          prixLait,
+          litres: litresProduits,
+          lignes: entree.fromages.map((f) => {
+            const prixParLitre = f.prix / f.litresParFromage;
+            return {
+              ...f,
+              prixParLitre,
+              productionPotentielle: arrondi(prixParLitre * litresProduits),
+              gainSurLait:
+                prixLait !== undefined ? arrondi((prixParLitre - prixLait) * litresProduits) : undefined,
+            };
+          }),
+        }
+      : undefined;
   return {
     pistes,
+    investissements,
+    valorisation,
     economieTotale,
     coutParLitre,
     coutParLitreApres,

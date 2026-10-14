@@ -1,11 +1,20 @@
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
 import {
   TYPE_PISTE,
   type Piste,
   type PlanEconomies as Plan,
 } from '@/features/comptabilite/services/pistesEconomie';
-import { HYPOTHESES_ECONOMIE, UN_CENTIME } from '@/shared/constants/economies';
+import {
+  HYPOTHESES_ECONOMIE,
+  HYPOTHESES_INVESTISSEMENT,
+  INVESTISSEMENT,
+  UN_CENTIME,
+} from '@/shared/constants/economies';
+import { CoutInvestissementModal } from '@/features/comptabilite/components/CoutInvestissementModal';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { LOCALE } from '@/shared/constants/format';
 import { formatMontant } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
@@ -52,6 +61,19 @@ function texteDeLaPiste(p: Piste): string {
  * toucher (urée basse, analyses critiques, impôts et cotisations) y sont aussi, pour dire pourquoi.
  */
 export function PlanEconomies({ plan, litresProduits }: { plan: Plan; litresProduits: number }) {
+  const { settings, patchSettings } = useAppSettings();
+  /** L'investissement dont on indique le coût. */
+  const [coutOuvert, setCoutOuvert] = useState<ValeurDe<typeof INVESTISSEMENT> | null>(null);
+  const I = T.investissements;
+  const V = T.valorisation;
+  const enregistrerCout = async (cout: number | undefined) => {
+    if (!coutOuvert) return;
+    const couts = { ...settings.exploitation?.investissementsEconomie };
+    if (cout) couts[coutOuvert] = cout;
+    else delete couts[coutOuvert];
+    await patchSettings({ exploitation: { ...settings.exploitation, investissementsEconomie: couts } });
+    setCoutOuvert(null);
+  };
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{T.titre}</Text>
@@ -113,6 +135,89 @@ export function PlanEconomies({ plan, litresProduits }: { plan: Plan; litresProd
           </Text>
         </>
       ) : null}
+      {plan.investissements.length > 0 ? (
+        <>
+          <View style={commonStyles.separateur} />
+          <Text style={commonStyles.lineSemiBold}>{I.titre}</Text>
+          <Text style={commonStyles.note}>{I.aide}</Text>
+          {plan.investissements.map((inv) => {
+            const parts = HYPOTHESES_INVESTISSEMENT[inv.investissement] as Record<string, number>;
+            const texte =
+              inv.investissement === INVESTISSEMENT.SILO
+                ? I.silo.texte(pourcent(parts.alimentation ?? 0), pourcent(parts.carburant ?? 0))
+                : I.cuve.texte(pourcent(parts.carburant ?? 0));
+            return (
+              <View key={inv.investissement} style={commonStyles.gap2}>
+                <View style={styles.ligne}>
+                  <Text style={[commonStyles.lineBold, commonStyles.flex1]}>
+                    {inv.investissement === INVESTISSEMENT.SILO ? I.silo.titre : I.cuve.titre}
+                  </Text>
+                  <Text style={[commonStyles.lineBold, { color: colors.primary }]}>
+                    {`− ${formatMontant(inv.economie)}`}
+                  </Text>
+                </View>
+                <Text style={commonStyles.note}>{texte}</Text>
+                <Text style={commonStyles.note}>{I.gain(formatMontant(inv.economie))}</Text>
+                {inv.cout ? <Text style={commonStyles.note}>{I.cout(formatMontant(inv.cout))}</Text> : null}
+                {inv.remboursementAnnees !== undefined ? (
+                  <Text style={commonStyles.lineSemiBold}>
+                    {I.remboursement(I.duree(Math.max(1, Math.round(inv.remboursementAnnees * 12))))}
+                  </Text>
+                ) : null}
+                <Pressable onPress={() => setCoutOuvert(inv.investissement)} hitSlop={8}>
+                  <Text style={commonStyles.lien}>{inv.cout ? I.modifierCout : I.indiquerCout}</Text>
+                </Pressable>
+              </View>
+            );
+          })}
+        </>
+      ) : null}
+      <View style={commonStyles.separateur} />
+      <Text style={commonStyles.lineSemiBold}>{V.titre}</Text>
+      {plan.valorisation ? (
+        <>
+          <Text style={commonStyles.note}>{V.aide}</Text>
+          {plan.valorisation.prixLait !== undefined ? (
+            <Text style={commonStyles.note}>{V.lait(formatMontant(plan.valorisation.prixLait))}</Text>
+          ) : (
+            <Text style={commonStyles.mutedItalic}>{V.sansPrixLait}</Text>
+          )}
+          {plan.valorisation.lignes.map((l) => (
+            <View key={l.libelle} style={commonStyles.gap2}>
+              <Text style={commonStyles.lineBold}>
+                {V.fromage(l.libelle, formatMontant(l.prix), nombre(l.litresParFromage))}
+              </Text>
+              <Text style={commonStyles.note}>{V.parLitre(formatMontant(l.prixParLitre))}</Text>
+              {plan.valorisation && plan.valorisation.litres > 0 ? (
+                <Text style={commonStyles.note}>
+                  {V.production(nombre(plan.valorisation.litres, 0), formatMontant(l.productionPotentielle))}
+                </Text>
+              ) : null}
+              {l.gainSurLait !== undefined && plan.valorisation && plan.valorisation.litres > 0 ? (
+                <Text
+                  style={[
+                    commonStyles.lineSemiBold,
+                    { color: l.gainSurLait >= 0 ? colors.primary : colors.danger },
+                  ]}
+                >
+                  {l.gainSurLait >= 0
+                    ? V.plus(formatMontant(l.gainSurLait))
+                    : V.moins(formatMontant(-l.gainSurLait))}
+                </Text>
+              ) : null}
+            </View>
+          ))}
+        </>
+      ) : (
+        <Text style={commonStyles.mutedItalic}>{V.aucun}</Text>
+      )}
+      <CoutInvestissementModal
+        visible={coutOuvert !== null}
+        titre={coutOuvert === INVESTISSEMENT.SILO ? I.silo.titre : I.cuve.titre}
+        cout={coutOuvert ? settings.exploitation?.investissementsEconomie?.[coutOuvert] : undefined}
+        onValider={enregistrerCout}
+        onFermer={() => setCoutOuvert(null)}
+      />
     </Card>
   );
 }

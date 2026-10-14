@@ -3,7 +3,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { formatMontant } from '@/shared/utils/dates';
-import { parseMontant } from '@/shared/utils/nombres';
+import { parseDecimal, parseMontant } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -14,11 +14,16 @@ interface Props {
   /** Le prix de vente actuel ; le champ n'est proposé que pour un article qui se vend (`avecPrix`). */
   prix?: number;
   avecPrix: boolean;
+  /** Les litres de lait par fromage : le champ n'est proposé que pour un fromage (`avecLitres`). */
+  litresParFromage?: number;
+  avecLitres?: boolean;
+  /** Le nom du champ des litres quand il diffère (brocciu : le lait versé dans le lactosérum). */
+  libelleLitres?: string;
   /** Le prix se compte au kilo (les lignes d'animaux de la viande). */
   parKg?: boolean;
   /** Un libellé de prix particulier (le litre de lait, l'œuf) : il n'y a alors que le prix à modifier, sans nom à changer. */
   libellePrix?: string;
-  onValider: (nom: string, prix?: number) => void;
+  onValider: (nom: string, prix?: number, litres?: number) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
   onSupprimer?: () => void;
   onAnnuler: () => void;
@@ -33,6 +38,9 @@ export function ArticleStockModal({
   nom,
   prix,
   avecPrix,
+  litresParFromage,
+  avecLitres,
+  libelleLitres,
   parKg,
   libellePrix,
   onValider,
@@ -41,6 +49,7 @@ export function ArticleStockModal({
 }: Props) {
   const [nomSaisi, setNomSaisi] = useState('');
   const [prixSaisi, setPrixSaisi] = useState('');
+  const [litresSaisis, setLitresSaisis] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,6 +58,7 @@ export function ArticleStockModal({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNomSaisi(nom ?? '');
       setPrixSaisi(prix ? formatMontant(prix) : '');
+      setLitresSaisis(litresParFromage ? String(litresParFromage).replace('.', ',') : '');
       setErreur(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +68,9 @@ export function ArticleStockModal({
     if (!libellePrix && !nomSaisi.trim()) return setErreur(T.nomRequis);
     const montant = parseMontant(prixSaisi);
     if (prixSaisi.trim() && !(montant > 0)) return setErreur(T.prixInvalide);
-    onValider(nomSaisi.trim(), montant > 0 ? montant : undefined);
+    const litres = parseDecimal(litresSaisis);
+    if (avecLitres && litresSaisis.trim() && !(litres > 0)) return setErreur(T.litresInvalide);
+    onValider(nomSaisi.trim(), montant > 0 ? montant : undefined, litres > 0 ? litres : undefined);
   };
 
   return (
@@ -79,6 +91,15 @@ export function ArticleStockModal({
               }
               keyboardType="decimal-pad"
               placeholder="0,00"
+            />
+          ) : null}
+          {avecLitres ? (
+            <FormField
+              label={libelleLitres ?? T.litresFromage}
+              value={litresSaisis}
+              onChangeText={setLitresSaisis}
+              keyboardType="decimal-pad"
+              placeholder="0"
             />
           ) : null}
           {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}

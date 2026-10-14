@@ -21,6 +21,11 @@ import { calculerBilan } from '@/features/cheptel/services/bilanCheptel';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { articlesDuProduit } from '@/features/stock/services/lots';
+import { CLE_PRIX_LAIT, PRODUIT_A_LOTS } from '@/shared/constants/stock';
+import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
+import type { InfosExploitation } from '@/features/settings/settings';
 
 interface OptionsPlan {
   annee: number;
@@ -43,14 +48,34 @@ async function anneePrecedente(options: OptionsPlan): Promise<AnneePrecedente | 
 }
 
 /** Le plan d'économies d'une année : les analyses du lait, le lait par traite et ce que l'année d'avant donnait. */
-async function construirePlanDeLAnnee(r: Rentabilite, options: OptionsPlan): Promise<PlanEconomies> {
-  const [controles, production, precedente] = await Promise.all([
+async function construirePlanDeLAnnee(
+  r: Rentabilite,
+  options: OptionsPlan,
+  espece: EspeceAnimale,
+  investissements: InfosExploitation['investissementsEconomie'],
+): Promise<PlanEconomies> {
+  const [controles, production, precedente, stock] = await Promise.all([
     listControles(options.annee),
     productionLaitiere(options.annee),
     anneePrecedente(options),
+    lireArchiveStock(),
   ]);
   const analyses = controles.filter((c) => c.famille === FAMILLE_CONTROLE.ANALYSE);
-  return construirePlan({ rentabilite: r, production, precedente, analyses });
+  // Les fromages de l'inventaire qui ont un prix de vente et les litres de lait qu'il faut pour les faire.
+  const fromages = articlesDuProduit(PRODUIT_A_LOTS.FROMAGE, stock, espece).flatMap((a) =>
+    a.prix && a.prix > 0 && a.litresParFromage && a.litresParFromage > 0
+      ? [{ libelle: a.libelle, prix: a.prix, litresParFromage: a.litresParFromage }]
+      : [],
+  );
+  return construirePlan({
+    rentabilite: r,
+    production,
+    precedente,
+    analyses,
+    investissements,
+    fromages,
+    prixLaitInventaire: stock.prix[CLE_PRIX_LAIT],
+  });
 }
 
 /** La rentabilité de l'année active et de l'activité choisie, rechargée à chaque retour sur l'écran. */
@@ -65,6 +90,7 @@ export function useRentabilite() {
   const annee = settings.anneeActive;
   const infos = settings.exploitation;
   const { regime } = reglagesTva(infos);
+  const investissementsEconomie = infos?.investissementsEconomie;
   /** Les montants s'entendent hors taxes quand la TVA est déclarée (réel simplifié ou normal). */
   const horsTaxes =
     regime === REGIME_TVA_PILOTAGE.REEL_SIMPLIFIE || regime === REGIME_TVA_PILOTAGE.REEL_NORMAL;
@@ -87,9 +113,16 @@ export function useRentabilite() {
     setAnnees(toutesAnnees);
     setResultat(r);
     setPlan(
-      laitier ? await construirePlanDeLAnnee(r, { annee, filtre, horsTaxes, effectif, laitier }) : null,
+      laitier
+        ? await construirePlanDeLAnnee(
+            r,
+            { annee, filtre, horsTaxes, effectif, laitier },
+            espece,
+            investissementsEconomie,
+          )
+        : null,
     );
-  }, [annee, filtre, horsTaxes, espece, laitier]);
+  }, [annee, filtre, horsTaxes, espece, laitier, investissementsEconomie]);
 
   useFocusEffect(
     useCallback(() => {

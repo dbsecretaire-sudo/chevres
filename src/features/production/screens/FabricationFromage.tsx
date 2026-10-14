@@ -15,6 +15,7 @@ import {
   fabriquerFromages,
   numeroSuivant,
 } from '@/features/stock/services/lots';
+import { definirLitresParFromage } from '@/features/stock/services/stock';
 import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
@@ -44,7 +45,8 @@ export default function FabricationFromage() {
   const [date, setDate] = useState(todayISO());
   const [quantite, setQuantite] = useState('');
   const [premier, setPremier] = useState('');
-  const [litres, setLitres] = useState('');
+  /** Les litres de lait par fromage, demandés une seule fois quand l'inventaire ne les a pas encore. */
+  const [litresSaisis, setLitresSaisis] = useState('');
   const [enregistrement, setEnregistrement] = useState(false);
 
   useEffect(() => {
@@ -65,6 +67,10 @@ export default function FabricationFromage() {
   };
 
   const nombre = Math.round(Number(quantite) || 0);
+  /** Les litres de lait par fromage : ceux de l'inventaire, sinon ceux qu'on vient d'indiquer. */
+  const litresDeLInventaire = archive?.litresParFromage?.[article];
+  const litresParFromage = litresDeLInventaire ?? parseDecimal(litresSaisis);
+  const laitUtilise = Math.round(nombre * litresParFromage * 100) / 100;
   const dernier = nombre > 0 && premier ? derniereBoucle(premier, nombre) : undefined;
 
   const fabriquer = async () => {
@@ -72,16 +78,18 @@ export default function FabricationFromage() {
     const erreur = erreurFabrication(archive, article, premier, nombre);
     if (erreur) return Alert.alert(erreur);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
-    if (fromage && !(parseDecimal(litres) > 0))
-      return Alert.alert(TEXTES.production.fabrication.litresRequis);
+    if (fromage && !(litresParFromage > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
     setEnregistrement(true);
     try {
+      // Les litres par fromage indiqués ici sont gardés dans l'inventaire : on ne les redemande plus.
+      if (fromage && litresDeLInventaire === undefined)
+        await definirLitresParFromage(article, litresParFromage);
       await fabriquerFromages({
         article,
         date,
         quantite: nombre,
         debut: premier,
-        litres: fromage ? parseDecimal(litres) : undefined,
+        litres: fromage ? laitUtilise : undefined,
       });
       router.back();
     } finally {
@@ -110,14 +118,29 @@ export default function FabricationFromage() {
         <FormField label={T.premier} required value={premier} onChangeText={(v) => setPremier(v.trim())} />
         <Text style={commonStyles.note}>{dernier ? T.dernier(dernier) : T.premierAide}</Text>
         {fromage ? (
-          <FormField
-            label={TEXTES.production.fabrication.litres}
-            required
-            value={litres}
-            onChangeText={setLitres}
-            keyboardType="decimal-pad"
-            placeholder="0"
-          />
+          litresDeLInventaire ? (
+            nombre > 0 ? (
+              <Text style={commonStyles.note}>
+                {TEXTES.production.fabrication.laitUtilise(
+                  nombre,
+                  String(litresDeLInventaire).replace('.', ','),
+                  String(laitUtilise).replace('.', ','),
+                )}
+              </Text>
+            ) : null
+          ) : (
+            <>
+              <FormField
+                label={TEXTES.production.fabrication.litresParFromage}
+                required
+                value={litresSaisis}
+                onChangeText={setLitresSaisis}
+                keyboardType="decimal-pad"
+                placeholder="0"
+              />
+              <Text style={commonStyles.note}>{TEXTES.production.fabrication.litresParFromageAide}</Text>
+            </>
+          )
         ) : null}
         <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
       </Screen>

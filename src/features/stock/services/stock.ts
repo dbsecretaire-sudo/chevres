@@ -55,6 +55,8 @@ export interface ArticleAffiche {
   id?: string;
   /** Le prix de vente (€) d'un fromage ou d'une viande, quand on l'a fixé. */
   prix?: number;
+  /** Les litres de lait qu'il faut pour un fromage, quand on les a indiqués. */
+  litresParFromage?: number;
 }
 
 /** La clé de la ligne des petits d'une espèce dans le stock de viande (cabris, agneaux, veaux, porcelets, poussins). */
@@ -171,7 +173,9 @@ export function articlesDuGenre(
     const i = ordre.indexOf(a.cle);
     return i >= 0 ? i : ordre.length + tous.indexOf(a);
   };
-  return [...tous].sort((a, b) => rang(a) - rang(b)).map((a) => ({ ...a, prix: archive.prix[a.cle] }));
+  return [...tous]
+    .sort((a, b) => rang(a) - rang(b))
+    .map((a) => ({ ...a, prix: archive.prix[a.cle], litresParFromage: archive.litresParFromage?.[a.cle] }));
 }
 
 /** Le nom d'un article d'après son identifiant (« fromage:frais » → « Frais »). */
@@ -471,10 +475,13 @@ export async function masquerArticle(cle: string): Promise<void> {
   const archive = await lireArchiveStock();
   const prix = { ...archive.prix };
   delete prix[cle];
+  const litresParFromage = { ...archive.litresParFromage };
+  delete litresParFromage[cle];
   await remplacerArchiveStock({
     ...archive,
     mouvements: archive.mouvements.filter((m) => m.article !== cle),
     prix,
+    litresParFromage,
     masques: [...new Set([...(archive.masques ?? []), cle])],
   });
 }
@@ -485,6 +492,17 @@ export async function definirPrixArticle(cle: string, prix: number | undefined):
   const autres = { ...archive.prix };
   delete autres[cle];
   await remplacerArchiveStock({ ...archive, prix: prix && prix > 0 ? { ...autres, [cle]: prix } : autres });
+}
+
+/** Fixe les litres de lait qu'il faut pour un fromage ; sans litres, ils sont retirés. */
+export async function definirLitresParFromage(cle: string, litres: number | undefined): Promise<void> {
+  const archive = await lireArchiveStock();
+  const autres = { ...archive.litresParFromage };
+  delete autres[cle];
+  await remplacerArchiveStock({
+    ...archive,
+    litresParFromage: litres && litres > 0 ? { ...autres, [cle]: litres } : autres,
+  });
 }
 
 /** Enregistre le litrage d'un jour : un nouveau (sans identifiant) ou un litrage modifié. */
