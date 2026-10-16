@@ -51,6 +51,10 @@ export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion', N
 /** La nature d'un contenu d'organisme (MSA, DDTM, DRAAF, ODARC…) : des courriers, des démarches, des documents. */
 export const NATURE_CONTENU_ORGANISME = [NATURE_COURRIEL, 'demarche', 'document'] as const;
 
+/** L'envoi en recommandé d'un courrier : simple, ou avec accusé de réception (jamais les deux). */
+export const RECOMMANDE = { SIMPLE: 'simple', AR: 'ar' } as const;
+export type Recommande = (typeof RECOMMANDE)[keyof typeof RECOMMANDE];
+
 /** La nature d'un contenu d'assureur : des contrats, des courriers, des démarches (sinistre…), des documents. */
 export const NATURE_CONTENU_ASSUREUR = ['contrat', NATURE_COURRIEL, 'demarche', 'document'] as const;
 

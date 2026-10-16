@@ -17,6 +17,7 @@ function courrierHtml(c: CourrierCompose): string {
   * { box-sizing: border-box; }
   body { font-family: Georgia, 'Times New Roman', serif; color: #111; padding: 40px 56px; font-size: 12px; line-height: 1.5; }
   .expediteur { white-space: normal; }
+  .mention { margin-top: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
   .destinataire { margin: 34px 0 0 52%; }
   .lieu-date { margin: 26px 0 0 52%; }
   .objet { margin: 28px 0 22px; font-weight: 700; }
@@ -27,6 +28,7 @@ function courrierHtml(c: CourrierCompose): string {
 </head>
 <body>
   <div class="expediteur">${lignes(c.expediteur)}</div>
+  ${c.mention ? `<div class="mention">${echapper(c.mention)}</div>` : ''}
   <div class="destinataire">${lignes(c.destinataire)}</div>
   <div class="lieu-date">${echapper(c.lieuDate)}</div>
   <div class="objet">Objet : ${echapper(c.objet)}</div>
