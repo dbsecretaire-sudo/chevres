@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
+import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
 import { useLotsARappeler, type RappelDeLot } from '@/features/stock/hooks/useLotsARappeler';
 import { destinationRappel } from '@/features/rappels/services/destination';
@@ -21,7 +22,7 @@ const T = TEXTES.rappels;
  * Les déclarations à valider (RSA trimestriel, URSSAF mensuel) : une ligne par rappel, qui ouvre l'écran de la déclaration ; la
  * coche à droite la marque comme faite. N'affiche rien s'il n'y en a pas.
  */
-export function BlocRappels() {
+function BlocRappelsDeclarations() {
   const router = useRouter();
   const { rappels, genres, valider } = useRappels();
   const { aRappeler: lots, aValider, valider: validerLot } = useLotsARappeler();
@@ -115,5 +116,15 @@ export function BlocRappels() {
         }}
       />
     </View>
+  );
+}
+
+/** Les rappels de l'accueil : la sauvegarde à faire quand elle date de trop, puis les déclarations et les lots à rappeler. */
+export function BlocRappels() {
+  return (
+    <>
+      <RappelSauvegarde />
+      <BlocRappelsDeclarations />
+    </>
   );
 }

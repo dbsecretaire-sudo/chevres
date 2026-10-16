@@ -16,6 +16,7 @@ import {
   pousserToutesAnnees,
   tirerToutesAnnees,
 } from '@/features/drive/sync';
+import { noterSauvegarde } from '@/features/sauvegarde/derniereSauvegarde';
 import { ID_ETABLISSEMENT_DEFAUT } from '@/shared/constants/stockage';
 import { TEXTES } from '@/shared/textes';
 
@@ -127,6 +128,8 @@ export function useGoogleDrive() {
         await recharger();
       }
       await patchSettings({ derniereSynchronisation: new Date().toISOString() });
+      // Les données envoyées sur Drive sont sauvegardées (pas celles qu'on en récupère).
+      if (sens === 'push') await noterSauvegarde();
       Alert.alert(
         TEXTES.settings.reglages.termine,
         `${

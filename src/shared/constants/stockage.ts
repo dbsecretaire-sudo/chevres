@@ -32,6 +32,8 @@ export const CLE_STOCKAGE = {
   IDENTIFICATION: 'identification',
   /** Les tiers que l'utilisateur ajoute aux partenaires ou en retire (Organisation, dans Partenaires). */
   PARTENAIRES: 'partenaires',
+  /** La date de la dernière sauvegarde (fichier ou Google Drive) : l'accueil rappelle d'en faire une quand elle date de trop. */
+  DERNIERE_SAUVEGARDE: 'derniere-sauvegarde',
   DOSSIERS: 'dossiers',
   GITE: 'gite',
   TRADING: 'trading',

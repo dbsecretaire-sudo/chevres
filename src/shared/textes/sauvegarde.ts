@@ -5,6 +5,15 @@ const V = vocabulaire;
 
 /** Textes de l'interface — « sauvegarde ». À modifier ici uniquement. */
 export const TEXTES_SAUVEGARDE = {
+  /** Le rappel de l'accueil : une sauvegarde hors de l'appareil protège les données d'une panne ou d'une perte. */
+  rappel: {
+    titre: 'Pensez à sauvegarder vos données',
+    jamais: (jours: number) =>
+      `Aucune sauvegarde n’a été faite depuis ${jours} jours. Vos données sont sur cet appareil seulement : en cas de panne ou de perte, elles seraient perdues.`,
+    depuis: (jours: number) =>
+      `Dernière sauvegarde il y a ${jours} jours. Vos données sont sur cet appareil seulement : sauvegardez-les dans un fichier ou sur Google Drive.`,
+    bouton: 'Sauvegarder maintenant',
+  },
   backup: {
     get sauvegardeTroupeauChevres() {
       return modeEntreprise() ? 'Sauvegarde de l’entreprise' : `Sauvegarde ${V().troupeau}`;

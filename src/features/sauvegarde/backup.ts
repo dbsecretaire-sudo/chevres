@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { noterSauvegarde } from '@/features/sauvegarde/derniereSauvegarde';
 import * as DocumentPicker from 'expo-document-picker';
 import { CATEGORIES_STOCKAGE } from '@/shared/constants/csv';
 import { getYears, loadYear, saveYear, reindexYear } from '@/shared/storage/localStore';
@@ -204,6 +205,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
       dialogTitle: TEXTES.sauvegarde.backup.sauvegardeTroupeauChevres,
     });
   }
+  await noterSauvegarde();
 }
 
 export interface ResultatImport {
