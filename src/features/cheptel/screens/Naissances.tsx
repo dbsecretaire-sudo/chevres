@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
+import { Button } from '@/shared/components/Button';
+import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -34,6 +36,15 @@ export default function Naissances() {
   return (
     <Screen scroll={false}>
       <SelecteurEspece />
+      {portees.length > 0 ? (
+        <View style={commonStyles.topPadded}>
+          <Button
+            variant="secondary"
+            label={TEXTES.cheptel.naissances.carnetBouton}
+            onPress={() => exporterCarnetMiseBasPdf().catch(() => undefined)}
+          />
+        </View>
+      ) : null}
       <FlatList
         data={portees}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}

@@ -146,12 +146,51 @@ export const TEXTES_CHEPTEL = {
       technique: 'Technique',
     },
   },
+  /** Le tableau de bord du cheptel : effectifs, pyramide des âges, mouvements de l'année, santé. */
+  tableauDeBord: {
+    titre: 'Tableau de bord',
+    aide: 'Effectifs, pyramide des âges, mouvements de l’année et santé du troupeau.',
+    effectif: 'Effectif',
+    total: 'Animaux vivants',
+    femelles: 'Femelles',
+    males: 'Mâles',
+    pyramide: 'Pyramide des âges',
+    legende: 'Vert : femelles. Orangé : mâles.',
+    repartition: (femelles: number, males: number) => `${femelles + males} · ${femelles} F · ${males} M`,
+    classes: {
+      moins6: 'Moins de 6 mois',
+      de6a12: '6 à 12 mois',
+      de1a2: '1 à 2 ans',
+      de2a3: '2 à 3 ans',
+      de3a4: '3 à 4 ans',
+      de4a5: '4 à 5 ans',
+      plus5: '5 ans et plus',
+    },
+    mouvements: (annee: number) => `Mouvements de ${annee}`,
+    mouvementsLibelles: {
+      naissances: 'Naissances',
+      achats: 'Achats',
+      ventes: 'Ventes',
+      morts: 'Morts',
+      autresSorties: 'Autres sorties (abattoir, pension…)',
+    },
+  },
   /** Les traitements donnés aux animaux et leurs délais d'attente (lait, viande). */
   traitements: {
     titre: 'Traitements',
     aide: 'Les médicaments donnés aux animaux et leurs délais d’attente : lait, viande.',
     nouveau: 'Nouveau traitement',
     modifier: 'Traitement',
+    /** Le titre de l'encart de l'accueil. */
+    accueil: 'Santé du troupeau',
+    bilan: {
+      titre: 'Bilan sanitaire annuel',
+      aucun: 'Aucun bilan sanitaire enregistré : il se note dans les visites du vétérinaire (motif « Bilan sanitaire annuel »).',
+      valide: (date: string) => `Valide jusqu’au ${date}`,
+      bientot: (jours: number, date: string) =>
+        jours === 0 ? `Expire aujourd’hui (${date})` : `Expire dans ${jours} ${jours > 1 ? 'jours' : 'jour'} (le ${date}) : pensez à le renouveler`,
+      expire: (date: string) => `Expiré depuis le ${date} : à renouveler`,
+    },
     enCours: 'Délais d’attente en cours',
     aucunEnCours: 'Aucun délai d’attente en cours.',
     lait: 'Lait',
@@ -729,6 +768,29 @@ export const TEXTES_CHEPTEL = {
     },
     naissanceNotes: (notes: string) => `Naissance: ${notes}`,
     sansBoucleSexe: (sexe: unknown) => `sans boucle (${sexe})`,
+    /** Le carnet de mise bas imprimable. */
+    carnetBouton: 'Carnet de mise bas (PDF)',
+    carnet: {
+      titre: 'Carnet de mise bas',
+      fichier: 'carnet_mise_bas',
+      aucune: 'Aucune mise bas enregistrée.',
+      inconnue: 'inconnue',
+      sansBoucle: 'sans boucle',
+      annee: (annee: string) => `Mises bas de ${annee}`,
+      resume: (misesBas: number, petits: number) =>
+        `${misesBas} ${misesBas > 1 ? 'mises bas' : 'mise bas'}, ${petits} ${petits > 1 ? 'petits' : 'petit'}`,
+      mortNes: (nombre: number) => `${nombre} ${nombre > 1 ? 'mort-nés' : 'mort-né'}`,
+      colonnes: {
+        date: 'Date de mise bas',
+        mere: 'Mère (n° de boucle)',
+        nes: 'Petits nés',
+        vivants: 'Vivants',
+        femelles: 'Femelles',
+        males: 'Mâles',
+        boucles: 'N° de boucle des petits',
+        observations: 'Observations',
+      },
+    },
   },
   nouvelleChevre: {
     mereInconnue: 'Aucune / inconnue',

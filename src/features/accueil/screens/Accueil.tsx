@@ -6,6 +6,7 @@ import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
+import { BlocSante } from '@/features/exploitation/components/BlocSante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -42,6 +43,7 @@ function AccueilElevage() {
       {/* Sur ordinateur, les rubriques en grandes tuiles ; sur téléphone, les chiffres de l'élevage. */}
       {estBureau() ? <TuilesRubriques /> : <TuilesAccueil stats={stats} annee={annee} />}
 
+      <BlocSante />
       <BlocRappels />
     </Screen>
   );

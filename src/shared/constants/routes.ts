@@ -28,6 +28,8 @@ export const ROUTES = {
   CHEPTEL_BILAN: '/cheptel/bilan',
   /** Les traitements donnés aux animaux et leurs délais d'attente. */
   CHEPTEL_TRAITEMENTS: '/cheptel/traitements',
+  /** Le tableau de bord du cheptel : effectifs, pyramide des âges, mouvements, santé. */
+  CHEPTEL_TABLEAU_DE_BORD: '/cheptel/tableau-de-bord',
   CHEPTEL_TRAITEMENT_NOUVEAU: '/cheptel/traitement',
   traitement: (id: string) => `/cheptel/traitement?id=${id}` as const,
   /** Les réglages du cheptel : UGB, primes, effectif déclaré. */
