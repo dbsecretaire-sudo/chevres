@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
 import { BarreHorizontale } from '@/shared/components/BarreHorizontale';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { AmortissementFromagerie } from '@/features/comptabilite/components/AmortissementFromagerie';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { bilanAgritourisme, type BilanAgritourisme } from '@/features/commercial/services/agritourisme';
 import { RepartitionLait } from '@/features/comptabilite/components/RepartitionLait';
 import { calculerAmortissement } from '@/features/comptabilite/services/amortissement';
 import { GraphiqueValorisation } from '@/features/comptabilite/components/GraphiqueValorisation';
@@ -108,6 +110,17 @@ export function PlanEconomies({ plan, litresProduits }: { plan: Plan; litresProd
 
   /** L'amortissement de la fromagerie choisi pour la simulation. */
   const amortissement = calculerAmortissement(settings.exploitation?.amortissementFromagerie);
+  /** Les visites d'agritourisme de l'année : leurs recettes peuvent s'ajouter au résultat de la simulation. */
+  const [agritourisme, setAgritourisme] = useState<BilanAgritourisme | null>(null);
+  useEffect(() => {
+    lireArchiveCommercial().then((archive) =>
+      setAgritourisme(
+        bilanAgritourisme(archive.visites.filter((v) => v.date.startsWith(String(settings.anneeActive)))),
+      ),
+    );
+  }, [settings.anneeActive]);
+  /** Les recettes des visites de l'année : une ligne de la répartition (rien sans visite). */
+  const recettesTourisme = agritourisme && agritourisme.sorties > 0 ? agritourisme.recettes : undefined;
   const onglets = [
     { valeur: 'resume' as const, label: T.onglets.resume },
     ...(pistesChiffrees.length > 0
@@ -335,7 +348,7 @@ export function PlanEconomies({ plan, litresProduits }: { plan: Plan; litresProd
         plan.valorisation ? (
           <>
             <Text style={commonStyles.note}>{V.aide}</Text>
-            <GraphiqueValorisation valorisation={plan.valorisation} />
+            <GraphiqueValorisation valorisation={plan.valorisation} recettesTourisme={recettesTourisme} />
             {plan.valorisation.litres > 0 ? (
               <>
                 <Pressable onPress={() => setSimulation((ouverte) => !ouverte)} hitSlop={8}>
@@ -359,15 +372,18 @@ export function PlanEconomies({ plan, litresProduits }: { plan: Plan; litresProd
                     coutSelParGramme={plan.valorisation.coutSelParGramme}
                     amortissementAnnuel={amortissement.inclure ? amortissement.annuel : undefined}
                     charges={plan.charges}
+                    recettesTourisme={recettesTourisme}
                     sousLeTableau={
-                      <AmortissementFromagerie
-                        reglage={settings.exploitation?.amortissementFromagerie}
-                        onEnregistrer={(reglage) =>
-                          patchSettings({
-                            exploitation: { ...settings.exploitation, amortissementFromagerie: reglage },
-                          })
-                        }
-                      />
+                      <>
+                        <AmortissementFromagerie
+                          reglage={settings.exploitation?.amortissementFromagerie}
+                          onEnregistrer={(reglage) =>
+                            patchSettings({
+                              exploitation: { ...settings.exploitation, amortissementFromagerie: reglage },
+                            })
+                          }
+                        />
+                      </>
                     }
                     onTelecharger={(repartition) =>
                       exporterSimulationLaitPdf({
@@ -377,6 +393,7 @@ export function PlanEconomies({ plan, litresProduits }: { plan: Plan; litresProd
                         prixLait: plan.valorisation?.prixLait,
                         charges: plan.charges,
                         amortissement: amortissement.inclure ? amortissement : undefined,
+                        agritourisme: recettesTourisme,
                       })
                     }
                     onEnregistrer={(parts) =>

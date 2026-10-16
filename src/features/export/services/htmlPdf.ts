@@ -238,6 +238,8 @@ export function documentHtml(
 /** Les options d'impression : A4 en portrait (par défaut) ou en paysage pour les tableaux larges. */
 export interface OptionsImpression {
   paysage?: boolean;
+  /** Un document à la taille exacte de la feuille (un formulaire) : aucune marge autour de la page. */
+  sansMarges?: boolean;
 }
 
 /** Génère le PDF depuis le HTML, le copie sous `nomFichier` et ouvre le menu de partage. */
@@ -258,6 +260,7 @@ export async function ecrireEtPartagerPdf(
     // Une page A4 : sans taille, l'impression suit le format du pays de l'appareil (Letter aux États-Unis).
     width: options.paysage ? HAUTEUR_PAGE_A4 : LARGEUR_PAGE_A4,
     height: options.paysage ? LARGEUR_PAGE_A4 : HAUTEUR_PAGE_A4,
+    ...(options.sansMarges ? { margins: { top: 0, right: 0, bottom: 0, left: 0 } } : {}),
   });
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
   await FileSystem.copyAsync({ from: uri, to: destination });

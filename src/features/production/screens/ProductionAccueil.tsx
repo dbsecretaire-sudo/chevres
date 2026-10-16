@@ -5,7 +5,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuProduit, estArticleAvecLots } from '@/features/stock/services/lots';
-import { articlesDuGenre, niveauxDeStock, type ArticleAffiche } from '@/features/stock/services/stock';
+import {
+  articlesDuGenre,
+  niveauxDeStock,
+  resynchroniserStockDesVentes,
+  type ArticleAffiche,
+} from '@/features/stock/services/stock';
 import { GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -15,7 +20,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { laiterieActive } from '@/features/comptabilite/utils/recettes';
+import { laiterieActive, oeufsActifs } from '@/features/comptabilite/utils/recettes';
 import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/controles';
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { ROUTES } from '@/shared/constants/routes';
@@ -35,19 +40,23 @@ export default function ProductionAccueil() {
   const [negatifs, setNegatifs] = useState<Record<string, boolean>>({});
   useFocusEffect(
     useCallback(() => {
-      lireArchiveStock().then((archive) => {
-        const niveaux = niveauxDeStock(archive.mouvements);
-        const aUnNegatif = (articles: ArticleAffiche[]) =>
-          articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
-        setNegatifs({
-          fromages: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.FROMAGE, archive, espece)),
-          charcuterie: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.CHARCUTERIE, archive, espece)),
-          // La viande vendue : les animaux entiers de l'inventaire (les produits de charcuterie ont leur ligne à part).
-          viande: aUnNegatif(
-            articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter((a) => !estArticleAvecLots(a.cle)),
-          ),
+      resynchroniserStockDesVentes()
+        .then(() => lireArchiveStock())
+        .then((archive) => {
+          const niveaux = niveauxDeStock(archive.mouvements);
+          const aUnNegatif = (articles: ArticleAffiche[]) =>
+            articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
+          setNegatifs({
+            fromages: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.FROMAGE, archive, espece)),
+            charcuterie: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.CHARCUTERIE, archive, espece)),
+            // La viande vendue : les animaux entiers de l'inventaire (les produits de charcuterie ont leur ligne à part).
+            viande: aUnNegatif(
+              articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter(
+                (a) => !estArticleAvecLots(a.cle),
+              ),
+            ),
+          });
         });
-      });
     }, [espece]),
   );
   // Le lait, les fromages et son contrôle ne concernent que les espèces qui ont une laiterie (chèvres, brebis, vaches).
@@ -61,6 +70,9 @@ export default function ProductionAccueil() {
   };
   /** Le premier groupe : ce qu'on produit et vend (fromages, viande, boucherie / charcuterie). */
   const produits: Ligne[] = [
+    ...(oeufsActifs(espece)
+      ? [{ cle: 'oeufs', ...T.oeufs, icone: 'egg' as const, route: ROUTES.PRODUCTION_OEUFS }]
+      : []),
     ...(laiterie
       ? [{ cle: 'fromages', ...T.fromages, icone: 'nutrition' as const, route: ROUTES.PRODUCTION_FROMAGES }]
       : []),

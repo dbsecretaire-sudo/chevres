@@ -1,4 +1,5 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
+import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import type { ReactNode } from 'react';
@@ -41,6 +42,8 @@ import { formatTotalEuros } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
+import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
+import { ATELIER } from '@/shared/constants/ateliers';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { todayISO } from '@/shared/utils/dates';
@@ -140,9 +143,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           puceCompteParDefaut={TEXTES.comptabilite.nouvelleEcriture.groupeAutresComptes}
           onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
         />
-
         <NoteComptePcg compte={e.compteAffiche} />
-
         {/* Ce qui est propre à la catégorie, puis le montant, la TVA et l'atelier : le même ordre qu'à la modification d'une facture. */}
         {e.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
           <ChampVisite
@@ -152,7 +153,6 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             onAjouter={e.setAjouterVisite}
           />
         )}
-
         {e.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
           <ChampStockProduction
             compte={e.compteDepenseAutre}
@@ -182,6 +182,17 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             </Card>
           </>
         )}
+        {e.estChambre && (
+          <>
+            <LignesChambreEditor lignes={e.lignesChambre} onChange={e.setLignesChambre} />
+            <Card style={commonStyles.gap10}>
+              <Text style={styles.total}>
+                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+                {formatTotalEuros(e.totalChambre)}
+              </Text>
+            </Card>
+          </>
+        )}
         {estAlimentation && (
           <>
             <LignesAlimentationEditor
@@ -197,7 +208,6 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             </Card>
           </>
         )}
-
         {e.estMarchandisesGite && (
           <>
             <LignesMarchandisesEditor lignes={e.lignesMarchandises} onChange={e.setLignesMarchandises} />
@@ -209,7 +219,6 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             </Card>
           </>
         )}
-
         {estCarburant && (
           <>
             <LignesCarburantEditor lignes={e.lignesCarburant} onChange={e.setLignesCarburant} />
@@ -221,11 +230,9 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             </Card>
           </>
         )}
-
-        {!estAlimentation && !estProduction && !estCarburant && !e.estMarchandisesGite && (
+        {!estAlimentation && !estProduction && !estCarburant && !e.estMarchandisesGite && !e.estChambre && (
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
         )}
-
         {e.afficherTva && (
           <SelectField
             label={TEXTES.commun.general.tauxDeTva}
@@ -234,12 +241,14 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             options={OPTIONS_TAUX_TVA}
           />
         )}
-
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
           <ChampAtelier value={e.atelier} onChange={e.setAtelier} />
         )}
+        {e.atelier === ATELIER.AGRITOURISME ? (
+          <ChampElementAgritourisme value={e.elementAgri} onChange={e.setElementAgri} />
+        ) : null}{' '}
       </SectionForm>
     </>
   );

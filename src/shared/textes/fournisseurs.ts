@@ -1,5 +1,16 @@
 /** Textes de l'interface — « fournisseurs ». À modifier ici uniquement. */
 export const TEXTES_FOURNISSEURS = {
+  /** Les factures de la Chambre d'agriculture : ses articles habituels, modifiables. */
+  chambre: {
+    titre: 'Articles de la Chambre d’agriculture',
+    aide: 'Les articles proposés sont modifiables : changez un nom, retirez une ligne, ajoutez-en. Le total de la facture est la somme des montants (un article sans montant n’est pas facturé).',
+    articles: ['Forfait d’identification', 'Équarrissage ATM', 'Conseils et analyses'],
+    article: 'Article',
+    montant: 'Montant TTC (€)',
+    ajouter: 'Ajouter un article',
+    retirer: 'Retirer cet article',
+    detailler: 'Détailler par article de la Chambre',
+  },
   /** Catégories de tiers (fournisseurs) : le champ de leur fiche et l'écran Organisation › Clients et fournisseurs › Catégories de tiers. */
   categories: {
     champ: 'Catégorie',

@@ -44,6 +44,8 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
+import { loadAllYears } from '@/shared/storage/localStore';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { COMPTE_BOUCLES } from '@/shared/constants/planComptable';
 import { listesDOffice } from '@/features/stock/utils/doublonsListes';
 import { bouclesApresAchat, synchroniserPoseBoucles } from '@/features/stock/services/boucles';
@@ -599,6 +601,40 @@ export async function renommerArticle(cle: string, nom: string): Promise<void> {
   }
 }
 
+/**
+ * Refait les mouvements de stock des ventes déjà enregistrées (celles de l'année donnée et des suivantes, ou toutes) d'après le
+ * conditionnement en vigueur à leur date : un conditionnement modifié met le stock à jour, au lieu de ne valoir que pour les ventes à venir.
+ */
+export async function resynchroniserStockDesVentes(depuisAnnee?: number): Promise<boolean> {
+  const ventes = (await loadAllYears(CATEGORIE_STOCKAGE.VENTES)).filter(
+    (v) => depuisAnnee === undefined || yearOf(v.date) >= depuisAnnee,
+  );
+  if (ventes.length === 0) return false;
+  const archive = await lireArchiveStock();
+  const ids = new Set(ventes.map((v) => v.id));
+  const autres = archive.mouvements.filter((m) => !(m.venteId && ids.has(m.venteId)));
+  const anciens = archive.mouvements.filter((m) => m.venteId && ids.has(m.venteId));
+  const nouveaux: MouvementStock[] = ventes.flatMap((vente) =>
+    consommationDeLaVente(vente, archive).map(({ article, quantite }) => ({
+      id: generateId(),
+      article,
+      date: vente.date,
+      delta: -quantite,
+      origine: ORIGINE_MOUVEMENT.VENTE,
+      venteId: vente.id,
+    })),
+  );
+  // Rien n'est réécrit quand les mouvements sont déjà ceux que le conditionnement donne.
+  const signature = (liste: MouvementStock[]) =>
+    liste
+      .map((m) => `${m.venteId}|${m.article}|${m.date}|${m.delta}`)
+      .sort()
+      .join('\n');
+  if (signature(anciens) === signature(nouveaux)) return false;
+  await remplacerArchiveStock({ ...archive, mouvements: [...autres, ...nouveaux] });
+  return true;
+}
+
 /** Choisit les emballages consommés par fromage vendu pour un fromage (son code, ou l'identifiant d'un fromage ajouté). */
 export async function definirConditionnement(
   code: string,
@@ -612,11 +648,13 @@ export async function definirConditionnement(
       ...archive,
       conditionnements: { ...archive.conditionnements, [code]: emballages },
     });
+    await resynchroniserStockDesVentes();
     return;
   }
   const parAnnee = { ...(archive.conditionnementsParAnnee ?? {}) };
   parAnnee[String(annee)] = { ...(parAnnee[String(annee)] ?? {}), [code]: emballages };
   await remplacerArchiveStock({ ...archive, conditionnementsParAnnee: parAnnee });
+  await resynchroniserStockDesVentes(annee);
 }
 
 /** Retire le conditionnement choisi d'un élément (un fromage retrouve celui d'office, une autre ligne n'en a plus). */
@@ -629,6 +667,7 @@ export async function retirerConditionnement(code: string, annee?: number): Prom
     if (Object.keys(reste).length > 0) parAnnee[String(annee)] = reste;
     else delete parAnnee[String(annee)];
     await remplacerArchiveStock({ ...archive, conditionnementsParAnnee: parAnnee });
+    await resynchroniserStockDesVentes(annee);
     return;
   }
   const conditionnements = { ...archive.conditionnements };
@@ -640,6 +679,7 @@ export async function retirerConditionnement(code: string, annee?: number): Prom
     if (Object.keys(reste).length > 0) parAnnee[a] = reste;
   }
   await remplacerArchiveStock({ ...archive, conditionnements, conditionnementsParAnnee: parAnnee });
+  await resynchroniserStockDesVentes();
 }
 
 /** Place un article à un index précis de la liste de son genre (après l'avoir glissé à cet endroit). */

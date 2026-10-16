@@ -7,6 +7,7 @@ import {
   cleArticle,
   codeFromageDeLaVente,
   estLigneDuCheptel,
+  libelleArticle,
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock, LotFromage, MouvementStock } from '@/features/stock/types';
@@ -16,11 +17,16 @@ import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ETAT_LOT,
   GENRE_ARTICLE,
+  LETTRE_CATEGORIE_LOT,
+  LETTRE_CATEGORIE_LOT_PAR_DEFAUT,
+  LETTRE_PRODUIT_LOT,
   LOTS_MAX_PAR_FABRICATION,
   ORIGINE_MOUVEMENT,
   PRODUIT_A_LOTS,
+  SEPARATEUR_NUMERO_LOT,
   TRI_LOT,
 } from '@/shared/constants/stock';
+import { MS_PAR_JOUR } from '@/shared/constants/temps';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { generateId } from '@/shared/utils/id';
 import { TEXTES } from '@/shared/textes';
@@ -140,6 +146,47 @@ export function fromagesRequis(
   if (idsDesFromages(vente).length > 0) return false;
   const article = articleDeLaVente(vente, archive);
   return !!article && lotsAChoisir(archive, article, vente.id).length > 0;
+}
+
+/** Le jour de l'année d'une date AAAA-MM-JJ (1 pour le 1er janvier, 365 ou 366 pour le dernier jour). */
+export function jourDeLAnnee(date: string): number {
+  const [annee, mois, jour] = date.split('-').map(Number);
+  return Math.round((Date.UTC(annee, mois - 1, jour) - Date.UTC(annee, 0, 0)) / MS_PAR_JOUR);
+}
+
+/** La lettre de la catégorie d'un produit dans son numéro de lot : celle d'office (Frais, Vieux, Crottin, Brocciu), sinon l'initiale de son nom. */
+export function lettreDeCategorie(article: string, archive: ArchiveStock): string {
+  const code = article.split(':')[1];
+  const dOffice = LETTRE_CATEGORIE_LOT[code];
+  if (dOffice) return dOffice;
+  const initiale = libelleArticle(article, archive)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+  return /[A-Z]/.test(initiale) ? initiale : LETTRE_CATEGORIE_LOT_PAR_DEFAUT;
+}
+
+/** Le début du numéro des lots d'un produit fabriqué un jour : « FF261 » (fromage, frais, 2026, 1er jour). */
+export function prefixeDeLot(article: string, date: string, archive: ArchiveStock): string {
+  const produit = estArticleFromage(article) ? PRODUIT_A_LOTS.FROMAGE : PRODUIT_A_LOTS.CHARCUTERIE;
+  const annee = String(Number(date.slice(0, 4)) % 100).padStart(2, '0');
+  return `${LETTRE_PRODUIT_LOT[produit]}${lettreDeCategorie(article, archive)}${annee}${jourDeLAnnee(date)}`;
+}
+
+/**
+ * Le numéro du premier lot d'une fabrication, « FF261-1 » : le produit (F fromage, B boucherie), sa catégorie (F frais, V vieux,
+ * C crottin, B brocciu, l'initiale du nom sinon), l'année, le jour de l'année, puis le n° du produit. Une deuxième fabrication du même
+ * jour continue la numérotation de la première.
+ */
+export function numeroDeLot(archive: ArchiveStock, article: string, date: string): string {
+  const prefixe = prefixeDeLot(article, date, archive);
+  const debut = `${prefixe}${SEPARATEUR_NUMERO_LOT}`;
+  const rangs = (archive.lots ?? [])
+    .filter((l) => l.numero.startsWith(debut))
+    .map((l) => Number(l.numero.slice(debut.length)) || 0);
+  return `${debut}${Math.max(0, ...rangs) + 1}`;
 }
 
 /** Le numéro de lot qui suit le plus grand déjà pris pour ce fromage (« 1 » quand il n'y en a pas encore). */

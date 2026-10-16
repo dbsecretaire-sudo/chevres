@@ -20,6 +20,7 @@ import {
   conditionnementDe,
   definirConditionnement,
   libelleArticle,
+  resynchroniserStockDesVentes,
   retirerConditionnement,
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
@@ -58,7 +59,10 @@ export default function Conditionnement() {
     }, [settings.anneeActive]),
   );
 
-  const charger = useCallback(async () => setArchive(await lireArchiveStock()), []);
+  const charger = useCallback(async () => {
+    await resynchroniserStockDesVentes();
+    setArchive(await lireArchiveStock());
+  }, []);
   useFocusEffect(
     useCallback(() => {
       charger();

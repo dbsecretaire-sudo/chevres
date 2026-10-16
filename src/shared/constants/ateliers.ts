@@ -12,6 +12,8 @@ export const ATELIER = {
   ANIMAUX: 'animaux',
   VIANDE: 'viande',
   OEUFS: 'oeufs',
+  /** Les visites de la ferme, le 4x4, les repas et la dégustation : une recette « autre » rangée dans cet atelier. */
+  AGRITOURISME: 'agritourisme',
   AUTRES: 'autres',
 } as const;
 
@@ -31,4 +33,3 @@ export const ATELIER_PAR_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE
 };
 
 /** Les ateliers du lait : le coût de production du litre se calcule sur leurs charges. */
-

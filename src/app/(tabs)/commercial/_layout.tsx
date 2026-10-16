@@ -24,6 +24,24 @@ export default function CommercialLayout() {
         })}
       />
       <Stack.Screen name="circuits" options={{ title: TEXTES.commercial.circuits.titre }} />
+      <Stack.Screen name="agritourisme" options={{ title: TEXTES.commercial.agritourisme.titre }} />
+      <Stack.Screen
+        name="visite"
+        options={({ route }) => ({
+          title: (route.params as { id?: string } | undefined)?.id
+            ? TEXTES.commercial.agritourisme.visite.titre
+            : TEXTES.commercial.agritourisme.visite.titreNouvelle,
+        })}
+      />
+      <Stack.Screen name="formules" options={{ title: TEXTES.commercial.agritourisme.listeFormules.titre }} />
+      <Stack.Screen
+        name="formule"
+        options={({ route }) => ({
+          title: (route.params as { id?: string } | undefined)?.id
+            ? TEXTES.commercial.agritourisme.formule.titre
+            : TEXTES.commercial.agritourisme.formule.titreNouvelle,
+        })}
+      />
     </Stack>
   );
 }

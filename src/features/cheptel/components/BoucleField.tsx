@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { identificationCheptel } from '@/features/settings/settings';
+import { identificationCheptel, synchroBouclesActive } from '@/features/settings/settings';
+import { loadAllYears } from '@/shared/storage/localStore';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
 import { SelectModal, type SelectOption } from '@/shared/components/SelectModal';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { bouclesDeLInventaire, trierBoucles } from '@/features/stock/services/boucles';
+import { bouclesDeLInventaire, bouclesSelonLeCheptel, trierBoucles } from '@/features/stock/services/boucles';
 import { ARTICLE_BOUCLE, ETAT_BOUCLE, GENRE_ARTICLE, TRI_BOUCLE } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/cheptel/BoucleField.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -50,18 +52,23 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
   const [listeOuverte, setListeOuverte] = useState(false);
   /** Les boucles de l'inventaire qui ne sont pas encore posées, avec « Aucune » en premier. */
   const [disponibles, setDisponibles] = useState<SelectOption<string>[]>([]);
+  const synchro = synchroBouclesActive(settings.exploitation);
   useEffect(() => {
-    lireArchiveStock().then((archive) =>
+    // Avec la synchronisation, une boucle qu'un animal porte déjà n'est plus proposée, même si l'inventaire n'a pas encore été remis à jour.
+    Promise.all([lireArchiveStock(), loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)]).then(([archive, animaux]) => {
+      const boucles = synchro
+        ? bouclesSelonLeCheptel(archive.boucles ?? [], animaux)
+        : (archive.boucles ?? []);
       setDisponibles(
         trierBoucles(
-          bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE).filter((b) => sortes.includes(b.article)),
+          bouclesDeLInventaire({ boucles }, ETAT_BOUCLE.NON_POSEE).filter((b) => sortes.includes(b.article)),
           TRI_BOUCLE.NUMERO,
           true,
         ).map((b) => ({ value: b.numero, label: b.numero })),
-      ),
-    );
+      );
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rouge]);
+  }, [rouge, synchro]);
   const fond = useFondChamp();
 
   return (

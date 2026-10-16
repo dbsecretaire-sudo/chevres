@@ -6,6 +6,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { ROUTES } from '@/shared/constants/routes';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { TEXTES } from '@/shared/textes';
 
@@ -52,7 +53,7 @@ export default function AccueilComptabilite() {
     {
       cle: 'rentabilite',
       titre: T.rentabilite.titre,
-      aide: T.rentabilite.aide,
+      aide: modeEntreprise() ? T.rentabilite.aideEntreprise : T.rentabilite.aide,
       icone: 'trending-up',
       route: ROUTES.RENTABILITE,
     },

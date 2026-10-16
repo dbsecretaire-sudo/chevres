@@ -5,6 +5,8 @@ import { getYears, loadYear } from '@/shared/storage/localStore';
 import { getSettings, indicatifMarquagePar } from '@/features/settings/settings';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { commandeRow, visiteAgritourismeRow } from '@/features/export/services/lignesCommercial';
 import { libelleArticle } from '@/features/stock/services/stock';
 import { listVisitesVeterinaire } from '@/features/exploitation/repository/visitesVeterinaire';
 import { listControles } from '@/features/exploitation/repository/controles';
@@ -69,6 +71,29 @@ export async function exporterAnneeExcel(annee: number): Promise<void> {
         TEXTES.export.xlsxExport.aucuneDonneePourCetteAnnee,
       ),
       LABEL_CATEGORIE_STOCKAGE[categorie].slice(0, LONGUEUR_MAX_NOM_ONGLET),
+    );
+  }
+
+  // Le volet Commercial : les visites d'agritourisme et les commandes de l'année (un onglet chacun, seulement s'il y en a).
+  const commercial = await lireArchiveCommercial();
+  const delAnnee = (date: string) => date.startsWith(String(annee));
+  const visites = commercial.visites.filter((v) => delAnnee(v.date));
+  const commandes = commercial.commandes.filter((c) => delAnnee(c.date));
+  if (visites.length > 0) {
+    XLSX.utils.book_append_sheet(
+      workbook,
+      feuilleOuMessage(
+        visites.map(visiteAgritourismeRow),
+        TEXTES.export.xlsxExport.aucuneDonneePourCetteAnnee,
+      ),
+      TEXTES.export.xlsxExport.commercial.agritourisme,
+    );
+  }
+  if (commandes.length > 0) {
+    XLSX.utils.book_append_sheet(
+      workbook,
+      feuilleOuMessage(commandes.map(commandeRow), TEXTES.export.xlsxExport.aucuneDonneePourCetteAnnee),
+      TEXTES.export.xlsxExport.commercial.commandes,
     );
   }
 

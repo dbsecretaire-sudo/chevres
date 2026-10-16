@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { bouclesDeLInventaire, trierBoucles } from '@/features/stock/services/boucles';
+import type { Chevre } from '@/features/cheptel/types';
+import { bouclesDeLInventaire, bouclesSelonLeCheptel, trierBoucles } from '@/features/stock/services/boucles';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { synchroBouclesActive } from '@/features/settings/settings';
 import { useFiltresColonnes } from '@/shared/hooks/useFiltresColonnes';
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
@@ -21,13 +24,26 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
   const [croissant, setCroissant] = useState(true);
   /** Les animaux qui ne sont plus vivants (morts, vendus, à l'abattoir…) : la case « Morte » d'une boucle est cochée quand l'animal qui la porte en fait partie. */
   const [morts, setMorts] = useState<Set<string>>(new Set());
+  /** Les animaux, par identifiant : la date de pose d'une boucle est celle de la fiche de l'animal qui la porte. */
+  const [animaux, setAnimaux] = useState<Map<string, Chevre>>(new Map());
   useEffect(() => {
-    loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then((animaux) =>
-      setMorts(new Set(animaux.filter((a) => a.statut !== STATUT_CHEVRE.VIVANTE).map((a) => a.id))),
-    );
+    loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then((liste) => {
+      setAnimaux(new Map(liste.map((a) => [a.id, a])));
+      setMorts(new Set(liste.filter((a) => a.statut !== STATUT_CHEVRE.VIVANTE).map((a) => a.id)));
+    });
   }, [boucles]);
+  // Avec la synchronisation, les listes montrent toujours l'état des fiches du cheptel (posée, date de pose, animal mort), même quand
+  // l'inventaire n'a pas encore été remis à jour ; désactivée, l'inventaire et le cheptel ne se parlent plus.
+  const { settings } = useAppSettings();
+  const bouclesAvecDates = synchroBouclesActive(settings.exploitation)
+    ? bouclesSelonLeCheptel(boucles, [...animaux.values()])
+    : boucles;
 
-  const triees = trierBoucles(bouclesDeLInventaire({ boucles }, etat, article), tri, croissant);
+  const triees = trierBoucles(
+    bouclesDeLInventaire({ boucles: bouclesAvecDates }, etat, article),
+    tri,
+    croissant,
+  );
   /** Le filtre de chaque colonne, comme dans Excel : les valeurs sont celles qu'affiche le tableau. */
   const filtres = useFiltresColonnes<BoucleStock, 'numero' | 'pose' | 'achat' | 'morte'>({
     numero: (b) => b.numero,

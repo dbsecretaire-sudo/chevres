@@ -4,6 +4,12 @@ import {
   versLignesProductionForm,
   type LigneProductionForm,
 } from '@/features/comptabilite/forms/lignesProduction';
+import {
+  lignesChambreFinales,
+  lignesChambreParDefaut,
+  versLignesChambreForm,
+  type LigneChambreForm,
+} from '@/features/comptabilite/forms/lignesChambre';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
@@ -67,6 +73,9 @@ export function useFicheFacture(id: string | undefined) {
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([]);
   const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([]);
   const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([]);
+  const [lignesChambre, setLignesChambre] = useState<LigneChambreForm[]>([]);
+  /** Une facture de la Chambre d'agriculture saisie sans détail : on choisit de la détailler par article. */
+  const [detaillerChambre, setDetaillerChambre] = useState(false);
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
   const [montantTexte, setMontantTexte] = useState('');
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
@@ -85,12 +94,17 @@ export function useFicheFacture(id: string | undefined) {
   const estMarchandises =
     facture?.categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
     (facture.lignesMarchandises?.length ?? 0) > 0;
+  /** Une dépense « Autre » détaillée par article de la Chambre d'agriculture (les anciennes factures gardent un seul montant). */
+  const estChambre =
+    facture?.categorieDepense === CATEGORIE_DEPENSE.AUTRE &&
+    ((facture.lignesChambre?.length ?? 0) > 0 || detaillerChambre);
   /** Activité affichée dans le formulaire (celle de la facture, ou celle déduite pour les anciennes factures). */
   const activiteForm: ActiviteComptable = form ? activiteFacture(form) : especeCourante();
   const totalAlimentation = totalMontants(lignes);
   const totalCarburant = totalMontants(lignesCarburant);
   const totalMarchandises = totalMontants(lignesMarchandises);
   const totalProduction = totalMontants(lignesProduction);
+  const totalChambre = totalMontants(lignesChambre);
 
   const charger = useCallback(async () => {
     if (!id) return;
@@ -101,6 +115,8 @@ export function useFicheFacture(id: string | undefined) {
     setLignesCarburant(f ? versLignesCarburantForm(f) : []);
     setLignesMarchandises(f ? versLignesMarchandisesForm(f) : []);
     setLignesProduction(f ? versLignesProductionForm(f) : []);
+    setLignesChambre(f ? versLignesChambreForm(f) : []);
+    setDetaillerChambre(false);
     setMontantTexte(f ? montantEnTexte(f) : '');
     setComptes(await listComptesPcg());
   }, [id]);
@@ -203,6 +219,15 @@ export function useFicheFacture(id: string | undefined) {
         stockQuantite: undefined,
         bouclesDebut: undefined,
       };
+    } else if (estChambre) {
+      const lignesRetenues = lignesChambreFinales(lignesChambre);
+      if (lignesRetenues.length === 0) {
+        return refuser({
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        });
+      }
+      aEnregistrer = { ...form, montant: totalChambre, lignesChambre: lignesRetenues };
     } else if (estMarchandises) {
       const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises);
       if (lignesRetenues.length === 0) {
@@ -261,7 +286,14 @@ export function useFicheFacture(id: string | undefined) {
   // Tout changement de la fiche s'enregistre tout seul.
   useEnregistrementAuto({
     actif: editing,
-    signature: JSON.stringify([form, lignes, lignesCarburant, lignesMarchandises, lignesProduction]),
+    signature: JSON.stringify([
+      form,
+      lignes,
+      lignesCarburant,
+      lignesMarchandises,
+      lignesProduction,
+      lignesChambre,
+    ]),
     enregistrer: () => enregistrerModifications(true),
   });
 
@@ -313,6 +345,15 @@ export function useFicheFacture(id: string | undefined) {
     setLignesMarchandises,
     lignesProduction,
     setLignesProduction,
+    lignesChambre,
+    setLignesChambre,
+    estChambre,
+    totalChambre,
+    /** Détaille une facture de la Chambre d'agriculture par article (les articles habituels, à compléter). */
+    detaillerChambreAgriculture: () => {
+      setLignesChambre(lignesChambreParDefaut());
+      setDetaillerChambre(true);
+    },
     estProduction,
     totalProduction,
     estMarchandises,

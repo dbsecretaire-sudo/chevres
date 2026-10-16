@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';
-import { BoutonBilanCheptel } from '@/features/cheptel/components/BoutonBilanCheptel';
+import { BoutonsEnteteCheptel } from '@/features/cheptel/components/BoutonsEnteteCheptel';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -23,7 +23,7 @@ export default function CheptelLayout() {
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />
       <Stack.Screen
         name="liste"
-        options={{ title: TEXTES.cheptel.listeCheptel.titre, headerRight: () => <BoutonBilanCheptel /> }}
+        options={{ title: TEXTES.cheptel.listeCheptel.titre, headerRight: () => <BoutonsEnteteCheptel /> }}
       />
       <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
       <Stack.Screen

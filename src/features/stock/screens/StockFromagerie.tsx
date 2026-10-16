@@ -32,6 +32,7 @@ import { Button } from '@/shared/components/Button';
 import {
   bouclesDeLEspece,
   estBoucleDeRemplacement,
+  synchroniserPoseBoucles,
   bouclesPossiblesDuCheptel,
   synchroniserBouclesDuCheptel,
   type BouclePossible,
@@ -66,6 +67,7 @@ import {
   roleDeLaViande,
   estLigneDuCheptel,
   niveauxDeStock,
+  resynchroniserStockDesVentes,
   masquerArticle,
   supprimerArticle,
   type ArticleAffiche,
@@ -200,6 +202,9 @@ export default function StockFromagerie() {
   const litresVendus = ventesLait.reduce((total, v) => total + v.litres, 0);
 
   const charger = useCallback(async () => {
+    // Le stock des ventes suit le conditionnement en vigueur à leur date (un conditionnement modifié avant cette mise à jour s'y retrouve).
+    await synchroniserPoseBoucles();
+    await resynchroniserStockDesVentes();
     const [stock, ventes, vivants, factures] = await Promise.all([
       lireArchiveStock(),
       listToutesVentes(),
@@ -447,9 +452,6 @@ export default function StockFromagerie() {
   const ajoutsDeLaCategorie = (categorie: string): Option[] => [
     ...sectionsAffichees
       .filter((x) => x.categorie === categorie)
-      // Les fromages et la viande (produits finis et produits animaux) entrent par la Production et sortent par les ventes : on n'en
-      // ajoute pas ici.
-      .filter((x) => x.genre !== GENRE_ARTICLE.FROMAGE && x.genre !== GENRE_ARTICLE.VIANDE)
       .map(({ section, genre }): Option | null =>
         genre === GENRE_ARTICLE.BOUCLE
           ? null
@@ -774,16 +776,16 @@ export default function StockFromagerie() {
             : undefined
         }
         onValider={renommer}
-        // Une viande ne se supprime pas ici ; un fromage, oui — sauf s'il a déjà des mouvements ou des lots.
+        // Un fromage ou une viande se supprime — sauf s'il a déjà des mouvements ou des lots, ou si c'est un animal du cheptel.
         onSupprimer={
-          produitFiniModifie && !renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)
+          renomme && estLigneDuCheptel(renomme.cle)
             ? undefined
             : () => {
                 if (!renomme) return;
                 const utilise =
                   archive.mouvements.some((m) => m.article === renomme.cle) ||
                   (archive.lots ?? []).some((l) => l.article === renomme.cle);
-                if (renomme.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) && utilise) {
+                if (produitFiniModifie && utilise) {
                   Alert.alert(T.suppression.fromageUtilise(renomme.libelle));
                   return;
                 }

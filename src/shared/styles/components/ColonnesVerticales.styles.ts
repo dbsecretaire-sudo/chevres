@@ -20,6 +20,8 @@ export const styles = StyleSheet.create({
   repere: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: colors.border },
   barre: { width: '62%', maxWidth: 56, borderTopLeftRadius: 2, borderTopRightRadius: 2 },
   barrePleine: { backgroundColor: colors.primary },
+  /** Le complément empilé (les activités touristiques) : plein, d'une teinte plus claire, au-dessus de la colonne. */
+  barreComplement: { backgroundColor: colors.ajout, borderRadius: 2 },
   barreCernee: {
     borderWidth: 2,
     borderBottomWidth: 0,

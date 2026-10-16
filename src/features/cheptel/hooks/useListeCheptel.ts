@@ -22,6 +22,8 @@ import {
   type Tri,
 } from '@/features/cheptel/utils/filtresCheptel';
 import { FILTRE_CATEGORIE_CHEPTEL, FILTRE_STATUT_CHEPTEL, TRI_CHEPTEL } from '@/shared/constants/cheptel';
+import { ETAT_CONSERVE } from '@/shared/constants/etatConserve';
+import { useEtatConserve } from '@/shared/hooks/useEtatConserve';
 import { TEXTES } from '@/shared/textes';
 
 /** État de la liste du cheptel : chargement, filtres, tri, recherche et libellés dérivés. */
@@ -30,11 +32,21 @@ export function useListeCheptel() {
   const { espece } = useEtablissement();
   const [chevres, setChevres] = useState<Chevre[]>([]);
   const [misesBas, setMisesBas] = useState<Record<string, string>>({});
-  const [recherche, setRecherche] = useState('');
-  const [statutFiltre, setStatutFiltre] = useState<StatutFiltre>(FILTRE_STATUT_CHEPTEL.VIVANTE);
-  const [categorieFiltre, setCategorieFiltre] = useState<CategorieFiltre>(FILTRE_CATEGORIE_CHEPTEL.TOUT);
-  const [tri, setTri] = useState<Tri>(TRI_CHEPTEL.BOUCLE);
-  const [precis, setPrecis] = useState<CriteresPrecis>(CRITERES_PRECIS_VIDES);
+  // La recherche et les filtres sont gardés quand on ouvre une fiche : au retour sur la liste, ils sont toujours là.
+  const [recherche, setRecherche] = useEtatConserve(ETAT_CONSERVE.CHEPTEL_RECHERCHE, '');
+  const [statutFiltre, setStatutFiltre] = useEtatConserve<StatutFiltre>(
+    ETAT_CONSERVE.CHEPTEL_STATUT,
+    FILTRE_STATUT_CHEPTEL.VIVANTE,
+  );
+  const [categorieFiltre, setCategorieFiltre] = useEtatConserve<CategorieFiltre>(
+    ETAT_CONSERVE.CHEPTEL_CATEGORIE,
+    FILTRE_CATEGORIE_CHEPTEL.TOUT,
+  );
+  const [tri, setTri] = useEtatConserve<Tri>(ETAT_CONSERVE.CHEPTEL_TRI, TRI_CHEPTEL.BOUCLE);
+  const [precis, setPrecis] = useEtatConserve<CriteresPrecis>(
+    ETAT_CONSERVE.CHEPTEL_CRITERES,
+    CRITERES_PRECIS_VIDES,
+  );
 
   const charger = useCallback(async () => {
     const [vivantes, sorties, misesBasParMere] = await Promise.all([

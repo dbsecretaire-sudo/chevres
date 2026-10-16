@@ -190,6 +190,18 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         </View>
       ) : null}
 
+      {facture.lignesChambre && facture.lignesChambre.length > 0 ? (
+        <View style={commonStyles.gap2}>
+          <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.factureLecture.detailsDeuxPoints}</Text>
+          {facture.lignesChambre.map((ligne, index) => (
+            <View key={index} style={commonStyles.rowBetween}>
+              <Text style={commonStyles.line}>{ligne.libelle}</Text>
+              <Text style={commonStyles.lineSemiBold}>{formatMontant(ligne.montant)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {facture.lignesMarchandises && facture.lignesMarchandises.length > 0 ? (
         <View style={commonStyles.gap2}>
           <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.factureLecture.detailsDeuxPoints}</Text>

@@ -76,6 +76,9 @@ export const ARTICLE_EMBALLAGE = {
 /** Les espèces dont les animaux n'ont pas de boucle d'identification : leur numéro ne va pas à l'inventaire des boucles. */
 export const ESPECES_SANS_BOUCLE: readonly string[] = ['poules', 'domestiques'];
 
+/** Les espèces qui n'ont aucune production (fromages, œufs, viande…) : les animaux de compagnie. L'onglet Production leur est masqué. */
+export const ESPECES_SANS_PRODUCTION: readonly string[] = ['domestiques'];
+
 /** Les sortes de boucles tenues d'office dans l'inventaire : boucles, boucles rouges et tiptag (on ne peut ni en ajouter ni en retirer). */
 export const ARTICLE_BOUCLE = {
   BOUCLES: 'boucles',
@@ -305,3 +308,26 @@ export const SECTION_STOCK_PAR_CATEGORIE_RECETTE: Record<string, string> = {
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: SECTION_STOCK.ANIMAUX,
   [CATEGORIE_RECETTE.ANIMAL_MORT]: SECTION_STOCK.ANIMAUX,
 };
+
+/** Le numéro d'un lot se lit « FF261-1 » : le produit, la catégorie, l'année (2 chiffres), le jour de l'année, « - » et le n° du produit. */
+export const SEPARATEUR_NUMERO_LOT = '-';
+
+/** La première lettre du numéro d'un lot : F pour un fromage, B pour la boucherie et la charcuterie. */
+export const LETTRE_PRODUIT_LOT: Record<string, string> = {
+  [PRODUIT_A_LOTS.FROMAGE]: 'F',
+  [PRODUIT_A_LOTS.CHARCUTERIE]: 'B',
+};
+
+/**
+ * La lettre de la catégorie dans le numéro d'un lot, pour les fromages d'office : Frais, Vieux (l'affiné), Crottin, Brocciu. Un
+ * autre produit (un fromage ajouté, la charcuterie : Figatellu…) prend l'initiale de son nom.
+ */
+export const LETTRE_CATEGORIE_LOT: Record<string, string> = {
+  [TYPE_FROMAGE.FRAIS]: 'F',
+  [TYPE_FROMAGE.AFFINE]: 'V',
+  [TYPE_FROMAGE.CROTTIN]: 'C',
+  [TYPE_FROMAGE.BROCCIU]: 'B',
+};
+
+/** La lettre de la catégorie quand le nom du produit n'en donne aucune. */
+export const LETTRE_CATEGORIE_LOT_PAR_DEFAUT = 'X';

@@ -7,13 +7,14 @@ import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { exporterGuideLotsPdf } from '@/features/export/guideLotsPdf';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle } from '@/features/stock/services/boucles';
 import {
   articlesDuProduit,
   erreurFabrication,
   fabriquerFromages,
-  numeroSuivant,
+  numeroDeLot,
 } from '@/features/stock/services/lots';
 import { definirLitresParFromage } from '@/features/stock/services/stock';
 import type { ArticleAffiche } from '@/features/stock/services/stock';
@@ -44,7 +45,8 @@ export default function FabricationFromage() {
   const [article, setArticle] = useState('');
   const [date, setDate] = useState(todayISO());
   const [quantite, setQuantite] = useState('');
-  const [premier, setPremier] = useState('');
+  /** Le numéro du premier lot tapé à la main (vide : celui qui est proposé d'après le produit et la date). */
+  const [premierSaisi, setPremierSaisi] = useState<string | null>(null);
   /** Les litres de lait par fromage, demandés une seule fois quand l'inventaire ne les a pas encore. */
   const [litresSaisis, setLitresSaisis] = useState('');
   const [enregistrement, setEnregistrement] = useState(false);
@@ -54,16 +56,20 @@ export default function FabricationFromage() {
       const proposes = articlesDuProduit(produit, a, espece);
       setArchive(a);
       setArticles(proposes);
-      if (proposes[0]) {
-        setArticle(proposes[0].cle);
-        setPremier(numeroSuivant(a, proposes[0].cle));
-      }
+      if (proposes[0]) setArticle(proposes[0].cle);
     });
   }, [espece, produit]);
 
+  // Le numéro du premier lot se propose d'après le produit et la date (on peut le modifier ensuite).
+  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive, article, date) : '');
+
   const choisirArticle = (cle: string) => {
     setArticle(cle);
-    if (archive) setPremier(numeroSuivant(archive, cle));
+    setPremierSaisi(null);
+  };
+  const changerDate = (nouvelle: string) => {
+    setDate(nouvelle);
+    setPremierSaisi(null);
   };
 
   const nombre = Math.round(Number(quantite) || 0);
@@ -107,7 +113,7 @@ export default function FabricationFromage() {
           onChange={choisirArticle}
           options={articles.map((a) => ({ value: a.cle, label: a.libelle }))}
         />
-        <DateField label={T.date} required value={date} onChange={setDate} />
+        <DateField label={T.date} required value={date} onChange={changerDate} />
         <FormField
           label={T.quantite}
           required
@@ -115,8 +121,19 @@ export default function FabricationFromage() {
           onChangeText={(v) => /^\d*$/.test(v) && setQuantite(v)}
           keyboardType="number-pad"
         />
-        <FormField label={T.premier} required value={premier} onChangeText={(v) => setPremier(v.trim())} />
+        <FormField
+          label={T.premier}
+          required
+          explication={TEXTES.production.fabrication.explicationNumero}
+          value={premier}
+          onChangeText={(v) => setPremierSaisi(v.trim())}
+        />
         <Text style={commonStyles.note}>{dernier ? T.dernier(dernier) : T.premierAide}</Text>
+        <Button
+          variant="secondary"
+          label={TEXTES.production.fabrication.guide}
+          onPress={() => exporterGuideLotsPdf(espece)}
+        />
         {fromage ? (
           litresDeLInventaire ? (
             nombre > 0 ? (

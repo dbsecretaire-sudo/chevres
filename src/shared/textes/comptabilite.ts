@@ -444,6 +444,9 @@ export const TEXTES_COMPTABILITE = {
       /** Le tableau de répartition du lait entre les fromages et le lait vendu. */
       repartition: {
         titre: 'Répartition du lait',
+        /** Avec des visites d'agritourisme dans l'année : leurs recettes sont une ligne du tableau. */
+        titreAvecTourisme: 'Répartition du lait et activités touristiques',
+        tourisme: 'Activités touristiques',
         aide: (litres: string) =>
           `Choisissez la part des ${litres} L qui devient chaque fromage ; le reste est vendu tel quel.`,
         colonnes: {
@@ -481,6 +484,7 @@ export const TEXTES_COMPTABILITE = {
         final: {
           titre: 'Résultat final',
           recettes: 'Recettes nettes (lait et fromages)',
+          recettesAvecTourisme: 'Recettes nettes (lait, fromages et activités touristiques)',
           charges: 'Charges du lait',
           amortissement: 'Amortissement de la fromagerie',
           resultat: 'Résultat final',
@@ -492,6 +496,12 @@ export const TEXTES_COMPTABILITE = {
       },
       /** Le lait en fromage face au lait vendu, d'après les prix et les litres par fromage de l'inventaire. */
       valorisation: {
+        /** Les activités touristiques ont besoin de fromages (dégustation, repas) : leurs recettes s'ajoutent aux colonnes des fromages, pas au lait vendu tel quel. */
+        tourisme:
+          '+ Activités touristiques : elles ont besoin de fromages (dégustation, repas), donc elles s’ajoutent aux fromages et non au lait vendu tel quel.',
+        colonneTourisme: '+ Tourisme',
+        avecTourisme: (tourisme: string, total: string) =>
+          `+ activités touristiques ${tourisme} : ${total} en tout`,
         titre: 'Le lait en fromage ou vendu tel quel',
         aide: 'Ce que rapporterait le lait de l’année tout transformé en un seul fromage, face au lait vendu tel quel. Indicatif : sans les frais de fabrication.',
         simuler: 'Simuler une répartition du lait',
@@ -573,6 +583,8 @@ export const TEXTES_COMPTABILITE = {
     rentabilite: {
       titre: 'Rentabilité',
       aide: 'Marge par atelier, coût du litre, poids des charges, résultat sans les aides.',
+      /** Une entreprise (secrétariat, gîte, activité financière) : ni ateliers ni coûts de production. */
+      aideEntreprise: 'Résultat de l’année, avec et sans les aides, poids des charges.',
     },
     tva: {
       titre: 'Pilotage de la TVA',

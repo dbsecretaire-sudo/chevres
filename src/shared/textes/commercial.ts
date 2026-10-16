@@ -21,6 +21,7 @@ export const TEXTES_COMMERCIAL = {
       tarifs: 'Tarifs et prix',
       commandes: 'Commandes et livraisons',
       circuits: 'Circuits de vente',
+      agritourisme: 'Agritourisme',
     },
     ventes: {
       titre: 'Chiffre d’affaires',
@@ -35,6 +36,15 @@ export const TEXTES_COMMERCIAL = {
       titre: 'Commandes',
       aide: 'Ce que les clients ont commandé : à préparer, à livrer, livré.',
       ouvertes: (n: number) => `${n} à préparer ou à livrer`,
+    },
+    visitesAgri: {
+      titre: 'Visites de la ferme',
+      aide: 'Visite, parcours en 4x4, repas et dégustation : les groupes et ce que ça rapporte.',
+      aVenir: (n: number) => `${n} visite${n > 1 ? 's' : ''} à venir`,
+    },
+    formulesAgri: {
+      titre: 'Formules et tarifs',
+      aide: 'Ce que comprend chaque formule, son prix par personne et ce qu’elle coûte.',
     },
     circuits: {
       titre: 'Circuits de vente',
@@ -182,6 +192,143 @@ export const TEXTES_COMMERCIAL = {
     graphique: { axe: '€' },
     aucune: 'Aucune vente sur cette période.',
     sansCircuit: 'Précisez le circuit dans vos ventes pour un bilan plus juste.',
+  },
+  /** L'agritourisme : visites de la ferme, parcours en 4x4, repas (migliaccioles cuites devant les visiteurs), dégustation de fromages. */
+  agritourisme: {
+    titre: 'Agritourisme',
+    descriptionRecette: (formule: string, personnes: number) =>
+      `Agritourisme — ${formule} (${personnes} personne${personnes > 1 ? 's' : ''})`,
+    elements: {
+      visite: 'Visite de la ferme',
+      quatre_quatre: 'Parcours en 4x4',
+      repas: 'Repas (migliaccioles cuites devant les visiteurs)',
+      degustation: 'Dégustation de fromages maison',
+    },
+    elementsCourts: {
+      visite: 'Visite',
+      quatre_quatre: '4x4',
+      repas: 'Repas',
+      degustation: 'Dégustation',
+    },
+    cartes: {
+      sorties: 'Sorties',
+      visiteurs: 'Visiteurs',
+      recettes: 'Recettes',
+      charges: 'Charges de l’atelier',
+      marge: 'Marge',
+    },
+    vues: { aVenir: 'À venir', realisees: 'Réalisées', toutes: 'Toutes' },
+    statuts: { prevue: 'À venir', realisee: 'Réalisée', annulee: 'Annulée' },
+    aucune: 'Aucune visite.',
+    margeAide:
+      'Les charges (carburant du 4x4, ingrédients du repas, fromages dégustés…) se saisissent dans les factures, avec l’atelier « Agritourisme » : la Rentabilité (marge par atelier) les calcule. La marge est les recettes des visites moins ces charges, pour l’année choisie.',
+    chargesAide:
+      'Les coûts de la visite (repas, 4x4…) se saisissent dans les factures avec l’atelier « Agritourisme » : la Rentabilité les calcule.',
+    ligne: {
+      detail: (client: string, participants: number) =>
+        `${client} · ${participants} personne${participants > 1 ? 's' : ''}`,
+    },
+    nouvelle: 'Nouvelle visite',
+    formules: 'Formules et tarifs',
+    /** Le champ « Élément de l'agritourisme » d'une facture reçue rangée dans l'atelier Agritourisme. */
+    elementFacture: {
+      label: 'Élément de l’agritourisme',
+      commun: 'Commun à toutes les visites',
+      aide: 'Le 4x4 (assurance tout risque, assurance RC exploitation, gazole, usure), le repas, la dégustation… : la Rentabilité en tire le coût de chaque formule.',
+    },
+    /** Rentabilité › Coûts de production : le coût d'une visite par formule. */
+    couts: {
+      titre: 'Agritourisme : coût par visite et par formule',
+      parVisite: (montant: string) => `${montant} par visite`,
+      commun: 'Charges communes',
+      composant: (libelle: string, postes: string, visites: number, parVisite: string) =>
+        `${libelle} : ${postes} ÷ ${visites} visite${visites > 1 ? 's' : ''} = ${parVisite}`,
+      nonReparti: (montant: string) =>
+        `${montant} de charges rattachées à un élément qu’aucune visite de l’année ne comprend : elles ne sont dans le coût d’aucune formule.`,
+      aucuneCharge:
+        'Aucune charge rattachée à l’atelier Agritourisme cette année : choisissez cet atelier (et l’élément) dans vos factures.',
+      aide: 'Le coût d’une formule est la somme de ses éléments : chaque élément (le 4x4, le repas…) se répartit sur les visites de l’année qui le comprennent. Les charges sans élément se partagent entre toutes les visites.',
+    },
+    visite: {
+      titreNouvelle: 'Nouvelle visite',
+      titre: 'Visite',
+      date: 'Date de la visite',
+      client: 'Client ou groupe',
+      clientPlaceholder: 'Choisir un client',
+      clientLibre: 'Nom du groupe',
+      clientLibreAide: 'Pour un groupe sans fiche client (une famille, un car), écrivez son nom.',
+      formule: 'Formule',
+      participants: 'Nombre de personnes',
+      prix: 'Prix par personne (€)',
+      total: (montant: string) => `Recette : ${montant}`,
+      chargesAide:
+        'Les coûts de la visite (repas, 4x4…) se saisissent dans les factures avec l’atelier « Agritourisme » : la Rentabilité les calcule.',
+      note: 'Note',
+      notePlaceholder: 'Heure d’arrivée, régime alimentaire, langue du groupe…',
+      pasEncaissee: 'À encaisser plus tard',
+      enregistrer: 'Enregistrer la visite',
+      supprimer: 'Supprimer la visite',
+      supprimerTitre: 'Supprimer cette visite ?',
+      supprimerMessage: 'La visite est supprimée, avec sa recette en comptabilité si elle a été réalisée.',
+      clientRequis: 'Choisissez ou écrivez le client ou le groupe.',
+      formuleRequise: 'Choisissez une formule.',
+      participantsRequis: 'Indiquez le nombre de personnes.',
+      aucuneFormule: 'Aucune formule : créez-en une d’abord (Formules et tarifs).',
+      actions: {
+        realiser: 'Marquer réalisée (inscrit la recette)',
+        defaire: 'Défaire la réalisation',
+        annuler: 'Annuler la visite',
+        rouvrir: 'Rouvrir la visite',
+      },
+      realiser: {
+        titre: 'Marquer la visite réalisée ?',
+        message: (montant: string) =>
+          `La recette de ${montant} est inscrite en comptabilité (atelier Agritourisme).`,
+        confirmer: 'Réalisée',
+      },
+      defaire: {
+        titre: 'Défaire la réalisation ?',
+        message: 'La recette inscrite en comptabilité est supprimée et la visite redevient « à venir ».',
+        confirmer: 'Défaire',
+      },
+    },
+    formule: {
+      titreNouvelle: 'Nouvelle formule',
+      titre: 'Formule',
+      nom: 'Nom de la formule',
+      nomPlaceholder: 'ex : Visite, 4x4 et repas',
+      prix: 'Prix par personne (€ TTC)',
+      elements: 'Ce que la formule comprend',
+      chargesAide:
+        'Les coûts (repas, ingrédients, fromage dégusté, carburant du 4x4) ne se saisissent pas ici : mettez l’atelier « Agritourisme » sur les factures concernées, la Rentabilité calcule la marge.',
+      tauxTva: 'Taux de TVA (%)',
+      tauxTvaAide: 'Indicatif : à confirmer avec votre comptable.',
+      note: 'Note',
+      enregistrer: 'Enregistrer la formule',
+      supprimer: 'Supprimer la formule',
+      supprimerTitre: 'Supprimer cette formule ?',
+      supprimerMessage: 'La formule est supprimée de la liste.',
+      utilisee: 'Des visites utilisent cette formule : elle ne peut pas être supprimée.',
+      ajouterElement: 'Ajouter un élément',
+      ajouterElementTitre: 'Nouvel élément de la formule',
+      elementPlaceholder: 'ex : Atelier fromage, balade avec les chèvres',
+      renommerElement: 'Modifier cet élément',
+      renommerElementTitre: 'Modifier le nom de l’élément',
+      retirerElement: 'Retirer cet élément',
+      retirerElementTitre: 'Retirer cet élément ?',
+      retirerElementMessage: (nom: string) =>
+        `« ${nom} » disparaît de la liste et de toutes les formules qui le comprenaient.`,
+      elementsAide:
+        'Cochez ce que la formule comprend ; ajoutez, renommez ou retirez des éléments au fur et à mesure.',
+      nomRequis: 'Donnez un nom à la formule.',
+      prixInvalide: 'Indiquez un prix par personne.',
+    },
+    listeFormules: {
+      titre: 'Formules et tarifs',
+      nouvelle: 'Nouvelle formule',
+      aucune: 'Aucune formule : créez la première avec le bouton +.',
+      detail: (prix: string) => `${prix} par personne`,
+    },
   },
   bonLivraison: {
     titre: 'Bon de livraison',

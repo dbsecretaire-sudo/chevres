@@ -86,6 +86,12 @@ export interface LigneCarburant {
   litrage?: number;
 }
 
+/** Un article d'une facture de la Chambre d'agriculture : son nom et son montant TTC. */
+export interface LigneChambre {
+  libelle: string;
+  montant: number;
+}
+
 export interface Facture {
   id: string;
   date: string;
@@ -105,14 +111,21 @@ export interface Facture {
   echeance?: string;
   /** La date où la facture a été réglée ou encaissée, quand elle diffère de sa date (la trésorerie s'en sert). */
   datePaiement?: string;
-  /** Pour une facture reçue : l'atelier qu'elle concerne (voir ATELIER) ; absent : une charge commune, répartie entre les ateliers. */
+  /**
+   * Pour une facture reçue : l'atelier qu'elle concerne (voir ATELIER) ; absent : une charge commune, répartie entre les ateliers.
+   * Pour une facture émise : l'atelier de sa recette (l'agritourisme) ; absent : une « autre recette ».
+   */
   atelier?: string;
+  /** Pour une charge de l'atelier Agritourisme : l'élément qu'elle concerne (le 4x4, le repas…) ; absent : toutes les visites. */
+  elementAgri?: string;
   /** Uniquement si categorieDepense === 'alimentation' : une facture peut regrouper plusieurs aliments. */
   lignesAlimentation?: LigneAlimentation[];
   /** Uniquement si categorieDepense === 'achats_marchandises' dans un gîte : le détail des marchandises achetées. */
   lignesMarchandises?: LigneMarchandise[];
   /** Achat de production : le détail par fourniture (chacune entre au stock). Les anciennes factures n'ont que stockArticle, stockQuantite et bouclesDebut (voir lignesProductionDe). */
   lignesProduction?: LigneProduction[];
+  /** Une facture de la Chambre d'agriculture détaillée par article (forfait d'identification, équarrissage ATM, conseils et analyses). */
+  lignesChambre?: LigneChambre[];
   /**
    * Vrai quand les quantités de lignesMarchandises ont été ajoutées au stock du gîte. Une facture d'avant cette gestion du
    * stock ne l'a pas : la première fois qu'on l'enregistre de nouveau, ses quantités sont ajoutées (une seule fois).

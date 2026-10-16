@@ -23,7 +23,14 @@ const nombre = (valeur: number, decimales = 2): string =>
  * paiements des récolteurs, soit 100 %) ou tout transformé en ce fromage, avec son pourcentage de ce lait vendu. Un appui sur une
  * vignette déroule son détail en dessous.
  */
-export function GraphiqueValorisation({ valorisation }: { valorisation: ValorisationLait }) {
+export function GraphiqueValorisation({
+  valorisation,
+  recettesTourisme,
+}: {
+  valorisation: ValorisationLait;
+  /** Les recettes de l'agritourisme de l'année : elles s'ajoutent à chaque fromage (elles en ont besoin), pas au lait vendu tel quel. */
+  recettesTourisme?: number;
+}) {
   const [ouverte, setOuverte] = useState<string | null>(null);
   const [vue, setVue] = useState<Vue>('graphique');
   const valo = valorisation;
@@ -51,6 +58,7 @@ export function GraphiqueValorisation({ valorisation }: { valorisation: Valorisa
         valeur={vue}
         onChoisir={setVue}
       />
+      {recettesTourisme ? <Text style={commonStyles.note}>{V.tourisme}</Text> : null}
       {vue === 'graphique' ? (
         <>
           {/* Le graphique : le lait vendu (colonne pleine, la référence) et le lait tout transformé en chaque fromage (colonnes cernées) */}
@@ -62,6 +70,8 @@ export function GraphiqueValorisation({ valorisation }: { valorisation: Valorisa
               texteValeur: formatMontant(t.montant),
               texteDetail: t.pourcent !== undefined ? `${nombre(t.pourcent)} %` : undefined,
               pleine: t.cle === 'lait',
+              // Les activités touristiques ont besoin de fromages : le lait vendu tel quel n'en profite pas.
+              complement: t.cle === 'lait' ? undefined : recettesTourisme,
             }))}
             choisie={ouverte}
             onChoisir={setOuverte}
@@ -78,6 +88,7 @@ export function GraphiqueValorisation({ valorisation }: { valorisation: Valorisa
             { cle: 'litre', titre: V.colonnes.litre, largeur: 90 },
             { cle: 'emballages', titre: V.colonnes.emballages, largeur: 100 },
             { cle: 'net', titre: V.colonnes.net, largeur: 110 },
+            ...(recettesTourisme ? [{ cle: 'tourisme', titre: V.colonneTourisme, largeur: 110 }] : []),
           ]}
           lignes={[
             ...(base !== undefined
@@ -91,6 +102,7 @@ export function GraphiqueValorisation({ valorisation }: { valorisation: Valorisa
                       litre: valo.prixLait !== undefined ? formatMontant(valo.prixLait) : '—',
                       emballages: '—',
                       net: formatMontant(base),
+                      tourisme: '—',
                     },
                   },
                 ]
@@ -106,6 +118,7 @@ export function GraphiqueValorisation({ valorisation }: { valorisation: Valorisa
                   litre: formatMontant(l.prixParLitre),
                   emballages: formatMontant(-emballages),
                   net: formatMontant(l.productionPotentielle - emballages),
+                  tourisme: recettesTourisme ? formatMontant(recettesTourisme) : '—',
                 },
               };
             }),
@@ -144,6 +157,14 @@ export function GraphiqueValorisation({ valorisation }: { valorisation: Valorisa
                 )}
               </Text>
             </>
+          ) : null}
+          {recettesTourisme && valo.litres > 0 ? (
+            <Text style={commonStyles.note}>
+              {V.avecTourisme(
+                formatMontant(recettesTourisme),
+                formatMontant(ligne.productionPotentielle + recettesTourisme),
+              )}
+            </Text>
           ) : null}
           {ligne.gainSurLait !== undefined && valo.litres > 0 ? (
             <Text

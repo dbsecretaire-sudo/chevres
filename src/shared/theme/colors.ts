@@ -31,6 +31,29 @@ export const colors = {
   badgeBg: '#EAF0E4',
 };
 
+/** Les bleus du formulaire papier du dossier PAC (document de suivi des mouvements) : titres, traits, cadres et cases teintées. */
+export const couleursFormulairePac = {
+  /** « Dossier PAC » et les mots qui portent le bleu du formulaire. */
+  titre: '#009ED5',
+  /** Les traits du tableau et les graduations bleues. */
+  trait: '#0097CC',
+  /** Le cadre clair du tableau. */
+  cadre: '#C1DCEE',
+  /** Le cadre, plus soutenu, du bloc d'identification. */
+  cadreIdent: '#96C5E4',
+  /** Le fond des cases d'en-tête, puis celui des colonnes teintées. */
+  entete: '#D6E7F4',
+  case: '#ECF3F9',
+  /** Le fond des cadres du bloc d'identification et du bordereau. */
+  fondCadre: '#F6F8FB',
+  /** Le bleu clair de « campagne 2026 ». */
+  titreClair: '#9ED3EC',
+  /** Le bleu des mots mis en valeur du bordereau (IMPORTANT, ATTENTION). */
+  accent: '#1E90D0',
+  /** Le noir (un peu chaud) des textes imprimés. */
+  texte: '#181717',
+};
+
 export const statutColors: Record<string, string> = {
   vivante: '#3F6B3A',
   morte: '#6B6F63',

@@ -27,6 +27,10 @@ export const fournituresSeulementBoucles = (
   fournisseur: Pick<Fournisseur, 'categorie'> | undefined,
 ): boolean => categorieFournisseurDe(fournisseur?.categorie).id === CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE;
 
+/** Vrai pour un fournisseur de la catégorie « Chambre d'agriculture » : ses factures se détaillent par article. */
+export const estChambreAgriculture = (fournisseur: Pick<Fournisseur, 'categorie'> | undefined): boolean =>
+  categorieFournisseurDe(fournisseur?.categorie).id === CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE;
+
 /**
  * Les fournisseurs qui peuvent avoir une dépense déjà saisie (sa catégorie ne change pas) ; celui déjà inscrit sur l'écriture reste
  * proposé, même si sa catégorie a changé depuis.

@@ -18,6 +18,21 @@ export async function listChevresVivantes(): Promise<Chevre[]> {
     .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
 }
 
+/**
+ * Les animaux de l'espèce courante présents à une date : nés au plus tard ce jour-là et pas encore sortis (vendus, morts…) — un animal
+ * sorti le jour même y était encore. Sert à lister les boucles d'un contrôle ou d'une visite passés.
+ */
+export async function listChevresPresentesLe(date: string): Promise<Chevre[]> {
+  const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
+  return all
+    .filter((c) => {
+      if (c.dateNaissance && c.dateNaissance > date) return false;
+      if (c.statut === STATUT_CHEVRE.VIVANTE || !c.dateStatut) return true;
+      return c.dateStatut >= date;
+    })
+    .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
+}
+
 /** Les animaux vivants d'une espèce : les petits (qui n'ont pas encore l'âge de sevrage) et les autres. */
 export interface EffectifVivant {
   petits: number;

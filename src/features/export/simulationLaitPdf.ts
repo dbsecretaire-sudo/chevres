@@ -39,12 +39,14 @@ export async function exporterSimulationLaitPdf(entree: {
   charges?: number;
   /** L'amortissement de la fromagerie, quand l'utilisateur l'inclut : il figure au PDF et se retranche du résultat. */
   amortissement?: CalculAmortissement;
+  /** Les recettes de l'agritourisme de l'année, quand l'utilisateur les ajoute au résultat final. */
+  agritourisme?: number;
 }): Promise<void> {
-  const { annee, litres, repartition: r, prixLait, charges, amortissement } = entree;
+  const { annee, litres, repartition: r, prixLait, charges, amortissement, agritourisme } = entree;
   const settings = await getSettings();
   const F = P.resultatFinal;
   const amortissementAnnuel = amortissement?.inclure ? amortissement.annuel : 0;
-  const resultatFinal = r.total.net - (charges ?? 0) - amortissementAnnuel;
+  const resultatFinal = r.total.net + (agritourisme ?? 0) - (charges ?? 0) - amortissementAnnuel;
   const ecart = r.total.net - r.toutVendu;
   const prixDevenu = r.total.litres > 0 ? r.total.net / r.total.litres : 0;
   const brocciu = r.lignes.find((l) => l.cle === CLE_FROMAGE_BROCCIU);
@@ -91,6 +93,7 @@ export async function exporterSimulationLaitPdf(entree: {
       : []),
   ]);
 
+  const tourisme = agritourisme && agritourisme > 0 ? agritourisme : 0;
   const histogramme = histogrammeHtml([
     {
       libelle: R.laitVendu,
@@ -105,6 +108,9 @@ export async function exporterSimulationLaitPdf(entree: {
       texte: formatMontant(l.net),
       detail: pourcent(l.part, 1),
     })),
+    ...(tourisme
+      ? [{ libelle: R.tourisme, valeur: tourisme, texte: formatMontant(tourisme), detail: '' }]
+      : []),
   ]);
 
   const lignesRepartition = [
@@ -117,6 +123,19 @@ export async function exporterSimulationLaitPdf(entree: {
       [R.colonnes.emballages]: formatMontant(-l.emballages),
       [R.colonnes.net]: formatMontant(l.net),
     })),
+    ...(tourisme
+      ? [
+          {
+            [R.colonnes.type]: R.tourisme,
+            [R.colonnes.part]: '—',
+            [R.colonnes.lait]: '—',
+            [R.colonnes.nombre]: '—',
+            [R.colonnes.recette]: formatMontant(tourisme),
+            [R.colonnes.emballages]: '—',
+            [R.colonnes.net]: formatMontant(tourisme),
+          },
+        ]
+      : []),
     {
       [R.colonnes.type]: R.laitVendu,
       [R.colonnes.part]: pourcent(r.vendu.part),
@@ -131,16 +150,16 @@ export async function exporterSimulationLaitPdf(entree: {
       [R.colonnes.part]: pourcent(r.total.part),
       [R.colonnes.lait]: `${nombre(r.total.litres, 1)} L`,
       [R.colonnes.nombre]: nombre(r.total.nombre, 1),
-      [R.colonnes.recette]: formatMontant(r.total.recette),
+      [R.colonnes.recette]: formatMontant(r.total.recette + tourisme),
       [R.colonnes.emballages]: formatMontant(-r.total.emballages),
-      [R.colonnes.net]: formatMontant(r.total.net),
+      [R.colonnes.net]: formatMontant(r.total.net + tourisme),
     },
   ];
 
   const sections = [
     sectionHtml(P.sections.resume, cartes + histogramme),
     sectionHtml(
-      P.sections.repartition,
+      tourisme ? P.sections.repartitionTourisme : P.sections.repartition,
       [
         tableauHtml(lignesRepartition, '', { totaux: true }),
         noteHtml(
@@ -161,7 +180,10 @@ export async function exporterSimulationLaitPdf(entree: {
         [
           tableauHtml(
             [
-              { [F.poste]: F.recettes, [F.montant]: formatMontant(r.total.net) },
+              {
+                [F.poste]: tourisme ? F.recettesAvecTourisme : F.recettes,
+                [F.montant]: formatMontant(r.total.net + tourisme),
+              },
               { [F.poste]: F.charges, [F.montant]: formatMontant(-charges) },
               ...(amortissementAnnuel
                 ? [{ [F.poste]: F.amortissement, [F.montant]: formatMontant(-amortissementAnnuel) }]

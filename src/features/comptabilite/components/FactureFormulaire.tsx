@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -21,6 +22,7 @@ import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { clientsPourLaRecette } from '@/features/comptabilite/utils/recettes';
 import {
   depenseImposee,
+  estChambreAgriculture,
   fournisseursPourLaDepense,
   fournituresSeulementBoucles,
 } from '@/features/fournisseurs/services/categorie';
@@ -48,6 +50,8 @@ import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/c
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
+import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
+import { ATELIER } from '@/shared/constants/ateliers';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
 import { tauxImpositionAide } from '@/features/comptabilite/utils/planComptable';
 import { avecPaiement } from '@/features/comptabilite/utils/paiement';
@@ -130,6 +134,14 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         {formatTotalEuros(f.totalMarchandises)}
       </Text>
     </>
+  ) : f.estChambre ? (
+    <>
+      <LignesChambreEditor lignes={f.lignesChambre} onChange={f.setLignesChambre} />
+      <Text style={styles.total}>
+        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+        {formatTotalEuros(f.totalChambre)}
+      </Text>
+    </>
   ) : f.estProduction ? (
     <>
       <LignesProductionEditor
@@ -151,7 +163,17 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       </Text>
     </>
   ) : (
-    <ChampMontantTtc value={f.montantTexte} onChange={f.changerMontant} />
+    <>
+      <ChampMontantTtc value={f.montantTexte} onChange={f.changerMontant} />
+      {/* Une dépense « Autre » d'un fournisseur de la Chambre d'agriculture : on peut la détailler par article. */}
+      {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && estChambreAgriculture(fournisseur) ? (
+        <Button
+          variant="secondary"
+          label={TEXTES.fournisseurs.chambre.detailler}
+          onPress={f.detaillerChambreAgriculture}
+        />
+      ) : null}
+    </>
   );
 
   return (
@@ -341,7 +363,19 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         {!estEmise && !modeEntreprise() && !depenseImposee(fournisseur) ? (
           <ChampAtelier
             value={form.atelier ?? ''}
-            onChange={(atelier) => f.setForm({ ...form, atelier: atelier || undefined })}
+            onChange={(atelier) =>
+              f.setForm({
+                ...form,
+                atelier: atelier || undefined,
+                elementAgri: atelier === ATELIER.AGRITOURISME ? form.elementAgri : undefined,
+              })
+            }
+          />
+        ) : null}
+        {!estEmise && form.atelier === ATELIER.AGRITOURISME ? (
+          <ChampElementAgritourisme
+            value={form.elementAgri ?? ''}
+            onChange={(element) => f.setForm({ ...form, elementAgri: element || undefined })}
           />
         ) : null}
       </SectionForm>

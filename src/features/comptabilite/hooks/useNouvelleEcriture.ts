@@ -26,7 +26,7 @@ import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { chargerCategoriesRecetteInventaire } from '@/features/comptabilite/repository/categoriesRecetteInventaire';
 import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
-import { categorieDepenseAutorisee } from '@/features/fournisseurs/services/categorie';
+import { categorieDepenseAutorisee, estChambreAgriculture } from '@/features/fournisseurs/services/categorie';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import {
   categorieFournisseurDe,
@@ -54,6 +54,7 @@ import {
   ligneMarchandiseVide,
   type LigneMarchandiseForm,
 } from '@/features/comptabilite/forms/lignesMarchandises';
+import { lignesChambreParDefaut, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
 import {
   ligneProductionVide,
   type LigneProductionForm,
@@ -116,7 +117,7 @@ const PREFIXE_COMPTES_DEPENSE = '6';
 const PREFIXE_COMPTES_RECETTE = '7';
 
 /** État, valeurs calculées et actions du formulaire « Nouvelle écriture » (débit/crédit). */
-export function useNouvelleEcriture(typeInitial?: TypeFacture) {
+export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale?: CategorieRecette) {
   const router = useRouter();
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
   const { anneeImposee, dateDuJour } = useAnneeImposee();
@@ -137,6 +138,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [circuit, setCircuit] = useState('');
   /** L'atelier d'une charge (vide : commune, répartie entre les ateliers). */
   const [atelier, setAtelier] = useState('');
+  /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
+  const [elementAgri, setElementAgri] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
   // s'applique (champ affiché, taux enregistré) que si elle a coché « Assujetti à la TVA » dans ses informations.
   const entreprise = modeEntreprise();
@@ -180,6 +183,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
   /** Achat de production : le détail par fourniture. */
   const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([ligneProductionVide()]);
+  /** Les articles d'une facture de la Chambre d'agriculture (forfait d'identification, équarrissage ATM, conseils et analyses). */
+  const [lignesChambre, setLignesChambre] = useState<LigneChambreForm[]>(lignesChambreParDefaut);
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise
       ? tvaEntreprise
@@ -203,8 +208,9 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
 
   // Crédit (facture émise ou vente de production)
   // Première recette de l'espèce courante : le lait pour les chèvres, la charcuterie pour les cochons…
+  // Une recette peut s'ouvrir sur sa catégorie (les œufs vendus depuis la Production, par exemple).
   const [categorieRecette, setCategorieRecette] = useState<CategorieRecette>(
-    premiereCategorieRecette(activiteInitiale),
+    categorieInitiale ?? premiereCategorieRecette(activiteInitiale),
   );
   const [typeFromage, setTypeFromage] = useState<TypeFromage>(TYPE_FROMAGE.FRAIS);
   const [typeFromageLibre, setTypeFromageLibre] = useState('');
@@ -230,7 +236,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const [tauxTvaVente, setTauxTvaVente] = useState(
     entreprise
       ? tauxTvaEntreprise(premiereCategorieRecette(activiteInitiale))
-      : String(tauxTvaParDefaut(premiereCategorieRecette(especeCourante()))),
+      : String(tauxTvaParDefaut(categorieInitiale ?? premiereCategorieRecette(especeCourante()))),
   );
   const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState('');
@@ -296,6 +302,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
   const totalProduction = totalMontants(lignesProduction);
+  const totalChambre = totalMontants(lignesChambre);
 
   // Les comptes retirés pour l'espèce de l'écriture n'y sont plus proposés (une écriture commune les garde tous).
   const comptesDeLActivite = comptes.filter((c) =>
@@ -349,6 +356,11 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
   const rattacherSiCommun = () => setActivite((a) => (a === ACTIVITE_COMMUNE ? especeCourante() : a));
 
   const fournisseurSelectionne = fournisseurs.find((x) => x.id === fournisseurId);
+  /** Une dépense « Autre » d'un fournisseur de la catégorie Chambre d'agriculture : le détail par article. */
+  const estChambre =
+    type === TYPE_FACTURE.RECUE &&
+    categorieDepense === CATEGORIE_DEPENSE.AUTRE &&
+    estChambreAgriculture(fournisseurSelectionne);
   const changerFournisseur = (id: string) => {
     setFournisseurId(id);
     const choisi = fournisseurs.find((x) => x.id === id);
@@ -515,6 +527,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         lignesAlimentation,
         lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
         lignesProduction,
+        lignesChambre: estChambre ? lignesChambre : undefined,
         lignesCarburant,
         categorieRecette,
         typeFromage,
@@ -543,6 +556,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
         sansFacture,
         echeance,
         atelier,
+        elementAgri,
         reajustement,
         natureUrssaf,
         circuit,
@@ -634,6 +648,10 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     lignesProduction,
     setLignesProduction,
     totalProduction,
+    lignesChambre,
+    setLignesChambre,
+    totalChambre,
+    estChambre,
     totalAlimentation,
     totalCarburant,
     tauxTvaAchat,
@@ -721,6 +739,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture) {
     setAvecFacture,
     atelier,
     setAtelier,
+    elementAgri,
+    setElementAgri,
     clientSelectionne,
     enAttente,
     setEnAttente,

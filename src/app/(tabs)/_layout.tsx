@@ -5,6 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
+import { productionActive } from '@/features/comptabilite/utils/recettes';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
@@ -37,7 +38,7 @@ export default function TabsLayout() {
   const dansOrganisation =
     !barreBleue && (depuisOrganisation || PAGES_ORGANISATION.some((p) => page.startsWith(p)));
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
-  useEtablissement();
+  const { espece } = useEtablissement();
   // Une entreprise a un onglet Clients à la place du Cheptel ; un élevage l'inverse.
   const entreprise = modeEntreprise();
   // Le stock : un onglet en bas pour une exploitation agricole (fromagerie, aliments) et pour un gîte (boissons, nourriture).
@@ -123,7 +124,8 @@ export default function TabsLayout() {
         options={{
           title: TEXTES.production.titre,
           headerShown: false,
-          href: entreprise ? null : undefined,
+          // Les animaux de compagnie n'ont aucune production.
+          href: entreprise || !productionActive(espece) ? null : undefined,
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="cheese" size={size} color={color} />,
         }}
         listeners={({ navigation }) => ({

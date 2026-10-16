@@ -12,6 +12,7 @@ import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/
 import type { ArchiveGite } from '@/features/gite/types';
 import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
 import type { ArchiveTrading } from '@/features/trading/types';
+import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
 import type { ArchiveBar } from '@/features/bar/types';
 import {
@@ -374,6 +375,9 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   if (sauvegarde.etablissement) {
     await appliquerProfilEtablissementActif(sauvegarde.etablissement);
   }
+
+  // Les animaux ont changé : les poses de l'inventaire des boucles (dates comprises) se refont d'après eux.
+  await synchroniserPoseBoucles();
 
   return {
     annule: false,

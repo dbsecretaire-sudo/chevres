@@ -9,6 +9,8 @@ export interface ColonneGraphique {
   /** Le montant écrit sous le nom, et une ligne en plus (un pourcentage). */
   texteValeur: string;
   texteDetail?: string;
+  /** Un montant de plus empilé au-dessus de la colonne (les activités touristiques), d'une autre couleur ; il compte dans la hauteur. */
+  complement?: number;
   /** Vrai : la colonne est pleine (la référence) ; sinon elle est seulement cernée. */
   pleine?: boolean;
 }
@@ -45,7 +47,7 @@ export function ColonnesVerticales({
   formaterGraduation,
   hauteur = 220,
 }: Props) {
-  const plusGrand = Math.max(...colonnes.map((c) => c.valeur), 1);
+  const plusGrand = Math.max(...colonnes.map((c) => c.valeur + (c.complement ?? 0)), 1);
   const pas = pasLisible(plusGrand);
   const sommet = Math.ceil(plusGrand / pas) * pas;
   const graduations = Array.from({ length: Math.round(sommet / pas) }, (_, i) => (i + 1) * pas);
@@ -77,6 +79,11 @@ export function ColonnesVerticales({
                   {graduations.map((g) => (
                     <View key={g} style={[styles.repere, { bottom: y(g) }]} />
                   ))}
+                  {c.complement ? (
+                    <View
+                      style={[styles.barre, styles.barreComplement, { height: Math.max(y(c.complement), 2) }]}
+                    />
+                  ) : null}
                   <View
                     style={[
                       styles.barre,

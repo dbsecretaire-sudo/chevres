@@ -208,7 +208,7 @@ type SorteDuNumero = (numero: string) => string;
 
 const sorteDesNumeros = (boucles: BoucleStock[], tiptags?: ReadonlySet<string>): SorteDuNumero => {
   const connues = new Map(
-    boucles.filter((b) => !estBoucleDeRemplacement(b.article)).map((b) => [b.numero, b.article]),
+    boucles.filter((b) => !estBoucleDeRemplacement(b.article)).map((b) => [b.numero.trim(), b.article]),
   );
   return (numero) => connues.get(numero) ?? (tiptags?.has(numero) ? ARTICLE_TIPTAG : ARTICLE_BOUCLES);
 };
@@ -240,7 +240,14 @@ const bouclesPortees = (
     },
   ].filter((b): b is { article: string; numero: string; date: string | undefined } => !!b.numero);
 
-const cleBoucle = (article: string, numero: string): string => `${article}|${numero}`;
+const cleBoucle = (article: string, numero: string): string => `${article}|${numero.trim()}`;
+
+/** Une boucle numérotée que ni une facture ni une date d'achat ne rattache à un achat : elle n'a jamais été commandée. */
+const neuveSansAchat = (b: BoucleStock): boolean =>
+  !b.depuisCheptel && !b.factureId && !b.dateAchat && !estBoucleDeRemplacement(b.article);
+
+/** Une boucle qui n'existe que tant qu'un animal la porte : celle que le cheptel a ajoutée, ou que nulle commande n'a achetée. */
+const nExisteQueSiPortee = (b: BoucleStock): boolean => !!b.depuisCheptel || neuveSansAchat(b);
 
 /** Vrai quand les animaux de cette espèce portent des boucles (pas les poules, ni les animaux domestiques). */
 const porteDesBoucles = (animal: Pick<Chevre, 'espece'>): boolean =>
@@ -263,15 +270,18 @@ export function avecPoses(
   const portees = new Map<string, { animal: AnimalBouclable; date?: string }>();
   for (const animal of animaux) {
     for (const b of bouclesPortees(animal, sorteDe)) {
-      if (!portees.has(cleBoucle(b.article, b.numero)))
+      // Un numéro porté par plusieurs animaux (une ancienne fiche, un numéro repris) : celui qui a une date de pose l'emporte.
+      const dejaVu = portees.get(cleBoucle(b.article, b.numero));
+      if (!dejaVu || (!dejaVu.date && b.date))
         portees.set(cleBoucle(b.article, b.numero), { animal, date: b.date });
     }
   }
-  let inventaire = archive.boucles ?? [];
+  // Une boucle jamais commandée est de celles du cheptel : elle entre au stock quand un animal la porte et en sort avec lui.
+  let inventaire = (archive.boucles ?? []).map((b) => (neuveSansAchat(b) ? { ...b, depuisCheptel: true } : b));
   for (const animal of aAjouter) {
     if (!porteDesBoucles(animal)) continue;
     for (const portee of bouclesPortees(animal, sorteDe)) {
-      if (inventaire.some((x) => x.article === portee.article && x.numero === portee.numero)) continue;
+      if (inventaire.some((x) => x.article === portee.article && x.numero.trim() === portee.numero)) continue;
       inventaire = [
         ...inventaire,
         {
@@ -320,6 +330,58 @@ export function avecPoses(
     boucles,
     mouvements: [...archive.mouvements.filter((m) => !m.boucleId), ...mouvements],
   };
+}
+
+/**
+ * La date de pose d'une boucle d'après la fiche de l'animal qui la porte : sa date de bouclage, ou celle de sa boucle rouge ou de
+ * son rebouclage selon la sorte de la boucle. Les listes la montrent telle que la fiche la donne, même avant la synchronisation.
+ */
+export function datePoseSelonLAnimal(
+  article: string,
+  animal: Pick<Chevre, 'dateBouclage' | 'dateBoucleRouge' | 'dateRebouclage'> | undefined,
+): string | undefined {
+  if (!animal) return undefined;
+  const date =
+    article === ARTICLE_ROUGES
+      ? animal.dateBoucleRouge
+      : article === ARTICLE_REBOUCLAGE
+        ? animal.dateRebouclage
+        : animal.dateBouclage;
+  return date || undefined;
+}
+
+/**
+ * Les boucles de l'inventaire telles que le cheptel les donne à l'instant : une boucle (ou un tiptag) est posée quand un animal de
+ * son espèce porte son numéro (sa date de pose est la date de bouclage de l'animal), et à poser sinon. Une boucle rouge ou de
+ * rebouclage garde son animal, avec la date de sa fiche. Les listes s'en servent pour montrer toujours l'état des fiches, même quand
+ * l'inventaire n'a pas encore été remis à jour.
+ */
+export function bouclesSelonLeCheptel(boucles: BoucleStock[], animaux: Chevre[]): BoucleStock[] {
+  const parNumero = new Map<string, Chevre>();
+  for (const animal of animaux) {
+    const numero = animal.numeroBoucle?.trim();
+    if (!numero) continue;
+    const cle = `${especeDe(animal)}|${numero}`;
+    const dejaVu = parNumero.get(cle);
+    // Un numéro porté par plusieurs animaux : celui qui a une date de bouclage l'emporte.
+    if (!dejaVu || (!dejaVu.dateBouclage && animal.dateBouclage)) parNumero.set(cle, animal);
+  }
+  const parId = new Map(animaux.map((a) => [a.id, a]));
+  return boucles
+    .map((b): BoucleStock => {
+      if (estBoucleDeRemplacement(b.article)) {
+        const animal = b.chevreId ? parId.get(b.chevreId) : undefined;
+        // L'animal n'est plus au cheptel : la boucle n'est plus posée.
+        if (!animal) return { ...b, chevreId: undefined, datePose: undefined };
+        return { ...b, datePose: datePoseSelonLAnimal(b.article, animal) ?? b.datePose };
+      }
+      const animal = parNumero.get(`${especeDeLaBoucle(b)}|${b.numero.trim()}`);
+      return animal
+        ? { ...b, chevreId: animal.id, datePose: datePoseSelonLAnimal(b.article, animal) ?? b.datePose }
+        : { ...b, chevreId: undefined, datePose: undefined };
+    })
+    // Une boucle ajoutée depuis le cheptel ou jamais commandée n'existe que tant qu'un animal la porte.
+    .filter((b) => !nExisteQueSiPortee(b) || !!b.chevreId);
 }
 
 /** Une pose à la fois : plusieurs enregistrements d'animaux d'affilée ne se mélangent pas. */

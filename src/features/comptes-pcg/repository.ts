@@ -41,6 +41,12 @@ function comptesInitiaux(): CompteComptableEnregistre[] {
  * ceux qui manquent (ajoutés par une mise à jour de l'app) sont ajoutés, sans toucher au reste.
  */
 function avecComptesAutomatiques(comptes: CompteComptableEnregistre[]): CompteComptableEnregistre[] {
+  // Le 601500 est celui des boucles : un plan enregistré avec son ancien libellé (fournitures de production) le reprend.
+  comptes = comptes.map((c) =>
+    c.numero === COMPTE_BOUCLES.numero && c.libelle !== COMPTE_BOUCLES.libelle
+      ? { ...c, libelle: COMPTE_BOUCLES.libelle }
+      : c,
+  );
   const numeros = new Set(comptes.map((c) => c.numero));
   const manquants = [
     COMPTE_BOUCLES,

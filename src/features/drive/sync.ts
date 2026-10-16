@@ -8,6 +8,7 @@ import { listClients, remplacerTousClients } from '@/features/clients/repository
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
 import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
 import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
+import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
 import {
   lireArchiveCommercial,
@@ -495,5 +496,7 @@ export async function tirerToutesAnnees(
   await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);
   await tirerComptesPcg(accessToken, folderId);
+  // Les animaux ont pu changer : les poses de l'inventaire des boucles (dates comprises) se refont d'après eux.
+  await synchroniserPoseBoucles();
   return bilan;
 }

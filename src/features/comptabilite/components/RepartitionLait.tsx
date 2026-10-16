@@ -43,6 +43,8 @@ interface Props {
   amortissementAnnuel?: number;
   /** Les charges de l'année (toutes) : elles se retranchent des recettes pour le résultat final. */
   charges?: number;
+  /** Les recettes de l'agritourisme de l'année (visites à venir et réalisées) : une ligne du tableau, comptée dans le résultat final. */
+  recettesTourisme?: number;
   /** Ce qui se place sous le tableau, avant le bouton de téléchargement (l'amortissement de la fromagerie). */
   sousLeTableau?: ReactNode;
   /** Ce que coûte un gramme de sel (€), d'après ses achats ; rien sans achat de sel. */
@@ -67,6 +69,7 @@ export function RepartitionLait({
   onTelecharger,
   amortissementAnnuel,
   charges,
+  recettesTourisme,
   sousLeTableau,
   coutSelParGramme,
 }: Props) {
@@ -104,9 +107,10 @@ export function RepartitionLait({
     <Text style={[commonStyles.line, styles.cellule, { width: largeur }, style]}>{texte}</Text>
   );
 
+  const resultatFinal = r.total.net + (recettesTourisme ?? 0) - (charges ?? 0) - (amortissementAnnuel ?? 0);
   return (
     <View style={commonStyles.gap6}>
-      <Text style={commonStyles.lineBold}>{T.titre}</Text>
+      <Text style={commonStyles.lineBold}>{recettesTourisme ? T.titreAvecTourisme : T.titre}</Text>
       <Text style={commonStyles.note}>{T.aide(nombre(litres))}</Text>
       <PucesDefilantes<Vue>
         puces={[
@@ -177,6 +181,17 @@ export function RepartitionLait({
                 </View>
               );
             })}
+            {recettesTourisme ? (
+              <View style={styles.ligne}>
+                {cellule(T.tourisme, LARGEURS.type)}
+                {cellule('—', LARGEURS.part)}
+                {cellule('—', LARGEURS.lait)}
+                {cellule('—', LARGEURS.nombre)}
+                {cellule(formatMontant(recettesTourisme), LARGEURS.argent)}
+                {cellule('—', LARGEURS.argent)}
+                {cellule(formatMontant(recettesTourisme), LARGEURS.argent, commonStyles.lineBold)}
+              </View>
+            ) : null}
             <View style={styles.ligne}>
               {cellule(T.laitVendu, LARGEURS.type)}
               {cellule(pourcent(r.vendu.part), LARGEURS.part)}
@@ -191,9 +206,17 @@ export function RepartitionLait({
               {cellule(pourcent(r.total.part), LARGEURS.part, commonStyles.lineBold)}
               {cellule(`${nombre(r.total.litres, 1)} L`, LARGEURS.lait, commonStyles.lineBold)}
               {cellule(nombre(r.total.nombre, 1), LARGEURS.nombre, commonStyles.lineBold)}
-              {cellule(formatMontant(r.total.recette), LARGEURS.argent, commonStyles.lineBold)}
+              {cellule(
+                formatMontant(r.total.recette + (recettesTourisme ?? 0)),
+                LARGEURS.argent,
+                commonStyles.lineBold,
+              )}
               {cellule(formatMontant(-r.total.emballages), LARGEURS.argent, commonStyles.lineBold)}
-              {cellule(formatMontant(r.total.net), LARGEURS.argent, commonStyles.lineBold)}
+              {cellule(
+                formatMontant(r.total.net + (recettesTourisme ?? 0)),
+                LARGEURS.argent,
+                commonStyles.lineBold,
+              )}
             </View>
           </View>
         </ScrollView>
@@ -217,6 +240,16 @@ export function RepartitionLait({
                 texteValeur: formatMontant(l.net),
                 texteDetail: pourcent(l.part),
               })),
+              ...(recettesTourisme
+                ? [
+                    {
+                      cle: 'tourisme',
+                      libelle: T.tourisme,
+                      valeur: recettesTourisme,
+                      texteValeur: formatMontant(recettesTourisme),
+                    },
+                  ]
+                : []),
             ]}
             choisie={choisie}
             onChoisir={setChoisie}
@@ -269,8 +302,12 @@ export function RepartitionLait({
         <View style={commonStyles.gap2}>
           <Text style={commonStyles.lineBold}>{T.final.titre}</Text>
           <View style={styles.ligneResultat}>
-            <Text style={[commonStyles.line, commonStyles.flex1]}>{T.final.recettes}</Text>
-            <Text style={commonStyles.lineSemiBold}>{formatMontant(r.total.net)}</Text>
+            <Text style={[commonStyles.line, commonStyles.flex1]}>
+              {recettesTourisme ? T.final.recettesAvecTourisme : T.final.recettes}
+            </Text>
+            <Text style={commonStyles.lineSemiBold}>
+              {formatMontant(r.total.net + (recettesTourisme ?? 0))}
+            </Text>
           </View>
           <View style={styles.ligneResultat}>
             <Text style={[commonStyles.line, commonStyles.flex1]}>{T.final.charges}</Text>
@@ -285,15 +322,9 @@ export function RepartitionLait({
           <View style={styles.ligneResultat}>
             <Text style={[commonStyles.lineBold, commonStyles.flex1]}>{T.final.resultat}</Text>
             <Text
-              style={[
-                commonStyles.lineBold,
-                {
-                  color:
-                    r.total.net - charges - (amortissementAnnuel ?? 0) >= 0 ? colors.primary : colors.danger,
-                },
-              ]}
+              style={[commonStyles.lineBold, { color: resultatFinal >= 0 ? colors.primary : colors.danger }]}
             >
-              {formatMontant(r.total.net - charges - (amortissementAnnuel ?? 0))}
+              {formatMontant(resultatFinal)}
             </Text>
           </View>
         </View>

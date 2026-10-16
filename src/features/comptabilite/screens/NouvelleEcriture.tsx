@@ -14,8 +14,8 @@ import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { SectionDepense } from '@/features/comptabilite/components/ecriture/SectionDepense';
 import { SectionRecette } from '@/features/comptabilite/components/ecriture/SectionRecette';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
-import type { TypeFacture } from '@/features/comptabilite/types';
-import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import type { CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
+import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
@@ -31,8 +31,12 @@ const OPTIONS_TYPE = [
 
 export default function NouvelleFacture() {
   useAjoutTabBarBleu();
-  const params = useLocalSearchParams<{ type?: TypeFacture }>();
-  const e = useNouvelleEcriture(params.type);
+  const params = useLocalSearchParams<{ type?: TypeFacture; categorie?: CategorieRecette }>();
+  // La catégorie de recette d'ouverture : seulement une catégorie connue.
+  const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
+    ? params.categorie
+    : undefined;
+  const e = useNouvelleEcriture(params.type, categorie);
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
   useFocusEffect(

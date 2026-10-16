@@ -53,6 +53,8 @@ export const ROUTES = {
   productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,
   PRODUCTION_RAPPELS_LOTS: '/production/rappels-lots',
   PRODUCTION_VIANDE: '/production/viande',
+  /** Les œufs vendus (les poules). */
+  PRODUCTION_OEUFS: '/production/oeufs',
   PRODUCTION_STATISTIQUES: '/production/statistiques',
 
   /** L'onglet Commercial d'un élevage : ventes et clients, tarifs, commandes et livraisons, circuits de vente. */
@@ -61,6 +63,13 @@ export const ROUTES = {
   COMMERCIAL_TARIFS: '/commercial/tarifs',
   COMMERCIAL_COMMANDES: '/commercial/commandes',
   COMMERCIAL_CIRCUITS: '/commercial/circuits',
+  /** L'agritourisme : les visites, une visite (nouvelle ou celle dont on donne l'identifiant), les formules. */
+  COMMERCIAL_AGRITOURISME: '/commercial/agritourisme',
+  COMMERCIAL_VISITE: '/commercial/visite',
+  visiteAgritourisme: (id: string) => `/commercial/visite?id=${id}` as const,
+  COMMERCIAL_FORMULES: '/commercial/formules',
+  COMMERCIAL_FORMULE: '/commercial/formule',
+  formuleAgritourisme: (id: string) => `/commercial/formule?id=${id}` as const,
   /** Une nouvelle commande, ou celle dont on donne l'identifiant. */
   COMMERCIAL_COMMANDE: '/commercial/commande',
   commande: (id: string) => `/commercial/commande?id=${id}` as const,

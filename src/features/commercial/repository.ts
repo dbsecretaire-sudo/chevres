@@ -17,6 +17,11 @@ export function normaliserArchiveCommercial(
   }
   return {
     commandes: Array.isArray(archive?.commandes) ? archive.commandes : [],
+    formules: Array.isArray(archive?.formules) ? archive.formules : [],
+    visites: Array.isArray(archive?.visites) ? archive.visites : [],
+    elementsFormule: Array.isArray(archive?.elementsFormule)
+      ? archive.elementsFormule.filter((e) => e && typeof e.id === 'string' && typeof e.nom === 'string')
+      : undefined,
     tarifs,
   };
 }

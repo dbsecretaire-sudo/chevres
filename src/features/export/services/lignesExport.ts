@@ -8,6 +8,7 @@ import {
   LABEL_CATEGORIE_DEPENSE,
   LABEL_CATEGORIE_RECETTE,
   LABEL_CATEGORIE_VENTE,
+  LABEL_CIRCUIT_VENTE,
   LABEL_SEXE,
   LABEL_TYPE_FROMAGE,
   LABEL_UNITE_VENTE_COURT,
@@ -80,6 +81,9 @@ export function venteRow(v: Vente) {
       : TEXTES.export.colonnes.non,
     [TEXTES.export.colonnes.nFacture]: v.numeroFacture ?? '',
     [TEXTES.export.colonnes.reajustement]: v.reajustement ? TEXTES.export.colonnes.oui : '',
+    [TEXTES.export.colonnes.circuit]: v.circuit
+      ? (LABEL_CIRCUIT_VENTE[v.circuit as keyof typeof LABEL_CIRCUIT_VENTE] ?? v.circuit)
+      : '',
   };
 }
 
@@ -152,6 +156,8 @@ export function visiteRow(v: VisiteVeterinaire, indicatif?: IndicatifParEspece) 
     [TEXTES.export.colonnes.motif]: v.motif,
     [TEXTES.export.colonnes.description]: v.description ?? '',
     [TEXTES.export.colonnes.cout]: v.cout ?? '',
+    [TEXTES.export.colonnes.rapportEssais]: v.rapportEssais ? TEXTES.export.colonnes.oui : '',
+    [TEXTES.export.colonnes.numeroRapport]: v.numeroRapport ?? '',
   };
 }
 

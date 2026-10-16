@@ -21,6 +21,7 @@ import type {
   CategorieVente,
   Facture,
   LigneAlimentation,
+  LigneChambre,
   LigneMarchandise,
   LigneProduction,
   LigneCarburant,
@@ -31,8 +32,10 @@ import type {
   Vente,
   NatureUrssaf,
 } from '@/features/comptabilite/types';
+import { lignesChambreFinales, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
 import { numeroFactureLibre, prixLibre } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
+import { ATELIER } from '@/shared/constants/ateliers';
 import { MOTIF_NUMERO_FACTURE_NUMERIQUE } from '@/shared/constants/clients';
 import {
   CATEGORIES_VENTE_ANIMAUX,
@@ -82,6 +85,8 @@ export interface SaisieEcriture {
   lignesCarburant: LigneCarburantForm[];
   /** Le détail par fourniture d'un achat de production. */
   lignesProduction?: LigneProductionForm[];
+  /** Le détail par article d'une facture de la Chambre d'agriculture (absent : une autre facture). */
+  lignesChambre?: LigneChambreForm[];
   categorieRecette: CategorieRecette;
   typeFromage: TypeFromage;
   typeFromageLibre: string;
@@ -118,6 +123,8 @@ export interface SaisieEcriture {
   numeroFacture: string;
   /** L'atelier d'une facture reçue (vide : une charge commune). */
   atelier?: string;
+  /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
+  elementAgri?: string;
   /** Le paiement n'a pas encore eu lieu (faux : payée à la date de l'écriture), et sa date prévue. */
   enAttente?: boolean;
   echeance?: string;
@@ -253,6 +260,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
   let lignesAlimentation: LigneAlimentation[] | undefined;
   let lignesCarburant: LigneCarburant[] | undefined;
   let lignesMarchandises: LigneMarchandise[] | undefined;
+  let lignesChambre: LigneChambre[] | undefined;
   let lignesProduction: LigneProduction[] | undefined;
   const estProduction =
     estRecue && s.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION && !!s.lignesProduction;
@@ -283,6 +291,17 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
     }
     montantFinal = totalMontants(s.lignesProduction);
+  } else if (estRecue && s.lignesChambre) {
+    lignesChambre = lignesChambreFinales(s.lignesChambre);
+    if (lignesChambre.length === 0) {
+      return {
+        erreur: {
+          titre: TEXTES.commun.general.montantInvalide,
+          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
+        },
+      };
+    }
+    montantFinal = totalMontants(s.lignesChambre);
   } else if (estRecue && s.lignesMarchandises) {
     lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises);
     if (lignesMarchandises.length === 0) {
@@ -331,11 +350,14 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       montant: montantFinal,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       atelier: estRecue && s.atelier ? s.atelier : undefined,
+      elementAgri:
+        estRecue && s.atelier === ATELIER.AGRITOURISME && s.elementAgri ? s.elementAgri : undefined,
       payee: s.enAttente ? false : undefined,
       sansFacture: estRecue && s.sansFacture ? true : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       lignesAlimentation,
       lignesMarchandises,
+      lignesChambre,
       lignesProduction,
       stockArticle: stockProduction ? s.stockArticle : undefined,
       stockQuantite: stockProduction ? s.stockQuantite : undefined,

@@ -57,6 +57,7 @@ export default function ProductionLayout() {
       />
       <Stack.Screen name="rappels-lots" options={{ title: TEXTES.production.rappelsLots.titre }} />
       <Stack.Screen name="viande" options={{ title: TEXTES.production.viande.titre }} />
+      <Stack.Screen name="oeufs" options={{ title: TEXTES.production.oeufs.titre }} />
       <Stack.Screen name="statistiques" options={{ title: TEXTES.stock.statistiques.titre }} />
       <Stack.Screen
         name="controles/liste"

@@ -365,6 +365,7 @@ export const LABEL_ATELIER: Record<ValeurDe<typeof ATELIER>, string> = {
   [ATELIER.ANIMAUX]: 'Reproducteurs et réformes',
   [ATELIER.VIANDE]: 'Viande et charcuterie',
   [ATELIER.OEUFS]: 'Œufs',
+  [ATELIER.AGRITOURISME]: 'Agritourisme',
   [ATELIER.AUTRES]: 'Autres recettes',
 };
 

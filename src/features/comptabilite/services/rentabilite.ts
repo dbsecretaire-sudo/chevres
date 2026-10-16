@@ -135,7 +135,11 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
         aides += f.montant;
         continue;
       }
-      recettes.set(ATELIER.AUTRES, (recettes.get(ATELIER.AUTRES) ?? 0) + montant(f.montant, f.tauxTva));
+      // Une recette rangée dans un atelier (l'agritourisme) y compte ; les autres sont des « autres recettes ».
+      const atelierRecette = (Object.values(ATELIER) as string[]).includes(f.atelier ?? '')
+        ? (f.atelier as Atelier)
+        : ATELIER.AUTRES;
+      recettes.set(atelierRecette, (recettes.get(atelierRecette) ?? 0) + montant(f.montant, f.tauxTva));
       continue;
     }
     if (f.categorieDepense && CHARGES_EXCLUES.includes(f.categorieDepense)) continue;

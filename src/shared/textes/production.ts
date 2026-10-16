@@ -12,6 +12,7 @@ export const TEXTES_PRODUCTION = {
     },
     fromages: { titre: 'Fromages', aide: 'Les fromages par lot : fabrication, vente, rappels.' },
     viande: { titre: 'Viande', aide: 'Les ventes de viande de l’année.' },
+    oeufs: { titre: 'Œufs', aide: 'Les ventes d’œufs de l’année.' },
     charcuterie: {
       titre: 'Boucherie / Charcuterie',
       aide: 'La boucherie et la charcuterie par lot : fabrication, vente, rappels.',
@@ -106,7 +107,12 @@ export const TEXTES_PRODUCTION = {
     date: 'Date de fabrication',
     quantite: 'Nombre de fromages',
     premier: 'N° du premier lot',
+    /** L'explication du « ? » à côté du n° du premier lot : comment le numéro se compose. */
+    explicationNumero:
+      'Le numéro d’un lot se lit, par exemple, « FF261-1 » :\n\n• F : le produit (F fromage, B boucherie et charcuterie)\n• F : la catégorie (F frais, V vieux, C crottin, B brocciu, F figatellu… : l’initiale du nom pour un autre produit)\n• 26 : l’année de fabrication (2 chiffres)\n• 1 : le jour de l’année (de 1 à 365)\n• -1 : le numéro du fromage de cette fabrication, qui se poursuit à chaque fromage (-2, -3…)\n\nLe numéro est proposé tout seul d’après le produit et la date ; deux fabrications du même produit le même jour se poursuivent.',
     premierAide: 'Chaque fromage a son numéro de lot, à la suite du premier.',
+    /** Le bouton qui donne le guide des numéros de lot en PDF. */
+    guide: 'Guide des numéros de lot (PDF)',
     dernier: (numero: string) => `Dernier lot : ${numero}`,
     litresParFromage: 'Litres de lait par fromage',
     litresParFromageAide:
@@ -151,6 +157,13 @@ export const TEXTES_PRODUCTION = {
     choisir: 'Choisissez les lots à rappeler.',
     enregistrer: (nombre: number) => `Rappeler ${nombre} lot${nombre > 1 ? 's' : ''}`,
     aide: 'Seuls les produits vendus dont le contrôle n’est pas ok sont proposés. Un produit rappelé est marqué « Rappelé » dans l’inventaire.',
+  },
+  /** Les œufs vendus de l'année (les poules). */
+  oeufs: {
+    titre: 'Œufs vendus',
+    aucune: 'Aucune vente d’œufs cette année',
+    ajouter: 'Ajouter une vente d’œufs',
+    total: (nombre: string, montant: string) => `${nombre} œufs · total : ${montant}`,
   },
   /** La viande vendue de l'année. */
   viande: {

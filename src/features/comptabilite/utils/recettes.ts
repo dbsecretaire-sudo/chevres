@@ -1,6 +1,7 @@
 import type { ActiviteComptable, CategorieRecette, CategorieVente } from '@/features/comptabilite/types';
 import { groupeRecetteAutorise } from '@/features/clients/services/categorie';
 import { GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
+import { ESPECES_SANS_PRODUCTION } from '@/shared/constants/stock';
 import type { Client } from '@/features/clients/types';
 import { nomComplet } from '@/shared/utils/personne';
 import {
@@ -99,6 +100,13 @@ const groupesDe = (activite: ActiviteComptable): GroupeRecetteDefinition[] =>
 /** Vrai quand la laiterie / fromagerie est proposée à l'espèce : aux chèvres, aux brebis et aux vaches. */
 export const laiterieActive = (espece: string): boolean =>
   groupesActifsEspece(espece).includes(GROUPE_RECETTE.LAIT);
+
+/** Vrai quand l'espèce a une production (tous les élevages, pas les animaux de compagnie). */
+export const productionActive = (espece: string): boolean => !ESPECES_SANS_PRODUCTION.includes(espece);
+
+/** Vrai quand la vente d'œufs est proposée à l'espèce (les poules). */
+export const oeufsActifs = (espece: string): boolean =>
+  groupesActifsEspece(espece).includes(GROUPE_RECETTE.OEUFS);
 
 /** Les groupes proposés pour une espèce. */
 export const groupesActifsEspece = (espece: string): GroupeRecette[] =>

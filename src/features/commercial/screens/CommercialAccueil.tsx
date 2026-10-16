@@ -99,6 +99,13 @@ export default function CommercialAccueil() {
       ],
     },
     {
+      titre: T.groupes.agritourisme,
+      lignes: [
+        { cle: 'visites', ...T.visitesAgri, icone: 'trail-sign', route: ROUTES.COMMERCIAL_AGRITOURISME },
+        { cle: 'formules', ...T.formulesAgri, icone: 'pricetags', route: ROUTES.COMMERCIAL_FORMULES },
+      ],
+    },
+    {
       titre: T.groupes.circuits,
       lignes: [{ cle: 'circuits', ...T.circuits, icone: 'git-network', route: ROUTES.COMMERCIAL_CIRCUITS }],
     },

@@ -1,3 +1,4 @@
+import type { StatutVisite } from '@/shared/constants/agritourisme';
 import type { StatutCommande } from '@/shared/constants/commercial';
 
 /** Une ligne d'une commande : un fromage de l'inventaire, sa quantité (pièces) et son prix à la pièce. */
@@ -36,9 +37,56 @@ export interface Commande {
   echeance?: string;
 }
 
+/** Une formule d'agritourisme : ce qu'elle comprend (visite, 4x4, repas, dégustation), son prix par personne et ce qu'elle coûte. */
+export interface FormuleAgritourisme {
+  id: string;
+  nom: string;
+  /** Le prix par personne (€ TTC). */
+  prix: number;
+  /** Ce que la formule comprend : les identifiants des éléments choisis (voir elementsDeFormule). */
+  elements: string[];
+  /** Le taux de TVA de la recette (%) ; absent : le taux d'office de l'agritourisme. */
+  tauxTva?: number;
+  note?: string;
+}
+
+/** Un élément qu'une formule peut comprendre (visite, 4x4, repas, dégustation… ou un élément ajouté) : son nom, et un nom court pour les listes. */
+export interface ElementFormule {
+  id: string;
+  nom: string;
+  court?: string;
+}
+
+/** Une visite de la ferme : qui vient, quand, combien de personnes, quelle formule, et si elle est payée. */
+export interface VisiteAgritourisme {
+  id: string;
+  date: string;
+  /** La fiche du client, quand le groupe en a une ; son nom est toujours dans `client`. */
+  clientId?: string;
+  client: string;
+  formuleId: string;
+  /** Le nom de la formule au moment de la visite (il reste lisible si la formule est renommée). */
+  formule: string;
+  participants: number;
+  /** Le prix par personne de cette visite (celui de la formule, modifiable). */
+  prixParPersonne: number;
+  statut: StatutVisite;
+  note?: string;
+  /** Le paiement est à encaisser plus tard (la trésorerie compte la recette à son échéance). */
+  enAttente?: boolean;
+  echeance?: string;
+  /** Une fois réalisée : la recette inscrite en comptabilité. */
+  factureId?: string;
+}
+
 /** Tout le volet commercial d'un établissement. */
 export interface ArchiveCommercial {
   commandes: Commande[];
+  /** L'agritourisme : les formules proposées et les visites. */
+  formules: FormuleAgritourisme[];
+  visites: VisiteAgritourisme[];
+  /** Les éléments qu'une formule peut comprendre, tels que l'utilisateur les a modifiés ; absent : ceux d'office (voir elementsDeFormule). */
+  elementsFormule?: ElementFormule[];
   /** Les prix par catégorie de client : article → catégorie du client → prix à la pièce (€). Absent : le prix de l'inventaire. */
   tarifs: Record<string, Record<string, number>>;
 }

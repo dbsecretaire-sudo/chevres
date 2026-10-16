@@ -130,6 +130,54 @@ export const TEXTES_EXPORT = {
       avertissement:
         'Correspondance indicative entre vos factures et les comptes du plan comptable, non validée par un expert-comptable : à confirmer avant tout usage officiel.',
     },
+    /** Le guide des numéros de lot : la lecture d'un numéro, les lettres des produits, les règles. */
+    guideLots: {
+      titre: 'Guide des numéros de lot',
+      cartes: {
+        exemple: 'Un numéro d’aujourd’hui',
+        exempleDetail: (date: string) => `Premier lot fabriqué le ${date}`,
+        jour: 'Jour de l’année',
+        jourDetail: 'De 1 (1er janvier) à 365',
+      },
+      sections: {
+        lire: 'Comment lire un numéro de lot',
+        produits: 'Les lettres de vos produits',
+        regles: 'À retenir',
+      },
+      colonnes: {
+        partie: 'Partie',
+        exemple: 'Dans l’exemple',
+        sens: 'Ce que ça veut dire',
+        produit: 'Produit',
+        lettreProduit: 'Produit (1re lettre)',
+        lettreCategorie: 'Catégorie (2e lettre)',
+        debut: 'Début du numéro',
+        premier: 'Premier lot aujourd’hui',
+      },
+      partie: {
+        produit: '1re lettre',
+        categorie: '2e lettre',
+        annee: 'Année',
+        jour: 'Jour de l’année',
+        numero: 'Numéro du produit',
+      },
+      sens: {
+        produit: 'Le produit : F pour un fromage, B pour la boucherie et la charcuterie.',
+        categorie:
+          'La catégorie : F frais, V vieux (affiné), C crottin, B brocciu ; pour un autre produit, l’initiale de son nom (Figatellu : F, Tomme : T).',
+        annee: 'L’année de fabrication, sur 2 chiffres.',
+        jour: 'Le jour de l’année de la fabrication, sans zéro devant (de 1 à 365).',
+        numero: 'Un tiret puis le numéro du produit dans la fabrication : -1, -2, -3…',
+      },
+      aucunProduit: 'Aucun produit dans l’inventaire.',
+      noteProduits: (date: string) => `Les numéros sont ceux qu’un lot fabriqué le ${date} prendrait.`,
+      regles: [
+        'Chaque produit d’une fabrication a son numéro : le premier se termine par -1, les suivants par -2, -3…',
+        'Deux fabrications du même produit le même jour se poursuivent : si la première s’arrête à -5, la suivante commence à -6.',
+        'Un autre jour, ou un autre produit, repart à -1.',
+        'Un numéro de lot se note sur le produit (étiquette ou tampon) : il sert à retrouver la fabrication, et à rappeler les lots vendus si besoin.',
+      ],
+    },
     /** La simulation du lait en fromage : chiffres clés, histogramme, tableau de répartition, brocciu. */
     simulationLait: {
       titre: 'Simulation : le lait en fromage',
@@ -152,6 +200,7 @@ export const TEXTES_EXPORT = {
         poste: 'Poste',
         montant: 'Montant',
         recettes: 'Recettes nettes (lait et fromages, emballages déduits)',
+        recettesAvecTourisme: 'Recettes nettes (lait, fromages, activités touristiques ; emballages déduits)',
         charges: 'Charges du lait de l’année',
         amortissement: 'Amortissement de la fromagerie',
         final: 'Résultat final',
@@ -170,6 +219,7 @@ export const TEXTES_EXPORT = {
       sections: {
         resume: 'En un coup d’œil',
         repartition: 'Répartition du lait',
+        repartitionTourisme: 'Répartition du lait et activités touristiques',
         amortissement: 'Amortissement de la fromagerie',
         resultat: 'Résultat final',
       },
@@ -238,6 +288,28 @@ export const TEXTES_EXPORT = {
     },
   },
   xlsxExport: {
+    /** Les onglets du volet Commercial de l'export de l'année : les visites d'agritourisme et les commandes. */
+    commercial: {
+      agritourisme: 'Agritourisme',
+      commandes: 'Commandes',
+      colonnes: {
+        date: 'Date',
+        client: 'Client ou groupe',
+        formule: 'Formule',
+        personnes: 'Personnes',
+        prixParPersonne: 'Prix par personne (€)',
+        recette: 'Recette (€)',
+        coutEstime: 'Coût estimé (€)',
+        etat: 'État',
+        aEncaisser: 'À encaisser',
+        oui: 'Oui',
+        note: 'Note',
+        numero: 'N°',
+        livraison: 'Livraison prévue',
+        articles: 'Fromages commandés',
+        total: 'Total (€)',
+      },
+    },
     ouiValeur: (valeur: unknown) => `Oui (${valeur})`,
     aucuneDonneePourCetteAnnee: 'Aucune donnée pour cette année',
     veterinaire: 'Vétérinaire',
@@ -327,6 +399,9 @@ export const TEXTES_EXPORT = {
     non: 'Non',
     nFacture: 'N° de facture',
     reajustement: 'Réajustement',
+    circuit: 'Circuit de vente',
+    rapportEssais: 'Rapport d’essais',
+    numeroRapport: 'N° du rapport',
     categorieClient: 'Catégorie',
     declaree: 'Vente déclarée',
     natureUrssaf: 'Nature (URSSAF)',

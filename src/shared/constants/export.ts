@@ -32,6 +32,8 @@ export const NOM_FICHIER_EXPORT_INVENTAIRE = 'inventaire';
 /** La liste des boucles d'identification (celle que les filtres de l'écran montrent). */
 export const NOM_FICHIER_EXPORT_BOUCLES = 'boucles';
 export const NOM_FICHIER_EXPORT_SIMULATION_LAIT = 'simulation_lait';
+/** Le guide des numéros de lot (comment se lit un numéro, les lettres de chaque produit). */
+export const NOM_FICHIER_EXPORT_GUIDE_LOTS = 'guide_numeros_lots';
 /** Export de l'année d'une entreprise (prestations de service, association…). */
 export const NOM_FICHIER_EXPORT_ENTREPRISE = 'entreprise';
 
@@ -42,3 +44,8 @@ export const VERSION_SAUVEGARDE = 1;
 export const NOM_FICHIER_SAUVEGARDE = 'troupeau_chevres_sauvegarde';
 export const NOM_FICHIER_SAUVEGARDE_ENTREPRISE = 'entreprise_sauvegarde';
 export const EXTENSION_SAUVEGARDE = 'json';
+
+/** Le document de suivi des mouvements des brebis et/ou chèvres (dossier PAC). */
+export const NOM_FICHIER_EXPORT_SUIVI_MOUVEMENTS = 'suivi_mouvements';
+/** Les bordereaux de perte de l'aide aux petits ruminants (dossier PAC). */
+export const NOM_FICHIER_EXPORT_BORDEREAUX_PERTE = 'bordereaux_perte';
