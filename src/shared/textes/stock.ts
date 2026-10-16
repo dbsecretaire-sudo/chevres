@@ -150,7 +150,23 @@ export const TEXTES_STOCK = {
     etat: { tout: 'Tout', posee: 'Posée', non_posee: 'Non posée' },
     aucuneBoucle: 'Aucune boucle.',
     /** Les titres des colonnes : les dates sur deux lignes, pour tenir dans la largeur. */
-    colonnes: { numero: 'N°', pose: 'Date de\npose', achat: 'Date d’\nachat' },
+    colonnes: { numero: 'N°', pose: 'Date de\npose', achat: 'Date d’\nachat', remarque: 'Remarque' },
+    /** Les remarques notées sur une boucle (une exception), et leur réglage par plage de numéros. */
+    remarque: { en_trop: 'Commandée en trop', jamais_posee: 'Jamais posée', aucune: 'Aucune' },
+    marquer: {
+      bouton: 'Marquer des boucles',
+      aide: 'Note une exception sur une plage de boucles de l’inventaire : commandées en trop, ou jamais posées. La colonne « Remarque » n’apparaît dans les listes que si une boucle en a une.',
+      titre: 'Marquer des boucles',
+      sorte: 'Sorte de boucles',
+      remarque: 'Remarque',
+      du: 'Du n°',
+      au: 'Au n°',
+      valider: 'Marquer',
+      fermer: 'Fermer',
+      numeroRequis: 'Indiquez le premier et le dernier numéro.',
+      aucuneTrouvee: 'Aucune boucle de cette sorte entre ces deux numéros.',
+      fait: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''} mise${nombre > 1 ? 's' : ''} à jour.`,
+    },
     /** Les listes des boucles rouges et de rebouclage : le numéro de la boucle remplacée (celui de l'animal) et la date de la pose. */
     numeroRemplacement: 'N° de\nremplac.',
     poseRouge: 'Date de\nbouclage',

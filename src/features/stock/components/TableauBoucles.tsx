@@ -114,7 +114,10 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
         <ScrollView style={pleinePage ? undefined : styles.liste} nestedScrollEnabled>
           {lignes.map((b, i) => (
             <View key={b.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
-              <Text style={[styles.texteLigne, styles.colonneNumero]}>{b.numero}</Text>
+              <View style={styles.colonneNumero}>
+                <Text style={styles.texteLigne}>{b.numero}</Text>
+                {b.remarque ? <Text style={styles.remarqueBoucle}>{T.remarque[b.remarque]}</Text> : null}
+              </View>
               <Text style={[styles.datePose, styles.colonneDate]}>
                 {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}
               </Text>

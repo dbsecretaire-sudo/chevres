@@ -35,6 +35,8 @@ export const styles = StyleSheet.create({
   ligne: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   ligneSeparee: { borderTopWidth: 1, borderTopColor: colors.border },
   texteLigne: { fontSize: 13, color: colors.text },
+  /** La remarque d'une boucle (commandée en trop, jamais posée) : en petit sous son numéro. */
+  remarqueBoucle: { fontSize: 11, fontStyle: 'italic', color: colors.textMuted },
   /** Une date qui se modifie d'un appui (la date de fabrication d'un lot) : soulignée. */
   dateModifiable: { textDecorationLine: 'underline' },
   /** La ligne « Tout cocher » sous l'en-tête du tableau. */

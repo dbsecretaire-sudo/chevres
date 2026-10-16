@@ -26,6 +26,7 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
     .map((liste) => {
       const rouge = estBoucleDeRemplacement(liste.article);
       const rebouclage = estArticleRebouclage(liste.article);
+      const avecRemarques = liste.lignes.some((b) => b.remarque);
       const lignes = liste.lignes.map((b) => ({
         [rouge ? T.numeroRemplacement : T.colonnes.numero]: b.numero,
         [rebouclage ? T.poseRebouclage : rouge ? T.poseRouge : T.colonnes.pose]: b.datePose
@@ -35,6 +36,7 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
             : '',
         ...(rouge ? {} : { [T.colonnes.achat]: b.dateAchat ? formatDateShortFR(b.dateAchat) : '' }),
         [T.morte]: b.chevreId && liste.morts.has(b.chevreId) ? P.oui : '',
+        ...(avecRemarques ? { [T.colonnes.remarque]: b.remarque ? T.remarque[b.remarque] : '' } : {}),
       }));
       return sectionHtml(
         libelleDeLaSorte(liste.article),

@@ -415,6 +415,46 @@ export function synchroniserPoseBoucles(enregistre?: AnimalBouclable): Promise<v
   return suite;
 }
 
+/**
+ * Note (ou retire, sans remarque) une remarque sur les boucles d'une sorte de l'espèce active dont le numéro est compris entre deux
+ * numéros, inclus (dans l'ordre qu'on les donne). Rend les boucles à jour et leur nombre.
+ */
+export function avecRemarque(
+  boucles: BoucleStock[],
+  article: string,
+  de: string,
+  a: string,
+  remarque: BoucleStock['remarque'],
+): { boucles: BoucleStock[]; nombre: number } {
+  const [premier, dernier] = comparerNumeros(de, a) <= 0 ? [de, a] : [a, de];
+  const dansLaPlage = (b: BoucleStock) =>
+    b.article === article &&
+    especeDeLaBoucle(b) === especeCourante() &&
+    comparerNumeros(b.numero, premier) >= 0 &&
+    comparerNumeros(b.numero, dernier) <= 0;
+  return {
+    boucles: boucles.map((b) => (dansLaPlage(b) ? { ...b, remarque } : b)),
+    nombre: boucles.filter(dansLaPlage).length,
+  };
+}
+
+/** Enregistre la remarque sur la plage de boucles (voir `avecRemarque`) ; rend le nombre de boucles touchées. */
+export function marquerBoucles(
+  article: string,
+  de: string,
+  a: string,
+  remarque: BoucleStock['remarque'],
+): Promise<number> {
+  const suite = file.then(async () => {
+    const archive = await lireArchiveStock();
+    const resultat = avecRemarque(archive.boucles ?? [], article, de.trim(), a.trim(), remarque);
+    if (resultat.nombre > 0) await remplacerArchiveStock({ ...archive, boucles: resultat.boucles });
+    return resultat.nombre;
+  });
+  file = suite.catch(() => undefined);
+  return suite;
+}
+
 /** Les boucles d'un article (ou de tous), posées ou non. */
 export const bouclesDeLInventaire = (
   archive: Pick<ArchiveStock, 'boucles'>,
