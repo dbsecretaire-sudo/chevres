@@ -77,18 +77,26 @@ export function ligneDeLaListe(
 }
 
 /**
- * Sépare les boucles d'avant et d'après la date d'installation de l'exploitant actuel : une boucle est d'avant quand sa date de pose
- * (à défaut, d'achat) précède cette date ; sans date, elle est d'après (une boucle en stock est à l'exploitant actuel).
+ * Sépare les boucles d'avant et d'après la date d'installation de l'exploitant actuel : une boucle posée est d'avant quand sa date de
+ * pose précède cette date, sinon (non posée) sa date d'achat ; sans date, elle est d'après (une boucle en stock est à l'exploitant
+ * actuel). Une boucle non posée suit sa commande : quand une autre boucle de la même facture est posée depuis l'installation, elle est
+ * d'après, même si la commande est plus ancienne. `toutes` : toutes les boucles de la sorte (pas seulement celles imprimées), où se
+ * retrouvent les autres boucles de la commande.
  */
 export function separerSelonInstallation(
   boucles: BoucleStock[],
   installation: string,
+  toutes: BoucleStock[] = boucles,
 ): { avant: BoucleStock[]; apres: BoucleStock[] } {
+  const commandesEnCours = new Set(
+    toutes.filter((b) => b.factureId && b.datePose && b.datePose >= installation).map((b) => b.factureId),
+  );
   const avant: BoucleStock[] = [];
   const apres: BoucleStock[] = [];
   for (const b of boucles) {
     const date = b.datePose ?? b.dateAchat;
-    (date && date < installation ? avant : apres).push(b);
+    const suitSaCommande = !b.datePose && !!b.factureId && commandesEnCours.has(b.factureId);
+    (!suitSaCommande && date && date < installation ? avant : apres).push(b);
   }
   return { avant, apres };
 }
@@ -226,7 +234,7 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
     const filtre = T.etat[liste.etat];
     if (!installation) return [{ ...base, filtre, lignes: boucles.map((b) => ligneDe(liste, b)) }];
     // Les boucles d'avant et d'après l'installation sont sur des pages différentes (une liste sans boucle d'un côté n'a pas de page).
-    const { avant, apres } = separerSelonInstallation(boucles, installation);
+    const { avant, apres } = separerSelonInstallation(boucles, installation, liste.toutes);
     const date = formatDateShortFR(installation);
     return [
       ...(avant.length > 0 ? [{ ...base, filtre: `${filtre} · ${P.avantInstallation(date)}`, lignes: avant.map((b) => ligneDe(liste, b)) }] : []),

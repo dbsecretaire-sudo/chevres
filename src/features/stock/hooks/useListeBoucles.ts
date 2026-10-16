@@ -57,6 +57,8 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
       ? [...bouclesAvecDates.filter((b) => b.article !== article), ...lignesDeRemplacement(article, bouclesAvecDates, mouvements ?? [])]
       : bouclesAvecDates;
   const classees = trierBoucles(bouclesDeLInventaire({ boucles: source }, etat, article), tri, croissant);
+  /** Toutes les boucles de la sorte, quels que soient l'état et les filtres : l'impression y retrouve les autres boucles d'une commande. */
+  const toutes = bouclesDeLInventaire({ boucles: source }, ETAT_BOUCLE.TOUT, article);
   // Les lignes vides (en stock) viennent après celles qui portent un numéro, quel que soit le tri.
   const triees = remplacement ? [...classees.filter((b) => b.numero), ...classees.filter((b) => !b.numero)] : classees;
   /** Le filtre de chaque colonne, comme dans Excel : les valeurs sont celles qu'affiche le tableau. */
@@ -106,6 +108,7 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
     sorties,
     /** Les animaux, par identifiant (l'impression en tire l'année de naissance). */
     animaux,
+    toutes,
     lignes,
   };
 }

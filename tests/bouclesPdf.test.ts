@@ -91,4 +91,20 @@ describe('liste des repères imprimée', () => {
     // Le jour même de l'installation est d'après ; sans aucune date, une boucle en stock est d'après.
     expect(apres.map((b) => b.numero)).toEqual(['2', '3', '5']);
   });
+
+  it('une boucle non posée suit sa commande : d’après l’installation si une boucle de la même facture y est posée', () => {
+    const lot = [
+      boucle({ numero: '230001', factureId: 'f1', dateAchat: '2022-12-01' }),
+      boucle({ numero: '230002', factureId: 'f1', dateAchat: '2022-12-01', datePose: '2023-05-01' }),
+      boucle({ numero: '230014', factureId: 'f1', dateAchat: '2022-12-01' }),
+      boucle({ numero: '100', factureId: 'f0', dateAchat: '2020-01-01' }),
+    ];
+    const { avant, apres } = separerSelonInstallation(lot, '2023-01-15');
+    expect(apres.map((b) => b.numero)).toEqual(['230001', '230002', '230014']);
+    expect(avant.map((b) => b.numero)).toEqual(['100']);
+    // Seules les boucles imprimées sont données, mais la commande se lit dans toutes celles de la sorte.
+    const nonPosees = lot.filter((b) => !b.datePose && b.factureId === 'f1');
+    expect(separerSelonInstallation(nonPosees, '2023-01-15', lot).apres).toHaveLength(2);
+    expect(separerSelonInstallation(nonPosees, '2023-01-15').apres).toHaveLength(0);
+  });
 });
