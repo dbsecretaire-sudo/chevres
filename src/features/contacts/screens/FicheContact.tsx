@@ -124,7 +124,7 @@ export default function FicheContact() {
   const ajouterDocument = async () => {
     if (!contact) return;
     const entreeId = await assurerEntreeDuContact(contact);
-    router.push(ROUTES.santeContenuGroupement(entreeId) as never);
+    router.push(ROUTES.contactContenu(entreeId) as never);
   };
 
   const supprimer = async () => {
@@ -371,7 +371,7 @@ export default function FicheContact() {
                       onPress={() =>
                         router.push(
                           (x.origine === 'partenaire'
-                            ? ROUTES.santeContenuGroupement(x.groupementId!, x.contenuId)
+                            ? ROUTES.contactContenu(x.groupementId!, x.contenuId)
                             : ROUTES.element(x.elementId!)) as never,
                         )
                       }

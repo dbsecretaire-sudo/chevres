@@ -40,6 +40,9 @@ export const ROUTES = {
   santeControles: (famille: string) => `${baseControles(famille)}/liste?famille=${famille}` as const,
   /** Un nouveau contrôle, de la famille donnée. */
   santeControleNouveau: (famille: string) => `${baseControles(famille)}/nouvelle?famille=${famille}` as const,
+  /** Un document d'un contact (courrier, contrat, aide…), ouvert depuis sa fiche : il reste dans la section Contacts (nouveau sans identifiant, sinon modifié). */
+  contactContenu: (groupementId: string, id?: string) =>
+    `/comptabilite/contacts/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
   /** Un groupement : ses contenus. */
   santeGroupement: (id: string) => `${DOSSIER_PARTENAIRES}/groupement?id=${id}` as const,
   /** Un contenu d'un groupement (nouveau sans identifiant, sinon modifié). */

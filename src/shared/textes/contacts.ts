@@ -2,6 +2,7 @@
 export const TEXTES_CONTACTS = {
   titre: 'Contacts',
   titreFiche: 'Contact',
+  titreDocument: 'Document du contact',
   aide: 'Un contact reçoit des recettes, fait des dépenses, ou les deux. Une seule fiche, une seule catégorie.',
   aideRubrique: 'Clients et fournisseurs réunis : chaque contact une fois, avec ses recettes et ses dépenses.',
   recherche: 'Nom, téléphone, e-mail…',

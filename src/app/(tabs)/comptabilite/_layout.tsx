@@ -95,6 +95,7 @@ export default function ComptabiliteLayout() {
         }}
       />
       <Stack.Screen name="contacts/[id]" options={{ title: TEXTES.contacts.titreFiche }} />
+      <Stack.Screen name="contacts/contenu" options={{ title: TEXTES.contacts.titreDocument }} />
       <Stack.Screen
         name="fournisseurs/index"
         options={{

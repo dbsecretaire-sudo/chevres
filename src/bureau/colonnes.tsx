@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { Redirect, useGlobalSearchParams, usePathname, type Href } from 'expo-router';
+import { Redirect, useGlobalSearchParams, useIsFocused, usePathname, type Href } from 'expo-router';
 import { estBureau } from '@/shared/utils/plateforme';
 
 /** À partir de cette largeur de fenêtre (en pixels), la version Windows montre deux colonnes : le menu de la rubrique et l'écran ouvert. */
@@ -18,11 +18,15 @@ export const DansColonneGauche = createContext(false);
 /**
  * L'accueil d'une rubrique, ouvert comme un écran, quand il y a deux colonnes : son menu est déjà à gauche, alors la colonne de droite
  * montre directement l'écran principal de la rubrique. Rend la redirection à afficher (rien sinon) ; à appeler en haut de l'écran.
+ *
+ * L'accueil n'y redirige que lorsqu'il est l'écran affiché : quand on arrive dans la rubrique par un écran plus profond (le courrier
+ * d'un contact, depuis un autre onglet), l'accueil se monte d'abord dessous, et sa redirection écraserait l'écran demandé.
  */
 export function useAccueilEnDeuxColonnes(ecranPrincipal: string) {
   const deuxColonnes = useDeuxColonnes();
   const dansMenu = useContext(DansColonneGauche);
-  return deuxColonnes && !dansMenu ? <Redirect href={ecranPrincipal as Href} /> : null;
+  const affiche = useIsFocused();
+  return deuxColonnes && !dansMenu && affiche ? <Redirect href={ecranPrincipal as Href} /> : null;
 }
 
 /**
