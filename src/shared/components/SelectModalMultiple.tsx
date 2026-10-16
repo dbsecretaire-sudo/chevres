@@ -21,6 +21,8 @@ interface Props<T extends string> {
   /** Les lignes cochées, quand on valide. */
   onValider: (valeurs: T[]) => void;
   onClose: () => void;
+  /** Les lignes cochées à l'ouverture (la fenêtre se recrée avec une autre `key` pour en changer). */
+  initiales?: T[];
   /**
    * Le nombre qui fait le numéro d'une ligne (« 12 » pour le lot 12) : quand il est donné, une plage tapée dans la recherche
    * (« 12-30 ») propose de cocher d'un coup toutes les lignes de ce nombre à celui-là.
@@ -40,10 +42,11 @@ export function SelectModalMultiple<T extends string>({
   onValider,
   onClose,
   numeroDe,
+  initiales,
 }: Props<T>) {
   const accent = useAccentColor();
   const [recherche, setRecherche] = useState('');
-  const [cochees, setCochees] = useState<Set<T>>(new Set());
+  const [cochees, setCochees] = useState<Set<T>>(() => new Set(initiales));
 
   const q = recherche.trim().toLowerCase();
   const plage = numeroDe ? lirePlage(recherche) : null;

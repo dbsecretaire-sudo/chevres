@@ -7,6 +7,14 @@ export const TEXTES_CARNET = {
     designation: 'Acte ou traitement',
     exempleDesignation: 'ex : Prise de sang, vaccin, antibiotique…',
     animal: 'N° d’animal ou lot concerné',
+    animauxConcernes: 'Animaux concernés',
+    choisirLesAnimaux: 'Choisir les animaux',
+    choisirAbord: 'Choisissez d’abord les animaux concernés : le reste de la ligne s’affiche ensuite.',
+    aucuneBoucle:
+      'Aucune boucle à proposer : les numéros des boucles s’ajoutent dans les détails de la visite vétérinaire (N° de boucle concerné).',
+    sansVisite:
+      'La visite n’existe pas encore : cochez « Ajouter aux visites vétérinaires », enregistrez la facture, puis ajoutez les numéros dans les détails de la visite.',
+    modifierVisite: 'Modifier la visite vétérinaire',
     choisirAnimaux: 'Choisir dans la liste',
     titreChoixAnimaux: 'Animaux de la visite',
     validerChoix: (n: number) => `Choisir ${n} animal${n > 1 ? 'ux' : ''}`,

@@ -39,6 +39,7 @@ import {
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { ROUTES } from '@/shared/constants/routes';
+import { idVisiteDeLaFacture } from '@/features/exploitation/services/visitesFacture';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
@@ -317,6 +318,8 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
               lignes={form.lignesVeterinaire ?? []}
               onChange={(lignesVeterinaire) => f.setForm({ ...form, lignesVeterinaire })}
               dateParDefaut={form.date}
+              visiteId={form.visiteVeterinaire ? idVisiteDeLaFacture(form.id) : undefined}
+              retour={ROUTES.ficheFacture(form.id)}
             />
           </>
         )}

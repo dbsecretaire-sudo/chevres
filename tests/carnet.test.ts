@@ -169,10 +169,11 @@ describe('carnet sanitaire', () => {
       expect(bouclesDeLaVisite(jour, animaux, visites)).toEqual(['00462', '10005', '20002', '50001']);
     });
 
-    it('sans visite ce jour-là, tous les animaux présents', () => {
-      const animaux = [animal('10'), animal('9'), animal('2', { statut: 'morte', dateStatut: '2020-06-01' })];
-      expect(bouclesDeLaVisite(jour, animaux, [])).toEqual(['9', '10']);
-      expect(bouclesDeLaVisite(jour, animaux, [{ date: jour, chevreNumeroBoucle: '' }] as never[])).toEqual(['9', '10']);
+    it('sans visite ce jour-là, ou sans boucle dans la visite, aucune boucle : les numéros s’ajoutent d’abord à la visite', () => {
+      const animaux = [animal('10'), animal('9')];
+      expect(bouclesDeLaVisite(jour, animaux, [])).toEqual([]);
+      expect(bouclesDeLaVisite(jour, animaux, [{ date: jour, chevreNumeroBoucle: '' }] as never[])).toEqual([]);
+      expect(bouclesDeLaVisite(jour, animaux, [{ date: jour, chevreNumeroBoucle: '10' }] as never[])).toEqual(['10']);
     });
   });
 });
