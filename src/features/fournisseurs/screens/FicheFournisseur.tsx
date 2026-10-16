@@ -16,6 +16,7 @@ import {
   FournisseurFormulaire,
   FournisseurLecture,
 } from '@/features/fournisseurs/components/FournisseurFiche';
+import { ContactLie } from '@/features/contacts/components/ContactLie';
 import { useFicheFournisseur } from '@/features/fournisseurs/hooks/useFicheFournisseur';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -86,6 +87,7 @@ export default function FicheFournisseur() {
         ) : (
           <>
             <FournisseurLecture fournisseur={fournisseur} onModifier={() => e.setEditing(true)} />
+            <ContactLie fournisseur={fournisseur} />
             {e.ecritures.length > 0 && <FournisseurTotal resume={e.resume} />}
             <FournisseurEcritures ecritures={e.ecritures} />
           </>

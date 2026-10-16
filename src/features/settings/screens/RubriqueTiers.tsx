@@ -12,6 +12,13 @@ export default function RubriqueTiers() {
     <Screen>
       <BlocLignes>
         <LigneRubrique
+          titre={TEXTES.contacts.titre}
+          aide={TEXTES.contacts.aideRubrique}
+          icone="people-circle"
+          route={ROUTES.CONTACTS}
+          retour={ROUTES.ORGANISATION_TIERS}
+        />
+        <LigneRubrique
           titre={TEXTES.commun.general.clients}
           aide={T.aideClients}
           icone="person"

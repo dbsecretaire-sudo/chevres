@@ -48,7 +48,8 @@ const memeClient = (a: Client, b: Client) =>
 export async function importerClient(source: Client): Promise<Client | undefined> {
   const existants = await lireTous();
   if (existants.some((c) => memeClient(c, source))) return undefined;
-  const { id: _id, ...donnees } = source;
+  // Le lien vers sa fiche fournisseur est celui de l'autre établissement : il ne vaut pas ici.
+  const { id: _id, fournisseurId: _lien, ...donnees } = source;
   return creerClient(donnees);
 }
 

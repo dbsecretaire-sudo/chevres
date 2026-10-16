@@ -220,3 +220,13 @@ describe('fiche fournisseur', () => {
     });
   });
 });
+
+describe('un contact lié à ses deux fiches', () => {
+  it('n’a qu’une entrée même si les noms de ses fiches diffèrent', () => {
+    const f = { ...fournisseur('f1', 'MSA', CATEGORIE_FOURNISSEUR.ORGANISME), clientId: 'c1' } as Fournisseur;
+    const c = { id: 'c1', nom: 'MSA de Corse', categorie: 'organisme', fournisseurId: 'f1' } as unknown as Client;
+    const plan = planifierPartenaires([f], [c], [], CHOIX_PARTENAIRES_VIDE, '2026-02-01');
+    expect(plan.aEnregistrer).toHaveLength(1);
+    expect(plan.aEnregistrer[0]).toMatchObject({ fournisseurId: 'f1', clientId: 'c1', type: 'MSA' });
+  });
+});

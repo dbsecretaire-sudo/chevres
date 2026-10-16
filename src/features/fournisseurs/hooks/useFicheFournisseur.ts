@@ -5,6 +5,7 @@ import {
   getFournisseur,
   supprimerFournisseur,
 } from '@/features/fournisseurs/repository';
+import { partagerCoordonneesDuFournisseur } from '@/features/contacts/repository';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import {
   calculerResumeFournisseur,
@@ -51,6 +52,8 @@ export function useFicheFournisseur(id: string | undefined) {
     if ('erreur' in resultat) return setErreur(resultat.erreur);
 
     await enregistrerFournisseur(resultat.fournisseur);
+    // Son adresse, son téléphone et son e-mail passent à sa fiche client, s'il en a une.
+    await partagerCoordonneesDuFournisseur(resultat.fournisseur);
     setFournisseur(resultat.fournisseur);
     setForm(resultat.fournisseur);
     setEditing(false);

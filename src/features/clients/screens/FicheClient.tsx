@@ -9,6 +9,7 @@ import { colors } from '@/shared/theme/colors';
 import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { ClientEcritures, ClientResume, estVente } from '@/features/clients/components/ClientResume';
 import { ClientFormulaire, ClientLecture } from '@/features/clients/components/ClientFiche';
+import { ContactLie } from '@/features/contacts/components/ContactLie';
 import { ClientReservations } from '@/features/gite/components/ClientReservations';
 import { ClientTaches } from '@/features/dossiers/components/ClientTaches';
 import { NoteDuClient } from '@/features/dossiers/components/NoteDuClient';
@@ -90,6 +91,7 @@ export default function FicheClient() {
         ) : (
           <ClientLecture client={client} onModifier={() => fiche.setEditing(true)} />
         )}
+        {!fiche.editing ? <ContactLie client={client} /> : null}
 
         {/* Un gîte liste les réservations du client ; un secrétariat, ses tâches et contenus. */}
         {!fiche.editing && modeEntreprise() && gite ? <ClientReservations clientId={client.id} /> : null}

@@ -46,7 +46,8 @@ export async function importerFournisseur(source: Fournisseur): Promise<Fourniss
   const siret = source.siret?.trim();
   const nom = source.nomEntreprise.trim().toLowerCase();
   if (existants.some((f) => (siret ? f.siret === siret : f.nomEntreprise.trim().toLowerCase() === nom))) return undefined;
-  const { id: _id, ...donnees } = source;
+  // Le lien vers sa fiche client est celui de l'autre établissement : il ne vaut pas ici.
+  const { id: _id, clientId: _lien, ...donnees } = source;
   return creerFournisseur(donnees);
 }
 

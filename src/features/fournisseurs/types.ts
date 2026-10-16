@@ -16,4 +16,6 @@ export interface Fournisseur {
   email?: string;
   /** La catégorie du fournisseur (voir categoriesFournisseur) : elle règle les dépenses possibles ; à défaut, la catégorie d'office. */
   categorie?: string;
+  /** Sa fiche client quand c'est aussi un client : un seul contact, deux fiches (voir features/contacts). */
+  clientId?: string;
 }

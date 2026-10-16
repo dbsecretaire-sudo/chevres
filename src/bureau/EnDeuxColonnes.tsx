@@ -13,7 +13,7 @@ import { estBureau } from '@/shared/utils/plateforme';
 import { LARGEUR_MENU, styles } from '@/shared/styles/bureau/EnDeuxColonnes.styles';
 
 /** Les écrans des tiers (clients, fournisseurs) : des écrans de la comptabilité, mais de l'Organisation. */
-const PAGES_TIERS = [ROUTES.CLIENTS, ROUTES.FOURNISSEURS];
+const PAGES_TIERS = [ROUTES.CLIENTS, ROUTES.FOURNISSEURS, ROUTES.CONTACTS];
 
 /** La variable CSS qui donne la largeur du menu de gauche : bureau/preload.js en fait le bord gauche des modales. */
 const VARIABLE_LARGEUR_MENU = '--bureau-menu-gauche';

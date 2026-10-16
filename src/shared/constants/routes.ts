@@ -105,6 +105,8 @@ export const ROUTES = {
   RENTABILITE: '/comptabilite/rentabilite',
   COMPTABILITE_TRESORERIE: '/comptabilite/tresorerie',
   COMPTABILITE_TRESORERIE_REGLAGES: '/comptabilite/tresorerie-reglages',
+  /** Les contacts : clients et fournisseurs en une seule liste. */
+  CONTACTS: '/comptabilite/contacts',
   FOURNISSEURS: '/comptabilite/fournisseurs',
   FOURNISSEUR_NOUVEAU: '/comptabilite/fournisseurs/nouveau',
   /** Les fournisseurs, ouverts depuis un formulaire en cours : `retour` est l'adresse où la flèche de retour ramène. */

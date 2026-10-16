@@ -10,4 +10,6 @@ export interface Client {
   categorie?: string;
   /** Vrai une fois que la structure type de sous-dossiers a été créée pour ce client (voir features/dossiers). */
   structureInitialisee?: boolean;
+  /** Sa fiche fournisseur quand c'est aussi un fournisseur : un seul contact, deux fiches (voir features/contacts). */
+  fournisseurId?: string;
 }

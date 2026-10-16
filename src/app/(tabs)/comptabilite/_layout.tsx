@@ -83,6 +83,10 @@ export default function ComptabiliteLayout() {
       <Stack.Screen name="rentabilite" options={{ title: TEXTES.comptabilite.accueil.rentabilite.titre }} />
       <Stack.Screen name="tva" options={{ title: TEXTES.comptabilite.accueil.tva.titre }} />
       <Stack.Screen
+        name="contacts"
+        options={{ title: TEXTES.contacts.titre, headerLeft: flecheOrganisation ?? enteteBureau() }}
+      />
+      <Stack.Screen
         name="fournisseurs/index"
         options={{
           title: TEXTES.commun.general.fournisseurs,

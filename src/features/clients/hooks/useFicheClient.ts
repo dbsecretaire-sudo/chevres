@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { enregistrerClient, getClient, supprimerClient } from '@/features/clients/repository';
+import { partagerCoordonneesDuClient } from '@/features/contacts/repository';
 import {
   calculerResumeClient,
   ecrituresDuClient,
@@ -68,6 +69,8 @@ export function useFicheClient(id: string | undefined) {
       adressePostale: form.adressePostale?.trim() || undefined,
     };
     await enregistrerClient(nettoye);
+    // Son adresse, son téléphone et son e-mail passent à sa fiche fournisseur, s'il en a une.
+    await partagerCoordonneesDuClient(nettoye);
     setClient(nettoye);
     setForm(nettoye);
     setEditing(false);

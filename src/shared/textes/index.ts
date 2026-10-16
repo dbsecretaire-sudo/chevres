@@ -8,6 +8,7 @@ import { TEXTES_COMMERCIAL } from '@/shared/textes/commercial';
 import { TEXTES_COMMUN } from '@/shared/textes/commun';
 import { TEXTES_COMPTABILITE } from '@/shared/textes/comptabilite';
 import { TEXTES_COMPTES_PCG } from '@/shared/textes/comptesPcg';
+import { TEXTES_CONTACTS } from '@/shared/textes/contacts';
 import { TEXTES_DOSSIERS } from '@/shared/textes/dossiers';
 import { TEXTES_DRIVE } from '@/shared/textes/drive';
 import { TEXTES_ENTREPRISE } from '@/shared/textes/entreprise';
@@ -40,6 +41,7 @@ export const TEXTES = {
   commun: TEXTES_COMMUN,
   comptabilite: TEXTES_COMPTABILITE,
   comptesPcg: TEXTES_COMPTES_PCG,
+  contacts: TEXTES_CONTACTS,
   dossiers: TEXTES_DOSSIERS,
   drive: TEXTES_DRIVE,
   entreprise: TEXTES_ENTREPRISE,
