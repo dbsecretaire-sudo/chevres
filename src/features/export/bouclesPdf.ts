@@ -112,7 +112,7 @@ const STYLES = `
   .cheptel { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-right: 2px; }
   .cheptel .case { border: 1.4px solid #111; padding: 3px 12px; font-size: 15px; font-weight: 700; letter-spacing: 1px; min-width: 112px; text-align: center; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.5px solid #111; }
-  th { height: 36px; border: 1.1px solid #111; font-weight: 400; font-size: 11px; padding: 2px 3px; line-height: 1.2; }
+  th { height: 36px; border: 1.1px solid #111; font-weight: 400; font-size: 9.5px; padding: 2px 3px; line-height: 1.2; }
   td { height: 20px; border: 1.1px solid #111; padding: 0 5px; font-size: 9px; line-height: 1.1; vertical-align: middle; overflow: hidden; }
   td.numero { font-size: 12px; font-weight: 700; padding-left: 9px; white-space: nowrap; }
   td.centre { text-align: center; font-size: 10px; }
