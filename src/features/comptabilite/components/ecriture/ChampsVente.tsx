@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ChampTauxImposition } from '@/features/comptabilite/components/ChampTauxImposition';
@@ -22,9 +22,15 @@ import { ROUTES } from '@/shared/constants/routes';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
 import { SelectModal } from '@/shared/components/SelectModal';
+import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { colors } from '@/shared/theme/colors';
-import { estPetitLe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
-import { libelleAnimalVendu } from '@/features/comptabilite/utils/animauxVendus';
+import { estPetitLe, listAnimauxAbattusDe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
+import {
+  joursAbattusAFacturer,
+  libelleAnimalVendu,
+  type JourAbattu,
+} from '@/features/comptabilite/utils/animauxVendus';
 import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
 import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
@@ -363,9 +369,15 @@ export function ChampsVenteViande({ e }: Props) {
   const espece: EspeceAnimale =
     e.activite === ACTIVITE_COMMUNE ? especeCourante() : (e.activite as EspeceAnimale);
   const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  /** Les jours d'abattage dont la viande n'est pas encore facturée : on y choisit tous les animaux, ou certains numéros. */
+  const [jours, setJours] = useState<JourAbattu[]>([]);
+  const [abattusOuvert, setAbattusOuvert] = useState(false);
   useFocusEffect(
     useCallback(() => {
       listAnimauxVivantsDe(espece).then(setAnimaux);
+      Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
+        setJours(joursAbattusAFacturer(abattus, ventes)),
+      );
     }, [espece]),
   );
   /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
@@ -394,8 +406,12 @@ export function ChampsVenteViande({ e }: Props) {
   /** Un animal de la liste est un petit (cabri, agneau…) s'il n'a pas encore l'âge de sevrage de son espèce le jour de la vente. */
   const estPetit = (animal: Chevre) => estPetitLe(animal, e.date);
   /** Les animaux déjà choisis : le nombre d'animaux de la vente est leur nombre. */
+  const joursProposes = jours
+    .map((j) => ({ date: j.date, animaux: j.animaux.filter((a) => !!a.numeroBoucle === e.avecFacture) }))
+    .filter((j) => j.animaux.length > 0);
+  const jourChoisi = joursProposes.find((j) => j.date === e.dateAbattoir);
   const animauxChoisis = e.animaux
-    .map((id) => animaux.find((a) => a.id === id))
+    .map((id) => [...animaux, ...jours.flatMap((j) => j.animaux)].find((a) => a.id === id))
     .filter((a): a is Chevre => !!a);
   /** Une vente d'animaux (petits, sur pied, vivants) se fait animal par animal : on les désigne, plutôt que d'en saisir le nombre. */
   const parAnimal = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
@@ -423,6 +439,19 @@ export function ChampsVenteViande({ e }: Props) {
     const texte = String(total).replace('.', ',');
     e.setPoidsKg(texte);
     totalAuKilo(texte);
+  };
+  /** Les animaux du jour d'abattage choisi qu'on peut encore ajouter (avec facture, ceux qui ont une boucle). */
+  const abattusProposes = (jourChoisi?.animaux ?? []).filter((a) => !e.animaux.includes(a.id));
+  /** Ajoute d'un coup les animaux cochés du jour d'abattage : tous, ou certains numéros. */
+  const ajouterAbattus = (ids: string[]) => {
+    const nouveaux = abattusProposes.filter((a) => ids.includes(a.id));
+    setAbattusOuvert(false);
+    if (nouveaux.length === 0) return;
+    const liste = [...e.animaux, ...nouveaux.map((a) => a.id)];
+    reprendrePoids([...animauxChoisis, ...nouveaux]);
+    e.setAnimaux(liste);
+    e.setJeune(estPetit(nouveaux[0]));
+    e.setQuantite(String(liste.length));
   };
   const ajouterAnimal = (id: string) => {
     const animal = animaux.find((a) => a.id === id);
@@ -495,6 +524,26 @@ export function ChampsVenteViande({ e }: Props) {
         <>
           {parAnimal ? (
             <View style={commonStyles.gap6}>
+              {/* Des animaux déjà à l'abattoir : la facture désigne ceux d'un jour d'abattage. */}
+              {joursProposes.length > 0 ? (
+                <SelectField<string>
+                  label={TEXTES.comptabilite.nouvelleEcriture.animauxAbattus}
+                  value={jourChoisi?.date ?? ''}
+                  placeholder={TEXTES.comptabilite.nouvelleEcriture.animauxVivants}
+                  onChange={(date) => {
+                    e.setDateAbattoir(date);
+                    e.setAnimaux([]);
+                    if (date) setAbattusOuvert(true);
+                  }}
+                  options={[
+                    { value: '', label: TEXTES.comptabilite.nouvelleEcriture.animauxVivants },
+                    ...joursProposes.map((j) => ({
+                      value: j.date,
+                      label: TEXTES.comptabilite.nouvelleEcriture.jourAbattu(formatDateFR(j.date), j.animaux.length),
+                    })),
+                  ]}
+                />
+              ) : null}
               <View style={commonStyles.rowSpaceBetween}>
                 <Text style={commonStyles.lineSemiBold}>
                   {TEXTES.comptabilite.nouvelleEcriture.animauxVendus}
@@ -502,12 +551,17 @@ export function ChampsVenteViande({ e }: Props) {
                 </Text>
                 <Pressable
                   style={commonStyles.boutonPastille}
-                  onPress={() => setQuestion(choisie ?? null)}
+                  onPress={() => (jourChoisi ? setAbattusOuvert(true) : setQuestion(choisie ?? null))}
                   accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.ajouterUnAnimal}
                 >
                   <Ionicons name="add-circle" size={28} color={colors.ajout} />
                 </Pressable>
               </View>
+              {animauxChoisis.some((a) => a.poidsKg === undefined) && animauxChoisis.length > 0 ? (
+                <Text style={commonStyles.note}>
+                  {TEXTES.comptabilite.nouvelleEcriture.poidsManquant(animauxChoisis.filter((a) => a.poidsKg === undefined).length)}
+                </Text>
+              ) : null}
               {animauxChoisis.length > 0 ? (
                 <Card style={commonStyles.gap10}>
                   {animauxChoisis.map((animal) => (
@@ -634,6 +688,21 @@ export function ChampsVenteViande({ e }: Props) {
         </Text>
       ) : null}
 
+      {/* Les animaux d'un jour d'abattage : tous cochés d'office, on en décoche, ou on tape une plage de numéros. */}
+      <SelectModalMultiple<string>
+        key={`${e.dateAbattoir}-${abattusProposes.length}`}
+        visible={abattusOuvert}
+        titre={TEXTES.comptabilite.nouvelleEcriture.animauxAbattusLe(formatDateFR(jourChoisi?.date))}
+        options={abattusProposes.map((a) => ({ value: a.id, label: libelleAnimal(a) }))}
+        initiales={abattusProposes.map((a) => a.id)}
+        libelleValider={TEXTES.comptabilite.nouvelleEcriture.ajouterLesAnimaux}
+        onValider={ajouterAbattus}
+        onClose={() => setAbattusOuvert(false)}
+        numeroDe={(id) => {
+          const chiffres = /(\d+)$/.exec(abattusProposes.find((a) => a.id === id)?.numeroBoucle ?? '');
+          return chiffres ? Number(chiffres[1]) : undefined;
+        }}
+      />
       <SelectModal<string>
         visible={!!question}
         titre={TEXTES.comptabilite.nouvelleEcriture.animalVendu(question?.libelle ?? '')}

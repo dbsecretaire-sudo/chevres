@@ -31,12 +31,12 @@ const OPTIONS_TYPE = [
 
 export default function NouvelleFacture() {
   useAjoutTabBarBleu();
-  const params = useLocalSearchParams<{ type?: TypeFacture; categorie?: CategorieRecette }>();
+  const params = useLocalSearchParams<{ type?: TypeFacture; categorie?: CategorieRecette; abattoir?: string; facture?: string }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
     ? params.categorie
     : undefined;
-  const e = useNouvelleEcriture(params.type, categorie);
+  const e = useNouvelleEcriture(params.type, categorie, params.abattoir, params.facture === 'non');
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
   useFocusEffect(

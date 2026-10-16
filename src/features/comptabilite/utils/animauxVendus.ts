@@ -4,7 +4,9 @@ import { articlesDuGenre, roleDeLaViande, type FiltreStock } from '@/features/st
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { GENRE_ARTICLE, type ROLE_VIANDE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { SEXE } from '@/shared/constants/cheptel';
+import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import type { Vente } from '@/features/comptabilite/types';
 import { formatDateFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
@@ -25,6 +27,39 @@ export function libelleAnimalVendu(
       ? T.sansBoucleNom(a.nom)
       : T.sansBoucle;
   return T.animalOption(identifiant, a.sexe === SEXE.MALE ? T.sexeM : T.sexeF, formatDateFR(a.dateNaissance));
+}
+
+/** Les animaux envoyés à l'abattoir un même jour. */
+export interface JourAbattu {
+  date: string;
+  animaux: Chevre[];
+}
+
+/**
+ * Les animaux à l'abattoir dont la viande n'est pas encore facturée (aucune vente ne les désigne), rangés par jour d'abattage — le
+ * plus récent d'abord. `venteId` : la vente qu'on modifie, dont les animaux restent proposés.
+ */
+export function joursAbattusAFacturer(
+  animaux: Chevre[],
+  ventes: Pick<Vente, 'id' | 'animaux'>[],
+  venteId?: string,
+): JourAbattu[] {
+  const factures = new Set(
+    ventes
+      .filter((v) => v.id !== venteId)
+      .flatMap((v) => (v.animaux ?? '').split(SEPARATEUR_ANIMAUX).filter(Boolean)),
+  );
+  const parJour = new Map<string, Chevre[]>();
+  for (const a of animaux) {
+    if (a.statut !== STATUT_CHEVRE.ABATTOIR || !a.dateStatut || factures.has(a.id)) continue;
+    parJour.set(a.dateStatut, [...(parJour.get(a.dateStatut) ?? []), a]);
+  }
+  return [...parJour.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([date, liste]) => ({
+      date,
+      animaux: liste.sort((a, b) => (a.numeroBoucle ?? '').localeCompare(b.numeroBoucle ?? '')),
+    }));
 }
 
 /**

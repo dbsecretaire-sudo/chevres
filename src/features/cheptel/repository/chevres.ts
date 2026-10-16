@@ -66,6 +66,14 @@ export async function listAnimauxVivantsDe(espece: EspeceAnimale): Promise<Chevr
     .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
 }
 
+/** Les animaux de l'espèce envoyés à l'abattoir (avec leur jour d'abattage et leur poids) : de quoi facturer la viande. */
+export async function listAnimauxAbattusDe(espece: EspeceAnimale): Promise<Chevre[]> {
+  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  return all
+    .filter((c) => c.statut === STATUT_CHEVRE.ABATTOIR && especeDe(c) === espece)
+    .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
+}
+
 /** Animaux de l'espèce courante morts, abattus ou vendus : conservés mais masqués de la liste principale. */
 export async function listChevresHistorique(): Promise<Chevre[]> {
   const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
@@ -165,6 +173,8 @@ export async function declarerStatutChevre(
 ): Promise<void> {
   const chevre = await getChevre(id);
   if (!chevre) return;
+  // Un animal déjà envoyé à l'abattoir le reste : la facture de sa viande ne le fait pas passer en « mort » ou « vendu ».
+  if (chevre.statut === STATUT_CHEVRE.ABATTOIR && statut !== STATUT_CHEVRE.ABATTOIR) return;
   await saveChevre({ ...chevre, statut, dateStatut, poidsKg: poidsKg ?? chevre.poidsKg });
 }
 

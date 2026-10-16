@@ -118,12 +118,19 @@ const PREFIXE_COMPTES_DEPENSE = '6';
 const PREFIXE_COMPTES_RECETTE = '7';
 
 /** État, valeurs calculées et actions du formulaire « Nouvelle écriture » (débit/crédit). */
-export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale?: CategorieRecette) {
+export function useNouvelleEcriture(
+  typeInitial?: TypeFacture,
+  categorieInitiale?: CategorieRecette,
+  /** Le jour d'abattage d'ouverture (depuis Production › Viande) : les animaux abattus ce jour-là sont proposés d'office. */
+  abattoirInitial?: string,
+  /** Ouvert pour un client qui ne veut pas de facture (depuis Production › Viande, pour les petits sans boucle). */
+  sansFactureInitial?: boolean,
+) {
   const router = useRouter();
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
   const { anneeImposee, dateDuJour } = useAnneeImposee();
   /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
-  const [avecFacture, setAvecFacture] = useState(true);
+  const [avecFacture, setAvecFacture] = useState(!sansFactureInitial);
   /** Le numéro de la facture de la vente (obligatoire quand elle est déclarée). */
   const [numeroFacture, setNumeroFacture] = useState('');
   /** Le récolteur coche « Réajustement » : décoché d'office. */
@@ -226,7 +233,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale
   /** Les lots des fromages vendus (vide : aucun choisi, ou un fromage sans lot). */
   const [fromages, setFromages] = useState<string[]>([]);
   /** Une vente de viande avec des animaux : leur date d'abattoir (vide : la date de la vente). */
-  const [dateAbattoir, setDateAbattoir] = useState('');
+  const [dateAbattoir, setDateAbattoir] = useState(abattoirInitial ?? '');
   const [precision, setPrecision] = useState('');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');

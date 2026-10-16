@@ -19,6 +19,7 @@ import type { ArchiveStock } from '@/features/stock/types';
 import { ETAT_LOT, GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ROUTES } from '@/shared/constants/routes';
+import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -55,17 +56,29 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
     <Screen scroll={false}>
       <Stack.Screen
         options={{
-          headerRight: () =>
-            fromage ? (
+          // Les réglages de la liste : ajouter une variété (un produit), à côté des statistiques de lait pour les fromages.
+          headerRight: () => (
+            <View style={commonStyles.row}>
+              {fromage ? (
+                <Pressable
+                  style={commonStyles.boutonEnteteDroite}
+                  onPress={() => router.push(ROUTES.PRODUCTION_STATISTIQUES)}
+                  hitSlop={10}
+                  accessibilityLabel={TEXTES.production.fromages.statistiques}
+                >
+                  <Ionicons name="stats-chart" size={24} color={colors.blanc} />
+                </Pressable>
+              ) : null}
               <Pressable
                 style={commonStyles.boutonEnteteDroite}
-                onPress={() => router.push(ROUTES.PRODUCTION_STATISTIQUES)}
+                onPress={() => setAjoutOuvert(true)}
                 hitSlop={10}
-                accessibilityLabel={TEXTES.production.fromages.statistiques}
+                accessibilityLabel={T.ajouter.titre}
               >
-                <Ionicons name="stats-chart" size={24} color={colors.blanc} />
+                <Ionicons name="settings" size={24} color={colors.blanc} />
               </Pressable>
-            ) : null,
+            </View>
+          ),
         }}
       />
       <ScrollView contentContainerStyle={commonStyles.listFab}>
@@ -102,19 +115,22 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
       <Fab
         options={[
           {
-            label: T.ajouter.titre,
-            icon: 'add-circle',
-            onPress: () => setAjoutOuvert(true),
-          },
-          {
             label: T.fabriquer,
             icon: 'add-circle',
             onPress: () => router.push(ROUTES.productionFabrication(produit)),
           },
+          // Facturer : la vente s'enregistre comme toute recette, ouverte sur les fromages (ou la boucherie / charcuterie), où l'on choisit les lots.
           {
-            label: T.rappeler,
-            icon: 'alert-circle',
-            onPress: () => router.push(ROUTES.productionRappel(produit)),
+            label: T.facturer,
+            icon: 'document-text',
+            onPress: () =>
+              router.push({
+                pathname: ROUTES.COMPTABILITE_NOUVELLE,
+                params: {
+                  type: TYPE_FACTURE.EMISE,
+                  categorie: fromage ? CATEGORIE_RECETTE.FROMAGE : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+                },
+              }),
           },
         ]}
       />

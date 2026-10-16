@@ -696,6 +696,14 @@ export const TEXTES_COMPTABILITE = {
     animalOption: (libelle: string, sexe: string, naissance: string) =>
       `${libelle} · ${sexe} · né(e) le ${naissance}`,
     animauxVendus: 'Animaux vendus',
+    /** Les animaux déjà à l'abattoir : on choisit le jour d'abattage, puis tous les animaux ou certains numéros. */
+    animauxAbattus: 'Animaux abattus le',
+    animauxVivants: 'Animaux vivants (un par un)',
+    jourAbattu: (date: string, nombre: number) => `${date} — ${nombre} animal${nombre > 1 ? 'ux' : ''} à facturer`,
+    poidsManquant: (nombre: number) =>
+      `${nombre} animal${nombre > 1 ? 'ux n’ont' : ' n’a'} pas de poids sur sa fiche : indiquez-le sur la fiche (le prix se calcule avec le poids et le prix au kilo), ou saisissez le poids total ci-dessous.`,
+    animauxAbattusLe: (date: string) => `Animaux abattus le ${date}`,
+    ajouterLesAnimaux: (nombre: number) => `Ajouter ${nombre} animal${nombre > 1 ? 'ux' : ''}`,
     dateAbattoir: 'Date d’abattoir',
     /** Les fromages et la charcuterie d'une vente, désignés par leur numéro de lot. */
     lotsVendus: 'Produits vendus (n° de lot)',
