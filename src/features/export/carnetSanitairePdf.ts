@@ -29,20 +29,31 @@ const chiffresDuCheptel = (numero: string | undefined): string => (numero ?? '')
  * Une intervention : deux rangées, comme le formulaire papier — en haut le médicament sur toute la largeur de sa case, en dessous la
  * voie, la dose et le rythme ; les autres cases s'étendent sur les deux rangées.
  */
+/**
+ * La taille du texte d'une case selon sa longueur : chaque ligne du carnet a une hauteur fixe, un texte long s'écrit plus petit (jusqu'à
+ * quatre lignes d'écriture normale, puis plus petit) au lieu d'agrandir sa ligne ou de passer sur la page suivante.
+ * `parLigne` : le nombre de caractères qui tiennent sur une ligne de la case, `lignes` : le nombre de lignes qu'elle porte.
+ */
+export function tailleDuTexte(texte: string | undefined, parLigne: number, lignes: number): '' | 't2' | 't3' {
+  const longueur = (texte ?? '').length;
+  if (longueur <= parLigne * lignes) return '';
+  return longueur <= parLigne * lignes * 1.45 ? 't2' : 't3';
+}
+
 function ligneHtml(l: LigneCarnet | undefined): string {
   const intervenant = l ? [l.intervenant, l.intervenant ? D.veterinaire : ''].filter(Boolean).join(', ') : '';
-  const c = (texte: string | undefined, classe = '', rowspan = 2) =>
-    `<td${rowspan > 1 ? ` rowspan="${rowspan}"` : ''}${classe ? ` class="${classe}"` : ''}>${echapper(texte ?? '')}</td>`;
+  const c = (texte: string | undefined, classe = '', parLigne = 99, lignes = 4) =>
+    `<td rowspan="2"${classe ? ` class="${classe}"` : ''}><div class="cl ${tailleDuTexte(texte, parLigne, lignes)}">${echapper(texte ?? '')}</div></td>`;
   return `<tr class="entree">
     ${c(l ? date(l.date) : '')}
-    ${c(l ? l.animal || D.troupeauEntier : '')}
-    ${c(l?.ordonnance, 'g')}
+    ${c(l ? l.animal || D.troupeauEntier : '', '', 13, 3)}
+    ${c(l?.ordonnance, 'g', 11, 3)}
     ${c(l ? date(l.debut) : '', 'g')}
     ${c(l ? date(l.fin) : '', 'g')}
-    <td colspan="3" class="med">${echapper(l?.medicament ?? '')}</td>
+    <td colspan="3" class="med"><div class="cm ${tailleDuTexte(l?.medicament, 24, 2)}">${echapper(l?.medicament ?? '')}</div></td>
     ${c(l ? date(l.remise) : '', 'g')}
-    ${c(l?.motif, 'gauche')}
-    ${c(intervenant, 'gauche')}
+    ${c(l?.motif, 'gauche', 40, 4)}
+    ${c(intervenant, 'gauche', 24, 4)}
   </tr>
   <tr class="sous">
     <td>${echapper(l?.voie ?? '')}</td><td>${echapper(l?.dose ?? '')}</td><td>${echapper(l?.rythme ?? '')}</td>
@@ -97,7 +108,7 @@ export function carnetHtml(lignes: LigneCarnet[], atelier: string, cheptel: stri
 <style>
   * { box-sizing: border-box; }
   body { font-family: Helvetica, Arial, sans-serif; color: ${TRAIT}; margin: 0; padding: 8mm 9mm; font-size: 9px; }
-  .page { page-break-after: always; }
+  .page { page-break-after: always; page-break-inside: avoid; }
   .page:last-child { page-break-after: auto; }
   .titre { background: ${VERT}; color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 3px; text-align: center; padding: 4px 0; }
   .bandeau { background: ${GRIS_BANDEAU}; color: #fff; display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin: 3px 0 5px; font-weight: 800; font-size: 12px; }
@@ -110,9 +121,14 @@ export function carnetHtml(lignes: LigneCarnet[], atelier: string, cheptel: stri
   th { font-weight: 700; font-size: 8.5px; }
   th small { font-weight: 400; font-size: 7px; }
   tbody td { font-size: 8.5px; }
-  tr.entree td { height: 7mm; border-top: 1.6px solid ${TRAIT}; }
-  tr.sous td { height: 6.5mm; }
+  tr.entree td { height: 6.6mm; border-top: 1.6px solid ${TRAIT}; }
+  tr.sous td { height: 6mm; }
   td.med { text-align: center; font-size: 8px; }
+  /* Une ligne a toujours la même hauteur : ce qui dépasse d'une case est écrit plus petit, puis coupé. */
+  .cl { max-height: 12mm; overflow: hidden; line-height: 1.15; }
+  .cm { max-height: 6mm; overflow: hidden; line-height: 1.15; }
+  .cl.t2, .cm.t2 { font-size: 7px; }
+  .cl.t3, .cm.t3 { font-size: 6px; }
   td.g { background: ${GRIS_COLONNE}; }
   td.gauche { text-align: left; }
 </style>
@@ -138,6 +154,6 @@ export async function exporterCarnetSanitairePdf(): Promise<void> {
     carnetHtml(lignes, atelier.charAt(0).toUpperCase() + atelier.slice(1), cheptel),
     `${D.fichier}.${FORMAT_EXPORT.PDF}`,
     TEXTES.carnet.generer,
-    { paysage: true },
+    { paysage: true, sansTitre: true },
   );
 }

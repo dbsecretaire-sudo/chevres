@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Facture } from '@/features/comptabilite/types';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
-import { lignesDuCarnet, pagesDuCarnet, placeDeLaLigne } from '@/features/exploitation/services/carnetSanitaire';
+import { lignesDuCarnet, pagesDuCarnet } from '@/features/exploitation/services/carnetSanitaire';
 import type { VisiteVeterinaire } from '@/features/exploitation/types';
+import { tailleDuTexte } from '@/features/export/carnetSanitairePdf';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 
 const facture = (plus: Partial<Facture>): Facture =>
@@ -112,20 +113,6 @@ describe('carnet sanitaire', () => {
     expect(lignes).toEqual([]);
   });
 
-  it('une ligne au texte long prend la place de plusieurs : la page ne déborde pas', () => {
-    const longue = { date: '2026-01-01', animal: '', ordonnance: '', motif: 'x'.repeat(400), intervenant: 'OMNIA VET' } as never;
-    const courte = { date: '2026-01-02', animal: '1', ordonnance: '', motif: 'Vaccin', intervenant: '' } as never;
-    expect(placeDeLaLigne(courte)).toBe(1);
-    expect(placeDeLaLigne(longue)).toBeGreaterThan(2);
-    const pages = pagesDuCarnet([longue, longue, longue, courte]);
-    // Chaque page tient sur neuf lignes de carnet, lignes vides comprises.
-    for (const page of pages) {
-      const total = page.reduce((somme, l) => somme + (l ? placeDeLaLigne(l) : 1), 0);
-      expect(total).toBe(9);
-    }
-    expect(pages.length).toBeGreaterThan(1);
-  });
-
   it('range les lignes en pages de neuf, avec des lignes vides pour finir', () => {
     expect(pagesDuCarnet([])).toHaveLength(1);
     const dix = Array.from({ length: 10 }, (_, i) => ({ date: `2026-01-${String(i + 1).padStart(2, '0')}` })) as never[];
@@ -134,5 +121,18 @@ describe('carnet sanitaire', () => {
     expect(pages[0].filter(Boolean)).toHaveLength(9);
     expect(pages[1].filter(Boolean)).toHaveLength(1);
     expect(pages[1]).toHaveLength(9);
+  });
+
+  it('neuf lignes sur chaque page, quelle que soit la longueur des textes', () => {
+    const longue = { date: '2026-01-01', animal: 'x'.repeat(80), ordonnance: '', motif: 'y'.repeat(500), intervenant: 'OMNIA VET' } as never;
+    const pages = pagesDuCarnet(Array.from({ length: 20 }, () => longue));
+    expect(pages).toHaveLength(3);
+    for (const page of pages) expect(page).toHaveLength(9);
+  });
+
+  it('un texte long s’écrit plus petit dans sa case', () => {
+    expect(tailleDuTexte('court', 40, 4)).toBe('');
+    expect(tailleDuTexte('y'.repeat(170), 40, 4)).toBe('t2');
+    expect(tailleDuTexte('y'.repeat(400), 40, 4)).toBe('t3');
   });
 });

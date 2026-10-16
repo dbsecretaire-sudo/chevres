@@ -241,6 +241,8 @@ export interface OptionsImpression {
   paysage?: boolean;
   /** Un document à la taille exacte de la feuille (un formulaire) : aucune marge autour de la page. */
   sansMarges?: boolean;
+  /** Un formulaire dont la page est déjà pleine : le titre personnalisé de l'utilisateur n'est pas ajouté en tête (il ferait déborder la première page). */
+  sansTitre?: boolean;
 }
 
 /**
@@ -259,7 +261,7 @@ export async function ecrireEtPartagerPdf(
   options: OptionsImpression = {},
 ): Promise<void> {
   // Le titre personnalisé de l'utilisateur (Organisation › Export) s'imprime en tête des PDF (pas d'un formulaire à la taille exacte de la page : il la ferait déborder).
-  const titrePerso = options.sansMarges ? undefined : (await getSettings()).exploitation?.titrePdf?.trim();
+  const titrePerso = options.sansMarges || options.sansTitre ? undefined : (await getSettings()).exploitation?.titrePdf?.trim();
   const html = titrePerso
     ? source.replace('<body>', `<body>\n  <div class="titre-perso">${echapper(titrePerso)}</div>`)
     : source;
