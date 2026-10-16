@@ -8,7 +8,7 @@ import { Button } from '@/shared/components/Button';
 import { SelectField } from '@/shared/components/SelectField';
 import { ligneChambreVide, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
 import { estLigneEquarrissage } from '@/features/comptabilite/utils/equarrissage';
-import { estEquarrisseur } from '@/features/exploitation/services/equarrisseurs';
+import { estEquarrisseur } from '@/features/exploitation/services/partenaires';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { colors } from '@/shared/theme/colors';

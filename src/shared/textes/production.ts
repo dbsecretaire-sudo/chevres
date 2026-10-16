@@ -7,7 +7,7 @@ export const TEXTES_PRODUCTION = {
       produit: 'Produit',
       laitier: 'Analyses et contrôle du lait',
       analyses: 'Analyses et contrôles',
-      collectifs: 'Collectifs',
+      collectifs: 'Réseau',
       dangereux: 'Gestion des produits dangereux',
     },
     fromages: { titre: 'Fromages', aide: 'Les fromages par lot : fabrication, vente, rappels.' },
@@ -33,7 +33,10 @@ export const TEXTES_PRODUCTION = {
       titre: 'Dépistage de la salmonelle',
       aide: 'Les prélèvements de fientes analysés pour la salmonelle.',
     },
-    groupements: { titre: 'Groupements', aide: 'Adhésion, achats groupés, actions spécifiques.' },
+    groupements: {
+      titre: 'Partenaires',
+      aide: 'Groupements, organismes, équarrisseurs : contrats, courriers, échéances, factures.',
+    },
     rappels: {
       titre: 'Rappels de lots',
       aide: 'Les lots vendus à rappeler (contrôle non ok) et ceux déjà rappelés.',

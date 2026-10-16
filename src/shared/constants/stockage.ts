@@ -30,6 +30,8 @@ export const CLE_STOCKAGE = {
   CLIENTS: 'clients',
   /** Les documents d'identification et d'installation de l'exploitation (pièces scannées). */
   IDENTIFICATION: 'identification',
+  /** Les tiers que l'utilisateur ajoute aux partenaires ou en retire (Organisation, dans Partenaires). */
+  PARTENAIRES: 'partenaires',
   DOSSIERS: 'dossiers',
   GITE: 'gite',
   TRADING: 'trading',

@@ -45,6 +45,12 @@ export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique'] a
 /** La nature d'un contenu d'équarrisseur : des contrats, des factures, des promotions (pas d'achat groupé). */
 export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion'] as const;
 
+/** La nature d'un contenu d'organisme (MSA, DDTM, DRAAF, ODARC…) : des courriers, des démarches, des documents. */
+export const NATURE_CONTENU_ORGANISME = ['courrier', 'demarche', 'document'] as const;
+
+/** La nature d'un contenu d'assureur : des contrats, des courriers, des démarches (sinistre…), des documents. */
+export const NATURE_CONTENU_ASSUREUR = ['contrat', 'courrier', 'demarche', 'document'] as const;
+
 /** La hauteur du graphique du résumé du contrôle laitier quand il s'affiche en plein écran (px). */
 export const HAUTEUR_COURBE_PLEIN_ECRAN = 340;
 

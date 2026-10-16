@@ -11,6 +11,11 @@ import {
   remplacerTousDocumentsIdentification,
 } from '@/features/identification/repository';
 import type { DocumentIdentification } from '@/features/identification/types';
+import {
+  enregistrerChoixPartenaires,
+  lireChoixPartenaires,
+  type ChoixPartenaires,
+} from '@/features/exploitation/repository/partenaires';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
 import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
@@ -81,6 +86,8 @@ interface FichierSauvegarde {
   clients?: Client[];
   /** Les documents d'identification et d'installation de l'exploitation (absent des anciennes sauvegardes). */
   identification?: DocumentIdentification[];
+  /** Les tiers ajoutés aux partenaires ou retirés (absent des anciennes sauvegardes). */
+  partenaires?: ChoixPartenaires;
   /** Sous-dossiers et contenus de l'explorateur de dossiers (absent des anciennes sauvegardes). */
   dossiers?: ArchiveDossiers;
   /** Séjours du gîte (absent des anciennes sauvegardes). */
@@ -151,6 +158,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     lireArchiveAnnexes(),
   ]);
   const identification = await listDocumentsIdentification();
+  const partenaires = await lireChoixPartenaires();
 
   const pieces: PieceSauvegardee[] = [];
   if (piecesDisponibles()) {
@@ -166,6 +174,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     fournisseurs,
     clients,
     identification,
+    partenaires,
     dossiers,
     gite,
     trading,
@@ -310,6 +319,13 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     await appliquerSiDifferent(await listDocumentsIdentification(), sauvegarde.identification, () =>
       remplacerTousDocumentsIdentification(sauvegarde.identification!),
     );
+  }
+
+  if (sauvegarde.partenaires && typeof sauvegarde.partenaires === 'object') {
+    await enregistrerChoixPartenaires({
+      ajoutes: Array.isArray(sauvegarde.partenaires.ajoutes) ? sauvegarde.partenaires.ajoutes : [],
+      retires: Array.isArray(sauvegarde.partenaires.retires) ? sauvegarde.partenaires.retires : [],
+    });
   }
 
   if (sauvegarde.dossiers && Array.isArray(sauvegarde.dossiers.sousDossiers)) {
