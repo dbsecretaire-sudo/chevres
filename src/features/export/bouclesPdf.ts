@@ -3,6 +3,7 @@ import { avecIndicatif } from '@/features/export/services/lignesExport';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, identificationCheptel, indicatifMarquagePar } from '@/features/settings/settings';
 import {
+  estArticleRebouclage,
   estBoucleDeRemplacement,
   libelleDeLaSorte,
   nePasPoser,
@@ -63,7 +64,12 @@ export function ligneDeLaListe(
     b.remarque ? texteDeLaRemarque(b.remarque) : undefined,
     !b.remarque && nePasPoser(b) ? T.nePasPoser : undefined,
     // Une boucle rouge ou de rebouclage s'achète en quantité, sans numéro : la date d'achat est ce qui la distingue.
-    estBoucleDeRemplacement(b.article) && b.dateAchat ? P.achatLe(formatDateShortFR(b.dateAchat)) : undefined,
+    // Un rebouclage posé : sa date de pose ; sinon (boucle en stock) sa date d'achat, comme la boucle rouge.
+    estArticleRebouclage(b.article) && b.datePose
+      ? P.poseLe(formatDateShortFR(b.datePose))
+      : estBoucleDeRemplacement(b.article) && b.dateAchat
+        ? P.achatLe(formatDateShortFR(b.dateAchat))
+        : undefined,
     sortie ? texteDeLaSortie(sortie.statut, sortie.date) || P.oui : undefined,
   ].filter(Boolean);
   return {

@@ -54,6 +54,15 @@ describe('liste des repères imprimée', () => {
     expect(ligneDeLaListe(boucle({ dateAchat: '2024-12-10' }), undefined, undefined, undefined).commentaires).toBe('');
   });
 
+  it('un rebouclage posé porte sa date de pose en commentaire (« Pose le »), une boucle rouge sa date d’achat', () => {
+    const reb = ligneDeLaListe(boucle({ article: 'boucle:rebouclage', dateAchat: '2023-04-28', datePose: '2023-06-01', chevreId: 'c' }), undefined, undefined, undefined);
+    expect(reb.commentaires).toBe('Pose le 01/06/2023');
+    const rouge = ligneDeLaListe(boucle({ article: 'boucle:rouges', dateAchat: '2023-04-28', datePose: '2023-06-01', chevreId: 'c' }), undefined, undefined, undefined);
+    expect(rouge.commentaires).toBe('Achat le 28/04/2023');
+    const stock = ligneDeLaListe(boucle({ article: 'boucle:rebouclage', numero: '', dateAchat: '2023-04-28' }), undefined, undefined, undefined);
+    expect(stock.commentaires).toBe('Achat le 28/04/2023');
+  });
+
   it('toujours trente lignes par page, les manquantes restant vides', () => {
     const ligne = (n: number): LigneListe => ({ identification: 'FR ' + n, naissance: '', pose: '', secondRepere: '', commentaires: '' });
     expect(LIGNES_PAR_PAGE_REPERES).toBe(30);
