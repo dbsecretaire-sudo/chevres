@@ -39,6 +39,7 @@ import {
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { ROUTES } from '@/shared/constants/routes';
+import { DossiersDeLAide } from '@/features/exploitation/components/DossiersDeLAide';
 import { idVisiteDeLaFacture } from '@/features/exploitation/services/visitesFacture';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { formatTotalEuros } from '@/shared/utils/nombres';
@@ -304,6 +305,9 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             )}
           </>
         )}
+
+        {/* Une recette d'aide : le dossier de l'aide (ses pièces jointes) qui la lie, rangé chez l'organisme. */}
+        {estAide && form.id ? <DossiersDeLAide factureId={form.id} /> : null}
 
         {/* Une dépense vétérinaire : le motif de la visite ; une dépense de production ou autre : le stock qu'elle alimente. */}
         {form.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
