@@ -82,4 +82,4 @@ npm run bureau:installateur # fabrique le programme d'installation Windows (doss
 ```
 
 Le dossier `chevre_pc` n'est plus qu'une copie de ce dépôt qui sert à fabriquer l'installateur : on n'y modifie rien. Pour le mettre à
-jour : `git pull ..\chèvre master` (ou `npm run bureau:synchro`).
+jour : `git pull ..\chèvre master`.
