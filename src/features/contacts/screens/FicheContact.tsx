@@ -20,6 +20,8 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { FormulaireContactChamps } from '@/features/contacts/components/FormulaireContactChamps';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import {
+  assurerEntreeDuContact,
+  convertirGroupementsEnContacts,
   enregistrerContact,
   getContact,
   lierLesFichesDeMemeNom,
@@ -74,6 +76,7 @@ export default function FicheContact() {
 
   const charger = useCallback(async () => {
     if (!id) return;
+    await convertirGroupementsEnContacts();
     await lierLesFichesDeMemeNom();
     const c = await getContact(id);
     setContact(c);
@@ -118,6 +121,12 @@ export default function FicheContact() {
     await charger();
   };
 
+  const ajouterDocument = async () => {
+    if (!contact) return;
+    const entreeId = await assurerEntreeDuContact(contact);
+    router.push(ROUTES.santeContenuGroupement(entreeId) as never);
+  };
+
   const supprimer = async () => {
     if (!contact) return;
     await supprimerContact(contact);
@@ -140,8 +149,9 @@ export default function FicheContact() {
   const telephone = c?.telephone || f?.telephone;
   const email = c?.email || f?.email;
   const balance = balanceDuContact(ecritures);
-  const documents = elements.filter((x) => x.fichiers > 0);
-  const autres = elements.filter((x) => x.fichiers === 0);
+  // Les documents : ce qui est rangé dans la fiche du contact (courriers, contrats, aides, notes…) ; les autres : le reste de son dossier.
+  const documents = elements.filter((x) => x.origine === 'partenaire');
+  const autres = elements.filter((x) => x.origine === 'dossier');
 
   return (
     <Screen scroll={false}>
@@ -335,6 +345,9 @@ export default function FicheContact() {
               </View>
             ) : (
               <View style={commonStyles.gap10}>
+                {onglet === 'documents' ? (
+                  <Button variant="secondary" label={T.ajouterDocument} onPress={ajouterDocument} />
+                ) : null}
                 {(onglet === 'documents' ? documents : autres).length === 0 ? (
                   <Text style={commonStyles.mutedItalic}>
                     {onglet === 'documents' ? T.aucunDocument : T.aucunAutre}
@@ -346,7 +359,11 @@ export default function FicheContact() {
                       title={x.titre}
                       subtitle={[
                         formatDateFR(x.date),
-                        T.origine[x.origine],
+                        x.nature
+                          ? (TEXTES.exploitation.controles.natureGroupement[
+                              x.nature as keyof typeof TEXTES.exploitation.controles.natureGroupement
+                            ] ?? T.origine[x.origine])
+                          : T.origine[x.origine],
                         x.fichiers > 0 ? TEXTES.fichiers.nombre(x.fichiers) : undefined,
                       ]
                         .filter(Boolean)

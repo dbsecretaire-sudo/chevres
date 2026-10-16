@@ -22,14 +22,14 @@ export const TEXTES_SETTINGS = {
   },
   reglages: {
     sectionEtablissement: 'Mon établissement',
-    sectionTiers: 'Clients et fournisseurs',
-    aideRubriqueTiers: 'Les carnets d’adresses de vos clients et de vos fournisseurs.',
+    sectionTiers: 'Contacts',
+    aideRubriqueTiers: 'Le carnet d’adresses de vos contacts, leurs catégories et ce qu’elles changent.',
     aideRubriqueFiscalite: 'Déclarations à valider, impôts, RSA, URSSAF, TVA.',
-    sectionCategoriesClient: 'Catégories de client',
+    sectionCategoriesClient: 'Catégories de contact (recettes)',
     aideCategoriesClient: 'Particulier, récolteur, organisme… et ce qu’elles changent dans les ventes.',
-    sectionCategoriesTiers: 'Catégories de tiers',
-    aideCategoriesTiers: 'Fournisseur, vétérinaire… et les dépenses que leurs factures peuvent avoir.',
-    aideRubriqueEtablissement: 'Informations, statut, dossiers des clients.',
+    sectionCategoriesTiers: 'Catégories de contact (dépenses)',
+    aideCategoriesTiers: 'Contact, vétérinaire… et les dépenses que leurs factures peuvent avoir.',
+    aideRubriqueEtablissement: 'Informations, statut, dossiers des contacts.',
     aideRubriqueDonnees: 'Export et PDF, sauvegarde, Google Drive.',
     aideConditionnement: 'Les emballages consommés à chaque vente d’un fromage.',
     sectionDonnees: 'Mes données',
@@ -44,7 +44,7 @@ export const TEXTES_SETTINGS = {
     comptesPcg: 'Comptes du plan comptable',
     aideComptesPcg: 'Les comptes et leurs libellés.',
     aideInformations: 'Nom, statut, régimes, SIRET, tarifs…',
-    aideStructure: 'Les dossiers créés pour chaque nouveau client.',
+    aideStructure: 'Les dossiers créés pour chaque nouveau contact.',
     aideExport: (annee: number) => `Un rapport de l’année ${annee}, en PDF ou en Excel.`,
     aideSauvegarde: 'Toutes les données dans un seul fichier, à garder ou à reprendre.',
     aideDrive: 'Synchroniser les données avec votre Google Drive.',
@@ -70,36 +70,36 @@ export const TEXTES_SETTINGS = {
     }) => {
       const bilan = `${r.misAJour} jeu(x) de données mis à jour, ${r.inchanges} déjà à jour (laissé(s) tel(s) quel(s)).`;
       return modeEntreprise()
-        ? `${r.clients} client(s), ${r.fournisseurs} fournisseur(s), ${r.contenus} contenu(s) de dossier, ${r.sejours} séjour(s), ${r.trades} trade(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`
-        : `${r.animaux} animal/animaux, ${r.fournisseurs} fournisseur(s), ${r.clients} client(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`;
+        ? `${r.clients + r.fournisseurs} contact(s), ${r.contenus} contenu(s) de dossier, ${r.sejours} séjour(s), ${r.trades} trade(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`
+        : `${r.animaux} animal/animaux, ${r.clients + r.fournisseurs} contact(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`;
     },
     erreurDImport: 'Erreur d’import',
     export: 'Export',
     descriptionExport: (annee: number) =>
       modeEntreprise()
-        ? `Génère un rapport (${contenuEntreprise('synthèse, factures, clients, contenus des dossiers')}) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`
+        ? `Génère un rapport (${contenuEntreprise('synthèse, factures, contacts, contenus des dossiers')}) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`
         : `Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`,
     exporter: 'Exporter',
     sauvegardeLocale: 'Sauvegarde locale',
     get exporteToutesLesDonneesDe() {
       const contenu = modeEntreprise()
-        ? contenuEntreprise('factures, clients, dossiers et contenus, fournisseurs')
-        : 'cheptel, ventes, factures, visites, contrôles, fournisseurs';
+        ? contenuEntreprise('factures, contacts, dossiers et contenus')
+        : 'cheptel, ventes, factures, visites, contrôles, contacts';
       return `Exporte toutes les données de l’appli (toutes années, ${contenu}) dans un seul fichier à conserver ailleurs (mail, stockage…) — permet de tout récupérer après une réinstallation, sans passer par Google Drive.`;
     },
     importer: 'Importer',
     restaurerUneSauvegardeQuestion: 'Restaurer une sauvegarde ?',
     get toutesLesDonneesActuellementEnregistrees() {
       const contenu = modeEntreprise()
-        ? contenuEntreprise('factures, clients, dossiers et contenus, fournisseurs')
-        : 'cheptel, ventes, factures, visites, contrôles, fournisseurs';
+        ? contenuEntreprise('factures, contacts, dossiers et contenus')
+        : 'cheptel, ventes, factures, visites, contrôles, contacts';
       return `Toutes les données actuellement enregistrées sur cet appareil (${contenu}) seront remplacées par celles du fichier choisi. Cette action est irréversible.`;
     },
     choisirLeFichier: 'Choisir le fichier',
     googleDrive: 'Google Drive',
     get synchroniseLesFichiersTexteCheptel() {
       const contenu = modeEntreprise()
-        ? contenuEntreprise('factures, clients, dossiers et contenus')
+        ? contenuEntreprise('factures, contacts, dossiers et contenus')
         : 'cheptel, ventes, factures, visites vétérinaire, contrôles';
       return `Synchronise les fichiers texte (${contenu}) dans un dossier « Troupeau Chèvres » sur Google Drive, pour partager les données entre plusieurs appareils.`;
     },

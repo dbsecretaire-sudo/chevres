@@ -24,6 +24,10 @@ import {
   type Contact,
 } from '@/features/contacts/services/contacts';
 import { fichesDuFormulaire, type FormulaireContact } from '@/features/contacts/services/fiche';
+import { enregistrerControle, listTousControles } from '@/features/exploitation/repository/controles';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { todayISO } from '@/shared/utils/dates';
 import { nomComplet } from '@/shared/utils/personne';
 
 /** Les contacts de l'établissement actif (fiches client et fournisseur réunies). */
@@ -139,4 +143,67 @@ export async function enregistrerContact(
 export async function supprimerContact(contact: Contact): Promise<void> {
   if (contact.client) await supprimerClient(contact.client.id);
   if (contact.fournisseur) await supprimerFournisseur(contact.fournisseur.id);
+}
+
+const memeNom = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * L'entrée où se rangent les documents d'un contact (ses courriers, contrats, aides, notes…) : celle qui est liée à sa fiche, sinon un
+ * groupement saisi à la main du même nom (adopté), sinon une entrée neuve. Renvoie son identifiant.
+ */
+export async function assurerEntreeDuContact(contact: Contact): Promise<string> {
+  const entrees = (await listTousControles()).filter((c) => c.famille === FAMILLE_CONTROLE.GROUPEMENT);
+  const fournisseurId = contact.fournisseur?.id;
+  const clientId = contact.client?.id;
+  const lie = entrees.find(
+    (c) => (!!fournisseurId && c.fournisseurId === fournisseurId) || (!!clientId && c.clientId === clientId),
+  );
+  const adoptee =
+    lie ?? entrees.find((c) => !c.fournisseurId && !c.clientId && memeNom(c.type, contact.nom));
+  if (adoptee) {
+    if (adoptee.fournisseurId !== fournisseurId || adoptee.clientId !== clientId) {
+      await enregistrerControle({ ...adoptee, fournisseurId, clientId });
+    }
+    return adoptee.id;
+  }
+  const creee = await enregistrerControle({
+    famille: FAMILLE_CONTROLE.GROUPEMENT,
+    date: todayISO(),
+    type: contact.nom,
+    fournisseurId,
+    clientId,
+  });
+  return creee.id;
+}
+
+/**
+ * Les groupements saisis à la main (GDS, achat groupé…) n'ont ni fiche client ni fiche fournisseur : chacun devient un contact qui fait
+ * des dépenses (la case « recettes » se coche à part), avec ses contenus. S'il existe déjà un contact du même nom, c'est à lui qu'il est
+ * lié. Sans effet sur ce qui est déjà converti.
+ */
+export async function convertirGroupementsEnContacts(): Promise<void> {
+  const controles = await listTousControles();
+  const orphelins = controles.filter(
+    (c) => c.famille === FAMILLE_CONTROLE.GROUPEMENT && !c.fournisseurId && !c.clientId,
+  );
+  if (orphelins.length === 0) return;
+  const [clients, fournisseurs] = await Promise.all([listClients(), listFournisseurs()]);
+  for (const entree of orphelins) {
+    const fournisseur = fournisseurs.find((f) => memeNom(f.nomEntreprise, entree.type));
+    const client = clients.find((c) => memeNom(nomComplet(c), entree.type));
+    if (fournisseur) {
+      await enregistrerControle({ ...entree, fournisseurId: fournisseur.id, clientId: client?.id });
+    } else if (client) {
+      await enregistrerControle({ ...entree, clientId: client.id });
+    } else {
+      const cree = await creerFournisseur({
+        nom: '',
+        nomEntreprise: entree.type,
+        siret: '',
+        adressePostale: '',
+        categorie: CATEGORIE_FOURNISSEUR.GROUPEMENT,
+      });
+      await enregistrerControle({ ...entree, fournisseurId: cree.id });
+    }
+  }
 }

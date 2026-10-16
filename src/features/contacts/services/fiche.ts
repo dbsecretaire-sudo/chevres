@@ -209,6 +209,8 @@ export interface ElementLie {
   /** Le nombre de fichiers joints : avec fichiers c'est un document, sans c'est un autre élément. */
   fichiers: number;
   origine: 'partenaire' | 'dossier';
+  /** La nature d'un contenu rangé dans la fiche (courrier, aide, contrat…). */
+  nature?: string;
   groupementId?: string;
   contenuId?: string;
   elementId?: string;
@@ -236,6 +238,7 @@ export function elementsDuContact(
       date: x.date,
       fichiers: x.fichiers?.length ?? 0,
       origine: 'partenaire' as const,
+      nature: x.nature,
       groupementId: entree.id,
       contenuId: x.id,
     })),

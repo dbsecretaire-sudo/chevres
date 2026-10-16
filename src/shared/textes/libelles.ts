@@ -76,10 +76,10 @@ export const LABEL_ZONE_ICHN: Record<ValeurDe<typeof ZONE_ICHN>, string> = {
 };
 
 export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURNISSEUR>, string> = {
-  [CATEGORIE_FOURNISSEUR.GENERAL]: 'Fournisseur',
+  [CATEGORIE_FOURNISSEUR.GENERAL]: 'Général',
   [CATEGORIE_FOURNISSEUR.VETERINAIRE]: 'Vétérinaire',
   [CATEGORIE_FOURNISSEUR.ETAT]: 'État',
-  [CATEGORIE_FOURNISSEUR.ALIMENTS]: 'Fournisseur d’aliments',
+  [CATEGORIE_FOURNISSEUR.ALIMENTS]: 'Aliments',
   [CATEGORIE_FOURNISSEUR.CARBURANT]: 'Distributeur de carburant',
   [CATEGORIE_FOURNISSEUR.GARAGE]: 'Garage / réparateur',
   [CATEGORIE_FOURNISSEUR.ORGANISME]: 'Organisme',
@@ -88,7 +88,7 @@ export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURN
   [CATEGORIE_FOURNISSEUR.EQUARRISSAGE]: 'Équarrissage',
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: 'Assureur',
   [CATEGORIE_FOURNISSEUR.BANQUE]: 'Banque',
-  [CATEGORIE_FOURNISSEUR.NON_FACTURABLE]: 'Fournisseur non facturable',
+  [CATEGORIE_FOURNISSEUR.NON_FACTURABLE]: 'Non facturable',
 };
 
 export const LABEL_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE>, string> = {

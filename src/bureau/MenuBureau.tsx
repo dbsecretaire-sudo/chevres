@@ -37,6 +37,11 @@ function definitionDesMenus(): DefinitionMenu[] {
     label: TEXTES.commun.general.clients,
     route: ROUTES.CLIENTS,
   };
+  /** Les contacts (clients, fournisseurs, organismes…) : une entrée du haut, car ils servent aux recettes, aux dépenses et aux documents. */
+  const contacts: DefinitionMenu = {
+    label: TEXTES.contacts.titre,
+    route: ROUTES.CONTACTS,
+  };
   const cheptel: DefinitionMenu = {
     label: TEXTES.commun.general.cheptel,
     items: [
@@ -86,13 +91,11 @@ function definitionDesMenus(): DefinitionMenu[] {
     label: TEXTES.commercial.titre,
     items: [
       { label: K.ventes.titre, route: ROUTES.COMMERCIAL_VENTES },
-      { label: K.clients.titre, route: ROUTES.CLIENTS },
       { label: K.tarifs.titre, route: ROUTES.COMMERCIAL_TARIFS },
       { label: K.commandes.titre, route: ROUTES.COMMERCIAL_COMMANDES },
       { label: K.visitesAgri.titre, route: ROUTES.COMMERCIAL_AGRITOURISME },
       { label: K.formulesAgri.titre, route: ROUTES.COMMERCIAL_FORMULES },
       { label: K.circuits.titre, route: ROUTES.COMMERCIAL_CIRCUITS },
-      { label: K.partenaires.titre, route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT) },
     ],
   };
   const comptabilite: DefinitionMenu = {
@@ -149,6 +152,7 @@ function definitionDesMenus(): DefinitionMenu[] {
         ...(productionActive(especeCourante()) ? [production] : []),
         commercial,
         comptabilite,
+        contacts,
         organisation,
       ];
 }

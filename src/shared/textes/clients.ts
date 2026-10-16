@@ -5,9 +5,9 @@ const Cap = capitaliser;
 
 /** Textes de l'interface — « clients ». À modifier ici uniquement. */
 export const TEXTES_CLIENTS = {
-  contact: { appeler: 'Appeler le client', ecrire: 'Écrire un e-mail au client' },
+  contact: { appeler: 'Appeler le contact', ecrire: 'Écrire un e-mail au contact' },
   ficheClient: {
-    clientIntrouvable: 'Client introuvable.',
+    clientIntrouvable: 'Contact introuvable.',
     categorieDeuxPoints: 'Catégorie : ',
     telephoneDeuxPoints: 'Téléphone : ',
     emailDeuxPoints: 'Email : ',
@@ -19,8 +19,8 @@ export const TEXTES_CLIENTS = {
     },
     autresVentes: 'Autres ventes (animaux, viande, charcuterie)',
     aidesSubventions: 'Aides / subventions',
-    totalPayeParCeClient: 'Total payé par ce client',
-    aucuneEcritureLieeACe: 'Aucune écriture liée à ce client pour l’instant.',
+    totalPayeParCeClient: 'Total payé par ce contact',
+    aucuneEcritureLieeACe: 'Aucune écriture liée à ce contact pour l’instant.',
     cetteActionSupprimeraDefinitivementLa: (nom: string, valeur: string) =>
       `Cette action supprimera définitivement la fiche de ${nom}${valeur}. Les ventes déjà enregistrées ne sont pas modifiées.`,
     masquerLesDetails: 'Masquer les détails',
@@ -29,13 +29,13 @@ export const TEXTES_CLIENTS = {
   },
   listeClients: {
     nomTelephoneEmailPoints: 'Nom, téléphone, email…',
-    aucunClient: 'Aucun client',
-    ajoutezVosClientsPourLes: 'Ajoutez vos clients pour les retrouver rapidement dans une nouvelle vente.',
+    aucunClient: 'Aucun contact',
+    ajoutezVosClientsPourLes: 'Ajoutez vos contacts pour les retrouver rapidement dans une nouvelle vente.',
   },
   nouveauClient: {
-    nomDuClient: 'Nom du client',
-    categorieDuClient: 'Catégorie de client',
-    aideCategorie: 'Elle règle le prix, le n° de facture et la déclaration des ventes de ce client.',
+    nomDuClient: 'Nom du contact',
+    categorieDuClient: 'Catégorie de contact',
+    aideCategorie: 'Elle règle le prix, le n° de facture et la déclaration des ventes de ce contact.',
   },
   /** Organisation › Clients et fournisseurs › Catégories de client. */
   categories: {
@@ -46,8 +46,8 @@ export const TEXTES_CLIENTS = {
     dansLesVentes: 'Dans les ventes',
     renommer: 'Modifier le nom de la catégorie',
     nomCategorie: 'Nom de la catégorie',
-    affichage: 'Afficher dans les factures de ses clients',
-    aideAffichage: 'Décochée, la case n’apparaît plus dans la facture d’un client de cette catégorie.',
+    affichage: 'Afficher dans les factures de ses contacts',
+    aideAffichage: 'Décochée, la case n’apparaît plus dans la facture d’un contact de cette catégorie.',
     exempleNom: 'ex : Coopérative',
     ajouter: '+ Ajouter une catégorie',
     recettes: 'Recettes proposées',
@@ -55,18 +55,18 @@ export const TEXTES_CLIENTS = {
       'Seul un organisme a l’aide / subvention d’office (ou une facture de prestations) ; les autres catégories ne la proposent pas tant que vous ne la cochez pas.',
     declaree: 'Vente déclarée d’office (avec facture)',
     prixLibre: 'Prix libre, n° de facture avec lettres, réajustement',
-    parDefaut: 'Catégorie d’office des clients : elle ne se retire pas.',
+    parDefaut: 'Catégorie d’office des contacts : elle ne se retire pas.',
     protegee:
-      'Les groupements (Production) se choisissent parmi les clients de cette catégorie : elle ne se retire pas.',
+      'Les groupements (Production) se choisissent parmi les contacts de cette catégorie : elle ne se retire pas.',
     supprimer: 'Retirer cette catégorie',
     supprimerQuestion: 'Retirer cette catégorie ?',
-    supprimerMessage: 'Les clients qui l’avaient passent en « Particulier » dans leur fiche.',
+    supprimerMessage: 'Les contacts qui l’avaient passent en « Particulier » dans leur fiche.',
   },
   importClient: {
-    importerDepuisUnAutreEtablissement: 'Importer un client depuis un autre établissement',
-    saisirUnNouveauClient: 'Saisir un nouveau client',
-    choisissezUnEtablissement: 'Choisissez un établissement, puis le client à importer.',
-    aucunClientDansCetEtablissement: 'Aucun client dans cet établissement.',
+    importerDepuisUnAutreEtablissement: 'Importer un contact depuis un autre établissement',
+    saisirUnNouveauClient: 'Saisir un nouveau contact',
+    choisissezUnEtablissement: 'Choisissez un établissement, puis le contact à importer.',
+    aucunClientDansCetEtablissement: 'Aucun contact dans cet établissement.',
     dejaPresent: (nom: string) =>
       `« ${nom} » existe déjà dans cet établissement (même nom et même téléphone) : rien n’a été importé.`,
   },

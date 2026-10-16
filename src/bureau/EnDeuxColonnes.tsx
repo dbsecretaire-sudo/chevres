@@ -13,7 +13,7 @@ import { estBureau } from '@/shared/utils/plateforme';
 import { LARGEUR_MENU, styles } from '@/shared/styles/bureau/EnDeuxColonnes.styles';
 
 /** Les écrans des tiers (clients, fournisseurs) : des écrans de la comptabilité, mais de l'Organisation. */
-const PAGES_TIERS = [ROUTES.CLIENTS, ROUTES.FOURNISSEURS, ROUTES.CONTACTS];
+const PAGES_TIERS = [ROUTES.CLIENTS, ROUTES.FOURNISSEURS];
 
 /** La variable CSS qui donne la largeur du menu de gauche : bureau/preload.js en fait le bord gauche des modales. */
 const VARIABLE_LARGEUR_MENU = '--bureau-menu-gauche';
@@ -35,6 +35,10 @@ const PAGES_ORGANISATION = [
  * ouvert : le menu se recharge, ses alertes (stocks négatifs…) restent à jour.
  */
 function menuDeLaRubrique(page: string, adresse: string, depuisOrganisation: boolean): ReactElement | null {
+  // Les contacts ont leur entrée dans la barre du haut : pas de menu à gauche, sauf ouverts depuis l'Organisation.
+  if (page === 'comptabilite' && adresse.startsWith(ROUTES.CONTACTS)) {
+    return depuisOrganisation ? <Reglages key={adresse} /> : null;
+  }
   if (page === 'cheptel' || page === 'sante') return <AccueilCheptel key={adresse} />;
   if (page === 'production') return <ProductionAccueil key={adresse} />;
   if (page === 'commercial') return <CommercialAccueil key={adresse} />;

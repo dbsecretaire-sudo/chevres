@@ -7,7 +7,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { Fab } from '@/shared/components/Fab';
 import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
-import { lierLesFichesDeMemeNom, listContacts } from '@/features/contacts/repository';
+import { convertirGroupementsEnContacts, lierLesFichesDeMemeNom, listContacts } from '@/features/contacts/repository';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import type { Contact } from '@/features/contacts/services/contacts';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
@@ -47,7 +47,9 @@ export default function ListeContacts() {
   useFocusEffect(
     useCallback(() => {
       // Les fiches de même nom se lient d'elles-mêmes avant d'être réunies.
-      lierLesFichesDeMemeNom()
+      // Les groupements saisis à la main deviennent des contacts ; les fiches de même nom se lient.
+      convertirGroupementsEnContacts()
+        .then(lierLesFichesDeMemeNom)
         .then(listContacts)
         .then(setContacts)
         .catch(() => undefined);
