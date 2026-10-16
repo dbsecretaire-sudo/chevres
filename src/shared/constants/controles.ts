@@ -40,16 +40,19 @@ export const TYPE_DOCUMENT_TERRAIN = {
 } as const;
 
 /** La nature d'un contenu de groupement (la note ou la démarche qu'il range). */
-export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique'] as const;
+/** La nature « Courrier / courriel » : une lettre ou un message à écrire au partenaire (la mise en forme se fait toute seule). */
+export const NATURE_COURRIEL = 'courrier_courriel';
+
+export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique', NATURE_COURRIEL] as const;
 
 /** La nature d'un contenu d'équarrisseur : des contrats, des factures, des promotions (pas d'achat groupé). */
-export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion'] as const;
+export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion', NATURE_COURRIEL] as const;
 
 /** La nature d'un contenu d'organisme (MSA, DDTM, DRAAF, ODARC…) : des courriers, des démarches, des documents. */
-export const NATURE_CONTENU_ORGANISME = ['courrier', 'demarche', 'document'] as const;
+export const NATURE_CONTENU_ORGANISME = [NATURE_COURRIEL, 'demarche', 'document'] as const;
 
 /** La nature d'un contenu d'assureur : des contrats, des courriers, des démarches (sinistre…), des documents. */
-export const NATURE_CONTENU_ASSUREUR = ['contrat', 'courrier', 'demarche', 'document'] as const;
+export const NATURE_CONTENU_ASSUREUR = ['contrat', NATURE_COURRIEL, 'demarche', 'document'] as const;
 
 /** La hauteur du graphique du résumé du contrôle laitier quand il s'affiche en plein écran (px). */
 export const HAUTEUR_COURBE_PLEIN_ECRAN = 340;
