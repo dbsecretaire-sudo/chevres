@@ -54,8 +54,13 @@ function dansUneZoneQuiDefile(element) {
 
 function etiqueterLesBoutonsDEntete() {
   for (const bouton of document.querySelectorAll('div[aria-label]')) {
-    if (bouton.dataset.etiquette) continue;
     const nom = bouton.getAttribute('aria-label');
+    if (bouton.dataset.etiquette) {
+      // Le même bouton change de nom (l'en-tête garde son élément d'un onglet à l'autre) : son étiquette suit.
+      const etiquetee = bouton.querySelector('.' + CLASSE_ETIQUETTE);
+      if (etiquetee && nom && etiquetee.textContent !== nom) etiquetee.textContent = nom;
+      continue;
+    }
     // Un bouton en icône seulement (un seul caractère : le dessin de l'icône), visible, dans l'en-tête.
     if (
       !nom ||
@@ -103,5 +108,5 @@ window.addEventListener('DOMContentLoaded', () => {
       planifie = false;
       etiqueterLesBoutonsDEntete();
     });
-  }).observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-label'] });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Facture } from '@/features/comptabilite/types';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
-import { lignesDuCarnet, pagesDuCarnet } from '@/features/exploitation/services/carnetSanitaire';
+import { lignesDuCarnet, pagesDuCarnet, placeDeLaLigne } from '@/features/exploitation/services/carnetSanitaire';
 import type { VisiteVeterinaire } from '@/features/exploitation/types';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 
@@ -85,6 +85,21 @@ describe('carnet sanitaire', () => {
     expect(lignes[1].intervenant).toBe('OMNIA VET');
   });
 
+  it('une ligne par animal quand la visite en concerne plusieurs', () => {
+    const lignes = lignesDuCarnet([], [visite({ chevreNumeroBoucle: '00462, 00464 10005' })], 'chevres');
+    expect(lignes.map((l) => l.animal)).toEqual(['00462', '00464', '10005']);
+    expect(new Set(lignes.map((l) => l.motif))).toEqual(new Set(['Prophylaxie']));
+  });
+
+  it('un acte de facture sur plusieurs animaux : une ligne chacun ; un lot reste d’une pièce', () => {
+    const lignes = lignesDuCarnet(
+      [facture({ lignesVeterinaire: [{ id: 'a', libelle: 'Vaccin', animal: '123, 456' }, { id: 'b', libelle: 'Soin', animal: 'Lot 60 chèvres' }] })],
+      [],
+      'chevres',
+    );
+    expect(lignes.map((l) => l.animal)).toEqual(['123', '456', 'Lot 60 chèvres']);
+  });
+
   it('ignore les dépenses d’une autre espèce et les autres catégories', () => {
     const lignes = lignesDuCarnet(
       [
@@ -95,6 +110,20 @@ describe('carnet sanitaire', () => {
       'chevres',
     );
     expect(lignes).toEqual([]);
+  });
+
+  it('une ligne au texte long prend la place de plusieurs : la page ne déborde pas', () => {
+    const longue = { date: '2026-01-01', animal: '', ordonnance: '', motif: 'x'.repeat(200), intervenant: 'OMNIA VET' } as never;
+    const courte = { date: '2026-01-02', animal: '1', ordonnance: '', motif: 'Vaccin', intervenant: '' } as never;
+    expect(placeDeLaLigne(courte)).toBe(1);
+    expect(placeDeLaLigne(longue)).toBeGreaterThan(2);
+    const pages = pagesDuCarnet([longue, longue, longue, courte]);
+    // Chaque page tient sur neuf lignes de carnet, lignes vides comprises.
+    for (const page of pages) {
+      const total = page.reduce((somme, l) => somme + (l ? placeDeLaLigne(l) : 1), 0);
+      expect(total).toBe(9);
+    }
+    expect(pages.length).toBeGreaterThan(1);
   });
 
   it('range les lignes en pages de neuf, avec des lignes vides pour finir', () => {
