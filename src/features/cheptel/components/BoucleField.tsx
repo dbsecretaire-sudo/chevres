@@ -61,7 +61,10 @@ export function BoucleField({ label, value, onChangeText, placeholder, required,
         : (archive.boucles ?? []);
       setDisponibles(
         trierBoucles(
-          bouclesDeLInventaire({ boucles }, ETAT_BOUCLE.NON_POSEE).filter((b) => sortes.includes(b.article)),
+          // Une boucle qui porte une remarque (commandée en trop, jamais posée…) n'est pas à poser : elle n'est pas proposée.
+          bouclesDeLInventaire({ boucles }, ETAT_BOUCLE.NON_POSEE).filter(
+            (b) => sortes.includes(b.article) && !b.remarque,
+          ),
           TRI_BOUCLE.NUMERO,
           true,
         ).map((b) => ({ value: b.numero, label: b.numero })),
