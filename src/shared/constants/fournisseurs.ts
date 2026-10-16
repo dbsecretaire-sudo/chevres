@@ -20,6 +20,8 @@ export const CATEGORIE_FOURNISSEUR = {
   CHAMBRE_AGRICULTURE: 'chambre_agriculture',
   /** Un groupement (GDS, achats groupés…) : ses factures sont des cotisations ou des achats, de n'importe quelle dépense. */
   GROUPEMENT: 'groupement',
+  /** Un équarrisseur (ATM…) : il s'affiche dans Groupements avec ses coordonnées, ses contrats, ses factures et ses promotions. */
+  EQUARRISSAGE: 'equarrissage',
   ASSUREUR: 'assureur',
   BANQUE: 'banque',
   /** Un fournisseur qui ne remet pas de facture : ses dépenses sont notées « non facturées » (pas de TVA à déduire). */
@@ -29,11 +31,12 @@ export const CATEGORIE_FOURNISSEUR = {
 /** La catégorie d'un fournisseur dont la fiche n'en a pas (ou dont la catégorie a été retirée) : elle ne se retire pas de la liste. */
 export const CATEGORIE_FOURNISSEUR_PAR_DEFAUT = CATEGORIE_FOURNISSEUR.GENERAL;
 
-/** Les catégories qui ne se retirent pas : celle d'office, et celles dont les dépenses vétérinaires et les impôts ont besoin. */
+/** Les catégories qui ne se retirent pas : celle d'office, et celles dont les dépenses vétérinaires, les impôts et les équarrisseurs ont besoin. */
 export const CATEGORIES_FOURNISSEUR_PROTEGEES: readonly string[] = [
   CATEGORIE_FOURNISSEUR_PAR_DEFAUT,
   CATEGORIE_FOURNISSEUR.VETERINAIRE,
   CATEGORIE_FOURNISSEUR.ETAT,
+  CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
 ];
 
 /** Les dépenses d'office d'un vétérinaire. Les autres catégories n'en limitent aucune, sauf réglage contraire. */

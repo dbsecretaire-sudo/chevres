@@ -9,6 +9,9 @@ export interface Fournisseur {
   tva?: string;
   rib?: string;
   adressePostale: string;
+  /** Les coordonnées facultatives : elles s'affichent aussi pour un équarrisseur, dans Groupements. */
+  telephone?: string;
+  email?: string;
   /** La catégorie du fournisseur (voir categoriesFournisseur) : elle règle les dépenses possibles ; à défaut, la catégorie d'office. */
   categorie?: string;
 }

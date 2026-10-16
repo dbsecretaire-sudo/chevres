@@ -42,6 +42,9 @@ export const TYPE_DOCUMENT_TERRAIN = {
 /** La nature d'un contenu de groupement (la note ou la démarche qu'il range). */
 export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique'] as const;
 
+/** La nature d'un contenu d'équarrisseur : des contrats, des factures, des promotions (pas d'achat groupé). */
+export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion'] as const;
+
 /** La hauteur du graphique du résumé du contrôle laitier quand il s'affiche en plein écran (px). */
 export const HAUTEUR_COURBE_PLEIN_ECRAN = 340;
 

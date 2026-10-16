@@ -50,6 +50,18 @@ export function FournisseurLecture({
         {TEXTES.commun.general.adresseDeuxPoints}
         {fournisseur.adressePostale}
       </Text>
+      {fournisseur.telephone ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.clients.ficheClient.telephoneDeuxPoints}
+          {fournisseur.telephone}
+        </Text>
+      ) : null}
+      {fournisseur.email ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.clients.ficheClient.emailDeuxPoints}
+          {fournisseur.email}
+        </Text>
+      ) : null}
 
       <Button label={TEXTES.commun.general.modifierLaFiche} variant="secondary" onPress={onModifier} />
     </Card>
@@ -117,6 +129,21 @@ export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer
         onChangeText={(v) => onChange({ ...form, adressePostale: v })}
         multiline
         style={commonStyles.textarea}
+      />
+      <FormField
+        label={TEXTES.commun.general.telephone}
+        value={form.telephone ?? ''}
+        onChangeText={(v) => onChange({ ...form, telephone: v })}
+        keyboardType="phone-pad"
+        placeholder={TEXTES.commun.general.facultatif}
+      />
+      <FormField
+        label={TEXTES.commun.general.email}
+        value={form.email ?? ''}
+        onChangeText={(v) => onChange({ ...form, email: v })}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        placeholder={TEXTES.commun.general.facultatif}
       />
 
       <View style={commonStyles.row}>

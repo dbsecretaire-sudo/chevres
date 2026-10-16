@@ -29,6 +29,8 @@ export default function NouveauFournisseur() {
   const [tva, setTva] = useState('');
   const [rib, setRib] = useState('');
   const [adressePostale, setAdressePostale] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
   const [categorie, setCategorie] = useState<string>(CATEGORIE_FOURNISSEUR_PAR_DEFAUT);
   const [enregistrement, setEnregistrement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -55,6 +57,8 @@ export default function NouveauFournisseur() {
         tva: tva.trim() || undefined,
         rib: rib.trim() || undefined,
         adressePostale: adressePostale.trim(),
+        telephone: telephone.trim() || undefined,
+        email: email.trim() || undefined,
         categorie,
       });
       router.back();
@@ -116,6 +120,21 @@ export default function NouveauFournisseur() {
               multiline
               style={commonStyles.textarea}
               placeholder={TEXTES.fournisseurs.nouveauFournisseur.numeroRueCodePostalVille}
+            />
+            <FormField
+              label={TEXTES.commun.general.telephone}
+              value={telephone}
+              onChangeText={setTelephone}
+              keyboardType="phone-pad"
+              placeholder={TEXTES.commun.general.facultatif}
+            />
+            <FormField
+              label={TEXTES.commun.general.email}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder={TEXTES.commun.general.facultatif}
             />
             <FormField
               label={TEXTES.commun.general.siret}

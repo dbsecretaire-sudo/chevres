@@ -51,6 +51,8 @@ export function nettoyerFournisseur(
       tva: form.tva?.trim() || undefined,
       rib: form.rib?.trim() || undefined,
       adressePostale: form.adressePostale.trim(),
+      telephone: form.telephone?.trim() || undefined,
+      email: form.email?.trim() || undefined,
     },
   };
 }
