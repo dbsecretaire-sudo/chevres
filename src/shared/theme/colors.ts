@@ -56,6 +56,21 @@ export const couleursFormulairePac = {
   texte: '#181717',
 };
 
+/** Les teintes de la déclaration de montée et descente d'estive (le formulaire est beige et orangé, non bleu comme le suivi des mouvements). */
+export const couleursFormulaireEstive = {
+  /** « Dossier PAC · campagne » et les mots d'accent. */
+  accent: '#D29A5B',
+  /** Le bandeau sombre « Identification des utilisateurs ». */
+  bandeau: '#C99D72',
+  /** Les en-têtes de colonnes et le cadre. */
+  entete: '#EBD3B8',
+  /** Le fond clair du cadre de l'entité collective. */
+  cadre: '#F6EADB',
+  /** Les traits fins du tableau et des cases. */
+  trait: '#A98C6B',
+  texte: '#181717',
+};
+
 export const statutColors: Record<string, string> = {
   vivante: '#3F6B3A',
   morte: '#6B6F63',

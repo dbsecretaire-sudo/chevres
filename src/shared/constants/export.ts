@@ -49,3 +49,5 @@ export const EXTENSION_SAUVEGARDE = 'json';
 export const NOM_FICHIER_EXPORT_SUIVI_MOUVEMENTS = 'suivi_mouvements';
 /** Les bordereaux de perte de l'aide aux petits ruminants (dossier PAC). */
 export const NOM_FICHIER_EXPORT_BORDEREAUX_PERTE = 'bordereaux_perte';
+/** La déclaration de montée et descente d'estive (dossier PAC). */
+export const NOM_FICHIER_EXPORT_DECLARATION_ESTIVE = 'declaration_estive';

@@ -32,7 +32,7 @@ function casesHtml(valeur: string, nombre: number, largeurMm: number, aDroite = 
 }
 
 /** Les étoiles du drapeau européen : douze en cercle, dessinées en SVG pour ne dépendre d'aucune police. */
-function drapeauEuropeHtml(): string {
+export function drapeauEuropeHtml(): string {
   const etoile = (cx: number, cy: number, r: number) =>
     Array.from({ length: 10 }, (_, i) => {
       const rayon = i % 2 === 0 ? r : r * 0.4;

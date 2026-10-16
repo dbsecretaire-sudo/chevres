@@ -114,6 +114,18 @@ export interface InfosEntreprise {
 export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined =>
   infos?.montantTaxeSejour ?? infos?.taxeSejourParNuit;
 
+/**
+ * Ce que l'utilisateur saisit d'une année de transhumance (la déclaration de montée et descente d'estive) : les dates (AAAA-MM-JJ), la zone
+ * d'estive, et le gestionnaire de l'estive (l'entité collective) avec la commune de son siège.
+ */
+export interface ReglagesEstive {
+  dateMontee?: string;
+  dateDescente?: string;
+  zone?: string;
+  gestionnaire?: string;
+  communeGestionnaire?: string;
+}
+
 /** Ce que l'utilisateur saisit d'une année de traite : les dates de début et de fin, et le nombre d'animaux à traire. */
 export interface ReglagesTraite {
   debut?: string;
@@ -202,6 +214,8 @@ export interface InfosExploitation {
    * pour un lait par animal plus précis que celui déduit de l'inventaire. Ils ne se reprennent pas d'une année à l'autre.
    */
   traites?: Record<string, ReglagesTraite>;
+  /** La transhumance d'une année (« 2026 ») : de quoi remplir la déclaration de montée et descente d'estive. */
+  estives?: Record<string, ReglagesEstive>;
   /** La répartition du lait choisie dans le plan d'économies : la part (en %) du lait de l'année de chaque fromage, par identifiant d'article ; le reste est vendu tel quel. Absent : la répartition réelle. */
   repartitionLait?: Record<string, number>;
   /** Le brocciu fait partie de la répartition (fabriqué avec le petit-lait des autres fromages) : coché ou non. Absent : coché quand il a été fabriqué. */

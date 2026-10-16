@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text } from 'react-native';
 import { Button } from '@/shared/components/Button';
+import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { SelectField } from '@/shared/components/SelectField';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { anneesDuSuivi } from '@/features/cheptel/services/suiviMouvements';
@@ -27,6 +28,8 @@ export function FenetreSuiviMouvements({ visible, onClose }: { visible: boolean;
   const [encours, setEncours] = useState(false);
   /** Vrai quand les bordereaux demandés n'ont aucune perte à déclarer. */
   const [sansPerte, setSansPerte] = useState(false);
+  /** La fenêtre de la déclaration d'estive (la transhumance), ouverte depuis celle-ci. */
+  const [estiveOuverte, setEstiveOuverte] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -82,10 +85,17 @@ export function FenetreSuiviMouvements({ visible, onClose }: { visible: boolean;
             disabled={encours || annees.length === 0}
           />
           <Text style={commonStyles.note}>{T.aideBordereaux}</Text>
+          <Button variant="secondary" label={T.estive.bouton} onPress={() => setEstiveOuverte(true)} />
           {sansPerte ? <Text style={commonStyles.mutedItalic}>{T.aucunePerte}</Text> : null}
           <Button variant="secondary" label={TEXTES.commun.general.annuler} onPress={onClose} />
         </Pressable>
       </Pressable>
+      <FenetreEstive
+        visible={estiveOuverte}
+        annee={choix === TOUTES ? currentYear() : Number(choix)}
+        onClose={() => setEstiveOuverte(false)}
+        onGeneree={onClose}
+      />
     </Modal>
   );
 }
