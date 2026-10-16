@@ -97,8 +97,9 @@ export function ligneDeLaListe(
 
 /**
  * La ligne imprimée d'une boucle rouge (repère provisoire) : le repère perdu est le numéro de la boucle de l'animal, la pose de la
- * boucle rouge est sa date, la pose du repère à l'identique est la date de rebouclage de l'animal. Une boucle rouge en stock n'a ni
- * numéro ni date de pose : sa ligne reste vide, avec sa date d'achat en observation.
+ * boucle rouge est sa date, la pose du repère à l'identique est la date de rebouclage de l'animal ; les observations sont la remarque et
+ * la cause de la mort. Une boucle rouge en stock n'a ni
+ * numéro ni date de pose : sa ligne reste vide (sans observation).
  */
 export function ligneRouge(
   b: BoucleStock,
@@ -110,7 +111,6 @@ export function ligneRouge(
   const observations = [
     b.remarque ? texteDeLaRemarque(b.remarque) : undefined,
     !b.remarque && nePasPoser(b) ? T.nePasPoser : undefined,
-    b.dateAchat ? P.achatLe(formatDateShortFR(b.dateAchat)) : undefined,
     sortie ? texteDeLaSortie(sortie.statut, sortie.date) || P.oui : undefined,
   ].filter(Boolean);
   return {

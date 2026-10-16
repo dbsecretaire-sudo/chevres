@@ -130,11 +130,11 @@ describe('liste des repères imprimée', () => {
       type: 'P',
       poseRouge: '01/02/2024',
       identique: '10/03/2024',
-      observations: 'Achat le 28/04/2023 — 01/08/2025, voir bordereau de perte',
+      observations: '01/08/2025, voir bordereau de perte',
     });
-    // Une boucle rouge en stock : une ligne vide, avec sa date d'achat.
+    // Une boucle rouge en stock : une ligne vide, sans observation.
     const stock = ligneRouge(boucle({ article: 'boucle:rouges', numero: '', dateAchat: '2023-04-28' }), undefined, undefined, 'FR 21228', 'P');
-    expect(stock).toMatchObject({ perdu: '', type: '', poseRouge: '', observations: 'Achat le 28/04/2023' });
+    expect(stock).toMatchObject({ perdu: '', type: '', poseRouge: '', observations: '' });
   });
 
   it('le type du repère perdu : E pour un tiptag, P pour une boucle, vide sinon', () => {
