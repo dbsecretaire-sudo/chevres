@@ -229,6 +229,23 @@ export const TEXTES_EXPORT = {
       titre: 'Boucles d’identification',
       filtres: (etat: string) => `État : ${etat}`,
       oui: 'Oui',
+      /** La « liste des repères » : le titre, l'en-tête et les colonnes du formulaire officiel. */
+      titreListe: 'LISTE DES REPERES',
+      enStock: 'EN STOCK',
+      poses: 'POSÉS',
+      edition: (date: string) => `Edition du : ${date}`,
+      nom: 'Nom',
+      adresse: 'Adresse',
+      cheptel: 'N° de Cheptel :',
+      colonnes: {
+        identification: 'N° d’identification',
+        naissance: 'Année de naissance',
+        pose: 'Date de pose du repère',
+        secondRepere: 'Date de pose du second repère',
+        commentaires: 'Commentaires*',
+      },
+      noteCommentaires:
+        '*Indiquer notamment les informations relatives aux boucles cassées, perdues, à l’utilisation du repère pour ré-identifier un agneau ayant perdu son unique repère ; la race de l’animal et le génotype tremblante, s’ils sont connus, peuvent également être précisés.',
       total: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
       /** Ce que l'impression écrit pour un animal qui n'est plus vivant : la cause de sa sortie et sa date. */
       sortie: {

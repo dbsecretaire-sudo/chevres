@@ -98,6 +98,8 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
     trierPar,
     morts,
     sorties,
+    /** Les animaux, par identifiant (l'impression en tire l'année de naissance). */
+    animaux,
     lignes,
   };
 }
