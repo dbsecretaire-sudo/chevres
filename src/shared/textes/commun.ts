@@ -140,6 +140,7 @@ export const TEXTES_COMMUN = {
     supprimer: 'Supprimer',
     modifier: 'Modifier',
     nDeBoucleConcerne: 'N° de boucle concerné',
+    animauxSelectionnes: (n: number) => `${n} animal${n > 1 ? 'ux' : ''} sélectionné${n > 1 ? 's' : ''}`,
     videTroupeauEntier: 'Vide = troupeau entier',
     /** Le choix des boucles dans la liste des animaux vivants du cheptel (contrôles, visites vétérinaires). */
     choisirBoucles: 'Choisir dans le cheptel',

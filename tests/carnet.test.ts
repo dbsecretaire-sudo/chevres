@@ -1,3 +1,4 @@
+import { numerosDeBoucles, repartirEnColonnes } from '@/features/cheptel/utils/numerosBoucles';
 import { describe, expect, it } from 'vitest';
 import type { Facture } from '@/features/comptabilite/types';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
@@ -175,5 +176,17 @@ describe('carnet sanitaire', () => {
       expect(bouclesDeLaVisite(jour, animaux, [{ date: jour, chevreNumeroBoucle: '' }] as never[])).toEqual([]);
       expect(bouclesDeLaVisite(jour, animaux, [{ date: jour, chevreNumeroBoucle: '10' }] as never[])).toEqual(['10']);
     });
+  });
+
+  it('les boucles d’une visite se répartissent en cinq colonnes qui se lisent de haut en bas', () => {
+    const numeros = Array.from({ length: 12 }, (_, i) => String(i + 1));
+    const colonnes = repartirEnColonnes(numeros);
+    expect(colonnes).toHaveLength(5);
+    expect(colonnes[0]).toEqual(['1', '2', '3']);
+    expect(colonnes[3]).toEqual(['10', '11', '12']);
+    expect(colonnes[4]).toEqual([]);
+    expect(colonnes.flat()).toEqual(numeros);
+    expect(repartirEnColonnes([])).toEqual([[], [], [], [], []]);
+    expect(numerosDeBoucles('10001, 10006 20002;30001')).toHaveLength(4);
   });
 });
