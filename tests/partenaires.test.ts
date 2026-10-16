@@ -11,9 +11,12 @@ import {
   estPartenaire,
   facturesPartenaire,
   naturesDuPartenaire,
+  planifierPartenaires,
   sectionDuPartenaire,
 } from '@/features/exploitation/services/partenaires';
 import { CHOIX_PARTENAIRES_VIDE, choixLu } from '@/features/exploitation/repository/partenaires';
+import type { Client } from '@/features/clients/types';
+import type { Controle } from '@/features/exploitation/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 
@@ -150,5 +153,50 @@ describe('clients partenaires et catégories fusionnées', () => {
       '0601',
       '1 rue, 20000 Ajaccio',
     ]);
+  });
+});
+
+describe('un fournisseur et un client de même nom', () => {
+  const chambre = fournisseur('f1', 'Chambre d’agriculture', CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE);
+  const chambreClient = {
+    id: 'c1',
+    nom: 'Chambre d’agriculture',
+    categorie: 'organisme',
+  } as unknown as Client;
+  const entree = (id: string, extra: Partial<Controle>): Controle =>
+    ({ id, chevreId: 'x', famille: 'groupement', date: '2026-01-01', type: 'Chambre d’agriculture', ...extra }) as Controle;
+  const contenu = (id: string) => ({ id, titre: id, date: '2026-01-02' }) as never;
+
+  it('n’ont qu’une entrée, créée avec les deux fiches', () => {
+    const plan = planifierPartenaires([chambre], [chambreClient], [], CHOIX_PARTENAIRES_VIDE, '2026-02-01');
+    expect(plan.aSupprimer).toEqual([]);
+    expect(plan.aEnregistrer).toHaveLength(1);
+    expect(plan.aEnregistrer[0]).toMatchObject({ fournisseurId: 'f1', clientId: 'c1' });
+  });
+
+  it('les deux entrées déjà créées sont fusionnées, leurs contenus réunis', () => {
+    const controles = [
+      entree('e1', { fournisseurId: 'f1', contenus: [contenu('a')] }),
+      entree('e2', { clientId: 'c1', contenus: [contenu('b'), contenu('a')] }),
+    ];
+    const plan = planifierPartenaires([chambre], [chambreClient], controles, CHOIX_PARTENAIRES_VIDE, '2026-02-01');
+    expect(plan.aSupprimer).toEqual(['e2']);
+    expect(plan.aEnregistrer).toHaveLength(1);
+    expect(plan.aEnregistrer[0]).toMatchObject({ id: 'e1', fournisseurId: 'f1', clientId: 'c1' });
+    expect(plan.aEnregistrer[0].contenus?.map((x) => x.id)).toEqual(['a', 'b']);
+  });
+
+  it('l’entrée du client seul devient celle du fournisseur', () => {
+    const controles = [entree('e2', { clientId: 'c1', contenus: [contenu('b')] })];
+    const plan = planifierPartenaires([chambre], [chambreClient], controles, CHOIX_PARTENAIRES_VIDE, '2026-02-01');
+    expect(plan.aSupprimer).toEqual([]);
+    expect(plan.aEnregistrer).toHaveLength(1);
+    expect(plan.aEnregistrer[0]).toMatchObject({ id: 'e2', fournisseurId: 'f1', clientId: 'c1' });
+  });
+
+  it('des noms différents restent deux partenaires', () => {
+    const autre = { ...chambreClient, id: 'c2', nom: 'Chambre de Corse' } as Client;
+    const plan = planifierPartenaires([chambre], [autre], [], CHOIX_PARTENAIRES_VIDE, '2026-02-01');
+    expect(plan.aEnregistrer).toHaveLength(2);
   });
 });
