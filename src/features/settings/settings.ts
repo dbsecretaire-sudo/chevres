@@ -71,7 +71,7 @@ export interface ReglagePrime {
   plafondTaux?: number;
   partFixe?: number;
   tranchesZone?: { jusqua: number; pourcentage: number }[];
-  /** L'ICHN par zone : le montant (€/ha) de chaque zone autre que la montagne sèche (`taux`) ; les hectares de chaque zone sont ceux des parcelles (Contrôles de surface). */
+  /** L'ICHN par zone : le montant (€/ha) de chaque zone autre que la montagne sèche (`taux`) ; les hectares de chaque zone sont ceux des parcelles (Suivi des terrains). */
   tauxParZone?: Record<string, number>;
   /** La majoration (%) des montants de l'ICHN pour un cheptel de petits ruminants (+10 % en montagne, +30 % en zones à contraintes, d'après l'ODARC). */
   majorationPetitsRuminants?: number;

@@ -18,7 +18,7 @@ export const TEXTES_PRODUCTION = {
       aide: 'La boucherie et la charcuterie par lot : fabrication, vente, rappels.',
     },
     laitier: {
-      titre: 'Contrôle laitier',
+      titre: 'Qualité du lait',
       aide: 'Les contrôles de la production et de la qualité du lait, et les analyses.',
     },
     productionLait: {
