@@ -95,8 +95,12 @@ export function recensementHtml(d: DonneesRecensement): string {
 </html>`;
 }
 
-/** Crée le recensement annuel (PDF) d'une année d'après le cheptel de l'espèce courante, et l'ouvre à l'envoi ou à l'impression. */
-export async function exporterRecensementPdf(annee: number): Promise<void> {
+/**
+ * Crée le recensement annuel (PDF) d'après le cheptel de l'espèce courante, et l'ouvre à l'envoi ou à l'impression. On donne l'année des
+ * données : pour 2026, c'est le recensement 2027 (les effectifs au 1er janvier 2027 et les naissances du 1er janvier au 31 décembre 2026).
+ */
+export async function exporterRecensementPdf(anneeDesDonnees: number): Promise<void> {
+  const annee = anneeDesDonnees + 1;
   const [tous, settings] = await Promise.all([loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), getSettings()]);
   const infos = settings.exploitation;
   const espece = especeCourante();

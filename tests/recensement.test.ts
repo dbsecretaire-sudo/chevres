@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { recensementAnnuel } from '@/features/cheptel/services/recensement';
 import type { Chevre } from '@/features/cheptel/types';
 
-const animal = (naissance: string, sexe: 'F' | 'M', statut = 'vivante', dateStatut?: string): Chevre =>
-  ({ id: naissance + sexe + statut, sexe, statut, dateStatut, dateNaissance: naissance }) as unknown as Chevre;
+const animal = (naissance: string, sexe: 'F' | 'M', statut = 'vivante', dateStatut?: string, numeroBoucle = `B${Math.random()}`): Chevre =>
+  ({ id: naissance + sexe + statut + numeroBoucle, sexe, statut, dateStatut, dateNaissance: naissance, numeroBoucle }) as unknown as Chevre;
 
 describe('recensement annuel au 1er janvier', () => {
   it('compte les animaux de plus de 6 mois ce jour-là, femelles et mâles', () => {
@@ -49,5 +49,17 @@ describe('recensement annuel au 1er janvier', () => {
       2026,
     );
     expect(r.nes).toBe(4);
+  });
+
+  it('les petits sans boucle ne comptent pas dans les nés', () => {
+    const r = recensementAnnuel(
+      [
+        animal('2026-02-01', 'F'),
+        animal('2026-03-01', 'M', 'vendue', '2026-04-01', ''),
+        animal('2026-03-05', 'F', 'vivante', undefined, '   '),
+      ],
+      2027,
+    );
+    expect(r.nes).toBe(1);
   });
 });

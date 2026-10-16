@@ -5,6 +5,8 @@ import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ROUTES } from '@/shared/constants/routes';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
+import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { laiterieActive, oeufsActifs, productionActive } from '@/features/comptabilite/utils/recettes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -42,24 +44,13 @@ function definitionDesMenus(): DefinitionMenu[] {
     label: TEXTES.contacts.titre,
     route: ROUTES.CONTACTS,
   };
+  /** Le menu du Cheptel : les mêmes groupes que l'accueil du Cheptel sur téléphone (voir groupesCheptel), séparés par un trait. */
   const cheptel: DefinitionMenu = {
     label: TEXTES.commun.general.cheptel,
-    items: [
-      { label: TEXTES.commun.general.cheptel, route: ROUTES.CHEPTEL_LISTE },
-      {
-        label: TEXTES.exploitation.controles.familles.surface.titre,
-        route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE),
-      },
-      {
-        label: TEXTES.exploitation.controles.familles.animaux.titre,
-        route: ROUTES.santeControles(FAMILLE_CONTROLE.ANIMAUX),
-      },
-      { label: TEXTES.cheptel.traitements.titre, route: ROUTES.CHEPTEL_TRAITEMENTS },
-      { label: TEXTES.cheptel.lots.titre, route: ROUTES.CHEPTEL_LOTS },
-      { label: TEXTES.commun.general.alimentation, route: ROUTES.SANTE_ALIMENTATION },
-      { label: TEXTES.commun.general.bilanAnnuel, route: ROUTES.CHEPTEL_BILAN },
-      { label: TEXTES.cheptel.reglages.titre, route: ROUTES.CHEPTEL_REGLAGES },
-    ],
+    items: groupesCheptel(especeDuSuivi(especeCourante())).flatMap((groupe, i) => [
+      ...(i > 0 ? [{ separateur: true as const }] : []),
+      ...groupe.lignes.map((l) => ({ label: l.titre, route: l.route })),
+    ]),
   };
   const production: DefinitionMenu = {
     label: TEXTES.production.titre,

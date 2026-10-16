@@ -26,6 +26,13 @@ export const ROUTES = {
   /** La liste des animaux vivants. */
   CHEPTEL_LISTE: '/cheptel/liste',
   CHEPTEL_BILAN: '/cheptel/bilan',
+  /** Le tableau de bord du cheptel : la pyramide des âges et les mouvements de l'année. */
+  CHEPTEL_TABLEAU_DE_BORD: '/cheptel/tableau-de-bord',
+  /** Les naissances (les mises bas, portée par portée) et les sorties (mortes, vendues, abattoir). */
+  CHEPTEL_NAISSANCES: '/cheptel/naissances',
+  CHEPTEL_HISTORIQUE: '/cheptel/historique',
+  /** Le dossier PAC : suivi des mouvements, bordereaux de perte, recensement, déclaration d'estive. */
+  CHEPTEL_DOSSIER_PAC: '/cheptel/dossier-pac',
   /** Les traitements donnés aux animaux et leurs délais d'attente. */
   CHEPTEL_TRAITEMENTS: '/cheptel/traitements',
   CHEPTEL_TRAITEMENT_NOUVEAU: '/cheptel/traitement',
@@ -48,6 +55,9 @@ export const ROUTES = {
   santeVisite: (id: string) => `/sante/veterinaire/visite?id=${id}` as const,
   /** La liste des contrôles d'une famille (surface, animaux : dans le Cheptel ; laitier, analyses : dans Production ; partenaires : dans Commercial). */
   santeControles: (famille: string) => `${baseControles(famille)}/liste?famille=${famille}` as const,
+  /** La liste des contrôles d'une famille, ouverte sur l'un de ses onglets (la santé, les boucles, les contrôles des animaux). */
+  santeControlesOnglet: (famille: string, onglet: string) =>
+    `${baseControles(famille)}/liste?famille=${famille}&onglet=${onglet}` as const,
   /** Un nouveau contrôle, de la famille donnée. */
   santeControleNouveau: (famille: string) => `${baseControles(famille)}/nouvelle?famille=${famille}` as const,
   /** Un document d'un contact (courrier, contrat, aide…), ouvert depuis sa fiche : il reste dans la section Contacts (nouveau sans identifiant, sinon modifié). */

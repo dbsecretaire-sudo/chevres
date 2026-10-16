@@ -12,7 +12,7 @@ export interface Recensement {
   /** Les animaux de plus de 6 mois au 1er janvier : femelles, et mâles (les boucs ou les béliers). */
   femelles: number;
   males: number;
-  /** Les animaux nés pendant l'année d'avant : ceux encore présents, vendus ou consommés (les morts et les mort-nés n'y sont pas). */
+  /** Les animaux nés pendant l'année d'avant, avec une boucle : ceux encore présents, vendus ou consommés (les morts, les mort-nés et les petits sans boucle n'y sont pas). */
   nes: number;
 }
 
@@ -30,7 +30,7 @@ const sortiAvant = (animal: Chevre, jour: string): boolean =>
 
 /**
  * Le recensement du 1er janvier d'une année d'après le cheptel : les animaux de plus de 6 mois ce jour-là (femelles et mâles), et le
- * nombre d'animaux nés l'année d'avant (encore présents, vendus ou autoconsommés ; sans les morts ni les mort-nés).
+ * nombre d'animaux nés l'année d'avant (encore présents, vendus ou autoconsommés ; sans les morts, les mort-nés ni les petits sans boucle).
  */
 export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement {
   const premierJanvier = `${annee}-01-01`;
@@ -49,8 +49,12 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
       if (animal.sexe === SEXE.FEMELLE) femelles += 1;
       else males += 1;
     }
-    // Né l'année d'avant, et pas mort : encore présent, vendu ou consommé.
-    if (animal.dateNaissance >= debutAnneeAvant && animal.dateNaissance < premierJanvier) {
+    // Né l'année d'avant, avec une boucle, et pas mort : encore présent, vendu ou consommé.
+    if (
+      animal.numeroBoucle?.trim() &&
+      animal.dateNaissance >= debutAnneeAvant &&
+      animal.dateNaissance < premierJanvier
+    ) {
       const mort = animal.statut === STATUT_CHEVRE.MORTE;
       if (!mort) nes += 1;
     }

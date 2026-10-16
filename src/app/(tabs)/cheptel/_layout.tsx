@@ -3,7 +3,6 @@ import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranPa
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
-import { BoutonsEnteteCheptel } from '@/features/cheptel/components/BoutonsEnteteCheptel';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -23,10 +22,8 @@ export default function CheptelLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />
-      <Stack.Screen
-        name="liste"
-        options={{ title: TEXTES.cheptel.listeCheptel.titre, headerRight: () => <BoutonsEnteteCheptel /> }}
-      />
+      <Stack.Screen name="liste" options={{ title: TEXTES.cheptel.listeCheptel.titre }} />
+      <Stack.Screen name="dossier-pac" options={{ title: TEXTES.cheptel.accueil.lignes.dossierPac.titre }} />
       <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
       <Stack.Screen
         name="nouvelle"
@@ -60,6 +57,7 @@ export default function CheptelLayout() {
       />
       <Stack.Screen name="bilan" options={{ title: TEXTES.commun.general.bilanAnnuel }} />
       <Stack.Screen name="traitements" options={{ title: TEXTES.cheptel.traitements.titre }} />
+      <Stack.Screen name="tableau-de-bord" options={{ title: TEXTES.cheptel.tableauDeBord.titre }} />
       <Stack.Screen name="traitement" options={{ title: TEXTES.cheptel.traitements.modifier }} />
       <Stack.Screen name="lots" options={{ title: TEXTES.cheptel.lots.titre }} />
       <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />

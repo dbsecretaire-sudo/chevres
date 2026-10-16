@@ -27,7 +27,7 @@ const T = TEXTES.cheptel.tableauDeBord;
  * Le tableau de bord du cheptel, sur l'accueil : la pyramide des âges (femelles et mâles par classe d'âge) et les mouvements de
  * l'année (naissances, achats, ventes, morts), d'après le cheptel et les ventes de l'espèce courante.
  */
-export function TableauDeBordCheptel() {
+export function TableauDeBordCheptel({ afficherVide = false }: { afficherVide?: boolean }) {
   const { espece } = useEtablissement();
   const annee = currentYear();
   const [pyramide, setPyramide] = useState<ClasseDAge[]>([]);
@@ -55,7 +55,13 @@ export function TableauDeBordCheptel() {
   const mouvementsTotal = mouvements
     ? mouvements.naissances + mouvements.achats + mouvements.ventes + mouvements.morts + mouvements.autresSorties
     : 0;
-  if (total === 0 && mouvementsTotal === 0) return null;
+  if (total === 0 && mouvementsTotal === 0) {
+    return afficherVide ? (
+      <Card>
+        <Text style={commonStyles.mutedItalic}>{T.vide}</Text>
+      </Card>
+    ) : null;
+  }
   const plusGrande = Math.max(1, ...pyramide.map((c) => c.femelles + c.males));
 
   return (

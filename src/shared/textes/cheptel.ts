@@ -139,11 +139,26 @@ export const TEXTES_CHEPTEL = {
   /** Les groupes de l'accueil du Cheptel. */
   accueil: {
     groupes: {
-      troupeau: 'Gestion du troupeau',
-      terrains: 'Terrains et identification',
+      troupeau: 'Troupeau',
       sante: 'Santé',
+      identification: 'Identification et PAC',
       statistiques: 'Statistiques',
       technique: 'Technique',
+    },
+    /** Les lignes du menu du Cheptel (voir groupesCheptel). */
+    lignes: {
+      animaux: { titre: 'Animaux', aide: 'Les animaux vivants : fiches, ajout.' },
+      naissances: { titre: 'Naissances', aide: 'Les mises bas, portée par portée, et le carnet de mise bas.' },
+      sorties: { titre: 'Sorties', aide: 'Les animaux morts, vendus ou envoyés à l’abattoir.' },
+      visites: { titre: 'Visites du vétérinaire', aide: 'Le carnet sanitaire : visites, analyses, ordonnances.' },
+      boucles: { titre: 'Boucles', aide: 'L’inventaire des boucles, les repères et les boucles rouges.' },
+      controles: { titre: 'Contrôles des animaux', aide: 'Les contrôles de l’ASP : identification, registre.' },
+      dossierPac: {
+        titre: 'Dossier PAC',
+        aide: 'Suivi des mouvements, bordereaux de perte, recensement annuel, déclaration d’estive.',
+      },
+      bilan: { aide: 'Les effectifs, l’UGB et les primes de l’année.' },
+      alimentation: { aide: 'Ce que mangent les animaux et ce que ça coûte.' },
     },
   },
   /** Les lots d'animaux : un nom, des boucles, leur suivi sanitaire. */
@@ -180,6 +195,7 @@ export const TEXTES_CHEPTEL = {
     femelles: 'Femelles',
     males: 'Mâles',
     pyramide: 'Pyramide des âges',
+    vide: 'Aucun animal ni mouvement pour l’instant.',
     legende: 'Vert : femelles. Orangé : mâles.',
     repartition: (femelles: number, males: number) => `${femelles + males} · ${femelles} F · ${males} M`,
     classes: {
@@ -558,7 +574,8 @@ export const TEXTES_CHEPTEL = {
     /** Le recensement annuel des ovins et caprins de la Chambre d'agriculture (règlement CE 21/2004). */
     recensement: {
       bouton: 'Recensement annuel (PDF)',
-      aide: 'Les effectifs au 1er janvier et les naissances de l’année d’avant, calculés d’après le cheptel, sur le formulaire de la Chambre d’agriculture.',
+      aide: (annee: number) =>
+        `Pour ${annee} : le recensement ${annee + 1}, avec les effectifs au 1er janvier ${annee + 1} et les naissances du 1er janvier au 31 décembre ${annee} (sans les petits sans boucle), calculés d’après le cheptel.`,
       fichier: 'recensement',
       titre: (annee: number) => `RECENSEMENT ANNUEL OVINS ET CAPRINS ${annee}`,
       monsieur: 'Mr',
