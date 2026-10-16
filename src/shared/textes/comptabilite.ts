@@ -650,6 +650,10 @@ export const TEXTES_COMPTABILITE = {
     /** Une dépense vétérinaire : le motif, et l'inscription de la visite dans les visites vétérinaires. */
     visite: {
       motif: 'Motif de la visite',
+      motifs: 'Motifs de la visite',
+      modifierMotifs: 'Modifier la liste des motifs',
+      autreMotif: 'Autre motif (texte libre)',
+      autreMotifExemple: 'ex : contrôle après traitement',
       ajouter: 'Ajouter aux visites vétérinaires',
       motifRequis: 'Motif de la visite requis pour l’ajouter aux visites vétérinaires',
     },

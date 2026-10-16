@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Facture } from '@/features/comptabilite/types';
 import {
+  categoriesDeLOrganisation,
+  coordonneesClient,
+  estClientPartenaire,
+  facturesDuClient,
   choixApresCoche,
   estCategoriePartenaire,
   estPartenaire,
@@ -107,5 +111,44 @@ describe('factures d’un partenaire', () => {
     } as never);
     expect(facturesPartenaire(atm, [chambre], false, 'x', 'Facture')).toHaveLength(1);
     expect(facturesPartenaire(fournisseur('autre', 'Autre', CATEGORIE_FOURNISSEUR.EQUARRISSAGE), [chambre], false, 'x', 'Facture')).toEqual([]);
+  });
+});
+
+describe('clients partenaires et catégories fusionnées', () => {
+  it('une catégorie qui existe pour les fournisseurs et les clients n’a qu’une ligne, sans les particuliers', () => {
+    const lignes = categoriesDeLOrganisation(
+      [{ id: 'organisme', nom: 'Organisme' }, { id: 'groupement', nom: 'Groupement' }, { id: 'banque', nom: 'Banque' }],
+      [{ id: 'particulier', nom: 'Particulier' }, { id: 'organisme', nom: 'Organisme' }, { id: 'groupement', nom: 'Groupement' }, { id: 'entreprise', nom: 'Entreprise' }],
+    );
+    expect(lignes.map((l) => l.id)).toEqual(['organisme', 'groupement', 'banque', 'entreprise']);
+  });
+
+  it('un client est partenaire quand sa catégorie est incluse, jamais un particulier', () => {
+    const choix = choixApresCoche(choixApresCoche(CHOIX_PARTENAIRES_VIDE, 'entreprise', true), 'particulier', true);
+    expect(estClientPartenaire({ categorie: 'entreprise' }, choix)).toBe(true);
+    expect(estClientPartenaire({ categorie: 'recolteur' }, choix)).toBe(false);
+    expect(estClientPartenaire({ categorie: 'particulier' }, choix)).toBe(false);
+    expect(estClientPartenaire({ categorie: undefined }, choix)).toBe(false);
+  });
+
+  it('range un client dans sa section : groupement, organisme ou clients', () => {
+    const client = (categorie: string) => ({ id: 'c', nom: 'X', categorie }) as never;
+    expect(sectionDuPartenaire(undefined, client('groupement'))).toBe('groupements');
+    expect(sectionDuPartenaire(undefined, client('organisme'))).toBe('organismes');
+    expect(sectionDuPartenaire(undefined, client('entreprise'))).toBe('clients');
+    expect(naturesDuPartenaire(undefined, client('entreprise'))).toContain('courrier_courriel');
+  });
+
+  it('les factures d’un client sont celles qu’on lui a émises, de la plus récente à la plus ancienne', () => {
+    const emise = (id: string, tiers: string, date: string, montant: number) =>
+      ({ id, type: 'emise', tiers, date, montant, description: '' }) as never;
+    const factures = [emise('a', 'Dupont Anne', '2026-01-01', 10), emise('b', 'dupont anne', '2026-03-01', 20), emise('c', 'Autre', '2026-02-01', 5)];
+    const res = facturesDuClient({ id: 'c', nom: 'Dupont', prenom: 'Anne' } as never, factures, 'Facture');
+    expect(res.map((f) => f.id)).toEqual(['b', 'a']);
+    const adresse = ['1 rue', '20000 Ajaccio'].join(String.fromCharCode(10));
+    expect(coordonneesClient({ id: 'c', nom: 'D', telephone: '0601', adressePostale: adresse } as never)).toEqual([
+      '0601',
+      '1 rue, 20000 Ajaccio',
+    ]);
   });
 });
