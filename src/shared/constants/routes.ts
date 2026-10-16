@@ -125,6 +125,10 @@ export const ROUTES = {
   // Explorateur de dossiers d'une entreprise
   CLIENTS_EXPLORATEUR: '/clients',
   STRUCTURE_DOSSIERS: '/structure-dossiers',
+  /** Les documents d'identification et d'installation de l'exploitation (Mon établissement), et l'un d'eux (nouveau sans identifiant). */
+  DOCUMENTS_IDENTIFICATION: '/documents-identification',
+  documentIdentification: (id?: string) =>
+    (id ? `/document-identification?id=${id}` : '/document-identification') as string,
   // Les données (écrans ouverts depuis l'onglet Organisation)
   ORGANISATION_ETABLISSEMENT: '/organisation-etablissement',
   ORGANISATION_DONNEES: '/organisation-donnees',

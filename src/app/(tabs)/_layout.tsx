@@ -23,6 +23,8 @@ const PAGES_ORGANISATION = [
   'google-drive',
   'structure-dossiers',
   'informations-exploitation',
+  'documents-identification',
+  'document-identification',
 ];
 
 export default function TabsLayout() {
@@ -228,6 +230,24 @@ export default function TabsLayout() {
           title: TEXTES.dossiers.structure.titre,
           // Destination fixe : on revient toujours aux Réglages, d'où l'écran est ouvert.
           headerLeft: () => <HeaderBackTo to={ROUTES.ORGANISATION_ETABLISSEMENT} />,
+        }}
+      />
+      <Tabs.Screen
+        name="documents-identification"
+        options={{
+          href: null,
+          title: TEXTES.identification.titre,
+          // On revient toujours à Mon établissement, d'où la liste est ouverte.
+          headerLeft: () => <HeaderBackTo to={ROUTES.ORGANISATION_ETABLISSEMENT} />,
+        }}
+      />
+      <Tabs.Screen
+        name="document-identification"
+        options={{
+          href: null,
+          title: TEXTES.identification.titre,
+          // Un document revient à la liste des documents d'identification.
+          headerLeft: () => <HeaderBackTo to={ROUTES.DOCUMENTS_IDENTIFICATION} />,
         }}
       />
       <Tabs.Screen

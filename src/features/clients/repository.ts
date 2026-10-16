@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
 import { cleStockage, cleStockagePour } from '@/features/etablissements/repository';
-import { nomComplet } from '@/shared/utils/personne';
+import { comparerAlphabetique, nomComplet } from '@/shared/utils/personne';
 import type { Client } from '@/features/clients/types';
 import { supprimerDossiersDuClient } from '@/features/dossiers/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
@@ -22,16 +22,16 @@ async function ecrireTous(items: Client[]): Promise<void> {
   await AsyncStorage.setItem(cle(), JSON.stringify(items));
 }
 
-/** Clients triés par nom, pour la liste et les sélecteurs. */
+/** Clients triés par ordre alphabétique de leur nom (et non par ordre de création), pour la liste et les sélecteurs. */
 export async function listClients(): Promise<Client[]> {
   const items = await lireTous();
-  return items.sort((a, b) => a.nom.localeCompare(b.nom));
+  return items.sort((a, b) => comparerAlphabetique(nomComplet(a), nomComplet(b)));
 }
 
-/** Clients d'un autre établissement (lecture seule), triés par nom — pour les importer dans l'établissement actif. */
+/** Clients d'un autre établissement (lecture seule), triés par ordre alphabétique — pour les importer dans l'établissement actif. */
 export async function listClientsDeEtablissement(etablissementId: string): Promise<Client[]> {
   const items = await lireTous(cleStockagePour(etablissementId, CLE_STOCKAGE.CLIENTS));
-  return items.sort((a, b) => a.nom.localeCompare(b.nom));
+  return items.sort((a, b) => comparerAlphabetique(nomComplet(a), nomComplet(b)));
 }
 
 const normaliser = (texte: string | undefined) => (texte ?? '').trim().toLowerCase();

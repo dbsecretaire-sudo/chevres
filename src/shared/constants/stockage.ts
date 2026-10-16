@@ -28,6 +28,8 @@ export const CLE_STOCKAGE = {
   ESPECE_COURANTE: 'espece-courante',
   FOURNISSEURS: 'fournisseurs',
   CLIENTS: 'clients',
+  /** Les documents d'identification et d'installation de l'exploitation (pièces scannées). */
+  IDENTIFICATION: 'identification',
   DOSSIERS: 'dossiers',
   GITE: 'gite',
   TRADING: 'trading',

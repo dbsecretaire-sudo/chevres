@@ -3,6 +3,7 @@ import { generateId } from '@/shared/utils/id';
 import { cleStockage, cleStockagePour } from '@/features/etablissements/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+import { comparerAlphabetique } from '@/shared/utils/personne';
 
 const cle = () => cleStockage(CLE_STOCKAGE.FOURNISSEURS);
 
@@ -20,16 +21,19 @@ async function ecrireTous(items: Fournisseur[]): Promise<void> {
   await AsyncStorage.setItem(cle(), JSON.stringify(items));
 }
 
-/** Fournisseurs triés par nom, pour la liste et les sélecteurs. */
+/** Le nom sous lequel un fournisseur s'affiche dans les listes : celui de son entreprise (à défaut, celui de son contact). */
+const nomAffiche = (f: Fournisseur): string => f.nomEntreprise || f.nom;
+
+/** Fournisseurs triés par ordre alphabétique du nom de leur entreprise (et non par ordre de création), pour la liste et les sélecteurs. */
 export async function listFournisseurs(): Promise<Fournisseur[]> {
   const items = await lireTous();
-  return items.sort((a, b) => a.nom.localeCompare(b.nom));
+  return items.sort((a, b) => comparerAlphabetique(nomAffiche(a), nomAffiche(b)));
 }
 
-/** Fournisseurs d'un autre établissement (lecture seule), triés par nom — pour les importer dans l'établissement actif. */
+/** Fournisseurs d'un autre établissement (lecture seule), triés par ordre alphabétique — pour les importer dans l'établissement actif. */
 export async function listFournisseursDeEtablissement(etablissementId: string): Promise<Fournisseur[]> {
   const items = await lireTous(cleStockagePour(etablissementId, CLE_STOCKAGE.FOURNISSEURS));
-  return items.sort((a, b) => a.nom.localeCompare(b.nom));
+  return items.sort((a, b) => comparerAlphabetique(nomAffiche(a), nomAffiche(b)));
 }
 
 /**

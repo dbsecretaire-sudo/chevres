@@ -25,6 +25,12 @@ export default function RubriqueEtablissement() {
           icone="business"
           route={ROUTES.INFORMATIONS_EXPLOITATION}
         />
+        <LigneRubrique
+          titre={TEXTES.identification.titre}
+          aide={TEXTES.identification.aide}
+          icone="document-attach"
+          route={ROUTES.DOCUMENTS_IDENTIFICATION}
+        />
         {avecDossiersClients ? (
           <LigneRubrique
             titre={TEXTES.dossiers.structure.titre}

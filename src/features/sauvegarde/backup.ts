@@ -6,6 +6,11 @@ import { getYears, loadYear, saveYear, reindexYear } from '@/shared/storage/loca
 import { getSettings, updateSettings, type InfosExploitation } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
+import {
+  listDocumentsIdentification,
+  remplacerTousDocumentsIdentification,
+} from '@/features/identification/repository';
+import type { DocumentIdentification } from '@/features/identification/types';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
 import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
@@ -74,6 +79,8 @@ interface FichierSauvegarde {
   donnees: Partial<Record<Categorie, Record<string, unknown[]>>>;
   fournisseurs: Fournisseur[];
   clients?: Client[];
+  /** Les documents d'identification et d'installation de l'exploitation (absent des anciennes sauvegardes). */
+  identification?: DocumentIdentification[];
   /** Sous-dossiers et contenus de l'explorateur de dossiers (absent des anciennes sauvegardes). */
   dossiers?: ArchiveDossiers;
   /** Séjours du gîte (absent des anciennes sauvegardes). */
@@ -143,6 +150,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     lireArchiveEspeces(),
     lireArchiveAnnexes(),
   ]);
+  const identification = await listDocumentsIdentification();
 
   const pieces: PieceSauvegardee[] = [];
   if (piecesDisponibles()) {
@@ -157,6 +165,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     donnees,
     fournisseurs,
     clients,
+    identification,
     dossiers,
     gite,
     trading,
@@ -294,6 +303,12 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   if (Array.isArray(sauvegarde.clients)) {
     await appliquerSiDifferent(await listClients(), sauvegarde.clients, () =>
       remplacerTousClients(sauvegarde.clients!),
+    );
+  }
+
+  if (Array.isArray(sauvegarde.identification)) {
+    await appliquerSiDifferent(await listDocumentsIdentification(), sauvegarde.identification, () =>
+      remplacerTousDocumentsIdentification(sauvegarde.identification!),
     );
   }
 
