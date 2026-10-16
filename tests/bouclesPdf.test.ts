@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, pagesDesReperes, separerSelonInstallation, type LigneListe, type ListeImprimee } from '@/features/export/bouclesPdf';
+import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, ligneRouge, pagesDesReperes, pagesDuDocument, separerSelonInstallation, typeDuRepere, type LigneListe, type ListeImprimee } from '@/features/export/bouclesPdf';
 import type { BoucleStock } from '@/features/stock/types';
 
 const boucle = (plus: Partial<BoucleStock>): BoucleStock => ({ id: 'b', article: 'boucle:boucles', numero: '200888', ...plus });
@@ -115,5 +115,62 @@ describe('liste des repères imprimée', () => {
     const nonPosees = lot.filter((b) => !b.datePose && b.factureId === 'f1');
     expect(separerSelonInstallation(nonPosees, '2023-01-15', lot).apres).toHaveLength(2);
     expect(separerSelonInstallation(nonPosees, '2023-01-15').apres).toHaveLength(0);
+  });
+
+  it('la ligne d’une boucle rouge : repère perdu, pose de la rouge, pose à l’identique, observations', () => {
+    const l = ligneRouge(
+      boucle({ article: 'boucle:rouges', numero: '00462', datePose: '2024-02-01', dateAchat: '2023-04-28', chevreId: 'c' }),
+      { dateRebouclage: '2024-03-10' },
+      { statut: 'morte', date: '2025-08-01' },
+      'FR 21228',
+      'P',
+    );
+    expect(l).toEqual({
+      perdu: 'FR 2122800462',
+      type: 'P',
+      poseRouge: '01/02/2024',
+      identique: '10/03/2024',
+      observations: 'Achat le 28/04/2023 — 01/08/2025, voir bordereau de perte',
+    });
+    // Une boucle rouge en stock : une ligne vide, avec sa date d'achat.
+    const stock = ligneRouge(boucle({ article: 'boucle:rouges', numero: '', dateAchat: '2023-04-28' }), undefined, undefined, 'FR 21228', 'P');
+    expect(stock).toMatchObject({ perdu: '', type: '', poseRouge: '', observations: 'Achat le 28/04/2023' });
+  });
+
+  it('le type du repère perdu : E pour un tiptag, P pour une boucle, vide sinon', () => {
+    const tiptags = new Set(['10']);
+    const boucles = new Set(['20']);
+    expect(typeDuRepere('10', tiptags, boucles)).toBe('E');
+    expect(typeDuRepere(' 20 ', tiptags, boucles)).toBe('P');
+    expect(typeDuRepere('30', tiptags, boucles)).toBe('');
+  });
+
+  it('la liste des repères provisoires rouges : titre, colonnes du formulaire et indices de 1 à 30 sur chaque page', () => {
+    const rouges = Array.from({ length: 35 }, (_, i) => ({ perdu: 'FR ' + i, type: 'P', poseRouge: '', identique: '', observations: '' }));
+    const liste: ListeImprimee = { titre: { debut: 'LISTE DES REPERES PROVISOIRES ROUGES', fin: '' }, sorte: 'Boucles rouges', filtre: 'Tout', lignes: [], rouges };
+    const html = bouclesHtml([liste], { nom: 'X', adresse: [], cheptel: '1' }, '16/10/2026');
+    expect(html.split('<section class="page-repere">')).toHaveLength(3);
+    expect(html).toContain('LISTE DES REPERES PROVISOIRES ROUGES');
+    expect(html).toContain('N° du repère perdu');
+    expect(html).toContain('Date de pose du repère à l’identique');
+    expect(html).toContain('E : électronique');
+    expect(html.split('<td class="indice">30</td>')).toHaveLength(3);
+    expect(html.split('<td class="indice">1</td>')).toHaveLength(3);
+  });
+
+  it('chaque section commence sur un recto : une page blanche suit une section d’un nombre impair de pages', () => {
+    const ligne = { identification: 'FR 1', naissance: '', pose: '', secondRepere: '', commentaires: '' };
+    const section = (nombre: number, sorte: string): ListeImprimee => ({
+      titre: { debut: 'LISTE DES REPERES', fin: '' },
+      sorte,
+      filtre: 'Tout',
+      lignes: Array.from({ length: nombre }, () => ligne),
+    });
+    const identite = { nom: 'X', adresse: [], cheptel: '1' };
+    // 1 page (impaire) : une page blanche ensuite ; 2 pages : rien ; la dernière section n'a pas de page blanche après elle.
+    const pages = pagesDuDocument([section(10, 'A'), section(40, 'B'), section(5, 'C')], identite, '16/10/2026');
+    expect(pages).toHaveLength(1 + 1 + 2 + 1);
+    expect(pages[1]).toContain('<div class="feuille"></div>');
+    expect(pages.filter((p) => p.includes('<div class="feuille"></div>'))).toHaveLength(1);
   });
 });

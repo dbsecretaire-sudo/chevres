@@ -3,6 +3,7 @@ import { avecIndicatif } from '@/features/export/services/lignesExport';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, identificationCheptel, indicatifMarquagePar } from '@/features/settings/settings';
 import {
+  estArticleBoucleRouge,
   estArticleRebouclage,
   estBoucleDeRemplacement,
   libelleDeLaSorte,
@@ -14,7 +15,7 @@ import {
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import type { BoucleStock } from '@/features/stock/types';
 import { FORMAT_EXPORT, NOM_FICHIER_EXPORT_BOUCLES } from '@/shared/constants/export';
-import { ETAT_BOUCLE } from '@/shared/constants/stock';
+import { ARTICLE_BOUCLE, ETAT_BOUCLE, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 import { formatDateShortFR, todayISO } from '@/shared/utils/dates';
@@ -38,8 +39,20 @@ export interface LigneListe {
   commentaires: string;
 }
 
+/** Une ligne de la liste des repères provisoires rouges : le repère perdu, son type, les deux dates de pose et les observations. */
+export interface LigneRouge {
+  perdu: string;
+  /** « E » (électronique) ou « P » (plastique) ; vide quand on ne sait pas. */
+  type: string;
+  poseRouge: string;
+  identique: string;
+  observations: string;
+}
+
 /** Une liste imprimée : une sorte de boucles dans l'état choisi, sur le modèle de la « liste des repères » officielle. */
 export interface ListeImprimee {
+  /** Les boucles rouges : lignes du formulaire des repères provisoires rouges (les autres sortes ont `lignes`). */
+  rouges?: LigneRouge[];
   /** Le titre : « LISTE DES REPERES EN STOCK » pour les boucles à poser, « … POSES » pour les posées. */
   titre: { debut: string; fin: string };
   sorte: string;
@@ -83,6 +96,42 @@ export function ligneDeLaListe(
 }
 
 /**
+ * La ligne imprimée d'une boucle rouge (repère provisoire) : le repère perdu est le numéro de la boucle de l'animal, la pose de la
+ * boucle rouge est sa date, la pose du repère à l'identique est la date de rebouclage de l'animal. Une boucle rouge en stock n'a ni
+ * numéro ni date de pose : sa ligne reste vide, avec sa date d'achat en observation.
+ */
+export function ligneRouge(
+  b: BoucleStock,
+  animal: Pick<Chevre, 'dateRebouclage'> | undefined,
+  sortie: { statut: string; date?: string } | undefined,
+  indicatif: string | undefined,
+  type: string,
+): LigneRouge {
+  const observations = [
+    b.remarque ? texteDeLaRemarque(b.remarque) : undefined,
+    !b.remarque && nePasPoser(b) ? T.nePasPoser : undefined,
+    b.dateAchat ? P.achatLe(formatDateShortFR(b.dateAchat)) : undefined,
+    sortie ? texteDeLaSortie(sortie.statut, sortie.date) || P.oui : undefined,
+  ].filter(Boolean);
+  return {
+    perdu: avecIndicatif(b.numero, indicatif),
+    type: b.numero ? type : '',
+    poseRouge: b.datePose ? formatDateShortFR(b.datePose) : '',
+    identique: animal?.dateRebouclage ? formatDateShortFR(animal.dateRebouclage) : '',
+    observations: observations.join(' — '),
+  };
+}
+
+/**
+ * Le type d'un repère perdu d'après l'inventaire : « E » (électronique) quand son numéro est celui d'un tiptag, « P » (plastique) quand
+ * c'est celui d'une boucle ; vide quand l'inventaire ne le connaît pas.
+ */
+export function typeDuRepere(numero: string, tiptags: ReadonlySet<string>, boucles: ReadonlySet<string>): string {
+  const n = numero.trim();
+  return tiptags.has(n) ? 'E' : boucles.has(n) ? 'P' : '';
+}
+
+/**
  * Sépare les boucles d'avant et d'après la date d'installation de l'exploitant actuel : une boucle posée est d'avant quand sa date de
  * pose précède cette date, sinon (non posée) sa date d'achat ; sans date, elle est d'après (une boucle en stock est à l'exploitant
  * actuel). Une boucle non posée suit sa commande : quand une autre boucle de la même facture est posée depuis l'installation, elle est
@@ -116,7 +165,7 @@ const titreDeLEtat = (etat: string): { debut: string; fin: string } => ({
 export const LIGNES_PAR_PAGE_REPERES = 30;
 
 /** Les lignes d'une liste réparties en pages de trente, la dernière complétée de lignes vides ; une page vide quand il n'y a rien. */
-export function pagesDesReperes(lignes: LigneListe[]): (LigneListe | undefined)[][] {
+export function pagesDesReperes<L>(lignes: L[]): (L | undefined)[][] {
   const nombre = Math.max(1, Math.ceil(lignes.length / LIGNES_PAR_PAGE_REPERES));
   return Array.from({ length: nombre }, (_, p) =>
     Array.from({ length: LIGNES_PAR_PAGE_REPERES }, (_, i) => lignes[p * LIGNES_PAR_PAGE_REPERES + i]),
@@ -136,6 +185,8 @@ const STYLES = `
   .haut { height: 66px; text-align: center; }
   h1 { margin: 0; font-size: 24px; line-height: 28px; font-weight: 700; letter-spacing: 0.3px; }
   h1 .fin { font-size: 22px; margin-left: 5px; }
+  h1.long { font-size: 20px; }
+  td.indice { text-align: center; font-size: 12px; font-weight: 700; }
   .edition { font-size: 13px; line-height: 15px; margin-top: 1px; }
   .sorte { font-size: 10px; line-height: 12px; color: #444; margin-top: 1px; }
   .entete { height: 62px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; }
@@ -197,6 +248,71 @@ function pageHtml(
 </div></section>`;
 }
 
+const ligneRougeHtml = (l: LigneRouge | undefined, indice: number): string =>
+  `<tr>
+        <td class="indice">${indice}</td>
+        <td class="numero">${l?.perdu ? identificationHtml(l.perdu) : ''}</td>
+        <td class="centre">${echapper(l?.type ?? '')}</td>
+        <td class="centre">${echapper(l?.poseRouge ?? '')}</td>
+        <td class="centre">${echapper(l?.identique ?? '')}</td>
+        <td>${echapper(l?.observations ?? '')}</td>
+      </tr>`;
+
+/** L'en-tête d'une page : le titre, l'édition, la sorte, puis le nom, l'adresse et le n° de cheptel. */
+const enteteHtml = (liste: ListeImprimee, identite: IdentiteListe, edition: string, classeTitre = ''): string => `
+  <div class="haut">
+    <h1${classeTitre ? ` class="${classeTitre}"` : ''}>${echapper(liste.titre.debut)}${liste.titre.fin ? ` <span class="fin">${echapper(liste.titre.fin)}</span>` : ''}</h1>
+    <div class="edition">${echapper(P.edition(edition))}</div>
+    <div class="sorte">${echapper(liste.sorte)} · ${echapper(liste.filtre)}</div>
+  </div>
+  <div class="entete">
+    <div class="identite">
+      <span>${echapper(P.nom)}</span><span class="nom">${echapper(identite.nom)}</span>
+      <span>${echapper(P.adresse)}</span><span>${identite.adresse.map(echapper).join('<br/>')}</span>
+    </div>
+    <div class="cheptel"><span>${echapper(P.cheptel)}</span><span class="case">${echapper(identite.cheptel)}</span></div>
+  </div>`;
+
+/** Une page de la liste des repères provisoires rouges : trente lignes numérotées de 1 à 30, comme le formulaire officiel. */
+function pageRougesHtml(
+  liste: ListeImprimee,
+  lignes: (LigneRouge | undefined)[],
+  identite: IdentiteListe,
+  edition: string,
+): string {
+  const C = P.rouges;
+  return `<section class="page-repere"><div class="feuille">${enteteHtml(liste, identite, edition, 'long')}
+  <table>
+    <colgroup><col style="width:6.8%"/><col style="width:19.9%"/><col style="width:12.7%"/><col style="width:15.4%"/><col style="width:15.2%"/><col style="width:30%"/></colgroup>
+    <thead><tr>
+      <th>${echapper(C.indice)}</th>
+      <th>${echapper(C.perdu)}</th>
+      <th>${C.type.map(echapper).join('<br/>')}</th>
+      <th>${echapper(C.poseRouge)}</th>
+      <th>${echapper(C.identique)}</th>
+      <th>${echapper(C.observations)}</th>
+    </tr></thead>
+    <tbody>${lignes.map((l, i) => ligneRougeHtml(l, i + 1)).join('')}</tbody>
+  </table>
+</div></section>`;
+}
+
+/** Une page blanche : de quoi que la section suivante commence sur un recto à l'impression recto verso. */
+const pageBlancheHtml = '<section class="page-repere"><div class="feuille"></div></section>';
+
+/**
+ * Les pages du document, section après section (chaque sorte de boucles, avant et après l'installation). Pour l'impression recto
+ * verso, chaque section commence sur un recto : une section d'un nombre impair de pages est suivie d'une page blanche.
+ */
+export function pagesDuDocument(listes: ListeImprimee[], identite: IdentiteListe, edition: string): string[] {
+  return listes.flatMap((l, i) => {
+    const pages = l.rouges
+      ? pagesDesReperes(l.rouges).map((page) => pageRougesHtml(l, page, identite, edition))
+      : pagesDesReperes(l.lignes).map((page) => pageHtml(l, page, identite, edition));
+    return i < listes.length - 1 && pages.length % 2 === 1 ? [...pages, pageBlancheHtml] : pages;
+  });
+}
+
 /** Les listes de repères en HTML : par sorte de boucles, des pages de trente lignes, chacune avec son en-tête, comme le formulaire officiel. */
 export function bouclesHtml(listes: ListeImprimee[], identite: IdentiteListe, edition: string): string {
   return `<!DOCTYPE html>
@@ -206,13 +322,23 @@ export function bouclesHtml(listes: ListeImprimee[], identite: IdentiteListe, ed
 <style>${STYLES}</style>
 </head>
 <body>
-${listes.flatMap((l) => pagesDesReperes(l.lignes).map((page) => pageHtml(l, page, identite, edition))).join('\n')}
+${pagesDuDocument(listes, identite, edition).join('\n')}
 </body>
 </html>`;
 }
 
 /** Imprime les listes de boucles telles que les filtres les montrent, présentées comme la « liste des repères » officielle. */
-export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> {
+/** L'ordre des sections à l'impression : les boucles, les tiptag, le rebouclage, puis les repères provisoires rouges. */
+const RANG_DES_SORTES = [ARTICLE_BOUCLE.BOUCLES, ARTICLE_BOUCLE.TIPTAG, ARTICLE_BOUCLE.REBOUCLAGE, ARTICLE_BOUCLE.ROUGES].map(
+  (code) => `${GENRE_ARTICLE.BOUCLE}:${code}`,
+);
+
+export async function exporterBouclesPdf(listesDeLEcran: ListeBoucles[]): Promise<void> {
+  const rang = (l: ListeBoucles) => {
+    const i = RANG_DES_SORTES.indexOf(l.article ?? '');
+    return i < 0 ? RANG_DES_SORTES.length : i;
+  };
+  const listes = [...listesDeLEcran].sort((x, y) => rang(x) - rang(y));
   const settings = await getSettings();
   const espece = especeCourante();
   const indicatif = indicatifMarquagePar(settings.exploitation)(espece);
@@ -233,20 +359,40 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
       b.chevreId && liste.morts.has(b.chevreId) ? (liste.sorties.get(b.chevreId) ?? { statut: '' }) : undefined,
       indicatif,
     );
+  // Le type d'un repère perdu (E ou P) : d'après les listes de tiptag et de boucles de l'inventaire.
+  const numerosDe = (article: string) =>
+    new Set(listes.filter((l) => l.article === article).flatMap((l) => l.toutes.map((b) => b.numero.trim())));
+  const tiptags = numerosDe(`${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.TIPTAG}`);
+  const plastiques = numerosDe(`${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.BOUCLES}`);
+  const rougeDe = (liste: ListeBoucles, b: BoucleStock) =>
+    ligneRouge(
+      b,
+      b.chevreId ? liste.animaux.get(b.chevreId) : undefined,
+      b.chevreId && liste.morts.has(b.chevreId) ? (liste.sorties.get(b.chevreId) ?? { statut: '' }) : undefined,
+      indicatif,
+      typeDuRepere(b.numero, tiptags, plastiques),
+    );
   const imprimees: ListeImprimee[] = listes.flatMap((liste) => {
     // Les lots dans l'ordre d'achat (les boucles de remplacement gardent leur ordre : les poses, puis celles en stock).
     const boucles = estBoucleDeRemplacement(liste.article) ? liste.lignes : trierParLotAchat(liste.lignes);
-    const base = { titre: titreDeLEtat(liste.etat), sorte: libelleDeLaSorte(liste.article) };
+    const rouge = estArticleBoucleRouge(liste.article);
+    const base = {
+      titre: rouge ? { debut: P.titreRouges, fin: '' } : titreDeLEtat(liste.etat),
+      sorte: libelleDeLaSorte(liste.article),
+    };
     const filtre = T.etat[liste.etat];
-    if (!installation) return [{ ...base, filtre, lignes: boucles.map((b) => ligneDe(liste, b)) }];
+    /** Une liste imprimée avec ces boucles : le formulaire des repères provisoires rouges, ou celui des repères. */
+    const imprimee = (bs: BoucleStock[], filtreDuGroupe: string): ListeImprimee =>
+      rouge
+        ? { ...base, filtre: filtreDuGroupe, lignes: [], rouges: bs.map((b) => rougeDe(liste, b)) }
+        : { ...base, filtre: filtreDuGroupe, lignes: bs.map((b) => ligneDe(liste, b)) };
+    if (!installation) return [imprimee(boucles, filtre)];
     // Les boucles d'avant et d'après l'installation sont sur des pages différentes (une liste sans boucle d'un côté n'a pas de page).
     const { avant, apres } = separerSelonInstallation(boucles, installation, liste.toutes);
     const date = formatDateShortFR(installation);
     return [
-      ...(avant.length > 0 ? [{ ...base, filtre: `${filtre} · ${P.avantInstallation(date)}`, lignes: avant.map((b) => ligneDe(liste, b)) }] : []),
-      ...(apres.length > 0 || avant.length === 0
-        ? [{ ...base, filtre: `${filtre} · ${P.depuisInstallation(date)}`, lignes: apres.map((b) => ligneDe(liste, b)) }]
-        : []),
+      ...(avant.length > 0 ? [imprimee(avant, `${filtre} · ${P.avantInstallation(date)}`)] : []),
+      ...(apres.length > 0 || avant.length === 0 ? [imprimee(apres, `${filtre} · ${P.depuisInstallation(date)}`)] : []),
     ];
   });
   await ecrireEtPartagerPdf(

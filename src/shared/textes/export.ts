@@ -249,6 +249,16 @@ export const TEXTES_EXPORT = {
         secondRepere: 'Date de pose du second repère',
         commentaires: 'Commentaires*',
       },
+      /** La « liste des repères provisoires rouges » : le titre et les colonnes du formulaire officiel. */
+      titreRouges: 'LISTE DES REPERES PROVISOIRES ROUGES',
+      rouges: {
+        indice: 'Indice',
+        perdu: 'N° du repère perdu',
+        type: ['Type :', 'E : électronique', 'P : plastique'],
+        poseRouge: 'Date de pose de la boucle provisoire rouge',
+        identique: 'Date de pose du repère à l’identique',
+        observations: 'Observations',
+      },
       noteCommentaires:
         '*Indiquer notamment les informations relatives aux boucles cassées, perdues, à l’utilisation du repère pour ré-identifier un agneau ayant perdu son unique repère ; la race de l’animal et le génotype tremblante, s’ils sont connus, peuvent également être précisés.',
       total: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
