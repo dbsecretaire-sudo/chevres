@@ -75,27 +75,6 @@ export function liensAEnregistrer(clients: Client[], fournisseurs: Fournisseur[]
     .map((c) => ({ client: c.client, fournisseur: c.fournisseur }));
 }
 
-/** La fiche fournisseur d'un client qu'on ajoute aussi comme fournisseur : ses coordonnées reprises, SIRET et adresse facultatifs. */
-export const fournisseurPourClient = (client: Client): Omit<Fournisseur, 'id'> => ({
-  nom: client.nom,
-  prenom: client.prenom,
-  nomEntreprise: nomComplet(client),
-  siret: '',
-  adressePostale: client.adressePostale ?? '',
-  telephone: client.telephone,
-  email: client.email,
-  clientId: client.id,
-});
-
-/** La fiche client d'un fournisseur qu'on ajoute aussi comme client : elle porte le nom de son entreprise. */
-export const clientPourFournisseur = (fournisseur: Fournisseur): Omit<Client, 'id'> => ({
-  nom: nomDuFournisseur(fournisseur),
-  adressePostale: fournisseur.adressePostale || undefined,
-  telephone: fournisseur.telephone,
-  email: fournisseur.email,
-  fournisseurId: fournisseur.id,
-});
-
 const rempli = (v: string | undefined): string | undefined => v?.trim() || undefined;
 
 /**

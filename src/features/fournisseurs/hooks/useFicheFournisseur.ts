@@ -46,7 +46,6 @@ export function useFicheFournisseur(id: string | undefined) {
   const enregistrerModifications = async () => {
     if (!form) return;
     const resultat = nettoyerFournisseur(form, {
-      nom: TEXTES.commun.general.nomRequis,
       entreprise: TEXTES.commun.general.nomDEntrepriseRequis,
     });
     if ('erreur' in resultat) return setErreur(resultat.erreur);

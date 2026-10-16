@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import {
-  clientPourFournisseur,
   construireContacts,
   contactDe,
   coordonneesAPartager,
-  fournisseurPourClient,
   liensAEnregistrer,
 } from '@/features/contacts/services/contacts';
 
@@ -81,26 +79,6 @@ describe('contacts', () => {
 });
 
 describe('fiches d’un même contact', () => {
-  it('le fournisseur créé pour un client reprend ses coordonnées, SIRET et adresse facultatifs', () => {
-    const f = fournisseurPourClient(client('c1', 'Dupont', { prenom: 'Jean', telephone: '06', email: 'a@b.fr' }));
-    expect(f).toMatchObject({
-      nomEntreprise: 'Dupont Jean',
-      nom: 'Dupont',
-      prenom: 'Jean',
-      siret: '',
-      adressePostale: '',
-      telephone: '06',
-      email: 'a@b.fr',
-      clientId: 'c1',
-    });
-  });
-
-  it('le client créé pour un fournisseur porte le nom de son entreprise', () => {
-    const c = clientPourFournisseur(fournisseur('f1', 'Chambre', { adressePostale: '1 rue', telephone: '04' }));
-    expect(c).toMatchObject({ nom: 'Chambre', adressePostale: '1 rue', telephone: '04', fournisseurId: 'f1' });
-    expect(clientPourFournisseur(fournisseur('f2', 'X')).adressePostale).toBeUndefined();
-  });
-
   it('seules les coordonnées remplies se partagent', () => {
     expect(coordonneesAPartager({ adressePostale: ' 1 rue ', telephone: '', email: undefined })).toEqual({
       adressePostale: '1 rue',

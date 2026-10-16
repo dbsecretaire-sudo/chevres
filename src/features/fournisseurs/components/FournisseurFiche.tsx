@@ -25,11 +25,13 @@ export function FournisseurLecture({
         {TEXTES.fournisseurs.ficheFournisseur.nomDEntrepriseDeuxPoints}
         {fournisseur.nomEntreprise}
       </Text>
-      <Text style={commonStyles.line}>
-        {TEXTES.fournisseurs.ficheFournisseur.contactDeuxPoints}
-        {fournisseur.nom}
-        {fournisseur.prenom ? ` ${fournisseur.prenom}` : ''}
-      </Text>
+      {fournisseur.nom || fournisseur.prenom ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.fournisseurs.ficheFournisseur.contactDeuxPoints}
+          {fournisseur.nom}
+          {fournisseur.prenom ? ` ${fournisseur.prenom}` : ''}
+        </Text>
+      ) : null}
       {fournisseur.siret ? (
         <Text style={commonStyles.line}>
           {TEXTES.fournisseurs.ficheFournisseur.siretDeuxPoints}
@@ -97,7 +99,6 @@ export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer
       />
       <FormField
         label={TEXTES.commun.general.nom}
-        required
         value={form.nom}
         onChangeText={(v) => onChange({ ...form, nom: v })}
       />

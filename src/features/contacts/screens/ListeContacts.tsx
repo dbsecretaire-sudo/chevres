@@ -8,28 +8,18 @@ import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { Fab } from '@/shared/components/Fab';
 import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
 import { lierLesFichesDeMemeNom, listContacts } from '@/features/contacts/repository';
+import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import type { Contact } from '@/features/contacts/services/contacts';
+import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.contacts;
 
-/** Ce que dit la ligne d'un contact : s'il reçoit des recettes (client), fait des dépenses (fournisseur), ses coordonnées. */
-const sousTitreDe = (c: Contact): string => {
-  const source = c.client ?? c.fournisseur;
-  return [
-    [c.client ? T.recettes : undefined, c.fournisseur ? T.depenses : undefined].filter(Boolean).join(' + '),
-    source?.telephone,
-    source?.email,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-};
-
 /**
  * Les contacts : les clients et les fournisseurs en une seule liste, chacun une fois — avec « Recettes » s'il a une fiche client,
- * « Dépenses » s'il a une fiche fournisseur. Un appui ouvre sa fiche ; l'autre côté s'y ouvre ou s'y ajoute.
+ * « Dépenses » s'il a une fiche fournisseur. Un appui ouvre sa fiche unique (une catégorie, une balance, toutes ses écritures).
  */
 export default function ListeContacts() {
   const router = useRouter();
@@ -37,6 +27,22 @@ export default function ListeContacts() {
   const { retour } = useLocalSearchParams<{ retour?: string }>();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [recherche, setRecherche] = useState('');
+  const { categories, idsConnus } = useCategoriesContact();
+
+  /** Ce que dit la ligne d'un contact : recettes et/ou dépenses, sa catégorie (ou « à choisir »), ses coordonnées. */
+  const sousTitreDe = (c: Contact): string => {
+    const source = c.client ?? c.fournisseur;
+    const categorie = categorieDuContact(c, idsConnus);
+    return [
+      [c.client ? T.recettes : undefined, c.fournisseur ? T.depenses : undefined].filter(Boolean).join(' + '),
+      categorie.conflit ? T.categorieAChoisir : categories.find((x) => x.id === categorie.id)?.nom,
+      source?.telephone,
+      source?.email,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  };
+  const aClasser = contacts.filter((c) => categorieDuContact(c, idsConnus).conflit).length;
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +69,7 @@ export default function ListeContacts() {
       <FlecheRetourDepuis retour={retour} />
       <View style={commonStyles.topPadded}>
         <Text style={commonStyles.note}>{T.aide}</Text>
+        {aClasser > 0 ? <Text style={commonStyles.lineBold}>{T.aClasser(aClasser)}</Text> : null}
         <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.recherche} />
       </View>
 
@@ -75,24 +82,13 @@ export default function ListeContacts() {
           <ListRow
             title={item.nom}
             subtitle={sousTitreDe(item) || undefined}
-            onPress={() =>
-              router.push(
-                (item.client ? ROUTES.ficheClient(item.client.id) : ROUTES.ficheFournisseur(item.fournisseur!.id)) as never,
-              )
-            }
+            onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
           />
         )}
       />
 
       <Fab
-        options={[
-          { label: T.nouveauClient, icon: 'add', onPress: () => router.push(ROUTES.CLIENT_NOUVEAU as never) },
-          {
-            label: T.nouveauFournisseur,
-            icon: 'add',
-            onPress: () => router.push(ROUTES.FOURNISSEUR_NOUVEAU as never),
-          },
-        ]}
+        options={[{ label: T.nouveau, icon: 'add', onPress: () => router.push(ROUTES.CONTACT_NOUVEAU as never) }]}
       />
     </Screen>
   );

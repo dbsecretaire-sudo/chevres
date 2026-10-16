@@ -87,7 +87,7 @@ export default function FicheFournisseur() {
         ) : (
           <>
             <FournisseurLecture fournisseur={fournisseur} onModifier={() => e.setEditing(true)} />
-            <ContactLie fournisseur={fournisseur} />
+            <ContactLie id={fournisseur.id} />
             {e.ecritures.length > 0 && <FournisseurTotal resume={e.resume} />}
             <FournisseurEcritures ecritures={e.ecritures} />
           </>

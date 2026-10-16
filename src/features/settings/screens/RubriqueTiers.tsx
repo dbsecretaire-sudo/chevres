@@ -19,20 +19,6 @@ export default function RubriqueTiers() {
           retour={ROUTES.ORGANISATION_TIERS}
         />
         <LigneRubrique
-          titre={TEXTES.commun.general.clients}
-          aide={T.aideClients}
-          icone="person"
-          route={ROUTES.CLIENTS}
-          retour={ROUTES.ORGANISATION_TIERS}
-        />
-        <LigneRubrique
-          titre={TEXTES.commun.general.fournisseurs}
-          aide={T.aideFournisseurs}
-          icone="people"
-          route={ROUTES.FOURNISSEURS}
-          retour={ROUTES.ORGANISATION_TIERS}
-        />
-        <LigneRubrique
           titre={T.sectionCategoriesClient}
           aide={T.aideCategoriesClient}
           icone="pricetags"

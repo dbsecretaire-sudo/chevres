@@ -202,9 +202,9 @@ describe('un fournisseur et un client de même nom', () => {
 });
 
 describe('fiche fournisseur', () => {
-  it('le SIRET et l’adresse sont facultatifs, le nom et l’entreprise restent requis', async () => {
+  it('le contact, le SIRET et l’adresse sont facultatifs, l’entreprise reste requise', async () => {
     const { nettoyerFournisseur } = await import('@/features/fournisseurs/services/resumeFournisseur');
-    const messages = { nom: 'Nom requis', entreprise: 'Entreprise requise' };
+    const messages = { entreprise: 'Entreprise requise' };
     const sansSiret = nettoyerFournisseur(
       { id: 'f', nom: ' Dupont ', nomEntreprise: ' Chambre ', siret: '  ', adressePostale: '' },
       messages,
@@ -215,8 +215,8 @@ describe('fiche fournisseur', () => {
       siret: '',
       adressePostale: '',
     });
-    expect(nettoyerFournisseur({ id: 'f', nom: '', nomEntreprise: 'X', siret: '', adressePostale: '' }, messages)).toEqual({
-      erreur: 'Nom requis',
+    expect(nettoyerFournisseur({ id: 'f', nom: '', nomEntreprise: ' ', siret: '', adressePostale: '' }, messages)).toEqual({
+      erreur: 'Entreprise requise',
     });
   });
 });

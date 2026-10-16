@@ -42,7 +42,6 @@ export default function NouveauFournisseur() {
   });
 
   const enregistrer = async () => {
-    if (!nom.trim()) return setErreur(TEXTES.commun.general.nomRequis);
     if (!nomEntreprise.trim()) return setErreur(TEXTES.commun.general.nomDEntrepriseRequis);
 
     setEnregistrement(true);
@@ -99,7 +98,6 @@ export default function NouveauFournisseur() {
             />
             <FormField
               label={TEXTES.commun.general.nom}
-              required
               value={nom}
               onChangeText={setNom}
               placeholder={TEXTES.fournisseurs.nouveauFournisseur.nomDuContact}

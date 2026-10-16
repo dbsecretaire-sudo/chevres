@@ -62,7 +62,7 @@ export const TEXTES_FOURNISSEURS = {
     ajoutezVosFournisseursPourLes:
       'Ajoutez vos fournisseurs pour les retrouver rapidement dans une nouvelle facture.',
     nomValeurSiretSiret: (nom: string, valeur: string, siret?: string) =>
-      siret ? `${nom}${valeur} · SIRET ${siret}` : `${nom}${valeur}`,
+      [`${nom}${valeur}`.trim(), siret ? `SIRET ${siret}` : ''].filter(Boolean).join(' · '),
   },
   nouveauFournisseur: {
     exCooperativeAgricoleDuNord: 'ex: Coopérative agricole du Nord',

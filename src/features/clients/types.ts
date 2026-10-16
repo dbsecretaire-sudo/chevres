@@ -12,4 +12,6 @@ export interface Client {
   structureInitialisee?: boolean;
   /** Sa fiche fournisseur quand c'est aussi un fournisseur : un seul contact, deux fiches (voir features/contacts). */
   fournisseurId?: string;
+  /** La personne à contacter, quand le client est une organisation. */
+  contact?: string;
 }

@@ -91,7 +91,7 @@ export default function FicheClient() {
         ) : (
           <ClientLecture client={client} onModifier={() => fiche.setEditing(true)} />
         )}
-        {!fiche.editing ? <ContactLie client={client} /> : null}
+        {!fiche.editing ? <ContactLie id={client.id} /> : null}
 
         {/* Un gîte liste les réservations du client ; un secrétariat, ses tâches et contenus. */}
         {!fiche.editing && modeEntreprise() && gite ? <ClientReservations clientId={client.id} /> : null}

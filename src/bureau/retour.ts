@@ -62,7 +62,7 @@ export interface ParametresDePage {
 const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] = [
   [/^\/comptabilite\/(facture|vente)\/[^/]+$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/comptabilite\/nouvelle$/, () => ROUTES.COMPTABILITE_LISTE],
-  [/^\/comptabilite\/(clients|fournisseurs|comptes-pcg)\/(?!index$)[^/]+$/, (m) => `/comptabilite/${m[1]}`],
+  [/^\/comptabilite\/(clients|fournisseurs|contacts|comptes-pcg)\/(?!index$)[^/]+$/, (m) => `/comptabilite/${m[1]}`],
   [/^\/comptabilite\/(stocks|conditionnement)$/, () => ROUTES.COMPTABILITE_INVENTAIRE],
   [/^\/comptabilite\/stock-(historique|statistiques|structure)$/, () => ROUTES.COMPTABILITE_STOCKS],
   [/^\/comptabilite\/tresorerie-reglages$/, () => ROUTES.COMPTABILITE_TRESORERIE],

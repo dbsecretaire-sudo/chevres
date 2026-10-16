@@ -107,6 +107,8 @@ export const ROUTES = {
   COMPTABILITE_TRESORERIE_REGLAGES: '/comptabilite/tresorerie-reglages',
   /** Les contacts : clients et fournisseurs en une seule liste. */
   CONTACTS: '/comptabilite/contacts',
+  CONTACT_NOUVEAU: '/comptabilite/contacts/nouveau',
+  ficheContact: (id: string) => `/comptabilite/contacts/${id}` as const,
   FOURNISSEURS: '/comptabilite/fournisseurs',
   FOURNISSEUR_NOUVEAU: '/comptabilite/fournisseurs/nouveau',
   /** Les fournisseurs, ouverts depuis un formulaire en cours : `retour` est l'adresse où la flèche de retour ramène. */

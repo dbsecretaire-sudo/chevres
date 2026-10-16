@@ -1,40 +1,41 @@
-import { creerClient, enregistrerClient, listClients } from '@/features/clients/repository';
-import type { Client } from '@/features/clients/types';
-import { creerFournisseur, enregistrerFournisseur, listFournisseurs } from '@/features/fournisseurs/repository';
-import type { Fournisseur } from '@/features/fournisseurs/types';
 import {
-  clientPourFournisseur,
+  creerClient,
+  enregistrerClient,
+  listClients,
+  supprimerClient,
+} from '@/features/clients/repository';
+import type { Client } from '@/features/clients/types';
+import {
+  creerFournisseur,
+  enregistrerFournisseur,
+  listFournisseurs,
+  supprimerFournisseur,
+} from '@/features/fournisseurs/repository';
+import type { Fournisseur } from '@/features/fournisseurs/types';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { filtrerParClient } from '@/features/clients/services/resumeClient';
+import { facturesDuFournisseur } from '@/features/fournisseurs/services/resumeFournisseur';
+import {
   construireContacts,
   contactDe,
   coordonneesAPartager,
-  fournisseurPourClient,
   liensAEnregistrer,
+  type Contact,
 } from '@/features/contacts/services/contacts';
+import { fichesDuFormulaire, type FormulaireContact } from '@/features/contacts/services/fiche';
+import { nomComplet } from '@/shared/utils/personne';
 
 /** Les contacts de l'établissement actif (fiches client et fournisseur réunies). */
-export async function listContacts() {
+export async function listContacts(): Promise<Contact[]> {
   const [clients, fournisseurs] = await Promise.all([listClients(), listFournisseurs()]);
   return construireContacts(clients, fournisseurs);
 }
 
 /** Le contact d'une fiche (client ou fournisseur) : les deux fiches quand il en a deux. */
-export async function getContact(id: string) {
+export async function getContact(id: string): Promise<Contact | undefined> {
   const [clients, fournisseurs] = await Promise.all([listClients(), listFournisseurs()]);
   return contactDe(id, clients, fournisseurs);
-}
-
-/** Ajoute le client aussi comme fournisseur : une nouvelle fiche fournisseur, liée à la sienne. */
-export async function ajouterCommeFournisseur(client: Client): Promise<Fournisseur> {
-  const fournisseur = await creerFournisseur(fournisseurPourClient(client));
-  await enregistrerClient({ ...client, fournisseurId: fournisseur.id });
-  return fournisseur;
-}
-
-/** Ajoute le fournisseur aussi comme client : une nouvelle fiche client, liée à la sienne. */
-export async function ajouterCommeClient(fournisseur: Fournisseur): Promise<Client> {
-  const client = await creerClient(clientPourFournisseur(fournisseur));
-  await enregistrerFournisseur({ ...fournisseur, clientId: client.id });
-  return client;
 }
 
 /**
@@ -77,4 +78,65 @@ export async function partagerCoordonneesDuFournisseur(fournisseur: Fournisseur)
     email: email ?? autre.email,
     fournisseurId: fournisseur.id,
   });
+}
+
+/** Pourquoi un contact ne s'enregistre pas. */
+export type ErreurContact = 'nomRequis' | 'rienCoche' | 'ecrituresRecettes' | 'ecrituresDepenses';
+
+/** Vrai si le client a des ventes ou des factures : on ne retire pas son côté « recettes ». */
+async function clientAEcritures(client: Client): Promise<boolean> {
+  const [ventes, factures] = await Promise.all([listToutesVentes(), listToutesFactures()]);
+  const siennes = filtrerParClient(nomComplet(client), ventes, factures);
+  return siennes.ventes.length + siennes.factures.length > 0;
+}
+
+/** Vrai si le fournisseur a des factures reçues : on ne retire pas son côté « dépenses ». */
+async function fournisseurAEcritures(fournisseur: Fournisseur): Promise<boolean> {
+  return facturesDuFournisseur(fournisseur, await listToutesFactures()).length > 0;
+}
+
+/**
+ * Enregistre un contact d'après son formulaire : crée ou met à jour sa fiche client (recettes) et sa fiche fournisseur (dépenses),
+ * les lie, et supprime le côté décoché — sauf s'il a déjà des écritures, qui ne doivent pas perdre leur fiche.
+ */
+export async function enregistrerContact(
+  form: FormulaireContact,
+  existant?: Contact,
+  idsConnus?: { client: readonly string[]; fournisseur: readonly string[] },
+): Promise<{ erreur: ErreurContact } | { contact: Contact }> {
+  if (!form.nom.trim()) return { erreur: 'nomRequis' };
+  if (!form.recettes && !form.depenses) return { erreur: 'rienCoche' };
+  if (existant?.client && !form.recettes && (await clientAEcritures(existant.client))) {
+    return { erreur: 'ecrituresRecettes' };
+  }
+  if (existant?.fournisseur && !form.depenses && (await fournisseurAEcritures(existant.fournisseur))) {
+    return { erreur: 'ecrituresDepenses' };
+  }
+
+  const fiches = fichesDuFormulaire(form, existant, idsConnus);
+  let client: Client | undefined;
+  let fournisseur: Fournisseur | undefined;
+  if (fiches.client) {
+    const { id, ...donnees } = fiches.client;
+    client = id ? { id, ...donnees } : await creerClient(donnees);
+  }
+  if (fiches.fournisseur) {
+    const { id, ...donnees } = fiches.fournisseur;
+    fournisseur = id ? { id, ...donnees } : await creerFournisseur(donnees);
+  }
+  // Les deux fiches se lient ; une fiche seule n'a plus de lien.
+  if (client) client = { ...client, fournisseurId: fournisseur?.id };
+  if (fournisseur) fournisseur = { ...fournisseur, clientId: client?.id };
+  if (client) await enregistrerClient(client);
+  if (fournisseur) await enregistrerFournisseur(fournisseur);
+  if (existant?.client && !client) await supprimerClient(existant.client.id);
+  if (existant?.fournisseur && !fournisseur) await supprimerFournisseur(existant.fournisseur.id);
+
+  return { contact: { cle: (client ?? fournisseur)!.id, nom: nomComplet(client ?? { nom: fournisseur!.nomEntreprise }), client, fournisseur } };
+}
+
+/** Supprime le contact : ses deux fiches (ses ventes et ses factures déjà enregistrées ne sont pas modifiées). */
+export async function supprimerContact(contact: Contact): Promise<void> {
+  if (contact.client) await supprimerClient(contact.client.id);
+  if (contact.fournisseur) await supprimerFournisseur(contact.fournisseur.id);
 }
