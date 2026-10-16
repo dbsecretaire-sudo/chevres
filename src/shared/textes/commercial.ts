@@ -17,10 +17,7 @@ export const TEXTES_COMMERCIAL = {
       aucun: 'Rien en attente',
     },
     groupes: {
-      ventes: 'Ventes et clients',
-      tarifs: 'Tarifs et prix',
-      commandes: 'Commandes et livraisons',
-      circuits: 'Circuits de vente',
+      ventes: 'Ventes',
       agritourisme: 'Agritourisme',
       reseau: 'Réseau',
     },

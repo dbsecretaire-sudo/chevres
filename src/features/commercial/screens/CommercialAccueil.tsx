@@ -79,16 +79,7 @@ export default function CommercialAccueil() {
           route: ROUTES.COMMERCIAL_VENTES,
           alerte: resume.enRetard,
         },
-        { cle: 'clients', ...T.clients, icone: 'people', route: ROUTES.CLIENTS },
-      ],
-    },
-    {
-      titre: T.groupes.tarifs,
-      lignes: [{ cle: 'tarifs', ...T.tarifs, icone: 'pricetags', route: ROUTES.COMMERCIAL_TARIFS }],
-    },
-    {
-      titre: T.groupes.commandes,
-      lignes: [
+        { cle: 'tarifs', ...T.tarifs, icone: 'pricetags', route: ROUTES.COMMERCIAL_TARIFS },
         {
           cle: 'commandes',
           titre: T.commandes.titre,
@@ -97,6 +88,7 @@ export default function CommercialAccueil() {
           icone: 'cube',
           route: ROUTES.COMMERCIAL_COMMANDES,
         },
+        { cle: 'circuits', ...T.circuits, icone: 'git-network', route: ROUTES.COMMERCIAL_CIRCUITS },
       ],
     },
     {
@@ -105,10 +97,6 @@ export default function CommercialAccueil() {
         { cle: 'visites', ...T.visitesAgri, icone: 'trail-sign', route: ROUTES.COMMERCIAL_AGRITOURISME },
         { cle: 'formules', ...T.formulesAgri, icone: 'pricetags', route: ROUTES.COMMERCIAL_FORMULES },
       ],
-    },
-    {
-      titre: T.groupes.circuits,
-      lignes: [{ cle: 'circuits', ...T.circuits, icone: 'git-network', route: ROUTES.COMMERCIAL_CIRCUITS }],
     },
     {
       titre: T.groupes.reseau,
@@ -125,7 +113,14 @@ export default function CommercialAccueil() {
 
   const tuiles: TuileChiffre[] = [
     ...(resume.commandesOuvertes > 0
-      ? [{ cle: 'commandes', libelle: T.resume.aPreparer, valeur: String(resume.commandesOuvertes) }]
+      ? [
+          {
+            cle: 'commandes',
+            libelle: T.resume.aPreparer,
+            valeur: String(resume.commandesOuvertes),
+            onPress: () => router.push(ROUTES.COMMERCIAL_COMMANDES as never),
+          },
+        ]
       : []),
     ...(resume.aEncaisser > 0
       ? [
@@ -134,11 +129,19 @@ export default function CommercialAccueil() {
             libelle: T.resume.aEncaisser,
             valeur: formatMontant(resume.aEncaisser),
             alerte: resume.enRetard,
+            onPress: () => router.push(ROUTES.commercialVentes('encaisser') as never),
           },
         ]
       : []),
     ...(resume.aRelancer > 0
-      ? [{ cle: 'relancer', libelle: T.resume.aRelancer, valeur: String(resume.aRelancer) }]
+      ? [
+          {
+            cle: 'relancer',
+            libelle: T.resume.aRelancer,
+            valeur: String(resume.aRelancer),
+            onPress: () => router.push(ROUTES.commercialVentes('relancer') as never),
+          },
+        ]
       : []),
   ];
 

@@ -67,6 +67,8 @@ export const ROUTES = {
   /** L'onglet Commercial d'un élevage : ventes et clients, tarifs, commandes et livraisons, circuits de vente. */
   COMMERCIAL: '/commercial',
   COMMERCIAL_VENTES: '/commercial/ventes',
+  /** Les ventes ouvertes sur une vue : « encaisser » (les paiements en attente) ou « relancer » (les clients à relancer). */
+  commercialVentes: (vue: 'encaisser' | 'relancer') => `/commercial/ventes?vue=${vue}` as const,
   COMMERCIAL_TARIFS: '/commercial/tarifs',
   COMMERCIAL_COMMANDES: '/commercial/commandes',
   COMMERCIAL_CIRCUITS: '/commercial/circuits',

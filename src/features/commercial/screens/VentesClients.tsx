@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Linking, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ColonnesVerticales } from '@/shared/components/ColonnesVerticales';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -33,7 +33,14 @@ const nombre = (valeur: number): string => valeur.toLocaleString(LOCALE, { maxim
 export default function VentesClients() {
   const router = useRouter();
   const donnees = useDonneesCommerciales();
-  const [vue, setVue] = useState<VueVentes | 'encaisser' | 'relancer'>(VUE_VENTES.PRODUITS);
+  const { vue: vueDuLien } = useLocalSearchParams<{ vue?: string }>();
+  /** La vue que le lien ouvre (les paiements à encaisser, les clients à relancer), sinon les produits. */
+  const vueOuverte: VueVentes | 'encaisser' | 'relancer' =
+    vueDuLien === 'encaisser' || vueDuLien === 'relancer' ? vueDuLien : VUE_VENTES.PRODUITS;
+  // Un choix fait sur l'écran vaut pour le lien qui l'a ouvert ; un autre lien ouvre sa propre vue.
+  const [choix, setChoix] = useState<{ lien?: string; vue: VueVentes | 'encaisser' | 'relancer' } | null>(null);
+  const vue = choix && choix.lien === vueDuLien ? choix.vue : vueOuverte;
+  const setVue = (v: VueVentes | 'encaisser' | 'relancer') => setChoix({ lien: vueDuLien, vue: v });
   const [moisChoisi, setMoisChoisi] = useState<string | null>(null);
   const aujourdhui = todayISO();
 
