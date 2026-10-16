@@ -4,6 +4,9 @@ import type { Facture, Vente } from '@/features/comptabilite/types';
 import { ecrituresDuClient, filtrerParClient, type EcritureClient } from '@/features/clients/services/resumeClient';
 import { facturesDuFournisseur } from '@/features/fournisseurs/services/resumeFournisseur';
 import type { Contact } from '@/features/contacts/services/contacts';
+import type { ArchiveDossiers } from '@/features/dossiers/types';
+import type { Controle } from '@/features/exploitation/types';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { SOURCE_TRANSACTION } from '@/shared/constants/comptabilite';
 import type { CategorieClientReglage } from '@/shared/dictionnaire/categoriesClient';
 import type { CategorieFournisseurReglage } from '@/shared/dictionnaire/categoriesFournisseur';
@@ -196,4 +199,58 @@ export function fichesDuFormulaire(
     };
   }
   return resultat;
+}
+
+/** Un élément rangé pour un contact : un contenu de sa fiche Partenaires (courrier, note, aide…) ou un contenu de son dossier. */
+export interface ElementLie {
+  cle: string;
+  titre: string;
+  date: string;
+  /** Le nombre de fichiers joints : avec fichiers c'est un document, sans c'est un autre élément. */
+  fichiers: number;
+  origine: 'partenaire' | 'dossier';
+  groupementId?: string;
+  contenuId?: string;
+  elementId?: string;
+}
+
+/**
+ * Les éléments liés à un contact, du plus récent au plus ancien : les contenus de son entrée dans Partenaires (rangée sous sa fiche
+ * fournisseur ou sa fiche client) et les contenus du dossier de son client.
+ */
+export function elementsDuContact(
+  contact: Pick<Contact, 'client' | 'fournisseur'>,
+  controles: Controle[],
+  archive: ArchiveDossiers,
+): ElementLie[] {
+  const entrees = controles.filter(
+    (c) =>
+      c.famille === FAMILLE_CONTROLE.GROUPEMENT &&
+      ((!!contact.fournisseur && c.fournisseurId === contact.fournisseur.id) ||
+        (!!contact.client && c.clientId === contact.client.id)),
+  );
+  const dePartenaire: ElementLie[] = entrees.flatMap((entree) =>
+    (entree.contenus ?? []).map((x) => ({
+      cle: `p-${entree.id}-${x.id}`,
+      titre: x.titre,
+      date: x.date,
+      fichiers: x.fichiers?.length ?? 0,
+      origine: 'partenaire' as const,
+      groupementId: entree.id,
+      contenuId: x.id,
+    })),
+  );
+  const deDossier: ElementLie[] = contact.client
+    ? archive.elements
+        .filter((e) => e.clientId === contact.client!.id)
+        .map((e) => ({
+          cle: `d-${e.id}`,
+          titre: e.titre,
+          date: e.date,
+          fichiers: e.fichiers?.length ?? 0,
+          origine: 'dossier' as const,
+          elementId: e.id,
+        }))
+    : [];
+  return [...dePartenaire, ...deDossier].sort((a, b) => b.date.localeCompare(a.date));
 }

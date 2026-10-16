@@ -9,6 +9,9 @@ import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { OptionsModal } from '@/shared/components/OptionsModal';
+import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { lireArchiveDossiers } from '@/features/dossiers/repository';
+import { listTousControles } from '@/features/exploitation/repository/controles';
 import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { estVente } from '@/features/clients/components/ClientResume';
 import type { EcritureClient } from '@/features/clients/services/resumeClient';
@@ -28,6 +31,8 @@ import {
   balanceDuContact,
   categorieDuContact,
   ecrituresDuContact,
+  elementsDuContact,
+  type ElementLie,
   formulaireDuContact,
   type FormulaireContact,
 } from '@/features/contacts/services/fiche';
@@ -38,6 +43,9 @@ import { TEXTES } from '@/shared/textes';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 
 const T = TEXTES.contacts.fiche;
+
+/** Les trois onglets de la fiche : les écritures, les documents (éléments avec fichiers) et les autres éléments liés. */
+type Onglet = 'ecritures' | 'documents' | 'autres';
 const F = TEXTES.contacts.formulaire;
 
 /** Un montant signé : une recette « + », une dépense « − », en vert ou en rouge. */
@@ -56,6 +64,8 @@ export default function FicheContact() {
   const [contact, setContact] = useState<Contact | undefined>();
   const [introuvable, setIntrouvable] = useState(false);
   const [ecritures, setEcritures] = useState<EcritureClient[]>([]);
+  const [elements, setElements] = useState<ElementLie[]>([]);
+  const [onglet, setOnglet] = useState<Onglet>('ecritures');
   const [form, setForm] = useState<FormulaireContact | null>(null);
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
@@ -68,9 +78,19 @@ export default function FicheContact() {
     const c = await getContact(id);
     setContact(c);
     setIntrouvable(!c);
-    if (!c) return setEcritures([]);
-    const [ventes, factures] = await Promise.all([listToutesVentes(), listToutesFactures()]);
+    if (!c) {
+      setEcritures([]);
+      setElements([]);
+      return;
+    }
+    const [ventes, factures, controles, archive] = await Promise.all([
+      listToutesVentes(),
+      listToutesFactures(),
+      listTousControles(),
+      lireArchiveDossiers(),
+    ]);
     setEcritures(ecrituresDuContact(c, ventes, factures));
+    setElements(elementsDuContact(c, controles, archive));
   }, [id]);
 
   useFocusEffect(
@@ -120,6 +140,8 @@ export default function FicheContact() {
   const telephone = c?.telephone || f?.telephone;
   const email = c?.email || f?.email;
   const balance = balanceDuContact(ecritures);
+  const documents = elements.filter((x) => x.fichiers > 0);
+  const autres = elements.filter((x) => x.fichiers === 0);
 
   return (
     <Screen scroll={false}>
@@ -278,30 +300,69 @@ export default function FicheContact() {
               </Card>
             ) : null}
 
-            <View style={commonStyles.gap10}>
-              <Text style={commonStyles.cardTitle}>
-                {TEXTES.commun.general.ecrituresLiees}
-                {ecritures.length > 0 ? ` (${ecritures.length})` : ''}
-              </Text>
-              {ecritures.length === 0 ? (
-                <Text style={commonStyles.mutedItalic}>{T.aucuneEcriture}</Text>
-              ) : (
-                ecritures.map((e) => (
-                  <ListRow
-                    key={e.id}
-                    title={e.titre}
-                    subtitle={formatDateFR(e.date)}
-                    trailing={
-                      <Text style={[commonStyles.lineBold, { color: couleurDuMontant(e.montant) }]}>
-                        {e.montant < 0 ? '−' : '+'}
-                        {formatMontant(Math.abs(e.montant))}
-                      </Text>
-                    }
-                    onPress={() => router.push((estVente(e) ? ROUTES.ficheVente(e.id) : ROUTES.ficheFacture(e.id)) as never)}
-                  />
-                ))
-              )}
-            </View>
+            <PucesDefilantes<Onglet>
+              puces={[
+                { valeur: 'ecritures', label: T.ongletEcritures(ecritures.length) },
+                { valeur: 'documents', label: T.ongletDocuments(documents.length) },
+                { valeur: 'autres', label: T.ongletAutres(autres.length) },
+              ]}
+              valeur={onglet}
+              onChoisir={setOnglet}
+            />
+
+            {onglet === 'ecritures' ? (
+              <View style={commonStyles.gap10}>
+                {ecritures.length === 0 ? (
+                  <Text style={commonStyles.mutedItalic}>{T.aucuneEcriture}</Text>
+                ) : (
+                  ecritures.map((e) => (
+                    <ListRow
+                      key={e.id}
+                      title={e.titre}
+                      subtitle={formatDateFR(e.date)}
+                      trailing={
+                        <Text style={[commonStyles.lineBold, { color: couleurDuMontant(e.montant) }]}>
+                          {e.montant < 0 ? '−' : '+'}
+                          {formatMontant(Math.abs(e.montant))}
+                        </Text>
+                      }
+                      onPress={() =>
+                        router.push((estVente(e) ? ROUTES.ficheVente(e.id) : ROUTES.ficheFacture(e.id)) as never)
+                      }
+                    />
+                  ))
+                )}
+              </View>
+            ) : (
+              <View style={commonStyles.gap10}>
+                {(onglet === 'documents' ? documents : autres).length === 0 ? (
+                  <Text style={commonStyles.mutedItalic}>
+                    {onglet === 'documents' ? T.aucunDocument : T.aucunAutre}
+                  </Text>
+                ) : (
+                  (onglet === 'documents' ? documents : autres).map((x) => (
+                    <ListRow
+                      key={x.cle}
+                      title={x.titre}
+                      subtitle={[
+                        formatDateFR(x.date),
+                        T.origine[x.origine],
+                        x.fichiers > 0 ? TEXTES.fichiers.nombre(x.fichiers) : undefined,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                      onPress={() =>
+                        router.push(
+                          (x.origine === 'partenaire'
+                            ? ROUTES.santeContenuGroupement(x.groupementId!, x.contenuId)
+                            : ROUTES.element(x.elementId!)) as never,
+                        )
+                      }
+                    />
+                  ))
+                )}
+              </View>
+            )}
           </>
         )}
       </ScrollView>

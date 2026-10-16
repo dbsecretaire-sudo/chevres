@@ -29,6 +29,12 @@ export const TEXTES_CONTACTS = {
     balance: 'Balance du contact',
     aideBalance: 'Ce qu’il vous a payé, moins ce que vous lui avez payé.',
     aucuneEcriture: 'Aucune écriture liée à ce contact pour l’instant.',
+    ongletEcritures: (n: number) => `Écritures liées${n > 0 ? ` (${n})` : ''}`,
+    ongletDocuments: (n: number) => `Documents liés${n > 0 ? ` (${n})` : ''}`,
+    ongletAutres: (n: number) => `Autres éléments liés${n > 0 ? ` (${n})` : ''}`,
+    aucunDocument: 'Aucun document lié à ce contact pour l’instant.',
+    aucunAutre: 'Aucun autre élément lié à ce contact pour l’instant.',
+    origine: { partenaire: 'Partenaires', dossier: 'Dossier' },
     supprimerQuestion: 'Supprimer ce contact ?',
     supprimerMessage: (nom: string) =>
       `Cette action supprimera définitivement la fiche de ${nom}. Les ventes et les factures déjà enregistrées ne sont pas modifiées.`,

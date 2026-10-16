@@ -8,6 +8,7 @@ import {
   categorieDuContact,
   categoriesDuContact,
   ecrituresDuContact,
+  elementsDuContact,
   fichesDuFormulaire,
   FORMULAIRE_CONTACT_VIDE,
   formulaireDuContact,
@@ -146,5 +147,44 @@ describe('formulaire d’un contact', () => {
     const f = fichesDuFormulaire({ ...FORMULAIRE_CONTACT_VIDE, nom: 'X', personne: 'Anne Martin', recettes: true, depenses: true });
     expect(f.fournisseur?.nom).toBe('Anne Martin');
     expect(f.client?.contact).toBe('Anne Martin');
+  });
+});
+
+describe('éléments liés à un contact', () => {
+  const piece = { id: 'p', nom: 'a.pdf', extension: 'pdf', mime: 'application/pdf', ajoutLe: '2024-01-01' };
+  const entree = (id: string, extra: Record<string, unknown>) =>
+    ({ id, chevreId: 'x', famille: 'groupement', date: '2024-01-01', type: 'Chambre', ...extra }) as never;
+
+  it('réunit les contenus de son entrée Partenaires et ceux de son dossier, du plus récent au plus ancien', () => {
+    const c = contact(client(), fournisseur());
+    const controles = [
+      entree('e1', {
+        fournisseurId: 'f1',
+        contenus: [
+          { id: 'a', titre: 'Aide 2024', date: '2024-05-01', fichiers: [piece] },
+          { id: 'b', titre: 'Courrier', date: '2024-03-01' },
+        ],
+      }),
+      entree('e2', { fournisseurId: 'autre', contenus: [{ id: 'z', titre: 'Pas lui', date: '2024-09-01' }] }),
+    ];
+    const archive = {
+      sousDossiers: [],
+      elements: [
+        { id: 'd1', clientId: 'c1', dossierId: 's', titre: 'Note', date: '2024-04-01' },
+        { id: 'd2', clientId: 'autre', dossierId: 's', titre: 'Pas lui', date: '2024-04-02' },
+      ],
+    };
+    const liste = elementsDuContact(c, controles, archive);
+    expect(liste.map((x) => x.titre)).toEqual(['Aide 2024', 'Note', 'Courrier']);
+    expect(liste.filter((x) => x.fichiers > 0).map((x) => x.titre)).toEqual(['Aide 2024']);
+    expect(liste[0]).toMatchObject({ origine: 'partenaire', groupementId: 'e1', contenuId: 'a' });
+    expect(liste[1]).toMatchObject({ origine: 'dossier', elementId: 'd1' });
+  });
+
+  it('une entrée liée à la fiche client compte aussi, et un contact sans client n’a pas de dossier', () => {
+    const controles = [entree('e3', { clientId: 'c1', contenus: [{ id: 'k', titre: 'Note', date: '2024-01-02' }] })];
+    expect(elementsDuContact(contact(client()), controles, { sousDossiers: [], elements: [] })).toHaveLength(1);
+    const archive = { sousDossiers: [], elements: [{ id: 'd1', clientId: 'c1', dossierId: 's', titre: 'N', date: '2024-01-01' }] };
+    expect(elementsDuContact(contact(undefined, fournisseur()), [], archive)).toEqual([]);
   });
 });
