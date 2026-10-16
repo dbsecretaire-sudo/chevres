@@ -302,7 +302,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale
   const totalAlimentation = totalMontants(lignesAlimentation);
   const totalCarburant = totalMontants(lignesCarburant);
   const totalProduction = totalMontants(lignesProduction);
-  const totalChambre = totalMontants(lignesChambre);
+  /** Le total d'une facture de la Chambre : ses articles, plus les boucles qu'elle commande. */
+  const totalChambre = totalMontants(lignesChambre) + totalProduction;
 
   // Les comptes retirés pour l'espèce de l'écriture n'y sont plus proposés (une écriture commune les garde tous).
   const comptesDeLActivite = comptes.filter((c) =>

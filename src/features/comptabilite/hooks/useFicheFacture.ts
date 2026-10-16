@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
+  ligneProductionVide,
   lignesProductionFinales,
   versLignesProductionForm,
   type LigneProductionForm,
@@ -104,7 +105,8 @@ export function useFicheFacture(id: string | undefined) {
   const totalCarburant = totalMontants(lignesCarburant);
   const totalMarchandises = totalMontants(lignesMarchandises);
   const totalProduction = totalMontants(lignesProduction);
-  const totalChambre = totalMontants(lignesChambre);
+  /** Le total d'une facture de la Chambre : ses articles, plus les boucles qu'elle commande. */
+  const totalChambre = totalMontants(lignesChambre) + totalProduction;
 
   const charger = useCallback(async () => {
     if (!id) return;
@@ -114,7 +116,11 @@ export function useFicheFacture(id: string | undefined) {
     setLignes(f ? versLignesAlimentationForm(f) : []);
     setLignesCarburant(f ? versLignesCarburantForm(f) : []);
     setLignesMarchandises(f ? versLignesMarchandisesForm(f) : []);
-    setLignesProduction(f ? versLignesProductionForm(f) : []);
+    // Une facture de la Chambre n'a de boucles que celles qu'elle a commandées (sinon, une ligne vide, pas son montant entier).
+    const detailleeParChambre = f?.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (f.lignesChambre?.length ?? 0) > 0;
+    setLignesProduction(
+      f ? (detailleeParChambre && !f.lignesProduction?.length ? [ligneProductionVide()] : versLignesProductionForm(f)) : [],
+    );
     setLignesChambre(f ? versLignesChambreForm(f) : []);
     setDetaillerChambre(false);
     setMontantTexte(f ? montantEnTexte(f) : '');
@@ -227,7 +233,20 @@ export function useFicheFacture(id: string | undefined) {
           message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
         });
       }
-      aEnregistrer = { ...form, montant: totalChambre, lignesChambre: lignesRetenues };
+      // Les boucles commandées avec la facture entrent à l'inventaire ; sans elles, l'ancien détail par fourniture est retiré.
+      const boucles = lignesProductionFinales(lignesProduction);
+      if (boucles.some((l) => l.article && !(l.quantite && l.quantite > 0))) {
+        return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise });
+      }
+      aEnregistrer = {
+        ...form,
+        montant: [...lignesRetenues, ...boucles].reduce((total, l) => total + l.montant, 0),
+        lignesChambre: lignesRetenues,
+        lignesProduction: boucles.length > 0 ? boucles : undefined,
+        stockArticle: undefined,
+        stockQuantite: undefined,
+        bouclesDebut: undefined,
+      };
     } else if (estMarchandises) {
       const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises);
       if (lignesRetenues.length === 0) {
@@ -352,6 +371,7 @@ export function useFicheFacture(id: string | undefined) {
     /** Détaille une facture de la Chambre d'agriculture par article (les articles habituels, à compléter). */
     detaillerChambreAgriculture: () => {
       setLignesChambre(lignesChambreParDefaut());
+      setLignesProduction([ligneProductionVide()]);
       setDetaillerChambre(true);
     },
     estProduction,

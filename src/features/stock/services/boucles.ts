@@ -442,6 +442,10 @@ export function avecRemarque(
 export const texteDeLaRemarque = (remarque: string): string =>
   TEXTES.stock.boucles.remarqueAncienne[remarque] ?? remarque;
 
+/** Une boucle qui porte une remarque et n'est pas posée : les listes l'indiquent d'un signe d'interdiction à la place de la date de pose. */
+export const nePasPoser = (b: Pick<BoucleStock, 'remarque' | 'chevreId' | 'datePose'>): boolean =>
+  !!b.remarque && !b.chevreId && !b.datePose;
+
 /** Enregistre la remarque (libre ; vide : retirée) sur la plage de boucles (voir `avecRemarque`) ; rend le nombre de boucles touchées. */
 export function marquerBoucles(
   article: string,

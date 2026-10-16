@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { Chevre } from '@/features/cheptel/types';
-import { bouclesDeLInventaire, bouclesSelonLeCheptel, trierBoucles } from '@/features/stock/services/boucles';
+import {
+  bouclesDeLInventaire,
+  bouclesSelonLeCheptel,
+  nePasPoser,
+  trierBoucles,
+} from '@/features/stock/services/boucles';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { synchroBouclesActive } from '@/features/settings/settings';
 import { useFiltresColonnes } from '@/shared/hooks/useFiltresColonnes';
@@ -47,7 +52,14 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
   /** Le filtre de chaque colonne, comme dans Excel : les valeurs sont celles qu'affiche le tableau. */
   const filtres = useFiltresColonnes<BoucleStock, 'numero' | 'pose' | 'achat' | 'morte'>({
     numero: (b) => b.numero,
-    pose: (b) => (b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? TEXTES.stock.boucles.posee : ''),
+    pose: (b) =>
+      b.datePose
+        ? formatDateShortFR(b.datePose)
+        : b.chevreId
+          ? TEXTES.stock.boucles.posee
+          : nePasPoser(b)
+            ? TEXTES.stock.boucles.nePasPoser
+            : '',
     achat: (b) => formatDateShortFR(b.dateAchat),
     morte: (b) =>
       b.chevreId && morts.has(b.chevreId) ? TEXTES.stock.boucles.morteOui : TEXTES.stock.boucles.morteNon,

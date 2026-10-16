@@ -3,6 +3,7 @@ import {
   estArticleRebouclage,
   estBoucleDeRemplacement,
   libelleDeLaSorte,
+  nePasPoser,
   texteDeLaRemarque,
 } from '@/features/stock/services/boucles';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
@@ -34,7 +35,9 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
           ? formatDateShortFR(b.datePose)
           : b.chevreId
             ? T.posee
-            : '',
+            : nePasPoser(b)
+              ? T.nePasPoser
+              : '',
         ...(rouge ? {} : { [T.colonnes.achat]: b.dateAchat ? formatDateShortFR(b.dateAchat) : '' }),
         [T.morte]: b.chevreId && liste.morts.has(b.chevreId) ? P.oui : '',
         ...(avecRemarques ? { [T.colonnes.remarque]: b.remarque ? texteDeLaRemarque(b.remarque) : '' } : {}),

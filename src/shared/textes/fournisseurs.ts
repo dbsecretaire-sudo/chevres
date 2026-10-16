@@ -10,6 +10,8 @@ export const TEXTES_FOURNISSEURS = {
     ajouter: 'Ajouter un article',
     retirer: 'Retirer cet article',
     detailler: 'Détailler par article de la Chambre',
+    /** Les boucles que la facture commande en même temps que ses articles : elles entrent à l'inventaire. */
+    boucles: 'Boucles commandées avec cette facture (facultatif, ajoutées à l’inventaire)',
   },
   /** Catégories de tiers (fournisseurs) : le champ de leur fiche et l'écran Organisation › Clients et fournisseurs › Catégories de tiers. */
   categories: {

@@ -151,6 +151,8 @@ export const TEXTES_STOCK = {
     aucuneBoucle: 'Aucune boucle.',
     /** Les titres des colonnes : les dates sur deux lignes, pour tenir dans la largeur. */
     colonnes: { numero: 'N°', pose: 'Date de\npose', achat: 'Date d’\nachat', remarque: 'Remarque' },
+    /** Une boucle à remarque non posée : un signe d'interdiction remplace la date de pose (son texte, pour le filtre, le PDF et la lecture vocale). */
+    nePasPoser: 'Ne pas poser',
     /** Les premières remarques d'une boucle étaient deux choix fixes, enregistrés sous ces codes : elles s'affichent encore en clair. */
     remarqueAncienne: { en_trop: 'Commandée en trop', jamais_posee: 'Jamais posée' } as Record<string, string>,
     /** Le réglage, par plage de numéros, d'une remarque libre sur des boucles de l'inventaire (une exception). */

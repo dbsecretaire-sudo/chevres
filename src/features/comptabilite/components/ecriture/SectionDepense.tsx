@@ -185,6 +185,12 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
         {e.estChambre && (
           <>
             <LignesChambreEditor lignes={e.lignesChambre} onChange={e.setLignesChambre} />
+            <LignesProductionEditor
+              lignes={e.lignesProduction}
+              onChange={e.setLignesProduction}
+              seulementBoucles
+              titre={TEXTES.fournisseurs.chambre.boucles}
+            />
             <Card style={commonStyles.gap10}>
               <Text style={styles.total}>
                 {TEXTES.commun.general.totalFactureTtcDeuxPoints}

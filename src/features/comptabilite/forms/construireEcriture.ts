@@ -301,7 +301,13 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
         },
       };
     }
-    montantFinal = totalMontants(s.lignesChambre);
+    // Une facture de la Chambre peut aussi commander des boucles : elles entrent à l'inventaire avec leurs numéros.
+    const boucles = lignesProductionFinales(s.lignesProduction ?? []);
+    if (boucles.some((l) => l.article && !(l.quantite && l.quantite > 0))) {
+      return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
+    }
+    lignesProduction = boucles.length > 0 ? boucles : undefined;
+    montantFinal = [...lignesChambre, ...boucles].reduce((total, l) => total + l.montant, 0);
   } else if (estRecue && s.lignesMarchandises) {
     lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises);
     if (lignesMarchandises.length === 0) {

@@ -7,6 +7,7 @@ import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import {
   estArticleRebouclage,
   estBoucleDeRemplacement,
+  nePasPoser,
   texteDeLaRemarque,
 } from '@/features/stock/services/boucles';
 import { ETAT_BOUCLE, TRI_BOUCLE } from '@/shared/constants/stock';
@@ -122,9 +123,15 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
                 <Text style={styles.texteLigne}>{b.numero}</Text>
                 {b.remarque ? <Text style={styles.remarqueBoucle}>{texteDeLaRemarque(b.remarque)}</Text> : null}
               </View>
-              <Text style={[styles.datePose, styles.colonneDate]}>
-                {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}
-              </Text>
+              {nePasPoser(b) ? (
+                <View style={styles.colonneDate}>
+                  <Ionicons name="ban" size={18} color={colors.danger} accessibilityLabel={T.nePasPoser} />
+                </View>
+              ) : (
+                <Text style={[styles.datePose, styles.colonneDate]}>
+                  {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}
+                </Text>
+              )}
               {rouge ? null : (
                 <Text style={[styles.texteLigne, styles.colonneDate]}>{formatDateShortFR(b.dateAchat)}</Text>
               )}

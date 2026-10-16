@@ -25,6 +25,8 @@ interface Props {
   onChange: (lignes: LigneProductionForm[]) => void;
   /** Seules les boucles d'identification sont proposées (les factures de la chambre d'agriculture). */
   seulementBoucles?: boolean;
+  /** Le titre de la carte (par défaut : « Détail par fourniture »). */
+  titre?: string;
 }
 
 const T = TEXTES.comptabilite.lignesProductionEditor;
@@ -34,7 +36,7 @@ const T = TEXTES.comptabilite.lignesProductionEditor;
  * (avec recherche) dans la liste de l'inventaire — emballages, matériel, boucles… ; le crayon mène à l'inventaire et la liste s'y met
  * à jour. La quantité de chaque fourniture entre au stock ; le total de la facture est la somme des montants.
  */
-export function LignesProductionEditor({ lignes, onChange, seulementBoucles }: Props) {
+export function LignesProductionEditor({ lignes, onChange, seulementBoucles, titre }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
@@ -58,7 +60,7 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles }: P
   return (
     <Card style={commonStyles.gap10}>
       <View style={commonStyles.rowSpaceBetween}>
-        <Text style={commonStyles.lineBold}>{T.detailParFourniture}</Text>
+        <Text style={commonStyles.lineBold}>{titre ?? T.detailParFourniture}</Text>
         <Pressable
           style={commonStyles.boutonPastille}
           onPress={() => onChange([...lignes, ligneProductionVide()])}

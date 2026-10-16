@@ -137,6 +137,12 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   ) : f.estChambre ? (
     <>
       <LignesChambreEditor lignes={f.lignesChambre} onChange={f.setLignesChambre} />
+      <LignesProductionEditor
+        lignes={f.lignesProduction}
+        onChange={f.setLignesProduction}
+        seulementBoucles
+        titre={TEXTES.fournisseurs.chambre.boucles}
+      />
       <Text style={styles.total}>
         {TEXTES.commun.general.totalFactureTtcDeuxPoints}
         {formatTotalEuros(f.totalChambre)}
