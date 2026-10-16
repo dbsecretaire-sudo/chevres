@@ -68,7 +68,7 @@ describe('carnet sanitaire', () => {
       'chevres',
     );
     expect(lignes).toHaveLength(2);
-    expect(lignes[0]).toMatchObject({ animal: '12345', voie: 'sous-cutanée', remise: '2026-09-02', motif: 'Prise de sang — Prophylaxie', intervenant: 'OMNIA VET' });
+    expect(lignes[0]).toMatchObject({ animal: '12345', voie: 'sous-cutanée', remise: '2026-09-02', medicament: 'Prise de sang', motif: 'Prophylaxie', intervenant: 'OMNIA VET' });
     expect(lignes[1].animal).toBe('');
   });
 
@@ -76,7 +76,7 @@ describe('carnet sanitaire', () => {
     const f = facture({ lignesVeterinaire: [{ id: 'a', libelle: 'Vaccin' }] });
     const lignes = lignesDuCarnet([f], [visite({ factureId: 'f1' })], 'chevres');
     expect(lignes).toHaveLength(1);
-    expect(lignes[0].motif).toBe('Vaccin');
+    expect(lignes[0].medicament).toBe('Vaccin');
   });
 
   it('une visite sans détail figure avec son motif', () => {
@@ -113,7 +113,7 @@ describe('carnet sanitaire', () => {
   });
 
   it('une ligne au texte long prend la place de plusieurs : la page ne déborde pas', () => {
-    const longue = { date: '2026-01-01', animal: '', ordonnance: '', motif: 'x'.repeat(200), intervenant: 'OMNIA VET' } as never;
+    const longue = { date: '2026-01-01', animal: '', ordonnance: '', motif: 'x'.repeat(400), intervenant: 'OMNIA VET' } as never;
     const courte = { date: '2026-01-02', animal: '1', ordonnance: '', motif: 'Vaccin', intervenant: '' } as never;
     expect(placeDeLaLigne(courte)).toBe(1);
     expect(placeDeLaLigne(longue)).toBeGreaterThan(2);

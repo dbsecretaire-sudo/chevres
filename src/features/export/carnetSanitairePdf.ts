@@ -25,21 +25,27 @@ const date = (iso: string) => (iso ? formatDateFR(iso) : '');
 /** Le n° de cheptel tel que le formulaire le donne : « FR » est déjà imprimé, on n'écrit que la suite. */
 const chiffresDuCheptel = (numero: string | undefined): string => (numero ?? '').replace(/^\s*FR\s*/i, '').trim();
 
+/**
+ * Une intervention : deux rangées, comme le formulaire papier — en haut le médicament sur toute la largeur de sa case, en dessous la
+ * voie, la dose et le rythme ; les autres cases s'étendent sur les deux rangées.
+ */
 function ligneHtml(l: LigneCarnet | undefined): string {
-  if (!l) return `<tr><td></td><td></td>${'<td class="g"></td>'.repeat(7)}<td></td><td></td></tr>`;
-  const intervenant = [l.intervenant, l.intervenant ? D.veterinaire : ''].filter(Boolean).join(', ');
-  return `<tr>
-    <td>${echapper(date(l.date))}</td>
-    <td>${echapper(l.animal || D.troupeauEntier)}</td>
-    <td class="g">${echapper(l.ordonnance)}</td>
-    <td class="g">${echapper(date(l.debut))}</td>
-    <td class="g">${echapper(date(l.fin))}</td>
-    <td class="g">${echapper(l.voie)}</td>
-    <td class="g">${echapper(l.dose)}</td>
-    <td class="g">${echapper(l.rythme)}</td>
-    <td class="g">${echapper(date(l.remise))}</td>
-    <td class="gauche">${echapper(l.motif)}</td>
-    <td class="gauche">${echapper(intervenant)}</td>
+  const intervenant = l ? [l.intervenant, l.intervenant ? D.veterinaire : ''].filter(Boolean).join(', ') : '';
+  const c = (texte: string | undefined, classe = '', rowspan = 2) =>
+    `<td${rowspan > 1 ? ` rowspan="${rowspan}"` : ''}${classe ? ` class="${classe}"` : ''}>${echapper(texte ?? '')}</td>`;
+  return `<tr class="entree">
+    ${c(l ? date(l.date) : '')}
+    ${c(l ? l.animal || D.troupeauEntier : '')}
+    ${c(l?.ordonnance, 'g')}
+    ${c(l ? date(l.debut) : '', 'g')}
+    ${c(l ? date(l.fin) : '', 'g')}
+    <td colspan="3" class="med">${echapper(l?.medicament ?? '')}</td>
+    ${c(l ? date(l.remise) : '', 'g')}
+    ${c(l?.motif, 'gauche')}
+    ${c(intervenant, 'gauche')}
+  </tr>
+  <tr class="sous">
+    <td>${echapper(l?.voie ?? '')}</td><td>${echapper(l?.dose ?? '')}</td><td>${echapper(l?.rythme ?? '')}</td>
   </tr>`;
 }
 
@@ -57,6 +63,11 @@ function pageHtml(
     <span class="page-numero">${D.page} ${numero}</span>
   </div>
   <table>
+    <colgroup>
+      <col style="width:7.7%"/><col style="width:8.6%"/><col style="width:7.3%"/><col style="width:7.2%"/><col style="width:7.2%"/>
+      <col style="width:5%"/><col style="width:4.9%"/><col style="width:5%"/>
+      <col style="width:7.3%"/><col style="width:25%"/><col style="width:14.8%"/>
+    </colgroup>
     <thead>
       <tr>
         <th rowspan="2">${D.dateIntervention}</th>
@@ -98,7 +109,10 @@ export function carnetHtml(lignes: LigneCarnet[], atelier: string, cheptel: stri
   th, td { border: 1px solid ${TRAIT}; padding: 2px 4px; text-align: center; vertical-align: middle; overflow-wrap: break-word; }
   th { font-weight: 700; font-size: 8.5px; }
   th small { font-weight: 400; font-size: 7px; }
-  tbody td { height: 13.5mm; font-size: 8.5px; }
+  tbody td { font-size: 8.5px; }
+  tr.entree td { height: 7mm; border-top: 1.6px solid ${TRAIT}; }
+  tr.sous td { height: 6.5mm; }
+  td.med { text-align: center; font-size: 8px; }
   td.g { background: ${GRIS_COLONNE}; }
   td.gauche { text-align: left; }
 </style>
