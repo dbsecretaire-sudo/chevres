@@ -8,12 +8,15 @@ export interface LigneChambreForm {
   key: string;
   libelle: string;
   montant: string;
+  /** L'équarrisseur (sa fiche fournisseur) d'une ligne d'équarrissage ; vide : aucun choix. */
+  equarrisseurId: string;
 }
 
 export const ligneChambreVide = (libelle = ''): LigneChambreForm => ({
   key: generateId(),
   libelle,
   montant: '',
+  equarrisseurId: '',
 });
 
 /** Les articles que la Chambre d'agriculture facture d'ordinaire (forfait d'identification, équarrissage ATM, conseils et analyses). */
@@ -26,10 +29,15 @@ export const versLignesChambreForm = (facture: Pick<Facture, 'lignesChambre'>): 
     key: generateId(),
     libelle: l.libelle,
     montant: String(l.montant).replace('.', ','),
+    equarrisseurId: l.equarrisseurId ?? '',
   }));
 
 /** Les lignes à enregistrer : celles qui ont un montant (un article sans montant n'est pas facturé). */
 export const lignesChambreFinales = (lignes: LigneChambreForm[]): LigneChambre[] =>
   lignes
-    .map((l) => ({ libelle: l.libelle.trim(), montant: parseDecimal(l.montant) }))
+    .map((l) => ({
+      libelle: l.libelle.trim(),
+      montant: parseDecimal(l.montant),
+      equarrisseurId: l.equarrisseurId || undefined,
+    }))
     .filter((l) => l.montant > 0);

@@ -12,6 +12,12 @@ export const TEXTES_FOURNISSEURS = {
     detailler: 'Détailler par article de la Chambre',
     /** Les boucles que la facture commande en même temps que ses articles : elles entrent à l'inventaire. */
     boucles: 'Boucles commandées avec cette facture (facultatif, ajoutées à l’inventaire)',
+    /** Une ligne d'équarrissage se lie à un équarrisseur : elle apparaît dans ses factures, dans Groupements. */
+    equarrisseur: 'Équarrisseur',
+    equarrisseurAuto: (nom: string) => `${nom} (automatique)`,
+    equarrisseurAChoisir: 'À choisir',
+    equarrisseurAide:
+      'Cette ligne apparaît dans les factures de cet équarrisseur, dans Groupements. Changez-le si l’équarrisseur change.',
   },
   /** Catégories de tiers (fournisseurs) : le champ de leur fiche et l'écran Organisation › Clients et fournisseurs › Catégories de tiers. */
   categories: {

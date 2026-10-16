@@ -90,6 +90,8 @@ export interface LigneCarburant {
 export interface LigneChambre {
   libelle: string;
   montant: number;
+  /** Une ligne d'équarrissage : la fiche fournisseur de l'équarrisseur qui la reçoit (absente : l'unique équarrisseur, s'il n'y en a qu'un). */
+  equarrisseurId?: string;
 }
 
 export interface Facture {
