@@ -7,13 +7,20 @@ import { BlocLignes } from '@/shared/components/BlocListe';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { NomModal } from '@/features/dossiers/components/NomModal';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { SelectModal } from '@/shared/components/SelectModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { articlesDuProduit, lotsDeLInventaire } from '@/features/stock/services/lots';
+import {
+  articlesDuProduit,
+  lotsDeLInventaire,
+  remettreLotsAZero,
+  supprimerLotsDesArticles,
+} from '@/features/stock/services/lots';
 import { ajouterArticle, niveauxDeStock, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
 import { ETAT_LOT, GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
@@ -22,6 +29,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { todayISO } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
 /**
@@ -39,6 +47,10 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
   const [visible, setVisible] = useState(false);
   /** La fenêtre qui demande le nom d'un nouveau produit (il entre à l'inventaire, sans stock : la fabrication le remplit). */
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  /** Les réglages de la liste : leur menu, puis l'action choisie (remise à zéro ou suppression des lots) et sa catégorie (« » : toutes). */
+  const [reglagesOuverts, setReglagesOuverts] = useState(false);
+  const [action, setAction] = useState<'zero' | 'supprimer' | null>(null);
+  const [cible, setCible] = useState<string | null>(null);
 
   const charger = useCallback(() => lireArchiveStock().then(setArchive), []);
   useFocusEffect(
@@ -71,9 +83,9 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
               ) : null}
               <Pressable
                 style={commonStyles.boutonEnteteDroite}
-                onPress={() => setAjoutOuvert(true)}
+                onPress={() => setReglagesOuverts(true)}
                 hitSlop={10}
-                accessibilityLabel={T.ajouter.titre}
+                accessibilityLabel={TEXTES.production.reglagesLots.titre}
               >
                 <Ionicons name="settings" size={24} color={colors.blanc} />
               </Pressable>
@@ -133,6 +145,74 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
               }),
           },
         ]}
+      />
+      {/* Les réglages : ajouter une variété, remettre les lots à zéro, ou les supprimer, par catégorie. */}
+      <SelectModal<string>
+        visible={reglagesOuverts}
+        titre={TEXTES.production.reglagesLots.titre}
+        value=""
+        options={[
+          { value: 'ajouter', label: T.ajouter.titre },
+          { value: 'zero', label: TEXTES.production.reglagesLots.remettreAZero },
+          { value: 'supprimer', label: TEXTES.production.reglagesLots.supprimerLots },
+        ]}
+        onSelect={(choix) => {
+          setReglagesOuverts(false);
+          if (choix === 'ajouter') setAjoutOuvert(true);
+          else {
+            setCible(null);
+            setAction(choix as 'zero' | 'supprimer');
+          }
+        }}
+        onClose={() => setReglagesOuverts(false)}
+      />
+      <SelectModal<string>
+        visible={!!action && cible === null}
+        titre={TEXTES.production.reglagesLots.quelleCategorie}
+        value=""
+        options={[
+          { value: '', label: TEXTES.production.reglagesLots.toutes },
+          ...articles.map((a) => ({
+            value: a.cle,
+            label: TEXTES.production.reglagesLots.ligne(a.libelle, lotsDeLInventaire({ lots }, ETAT_LOT.TOUT, a.cle).length),
+          })),
+        ]}
+        onSelect={setCible}
+        onClose={() => setAction(null)}
+      />
+      <ConfirmModal
+        visible={!!action && cible !== null}
+        title={
+          action === 'zero'
+            ? TEXTES.production.reglagesLots.zeroTitre(
+                cible ? (articles.find((a) => a.cle === cible)?.libelle ?? '') : TEXTES.production.reglagesLots.toutes,
+              )
+            : TEXTES.production.reglagesLots.supprimerTitre(
+                cible ? (articles.find((a) => a.cle === cible)?.libelle ?? '') : TEXTES.production.reglagesLots.toutes,
+              )
+        }
+        message={(() => {
+          const cles = cible ? [cible] : articles.map((a) => a.cle);
+          const nombre = (etat: ValeurDe<typeof ETAT_LOT>) => cles.reduce((t, c) => t + lotsDeLInventaire({ lots }, etat, c).length, 0);
+          return action === 'zero'
+            ? TEXTES.production.reglagesLots.zeroMessage(nombre(ETAT_LOT.EN_STOCK))
+            : TEXTES.production.reglagesLots.supprimerMessage(nombre(ETAT_LOT.TOUT));
+        })()}
+        confirmLabel={
+          action === 'zero' ? TEXTES.production.reglagesLots.zeroBouton : TEXTES.production.reglagesLots.supprimerBouton
+        }
+        onCancel={() => {
+          setAction(null);
+          setCible(null);
+        }}
+        onConfirm={async () => {
+          const cles = cible ? [cible] : articles.map((a) => a.cle);
+          if (action === 'zero') await remettreLotsAZero(cles, todayISO());
+          else if (action === 'supprimer') await supprimerLotsDesArticles(cles);
+          setAction(null);
+          setCible(null);
+          charger();
+        }}
       />
       <NomModal
         visible={ajoutOuvert}

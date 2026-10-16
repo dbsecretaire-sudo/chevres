@@ -8,6 +8,7 @@ import {
   codeFromageDeLaVente,
   estLigneDuCheptel,
   libelleArticle,
+  niveauxDeStock,
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock, LotFromage, MouvementStock } from '@/features/stock/types';
@@ -309,6 +310,42 @@ export function lotsDeLaFabrication(lots: LotFromage[], lot: LotFromage): LotFro
       ? l.mouvementId === lot.mouvementId
       : !l.mouvementId && l.article === lot.article && l.dateFabrication === lot.dateFabrication,
   );
+}
+
+/**
+ * Remet à zéro des fromages (ceux de ces articles) : les lots en stock disparaissent et le stock revient à 0 par un mouvement. Les lots
+ * déjà vendus ou rappelés restent, pour la traçabilité de leurs ventes.
+ */
+export function remettreLotsAZero(articles: string[], date: string): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const niveaux = niveauxDeStock(archive.mouvements);
+    const enStock = new Set(
+      (archive.lots ?? [])
+        .filter((l) => articles.includes(l.article) && etatDuLot(l) === ETAT_LOT.EN_STOCK)
+        .map((l) => l.id),
+    );
+    const remises: MouvementStock[] = articles.flatMap((article) => {
+      const niveau = niveaux.get(article) ?? 0;
+      return niveau === 0 ? [] : [{ id: generateId(), article, date, delta: -niveau, origine: ORIGINE_MOUVEMENT.MANUEL }];
+    });
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).filter((l) => !enStock.has(l.id)),
+      mouvements: [...archive.mouvements, ...remises],
+    });
+  });
+}
+
+/** Supprime tous les lots de ces articles (vendus et rappelés compris) : leur numérotation repart de 1 ; le stock ne change pas. */
+export function supprimerLotsDesArticles(articles: string[]): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).filter((l) => !articles.includes(l.article)),
+    });
+  });
 }
 
 /** Coche ou décoche le contrôle de plusieurs fromages d'un coup (« tout sélectionner »). */
