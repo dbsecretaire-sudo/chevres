@@ -26,7 +26,7 @@ export const LIGNES_PAR_PAGE_LIVRET = 20;
 /** Le carnet en feuilles A4 à ranger dans un classeur, ou en livret : des feuilles A4 en paysage à imprimer recto verso et à plier en deux. */
 export type FormatCarnet = 'a4' | 'livret';
 
-/** Une ligne du carnet : une mise bas (la mère et tous ses petits). Le père et le poids de départ restent à écrire à la main. */
+/** Une ligne du carnet : une mise bas (la mère et tous ses petits). Le père reste à écrire à la main. */
 export interface LigneCabri {
   date: string;
   numero: string;
@@ -34,6 +34,8 @@ export interface LigneCabri {
   sexe: string;
   observations: string;
   age: string;
+  /** Le poids de départ des petits (kg), quand l'abattoir l'a donné. */
+  poids: string;
 }
 
 /** Le jour et le mois d'une date ISO, comme sur le carnet papier (l'année est celle du tableau) : 05/03. */
@@ -83,6 +85,7 @@ export function ligneDeLaPortee(p: PorteeNaissance): LigneCabri {
     sexe: p.cabrits.map(lettreDuSexe).filter(Boolean).join(' + '),
     observations: [texte((x) => x.devenir), renouvellement].filter(Boolean).join(' · '),
     age: texte((x) => x.age),
+    poids: texte((x) => (x.c.poidsKg !== undefined ? C.poidsKg(x.c.poidsKg) : '')),
   };
 }
 
@@ -93,7 +96,7 @@ export function lignesDeLAnnee(portees: PorteeNaissance[]): LigneCabri[] {
 
 /** Les lignes coupées en pages de 32 ; la dernière page est complétée de lignes vides, où écrire à la main les naissances suivantes. */
 export function pagesDeLignes(lignes: LigneCabri[], parPage = LIGNES_PAR_PAGE): LigneCabri[][] {
-  const vide: LigneCabri = { date: '', numero: '', mere: '', sexe: '', observations: '', age: '' };
+  const vide: LigneCabri = { date: '', numero: '', mere: '', sexe: '', observations: '', age: '', poids: '' };
   const pages: LigneCabri[][] = [];
   for (let i = 0; i < Math.max(lignes.length, 1); i += parPage) {
     const page = lignes.slice(i, i + parPage);
@@ -348,7 +351,7 @@ function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire): string
   const lignesHtml = lignes
     .map(
       (l) =>
-        `<tr><td>${echapper(l.date)}</td><td>${echapper(l.numero)}</td><td>${echapper(l.mere)}</td><td></td><td>${echapper(l.sexe)}</td><td class="libre">${echapper(l.observations)}</td><td>${echapper(l.age)}</td><td></td></tr>`,
+        `<tr><td>${echapper(l.date)}</td><td>${echapper(l.numero)}</td><td>${echapper(l.mere)}</td><td></td><td>${echapper(l.sexe)}</td><td class="libre">${echapper(l.observations)}</td><td>${echapper(l.age)}</td><td>${echapper(l.poids)}</td></tr>`,
     )
     .join('');
   return `<div class="page">

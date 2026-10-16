@@ -30,5 +30,7 @@ export interface Chevre {
   renouvellement?: boolean;
   /** Année pour laquelle la désignation au renouvellement a été faite. */
   renouvellementAnnee?: number;
+  /** Le poids en kilos : celui donné par l'abattoir (poids de carcasse) à la sortie d'un petit, ou une pesée. */
+  poidsKg?: number;
   notes?: string;
 }

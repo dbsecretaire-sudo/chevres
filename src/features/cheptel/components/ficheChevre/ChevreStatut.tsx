@@ -2,6 +2,7 @@ import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { DateField } from '@/shared/components/DateField';
+import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
 import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
@@ -14,6 +15,9 @@ interface DeclarationProps {
   statut: StatutChevre;
   date: string;
   onDateChange: (date: string) => void;
+  /** Le poids donné à la sortie (abattoir, vente) : facultatif. */
+  poidsKg?: number;
+  onPoidsChange: (poidsKg: number | undefined) => void;
   onAnnuler: () => void;
   onConfirmer: () => void;
 }
@@ -24,6 +28,8 @@ export function ChevreStatutDeclaration({
   statut,
   date,
   onDateChange,
+  poidsKg,
+  onPoidsChange,
   onAnnuler,
   onConfirmer,
 }: DeclarationProps) {
@@ -34,6 +40,14 @@ export function ChevreStatutDeclaration({
         {statutLabel(statut, chevre.sexe)}
       </Text>
       <DateField label={TEXTES.commun.general.date} value={date} onChange={onDateChange} />
+      {/* L'abattoir donne le poids de la carcasse : il se note ici, avec la sortie. */}
+      {statut === STATUT_CHEVRE.ABATTOIR || statut === STATUT_CHEVRE.VENDUE ? (
+        <ChampPoids
+          value={poidsKg ?? chevre.poidsKg}
+          onChange={onPoidsChange}
+          label={statut === STATUT_CHEVRE.ABATTOIR ? TEXTES.cheptel.ficheChevre.poidsAbattoir : undefined}
+        />
+      ) : null}
       {/* Envoyée à l'abattoir, vendue ou consommée : pas pendant un délai d'attente pour la viande. */}
       {chevre.numeroBoucle &&
       ([STATUT_CHEVRE.ABATTOIR, STATUT_CHEVRE.VENDUE, STATUT_CHEVRE.AUTOCONSOMMEE] as string[]).includes(statut) ? (

@@ -11,6 +11,7 @@ import {
   porteesParAnnee,
   resultatsDeLAnnee,
 } from '@/features/export/carnetMiseBasPdf';
+import { lirePoids } from '@/features/cheptel/utils/poids';
 import type { PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -27,6 +28,7 @@ describe('carnet de mise bas', () => {
       sexe: 'F',
       observations: '',
       age: '',
+      poids: '',
     });
   });
 
@@ -52,6 +54,26 @@ describe('carnet de mise bas', () => {
     );
     expect([jumeaux.observations, jumeaux.age]).toEqual(['1 : Vendu', '1 : 2 mois']);
     expect(ligneDeLaPortee(portee('2026-03-05', '', [petit('M', { statut: 'mortne' })])).mere).toBe('inconnue');
+  });
+
+  it('le poids donné par l’abattoir s’écrit dans la colonne « poids départ »', () => {
+    expect(ligneDeLaPortee(portee('2026-03-05', 'a', [petit('M', { numeroBoucle: '1', poidsKg: 9.5 })])).poids).toBe('9,5 kg');
+    const deux = ligneDeLaPortee(
+      portee('2026-03-05', 'a', [petit('M', { numeroBoucle: '1', poidsKg: 8 }), petit('F', { numeroBoucle: '2' })]),
+    );
+    expect(deux.poids).toBe('1 : 8 kg');
+    expect(ligneDeLaPortee(portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '3' })])).poids).toBe('');
+  });
+
+  it('un poids se lit avec une virgule ou un point', () => {
+    expect([lirePoids('9,5'), lirePoids(' 12.25 '), lirePoids(''), lirePoids('abc'), lirePoids('0'), lirePoids('-3')]).toEqual([
+      9.5,
+      12.25,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 
   it('les mises bas d’une année sont rangées par date de naissance, chacune sur sa ligne', () => {

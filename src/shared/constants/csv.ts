@@ -30,6 +30,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'dateStatut',
     'renouvellement',
     'renouvellementAnnee',
+    'poidsKg',
     'notes',
   ],
   [CATEGORIE_STOCKAGE.VISITES_VETERINAIRE]: [

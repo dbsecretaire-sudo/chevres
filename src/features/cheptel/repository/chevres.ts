@@ -160,10 +160,12 @@ export async function declarerStatutChevre(
   id: string,
   statut: StatutChevre,
   dateStatut: string,
+  /** Le poids donné à la sortie (abattoir…) : il remplace celui de la fiche ; absent, celui de la fiche reste. */
+  poidsKg?: number,
 ): Promise<void> {
   const chevre = await getChevre(id);
   if (!chevre) return;
-  await saveChevre({ ...chevre, statut, dateStatut });
+  await saveChevre({ ...chevre, statut, dateStatut, poidsKg: poidsKg ?? chevre.poidsKg });
 }
 
 export async function reactiverChevre(id: string): Promise<void> {

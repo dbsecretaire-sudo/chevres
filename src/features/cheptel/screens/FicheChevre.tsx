@@ -110,6 +110,8 @@ export default function FicheChevre() {
             statut={fiche.statutForm}
             date={fiche.dateStatutForm}
             onDateChange={fiche.setDateStatutForm}
+            poidsKg={fiche.poidsStatutForm}
+            onPoidsChange={fiche.setPoidsStatutForm}
             onAnnuler={() => fiche.setShowStatutForm(false)}
             onConfirmer={fiche.enregistrerStatut}
           />

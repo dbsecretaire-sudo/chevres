@@ -36,6 +36,8 @@ export function useFicheChevre(id: string | undefined) {
 
   const [statutForm, setStatutForm] = useState<StatutChevre>(STATUT_CHEVRE.MORTE);
   const [dateStatutForm, setDateStatutForm] = useState(todayISO());
+  /** Le poids donné à la sortie (abattoir, vente) ; absent : celui de la fiche reste. */
+  const [poidsStatutForm, setPoidsStatutForm] = useState<number | undefined>(undefined);
   const [showStatutForm, setShowStatutForm] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -97,12 +99,13 @@ export function useFicheChevre(id: string | undefined) {
       if (!ok) return;
     }
     setStatutForm(statut);
+    setPoidsStatutForm(undefined);
     setShowStatutForm(true);
   };
 
   const enregistrerStatut = async () => {
     if (!chevre) return;
-    await declarerStatutChevre(chevre.id, statutForm, dateStatutForm);
+    await declarerStatutChevre(chevre.id, statutForm, dateStatutForm, poidsStatutForm);
     setShowStatutForm(false);
     charger();
   };
@@ -129,6 +132,8 @@ export function useFicheChevre(id: string | undefined) {
     statutForm,
     dateStatutForm,
     setDateStatutForm,
+    poidsStatutForm,
+    setPoidsStatutForm,
     showStatutForm,
     setShowStatutForm,
     erreur,

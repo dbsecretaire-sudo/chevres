@@ -58,6 +58,12 @@ export function ChevreResume({ chevre, indicatif, onModifier }: Props) {
         {TEXTES.cheptel.ficheChevre.nDeBoucleDeLaDeuxPoints}{' '}
         {chevre.mereNumeroBoucle ? avecIndicatif(chevre.mereNumeroBoucle, indicatif) : '—'}
       </Text>
+      {chevre.poidsKg !== undefined && (
+        <Text style={commonStyles.line}>
+          {TEXTES.cheptel.ficheChevre.poidsDeuxPoints}
+          {TEXTES.cheptel.ficheChevre.poidsKg(chevre.poidsKg)}
+        </Text>
+      )}
       <Text style={commonStyles.line}>
         {TEXTES.cheptel.ficheChevre.notesDeuxPoints}
         {chevre.notes ?? '—'}

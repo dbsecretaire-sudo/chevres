@@ -7,6 +7,7 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import { BoucleField } from '@/features/cheptel/components/BoucleField';
+import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
 import { categorieAnimal } from '@/features/cheptel/utils/chevreLabel';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
 import type { Chevre } from '@/features/cheptel/types';
@@ -101,6 +102,9 @@ export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer, onAjou
             />
           </View>
         </View>
+      </SectionForm>
+      <SectionForm>
+        <ChampPoids value={form.poidsKg} onChange={(poidsKg) => onChange({ ...form, poidsKg })} />
       </SectionForm>
       {/* La boucle rouge (remplacement provisoire) et la boucle de rebouclage : seulement leur date de pose, elles n'ont pas de numéro. */}
       <SectionForm>
