@@ -14,8 +14,12 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { listToutesVentes, listVentes } from '@/features/comptabilite/repository/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import type { Vente } from '@/features/comptabilite/types';
+import type { Chevre } from '@/features/cheptel/types';
+import { poidsTotal } from '@/features/cheptel/utils/poids';
+import { loadAllYears } from '@/shared/storage/localStore';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
@@ -34,6 +38,8 @@ export default function ViandeVendue() {
   const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [ventes, setVentes] = useState<Vente[]>([]);
+  /** Les fiches du cheptel, par identifiant : une vente de viande désigne ses animaux (la traçabilité passe par leurs boucles). */
+  const [animaux, setAnimaux] = useState<Map<string, Chevre>>(new Map());
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste] = await Promise.all([
@@ -41,6 +47,7 @@ export default function ViandeVendue() {
       regrouper ? listToutesVentes() : listVentes(settings.anneeActive),
     ]);
     setAnnees(toutesAnnees);
+    setAnimaux(new Map((await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)).map((a) => [a.id, a as Chevre])));
     setVentes(
       liste.filter(
         (v) =>
@@ -57,6 +64,27 @@ export default function ViandeVendue() {
   );
 
   const total = ventes.reduce((somme, v) => somme + (v.prix ?? 0), 0);
+
+  /**
+   * Ce que la vente dit de la viande : le jour d'abattoir, les boucles des animaux (de quoi retrouver d'où vient la viande, sans
+   * lots : les betes passent par l'abattoir) et leur poids.
+   */
+  const tracabilite = (v: Vente): string => {
+    const betes = (v.animaux ?? '')
+      .split(SEPARATEUR_ANIMAUX)
+      .filter(Boolean)
+      .map((id) => animaux.get(id))
+      .filter((a): a is Chevre => !!a);
+    const boucles = betes.map((a) => a.numeroBoucle || a.nom || T.sansBoucle);
+    const poids = poidsTotal(betes) ?? v.poidsKg;
+    return [
+      v.dateAbattoir ? T.abattoirLe(formatDateFR(v.dateAbattoir)) : '',
+      boucles.length > 0 ? T.boucles(boucles.join(', ')) : '',
+      poids ? T.poids(String(poids).replace('.', ',')) : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  };
 
   return (
     <Screen scroll={false}>
@@ -84,7 +112,9 @@ export default function ViandeVendue() {
           <LigneDeBloc index={index} total={ventes.length}>
             <ListRow
               title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
-              subtitle={[formatDateFR(item.date), item.client].filter(Boolean).join(' · ')}
+              subtitle={[[formatDateFR(item.date), item.client].filter(Boolean).join(' · '), tracabilite(item)]
+                .filter(Boolean)
+                .join('\n')}
               trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
               onPress={() => router.push(ROUTES.ficheVente(item.id))}
             />

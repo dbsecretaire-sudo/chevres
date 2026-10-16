@@ -29,6 +29,7 @@ import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateA
 import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import type { Chevre } from '@/features/cheptel/types';
+import { poidsTotal } from '@/features/cheptel/utils/poids';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
@@ -415,10 +416,19 @@ export function ChampsVenteViande({ e }: Props) {
       (!ligneAdultes || !estPetit(a)) &&
       (animauxChoisis.length === 0 || estPetit(a) === estPetit(animauxChoisis[0])),
   );
+  /** Le poids des animaux choisis, quand l'abattoir l'a donné pour chacun : il remplit le poids de la vente, et le total au kilo suit. */
+  const reprendrePoids = (choisis: Chevre[]) => {
+    const total = poidsTotal(choisis);
+    if (total === undefined) return;
+    const texte = String(total).replace('.', ',');
+    e.setPoidsKg(texte);
+    totalAuKilo(texte);
+  };
   const ajouterAnimal = (id: string) => {
     const animal = animaux.find((a) => a.id === id);
     if (!animal) return;
     const liste = [...e.animaux, id];
+    reprendrePoids([...animauxChoisis, animal]);
     e.setAnimaux(liste);
     e.setJeune(estPetit(animal));
     e.setQuantite(String(liste.length));
@@ -427,6 +437,7 @@ export function ChampsVenteViande({ e }: Props) {
   };
   const retirerAnimal = (id: string) => {
     const liste = e.animaux.filter((x) => x !== id);
+    reprendrePoids(animauxChoisis.filter((a) => liste.includes(a.id)));
     e.setAnimaux(liste);
     e.setQuantite(String(Math.max(1, liste.length)));
     if (liste.length === 0) e.setJeune(undefined);

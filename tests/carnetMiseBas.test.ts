@@ -11,7 +11,7 @@ import {
   porteesParAnnee,
   resultatsDeLAnnee,
 } from '@/features/export/carnetMiseBasPdf';
-import { lirePoids } from '@/features/cheptel/utils/poids';
+import { lirePoids, poidsTotal } from '@/features/cheptel/utils/poids';
 import type { PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -74,6 +74,12 @@ describe('carnet de mise bas', () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it('le poids total de plusieurs animaux : seulement quand chacun a le sien', () => {
+    expect(poidsTotal([{ poidsKg: 8.5 }, { poidsKg: 9.25 }])).toBe(17.75);
+    expect(poidsTotal([{ poidsKg: 8 }, {}])).toBeUndefined();
+    expect(poidsTotal([])).toBeUndefined();
   });
 
   it('les mises bas d’une année sont rangées par date de naissance, chacune sur sa ligne', () => {

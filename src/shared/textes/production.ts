@@ -168,6 +168,10 @@ export const TEXTES_PRODUCTION = {
     titre: 'Viande vendue',
     rappeler: 'Rappeler des lots',
     aucune: 'Aucune vente de viande cette année',
+    abattoirLe: (date: string) => `Abattoir le ${date}`,
+    boucles: (liste: string) => `boucles : ${liste}`,
+    poids: (kg: string) => `${kg} kg`,
+    sansBoucle: 'sans boucle',
     total: (montant: string) => `Total : ${montant}`,
   },
 } as const;
