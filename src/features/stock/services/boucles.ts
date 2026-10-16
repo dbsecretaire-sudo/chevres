@@ -21,7 +21,8 @@ import {
 import { loadAllYears } from '@/shared/storage/localStore';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
-import { todayISO } from '@/shared/utils/dates';
+import { formatDateShortFR, todayISO } from '@/shared/utils/dates';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { generateId } from '@/shared/utils/id';
 
 /** Au plus ce nombre de chiffres dans un numéro de boucle : au-delà, les additions ne sont plus exactes. */
@@ -382,6 +383,30 @@ export function bouclesSelonLeCheptel(boucles: BoucleStock[], animaux: Chevre[])
     })
     // Une boucle ajoutée depuis le cheptel ou jamais commandée n'existe que tant qu'un animal la porte.
     .filter((b) => !nExisteQueSiPortee(b) || !!b.chevreId);
+}
+
+/**
+ * Ce que l'impression des boucles écrit pour l'animal qui la portait : « Abattoir le 12/03/26 », « Auto-consommation le … »,
+ * « Mort-né le … », « Vendue le … » ; pour une mort classique (disparition en transhumance) : « 12/03/26, voir bordereau de perte ».
+ * Rien pour un animal vivant.
+ */
+export function texteDeLaSortie(statut: string | undefined, dateStatut: string | undefined): string {
+  const date = dateStatut ? formatDateShortFR(dateStatut) : '';
+  const T = TEXTES.export.pdf.boucles.sortie;
+  switch (statut) {
+    case STATUT_CHEVRE.ABATTOIR:
+      return T.abattoir(date);
+    case STATUT_CHEVRE.AUTOCONSOMMEE:
+      return T.autoconsommee(date);
+    case STATUT_CHEVRE.MORT_NE:
+      return T.mortne(date);
+    case STATUT_CHEVRE.VENDUE:
+      return T.vendue(date);
+    case STATUT_CHEVRE.MORTE:
+      return T.morte(date);
+    default:
+      return '';
+  }
 }
 
 /** Une pose à la fois : plusieurs enregistrements d'animaux d'affilée ne se mélangent pas. */

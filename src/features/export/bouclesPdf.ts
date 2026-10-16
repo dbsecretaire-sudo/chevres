@@ -5,6 +5,7 @@ import {
   libelleDeLaSorte,
   nePasPoser,
   texteDeLaRemarque,
+  texteDeLaSortie,
 } from '@/features/stock/services/boucles';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import {
@@ -21,6 +22,12 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock.boucles;
 const P = TEXTES.export.pdf.boucles;
+
+/** Ce que l'impression écrit pour l'animal qui portait la boucle ; « Oui » quand son statut n'est pas connu. */
+const sortieDe = (liste: ListeBoucles, chevreId: string): string => {
+  const sortie = liste.sorties.get(chevreId);
+  return (sortie ? texteDeLaSortie(sortie.statut, sortie.date) : '') || P.oui;
+};
 
 export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> {
   const settings = await getSettings();
@@ -39,7 +46,8 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
               ? T.nePasPoser
               : '',
         ...(rouge ? {} : { [T.colonnes.achat]: b.dateAchat ? formatDateShortFR(b.dateAchat) : '' }),
-        [T.morte]: b.chevreId && liste.morts.has(b.chevreId) ? P.oui : '',
+        // La cause de la sortie et sa date : « Abattoir le … », « Mort-né le … », « …, voir bordereau de perte ».
+        [T.morte]: b.chevreId && liste.morts.has(b.chevreId) ? sortieDe(liste, b.chevreId) : '',
         ...(avecRemarques ? { [T.colonnes.remarque]: b.remarque ? texteDeLaRemarque(b.remarque) : '' } : {}),
       }));
       return sectionHtml(

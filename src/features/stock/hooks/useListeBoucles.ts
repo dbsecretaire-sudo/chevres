@@ -29,12 +29,16 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
   const [croissant, setCroissant] = useState(true);
   /** Les animaux qui ne sont plus vivants (morts, vendus, à l'abattoir…) : la case « Morte » d'une boucle est cochée quand l'animal qui la porte en fait partie. */
   const [morts, setMorts] = useState<Set<string>>(new Set());
+  /** Le statut et la date de sortie des animaux qui ne sont plus vivants : l'impression écrit la cause (abattoir, auto-consommation…) et la date. */
+  const [sorties, setSorties] = useState<Map<string, { statut: string; date?: string }>>(new Map());
   /** Les animaux, par identifiant : la date de pose d'une boucle est celle de la fiche de l'animal qui la porte. */
   const [animaux, setAnimaux] = useState<Map<string, Chevre>>(new Map());
   useEffect(() => {
     loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then((liste) => {
       setAnimaux(new Map(liste.map((a) => [a.id, a])));
-      setMorts(new Set(liste.filter((a) => a.statut !== STATUT_CHEVRE.VIVANTE).map((a) => a.id)));
+      const partis = liste.filter((a) => a.statut !== STATUT_CHEVRE.VIVANTE);
+      setMorts(new Set(partis.map((a) => a.id)));
+      setSorties(new Map(partis.map((a) => [a.id, { statut: a.statut, date: a.dateStatut }])));
     });
   }, [boucles]);
   // Avec la synchronisation, les listes montrent toujours l'état des fiches du cheptel (posée, date de pose, animal mort), même quand
@@ -93,6 +97,7 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
     croissant,
     trierPar,
     morts,
+    sorties,
     lignes,
   };
 }

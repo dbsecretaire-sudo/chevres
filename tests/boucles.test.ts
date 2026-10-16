@@ -9,6 +9,7 @@ import {
   nePasPoser,
   numeroDejaEnStock,
   plageDeBoucles,
+  texteDeLaSortie,
 } from '@/features/stock/services/boucles';
 import type { ArchiveStock, BoucleStock } from '@/features/stock/types';
 import { ARTICLE_BOUCLE, GENRE_ARTICLE } from '@/shared/constants/stock';
@@ -127,5 +128,24 @@ describe('remarque sur des boucles', () => {
     expect(nePasPoser({ remarque: 'jamais posées' })).toBe(true);
     expect(nePasPoser({ remarque: 'jamais posées', chevreId: 'c1' })).toBe(false);
     expect(nePasPoser({})).toBe(false);
+  });
+});
+
+describe('sortie d’un animal sur l’impression des boucles', () => {
+  it('écrit la cause et la date : abattoir, auto-consommation, mort-né, vente', () => {
+    expect(texteDeLaSortie('abattoir', '2026-03-12')).toMatch(/^Abattoir le /);
+    expect(texteDeLaSortie('autoconsommee', '2026-03-12')).toMatch(/^Auto-consommation le /);
+    expect(texteDeLaSortie('mortne', '2026-03-12')).toMatch(/^Mort-né le /);
+    expect(texteDeLaSortie('vendue', '2026-03-12')).toMatch(/^Vendue le /);
+  });
+
+  it('une mort classique (transhumance) renvoie au bordereau de perte', () => {
+    expect(texteDeLaSortie('morte', '2026-03-12')).toMatch(/, voir bordereau de perte$/);
+    expect(texteDeLaSortie('morte', undefined)).toBe('Voir bordereau de perte');
+  });
+
+  it('sans date, la cause seule ; rien pour un animal vivant', () => {
+    expect(texteDeLaSortie('abattoir', undefined)).toBe('Abattoir');
+    expect(texteDeLaSortie('vivante', '2026-03-12')).toBe('');
   });
 });

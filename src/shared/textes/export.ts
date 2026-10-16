@@ -230,6 +230,15 @@ export const TEXTES_EXPORT = {
       filtres: (etat: string) => `État : ${etat}`,
       oui: 'Oui',
       total: (nombre: number) => `${nombre} boucle${nombre > 1 ? 's' : ''}`,
+      /** Ce que l'impression écrit pour un animal qui n'est plus vivant : la cause de sa sortie et sa date. */
+      sortie: {
+        abattoir: (date: string) => (date ? `Abattoir le ${date}` : 'Abattoir'),
+        autoconsommee: (date: string) => (date ? `Auto-consommation le ${date}` : 'Auto-consommation'),
+        mortne: (date: string) => (date ? `Mort-né le ${date}` : 'Mort-né'),
+        vendue: (date: string) => (date ? `Vendue le ${date}` : 'Vendue'),
+        /** Une mort classique (une disparition en transhumance) : le bordereau de perte la déclare. */
+        morte: (date: string) => (date ? `${date}, voir bordereau de perte` : 'Voir bordereau de perte'),
+      },
     },
     inventaire: {
       colonnes: {
