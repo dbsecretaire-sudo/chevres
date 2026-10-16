@@ -112,10 +112,10 @@ const STYLES = `
   .cheptel { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-right: 2px; }
   .cheptel .case { border: 1.4px solid #111; padding: 3px 12px; font-size: 15px; font-weight: 700; letter-spacing: 1px; min-width: 112px; text-align: center; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.5px solid #111; }
-  th { height: 36px; border: 1.1px solid #111; font-weight: 400; font-size: 11.5px; padding: 2px 3px; line-height: 1.2; }
-  td { height: 20px; border: 1.1px solid #111; padding: 0 5px; font-size: 9.5px; line-height: 1.1; vertical-align: middle; overflow: hidden; }
-  td.numero { font-size: 13px; font-weight: 700; padding-left: 9px; white-space: nowrap; }
-  td.centre { text-align: center; font-size: 11px; }
+  th { height: 36px; border: 1.1px solid #111; font-weight: 400; font-size: 11px; padding: 2px 3px; line-height: 1.2; }
+  td { height: 20px; border: 1.1px solid #111; padding: 0 5px; font-size: 9px; line-height: 1.1; vertical-align: middle; overflow: hidden; }
+  td.numero { font-size: 12px; font-weight: 700; padding-left: 9px; white-space: nowrap; }
+  td.centre { text-align: center; font-size: 10px; }
   .note { font-size: 8.5px; line-height: 10px; margin-top: 3px; height: 22px; overflow: hidden; }
 `;
 
@@ -151,7 +151,7 @@ function pageHtml(
     <div class="cheptel"><span>${echapper(P.cheptel)}</span><span class="case">${echapper(identite.cheptel)}</span></div>
   </div>
   <table>
-    <colgroup><col style="width:25%"/><col style="width:14%"/><col style="width:16%"/><col style="width:17%"/><col style="width:28%"/></colgroup>
+    <colgroup><col style="width:24.9%"/><col style="width:14.3%"/><col style="width:14.6%"/><col style="width:14.8%"/><col style="width:31.4%"/></colgroup>
     <thead><tr>
       <th>${echapper(P.colonnes.identification)}</th>
       <th>${echapper(P.colonnes.naissance)}</th>
