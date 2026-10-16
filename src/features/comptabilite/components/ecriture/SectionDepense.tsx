@@ -1,5 +1,6 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
+import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import type { ReactNode } from 'react';
@@ -146,12 +147,15 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
         <NoteComptePcg compte={e.compteAffiche} />
         {/* Ce qui est propre à la catégorie, puis le montant, la TVA et l'atelier : le même ordre qu'à la modification d'une facture. */}
         {e.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
-          <ChampVisite
-            motif={e.motifVisite}
-            ajouter={e.ajouterVisite}
-            onMotif={e.setMotifVisite}
-            onAjouter={e.setAjouterVisite}
-          />
+          <>
+            <ChampVisite
+              motif={e.motifVisite}
+              ajouter={e.ajouterVisite}
+              onMotif={e.setMotifVisite}
+              onAjouter={e.setAjouterVisite}
+            />
+            <LignesVeterinaireEditor lignes={e.lignesVeterinaire} onChange={e.setLignesVeterinaire} />
+          </>
         )}
         {e.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
           <ChampStockProduction

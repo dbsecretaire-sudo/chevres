@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
+import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -305,12 +306,19 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
 
         {/* Une dépense vétérinaire : le motif de la visite ; une dépense de production ou autre : le stock qu'elle alimente. */}
         {form.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
-          <ChampVisite
-            motif={form.motifVisite ?? ''}
-            ajouter={!!form.visiteVeterinaire}
-            onMotif={(motif) => f.setForm({ ...form, motifVisite: motif || undefined })}
-            onAjouter={(ajouter) => f.setForm({ ...form, visiteVeterinaire: ajouter || undefined })}
-          />
+          <>
+            <ChampVisite
+              motif={form.motifVisite ?? ''}
+              ajouter={!!form.visiteVeterinaire}
+              onMotif={(motif) => f.setForm({ ...form, motifVisite: motif || undefined })}
+              onAjouter={(ajouter) => f.setForm({ ...form, visiteVeterinaire: ajouter || undefined })}
+            />
+            <LignesVeterinaireEditor
+              lignes={form.lignesVeterinaire ?? []}
+              onChange={(lignesVeterinaire) => f.setForm({ ...form, lignesVeterinaire })}
+              dateParDefaut={form.date}
+            />
+          </>
         )}
         {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
           <ChampStockProduction

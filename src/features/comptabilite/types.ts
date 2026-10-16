@@ -94,6 +94,31 @@ export interface LigneChambre {
   equarrisseurId?: string;
 }
 
+/**
+ * Ce qui a été fait lors d'une visite du vétérinaire (un acte, un traitement) : de quoi remplir une ligne du carnet sanitaire. Elle ne
+ * porte pas de montant : celui de la facture reste son total.
+ */
+export interface LigneVeterinaire {
+  id: string;
+  /** L'acte ou le traitement (prise de sang, vaccin, antibiotique…). */
+  libelle: string;
+  /** Le n° d'animal ou le lot concerné ; absent : le troupeau entier. */
+  animal?: string;
+  /** Le n° d'ordonnance ou la référence de l'annexe. */
+  ordonnance?: string;
+  /** Les dates de début et de fin du traitement (AAAA-MM-JJ). */
+  dateDebut?: string;
+  dateFin?: string;
+  /** Le médicament : la voie d'administration, la dose et le rythme. */
+  voie?: string;
+  dose?: string;
+  rythme?: string;
+  /** La date de remise en vente de la viande et du lait (AAAA-MM-JJ). */
+  remiseEnVente?: string;
+  /** Le motif du traitement et les observations. */
+  observations?: string;
+}
+
 export interface Facture {
   id: string;
   date: string;
@@ -128,6 +153,8 @@ export interface Facture {
   lignesProduction?: LigneProduction[];
   /** Une facture de la Chambre d'agriculture détaillée par article (forfait d'identification, équarrissage ATM, conseils et analyses). */
   lignesChambre?: LigneChambre[];
+  /** Une dépense vétérinaire : tout ce qui a été fait lors de la visite (voir LigneVeterinaire), repris par le carnet sanitaire. */
+  lignesVeterinaire?: LigneVeterinaire[];
   /**
    * Vrai quand les quantités de lignesMarchandises ont été ajoutées au stock du gîte. Une facture d'avant cette gestion du
    * stock ne l'a pas : la première fois qu'on l'enregistre de nouveau, ses quantités sont ajoutées (une seule fois).

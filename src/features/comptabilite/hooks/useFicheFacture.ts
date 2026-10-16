@@ -11,6 +11,7 @@ import {
   versLignesChambreForm,
   type LigneChambreForm,
 } from '@/features/comptabilite/forms/lignesChambre';
+import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
@@ -270,6 +271,8 @@ export function useFicheFacture(id: string | undefined) {
     ) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.visite.motifRequis });
     }
+    // Les lignes « ce qui a été fait » d'une dépense vétérinaire : celles qui disent un acte ou un traitement seulement.
+    aEnregistrer = { ...aEnregistrer, lignesVeterinaire: lignesVeterinaireRetenues(aEnregistrer) };
     const erreurBoucles = erreurAchatBoucles(await lireArchiveStock(), aEnregistrer);
     if (erreurBoucles) {
       return refuser({ titre: erreurBoucles });

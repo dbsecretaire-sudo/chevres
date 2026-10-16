@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -242,6 +243,14 @@ export interface OptionsImpression {
   sansMarges?: boolean;
 }
 
+/**
+ * Android fabrique le PDF avec le moteur de Chrome, comme la version Windows : sa page A4 a 96 points par pouce au lieu de 72 (iOS). Un
+ * formulaire dessiné pour une page de 595 × 842 points n'en remplirait que les trois quarts, en haut à gauche, et déborderait sur une
+ * deuxième page. Comme sur l'ordinateur (voir bureau/print.ts), il s'agrandit d'un tiers (--k), sans marge.
+ */
+const ECHELLE_PAGE_ANDROID = 1.33;
+const STYLE_PAGE_SANS_MARGES_ANDROID = `@page { size: A4; margin: 0 } :root { --k: ${ECHELLE_PAGE_ANDROID} }`;
+
 /** Génère le PDF depuis le HTML, le copie sous `nomFichier` et ouvre le menu de partage. */
 export async function ecrireEtPartagerPdf(
   source: string,
@@ -249,13 +258,16 @@ export async function ecrireEtPartagerPdf(
   titre: string,
   options: OptionsImpression = {},
 ): Promise<void> {
-  // Le titre personnalisé de l'utilisateur (Organisation › Export) s'imprime en tête de tous les PDF.
-  const titrePerso = (await getSettings()).exploitation?.titrePdf?.trim();
+  // Le titre personnalisé de l'utilisateur (Organisation › Export) s'imprime en tête des PDF (pas d'un formulaire à la taille exacte de la page : il la ferait déborder).
+  const titrePerso = options.sansMarges ? undefined : (await getSettings()).exploitation?.titrePdf?.trim();
   const html = titrePerso
     ? source.replace('<body>', `<body>\n  <div class="titre-perso">${echapper(titrePerso)}</div>`)
     : source;
   const { uri } = await Print.printToFileAsync({
-    html,
+    html:
+      options.sansMarges && Platform.OS === 'android'
+        ? html.replace('</head>', `<style>${STYLE_PAGE_SANS_MARGES_ANDROID}</style></head>`)
+        : html,
     base64: false,
     // Une page A4 : sans taille, l'impression suit le format du pays de l'appareil (Letter aux États-Unis).
     width: options.paysage ? HAUTEUR_PAGE_A4 : LARGEUR_PAGE_A4,

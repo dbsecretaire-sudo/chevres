@@ -64,6 +64,7 @@ import type {
   ActiviteComptable,
   CategorieDepense,
   CategorieRecette,
+  LigneVeterinaire,
   TypeAide,
   TypeFacture,
   TypeFromage,
@@ -185,6 +186,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale
   const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([ligneProductionVide()]);
   /** Les articles d'une facture de la Chambre d'agriculture (forfait d'identification, équarrissage ATM, conseils et analyses). */
   const [lignesChambre, setLignesChambre] = useState<LigneChambreForm[]>(lignesChambreParDefaut);
+  /** Une dépense vétérinaire : tout ce qui a été fait lors de la visite (pour le carnet sanitaire). */
+  const [lignesVeterinaire, setLignesVeterinaire] = useState<LigneVeterinaire[]>([]);
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise
       ? tvaEntreprise
@@ -529,6 +532,7 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale
         lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
         lignesProduction,
         lignesChambre: estChambre ? lignesChambre : undefined,
+        lignesVeterinaire,
         lignesCarburant,
         categorieRecette,
         typeFromage,
@@ -651,6 +655,8 @@ export function useNouvelleEcriture(typeInitial?: TypeFacture, categorieInitiale
     totalProduction,
     lignesChambre,
     setLignesChambre,
+    lignesVeterinaire,
+    setLignesVeterinaire,
     totalChambre,
     estChambre,
     totalAlimentation,

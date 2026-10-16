@@ -22,6 +22,7 @@ import type {
   Facture,
   LigneAlimentation,
   LigneChambre,
+  LigneVeterinaire,
   LigneMarchandise,
   LigneProduction,
   LigneCarburant,
@@ -33,6 +34,7 @@ import type {
   NatureUrssaf,
 } from '@/features/comptabilite/types';
 import { lignesChambreFinales, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
+import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
 import { numeroFactureLibre, prixLibre } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { ATELIER } from '@/shared/constants/ateliers';
@@ -87,6 +89,8 @@ export interface SaisieEcriture {
   lignesProduction?: LigneProductionForm[];
   /** Le détail par article d'une facture de la Chambre d'agriculture (absent : une autre facture). */
   lignesChambre?: LigneChambreForm[];
+  /** Une dépense vétérinaire : tout ce qui a été fait lors de la visite (pour le carnet sanitaire). */
+  lignesVeterinaire?: LigneVeterinaire[];
   categorieRecette: CategorieRecette;
   typeFromage: TypeFromage;
   typeFromageLibre: string;
@@ -364,6 +368,9 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       lignesAlimentation,
       lignesMarchandises,
       lignesChambre,
+      lignesVeterinaire: visite
+        ? lignesVeterinaireRetenues({ categorieDepense: s.categorieDepense, lignesVeterinaire: s.lignesVeterinaire })
+        : undefined,
       lignesProduction,
       stockArticle: stockProduction ? s.stockArticle : undefined,
       stockQuantite: stockProduction ? s.stockQuantite : undefined,
