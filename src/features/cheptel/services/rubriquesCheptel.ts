@@ -25,9 +25,9 @@ export interface GroupeRubrique {
  * Le menu du Cheptel, rangé par logique — le même sur téléphone (l'accueil du Cheptel) et sur Windows (la barre du haut et le menu de
  * gauche) :
  * - le troupeau : les animaux, leurs naissances, leurs sorties, leurs lots ;
- * - la santé : les traitements et les délais d'attente, les visites du vétérinaire ;
+ * - la santé : les traitements et les délais d'attente, les visites du vétérinaire, l'alimentation ;
  * - l'identification et la PAC : les boucles, les contrôles, les terrains, le dossier PAC ;
- * - les statistiques : le bilan annuel, l'alimentation ;
+ * - les statistiques : le tableau de bord, le bilan annuel ;
  * - la technique : les réglages.
  * `avecDossierPac` : le dossier PAC ne concerne que les brebis et les chèvres.
  */
@@ -58,6 +58,7 @@ export function groupesCheptel(avecDossierPac: boolean): GroupeRubrique[] {
           icone: 'clipboard',
           route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
         },
+        { cle: 'alimentation', titre: TEXTES.commun.general.alimentation, aide: L.alimentation.aide, icone: 'nutrition', route: ROUTES.SANTE_ALIMENTATION },
       ],
     },
     {
@@ -90,7 +91,6 @@ export function groupesCheptel(avecDossierPac: boolean): GroupeRubrique[] {
       lignes: [
         { cle: 'tableauDeBord', titre: C.tableauDeBord.titre, aide: C.tableauDeBord.aide, icone: 'bar-chart', route: ROUTES.CHEPTEL_TABLEAU_DE_BORD },
         { cle: 'bilan', titre: TEXTES.commun.general.bilanAnnuel, aide: L.bilan.aide, icone: 'stats-chart', route: ROUTES.CHEPTEL_BILAN },
-        { cle: 'alimentation', titre: TEXTES.commun.general.alimentation, aide: L.alimentation.aide, icone: 'nutrition', route: ROUTES.SANTE_ALIMENTATION },
       ],
     },
     {

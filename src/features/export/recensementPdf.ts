@@ -28,24 +28,24 @@ export interface DonneesRecensement {
 
 const STYLES = `
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 18mm 20mm; font-size: 11pt; }
-  .chambre { color: #3b8a3d; font-weight: 700; font-size: 13pt; line-height: 1.15; }
-  .adresse { border: 1.5px solid #111; width: 60%; margin: 6mm 0 0 auto; padding: 6mm 4mm; text-align: center; font-weight: 700; font-size: 13pt; line-height: 2; text-transform: uppercase; }
-  h1 { font-size: 16pt; text-decoration: underline; margin: 12mm 0 6mm; text-align: center; }
-  .mention { background: #ffff1a; text-align: justify; font-weight: 600; padding: 1mm 0; line-height: 1.5; }
-  .production { text-align: center; margin: 9mm 0 5mm; font-weight: 600; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 0 6mm; font-size: 10pt; }
+  .chambre { color: #3b8a3d; font-weight: 700; font-size: 12pt; line-height: 1.15; }
+  .adresse { border: 1.5px solid #111; width: 60%; margin: 4mm 0 0 auto; padding: 3mm 4mm; text-align: center; font-weight: 700; font-size: 12pt; line-height: 1.6; text-transform: uppercase; }
+  h1 { font-size: 16pt; text-decoration: underline; margin: 7mm 0 4mm; text-align: center; }
+  .mention { background: #ffff1a; text-align: justify; font-weight: 600; padding: 1mm 0; line-height: 1.35; }
+  .production { text-align: center; margin: 5mm 0 4mm; font-weight: 600; }
   .production span { margin: 0 10mm; }
   .case { display: inline-block; width: 12mm; height: 7mm; border: 1.5px solid #111; vertical-align: middle; text-align: center; font-weight: 800; line-height: 6mm; margin-left: 3mm; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  th, td { border: 1.5px solid #111; padding: 2mm 3mm; vertical-align: middle; }
+  th, td { border: 1.5px solid #111; padding: 1.5mm 3mm; vertical-align: middle; }
   th { text-align: center; font-weight: 700; }
   th.cheptel { text-align: left; }
-  td.libelle { font-weight: 600; text-align: justify; line-height: 1.4; }
+  td.libelle { font-weight: 600; text-align: justify; line-height: 1.3; }
   td.valeur { text-align: center; font-size: 13pt; font-weight: 700; color: #1a2a8a; }
-  .bas { margin-top: 8mm; font-weight: 600; line-height: 1.6; }
-  .signature { display: flex; justify-content: space-between; margin-top: 8mm; font-weight: 700; }
-  .conserver { background: #e01b1b; color: #fff; text-align: center; font-weight: 700; margin: 12mm auto 0; padding: 0.5mm 4mm; width: fit-content; }
-  .pied { text-align: center; color: #3b8a3d; margin-top: 14mm; line-height: 1.5; }
+  .bas { margin-top: 5mm; font-weight: 600; line-height: 1.4; }
+  .signature { display: flex; justify-content: space-between; margin-top: 5mm; font-weight: 700; }
+  .conserver { background: #e01b1b; color: #fff; text-align: center; font-weight: 700; margin: 8mm auto 0; padding: 0.5mm 4mm; width: fit-content; }
+  .pied { text-align: center; color: #3b8a3d; margin-top: 5mm; line-height: 1.4; }
 `;
 
 /** Le recensement annuel des ovins et caprins : le formulaire de la Chambre d'agriculture, avec les effectifs calculés d'après le cheptel. */
@@ -74,7 +74,7 @@ export function recensementHtml(d: DonneesRecensement): string {
   <div class="adresse">${echapper(nomEnMajuscules)}<br>${echapper(d.ligneAdresse || d.commune)}<br>${echapper(`${d.codePostal} ${d.commune}`.trim())}</div>
   <h1>${echapper(R.titre(r.annee))}</h1>
   <p class="mention">${echapper(R.mention(r.annee))}</p>
-  <div class="production">${echapper(R.typeDeProduction)}<br><br>
+  <div class="production">${echapper(R.typeDeProduction)}<br>
     <span>${echapper(R.lait)} <i class="case">${d.lait ? '✕' : ''}</i></span>
     <span>${echapper(R.viande)} <i class="case">${d.lait ? '' : '✕'}</i></span>
   </div>

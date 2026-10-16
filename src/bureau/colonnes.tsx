@@ -37,12 +37,16 @@ export function useLigneActive(): (route: string) => boolean {
   const deuxColonnes = useDeuxColonnes();
   const dansMenu = useContext(DansColonneGauche);
   const adresse = usePathname();
-  const { famille } = useGlobalSearchParams<{ famille?: string }>();
+  const { famille, onglet } = useGlobalSearchParams<{ famille?: string; onglet?: string }>();
   return (route) => {
     if (!deuxColonnes || !dansMenu) return false;
     const [chemin, requete] = route.split('?');
     if (adresse !== chemin && !adresse.startsWith(`${chemin}/`)) return false;
-    const voulue = new URLSearchParams(requete ?? '').get('famille');
+    const voulus = new URLSearchParams(requete ?? '');
+    const voulue = voulus.get('famille');
+    const ongletVoulu = voulus.get('onglet');
+    // Les écrans d'un même volet (la santé, les boucles, les contrôles) ont chacun leur ligne : seule celle de l'écran ouvert est allumée.
+    if (ongletVoulu && ongletVoulu !== onglet) return false;
     return !voulue || voulue === famille;
   };
 }

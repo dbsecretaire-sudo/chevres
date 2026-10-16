@@ -9,6 +9,15 @@ import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import type { FamilleControle } from '@/features/exploitation/types';
 import { TEXTES } from '@/shared/textes';
 
+/** Le titre d'un écran de contrôles : celui de l'entrée du menu quand un écran précis est demandé (visites, boucles, contrôles des animaux), sinon celui du volet. */
+function titreDeLEcran(params: { famille?: string; onglet?: string } | undefined): string {
+  const lignes = TEXTES.cheptel.accueil.lignes;
+  if (params?.onglet === 'sante') return lignes.visites.titre;
+  if (params?.onglet === 'boucles') return lignes.boucles.titre;
+  if (params?.onglet === 'animaux') return lignes.controles.titre;
+  return TEXTES.exploitation.controles.familles[(params?.famille ?? 'animaux') as FamilleControle].titre;
+}
+
 export default function SanteLayout() {
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
   useEtablissement();
@@ -40,10 +49,7 @@ export default function SanteLayout() {
         name="controles/liste"
         options={({ route }) => ({
           headerLeft: flecheCheptel,
-          title:
-            TEXTES.exploitation.controles.familles[
-              ((route.params as { famille?: string } | undefined)?.famille ?? 'animaux') as FamilleControle
-            ].titre,
+          title: titreDeLEcran(route.params as { famille?: string; onglet?: string } | undefined),
         })}
       />
       <Stack.Screen name="controles/nouvelle" options={({ route }) => enteteControle(route.params)} />
