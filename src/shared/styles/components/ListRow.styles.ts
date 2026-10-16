@@ -25,6 +25,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  /** La ligne du menu dont l'écran est ouvert à côté : un fond plus soutenu et une barre à gauche. */
+  rowActive: { backgroundColor: colors.ligneActive, borderLeftWidth: 4, borderLeftColor: colors.primary },
   rowSurlignee: { borderColor: colors.primary, borderWidth: 2 },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
   rowTitleGris: { color: colors.textMuted },

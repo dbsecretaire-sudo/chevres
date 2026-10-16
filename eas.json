@@ -6,13 +6,22 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "ELECTRON_SKIP_BINARY_DOWNLOAD": "1"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "ELECTRON_SKIP_BINARY_DOWNLOAD": "1"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "ELECTRON_SKIP_BINARY_DOWNLOAD": "1"
+      }
     }
   },
   "submit": {

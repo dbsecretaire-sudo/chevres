@@ -12,6 +12,9 @@ import { EtablissementHeaderButton } from '@/features/etablissements/components/
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
+import { MenuBureau } from '@/bureau/MenuBureau';
+import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 /** Les pages (cachées de la barre) qui font partie de l'Organisation : son onglet y reste en couleur. */
 const PAGES_ORGANISATION = [
@@ -27,7 +30,7 @@ const PAGES_ORGANISATION = [
   'document-identification',
 ];
 
-export default function TabsLayout() {
+function Onglets() {
   const segments: string[] = useSegments();
   const page = segments[1] ?? '';
   const retourContexte = useRetourContexte();
@@ -62,6 +65,8 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarShowLabel: false,
+        // Dans la version Windows, les menus de la barre du haut remplacent la barre d'icônes du bas.
+        tabBarStyle: estBureau() ? { display: 'none' } : undefined,
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
@@ -262,5 +267,17 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+  );
+}
+
+/** Dans la version Windows : la barre de menus en haut, et deux colonnes (menu de la rubrique à gauche, écran à droite) quand la fenêtre est large. */
+export default function TabsLayout() {
+  return (
+    <>
+      <MenuBureau />
+      <EnDeuxColonnes>
+        <Onglets />
+      </EnDeuxColonnes>
+    </>
   );
 }

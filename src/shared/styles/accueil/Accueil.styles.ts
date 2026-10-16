@@ -39,6 +39,9 @@ export const styles = StyleSheet.create({
   rangee: { flexDirection: 'row', alignItems: 'stretch' },
   stat: { flex: 1, padding: 16, gap: 4, minHeight: 92 },
   statAppuyee: { backgroundColor: colors.background },
+  /** Version Windows : une rubrique en grande tuile, son nom au centre. */
+  tuileRubrique: { flex: 1, minHeight: 100, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  tuileRubriqueTexte: { fontSize: 24, fontWeight: '600', color: colors.text },
   statLibelle: { fontSize: 13, color: colors.textMuted },
   statDetail: { fontSize: 12, color: colors.textMuted },
   separateurVertical: { width: 1, backgroundColor: colors.border },

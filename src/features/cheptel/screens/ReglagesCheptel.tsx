@@ -49,6 +49,7 @@ import { LABEL_ACTIVITE_COMPTABLE, LABEL_ZONE_ICHN } from '@/shared/textes/libel
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 const T = TEXTES.cheptel.ugbPrimes;
 
@@ -355,7 +356,8 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
     aide: string | undefined,
     aideSaisie: SaisieAide,
   ) => {
-    const ouverte = aideOuverte === cle;
+    // Sur ordinateur, toutes les aides sont dépliées.
+    const ouverte = estBureau() || aideOuverte === cle;
     return (
       <Card key={cle}>
         <View style={commonStyles.rowSpaceBetween}>
@@ -365,7 +367,9 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
           >
             <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{nom}</Text>
             {aideSaisie.actif ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : null}
-            <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+            {estBureau() ? null : (
+              <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+            )}
           </Pressable>
           <Pressable
             onPress={() => setRenommage({ cle, personnalisee, nom })}
@@ -548,7 +552,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
         const c = saisie.coefficients[especeCoef] ?? { adulte: '', petit: '' };
         const maj = (patch: Partial<{ adulte: string; petit: string }>) =>
           setSaisie((s) => ({ ...s, coefficients: { ...s.coefficients, [especeCoef]: { ...c, ...patch } } }));
-        const ouverte = especeOuverte === especeCoef;
+        const ouverte = estBureau() || especeOuverte === especeCoef;
         return (
           <Card key={especeCoef}>
             <Pressable
@@ -558,7 +562,9 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
               <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>
                 {LABEL_ACTIVITE_COMPTABLE[especeCoef]}
               </Text>
-              <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+              {estBureau() ? null : (
+                <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+              )}
             </Pressable>
             {ouverte ? (
               <>

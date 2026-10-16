@@ -12,6 +12,8 @@ import { YearPicker } from '@/shared/components/YearPicker';
 import AccueilEntreprise from '@/features/accueil/screens/AccueilEntreprise';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TuilesAccueil } from '@/features/accueil/components/TuilesAccueil';
+import { TuilesRubriques } from '@/features/accueil/components/TuilesRubriques';
+import { estBureau } from '@/shared/utils/plateforme';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 
 /** Accueil de l'élevage, ou celui de l'entreprise quand l'établissement actif n'est pas un élevage. */
@@ -37,7 +39,8 @@ function AccueilElevage() {
         onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
       />
 
-      <TuilesAccueil stats={stats} annee={annee} />
+      {/* Sur ordinateur, les rubriques en grandes tuiles ; sur téléphone, les chiffres de l'élevage. */}
+      {estBureau() ? <TuilesRubriques /> : <TuilesAccueil stats={stats} annee={annee} />}
 
       <BlocRappels />
     </Screen>

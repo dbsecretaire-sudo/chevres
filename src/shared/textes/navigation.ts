@@ -4,6 +4,11 @@ const V = vocabulaire;
 
 /** Textes de l'interface — « navigation ». À modifier ici uniquement. */
 export const TEXTES_NAVIGATION = {
+  /** Les menus de la version Windows (barre du haut). */
+  menuBureau: {
+    historiqueDesStocks: 'Historique des stocks',
+    statistiquesDesStocks: 'Statistiques des stocks',
+  },
   layout: {
     accueil: 'Accueil',
     reglages: 'Organisation',

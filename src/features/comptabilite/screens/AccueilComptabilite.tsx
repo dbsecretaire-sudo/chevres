@@ -7,6 +7,7 @@ import { ListRow } from '@/shared/components/ListRow';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { ROUTES } from '@/shared/constants/routes';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { TEXTES } from '@/shared/textes';
 
@@ -20,6 +21,10 @@ const G = T.groupes;
  */
 export default function AccueilComptabilite() {
   const router = useRouter();
+  const estActive = useLigneActive();
+  // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre les écritures.
+  const redirection = useAccueilEnDeuxColonnes(ROUTES.COMPTABILITE_LISTE);
+  if (redirection) return redirection;
   type Rubrique = {
     cle: string;
     titre: string;
@@ -103,6 +108,7 @@ export default function AccueilComptabilite() {
                 title={l.titre}
                 subtitle={l.aide}
                 icone={l.icone}
+                actif={estActive(l.route)}
                 onPress={() => router.push(l.route as never)}
               />
             ))}

@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -10,6 +11,7 @@ export default function CommercialLayout() {
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
+        headerLeft: enteteBureau(),
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commercial.titre }} />

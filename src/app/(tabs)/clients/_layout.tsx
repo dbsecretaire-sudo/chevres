@@ -4,6 +4,7 @@ import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRe
 import { MenuActivite } from '@/features/dossiers/components/MenuActivite';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { activitesEtablissement } from '@/shared/dictionnaire/entreprise';
+import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -19,6 +20,7 @@ export default function ClientsLayout() {
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
+        headerLeft: enteteBureau(),
       }}
     >
       <Stack.Screen

@@ -1,6 +1,6 @@
 {
   "name": "troupeau-chevres",
-  "version": "1.0.0",
+  "version": "1.0.86",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -34,6 +34,9 @@
   "devDependencies": {
     "@types/papaparse": "^5.5.2",
     "@types/react": "~19.2.2",
+    "cross-env": "^10.1.0",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3",
@@ -45,7 +48,47 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bureau:export": "cross-env EXPO_PUBLIC_BUREAU=1 expo export --platform web --clear",
+    "bureau": "electron bureau/main.js",
+    "bureau:lancer": "npm run bureau:export && npm run bureau",
+    "bureau:installateur": "npm run bureau:export && electron-builder --win --publish never"
   },
-  "private": true
+  "private": true,
+  "description": "Troupeau Chèvres",
+  "author": "Troupeau Chèvres",
+  "build": {
+    "appId": "com.troupeauchevres.bureau",
+    "productName": "Troupeau Chèvres",
+    "directories": {
+      "output": "bureau-dist"
+    },
+    "files": [
+      "bureau/**/*",
+      "dist/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "extraMetadata": {
+      "main": "bureau/main.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "language": "1036"
+    }
+  }
 }

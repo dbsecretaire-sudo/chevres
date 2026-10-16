@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { uriPiece } from '@/features/fichiers/services/pieces';
+import { uriAffichagePiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { DELAI_DOUBLE_APPUI_MS, NIVEAUX_ZOOM_IMAGE, ZOOM_DOUBLE_APPUI } from '@/shared/constants/fichiers';
 import { colors } from '@/shared/theme/colors';
@@ -84,7 +84,7 @@ export function VisionneuseImage({ piece, visible, onFermer }: Props) {
               <ScrollView contentContainerStyle={{ minHeight: zone.hauteur, justifyContent: 'center' }}>
                 <Pressable onPress={appuyer}>
                   <Image
-                    source={{ uri: uriPiece(piece) }}
+                    source={{ uri: uriAffichagePiece(piece) }}
                     style={{ width: zone.largeur * zoom, height: zone.hauteur * zoom }}
                     resizeMode="contain"
                   />

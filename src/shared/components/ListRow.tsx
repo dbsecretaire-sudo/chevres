@@ -15,11 +15,13 @@ interface Props {
   grise?: boolean;
   /** Met la ligne en évidence (la réservation qu'on est venu voir). */
   surlignee?: boolean;
+  /** La ligne dont l'écran est ouvert à côté (le menu de gauche de la version Windows) : elle est en couleur. */
+  actif?: boolean;
   /** Une icône dans une pastille teintée à gauche, et une flèche à droite (les lignes d'un menu). */
   icone?: keyof typeof Ionicons.glyphMap;
 }
 
-export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, icone }: Props) {
+export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, actif, icone }: Props) {
   const dansBloc = useDansBloc();
   return (
     <Pressable
@@ -28,6 +30,7 @@ export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, 
         styles.rowCard,
         dansBloc && styles.rowDansBloc,
         surlignee && styles.rowSurlignee,
+        actif && styles.rowActive,
         pressed && onPress ? commonStyles.pressed : null,
       ]}
     >

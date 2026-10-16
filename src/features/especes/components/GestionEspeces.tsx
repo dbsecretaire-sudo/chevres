@@ -14,6 +14,7 @@ import { generateId } from '@/shared/utils/id';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';
+import { estBureau } from '@/shared/utils/plateforme';
 
 const T = TEXTES.especes;
 
@@ -60,7 +61,8 @@ export function GestionEspeces({ visible, onChange, onFermer }: Props) {
 
   /** Un menu déroulant : le titre, et le formulaire une fois déroulé. */
   const menu = (id: string, titre: string, sousTitre: string | undefined, contenu: React.ReactNode) => {
-    const deroule = ouvert === id;
+    // Sur ordinateur, tous les menus sont déroulés.
+    const deroule = estBureau() || ouvert === id;
     return (
       <Card key={`${id}-${version}`} style={commonStyles.gap10}>
         <Pressable
@@ -69,7 +71,13 @@ export function GestionEspeces({ visible, onChange, onFermer }: Props) {
           accessibilityRole="button"
           accessibilityState={{ expanded: deroule }}
         >
-          <Ionicons name={deroule ? 'chevron-down' : 'chevron-forward'} size={20} color={colors.textMuted} />
+          {estBureau() ? null : (
+            <Ionicons
+              name={deroule ? 'chevron-down' : 'chevron-forward'}
+              size={20}
+              color={colors.textMuted}
+            />
+          )}
           <View style={commonStyles.flex1}>
             <Text style={commonStyles.lineBold}>{titre}</Text>
             {sousTitre ? <Text style={commonStyles.note}>{sousTitre}</Text> : null}

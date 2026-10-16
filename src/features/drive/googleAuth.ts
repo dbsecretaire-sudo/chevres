@@ -7,6 +7,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { DRIVE_SCOPES, GOOGLE_WEB_CLIENT_ID } from '@/shared/constants/google';
 import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 // email et profil sont inclus par défaut par la bibliothèque.
 // Note : "drive.file" (accès restreint aux fichiers créés par l'app) empêche l'app
@@ -36,7 +37,7 @@ export function configureGoogle(): void {
 
 /** Conservé pour compatibilité avec le reste de l'appli. */
 export function isSecureStoreAvailable(): boolean {
-  return Platform.OS !== 'web';
+  return Platform.OS !== 'web' || estBureau();
 }
 
 export interface GoogleSignInResult {

@@ -6,6 +6,7 @@ import * as Sharing from 'expo-sharing';
 import { getIdEtablissementActif } from '@/features/etablissements/repository';
 import type { PieceJointe } from '@/features/fichiers/types';
 import {
+  ADRESSE_FICHIERS_BUREAU,
   DOSSIER_PIECES_LOCAL,
   EXTENSION_PAR_MIME,
   EXTENSION_PDF,
@@ -14,10 +15,11 @@ import {
   MIME_PAR_EXTENSION,
 } from '@/shared/constants/fichiers';
 import { todayISO } from '@/shared/utils/dates';
+import { estBureau } from '@/shared/utils/plateforme';
 import { generateId } from '@/shared/utils/id';
 
-/** Les fichiers joints sont rangés dans l'appareil : indisponibles sur le web. */
-export const piecesDisponibles = (): boolean => Platform.OS !== 'web';
+/** Les fichiers joints sont rangés dans l'appareil : indisponibles sur le web, mais pas dans la version Windows. */
+export const piecesDisponibles = (): boolean => Platform.OS !== 'web' || estBureau();
 
 /** Un fichier choisi dans le sélecteur de l'appareil, avant d'être rangé. */
 export interface FichierChoisi {
@@ -31,6 +33,10 @@ const dossierLocal = (): string =>
 
 /** Où le fichier joint est rangé dans l'appareil. */
 export const uriPiece = (piece: PieceJointe): string => `${dossierLocal()}${piece.id}.${piece.extension}`;
+
+/** L'adresse pour afficher le fichier dans une image : sur l'ordinateur, la fenêtre ne lit pas un chemin du disque directement. */
+export const uriAffichagePiece = (piece: PieceJointe): string =>
+  estBureau() ? `${ADRESSE_FICHIERS_BUREAU}${encodeURIComponent(uriPiece(piece))}` : uriPiece(piece);
 
 /** L'extension d'un fichier : celle de son nom, sinon celle de son type. */
 function extensionDe(nom: string, mime: string): string {
@@ -96,6 +102,8 @@ export async function pieceExiste(piece: PieceJointe): Promise<boolean> {
 
 /** Ouvre le fichier avec une autre application de l'appareil (lecteur PDF, Word, Excel, galerie…). */
 export async function ouvrirPiece(piece: PieceJointe): Promise<void> {
+  // Sur l'ordinateur, le fichier s'ouvre avec le programme de Windows qui lui convient (Word, Excel, lecteur PDF…).
+  if (estBureau()) return window.bureau?.fichiers.ouvrir(uriPiece(piece));
   if (!(await Sharing.isAvailableAsync())) return;
   await Sharing.shareAsync(uriPiece(piece), { mimeType: piece.mime, dialogTitle: piece.nom });
 }

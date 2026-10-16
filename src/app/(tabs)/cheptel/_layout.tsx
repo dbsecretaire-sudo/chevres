@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { BoutonsEnteteCheptel } from '@/features/cheptel/components/BoutonsEnteteCheptel';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
@@ -18,6 +19,7 @@ export default function CheptelLayout() {
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
+        headerLeft: enteteBureau(),
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />

@@ -1,4 +1,5 @@
 import { Text } from 'react-native';
+import { useAccueilEnDeuxColonnes } from '@/bureau/colonnes';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
@@ -14,6 +15,9 @@ const T = TEXTES.settings.reglages;
  * onglet : le cheptel dans Cheptel › Réglages ; la comptabilité, l'inventaire (conditionnement) et la fiscalité dans Comptabilité.
  */
 export default function Reglages() {
+  // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre l'établissement.
+  const redirection = useAccueilEnDeuxColonnes(ROUTES.ORGANISATION_ETABLISSEMENT);
+  if (redirection) return redirection;
   return (
     <Screen>
       <BlocLignes>

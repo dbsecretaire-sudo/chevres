@@ -5,6 +5,7 @@ import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/components/SectionDeroulante.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { estBureau } from '@/shared/utils/plateforme';
 
 interface Props {
   titre: string;
@@ -19,17 +20,21 @@ interface Props {
 
 /** Une section qui se déroule d'un appui sur son titre : plusieurs peuvent être ouvertes en même temps. */
 export function SectionDeroulante({ titre, nombre, ouverte, onBasculer, alerte, children }: Props) {
+  // Sur ordinateur, toutes les sections sont déroulées : il y a la place, et rien à dérouler.
+  const deplie = estBureau() || ouverte;
   return (
-    <View style={[commonStyles.gap10, ouverte && styles.panneau]}>
-      <Pressable style={[styles.entete, ouverte && styles.enteteOuverte]} onPress={onBasculer}>
+    <View style={[commonStyles.gap10, deplie && styles.panneau]}>
+      <Pressable style={[styles.entete, deplie && styles.enteteOuverte]} onPress={onBasculer}>
         <Text style={styles.titre}>
           {titre}
           {nombre !== undefined ? ` (${nombre})` : ''}
         </Text>
         {alerte ? <PastilleAlerte /> : null}
-        <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+        {estBureau() ? null : (
+          <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+        )}
       </Pressable>
-      {ouverte ? children : null}
+      {deplie ? children : null}
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import type { FamilleControle } from '@/features/exploitation/types';
@@ -24,6 +25,7 @@ export default function SanteLayout() {
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
+        headerLeft: enteteBureau(),
       }}
     >
       <Stack.Screen

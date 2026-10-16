@@ -4,6 +4,7 @@ import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRe
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -34,6 +35,7 @@ export default function ComptabiliteLayout() {
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
+        headerLeft: enteteBureau(),
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.comptabilite }} />
@@ -82,7 +84,10 @@ export default function ComptabiliteLayout() {
       <Stack.Screen name="tva" options={{ title: TEXTES.comptabilite.accueil.tva.titre }} />
       <Stack.Screen
         name="fournisseurs/index"
-        options={{ title: TEXTES.commun.general.fournisseurs, headerLeft: flecheOrganisation }}
+        options={{
+          title: TEXTES.commun.general.fournisseurs,
+          headerLeft: flecheOrganisation ?? enteteBureau(),
+        }}
       />
       <Stack.Screen
         name="fournisseurs/nouveau"
@@ -105,7 +110,7 @@ export default function ComptabiliteLayout() {
       <Stack.Screen name="comptes-pcg/[id]" options={{ title: TEXTES.commun.general.comptePcg }} />
       <Stack.Screen
         name="clients/index"
-        options={{ title: TEXTES.commun.general.clients, headerLeft: flecheOrganisation }}
+        options={{ title: TEXTES.commun.general.clients, headerLeft: flecheOrganisation ?? enteteBureau() }}
       />
       <Stack.Screen
         name="clients/nouveau"

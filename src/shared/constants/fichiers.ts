@@ -3,6 +3,9 @@
 /** Sous-dossier local des fichiers joints (un dossier par établissement dedans). */
 export const DOSSIER_PIECES_LOCAL = 'pieces';
 
+/** Version Windows : l'adresse sous laquelle la fenêtre affiche un fichier de l'ordinateur (suivie du chemin, encodé). */
+export const ADRESSE_FICHIERS_BUREAU = 'app://local/fichier/';
+
 /** Sous-dossier, dans le dossier Drive de l'établissement, des fichiers joints. */
 export const DOSSIER_PIECES_DRIVE = 'Pièces';
 

@@ -7,6 +7,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { Screen } from '@/shared/components/Screen';
+import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { TuilesChiffres, type TuileChiffre } from '@/features/commercial/components/TuilesChiffres';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { commandeOuverte } from '@/features/commercial/services/commandes';
@@ -36,6 +37,9 @@ interface Resume {
  */
 export default function CommercialAccueil() {
   const router = useRouter();
+  const estActive = useLigneActive();
+  // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre le chiffre d'affaires.
+  const redirection = useAccueilEnDeuxColonnes(ROUTES.COMMERCIAL_VENTES);
   const [resume, setResume] = useState<Resume>({
     commandesOuvertes: 0,
     aEncaisser: 0,
@@ -145,6 +149,7 @@ export default function CommercialAccueil() {
       : []),
   ];
 
+  if (redirection) return redirection;
   return (
     <Screen>
       {tuiles.length > 0 ? <TuilesChiffres tuiles={tuiles} /> : null}
@@ -157,6 +162,7 @@ export default function CommercialAccueil() {
                 title={l.titre}
                 subtitle={l.aide}
                 icone={l.icone}
+                actif={estActive(l.route)}
                 trailing={
                   l.alerte ? (
                     <View style={commonStyles.row}>

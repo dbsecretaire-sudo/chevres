@@ -3,6 +3,7 @@ import { DetailUgbPrimes } from '@/features/cheptel/components/bilan/DetailUgbPr
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { comparerAuxPercues, saisonDePrime } from '@/features/cheptel/services/primesPercues';
+import { estBureau } from '@/shared/utils/plateforme';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { parseDecimal } from '@/shared/utils/nombres';
 import {
@@ -71,7 +72,8 @@ export default function BilanAnnuel() {
   /** La carte déroulée : toutes sont enroulées au départ, et une seule est visible à la fois. */
   const [carteOuverte, setCarteOuverte] = useState<string | null>(null);
   const carte = (id: string) => ({
-    ouverte: carteOuverte === id,
+    // Sur ordinateur, toutes les cartes sont déroulées.
+    ouverte: estBureau() || carteOuverte === id,
     onBasculer: () => setCarteOuverte((actuelle) => (actuelle === id ? null : id)),
   });
 

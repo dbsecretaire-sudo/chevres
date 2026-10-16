@@ -24,6 +24,7 @@ import { laiterieActive, oeufsActifs } from '@/features/comptabilite/utils/recet
 import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/controles';
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { ROUTES } from '@/shared/constants/routes';
+import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.accueil;
@@ -61,6 +62,15 @@ export default function ProductionAccueil() {
   );
   // Le lait, les fromages et son contrôle ne concernent que les espèces qui ont une laiterie (chèvres, brebis, vaches).
   const laiterie = laiterieActive(espece);
+  const estActive = useLigneActive();
+  // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre les fromages (ou la viande sans laiterie).
+  const redirection = useAccueilEnDeuxColonnes(
+    laiterie
+      ? ROUTES.PRODUCTION_FROMAGES
+      : oeufsActifs(espece)
+        ? ROUTES.PRODUCTION_OEUFS
+        : ROUTES.PRODUCTION_VIANDE,
+  );
   type Ligne = {
     cle: string;
     titre: string;
@@ -129,6 +139,7 @@ export default function ProductionAccueil() {
     { titre: G.analyses, lignes: analyses },
     { titre: G.dangereux, lignes: dangereux },
   ].filter((g) => g.lignes.length > 0);
+  if (redirection) return redirection;
   return (
     <Screen>
       <SelecteurEspece />
@@ -141,6 +152,7 @@ export default function ProductionAccueil() {
                 title={l.titre}
                 subtitle={l.aide}
                 icone={l.icone}
+                actif={estActive(l.route)}
                 trailing={
                   negatifs[l.cle] ? (
                     <View style={commonStyles.row}>

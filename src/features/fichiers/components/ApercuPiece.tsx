@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VisionneuseImage } from '@/features/fichiers/components/VisionneuseImage';
-import { ouvrirPiece, uriPiece } from '@/features/fichiers/services/pieces';
+import { ouvrirPiece, uriAffichagePiece } from '@/features/fichiers/services/pieces';
 import { EXTENSIONS_IMAGE } from '@/shared/constants/fichiers';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { colors } from '@/shared/theme/colors';
@@ -32,7 +32,11 @@ export function ApercuPiece({ piece }: { piece: PieceJointe }) {
         onPress={() => setPleinEcran(true)}
         accessibilityLabel={TEXTES.fichiers.visionneuse.agrandir}
       >
-        <Image source={{ uri: uriPiece(piece) }} style={commonStyles.apercuImage} resizeMode="contain" />
+        <Image
+          source={{ uri: uriAffichagePiece(piece) }}
+          style={commonStyles.apercuImage}
+          resizeMode="contain"
+        />
         <View style={styles.coin}>
           <Ionicons name="expand-outline" size={18} color={colors.blanc} />
         </View>

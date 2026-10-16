@@ -14,6 +14,7 @@ import { LABEL_NATURE_URSSAF, NOMS_MOIS } from '@/shared/textes/libelles';
 import { styles } from '@/shared/styles/comptabilite/FiscaliteRsa.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 const T = TEXTES.entreprise.urssaf;
 
@@ -76,17 +77,20 @@ export default function UrssafEcran() {
           <Text style={[commonStyles.mutedBold, styles.colonne]}>{T.cotisations}</Text>
         </View>
         {urssaf?.mois.map((m) => {
-          const replie = !deroules.includes(m.mois);
+          // Sur ordinateur, le détail de chaque mois est toujours visible.
+          const replie = !estBureau() && !deroules.includes(m.mois);
           return (
             <View key={m.mois} style={commonStyles.gap2}>
               <Pressable style={styles.ligne} onPress={() => basculer(m.mois)}>
                 <View style={[commonStyles.rowFin, commonStyles.flex1]}>
                   <Text style={commonStyles.lien}>{NOMS_MOIS[m.mois - 1]}</Text>
-                  <Ionicons
-                    name={replie ? 'chevron-down' : 'chevron-up'}
-                    size={16}
-                    color={colors.textMuted}
-                  />
+                  {estBureau() ? null : (
+                    <Ionicons
+                      name={replie ? 'chevron-down' : 'chevron-up'}
+                      size={16}
+                      color={colors.textMuted}
+                    />
+                  )}
                 </View>
                 <Text style={[commonStyles.lien, styles.colonne]}>{formatMontant(m.chiffreAffaires)}</Text>
                 <Text style={[commonStyles.lien, styles.colonne]}>{formatMontant(m.cotisations)}</Text>

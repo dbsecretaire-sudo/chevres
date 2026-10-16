@@ -7,6 +7,7 @@ import { ListRow } from '@/shared/components/ListRow';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
+import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
 import { TEXTES } from '@/shared/textes';
 
@@ -20,6 +21,10 @@ const G = TEXTES.cheptel.accueil.groupes;
  */
 export default function AccueilCheptel() {
   const router = useRouter();
+  const estActive = useLigneActive();
+  // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre le cheptel.
+  const redirection = useAccueilEnDeuxColonnes(ROUTES.CHEPTEL_LISTE);
+  if (redirection) return redirection;
   const vers = (route: string) => () => {
     entrerAvecRetour(ROUTES.CHEPTEL);
     router.push(route as never);
@@ -54,6 +59,7 @@ export default function AccueilCheptel() {
           <ListRow
             title={TEXTES.commun.general.cheptel}
             icone="paw"
+            actif={estActive(ROUTES.CHEPTEL_LISTE)}
             onPress={() => router.push(ROUTES.CHEPTEL_LISTE)}
           />
         </BlocLignes>
@@ -61,7 +67,14 @@ export default function AccueilCheptel() {
       <GroupeAccueil titre={G.terrains}>
         <BlocLignes>
           {terrains.map((l) => (
-            <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={vers(l.route)} />
+            <ListRow
+              key={l.cle}
+              title={l.titre}
+              subtitle={l.aide}
+              icone={l.icone}
+              actif={estActive(l.route)}
+              onPress={vers(l.route)}
+            />
           ))}
         </BlocLignes>
       </GroupeAccueil>
@@ -70,6 +83,7 @@ export default function AccueilCheptel() {
           <ListRow
             title={TEXTES.commun.general.alimentation}
             icone="nutrition"
+            actif={estActive(ROUTES.SANTE_ALIMENTATION)}
             onPress={vers(ROUTES.SANTE_ALIMENTATION)}
           />
         </BlocLignes>
@@ -80,6 +94,7 @@ export default function AccueilCheptel() {
             title={TEXTES.cheptel.reglages.titre}
             subtitle={TEXTES.cheptel.reglages.aide}
             icone="settings"
+            actif={estActive(ROUTES.CHEPTEL_REGLAGES)}
             onPress={() => router.push(ROUTES.CHEPTEL_REGLAGES)}
           />
         </BlocLignes>

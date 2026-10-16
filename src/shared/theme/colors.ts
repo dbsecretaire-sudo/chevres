@@ -29,6 +29,8 @@ export const colors = {
   success: '#3F6B3A',
   warning: '#C97B3D',
   badgeBg: '#EAF0E4',
+  /** La ligne du menu dont l'écran est ouvert à droite (la version Windows en deux colonnes). */
+  ligneActive: '#D5E5CC',
 };
 
 /** Les bleus du formulaire papier du dossier PAC (document de suivi des mouvements) : titres, traits, cadres et cases teintées. */

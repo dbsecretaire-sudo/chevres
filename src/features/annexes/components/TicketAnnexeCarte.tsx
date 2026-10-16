@@ -16,6 +16,7 @@ import { styles } from '@/shared/styles/bar/Bar.styles';
 import { styles as stylesTicket } from '@/shared/styles/annexes/Annexes.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 const T = TEXTES.annexes.ticket;
 
@@ -49,7 +50,7 @@ export function TicketAnnexeCarte({
   ticket,
   articles,
   categories,
-  replie,
+  replie: replieDemande,
   onBasculer,
   onRenommer,
   onChangerDate,
@@ -67,6 +68,8 @@ export function TicketAnnexeCarte({
   const [quantite, setQuantite] = useState(1);
 
   const lignes = lignesDuTicket(ticket, articles);
+  // Sur ordinateur, tous les tickets sont dépliés.
+  const replie = !estBureau() && replieDemande;
   const total = totalTicket(lignes);
   const proposes = articles.filter((a) => !categorieId || a.categorieId === categorieId);
 
@@ -88,9 +91,11 @@ export function TicketAnnexeCarte({
         </View>
         <Text style={commonStyles.muted}>{ticket.date ?? todayISO()}</Text>
         {replie ? <Text style={styles.totalTicketReplie}>{formatMontant(total)}</Text> : null}
-        <Pressable onPress={onBasculer} hitSlop={8} accessibilityLabel={replie ? T.deplier : T.replier}>
-          <Ionicons name={replie ? 'chevron-down' : 'chevron-up'} size={24} color={colors.primary} />
-        </Pressable>
+        {estBureau() ? null : (
+          <Pressable onPress={onBasculer} hitSlop={8} accessibilityLabel={replie ? T.deplier : T.replier}>
+            <Ionicons name={replie ? 'chevron-down' : 'chevron-up'} size={24} color={colors.primary} />
+          </Pressable>
+        )}
       </View>
 
       {replie ? null : (
