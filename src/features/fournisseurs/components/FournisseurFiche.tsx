@@ -30,10 +30,12 @@ export function FournisseurLecture({
         {fournisseur.nom}
         {fournisseur.prenom ? ` ${fournisseur.prenom}` : ''}
       </Text>
-      <Text style={commonStyles.line}>
-        {TEXTES.fournisseurs.ficheFournisseur.siretDeuxPoints}
-        {fournisseur.siret}
-      </Text>
+      {fournisseur.siret ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.fournisseurs.ficheFournisseur.siretDeuxPoints}
+          {fournisseur.siret}
+        </Text>
+      ) : null}
       {fournisseur.tva ? (
         <Text style={commonStyles.line}>
           {TEXTES.fournisseurs.ficheFournisseur.tvaIntracommunautaireDeuxPoints}
@@ -46,10 +48,12 @@ export function FournisseurLecture({
           {fournisseur.rib}
         </Text>
       ) : null}
-      <Text style={commonStyles.line}>
-        {TEXTES.commun.general.adresseDeuxPoints}
-        {fournisseur.adressePostale}
-      </Text>
+      {fournisseur.adressePostale ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.commun.general.adresseDeuxPoints}
+          {fournisseur.adressePostale}
+        </Text>
+      ) : null}
       {fournisseur.telephone ? (
         <Text style={commonStyles.line}>
           {TEXTES.clients.ficheClient.telephoneDeuxPoints}
@@ -105,7 +109,6 @@ export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer
       />
       <FormField
         label={TEXTES.commun.general.siret}
-        required
         value={form.siret}
         onChangeText={(v) => onChange({ ...form, siret: v })}
         keyboardType="number-pad"
@@ -124,7 +127,6 @@ export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer
       />
       <FormField
         label={TEXTES.commun.general.adressePostale}
-        required
         value={form.adressePostale}
         onChangeText={(v) => onChange({ ...form, adressePostale: v })}
         multiline

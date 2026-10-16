@@ -176,8 +176,6 @@ export const TEXTES_COMMUN = {
       return `Registre complet du cheptel — ${V().troupeau}`;
     },
     nomDEntrepriseRequis: 'Nom d’entreprise requis',
-    siretRequis: 'SIRET requis',
-    adressePostaleRequise: 'Adresse postale requise',
     confirmer: 'Confirmer',
     troupeauEntier: 'Troupeau entier',
     aucuneFacturePourCetteAnnee: 'Aucune facture pour cette année',

@@ -24,6 +24,9 @@ export const TEXTES_FOURNISSEURS = {
     champ: 'Catégorie',
     aideChamp: 'Elle règle les catégories de dépense que ses factures peuvent avoir.',
     aide: 'Renommez, ajoutez ou retirez des catégories, et réglez les dépenses que leurs fournisseurs peuvent avoir.',
+    parCategorie: 'Par catégorie',
+    parOption: 'Par option',
+    aideParOption: 'Ouvrez une option et cochez les catégories qui l’appliquent.',
     renommer: 'Modifier le nom de la catégorie',
     nomCategorie: 'Nom de la catégorie',
     affichage: 'Afficher dans les factures de ses fournisseurs',
@@ -58,13 +61,12 @@ export const TEXTES_FOURNISSEURS = {
     aucunFournisseur: 'Aucun fournisseur',
     ajoutezVosFournisseursPourLes:
       'Ajoutez vos fournisseurs pour les retrouver rapidement dans une nouvelle facture.',
-    nomValeurSiretSiret: (nom: string, valeur: string, siret: string) => `${nom}${valeur} · SIRET ${siret}`,
+    nomValeurSiretSiret: (nom: string, valeur: string, siret?: string) =>
+      siret ? `${nom}${valeur} · SIRET ${siret}` : `${nom}${valeur}`,
   },
   nouveauFournisseur: {
     exCooperativeAgricoleDuNord: 'ex: Coopérative agricole du Nord',
     nomDuContact: 'Nom du contact',
-    numeroRueCodePostalVille: 'Numéro, rue, code postal, ville',
-    t14Chiffres: '14 chiffres',
     facultatifIbanBic: 'Facultatif — IBAN / BIC',
   },
   importFournisseur: {

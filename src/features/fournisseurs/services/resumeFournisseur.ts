@@ -31,15 +31,13 @@ export function calculerResumeFournisseur(factures: Facture[]): ResumeFournisseu
   };
 }
 
-/** Valide et nettoie la fiche ; renvoie le message d'erreur ou le fournisseur nettoyé. */
+/** Valide et nettoie la fiche (le SIRET et l'adresse sont facultatifs : un organisme n'en a pas toujours) ; renvoie le message d'erreur ou le fournisseur nettoyé. */
 export function nettoyerFournisseur(
   form: Fournisseur,
-  messages: { nom: string; entreprise: string; siret: string; adresse: string },
+  messages: { nom: string; entreprise: string },
 ): { erreur: string } | { fournisseur: Fournisseur } {
   if (!form.nom.trim()) return { erreur: messages.nom };
   if (!form.nomEntreprise.trim()) return { erreur: messages.entreprise };
-  if (!form.siret.trim()) return { erreur: messages.siret };
-  if (!form.adressePostale.trim()) return { erreur: messages.adresse };
 
   return {
     fournisseur: {

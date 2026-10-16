@@ -16,6 +16,8 @@ import {
   type CategorieClientReglage,
 } from '@/shared/dictionnaire/categoriesClient';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { ChoixVueCategories } from '@/features/settings/components/ChoixVueCategories';
+import { ReglagesParOption } from '@/features/settings/components/ReglagesParOption';
 import { groupesRecetteProposes } from '@/features/comptabilite/utils/recettes';
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -46,6 +48,8 @@ export default function RubriqueCategoriesClient() {
   const [ouverte, setOuverte] = useState<string | null>(null);
   const groupesProposes = groupesRecetteProposes();
   const [aRetirer, setARetirer] = useState<string | null>(null);
+  /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
+  const [parOption, setParOption] = useState(false);
 
   useEffect(() => {
     // Chargement initial unique depuis les réglages.
@@ -66,7 +70,66 @@ export default function RubriqueCategoriesClient() {
   return (
     <Screen>
       <Text style={styles.aide}>{T.aide}</Text>
-      {categories.map((c) => {
+      <ChoixVueCategories
+        parOption={parOption}
+        onChange={setParOption}
+        libelleParCategorie={T.parCategorie}
+        libelleParOption={T.parOption}
+      />
+      {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
+      {parOption ? (
+        <ReglagesParOption
+          categories={categories}
+          groupes={[
+            {
+              titre: T.dansLesVentes,
+              options: [
+                {
+                  cle: 'declaree',
+                  titre: T.declaree,
+                  coche: (id) => !!categories.find((c) => c.id === id)?.declaree,
+                  definir: (id, declaree) => maj(id, { declaree }),
+                },
+                {
+                  cle: 'prixLibre',
+                  titre: T.prixLibre,
+                  coche: (id) => !!categories.find((c) => c.id === id)?.prixLibre,
+                  definir: (id, prixLibre) => maj(id, { prixLibre }),
+                },
+              ],
+            },
+            {
+              titre: T.affichage,
+              options: [
+                {
+                  cle: 'pasEncaissee',
+                  titre: TEXTES.comptabilite.tresorerie.paiement.pasEncaissee,
+                  coche: (id) => pasEncaisseeAffichee(categories.find((c) => c.id === id)),
+                  definir: (id, pasEncaissee) => maj(id, { pasEncaissee }),
+                },
+              ],
+            },
+            {
+              titre: T.recettes,
+              options: groupesProposes.map((g) => ({
+                cle: g,
+                titre: LABEL_GROUPE_RECETTE[g],
+                coche: (id) => {
+                  const c = categories.find((x) => x.id === id);
+                  return !!c && groupesRecetteDeLaCategorie(c).includes(g);
+                },
+                definir: (id, cochee) => {
+                  const c = categories.find((x) => x.id === id);
+                  if (!c) return;
+                  const recettes = groupesRecetteDeLaCategorie(c);
+                  maj(id, { recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g) });
+                },
+              })),
+            },
+          ]}
+        />
+      ) : null}
+      {(parOption ? [] : categories).map((c) => {
         const recettes = groupesRecetteDeLaCategorie(c);
         return (
           <SectionDeroulante
@@ -125,7 +188,7 @@ export default function RubriqueCategoriesClient() {
           </SectionDeroulante>
         );
       })}
-      <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />
+      {parOption ? null : <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />}
 
       <NomModal
         visible={!!renommage}

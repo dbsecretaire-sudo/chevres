@@ -47,8 +47,6 @@ export function useFicheFournisseur(id: string | undefined) {
     const resultat = nettoyerFournisseur(form, {
       nom: TEXTES.commun.general.nomRequis,
       entreprise: TEXTES.commun.general.nomDEntrepriseRequis,
-      siret: TEXTES.commun.general.siretRequis,
-      adresse: TEXTES.commun.general.adressePostaleRequise,
     });
     if ('erreur' in resultat) return setErreur(resultat.erreur);
 

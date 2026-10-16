@@ -40,6 +40,10 @@ export const TEXTES_CLIENTS = {
   /** Organisation › Clients et fournisseurs › Catégories de client. */
   categories: {
     aide: 'Renommez, ajoutez ou retirez des catégories, et réglez ce qu’elles changent dans les ventes.',
+    parCategorie: 'Par catégorie',
+    parOption: 'Par option',
+    aideParOption: 'Ouvrez une option et cochez les catégories qui l’appliquent.',
+    dansLesVentes: 'Dans les ventes',
     renommer: 'Modifier le nom de la catégorie',
     nomCategorie: 'Nom de la catégorie',
     affichage: 'Afficher dans les factures de ses clients',

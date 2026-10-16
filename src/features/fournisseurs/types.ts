@@ -4,10 +4,12 @@ export interface Fournisseur {
   nom: string;
   prenom?: string;
   nomEntreprise: string;
+  /** Facultatif : un organisme n'en a pas toujours (vide si absent). */
   siret: string;
   /** Numéro de TVA intracommunautaire — facultatif (ex : fournisseur en franchise en base). */
   tva?: string;
   rib?: string;
+  /** Facultative (vide si absente). */
   adressePostale: string;
   /** Les coordonnées facultatives : elles s'affichent aussi pour un équarrisseur, dans Groupements. */
   telephone?: string;

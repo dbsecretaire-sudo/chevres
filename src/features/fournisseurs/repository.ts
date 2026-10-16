@@ -42,7 +42,10 @@ export async function listFournisseursDeEtablissement(etablissementId: string): 
  */
 export async function importerFournisseur(source: Fournisseur): Promise<Fournisseur | undefined> {
   const existants = await lireTous();
-  if (existants.some((f) => f.siret === source.siret)) return undefined;
+  // Même SIRET quand il y en a un, sinon même nom d'entreprise.
+  const siret = source.siret?.trim();
+  const nom = source.nomEntreprise.trim().toLowerCase();
+  if (existants.some((f) => (siret ? f.siret === siret : f.nomEntreprise.trim().toLowerCase() === nom))) return undefined;
   const { id: _id, ...donnees } = source;
   return creerFournisseur(donnees);
 }

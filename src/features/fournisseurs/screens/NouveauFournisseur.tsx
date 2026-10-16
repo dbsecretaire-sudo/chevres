@@ -44,8 +44,6 @@ export default function NouveauFournisseur() {
   const enregistrer = async () => {
     if (!nom.trim()) return setErreur(TEXTES.commun.general.nomRequis);
     if (!nomEntreprise.trim()) return setErreur(TEXTES.commun.general.nomDEntrepriseRequis);
-    if (!siret.trim()) return setErreur(TEXTES.commun.general.siretRequis);
-    if (!adressePostale.trim()) return setErreur(TEXTES.commun.general.adressePostaleRequise);
 
     setEnregistrement(true);
     try {
@@ -114,12 +112,11 @@ export default function NouveauFournisseur() {
             />
             <FormField
               label={TEXTES.commun.general.adressePostale}
-              required
               value={adressePostale}
               onChangeText={setAdressePostale}
               multiline
               style={commonStyles.textarea}
-              placeholder={TEXTES.fournisseurs.nouveauFournisseur.numeroRueCodePostalVille}
+              placeholder={TEXTES.commun.general.facultatif}
             />
             <FormField
               label={TEXTES.commun.general.telephone}
@@ -138,11 +135,10 @@ export default function NouveauFournisseur() {
             />
             <FormField
               label={TEXTES.commun.general.siret}
-              required
               value={siret}
               onChangeText={setSiret}
               keyboardType="number-pad"
-              placeholder={TEXTES.fournisseurs.nouveauFournisseur.t14Chiffres}
+              placeholder={TEXTES.commun.general.facultatif}
             />
             <FormField
               label={TEXTES.commun.general.tvaIntracommunautaire}

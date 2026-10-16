@@ -7,6 +7,8 @@ import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { ChoixVueCategories } from '@/features/settings/components/ChoixVueCategories';
+import { ReglagesParOption } from '@/features/settings/components/ReglagesParOption';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
@@ -49,6 +51,8 @@ export default function RubriqueCategoriesTiers() {
   const [aRetirer, setARetirer] = useState<string | null>(null);
   /** La catégorie déroulée (une seule à la fois) : toutes sont enroulées au départ. */
   const [ouverte, setOuverte] = useState<string | null>(null);
+  /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
+  const [parOption, setParOption] = useState(false);
   const depensesProposees = categoriesDepenseDuMode();
   const manquantes = categoriesFournisseurManquantes(categories);
 
@@ -73,7 +77,55 @@ export default function RubriqueCategoriesTiers() {
   return (
     <Screen>
       <Text style={styles.aide}>{T.aide}</Text>
-      {categories.map((c) => {
+      <ChoixVueCategories
+        parOption={parOption}
+        onChange={setParOption}
+        libelleParCategorie={T.parCategorie}
+        libelleParOption={T.parOption}
+      />
+      {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
+      {parOption ? (
+        <ReglagesParOption
+          categories={categories}
+          groupes={[
+            {
+              titre: T.affichage,
+              options: [
+                {
+                  cle: 'pasPayee',
+                  titre: TEXTES.comptabilite.tresorerie.paiement.pasPayee,
+                  coche: (id) => pasPayeeAffichee(categories.find((c) => c.id === id)),
+                  definir: (id, pasPayee) => maj(id, { pasPayee }),
+                },
+                {
+                  cle: 'sansFacture',
+                  titre: TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee,
+                  coche: (id) => sansFactureAffichee(categories.find((c) => c.id === id)),
+                  definir: (id, sansFacture) => maj(id, { sansFacture }),
+                },
+              ],
+            },
+            {
+              titre: T.depenses,
+              options: depensesProposees.map((d) => ({
+                cle: d,
+                titre: LABEL_CATEGORIE_DEPENSE[d],
+                coche: (id) => {
+                  const c = categories.find((x) => x.id === id);
+                  return !!c && (depensesDeLaCategorie(c) ?? depensesProposees).includes(d);
+                },
+                definir: (id, cochee) => {
+                  const c = categories.find((x) => x.id === id);
+                  if (!c) return;
+                  const permises = depensesDeLaCategorie(c) ?? depensesProposees;
+                  maj(id, { depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d) });
+                },
+              })),
+            },
+          ]}
+        />
+      ) : null}
+      {(parOption ? [] : categories).map((c) => {
         // Sans réglage, un vétérinaire n'a que la dépense vétérinaire et les autres catégories les ont toutes.
         const permises = depensesDeLaCategorie(c) ?? depensesProposees;
         return (
@@ -125,7 +177,7 @@ export default function RubriqueCategoriesTiers() {
           </SectionDeroulante>
         );
       })}
-      <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />
+      {parOption ? null : <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />}
       {/* Une liste enregistrée avant l'arrivée de nouvelles catégories d'office : un bouton les ajoute, sans toucher aux vôtres. */}
       {manquantes.length > 0 ? (
         <Button
