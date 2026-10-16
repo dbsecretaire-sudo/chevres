@@ -14,6 +14,7 @@ import { clientsARelancer } from '@/features/commercial/services/statistiques';
 import { listClients } from '@/features/clients/repository';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { JOURS_CLIENT_A_RELANCER } from '@/shared/constants/commercial';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
@@ -108,6 +109,17 @@ export default function CommercialAccueil() {
     {
       titre: T.groupes.circuits,
       lignes: [{ cle: 'circuits', ...T.circuits, icone: 'git-network', route: ROUTES.COMMERCIAL_CIRCUITS }],
+    },
+    {
+      titre: T.groupes.reseau,
+      lignes: [
+        {
+          cle: 'partenaires',
+          ...T.partenaires,
+          icone: 'people',
+          route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
+        },
+      ],
     },
   ];
 

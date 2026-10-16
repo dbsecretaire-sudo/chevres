@@ -69,8 +69,6 @@ export default function ProductionLayout() {
         })}
       />
       <Stack.Screen name="controles/nouvelle" options={({ route }) => enteteControle(route.params)} />
-      <Stack.Screen name="controles/groupement" />
-      <Stack.Screen name="controles/contenu" />
     </Stack>
   );
 }

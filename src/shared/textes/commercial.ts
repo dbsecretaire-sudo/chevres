@@ -22,6 +22,11 @@ export const TEXTES_COMMERCIAL = {
       commandes: 'Commandes et livraisons',
       circuits: 'Circuits de vente',
       agritourisme: 'Agritourisme',
+      reseau: 'Réseau',
+    },
+    partenaires: {
+      titre: 'Partenaires',
+      aide: 'Groupements, organismes, assureurs, équarrisseurs : contrats, courriers, échéances, factures.',
     },
     ventes: {
       titre: 'Chiffre d’affaires',

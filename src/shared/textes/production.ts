@@ -1,4 +1,4 @@
-/** Textes de l'interface — l'onglet Production (fromages, viande vendue, contrôle laitier, groupements). À modifier ici uniquement. */
+/** Textes de l'interface — l'onglet Production (fromages, viande vendue, contrôle laitier). À modifier ici uniquement. */
 export const TEXTES_PRODUCTION = {
   titre: 'Production',
   /** Les lignes de l'écran d'accueil de l'onglet. */
@@ -7,7 +7,6 @@ export const TEXTES_PRODUCTION = {
       produit: 'Produit',
       laitier: 'Analyses et contrôle du lait',
       analyses: 'Analyses et contrôles',
-      collectifs: 'Réseau',
       dangereux: 'Gestion des produits dangereux',
     },
     fromages: { titre: 'Fromages', aide: 'Les fromages par lot : fabrication, vente, rappels.' },
@@ -32,10 +31,6 @@ export const TEXTES_PRODUCTION = {
     salmonelle: {
       titre: 'Dépistage de la salmonelle',
       aide: 'Les prélèvements de fientes analysés pour la salmonelle.',
-    },
-    groupements: {
-      titre: 'Partenaires',
-      aide: 'Groupements, organismes, équarrisseurs : contrats, courriers, échéances, factures.',
     },
     rappels: {
       titre: 'Rappels de lots',

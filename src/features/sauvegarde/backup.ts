@@ -12,6 +12,7 @@ import {
 } from '@/features/identification/repository';
 import type { DocumentIdentification } from '@/features/identification/types';
 import {
+  choixLu,
   enregistrerChoixPartenaires,
   lireChoixPartenaires,
   type ChoixPartenaires,
@@ -86,7 +87,7 @@ interface FichierSauvegarde {
   clients?: Client[];
   /** Les documents d'identification et d'installation de l'exploitation (absent des anciennes sauvegardes). */
   identification?: DocumentIdentification[];
-  /** Les tiers ajoutés aux partenaires ou retirés (absent des anciennes sauvegardes). */
+  /** Les catégories de tiers ajoutées aux partenaires ou retirées (absent des anciennes sauvegardes). */
   partenaires?: ChoixPartenaires;
   /** Sous-dossiers et contenus de l'explorateur de dossiers (absent des anciennes sauvegardes). */
   dossiers?: ArchiveDossiers;
@@ -322,10 +323,7 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   }
 
   if (sauvegarde.partenaires && typeof sauvegarde.partenaires === 'object') {
-    await enregistrerChoixPartenaires({
-      ajoutes: Array.isArray(sauvegarde.partenaires.ajoutes) ? sauvegarde.partenaires.ajoutes : [],
-      retires: Array.isArray(sauvegarde.partenaires.retires) ? sauvegarde.partenaires.retires : [],
-    });
+    await enregistrerChoixPartenaires(choixLu(sauvegarde.partenaires));
   }
 
   if (sauvegarde.dossiers && Array.isArray(sauvegarde.dossiers.sousDossiers)) {

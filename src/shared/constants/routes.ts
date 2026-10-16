@@ -3,11 +3,18 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 /** Adresses (routes) de navigation de l'application — à modifier ici uniquement. */
 
 /** Les familles de contrôles qui relèvent de la Production (le reste est dans le Cheptel). */
-const FAMILLES_DE_PRODUCTION = ['laitier', 'analyse', 'groupement', 'officiel', 'autocontrole', 'salmonelle'];
+const FAMILLES_DE_PRODUCTION = ['laitier', 'analyse', 'officiel', 'autocontrole', 'salmonelle'];
 
-/** Le dossier des écrans de contrôle d'une famille : Production pour le lait et les groupements, Cheptel (santé) pour le reste. */
+/** Le dossier des écrans des partenaires (les groupements, organismes, assureurs, équarrisseurs) : dans l'onglet Commercial. */
+const DOSSIER_PARTENAIRES = '/commercial/partenaires';
+
+/** Le dossier des écrans de contrôle d'une famille : Commercial pour les partenaires, Production pour le lait, Cheptel (santé) pour le reste. */
 const baseControles = (famille: string): string =>
-  FAMILLES_DE_PRODUCTION.includes(famille) ? '/production/controles' : '/sante/controles';
+  famille === 'groupement'
+    ? DOSSIER_PARTENAIRES
+    : FAMILLES_DE_PRODUCTION.includes(famille)
+      ? '/production/controles'
+      : '/sante/controles';
 
 export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
@@ -29,15 +36,15 @@ export const ROUTES = {
   SANTE_ALIMENTATION: '/sante/alimentation',
   /** La fiche d'une visite vétérinaire (son formulaire, avec ses fichiers) : les visites viennent des dépenses vétérinaires. */
   santeVisite: (id: string) => `/sante/veterinaire/visite?id=${id}` as const,
-  /** La liste des contrôles d'une famille (surface, animaux : dans le Cheptel ; laitier, analyses, groupements : dans Production). */
+  /** La liste des contrôles d'une famille (surface, animaux : dans le Cheptel ; laitier, analyses : dans Production ; partenaires : dans Commercial). */
   santeControles: (famille: string) => `${baseControles(famille)}/liste?famille=${famille}` as const,
   /** Un nouveau contrôle, de la famille donnée. */
   santeControleNouveau: (famille: string) => `${baseControles(famille)}/nouvelle?famille=${famille}` as const,
   /** Un groupement : ses contenus. */
-  santeGroupement: (id: string) => `/production/controles/groupement?id=${id}` as const,
+  santeGroupement: (id: string) => `${DOSSIER_PARTENAIRES}/groupement?id=${id}` as const,
   /** Un contenu d'un groupement (nouveau sans identifiant, sinon modifié). */
   santeContenuGroupement: (groupementId: string, id?: string) =>
-    `/production/controles/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
+    `${DOSSIER_PARTENAIRES}/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
   /** Un contrôle (un terrain…) qu'on modifie. */
   santeControleModifier: (famille: string, id: string) =>
     `${baseControles(famille)}/nouvelle?famille=${famille}&id=${id}` as const,

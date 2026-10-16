@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -42,6 +43,13 @@ export default function CommercialLayout() {
             : TEXTES.commercial.agritourisme.formule.titreNouvelle,
         })}
       />
+      <Stack.Screen
+        name="partenaires/liste"
+        options={{ title: TEXTES.exploitation.controles.familles.groupement.titre }}
+      />
+      <Stack.Screen name="partenaires/nouvelle" options={({ route }) => enteteControle(route.params)} />
+      <Stack.Screen name="partenaires/groupement" />
+      <Stack.Screen name="partenaires/contenu" />
     </Stack>
   );
 }

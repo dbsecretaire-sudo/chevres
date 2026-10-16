@@ -31,7 +31,7 @@ const G = T.groupes;
 
 /**
  * L'onglet Production d'un élevage, à côté du Cheptel : des groupes titrés — le produit (fromages et charcuterie par lot, viande
- * vendue), l'analyse et le contrôle du lait, les collectifs (groupements), les produits dangereux (rappels de lots). Le stock y est branché : les lots sont ceux de l'inventaire.
+ * vendue), l'analyse et le contrôle du lait, les produits dangereux (rappels de lots). Le stock y est branché : les lots sont ceux de l'inventaire.
  */
 export default function ProductionAccueil() {
   const router = useRouter();
@@ -79,7 +79,7 @@ export default function ProductionAccueil() {
     { cle: 'viande', ...T.viande, icone: 'restaurant', route: ROUTES.PRODUCTION_VIANDE },
     { cle: 'charcuterie', ...T.charcuterie, icone: 'cut', route: ROUTES.PRODUCTION_CHARCUTERIE },
   ];
-  /** L'analyse et le contrôle du lait (une laiterie seulement), les collectifs et les rappels de lots : un groupe titré chacun. */
+  /** L'analyse et le contrôle du lait (une laiterie seulement) et les rappels de lots : un groupe titré chacun. */
   const laitier: Ligne[] = laiterie
     ? [
         {
@@ -120,14 +120,6 @@ export default function ProductionAccueil() {
             },
       ]
     : [];
-  const collectifs: Ligne[] = [
-    {
-      cle: 'groupements',
-      ...T.groupements,
-      icone: 'people',
-      route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
-    },
-  ];
   const dangereux: Ligne[] = [
     { cle: 'rappels', ...T.rappels, icone: 'notifications', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
   ];
@@ -135,7 +127,6 @@ export default function ProductionAccueil() {
     { titre: G.produit, lignes: produits },
     { titre: G.laitier, lignes: laitier },
     { titre: G.analyses, lignes: analyses },
-    { titre: G.collectifs, lignes: collectifs },
     { titre: G.dangereux, lignes: dangereux },
   ].filter((g) => g.lignes.length > 0);
   return (
