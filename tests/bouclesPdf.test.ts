@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bouclesHtml, ligneDeLaListe, type ListeImprimee } from '@/features/export/bouclesPdf';
+import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, pagesDesReperes, type LigneListe, type ListeImprimee } from '@/features/export/bouclesPdf';
 import type { BoucleStock } from '@/features/stock/types';
 
 const boucle = (plus: Partial<BoucleStock>): BoucleStock => ({ id: 'b', article: 'boucle:boucles', numero: '200888', ...plus });
@@ -7,7 +7,7 @@ const boucle = (plus: Partial<BoucleStock>): BoucleStock => ({ id: 'b', article:
 describe('liste des repères imprimée', () => {
   it('écrit l’identification avec l’indicatif, l’année de naissance et la date de pose', () => {
     const l = ligneDeLaListe(boucle({ datePose: '2020-04-01', chevreId: 'c1' }), { dateNaissance: '2019-12-16' }, undefined, 'FR 21228');
-    expect(l).toMatchObject({ identification: 'FR 21228200888', naissance: '2019', pose: '01/04/2020', secondRepere: '', commentaires: '' });
+    expect(l).toMatchObject({ identification: 'FR 21228200888', naissance: '2019', pose: '01/04/2020', secondRepere: '01/04/2020', commentaires: '' });
   });
 
   it('range la remarque et la sortie de l’animal dans les commentaires', () => {
@@ -45,5 +45,27 @@ describe('liste des repères imprimée', () => {
     expect(html).toContain('Date de pose du second repère');
     expect(html).toContain('Commentaires*');
     expect(html).toContain('20272 Pianello');
+  });
+
+  it('toujours trente lignes par page, les manquantes restant vides', () => {
+    const ligne = (n: number): LigneListe => ({ identification: 'FR ' + n, naissance: '', pose: '', secondRepere: '', commentaires: '' });
+    expect(LIGNES_PAR_PAGE_REPERES).toBe(30);
+    for (const nombre of [0, 1, 29, 30, 31, 61]) {
+      const pages = pagesDesReperes(Array.from({ length: nombre }, (_, i) => ligne(i)));
+      expect(pages).toHaveLength(Math.max(1, Math.ceil(nombre / 30)));
+      for (const page of pages) expect(page).toHaveLength(30);
+      expect(pages.flat().filter(Boolean)).toHaveLength(nombre);
+    }
+  });
+
+  it('l’en-tête est sur chaque page du document', () => {
+    const lignes = Array.from({ length: 65 }, (_, i) => ({ identification: 'FR ' + i, naissance: '', pose: '', secondRepere: '', commentaires: '' }));
+    const liste: ListeImprimee = { titre: { debut: 'LISTE DES REPERES', fin: '' }, sorte: 'Boucles', filtre: 'Tout', lignes };
+    const html = bouclesHtml([liste], { nom: 'Riolacci Joseph', adresse: ['20272 Pianello'], cheptel: '20213003' }, '16/10/2026');
+    expect(html.match(/<section class="page-repere">/g)).toHaveLength(3);
+    expect(html.split('Edition du : 16/10/2026')).toHaveLength(4);
+    expect(html.match(/20213003/g)).toHaveLength(3);
+    // Trois pages : chacune une ligne d'en-tête de tableau et trente lignes.
+    expect(html.split('<tr>')).toHaveLength(3 * 31 + 1);
   });
 });

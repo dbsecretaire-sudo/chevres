@@ -66,7 +66,8 @@ export function ligneDeLaListe(
     identification: avecIndicatif(b.numero, indicatif),
     naissance: animal?.dateNaissance?.slice(0, 4) ?? '',
     pose: b.datePose ? formatDateShortFR(b.datePose) : '',
-    secondRepere: '',
+    // Le second repère se pose le même jour que le premier.
+    secondRepere: b.datePose ? formatDateShortFR(b.datePose) : '',
     commentaires: commentaires.join(' — '),
   };
 }
@@ -76,47 +77,69 @@ const titreDeLEtat = (etat: string): { debut: string; fin: string } => ({
   fin: etat === ETAT_BOUCLE.NON_POSEE ? P.enStock : etat === ETAT_BOUCLE.POSEE ? P.poses : '',
 });
 
+/** Le nombre de lignes de chaque page : celui du formulaire officiel, toujours le même (les lignes manquantes restent vides). */
+export const LIGNES_PAR_PAGE_REPERES = 30;
+
+/** Les lignes d'une liste réparties en pages de trente, la dernière complétée de lignes vides ; une page vide quand il n'y a rien. */
+export function pagesDesReperes(lignes: LigneListe[]): (LigneListe | undefined)[][] {
+  const nombre = Math.max(1, Math.ceil(lignes.length / LIGNES_PAR_PAGE_REPERES));
+  return Array.from({ length: nombre }, (_, p) =>
+    Array.from({ length: LIGNES_PAR_PAGE_REPERES }, (_, i) => lignes[p * LIGNES_PAR_PAGE_REPERES + i]),
+  );
+}
+
+/*
+ * Le formulaire est dessiné sur une feuille de 595 × 842 (l'A4) : comme les autres formulaires, elle s'agrandit d'un tiers sur Android et
+ * sur l'ordinateur (--k, voir htmlPdf.ts et bureau/print.ts). L'en-tête et le tableau de trente lignes remplissent la page.
+ */
 const STYLES = `
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 8mm 12mm 10mm; font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 12px; }
-  .liste { page-break-after: always; }
-  .liste:last-child { page-break-after: auto; }
-  h1 { margin: 0; text-align: center; font-size: 25px; font-weight: 700; letter-spacing: 0.3px; }
-  h1 .fin { font-size: 22px; margin-left: 6px; }
-  .edition { text-align: center; font-size: 14px; margin-top: 1px; }
-  .sorte { text-align: center; font-size: 12px; color: #444; margin-top: 2px; }
-  .entete { display: flex; justify-content: space-between; align-items: flex-start; margin: 14px 0 12px; }
-  .identite { display: grid; grid-template-columns: 62px auto; row-gap: 6px; font-size: 14px; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #111; }
+  .page-repere { width: calc(595px * var(--k, 1)); height: calc(842px * var(--k, 1)); position: relative; overflow: hidden; page-break-after: always; }
+  .page-repere:last-child { page-break-after: auto; }
+  .feuille { position: absolute; left: 0; top: 0; width: 595px; height: 842px; padding: 22px 28px 12px; transform-origin: 0 0; transform: scale(var(--k, 1)); }
+  .haut { height: 66px; text-align: center; }
+  h1 { margin: 0; font-size: 24px; line-height: 28px; font-weight: 700; letter-spacing: 0.3px; }
+  h1 .fin { font-size: 22px; margin-left: 5px; }
+  .edition { font-size: 13px; line-height: 15px; margin-top: 1px; }
+  .sorte { font-size: 10px; line-height: 12px; color: #444; margin-top: 1px; }
+  .entete { height: 62px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; }
+  .identite { display: grid; grid-template-columns: 52px auto; row-gap: 3px; font-size: 12.5px; line-height: 15px; }
   .identite .nom { text-transform: uppercase; }
-  .cheptel { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-right: 6mm; }
-  .cheptel .case { border: 1.5px solid #111; padding: 4px 14px; font-size: 17px; font-weight: 700; letter-spacing: 1px; min-width: 130px; text-align: center; }
-  table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.6px solid #111; }
-  thead { display: table-header-group; }
-  th { border: 1.2px solid #111; font-weight: 400; font-size: 13px; padding: 7px 4px; line-height: 1.25; }
-  td { border: 1.2px solid #111; height: 9mm; padding: 2px 6px; font-size: 12.5px; vertical-align: middle; overflow-wrap: break-word; }
-  tr { page-break-inside: avoid; }
-  td.numero { font-size: 15px; font-weight: 700; padding-left: 12px; }
-  td.centre { text-align: center; }
-  .note { font-size: 10.5px; margin-top: 4px; line-height: 1.3; }
-  .total { font-size: 10.5px; color: #555; margin-top: 3px; }
+  .cheptel { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-right: 2px; }
+  .cheptel .case { border: 1.4px solid #111; padding: 3px 12px; font-size: 15px; font-weight: 700; letter-spacing: 1px; min-width: 112px; text-align: center; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.5px solid #111; }
+  th { height: 36px; border: 1.1px solid #111; font-weight: 400; font-size: 11.5px; padding: 2px 3px; line-height: 1.2; }
+  td { height: 20px; border: 1.1px solid #111; padding: 0 5px; font-size: 9.5px; line-height: 1.1; vertical-align: middle; overflow: hidden; }
+  td.numero { font-size: 13px; font-weight: 700; padding-left: 9px; white-space: nowrap; }
+  td.centre { text-align: center; font-size: 11px; }
+  .note { font-size: 8.5px; line-height: 10px; margin-top: 3px; height: 22px; overflow: hidden; }
 `;
 
-function listeHtml(liste: ListeImprimee, identite: IdentiteListe, edition: string): string {
-  const lignes = liste.lignes
-    .map(
-      (l) => `<tr>
+const ligneHtml = (l: LigneListe | undefined): string =>
+  l
+    ? `<tr>
         <td class="numero">${identificationHtml(l.identification)}</td>
         <td class="centre">${echapper(l.naissance)}</td>
         <td class="centre">${echapper(l.pose)}</td>
         <td class="centre">${echapper(l.secondRepere)}</td>
         <td>${echapper(l.commentaires)}</td>
-      </tr>`,
-    )
-    .join('');
-  return `<section class="liste">
-  <h1>${echapper(liste.titre.debut)}${liste.titre.fin ? ` <span class="fin">${echapper(liste.titre.fin)}</span>` : ''}</h1>
-  <div class="edition">${echapper(P.edition(edition))}</div>
-  <div class="sorte">${echapper(liste.sorte)} · ${echapper(liste.filtre)}</div>
+      </tr>`
+    : '<tr><td class="numero"></td><td></td><td></td><td></td><td></td></tr>';
+
+/** Une page de la liste : l'en-tête (titre, édition, nom, adresse, n° de cheptel), le tableau de trente lignes et la note. */
+function pageHtml(
+  liste: ListeImprimee,
+  lignes: (LigneListe | undefined)[],
+  identite: IdentiteListe,
+  edition: string,
+): string {
+  return `<section class="page-repere"><div class="feuille">
+  <div class="haut">
+    <h1>${echapper(liste.titre.debut)}${liste.titre.fin ? ` <span class="fin">${echapper(liste.titre.fin)}</span>` : ''}</h1>
+    <div class="edition">${echapper(P.edition(edition))}</div>
+    <div class="sorte">${echapper(liste.sorte)} · ${echapper(liste.filtre)}</div>
+  </div>
   <div class="entete">
     <div class="identite">
       <span>${echapper(P.nom)}</span><span class="nom">${echapper(identite.nom)}</span>
@@ -133,14 +156,13 @@ function listeHtml(liste: ListeImprimee, identite: IdentiteListe, edition: strin
       <th>${echapper(P.colonnes.secondRepere)}</th>
       <th>${echapper(P.colonnes.commentaires)}</th>
     </tr></thead>
-    <tbody>${lignes || `<tr><td colspan="5" class="centre">${echapper(T.aucuneBoucle)}</td></tr>`}</tbody>
+    <tbody>${lignes.map(ligneHtml).join('')}</tbody>
   </table>
   <div class="note">${echapper(P.noteCommentaires)}</div>
-  <div class="total">${echapper(P.total(liste.lignes.length))}</div>
-</section>`;
+</div></section>`;
 }
 
-/** Les listes de repères en HTML : une « liste des repères » par sorte de boucles, sur le modèle du formulaire officiel. */
+/** Les listes de repères en HTML : par sorte de boucles, des pages de trente lignes, chacune avec son en-tête, comme le formulaire officiel. */
 export function bouclesHtml(listes: ListeImprimee[], identite: IdentiteListe, edition: string): string {
   return `<!DOCTYPE html>
 <html>
@@ -149,7 +171,7 @@ export function bouclesHtml(listes: ListeImprimee[], identite: IdentiteListe, ed
 <style>${STYLES}</style>
 </head>
 <body>
-${listes.map((l) => listeHtml(l, identite, edition)).join('\n')}
+${listes.flatMap((l) => pagesDesReperes(l.lignes).map((page) => pageHtml(l, page, identite, edition))).join('\n')}
 </body>
 </html>`;
 }
@@ -185,5 +207,6 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
     bouclesHtml(imprimees, identite, formatDateShortFR(todayISO())),
     `${NOM_FICHIER_EXPORT_BOUCLES}.${FORMAT_EXPORT.PDF}`,
     P.titre,
+    { sansMarges: true },
   );
 }
