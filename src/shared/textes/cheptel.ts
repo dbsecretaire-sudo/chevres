@@ -146,6 +146,31 @@ export const TEXTES_CHEPTEL = {
       technique: 'Technique',
     },
   },
+  /** Les lots d'animaux : un nom, des boucles, leur suivi sanitaire. */
+  lots: {
+    titre: 'Lots d’animaux',
+    lot: 'Lot',
+    aide: 'Des groupes d’animaux nommés (chevrettes 2026, chèvres en lactation…) : on les réutilise pour un traitement, une visite ou un contrôle, et on suit leur santé ensemble.',
+    nouveau: 'Nouveau lot',
+    aucun: 'Aucun lot.',
+    aucunAide: 'Créez un lot avec le bouton +, ou gardez des animaux comme lot depuis un traitement.',
+    nom: 'Nom du lot',
+    exemple: 'ex : Chevrettes 2026',
+    nomRequis: 'Donnez un nom au lot.',
+    nomPris: 'Un lot porte déjà ce nom.',
+    aideBoucles: 'Les boucles des animaux du lot. Les animaux sortis du troupeau restent dans la liste mais ne comptent plus.',
+    animaux: (vivants: number, total: number) =>
+      vivants === total ? `${total} ${total > 1 ? 'animaux' : 'animal'}` : `${vivants} vivant${vivants > 1 ? 's' : ''} sur ${total}`,
+    enDelai: (nombre: number) => `${nombre} en délai d’attente`,
+    suivi: 'Suivi sanitaire du lot',
+    nouveauTraitement: 'Donner un traitement à ce lot',
+    traitementsDuLot: (nombre: number) => `Traitements du lot${nombre > 0 ? ` (${nombre})` : ''}`,
+    aucunTraitement: 'Aucun traitement donné à ce lot pour l’instant.',
+    supprimer: 'Supprimer ce lot',
+    supprimerQuestion: 'Supprimer ce lot ?',
+    supprimerMessage: 'Le lot disparaît ; les animaux et les traitements déjà enregistrés restent.',
+    lotDuTraitement: (nom: string) => `Lot : ${nom}`,
+  },
   /** Le tableau de bord du cheptel : effectifs, pyramide des âges, mouvements de l'année, santé. */
   tableauDeBord: {
     titre: 'Tableau de bord',
@@ -530,6 +555,36 @@ export const TEXTES_CHEPTEL = {
     /** Ce qui s'écrit dans la colonne « Nom de l'acheteur ou du vendeur » quand la vente n'en donne pas. */
     abattoir: 'Abattoir',
     autoConsommation: 'Autoconsommation',
+    /** Le recensement annuel des ovins et caprins de la Chambre d'agriculture (règlement CE 21/2004). */
+    recensement: {
+      bouton: 'Recensement annuel (PDF)',
+      aide: 'Les effectifs au 1er janvier et les naissances de l’année d’avant, calculés d’après le cheptel, sur le formulaire de la Chambre d’agriculture.',
+      fichier: 'recensement',
+      titre: (annee: number) => `RECENSEMENT ANNUEL OVINS ET CAPRINS ${annee}`,
+      monsieur: 'Mr',
+      chambre: ['CHAMBRE D’AGRICULTURE', 'DE RÉGION CORSE'],
+      chambreAdresse: ['CHAMBRE D’AGRICULTURE DE RÉGION CORSE', 'Route du Stade, Lieu-dit PETRAOLO', '20215 VESCOVATO'],
+      mention: (annee: number) =>
+        `Le règlement (CE) n° 21/2004 prévoit le recensement annuel des animaux présents dans les exploitations d’élevage et les centres d’engraissement. Tout détenteur d’ovins ou/et caprins a obligation de transmettre ses données. Ce document est à retourner dès sa réception, au plus tard avant le 31/01/${annee}.`,
+      typeDeProduction: 'Veuillez préciser le type de production :',
+      lait: 'Lait',
+      viande: 'Viande',
+      cheptel: 'CHEPTEL :',
+      effectifsOvins: 'EFFECTIFS OVINS',
+      effectifsCaprins: 'EFFECTIFS CAPRINS',
+      ligne1: (annee: number) => `Nombre d’animaux (mâles et femelles) âgés de + de 6 mois au 01/01/${annee}`,
+      ligne2: (anneeAvant: number) =>
+        `Nombre d’animaux nés (animaux encore présents + animaux vendus + animaux autoconsommés) entre le 01/01/${anneeAvant} et le 31/12/${anneeAvant}`,
+      ligne3: (anneeAvant: number) =>
+        `Nombre d’animaux nés sur une autre exploitation et engraissés sur l’exploitation au cours de l’année ${anneeAvant}`,
+      femelles: (nombre: number) => `${nombre} femelle${nombre > 1 ? 's' : ''}`,
+      males: (nombre: number, caprins: boolean) =>
+        caprins ? `${nombre} bouc${nombre > 1 ? 's' : ''}` : `${nombre} bélier${nombre > 1 ? 's' : ''}`,
+      cessation: 'Si vous ne détenez plus d’animaux, merci de prendre contact avec l’ERE pour enregistrer votre cessation d’activité.',
+      date: 'DATE :',
+      signature: 'SIGNATURE :',
+      conserver: 'EXEMPLAIRE À CONSERVER DANS VOTRE REGISTRE D’ÉLEVAGE',
+    },
     /** La déclaration de montée et descente d'estive (la transhumance), à renvoyer à la DDT(M). */
     estive: {
       bouton: 'Déclaration d’estive (transhumance)…',

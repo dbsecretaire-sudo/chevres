@@ -60,8 +60,9 @@ export default function CheptelLayout() {
       />
       <Stack.Screen name="bilan" options={{ title: TEXTES.commun.general.bilanAnnuel }} />
       <Stack.Screen name="traitements" options={{ title: TEXTES.cheptel.traitements.titre }} />
-      <Stack.Screen name="tableau-de-bord" options={{ title: TEXTES.cheptel.tableauDeBord.titre }} />
       <Stack.Screen name="traitement" options={{ title: TEXTES.cheptel.traitements.modifier }} />
+      <Stack.Screen name="lots" options={{ title: TEXTES.cheptel.lots.titre }} />
+      <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />
       <Stack.Screen name="reglages" options={{ title: TEXTES.cheptel.reglages.titre }} />
     </Stack>
   );

@@ -54,6 +54,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'produit',
     'motif',
     'chevreNumeroBoucle',
+    'lotId',
     'delaiLaitJours',
     'delaiViandeJours',
     'notes',

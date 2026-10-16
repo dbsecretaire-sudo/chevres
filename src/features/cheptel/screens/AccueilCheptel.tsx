@@ -87,17 +87,17 @@ export default function AccueilCheptel() {
             actif={estActive(ROUTES.CHEPTEL_TRAITEMENTS)}
             onPress={vers(ROUTES.CHEPTEL_TRAITEMENTS)}
           />
+          <ListRow
+            title={TEXTES.cheptel.lots.titre}
+            subtitle={TEXTES.cheptel.lots.aide}
+            icone="layers"
+            actif={estActive(ROUTES.CHEPTEL_LOTS)}
+            onPress={vers(ROUTES.CHEPTEL_LOTS)}
+          />
         </BlocLignes>
       </GroupeAccueil>
       <GroupeAccueil titre={G.statistiques}>
         <BlocLignes>
-          <ListRow
-            title={TEXTES.cheptel.tableauDeBord.titre}
-            subtitle={TEXTES.cheptel.tableauDeBord.aide}
-            icone="stats-chart"
-            actif={estActive(ROUTES.CHEPTEL_TABLEAU_DE_BORD)}
-            onPress={vers(ROUTES.CHEPTEL_TABLEAU_DE_BORD)}
-          />
           <ListRow
             title={TEXTES.commun.general.alimentation}
             icone="nutrition"

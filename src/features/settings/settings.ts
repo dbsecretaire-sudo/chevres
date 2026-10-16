@@ -114,6 +114,13 @@ export interface InfosEntreprise {
 export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined =>
   infos?.montantTaxeSejour ?? infos?.taxeSejourParNuit;
 
+/** Un lot d'animaux : un nom (« Chevrettes 2026 ») et les boucles des animaux, séparées par des virgules. Il désigne les mêmes animaux d'un geste. */
+export interface LotAnimaux {
+  id: string;
+  nom: string;
+  boucles: string;
+}
+
 /**
  * Ce que l'utilisateur saisit d'une année de transhumance (la déclaration de montée et descente d'estive) : les dates (AAAA-MM-JJ), la zone
  * d'estive, et le gestionnaire de l'estive (l'entité collective) avec la commune de son siège.
@@ -218,6 +225,8 @@ export interface InfosExploitation {
   traites?: Record<string, ReglagesTraite>;
   /** La transhumance d'une année (« 2026 ») : de quoi remplir la déclaration de montée et descente d'estive. */
   estives?: Record<string, ReglagesEstive>;
+  /** Les lots d'animaux nommés : on les réutilise pour un traitement, une visite ou un contrôle, et on suit leur santé ensemble. */
+  lots?: LotAnimaux[];
   /** La répartition du lait choisie dans le plan d'économies : la part (en %) du lait de l'année de chaque fromage, par identifiant d'article ; le reste est vendu tel quel. Absent : la répartition réelle. */
   repartitionLait?: Record<string, number>;
   /** Le brocciu fait partie de la répartition (fabriqué avec le petit-lait des autres fromages) : coché ou non. Absent : coché quand il a été fabriqué. */

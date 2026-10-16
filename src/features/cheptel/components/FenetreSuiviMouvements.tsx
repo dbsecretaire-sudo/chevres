@@ -8,6 +8,7 @@ import { anneesDuSuivi } from '@/features/cheptel/services/suiviMouvements';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { exporterBordereauxPertePdf } from '@/features/export/bordereauPertePdf';
 import { exporterSuiviMouvementsPdf } from '@/features/export/suiviMouvementsPdf';
+import { exporterRecensementPdf } from '@/features/export/recensementPdf';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { styles } from '@/shared/styles/cheptel/ListeCheptel.styles';
@@ -85,6 +86,13 @@ export function FenetreSuiviMouvements({ visible, onClose }: { visible: boolean;
             disabled={encours || annees.length === 0}
           />
           <Text style={commonStyles.note}>{T.aideBordereaux}</Text>
+          <Button
+            variant="secondary"
+            label={T.recensement.bouton}
+            onPress={() => exporterRecensementPdf(choix === TOUTES ? currentYear() : Number(choix)).then(onClose).catch(() => undefined)}
+            disabled={encours || annees.length === 0}
+          />
+          <Text style={commonStyles.note}>{T.recensement.aide}</Text>
           <Button variant="secondary" label={T.estive.bouton} onPress={() => setEstiveOuverte(true)} />
           {sansPerte ? <Text style={commonStyles.mutedItalic}>{T.aucunePerte}</Text> : null}
           <Button variant="secondary" label={TEXTES.commun.general.annuler} onPress={onClose} />

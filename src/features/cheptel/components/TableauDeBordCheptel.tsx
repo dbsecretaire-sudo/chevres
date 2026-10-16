@@ -1,10 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { BarreHorizontale } from '@/shared/components/BarreHorizontale';
-import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import { suiviMouvements } from '@/features/cheptel/services/suiviMouvements';
@@ -16,7 +14,6 @@ import {
 } from '@/features/cheptel/services/tableauDeBord';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
-import { BlocSante } from '@/features/exploitation/components/BlocSante';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { colors } from '@/shared/theme/colors';
@@ -27,10 +24,10 @@ import { currentYear, todayISO } from '@/shared/utils/dates';
 const T = TEXTES.cheptel.tableauDeBord;
 
 /**
- * Le tableau de bord du cheptel : les effectifs, la pyramide des âges (femelles et mâles par classe d'âge), les mouvements de l'année
- * (naissances, achats, ventes, morts) et ce que la santé demande (délais d'attente, bilan sanitaire).
+ * Le tableau de bord du cheptel, sur l'accueil : la pyramide des âges (femelles et mâles par classe d'âge) et les mouvements de
+ * l'année (naissances, achats, ventes, morts), d'après le cheptel et les ventes de l'espèce courante.
  */
-export default function TableauDeBord() {
+export function TableauDeBordCheptel() {
   const { espece } = useEtablissement();
   const annee = currentYear();
   const [pyramide, setPyramide] = useState<ClasseDAge[]>([]);
@@ -38,11 +35,7 @@ export default function TableauDeBord() {
 
   useFocusEffect(
     useCallback(() => {
-      Promise.all([
-        listChevresVivantes(),
-        loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL),
-        listToutesVentes(),
-      ])
+      Promise.all([listChevresVivantes(), loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), listToutesVentes()])
         .then(([vivants, tous, ventes]) => {
           setPyramide(pyramideDesAges(vivants, todayISO()));
           const suivi = suiviMouvements(deEspeceCourante(tous), ventes, annee, {
@@ -52,34 +45,21 @@ export default function TableauDeBord() {
           setMouvements(mouvementsDeLAnnee(suivi));
         })
         .catch(() => undefined);
-      // L'espèce courante change ce qui est lu : l'écran se recharge avec elle.
+      // L'espèce courante change ce qui est lu : le tableau se recharge avec elle.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [espece, annee]),
   );
 
-  const femelles = pyramide.reduce((t, c) => t + c.femelles, 0);
-  const males = pyramide.reduce((t, c) => t + c.males, 0);
+  const total = pyramide.reduce((t, c) => t + c.femelles + c.males, 0);
+  // Rien à montrer sans animal ni mouvement (un établissement qui commence) : le tableau n'encombre pas l'accueil.
+  const mouvementsTotal = mouvements
+    ? mouvements.naissances + mouvements.achats + mouvements.ventes + mouvements.morts + mouvements.autresSorties
+    : 0;
+  if (total === 0 && mouvementsTotal === 0) return null;
   const plusGrande = Math.max(1, ...pyramide.map((c) => c.femelles + c.males));
 
   return (
-    <Screen>
-      <SelecteurEspece />
-      <Card style={commonStyles.gap8}>
-        <Text style={commonStyles.cardTitle}>{T.effectif}</Text>
-        <View style={commonStyles.rowSpaceBetween}>
-          <Text style={commonStyles.line}>{T.total}</Text>
-          <Text style={commonStyles.lineBold}>{femelles + males}</Text>
-        </View>
-        <View style={commonStyles.rowSpaceBetween}>
-          <Text style={commonStyles.line}>{T.femelles}</Text>
-          <Text style={commonStyles.lineBold}>{femelles}</Text>
-        </View>
-        <View style={commonStyles.rowSpaceBetween}>
-          <Text style={commonStyles.line}>{T.males}</Text>
-          <Text style={commonStyles.lineBold}>{males}</Text>
-        </View>
-      </Card>
-
+    <>
       <Card style={commonStyles.gap10}>
         <Text style={commonStyles.cardTitle}>{T.pyramide}</Text>
         {pyramide.map((c) => (
@@ -118,8 +98,6 @@ export default function TableauDeBord() {
           ))}
         </Card>
       ) : null}
-
-      <BlocSante />
-    </Screen>
+    </>
   );
 }

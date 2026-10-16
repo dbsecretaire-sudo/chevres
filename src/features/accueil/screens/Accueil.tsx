@@ -7,6 +7,7 @@ import { TEXTES } from '@/shared/textes';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { BlocSante } from '@/features/exploitation/components/BlocSante';
+import { TableauDeBordCheptel } from '@/features/cheptel/components/TableauDeBordCheptel';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -33,18 +34,23 @@ function AccueilElevage() {
         <SelecteurEspece />
       </LigneFiltres>
 
-      {/* Les informations de l'exploitation : juste sous l'année et l'espèce, une simple ligne. */}
+      {/* Ce qui demande qu'on s'en occupe, d'abord : les délais d'attente, le bilan sanitaire, les déclarations à faire. */}
+      <BlocSante />
+      <BlocRappels />
+
+      {/* Les chiffres de l'élevage, la pyramide des âges et les mouvements de l'année. */}
+      <TuilesAccueil stats={stats} annee={annee} />
+      <TableauDeBordCheptel />
+
+      {/* Sur ordinateur, les rubriques en grandes tuiles, pour entrer d'un clic. */}
+      {estBureau() ? <TuilesRubriques /> : null}
+
+      {/* Les informations de l'exploitation, une simple ligne. */}
       <ListRow
         title={TEXTES.commun.general.informationsDeLExploitation}
         trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
         onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION)}
       />
-
-      {/* Sur ordinateur, les rubriques en grandes tuiles ; sur téléphone, les chiffres de l'élevage. */}
-      {estBureau() ? <TuilesRubriques /> : <TuilesAccueil stats={stats} annee={annee} />}
-
-      <BlocSante />
-      <BlocRappels />
     </Screen>
   );
 }
