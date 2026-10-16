@@ -11,6 +11,7 @@ const sansRequete = (adresse: string): string => adresse.split('?')[0].replace(/
 const ECRANS_DU_MENU = new Set(
   [
     ROUTES.CHEPTEL_LISTE,
+    ROUTES.CHEPTEL_TRAITEMENTS,
     ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE),
     ROUTES.santeControles(FAMILLE_CONTROLE.ANIMAUX),
     ROUTES.SANTE_ALIMENTATION,

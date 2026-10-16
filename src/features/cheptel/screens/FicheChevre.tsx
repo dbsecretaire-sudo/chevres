@@ -25,6 +25,7 @@ import {
 import { ChevreSortieFab } from '@/features/cheptel/components/ficheChevre/ChevreSortieFab';
 import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import { STATUT_CHEVRE, VUE_FICHE_CHEVRE } from '@/shared/constants/cheptel';
+import { ChevreTraitements } from '@/features/cheptel/components/ChevreTraitements';
 import { ROUTES } from '@/shared/constants/routes';
 import { styles } from '@/shared/styles/cheptel/FicheChevre.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -123,6 +124,8 @@ export default function FicheChevre() {
           onOuvrirVisite={(v) => router.push(ROUTES.santeVisite(v.id))}
           onOuvrirControle={(c) => router.push(ROUTES.santeControleModifier(familleDuControle(c), c.id))}
         />
+
+        <ChevreTraitements chevre={chevre} />
 
         {fiche.descendance.length > 0 && (
           <ChevreDescendance

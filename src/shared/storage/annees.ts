@@ -6,6 +6,7 @@ export async function toutesLesAnneesConnues(): Promise<number[]> {
   const groups = await Promise.all([
     getYears(CATEGORIE_STOCKAGE.CHEPTEL),
     getYears(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE),
+    getYears(CATEGORIE_STOCKAGE.TRAITEMENTS),
     getYears(CATEGORIE_STOCKAGE.FACTURES),
     getYears(CATEGORIE_STOCKAGE.VENTES),
     getYears(CATEGORIE_STOCKAGE.CONTROLES),

@@ -2,6 +2,8 @@ import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { DateField } from '@/shared/components/DateField';
+import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, StatutChevre } from '@/features/cheptel/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -32,6 +34,11 @@ export function ChevreStatutDeclaration({
         {statutLabel(statut, chevre.sexe)}
       </Text>
       <DateField label={TEXTES.commun.general.date} value={date} onChange={onDateChange} />
+      {/* Envoyée à l'abattoir, vendue ou consommée : pas pendant un délai d'attente pour la viande. */}
+      {chevre.numeroBoucle &&
+      ([STATUT_CHEVRE.ABATTOIR, STATUT_CHEVRE.VENDUE, STATUT_CHEVRE.AUTOCONSOMMEE] as string[]).includes(statut) ? (
+        <AvertissementDelais type="viande" date={date} boucles={[chevre.numeroBoucle]} />
+      ) : null}
       <View style={commonStyles.row}>
         <Button
           style={commonStyles.flex1}

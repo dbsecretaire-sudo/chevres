@@ -26,6 +26,7 @@ import { colors } from '@/shared/theme/colors';
 import { estPetitLe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
 import { libelleAnimalVendu } from '@/features/comptabilite/utils/animauxVendus';
 import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
+import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import type { Chevre } from '@/features/cheptel/types';
 import { FormField } from '@/shared/components/FormField';
@@ -149,6 +150,8 @@ export function ChampsVenteLait({ e }: Props) {
   useTotalVerrouille(e, prixDuLitre, e.quantite);
   return (
     <>
+      {/* Des femelles traitées, dont le lait ne doit pas être livré : l'avertissement s'affiche tant que leur délai court. */}
+      <AvertissementDelais type="lait" date={e.date} />
       {/* Un réajustement n'a pas de litrage. */}
       {e.reajustement ? null : (
         <FormField
@@ -212,6 +215,7 @@ export function ChampsVenteFromage({ e }: Props) {
 
   return (
     <>
+      <AvertissementDelais type="lait" date={e.date} />
       <SelectFieldEditable
         label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}
         required
@@ -294,6 +298,7 @@ export function ChampsVenteFromage({ e }: Props) {
 export function ChampsVenteCabris({ e }: Props) {
   return (
     <>
+      <AvertissementDelais type="viande" date={e.date} petitsSeulement />
       <View style={commonStyles.row}>
         <View style={commonStyles.flex1}>
           <FormField
@@ -511,6 +516,14 @@ export function ChampsVenteViande({ e }: Props) {
               {animauxChoisis.length > 0 && e.avecFacture ? (
                 <ChampDateAbattoir dateVente={e.date} value={e.dateAbattoir} onChange={e.setDateAbattoir} />
               ) : null}
+              {/* Les animaux choisis en délai d'attente pour la viande le jour de la vente (ou de l'abattage). */}
+              {animauxChoisis.length > 0 ? (
+                <AvertissementDelais
+                  type="viande"
+                  date={e.dateAbattoir || e.date}
+                  boucles={animauxChoisis.map((a) => a.numeroBoucle).filter((b): b is string => !!b)}
+                />
+              ) : null}
               <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.animauxNote}</Text>
             </View>
           ) : (
@@ -686,6 +699,7 @@ export function ChampsVenteOeufs({ e }: Props) {
 export function ChampsVenteAnimal({ e }: Props) {
   return (
     <>
+      <AvertissementDelais type="viande" date={e.dateAbattoir || e.date} />
       <View style={commonStyles.row}>
         <View style={commonStyles.flex1}>
           <FormField

@@ -4,6 +4,8 @@ export const CATEGORIE_STOCKAGE = {
   VENTES: 'ventes',
   FACTURES: 'factures',
   VISITES_VETERINAIRE: 'visites_veterinaire',
+  /** Les traitements donnés aux animaux, avec leurs délais d'attente (lait, viande). */
+  TRAITEMENTS: 'traitements',
   CONTROLES: 'controles',
 } as const;
 

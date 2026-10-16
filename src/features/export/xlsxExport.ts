@@ -18,6 +18,7 @@ import {
   controleRow,
   factureRow,
   venteRow,
+  traitementRow,
   visiteRow,
 } from '@/features/export/services/lignesExport';
 import {
@@ -52,6 +53,7 @@ const ROW_BUILDERS: Record<
   [CATEGORIE_STOCKAGE.FACTURES]: (items, _indicatif, libelleStock) =>
     items.map((f) => factureRow(f, libelleStock)),
   [CATEGORIE_STOCKAGE.VISITES_VETERINAIRE]: (items, indicatif) => items.map((v) => visiteRow(v, indicatif)),
+  [CATEGORIE_STOCKAGE.TRAITEMENTS]: (items, indicatif) => items.map((t) => traitementRow(t, indicatif)),
   [CATEGORIE_STOCKAGE.CONTROLES]: (items, indicatif) => items.map((c) => controleRow(c, indicatif, true)),
 };
 

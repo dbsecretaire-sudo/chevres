@@ -78,6 +78,17 @@ export default function AccueilCheptel() {
           ))}
         </BlocLignes>
       </GroupeAccueil>
+      <GroupeAccueil titre={G.sante}>
+        <BlocLignes>
+          <ListRow
+            title={TEXTES.cheptel.traitements.titre}
+            subtitle={TEXTES.cheptel.traitements.aide}
+            icone="medkit"
+            actif={estActive(ROUTES.CHEPTEL_TRAITEMENTS)}
+            onPress={vers(ROUTES.CHEPTEL_TRAITEMENTS)}
+          />
+        </BlocLignes>
+      </GroupeAccueil>
       <GroupeAccueil titre={G.statistiques}>
         <BlocLignes>
           <ListRow

@@ -46,6 +46,19 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'rapportEssais',
     'numeroRapport',
   ],
+  [CATEGORIE_STOCKAGE.TRAITEMENTS]: [
+    'id',
+    'espece',
+    'date',
+    'dateFin',
+    'produit',
+    'motif',
+    'chevreNumeroBoucle',
+    'delaiLaitJours',
+    'delaiViandeJours',
+    'notes',
+    'fichiers',
+  ],
   [CATEGORIE_STOCKAGE.FACTURES]: [
     'id',
     'date',
@@ -153,6 +166,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
 
 export const CHAMPS_NOMBRE = new Set([
   'cout',
+  'delaiLaitJours',
+  'delaiViandeJours',
   'montant',
   'quantite',
   'prix',
@@ -217,5 +232,6 @@ export const CATEGORIES_STOCKAGE: ValeurDe<typeof CATEGORIE_STOCKAGE>[] = [
   CATEGORIE_STOCKAGE.VENTES,
   CATEGORIE_STOCKAGE.FACTURES,
   CATEGORIE_STOCKAGE.VISITES_VETERINAIRE,
+  CATEGORIE_STOCKAGE.TRAITEMENTS,
   CATEGORIE_STOCKAGE.CONTROLES,
 ];

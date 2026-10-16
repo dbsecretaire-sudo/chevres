@@ -1,6 +1,6 @@
 import type { Chevre } from '@/features/cheptel/types';
 import { lignesProductionDe } from '@/features/comptabilite/utils/lignesProduction';
-import type { Controle, FamilleControle, VisiteVeterinaire } from '@/features/exploitation/types';
+import type { Controle, FamilleControle, Traitement, VisiteVeterinaire } from '@/features/exploitation/types';
 import { FAMILLE_CONTROLE, PARAMETRES_LAIT, SURFACES_TERRAIN } from '@/shared/constants/controles';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import {
@@ -158,6 +158,22 @@ export function visiteRow(v: VisiteVeterinaire, indicatif?: IndicatifParEspece) 
     [TEXTES.export.colonnes.cout]: v.cout ?? '',
     [TEXTES.export.colonnes.rapportEssais]: v.rapportEssais ? TEXTES.export.colonnes.oui : '',
     [TEXTES.export.colonnes.numeroRapport]: v.numeroRapport ?? '',
+  };
+}
+
+export function traitementRow(t: Traitement, indicatif?: IndicatifParEspece) {
+  return {
+    ...(plusieursEspeces() ? { [TEXTES.export.colonnes.espece]: LABEL_ACTIVITE_COMPTABLE[especeDe(t)] } : {}),
+    [TEXTES.export.colonnes.date]: formatDateShortFR(t.date),
+    [TEXTES.export.colonnes.dateFin]: t.dateFin ? formatDateShortFR(t.dateFin) : '',
+    [TEXTES.export.colonnes.nBoucle]: t.chevreNumeroBoucle
+      ? avecIndicatif(t.chevreNumeroBoucle, indicatif?.(especeDe(t)))
+      : TEXTES.commun.general.troupeauEntier,
+    [TEXTES.export.colonnes.produit]: t.produit,
+    [TEXTES.export.colonnes.motif]: t.motif ?? '',
+    [TEXTES.export.colonnes.delaiLait]: t.delaiLaitJours ?? '',
+    [TEXTES.export.colonnes.delaiViande]: t.delaiViandeJours ?? '',
+    [TEXTES.export.colonnes.description]: t.notes ?? '',
   };
 }
 

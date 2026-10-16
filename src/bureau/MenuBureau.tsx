@@ -54,6 +54,7 @@ function definitionDesMenus(): DefinitionMenu[] {
         label: TEXTES.exploitation.controles.familles.animaux.titre,
         route: ROUTES.santeControles(FAMILLE_CONTROLE.ANIMAUX),
       },
+      { label: TEXTES.cheptel.traitements.titre, route: ROUTES.CHEPTEL_TRAITEMENTS },
       { label: TEXTES.commun.general.alimentation, route: ROUTES.SANTE_ALIMENTATION },
       { label: TEXTES.commun.general.bilanAnnuel, route: ROUTES.CHEPTEL_BILAN },
       { label: TEXTES.cheptel.reglages.titre, route: ROUTES.CHEPTEL_REGLAGES },

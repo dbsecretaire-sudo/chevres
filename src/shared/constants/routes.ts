@@ -26,6 +26,10 @@ export const ROUTES = {
   /** La liste des animaux vivants. */
   CHEPTEL_LISTE: '/cheptel/liste',
   CHEPTEL_BILAN: '/cheptel/bilan',
+  /** Les traitements donnés aux animaux et leurs délais d'attente. */
+  CHEPTEL_TRAITEMENTS: '/cheptel/traitements',
+  CHEPTEL_TRAITEMENT_NOUVEAU: '/cheptel/traitement',
+  traitement: (id: string) => `/cheptel/traitement?id=${id}` as const,
   /** Les réglages du cheptel : UGB, primes, effectif déclaré. */
   CHEPTEL_REGLAGES: '/cheptel/reglages',
   CHEPTEL_AJOUT_RAPIDE: '/cheptel/ajout-rapide',
