@@ -50,6 +50,8 @@ export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] 
   })),
   // Un groupement n'a pas de limite : une cotisation (autre), un achat groupé (alimentation, production…).
   { id: CATEGORIE_FOURNISSEUR.GROUPEMENT, nom: LABEL_CATEGORIE_FOURNISSEUR.groupement },
+  // Le groupement sanitaire (GDS) non plus : cotisations, analyses, achats de médicaments…
+  { id: CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE, nom: LABEL_CATEGORIE_FOURNISSEUR.groupement_sanitaire },
   // Un équarrisseur n'a pas de limite non plus : une facture d'équarrissage (autre), un forfait, une cotisation…
   { id: CATEGORIE_FOURNISSEUR.EQUARRISSAGE, nom: LABEL_CATEGORIE_FOURNISSEUR.equarrissage },
   // Un fournisseur qui ne remet pas de facture : aucune limite de dépense, mais ses dépenses se notent « non facturées ».

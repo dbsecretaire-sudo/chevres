@@ -43,6 +43,12 @@ export default function Naissances() {
             label={TEXTES.cheptel.naissances.carnetBouton}
             onPress={() => exporterCarnetMiseBasPdf().catch(() => undefined)}
           />
+          <Button
+            variant="secondary"
+            label={TEXTES.cheptel.naissances.carnetLivretBouton}
+            onPress={() => exporterCarnetMiseBasPdf('livret').catch(() => undefined)}
+          />
+          <Text style={commonStyles.note}>{TEXTES.cheptel.naissances.carnetLivretAide}</Text>
         </View>
       ) : null}
       <FlatList

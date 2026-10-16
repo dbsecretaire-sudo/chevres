@@ -20,6 +20,8 @@ export const CATEGORIE_FOURNISSEUR = {
   CHAMBRE_AGRICULTURE: 'chambre_agriculture',
   /** Un groupement (GDS, achats groupés…) : ses factures sont des cotisations ou des achats, de n'importe quelle dépense. */
   GROUPEMENT: 'groupement',
+  /** Le groupement sanitaire (GDS) : un partenaire d'office ; il figure dans les coordonnées utiles du carnet de mise bas. */
+  GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   /** Un équarrisseur (ATM…) : il s'affiche dans Groupements avec ses coordonnées, ses contrats, ses factures et ses promotions. */
   EQUARRISSAGE: 'equarrissage',
   ASSUREUR: 'assureur',
@@ -37,6 +39,7 @@ export const CATEGORIES_FOURNISSEUR_PROTEGEES: readonly string[] = [
   CATEGORIE_FOURNISSEUR.VETERINAIRE,
   CATEGORIE_FOURNISSEUR.ETAT,
   CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
+  CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE,
 ];
 
 /** Les dépenses d'office d'un vétérinaire. Les autres catégories n'en limitent aucune, sauf réglage contraire. */
