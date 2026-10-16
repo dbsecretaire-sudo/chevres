@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
+import { ChampTarif } from '@/features/commercial/components/ChampTarif';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
 import { formatMontant } from '@/shared/utils/dates';
 import { parseDecimal, parseMontant } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -14,6 +17,8 @@ interface Props {
   /** Le prix de vente actuel ; le champ n'est proposé que pour un article qui se vend (`avecPrix`). */
   prix?: number;
   avecPrix: boolean;
+  /** L'identifiant de l'article (fromage, viande) : ses prix selon la catégorie de contact se règlent sous son prix de base. */
+  cle?: string;
   /** Les litres de lait par fromage : le champ n'est proposé que pour un fromage (`avecLitres`). */
   litresParFromage?: number;
   avecLitres?: boolean;
@@ -36,6 +41,7 @@ export function ArticleStockModal({
   visible,
   titre,
   nom,
+  cle,
   prix,
   avecPrix,
   litresParFromage,
@@ -51,6 +57,15 @@ export function ArticleStockModal({
   const [prixSaisi, setPrixSaisi] = useState('');
   const [litresSaisis, setLitresSaisis] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
+  /** Les prix de l'article selon la catégorie de contact (particulier, professionnel…). */
+  const [tarifsLus, setTarifsLus] = useState<{ cle: string; prix: Record<string, number> } | null>(null);
+  const tarifs = cle && tarifsLus?.cle === cle ? tarifsLus.prix : null;
+
+  useEffect(() => {
+    if (visible && cle && avecPrix) {
+      lireArchiveCommercial().then((archive) => setTarifsLus({ cle, prix: archive.tarifs[cle] ?? {} }));
+    }
+  }, [visible, cle, avecPrix]);
 
   useEffect(() => {
     // Chaque ouverture repart de l'article modifié.
@@ -92,6 +107,24 @@ export function ArticleStockModal({
               keyboardType="decimal-pad"
               placeholder="0,00"
             />
+          ) : null}
+          {/* Les prix selon la catégorie de contact : un particulier et un professionnel ne paient pas le même prix. */}
+          {avecPrix && cle && tarifs ? (
+            <View style={commonStyles.gap6}>
+              <Text style={commonStyles.lineBold}>{T.tarifsParCategorie}</Text>
+              <Text style={commonStyles.note}>{T.tarifsAide}</Text>
+              {categoriesClient().map((c) => (
+                <ChampTarif
+                  key={c.id}
+                  article={cle}
+                  categorie={c.id}
+                  nomCategorie={c.nom}
+                  valeur={tarifs[c.id]}
+                  prixInventaire={prix}
+                  parKg={parKg}
+                />
+              ))}
+            </View>
           ) : null}
           {avecLitres ? (
             <FormField

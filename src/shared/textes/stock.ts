@@ -98,6 +98,8 @@ export const TEXTES_STOCK = {
     prix: 'Prix de vente (€)',
     prixKg: 'Prix de vente (€ le kg)',
     prixLitre: 'Prix de vente (€ le litre)',
+    tarifsParCategorie: 'Prix selon la catégorie de contact',
+    tarifsAide: 'Un particulier et un professionnel ne paient pas le même prix. Laissé vide : le prix de vente ci-dessus.',
     /** Les litres de lait qu'il faut pour un fromage : sous le prix de vente, dans la fenêtre du fromage. */
     litresFromage: 'Litres de lait par fromage',
     litresBrocciu: 'Litres de lait versés dans le lactosérum par fromage',

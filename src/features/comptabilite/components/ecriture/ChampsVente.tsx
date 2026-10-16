@@ -9,6 +9,8 @@ import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { prixDuTarif } from '@/features/commercial/services/commandes';
 import {
   cleJeunes,
   prixDesOeufs,
@@ -85,6 +87,22 @@ function useTotalVerrouille(
         : '',
     );
   }, [actif, prixLibre, prixUnitaire, quantite, setMontant]);
+}
+
+/**
+ * Le prix d'un article (fromage, viande) pour le contact de la vente : celui de sa catégorie dans la grille de tarifs (un particulier et
+ * un professionnel ne paient pas le même prix), à défaut le prix de l'inventaire.
+ */
+function usePrixSelonLeContact(e: EtatNouvelleEcriture): (cle: string | undefined, prixInventaire: number | undefined) => number | undefined {
+  const [tarifs, setTarifs] = useState<Record<string, Record<string, number>>>({});
+  useFocusEffect(
+    useCallback(() => {
+      lireArchiveCommercial().then((archive) => setTarifs(archive.tarifs));
+    }, []),
+  );
+  const categorie = e.clientSelectionne?.categorie;
+  return (cle, prixInventaire) =>
+    cle ? prixDuTarif(cle, categorie, tarifs, prixInventaire === undefined ? {} : { [cle]: prixInventaire }) : prixInventaire;
 }
 
 /** Le prix de vente défini à l'inventaire pour le lait (€ le litre) ou l'œuf (€ pièce, 0,50 € d'office). */
@@ -206,9 +224,11 @@ export function ChampsVenteFromage({ e }: Props) {
   const retour = useAdresseCourante();
   const ajouteChoisi = fromageAjouteChoisi(fromages, e.typeFromage, e.typeFromageLibre);
   /** Le prix de vente défini au stock pour le fromage choisi (le premier par défaut), s'il y en a un. */
-  const prixDuChoix = fromages.find(
+  const prixSelonLeContact = usePrixSelonLeContact(e);
+  const fromageChoisi = fromages.find(
     (f) => valeurFromage(f) === (ajouteChoisi ? valeurFromage(ajouteChoisi) : e.typeFromage),
-  )?.prix;
+  );
+  const prixDuChoix = prixSelonLeContact(fromageChoisi?.cle, fromageChoisi?.prix);
   // Le prix total est celui de l'inventaire × la quantité : recalculé dès que le fromage, son prix ou la quantité change.
   useTotalVerrouille(e, prixDuChoix, e.quantite);
   /** Un fromage ajouté se note comme « autre » avec son nom : c'est ainsi que la vente retrouve son stock. */
@@ -358,7 +378,8 @@ export function ChampsVenteViande({ e }: Props) {
   const viandes = toutesViandes.filter((v) => (roleDeLaViande(v.cle) !== undefined) === animalEntier);
   const niveaux = useNiveauxStock();
   const choisie = viandes.find((x) => x.libelle === e.precision);
-  const prixDuDetail = choisie?.prix;
+  const prixSelonLeContact = usePrixSelonLeContact(e);
+  const prixDuDetail = prixSelonLeContact(choisie?.cle, choisie?.prix);
   // Un morceau ou un produit : prix de l'inventaire × quantité (un animal se calcule au kilo, avec son poids).
   const auKiloLigne = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
   useTotalVerrouille(e, prixDuDetail, e.quantite, !auKiloLigne);
@@ -499,7 +520,7 @@ export function ChampsVenteViande({ e }: Props) {
           // Un animal se vend à l'unité d'abord : le nombre d'animaux vaut 1 d'office.
           if (role && !e.quantite.trim()) e.setQuantite('1');
           if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
-          if (role) totalAuKilo(e.poidsKg, nouvelle?.prix);
+          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix));
           if (role) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
           // Un autre détail : les animaux et les lots déjà choisis ne valent plus.

@@ -101,10 +101,13 @@ export const TEXTES_COMMERCIAL = {
   },
   tarifs: {
     titre: 'Grille de tarifs',
-    aide: 'Le prix d’un fromage peut changer selon la catégorie du contact (particulier, restaurateur…). Laissé vide, c’est le prix de l’inventaire qui s’applique. Ces prix servent aux commandes.',
+    aide: 'Le prix d’un fromage ou d’une viande peut changer selon la catégorie du contact (particulier, professionnel…). Laissé vide, c’est le prix de l’inventaire qui s’applique. Ces prix servent aux commandes et aux ventes : le prix se calcule avec la catégorie du contact choisi.',
     inventaire: (prix: string) => `Prix de l’inventaire : ${prix}`,
     sansPrixInventaire: 'Pas de prix à l’inventaire',
     prixPour: (categorie: string) => `Prix pour « ${categorie} » (€)`,
+    prixKgPour: (categorie: string) => `Prix pour « ${categorie} » (€ le kg)`,
+    viande: 'Viande et animaux (prix au kilo)',
+    aucuneViande: 'Aucune viande à l’inventaire.',
     marge: {
       titre: 'Marge au prix de l’inventaire',
       emballage: (montant: string) => `Emballages : ${montant}`,

@@ -758,6 +758,7 @@ export default function StockFromagerie() {
         visible={!!renomme}
         titre={produitFiniModifie ? (renomme?.libelle ?? '') : T.renommer.titre}
         nom={renomme?.libelle}
+        cle={renomme?.cle}
         prix={renomme?.prix}
         avecPrix={!!renomme && seVend(renomme.cle)}
         avecLitres={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}

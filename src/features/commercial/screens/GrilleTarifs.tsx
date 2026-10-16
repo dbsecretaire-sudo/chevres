@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { EmptyState } from '@/shared/components/EmptyState';
-import { FormField } from '@/shared/components/FormField';
 import { Screen } from '@/shared/components/Screen';
-import { definirTarif, lireArchiveCommercial } from '@/features/commercial/repository';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { ChampTarif } from '@/features/commercial/components/ChampTarif';
 import type { ArchiveCommercial } from '@/features/commercial/types';
 import { useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -16,45 +16,8 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/commercial/Commercial.styles';
 import { TEXTES } from '@/shared/textes';
 import { formatMontant } from '@/shared/utils/dates';
-import { parseDecimal } from '@/shared/utils/nombres';
 
 const T = TEXTES.commercial.tarifs;
-
-const texte = (valeur: number | undefined): string =>
-  valeur === undefined ? '' : String(valeur).replace('.', ',');
-
-/** Le prix d'un fromage pour une catégorie de client : un champ qui s'enregistre en le quittant (vide : le prix de l'inventaire). */
-function ChampTarif({
-  article,
-  categorie,
-  nomCategorie,
-  valeur,
-  prixInventaire,
-}: {
-  article: string;
-  categorie: string;
-  nomCategorie: string;
-  valeur: number | undefined;
-  prixInventaire: number | undefined;
-}) {
-  const [saisie, setSaisie] = useState(texte(valeur));
-  const enregistrer = () => {
-    const prix = saisie.trim() ? parseDecimal(saisie) : undefined;
-    if (prix !== undefined && !(prix >= 0)) return;
-    definirTarif(article, categorie, prix);
-  };
-  return (
-    <FormField
-      label={T.prixPour(nomCategorie)}
-      value={saisie}
-      onChangeText={setSaisie}
-      onBlur={enregistrer}
-      onEndEditing={enregistrer}
-      keyboardType="decimal-pad"
-      placeholder={texte(prixInventaire) || '0,00'}
-    />
-  );
-}
 
 /**
  * La grille de tarifs : pour chaque fromage de l'inventaire, son prix de base (celui de l'inventaire), le prix de chaque catégorie de
@@ -62,6 +25,7 @@ function ChampTarif({
  */
 export default function GrilleTarifs() {
   const [fromages, setFromages] = useState<ArticleAffiche[]>([]);
+  const [viandes, setViandes] = useState<ArticleAffiche[]>([]);
   const [prix, setPrix] = useState<Record<string, number>>({});
   const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
   const { plan } = useRentabilite();
@@ -71,6 +35,7 @@ export default function GrilleTarifs() {
     useCallback(() => {
       Promise.all([lireArchiveStock(), lireArchiveCommercial()]).then(([stock, archive]) => {
         setFromages(articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock));
+        setViandes(articlesDuGenre(GENRE_ARTICLE.VIANDE, stock));
         setPrix(stock.prix);
         setCommercial(archive);
       });
@@ -141,6 +106,31 @@ export default function GrilleTarifs() {
         })
       )}
       <Text style={commonStyles.note}>{T.marge.aide}</Text>
+      {/* La viande et les animaux : un prix au kilo par catégorie de contact, comme les fromages. */}
+      <Text style={commonStyles.subheading}>{T.viande}</Text>
+      {viandes.length === 0 || !commercial ? (
+        <EmptyState title={T.aucuneViande} />
+      ) : (
+        viandes.map((v) => (
+          <View key={v.cle} style={styles.carte}>
+            <Text style={commonStyles.subheading}>{v.libelle}</Text>
+            <Text style={commonStyles.muted}>
+              {prix[v.cle] !== undefined ? T.inventaire(formatMontant(prix[v.cle])) : T.sansPrixInventaire}
+            </Text>
+            {categories.map((c) => (
+              <ChampTarif
+                key={`${v.cle}|${c.id}|${commercial.tarifs[v.cle]?.[c.id] ?? ''}`}
+                article={v.cle}
+                categorie={c.id}
+                nomCategorie={c.nom}
+                valeur={commercial.tarifs[v.cle]?.[c.id]}
+                prixInventaire={prix[v.cle]}
+                parKg
+              />
+            ))}
+          </View>
+        ))
+      )}
     </Screen>
   );
 }
