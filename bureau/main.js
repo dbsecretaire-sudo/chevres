@@ -219,7 +219,10 @@ ipcMain.handle('pdf:imprimer', async (_e, { html, paysage, sansMarges, pied }) =
   try {
     await fenetre.loadFile(page);
     // Un formulaire à la taille exacte de la feuille (sansMarges) s'imprime sans marge autour de la page.
-    const options = paysage
+    // Un formulaire en paysage sans marge (le carnet sanitaire) est dessiné pour la page elle-même : taille du style, sans agrandissement.
+    const options = paysage && sansMarges
+      ? { preferCSSPageSize: true, margins: SANS_MARGES }
+      : paysage
       ? { landscape: true, scale: ECHELLE_PAYSAGE, margins: SANS_MARGES }
       : sansMarges
         ? { preferCSSPageSize: true, margins: SANS_MARGES }

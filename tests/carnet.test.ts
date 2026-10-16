@@ -3,7 +3,7 @@ import type { Facture } from '@/features/comptabilite/types';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
 import { lignesDuCarnet, pagesDuCarnet } from '@/features/exploitation/services/carnetSanitaire';
 import type { VisiteVeterinaire } from '@/features/exploitation/types';
-import { tailleDuTexte } from '@/features/export/carnetSanitairePdf';
+import { carnetHtml, tailleDuTexte } from '@/features/export/carnetSanitairePdf';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 
 const facture = (plus: Partial<Facture>): Facture =>
@@ -134,5 +134,14 @@ describe('carnet sanitaire', () => {
     expect(tailleDuTexte('court', 40, 4)).toBe('');
     expect(tailleDuTexte('y'.repeat(170), 40, 4)).toBe('t2');
     expect(tailleDuTexte('y'.repeat(400), 40, 4)).toBe('t3');
+  });
+
+  it('chaque page est une feuille entière en paysage, avec ses neuf lignes', () => {
+    const lignes = Array.from({ length: 20 }, (_, i) => ({ date: '2026-01-01', animal: String(i), ordonnance: '', debut: '', fin: '', medicament: '', voie: '', dose: '', rythme: '', remise: '', motif: '', intervenant: '' }));
+    const html = carnetHtml(lignes, 'Chèvres', '20213003');
+    expect(html).toContain('@page { size: A4 landscape; margin: 0; }');
+    expect(html.split('<section class="page">')).toHaveLength(4);
+    expect(html.split('<tr class="entree">')).toHaveLength(3 * 9 + 1);
+    for (const n of [1, 2, 3]) expect(html).toContain('PAGE N° ' + n);
   });
 });

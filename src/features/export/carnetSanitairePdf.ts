@@ -98,7 +98,7 @@ function pageHtml(
 </section>`;
 }
 
-/** Le carnet sanitaire en HTML : une page A4 en paysage par neuf interventions, sur le modèle du formulaire papier. */
+/** Le carnet sanitaire en HTML : une page A4 en paysage par neuf interventions, sur le modèle du formulaire papier, le contenu centré sur chaque page. */
 export function carnetHtml(lignes: LigneCarnet[], atelier: string, cheptel: string): string {
   const pages = pagesDuCarnet(lignes);
   return `<!DOCTYPE html>
@@ -107,28 +107,30 @@ export function carnetHtml(lignes: LigneCarnet[], atelier: string, cheptel: stri
 <meta charset="utf-8" />
 <style>
   * { box-sizing: border-box; }
-  body { font-family: Helvetica, Arial, sans-serif; color: ${TRAIT}; margin: 0; padding: 8mm 9mm; font-size: 9px; }
-  .page { page-break-after: always; page-break-inside: avoid; }
+  @page { size: A4 landscape; margin: 0; }
+  body { font-family: Helvetica, Arial, sans-serif; color: ${TRAIT}; margin: 0; font-size: 9pt; }
+  /* Chaque page est une feuille entière (297 × 210 mm, sans marge d'impression) dont le contenu est centré : mêmes marges partout. */
+  .page { width: 297mm; height: 210mm; padding: 8mm 14mm; display: flex; flex-direction: column; justify-content: center; overflow: hidden; page-break-after: always; page-break-inside: avoid; }
   .page:last-child { page-break-after: auto; }
-  .titre { background: ${VERT}; color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 3px; text-align: center; padding: 4px 0; }
-  .bandeau { background: ${GRIS_BANDEAU}; color: #fff; display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin: 3px 0 5px; font-weight: 800; font-size: 12px; }
-  .bandeau .case { background: #fff; color: ${TRAIT}; min-width: 90px; min-height: 18px; padding: 2px 6px; font-weight: 600; }
-  .bandeau .case.large { min-width: 150px; }
-  .bandeau .fr { color: ${TRAIT}; background: #fff; padding: 2px 4px; margin-right: -8px; font-weight: 700; }
-  .bandeau .page-numero { margin-left: auto; font-size: 14px; }
-  table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid ${TRAIT}; }
-  th, td { border: 1px solid ${TRAIT}; padding: 2px 4px; text-align: center; vertical-align: middle; overflow-wrap: break-word; }
-  th { font-weight: 700; font-size: 8.5px; }
-  th small { font-weight: 400; font-size: 7px; }
-  tbody td { font-size: 8.5px; }
-  tr.entree td { height: 6.6mm; border-top: 1.6px solid ${TRAIT}; }
-  tr.sous td { height: 6mm; }
-  td.med { text-align: center; font-size: 8px; }
+  .titre { background: ${VERT}; color: #fff; font-size: 26pt; font-weight: 900; letter-spacing: 3pt; text-align: center; padding: 4pt 0; }
+  .bandeau { background: ${GRIS_BANDEAU}; color: #fff; display: flex; align-items: center; gap: 8pt; padding: 4pt 8pt; margin: 3pt 0 5pt; font-weight: 800; font-size: 12pt; }
+  .bandeau .case { background: #fff; color: ${TRAIT}; min-width: 90pt; min-height: 18pt; padding: 2pt 6pt; font-weight: 600; }
+  .bandeau .case.large { min-width: 150pt; }
+  .bandeau .fr { color: ${TRAIT}; background: #fff; padding: 2pt 4pt; margin-right: -8pt; font-weight: 700; }
+  .bandeau .page-numero { margin-left: auto; font-size: 14pt; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2pt solid ${TRAIT}; }
+  th, td { border: 1pt solid ${TRAIT}; padding: 2pt 4pt; text-align: center; vertical-align: middle; overflow-wrap: break-word; }
+  th { font-weight: 700; font-size: 8.5pt; }
+  th small { font-weight: 400; font-size: 7pt; }
+  tbody td { font-size: 8.5pt; }
+  tr.entree td { height: 8mm; border-top: 1.6pt solid ${TRAIT}; }
+  tr.sous td { height: 7.2mm; }
+  td.med { text-align: center; font-size: 8pt; }
   /* Une ligne a toujours la même hauteur : ce qui dépasse d'une case est écrit plus petit, puis coupé. */
-  .cl { max-height: 12mm; overflow: hidden; line-height: 1.15; }
-  .cm { max-height: 6mm; overflow: hidden; line-height: 1.15; }
-  .cl.t2, .cm.t2 { font-size: 7px; }
-  .cl.t3, .cm.t3 { font-size: 6px; }
+  .cl { max-height: 14.5mm; overflow: hidden; line-height: 1.15; }
+  .cm { max-height: 7mm; overflow: hidden; line-height: 1.15; }
+  .cl.t2, .cm.t2 { font-size: 7pt; }
+  .cl.t3, .cm.t3 { font-size: 6pt; }
   td.g { background: ${GRIS_COLONNE}; }
   td.gauche { text-align: left; }
 </style>
@@ -154,6 +156,6 @@ export async function exporterCarnetSanitairePdf(): Promise<void> {
     carnetHtml(lignes, atelier.charAt(0).toUpperCase() + atelier.slice(1), cheptel),
     `${D.fichier}.${FORMAT_EXPORT.PDF}`,
     TEXTES.carnet.generer,
-    { paysage: true, sansTitre: true },
+    { paysage: true, sansMarges: true },
   );
 }

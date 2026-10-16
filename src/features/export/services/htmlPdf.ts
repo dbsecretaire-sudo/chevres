@@ -241,8 +241,6 @@ export interface OptionsImpression {
   paysage?: boolean;
   /** Un document à la taille exacte de la feuille (un formulaire) : aucune marge autour de la page. */
   sansMarges?: boolean;
-  /** Un formulaire dont la page est déjà pleine : le titre personnalisé de l'utilisateur n'est pas ajouté en tête (il ferait déborder la première page). */
-  sansTitre?: boolean;
 }
 
 /**
@@ -251,7 +249,8 @@ export interface OptionsImpression {
  * deuxième page. Comme sur l'ordinateur (voir bureau/print.ts), il s'agrandit d'un tiers (--k), sans marge.
  */
 const ECHELLE_PAGE_ANDROID = 1.33;
-const STYLE_PAGE_SANS_MARGES_ANDROID = `@page { size: A4; margin: 0 } :root { --k: ${ECHELLE_PAGE_ANDROID} }`;
+const stylePageSansMargesAndroid = (paysage: boolean | undefined) =>
+  `@page { size: A4${paysage ? ' landscape' : ''}; margin: 0 } :root { --k: ${ECHELLE_PAGE_ANDROID} }`;
 
 /** Génère le PDF depuis le HTML, le copie sous `nomFichier` et ouvre le menu de partage. */
 export async function ecrireEtPartagerPdf(
@@ -261,14 +260,14 @@ export async function ecrireEtPartagerPdf(
   options: OptionsImpression = {},
 ): Promise<void> {
   // Le titre personnalisé de l'utilisateur (Organisation › Export) s'imprime en tête des PDF (pas d'un formulaire à la taille exacte de la page : il la ferait déborder).
-  const titrePerso = options.sansMarges || options.sansTitre ? undefined : (await getSettings()).exploitation?.titrePdf?.trim();
+  const titrePerso = options.sansMarges ? undefined : (await getSettings()).exploitation?.titrePdf?.trim();
   const html = titrePerso
     ? source.replace('<body>', `<body>\n  <div class="titre-perso">${echapper(titrePerso)}</div>`)
     : source;
   const { uri } = await Print.printToFileAsync({
     html:
       options.sansMarges && Platform.OS === 'android'
-        ? html.replace('</head>', `<style>${STYLE_PAGE_SANS_MARGES_ANDROID}</style></head>`)
+        ? html.replace('</head>', `<style>${stylePageSansMargesAndroid(options.paysage)}</style></head>`)
         : html,
     base64: false,
     // Une page A4 : sans taille, l'impression suit le format du pays de l'appareil (Letter aux États-Unis).
