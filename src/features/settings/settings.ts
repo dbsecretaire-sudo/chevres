@@ -234,6 +234,8 @@ export interface InfosExploitation {
   declarationsChambre?: Record<string, PieceJointe | PieceJointe[]>;
   numeroExploitation?: string;
   siret?: string;
+  /** La date d'installation de l'exploitant actuel (AAAA-MM-JJ) : les listes de repères imprimées séparent les boucles d'avant et d'après. */
+  dateInstallation?: string;
   nomExploitant?: string;
   adresseExploitant?: string;
   numeroPacage?: string;

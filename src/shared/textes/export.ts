@@ -234,6 +234,9 @@ export const TEXTES_EXPORT = {
       enStock: 'EN STOCK',
       poses: 'POSÉS',
       achatLe: (date: string) => `Achat le ${date}`,
+      /** Le sous-titre d'une liste séparée à la date d'installation de l'exploitant actuel. */
+      avantInstallation: (date: string) => `Avant l’installation du ${date}`,
+      depuisInstallation: (date: string) => `Depuis l’installation du ${date}`,
       edition: (date: string) => `Edition du : ${date}`,
       nom: 'Nom',
       adresse: 'Adresse',

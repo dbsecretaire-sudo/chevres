@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, pagesDesReperes, type LigneListe, type ListeImprimee } from '@/features/export/bouclesPdf';
+import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, pagesDesReperes, separerSelonInstallation, type LigneListe, type ListeImprimee } from '@/features/export/bouclesPdf';
 import type { BoucleStock } from '@/features/stock/types';
 
 const boucle = (plus: Partial<BoucleStock>): BoucleStock => ({ id: 'b', article: 'boucle:boucles', numero: '200888', ...plus });
@@ -74,5 +74,21 @@ describe('liste des repères imprimée', () => {
     expect(html.match(/20213003/g)).toHaveLength(3);
     // Trois pages : chacune une ligne d'en-tête de tableau et trente lignes.
     expect(html.split('<tr>')).toHaveLength(3 * 31 + 1);
+  });
+
+  it('sépare les boucles d’avant et d’après l’installation, d’après la date de pose (à défaut d’achat)', () => {
+    const { avant, apres } = separerSelonInstallation(
+      [
+        boucle({ numero: '1', datePose: '2020-04-01' }),
+        boucle({ numero: '2', datePose: '2023-01-15' }),
+        boucle({ numero: '3', datePose: '2024-06-01' }),
+        boucle({ numero: '4', dateAchat: '2022-05-05' }),
+        boucle({ numero: '5' }),
+      ],
+      '2023-01-15',
+    );
+    expect(avant.map((b) => b.numero)).toEqual(['1', '4']);
+    // Le jour même de l'installation est d'après ; sans aucune date, une boucle en stock est d'après.
+    expect(apres.map((b) => b.numero)).toEqual(['2', '3', '5']);
   });
 });

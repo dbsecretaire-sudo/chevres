@@ -75,6 +75,23 @@ export function ligneDeLaListe(
   };
 }
 
+/**
+ * Sépare les boucles d'avant et d'après la date d'installation de l'exploitant actuel : une boucle est d'avant quand sa date de pose
+ * (à défaut, d'achat) précède cette date ; sans date, elle est d'après (une boucle en stock est à l'exploitant actuel).
+ */
+export function separerSelonInstallation(
+  boucles: BoucleStock[],
+  installation: string,
+): { avant: BoucleStock[]; apres: BoucleStock[] } {
+  const avant: BoucleStock[] = [];
+  const apres: BoucleStock[] = [];
+  for (const b of boucles) {
+    const date = b.datePose ?? b.dateAchat;
+    (date && date < installation ? avant : apres).push(b);
+  }
+  return { avant, apres };
+}
+
 const titreDeLEtat = (etat: string): { debut: string; fin: string } => ({
   debut: P.titreListe,
   fin: etat === ETAT_BOUCLE.NON_POSEE ? P.enStock : etat === ETAT_BOUCLE.POSEE ? P.poses : '',
@@ -193,19 +210,28 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
       .filter(Boolean),
     cheptel: identificationCheptel(infos, espece).numeroCheptel?.trim() ?? '',
   };
-  const imprimees: ListeImprimee[] = listes.map((liste) => ({
-    titre: titreDeLEtat(liste.etat),
-    sorte: libelleDeLaSorte(liste.article),
-    filtre: T.etat[liste.etat],
-    lignes: liste.lignes.map((b) =>
-      ligneDeLaListe(
-        b,
-        b.chevreId ? liste.animaux.get(b.chevreId) : undefined,
-        b.chevreId && liste.morts.has(b.chevreId) ? (liste.sorties.get(b.chevreId) ?? { statut: '' }) : undefined,
-        indicatif,
-      ),
-    ),
-  }));
+  const installation = infos?.dateInstallation;
+  const ligneDe = (liste: ListeBoucles, b: BoucleStock) =>
+    ligneDeLaListe(
+      b,
+      b.chevreId ? liste.animaux.get(b.chevreId) : undefined,
+      b.chevreId && liste.morts.has(b.chevreId) ? (liste.sorties.get(b.chevreId) ?? { statut: '' }) : undefined,
+      indicatif,
+    );
+  const imprimees: ListeImprimee[] = listes.flatMap((liste) => {
+    const base = { titre: titreDeLEtat(liste.etat), sorte: libelleDeLaSorte(liste.article) };
+    const filtre = T.etat[liste.etat];
+    if (!installation) return [{ ...base, filtre, lignes: liste.lignes.map((b) => ligneDe(liste, b)) }];
+    // Les boucles d'avant et d'après l'installation sont sur des pages différentes (une liste sans boucle d'un côté n'a pas de page).
+    const { avant, apres } = separerSelonInstallation(liste.lignes, installation);
+    const date = formatDateShortFR(installation);
+    return [
+      ...(avant.length > 0 ? [{ ...base, filtre: `${filtre} · ${P.avantInstallation(date)}`, lignes: avant.map((b) => ligneDe(liste, b)) }] : []),
+      ...(apres.length > 0 || avant.length === 0
+        ? [{ ...base, filtre: `${filtre} · ${P.depuisInstallation(date)}`, lignes: apres.map((b) => ligneDe(liste, b)) }]
+        : []),
+    ];
+  });
   await ecrireEtPartagerPdf(
     bouclesHtml(imprimees, identite, formatDateShortFR(todayISO())),
     `${NOM_FICHIER_EXPORT_BOUCLES}.${FORMAT_EXPORT.PDF}`,
