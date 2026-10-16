@@ -252,6 +252,15 @@ const ECHELLE_PAGE_ANDROID = 1.33;
 const stylePageSansMargesAndroid = (paysage: boolean | undefined) =>
   `@page { size: A4${paysage ? ' landscape' : ''}; margin: 0 } :root { --k: ${ECHELLE_PAGE_ANDROID} }`;
 
+/** Écrit un PDF déjà fabriqué (en base64, par exemple un formulaire officiel rempli) sous `nomFichier` et ouvre le menu de partage. */
+export async function ecrirePdfBase64EtPartager(base64: string, nomFichier: string, titre: string): Promise<void> {
+  const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
+  await FileSystem.writeAsStringAsync(destination, base64, { encoding: FileSystem.EncodingType.Base64 });
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(destination, { mimeType: MIME_PDF, dialogTitle: titre, UTI: UTI_PDF });
+  }
+}
+
 /** Génère le PDF depuis le HTML, le copie sous `nomFichier` et ouvre le menu de partage. */
 export async function ecrireEtPartagerPdf(
   source: string,

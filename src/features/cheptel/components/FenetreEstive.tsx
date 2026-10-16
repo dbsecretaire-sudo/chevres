@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text } from 'react-native';
 import { Button } from '@/shared/components/Button';
+import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { effectifALaMontee } from '@/features/cheptel/services/estive';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
-import { exporterDeclarationEstivePdf } from '@/features/export/declarationEstivePdf';
+import { estLeGestionnaire, exporterDeclarationEstivePdf } from '@/features/export/declarationEstivePdf';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { ReglagesEstive } from '@/features/settings/settings';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -14,7 +15,7 @@ import { loadAllYears } from '@/shared/storage/localStore';
 import { styles } from '@/shared/styles/cheptel/ListeCheptel.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { formatDateFR } from '@/shared/utils/dates';
+import { formatDateFR, todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.cheptel.suiviMouvements;
 const E = T.estive;
@@ -37,6 +38,7 @@ export function FenetreEstive({
 }) {
   const { settings, patchSettings } = useAppSettings();
   const infos = settings.exploitation;
+  const nomExploitant = infos?.nomExploitant ?? '';
   const [valeurs, setValeurs] = useState<ReglagesEstive>({});
   const [effectif, setEffectif] = useState<number | undefined>();
   const [encours, setEncours] = useState(false);
@@ -51,12 +53,9 @@ export function FenetreEstive({
 
   // L'effectif au jour de la montée suit la date choisie.
   useEffect(() => {
-    if (!visible || !valeurs.dateMontee) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEffectif(undefined);
-      return;
-    }
-    const date = valeurs.dateMontee;
+    if (!visible) return;
+    // Sans date de montée, l'effectif est celui d'aujourd'hui.
+    const date = valeurs.dateMontee || todayISO();
     let actuel = true;
     Promise.all([loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), listToutesVentes()]).then(([tous, ventes]) => {
       if (!actuel) return;
@@ -108,12 +107,11 @@ export function FenetreEstive({
               onChange={(dateDescente) => maj({ dateDescente })}
             />
             <Text style={commonStyles.note}>{E.aideDates}</Text>
-            {valeurs.dateMontee ? (
-              effectif === undefined ? null : (
-                <Text style={commonStyles.lineBold}>{E.effectif(effectif, formatDateFR(valeurs.dateMontee))}</Text>
-              )
-            ) : (
-              <Text style={commonStyles.mutedItalic}>{E.effectifInconnu}</Text>
+            {effectif === undefined ? null : (
+              <Text style={commonStyles.lineBold}>
+                {E.effectif(effectif, formatDateFR(valeurs.dateMontee || todayISO()))}
+                {valeurs.dateMontee ? '' : ` ${E.effectifAujourdhui}`}
+              </Text>
             )}
             <FormField
               label={E.zone}
@@ -121,6 +119,18 @@ export function FenetreEstive({
               onChangeText={(zone) => maj({ zone })}
               placeholder={E.zoneExemple}
             />
+            <Checkbox
+              label={E.moiGestionnaire}
+              value={
+                estLeGestionnaire({
+                  moiGestionnaire: valeurs.moiGestionnaire,
+                  gestionnaire: valeurs.gestionnaire,
+                  identite: { numeroPacage: '', siret: '', numeroExploitation: '', nom: nomExploitant },
+                })
+              }
+              onChange={(moiGestionnaire) => maj({ moiGestionnaire })}
+            />
+            <Text style={commonStyles.note}>{E.aideMoiGestionnaire}</Text>
             <FormField
               label={E.gestionnaire}
               value={valeurs.gestionnaire ?? ''}

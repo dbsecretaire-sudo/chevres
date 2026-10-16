@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { codePostalEtCommune, effectifALaMontee } from '@/features/cheptel/services/estive';
 import type { Chevre } from '@/features/cheptel/types';
-import { declarationEstiveHtml, type DonneesEstive } from '@/features/export/declarationEstivePdf';
+import { PDFDocument } from 'pdf-lib';
+import {
+  declarationEstiveHtml,
+  entiteCollective,
+  estLeGestionnaire,
+  remplirDeclarationEstive,
+  separerNomPrenom,
+  type DonneesEstive,
+} from '@/features/export/declarationEstivePdf';
 
 const animal = (id: string, plus: Partial<Chevre>): Chevre =>
   ({ id, sexe: 'F', statut: 'vivante', dateNaissance: '2020-01-01', numeroBoucle: `1000${id}`, ...plus }) as unknown as Chevre;
@@ -66,7 +74,7 @@ describe('déclaration de montée et descente d’estive', () => {
   const html = declarationEstiveHtml(donnees);
 
   it('remplit la ligne de l’exploitation et le cadre du gestionnaire', () => {
-    for (const texte of ['Anne Martin', 'Corte', 'haute montagne', 'GAEC des Crêtes', 'Vivario', '>87<']) {
+    for (const texte of ['>Anne<', '>Martin<', 'Corte', 'haute montagne', 'GAEC des Crêtes', 'Vivario', '>87<']) {
       expect(html).toContain(texte);
     }
     expect(html).toContain('campagne 2026');
@@ -92,5 +100,52 @@ describe('déclaration de montée et descente d’estive', () => {
     expect(autre).not.toContain('>87<');
     expect(autre).not.toContain('16 novembre');
     expect(autre).toContain('date limite');
+  });
+});
+
+describe('formulaire officiel de la campagne 2026', () => {
+  const donnees: DonneesEstive = {
+    annee: 2026,
+    identite: { numeroPacage: '02B153928', siret: '12345678900011', numeroExploitation: 'FR20213003', nom: 'Riolacci Joseph' },
+    codePostal: '20272',
+    commune: 'Pianello',
+    effectifCaprins: 87,
+    dateMontee: '2026-06-15',
+    zone: 'haute montagne, Ibéri',
+    gestionnaire: 'Riolacci Joseph',
+  };
+
+  it('le nom complet « Nom Prénom » se sépare, un mot seul reste le nom', () => {
+    expect(separerNomPrenom('Riolacci Joseph')).toEqual({ nom: 'Riolacci', prenom: 'Joseph' });
+    expect(separerNomPrenom('Orsini Jean Pierre')).toEqual({ nom: 'Orsini', prenom: 'Jean Pierre' });
+    expect(separerNomPrenom('GAEC')).toEqual({ nom: 'GAEC', prenom: '' });
+  });
+
+  it('le gestionnaire est l’exploitant quand le nom est le même (dans un sens ou l’autre) ou quand c’est coché', () => {
+    expect(estLeGestionnaire(donnees)).toBe(true);
+    expect(estLeGestionnaire({ ...donnees, gestionnaire: 'Joseph Riolacci' })).toBe(true);
+    expect(estLeGestionnaire({ ...donnees, gestionnaire: 'Autre Personne' })).toBe(false);
+    expect(estLeGestionnaire({ ...donnees, gestionnaire: 'Autre Personne', moiGestionnaire: true })).toBe(true);
+    expect(estLeGestionnaire({ ...donnees, moiGestionnaire: false })).toBe(false);
+  });
+
+  it('le cadre de l’entité reprend les numéros de l’exploitant quand il est le gestionnaire', () => {
+    expect(entiteCollective(donnees)).toEqual({
+      numeroPacage: '02B153928',
+      siret: '12345678900011',
+      commune: 'Pianello',
+      gestionnaire: 'Riolacci Joseph',
+    });
+    const autre = entiteCollective({ ...donnees, gestionnaire: 'GAEC des Crêtes', communeGestionnaire: 'Vivario' });
+    expect(autre).toEqual({ numeroPacage: '', siret: '', commune: 'Vivario', gestionnaire: 'GAEC des Crêtes' });
+  });
+
+  it('remplit le formulaire officiel : une seule page, de la taille du modèle (A3 paysage)', async () => {
+    const base64 = await remplirDeclarationEstive(donnees);
+    const pdf = await PDFDocument.load(base64);
+    expect(pdf.getPageCount()).toBe(1);
+    const { width, height } = pdf.getPage(0).getSize();
+    expect(Math.round(width)).toBe(1191);
+    expect(Math.round(height)).toBe(842);
   });
 });

@@ -440,7 +440,10 @@ export const TEXTES_CHEPTEL = {
       communeGestionnaire: 'Commune du siège de l’entité collective',
       effectif: (nombre: number, date: string) =>
         `${nombre} caprin(s) de plus d’un an ou chèvre(s) ayant mis bas au ${date}.`,
-      effectifInconnu: 'Choisissez la date de montée : l’effectif est compté à ce jour-là.',
+      effectifAujourdhui: '(sans date de montée : le cheptel d’aujourd’hui)',
+      moiGestionnaire: 'Je suis moi-même le gestionnaire de l’estive',
+      aideMoiGestionnaire:
+        'Coché, vos numéros (Pacage, SIRET) et la commune de votre exploitation remplissent le cadre de l’entité collective.',
       generer: 'Générer la déclaration (PDF)',
       titre: 'Déclaration d’estive',
       direction: ['Direction départementale des territoires', 'Direction départementale des territoires et de la mer'],

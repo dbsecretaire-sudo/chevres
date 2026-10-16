@@ -124,6 +124,8 @@ export interface ReglagesEstive {
   zone?: string;
   gestionnaire?: string;
   communeGestionnaire?: string;
+  /** Vrai : l'utilisateur est lui-même le gestionnaire de l'estive (ses numéros remplissent le cadre de l'entité collective). */
+  moiGestionnaire?: boolean;
 }
 
 /** Ce que l'utilisateur saisit d'une année de traite : les dates de début et de fin, et le nombre d'animaux à traire. */
