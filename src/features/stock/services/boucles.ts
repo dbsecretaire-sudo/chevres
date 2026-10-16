@@ -94,6 +94,20 @@ function comparerNumeros(a: string, b: string): number {
   return x.tete === y.tete ? Number(x.chiffres) - Number(y.chiffres) : x.tete < y.tete ? -1 : 1;
 }
 
+/**
+ * L'ordre de la liste des repères imprimée : les lots se suivent dans l'ordre où ils ont été achetés, puis les numéros se suivent dans
+ * chaque lot. Les numéros ne suffisent pas à ranger les boucles : leur premier chiffre est celui de l'année et revient tous les dix
+ * ans (70039 date de 2017, 20040 de 2022). Une boucle sans date d'achat prend sa date de pose ; sans aucune date, elle est la dernière.
+ */
+export function trierParLotAchat(boucles: BoucleStock[]): BoucleStock[] {
+  const dateDe = (b: BoucleStock) => b.dateAchat ?? b.datePose ?? '';
+  return [...boucles].sort((a, b) => {
+    const [da, db] = [dateDe(a), dateDe(b)];
+    if (!da !== !db) return da ? -1 : 1;
+    return da.localeCompare(db) || comparerNumeros(a.numero, b.numero);
+  });
+}
+
 /** Les boucles d'un achat, d'après sa facture : celles de l'ancien enregistrement gardent leur pose. */
 export function bouclesApresAchat(
   boucles: BoucleStock[],

@@ -11,6 +11,7 @@ import {
   numeroDejaEnStock,
   plageDeBoucles,
   texteDeLaSortie,
+  trierParLotAchat,
 } from '@/features/stock/services/boucles';
 import type { ArchiveStock, BoucleStock } from '@/features/stock/types';
 import { ARTICLE_BOUCLE, GENRE_ARTICLE } from '@/shared/constants/stock';
@@ -186,5 +187,29 @@ describe('boucles de remplacement (rouges, rebouclage)', () => {
   it('rien en stock : seulement les poses ; un niveau négatif n’ajoute aucune ligne', () => {
     expect(lignesDeRemplacement(ROUGES, [], [])).toEqual([]);
     expect(lignesDeRemplacement(ROUGES, [], [mouvement('a', '2025-01-01', 1), mouvement('b', '2025-01-02', -3)])).toEqual([]);
+  });
+});
+
+describe('ordre de la liste des repères imprimée', () => {
+  const b = (numero: string, dateAchat?: string, datePose?: string) => boucle(numero, { dateAchat, datePose });
+
+  it('range les lots dans l’ordre d’achat, pas dans celui des numéros qui reviennent tous les dix ans', () => {
+    const ordre = trierParLotAchat([
+      b('220040', '2022-03-01'),
+      b('270039', '2017-02-01'),
+      b('230001', '2023-03-01'),
+      b('250034', '2015-02-01'),
+      b('220020', '2022-03-01'),
+    ]).map((x) => x.numero);
+    expect(ordre).toEqual(['250034', '270039', '220020', '220040', '230001']);
+  });
+
+  it('une boucle sans date d’achat prend sa date de pose ; sans aucune date, elle est la dernière', () => {
+    const ordre = trierParLotAchat([b('9'), b('5', undefined, '2016-04-01'), b('7', '2015-01-01')]).map((x) => x.numero);
+    expect(ordre).toEqual(['7', '5', '9']);
+  });
+
+  it('les numéros d’un même lot se suivent dans l’ordre (2 avant 10)', () => {
+    expect(trierParLotAchat([b('10', '2022-03-01'), b('2', '2022-03-01')]).map((x) => x.numero)).toEqual(['2', '10']);
   });
 });

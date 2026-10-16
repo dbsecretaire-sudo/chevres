@@ -8,6 +8,7 @@ import {
   nePasPoser,
   texteDeLaRemarque,
   texteDeLaSortie,
+  trierParLotAchat,
 } from '@/features/stock/services/boucles';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import type { BoucleStock } from '@/features/stock/types';
@@ -219,11 +220,13 @@ export async function exporterBouclesPdf(listes: ListeBoucles[]): Promise<void> 
       indicatif,
     );
   const imprimees: ListeImprimee[] = listes.flatMap((liste) => {
+    // Les lots dans l'ordre d'achat (les boucles de remplacement gardent leur ordre : les poses, puis celles en stock).
+    const boucles = estBoucleDeRemplacement(liste.article) ? liste.lignes : trierParLotAchat(liste.lignes);
     const base = { titre: titreDeLEtat(liste.etat), sorte: libelleDeLaSorte(liste.article) };
     const filtre = T.etat[liste.etat];
-    if (!installation) return [{ ...base, filtre, lignes: liste.lignes.map((b) => ligneDe(liste, b)) }];
+    if (!installation) return [{ ...base, filtre, lignes: boucles.map((b) => ligneDe(liste, b)) }];
     // Les boucles d'avant et d'après l'installation sont sur des pages différentes (une liste sans boucle d'un côté n'a pas de page).
-    const { avant, apres } = separerSelonInstallation(liste.lignes, installation);
+    const { avant, apres } = separerSelonInstallation(boucles, installation);
     const date = formatDateShortFR(installation);
     return [
       ...(avant.length > 0 ? [{ ...base, filtre: `${filtre} · ${P.avantInstallation(date)}`, lignes: avant.map((b) => ligneDe(liste, b)) }] : []),
