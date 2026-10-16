@@ -438,7 +438,11 @@ export function avecRemarque(
   };
 }
 
-/** Enregistre la remarque sur la plage de boucles (voir `avecRemarque`) ; rend le nombre de boucles touchées. */
+/** La remarque d'une boucle telle qu'on la lit (les deux premiers choix fixes, enregistrés sous un code, s'écrivent en clair). */
+export const texteDeLaRemarque = (remarque: string): string =>
+  TEXTES.stock.boucles.remarqueAncienne[remarque] ?? remarque;
+
+/** Enregistre la remarque (libre ; vide : retirée) sur la plage de boucles (voir `avecRemarque`) ; rend le nombre de boucles touchées. */
 export function marquerBoucles(
   article: string,
   de: string,
@@ -447,7 +451,7 @@ export function marquerBoucles(
 ): Promise<number> {
   const suite = file.then(async () => {
     const archive = await lireArchiveStock();
-    const resultat = avecRemarque(archive.boucles ?? [], article, de.trim(), a.trim(), remarque);
+    const resultat = avecRemarque(archive.boucles ?? [], article, de.trim(), a.trim(), remarque?.trim() || undefined);
     if (resultat.nombre > 0) await remplacerArchiveStock({ ...archive, boucles: resultat.boucles });
     return resultat.nombre;
   });

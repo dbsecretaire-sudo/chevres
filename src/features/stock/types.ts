@@ -1,4 +1,4 @@
-import type { GENRE_ARTICLE, ORIGINE_MOUVEMENT, REMARQUE_BOUCLE } from '@/shared/constants/stock';
+import type { GENRE_ARTICLE, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 export type GenreArticle = ValeurDe<typeof GENRE_ARTICLE>;
@@ -93,8 +93,8 @@ export interface BoucleStock {
   /** Posée : l'animal qui la porte, et la date de pose (celle du bouclage de l'animal, quand elle est renseignée). */
   chevreId?: string;
   datePose?: string;
-  /** Une exception notée à la main : commandée en trop, ou jamais posée. */
-  remarque?: ValeurDe<typeof REMARQUE_BOUCLE>;
+  /** Une exception notée à la main, en texte libre (commandée en trop, jamais posée…). */
+  remarque?: string;
 }
 
 /**

@@ -4,7 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
-import { estArticleRebouclage, estBoucleDeRemplacement } from '@/features/stock/services/boucles';
+import {
+  estArticleRebouclage,
+  estBoucleDeRemplacement,
+  texteDeLaRemarque,
+} from '@/features/stock/services/boucles';
 import { ETAT_BOUCLE, TRI_BOUCLE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
@@ -116,7 +120,7 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
             <View key={b.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
               <View style={styles.colonneNumero}>
                 <Text style={styles.texteLigne}>{b.numero}</Text>
-                {b.remarque ? <Text style={styles.remarqueBoucle}>{T.remarque[b.remarque]}</Text> : null}
+                {b.remarque ? <Text style={styles.remarqueBoucle}>{texteDeLaRemarque(b.remarque)}</Text> : null}
               </View>
               <Text style={[styles.datePose, styles.colonneDate]}>
                 {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}

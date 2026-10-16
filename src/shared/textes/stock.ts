@@ -151,14 +151,17 @@ export const TEXTES_STOCK = {
     aucuneBoucle: 'Aucune boucle.',
     /** Les titres des colonnes : les dates sur deux lignes, pour tenir dans la largeur. */
     colonnes: { numero: 'N°', pose: 'Date de\npose', achat: 'Date d’\nachat', remarque: 'Remarque' },
-    /** Les remarques notées sur une boucle (une exception), et leur réglage par plage de numéros. */
-    remarque: { en_trop: 'Commandée en trop', jamais_posee: 'Jamais posée', aucune: 'Aucune' },
+    /** Les premières remarques d'une boucle étaient deux choix fixes, enregistrés sous ces codes : elles s'affichent encore en clair. */
+    remarqueAncienne: { en_trop: 'Commandée en trop', jamais_posee: 'Jamais posée' } as Record<string, string>,
+    /** Le réglage, par plage de numéros, d'une remarque libre sur des boucles de l'inventaire (une exception). */
     marquer: {
       bouton: 'Marquer des boucles',
-      aide: 'Note une exception sur une plage de boucles de l’inventaire : commandées en trop, ou jamais posées. La colonne « Remarque » n’apparaît dans les listes que si une boucle en a une.',
+      aide: 'Note une remarque libre sur une plage de boucles de l’inventaire (commandées en trop, jamais posées…). Elle s’affiche sous le numéro, dans les listes et à l’impression.',
       titre: 'Marquer des boucles',
       sorte: 'Sorte de boucles',
       remarque: 'Remarque',
+      remarqueAide: 'Texte libre. Laissez vide pour retirer la remarque de ces boucles.',
+      remarquePlaceholder: 'Ex. : commandées en trop, jamais posées…',
       du: 'Du n°',
       au: 'Au n°',
       valider: 'Marquer',

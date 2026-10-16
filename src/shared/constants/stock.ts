@@ -126,12 +126,6 @@ export const TRI_BOUCLE = {
   ACHAT: 'achat',
 } as const;
 
-/** Les remarques qu'on peut noter sur une boucle de l'inventaire : une exception, réglée par plage de numéros dans les réglages. */
-export const REMARQUE_BOUCLE = {
-  EN_TROP: 'en_trop',
-  JAMAIS_POSEE: 'jamais_posee',
-} as const;
-
 /** Le nombre de boucles le plus grand qu'un seul achat peut contenir (une plage de numéros). */
 export const BOUCLES_MAX_PAR_ACHAT = 5000;
 

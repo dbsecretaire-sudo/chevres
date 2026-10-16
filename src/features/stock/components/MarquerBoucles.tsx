@@ -4,8 +4,7 @@ import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { libelleDeLaSorte, marquerBoucles } from '@/features/stock/services/boucles';
-import { ARTICLE_BOUCLE, GENRE_ARTICLE, REMARQUE_BOUCLE } from '@/shared/constants/stock';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { ARTICLE_BOUCLE, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -18,17 +17,15 @@ const SORTES = [
   `${GENRE_ARTICLE.BOUCLE}:${ARTICLE_BOUCLE.TIPTAG}`,
 ];
 
-const AUCUNE = 'aucune';
-type ChoixRemarque = ValeurDe<typeof REMARQUE_BOUCLE> | typeof AUCUNE;
-
 /**
- * Le réglage, hors de l'usage courant, des remarques d'une plage de boucles de l'inventaire (commandées en trop, jamais posées) : un
- * bouton qui ouvre une fenêtre où l'on choisit la sorte, la remarque et les numéros de la première et de la dernière boucle.
+ * Le réglage, hors de l'usage courant, de la remarque libre d'une plage de boucles de l'inventaire (commandées en trop, jamais posées…) :
+ * un bouton qui ouvre une fenêtre où l'on choisit la sorte, écrit la remarque et donne les numéros de la première et de la dernière
+ * boucle. Une remarque vide retire celle des boucles de la plage.
  */
 export function MarquerBoucles() {
   const [ouvert, setOuvert] = useState(false);
   const [sorte, setSorte] = useState(SORTES[0]);
-  const [remarque, setRemarque] = useState<ChoixRemarque>(REMARQUE_BOUCLE.EN_TROP);
+  const [remarque, setRemarque] = useState('');
   const [de, setDe] = useState('');
   const [a, setA] = useState('');
   const [message, setMessage] = useState<{ texte: string; erreur: boolean } | null>(null);
@@ -38,7 +35,7 @@ export function MarquerBoucles() {
     if (!de.trim() || !a.trim()) return setMessage({ texte: M.numeroRequis, erreur: true });
     setEnCours(true);
     try {
-      const nombre = await marquerBoucles(sorte, de, a, remarque === AUCUNE ? undefined : remarque);
+      const nombre = await marquerBoucles(sorte, de, a, remarque);
       setMessage(nombre > 0 ? { texte: M.fait(nombre), erreur: false } : { texte: M.aucuneTrouvee, erreur: true });
     } finally {
       setEnCours(false);
@@ -65,18 +62,16 @@ export function MarquerBoucles() {
                 onChange={setSorte}
                 options={SORTES.map((valeur) => ({ value: valeur, label: libelleDeLaSorte(valeur) }))}
               />
-              <SelectField<ChoixRemarque>
-                label={M.remarque}
-                value={remarque}
-                onChange={setRemarque}
-                options={[
-                  { value: REMARQUE_BOUCLE.EN_TROP, label: T.remarque.en_trop },
-                  { value: REMARQUE_BOUCLE.JAMAIS_POSEE, label: T.remarque.jamais_posee },
-                  { value: AUCUNE, label: T.remarque.aucune },
-                ]}
-              />
               <FormField label={M.du} value={de} onChangeText={setDe} autoCapitalize="characters" />
               <FormField label={M.au} value={a} onChangeText={setA} autoCapitalize="characters" />
+              <FormField
+                label={M.remarque}
+                value={remarque}
+                onChangeText={setRemarque}
+                placeholder={M.remarquePlaceholder}
+                aide={M.remarqueAide}
+                multiline
+              />
               {message ? (
                 <Text style={[commonStyles.note, message.erreur ? commonStyles.required : null]}>{message.texte}</Text>
               ) : null}
