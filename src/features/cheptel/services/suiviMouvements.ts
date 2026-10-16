@@ -99,7 +99,8 @@ function dateDeChangement(animal: Chevre, premiereMiseBas: string | undefined): 
 /**
  * Le suivi des mouvements d'une année pour les animaux d'une espèce (les brebis ou les chèvres) : les naissances, les
  * changements de catégorie, les ventes (avec l'acheteur que la vente donne), les morts et les autres sorties, rangés par date et par
- * cause, avec l'effectif au 1er janvier et en fin d'année. Les mort-nés n'entrent pas au troupeau ; les animaux achetés ne se
+ * cause, avec l'effectif au 1er janvier et en fin d'année. Les mort-nés n'entrent pas au troupeau, ni les animaux sans boucle (cabris
+ * vendus sans boucle) ; les animaux achetés ne se
  * distinguent pas dans les fiches (ils comptent à leur naissance).
  */
 export function suiviMouvements(
@@ -110,7 +111,11 @@ export function suiviMouvements(
 ): SuiviAnnuel {
   const debut = `${annee}-01-01`;
   const fin = `${annee}-12-31`;
-  const presents = animaux.filter((a) => a.statut !== STATUT_CHEVRE.MORT_NE && !!a.dateNaissance);
+  // Les animaux sans boucle (les cabris qui n'en ont pas encore, vendus avant) ne figurent pas dans le document : ni leur naissance, ni
+  // leur vente, ni l'effectif.
+  const presents = animaux.filter(
+    (a) => a.statut !== STATUT_CHEVRE.MORT_NE && !!a.dateNaissance && !!a.numeroBoucle?.trim(),
+  );
 
   // La première mise bas de chaque femelle : la plus ancienne naissance de ses petits (mort-nés compris).
   const premiereMiseBas = new Map<string, string>();
