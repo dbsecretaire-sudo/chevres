@@ -1,6 +1,8 @@
 import { pertesDeLAnnee, type PerteDuJour } from '@/features/cheptel/services/suiviMouvements';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
-import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
+import { MODELE_BORDEREAUX_2026 } from '@/features/export/modeles/bordereaux2026';
+import { echapper, ecrireEtPartagerPdf, ecrirePdfBase64EtPartager } from '@/features/export/services/htmlPdf';
+import { remplirModele } from '@/features/export/services/modelePdf';
 import { colonneDeLEspece, identiteDuSuivi, type IdentiteSuivi } from '@/features/export/suiviMouvementsPdf';
 import { getSettings } from '@/features/settings/settings';
 import { FORMAT_EXPORT, NOM_FICHIER_EXPORT_BORDEREAUX_PERTE } from '@/shared/constants/export';
@@ -185,6 +187,60 @@ ${pages.join('\n')}
 </html>`;
 }
 
+/** Les coordonnées (en points PDF, depuis le bas de la feuille) du bordereau de perte de la campagne 2026, relevées sur le PDF de la DDT(M). */
+const OFFICIEL = {
+  /** La partie haute de la feuille (le bordereau de perte, avec sa ligne de découpe) ; en dessous, c'est le bordereau de localisation. */
+  zone: { x: 0, y: 453.5, largeur: 595.3, hauteur: 841.89 - 453.5 },
+  /** Un deuxième bordereau de perte se pose dans la moitié basse de la feuille. */
+  decalages: [0, -430],
+  /** Les chiffres des cases se relèvent un peu : ils ne touchent pas le trait du bas. */
+  releveCases: 1.3,
+  pacage: { x: 83.2, y: 674.2, pas: 136.2 / 9 },
+  siret: { x: 312.7, y: 674.2, pas: 211.7 / 14 },
+  nom: { x: 202, y: 659.4, largeur: 350 },
+  brebis: { x: 129, y: 637.4, pas: 60.7 / 4 },
+  chevres: { x: 242.8, y: 637.4, pas: 60.7 / 4 },
+  jour: { centre: 168.6, y: 623.4 },
+  mois: { centre: 204.7, y: 623.4 },
+  /** La case « mortalité » : la mort en transhumance est une mortalité. */
+  mortalite: { x: 239.2, y: 606.6, cote: 8.4 },
+} as const;
+
+/** Les campagnes dont la feuille officielle est embarquée : les autres bordereaux sont dessinés d'après le même modèle. */
+export const CAMPAGNES_OFFICIELLES_BORDEREAUX: readonly number[] = [2026];
+
+/**
+ * Remplit la feuille officielle de la campagne 2026 : un bordereau de perte par jour de perte, deux par feuille (comme le formulaire à
+ * découper). Le PDF garde son aspect exact : seuls les numéros, la date, le nombre de bêtes perdues et le motif (mortalité) s'y ajoutent. Rend
+ * le PDF en base64.
+ */
+export function remplirBordereauxPerte(
+  pertes: PerteBordereau[],
+  identite: IdentiteSuivi,
+  colonne: ColonneSuivi,
+): Promise<string> {
+  const pages: PerteBordereau[][] = [];
+  for (let i = 0; i < pertes.length; i += 2) pages.push(pertes.slice(i, i + 2));
+  return remplirModele(
+    MODELE_BORDEREAUX_2026,
+    pages,
+    ({ cases, ajuste, centre, croix }, perte) => {
+      const releve = OFFICIEL.releveCases;
+      cases(OFFICIEL.pacage.x, OFFICIEL.pacage.y + releve, OFFICIEL.pacage.pas, identite.numeroPacage, 10);
+      cases(OFFICIEL.siret.x, OFFICIEL.siret.y + releve, OFFICIEL.siret.pas, identite.siret, 10);
+      ajuste(OFFICIEL.nom.x, OFFICIEL.nom.y, identite.nom, OFFICIEL.nom.largeur, 9.5);
+      // Les nombres s'écrivent à droite de leurs quatre cases.
+      const nombre = String(perte.nombre).padStart(4, ' ');
+      const cible = colonne === COLONNE_SUIVI_PAR_ESPECE.brebis ? OFFICIEL.brebis : OFFICIEL.chevres;
+      cases(cible.x, cible.y + releve, cible.pas, nombre, 10);
+      centre(OFFICIEL.jour.centre, OFFICIEL.jour.y, perte.date.slice(8, 10), 10);
+      centre(OFFICIEL.mois.centre, OFFICIEL.mois.y, perte.date.slice(5, 7), 10);
+      croix(OFFICIEL.mortalite.x, OFFICIEL.mortalite.y, OFFICIEL.mortalite.cote);
+    },
+    { zone: OFFICIEL.zone, decalages: [...OFFICIEL.decalages] },
+  );
+}
+
 /** Les pertes des années demandées, jour par jour (les bordereaux à remplir). */
 export async function pertesDesAnnees(annees: number[]): Promise<PerteBordereau[]> {
   const animaux = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
@@ -199,12 +255,19 @@ export async function exporterBordereauxPertePdf(annees: number[]): Promise<numb
   const pertes = await pertesDesAnnees(annees);
   if (pertes.length === 0) return 0;
   const settings = await getSettings();
-  const html = bordereauxPerteHtml(
-    pertes,
-    identiteDuSuivi(settings.exploitation),
-    colonneDeLEspece(especeCourante()),
-  );
+  const identite = identiteDuSuivi(settings.exploitation);
+  const colonne = colonneDeLEspece(especeCourante());
   const periode = annees.length === 1 ? `${annees[0]}` : `${annees[0]}-${annees[annees.length - 1]}`;
+  // Les pertes de la campagne 2026 s'écrivent sur la feuille officielle ; sinon les bordereaux sont dessinés d'après le même modèle.
+  if (pertes.every((p) => CAMPAGNES_OFFICIELLES_BORDEREAUX.includes(Number(p.date.slice(0, 4))))) {
+    await ecrirePdfBase64EtPartager(
+      await remplirBordereauxPerte(pertes, identite, colonne),
+      `${NOM_FICHIER_EXPORT_BORDEREAUX_PERTE}_${periode}.${FORMAT_EXPORT.PDF}`,
+      B.titre,
+    );
+    return pertes.length;
+  }
+  const html = bordereauxPerteHtml(pertes, identite, colonne);
   await ecrireEtPartagerPdf(
     html,
     `${NOM_FICHIER_EXPORT_BORDEREAUX_PERTE}_${periode}.${FORMAT_EXPORT.PDF}`,

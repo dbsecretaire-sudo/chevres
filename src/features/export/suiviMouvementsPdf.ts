@@ -8,7 +8,9 @@ import {
   type SuiviAnnuel,
 } from '@/features/cheptel/services/suiviMouvements';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
-import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
+import { MODELE_SUIVI_2026 } from '@/features/export/modeles/suivi2026';
+import { echapper, ecrireEtPartagerPdf, ecrirePdfBase64EtPartager } from '@/features/export/services/htmlPdf';
+import { remplirModele } from '@/features/export/services/modelePdf';
 import { getSettings, type InfosExploitation } from '@/features/settings/settings';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { NOM_FICHIER_EXPORT_SUIVI_MOUVEMENTS, FORMAT_EXPORT } from '@/shared/constants/export';
@@ -342,6 +344,113 @@ export const colonneDeLEspece = (espece: string): ColonneSuivi =>
     ? COLONNE_SUIVI_PAR_ESPECE.brebis
     : COLONNE_SUIVI_PAR_ESPECE.chevres;
 
+/** Les coordonnées du formulaire officiel de la campagne 2026, relevées sur le PDF de la DDT(M). La feuille est lue en paysage : l'abscisse va vers la droite, l'ordonnée vers le haut (en points) ; celles de la page du PDF, en portrait, sont tournées d'un quart de tour (voir remplirModele). */
+const OFFICIEL = {
+  /** La largeur de la page en portrait : l'ordonnée d'un point en paysage est cette largeur moins son abscisse dans la page. */
+  largeurPage: 595.276,
+  /** Les limites des colonnes de nombres, de gauche à droite : l'entrée et la sortie de chaque catégorie (jeunes, brebis, chèvres, boucs). */
+  bornes: [98.1, 144.8, 191.6, 238.4, 285.2, 331.9, 378.7, 425.5, 472.2],
+  /** La colonne de la date, celle de la cause, celle du nom de l'acheteur ou du vendeur. */
+  date: { debut: 18.7, fin: 98.1 },
+  cause: { debut: 472.2, fin: 527.5 },
+  nom: { debut: 657.9, largeur: 146 },
+  /** Les lignes : la position (dans la page) du haut de la première, et leur hauteur. */
+  premiereLigne: 238.0,
+  hauteurLigne: 21.26,
+  /** Le milieu (dans la page) des lignes des sous totaux, des effectifs de départ et des effectifs de fin. */
+  sousTotaux: 503.7,
+  effectifDepart: 191.2,
+  effectifFin: 531.35,
+  /** L'identification : la ligne de base (dans la page) du premier rang, puis des cases : début (abscisse) et largeur d'une case. */
+  identification: { page: 109.9, pacage: { x: 153.6, pas: 120.2 / 9 }, siret: { x: 328.1, pas: 187 / 14 }, exploitation: { x: 600.3 + 2 * (133.6 / 10), pas: 133.6 / 10 } },
+  nom_prenom: { page: 129.9, x: 320, largeur: 400 },
+  numeroPage: { page: 137.4, numero: { x: 754.0, pas: 10.6 }, total: { x: 782.9, pas: 10.6 } },
+  /** La date de l'effectif de fin : huit cases (jour, mois, année). */
+  dateFin: { page: 543.3, x: 23.3, pas: 70.2 / 8 },
+  /** Le « 1er janvier 2026 » imprimé au-dessus de l'effectif de départ : recouvert à partir de la deuxième page. */
+  libelleDepart: { debut: 22, largeur: 74, haut: 203.5, hauteur: 12.5, baseline: 201.2 },
+  /** Les chiffres des cases se relèvent un peu : ils ne touchent pas le trait du bas. */
+  releveCases: 1.3,
+} as const;
+
+/** « JJMMAAAA » d'une date AAAA-MM-JJ, pour les huit cases de la date de fin. */
+const jjmmaaaa = (iso: string): string => iso.slice(8, 10) + iso.slice(5, 7) + iso.slice(0, 4);
+
+/**
+ * Remplit la feuille officielle de la campagne 2026 (le document de suivi de la DDT(M), embarqué dans l'application) : une feuille par douze
+ * mouvements, avec l'identification, les dates, les nombres, les sous totaux, les effectifs et la date de fin. Le PDF garde son aspect
+ * exact : seules les valeurs s'y ajoutent. Rend le PDF en base64.
+ */
+export function remplirSuiviMouvements(
+  suivis: SuiviAnnuel[],
+  identite: IdentiteSuivi,
+  colonne: ColonneSuivi,
+  aujourdhui: string = todayISO(),
+): Promise<string> {
+  const feuilles = suivis.flatMap((s) => feuillesDuSuivi(s, aujourdhui));
+  const O = OFFICIEL;
+  const W = O.largeurPage;
+  const enY = (pagePosition: number) => W - pagePosition;
+  const colonnes = colonnesDeLaPage(colonne);
+  const milieuColonne = (k: number, sortie: boolean) => (O.bornes[2 * k + (sortie ? 1 : 0)] + O.bornes[2 * k + (sortie ? 2 : 1)]) / 2;
+  const milieuCategorie = (k: number) => (O.bornes[2 * k] + O.bornes[2 * k + 2]) / 2;
+  const ligneDeBase = (milieuPage: number, taille: number) => enY(milieuPage) - taille * 0.36;
+  const sur = (n: number | undefined): string => (n ? String(n) : '');
+
+  return remplirModele(
+    MODELE_SUIVI_2026,
+    feuilles.map((feuille) => [feuille]),
+    ({ cases, ajuste, centre, blanc, texte }, feuille) => {
+      const releve = O.releveCases;
+      // L'identification.
+      const base = enY(O.identification.page) + releve;
+      cases(O.identification.pacage.x, base, O.identification.pacage.pas, identite.numeroPacage, 10);
+      cases(O.identification.siret.x, base, O.identification.siret.pas, identite.siret, 10);
+      cases(O.identification.exploitation.x, base, O.identification.exploitation.pas, identite.numeroExploitation, 10);
+      ajuste(O.nom_prenom.x, enY(O.nom_prenom.page) + 1.5, identite.nom, O.nom_prenom.largeur, 10);
+      // Le numéro de la page, sur le nombre de pages.
+      const basePage = enY(O.numeroPage.page) + releve;
+      cases(O.numeroPage.numero.x, basePage, O.numeroPage.numero.pas, String(feuille.numero).padStart(2, ' '), 10);
+      cases(O.numeroPage.total.x, basePage, O.numeroPage.total.pas, String(feuille.total).padStart(2, ' '), 10);
+
+      // Les effectifs de départ ; à partir de la deuxième page, la date imprimée (« 1er janvier ») est remplacée par celle de la page.
+      if (feuille.numero > 1) {
+        const l = O.libelleDepart;
+        blanc(l.debut, enY(l.haut), l.largeur, l.hauteur);
+        texte(l.debut + 2, enY(l.baseline), feuille.libelleDepart, 7.5, true);
+      }
+      const fin = effectifApres(feuille.effectifDepart, feuille.lignes);
+      const totaux = sousTotaux(feuille.lignes);
+      colonnes.forEach((c, k) => {
+        if (!c.remplie) return;
+        centre(milieuCategorie(k), ligneDeBase(O.effectifDepart, 11), String(feuille.effectifDepart[c.categorie]), 11, true);
+        centre(milieuCategorie(k), ligneDeBase(O.effectifFin, 11), String(fin[c.categorie]), 11, true);
+        centre(milieuColonne(k, false), ligneDeBase(O.sousTotaux, 10), sur(totaux.entrees[c.categorie]), 10);
+        centre(milieuColonne(k, true), ligneDeBase(O.sousTotaux, 10), sur(totaux.sorties[c.categorie]), 10);
+      });
+      cases(O.dateFin.x, enY(O.dateFin.page) + releve, O.dateFin.pas, jjmmaaaa(feuille.dateFin), 9.5);
+
+      // Les mouvements, une ligne chacun.
+      feuille.lignes.forEach((ligne, i) => {
+        const milieu = O.premiereLigne + O.hauteurLigne * (i + 0.5);
+        const y = ligneDeBase(milieu, 10);
+        centre((O.date.debut + O.date.fin) / 2, y, formatDateFR(ligne.date), 9);
+        colonnes.forEach((c, k) => {
+          if (!c.remplie) return;
+          centre(milieuColonne(k, false), y, sur(ligne.entrees[c.categorie]), 10);
+          centre(milieuColonne(k, true), y, sur(ligne.sorties[c.categorie]), 10);
+        });
+        centre((O.cause.debut + O.cause.fin) / 2, y, ligne.cause, 10, true);
+        if (ligne.nom) ajuste(O.nom.debut + 4, y, ligne.nom, O.nom.largeur, 9);
+      });
+    },
+    { rotation: 90 },
+  );
+}
+
+/** Les campagnes dont la feuille officielle est embarquée : les autres suivis sont dessinés d'après le même modèle. */
+export const CAMPAGNES_OFFICIELLES_SUIVI: readonly number[] = [2026];
+
 /** Crée le PDF du suivi des mouvements pour les années demandées (une feuille par douze mouvements) et le partage. */
 export async function exporterSuiviMouvementsPdf(annees: number[]): Promise<void> {
   const [tous, ventes, settings] = await Promise.all([
@@ -352,16 +461,15 @@ export async function exporterSuiviMouvementsPdf(annees: number[]): Promise<void
   const animaux = deEspeceCourante(tous);
   const libelles = { abattoir: T.abattoir, autoConsommation: T.autoConsommation };
   const suivis = annees.map((annee) => suiviMouvements(animaux, ventes, annee, libelles));
-  const html = suiviMouvementsHtml(
-    suivis,
-    identiteDuSuivi(settings.exploitation),
-    colonneDeLEspece(especeCourante()),
-  );
+  const identite = identiteDuSuivi(settings.exploitation);
+  const colonne = colonneDeLEspece(especeCourante());
   const periode = annees.length === 1 ? `${annees[0]}` : `${annees[0]}-${annees[annees.length - 1]}`;
-  await ecrireEtPartagerPdf(
-    html,
-    `${NOM_FICHIER_EXPORT_SUIVI_MOUVEMENTS}_${periode}.${FORMAT_EXPORT.PDF}`,
-    T.titre,
-    { sansMarges: true },
-  );
+  const nomFichier = `${NOM_FICHIER_EXPORT_SUIVI_MOUVEMENTS}_${periode}.${FORMAT_EXPORT.PDF}`;
+  // La campagne 2026 s'écrit sur la feuille officielle ; sinon le suivi est dessiné d'après le même modèle.
+  if (annees.every((a) => CAMPAGNES_OFFICIELLES_SUIVI.includes(a))) {
+    await ecrirePdfBase64EtPartager(await remplirSuiviMouvements(suivis, identite, colonne), nomFichier, T.titre);
+    return;
+  }
+  const html = suiviMouvementsHtml(suivis, identite, colonne);
+  await ecrireEtPartagerPdf(html, nomFichier, T.titre, { sansMarges: true });
 }

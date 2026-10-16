@@ -266,7 +266,7 @@ export function remplirDeclarationEstive(d: DonneesEstive): Promise<string> {
   const y = OFFICIEL.baseLigne;
   const yCases = y + OFFICIEL.releveCases;
   const cheptel = d.identite.numeroExploitation.replace(/^FR/, '');
-  return remplirModele(MODELE_ESTIVE_2026, 1, ({ centre, ajuste, cases }) => {
+  return remplirModele(MODELE_ESTIVE_2026, [[d]], ({ centre, ajuste, cases }) => {
     // L'entité collective.
     cases(OFFICIEL.entite.pacage.x, OFFICIEL.entite.pacage.y, OFFICIEL.entite.pacage.pas, entite.numeroPacage, 10);
     cases(OFFICIEL.entite.siret.x, OFFICIEL.entite.siret.y, OFFICIEL.entite.siret.pas, entite.siret, 10);
