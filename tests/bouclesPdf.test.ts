@@ -47,6 +47,13 @@ describe('liste des repères imprimée', () => {
     expect(html).toContain('20272 Pianello');
   });
 
+  it('une boucle rouge ou de rebouclage porte sa date d’achat en commentaire', () => {
+    const l = ligneDeLaListe(boucle({ article: 'boucle:rebouclage', numero: '', dateAchat: '2024-12-10' }), undefined, undefined, 'FR 21228');
+    expect(l.identification).toBe('');
+    expect(l.commentaires).toBe('Achat le 10/12/2024');
+    expect(ligneDeLaListe(boucle({ dateAchat: '2024-12-10' }), undefined, undefined, undefined).commentaires).toBe('');
+  });
+
   it('toujours trente lignes par page, les manquantes restant vides', () => {
     const ligne = (n: number): LigneListe => ({ identification: 'FR ' + n, naissance: '', pose: '', secondRepere: '', commentaires: '' });
     expect(LIGNES_PAR_PAGE_REPERES).toBe(30);

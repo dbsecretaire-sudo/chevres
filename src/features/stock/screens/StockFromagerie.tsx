@@ -730,6 +730,7 @@ export default function StockFromagerie() {
         visible={boucleVisible}
         article={boucleOuverte}
         boucles={bouclesEspece}
+        mouvements={archive.mouvements}
         onFermer={() => setBoucleVisible(false)}
       />
 

@@ -233,6 +233,7 @@ export const TEXTES_EXPORT = {
       titreListe: 'LISTE DES REPERES',
       enStock: 'EN STOCK',
       poses: 'POSÉS',
+      achatLe: (date: string) => `Achat le ${date}`,
       edition: (date: string) => `Edition du : ${date}`,
       nom: 'Nom',
       adresse: 'Adresse',

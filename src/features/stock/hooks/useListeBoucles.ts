@@ -3,6 +3,8 @@ import type { Chevre } from '@/features/cheptel/types';
 import {
   bouclesDeLInventaire,
   bouclesSelonLeCheptel,
+  estBoucleDeRemplacement,
+  lignesDeRemplacement,
   nePasPoser,
   trierBoucles,
 } from '@/features/stock/services/boucles';
@@ -11,7 +13,7 @@ import { synchroBouclesActive } from '@/features/settings/settings';
 import { useFiltresColonnes } from '@/shared/hooks/useFiltresColonnes';
 import { formatDateShortFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
-import type { BoucleStock } from '@/features/stock/types';
+import type { BoucleStock, MouvementStock } from '@/features/stock/types';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ARTICLE_BOUCLE, ETAT_BOUCLE, GENRE_ARTICLE, TRI_BOUCLE } from '@/shared/constants/stock';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -23,7 +25,7 @@ import { loadAllYears } from '@/shared/storage/localStore';
  * toutes), le tri choisi, et les lignes qui en résultent. L'écran des contrôles s'en sert aussi pour imprimer exactement ce qui est
  * affiché.
  */
-export function useListeBoucles(boucles: BoucleStock[], article: string | undefined) {
+export function useListeBoucles(boucles: BoucleStock[], article: string | undefined, mouvements?: MouvementStock[]) {
   const [etat, setEtat] = useState<ValeurDe<typeof ETAT_BOUCLE>>(ETAT_BOUCLE.TOUT);
   const [tri, setTri] = useState<ValeurDe<typeof TRI_BOUCLE>>(TRI_BOUCLE.NUMERO);
   const [croissant, setCroissant] = useState(true);
@@ -48,11 +50,15 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
     ? bouclesSelonLeCheptel(boucles, [...animaux.values()])
     : boucles;
 
-  const triees = trierBoucles(
-    bouclesDeLInventaire({ boucles: bouclesAvecDates }, etat, article),
-    tri,
-    croissant,
-  );
+  // Une boucle de remplacement (rouge, rebouclage) s'achète en quantité : une ligne par boucle, celles en stock à numéro vide.
+  const remplacement = estBoucleDeRemplacement(article) && !!mouvements;
+  const source =
+    remplacement && article
+      ? [...bouclesAvecDates.filter((b) => b.article !== article), ...lignesDeRemplacement(article, bouclesAvecDates, mouvements ?? [])]
+      : bouclesAvecDates;
+  const classees = trierBoucles(bouclesDeLInventaire({ boucles: source }, etat, article), tri, croissant);
+  // Les lignes vides (en stock) viennent après celles qui portent un numéro, quel que soit le tri.
+  const triees = remplacement ? [...classees.filter((b) => b.numero), ...classees.filter((b) => !b.numero)] : classees;
   /** Le filtre de chaque colonne, comme dans Excel : les valeurs sont celles qu'affiche le tableau. */
   const filtres = useFiltresColonnes<BoucleStock, 'numero' | 'pose' | 'achat' | 'morte'>({
     numero: (b) => b.numero,
@@ -107,11 +113,11 @@ export function useListeBoucles(boucles: BoucleStock[], article: string | undefi
 export type ListeBoucles = ReturnType<typeof useListeBoucles>;
 
 /** Les listes de boucles du contrôle des animaux (boucles, boucles rouges, rebouclage, tiptag), chacune avec son état et son tri. */
-export function useListesBoucles(boucles: BoucleStock[]): ListeBoucles[] {
+export function useListesBoucles(boucles: BoucleStock[], mouvements?: MouvementStock[]): ListeBoucles[] {
   const cle = (code: ValeurDe<typeof ARTICLE_BOUCLE>) => `${GENRE_ARTICLE.BOUCLE}:${code}`;
   const normales = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.BOUCLES));
-  const rouges = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.ROUGES));
-  const rebouclage = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.REBOUCLAGE));
+  const rouges = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.ROUGES), mouvements);
+  const rebouclage = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.REBOUCLAGE), mouvements);
   const tiptag = useListeBoucles(boucles, cle(ARTICLE_BOUCLE.TIPTAG));
   return [normales, rouges, rebouclage, tiptag];
 }

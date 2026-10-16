@@ -7,7 +7,7 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { Facture } from '@/features/comptabilite/types';
 import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
-import type { ArchiveStock, BoucleStock } from '@/features/stock/types';
+import type { ArchiveStock, BoucleStock, MouvementStock } from '@/features/stock/types';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import {
   ARTICLE_BOUCLE,
@@ -383,6 +383,33 @@ export function bouclesSelonLeCheptel(boucles: BoucleStock[], animaux: Chevre[])
     })
     // Une boucle ajoutée depuis le cheptel ou jamais commandée n'existe que tant qu'un animal la porte.
     .filter((b) => !nExisteQueSiPortee(b) || !!b.chevreId);
+}
+
+/**
+ * Les lignes d'une boucle de remplacement (rouge, rebouclage), qui s'achète en quantité, sans numéro : une ligne par boucle achetée.
+ * Les poses notées sur les fiches du cheptel (avec leur numéro de remplacement) sont les premières ; celles qui restent en stock
+ * sont des lignes vides, à numéro vide. Chaque ligne porte la date d'achat de la boucle : les boucles se consomment dans l'ordre où
+ * elles sont entrées (les plus anciennes d'abord), donc celles qui restent sont les dernières achetées.
+ */
+export function lignesDeRemplacement(
+  article: string,
+  boucles: BoucleStock[],
+  mouvements: MouvementStock[],
+): BoucleStock[] {
+  const deLArticle = mouvements.filter((m) => m.article === article);
+  const entrees = deLArticle
+    .filter((m) => m.delta > 0)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .flatMap((m) => Array.from({ length: Math.round(m.delta) }, () => m.date));
+  const consommees = Math.round(deLArticle.filter((m) => m.delta < 0).reduce((t, m) => t - m.delta, 0));
+  const posees = boucles
+    .filter((b) => b.article === article && b.chevreId)
+    .sort((a, b) => (a.datePose ?? '9999').localeCompare(b.datePose ?? '9999') || a.id.localeCompare(b.id))
+    .map((b, i): BoucleStock => ({ ...b, dateAchat: b.dateAchat ?? entrees[i] }));
+  const libres = entrees.slice(consommees).map(
+    (dateAchat, i): BoucleStock => ({ id: `libre-${article}-${i}`, article, numero: '', dateAchat }),
+  );
+  return [...posees, ...libres];
 }
 
 /**

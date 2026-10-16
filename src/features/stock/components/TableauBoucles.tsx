@@ -42,7 +42,7 @@ export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
  */
 export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBoucles; pleinePage?: boolean }) {
   const { lignes, tri, trierPar, morts, etat, filtres } = liste;
-  /** La boucle rouge n'a pas de numéro ni d'achat à elle : son numéro est celui de remplacement, et il n'y a pas de date d'achat. */
+  /** La boucle de remplacement (rouge, rebouclage) s'achète en quantité : son numéro est celui de remplacement (vide tant qu'elle est en stock), avec sa date d'achat. */
   const rouge = estBoucleDeRemplacement(liste.article);
   const rebouclage = estArticleRebouclage(liste.article);
   const titreNumero = rouge ? T.numeroRemplacement : T.colonnes.numero;
@@ -101,7 +101,7 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
       <View style={styles.entete}>
         {titreColonne(TRI_BOUCLE.NUMERO, styles.colonneNumero)}
         {titreColonne(TRI_BOUCLE.POSE, styles.colonneDate)}
-        {rouge ? null : titreColonne(TRI_BOUCLE.ACHAT, styles.colonneDate)}
+        {titreColonne(TRI_BOUCLE.ACHAT, styles.colonneDate)}
         <View style={[styles.celluleEntete, styles.colonneMorte]}>
           <Text style={styles.titreMorte}>{T.morte}</Text>
           {boutonFiltre('morte')}
@@ -132,9 +132,7 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
                   {b.datePose ? formatDateShortFR(b.datePose) : b.chevreId ? T.posee : ''}
                 </Text>
               )}
-              {rouge ? null : (
-                <Text style={[styles.texteLigne, styles.colonneDate]}>{formatDateShortFR(b.dateAchat)}</Text>
-              )}
+              <Text style={[styles.texteLigne, styles.colonneDate]}>{formatDateShortFR(b.dateAchat)}</Text>
               <View style={styles.colonneMorte}>
                 <Ionicons
                   name={b.chevreId && morts.has(b.chevreId) ? 'checkbox' : 'square-outline'}

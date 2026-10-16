@@ -6,6 +6,7 @@ import {
   bouclesApresAchat,
   bouclesSelonLeCheptel,
   derniereBoucle,
+  lignesDeRemplacement,
   nePasPoser,
   numeroDejaEnStock,
   plageDeBoucles,
@@ -147,5 +148,43 @@ describe('sortie d’un animal sur l’impression des boucles', () => {
   it('sans date, la cause seule ; rien pour un animal vivant', () => {
     expect(texteDeLaSortie('abattoir', undefined)).toBe('Abattoir');
     expect(texteDeLaSortie('vivante', '2026-03-12')).toBe('');
+  });
+});
+
+describe('boucles de remplacement (rouges, rebouclage)', () => {
+  const ROUGES = 'boucle:rouges';
+  const mouvement = (id: string, date: string, delta: number) =>
+    ({ id, article: ROUGES, date, delta, origine: 'achat' }) as never;
+
+  it('une ligne par boucle achetée : les poses d’abord, puis les lignes vides en stock', () => {
+    const posees = [
+      boucle('00462', { id: 'p1', article: ROUGES, chevreId: 'c1', datePose: '2024-12-10' }),
+      boucle('70039', { id: 'p2', article: ROUGES, chevreId: 'c2', datePose: '2025-01-05' }),
+    ];
+    const lignes = lignesDeRemplacement(
+      ROUGES,
+      posees,
+      [mouvement('a', '2024-06-01', 10), mouvement('pose1', '2024-12-10', -1), mouvement('pose2', '2025-01-05', -1)],
+    );
+    expect(lignes).toHaveLength(10);
+    expect(lignes.slice(0, 2).map((b) => b.numero)).toEqual(['00462', '70039']);
+    const libres = lignes.slice(2);
+    expect(libres).toHaveLength(8);
+    expect(libres.every((b) => b.numero === '' && !b.chevreId)).toBe(true);
+    expect(new Set(libres.map((b) => b.id)).size).toBe(8);
+  });
+
+  it('chaque ligne a la date d’achat de sa boucle : les plus anciennes sont posées en premier', () => {
+    const lignes = lignesDeRemplacement(
+      ROUGES,
+      [boucle('1', { id: 'p', article: ROUGES, chevreId: 'c', datePose: '2025-01-05' })],
+      [mouvement('a', '2024-01-01', 1), mouvement('b', '2025-02-01', 2), mouvement('pose', '2025-01-05', -1)],
+    );
+    expect(lignes.map((b) => b.dateAchat)).toEqual(['2024-01-01', '2025-02-01', '2025-02-01']);
+  });
+
+  it('rien en stock : seulement les poses ; un niveau négatif n’ajoute aucune ligne', () => {
+    expect(lignesDeRemplacement(ROUGES, [], [])).toEqual([]);
+    expect(lignesDeRemplacement(ROUGES, [], [mouvement('a', '2025-01-01', 1), mouvement('b', '2025-01-02', -3)])).toEqual([]);
   });
 });
