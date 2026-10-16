@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Facture } from '@/features/comptabilite/types';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
-import { lignesDuCarnet, pagesDuCarnet } from '@/features/exploitation/services/carnetSanitaire';
+import { bouclesDeLaVisite, lignesDuCarnet, pagesDuCarnet } from '@/features/exploitation/services/carnetSanitaire';
 import type { VisiteVeterinaire } from '@/features/exploitation/types';
 import { carnetHtml, tailleDuTexte } from '@/features/export/carnetSanitairePdf';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
@@ -143,5 +143,36 @@ describe('carnet sanitaire', () => {
     expect(html.split('<section class="page">')).toHaveLength(4);
     expect(html.split('<tr class="entree">')).toHaveLength(3 * 9 + 1);
     for (const n of [1, 2, 3]) expect(html).toContain('PAGE N° ' + n);
+  });
+
+  describe('boucles proposées pour les actes de la visite', () => {
+    const animal = (numeroBoucle: string, plus: Record<string, string> = {}) =>
+      ({ numeroBoucle, dateNaissance: '2020-01-01', statut: 'vivante', ...plus }) as never;
+    const jour = '2026-08-26';
+
+    it('celles des animaux présents ce jour-là et contrôlés ce jour-là, par ordre croissant', () => {
+      const animaux = [
+        animal('20002'),
+        animal('00462'),
+        animal('10005'),
+        animal('30001', { dateNaissance: '2027-01-01' }),
+        animal('40001', { statut: 'abattoir', dateStatut: '2026-03-01' }),
+        animal('50001', { statut: 'vendue', dateStatut: '2026-09-15' }),
+        animal('60001'),
+      ];
+      const visites = [
+        { date: jour, chevreNumeroBoucle: '50001, 20002, 00462 10005 30001 40001 99999' },
+        { date: '2025-01-01', chevreNumeroBoucle: '60001' },
+      ] as never[];
+      // 30001 n'est pas encore né, 40001 est parti avant, 99999 n'est pas au cheptel, 60001 n'a pas été contrôlé ce jour-là ;
+      // 50001, vendue après la visite, était bien là.
+      expect(bouclesDeLaVisite(jour, animaux, visites)).toEqual(['00462', '10005', '20002', '50001']);
+    });
+
+    it('sans visite ce jour-là, tous les animaux présents', () => {
+      const animaux = [animal('10'), animal('9'), animal('2', { statut: 'morte', dateStatut: '2020-06-01' })];
+      expect(bouclesDeLaVisite(jour, animaux, [])).toEqual(['9', '10']);
+      expect(bouclesDeLaVisite(jour, animaux, [{ date: jour, chevreNumeroBoucle: '' }] as never[])).toEqual(['9', '10']);
+    });
   });
 });

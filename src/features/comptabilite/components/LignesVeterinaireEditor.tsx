@@ -1,9 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
+import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
+import { listToutesVisitesVeterinaire } from '@/features/exploitation/repository/visitesVeterinaire';
+import { bouclesDeLaVisite } from '@/features/exploitation/services/carnetSanitaire';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+import { loadAllYears } from '@/shared/storage/localStore';
 import { ligneVeterinaireVide } from '@/features/comptabilite/forms/lignesVeterinaire';
 import type { LigneVeterinaire } from '@/features/comptabilite/types';
 import { colors } from '@/shared/theme/colors';
@@ -16,7 +23,7 @@ const T = TEXTES.carnet.lignes;
 interface Props {
   lignes: LigneVeterinaire[];
   onChange: (lignes: LigneVeterinaire[]) => void;
-  /** La date de la facture : celle que prend une date facultative qu'on ajoute (à défaut, aujourd'hui). */
+  /** La date de la facture, celle de la visite : celle que prend une date facultative qu'on ajoute (à défaut, aujourd'hui), et le jour des boucles proposées. */
   dateParDefaut?: string;
 }
 
@@ -57,6 +64,21 @@ function DateFacultative({
  */
 export function LignesVeterinaireEditor({ lignes, onChange, dateParDefaut }: Props) {
   const defaut = dateParDefaut || todayISO();
+  /** Les boucles des animaux présents et contrôlés le jour de la visite, que la liste propose. */
+  const [boucles, setBoucles] = useState<string[]>([]);
+  /** La ligne dont on choisit les animaux dans la liste. */
+  const [ligneAChoisir, setLigneAChoisir] = useState<string | null>(null);
+  useEffect(() => {
+    let actif = true;
+    Promise.all([loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), listToutesVisitesVeterinaire()])
+      .then(([animaux, visites]) => {
+        if (actif) setBoucles(bouclesDeLaVisite(defaut, deEspeceCourante(animaux), visites));
+      })
+      .catch(() => undefined);
+    return () => {
+      actif = false;
+    };
+  }, [defaut]);
   const maj = (id: string, changement: Partial<LigneVeterinaire>) =>
     onChange(lignes.map((l) => (l.id === id ? { ...l, ...changement } : l)));
 
@@ -89,6 +111,11 @@ export function LignesVeterinaireEditor({ lignes, onChange, dateParDefaut }: Pro
             onChangeText={(animal) => maj(l.id, { animal })}
             placeholder={T.exempleAnimal}
           />
+          <Pressable onPress={() => setLigneAChoisir(l.id)} hitSlop={6}>
+            <Text style={{ color: colors.primary, textDecorationLine: 'underline', fontWeight: '600' }}>
+              {T.choisirAnimaux}
+            </Text>
+          </Pressable>
           <FormField
             label={T.ordonnance}
             value={l.ordonnance ?? ''}
@@ -154,6 +181,19 @@ export function LignesVeterinaireEditor({ lignes, onChange, dateParDefaut }: Pro
         </View>
       ))}
       <Button variant="secondary" label={T.ajouter} onPress={() => onChange([...lignes, ligneVeterinaireVide()])} />
+      <Text style={commonStyles.note}>{T.aideAnimaux}</Text>
+      <SelectModalMultiple<string>
+        visible={ligneAChoisir !== null}
+        titre={T.titreChoixAnimaux}
+        options={boucles.map((b) => ({ value: b, label: b }))}
+        libelleValider={T.validerChoix}
+        numeroDe={(b) => (/^\d+$/.test(b) ? Number(b) : undefined)}
+        onValider={(choisies) => {
+          if (ligneAChoisir) maj(ligneAChoisir, { animal: choisies.join(', ') });
+          setLigneAChoisir(null);
+        }}
+        onClose={() => setLigneAChoisir(null)}
+      />
     </Card>
   );
 }
