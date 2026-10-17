@@ -77,6 +77,20 @@ describe('carnet de mise bas', () => {
     ]);
   });
 
+  it('les morts des résultats sont ceux au 31 décembre de l’année : un petit mort l’année d’après est vivant', () => {
+    const portees = [
+      portee('2022-03-05', 'a', [
+        petit('F', { dateNaissance: '2022-03-05', statut: 'morte', dateStatut: '2022-03-08' }),
+        petit('M', { dateNaissance: '2022-03-05', statut: 'morte', dateStatut: '2023-02-10' }),
+        petit('F', { dateNaissance: '2022-03-05' }),
+      ]),
+    ];
+    const r = resultatsDeLAnnee(portees, 2022);
+    expect(r).toMatchObject({ nes: 3, morts: 1, mortsSemaine: 1, vivants: 2 });
+    // Sans année donnée, c'est celle des naissances.
+    expect(resultatsDeLAnnee(portees).morts).toBe(1);
+  });
+
   it('le poids total de plusieurs animaux : seulement quand chacun a le sien', () => {
     expect(poidsTotal([{ poidsKg: 8.5 }, { poidsKg: 9.25 }])).toBe(17.75);
     expect(poidsTotal([{ poidsKg: 8 }, {}])).toBeUndefined();

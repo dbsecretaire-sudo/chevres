@@ -205,7 +205,13 @@ export interface ResultatsProduction {
   mortalite?: number;
 }
 
-export function resultatsDeLAnnee(portees: PorteeNaissance[]): ResultatsProduction {
+/**
+ * Les résultats de production d'une année. Les morts sont ceux au 31 décembre de cette année : un petit mort l'année d'après était
+ * vivant à la fin de l'année de sa naissance, il compte parmi les vivants. `annee` : celle des naissances (à défaut, celle de la
+ * première mise bas).
+ */
+export function resultatsDeLAnnee(portees: PorteeNaissance[], annee: number | string = portees[0]?.date.slice(0, 4) ?? ''): ResultatsProduction {
+  const finAnnee = `${annee}-12-31`;
   const r: ResultatsProduction = {
     misesBas: new Set(portees.map((p) => p.mereNumeroBoucle)).size,
     simples: 0,
@@ -230,6 +236,8 @@ export function resultatsDeLAnnee(portees: PorteeNaissance[]): ResultatsProducti
         r.mortsNaissance += 1;
         r.morts += 1;
       } else if (c.statut === STATUT_CHEVRE.MORTE) {
+        // Mort après la fin de l'année : vivant au 31 décembre.
+        if (c.dateStatut && c.dateStatut > finAnnee) continue;
         r.morts += 1;
         if (!c.dateStatut) continue;
         const jours = joursEntre(c.dateNaissance, c.dateStatut);
@@ -471,7 +479,7 @@ export function carnetMiseBasHtml(
       ? [`<div class="page"><p class="vide">${echapper(C.aucune)}</p></div>`]
       : annees.flatMap(({ annee, portees: liste }) => [
           ...pagesDeLAnnee(liste, parPage).map((page) => pageCabris(annee, page, v)),
-          pageResultats(annee, resultatsDeLAnnee(liste), v),
+          pageResultats(annee, resultatsDeLAnnee(liste, annee), v),
         ])),
   ];
   if (format === 'livret') {
