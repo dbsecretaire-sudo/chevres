@@ -4,7 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
-import { ChampTarif } from '@/features/commercial/components/ChampTarif';
+import { ChampsTarifsParCategorie } from '@/features/commercial/components/ChampsTarifsParCategorie';
 import type { ArchiveCommercial } from '@/features/commercial/types';
 import { useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -64,16 +64,12 @@ export default function GrilleTarifs() {
               <Text style={commonStyles.muted}>
                 {base !== undefined ? T.inventaire(formatMontant(base)) : T.sansPrixInventaire}
               </Text>
-              {categories.map((c) => (
-                <ChampTarif
-                  key={`${f.cle}|${c.id}|${commercial.tarifs[f.cle]?.[c.id] ?? ''}`}
-                  article={f.cle}
-                  categorie={c.id}
-                  nomCategorie={c.nom}
-                  valeur={commercial.tarifs[f.cle]?.[c.id]}
-                  prixInventaire={base}
-                />
-              ))}
+              <ChampsTarifsParCategorie
+                article={f.cle}
+                categories={categories}
+                valeurs={commercial.tarifs[f.cle] ?? {}}
+                prixInventaire={base}
+              />
               {base !== undefined ? (
                 <View style={commonStyles.gap2}>
                   <Text style={commonStyles.lineBold}>{T.marge.titre}</Text>
@@ -117,17 +113,13 @@ export default function GrilleTarifs() {
             <Text style={commonStyles.muted}>
               {prix[v.cle] !== undefined ? T.inventaire(formatMontant(prix[v.cle])) : T.sansPrixInventaire}
             </Text>
-            {categories.map((c) => (
-              <ChampTarif
-                key={`${v.cle}|${c.id}|${commercial.tarifs[v.cle]?.[c.id] ?? ''}`}
-                article={v.cle}
-                categorie={c.id}
-                nomCategorie={c.nom}
-                valeur={commercial.tarifs[v.cle]?.[c.id]}
-                prixInventaire={prix[v.cle]}
-                parKg
-              />
-            ))}
+            <ChampsTarifsParCategorie
+              article={v.cle}
+              categories={categories}
+              valeurs={commercial.tarifs[v.cle] ?? {}}
+              prixInventaire={prix[v.cle]}
+              parKg
+            />
           </View>
         ))
       )}

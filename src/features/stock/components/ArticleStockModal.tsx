@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
-import { ChampTarif } from '@/features/commercial/components/ChampTarif';
+import { ChampsTarifsParCategorie } from '@/features/commercial/components/ChampsTarifsParCategorie';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
 import { formatMontant } from '@/shared/utils/dates';
@@ -113,17 +113,13 @@ export function ArticleStockModal({
             <View style={commonStyles.gap6}>
               <Text style={commonStyles.lineBold}>{T.tarifsParCategorie}</Text>
               <Text style={commonStyles.note}>{T.tarifsAide}</Text>
-              {categoriesClient().map((c) => (
-                <ChampTarif
-                  key={c.id}
-                  article={cle}
-                  categorie={c.id}
-                  nomCategorie={c.nom}
-                  valeur={tarifs[c.id]}
-                  prixInventaire={prix}
-                  parKg={parKg}
-                />
-              ))}
+              <ChampsTarifsParCategorie
+                article={cle}
+                categories={categoriesClient()}
+                valeurs={tarifs}
+                prixInventaire={prix}
+                parKg={parKg}
+              />
             </View>
           ) : null}
           {avecLitres ? (

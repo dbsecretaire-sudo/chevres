@@ -104,6 +104,8 @@ export const TEXTES_COMMERCIAL = {
     aide: 'Le prix d’un fromage ou d’une viande peut changer selon la catégorie du contact (particulier, professionnel…). Laissé vide, c’est le prix de l’inventaire qui s’applique. Ces prix servent aux commandes et aux ventes : le prix se calcule avec la catégorie du contact choisi.',
     inventaire: (prix: string) => `Prix de l’inventaire : ${prix}`,
     sansPrixInventaire: 'Pas de prix à l’inventaire',
+    categorieDuContact: 'Catégorie de contact',
+    autresTarifs: (liste: string) => `Autres prix définis : ${liste}`,
     prixPour: (categorie: string) => `Prix pour « ${categorie} » (€)`,
     prixKgPour: (categorie: string) => `Prix pour « ${categorie} » (€ le kg)`,
     viande: 'Viande et animaux (prix au kilo)',
