@@ -687,6 +687,15 @@ export const TEXTES_CHEPTEL = {
     generer: 'Générer le PDF',
     genererSuivi: 'Suivi des mouvements (PDF)',
     genererBordereaux: 'Bordereaux de perte (PDF)',
+    /** Les lignes du dossier PAC : un appui génère le document. */
+    lignes: {
+      suivi: { titre: 'Suivi des mouvements', aide: 'Naissances, ventes et morts de la période, avec les effectifs.' },
+      bordereaux: { titre: 'Bordereaux de perte', aide: 'Un bordereau par jour où des animaux sont morts.' },
+      recensement: { aide: (annee: number) => `Effectifs au 1er janvier ${annee + 1} et naissances de ${annee}.` },
+      estive: { aide: 'La déclaration de transhumance, à remplir.' },
+      voirDetail: (annee: number) => `Comment le recensement ${annee} est calculé`,
+      masquerDetail: 'Masquer le détail',
+    },
     aucunePerte: 'Aucune chèvre morte sur cette période : aucun bordereau de perte à remplir.',
     aideBordereaux:
       'Un bordereau de perte par jour où des animaux sont morts (petits et boucs compris) : tous comptent comme perdus (mortalité). Le remplacement et la signature restent à remplir.',

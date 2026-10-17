@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '@/shared/constants/routes';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
-import { Text } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
-import { Button } from '@/shared/components/Button';
-import { SelectField } from '@/shared/components/SelectField';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { ListRow } from '@/shared/components/ListRow';
 import type { Chevre } from '@/features/cheptel/types';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
@@ -19,6 +22,7 @@ import { exporterSuiviMouvementsPdf, especeDuSuivi } from '@/features/export/sui
 import { loadAllYears } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { colors } from '@/shared/theme/colors';
 import { currentYear } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
@@ -27,9 +31,12 @@ const T = TEXTES.cheptel.suiviMouvements;
 /** Le choix « toutes les années » de la liste. */
 const TOUTES = 'toutes';
 
+/** Les documents qui se génèrent d'un appui : un document par ligne. */
+type Document = 'suivi' | 'bordereaux' | 'recensement';
+
 /**
- * Le dossier PAC : tous les documents de la campagne, remplis d'après le cheptel, au même endroit — le suivi des mouvements, les
- * bordereaux de perte, le recensement annuel et la déclaration d'estive. On choisit l'année, puis le document.
+ * Le dossier PAC : tous les documents de la campagne, remplis d'après le cheptel, au même endroit. En haut, l'année (et l'espèce) ; dessous,
+ * une ligne par document — un appui le génère —, puis l'historique des documents déjà générés. Le détail du calcul du recensement se déplie.
  */
 export default function DossierPac() {
   const router = useRouter();
@@ -37,10 +44,12 @@ export default function DossierPac() {
   const { espece } = useEtablissement();
   const [annees, setAnnees] = useState<number[]>([]);
   const [choix, setChoix] = useState(String(currentYear()));
-  const [encours, setEncours] = useState(false);
+  /** Le document en cours de génération (sa ligne montre un indicateur, les autres attendent). */
+  const [encours, setEncours] = useState<Document | null>(null);
   /** Vrai quand les bordereaux demandés n'ont aucune perte à déclarer. */
   const [sansPerte, setSansPerte] = useState(false);
   const [estiveOuverte, setEstiveOuverte] = useState(false);
+  const [detailOuvert, setDetailOuvert] = useState(false);
   const [animauxDuCheptel, setAnimauxDuCheptel] = useState<Chevre[]>([]);
 
   useEffect(() => {
@@ -58,58 +67,111 @@ export default function DossierPac() {
   const annee = choix === TOUTES ? currentYear() : Number(choix);
   // Le recensement de l'année choisie d'après le cheptel : de quoi expliquer son nombre de petits nés.
   const recensement = animauxDuCheptel.length > 0 ? recensementAnnuel(animauxDuCheptel, annee + 1) : null;
-  const generer = async (creer: (annees: number[]) => Promise<number | void>) => {
-    setEncours(true);
+  const rienAFaire = annees.length === 0;
+  const generer = async (document: Document, creer: (annees: number[]) => Promise<number | void>) => {
+    setEncours(document);
     setSansPerte(false);
     try {
       const nombre = await creer(anneesChoisies);
       if (nombre === 0) setSansPerte(true);
     } finally {
-      setEncours(false);
+      setEncours(null);
     }
   };
+  /** Un appui sur une ligne la génère, sauf quand il n'y a rien à reporter ou qu'un autre document se prépare. */
+  const appui = (document: Document, creer: (annees: number[]) => Promise<number | void>) =>
+    encours || rienAFaire ? undefined : () => generer(document, creer);
+  /** À droite d'une ligne : un indicateur pendant sa génération, sinon l'icône du document. */
+  const droite = (document: Document) =>
+    encours === document ? (
+      <ActivityIndicator color={colors.primary} />
+    ) : (
+      <Ionicons name="download-outline" size={22} color={rienAFaire ? colors.textMuted : colors.primary} />
+    );
 
   return (
     <Screen>
-      <SelecteurEspece />
+      {/* L'espèce et l'année, en haut : ce que les documents ci-dessous reprennent. */}
+      <LigneFiltres>
+        {rienAFaire ? null : (
+          <ChoixDeroulant<string>
+            titre={T.annee}
+            valeur={choix}
+            options={options}
+            onChoisir={(valeur) => {
+              setChoix(valeur);
+              setSansPerte(false);
+            }}
+          />
+        )}
+        <SelecteurEspece />
+      </LigneFiltres>
       <Text style={commonStyles.note}>{T.fenetreAide}</Text>
       {!especeDuSuivi(espece) ? <Text style={commonStyles.mutedItalic}>{T.pasPourCetteEspece}</Text> : null}
-      {annees.length === 0 ? (
-        <Text style={commonStyles.mutedItalic}>{T.aucunAnimal}</Text>
-      ) : (
-        <SelectField
-          label={T.annee}
-          value={choix}
-          onChange={(valeur) => {
-            setChoix(valeur);
-            setSansPerte(false);
-          }}
-          options={options}
+      {rienAFaire ? <Text style={commonStyles.mutedItalic}>{T.aucunAnimal}</Text> : null}
+
+      {/* Les documents : une ligne chacun, un appui le génère. */}
+      <BlocLignes>
+        <ListRow
+          title={T.lignes.suivi.titre}
+          subtitle={T.lignes.suivi.aide}
+          trailing={droite('suivi')}
+          onPress={appui('suivi', exporterSuiviMouvementsPdf)}
         />
-      )}
-      <Button label={T.genererSuivi} onPress={() => generer(exporterSuiviMouvementsPdf)} disabled={encours || annees.length === 0} />
-      <Button label={T.genererBordereaux} onPress={() => generer(exporterBordereauxPertePdf)} disabled={encours || annees.length === 0} />
-      <Text style={commonStyles.note}>{T.aideBordereaux}</Text>
+        <ListRow
+          title={T.lignes.bordereaux.titre}
+          subtitle={T.lignes.bordereaux.aide}
+          trailing={droite('bordereaux')}
+          onPress={appui('bordereaux', exporterBordereauxPertePdf)}
+        />
+        <ListRow
+          title={`${T.recensement.bouton.replace(' (PDF)', '')} ${annee + 1}`}
+          subtitle={T.lignes.recensement.aide(annee)}
+          trailing={droite('recensement')}
+          onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
+        />
+        <ListRow
+          title={T.estive.bouton.replace('…', '')}
+          subtitle={T.lignes.estive.aide}
+          trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
+          onPress={() => setEstiveOuverte(true)}
+        />
+      </BlocLignes>
       {sansPerte ? <Text style={commonStyles.mutedItalic}>{T.aucunePerte}</Text> : null}
-      <Button
-        variant="secondary"
-        label={`${T.recensement.bouton} — ${annee + 1}`}
-        onPress={() => generer(async () => exporterRecensementPdf(annee))}
-        disabled={encours || annees.length === 0}
-      />
-      <Text style={commonStyles.note}>{T.recensement.aide(annee)}</Text>
-      {recensement && recensement.nesTotal > 0 ? (
-        <Text style={commonStyles.note}>
-          {T.recensement.detailNes(annee, recensement.nesTotal, recensement.nesSansBoucle, recensement.nesMorts, recensement.nes)}
+
+      {/* Le calcul du recensement : replié, pour ne pas allonger la page. */}
+      <Pressable onPress={() => setDetailOuvert(!detailOuvert)} hitSlop={8}>
+        <Text style={commonStyles.lien}>
+          {detailOuvert ? T.lignes.masquerDetail : T.lignes.voirDetail(annee + 1)}
         </Text>
+      </Pressable>
+      {detailOuvert ? (
+        <>
+          <Text style={commonStyles.note}>{T.recensement.aide(annee)}</Text>
+          {recensement && recensement.nesTotal > 0 ? (
+            <Text style={commonStyles.note}>
+              {T.recensement.detailNes(
+                annee,
+                recensement.nesTotal,
+                recensement.nesSansBoucle,
+                recensement.nesMorts,
+                recensement.nes,
+              )}
+            </Text>
+          ) : null}
+          <Text style={commonStyles.note}>{T.aideBordereaux}</Text>
+        </>
       ) : null}
-      <Button variant="secondary" label={T.estive.bouton} onPress={() => setEstiveOuverte(true)} />
+
       {/* Tous les PDF déjà générés, pour garder un historique. */}
-      <Button
-        variant="secondary"
-        label={TEXTES.export.bibliotheque.bouton}
-        onPress={() => router.push(ROUTES.bibliothequeDepuis(retour) as never)}
-      />
+      <BlocLignes>
+        <ListRow
+          title={TEXTES.export.bibliotheque.bouton}
+          subtitle={TEXTES.export.bibliotheque.aide}
+          trailing={<Ionicons name="time-outline" size={22} color={colors.primary} />}
+          onPress={() => router.push(ROUTES.bibliothequeDepuis(retour) as never)}
+        />
+      </BlocLignes>
       <FenetreEstive visible={estiveOuverte} annee={annee} onClose={() => setEstiveOuverte(false)} />
     </Screen>
   );
