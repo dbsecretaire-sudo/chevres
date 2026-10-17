@@ -7,9 +7,14 @@ import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
 import { chevresAyantAvorte } from '@/features/exploitation/services/lotsAnnuels';
-import { boucleDesFemellesALaReproduction, bouclesDuLot, lotsDeReproduction } from '@/features/exploitation/services/lots';
+import {
+  boucleDesFemellesALaReproduction,
+  bouclesDuLot,
+  lotsDeReproduction,
+} from '@/features/exploitation/services/lots';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
-import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { SEXE, STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
+import { ageAtteint } from '@/shared/utils/age';
 import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { capitaliser, especeCourante, vocabulaire, type Vocabulaire } from '@/shared/dictionnaire/animaux';
@@ -62,21 +67,25 @@ function joursEntre(debut: string, fin: string): number {
 /** L'âge au départ ou à la mort : en jours, puis en mois dès qu'il dépasse deux mois. */
 const ageTexte = (jours: number): string => (jours < 60 ? C.jours(jours) : C.mois(Math.round(jours / 30)));
 
-/** Un départ dans les deux mois qui suivent la naissance (l'abattoir des cabris) se note toujours, même après la fin de l'année. */
-const JOURS_DEUX_MOIS = 61;
 /**
- * Un petit parti après le 31 décembre de l'année de sa naissance et plus de deux mois après elle : ce départ (et son poids) n'est pas dans
- * le carnet de cette année. Un cabri parti à l'abattoir dans les deux mois y est, même en janvier ou février de l'année d'après.
+ * Un petit parti après le 31 décembre de l'année de sa naissance, à un âge où il n'est plus un petit (la chevrette gardée, partie à
+ * l'abattoir dix-neuf mois plus tard) : ce départ (et son poids) n'est pas dans le carnet de cette année. Un cabri parti à l'abattoir
+ * encore petit y est, même en janvier ou février de l'année d'après.
  */
 const departTardif = (c: Chevre): boolean =>
-  !!c.dateStatut && c.dateStatut > `${c.dateNaissance.slice(0, 4)}-12-31` && joursEntre(c.dateNaissance, c.dateStatut) > JOURS_DEUX_MOIS;
+  !!c.dateStatut &&
+  c.dateStatut > `${c.dateNaissance.slice(0, 4)}-12-31` &&
+  ageAtteint(c.dateNaissance, agePetitMax(), c.dateStatut);
 
 /**
- * Un petit est parti ou mort : il a un statut de sortie et une date qui compte dans le carnet (dans l'année de sa naissance ou dans les deux
- * mois qui la suivent ; voir departTardif).
+ * Un petit est parti ou mort : il a un statut de sortie et une date qui compte dans le carnet (dans l'année de sa naissance, ou plus tard mais encore petit ;
+ * voir departTardif).
  */
 const estParti = (c: Chevre): boolean =>
-  c.statut !== STATUT_CHEVRE.VIVANTE && c.statut !== STATUT_CHEVRE.MORT_NE && !!c.dateStatut && !departTardif(c);
+  c.statut !== STATUT_CHEVRE.VIVANTE &&
+  c.statut !== STATUT_CHEVRE.MORT_NE &&
+  !!c.dateStatut &&
+  !departTardif(c);
 
 /** Ce qu'est devenu un petit (mort-né, mort, vendu…) et son âge à ce moment-là ; rien quand il est toujours là. */
 function devenirDuCabri(c: Chevre): { devenir: string; age: string } {
@@ -109,7 +118,10 @@ export function ligneDeLaPortee(p: PorteeNaissance): LigneCabri {
   const renouvellement = p.cabrits.some((c) => c.renouvellement) ? C.renouvellement : '';
   return {
     date: jourEtMois(p.date),
-    numero: p.cabrits.map((c) => c.numeroBoucle || '').filter(Boolean).join('\n'),
+    numero: p.cabrits
+      .map((c) => c.numeroBoucle || '')
+      .filter(Boolean)
+      .join('\n'),
     mere: p.mereNumeroBoucle || C.inconnue,
     sexe: p.cabrits.map(lettreDuSexe).filter(Boolean).join(' + '),
     observations: [texte((x) => x.devenir), renouvellement].filter(Boolean).join(' · '),
@@ -197,7 +209,9 @@ export function porteesParAnnee(portees: PorteeNaissance[]): { annee: string; po
     const annee = p.date.slice(0, 4);
     parAnnee.set(annee, [...(parAnnee.get(annee) ?? []), p]);
   }
-  return [...parAnnee.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([annee, liste]) => ({ annee, portees: liste }));
+  return [...parAnnee.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([annee, liste]) => ({ annee, portees: liste }));
 }
 
 /** Les résultats de production d'une année, d'après ses mises bas (ce qui dépend de la reproduction reste à écrire à la main). */
@@ -248,7 +262,9 @@ export function chevresMisesALaReproduction(
   const deLots = lotsDeReproduction(lots, annee);
   if (deLots.length > 0) {
     // Les femelles des lots : une boucle qui n'est pas celle d'un mâle du cheptel (un animal sorti ou inconnu compte aussi).
-    const males = new Set(animaux.filter((c) => c.sexe === SEXE.MALE && c.numeroBoucle).map((c) => c.numeroBoucle));
+    const males = new Set(
+      animaux.filter((c) => c.sexe === SEXE.MALE && c.numeroBoucle).map((c) => c.numeroBoucle),
+    );
     const desLots = new Set(deLots.flatMap((l) => bouclesDuLot(l)).filter((b) => !males.has(b)));
     return desLots.size + new Set(meres.filter((m) => m && !desLots.has(m))).size;
   }
@@ -292,7 +308,11 @@ export function resultatsDeLAnnee(
     r.nes += taille;
     for (const c of p.cabrits) {
       // Vendus (à l'abattoir compris) ou gardés comme reproducteurs, à n'importe quelle date : un petit gardé quelques mois est vendu l'année d'après.
-      if (c.statut === STATUT_CHEVRE.VENDUE || c.statut === STATUT_CHEVRE.ABATTOIR || (c.renouvellement && c.statut === STATUT_CHEVRE.VIVANTE)) {
+      if (
+        c.statut === STATUT_CHEVRE.VENDUE ||
+        c.statut === STATUT_CHEVRE.ABATTOIR ||
+        (c.renouvellement && c.statut === STATUT_CHEVRE.VIVANTE)
+      ) {
         r.vendusOuGardes += 1;
       }
       if (c.statut === STATUT_CHEVRE.MORT_NE) {
@@ -404,8 +424,16 @@ const champ = (libelle: string, valeur = ''): string =>
 
 /** La couverture : le titre, les années du carnet, et l'exploitation. */
 function pageCouverture(infos: InfosExploitation | undefined, annees: string[]): string {
-  const periode = annees.length === 0 ? '' : annees.length === 1 ? annees[0] : `${annees[0]} – ${annees[annees.length - 1]}`;
-  const lignes = [infos?.nomExploitant?.trim(), infos?.numeroExploitation ? `${C.exploitation} : ${infos.numeroExploitation}` : ''].filter(Boolean);
+  const periode =
+    annees.length === 0
+      ? ''
+      : annees.length === 1
+        ? annees[0]
+        : `${annees[0]} – ${annees[annees.length - 1]}`;
+  const lignes = [
+    infos?.nomExploitant?.trim(),
+    infos?.numeroExploitation ? `${C.exploitation} : ${infos.numeroExploitation}` : '',
+  ].filter(Boolean);
   return `<div class="page">
     <div class="couverture">
       <div><div class="grand">${echapper(C.titre)}</div>${periode ? `<div class="periode">${echapper(periode)}</div>` : ''}</div>
@@ -460,7 +488,8 @@ function pageDonnees(infos: InfosExploitation | undefined, contacts: ContactsDuC
         <h1>${echapper(C.coordonnees)}</h1>
         ${[C.groupement, C.veterinaire, C.veterinaireSanitaire, C.inseminateur]
           .map((l) => {
-            const connu = l === C.veterinaire ? contacts.veterinaire : l === C.groupement ? contacts.groupement : [];
+            const connu =
+              l === C.veterinaire ? contacts.veterinaire : l === C.groupement ? contacts.groupement : [];
             return `${champ(l, connu[0])}${champ('', connu[1])}`;
           })
           .join('')}
@@ -474,9 +503,21 @@ function pageDonnees(infos: InfosExploitation | undefined, contacts: ContactsDuC
  * petit, n° de la mère, n° du père, sexe) ou la moitié droite (observations, âge de départ ou de mort, poids de départ) : les deux pages
  * face à face se lisent ensemble, ligne par ligne.
  */
-function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire, moitie?: 'gauche' | 'droite'): string {
+function pageCabris(
+  annee: string,
+  lignes: LigneCabri[],
+  v: Vocabulaire,
+  moitie?: 'gauche' | 'droite',
+): string {
   const c = C.colonnes;
-  const colonnes: { th: string; valeur: (l: LigneCabri) => string; libre?: boolean; entiere: number; gauche?: number; droite?: number }[] = [
+  const colonnes: {
+    th: string;
+    valeur: (l: LigneCabri) => string;
+    libre?: boolean;
+    entiere: number;
+    gauche?: number;
+    droite?: number;
+  }[] = [
     { th: c.date, valeur: (l) => l.date, entiere: 9, gauche: 15 },
     { th: c.numero(v.petit.singulier), valeur: (l) => l.numero, entiere: 18, gauche: 28 },
     { th: c.mere, valeur: (l) => l.mere, entiere: 11, gauche: 23 },
@@ -486,8 +527,10 @@ function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire, moitie?
     { th: c.age, valeur: (l) => l.age, entiere: 11, droite: 34 },
     { th: c.poids, valeur: (l) => l.poids, entiere: 10, droite: 28 },
   ];
-  const choisies = moitie === 'gauche' ? colonnes.slice(0, 5) : moitie === 'droite' ? colonnes.slice(5) : colonnes;
-  const largeur = (col: (typeof colonnes)[number]) => (moitie === 'gauche' ? col.gauche : moitie === 'droite' ? col.droite : col.entiere);
+  const choisies =
+    moitie === 'gauche' ? colonnes.slice(0, 5) : moitie === 'droite' ? colonnes.slice(5) : colonnes;
+  const largeur = (col: (typeof colonnes)[number]) =>
+    moitie === 'gauche' ? col.gauche : moitie === 'droite' ? col.droite : col.entiere;
   const lignesHtml = lignes
     .map(
       (l) =>
@@ -495,7 +538,10 @@ function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire, moitie?
     )
     .join('');
   // Le titre n'est que sur la page de droite du livret (du côté du poids de départ), grand et aligné à droite ; la page de gauche n'en a pas.
-  const titre = moitie === 'gauche' ? '' : `<h1 class="titre-cabris${moitie === 'droite' ? ' a-droite' : ''}">${echapper(capitaliser(v.petit.pluriel))} — ${echapper(annee)}</h1>`;
+  const titre =
+    moitie === 'gauche'
+      ? ''
+      : `<h1 class="titre-cabris${moitie === 'droite' ? ' a-droite' : ''}">${echapper(capitaliser(v.petit.pluriel))} — ${echapper(annee)}</h1>`;
   return `<div class="page">
     ${titre}
     <table>
@@ -510,7 +556,11 @@ function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire, moitie?
 const pourcent = (n: number | undefined): string => (n === undefined ? '' : `${n} %`);
 
 /** La page des résultats de production et du calcul des taux d'une année : ce que les mises bas permettent de calculer est déjà écrit. */
-function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire): { gauche: string; droite: string } {
+function partiesResultats(
+  annee: string,
+  r: ResultatsProduction,
+  v: Vocabulaire,
+): { gauche: string; droite: string } {
   const T = C.resultats;
   const f = v.femelle.pluriel;
   const p = v.petit.pluriel;
@@ -518,7 +568,10 @@ function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire)
     `<div class="boite"><div class="intitule">${echapper(intitule)}</div><div class="case">${echapper(valeur)}</div></div>`;
   const groupe = (titre: string, lignes: [string, number][]) =>
     `<div class="groupe"><div class="titre">${echapper(titre)}</div><div class="lignes">${lignes
-      .map(([l, n], k) => `<div class="l${k === lignes.length - 1 ? ' total' : ''}"><span>${echapper(l)}</span><b>${n}</b></div>`)
+      .map(
+        ([l, n], k) =>
+          `<div class="l${k === lignes.length - 1 ? ' total' : ''}"><span>${echapper(l)}</span><b>${n}</b></div>`,
+      )
       .join('')}</div></div>`;
   const taux = (nom: string, formule: string, valeur = '') =>
     `<div class="taux"><div class="tete"><div class="nom">${echapper(nom)} =</div><div class="valeur">${echapper(valeur)}</div></div><div class="formule">${echapper(formule)}</div></div>`;
@@ -527,7 +580,12 @@ function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire)
         ${boite(T.misesALaReproduction(f), String(r.misesALaReproduction ?? ''))}
         ${boite(T.avorte(f), String(r.avortements ?? ''))}
         ${boite(T.misBas(f), String(r.misesBas))}
-        ${groupe(T.nes(p), [[T.simples, r.simples], [T.doubles, r.doubles], [T.triples, r.triplesEtPlus], [T.total, r.nes]])}
+        ${groupe(T.nes(p), [
+          [T.simples, r.simples],
+          [T.doubles, r.doubles],
+          [T.triples, r.triplesEtPlus],
+          [T.total, r.nes],
+        ])}
         ${groupe(T.morts(p), [
           [T.naissance, r.mortsNaissance],
           [T.premiereSemaine, r.mortsSemaine],
@@ -574,12 +632,22 @@ export function carnetMiseBasHtml(
     resultatsDeLAnnee(
       liste,
       annee,
-      animaux ? chevresMisesALaReproduction(animaux, Number(annee), liste.map((p) => p.mereNumeroBoucle), lots) : undefined,
+      animaux
+        ? chevresMisesALaReproduction(
+            animaux,
+            Number(annee),
+            liste.map((p) => p.mereNumeroBoucle),
+            lots,
+          )
+        : undefined,
       chevresAyantAvorte(lots, Number(annee)),
     );
   const parPage = format === 'livret' ? LIGNES_PAR_PAGE_LIVRET : LIGNES_PAR_PAGE;
   const pages = [
-    pageCouverture(infos, annees.map((a) => a.annee)),
+    pageCouverture(
+      infos,
+      annees.map((a) => a.annee),
+    ),
     pageDonnees(infos, contacts),
     ...(annees.length === 0
       ? [`<div class="page"><p class="vide">${echapper(C.aucune)}</p></div>`]
@@ -610,7 +678,8 @@ export function carnetMiseBasHtml(
       const speciale = /couverture|blanche/.test(livret[k]);
       return `<div class="page6">${speciale ? livret[k] : `<div class="interieur">${livret[k]}</div><div class="numero-page">${k + 1}</div>`}</div>`;
     };
-    const demi5 = ([gauche, droite]: [number, number]) => `<div class="demi5">${page6(gauche)}${page6(droite)}</div>`;
+    const demi5 = ([gauche, droite]: [number, number]) =>
+      `<div class="demi5">${page6(gauche)}${page6(droite)}</div>`;
     return `<!DOCTYPE html>
 <html>
 <head>

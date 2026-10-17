@@ -78,7 +78,13 @@ describe('carnet de mise bas', () => {
     expect(l).toMatchObject({ observations: 'R', age: '', poids: '' });
   });
 
-  it('un cabri parti à l’abattoir dans les deux mois est noté, même après la fin de l’année', () => {
+  it('un cabri parti à l’abattoir encore petit (73 jours) est noté, même après la fin de l’année ; un animal gardé puis parti à 19 mois, non', () => {
+    const tard = ligneDeLaPortee(
+      portee('2025-12-14', 'a', [
+        petit('M', { numeroBoucle: '00846', dateNaissance: '2025-12-14', statut: 'abattoir', dateStatut: '2026-02-25', poidsKg: 7.3 }),
+      ]),
+    );
+    expect(tard).toMatchObject({ observations: 'A', age: '2 mois', poids: '7,3 kg' });
     const l = ligneDeLaPortee(
       portee('2024-12-29', 'a', [
         petit('M', { numeroBoucle: '00715', dateNaissance: '2024-12-29', statut: 'abattoir', dateStatut: '2025-02-10', poidsKg: 9 }),
