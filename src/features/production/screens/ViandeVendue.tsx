@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -69,6 +70,8 @@ type SorteDeVendus = 'morts' | 'vivants';
 /** La viande vendue de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
 export default function ViandeVendue() {
   const router = useRouter();
+  /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
+  const retour = useAdresseCourante();
   const { espece } = useEtablissement();
   const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
   const regrouper = !!settings.toutesAnnees;
@@ -500,7 +503,7 @@ export default function ViandeVendue() {
                 {
                   label: TEXTES.cheptel.reservation.ouvrirLaFiche,
                   icon: 'paw' as const,
-                  onPress: () => router.push(ROUTES.ficheChevre(menu.id)),
+                  onPress: () => router.push(ROUTES.ficheChevreDepuis(menu.id, retour)),
                 },
               ]
             : []

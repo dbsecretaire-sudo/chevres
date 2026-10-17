@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Alert, FlatList, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
@@ -47,6 +48,8 @@ function compareBoucle(a?: string, b?: string): number {
 
 export default function Historique() {
   const router = useRouter();
+  /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
+  const retour = useAdresseCourante();
   // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
   const { espece } = useEtablissement();
   const [chevres, setChevres] = useState<Chevre[]>([]);
@@ -135,7 +138,7 @@ export default function Historique() {
               formatDateFR(item.dateStatut),
             )}
             trailing={<Badge label={statutLabel(item.statut, item.sexe)} color={statutColors[item.statut]} />}
-            onPress={() => router.push(ROUTES.ficheChevre(item.id))}
+            onPress={() => router.push(ROUTES.ficheChevreDepuis(item.id, retour))}
           />
         )}
       />

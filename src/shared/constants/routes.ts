@@ -159,6 +159,8 @@ export const ROUTES = {
   COMPTE_PCG_NOUVEAU: '/comptabilite/comptes-pcg/nouveau',
 
   ficheChevre: (id: string) => `/cheptel/${id}` as const,
+  /** La fiche d'un animal ouverte depuis une liste (les naissances, l'historique, la viande…) : la flèche de retour y ramène. */
+  ficheChevreDepuis: (id: string, retour: string) => `/cheptel/${id}?retour=${encodeURIComponent(retour)}` as const,
   ficheFacture: (id: string) => `/comptabilite/facture/${id}` as const,
   ficheVente: (id: string) => `/comptabilite/vente/${id}` as const,
   ficheFournisseur: (id: string) => `/comptabilite/fournisseurs/${id}` as const,

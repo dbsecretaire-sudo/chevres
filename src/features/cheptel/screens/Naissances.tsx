@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Button } from '@/shared/components/Button';
 import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
@@ -24,6 +25,8 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 
 export default function Naissances() {
   const router = useRouter();
+  /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
+  const retour = useAdresseCourante();
   // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
   const { espece } = useEtablissement();
   const [portees, setPortees] = useState<PorteeNaissance[]>([]);
@@ -112,7 +115,7 @@ export default function Naissances() {
             <View style={styles.cabritsRow}>
               {item.cabrits.map((c) => (
                 <View key={c.id} style={styles.cabritChip}>
-                  <Text style={styles.cabritChipText} onPress={() => router.push(ROUTES.ficheChevre(c.id))}>
+                  <Text style={styles.cabritChipText} onPress={() => router.push(ROUTES.ficheChevreDepuis(c.id, retour))}>
                     {c.numeroBoucle ?? TEXTES.cheptel.naissances.sansBoucleSexe(c.sexe)}
                   </Text>
                   <Badge label={statutLabel(c.statut, c.sexe)} color={statutColors[c.statut]} />

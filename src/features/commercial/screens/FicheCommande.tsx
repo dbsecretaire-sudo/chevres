@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
@@ -78,6 +79,8 @@ const texte = (valeur: number): string => String(valeur).replace('.', ',');
 /** Une commande : le client, les fromages (au tarif de sa catégorie), les dates, puis sa préparation, sa livraison et son bon. */
 export default function FicheCommande() {
   const router = useRouter();
+  /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
+  const retour = useAdresseCourante();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [existante, setExistante] = useState<Commande | undefined>();
   const [clients, setClients] = useState<Client[]>([]);
@@ -452,7 +455,7 @@ export default function FicheCommande() {
       {animauxVendusDuBon.length > 0 ? (
         <SectionForm titre={TEXTES.cheptel.reservation.vendusDuBon}>
           {animauxVendusDuBon.map((a) => (
-            <LigneChevre key={a.id} chevre={a} onPress={() => router.push(ROUTES.ficheChevre(a.id))} />
+            <LigneChevre key={a.id} chevre={a} onPress={() => router.push(ROUTES.ficheChevreDepuis(a.id, retour))} />
           ))}
         </SectionForm>
       ) : null}
@@ -462,7 +465,7 @@ export default function FicheCommande() {
         <SectionForm titre={TEXTES.cheptel.reservation.section}>
           {reserves.length === 0 ? <Text style={commonStyles.note}>{TEXTES.cheptel.reservation.aucun}</Text> : null}
           {reserves.map((a) => (
-            <LigneChevre key={a.id} chevre={a} onPress={() => router.push(ROUTES.ficheChevre(a.id))} />
+            <LigneChevre key={a.id} chevre={a} onPress={() => router.push(ROUTES.ficheChevreDepuis(a.id, retour))} />
           ))}
           <Button
             variant="secondary"
