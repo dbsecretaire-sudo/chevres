@@ -206,6 +206,8 @@ export const reglageInvestissement = (
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
+  /** Mode avancé de Production › Viande : les onglets des animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants). */
+  ventesSansFacture?: boolean;
   /** Vrai une fois faite la réparation des animaux de lots d'abattoir remis vivants par une ancienne version (elle ne se refait pas). */
   reparationLotsAbattoir?: boolean;
   /** Les catégories de lots d'animaux ajoutées par l'utilisateur (Abattoir et Vétérinaire sont d'office). */

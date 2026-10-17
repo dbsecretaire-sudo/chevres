@@ -1,16 +1,15 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { Checkbox } from '@/shared/components/Checkbox';
+import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
-import {
-  nomDuLotVendus,
-  ventesDuLotVendus,
-  type SorteDeVendus,
-} from '@/features/exploitation/services/lotsVendus';
+import { nomDuLotVendus, type SorteDeVendus } from '@/features/exploitation/services/lotsVendus';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
@@ -51,7 +50,7 @@ type OngletViande = 'afacturer' | 'facturee' | 'avendre' | 'vendue';
 export default function ViandeVendue() {
   const router = useRouter();
   const { espece } = useEtablissement();
-  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
   const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [ventes, setVentes] = useState<Vente[]>([]);
@@ -59,6 +58,10 @@ export default function ViandeVendue() {
   const [animaux, setAnimaux] = useState<Map<string, Chevre>>(new Map());
   /** Les jours d'abattage dont la viande n'est pas encore facturée. */
   const [aFacturer, setAFacturer] = useState<JourAbattu[]>([]);
+  /** Les animaux que désigne une vente (de toutes les années) : un animal sans boucle déjà vendu n'est plus à vendre. */
+  const [idsVendus, setIdsVendus] = useState<Set<string>>(new Set());
+  /** Les animaux sans boucle vendus sans facture : morts ou vivants. */
+  const [sousOnglet, setSousOnglet] = useState<SorteDeVendus>('morts');
 
   const charger = useCallback(async () => {
     const [toutesAnnees, liste, toutesVentes] = await Promise.all([
@@ -67,6 +70,7 @@ export default function ViandeVendue() {
       listToutesVentes(),
     ]);
     setAnnees(toutesAnnees);
+    setIdsVendus(new Set(toutesVentes.flatMap((v) => idsDesAnimaux(v))));
     const cheptel = (await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)) as Chevre[];
     setAnimaux(new Map(cheptel.map((a) => [a.id, a])));
     setAFacturer(
@@ -105,42 +109,30 @@ export default function ViandeVendue() {
       .filter((g) => g.animaux.length > 0),
   );
   const groupesAFacturer = groupes.filter((g) => g.avecBoucle);
-  const groupesSansFacture = groupes.filter((g) => !g.avecBoucle);
-  const venteDeLOnglet = onglet === 'facturee' ? facturees : onglet === 'vendue' ? sansFacture : [];
+  const venteDeLOnglet = onglet === 'facturee' ? facturees : [];
   const { lots } = useLots();
   /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
   const ouvrirLot = (id: string) =>
     `${ROUTES.lot(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
-  /** Les animaux sans boucle vendus sans facture : les ventes déjà faites, morts ou vivants (le lot gère le passage de l'un à l'autre). */
-  const morts = ventesDuLotVendus('morts', sansFacture, animaux);
-  const vivants = ventesDuLotVendus('vivants', sansFacture, animaux);
-  const autresSansFacture = sansFacture.filter((x) => idsDesAnimaux(x).length === 0);
+  /** Le mode avancé : les animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants) ont leurs onglets. */
+  const avance = !!settings.exploitation?.ventesSansFacture;
+  const parNaissance = (a: Chevre, b: Chevre) => b.dateNaissance.localeCompare(a.dateNaissance);
+  const sansBoucle = [...animaux.values()].filter((a) => especeDe(a) === espece && !a.numeroBoucle?.trim());
+  /** À vendre : les animaux sans boucle vivants, ou déjà à l'abattoir, qu'aucune vente ne désigne. */
+  const aVendre = sansBoucle
+    .filter(
+      (a) =>
+        (a.statut === STATUT_CHEVRE.VIVANTE || a.statut === STATUT_CHEVRE.ABATTOIR) && !idsVendus.has(a.id),
+    )
+    .sort(parNaissance);
+  /** Vendus sans facture : ceux des ventes sans facture de l'année, morts (« morte » ou à l'abattoir) ou vivants (« vendue »). */
+  const idsSansFacture = new Set(sansFacture.flatMap((v) => idsDesAnimaux(v)));
+  const vendus = sansBoucle.filter((a) => idsSansFacture.has(a.id)).sort(parNaissance);
+  const vendusMorts = vendus.filter((a) => a.statut !== STATUT_CHEVRE.VENDUE);
+  const vendusVivants = vendus.filter((a) => a.statut === STATUT_CHEVRE.VENDUE);
+  const ongletActif: OngletViande =
+    !avance && (onglet === 'avendre' || onglet === 'vendue') ? 'afacturer' : onglet;
   const total = venteDeLOnglet.reduce((somme, v) => somme + (v.prix ?? 0), 0);
-
-  /** La ligne d'une vente : un appui l'ouvre. */
-  const ligneVente = (item: Vente) => (
-    <ListRow
-      key={item.id}
-      title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
-      subtitle={[[formatDateFR(item.date), item.client].filter(Boolean).join(' · '), tracabilite(item)]
-        .filter(Boolean)
-        .join('\n')}
-      trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
-      onPress={() => router.push(ROUTES.ficheVente(item.id))}
-    />
-  );
-  /** Les ventes sans facture d'une sorte (morts ou vivants), sous le titre du lot : un appui sur le titre ouvre le lot. */
-  const sectionVendus = (sorte: SorteDeVendus, liste: Vente[]) => {
-    const lot = lots.find((l) => l.vendus === sorte);
-    return liste.length > 0 ? (
-      <View style={commonStyles.listeSimple} key={sorte}>
-        <Pressable disabled={!lot} onPress={() => lot && router.push(ouvrirLot(lot.id) as never)}>
-          <Text style={commonStyles.lineBold}>{`${nomDuLotVendus(sorte)} (${liste.length})`}</Text>
-        </Pressable>
-        {liste.map(ligneVente)}
-      </View>
-    ) : null;
-  };
 
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
   const ligneDuJour = (g: { date: string; avecBoucle: boolean; animaux: Chevre[] }) => {
@@ -212,18 +204,30 @@ export default function ViandeVendue() {
           puces={[
             { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length) },
             { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
-            { valeur: 'avendre', label: T.onglets.sansFactureAVendre(groupesSansFacture.length) },
-            { valeur: 'vendue', label: T.onglets.sansFactureVendue(sansFacture.length) },
+            ...(avance
+              ? [
+                  { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
+                  { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(vendus.length) },
+                ]
+              : []),
           ]}
-          valeur={onglet}
+          valeur={ongletActif}
           onChoisir={setOnglet}
+        />
+        {/* Avancé : activer ou désactiver les onglets des animaux sans boucle vendus sans facture. */}
+        <Checkbox
+          label={T.avance}
+          value={avance}
+          onChange={(v) =>
+            patchSettings({ exploitation: { ...settings.exploitation, ventesSansFacture: v } })
+          }
         />
         {venteDeLOnglet.length > 0 ? (
           <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
         ) : null}
       </View>
       {/* La viande des animaux déjà à l'abattoir qui n'est pas encore vendue : un appui ouvre la facture, sur ce jour d'abattage. */}
-      {onglet === 'afacturer' ? (
+      {ongletActif === 'afacturer' ? (
         <View style={commonStyles.listeSimple}>
           {groupesAFacturer.length === 0 ? (
             <EmptyState title={T.rienAFacturer} />
@@ -231,27 +235,53 @@ export default function ViandeVendue() {
             groupesAFacturer.map(ligneDuJour)
           )}
         </View>
-      ) : onglet === 'avendre' ? (
-        <View style={commonStyles.listeSimple}>
-          {groupesSansFacture.length === 0 ? (
-            <EmptyState title={T.rienASansFacture} />
-          ) : (
-            <>
-              <Text style={commonStyles.note}>{T.sansFactureAVendreAide}</Text>
-              {groupesSansFacture.map(ligneDuJour)}
-            </>
+      ) : ongletActif === 'avendre' ? (
+        <FlatList
+          data={aVendre}
+          keyExtractor={(a) => a.id}
+          contentContainerStyle={commonStyles.listeBlocAvecFab}
+          ListHeaderComponent={<Text style={commonStyles.note}>{T.sansFactureAVendreAide}</Text>}
+          ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
+          renderItem={({ item, index }) => (
+            <LigneDeBloc index={index} total={aVendre.length}>
+              <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+            </LigneDeBloc>
           )}
-        </View>
-      ) : onglet === 'vendue' ? (
-        <ScrollView contentContainerStyle={commonStyles.listeBlocAvecFab}>
-          {sectionVendus('morts', morts)}
-          {sectionVendus('vivants', vivants)}
-          {autresSansFacture.length > 0 ? (
-            <View style={commonStyles.listeSimple}>{autresSansFacture.map(ligneVente)}</View>
-          ) : null}
-          {sansFacture.length === 0 ? <EmptyState title={T.aucune} /> : null}
-          {morts.length + vivants.length > 0 ? <Text style={commonStyles.note}>{T.vendusAide}</Text> : null}
-        </ScrollView>
+        />
+      ) : ongletActif === 'vendue' ? (
+        <FlatList
+          data={sousOnglet === 'morts' ? vendusMorts : vendusVivants}
+          keyExtractor={(a) => a.id}
+          contentContainerStyle={commonStyles.listeBlocAvecFab}
+          ListHeaderComponent={
+            <View style={commonStyles.gap6}>
+              <PucesDefilantes<SorteDeVendus>
+                puces={[
+                  { valeur: 'morts', label: T.sousOnglets.morts(vendusMorts.length) },
+                  { valeur: 'vivants', label: T.sousOnglets.vivants(vendusVivants.length) },
+                ]}
+                valeur={sousOnglet}
+                onChoisir={setSousOnglet}
+              />
+              {/* Le lot « Animaux vendus morts / vivants » : on y passe une vente de morts à vivants (leurs fiches suivent). */}
+              {lots.some((l) => l.vendus === sousOnglet) ? (
+                <Pressable
+                  onPress={() =>
+                    router.push(ouvrirLot(lots.find((l) => l.vendus === sousOnglet)!.id) as never)
+                  }
+                >
+                  <Text style={commonStyles.lien}>{nomDuLotVendus(sousOnglet)}</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          }
+          ListEmptyComponent={<EmptyState title={T.aucune} />}
+          renderItem={({ item, index }) => (
+            <LigneDeBloc index={index} total={(sousOnglet === 'morts' ? vendusMorts : vendusVivants).length}>
+              <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+            </LigneDeBloc>
+          )}
+        />
       ) : (
         <FlatList
           data={venteDeLOnglet}
@@ -278,6 +308,23 @@ export default function ViandeVendue() {
       {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
       <Fab
         options={[
+          ...(avance
+            ? [
+                {
+                  label: T.vendreSansFacture,
+                  icon: 'add' as const,
+                  onPress: () =>
+                    router.push({
+                      pathname: ROUTES.COMPTABILITE_NOUVELLE,
+                      params: {
+                        type: TYPE_FACTURE.EMISE,
+                        categorie: CATEGORIE_RECETTE.VIANDE,
+                        facture: 'non',
+                      },
+                    }),
+                },
+              ]
+            : []),
           {
             label: T.rappeler,
             icon: 'alert-circle',
