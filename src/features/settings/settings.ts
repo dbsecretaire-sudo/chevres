@@ -204,6 +204,8 @@ export const reglageInvestissement = (
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
+  /** Vrai une fois faite la réparation des animaux de lots d'abattoir remis vivants par une ancienne version (elle ne se refait pas). */
+  reparationLotsAbattoir?: boolean;
   /** Les catégories de lots d'animaux ajoutées par l'utilisateur (Abattoir et Vétérinaire sont d'office). */
   categoriesLots?: string[];
   /** La liste des catégories de lots (noms et ordre) : celles d'office et celles de l'utilisateur. Absente : celles d'office, puis `categoriesLots`. */
