@@ -4,6 +4,7 @@ import { effectifsVivants } from '@/features/cheptel/repository/chevres';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
+import { numerosTiptag } from '@/features/stock/services/boucles';
 import { niveauxDeStock } from '@/features/stock/services/stock';
 
 /**
@@ -17,7 +18,15 @@ export function useNiveauxStock(): Map<string, number> {
     useCallback(() => {
       Promise.all([lireArchiveStock(), listToutesVentes()])
         .then(async ([archive, ventes]) =>
-          setNiveaux(niveauxDeStock(archive.mouvements, await effectifsVivants(new Set(ventes.flatMap((v) => idsDesAnimaux(v)))))),
+          setNiveaux(
+            niveauxDeStock(
+              archive.mouvements,
+              await effectifsVivants(
+                new Set(ventes.flatMap((v) => idsDesAnimaux(v))),
+                numerosTiptag(archive.boucles),
+              ),
+            ),
+          ),
         )
         .catch(() => undefined);
     }, []),

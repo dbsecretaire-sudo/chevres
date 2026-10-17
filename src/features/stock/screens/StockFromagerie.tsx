@@ -32,6 +32,7 @@ import { Button } from '@/shared/components/Button';
 import {
   bouclesDeLEspece,
   estBoucleDeRemplacement,
+  numerosTiptag,
   synchroniserPoseBoucles,
   bouclesPossiblesDuCheptel,
   synchroniserBouclesDuCheptel,
@@ -214,7 +215,7 @@ export default function StockFromagerie() {
     setArchive(stock);
     setAchats(factures);
     // Les animaux à l'abattoir que vend une facture du client ne comptent plus ; les autres (à facturer) sont du stock.
-    setEffectifs(await effectifsVivants(new Set(ventes.flatMap((v) => idsDesAnimaux(v)))));
+    setEffectifs(await effectifsVivants(new Set(ventes.flatMap((v) => idsDesAnimaux(v))), numerosTiptag(stock.boucles)));
     setPossibles(await bouclesPossiblesDuCheptel());
     setVentesLait(
       ventes
