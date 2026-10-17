@@ -242,8 +242,11 @@ export function useFicheVente(id: string | undefined) {
         dateAbattoir: venteADeclarer(form) ? form.dateAbattoir : undefined,
       };
       await saveVente(nettoye);
-      // Un animal retiré de la vente ne change pas de statut : une facture modifiée ne ressuscite personne (la fiche remet un animal dans le
-      // cheptel actif, sur demande). Ceux de la vente passent « vendus » à sa date.
+      // Un animal retiré de la vente (il y était, il n'y est plus) qui avait été vendu revient dans le cheptel actif ; ceux à l'abattoir gardent
+      // leur statut. Ceux de la vente passent « vendus » à sa date.
+      for (const id of (vente ? idsDesAnimaux(vente) : []).filter((x) => !animauxForm.includes(x))) {
+        if ((await getChevre(id))?.statut === STATUT_CHEVRE.VENDUE) await reactiverChevre(id);
+      }
       // Les animaux vendus : « abattoir » pour une vente de viande déclarée (à la date d'abattoir), « morte » si elle ne l'est pas, « vendus » sinon.
       const sortie = sortieDesAnimauxDeLaVente(nettoye);
       for (const id of animauxForm) await declarerStatutChevre(id, sortie.statut, sortie.date);
