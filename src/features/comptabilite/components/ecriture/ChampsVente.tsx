@@ -10,6 +10,8 @@ import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
+import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { prixDuTarif } from '@/features/commercial/services/commandes';
 import {
   cleJeunes,
@@ -494,6 +496,15 @@ export function ChampsVenteViande({ e }: Props) {
     if (parAnimal && jourChoisi && e.animaux.length === 0 && !unParUn) choisirJour(jourChoisi.date);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parAnimal, jourChoisi?.date, e.animaux.length, unParUn]);
+  // Les frais d'abattoir du lot choisi (sa facture liée, sinon le montant noté) : proposés pour la part des animaux de la vente.
+  const fraisDuJour = useFraisAbattoir();
+  const propositionFrais = jourChoisi ? fraisDuJour(jourChoisi.date, e.animaux.length) : undefined;
+  useEffect(() => {
+    if (!propositionFrais) return;
+    e.setFraisAbattoir(String(propositionFrais.montant).replace('.', ','));
+    if (propositionFrais.tauxTva !== undefined) e.setTauxTvaFrais(String(propositionFrais.tauxTva));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propositionFrais?.montant, propositionFrais?.tauxTva]);
   const ajouterAnimal = (id: string) => {
     const animal = animaux.find((a) => a.id === id);
     if (!animal) return;
@@ -798,6 +809,17 @@ export function ChampsVenteViande({ e }: Props) {
           </View>
         </>
       )}
+      {parAnimal && !e.prixLibre ? (
+        <ChampFraisAbattoir
+          key={`${e.dateAbattoir}-${e.animaux.length}-${propositionFrais?.montant ?? ''}`}
+          valeur={e.fraisAbattoir}
+          onChange={e.setFraisAbattoir}
+          taux={e.tauxTvaFrais}
+          onTaux={e.setTauxTvaFrais}
+          tauxParDefaut={e.tauxTvaVente}
+          montantViande={parseDecimal(e.montant)}
+        />
+      ) : null}
       {e.prixLibre ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
       ) : choisie && !prixDuDetail ? (

@@ -184,10 +184,13 @@ export function useFicheVente(id: string | undefined) {
     // Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : il n'est jamais saisi.
     const quantite = sansQuantite ? Math.max(1, animauxForm.length) : form.quantite;
     let prix = form.prix;
+    const frais = form.categorie === CATEGORIE_VENTE.VIANDE ? (form.fraisAbattoir ?? 0) : 0;
     const prixDeLInventaire =
       (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente;
     if (prixDeLInventaire) {
       prix = totalDeLaVente({ ...form, quantite }, await lireArchiveStock(), prixDuContact);
+      // Les frais d'abattoir refacturés s'ajoutent au prix de la viande.
+      if (prix !== undefined && frais > 0) prix = Math.round((prix + frais) * 100) / 100;
     }
     if (!prix || prix < 0) {
       return refuser(
@@ -207,6 +210,8 @@ export function useFicheVente(id: string | undefined) {
         quantite: reajustement ? 0 : quantite,
         reajustement: reajustement ? true : undefined,
         client: form.client?.trim() || undefined,
+        fraisAbattoir: prixDeLInventaire && frais > 0 ? frais : undefined,
+        tauxTvaFrais: prixDeLInventaire && frais > 0 ? (form.tauxTvaFrais ?? form.tauxTva) : undefined,
         precision: form.precision?.trim() || undefined,
         numeroFacture: venteADeclarer(form) && !reajustement ? form.numeroFacture?.trim() : undefined,
         // Pas de date d'abattoir quand la vente n'est pas déclarée : l'animal passe en « morte ».

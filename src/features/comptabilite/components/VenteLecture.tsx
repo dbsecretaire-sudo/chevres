@@ -79,6 +79,11 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
         {TEXTES.commun.general.montantDeuxPoints}
         {vente.prix?.toFixed(2)} €
       </Text>
+      {vente.fraisAbattoir ? (
+        <Text style={commonStyles.note}>
+          {TEXTES.comptabilite.nouvelleEcriture.fraisAbattoirLecture(`${vente.fraisAbattoir.toFixed(2)} €`)}
+        </Text>
+      ) : null}
       <Text style={commonStyles.line}>{TEXTES.comptabilite.ficheVente.declaree(venteADeclarer(vente))}</Text>
       {vente.payee === false ? (
         <Text style={commonStyles.line}>

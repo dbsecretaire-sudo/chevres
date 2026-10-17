@@ -121,6 +121,10 @@ export interface LotAnimaux {
   boucles: string;
   /** Un lot d'abattoir : le jour d'abattage de ses animaux (AAAA-MM-JJ). Il se crée et se tient à jour tout seul d'après le cheptel. */
   abattoir?: string;
+  /** Pour un lot d'abattoir : la facture (dépense) de l'abattoir qui le concerne ; son montant est proposé en frais refacturés au client. */
+  factureId?: string;
+  /** Sans facture liée : le montant que l'abattoir demande de payer (€ TTC), noté à la main. */
+  fraisAbattoir?: number;
 }
 
 /**

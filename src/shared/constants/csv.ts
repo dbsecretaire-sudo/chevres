@@ -126,6 +126,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'datePaiement',
     'circuit',
     'commandeId',
+    'fraisAbattoir',
+    'tauxTvaFrais',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
@@ -167,6 +169,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
 };
 
 export const CHAMPS_NOMBRE = new Set([
+  'fraisAbattoir',
+  'tauxTvaFrais',
   'cout',
   'delaiLaitJours',
   'delaiViandeJours',

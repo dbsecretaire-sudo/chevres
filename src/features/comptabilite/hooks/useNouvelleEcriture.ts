@@ -234,6 +234,9 @@ export function useNouvelleEcriture(
   const [fromages, setFromages] = useState<string[]>([]);
   /** Une vente de viande avec des animaux : leur date d'abattoir (vide : la date de la vente). */
   const [dateAbattoir, setDateAbattoir] = useState(abattoirInitial ?? '');
+  /** Une vente de viande : les frais d'abattoir refacturés au client (texte saisi) et leur taux de TVA (vide : celui de la vente). */
+  const [fraisAbattoir, setFraisAbattoir] = useState('');
+  const [tauxTvaFrais, setTauxTvaFrais] = useState('');
   const [precision, setPrecision] = useState('');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
@@ -466,6 +469,8 @@ export function useNouvelleEcriture(
     setBouclesDebut('');
     setMotifVisite('');
     setPoidsKg('');
+    setFraisAbattoir('');
+    setTauxTvaFrais('');
     setAnimaux([]);
     setPrecision('');
     setJeune(undefined);
@@ -558,6 +563,8 @@ export function useNouvelleEcriture(
         animaux,
         fromages,
         dateAbattoir,
+        fraisAbattoir,
+        tauxTvaFrais,
         precision,
         clientSelectionne,
         estProductionVente,
@@ -698,6 +705,10 @@ export function useNouvelleEcriture(
     setFromages,
     dateAbattoir,
     setDateAbattoir,
+    fraisAbattoir,
+    setFraisAbattoir,
+    tauxTvaFrais,
+    setTauxTvaFrais,
     setAnimaux,
     precision,
     setPrecision,

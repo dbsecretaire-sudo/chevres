@@ -1,6 +1,7 @@
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listComptesPcg } from '@/features/comptes-pcg/repository';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
+import { partsDeLaVente } from '@/features/comptabilite/utils/ventes';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import { activiteFacture, activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
@@ -122,7 +123,8 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
   for (const v of entree.ventes) {
     if (!retenue(activiteVente(v))) continue;
     const atelier = ATELIER_PAR_CATEGORIE_VENTE[v.categorie] ?? ATELIER.AUTRES;
-    recettes.set(atelier, (recettes.get(atelier) ?? 0) + montant(v.prix ?? 0, v.tauxTva));
+    const parts = partsDeLaVente(v).reduce((t, p) => t + montant(p.ttc, p.taux), 0);
+    recettes.set(atelier, (recettes.get(atelier) ?? 0) + parts);
   }
 
   for (const f of entree.factures) {

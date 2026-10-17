@@ -103,6 +103,9 @@ export interface SaisieEcriture {
   compteRecetteAutre: string;
   tauxTvaVente: string;
   tauxTvaAchat: string;
+  /** Une vente de viande : les frais d'abattoir refacturés (texte saisi) et leur taux de TVA (vide : celui de la vente). */
+  fraisAbattoir: string;
+  tauxTvaFrais: string;
   poidsKg: string;
   /** Commentaire facultatif (viande, charcuterie, animal sur pied ou vivant). */
   precision: string;
@@ -203,6 +206,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   const estFromage = s.categorieRecette === CATEGORIE_RECETTE.FROMAGE;
+  const frais = categorie === CATEGORIE_VENTE.VIANDE ? parseDecimal(s.fraisAbattoir) : 0;
   return {
     vente: {
       activite: s.activite,
@@ -218,8 +222,12 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
           : estAnimal || estViande || estFromage || categorie === CATEGORIE_VENTE.OEUFS
             ? UNITE_VENTE.PIECE
             : s.unite,
-      prix: prixNum,
+      // Le prix total comprend les frais d'abattoir refacturés.
+      prix: Math.round((prixNum + (frais > 0 ? frais : 0)) * 100) / 100,
       tauxTva: parseDecimal(s.tauxTvaVente),
+      fraisAbattoir: frais > 0 ? frais : undefined,
+      tauxTvaFrais:
+        frais > 0 ? parseDecimal(s.tauxTvaFrais.trim() ? s.tauxTvaFrais : s.tauxTvaVente) : undefined,
       client: s.clientSelectionne ? nomComplet(s.clientSelectionne) : undefined,
       poidsKg:
         (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,

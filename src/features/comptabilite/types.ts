@@ -270,4 +270,7 @@ export interface Vente {
   circuit?: string;
   /** La commande dont la livraison a créé la vente : son prix est celui de la commande, pas celui de l'inventaire. */
   commandeId?: string;
+  /** Pour une vente de viande : les frais d'abattoir refacturés au client (€ TTC), compris dans `prix`, et leur taux de TVA (celui de la vente à défaut). */
+  fraisAbattoir?: number;
+  tauxTvaFrais?: number;
 }

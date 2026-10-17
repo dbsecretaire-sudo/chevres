@@ -22,6 +22,8 @@ export const CATEGORIE_FOURNISSEUR = {
   GROUPEMENT: 'groupement',
   /** Le groupement sanitaire (GDS) : un partenaire d'office ; il figure dans les coordonnées utiles du carnet de mise bas. */
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
+  /** Un abattoir : ses factures (frais d'abattage) se lient aux lots d'abattoir pour être refacturées au client. */
+  ABATTOIR: 'abattoir',
   /** Un équarrisseur (ATM…) : il s'affiche dans Groupements avec ses coordonnées, ses contrats, ses factures et ses promotions. */
   EQUARRISSAGE: 'equarrissage',
   ASSUREUR: 'assureur',
@@ -40,6 +42,7 @@ export const CATEGORIES_FOURNISSEUR_PROTEGEES: readonly string[] = [
   CATEGORIE_FOURNISSEUR.ETAT,
   CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
   CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE,
+  CATEGORIE_FOURNISSEUR.ABATTOIR,
 ];
 
 /** Les dépenses d'office d'un vétérinaire. Les autres catégories n'en limitent aucune, sauf réglage contraire. */

@@ -49,6 +49,8 @@ import {
   estCategorieVente,
 } from '@/features/comptabilite/utils/recettes';
 import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
+import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
+import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -133,6 +135,8 @@ export function VenteFormulaire({
     !form.commandeId;
   const totalInventaire = archive ? totalDeLaVente(form, archive, prixDuContact) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
+  /** Les frais d'abattoir refacturés comptent dans le prix total (viande à l'inventaire seulement). */
+  const frais = animalEntier && prixInventaire ? (form.fraisAbattoir ?? 0) : 0;
   /** Un récolteur peut cocher « Réajustement » (vente de lait déclarée) : plus de litrage ni de numéro de facture saisis. */
   const peutReajuster = reajustementPossible(client, form.categorie, venteADeclarer(form));
   const reajustement = peutReajuster && !!form.reajustement;
@@ -344,7 +348,7 @@ export function VenteFormulaire({
           value={
             prixInventaire
               ? totalInventaire !== undefined
-                ? String(totalInventaire).replace('.', ',')
+                ? String(Math.round((totalInventaire + frais) * 100) / 100).replace('.', ',')
                 : ''
               : montantTexte
           }
@@ -356,6 +360,18 @@ export function VenteFormulaire({
         />
         {prixInventaire && totalInventaire === undefined ? (
           <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
+        ) : null}
+        {/* Les frais d'abattoir refacturés au client : leur montant et leur taux de TVA. */}
+        {animalEntier && prixInventaire ? (
+          <ChampFraisAbattoir
+            key={`${form.dateAbattoir ?? ''}-${form.quantite}-${form.fraisAbattoir ?? ''}`}
+            valeur={form.fraisAbattoir ? String(form.fraisAbattoir).replace('.', ',') : ''}
+            onChange={(texte) => onChange({ ...form, fraisAbattoir: parseDecimal(texte) > 0 ? parseDecimal(texte) : undefined })}
+            taux={form.tauxTvaFrais !== undefined ? String(form.tauxTvaFrais) : ''}
+            onTaux={(taux) => onChange({ ...form, tauxTvaFrais: Number(taux) })}
+            tauxParDefaut={String(form.tauxTva ?? '')}
+            montantViande={totalInventaire ?? 0}
+          />
         ) : null}
 
         {complement}

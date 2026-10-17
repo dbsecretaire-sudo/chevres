@@ -15,6 +15,7 @@ import {
 } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
+import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
@@ -62,6 +63,7 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   const [detailOuvert, setDetailOuvert] = useState(false);
   const ids = idsDesAnimaux(form);
   const cle = ids.join(SEPARATEUR_ANIMAUX);
+  const fraisDuJour = useFraisAbattoir();
 
   useEffect(() => {
     roleDuDetailDeVente(activite, form.precision).then(setRole);
@@ -103,12 +105,17 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   /** Applique la liste d'animaux : leur nombre, leur âge et, quand chacun a son poids, le poids de la vente (le prix suit). */
   const appliquer = (liste: Chevre[], supplement: Partial<Vente> = {}) => {
     const poids = poidsTotal(liste);
+    // Les frais d'abattoir du lot : proposés pour la part des animaux de la vente.
+    const jour = 'dateAbattoir' in supplement ? supplement.dateAbattoir : form.dateAbattoir;
+    const frais = liste.length > 0 ? fraisDuJour(jour, liste.length) : undefined;
     onChange({
       ...form,
       animaux: liste.length > 0 ? liste.map((a) => a.id).join(SEPARATEUR_ANIMAUX) : undefined,
       quantite: Math.max(1, liste.length),
       jeune: liste.length > 0 && petits ? true : undefined,
       ...(poids !== undefined ? { poidsKg: poids } : {}),
+      ...(frais ? { fraisAbattoir: frais.montant, tauxTvaFrais: frais.tauxTva ?? form.tauxTvaFrais } : {}),
+      ...(liste.length === 0 ? { fraisAbattoir: undefined, tauxTvaFrais: undefined } : {}),
       ...supplement,
     });
   };

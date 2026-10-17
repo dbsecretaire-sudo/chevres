@@ -1,7 +1,7 @@
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
 import type { Facture, Vente } from '@/features/comptabilite/types';
-import { venteADeclarer } from '@/features/comptabilite/utils/ventes';
+import { partsDeLaVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { estCategorieVente } from '@/features/comptabilite/utils/recettes';
 import { tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
@@ -93,7 +93,9 @@ interface RecetteTva {
 /** Les recettes de TVA de l'année : les ventes que le client souhaite déclarer et les factures émises (hors aides, dépôts et dons). */
 function recettesTva(ventes: Vente[], factures: Facture[]): RecetteTva[] {
   return [
-    ...ventes.filter(venteADeclarer).map((v) => ({ date: v.date, ttc: v.prix ?? 0, taux: v.tauxTva })),
+    ...ventes
+      .filter(venteADeclarer)
+      .flatMap((v) => partsDeLaVente(v).map((p) => ({ date: v.date, ttc: p.ttc, taux: p.taux }))),
     ...factures
       .filter(
         (f) =>

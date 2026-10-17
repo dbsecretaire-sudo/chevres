@@ -43,3 +43,19 @@ export const idsDesFromages = (vente: Pick<Vente, 'fromages'>): string[] =>
 /** Vrai quand le client souhaite que la vente soit déclarée (avec facture) : d'office, et pour les ventes d'avant ce choix. */
 export const venteADeclarer = (vente: Pick<Vente, 'choixFacture'>): boolean =>
   vente.choixFacture !== TYPE_CHOIX_FACTURE.SANS_FACTURE;
+
+/**
+ * Les parts d'une vente à un même taux de TVA : la viande, puis les frais d'abattoir refacturés quand ils ont leur taux (le prix de la
+ * vente les comprend). Une vente sans frais n'a qu'une part.
+ */
+export function partsDeLaVente(
+  v: Pick<Vente, 'prix' | 'tauxTva' | 'fraisAbattoir' | 'tauxTvaFrais'>,
+): { ttc: number; taux?: number }[] {
+  const total = v.prix ?? 0;
+  const frais = v.fraisAbattoir && v.fraisAbattoir > 0 ? Math.min(v.fraisAbattoir, total) : 0;
+  if (frais === 0) return [{ ttc: total, taux: v.tauxTva }];
+  return [
+    { ttc: Math.round((total - frais) * 100) / 100, taux: v.tauxTva },
+    { ttc: frais, taux: v.tauxTvaFrais ?? v.tauxTva },
+  ];
+}
