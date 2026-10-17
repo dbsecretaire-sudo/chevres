@@ -4,6 +4,7 @@ import { Badge } from '@/shared/components/Badge';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { useLots } from '@/features/exploitation/hooks/useLots';
+import { useTiptags } from '@/features/stock/hooks/useTiptags';
 import { bouclesDuLot } from '@/features/exploitation/services/lots';
 import {
   lotsAnnuels,
@@ -42,6 +43,7 @@ interface Props {
 export function ChevreSuiviAnnuel({ chevre }: Props) {
   const router = useRouter();
   const { lots, ajouterAuLotAnnuel } = useLots();
+  const tiptags = useTiptags();
   const boucle = chevre.numeroBoucle?.trim();
   const dedans = lotsAnnuelsDeLAnimal(lots, boucle);
   const annee = currentYear();
@@ -55,7 +57,7 @@ export function ChevreSuiviAnnuel({ chevre }: Props) {
     { categorie: CATEGORIE_LOT.AVORTEMENT, label: T.avorte(femelle) },
   ].filter(
     (b) =>
-      peutRejoindreLeLot(b.categorie, chevre, aujourdhui) &&
+      peutRejoindreLeLot(b.categorie, chevre, aujourdhui, tiptags) &&
       !lotsAnnuels(lots, b.categorie, annee).some((l) => bouclesDuLot(l).includes(boucle ?? '')),
   );
 

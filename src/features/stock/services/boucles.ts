@@ -228,6 +228,14 @@ const sorteDesNumeros = (boucles: BoucleStock[], tiptags?: ReadonlySet<string>):
   return (numero) => connues.get(numero) ?? (tiptags?.has(numero) ? ARTICLE_TIPTAG : ARTICLE_BOUCLES);
 };
 
+/** Les numéros des tiptag de l'inventaire (de l'espèce active). */
+export const numerosTiptag = (boucles: BoucleStock[] | undefined): Set<string> =>
+  new Set(
+    bouclesDeLEspece(boucles)
+      .filter((b) => b.article === ARTICLE_TIPTAG && b.numero?.trim())
+      .map((b) => b.numero.trim()),
+  );
+
 /** Les boucles qu'un animal porte : sa boucle (ou son tiptag) et, quand il en a une, sa boucle rouge (avec leur date de pose). */
 const bouclesPortees = (
   animal: AnimalBouclable,

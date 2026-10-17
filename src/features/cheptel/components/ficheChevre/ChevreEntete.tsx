@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { Badge } from '@/shared/components/Badge';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
 import {
@@ -15,10 +16,12 @@ import { LABEL_SEXE } from '@/shared/textes/libelles';
 
 interface Props {
   chevre: Chevre;
+  /** Un cabri à tiptag : destiné à l'abattoir (règle d'or). */
+  destineAAbattoir?: boolean;
 }
 
 /** En-tête de la fiche : nom, sexe/naissance, badges (statut, renouvellement). Le menu est dans la barre du haut. */
-export function ChevreEntete({ chevre }: Props) {
+export function ChevreEntete({ chevre, destineAAbattoir }: Props) {
   return (
     <View style={commonStyles.header}>
       <View>
@@ -31,6 +34,9 @@ export function ChevreEntete({ chevre }: Props) {
       <View style={commonStyles.headerDroite}>
         <View style={styles.badges}>
           <Badge label={statutLabel(chevre.statut, chevre.sexe)} color={statutColors[chevre.statut]} />
+          {destineAAbattoir ? (
+            <Badge label={TEXTES.cheptel.ficheChevre.destineAAbattoir} color={statutColors[STATUT_CHEVRE.ABATTOIR]} />
+          ) : null}
         </View>
       </View>
     </View>

@@ -6,6 +6,9 @@ import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
+import { estTiptag } from '@/features/cheptel/utils/tiptag';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { numerosTiptag } from '@/features/stock/services/boucles';
 import { chevresAyantAvorte } from '@/features/exploitation/services/lotsAnnuels';
 import {
   boucleDesFemellesALaReproduction,
@@ -88,7 +91,10 @@ const estParti = (c: Chevre): boolean =>
   !departTardif(c);
 
 /** Ce qu'est devenu un petit (mort-né, mort, vendu…) et son âge à ce moment-là ; rien quand il est toujours là. */
-function devenirDuCabri(c: Chevre): { devenir: string; age: string } {
+function devenirDuCabri(
+  c: Chevre,
+  tiptags: ReadonlySet<string> = new Set(),
+): { devenir: string; age: string } {
   // Un petit mort n'a pas d'observation : l'âge de départ / mort suffit.
   const devenir =
     c.statut === STATUT_CHEVRE.MORT_NE
@@ -96,7 +102,12 @@ function devenirDuCabri(c: Chevre): { devenir: string; age: string } {
       : estParti(c) && c.statut !== STATUT_CHEVRE.MORTE
         ? (C.statuts as Record<string, string>)[c.statut]
         : '';
-  return { devenir, age: estParti(c) ? ageTexte(joursEntre(c.dateNaissance, c.dateStatut!)) : '' };
+  // Règle d'or : un cabri à tiptag est destiné à l'abattoir, noté « A » même avant son départ.
+  const destine = !devenir && c.statut === STATUT_CHEVRE.VIVANTE && estTiptag(c, tiptags);
+  return {
+    devenir: destine ? (C.statuts as Record<string, string>)[STATUT_CHEVRE.ABATTOIR] : devenir,
+    age: estParti(c) ? ageTexte(joursEntre(c.dateNaissance, c.dateStatut!)) : '',
+  };
 }
 
 const lettreDuSexe = (c: Chevre): string => (c.sexe === SEXE.FEMELLE ? 'F' : c.sexe === SEXE.MALE ? 'M' : '');
@@ -105,9 +116,9 @@ const lettreDuSexe = (c: Chevre): string => (c.sexe === SEXE.FEMELLE ? 'F' : c.s
  * La ligne d'une mise bas : sa date, la mère, et ses petits sur la même ligne — leurs boucles et leurs sexes réunis par « + » (M + F + F).
  * Ce que sont devenus les petits (mort, vendu) et leur âge s'écrivent à la suite ; avec plusieurs petits, chacun est précédé de sa boucle.
  */
-export function ligneDeLaPortee(p: PorteeNaissance): LigneCabri {
+export function ligneDeLaPortee(p: PorteeNaissance, tiptags: ReadonlySet<string> = new Set()): LigneCabri {
   const plusieurs = p.cabrits.length > 1;
-  const parPetit = p.cabrits.map((c) => ({ c, ...devenirDuCabri(c) }));
+  const parPetit = p.cabrits.map((c) => ({ c, ...devenirDuCabri(c, tiptags) }));
   const texte = (valeur: (x: (typeof parPetit)[number]) => string): string =>
     parPetit
       .map((x) => ({ x, v: valeur(x) }))
@@ -115,7 +126,10 @@ export function ligneDeLaPortee(p: PorteeNaissance): LigneCabri {
       .map((e) => (plusieurs && e.x.c.numeroBoucle ? `${e.x.c.numeroBoucle} : ${e.v}` : e.v))
       // Plusieurs petits : une ligne par boucle (une seule valeur : rien ne change).
       .join('\n');
-  const renouvellement = p.cabrits.some((c) => c.renouvellement) ? C.renouvellement : '';
+  // Un cabri à tiptag est destiné à l'abattoir : il n'est pas de ceux du renouvellement.
+  const renouvellement = p.cabrits.some((c) => c.renouvellement && !estTiptag(c, tiptags))
+    ? C.renouvellement
+    : '';
   return {
     date: jourEtMois(p.date),
     numero: p.cabrits
@@ -131,8 +145,11 @@ export function ligneDeLaPortee(p: PorteeNaissance): LigneCabri {
 }
 
 /** Les mises bas d'une année, une par ligne : de la plus ancienne à la plus récente d'après la date de naissance (le n° de la mère n'entre pas dans le tri : à date égale, l'ordre de saisie est gardé). */
-export function lignesDeLAnnee(portees: PorteeNaissance[]): LigneCabri[] {
-  return [...portees].sort((a, b) => a.date.localeCompare(b.date)).map(ligneDeLaPortee);
+export function lignesDeLAnnee(
+  portees: PorteeNaissance[],
+  tiptags: ReadonlySet<string> = new Set(),
+): LigneCabri[] {
+  return [...portees].sort((a, b) => a.date.localeCompare(b.date)).map((p) => ligneDeLaPortee(p, tiptags));
 }
 
 /** Les lignes coupées en pages de 32 ; la dernière page est complétée de lignes vides, où écrire à la main les naissances suivantes. */
@@ -169,13 +186,17 @@ const MOIS_FIN_D_ANNEE = 7;
  * Les pages des petits d'une année : d'abord celles des naissances du début d'année, puis une page vide (des lignes à écrire à la main :
  * naissances hors saison, rattrapage), puis celles des naissances de fin d'année. Chaque groupe commence sur une page neuve.
  */
-export function pagesDeLAnnee(portees: PorteeNaissance[], parPage = LIGNES_PAR_PAGE): LigneCabri[][] {
+export function pagesDeLAnnee(
+  portees: PorteeNaissance[],
+  parPage = LIGNES_PAR_PAGE,
+  tiptags: ReadonlySet<string> = new Set(),
+): LigneCabri[][] {
   const debut = portees.filter((p) => Number(p.date.slice(5, 7)) < MOIS_FIN_D_ANNEE);
   const fin = portees.filter((p) => Number(p.date.slice(5, 7)) >= MOIS_FIN_D_ANNEE);
   return [
-    ...pagesDeLignes(lignesDeLAnnee(debut), parPage),
+    ...pagesDeLignes(lignesDeLAnnee(debut, tiptags), parPage),
     ...pagesDeLignes([], parPage),
-    ...(fin.length > 0 ? pagesDeLignes(lignesDeLAnnee(fin), parPage) : []),
+    ...(fin.length > 0 ? pagesDeLignes(lignesDeLAnnee(fin, tiptags), parPage) : []),
   ];
 }
 
@@ -626,6 +647,8 @@ export function carnetMiseBasHtml(
   animaux?: Chevre[],
   /** Les lots d'animaux : ceux de mise à la reproduction donnent les femelles mises à la reproduction d'une année. */
   lots: LotAnimaux[] = [],
+  /** Les numéros des tiptag de l'inventaire : un cabri à tiptag est destiné à l'abattoir (« A »). */
+  tiptags: ReadonlySet<string> = new Set(),
 ): string {
   const annees = porteesParAnnee(porteesAvecBoucle(portees)).reverse();
   const resultats = (annee: string, liste: PorteeNaissance[]) =>
@@ -655,14 +678,14 @@ export function carnetMiseBasHtml(
           format === 'livret'
             ? [
                 // Une double page par tableau (la moitié gauche, puis la droite), puis les résultats et les taux face à face.
-                ...pagesDeLAnnee(liste, parPage).flatMap((page) => [
+                ...pagesDeLAnnee(liste, parPage, tiptags).flatMap((page) => [
                   pageCabris(annee, page, v, 'gauche'),
                   pageCabris(annee, page, v, 'droite'),
                 ]),
                 ...pagesResultatsLivret(annee, resultats(annee, liste), v),
               ]
             : [
-                ...pagesDeLAnnee(liste, parPage).map((page) => pageCabris(annee, page, v)),
+                ...pagesDeLAnnee(liste, parPage, tiptags).map((page) => pageCabris(annee, page, v)),
                 pageResultats(annee, resultats(annee, liste), v),
               ],
         )),
@@ -724,6 +747,7 @@ export async function exporterCarnetMiseBasPdf(format: FormatCarnet = 'a4'): Pro
     contactsDuCarnet(fournisseurs),
     animaux,
     settings.exploitation?.lots ?? [],
+    numerosTiptag((await lireArchiveStock()).boucles),
   );
   if (format === 'livret') {
     await ecrireEtPartagerPdf(html, `${C.fichierLivret}.${FORMAT_EXPORT.PDF}`, C.titre, { sansMarges: true });

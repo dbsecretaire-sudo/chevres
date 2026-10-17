@@ -7,6 +7,8 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import type { CabritNaissanceForm } from '@/features/cheptel/hooks/useNouvelleNaissance';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
+import { estTiptag } from '@/features/cheptel/utils/tiptag';
+import { useTiptags } from '@/features/stock/hooks/useTiptags';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -22,6 +24,7 @@ interface Props {
 
 /** Bloc de saisie d'un cabri dans le formulaire de naissance. */
 export function CabritNaissanceBloc({ cabrit, numero, retirable, onChange, onRetirer }: Props) {
+  const tiptags = useTiptags();
   return (
     <Card style={commonStyles.gap10}>
       <View style={commonStyles.rowSpaceBetween}>
@@ -37,6 +40,7 @@ export function CabritNaissanceBloc({ cabrit, numero, retirable, onChange, onRet
         onChangeText={(v) => onChange({ numeroBoucle: v })}
         placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
       />
+      {estTiptag(cabrit, tiptags) ? <Text style={commonStyles.note}>{TEXTES.cheptel.ficheChevre.tiptagAbattoir}</Text> : null}
       <SelectField
         label={TEXTES.commun.general.sexe}
         required

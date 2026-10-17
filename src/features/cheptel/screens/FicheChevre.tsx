@@ -4,6 +4,10 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/Screen';
+import { useTiptags } from '@/features/stock/hooks/useTiptags';
+import { estTiptag } from '@/features/cheptel/utils/tiptag';
+import { ageAtteint } from '@/shared/utils/age';
+import { todayISO } from '@/shared/utils/dates';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -16,7 +20,10 @@ import { ChevreEntete } from '@/features/cheptel/components/ficheChevre/ChevreEn
 import { ChevreFormulaire } from '@/features/cheptel/components/ficheChevre/ChevreFormulaire';
 import { ChevreResume } from '@/features/cheptel/components/ficheChevre/ChevreResume';
 import { ChevreSuiviAnnuel } from '@/features/cheptel/components/ficheChevre/ChevreSuiviAnnuel';
-import { ChevreSortie, ChevreStatutDeclaration } from '@/features/cheptel/components/ficheChevre/ChevreStatut';
+import {
+  ChevreSortie,
+  ChevreStatutDeclaration,
+} from '@/features/cheptel/components/ficheChevre/ChevreStatut';
 import {
   ChevreDescendance,
   ChevreSante,
@@ -24,7 +31,7 @@ import {
 } from '@/features/cheptel/components/ficheChevre/ChevreHistorique';
 import { ChevreSortieFab } from '@/features/cheptel/components/ficheChevre/ChevreSortieFab';
 import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
-import { STATUT_CHEVRE, VUE_FICHE_CHEVRE } from '@/shared/constants/cheptel';
+import { STATUT_CHEVRE, VUE_FICHE_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { ChevreTraitements } from '@/features/cheptel/components/ChevreTraitements';
 import { ROUTES } from '@/shared/constants/routes';
 import { styles } from '@/shared/styles/cheptel/FicheChevre.styles';
@@ -40,6 +47,7 @@ export default function FicheChevre() {
   const fiche = useFicheChevre(id);
   const { chevre, form } = fiche;
   const [onglet, setOnglet] = useState<OngletFiche>('fiche');
+  const tiptags = useTiptags();
   /** La confirmation de « Remettre dans le cheptel actif » : on pouvait vouloir seulement corriger la date de sortie. */
   const [confirmerReactivation, setConfirmerReactivation] = useState(false);
 
@@ -78,7 +86,14 @@ export default function FicheChevre() {
             ),
           }}
         />
-        <ChevreEntete chevre={chevre} />
+        <ChevreEntete
+          chevre={chevre}
+          destineAAbattoir={
+            estVivante &&
+            estTiptag(chevre, tiptags) &&
+            !ageAtteint(chevre.dateNaissance, agePetitMax(), todayISO())
+          }
+        />
 
         <OptionsModal
           visible={fiche.menuOuvert}
@@ -152,7 +167,11 @@ export default function FicheChevre() {
               chevre={chevre}
               visites={fiche.visites}
               controles={fiche.controles}
-              onOuvrirVisite={(v) => router.push(`${ROUTES.santeVisite(v.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never)}
+              onOuvrirVisite={(v) =>
+                router.push(
+                  `${ROUTES.santeVisite(v.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never,
+                )
+              }
               onOuvrirControle={(c) => router.push(ROUTES.santeControleModifier(familleDuControle(c), c.id))}
             />
 
@@ -194,7 +213,9 @@ export default function FicheChevre() {
       <ConfirmModal
         visible={confirmerReactivation}
         title={TEXTES.cheptel.ficheChevre.reactivationQuestion}
-        message={TEXTES.cheptel.ficheChevre.reactivationMessage(statutLabel(chevre.statut, chevre.sexe).toLowerCase())}
+        message={TEXTES.cheptel.ficheChevre.reactivationMessage(
+          statutLabel(chevre.statut, chevre.sexe).toLowerCase(),
+        )}
         confirmLabel={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif}
         onCancel={() => setConfirmerReactivation(false)}
         onConfirm={() => {

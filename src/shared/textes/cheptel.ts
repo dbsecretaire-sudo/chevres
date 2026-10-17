@@ -256,6 +256,9 @@ export const TEXTES_CHEPTEL = {
     lierFacture: 'Lier la facture de l’abattoir',
     factureAbattoir: 'Facture de l’abattoir',
     aucuneFactureAbattoir: 'Aucune dépense d’un contact de la catégorie Abattoir : rangez votre abattoir dans cette catégorie (Contacts), puis saisissez sa facture.',
+    cabrisATiptag: (nombre: number) => `${nombre} cabri${nombre > 1 ? 's' : ''} à tiptag pas encore à l’abattoir`,
+    cabrisATiptagAide: 'Tout tiptag de cabri est destiné à l’abattoir. Les ajouter à ce lot (puis Enregistrer) les envoie à l’abattoir au jour du lot.',
+    ajouterLesCabrisATiptag: 'Les ajouter à ce lot',
     factureDuClient: 'Facture du client',
     aucuneFactureClient: 'Aucune facture du client pour ce lot : il est à facturer.',
     clientInconnu: 'Client',
@@ -626,6 +629,9 @@ export const TEXTES_CHEPTEL = {
     nDeBoucleDeLaDeuxPoints: 'N° de boucle de la mère :',
     notesDeuxPoints: 'Notes : ',
     leEspace: 'le ',
+    /** Règle d'or : tout tiptag de cabri est destiné à l'abattoir. */
+    destineAAbattoir: 'Destiné à l’abattoir',
+    tiptagAbattoir: 'Tiptag : ce cabri est destiné à l’abattoir.',
     /** Les onglets de la fiche d'un animal. */
     onglets: {
       fiche: 'Fiche',
