@@ -14,7 +14,10 @@ import { AnimauxDeLaVente } from '@/features/comptabilite/components/AnimauxDeLa
 import { AnimauxVendusEdition } from '@/features/comptabilite/components/AnimauxVendusEdition';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
-import { exporterDocumentCirculationPdf, FEUILLETS_CIRCULATION } from '@/features/export/documentCirculationPdf';
+import {
+  exporterDocumentCirculationPdf,
+  FEUILLETS_CIRCULATION,
+} from '@/features/export/documentCirculationPdf';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';

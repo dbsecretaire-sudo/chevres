@@ -137,6 +137,8 @@ export interface SaisieEcriture {
   echeance?: string;
   /** La vente est un réajustement (récolteur) : ni litrage ni numéro de facture. */
   reajustement?: boolean;
+  /** La vente est offerte au client : prix à 0 €. */
+  offert?: boolean;
   /** Le circuit de vente d'une vente (vide : non précisé). */
   circuit?: string;
 }
@@ -191,8 +193,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   // Le prix total est obligatoire pour toute vente ; quand il vient de l'inventaire, c'est qu'il n'y est pas défini.
-  const prixNum = parseDecimal(s.montant);
-  if (!prixNum || prixNum < 0) {
+  const prixNum = s.offert ? 0 : parseDecimal(s.montant);
+  if (!s.offert && (!prixNum || prixNum < 0)) {
     return {
       erreur:
         (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(categorie) &&
@@ -206,7 +208,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   const estFromage = s.categorieRecette === CATEGORIE_RECETTE.FROMAGE;
-  const frais = categorie === CATEGORIE_VENTE.VIANDE ? parseDecimal(s.fraisAbattoir) : 0;
+  const frais = categorie === CATEGORIE_VENTE.VIANDE && !s.offert ? parseDecimal(s.fraisAbattoir) : 0;
   return {
     vente: {
       activite: s.activite,
@@ -244,6 +246,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       choixFacture: s.avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
       numeroFacture: s.avecFacture && !s.reajustement ? s.numeroFacture.trim() : undefined,
       reajustement: s.reajustement ? true : undefined,
+      offert: s.offert ? true : undefined,
       payee: s.enAttente ? false : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       circuit: s.circuit || undefined,
@@ -377,7 +380,10 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       lignesMarchandises,
       lignesChambre,
       lignesVeterinaire: visite
-        ? lignesVeterinaireRetenues({ categorieDepense: s.categorieDepense, lignesVeterinaire: s.lignesVeterinaire })
+        ? lignesVeterinaireRetenues({
+            categorieDepense: s.categorieDepense,
+            lignesVeterinaire: s.lignesVeterinaire,
+          })
         : undefined,
       lignesProduction,
       stockArticle: stockProduction ? s.stockArticle : undefined,

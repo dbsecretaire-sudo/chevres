@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
-import { Alert, FlatList, Modal, Pressable, Text, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { exporterBordereauxPertePdf } from '@/features/export/bordereauPertePdf';
@@ -15,8 +15,7 @@ import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { SelectField } from '@/shared/components/SelectField';
 import { statutColors } from '@/shared/theme/colors';
-import { changerDateDeSortieEnMasse, listChevresHistorique } from '@/features/cheptel/repository/chevres';
-import { DateField } from '@/shared/components/DateField';
+import { listChevresHistorique } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { currentYear, formatDateFR } from '@/shared/utils/dates';
 import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
@@ -55,10 +54,6 @@ export default function Historique() {
   /** Les années où l'on peut imprimer les bordereaux de perte, et la fenêtre où l'on choisit. */
   const [annees, setAnnees] = useState<number[]>([]);
   const [choixAnnee, setChoixAnnee] = useState(false);
-  /** La correction d'une date de sortie : la date enregistrée choisie, puis la vraie date. */
-  const [choixDate, setChoixDate] = useState(false);
-  const [dateACorriger, setDateACorriger] = useState('');
-  const [vraieDate, setVraieDate] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -79,24 +74,13 @@ export default function Historique() {
     });
   }, [chevres, tri]);
 
-  /** Les dates de sortie enregistrées, avec le nombre d'animaux de chacune : de quoi retrouver celle notée en bloc après coup. */
-  const datesDeSortie = useMemo(() => {
-    const compte = new Map<string, number>();
-    for (const c of chevres) if (c.dateStatut) compte.set(c.dateStatut, (compte.get(c.dateStatut) ?? 0) + 1);
-    return [...compte.entries()].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]));
-  }, [chevres]);
-  const appliquerCorrection = async () => {
-    await changerDateDeSortieEnMasse(dateACorriger, vraieDate);
-    setDateACorriger('');
-    listChevresHistorique().then(setChevres);
-  };
-
   /** Imprime les bordereaux de perte de l'année choisie (« toutes » : toutes les années) ; rien à imprimer sans perte. */
   const imprimerBordereaux = async (choix: string) => {
     setChoixAnnee(false);
     const liste = choix === 'toutes' ? annees : [Number(choix)];
     try {
-      if ((await exporterBordereauxPertePdf(liste)) === 0) Alert.alert(TEXTES.cheptel.suiviMouvements.aucunePerte);
+      if ((await exporterBordereauxPertePdf(liste)) === 0)
+        Alert.alert(TEXTES.cheptel.suiviMouvements.aucunePerte);
     } catch (e: unknown) {
       Alert.alert(e instanceof Error ? e.message : TEXTES.commun.general.erreur);
     }
@@ -122,58 +106,6 @@ export default function Historique() {
           options={OPTIONS_TRI}
         />
       </View>
-      <View style={commonStyles.topPadded}>
-        <Button
-          variant="secondary"
-          label={TEXTES.cheptel.historique.corrigerDate}
-          onPress={() => setChoixDate(true)}
-          disabled={datesDeSortie.length === 0}
-        />
-      </View>
-      {/* Une date de sortie notée en bloc (le jour de la saisie) : on la remplace pour tous ses animaux. */}
-      <SelectModal<string>
-        visible={choixDate}
-        titre={TEXTES.cheptel.historique.quelleDate}
-        value=""
-        options={datesDeSortie.map(([date, nombre]) => ({
-          value: date,
-          label: TEXTES.cheptel.historique.dateEtNombre(formatDateFR(date), nombre),
-        }))}
-        onSelect={(date) => {
-          setChoixDate(false);
-          setDateACorriger(date);
-          setVraieDate(date);
-        }}
-        onClose={() => setChoixDate(false)}
-      />
-      <Modal visible={!!dateACorriger} transparent animationType="fade" onRequestClose={() => setDateACorriger('')}>
-        <Pressable style={commonStyles.backdrop} onPress={() => setDateACorriger('')}>
-          <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
-            <Text style={commonStyles.subheading}>
-              {TEXTES.cheptel.historique.corrigerTitre(
-                formatDateFR(dateACorriger),
-                datesDeSortie.find(([d]) => d === dateACorriger)?.[1] ?? 0,
-              )}
-            </Text>
-            <Text style={commonStyles.note}>{TEXTES.cheptel.historique.corrigerAide}</Text>
-            <DateField label={TEXTES.cheptel.historique.vraieDate} value={vraieDate} onChange={setVraieDate} />
-            <View style={commonStyles.row}>
-              <Button
-                style={commonStyles.flex1}
-                variant="secondary"
-                label={TEXTES.commun.general.annuler}
-                onPress={() => setDateACorriger('')}
-              />
-              <Button
-                style={commonStyles.flex1}
-                label={TEXTES.commun.general.enregistrer}
-                onPress={appliquerCorrection}
-                disabled={!vraieDate || vraieDate === dateACorriger}
-              />
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
       <SelectModal<string>
         visible={choixAnnee}
         titre={TEXTES.cheptel.suiviMouvements.annee}

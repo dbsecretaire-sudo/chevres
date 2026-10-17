@@ -154,7 +154,11 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
               onMotif={e.setMotifVisite}
               onAjouter={e.setAjouterVisite}
             />
-            <LignesVeterinaireEditor lignes={e.lignesVeterinaire} onChange={e.setLignesVeterinaire} dateParDefaut={e.date} />
+            <LignesVeterinaireEditor
+              lignes={e.lignesVeterinaire}
+              onChange={e.setLignesVeterinaire}
+              dateParDefaut={e.date}
+            />
           </>
         )}
         {e.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (

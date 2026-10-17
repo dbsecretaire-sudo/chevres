@@ -919,13 +919,6 @@ export const TEXTES_CHEPTEL = {
   historique: {
     dateDeSortie: 'Date de sortie',
     trierPar: 'Trier par',
-    /** Corriger une date de sortie notée en bloc (le jour de la saisie) : le recensement au 1er janvier suit les vraies dates. */
-    corrigerDate: 'Corriger une date de sortie',
-    quelleDate: 'Quelle date de sortie corriger ?',
-    dateEtNombre: (date: string, nombre: number) => `${date} — ${nombre} animal${nombre > 1 ? 'aux' : ''}`.replace('animalaux', 'animaux'),
-    corrigerTitre: (date: string, nombre: number) => `Changer la date de sortie du ${date} (${nombre} animal${nombre > 1 ? 'aux' : ''})`.replace('animalaux', 'animaux'),
-    corrigerAide: 'Tous ces animaux sortis ce jour-là prennent la nouvelle date : le recensement du 1er janvier et les bordereaux de perte la suivent.',
-    vraieDate: 'Vraie date de sortie',
     aucunHistorique: 'Aucun historique',
     lesChevresMortesEnvoyeesA:
       "Les animaux morts, envoyés à l'abattoir ou vendus apparaîtront ici, tout en restant enregistrés.",

@@ -4,7 +4,11 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.comptabilite.nouvelleEcriture.visite;
 
-export { SEPARATEUR_MOTIFS, motifsDeLaVisite, texteDesMotifs } from '@/features/exploitation/components/ChampMotifsVisite';
+export {
+  SEPARATEUR_MOTIFS,
+  motifsDeLaVisite,
+  texteDesMotifs,
+} from '@/features/exploitation/components/ChampMotifsVisite';
 
 interface Props {
   motif: string;

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
@@ -35,6 +36,7 @@ import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/c
 import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
 import { Checkbox } from '@/shared/components/Checkbox';
+import { commonStyles } from '@/shared/styles/commonStyles';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
@@ -78,6 +80,14 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
                 e.setAnimaux([]);
               }}
             />
+            <Checkbox
+              label={TEXTES.comptabilite.nouvelleEcriture.offert}
+              value={e.offert}
+              onChange={e.setOffert}
+            />
+            {e.offert ? (
+              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertAide}</Text>
+            ) : null}
             {/* Une vente déclarée a un numéro de facture. */}
             {e.avecFacture ? (
               <ChampNumeroFacture

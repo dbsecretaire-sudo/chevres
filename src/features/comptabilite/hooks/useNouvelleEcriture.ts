@@ -135,6 +135,8 @@ export function useNouvelleEcriture(
   const [numeroFacture, setNumeroFacture] = useState('');
   /** Le récolteur coche « Réajustement » : décoché d'office. */
   const [reajustementCoche, setReajustement] = useState(false);
+  /** Une vente offerte au client : prix à 0 €. */
+  const [offertCoche, setOffert] = useState(false);
   /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
   const [natureUrssaf, setNatureUrssaf] = useState('');
   /** Le paiement n'a pas encore eu lieu : sa date prévue (la trésorerie la compte à cette date). */
@@ -577,6 +579,7 @@ export function useNouvelleEcriture(
         atelier,
         elementAgri,
         reajustement,
+        offert: offertCoche && estProductionVente,
         natureUrssaf,
         circuit,
       });
@@ -758,6 +761,8 @@ export function useNouvelleEcriture(
     reajustementPossible,
     reajustement,
     setReajustement,
+    offert: offertCoche,
+    setOffert,
     // affichage
     compteAffiche,
     avecFacture,

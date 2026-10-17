@@ -345,19 +345,26 @@ export function VenteFormulaire({
           </View>
         )}
         {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
+        <Checkbox
+          label={TEXTES.comptabilite.nouvelleEcriture.offert}
+          value={!!form.offert}
+          onChange={(offert) => onChange({ ...form, offert: offert ? true : undefined })}
+        />
         <FormField
           label={TEXTES.comptabilite.ficheVente.prixTotal}
           required
           value={
-            prixInventaire
-              ? totalInventaire !== undefined
-                ? String(Math.round((totalInventaire + frais) * 100) / 100).replace('.', ',')
-                : ''
-              : montantTexte
+            form.offert
+              ? '0,00'
+              : prixInventaire
+                ? totalInventaire !== undefined
+                  ? String(Math.round((totalInventaire + frais) * 100) / 100).replace('.', ',')
+                  : ''
+                : montantTexte
           }
           onChangeText={onChangerMontant}
-          editable={!prixInventaire}
-          style={prixInventaire ? commonStyles.verrouille : undefined}
+          editable={!prixInventaire && !form.offert}
+          style={prixInventaire || form.offert ? commonStyles.verrouille : undefined}
           keyboardType="decimal-pad"
           placeholder="0,00"
         />

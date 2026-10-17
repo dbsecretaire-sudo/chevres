@@ -47,7 +47,8 @@ function DateFacultative({
   parDefaut: string;
   onChange: (valeur: string | undefined) => void;
 }) {
-  if (!valeur) return <Button variant="secondary" label={T.ajouterDate(label)} onPress={() => onChange(parDefaut)} />;
+  if (!valeur)
+    return <Button variant="secondary" label={T.ajouterDate(label)} onPress={() => onChange(parDefaut)} />;
   return (
     <View style={commonStyles.rowFin}>
       <View style={commonStyles.flex1}>
@@ -216,7 +217,11 @@ export function LignesVeterinaireEditor({ lignes, onChange, dateParDefaut, visit
           )}
         </View>
       ))}
-      <Button variant="secondary" label={T.ajouter} onPress={() => onChange([...lignes, ligneVeterinaireVide()])} />
+      <Button
+        variant="secondary"
+        label={T.ajouter}
+        onPress={() => onChange([...lignes, ligneVeterinaireVide()])}
+      />
       <Text style={commonStyles.note}>{T.aideAnimaux}</Text>
       <SelectModalMultiple<string>
         key={ligneAChoisir ?? 'fermee'}

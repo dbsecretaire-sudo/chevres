@@ -17,20 +17,18 @@ export function lignesVeterinaireRetenues(
   if (facture.categorieDepense !== CATEGORIE_DEPENSE.VETERINAIRE) return undefined;
   const lignes = (facture.lignesVeterinaire ?? [])
     .filter((l) => l.libelle.trim())
-    .map(
-      (l): LigneVeterinaire => ({
-        id: l.id,
-        libelle: l.libelle.trim(),
-        animal: net(l.animal),
-        ordonnance: net(l.ordonnance),
-        dateDebut: net(l.dateDebut),
-        dateFin: net(l.dateFin),
-        voie: net(l.voie),
-        dose: net(l.dose),
-        rythme: net(l.rythme),
-        remiseEnVente: net(l.remiseEnVente),
-        observations: net(l.observations),
-      }),
-    );
+    .map((l): LigneVeterinaire => ({
+      id: l.id,
+      libelle: l.libelle.trim(),
+      animal: net(l.animal),
+      ordonnance: net(l.ordonnance),
+      dateDebut: net(l.dateDebut),
+      dateFin: net(l.dateFin),
+      voie: net(l.voie),
+      dose: net(l.dose),
+      rythme: net(l.rythme),
+      remiseEnVente: net(l.remiseEnVente),
+      observations: net(l.observations),
+    }));
   return lignes.length > 0 ? lignes : undefined;
 }

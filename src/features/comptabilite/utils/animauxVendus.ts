@@ -34,7 +34,10 @@ export const UN_PAR_UN = '__un_par_un';
 
 /** Les boucles d'un lot en quelques mots : toutes quand il y en a peu, sinon de la première à la dernière (« 00836 → 00855 »). */
 export function resumeBoucles(animaux: Chevre[]): string {
-  const boucles = animaux.map((a) => a.numeroBoucle).filter((b): b is string => !!b).sort();
+  const boucles = animaux
+    .map((a) => a.numeroBoucle)
+    .filter((b): b is string => !!b)
+    .sort();
   if (boucles.length <= 3) return boucles.join(', ');
   return `${boucles[0]} → ${boucles[boucles.length - 1]}`;
 }

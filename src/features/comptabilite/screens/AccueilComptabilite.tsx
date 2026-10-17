@@ -35,7 +35,13 @@ export default function AccueilComptabilite() {
   /** Les écritures, avec l'inventaire (qui existe pour un élevage et pour un gîte, pas pour un secrétariat ni une activité financière). */
   const ecritures: Rubrique[] = [
     { cle: 'ecritures', titre: T.ecritures, icone: 'list', route: ROUTES.COMPTABILITE_LISTE },
-    { cle: 'contacts', titre: TEXTES.contacts.titre, aide: TEXTES.contacts.aideRubrique, icone: 'people', route: ROUTES.CONTACTS },
+    {
+      cle: 'contacts',
+      titre: TEXTES.contacts.titre,
+      aide: TEXTES.contacts.aideRubrique,
+      icone: 'people',
+      route: ROUTES.CONTACTS,
+    },
     ...(inventaireAccessible()
       ? [
           {

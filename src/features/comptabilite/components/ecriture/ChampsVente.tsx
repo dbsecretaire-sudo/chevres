@@ -29,7 +29,11 @@ import { SelectModal } from '@/shared/components/SelectModal';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { colors } from '@/shared/theme/colors';
-import { estPetitLe, listAnimauxAbattusDe, listAnimauxVivantsDe } from '@/features/cheptel/repository/chevres';
+import {
+  estPetitLe,
+  listAnimauxAbattusDe,
+  listAnimauxVivantsDe,
+} from '@/features/cheptel/repository/chevres';
 import {
   joursAbattusAFacturer,
   libelleAnimalVendu,
@@ -97,7 +101,9 @@ function useTotalVerrouille(
  * Le prix d'un article (fromage, viande) pour le contact de la vente : celui de sa catégorie dans la grille de tarifs (un particulier et
  * un professionnel ne paient pas le même prix), à défaut le prix de l'inventaire.
  */
-function usePrixSelonLeContact(e: EtatNouvelleEcriture): (cle: string | undefined, prixInventaire: number | undefined) => number | undefined {
+function usePrixSelonLeContact(
+  e: EtatNouvelleEcriture,
+): (cle: string | undefined, prixInventaire: number | undefined) => number | undefined {
   const [tarifs, setTarifs] = useState<Record<string, Record<string, number>>>({});
   useFocusEffect(
     useCallback(() => {
@@ -106,7 +112,9 @@ function usePrixSelonLeContact(e: EtatNouvelleEcriture): (cle: string | undefine
   );
   const categorie = e.clientSelectionne?.categorie;
   return (cle, prixInventaire) =>
-    cle ? prixDuTarif(cle, categorie, tarifs, prixInventaire === undefined ? {} : { [cle]: prixInventaire }) : prixInventaire;
+    cle
+      ? prixDuTarif(cle, categorie, tarifs, prixInventaire === undefined ? {} : { [cle]: prixInventaire })
+      : prixInventaire;
 }
 
 /** Le prix de vente défini à l'inventaire pour le lait (€ le litre) ou l'œuf (€ pièce, 0,50 € d'office). */
@@ -612,7 +620,10 @@ export function ChampsVenteViande({ e }: Props) {
                   options={[
                     ...joursProposes.map((j) => ({
                       value: j.date,
-                      label: TEXTES.comptabilite.nouvelleEcriture.jourAbattu(formatDateFR(j.date), j.animaux.length),
+                      label: TEXTES.comptabilite.nouvelleEcriture.jourAbattu(
+                        formatDateFR(j.date),
+                        j.animaux.length,
+                      ),
                     })),
                     { value: UN_PAR_UN, label: TEXTES.comptabilite.nouvelleEcriture.unParUn },
                   ]}
@@ -692,7 +703,9 @@ export function ChampsVenteViande({ e }: Props) {
               ) : null}
               {animauxChoisis.some((a) => a.poidsKg === undefined) && animauxChoisis.length > 0 ? (
                 <Text style={commonStyles.note}>
-                  {TEXTES.comptabilite.nouvelleEcriture.poidsManquant(animauxChoisis.filter((a) => a.poidsKg === undefined).length)}
+                  {TEXTES.comptabilite.nouvelleEcriture.poidsManquant(
+                    animauxChoisis.filter((a) => a.poidsKg === undefined).length,
+                  )}
                 </Text>
               ) : null}
               {!jourChoisi && animauxChoisis.length > 0 ? (
@@ -712,7 +725,12 @@ export function ChampsVenteViande({ e }: Props) {
                 </Card>
               ) : null}
               {animauxChoisis.length > 0 && e.avecFacture ? (
-                <ChampDateAbattoir dateVente={e.date} value={e.dateAbattoir} onChange={e.setDateAbattoir} verrouille={!!jourChoisi} />
+                <ChampDateAbattoir
+                  dateVente={e.date}
+                  value={e.dateAbattoir}
+                  onChange={e.setDateAbattoir}
+                  verrouille={!!jourChoisi}
+                />
               ) : null}
               {/* Les animaux choisis en délai d'attente pour la viande le jour de la vente (ou de l'abattage). */}
               {animauxChoisis.length > 0 ? (
@@ -822,7 +840,9 @@ export function ChampsVenteViande({ e }: Props) {
           duLot={!!jourChoisi}
           onFacturer={(facturer) => {
             setFraisRefactures(facturer);
-            e.setFraisAbattoir(facturer && propositionFrais ? String(propositionFrais.montant).replace('.', ',') : '');
+            e.setFraisAbattoir(
+              facturer && propositionFrais ? String(propositionFrais.montant).replace('.', ',') : '',
+            );
           }}
         />
       ) : null}

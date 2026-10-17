@@ -98,7 +98,9 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   /** Le lot de la vente : un jour d'abattage dont tous les animaux choisis font partie. */
   const jourChoisi = joursProposes.find(
     (j) =>
-      j.date === form.dateAbattoir && choisis.length > 0 && choisis.every((a) => j.animaux.some((x) => x.id === a.id)),
+      j.date === form.dateAbattoir &&
+      choisis.length > 0 &&
+      choisis.every((a) => j.animaux.some((x) => x.id === a.id)),
   );
   const abattusProposes = (jourChoisi?.animaux ?? []).filter((a) => !ids.includes(a.id));
 
@@ -159,7 +161,9 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
           <View style={commonStyles.rowSpaceBetween}>
             <View style={commonStyles.flex1}>
               <Text style={commonStyles.lineSemiBold}>{T.abattoirDu(formatDateFR(jourChoisi.date))}</Text>
-              <Text style={commonStyles.muted}>{T.lotResume(choisis.length, resumeBoucles(choisis), poidsTotal(choisis))}</Text>
+              <Text style={commonStyles.muted}>
+                {T.lotResume(choisis.length, resumeBoucles(choisis), poidsTotal(choisis))}
+              </Text>
             </View>
             <Pressable
               onPress={() => {
@@ -206,7 +210,11 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
               {T.animauxVendus}
               <Text style={commonStyles.required}> *</Text>
             </Text>
-            <Pressable style={commonStyles.boutonPastille} onPress={() => setOuvert(true)} accessibilityLabel={T.ajouterUnAnimal}>
+            <Pressable
+              style={commonStyles.boutonPastille}
+              onPress={() => setOuvert(true)}
+              accessibilityLabel={T.ajouterUnAnimal}
+            >
               <Ionicons name="add-circle" size={28} color={colors.ajout} />
             </Pressable>
           </View>
@@ -229,7 +237,9 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
         </>
       ) : null}
       {choisis.some((a) => a.poidsKg === undefined) && choisis.length > 0 ? (
-        <Text style={commonStyles.note}>{T.poidsManquant(choisis.filter((a) => a.poidsKg === undefined).length)}</Text>
+        <Text style={commonStyles.note}>
+          {T.poidsManquant(choisis.filter((a) => a.poidsKg === undefined).length)}
+        </Text>
       ) : null}
       {!jourChoisi && ids.length > 0 && form.categorie === CATEGORIE_VENTE.VIANDE && declaree ? (
         <ChampDateAbattoir

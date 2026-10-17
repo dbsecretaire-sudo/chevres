@@ -184,7 +184,7 @@ export function useFicheVente(id: string | undefined) {
     // Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : il n'est jamais saisi.
     const quantite = sansQuantite ? Math.max(1, animauxForm.length) : form.quantite;
     let prix = form.prix;
-    const frais = form.categorie === CATEGORIE_VENTE.VIANDE ? (form.fraisAbattoir ?? 0) : 0;
+    const frais = form.categorie === CATEGORIE_VENTE.VIANDE && !form.offert ? (form.fraisAbattoir ?? 0) : 0;
     const prixDeLInventaire =
       (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente;
     if (prixDeLInventaire) {
@@ -192,7 +192,9 @@ export function useFicheVente(id: string | undefined) {
       // Les frais d'abattoir refacturés s'ajoutent au prix de la viande.
       if (prix !== undefined && frais > 0) prix = Math.round((prix + frais) * 100) / 100;
     }
-    if (!prix || prix < 0) {
+    // Une vente offerte (un cadeau) a un prix de 0 €.
+    if (form.offert) prix = 0;
+    if (!form.offert && (!prix || prix < 0)) {
       return refuser(
         prixDeLInventaire
           ? {
@@ -209,6 +211,7 @@ export function useFicheVente(id: string | undefined) {
         prix,
         quantite: reajustement ? 0 : quantite,
         reajustement: reajustement ? true : undefined,
+        offert: form.offert ? true : undefined,
         client: form.client?.trim() || undefined,
         fraisAbattoir: prixDeLInventaire && frais > 0 ? frais : undefined,
         tauxTvaFrais: prixDeLInventaire && frais > 0 ? (form.tauxTvaFrais ?? form.tauxTva) : undefined,

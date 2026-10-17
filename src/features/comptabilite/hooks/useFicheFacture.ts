@@ -118,9 +118,14 @@ export function useFicheFacture(id: string | undefined) {
     setLignesCarburant(f ? versLignesCarburantForm(f) : []);
     setLignesMarchandises(f ? versLignesMarchandisesForm(f) : []);
     // Une facture de la Chambre n'a de boucles que celles qu'elle a commandées (sinon, une ligne vide, pas son montant entier).
-    const detailleeParChambre = f?.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (f.lignesChambre?.length ?? 0) > 0;
+    const detailleeParChambre =
+      f?.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (f.lignesChambre?.length ?? 0) > 0;
     setLignesProduction(
-      f ? (detailleeParChambre && !f.lignesProduction?.length ? [ligneProductionVide()] : versLignesProductionForm(f)) : [],
+      f
+        ? detailleeParChambre && !f.lignesProduction?.length
+          ? [ligneProductionVide()]
+          : versLignesProductionForm(f)
+        : [],
     );
     setLignesChambre(f ? versLignesChambreForm(f) : []);
     setDetaillerChambre(false);

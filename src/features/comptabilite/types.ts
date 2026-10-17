@@ -260,6 +260,8 @@ export interface Vente {
   numeroFacture?: string;
   /** Un réajustement (vente de lait d'un récolteur) : sans litrage ni numéro de facture saisis. */
   reajustement?: boolean;
+  /** Une vente offerte (un cadeau au client) : son prix est de 0 €, les animaux et les produits sortent quand même du stock. */
+  offert?: boolean;
   /** Le paiement : faux = pas encore encaissé (voir echeance) ; absent : encaissé à la date de la vente (le cas d'office). */
   payee?: boolean;
   /** Pour une vente pas encore encaissée : la date prévue du paiement. */

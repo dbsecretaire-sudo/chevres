@@ -681,6 +681,8 @@ export const TEXTES_COMPTABILITE = {
     typeDeFromage: 'Type de fromage',
     detailDeLaVente: 'Détail de la vente',
     declarerLaVente: 'Le contact souhaite déclarer la vente',
+    offert: 'Offert au client (cadeau)',
+    offertAide: 'Le prix est de 0 € : les animaux et les produits sortent du stock comme pour une vente.',
     natureUrssaf: 'Nature de la recette (URSSAF)',
     natureUrssafAuto: 'Selon la catégorie',
     prixLibreRecolteur: 'Contact récolteur : le prix est libre, saisissez le total.',
@@ -698,20 +700,28 @@ export const TEXTES_COMPTABILITE = {
     animauxVendus: 'Animaux vendus',
     /** Les animaux déjà à l'abattoir : on choisit le jour d'abattage, puis tous les animaux ou certains numéros. */
     fraisAbattoir: 'Frais d’abattoir refacturés (€ TTC)',
-    fraisAbattoirAide: 'Ce que l’abattoir vous demande de payer, refacturé au client : il s’ajoute au prix de la viande. Le montant est celui de la facture de l’abattoir liée au lot (Lots d’animaux › Abattoir).',
+    fraisAbattoirAide:
+      'Ce que l’abattoir vous demande de payer, refacturé au client : il s’ajoute au prix de la viande. Le montant est celui de la facture de l’abattoir liée au lot (Lots d’animaux › Abattoir).',
     tvaDesFrais: 'TVA des frais (%)',
     totalAvecFrais: (total: string) => `Total de la facture avec les frais : ${total}`,
-    facturerLesFrais: (montant: string) => `Facturer les frais d’abattoir au client (${montant} TTC pour ces animaux)`,
-    aucuneFactureAbattoirLiee: 'Aucune facture d’abattoir n’est liée à ce lot : pas de frais à refacturer. Liez-la dans Lots d’animaux › Abattoir.',
+    facturerLesFrais: (montant: string) =>
+      `Facturer les frais d’abattoir au client (${montant} TTC pour ces animaux)`,
+    aucuneFactureAbattoirLiee:
+      'Aucune facture d’abattoir n’est liée à ce lot : pas de frais à refacturer. Liez-la dans Lots d’animaux › Abattoir.',
     dateAbattoirDuLot: 'C’est le jour d’abattage du lot : elle ne se modifie pas ici.',
     fraisAbattoirLecture: (montant: string) => `Frais d’abattoir refacturés : ${montant}`,
     abattoirAFacturer: 'Abattoir à facturer',
     choisirAbattoir: 'Choisir l’abattoir (tous ses animaux)',
     unParUn: 'Choisir les animaux un par un',
-    jourAbattu: (date: string, nombre: number) => `Abattoir du ${date} — ${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`,
+    jourAbattu: (date: string, nombre: number) =>
+      `Abattoir du ${date} — ${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`,
     abattoirDu: (date: string) => `Abattoir du ${date}`,
     lotResume: (nombre: number, boucles: string, poids?: number) =>
-      [`${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`, boucles, poids ? `${String(poids).replace('.', ',')} kg` : '']
+      [
+        `${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`,
+        boucles,
+        poids ? `${String(poids).replace('.', ',')} kg` : '',
+      ]
         .filter(Boolean)
         .join(' · '),
     retirerAbattoir: 'Retirer cet abattoir',
