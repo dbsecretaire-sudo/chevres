@@ -307,7 +307,7 @@ const STYLES = `
   th, td { border: 1.3px solid #111; padding: 1mm 2mm; text-align: center; vertical-align: middle; }
   th { font-size: 9.5pt; font-weight: 700; }
   td { height: 7mm; padding-top: 0; padding-bottom: 0; font-size: 10pt; }
-  td.libre { text-align: left; font-size: 9.5pt; overflow-wrap: anywhere; }
+  td.libre { text-align: center; font-size: 9.5pt; overflow-wrap: anywhere; }
   .boite { display: flex; margin: 0 0 4mm; }
   .boite .intitule { flex: 1; border: 1.3px solid #111; padding: 2mm 3mm; }
   .boite .case { width: 18mm; border: 1.3px solid #111; border-left: none; font-weight: 700; color: #1a2a8a; display: flex; align-items: center; justify-content: center; }
