@@ -242,10 +242,12 @@ export function niveauxDeStock(
   for (const m of mouvements) niveaux.set(m.article, (niveaux.get(m.article) ?? 0) + m.delta);
   for (const [espece, effectif] of Object.entries(effectifs ?? {})) {
     niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.JEUNE}`), effectif?.petits ?? 0);
-    // L'animal vivant : les femelles adultes vivantes (le bouc se vend à part). L'animal sur pied : les chèvres mortes, déjà à l'abattoir et pas
-    // encore facturées (les adultes, hors cabris et tiptag).
-    niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.VIVANT}`), effectif?.femelles ?? effectif?.sevres ?? 0);
-    niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.SUR_PIED}`), effectif?.aFacturerAdultes ?? 0);
+    for (const role of [ROLE_VIANDE.SUR_PIED, ROLE_VIANDE.VIVANT]) {
+      // L'animal sur pied et l'animal vivant : les femelles (le bouc se vend à part, sans compter dans ces lignes).
+      // Les adultes déjà à l'abattoir et pas encore facturés s'ajoutent à l'animal sur pied (pas à l'animal vivant, qui se vend vivant).
+      const aFacturer = role === ROLE_VIANDE.SUR_PIED ? (effectif?.aFacturerAdultes ?? 0) : 0;
+      niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${role}`), (effectif?.femelles ?? effectif?.sevres ?? 0) + aFacturer);
+    }
   }
   return niveaux;
 }

@@ -2,7 +2,6 @@ import { generateId } from '@/shared/utils/id';
 import { todayISO, yearOf } from '@/shared/utils/dates';
 import { ageAtteint } from '@/shared/utils/age';
 import { cleTriChevre } from '@/features/cheptel/utils/chevreLabel';
-import { estTiptag } from '@/features/cheptel/utils/tiptag';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { deleteRecord, findRecord, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -56,18 +55,14 @@ export const estPetitLe = (c: Pick<Chevre, 'dateNaissance' | 'espece'>, date: st
 export function effectifsDesAnimaux(
   all: Chevre[],
   facturees?: ReadonlySet<string>,
-  tiptags: ReadonlySet<string> = new Set(),
 ): Partial<Record<EspeceAnimale, EffectifVivant>> {
   const effectifs: Partial<Record<EspeceAnimale, EffectifVivant>> = {};
   const de = (c: Chevre) => (effectifs[especeDe(c)] ??= { petits: 0, sevres: 0, femelles: 0 });
   for (const c of all) {
     if (c.statut === STATUT_CHEVRE.ABATTOIR && facturees && !facturees.has(c.id)) {
       const effectif = de(c);
-      // Un cabri : un tiptag (destiné à l'abattoir) ou parti avant l'âge de petit (6 mois) ; sinon un adulte (« Chèvre sur pied »).
-      const cabri =
-        estTiptag(c, tiptags) ||
-        (!!c.dateStatut && !ageAtteint(c.dateNaissance, PARAMETRES_ESPECE[especeDe(c)].agePetitMax, c.dateStatut));
-      if (cabri) effectif.petits += 1;
+      // Un cabri : parti à l'abattoir avant l'âge de petit (6 mois) ; sinon un adulte.
+      if (c.dateStatut && !ageAtteint(c.dateNaissance, PARAMETRES_ESPECE[especeDe(c)].agePetitMax, c.dateStatut)) effectif.petits += 1;
       else effectif.aFacturerAdultes = (effectif.aFacturerAdultes ?? 0) + 1;
       continue;
     }
@@ -85,9 +80,8 @@ export function effectifsDesAnimaux(
 /** Le nombre d'animaux vivants de chaque espèce du cheptel, petits et sevrés (les espèces sans animal n'y figurent pas). */
 export async function effectifsVivants(
   facturees?: ReadonlySet<string>,
-  tiptags?: ReadonlySet<string>,
 ): Promise<Partial<Record<EspeceAnimale, EffectifVivant>>> {
-  return effectifsDesAnimaux(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), facturees, tiptags);
+  return effectifsDesAnimaux(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), facturees);
 }
 
 /** Les animaux vivants d'une espèce précise (pas forcément l'espèce courante) : on choisit celui d'une vente dans cette liste. */
