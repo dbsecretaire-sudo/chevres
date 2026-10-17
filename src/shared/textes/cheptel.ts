@@ -179,7 +179,7 @@ export const TEXTES_CHEPTEL = {
     enDelai: (nombre: number) => `${nombre} en délai d’attente`,
     /** Les lots d'abattoir : un par jour d'abattage, créés tout seuls d'après le cheptel. */
     abattoirDu: (date: string) => `Abattoir du ${date}`,
-    abattus: (nombre: number) => `${nombre} animal${nombre > 1 ? 'ux abattus' : ' abattu'}`,
+    abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
     aFacturer: 'à facturer',
     facture: 'facturé',
     aideAbattoir: 'Un lot d’abattoir : les animaux (avec boucle) envoyés à l’abattoir ce jour-là. Il se crée et se complète tout seul.',

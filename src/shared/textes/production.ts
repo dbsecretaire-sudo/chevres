@@ -191,7 +191,7 @@ export const TEXTES_PRODUCTION = {
     aFacturer: 'Viande à facturer',
     avecBoucle: 'avec boucle · facture',
     sansBoucleSansFacture: 'sans boucle · sans facture',
-    animaux: (nombre: number) => `${nombre} animal${nombre > 1 ? 'ux' : ''}`,
+    animaux: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`,
     boucles: (liste: string) => `boucles : ${liste}`,
     poids: (kg: string) => `${kg} kg`,
     sansBoucle: 'sans boucle',

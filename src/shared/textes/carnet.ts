@@ -17,7 +17,7 @@ export const TEXTES_CARNET = {
     modifierVisite: 'Modifier la visite vétérinaire',
     choisirAnimaux: 'Choisir dans la liste',
     titreChoixAnimaux: 'Animaux de la visite',
-    validerChoix: (n: number) => `Choisir ${n} animal${n > 1 ? 'ux' : ''}`,
+    validerChoix: (n: number) => `Choisir ${n} ${n > 1 ? 'animaux' : 'animal'}`,
     aideAnimaux:
       'La liste montre les boucles présentes à l’exploitation le jour de la visite et contrôlées ce jour-là (N° de boucle concerné de la visite), par ordre croissant. Plusieurs animaux : une ligne chacun sur le carnet.',
     exempleAnimal: 'vide : le troupeau entier',
