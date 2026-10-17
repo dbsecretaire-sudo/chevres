@@ -8,6 +8,7 @@ import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { OptionsModal } from '@/shared/components/OptionsModal';
+import { PoidsModal } from '@/features/cheptel/components/PoidsModal';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { listClients } from '@/features/clients/repository';
 import { enregistrerCommande, getCommande } from '@/features/commercial/repository';
@@ -15,7 +16,8 @@ import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { saveChevre } from '@/features/cheptel/repository/chevres';
-import { estReserve, liberer } from '@/features/cheptel/services/reservations';
+import { estReserve, liberer, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
+import type { Commande } from '@/features/commercial/types';
 import { reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
@@ -81,6 +83,10 @@ export default function ViandeVendue() {
   const [clients, setClients] = useState<Client[]>([]);
   const [menu, setMenu] = useState<Chevre | null>(null);
   const [cible, setCible] = useState<{ animal: Chevre; action: 'reserver' | 'ecriture' } | null>(null);
+  /** Les animaux d'un bon dont le poids manque, à demander avant d'ouvrir la facture (le premier est à l'écran). */
+  const [poidsAvantVente, setPoidsAvantVente] = useState<{ bon: Commande; restants: Chevre[] } | null>(null);
+  /** L'animal dont on note le poids (il s'écrit sur sa fiche : « Poids (kg) »). */
+  const [pesee, setPesee] = useState<Chevre | null>(null);
   /** Des cabris réservés : remis vivants ou morts (morts : pas de document de circulation). */
   const [choixEtat, setChoixEtat] = useState<{ animal: Chevre; client: Client } | null>(null);
   /** « À vendre » : les animaux libres, ou ceux déjà réservés pour un client. */
@@ -190,6 +196,14 @@ export default function ViandeVendue() {
   const validerEtVendre = async (animal: Chevre) => {
     const bon = animal.reservation?.commandeId ? await getCommande(animal.reservation.commandeId) : undefined;
     if (!bon) return ouvrirEcriture(animal, animal.reservation?.clientId);
+    // Les animaux du bon sans poids : leur poids se demande avant la facture, un par un.
+    const sansPoids = reservesDeLaCommande([...animaux.values()], bon.id).filter((a) => !a.poidsKg);
+    if (sansPoids.length > 0) return setPoidsAvantVente({ bon, restants: sansPoids });
+    await ouvrirLaVente(bon);
+  };
+
+  /** Le bon est validé (« préparée »), puis la vente s'ouvre avec lui. */
+  const ouvrirLaVente = async (bon: Commande) => {
     if (bon.statut === STATUT_COMMANDE.A_PREPARER) await enregistrerCommande({ ...bon, statut: STATUT_COMMANDE.PREPAREE });
     router.push({
       pathname: ROUTES.COMPTABILITE_NOUVELLE,
@@ -200,6 +214,18 @@ export default function ViandeVendue() {
         commande: bon.id,
       },
     });
+  };
+
+  /** Le poids saisi (ou passé) d'un animal du bon : on passe au suivant, puis à la facture. */
+  const poidsSuivant = async (poidsKg?: number) => {
+    const courant = poidsAvantVente;
+    if (!courant) return;
+    const [animal, ...restants] = courant.restants;
+    if (poidsKg !== undefined) await saveChevre({ ...animal, poidsKg });
+    if (restants.length > 0) return setPoidsAvantVente({ bon: courant.bon, restants });
+    setPoidsAvantVente(null);
+    await charger();
+    await ouvrirLaVente(courant.bon);
   };
 
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
@@ -333,7 +359,12 @@ export default function ViandeVendue() {
           ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
           renderItem={({ item, index }) => (
             <LigneDeBloc index={index} total={(dispo === 'disponibles' ? aVendreLibres : aVendreReserves).length}>
-              <LigneChevre chevre={item} onPress={() => setMenu(item)} />
+              {/* Un animal réservé : « Réservation » et le nom du client en titre. */}
+              <LigneChevre
+                chevre={item}
+                titre={estReserve(item) ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client) : undefined}
+                onPress={() => setMenu(item)}
+              />
             </LigneDeBloc>
           )}
         />
@@ -387,6 +418,11 @@ export default function ViandeVendue() {
                               },
                             }))
                         : []),
+                      {
+                        label: TEXTES.cheptel.reservation.indiquerLePoids,
+                        icon: 'paw' as const,
+                        onPress: () => setPesee(menu),
+                      },
                       {
                         label: TEXTES.cheptel.reservation.liberer,
                         icon: 'lock-open' as const,
@@ -447,6 +483,24 @@ export default function ViandeVendue() {
             },
           },
         ]}
+      />
+      <PoidsModal
+        visible={!!pesee}
+        valeurInitiale={pesee?.poidsKg}
+        onValider={async (poidsKg) => {
+          const animal = pesee;
+          setPesee(null);
+          if (!animal) return;
+          await saveChevre({ ...animal, poidsKg });
+          charger();
+        }}
+        onFermer={() => setPesee(null)}
+      />
+      <PoidsModal
+        visible={!!poidsAvantVente}
+        titre={poidsAvantVente ? libelleChevre(poidsAvantVente.restants[0]) : undefined}
+        onValider={poidsSuivant}
+        onFermer={() => poidsSuivant(undefined)}
       />
       <SelectModal<string>
         visible={!!cible}

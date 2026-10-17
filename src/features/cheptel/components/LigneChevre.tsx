@@ -25,18 +25,27 @@ function BadgeChevre({ chevre }: { chevre: Chevre }) {
 }
 
 /** Ligne de la liste du cheptel : libellé, sexe/naissance/sortie/mère et badge. */
-export function LigneChevre({ chevre, onPress }: { chevre: Chevre; onPress: () => void }) {
+export function LigneChevre({
+  chevre,
+  onPress,
+  titre,
+}: {
+  chevre: Chevre;
+  onPress: () => void;
+  /** Un titre à la place du libellé de l'animal (la liste des animaux réservés : « Réservation Momo »), sans la mention « Réservé pour… ». */
+  titre?: string;
+}) {
   const dateSortie =
     chevre.statut !== STATUT_CHEVRE.VIVANTE && chevre.dateStatut ? formatDateFR(chevre.dateStatut) : '';
   const mere = chevre.mereNumeroBoucle
     ? TEXTES.cheptel.listeCheptel.mereMerenumeroboucle(chevre.mereNumeroBoucle)
     : '';
 
-  const reserve = estReserve(chevre) ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}${chevre.reservation!.etat ? ` (${chevre.reservation!.etat})` : ''}` : '';
+  const reserve = !titre && estReserve(chevre) ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}${chevre.reservation!.etat ? ` (${chevre.reservation!.etat})` : ''}` : '';
 
   return (
     <ListRow
-      title={libelleChevre(chevre)}
+      title={titre ?? libelleChevre(chevre)}
       subtitle={`${LABEL_SEXE[chevre.sexe]} · ${formatDateFR(chevre.dateNaissance)} - ${dateSortie}${mere}${reserve}`}
       trailing={<BadgeChevre chevre={chevre} />}
       onPress={onPress}
