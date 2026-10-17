@@ -554,11 +554,12 @@ export function ChampsVenteViande({ e }: Props) {
     e.setQuantite('1');
     setDetailOuvert(false);
   };
-  // Le prix d'un animal est modifié à l'inventaire : le total (poids × prix au kilo) suit.
+  // Le prix d'un animal est modifié à l'inventaire, ou le poids est repris des fiches (depuis un bon de commande) : le total (poids × prix
+  // au kilo) suit.
   useEffect(() => {
     if (auKiloLigne) totalAuKilo(e.poidsKg);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prixDuDetail]);
+  }, [prixDuDetail, e.poidsKg, auKiloLigne]);
   const maximum = maximumAnimaux(choisie, e.jeune);
   const optionsAnimaux = Array.from(
     { length: Math.max(maximum, Math.round(parseDecimal(e.quantite)) || 1) },
