@@ -5,7 +5,7 @@ import { enregistrerNaissance } from '@/features/cheptel/repository/naissances';
 import { numeroBoucleExiste } from '@/features/cheptel/repository/chevres';
 import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import type { Sexe } from '@/features/cheptel/types';
-import { currentYear, todayISO } from '@/shared/utils/dates';
+import { todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
 import { SEXE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
@@ -17,8 +17,6 @@ export interface CabritNaissanceForm {
   sexe: Sexe;
   nom: string;
   mortNe: boolean;
-  renouvellement: boolean;
-  renouvellementAnnee: string;
 }
 
 export const nouveauCabrit = (): CabritNaissanceForm => ({
@@ -27,8 +25,6 @@ export const nouveauCabrit = (): CabritNaissanceForm => ({
   sexe: SEXE.FEMELLE,
   nom: '',
   mortNe: false,
-  renouvellement: false,
-  renouvellementAnnee: String(currentYear()),
 });
 
 /** Un cabri par sexe de la liste « F,M,F » reçue en paramètre ; un seul cabri femelle à défaut. */
@@ -105,8 +101,6 @@ export function useNouvelleNaissance() {
           sexe: c.sexe,
           nom: c.nom.trim() || undefined,
           mortNe: c.mortNe,
-          renouvellement: c.renouvellement,
-          renouvellementAnnee: c.renouvellement ? Number(c.renouvellementAnnee) || currentYear() : undefined,
         })),
         notes: notes.trim() || undefined,
       });

@@ -9,7 +9,6 @@ import { Button } from '@/shared/components/Button';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { colors } from '@/shared/theme/colors';
-import { currentYear } from '@/shared/utils/dates';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { useNouvelleChevre } from '@/features/cheptel/hooks/useNouvelleChevre';
@@ -87,20 +86,6 @@ export default function NouvelleChevre() {
             multiline
             style={commonStyles.textareaHaute}
           />
-          <Checkbox
-            label={TEXTES.commun.general.designeEPourLeRenouvellement}
-            value={e.renouvellement}
-            onChange={e.setRenouvellement}
-          />
-          {e.renouvellement && (
-            <FormField
-              label={TEXTES.commun.general.anneeDeDesignation}
-              value={e.renouvellementAnnee}
-              onChangeText={e.setRenouvellementAnnee}
-              keyboardType="number-pad"
-              placeholder={String(currentYear())}
-            />
-          )}
 
           {e.sexe === SEXE.FEMELLE && (
             <Checkbox

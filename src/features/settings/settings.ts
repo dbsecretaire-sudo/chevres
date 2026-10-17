@@ -125,6 +125,8 @@ export interface LotAnimaux {
   categorie?: string;
   /** Un lot de mises à la reproduction : l'année de ses mises bas. Un lot se crée tout seul chaque année (les femelles présentes au 1er janvier). */
   reproduction?: number;
+  /** Un lot de renouvellement : l'année de désignation de ses animaux (renouvellementAnnee de leur fiche, que le lot tient à jour). */
+  renouvellement?: number;
   /** Un lot créé tout seul pour une visite vétérinaire : la visite (son nom et sa date la suivent). */
   visiteId?: string;
   /** Pour un lot d'abattoir : la facture (dépense) de l'abattoir qui le concerne ; son montant est proposé en frais refacturés au client. */

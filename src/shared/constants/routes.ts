@@ -41,6 +41,10 @@ export const ROUTES = {
   /** Les lots d'animaux et le suivi sanitaire de chacun. */
   CHEPTEL_LOTS: '/cheptel/lots',
   CHEPTEL_LOT_NOUVEAU: '/cheptel/lot',
+  /** Les lots d'une catégorie (`autres` : ceux sans catégorie), dans leur propre page. */
+  lotsDeLaCategorie: (categorie: string) => `/cheptel/lots-categorie?categorie=${encodeURIComponent(categorie)}` as const,
+  /** Un nouveau lot, dans la catégorie donnée. */
+  lotNouveau: (categorie: string) => `/cheptel/lot?categorie=${encodeURIComponent(categorie)}` as const,
   lot: (id: string) => `/cheptel/lot?id=${id}` as const,
   traitement: (id: string) => `/cheptel/traitement?id=${id}` as const,
   /** Les réglages du cheptel : UGB, primes, effectif déclaré. */

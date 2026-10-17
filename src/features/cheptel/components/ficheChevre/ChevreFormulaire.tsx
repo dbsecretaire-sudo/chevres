@@ -1,7 +1,6 @@
 import { View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { SectionForm } from '@/shared/components/SectionForm';
-import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -11,7 +10,6 @@ import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
 import { categorieAnimal } from '@/features/cheptel/utils/chevreLabel';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
 import type { Chevre } from '@/features/cheptel/types';
-import { currentYear } from '@/shared/utils/dates';
 import { CATEGORIE_ANIMAL, SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -36,26 +34,6 @@ export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer, onAjou
   return (
     <View style={commonStyles.gap10}>
       <SectionForm titre={TEXTES.commun.formulaire.suivi}>
-        <Checkbox
-          label={TEXTES.commun.general.designeEPourLeRenouvellement}
-          value={!!form.renouvellement}
-          onChange={(v) =>
-            onChange({
-              ...form,
-              renouvellement: v,
-              renouvellementAnnee: v ? (form.renouvellementAnnee ?? currentYear()) : undefined,
-            })
-          }
-        />
-        {form.renouvellement && (
-          <FormField
-            label={TEXTES.commun.general.anneeDeDesignation}
-            value={form.renouvellementAnnee !== undefined ? String(form.renouvellementAnnee) : ''}
-            onChangeText={(v) => onChange({ ...form, renouvellementAnnee: Number(v) || undefined })}
-            keyboardType="number-pad"
-            placeholder={String(currentYear())}
-          />
-        )}
         {peutAvoirDesCabris && (
           <Button
             label={TEXTES.cheptel.ficheChevre.ajouterUnCabriNouvelleNaissance}

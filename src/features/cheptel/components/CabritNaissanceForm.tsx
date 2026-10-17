@@ -8,7 +8,6 @@ import { SelectField } from '@/shared/components/SelectField';
 import type { CabritNaissanceForm } from '@/features/cheptel/hooks/useNouvelleNaissance';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
 import { colors } from '@/shared/theme/colors';
-import { currentYear } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -52,20 +51,6 @@ export function CabritNaissanceBloc({ cabrit, numero, retirable, onChange, onRet
         placeholder={TEXTES.commun.general.facultatif}
       />
       <View style={commonStyles.gap10}>
-        <Checkbox
-          label={TEXTES.commun.general.designeEPourLeRenouvellement}
-          value={cabrit.renouvellement}
-          onChange={(v) => onChange({ renouvellement: v })}
-        />
-        {cabrit.renouvellement && (
-          <FormField
-            label={TEXTES.commun.general.anneeDeDesignation}
-            value={cabrit.renouvellementAnnee}
-            onChangeText={(v) => onChange({ renouvellementAnnee: v })}
-            keyboardType="number-pad"
-            placeholder={String(currentYear())}
-          />
-        )}
         <Checkbox
           label={TEXTES.commun.general.mortNe}
           value={cabrit.mortNe}

@@ -1,4 +1,4 @@
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 
 /** Une adresse sans sa requête (« ?famille=… ») ni barre finale. */
@@ -17,6 +17,7 @@ const ECRANS_DU_MENU = new Set(
     ROUTES.CHEPTEL_HISTORIQUE,
     ROUTES.CHEPTEL_DOSSIER_PAC,
     ROUTES.CHEPTEL_TABLEAU_DE_BORD,
+    ROUTES.CHEPTEL_BILAN,
     ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE),
     ROUTES.santeControles(FAMILLE_CONTROLE.ANIMAUX),
     ROUTES.SANTE_ALIMENTATION,
@@ -33,6 +34,7 @@ const ECRANS_DU_MENU = new Set(
     ROUTES.PRODUCTION_RAPPELS_LOTS,
     ROUTES.COMMERCIAL_VENTES,
     ROUTES.CLIENTS,
+    ROUTES.CONTACTS,
     ROUTES.COMMERCIAL_TARIFS,
     ROUTES.COMMERCIAL_COMMANDES,
     ROUTES.COMMERCIAL_CIRCUITS,
@@ -68,6 +70,7 @@ export interface ParametresDePage {
 const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] = [
   [/^\/comptabilite\/(facture|vente)\/[^/]+$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/comptabilite\/nouvelle$/, () => ROUTES.COMPTABILITE_LISTE],
+  [/^\/comptabilite\/fournisseurs$/, () => ROUTES.CONTACTS],
   [/^\/comptabilite\/(clients|fournisseurs|contacts|comptes-pcg)\/(?!index$)[^/]+$/, (m) => `/comptabilite/${m[1]}`],
   [/^\/comptabilite\/(stocks|conditionnement)$/, () => ROUTES.COMPTABILITE_INVENTAIRE],
   [/^\/comptabilite\/stock-(historique|statistiques|structure)$/, () => ROUTES.COMPTABILITE_STOCKS],
@@ -75,7 +78,11 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|urssaf)$/, () => ROUTES.FISCALITE],
   [/^\/comptabilite\/taux$/, () => ROUTES.COMPTABILITE_REGLAGES],
   [/^\/comptabilite\/detail$/, () => ROUTES.COMPTABILITE_LISTE],
-  [/^\/cheptel\/(nouvelle|naissance-nouvelle|ajout-rapide)$/, () => ROUTES.CHEPTEL_LISTE],
+  // Un lot revient aux lots d'animaux, un traitement aux traitements, une nouvelle naissance aux naissances.
+  [/^\/cheptel\/(lot|lots-categorie)$/, () => ROUTES.CHEPTEL_LOTS],
+  [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
+  [/^\/cheptel\/naissance-nouvelle$/, () => ROUTES.CHEPTEL_NAISSANCES],
+  [/^\/cheptel\/(nouvelle|ajout-rapide)$/, () => ROUTES.CHEPTEL_LISTE],
   [
     /^\/cheptel\/(?!liste$|bilan$|historique$|naissances$|reglages$|index$)[^/]+$/,
     () => ROUTES.CHEPTEL_LISTE,
@@ -100,8 +107,17 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/commercial\/commande$/, () => ROUTES.COMMERCIAL_COMMANDES],
   [/^\/commercial\/visite$/, () => ROUTES.COMMERCIAL_AGRITOURISME],
   [/^\/commercial\/formule$/, () => ROUTES.COMMERCIAL_FORMULES],
-  [/^\/sante\/controles\/nouvelle$/, () => ROUTES.santeControles(FAMILLE_CONTROLE.ANIMAUX)],
-  [/^\/sante\/veterinaire\/visite$/, () => ROUTES.santeControles(FAMILLE_CONTROLE.ANIMAUX)],
+  // Un contrôle revient à sa liste (celle des contrôles des animaux ou de surface, ou celle des terrains), une visite à la liste des visites.
+  [
+    /^\/sante\/controles\/nouvelle$/,
+    (_, p) =>
+      p.famille === FAMILLE_CONTROLE.SURFACE
+        ? ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.SURFACE, FAMILLE_CONTROLE.SURFACE)
+        : p.famille === FAMILLE_CONTROLE.TERRAIN
+          ? ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.SURFACE, FAMILLE_CONTROLE.TERRAIN)
+          : ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX),
+  ],
+  [/^\/sante\/veterinaire\/visite$/, () => ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE)],
   [/^\/organisation-categories-(client|tiers)$/, () => ROUTES.ORGANISATION_TIERS],
   [/^\/documents-identification$/, () => ROUTES.ORGANISATION_ETABLISSEMENT],
   [/^\/document-identification$/, () => ROUTES.DOCUMENTS_IDENTIFICATION],

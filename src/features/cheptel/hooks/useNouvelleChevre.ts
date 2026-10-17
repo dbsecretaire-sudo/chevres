@@ -5,7 +5,7 @@ import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import { creerChevre, numeroBoucleExiste } from '@/features/cheptel/repository/chevres';
 import { enregistrerNaissance } from '@/features/cheptel/repository/naissances';
 import type { Sexe } from '@/features/cheptel/types';
-import { currentYear, todayISO } from '@/shared/utils/dates';
+import { todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
 import { SEXE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
@@ -37,8 +37,6 @@ export function useNouvelleChevre() {
   const [dateNaissance, setDateNaissance] = useState(todayISO());
   const [mereNumeroBoucle, setMereNumeroBoucle] = useState('');
   const [notes, setNotes] = useState('');
-  const [renouvellement, setRenouvellement] = useState(false);
-  const [renouvellementAnnee, setRenouvellementAnnee] = useState(String(currentYear()));
   const [enregistrement, setEnregistrement] = useState(false);
 
   /** Le message sous le n° de boucle quand il est déjà attribué à un autre animal (vérifié dès la saisie). */
@@ -120,8 +118,6 @@ export function useNouvelleChevre() {
         dateNaissance,
         mereNumeroBoucle: mereNumeroBoucle.trim() || undefined,
         notes: notes.trim() || undefined,
-        renouvellement,
-        renouvellementAnnee: renouvellement ? Number(renouvellementAnnee) || currentYear() : undefined,
       });
 
       if (avecCabrits && chevre.numeroBoucle) {
@@ -159,10 +155,6 @@ export function useNouvelleChevre() {
     optionsMeres,
     notes,
     setNotes,
-    renouvellement,
-    setRenouvellement,
-    renouvellementAnnee,
-    setRenouvellementAnnee,
     enregistrement,
     avecCabrits,
     setAvecCabrits,
