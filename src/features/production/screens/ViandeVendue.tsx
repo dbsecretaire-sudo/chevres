@@ -214,8 +214,12 @@ export default function ViandeVendue() {
   const validerEtVendre = async (animal: Chevre) => {
     const bon = animal.reservation?.commandeId ? await getCommande(animal.reservation.commandeId) : undefined;
     if (!bon) return ouvrirEcriture(animal, animal.reservation?.clientId);
-    // Les animaux du bon sans poids : leur poids se demande avant la facture, un par un.
-    const sansPoids = reservesDeLaCommande([...animaux.values()], bon.id).filter((a) => !a.poidsKg);
+    await preparerEtVendre(bon, reservesDeLaCommande([...animaux.values()], bon.id));
+  };
+
+  /** Les animaux du bon sans poids : leur poids se demande avant la facture, un par un ; puis la vente s'ouvre. */
+  const preparerEtVendre = async (bon: Commande, animauxDuBon: Chevre[]) => {
+    const sansPoids = animauxDuBon.filter((a) => !a.poidsKg);
     if (sansPoids.length > 0) return setPoidsAvantVente({ bon, restants: sansPoids });
     await ouvrirLaVente(bon);
   };
@@ -533,7 +537,13 @@ export default function ViandeVendue() {
           const client = clients.find((c) => c.id === clientId);
           setCible(null);
           if (!choisi || !client) return;
-          if (choisi.action === 'ecriture') return ouvrirEcriture(choisi.animal, client.id);
+          // Facturer sans réservation d'abord : même chemin qu'une réservation validée (le bon du client se crée, le poids se demande si
+          // besoin, puis la vente s'ouvre avec le circuit, le détail selon la date et l'animal déjà choisis).
+          if (choisi.action === 'ecriture') {
+            const bon = await reserverAnimauxPourClient([choisi.animal], client);
+            const duBon = reservesDeLaCommande([...animaux.values()], bon.id).filter((a) => a.id !== choisi.animal.id);
+            return preparerEtVendre(bon, [...duBon, choisi.animal]);
+          }
           // Un cabri : vivant ou mort à la remise. Les autres animaux rejoignent tout de suite le bon de commande ouvert du client.
           if (estPetit(choisi.animal)) return setChoixEtat({ animal: choisi.animal, client });
           await reserverAnimauxPourClient([choisi.animal], client);

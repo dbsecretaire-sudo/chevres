@@ -23,7 +23,8 @@ import { nomComplet } from '@/shared/utils/personne';
 export async function bonDeCommandeOuvert(client: Client): Promise<Commande> {
   const archive = await lireArchiveCommercial();
   const ouvert = archive.commandes.find((c) => c.clientId === client.id && commandeOuverte(c));
-  if (ouvert) return ouvert;
+  // Une réservation se retire à la ferme : un bon sans circuit prend « Vente à la ferme » (à adapter à la facturation si besoin).
+  if (ouvert) return ouvert.circuit ? ouvert : enregistrerCommande({ ...ouvert, circuit: CIRCUIT_VENTE.FERME });
   return enregistrerCommande({
     client: nomComplet(client),
     clientId: client.id,
