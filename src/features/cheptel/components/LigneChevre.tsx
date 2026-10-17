@@ -8,6 +8,7 @@ import {
   statutLabel,
 } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre } from '@/features/cheptel/types';
+import { estReserve } from '@/features/cheptel/services/reservations';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_SEXE } from '@/shared/textes/libelles';
@@ -31,10 +32,12 @@ export function LigneChevre({ chevre, onPress }: { chevre: Chevre; onPress: () =
     ? TEXTES.cheptel.listeCheptel.mereMerenumeroboucle(chevre.mereNumeroBoucle)
     : '';
 
+  const reserve = estReserve(chevre) ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}` : '';
+
   return (
     <ListRow
       title={libelleChevre(chevre)}
-      subtitle={`${LABEL_SEXE[chevre.sexe]} · ${formatDateFR(chevre.dateNaissance)} - ${dateSortie}${mere}`}
+      subtitle={`${LABEL_SEXE[chevre.sexe]} · ${formatDateFR(chevre.dateNaissance)} - ${dateSortie}${mere}${reserve}`}
       trailing={<BadgeChevre chevre={chevre} />}
       onPress={onPress}
     />

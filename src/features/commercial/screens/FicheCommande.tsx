@@ -29,6 +29,21 @@ import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import { categorieDuClient, venteDeclareeParDefaut } from '@/features/clients/services/categorie';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repository/chevres';
+import type { Chevre } from '@/features/cheptel/types';
+import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
+import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import {
+  disponiblesPourLaCommande,
+  liberer,
+  reserver,
+  reservesDeLaCommande,
+} from '@/features/cheptel/services/reservations';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
+import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { ROUTES } from '@/shared/constants/routes';
 import { articlesDuGenre, estLigneDuCheptel, type ArticleAffiche } from '@/features/stock/services/stock';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
@@ -67,6 +82,10 @@ export default function FicheCommande() {
   const [prixInventaire, setPrixInventaire] = useState<Record<string, number>>({});
   const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
   const niveaux = useNiveauxStock();
+  /** Les animaux de l'espèce et ceux déjà vendus : un bon de commande réserve des animaux sans boucle à vendre. */
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  const [idsVendus, setIdsVendus] = useState<Set<string>>(new Set());
+  const [choixAnimaux, setChoixAnimaux] = useState(false);
 
   const [clientId, setClientId] = useState('');
   const [clientLibre, setClientLibre] = useState('');
@@ -99,8 +118,12 @@ export default function FicheCommande() {
         lireArchiveStock(),
         lireArchiveCommercial(),
         id ? getCommande(id) : Promise.resolve(undefined),
-      ]).then(([listeClients, stock, archive, commande]) => {
+        listTousLesAnimauxDeLEspece(),
+        listToutesVentes(),
+      ]).then(([listeClients, stock, archive, commande, lesAnimaux, lesVentes]) => {
         setClients(listeClients);
+        setAnimaux(lesAnimaux);
+        setIdsVendus(new Set(lesVentes.flatMap((v) => idsDesAnimaux(v))));
         // Les produits qu'on commande : les fromages, puis la viande et la charcuterie de l'inventaire (hors animaux du cheptel).
         setFromages([
           ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock),
@@ -229,6 +252,8 @@ export default function FicheCommande() {
   const changerStatut = async (nouveau: StatutCommande) => {
     const commande = construire();
     if (!commande) return;
+    // Une commande annulée ne réserve plus rien.
+    if (nouveau === STATUT_COMMANDE.ANNULEE) await libererLesAnimaux();
     const enregistree = await enregistrer({ ...commande, statut: nouveau });
     if (enregistree) router.back();
   };
@@ -249,8 +274,34 @@ export default function FicheCommande() {
     router.back();
   };
 
+  /** Les animaux réservés par ce bon de commande. */
+  const reserves = existante ? reservesDeLaCommande(animaux, existante.id) : [];
+  /** Les animaux sans boucle encore à vendre (vivants ou déjà à l'abattoir, pas vendus), libres ou réservés par cette commande. */
+  const aReserver = disponiblesPourLaCommande(
+    animaux.filter(
+      (a) =>
+        !a.numeroBoucle?.trim() &&
+        (a.statut === STATUT_CHEVRE.VIVANTE || a.statut === STATUT_CHEVRE.ABATTOIR) &&
+        !idsVendus.has(a.id),
+    ),
+    existante?.id,
+  );
+  const libererLesAnimaux = async () => {
+    for (const a of reserves) await saveChevre(liberer(a));
+  };
+  /** Réserve les animaux choisis pour le client de la commande ; ceux qui ne le sont plus sont libérés. */
+  const reserverLesAnimaux = async (choisis: string[]) => {
+    setChoixAnimaux(false);
+    if (!existante) return;
+    const reservation = { client: nomClient, clientId: client?.id, commandeId: existante.id, date: todayISO() };
+    for (const a of reserves.filter((r) => !choisis.includes(r.id))) await saveChevre(liberer(a));
+    for (const a of aReserver.filter((x) => choisis.includes(x.id))) await saveChevre(reserver(a, reservation));
+    setAnimaux(await listTousLesAnimauxDeLEspece());
+  };
+
   const supprimer = async () => {
     setConfirmation(null);
+    await libererLesAnimaux();
     if (existante) await supprimerCommande(existante.id);
     router.back();
   };
@@ -361,6 +412,21 @@ export default function FicheCommande() {
         <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
       </SectionForm>
 
+      {/* Le bon de commande réserve des animaux sans boucle (ils restent au troupeau jusqu'à leur vente). */}
+      {existante && ouverte ? (
+        <SectionForm titre={TEXTES.cheptel.reservation.section}>
+          {reserves.length === 0 ? <Text style={commonStyles.note}>{TEXTES.cheptel.reservation.aucun}</Text> : null}
+          {reserves.map((a) => (
+            <LigneChevre key={a.id} chevre={a} onPress={() => router.push(ROUTES.ficheChevre(a.id))} />
+          ))}
+          <Button
+            variant="secondary"
+            label={TEXTES.cheptel.reservation.reserverDesAnimaux}
+            onPress={() => setChoixAnimaux(true)}
+          />
+        </SectionForm>
+      ) : null}
+
       <SectionForm>
         <FormField
           label={T.note}
@@ -431,6 +497,17 @@ export default function FicheCommande() {
         ) : null}
       </View>
 
+      <SelectModalMultiple<string>
+        // Recréée à chaque ouverture : les animaux déjà réservés sont cochés d'emblée.
+        key={choixAnimaux ? 'ouverte' : 'fermee'}
+        visible={choixAnimaux}
+        titre={TEXTES.cheptel.reservation.titreChoix}
+        options={aReserver.map((a) => ({ value: a.id, label: libelleChevre(a) }))}
+        initiales={reserves.map((a) => a.id)}
+        libelleValider={TEXTES.cheptel.reservation.valider}
+        onValider={reserverLesAnimaux}
+        onClose={() => setChoixAnimaux(false)}
+      />
       <ConfirmModal
         visible={confirmation === 'livrer'}
         title={T.livrer.titre}

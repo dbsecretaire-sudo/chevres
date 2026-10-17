@@ -36,12 +36,22 @@ export default function NouvelleFacture() {
     categorie?: CategorieRecette;
     abattoir?: string;
     facture?: string;
+    /** Le client d'ouverture (sa fiche) et les animaux à vendre (leurs identifiants séparés par « ; »), depuis la réservation. */
+    client?: string;
+    animaux?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
     ? params.categorie
     : undefined;
-  const e = useNouvelleEcriture(params.type, categorie, params.abattoir, params.facture === 'non');
+  const e = useNouvelleEcriture(
+    params.type,
+    categorie,
+    params.abattoir,
+    params.facture === 'non',
+    params.client,
+    params.animaux ? params.animaux.split(';').filter(Boolean) : undefined,
+  );
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
   useFocusEffect(

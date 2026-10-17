@@ -7,6 +7,14 @@ import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { SelectModal } from '@/shared/components/SelectModal';
+import { listClients } from '@/features/clients/repository';
+import type { Client } from '@/features/clients/types';
+import { saveChevre } from '@/features/cheptel/repository/chevres';
+import { estReserve, liberer, reserver } from '@/features/cheptel/services/reservations';
+import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import { nomComplet } from '@/shared/utils/personne';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
@@ -36,7 +44,7 @@ import {
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
-import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -64,7 +72,13 @@ export default function ViandeVendue() {
   /** Les animaux sans boucle vendus sans facture : morts ou vivants. */
   const [sousOnglet, setSousOnglet] = useState<SorteDeVendus>('morts');
 
+  /** Les clients, et l'animal sans boucle touché : son menu (réserver, écriture sans facture…), puis le choix du client. */
+  const [clients, setClients] = useState<Client[]>([]);
+  const [menu, setMenu] = useState<Chevre | null>(null);
+  const [cible, setCible] = useState<{ animal: Chevre; action: 'reserver' | 'ecriture' } | null>(null);
+
   const charger = useCallback(async () => {
+    listClients().then(setClients);
     const [toutesAnnees, liste, toutesVentes] = await Promise.all([
       toutesLesAnneesConnues(),
       regrouper ? listToutesVentes() : listVentes(settings.anneeActive),
@@ -141,6 +155,19 @@ export default function ViandeVendue() {
           : ventesVivantes
         : [];
   const total = venteDeLOnglet.reduce((somme, v) => somme + (v.prix ?? 0), 0);
+
+  /** L'écriture comptable sans facture d'un animal pour un client : la vente s'ouvre avec le client et l'animal. */
+  const ouvrirEcriture = (animal: Chevre, clientId?: string) =>
+    router.push({
+      pathname: ROUTES.COMPTABILITE_NOUVELLE,
+      params: {
+        type: TYPE_FACTURE.EMISE,
+        categorie: CATEGORIE_RECETTE.VIANDE,
+        facture: 'non',
+        animaux: animal.id,
+        ...(clientId ? { client: clientId } : {}),
+      },
+    });
 
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
   const ligneDuJour = (g: { date: string; avecBoucle: boolean; animaux: Chevre[] }) => {
@@ -263,7 +290,7 @@ export default function ViandeVendue() {
           ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
           renderItem={({ item, index }) => (
             <LigneDeBloc index={index} total={aVendre.length}>
-              <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+              <LigneChevre chevre={item} onPress={() => setMenu(item)} />
             </LigneDeBloc>
           )}
         />
@@ -290,6 +317,67 @@ export default function ViandeVendue() {
           )}
         />
       )}
+      {/* Un animal sans boucle à vendre : le réserver pour un client, ou inscrire sa vente sans facture. */}
+      <OptionsModal
+        visible={!!menu}
+        onClose={() => setMenu(null)}
+        title={menu ? libelleChevre(menu) : undefined}
+        options={
+          menu
+            ? [
+                ...(estReserve(menu)
+                  ? [
+                      {
+                        label: TEXTES.cheptel.reservation.ecriturePour(menu.reservation!.client),
+                        icon: 'receipt' as const,
+                        onPress: () => ouvrirEcriture(menu, menu.reservation!.clientId),
+                      },
+                      {
+                        label: TEXTES.cheptel.reservation.liberer,
+                        icon: 'lock-open' as const,
+                        onPress: async () => {
+                          await saveChevre(liberer(menu));
+                          charger();
+                        },
+                      },
+                    ]
+                  : [
+                      {
+                        label: TEXTES.cheptel.reservation.reserver,
+                        icon: 'bookmark' as const,
+                        onPress: () => setCible({ animal: menu, action: 'reserver' }),
+                      },
+                      {
+                        label: TEXTES.cheptel.reservation.ecriture,
+                        icon: 'receipt' as const,
+                        onPress: () => setCible({ animal: menu, action: 'ecriture' }),
+                      },
+                    ]),
+                {
+                  label: TEXTES.cheptel.reservation.ouvrirLaFiche,
+                  icon: 'paw' as const,
+                  onPress: () => router.push(ROUTES.ficheChevre(menu.id)),
+                },
+              ]
+            : []
+        }
+      />
+      <SelectModal<string>
+        visible={!!cible}
+        titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.cheptel.reservation.choisirClient}
+        value=""
+        options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+        onSelect={async (clientId) => {
+          const choisi = cible;
+          const client = clients.find((c) => c.id === clientId);
+          setCible(null);
+          if (!choisi || !client) return;
+          if (choisi.action === 'ecriture') return ouvrirEcriture(choisi.animal, client.id);
+          await saveChevre(reserver(choisi.animal, { client: nomComplet(client), clientId: client.id, date: todayISO() }));
+          charger();
+        }}
+        onClose={() => setCible(null)}
+      />
       {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
       <Fab
         options={[

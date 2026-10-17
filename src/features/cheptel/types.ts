@@ -6,6 +6,16 @@ export type Sexe = ValeurDe<typeof SEXE>;
 
 export type StatutChevre = ValeurDe<typeof STATUT_CHEVRE>;
 
+/** Un animal réservé pour un client (un bon de commande, ou une promesse) : il reste au troupeau jusqu'à sa vente. */
+export interface ReservationAnimal {
+  /** Le nom du client (toujours lisible, même si sa fiche disparaît) et sa fiche. */
+  client: string;
+  clientId?: string;
+  /** Le bon de commande qui a réservé l'animal, quand il y en a un. */
+  commandeId?: string;
+  date: string; // YYYY-MM-DD
+}
+
 export interface Chevre {
   id: string;
   /** Espèce de l'animal ; absente sur les fiches saisies avant le choix de l'espèce (voir especeDe). */
@@ -20,6 +30,8 @@ export interface Chevre {
   /** Le rebouclage (boucle de rebouclage, qui remplace une boucle perdue ou cassée) : la date seulement, sans numéro. */
   dateRebouclage?: string; // YYYY-MM-DD
   nom?: string;
+  /** Réservé pour un client (voir ReservationAnimal) ; absent : disponible. */
+  reservation?: ReservationAnimal;
   sexe: Sexe;
   dateNaissance: string; // YYYY-MM-DD
   mereId?: string;

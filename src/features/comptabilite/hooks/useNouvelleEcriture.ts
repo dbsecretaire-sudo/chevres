@@ -125,6 +125,9 @@ export function useNouvelleEcriture(
   abattoirInitial?: string,
   /** Ouvert pour un client qui ne veut pas de facture (depuis Production › Viande, pour les petits sans boucle). */
   sansFactureInitial?: boolean,
+  /** Le client d'ouverture (depuis la réservation d'un animal) et les animaux à vendre. */
+  clientInitial?: string,
+  animauxInitiaux?: string[],
 ) {
   const router = useRouter();
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
@@ -231,7 +234,7 @@ export function useNouvelleEcriture(
   const [poidsKg, setPoidsKg] = useState('');
   const [jeune, setJeune] = useState<boolean | undefined>();
   /** Les fiches des animaux sur pied ou vivants vendus (vide : aucun choisi). */
-  const [animaux, setAnimaux] = useState<string[]>([]);
+  const [animaux, setAnimaux] = useState<string[]>(animauxInitiaux ?? []);
   /** Les lots des fromages vendus (vide : aucun choisi, ou un fromage sans lot). */
   const [fromages, setFromages] = useState<string[]>([]);
   /** Une vente de viande avec des animaux : leur date d'abattoir (vide : la date de la vente). */
@@ -254,7 +257,7 @@ export function useNouvelleEcriture(
       : String(tauxTvaParDefaut(categorieInitiale ?? premiereCategorieRecette(especeCourante()))),
   );
   const [clients, setClients] = useState<Client[]>([]);
-  const [clientId, setClientId] = useState('');
+  const [clientId, setClientId] = useState(clientInitial ?? '');
 
   const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
 

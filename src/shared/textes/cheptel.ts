@@ -1118,6 +1118,23 @@ export const TEXTES_CHEPTEL = {
       return `Cette ${V().femelle.singulier} a des ${V().petit.pluriel} à enregistrer`;
     },
   },
+  /** La réservation d'un animal pour un client (bon de commande ou promesse). */
+  reservation: {
+    pour: (client: string) => `Réservé pour ${client}`,
+    reserver: 'Réserver pour un client',
+    ecriture: 'Écriture comptable sans facture pour un client',
+    ecriturePour: (client: string) => `Écriture sans facture pour ${client}`,
+    liberer: 'Libérer la réservation',
+    ouvrirLaFiche: 'Ouvrir la fiche',
+    choisirClient: 'Pour quel client ?',
+    aucunClient: 'Aucun client enregistré : ajoutez-en un d’abord.',
+    section: 'Animaux réservés',
+    aucun: 'Aucun animal réservé pour cette commande.',
+    reserverDesAnimaux: 'Réserver des animaux',
+    titreChoix: 'Animaux à réserver',
+    valider: (n: number) => `Réserver ${n} animal${n > 1 ? 'aux' : ''}`.replace('animalaux', 'animaux'),
+    retirer: 'Retirer',
+  },
   nouvelleNaissance: {
     /** Le titre de l'écran quand la mère est connue (on arrive de sa fiche). */
     titrePour: (boucle: string) => `Déclarer une naissance pour ${boucle}`,
