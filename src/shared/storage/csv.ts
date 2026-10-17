@@ -199,6 +199,45 @@ export function fromCSV<C extends Categorie>(categorie: C, csv: string): RecordM
     });
 }
 
+/** Le nom du fichier qui réunit toutes les années d'une catégorie (« cheptel.csv »). */
+export const fileNameForCategorie = (categorie: Categorie): string => `${categorie}${EXTENSION_CSV}`;
+
+/**
+ * Toutes les années d'une catégorie dans un seul fichier : une colonne « annee » dit de quelle année est chaque ligne (l'année ne se déduit pas
+ * toujours de la ligne : c'est celle où l'enregistrement est rangé).
+ */
+export function toCSVParAnnees<C extends Categorie>(
+  categorie: C,
+  parAnnee: { annee: number; items: RecordMap[C][] }[],
+): string {
+  const columns = COLONNES_CSV[categorie];
+  const rows = parAnnee.flatMap(({ annee, items }) =>
+    items.map((item) => {
+      const row: Record<string, string> = { annee: String(annee) };
+      for (const col of columns) {
+        row[col] = serializeValue(col, (item as unknown as Record<string, unknown>)[col]);
+      }
+      return row;
+    }),
+  );
+  return Papa.unparse({ fields: ['annee', ...columns], data: rows });
+}
+
+/** Relit un fichier qui réunit toutes les années d'une catégorie : les lignes, rangées par année. */
+export function fromCSVParAnnees<C extends Categorie>(categorie: C, csv: string): Map<number, RecordMap[C][]> {
+  const columns = COLONNES_CSV[categorie];
+  const parsed = Papa.parse<Record<string, string>>(csv, { header: true, skipEmptyLines: true });
+  const parAnnee = new Map<number, RecordMap[C][]>();
+  for (const row of parsed.data) {
+    const annee = Number(row.annee);
+    if (!row.id || !Number.isFinite(annee)) continue;
+    const obj: Record<string, unknown> = {};
+    for (const col of columns) obj[col] = deserializeValue(col, row[col] ?? '');
+    parAnnee.set(annee, [...(parAnnee.get(annee) ?? []), obj as unknown as RecordMap[C]]);
+  }
+  return parAnnee;
+}
+
 export function fileNameFor(categorie: Categorie, annee: number): string {
   return `${categorie}_${annee}${EXTENSION_CSV}`;
 }

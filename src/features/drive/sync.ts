@@ -1,6 +1,13 @@
-import { fileNameFor, fromCSV, toCSV } from '@/shared/storage/csv';
+import {
+  fileNameFor,
+  fileNameForCategorie,
+  fromCSV,
+  fromCSVParAnnees,
+  toCSV,
+  toCSVParAnnees,
+} from '@/shared/storage/csv';
 import { CATEGORIES_STOCKAGE } from '@/shared/constants/csv';
-import { loadYear, reindexYear, saveYear } from '@/shared/storage/localStore';
+import { getYears, loadYear, reindexYear, saveYear } from '@/shared/storage/localStore';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { getSettings, updateSettings } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
@@ -414,6 +421,40 @@ export async function tirerComptesPcg(accessToken: string, folderId: string): Pr
   }
 }
 
+/**
+ * Envoie une catégorie (toutes ses années) dans un seul fichier de Google Drive (« cheptel.csv »), au lieu d'un fichier par année. Les anciens
+ * fichiers par année ne sont pas touchés : ils restent sur Drive, on peut les effacer à la main.
+ */
+export async function pousserCategorie(accessToken: string, folderId: string, categorie: Categorie): Promise<void> {
+  await deposer(accessToken, fileNameForCategorie(categorie), folderId, await csvLocalDeLaCategorie(categorie));
+}
+
+/** Le fichier de la catégorie tel que les données locales le donnent : toutes ses années, de la plus ancienne à la plus récente. */
+async function csvLocalDeLaCategorie(categorie: Categorie): Promise<string> {
+  const annees = [...(await getYears(categorie))].sort((a, b) => a - b);
+  const parAnnee = await Promise.all(annees.map(async (annee) => ({ annee, items: await loadYear(categorie, annee) })));
+  return toCSVParAnnees(
+    categorie,
+    parAnnee.filter((a) => a.items.length > 0),
+  );
+}
+
+/**
+ * Récupère une catégorie depuis son fichier unique de Google Drive : chaque année du fichier remplace l'année locale. Faux quand ce fichier
+ * n'existe pas encore (Drive a l'ancienne forme, un fichier par année) : l'appelant relit alors les fichiers par année.
+ */
+export async function tirerCategorie(accessToken: string, folderId: string, categorie: Categorie): Promise<boolean> {
+  const file = await findFile(accessToken, fileNameForCategorie(categorie), folderId);
+  if (!file) return false;
+  if (await identique(file, await csvLocalDeLaCategorie(categorie))) return true;
+  const parAnnee = fromCSVParAnnees(categorie, await downloadFileText(accessToken, file.id));
+  for (const [annee, items] of parAnnee) {
+    await saveYear(categorie, annee, items as any);
+    await reindexYear(categorie, annee, items as any);
+  }
+  return true;
+}
+
 /** Envoie les données locales de l'année vers Google Drive (écrase le fichier distant). */
 export async function pousserAnnee(
   accessToken: string,
@@ -435,8 +476,10 @@ export async function tirerAnnee(
   folderId: string,
   annee: number,
   onProgress?: (categorie: Categorie) => void,
+  /** Seulement ces catégories (celles que Drive n'a pas encore en un fichier unique) ; toutes sinon. */
+  categories: readonly Categorie[] = CATEGORIES_STOCKAGE,
 ): Promise<void> {
-  for (const categorie of CATEGORIES_STOCKAGE) {
+  for (const categorie of categories) {
     onProgress?.(categorie);
     const fileName = fileNameFor(categorie, annee);
     const file = await findFile(accessToken, fileName, folderId);
@@ -454,9 +497,11 @@ export async function pousserToutesAnnees(
   onProgress?: (annee: number, categorie: Categorie) => void,
 ): Promise<BilanSynchro> {
   bilan = { misAJour: 0, inchanges: 0 };
-  const annees = await toutesLesAnneesConnues();
-  for (const annee of annees) {
-    await pousserAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
+  // Un fichier par catégorie (toutes les années dedans), au lieu d'un fichier par catégorie et par année.
+  const anneeCourante = new Date().getFullYear();
+  for (const categorie of CATEGORIES_STOCKAGE) {
+    onProgress?.(anneeCourante, categorie);
+    await pousserCategorie(accessToken, folderId, categorie);
   }
   await pousserInfosExploitation(accessToken, folderId);
   await pousserEspeces(accessToken, folderId);
@@ -499,8 +544,16 @@ export async function tirerToutesAnnees(
     anneesDisponiblesSurDrive(accessToken, folderId),
   ]);
   const annees = Array.from(new Set([...locales, ...distantes])).sort((a, b) => b - a);
-  for (const annee of annees) {
-    await tirerAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c));
+  // Le fichier unique de chaque catégorie d'abord ; ce que Drive n'a pas encore sous cette forme se relit dans les anciens fichiers par année.
+  const anciennes: Categorie[] = [];
+  for (const categorie of CATEGORIES_STOCKAGE) {
+    onProgress?.(annees[0] ?? new Date().getFullYear(), categorie);
+    if (!(await tirerCategorie(accessToken, folderId, categorie))) anciennes.push(categorie);
+  }
+  if (anciennes.length > 0) {
+    for (const annee of annees) {
+      await tirerAnnee(accessToken, folderId, annee, (c) => onProgress?.(annee, c), anciennes);
+    }
   }
   await tirerInfosExploitation(accessToken, folderId);
   await tirerEspeces(accessToken, folderId);
