@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
+import { Button } from '@/shared/components/Button';
+import { styles } from '@/shared/styles/comptabilite/SectionRecette.styles';
 import { useRouter } from 'expo-router';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
@@ -43,8 +45,19 @@ import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { todayISO } from '@/shared/utils/dates';
 
-/** Champs d'un crédit : facture émise (aide, autre) ou vente de production (lait, fromage, cabris). */
-export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
+/**
+ * Première étape d'un crédit : la date, le contact, et pour une vente de production son numéro de facture (avec ou sans facture) et son
+ * circuit. `onCommande` ouvre le choix d'une commande à transformer en vente.
+ */
+export function SectionRecetteContact({
+  e,
+  date,
+  onCommande,
+}: {
+  e: EtatNouvelleEcriture;
+  date: ReactNode;
+  onCommande?: () => void;
+}) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const optionsClients = e.clients.map((c) => ({ value: c.id, label: nomComplet(c) }));
@@ -54,6 +67,14 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
       {/* L'identification : la date, le client, et pour une vente de production s'il souhaite la déclarer (numéro de facture). */}
       <SectionForm>
         {date}
+        {/* Une commande à transformer en vente : le contact, le circuit et le produit sont repris. */}
+        {e.estProductionVente && onCommande ? (
+          <Button
+            variant="secondary"
+            label={TEXTES.comptabilite.nouvelleEcriture.venteSurCommande}
+            onPress={onCommande}
+          />
+        ) : null}
         {/* D'abord à qui : le client, et pour une vente de production s'il souhaite la déclarer (numéro de facture). */}
         <SelectFieldEditable
           label={
@@ -70,36 +91,38 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
         />
         {e.estProductionVente ? (
-          <>
-            <Checkbox
-              label={TEXTES.comptabilite.nouvelleEcriture.declarerLaVente}
-              value={e.avecFacture}
-              onChange={(declaree) => {
-                e.setAvecFacture(declaree);
-                // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
-                e.setAnimaux([]);
-              }}
-            />
-            <Checkbox
-              label={TEXTES.comptabilite.nouvelleEcriture.offert}
-              value={e.offert}
-              onChange={e.setOffert}
-            />
-            {e.offert ? (
-              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertAide}</Text>
-            ) : null}
-            {/* Une vente déclarée a un numéro de facture. */}
+          <View style={commonStyles.row}>
+            {/* Avec facture : son numéro ; le bouton à côté passe de « Avec facture » à « Sans facture » (et inversement). */}
             {e.avecFacture ? (
-              <ChampNumeroFacture
-                value={e.numeroFacture}
-                onChange={e.setNumeroFacture}
-                libre={e.numeroFactureLibre}
-                reajustementPossible={e.reajustementPossible}
-                reajustement={e.reajustement}
-                onReajustement={e.setReajustement}
+              <View style={commonStyles.flex1}>
+                <ChampNumeroFacture
+                  value={e.numeroFacture}
+                  onChange={e.setNumeroFacture}
+                  libre={e.numeroFactureLibre}
+                  reajustementPossible={e.reajustementPossible}
+                  reajustement={e.reajustement}
+                  onReajustement={e.setReajustement}
+                />
+              </View>
+            ) : (
+              <View style={commonStyles.flex1} />
+            )}
+            <View style={styles.basculeFacture}>
+              <Button
+                variant={e.avecFacture ? 'primary' : 'secondary'}
+                label={
+                  e.avecFacture
+                    ? TEXTES.comptabilite.nouvelleEcriture.avecFacture
+                    : TEXTES.comptabilite.nouvelleEcriture.sansFacture
+                }
+                onPress={() => {
+                  e.setAvecFacture(!e.avecFacture);
+                  // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
+                  e.setAnimaux([]);
+                }}
               />
-            ) : null}
-          </>
+            </View>
+          </View>
         ) : e.categorieRecette !== CATEGORIE_RECETTE.AIDE ? (
           <FormField
             label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
@@ -108,25 +131,21 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
           />
         ) : null}
-        {/* Le paiement : encaissée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
-        {pasEncaisseeAffichee(
-          e.clientSelectionne ? categorieClientDe(e.clientSelectionne.categorie) : undefined,
-        ) ? (
-          <ChampPaiement
-            libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
-            enAttente={e.enAttente}
-            onEnAttente={(attente) => {
-              e.setEnAttente(attente);
-              if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
-            }}
-            echeance={e.echeance}
-            onEcheance={e.setEcheance}
-          />
-        ) : null}
         {/* Le circuit par lequel la vente passe (facultatif) : le volet Commercial en fait le bilan. */}
         {e.estProductionVente ? <ChampCircuit value={e.circuit} onChange={e.setCircuit} /> : null}
       </SectionForm>
 
+    </>
+  );
+}
+
+/** Seconde étape d'un crédit : la catégorie, ce qui est vendu, son montant, puis le paiement. */
+export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
+  const router = useRouter();
+  const retour = useAdresseCourante();
+
+  return (
+    <>
       {/* Les informations : la catégorie, ce qui est vendu et son montant. */}
       <SectionForm>
         <ChampCategorieCompte
@@ -223,6 +242,35 @@ export function SectionRecette({ e, date }: { e: EtatNouvelleEcriture; date: Rea
         {e.categorieRecette === CATEGORIE_RECETTE.OEUFS && <ChampsVenteOeufs e={e} />}
         {(e.categorieRecette === CATEGORIE_RECETTE.VIANDE ||
           e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) && <ChampsVenteViande e={e} />}
+
+        {/* Le paiement : offert au client, ou encaissé à sa date (d'office), ou pas encore. */}
+        <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.nouvelleEcriture.paiement}</Text>
+        {e.estProductionVente ? (
+          <>
+            <Checkbox
+              label={TEXTES.comptabilite.nouvelleEcriture.offert}
+              value={e.offert}
+              onChange={e.setOffert}
+            />
+            {e.offert ? (
+              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertAide}</Text>
+            ) : null}
+          </>
+        ) : null}
+        {pasEncaisseeAffichee(
+          e.clientSelectionne ? categorieClientDe(e.clientSelectionne.categorie) : undefined,
+        ) ? (
+          <ChampPaiement
+            libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+            enAttente={e.enAttente}
+            onEnAttente={(attente) => {
+              e.setEnAttente(attente);
+              if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+            }}
+            echeance={e.echeance}
+            onEcheance={e.setEcheance}
+          />
+        ) : null}
       </SectionForm>
     </>
   );

@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import type { Commande, LigneCommande } from '@/features/commercial/types';
+import { enregistrerCommande } from '@/features/commercial/repository';
+import { estLigneDeViande } from '@/features/commercial/services/commandes';
+import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import {
@@ -140,6 +144,8 @@ export function useNouvelleEcriture(
   const [reajustementCoche, setReajustement] = useState(false);
   /** Une vente offerte au client : prix à 0 €. */
   const [offertCoche, setOffert] = useState(false);
+  /** La commande que l'on transforme en ventes (une vente par ligne) : chaque enregistrement prend la ligne suivante. */
+  const [commande, setCommande] = useState<Commande | null>(null);
   /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
   const [natureUrssaf, setNatureUrssaf] = useState('');
   /** Le paiement n'a pas encore eu lieu : sa date prévue (la trésorerie la compte à cette date). */
@@ -463,6 +469,9 @@ export function useNouvelleEcriture(
    * Vide ce qui est propre à une écriture (montant, description, numéro, lignes) et garde ce qui se répète d'une saisie à
    * l'autre : le type, la date, l'activité, la catégorie, le client ou le fournisseur, la TVA, la nature URSSAF.
    */
+  /** La ligne de commande à reprendre après « Enregistrer et en ajouter une autre ». */
+  const suiteDeLaCommande = useRef<LigneCommande | null>(null);
+
   const repartir = () => {
     setDescription('');
     setMontant('');
@@ -483,6 +492,40 @@ export function useNouvelleEcriture(
     setLignesMarchandises([ligneMarchandiseVide()]);
     setLignesCarburant([ligneCarburantVide()]);
     setLignesProduction([ligneProductionVide()]);
+  };
+
+  /** Les lignes d'une commande pas encore passées en vente (les ventes déjà faites suivent l'ordre des lignes). */
+  const lignesRestantes = (c: Commande): LigneCommande[] =>
+    c.lignes.filter((l) => l.quantite > 0).slice(c.venteIds?.length ?? 0);
+
+  /** Reprend une ligne de commande : sa catégorie (fromage, ou viande / charcuterie), son produit et sa quantité. */
+  const appliquerLigne = (ligne: LigneCommande) => {
+    if (estLigneDeViande(ligne.article)) {
+      changerCategorieRecette(CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE);
+      setPrecision(ligne.libelle);
+    } else {
+      changerCategorieRecette(CATEGORIE_RECETTE.FROMAGE);
+      const code = ligne.article.split(':')[1];
+      if ((Object.values(TYPE_FROMAGE) as string[]).includes(code)) {
+        setTypeFromage(code as TypeFromage);
+        setTypeFromageLibre('');
+      } else {
+        setTypeFromage(TYPE_FROMAGE.AUTRE);
+        setTypeFromageLibre(ligne.libelle);
+      }
+    }
+    setQuantite(String(ligne.quantite));
+  };
+
+  /** Une vente basée sur une commande : le contact, le circuit, le paiement et la première ligne à passer en vente sont repris. */
+  const choisirCommande = (c: Commande) => {
+    setCommande(c);
+    if (c.clientId) choisirClient(c.clientId);
+    setCircuit(c.circuit ?? '');
+    setEnAttente(!!c.enAttente);
+    setEcheance(c.echeance ?? '');
+    const [premiere] = lignesRestantes(c);
+    if (premiere) appliquerLigne(premiere);
   };
 
   /** Enregistre l'écriture, puis ferme l'écran ; avec `enchainer`, reste dessus pour saisir la suivante. */
@@ -598,7 +641,19 @@ export function useNouvelleEcriture(
         }
       }
       if ('vente' in resultat) {
-        const vente = await enregistrerVente(resultat.vente);
+        const vente = await enregistrerVente({ ...resultat.vente, commandeId: commande?.id });
+        // Une vente de commande : elle s'ajoute à la commande, livrée quand toutes ses lignes sont passées en vente.
+        let suite: LigneCommande[] = [];
+        if (commande) {
+          const venteIds = [...(commande.venteIds ?? []), vente.id];
+          const mise = { ...commande, venteIds };
+          suite = lignesRestantes(mise);
+          const enregistree = await enregistrerCommande(
+            suite.length === 0 ? { ...mise, statut: STATUT_COMMANDE.LIVREE, dateLivraison: vente.date } : mise,
+          );
+          setCommande(suite.length === 0 ? null : enregistree);
+        }
+        if (enchainer && suite[0]) suiteDeLaCommande.current = suite[0];
         // Les animaux vendus quittent le cheptel : leur fiche passe en « abattoir » (vente de viande déclarée, à la date d'abattoir), en « morte » (non déclarée) ou en « vendue ».
         const sortie = sortieDesAnimauxDeLaVente(vente);
         for (const id of idsDesAnimaux(vente)) await declarerStatutChevre(id, sortie.statut, sortie.date);
@@ -617,6 +672,13 @@ export function useNouvelleEcriture(
       if (enchainer) {
         repartir();
         setEnchainees((n) => n + 1);
+        // Une commande qui a d'autres lignes : la suivante est reprise.
+        if (suiteDeLaCommande.current) {
+          appliquerLigne(suiteDeLaCommande.current);
+          setEnAttente(!!commande?.enAttente);
+          setEcheance(commande?.echeance ?? '');
+        }
+        suiteDeLaCommande.current = null;
       } else router.back();
     } finally {
       setEnregistrement(false);
@@ -766,6 +828,9 @@ export function useNouvelleEcriture(
     setReajustement,
     offert: offertCoche,
     setOffert,
+    commande,
+    choisirCommande,
+    lignesRestantesDeLaCommande: commande ? lignesRestantes(commande) : [],
     // affichage
     compteAffiche,
     avecFacture,

@@ -12,7 +12,14 @@ import { colors } from '@/shared/theme/colors';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { SectionDepense } from '@/features/comptabilite/components/ecriture/SectionDepense';
-import { SectionRecette } from '@/features/comptabilite/components/ecriture/SectionRecette';
+import {
+  SectionRecetteContact,
+  SectionRecetteVente,
+} from '@/features/comptabilite/components/ecriture/SectionRecette';
+import { SelectModal } from '@/shared/components/SelectModal';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { commandeOuverte, totalCommande } from '@/features/commercial/services/commandes';
+import type { Commande } from '@/features/commercial/types';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
@@ -20,7 +27,7 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
-import { currentYear } from '@/shared/utils/dates';
+import { currentYear, formatMontant } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -59,6 +66,22 @@ export default function NouvelleFacture() {
       toutesLesAnneesConnues().then((connues) => setAnnees([...new Set([...connues, currentYear() - 1])]));
     }, []),
   );
+  /** Un crédit se saisit en deux étapes : le contact (et la facture), puis la vente (ce qui est vendu, son montant, son paiement). */
+  const [etape, setEtape] = useState<'contact' | 'vente'>('contact');
+  const enDeuxEtapes = e.type !== TYPE_FACTURE.RECUE;
+  // Une écriture enchaînée repart de la première étape.
+  const [enchaineesVues, setEnchaineesVues] = useState(0);
+  if (enchaineesVues !== e.enchainees) {
+    setEnchaineesVues(e.enchainees);
+    setEtape('contact');
+  }
+  /** Les commandes à transformer en vente : celles qui restent à préparer ou à livrer. */
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [choixCommande, setChoixCommande] = useState(false);
+  const ouvrirLesCommandes = async () => {
+    setCommandes((await lireArchiveCommercial()).commandes.filter((c) => commandeOuverte(c)));
+    setChoixCommande(true);
+  };
   // L'activité se choisit par une puce (comme dans la liste) ; elle n'apparaît que pour un établissement à plusieurs espèces.
   const activites = [...especesActives(), ...(e.avecCommunActivite ? [ACTIVITE_COMMUNE] : [])];
 
@@ -103,8 +126,20 @@ export default function NouvelleFacture() {
 
         {e.type === TYPE_FACTURE.RECUE ? (
           <SectionDepense e={e} date={champDate} />
+        ) : etape === 'contact' ? (
+          <>
+            <SectionRecetteContact e={e} date={champDate} onCommande={ouvrirLesCommandes} />
+            {e.commande ? (
+              <Text style={commonStyles.note}>
+                {TEXTES.comptabilite.nouvelleEcriture.commandeEnCours(
+                  e.commande.numero,
+                  e.lignesRestantesDeLaCommande.length,
+                )}
+              </Text>
+            ) : null}
+          </>
         ) : (
-          <SectionRecette e={e} date={champDate} />
+          <SectionRecetteVente e={e} />
         )}
 
         {e.enchainees > 0 ? (
@@ -112,28 +147,62 @@ export default function NouvelleFacture() {
             {TEXTES.comptabilite.nouvelleEcriture.enchainees(e.enchainees)}
           </Text>
         ) : null}
-        <Button
-          variant="secondary"
-          label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
-          onPress={() => e.enregistrer(true)}
-          loading={e.enregistrement}
-        />
-        <View style={commonStyles.row}>
-          <Button
-            style={commonStyles.flex1}
-            variant="secondary"
-            label={TEXTES.commun.general.annuler}
-            onPress={e.annuler}
-          />
-          <Button
-            style={commonStyles.flex1}
-            label={TEXTES.commun.general.enregistrer}
-            onPress={() => e.enregistrer()}
-            loading={e.enregistrement}
-          />
-        </View>
+        {enDeuxEtapes && etape === 'contact' ? (
+          // Première étape : annuler, ou passer à la vente.
+          <View style={commonStyles.row}>
+            <Button
+              style={commonStyles.flex1}
+              variant="secondary"
+              label={TEXTES.commun.general.annuler}
+              onPress={e.annuler}
+            />
+            <Button
+              style={commonStyles.flex1}
+              label={TEXTES.comptabilite.nouvelleEcriture.suivant}
+              onPress={() => setEtape('vente')}
+            />
+          </View>
+        ) : (
+          <>
+            <Button
+              variant="secondary"
+              label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
+              onPress={() => e.enregistrer(true)}
+              loading={e.enregistrement}
+            />
+            <View style={commonStyles.row}>
+              <Button
+                style={commonStyles.flex1}
+                variant="secondary"
+                label={enDeuxEtapes ? TEXTES.comptabilite.nouvelleEcriture.precedent : TEXTES.commun.general.annuler}
+                onPress={enDeuxEtapes ? () => setEtape('contact') : e.annuler}
+              />
+              <Button
+                style={commonStyles.flex1}
+                label={TEXTES.commun.general.enregistrer}
+                onPress={() => e.enregistrer()}
+                loading={e.enregistrement}
+              />
+            </View>
+          </>
+        )}
       </Screen>
 
+      <SelectModal<string>
+        visible={choixCommande}
+        titre={TEXTES.comptabilite.nouvelleEcriture.choisirCommande}
+        value={e.commande?.id ?? ''}
+        options={commandes.map((c) => ({
+          value: c.id,
+          label: `${c.numero} · ${c.client} · ${formatMontant(totalCommande(c))}`,
+        }))}
+        onSelect={(id) => {
+          const choisie = commandes.find((c) => c.id === id);
+          setChoixCommande(false);
+          if (choisie) e.choisirCommande(choisie);
+        }}
+        onClose={() => setChoixCommande(false)}
+      />
       <InfoModal
         visible={!!e.erreur}
         title={e.erreur?.titre ?? ''}
