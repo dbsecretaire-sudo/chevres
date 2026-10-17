@@ -32,6 +32,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'renouvellementAnnee',
     'poidsKg',
     'notes',
+    // Réservé pour un client (le client, son bon de commande, vivants ou morts) : en JSON dans sa cellule.
+    'reservation',
   ],
   [CATEGORIE_STOCKAGE.VISITES_VETERINAIRE]: [
     'id',
@@ -129,6 +131,9 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'commandeId',
     'fraisAbattoir',
     'tauxTvaFrais',
+    // Vente de viande : vivants ou morts à la remise ; vente offerte au client.
+    'etatAnimaux',
+    'offert',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
@@ -213,6 +218,7 @@ export const CHAMPS_BOOLEEN = new Set([
   'visiteVeterinaire',
   'reajustement',
   'rapportEssais',
+  'offert',
 ]);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
@@ -230,7 +236,7 @@ export const CHAMPS_LIGNES_CARBURANT = new Set(['lignesCarburant']);
 export const CHAMPS_FICHIERS = new Set(['fichiers']);
 
 /** Les champs écrits tels quels en JSON dans leur cellule (les contenus d'un groupement, avec leurs fichiers). */
-export const CHAMPS_JSON = new Set(['contenus', 'lignesProduction', 'lignesChambre']);
+export const CHAMPS_JSON = new Set(['contenus', 'lignesProduction', 'lignesChambre', 'reservation']);
 
 export const CHAMPS_LIGNES_MARCHANDISES = new Set(['lignesMarchandises']);
 

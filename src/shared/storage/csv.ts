@@ -130,7 +130,9 @@ function deserializeValue(key: string, raw: string): unknown {
   if (CHAMPS_JSON.has(key)) {
     try {
       const valeur: unknown = JSON.parse(raw);
-      return Array.isArray(valeur) && valeur.length > 0 ? valeur : undefined;
+      // Une liste (non vide) ou un objet (la réservation d'un animal).
+      if (Array.isArray(valeur)) return valeur.length > 0 ? valeur : undefined;
+      return valeur && typeof valeur === 'object' ? valeur : undefined;
     } catch {
       return undefined;
     }

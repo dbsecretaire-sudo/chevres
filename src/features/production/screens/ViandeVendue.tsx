@@ -15,10 +15,10 @@ import { enregistrerCommande, getCommande } from '@/features/commercial/reposito
 import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
-import { saveChevre } from '@/features/cheptel/repository/chevres';
+import { getChevre, saveChevre } from '@/features/cheptel/repository/chevres';
 import { estReserve, liberer, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
 import type { Commande } from '@/features/commercial/types';
-import { reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
+import { bonOuvertDuClient, reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
 import { nomComplet } from '@/shared/utils/personne';
@@ -88,7 +88,12 @@ export default function ViandeVendue() {
   const [menu, setMenu] = useState<Chevre | null>(null);
   const [cible, setCible] = useState<{ animal: Chevre; action: 'reserver' | 'ecriture' } | null>(null);
   /** Les animaux d'un bon dont le poids manque, à demander avant d'ouvrir la facture (le premier est à l'écran). */
-  const [poidsAvantVente, setPoidsAvantVente] = useState<{ bon: Commande; restants: Chevre[] } | null>(null);
+  const [poidsAvantVente, setPoidsAvantVente] = useState<{
+    restants: Chevre[];
+    /** Un bon déjà là (réservation validée) ; ou une facture directe : l'animal et son client, rien n'est réservé tant que la vente n'est pas ouverte. */
+    bon?: Commande;
+    direct?: { animal: Chevre; client: Client };
+  } | null>(null);
   /** L'animal dont on note le poids (il s'écrit sur sa fiche : « Poids (kg) »). */
   const [pesee, setPesee] = useState<Chevre | null>(null);
   /** Des cabris réservés : remis vivants ou morts (morts : pas de document de circulation). */
@@ -244,10 +249,34 @@ export default function ViandeVendue() {
     if (!courant) return;
     const [animal, ...restants] = courant.restants;
     if (poidsKg !== undefined) await saveChevre({ ...animal, poidsKg });
-    if (restants.length > 0) return setPoidsAvantVente({ bon: courant.bon, restants });
+    if (restants.length > 0) return setPoidsAvantVente({ ...courant, restants });
     setPoidsAvantVente(null);
+    if (courant.direct) return finirLaFactureDirecte(courant.direct.animal, courant.direct.client);
     await charger();
-    await ouvrirLaVente(courant.bon);
+    if (courant.bon) await ouvrirLaVente(courant.bon);
+  };
+
+  /**
+   * Facturer un animal sans réservation : c'est seulement à l'ouverture de la vente que l'animal est réservé (le bon du client se crée).
+   * Une facture abandonnée avant (la fenêtre du poids fermée) n'enregistre rien : l'animal reste « à vendre ».
+   */
+  const finirLaFactureDirecte = async (animal: Chevre, client: Client) => {
+    // L'animal est relu : son poids vient d'être noté.
+    const frais = (await getChevre(animal.id)) ?? animal;
+    const bon = await reserverAnimauxPourClient([frais], client);
+    await charger();
+    await ouvrirLaVente(bon);
+  };
+
+  /** Une facture directe : le poids de l'animal (et de ceux déjà au bon du client) se demande d'abord, sans rien enregistrer. */
+  const lancerLaFactureDirecte = async (animal: Chevre, client: Client) => {
+    const bonExistant = await bonOuvertDuClient(client);
+    const duBon = bonExistant
+      ? reservesDeLaCommande([...animaux.values()], bonExistant.id).filter((a) => a.id !== animal.id)
+      : [];
+    const sansPoids = [...duBon, animal].filter((a) => !a.poidsKg);
+    if (sansPoids.length > 0) return setPoidsAvantVente({ restants: sansPoids, direct: { animal, client } });
+    await finirLaFactureDirecte(animal, client);
   };
 
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
@@ -524,7 +553,8 @@ export default function ViandeVendue() {
         visible={!!poidsAvantVente}
         titre={poidsAvantVente ? libelleChevre(poidsAvantVente.restants[0]) : undefined}
         onValider={poidsSuivant}
-        onFermer={() => poidsSuivant(undefined)}
+        // Fermer la fenêtre (un appui à côté) abandonne la facture : rien n'est enregistré, l'animal reste « à vendre ».
+        onFermer={() => setPoidsAvantVente(null)}
       />
       <SelectModal<string>
         visible={!!cible}
@@ -539,11 +569,7 @@ export default function ViandeVendue() {
           if (!choisi || !client) return;
           // Facturer sans réservation d'abord : même chemin qu'une réservation validée (le bon du client se crée, le poids se demande si
           // besoin, puis la vente s'ouvre avec le circuit, le détail selon la date et l'animal déjà choisis).
-          if (choisi.action === 'ecriture') {
-            const bon = await reserverAnimauxPourClient([choisi.animal], client);
-            const duBon = reservesDeLaCommande([...animaux.values()], bon.id).filter((a) => a.id !== choisi.animal.id);
-            return preparerEtVendre(bon, [...duBon, choisi.animal]);
-          }
+          if (choisi.action === 'ecriture') return lancerLaFactureDirecte(choisi.animal, client);
           // Un cabri : vivant ou mort à la remise. Les autres animaux rejoignent tout de suite le bon de commande ouvert du client.
           if (estPetit(choisi.animal)) return setChoixEtat({ animal: choisi.animal, client });
           await reserverAnimauxPourClient([choisi.animal], client);

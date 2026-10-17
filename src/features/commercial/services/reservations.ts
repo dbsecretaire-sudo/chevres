@@ -63,7 +63,7 @@ export async function prixDuProduitPourClient(article: string, client: Client): 
 }
 
 /** Le bon ouvert d'un client, sans le créer. */
-async function bonOuvertDuClient(client: Client): Promise<Commande | undefined> {
+export async function bonOuvertDuClient(client: Client): Promise<Commande | undefined> {
   return (await lireArchiveCommercial()).commandes.find((c) => c.clientId === client.id && commandeOuverte(c));
 }
 
