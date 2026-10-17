@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -23,6 +23,7 @@ import type { Commande } from '@/features/commercial/types';
 import { elementsAFacturer, type ElementACommande } from '@/features/commercial/services/commandes';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { reservesDeLaCommande } from '@/features/cheptel/services/reservations';
+import { etatCommunDesReservations } from '@/features/commercial/services/reservations';
 import type { Chevre } from '@/features/cheptel/types';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
@@ -57,6 +58,8 @@ export default function NouvelleFacture() {
     produitLibelle?: string;
     /** L'état des animaux (depuis leur réservation) : « vivants » ou « morts ». */
     etat?: string;
+    /** Un bon de commande à transformer en vente tout de suite (depuis la validation de la préparation). */
+    commande?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -114,6 +117,24 @@ export default function NouvelleFacture() {
     );
     setChoixCommande(true);
   };
+  /** Reprend un bon de commande : ses lignes et ses animaux réservés ; plusieurs éléments, on choisit ce qu'on facture maintenant. */
+  const commencer = (commande: Commande, tous: Chevre[]) => {
+    const reserves = reservesDeLaCommande(tous, commande.id);
+    const ids = reserves.map((a) => a.id);
+    const elements = elementsAFacturer(commande, ids, etatCommunDesReservations(reserves));
+    if (elements.length <= 1) e.demarrerCommande(commande, elements, ids);
+    else setPartie({ commande, elements, ids });
+  };
+  // Ouvert avec un bon de commande : il est repris d'office.
+  useEffect(() => {
+    if (!params.commande) return;
+    Promise.all([lireArchiveCommercial(), listTousLesAnimauxDeLEspece()]).then(([archive, tous]) => {
+      const bon = archive.commandes.find((c) => c.id === params.commande);
+      if (bon) commencer(bon, tous);
+    });
+    // Une seule fois, à l'ouverture.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.commande]);
   const libelleElement = (el: ElementACommande): string =>
     el.type === 'ligne'
       ? `${el.ligne.quantite} × ${el.ligne.libelle}`
@@ -236,11 +257,8 @@ export default function NouvelleFacture() {
           const choisie = commandes.find((c) => c.id === id);
           setChoixCommande(false);
           if (!choisie) return;
-          const ids = reservesDeLaCommande(animaux, choisie.id).map((a) => a.id);
-          const elements = elementsAFacturer(choisie, ids);
           // Un seul élément : on le reprend ; sinon on choisit de tout facturer ou seulement une partie du bon.
-          if (elements.length <= 1) e.demarrerCommande(choisie, elements, ids);
-          else setPartie({ commande: choisie, elements, ids });
+          commencer(choisie, animaux);
         }}
         onClose={() => setChoixCommande(false)}
       />

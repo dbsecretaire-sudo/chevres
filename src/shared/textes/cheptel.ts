@@ -1126,6 +1126,7 @@ export const TEXTES_CHEPTEL = {
     ecriture: 'Écriture comptable sans facture pour un client',
     ecriturePour: (client: string) => `Écriture sans facture pour ${client}`,
     liberer: 'Libérer la réservation',
+    validerEtVendre: 'Valider la préparation de commande et vendre',
     etatTitre: 'Ces cabris seront remis…',
     etatPlusTard: 'Pas encore décidé',
     remis: { vivants: 'Remis vivants', morts: 'Remis morts' },

@@ -57,7 +57,7 @@ export default function RappelsLots() {
       )
     : new Set<string>();
   const duProduit = (l: LotFromage) => articles.has(l.article);
-  const aRappeler = trierLots(lotsARappeler({ lots: archive?.lots }).filter(duProduit), TRI_LOT.NUMERO, true);
+  const aRappeler = trierLots(lotsARappeler({ lots: archive?.lots }).filter(duProduit), TRI_LOT.NUMERO, false);
   const rappeles = (archive?.lots ?? []).filter((l) => etatDuLot(l) === ETAT_LOT.RAPPELE && duProduit(l));
   const lignes = [
     ...aRappeler.map((lot) => ({ lot, detail: T.aRappeler(formatDateShortFR(lot.dateVente)) })),

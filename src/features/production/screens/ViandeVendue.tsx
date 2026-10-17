@@ -10,6 +10,8 @@ import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { listClients } from '@/features/clients/repository';
+import { enregistrerCommande, getCommande } from '@/features/commercial/repository';
+import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { saveChevre } from '@/features/cheptel/repository/chevres';
@@ -181,6 +183,25 @@ export default function ViandeVendue() {
       },
     });
 
+  /**
+   * Valide la préparation du bon de commande de l'animal réservé, puis ouvre la vente : le bon est repris (circuit, produit, quantité, état
+   * des animaux). Une réservation sans bon (d'avant les bons de commande) ouvre directement l'écriture.
+   */
+  const validerEtVendre = async (animal: Chevre) => {
+    const bon = animal.reservation?.commandeId ? await getCommande(animal.reservation.commandeId) : undefined;
+    if (!bon) return ouvrirEcriture(animal, animal.reservation?.clientId);
+    if (bon.statut === STATUT_COMMANDE.A_PREPARER) await enregistrerCommande({ ...bon, statut: STATUT_COMMANDE.PREPAREE });
+    router.push({
+      pathname: ROUTES.COMPTABILITE_NOUVELLE,
+      params: {
+        type: TYPE_FACTURE.EMISE,
+        categorie: CATEGORIE_RECETTE.VIANDE,
+        facture: 'non',
+        commande: bon.id,
+      },
+    });
+  };
+
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
   const ligneDuJour = (g: { date: string; avecBoucle: boolean; animaux: Chevre[] }) => {
     const poids = poidsTotal(g.animaux);
@@ -350,9 +371,9 @@ export default function ViandeVendue() {
                 ...(estReserve(menu)
                   ? [
                       {
-                        label: TEXTES.cheptel.reservation.ecriturePour(menu.reservation!.client),
+                        label: TEXTES.cheptel.reservation.validerEtVendre,
                         icon: 'receipt' as const,
-                        onPress: () => ouvrirEcriture(menu, menu.reservation!.clientId),
+                        onPress: () => validerEtVendre(menu),
                       },
                       ...(estPetit(menu)
                         ? (['vivants', 'morts'] as const)

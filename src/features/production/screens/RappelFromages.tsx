@@ -46,7 +46,7 @@ export default function RappelFromages() {
   }, [espece, produit]);
 
   // Les lots qu'on peut rappeler : ceux du fromage qui ont été vendus et dont le contrôle n'est pas bon (pas déjà rappelés).
-  const lots = trierLots(lotsARappeler({ lots: archive?.lots }, article), TRI_LOT.NUMERO, true);
+  const lots = trierLots(lotsARappeler({ lots: archive?.lots }, article), TRI_LOT.NUMERO, false);
 
   const basculer = (id: string) =>
     setChoisis((actuels) => (actuels.includes(id) ? actuels.filter((x) => x !== id) : [...actuels, id]));

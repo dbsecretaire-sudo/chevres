@@ -37,16 +37,23 @@ export const totalCommande = (commande: Pick<Commande, 'lignes'>): number =>
   arrondi(commande.lignes.reduce((t, l) => t + totalLigne(l), 0));
 
 /** Ce qu'une commande peut facturer d'un coup : une ligne (fromage, viande, charcuterie), ou les animaux réservés pour le contact. */
-export type ElementACommande = { type: 'ligne'; ligne: LigneCommande } | { type: 'animaux'; ids: string[] };
+export type ElementACommande =
+  | { type: 'ligne'; ligne: LigneCommande }
+  | { type: 'animaux'; ids: string[]; etat?: 'vivants' | 'morts' };
 
 /** Les éléments d'une commande qui restent à facturer : ses lignes pas encore facturées, et ses animaux réservés (pas encore vendus). */
-export function elementsAFacturer(commande: Commande, idsAnimauxReserves: string[]): ElementACommande[] {
+export function elementsAFacturer(
+  commande: Commande,
+  idsAnimauxReserves: string[],
+  /** Les animaux réservés sont remis vivants ou morts (quand leurs réservations le disent toutes). */
+  etat?: 'vivants' | 'morts',
+): ElementACommande[] {
   const faites = new Set(commande.lignesFacturees ?? []);
   return [
     ...commande.lignes
       .filter((l) => l.quantite > 0 && !faites.has(l.id))
       .map((ligne): ElementACommande => ({ type: 'ligne', ligne })),
-    ...(idsAnimauxReserves.length > 0 ? [{ type: 'animaux', ids: idsAnimauxReserves } as ElementACommande] : []),
+    ...(idsAnimauxReserves.length > 0 ? [{ type: 'animaux', ids: idsAnimauxReserves, etat } as ElementACommande] : []),
   ];
 }
 

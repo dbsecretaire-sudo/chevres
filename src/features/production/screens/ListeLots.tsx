@@ -175,6 +175,8 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
         lots={lots}
         sansLot={ouvert ? Math.max(0, (niveaux.get(ouvert.cle) ?? 0) - enStock(ouvert.cle)) : 0}
         onChange={charger}
+        // Dans Production, les lots s'ouvrent sur ceux qui sont en stock (l'inventaire, lui, montre tout).
+        etatInitial={ETAT_LOT.EN_STOCK}
         onFermer={() => setVisible(false)}
       />
     </Screen>

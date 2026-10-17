@@ -131,8 +131,13 @@ export const lotsAChoisir = (
   article: string,
   venteId?: string,
 ): LotFromage[] =>
-  (archive.lots ?? []).filter(
-    (l) => l.article === article && !l.dateRappel && (!l.venteId || l.venteId === venteId),
+  // Les numéros les plus grands d'abord.
+  trierLots(
+    (archive.lots ?? []).filter(
+      (l) => l.article === article && !l.dateRappel && (!l.venteId || l.venteId === venteId),
+    ),
+    TRI_LOT.NUMERO,
+    false,
   );
 
 /** Vrai quand la vente d'un produit identifié doit désigner ses lots (il en a en stock) et qu'elle n'en désigne aucun. */

@@ -9,7 +9,7 @@ import type { Client } from '@/features/clients/types';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { reserverLots } from '@/features/stock/services/lots';
 import type { LotFromage } from '@/features/stock/types';
-import { JOURS_AVANT_LIVRAISON, STATUT_COMMANDE } from '@/shared/constants/commercial';
+import { CIRCUIT_VENTE, JOURS_AVANT_LIVRAISON, STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { ajouterJours } from '@/shared/utils/calendrier';
 import { libelleArticle } from '@/features/stock/services/stock';
 import { generateId } from '@/shared/utils/id';
@@ -29,6 +29,7 @@ export async function bonDeCommandeOuvert(client: Client): Promise<Commande> {
     clientId: client.id,
     date: todayISO(),
     livraisonPrevue: ajouterJours(todayISO(), JOURS_AVANT_LIVRAISON),
+    circuit: CIRCUIT_VENTE.FERME,
     statut: STATUT_COMMANDE.A_PREPARER,
     lignes: [],
   });
@@ -41,7 +42,9 @@ export async function reserverAnimauxPourClient(
   /** Les cabris seront remis vivants ou morts (absent : pas encore décidé). */
   etat?: 'vivants' | 'morts',
 ): Promise<Commande> {
-  const bon = await bonDeCommandeOuvert(client);
+  let bon = await bonDeCommandeOuvert(client);
+  // Des animaux sans boucle réservés depuis Production › Viande : la vente se fait à la ferme.
+  if (bon.circuit !== CIRCUIT_VENTE.FERME) bon = await enregistrerCommande({ ...bon, circuit: CIRCUIT_VENTE.FERME });
   const reservation = { client: nomComplet(client), clientId: client.id, commandeId: bon.id, etat, date: todayISO() };
   for (const animal of animaux) await saveChevre(reserver(animal, reservation));
   return bon;
@@ -154,4 +157,11 @@ export async function rattacherLesReservations(clients: Client[]): Promise<void>
   for (const { client, article, lots } of groupes.values()) {
     await reserverLotsPourClient(lots, { cle: article, libelle: libelleArticle(article, stock) }, client);
   }
+}
+
+/** L'état (vivants ou morts) que disent toutes les réservations d'un groupe d'animaux ; rien quand elles diffèrent ou ne le disent pas. */
+export function etatCommunDesReservations(animaux: Chevre[]): 'vivants' | 'morts' | undefined {
+  const etats = new Set(animaux.map((a) => a.reservation?.etat));
+  const [seul] = [...etats];
+  return etats.size === 1 ? seul : undefined;
 }

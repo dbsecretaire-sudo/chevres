@@ -18,6 +18,7 @@ import type { Client } from '@/features/clients/types';
 import type { LotFromage } from '@/features/stock/types';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ETAT_LOT } from '@/shared/constants/stock';
+import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ROUTES } from '@/shared/constants/routes';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
@@ -37,6 +38,8 @@ interface Props {
   /** Relit les lots après un changement (la case de contrôle, une réservation). */
   onChange: () => void;
   onFermer: () => void;
+  /** L'état des lots montré à l'ouverture (« Tout » par défaut ; Production ouvre sur « En stock »). */
+  etatInitial?: ValeurDe<typeof ETAT_LOT>;
 }
 
 type Action = 'reserver' | 'facturer';
@@ -47,9 +50,9 @@ type Action = 'reserver' | 'facturer';
  * gris tant que rien n'est choisi, devient « Réserver / Facturer » : une fenêtre propose de réserver les lots, de les facturer, ou de
  * libérer leur réservation, puis demande le client.
  */
-export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onFermer }: Props) {
+export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onFermer, etatInitial }: Props) {
   const router = useRouter();
-  const liste = useListeLots(lots, article?.cle);
+  const liste = useListeLots(lots, article?.cle, etatInitial);
   const [choisis, setChoisis] = useState<Set<string>>(new Set());
   const [actions, setActions] = useState(false);
   const [action, setAction] = useState<Action | null>(null);

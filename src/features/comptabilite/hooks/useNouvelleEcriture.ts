@@ -82,7 +82,7 @@ import type {
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
-import { memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
+import { estDateISO, memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
 import { agePetitMax } from '@/shared/constants/cheptel';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import {
@@ -540,14 +540,17 @@ export function useNouvelleEcriture(
     changerCategorieRecette(CATEGORIE_RECETTE.VIANDE);
     setAvecFacture(false);
     setAnimaux(element.ids);
+    // Vivants ou morts, comme dit à la réservation.
+    setEtatAnimaux(element.etat ?? '');
     const [tous, archive] = await Promise.all([listTousLesAnimauxDeLEspece(), lireArchiveStock()]);
     const choisis = tous.filter((a) => element.ids.includes(a.id));
-    if (choisis.length > 0 && choisis.every((a) => !ageAtteint(a.dateNaissance, agePetitMax(), todayISO()))) {
-      const jeune = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find(
-        (a) => roleDeLaViande(a.cle) === ROLE_VIANDE.JEUNE,
-      );
-      if (jeune) setPrecision(jeune.libelle);
-    }
+    // Le détail de la vente d'après l'âge à la date de la facture : « Cabris » pour des petits, sinon la ligne des adultes (vivants s'ils
+    // sont remis vivants, sinon sur pied).
+    const jourFacture = estDateISO(date) ? date : todayISO();
+    const petits = choisis.length > 0 && choisis.every((a) => !ageAtteint(a.dateNaissance, agePetitMax(), jourFacture));
+    const role = petits ? ROLE_VIANDE.JEUNE : element.etat === 'vivants' ? ROLE_VIANDE.VIVANT : ROLE_VIANDE.SUR_PIED;
+    const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find((a) => roleDeLaViande(a.cle) === role);
+    if (ligne) setPrecision(ligne.libelle);
   };
 
   /** Une vente basée sur une commande : le contact, le circuit, le paiement, puis les éléments choisis, un à un. */

@@ -8,10 +8,16 @@ import { ETAT_LOT, TRI_LOT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /** Ce que l'on voit de la liste des lots d'un fromage : le filtre d'état (tous, en stock, vendus, rappelés), le tri choisi et les lignes qui en résultent. */
-export function useListeLots(lots: LotFromage[], article?: string) {
-  const [etat, setEtat] = useState<ValeurDe<typeof ETAT_LOT>>(ETAT_LOT.TOUT);
+export function useListeLots(
+  lots: LotFromage[],
+  article?: string,
+  /** L'état montré à l'ouverture (« Tout » dans l'inventaire ; « En stock » dans Production). */
+  etatInitial: ValeurDe<typeof ETAT_LOT> = ETAT_LOT.TOUT,
+) {
+  const [etat, setEtat] = useState<ValeurDe<typeof ETAT_LOT>>(etatInitial);
   const [tri, setTri] = useState<ValeurDe<typeof TRI_LOT>>(TRI_LOT.NUMERO);
-  const [croissant, setCroissant] = useState(true);
+  // Les lots les plus récents (les numéros les plus grands) d'abord.
+  const [croissant, setCroissant] = useState(false);
 
   const triees = trierLots(lotsDeLInventaire({ lots }, etat, article), tri, croissant);
   /** Le filtre de chaque colonne, comme dans Excel : les valeurs sont celles qu'affiche le tableau. */
