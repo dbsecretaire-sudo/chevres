@@ -30,8 +30,9 @@ export function FormulaireContactChamps({ form, onChange, categories }: Props) {
 
       <SelectField
         label={T.categorie}
+        required
         value={form.categorie}
-        placeholder={T.facultatif}
+        placeholder={T.choisirCategorie}
         onChange={(categorie) => maj({ categorie })}
         options={categories.map((c) => ({ value: c.id, label: c.nom }))}
         aide={T.aideCategorie}

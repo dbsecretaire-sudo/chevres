@@ -48,6 +48,7 @@ export const TEXTES_CONTACTS = {
   formulaire: {
     titreModifier: 'Modifier la fiche',
     categorie: 'Catégorie',
+    choisirCategorie: 'Choisir une catégorie',
     aideCategorie: 'Une seule catégorie pour le contact, qu’il reçoive des recettes, fasse des dépenses, ou les deux.',
     nom: 'Nom ou entreprise',
     prenom: 'Prénom',
@@ -70,6 +71,7 @@ export const TEXTES_CONTACTS = {
   },
   erreurs: {
     nomRequis: 'Nom requis',
+    categorieRequise: 'Choisissez une catégorie.',
     rienCoche: 'Cochez « recettes », « dépenses », ou les deux.',
     ecrituresRecettes: 'Ce contact a des ventes ou des factures émises : le côté « recettes » ne se retire pas.',
     ecrituresDepenses: 'Ce contact a des factures reçues : le côté « dépenses » ne se retire pas.',
