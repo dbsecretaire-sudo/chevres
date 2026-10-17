@@ -131,8 +131,6 @@ export interface LotAnimaux {
   categorie?: string;
   /** Un lot de mises à la reproduction : l'année de ses mises bas. Un lot se crée tout seul chaque année (les femelles présentes au 1er janvier). */
   reproduction?: number;
-  /** Un des deux lots des animaux sans boucle vendus sans facture : « morts » ou « vivants » (dans « Autres lots »). */
-  vendus?: 'morts' | 'vivants';
   /** Un lot de mises à la reproduction : la version du calcul qui l'a rempli (les lots d'une version plus ancienne sont recalculés une fois). */
   versionCalcul?: number;
   /** Un lot d'avortements : l'année des avortements de ses femelles. */

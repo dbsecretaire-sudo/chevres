@@ -248,17 +248,6 @@ export const TEXTES_CHEPTEL = {
       suivi: 'Suivi sanitaire',
     },
     aideVerrouille: 'Ce lot se crée tout seul (abattoir, visite vétérinaire…) : son nom et sa catégorie ne se modifient pas et il ne se supprime pas. On y change seulement les animaux.',
-    /** Les deux lots des animaux sans boucle vendus sans facture, dans « Autres lots ». */
-    vendus: {
-      morts: 'Animaux vendus morts',
-      vivants: 'Animaux vendus vivants',
-      aideMorts: 'Les animaux sans boucle vendus sans facture à un particulier, morts (d’office). Un bouton passe une vente en « vivants » : les fiches des animaux suivent.',
-      aideVivants: 'Les animaux sans boucle vendus sans facture, vendus vivants. Un bouton repasse une vente en « morts » : les fiches des animaux suivent.',
-      aucune: 'Aucune vente.',
-      animaux: (n: number) => (n > 1 ? `${n} animaux` : `${n} animal`),
-      passerEnVivants: 'Ces animaux étaient vendus vivants',
-      passerEnMorts: 'Ces animaux étaient vendus morts',
-    },
     rapportNumero: (numero?: string) => (numero ? `rapport d’essais n° ${numero}` : 'rapport d’essais'),
     aFacturer: 'à facturer',
     facture: 'facturé',

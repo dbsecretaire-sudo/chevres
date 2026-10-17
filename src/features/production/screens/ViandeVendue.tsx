@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
@@ -9,7 +9,6 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
-import { nomDuLotVendus, type SorteDeVendus } from '@/features/exploitation/services/lotsVendus';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
@@ -45,6 +44,8 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.production.viande;
 
 type OngletViande = 'afacturer' | 'facturee' | 'avendre' | 'vendue';
+/** Les ventes sans facture d'animaux sans boucle : morts (d'office) ou vendus vivants. */
+type SorteDeVendus = 'morts' | 'vivants';
 
 /** La viande vendue de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
 export default function ViandeVendue() {
@@ -239,14 +240,6 @@ export default function ViandeVendue() {
               valeur={sousOnglet}
               onChoisir={setSousOnglet}
             />
-            {/* Le lot « Animaux vendus morts / vivants » : on y passe une vente de morts à vivants (leurs fiches suivent). */}
-            {lots.some((l) => l.vendus === sousOnglet) ? (
-              <Pressable
-                onPress={() => router.push(ouvrirLot(lots.find((l) => l.vendus === sousOnglet)!.id) as never)}
-              >
-                <Text style={commonStyles.lien}>{nomDuLotVendus(sousOnglet)}</Text>
-              </Pressable>
-            ) : null}
           </>
         ) : null}
         {venteDeLOnglet.length > 0 ? (
