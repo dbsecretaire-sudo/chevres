@@ -20,10 +20,16 @@ const JOURS_SEVRAGE = 90;
 
 /** Les lignes d'une page A4 : le carnet papier déplié fait une moitié d'A4 et en compte 16, la page A4 en a donc 32. */
 export const LIGNES_PAR_PAGE = 32;
-/** Les lignes d'une page du livret (une demi-feuille A4, en A5 portrait) : la ligne est plus haute, pour écrire plus à l'aise. */
-export const LIGNES_PAR_PAGE_LIVRET = 18;
+/**
+ * Les lignes d'une page du livret (une page A6, comme le carnet papier) : le tableau se lit en travers de la page, ses lignes de 6 mm
+ * s'empilent sur les 105 mm de largeur ; les marges que les imprimantes imposent en prennent un peu.
+ */
+export const LIGNES_PAR_PAGE_LIVRET = 13;
 
-/** Le carnet en feuilles A4 à ranger dans un classeur, ou en livret : des feuilles A4 en paysage à imprimer recto verso et à plier en deux. */
+/**
+ * Le carnet en feuilles A4 à ranger dans un classeur, ou en livret A6 : des feuilles A4 en portrait de quatre pages par face, à imprimer
+ * recto verso, à couper en deux et à plier (comme le carnet papier, qui ouvert fait la moitié d'un A4).
+ */
 export type FormatCarnet = 'a4' | 'livret';
 
 /** Une ligne du carnet : une mise bas (la mère et tous ses petits). Le père reste à écrire à la main. */
@@ -143,6 +149,22 @@ export function pagesDeLAnnee(portees: PorteeNaissance[], parPage = LIGNES_PAR_P
   ];
 }
 
+/**
+ * Les faces des feuilles A4 du livret A6 : chaque feuille A4 porte deux feuilles A5 (coupées en deux après l'impression), et chaque
+ * feuille A5 deux pages A6 par face. Pour chaque face A4 : la feuille A5 du haut et celle du bas, chacune avec sa page de gauche puis sa
+ * page de droite (numérotées depuis 0). Le recto puis le verso de chaque feuille A4 se suivent (impression recto verso, retourner sur le
+ * bord long) ; la dernière feuille A4 peut n'avoir que celle du haut.
+ */
+export function facesA4DuLivret(pages: number): { haut: [number, number]; bas?: [number, number] }[] {
+  const a5 = ordreDuLivret(pages);
+  const faces: { haut: [number, number]; bas?: [number, number] }[] = [];
+  for (let i = 0; i * 4 < a5.length; i++) {
+    faces.push({ haut: a5[4 * i], bas: a5[4 * i + 2] });
+    faces.push({ haut: a5[4 * i + 1], bas: a5[4 * i + 3] });
+  }
+  return faces;
+}
+
 /** Les mises bas sans les petits sans boucle (mort-nés compris) : ils ne figurent pas dans le carnet ; une mise bas sans aucun petit avec boucle disparaît. */
 export function porteesAvecBoucle(portees: PorteeNaissance[]): PorteeNaissance[] {
   return portees
@@ -227,26 +249,30 @@ const STYLES = `
   * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 0 4mm; font-size: 10.5pt; }
   .page { page-break-after: always; }
-  .livret .page { page-break-after: auto; }
-  .livret { padding: 0; }
-  .feuille { width: 297mm; height: 209mm; display: flex; page-break-after: always; overflow: hidden; }
-  .feuille:last-child { page-break-after: auto; }
-  .demi { width: 148.5mm; height: 209mm; padding: 9mm 9mm 8mm; overflow: hidden; position: relative; }
-  .demi:first-child { border-right: 0.2mm dotted #aaa; }
-  .livret td { height: 8.4mm; font-size: 9pt; padding-left: 1mm; padding-right: 1mm; }
-  .livret th { font-size: 8.5pt; padding-left: 1mm; padding-right: 1mm; }
-  .livret .colonnes { flex-direction: column; gap: 4mm; }
-  .livret h1 { font-size: 16pt; margin-bottom: 4mm; }
-  .livret .couverture { height: 190mm; padding: 22mm 12mm 12mm; }
-  .livret .couverture .grand { font-size: 34pt; }
-  .livret .resultats { zoom: 0.84; }
-  .livret .champ { margin-bottom: 3.5mm; }
-  .livret .boite { margin-bottom: 2.5mm; }
-  .livret .groupe { margin-bottom: 2.5mm; }
-  .livret .taux { margin-bottom: 3mm; }
-  .livret .boite .intitule, .livret .groupe .titre, .livret .taux .formule { font-size: 9.5pt; padding-top: 1.2mm; padding-bottom: 1.2mm; }
-  .livret .groupe .l span { padding-top: 0.6mm; padding-bottom: 0.6mm; }
-  .numero-page { position: absolute; bottom: 3mm; left: 0; right: 0; text-align: center; font-size: 8pt; color: #777; }
+  /* Le livret A6 : des feuilles A4 en portrait, quatre pages A6 par face (deux feuilles A5 l'une sur l'autre, deux pages chacune). */
+  .a6 .page { page-break-after: auto; }
+  .face { width: 210mm; height: 296.5mm; page-break-after: always; overflow: hidden; }
+  .face:last-child { page-break-after: auto; }
+  .demi5 { width: 210mm; height: 148.25mm; display: flex; }
+  .demi5 + .demi5 { border-top: 0.2mm dotted #aaa; }
+  .page6 { width: 105mm; height: 148.25mm; position: relative; overflow: hidden; }
+  .page6:first-child { border-right: 0.2mm dotted #aaa; }
+  /* Les pages intérieures se lisent en travers, comme sur le carnet papier : le contenu est tourné d'un quart de tour. */
+  .pivote { position: absolute; left: 0; top: 0; width: 148.25mm; height: 105mm; padding: 6mm 7mm; transform-origin: 0 0; transform: translate(105mm, 0) rotate(90deg); overflow: hidden; }
+  .a6 h1 { font-size: 10pt; margin: 0 0 1.5mm; }
+  .a6 th { font-size: 6pt; padding: 0.4mm 1mm; }
+  .a6 td { height: 6mm; font-size: 7.5pt; padding: 0 1mm; }
+  .a6 td.libre { font-size: 7pt; }
+  .a6 .note { font-size: 5.5pt; margin: 0.8mm 0 0; }
+  .a6 .colonnes { gap: 5mm; }
+  .a6 .champ { margin-bottom: 1.8mm; font-size: 7pt; }
+  .a6 .champ .valeur { min-height: 3.5mm; }
+  .a6 .resultats { zoom: 0.55; }
+  .a6 .page6 > .page > .couverture { height: 136mm; margin: 6mm; padding: 14mm 8mm 8mm; border-radius: 2mm; }
+  .a6 .couverture .grand { font-size: 24pt; }
+  .a6 .couverture .periode { font-size: 11pt; margin-top: 3mm; }
+  .a6 .couverture .exploitation { font-size: 8pt; padding-top: 3mm; border-top-width: 0.8mm; }
+  .numero-page { position: absolute; bottom: 2mm; left: 0; right: 0; text-align: center; font-size: 6pt; color: #777; }
   .page:last-child { page-break-after: auto; }
   h1 { font-family: 'Arial Narrow', Arial, sans-serif; font-weight: 800; font-size: 20pt; margin: 0 0 5mm; line-height: 1.1; }
   .couverture { background: #5da844; color: #fff; height: 250mm; padding: 28mm 16mm 16mm; display: flex; flex-direction: column; justify-content: space-between; border-radius: 4mm; }
@@ -442,22 +468,25 @@ export function carnetMiseBasHtml(
   ];
   if (format === 'livret') {
     // Comme un livre : la couverture, son verso blanc, puis les pages ; à la fin, le verso blanc de la quatrième de couverture (verte) en
-    // dernière page. Des pages blanches de réserve complètent au multiple de 4 : chaque feuille porte quatre pages.
+    // dernière page. Des pages blanches de réserve complètent au multiple de 4 : chaque feuille A5 porte quatre pages.
     const livret = [pages[0], PAGE_BLANCHE, ...pages.slice(1)];
     while ((livret.length + 2) % 4 !== 0) livret.push(PAGE_BLANCHE);
     livret.push(PAGE_BLANCHE, QUATRIEME_DE_COUVERTURE);
-    // Pas de numéro sur les couvertures ni sur les pages blanches.
-    const demi = (k: number) =>
-      `<div class="demi">${livret[k]}${/couverture|blanche/.test(livret[k]) ? '' : `<div class="numero-page">${k + 1}</div>`}</div>`;
+    // Pas de numéro sur les couvertures ni sur les pages blanches ; les pages intérieures sont tournées d'un quart de tour.
+    const page6 = (k: number) => {
+      const speciale = /couverture|blanche/.test(livret[k]);
+      return `<div class="page6">${speciale ? livret[k] : `<div class="pivote">${livret[k]}</div><div class="numero-page">${k + 1}</div>`}</div>`;
+    };
+    const demi5 = ([gauche, droite]: [number, number]) => `<div class="demi5">${page6(gauche)}${page6(droite)}</div>`;
     return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8" />
 <style>${STYLES}</style>
 </head>
-<body class="livret">
-  ${ordreDuLivret(livret.length)
-    .map(([gauche, droite]) => `<div class="feuille">${demi(gauche)}${demi(droite)}</div>`)
+<body class="a6">
+  ${facesA4DuLivret(livret.length)
+    .map((face) => `<div class="face">${demi5(face.haut)}${face.bas ? demi5(face.bas) : ''}</div>`)
     .join('')}
 </body>
 </html>`;
@@ -476,7 +505,7 @@ export function carnetMiseBasHtml(
 
 /**
  * Crée le carnet de mise bas de l'espèce courante, d'après les naissances enregistrées, et l'ouvre à l'envoi ou à l'impression : en feuilles
- * A4 portrait, ou en livret (A4 paysage, recto verso, bord court, à plier en deux).
+ * A4 portrait, ou en livret A6 (A4 portrait, recto verso en retournant sur le bord long, à couper en deux et à plier).
  */
 export async function exporterCarnetMiseBasPdf(format: FormatCarnet = 'a4'): Promise<void> {
   const [portees, settings, fournisseurs] = await Promise.all([listNaissancesGroupees(), getSettings(), listFournisseurs()]);
@@ -488,7 +517,7 @@ export async function exporterCarnetMiseBasPdf(format: FormatCarnet = 'a4'): Pro
     contactsDuCarnet(fournisseurs),
   );
   if (format === 'livret') {
-    await ecrireEtPartagerPdf(html, `${C.fichierLivret}.${FORMAT_EXPORT.PDF}`, C.titre, { paysage: true, sansMarges: true });
+    await ecrireEtPartagerPdf(html, `${C.fichierLivret}.${FORMAT_EXPORT.PDF}`, C.titre, { sansMarges: true });
     return;
   }
   await ecrireEtPartagerPdf(html, `${C.fichier}.${FORMAT_EXPORT.PDF}`, C.titre);

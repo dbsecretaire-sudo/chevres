@@ -859,7 +859,7 @@ export const TEXTES_CHEPTEL = {
     /** Le carnet de mise bas imprimable. */
     carnetBouton: 'Carnet de mise bas (PDF)',
     carnetLivretBouton: 'Carnet à imprimer (livret à plier)',
-    carnetLivretAide: 'À imprimer en A4 paysage, recto verso (retourner sur le bord court), puis à plier en deux : un livret A5.',
+    carnetLivretAide: 'À imprimer en A4 portrait, recto verso (retourner sur le bord long), puis à couper en deux et à plier : un livret A6, comme le carnet papier.',
     carnet: {
       titre: 'Carnet de mise bas',
       fichier: 'carnet_mise_bas',

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   carnetMiseBasHtml,
   LIGNES_PAR_PAGE,
+  facesA4DuLivret,
   ligneDeLaPortee,
   ordreDuLivret,
   lignesDeLAnnee,
@@ -111,12 +112,24 @@ describe('carnet de mise bas', () => {
     expect(ordreDuLivret(5)).toEqual(ordreDuLivret(8));
   });
 
-  it('le livret a des feuilles A4 de deux demi-pages, et 18 lignes par page', () => {
+  it('le livret A6 : quatre pages par face de feuille A4, 13 lignes par page', () => {
     const html = carnetMiseBasHtml([portee('2026-05-01', 'b', [petit('M', { numeroBoucle: '1' })])], undefined, undefined, 'livret');
-    expect(html).toContain('class="livret"');
-    expect((html.match(/class="feuille"/g) ?? []).length).toBe(4);
-    expect((html.match(/class="demi"/g) ?? []).length).toBe(8);
-    expect(pagesDeLignes([], 18)[0]).toHaveLength(18);
+    expect(html).toContain('class="a6"');
+    // 8 pages A6 : 2 feuilles A5, donc 1 feuille A4 (recto et verso), chaque face avec 2 feuilles A5 de 2 pages.
+    expect((html.match(/class="face"/g) ?? []).length).toBe(2);
+    expect((html.match(/class="demi5"/g) ?? []).length).toBe(4);
+    expect((html.match(/class="page6"/g) ?? []).length).toBe(8);
+    expect(pagesDeLignes([], 13)[0]).toHaveLength(13);
+  });
+
+  it('les faces A4 du livret : deux feuilles A5 par feuille A4, recto puis verso', () => {
+    // 8 pages = 2 feuilles A5 (recto [7,0] verso [1,6] ; recto [5,2] verso [3,4]) : une seule feuille A4.
+    expect(facesA4DuLivret(8)).toEqual([
+      { haut: [7, 0], bas: [5, 2] },
+      { haut: [1, 6], bas: [3, 4] },
+    ]);
+    // 4 pages = 1 feuille A5 : le bas de la feuille A4 reste vide.
+    expect(facesA4DuLivret(4)).toEqual([{ haut: [3, 0], bas: undefined }, { haut: [1, 2], bas: undefined }]);
   });
 
   it('une page vide sépare les naissances du début d’année de celles de fin d’année', () => {
