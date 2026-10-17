@@ -604,6 +604,9 @@ export const TEXTES_CHEPTEL = {
       aide: (annee: number) =>
         `Pour ${annee} : le recensement ${annee + 1}, avec les effectifs au 1er janvier ${annee + 1} et les naissances du 1er janvier au 31 décembre ${annee} (sans les petits sans boucle), calculés d’après le cheptel.`,
       fichier: 'recensement',
+      /** Pourquoi le chiffre diffère du bilan annuel (qui compte tous les petits nés) : ceux sans boucle et ceux morts ne comptent pas au recensement. */
+      detailNes: (annee: number, total: number, sansBoucle: number, morts: number, nes: number) =>
+        `Nés en ${annee} : ${total} au total, dont ${sansBoucle} sans boucle et ${morts} mort${morts > 1 ? 's' : ''} qui ne comptent pas : ${nes} au recensement (le bilan annuel compte tous les petits nés).`,
       titre: (annee: number) => `RECENSEMENT ANNUEL OVINS ET CAPRINS ${annee}`,
       monsieur: 'Mr',
       chambre: ['CHAMBRE D’AGRICULTURE', 'DE RÉGION CORSE'],

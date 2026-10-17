@@ -14,6 +14,10 @@ export interface Recensement {
   males: number;
   /** Les animaux nés pendant l'année d'avant, avec une boucle : ceux encore présents, vendus ou consommés (les morts, les mort-nés et les petits sans boucle n'y sont pas). */
   nes: number;
+  /** De quoi retrouver le chiffre du bilan annuel : tous les petits nés l'année d'avant, dont ceux sans boucle et ceux morts (qui ne comptent pas dans `nes`). */
+  nesTotal: number;
+  nesSansBoucle: number;
+  nesMorts: number;
 }
 
 /** Les statuts qui retirent un animal du troupeau, avec une date de sortie. */
@@ -38,7 +42,16 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
   let femelles = 0;
   let males = 0;
   let nes = 0;
+  let nesTotal = 0;
+  let nesSansBoucle = 0;
+  let nesMorts = 0;
   for (const animal of animaux) {
+    // Les petits nés l'année d'avant : tous, puis ceux qui ne comptent pas (sans boucle, morts).
+    if (animal.dateNaissance >= debutAnneeAvant && animal.dateNaissance < premierJanvier) {
+      nesTotal += 1;
+      if (!animal.numeroBoucle?.trim()) nesSansBoucle += 1;
+      else if (animal.statut === STATUT_CHEVRE.MORTE || animal.statut === STATUT_CHEVRE.MORT_NE) nesMorts += 1;
+    }
     if (animal.statut === STATUT_CHEVRE.MORT_NE) continue;
     // Présent ce jour-là, et assez âgé.
     if (
@@ -59,5 +72,5 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
       if (!mort) nes += 1;
     }
   }
-  return { annee, femelles, males, nes };
+  return { annee, femelles, males, nes, nesTotal, nesSansBoucle, nesMorts };
 }

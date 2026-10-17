@@ -5,7 +5,7 @@ import { cleTriChevre } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { deleteRecord, findRecord, loadAllYears, upsertRecord } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
-import { PARAMETRES_ESPECE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { PARAMETRES_ESPECE, SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { deEspeceCourante, especeDe } from '@/features/cheptel/utils/espece';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
@@ -37,6 +37,8 @@ export async function listChevresPresentesLe(date: string): Promise<Chevre[]> {
 export interface EffectifVivant {
   petits: number;
   sevres: number;
+  /** Les femelles parmi les sevrés : le stock « Chèvre sur pied » et « Chèvre vivante » ne compte qu'elles (les boucs se vendent à part). */
+  femelles: number;
 }
 
 /** Un animal est un petit tant qu'il n'a pas atteint l'âge de sevrage de son espèce (2 mois pour une chèvre : un cabri). */
@@ -50,9 +52,12 @@ export async function effectifsVivants(): Promise<Partial<Record<EspeceAnimale, 
   for (const c of all) {
     if (c.statut !== STATUT_CHEVRE.VIVANTE) continue;
     const espece = especeDe(c);
-    const effectif = effectifs[espece] ?? { petits: 0, sevres: 0 };
+    const effectif = effectifs[espece] ?? { petits: 0, sevres: 0, femelles: 0 };
     if (estPetitLe(c)) effectif.petits += 1;
-    else effectif.sevres += 1;
+    else {
+      effectif.sevres += 1;
+      if (c.sexe === SEXE.FEMELLE) effectif.femelles += 1;
+    }
     effectifs[espece] = effectif;
   }
   return effectifs;

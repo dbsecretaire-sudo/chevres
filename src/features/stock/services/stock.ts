@@ -231,18 +231,19 @@ export function libelleOrigineMouvement(
 
 /**
  * Le niveau de chaque article : la somme de ses mouvements (négatif si on a vendu plus qu'on n'avait noté). Avec les
- * effectifs du cheptel, les petits, l'animal sur pied et l'animal vivant de chaque espèce valent ses animaux vivants.
+ * effectifs du cheptel, les petits valent les petits vivants de chaque espèce, et l'animal sur pied et l'animal vivant ses femelles adultes.
  */
 export function niveauxDeStock(
   mouvements: MouvementStock[],
-  effectifs?: Partial<Record<EspeceAnimale, { petits: number; sevres: number }>>,
+  effectifs?: Partial<Record<EspeceAnimale, { petits: number; sevres: number; femelles?: number }>>,
 ): Map<string, number> {
   const niveaux = new Map<string, number>();
   for (const m of mouvements) niveaux.set(m.article, (niveaux.get(m.article) ?? 0) + m.delta);
   for (const [espece, effectif] of Object.entries(effectifs ?? {})) {
     niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.JEUNE}`), effectif?.petits ?? 0);
     for (const role of [ROLE_VIANDE.SUR_PIED, ROLE_VIANDE.VIVANT]) {
-      niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${role}`), effectif?.sevres ?? 0);
+      // L'animal sur pied et l'animal vivant : les femelles (le bouc se vend à part, sans compter dans ces lignes).
+      niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${role}`), effectif?.femelles ?? effectif?.sevres ?? 0);
     }
   }
   return niveaux;

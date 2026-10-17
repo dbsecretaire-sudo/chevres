@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { SelectField } from '@/shared/components/SelectField';
+import type { Chevre } from '@/features/cheptel/types';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -10,6 +11,7 @@ import { anneesDuSuivi } from '@/features/cheptel/services/suiviMouvements';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { exporterBordereauxPertePdf } from '@/features/export/bordereauPertePdf';
 import { exporterRecensementPdf } from '@/features/export/recensementPdf';
+import { recensementAnnuel } from '@/features/cheptel/services/recensement';
 import { exporterSuiviMouvementsPdf, especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -34,11 +36,13 @@ export default function DossierPac() {
   /** Vrai quand les bordereaux demandés n'ont aucune perte à déclarer. */
   const [sansPerte, setSansPerte] = useState(false);
   const [estiveOuverte, setEstiveOuverte] = useState(false);
+  const [animauxDuCheptel, setAnimauxDuCheptel] = useState<Chevre[]>([]);
 
   useEffect(() => {
-    loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then((tous) =>
-      setAnnees(anneesDuSuivi(deEspeceCourante(tous), currentYear())),
-    );
+    loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then((tous) => {
+      setAnnees(anneesDuSuivi(deEspeceCourante(tous), currentYear()));
+      setAnimauxDuCheptel(deEspeceCourante(tous));
+    });
   }, [espece]);
 
   const options = [
@@ -47,6 +51,8 @@ export default function DossierPac() {
   ];
   const anneesChoisies = choix === TOUTES ? annees : [Number(choix)];
   const annee = choix === TOUTES ? currentYear() : Number(choix);
+  // Le recensement de l'année choisie d'après le cheptel : de quoi expliquer son nombre de petits nés.
+  const recensement = animauxDuCheptel.length > 0 ? recensementAnnuel(animauxDuCheptel, annee + 1) : null;
   const generer = async (creer: (annees: number[]) => Promise<number | void>) => {
     setEncours(true);
     setSansPerte(false);
@@ -87,6 +93,11 @@ export default function DossierPac() {
         disabled={encours || annees.length === 0}
       />
       <Text style={commonStyles.note}>{T.recensement.aide(annee)}</Text>
+      {recensement && recensement.nesTotal > 0 ? (
+        <Text style={commonStyles.note}>
+          {T.recensement.detailNes(annee, recensement.nesTotal, recensement.nesSansBoucle, recensement.nesMorts, recensement.nes)}
+        </Text>
+      ) : null}
       <Button variant="secondary" label={T.estive.bouton} onPress={() => setEstiveOuverte(true)} />
       <FenetreEstive visible={estiveOuverte} annee={annee} onClose={() => setEstiveOuverte(false)} />
     </Screen>
