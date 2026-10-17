@@ -259,6 +259,10 @@ export const TEXTES_CHEPTEL = {
     cabrisATiptag: (nombre: number) => `${nombre} cabri${nombre > 1 ? 's' : ''} à tiptag pas encore à l’abattoir`,
     cabrisATiptagAide: 'Tout tiptag de cabri est destiné à l’abattoir. Les ajouter à ce lot (puis Enregistrer) les envoie à l’abattoir au jour du lot.',
     ajouterLesCabrisATiptag: 'Les ajouter à ce lot',
+    lotVendu: 'Ce lot est vendu : il est figé.',
+    lotVenduAide: 'Rien ne s’y modifie (animaux, facture de l’abattoir). Pour le modifier, supprimez la facture du client.',
+    voirLaFactureDuClient: 'Voir la facture du client',
+    aucuneFactureAbattoirLiee: 'Aucune facture d’abattoir n’était liée à ce lot.',
     factureDuClient: 'Facture du client',
     aucuneFactureClient: 'Aucune facture du client pour ce lot : il est à facturer.',
     clientInconnu: 'Client',
@@ -644,6 +648,7 @@ export const TEXTES_CHEPTEL = {
     /** La carte de sortie d'un animal sorti : date et retour au cheptel actif, verrouillés d'office. */
     sortie: {
       titreAvecDate: (statut: string, date: string) => `${statut} le ${date}`,
+      figee: 'Cet animal est dans un lot d’abattoir vendu : sa sortie est figée. Pour la modifier, supprimez d’abord la facture du client.',
       deverrouiller: 'Déverrouiller pour modifier',
       verrouiller: 'Verrouiller',
       aideVerrou: 'Verrouillé pour éviter les erreurs : le cadenas permet de corriger la date de sortie ou de remettre l’animal dans le cheptel actif.',

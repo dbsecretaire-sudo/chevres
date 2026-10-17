@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import type { Vente } from '@/features/comptabilite/types';
+import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/Screen';
@@ -48,6 +51,15 @@ export default function FicheChevre() {
   const { chevre, form } = fiche;
   const [onglet, setOnglet] = useState<OngletFiche>('fiche');
   const tiptags = useTiptags();
+  /** Les ventes : un animal d'un lot d'abattoir vendu a une sortie figée. */
+  const [ventes, setVentes] = useState<Vente[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      listToutesVentes()
+        .then(setVentes)
+        .catch(() => undefined);
+    }, []),
+  );
   /** La confirmation de « Remettre dans le cheptel actif » : on pouvait vouloir seulement corriger la date de sortie. */
   const [confirmerReactivation, setConfirmerReactivation] = useState(false);
 
@@ -156,6 +168,10 @@ export default function FicheChevre() {
                 chevre={chevre}
                 onEnregistrerDate={fiche.enregistrerDateSortie}
                 onReactiver={() => setConfirmerReactivation(true)}
+                figee={
+                  chevre.statut === STATUT_CHEVRE.ABATTOIR &&
+                  ventes.some((v) => idsDesAnimaux(v).includes(chevre.id))
+                }
               />
             )}
           </>

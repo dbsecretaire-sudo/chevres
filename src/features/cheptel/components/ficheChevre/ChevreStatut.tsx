@@ -54,7 +54,9 @@ export function ChevreStatutDeclaration({
       ) : null}
       {/* Envoyée à l'abattoir, vendue ou consommée : pas pendant un délai d'attente pour la viande. */}
       {chevre.numeroBoucle &&
-      ([STATUT_CHEVRE.ABATTOIR, STATUT_CHEVRE.VENDUE, STATUT_CHEVRE.AUTOCONSOMMEE] as string[]).includes(statut) ? (
+      ([STATUT_CHEVRE.ABATTOIR, STATUT_CHEVRE.VENDUE, STATUT_CHEVRE.AUTOCONSOMMEE] as string[]).includes(
+        statut,
+      ) ? (
         <AvertissementDelais type="viande" date={date} boucles={[chevre.numeroBoucle]} />
       ) : null}
       <View style={commonStyles.row}>
@@ -84,10 +86,13 @@ export function ChevreSortie({
   chevre,
   onEnregistrerDate,
   onReactiver,
+  figee = false,
 }: {
   chevre: Chevre;
   onEnregistrerDate: (date: string) => void;
   onReactiver: () => void;
+  /** Vrai : l'animal est d'un lot d'abattoir vendu — sa sortie est figée tant que la facture du client existe. */
+  figee?: boolean;
 }) {
   const T = TEXTES.cheptel.ficheChevre.sortie;
   const [deverrouillee, setDeverrouillee] = useState(false);
@@ -100,14 +105,21 @@ export function ChevreSortie({
       <View style={commonStyles.rowSpaceBetween}>
         <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{titre}</Text>
         <Pressable
+          disabled={figee}
           onPress={() => setDeverrouillee((ouvert) => !ouvert)}
           hitSlop={8}
           accessibilityLabel={deverrouillee ? T.verrouiller : T.deverrouiller}
         >
-          <Ionicons name={deverrouillee ? 'lock-open' : 'lock-closed'} size={24} color={deverrouillee ? colors.danger : colors.primary} />
+          <Ionicons
+            name={deverrouillee && !figee ? 'lock-open' : 'lock-closed'}
+            size={24}
+            color={figee ? colors.textMuted : deverrouillee ? colors.danger : colors.primary}
+          />
         </Pressable>
       </View>
-      {deverrouillee ? (
+      {figee ? (
+        <Text style={commonStyles.note}>{T.figee}</Text>
+      ) : deverrouillee ? (
         <>
           <DateField label={TEXTES.cheptel.ficheChevre.dateDeSortie} value={date} onChange={setDate} />
           <Button
@@ -119,7 +131,11 @@ export function ChevreSortie({
             }}
             disabled={!date || date === chevre.dateStatut}
           />
-          <Button label={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif} variant="danger" onPress={onReactiver} />
+          <Button
+            label={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif}
+            variant="danger"
+            onPress={onReactiver}
+          />
           <Button variant="secondary" label={T.verrouiller} onPress={() => setDeverrouillee(false)} />
         </>
       ) : (
