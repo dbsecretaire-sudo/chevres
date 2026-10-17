@@ -14,6 +14,7 @@ import {
   resultatsDeLAnnee,
 } from '@/features/export/carnetMiseBasPdf';
 import { lirePoids, poidsTotal } from '@/features/cheptel/utils/poids';
+import { anneeDesMisesBas, lotsDeReproduction } from '@/features/exploitation/services/lots';
 import type { PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -83,6 +84,23 @@ describe('carnet de mise bas', () => {
       ]),
     );
     expect(l).toMatchObject({ observations: 'A', age: '43 j', poids: '9 kg' });
+  });
+
+  it('un lot de mise à la reproduction donne les chèvres mises à la reproduction de l’année des mises bas (cinq mois plus tard)', () => {
+    expect([anneeDesMisesBas('2025-09-15'), anneeDesMisesBas('2025-07-31'), anneeDesMisesBas('2025-08-01'), anneeDesMisesBas('2025-03-01')]).toEqual([2026, 2025, 2026, 2025]);
+    const f = (boucle: string, extra: Partial<Chevre> = {}) => petit('F', { numeroBoucle: boucle, dateNaissance: '2020-03-01', ...extra });
+    const animaux = [f('1'), f('2'), f('3'), f('4'), petit('M', { numeroBoucle: '9', dateNaissance: '2020-03-01' })];
+    const lots = [
+      { id: 'l', nom: 'Reproduction 2025', boucles: '1, 2, 9', categorie: 'reproduction', reproduction: '2025-09-15' },
+      { id: 'm', nom: 'Autre', boucles: '3', categorie: 'veterinaire' },
+    ];
+    // Le lot de septembre 2025 : les mises bas de 2026 ; le bouc n'y compte pas ; une mère hors du lot s'y ajoute.
+    expect(lotsDeReproduction(lots, 2026)).toHaveLength(1);
+    expect(lotsDeReproduction(lots, 2025)).toHaveLength(0);
+    expect(chevresMisesALaReproduction(animaux, 2026, [], lots)).toBe(2);
+    expect(chevresMisesALaReproduction(animaux, 2026, ['3'], lots)).toBe(3);
+    // Sans lot cette année-là : le calcul d'après le cheptel.
+    expect(chevresMisesALaReproduction(animaux, 2025, [], lots)).toBe(4);
   });
 
   it('un poids se lit avec une virgule ou un point', () => {

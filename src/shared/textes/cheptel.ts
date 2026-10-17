@@ -183,11 +183,16 @@ export const TEXTES_CHEPTEL = {
     categories: {
       abattoir: 'Abattoir',
       veterinaire: 'Vétérinaire',
+      reproduction: 'Mises à la reproduction',
       autres: 'Autres lots',
       reglages: 'Gérer les catégories de lots',
-      titreReglages: 'Catégories de lots (Abattoir et Vétérinaire sont toujours là)',
+      titreReglages: 'Catégories de lots (Abattoir, Vétérinaire et Mises à la reproduction sont toujours là)',
       categorie: 'Catégorie',
     },
+    /** Un lot de chèvres mises à la reproduction : sa date, et ce que le carnet de mise bas en fait. */
+    reproductionDu: (date: string) => `Mises à la reproduction du ${date}`,
+    dateReproduction: 'Date de mise à la reproduction',
+    aideReproduction: 'Les chèvres mises à la reproduction à cette date (la liste ne propose que les femelles). Le carnet de mise bas les compte pour les mises bas qui suivent, cinq mois plus tard, et en calcule les taux de fertilité et de productivité.',
     /** Le lot d'une visite vétérinaire, créé tout seul avec ses animaux. */
     visiteDu: (date: string) => `Visite vétérinaire du ${date}`,
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
@@ -952,7 +957,7 @@ export const TEXTES_CHEPTEL = {
           `${Cap(petits)} vendus + ${petits} gardés reproducteurs / ${femelles} mises à la reproduction`,
         formuleMortalite: (petits: string) => `${Cap(petits)} morts / ${petits} nés`,
         aCompleter: (femelles: string) =>
-          `Les ${femelles} mises à la reproduction sont toutes celles présentes au 1er janvier à leur majorité sexuelle (6 mois), avec les mères de l’année. Le nombre de ${femelles} ayant avorté n’est pas dans l’application : à écrire à la main.`,
+          `Les ${femelles} mises à la reproduction sont celles du lot de mise à la reproduction de l’année (Lots d’animaux), à défaut toutes celles présentes au 1er janvier à leur majorité sexuelle (6 mois), avec les mères de l’année. Le nombre de ${femelles} ayant avorté n’est pas dans l’application : à écrire à la main.`,
       },
     },
   },

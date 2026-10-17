@@ -5,7 +5,8 @@ import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments'
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
-import { getSettings, type InfosExploitation } from '@/features/settings/settings';
+import { getSettings, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
+import { bouclesDuLot, lotsDeReproduction } from '@/features/exploitation/services/lots';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
 import { SEXE, STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { ageAtteint } from '@/shared/utils/age';
@@ -234,15 +235,28 @@ export interface ResultatsProduction {
  * Les femelles mises à la reproduction pour les mises bas d'une année : toutes celles présentes au 1er janvier de cette année (nées avant,
  * pas encore sorties) qui avaient atteint leur majorité sexuelle (l'âge de petit de l'espèce), plus les mères de l'année qui n'y seraient pas (vendues ou mortes avant le 1er janvier d'après les statuts actuels,
  * ou mal datées) : une femelle qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être inférieur à celui des
- * mises bas.
+ * mises bas. Quand un lot de mise à la reproduction existe pour cette année (voir lotsDeReproduction), ce sont ses femelles qui comptent
+ * à la place de celles présentes au 1er janvier.
  */
-export function chevresMisesALaReproduction(animaux: Chevre[], annee: number, meres: string[] = []): number {
+export function chevresMisesALaReproduction(
+  animaux: Chevre[],
+  annee: number,
+  meres: string[] = [],
+  lots: LotAnimaux[] = [],
+): number {
   const premierJanvier = `${annee}-01-01`;
   const presentes = animaux.filter((c) => {
     if (c.sexe !== SEXE.FEMELLE || c.statut === STATUT_CHEVRE.MORT_NE || !c.dateNaissance || c.dateNaissance >= premierJanvier) return false;
     if (c.statut !== STATUT_CHEVRE.VIVANTE && c.dateStatut && c.dateStatut <= premierJanvier) return false;
     return compteAuxDocuments(c) && ageAtteint(c.dateNaissance, agePetitMax(), premierJanvier);
   });
+  const deLots = lotsDeReproduction(lots, annee);
+  if (deLots.length > 0) {
+    // Les femelles des lots : une boucle qui n'est pas celle d'un mâle du cheptel (un animal sorti ou inconnu compte aussi).
+    const males = new Set(animaux.filter((c) => c.sexe === SEXE.MALE && c.numeroBoucle).map((c) => c.numeroBoucle));
+    const desLots = new Set(deLots.flatMap((l) => bouclesDuLot(l)).filter((b) => !males.has(b)));
+    return desLots.size + new Set(meres.filter((m) => m && !desLots.has(m))).size;
+  }
   const boucles = new Set(presentes.map((c) => c.numeroBoucle?.trim()));
   return presentes.length + new Set(meres.filter((m) => m && !boucles.has(m))).size;
 }
@@ -555,13 +569,15 @@ export function carnetMiseBasHtml(
   contacts: ContactsDuCarnet = { veterinaire: [], groupement: [] },
   /** Le cheptel : il donne les femelles mises à la reproduction (sans lui, ces cases et les taux qui en dépendent restent à écrire à la main). */
   animaux?: Chevre[],
+  /** Les lots d'animaux : ceux de mise à la reproduction donnent les femelles mises à la reproduction d'une année. */
+  lots: LotAnimaux[] = [],
 ): string {
   const annees = porteesParAnnee(porteesAvecBoucle(portees)).reverse();
   const resultats = (annee: string, liste: PorteeNaissance[]) =>
     resultatsDeLAnnee(
       liste,
       annee,
-      animaux ? chevresMisesALaReproduction(animaux, Number(annee), liste.map((p) => p.mereNumeroBoucle)) : undefined,
+      animaux ? chevresMisesALaReproduction(animaux, Number(annee), liste.map((p) => p.mereNumeroBoucle), lots) : undefined,
     );
   const parPage = format === 'livret' ? LIGNES_PAR_PAGE_LIVRET : LIGNES_PAR_PAGE;
   const pages = [
@@ -640,6 +656,7 @@ export async function exporterCarnetMiseBasPdf(format: FormatCarnet = 'a4'): Pro
     format,
     contactsDuCarnet(fournisseurs),
     animaux,
+    settings.exploitation?.lots ?? [],
   );
   if (format === 'livret') {
     await ecrireEtPartagerPdf(html, `${C.fichierLivret}.${FORMAT_EXPORT.PDF}`, C.titre, { sansMarges: true });
