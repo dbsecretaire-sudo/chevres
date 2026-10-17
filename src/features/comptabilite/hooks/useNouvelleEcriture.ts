@@ -796,7 +796,8 @@ export function useNouvelleEcriture(
     choisirToutesAnnees,
     description,
     setDescription,
-    montant,
+    // Une vente offerte au client : le total est de 0 € (le montant calculé revient dès qu'on décoche).
+    montant: offertCoche && estProductionVente ? '0,00' : montant,
     setMontant,
     enregistrement,
     erreur,
