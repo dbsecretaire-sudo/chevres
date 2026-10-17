@@ -259,6 +259,8 @@ export const TEXTES_CHEPTEL = {
     factureDuClient: 'Facture du client',
     aucuneFactureClient: 'Aucune facture du client pour ce lot : il est à facturer.',
     clientInconnu: 'Client',
+    choisirLaFactureAbattoir: 'Choisissez la facture de l’abattoir de ce lot :',
+    ouvrirLesContacts: 'Ouvrir mes contacts',
     voirLaFacture: 'Voir ou modifier la facture',
     delierFacture: 'Délier cette facture',
     montantAbattoir: 'Ou noter le montant demandé par l’abattoir (€ TTC)',
