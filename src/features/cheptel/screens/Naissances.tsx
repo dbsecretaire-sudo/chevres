@@ -6,6 +6,9 @@ import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { YearPicker } from '@/shared/components/YearPicker';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { Badge } from '@/shared/components/Badge';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { statutColors } from '@/shared/theme/colors';
@@ -24,6 +27,11 @@ export default function Naissances() {
   // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
   const { espece } = useEtablissement();
   const [portees, setPortees] = useState<PorteeNaissance[]>([]);
+  /** L'année choisie (la même que dans le reste de l'application), ou « Tout » : toutes les années regroupées. */
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const regrouper = !!settings.toutesAnnees;
+  const annees = [...new Set(portees.map((p) => Number(p.date.slice(0, 4))))].filter(Boolean);
+  const affichees = regrouper ? portees : portees.filter((p) => p.date.startsWith(String(settings.anneeActive)));
 
   useFocusEffect(
     useCallback(() => {
@@ -35,7 +43,16 @@ export default function Naissances() {
 
   return (
     <Screen scroll={false}>
-      <SelecteurEspece />
+      <LigneFiltres>
+        <YearPicker
+          annees={annees}
+          value={settings.anneeActive}
+          onChange={setAnneeActive}
+          tout={regrouper}
+          onChoisirTout={choisirToutesAnnees}
+        />
+        <SelecteurEspece />
+      </LigneFiltres>
       {portees.length > 0 ? (
         <View style={commonStyles.topPadded}>
           <Button
@@ -47,7 +64,7 @@ export default function Naissances() {
         </View>
       ) : null}
       <FlatList
-        data={portees}
+        data={affichees}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}
         contentContainerStyle={commonStyles.listeSimple}
         ListEmptyComponent={
