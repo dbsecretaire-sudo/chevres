@@ -192,7 +192,7 @@ export const TEXTES_CHEPTEL = {
     /** Un lot de chèvres mises à la reproduction : sa date, et ce que le carnet de mise bas en fait. */
     reproductionDu: (date: string) => `Mises à la reproduction du ${date}`,
     dateReproduction: 'Date de mise à la reproduction',
-    aideReproduction: 'Les chèvres mises à la reproduction à cette date (la liste ne propose que les femelles). Le carnet de mise bas les compte pour les mises bas qui suivent, cinq mois plus tard, et en calcule les taux de fertilité et de productivité.',
+    aideReproduction: 'Le nom du lot est celui de sa date : il ne se modifie pas. Les chèvres mises à la reproduction à cette date (la liste ne propose que les femelles). Le carnet de mise bas les compte pour les mises bas qui suivent, cinq mois plus tard, et en calcule les taux de fertilité et de productivité.',
     /** Le lot d'une visite vétérinaire, créé tout seul avec ses animaux. */
     visiteDu: (date: string) => `Visite vétérinaire du ${date}`,
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
