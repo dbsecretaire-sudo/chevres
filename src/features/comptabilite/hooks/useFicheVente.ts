@@ -10,7 +10,8 @@ import {
 } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
-import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
+import { declarerStatutChevre, getChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import {
   idsDesAnimaux,
   reglageEtatAnimaux,
@@ -272,8 +273,11 @@ export function useFicheVente(id: string | undefined) {
     if (!vente) return;
     try {
       await supprimerVente(vente.id);
-      // Annuler une facture ne ressuscite pas les animaux : ils gardent leur statut (à l'abattoir, ils reviennent dans les animaux à
-      // facturer et dans leur lot d'abattoir) ; la fiche d'un animal le remet dans le cheptel actif, sur demande.
+      // Les animaux vendus par cette vente (vivants ou morts) reviennent dans le cheptel actif. Ceux à l'abattoir gardent leur statut (ils
+      // reviennent dans les animaux à facturer et dans leur lot d'abattoir) : annuler une facture ne ressuscite pas un animal abattu.
+      for (const id of idsDesAnimaux(vente)) {
+        if ((await getChevre(id))?.statut === STATUT_CHEVRE.VENDUE) await reactiverChevre(id);
+      }
       router.back();
     } catch (error) {
       console.error(error);
