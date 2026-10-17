@@ -85,6 +85,16 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
   };
   const lotsChoisis = lots.filter((l) => choisis.has(l.id));
   const reserves = lotsChoisis.filter((l) => l.reservation);
+  const libres = lotsChoisis.filter((l) => !l.reservation);
+  /** Le client de la réservation quand tous les lots choisis sont réservés pour le même (sinon on le demande). */
+  const clientDesReserves = (() => {
+    if (reserves.length === 0 || libres.length > 0) return undefined;
+    const cles = new Set(reserves.map((l) => l.reservation!.clientId ?? l.reservation!.client));
+    if (cles.size !== 1) return undefined;
+    const [cle] = [...cles];
+    const client = clients.find((c) => c.id === cle || nomComplet(c) === cle);
+    return client ? { id: client.id, nom: nomComplet(client) } : undefined;
+  })();
   const fromage = estArticleFromage(article?.cle);
 
   /** Les lots choisis rejoignent le bon de commande ouvert de ce client (créé s'il n'y en a pas). */
@@ -155,10 +165,18 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
             onClose={() => setActions(false)}
             title={T.nChoisis(choisis.size)}
             options={[
-              { label: T.reserver, icon: 'bookmark', onPress: () => setAction('reserver') },
-              { label: T.facturer, icon: 'receipt', onPress: () => setAction('facturer') },
+              // Pas réservés : on les réserve.
+              ...(libres.length > 0
+                ? [{ label: T.reserver, icon: 'bookmark' as const, onPress: () => setAction('reserver') }]
+                : []),
+              // Réservés pour un même client : on les lui facture d'un appui ; on peut aussi libérer la réservation.
               ...(reserves.length > 0
                 ? [
+                    {
+                      label: clientDesReserves ? T.facturerA(clientDesReserves.nom) : T.facturer,
+                      icon: 'receipt' as const,
+                      onPress: () => (clientDesReserves ? ouvrirEcriture(clientDesReserves.id) : setAction('facturer')),
+                    },
                     {
                       label: T.liberer,
                       icon: 'lock-open' as const,

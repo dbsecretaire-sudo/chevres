@@ -247,6 +247,7 @@ export const TEXTES_STOCK = {
     nChoisis: (n: number) => `${n} lot${n > 1 ? 's' : ''} choisi${n > 1 ? 's' : ''}`,
     reserver: 'Réserver',
     facturer: 'Facturer',
+    facturerA: (client: string) => `Facturer à ${client}`,
     liberer: 'Libérer la réservation',
     pourQuelClient: 'Pour quel client particulier ?',
     questionPrix: (produit: string) => `Quel prix à la pièce pour « ${produit} » (€ TTC) ?`,
