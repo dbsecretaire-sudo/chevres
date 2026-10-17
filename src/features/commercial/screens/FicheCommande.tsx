@@ -32,6 +32,7 @@ import { categorieDuClient, venteDeclareeParDefaut } from '@/features/clients/se
 import { lireArchiveStock } from '@/features/stock/repository';
 import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
+import type { LotFromage } from '@/features/stock/types';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import {
@@ -83,6 +84,8 @@ export default function FicheCommande() {
   const [prixInventaire, setPrixInventaire] = useState<Record<string, number>>({});
   const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
   const niveaux = useNiveauxStock();
+  /** Les lots du stock : une ligne qui a des lots réservés les nomme (leurs numéros se communiquent à la facturation). */
+  const [lotsDuStock, setLotsDuStock] = useState<LotFromage[]>([]);
   /** Les animaux de l'espèce et ceux déjà vendus : un bon de commande réserve des animaux sans boucle à vendre. */
   const [animaux, setAnimaux] = useState<Chevre[]>([]);
   const [idsVendus, setIdsVendus] = useState<Set<string>>(new Set());
@@ -131,6 +134,7 @@ export default function FicheCommande() {
           ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock).filter((a) => !estLigneDuCheptel(a.cle)),
         ]);
         setPrixInventaire(stock.prix);
+        setLotsDuStock(stock.lots ?? []);
         setCommercial(archive);
         if (commande) {
           setExistante(commande);
@@ -323,6 +327,12 @@ export default function FicheCommande() {
     if (enregistree) await exporterBonLivraisonPdf(enregistree);
   };
 
+  /** Les numéros des lots réservés pour une ligne de la commande. */
+  const numerosDesLots = (idLigne: string): string[] => {
+    const ids = existante?.lignes.find((e) => e.id === idLigne)?.lotIds ?? [];
+    return ids.map((id) => lotsDuStock.find((lot) => lot.id === id)?.numero).filter((n): n is string => !!n);
+  };
+
   const optionsClients = [
     { value: '', label: T.clientPlaceholder },
     ...clients.map((c) => ({ value: c.id, label: nomComplet(c) })),
@@ -376,6 +386,10 @@ export default function FicheCommande() {
               options={optionsFromages}
               onChange={(article) => changerFromage(l.id, article)}
             />
+            {/* Les lots réservés pour cette ligne : leurs numéros (suivi), repris par la vente à la facturation. */}
+            {numerosDesLots(l.id).length > 0 ? (
+              <Text style={commonStyles.note}>{T.lotsReserves(numerosDesLots(l.id).join(', '))}</Text>
+            ) : null}
             {/* Ce qui reste en stock de ce produit, et ce qu'il en restera une fois la commande livrée. */}
             <Text style={commonStyles.note}>
               {T.resteEnStock(
@@ -389,6 +403,8 @@ export default function FicheCommande() {
                   label={T.quantite}
                   value={l.quantite}
                   onChangeText={(quantite) => changerLigne(l.id, { quantite })}
+                  // Des lots réservés : leur nombre fait la quantité.
+                  editable={numerosDesLots(l.id).length === 0}
                   keyboardType="number-pad"
                 />
               </View>

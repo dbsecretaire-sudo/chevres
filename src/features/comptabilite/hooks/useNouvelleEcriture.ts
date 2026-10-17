@@ -537,7 +537,10 @@ export function useNouvelleEcriture(
         setTypeFromageLibre(ligne.libelle);
       }
     }
-    setQuantite(String(ligne.quantite));
+    // Des lots réservés pour cette ligne : ils sont vendus avec elle (suivi des lots), leur nombre fait la quantité.
+    const lots = ligne.lotIds ?? [];
+    setFromages(lots);
+    setQuantite(String(lots.length > 0 ? lots.length : ligne.quantite));
   };
 
   /** Reprend un élément d'une commande : une ligne, ou les animaux réservés (vente sans facture, détail deviné d'après leur âge). */

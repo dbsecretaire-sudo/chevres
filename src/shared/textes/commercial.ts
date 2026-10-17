@@ -154,6 +154,7 @@ export const TEXTES_COMMERCIAL = {
     ajouterLigne: 'Ajouter un produit',
     fromage: 'Produit (fromage, viande, charcuterie)',
     enStock: (n: number) => `${n} en stock`,
+    lotsReserves: (liste: string) => `Lots réservés : ${liste}`,
     resteEnStock: (stock: number, apres: number) =>
       apres < 0
         ? `En stock : ${stock} — il en manque ${-apres} pour cette commande.`
