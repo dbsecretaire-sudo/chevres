@@ -2,8 +2,6 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { effectifsVivants } from '@/features/cheptel/repository/chevres';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
-import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { niveauxDeStock } from '@/features/stock/services/stock';
 
 /**
@@ -15,11 +13,9 @@ export function useNiveauxStock(): Map<string, number> {
 
   useFocusEffect(
     useCallback(() => {
-      Promise.all([lireArchiveStock(), listToutesVentes()])
-        .then(async ([archive, ventes]) =>
-          setNiveaux(niveauxDeStock(archive.mouvements, await effectifsVivants(new Set(ventes.flatMap((v) => idsDesAnimaux(v)))))),
-        )
-        .catch(() => undefined);
+      Promise.all([lireArchiveStock(), effectifsVivants()]).then(([archive, effectifs]) =>
+        setNiveaux(niveauxDeStock(archive.mouvements, effectifs)),
+      );
     }, []),
   );
 

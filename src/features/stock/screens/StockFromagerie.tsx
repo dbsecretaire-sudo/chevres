@@ -47,7 +47,6 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { coutsUnitairesAchats } from '@/features/comptabilite/services/repartitionLait';
 import { montantsHorsTaxes } from '@/features/comptabilite/utils/reglagesTva';
-import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { effectifsVivants, type EffectifVivant } from '@/features/cheptel/repository/chevres';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -206,15 +205,15 @@ export default function StockFromagerie() {
     // Le stock des ventes suit le conditionnement en vigueur à leur date (un conditionnement modifié avant cette mise à jour s'y retrouve).
     await synchroniserPoseBoucles();
     await resynchroniserStockDesVentes();
-    const [stock, ventes, factures] = await Promise.all([
+    const [stock, ventes, vivants, factures] = await Promise.all([
       lireArchiveStock(),
       listToutesVentes(),
+      effectifsVivants(),
       listToutesFactures(),
     ]);
     setArchive(stock);
     setAchats(factures);
-    // Les animaux à l'abattoir que vend une facture du client ne comptent plus ; les autres (à facturer) sont du stock.
-    setEffectifs(await effectifsVivants(new Set(ventes.flatMap((v) => idsDesAnimaux(v)))));
+    setEffectifs(vivants);
     setPossibles(await bouclesPossiblesDuCheptel());
     setVentesLait(
       ventes

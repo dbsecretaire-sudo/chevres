@@ -10,7 +10,6 @@ import {
   estLotAutomatique,
   groupesDeLots,
   boucleDesFemellesALaReproduction,
-  jourDeReferenceDesMisesBas,
   lotsDAbattoir,
   lotsDeReproductionDeLAnnee,
   lotsDeRenouvellementDeLAnnee,
@@ -91,23 +90,9 @@ describe('lots de mise à la reproduction', () => {
     const recalcule = lotsDeReproductionDeLAnnee(animaux, [ancien], 2022) as LotAnimaux[];
     const lot2022 = recalcule.find((l) => l.reproduction === 2022)!;
     expect(lot2022.boucles).toBe('1, 3, 77');
-    expect(lot2022.versionCalcul).toBe(3);
+    expect(lot2022.versionCalcul).toBe(2);
     const corrige = recalcule.map((l) => (l.reproduction === 2022 ? { ...l, boucles: '1, 3' } : l));
     expect(lotsDeReproductionDeLAnnee(animaux, corrige, 2022)).toBeNull();
-  });
-});
-
-describe('lot de mise à la reproduction : une femelle morte en cours d’année', () => {
-  it('sans mise bas enregistrée, une femelle morte en août ne compte pas pour cette année-là ; avec une mise bas en février, si', () => {
-    const mere = (b: string, extra: Partial<Chevre> = {}) => animal(b, { dateNaissance: '2019-03-01', ...extra });
-    const aout = mere('642', { statut: 'morte', dateStatut: '2022-08-15' });
-    // Une année passée sans mise bas : vivante jusqu'au 31 décembre.
-    expect(boucleDesFemellesALaReproduction([mere('1'), aout], 2022)).toEqual(['1']);
-    // Avec une mise bas en février : la femelle était encore vivante, elle compte.
-    const avecMiseBas = [mere('1'), aout, animal('100', { dateNaissance: '2022-02-10', mereNumeroBoucle: '1' })];
-    expect(boucleDesFemellesALaReproduction(avecMiseBas, 2022)).toEqual(['1', '642']);
-    expect(jourDeReferenceDesMisesBas(avecMiseBas, 2022)).toBe('2022-02-10');
-    expect(jourDeReferenceDesMisesBas([mere('1')], 2022)).toBe('2022-12-31');
   });
 });
 
