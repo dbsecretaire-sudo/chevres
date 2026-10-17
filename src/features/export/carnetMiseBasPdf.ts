@@ -21,7 +21,7 @@ const JOURS_SEVRAGE = 90;
 /** Les lignes d'une page A4 : le carnet papier déplié fait une moitié d'A4 et en compte 16, la page A4 en a donc 32. */
 export const LIGNES_PAR_PAGE = 32;
 /** Les lignes d'une page du livret (une demi-feuille A4, en A5 portrait) : la ligne est plus haute, pour écrire plus à l'aise. */
-export const LIGNES_PAR_PAGE_LIVRET = 20;
+export const LIGNES_PAR_PAGE_LIVRET = 18;
 
 /** Le carnet en feuilles A4 à ranger dans un classeur, ou en livret : des feuilles A4 en paysage à imprimer recto verso et à plier en deux. */
 export type FormatCarnet = 'a4' | 'livret';
@@ -57,8 +57,13 @@ const estParti = (c: Chevre): boolean =>
 
 /** Ce qu'est devenu un petit (mort-né, mort, vendu…) et son âge à ce moment-là ; rien quand il est toujours là. */
 function devenirDuCabri(c: Chevre): { devenir: string; age: string } {
+  // Un petit mort n'a pas d'observation : l'âge de départ / mort suffit.
   const devenir =
-    c.statut === STATUT_CHEVRE.MORT_NE ? C.statuts.mortNe : estParti(c) ? (C.statuts as Record<string, string>)[c.statut] : '';
+    c.statut === STATUT_CHEVRE.MORT_NE
+      ? C.statuts.mortNe
+      : estParti(c) && c.statut !== STATUT_CHEVRE.MORTE
+        ? (C.statuts as Record<string, string>)[c.statut]
+        : '';
   return { devenir, age: estParti(c) ? ageTexte(joursEntre(c.dateNaissance, c.dateStatut!)) : '' };
 }
 
@@ -228,7 +233,7 @@ const STYLES = `
   .feuille:last-child { page-break-after: auto; }
   .demi { width: 148.5mm; height: 209mm; padding: 9mm 9mm 8mm; overflow: hidden; position: relative; }
   .demi:first-child { border-right: 0.2mm dotted #aaa; }
-  .livret td { height: 8.6mm; font-size: 9pt; padding-left: 1mm; padding-right: 1mm; }
+  .livret td { height: 8.4mm; font-size: 9pt; padding-left: 1mm; padding-right: 1mm; }
   .livret th { font-size: 8.5pt; padding-left: 1mm; padding-right: 1mm; }
   .livret .colonnes { flex-direction: column; gap: 4mm; }
   .livret h1 { font-size: 16pt; margin-bottom: 4mm; }
@@ -259,7 +264,7 @@ const STYLES = `
   th, td { border: 1.3px solid #111; padding: 1mm 2mm; text-align: center; vertical-align: middle; }
   th { font-size: 9.5pt; font-weight: 700; }
   td { height: 7mm; padding-top: 0; padding-bottom: 0; font-size: 10pt; }
-  td.libre { text-align: left; font-size: 9.5pt; }
+  td.libre { text-align: left; font-size: 9.5pt; overflow-wrap: anywhere; }
   .boite { display: flex; margin: 0 0 4mm; }
   .boite .intitule { flex: 1; border: 1.3px solid #111; padding: 2mm 3mm; }
   .boite .case { width: 18mm; border: 1.3px solid #111; border-left: none; font-weight: 700; color: #1a2a8a; display: flex; align-items: center; justify-content: center; }
@@ -295,6 +300,12 @@ function pageCouverture(infos: InfosExploitation | undefined, annees: string[]):
     </div>
   </div>`;
 }
+
+/** Une page sans rien : le verso de la couverture, ou une page de réserve du livret. */
+const PAGE_BLANCHE = '<div class="page blanche"></div>';
+
+/** La quatrième de couverture du livret : le même vert que la couverture, sans texte. */
+const QUATRIEME_DE_COUVERTURE = '<div class="page"><div class="couverture"></div></div>';
 
 /** Les coordonnées utiles que le carnet reprend des contacts : chacune en deux lignes (le nom, puis le téléphone et l'adresse). */
 export interface ContactsDuCarnet {
@@ -357,10 +368,11 @@ function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire): string
   return `<div class="page">
     <h1>${echapper(capitaliser(v.petit.pluriel))} — ${echapper(annee)}</h1>
     <table>
-      <colgroup><col style="width:9%" /><col style="width:22%" /><col style="width:11%" /><col style="width:9%" /><col style="width:12%" /><col style="width:17%" /><col style="width:11%" /><col style="width:9%" /></colgroup>
+      <colgroup><col style="width:9%" /><col style="width:18%" /><col style="width:11%" /><col style="width:8%" /><col style="width:10%" /><col style="width:23%" /><col style="width:11%" /><col style="width:10%" /></colgroup>
       <thead><tr><th>${echapper(c.date)}</th><th>${echapper(c.numero(v.petit.singulier))}</th><th>${echapper(c.mere)}</th><th>${echapper(c.pere)}</th><th>${echapper(c.sexe)}</th><th>${echapper(c.observations)}</th><th>${echapper(c.age)}</th><th>${echapper(c.poids)}</th></tr></thead>
       <tbody>${lignesHtml}</tbody>
     </table>
+    <p class="note">${echapper(C.legende)}</p>
   </div>`;
 }
 
@@ -429,10 +441,14 @@ export function carnetMiseBasHtml(
         ])),
   ];
   if (format === 'livret') {
-    // Des pages blanches complètent le livret au multiple de 4 : chaque feuille porte quatre pages.
-    while (pages.length % 4 !== 0) pages.push('<div class="page"></div>');
+    // Comme un livre : la couverture, son verso blanc, puis les pages ; à la fin, le verso blanc de la quatrième de couverture (verte) en
+    // dernière page. Des pages blanches de réserve complètent au multiple de 4 : chaque feuille porte quatre pages.
+    const livret = [pages[0], PAGE_BLANCHE, ...pages.slice(1)];
+    while ((livret.length + 2) % 4 !== 0) livret.push(PAGE_BLANCHE);
+    livret.push(PAGE_BLANCHE, QUATRIEME_DE_COUVERTURE);
+    // Pas de numéro sur les couvertures ni sur les pages blanches.
     const demi = (k: number) =>
-      `<div class="demi">${pages[k]}<div class="numero-page">${k + 1}</div></div>`;
+      `<div class="demi">${livret[k]}${/couverture|blanche/.test(livret[k]) ? '' : `<div class="numero-page">${k + 1}</div>`}</div>`;
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -440,7 +456,7 @@ export function carnetMiseBasHtml(
 <style>${STYLES}</style>
 </head>
 <body class="livret">
-  ${ordreDuLivret(pages.length)
+  ${ordreDuLivret(livret.length)
     .map(([gauche, droite]) => `<div class="feuille">${demi(gauche)}${demi(droite)}</div>`)
     .join('')}
 </body>

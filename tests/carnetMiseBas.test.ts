@@ -45,14 +45,14 @@ describe('carnet de mise bas', () => {
 
   it('un petit mort ou vendu : son devenir en observation et son âge ; avec plusieurs petits, précédé de sa boucle', () => {
     const seul = ligneDeLaPortee(portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '1', statut: 'morte', dateStatut: '2026-03-12' })]));
-    expect([seul.observations, seul.age]).toEqual(['Mort', '7 j']);
+    expect([seul.observations, seul.age]).toEqual(['', '7 j']);
     const jumeaux = ligneDeLaPortee(
       portee('2026-03-05', 'a', [
         petit('M', { numeroBoucle: '1', statut: 'vendue', dateStatut: '2026-05-04' }),
         petit('F', { numeroBoucle: '2' }),
       ]),
     );
-    expect([jumeaux.observations, jumeaux.age]).toEqual(['1 : Vendu', '1 : 2 mois']);
+    expect([jumeaux.observations, jumeaux.age]).toEqual(['1 : V', '1 : 2 mois']);
     expect(ligneDeLaPortee(portee('2026-03-05', '', [petit('M', { statut: 'mortne' })])).mere).toBe('inconnue');
   });
 
@@ -111,12 +111,12 @@ describe('carnet de mise bas', () => {
     expect(ordreDuLivret(5)).toEqual(ordreDuLivret(8));
   });
 
-  it('le livret a des feuilles A4 de deux demi-pages, et 20 lignes par page', () => {
+  it('le livret a des feuilles A4 de deux demi-pages, et 18 lignes par page', () => {
     const html = carnetMiseBasHtml([portee('2026-05-01', 'b', [petit('M', { numeroBoucle: '1' })])], undefined, undefined, 'livret');
     expect(html).toContain('class="livret"');
     expect((html.match(/class="feuille"/g) ?? []).length).toBe(4);
     expect((html.match(/class="demi"/g) ?? []).length).toBe(8);
-    expect(pagesDeLignes([], 20)[0]).toHaveLength(20);
+    expect(pagesDeLignes([], 18)[0]).toHaveLength(18);
   });
 
   it('une page vide sépare les naissances du début d’année de celles de fin d’année', () => {
