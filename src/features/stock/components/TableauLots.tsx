@@ -162,7 +162,7 @@ export function TableauLots({
                   {lot.dateVente
                     ? formatDateShortFR(lot.dateVente)
                     : lot.reservation
-                      ? T.reservePour(lot.reservation.client)
+                      ? T.reserve
                       : ''}
                 </Text>
               )}

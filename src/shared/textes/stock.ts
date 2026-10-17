@@ -252,7 +252,7 @@ export const TEXTES_STOCK = {
     liberer: 'Libérer la réservation',
     pourQuelClient: 'Pour quel client particulier ?',
     questionPrix: (produit: string) => `Quel prix à la pièce pour « ${produit} » (€ TTC) ?`,
-    reservePour: (client: string) => `Réservé : ${client}`,
+    reserve: 'Réservé',
     /** Rappel : l'inventaire des fromages ne se modifie pas à la main. */
     rappel:
       'Les ajouts et les suppressions se font dans Comptabilité (suppression par vente), et dans Production (ajout par fabrication, rappels).',
