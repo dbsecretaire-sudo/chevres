@@ -502,6 +502,12 @@ export function ChampsVenteViande({ e }: Props) {
     e.setQuantite(String(jour.animaux.length));
     reprendrePoids(jour.animaux);
   };
+  // Des animaux déjà choisis (depuis un bon de commande) : leur poids, noté sur leur fiche, remplit le poids de la vente.
+  useEffect(() => {
+    if (e.animaux.length === 0 || animauxChoisis.length !== e.animaux.length || e.poidsKg.trim()) return;
+    reprendrePoids(animauxChoisis);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [e.animaux, animauxChoisis.length, e.poidsKg]);
   // Un jour d'abattage d'ouverture (depuis Production › Viande), ou un autre détail de vente : le lot du jour se prend d'office.
   useEffect(() => {
     if (parAnimal && jourChoisi && e.animaux.length === 0 && !unParUn) choisirJour(jourChoisi.date);

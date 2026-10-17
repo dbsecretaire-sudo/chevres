@@ -552,6 +552,9 @@ export function useNouvelleEcriture(
     const role = petits ? ROLE_VIANDE.JEUNE : element.etat === 'vivants' ? ROLE_VIANDE.VIVANT : ROLE_VIANDE.SUR_PIED;
     const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find((a) => roleDeLaViande(a.cle) === role);
     if (ligne) setPrecision(ligne.libelle);
+    // Le nombre d'animaux, et petits ou adultes ; leur poids est repris par le formulaire (voir ChampsVenteViande).
+    setQuantite(String(element.ids.length));
+    setJeune(petits);
   };
 
   /** Une vente basée sur une commande : le contact, le circuit, le paiement, puis les éléments choisis, un à un. */

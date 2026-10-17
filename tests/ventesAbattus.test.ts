@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { joursAbattusAFacturer } from '@/features/comptabilite/utils/animauxVendus';
+import { animauxSansFactureAReparer, joursAbattusAFacturer } from '@/features/comptabilite/utils/animauxVendus';
 import { documentCirculationRequis, reglageEtatAnimaux, sortieDesAnimauxDeLaVente } from '@/features/comptabilite/utils/ventes';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -36,10 +36,11 @@ describe('document de circulation : vente déclarée et transport d’animaux vi
     expect(documentCirculationRequis(vente({ animaux: undefined }))).toBe(false);
   });
 
-  it('les cabris remis vivants sortent « vendus », remis morts « morts »', () => {
+  it('les animaux vendus, vivants ou morts, sortent « vendus » ; sans état, une vente déclarée les envoie à l’abattoir', () => {
     expect(sortieDesAnimauxDeLaVente(vente({ etatAnimaux: 'vivants' })).statut).toBe('vendue');
-    expect(sortieDesAnimauxDeLaVente(vente({ etatAnimaux: 'morts' })).statut).toBe('morte');
+    expect(sortieDesAnimauxDeLaVente(vente({ etatAnimaux: 'morts' })).statut).toBe('vendue');
     expect(sortieDesAnimauxDeLaVente(vente({})).statut).toBe('abattoir');
+    expect(sortieDesAnimauxDeLaVente(vente({ choixFacture: 'sans_facture' })).statut).toBe('vendue');
   });
 });
 
@@ -50,5 +51,17 @@ describe('état des animaux d’une vente de viande', () => {
     expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'pied', declaree: false })).toEqual({ choix: false, etat: 'morts' });
     expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'jeune', declaree: true })).toEqual({ choix: false, etat: 'morts' });
     expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'jeune', declaree: false })).toEqual({ choix: true });
+  });
+});
+
+describe('réparation des ventes sans facture', () => {
+  it('les animaux notés « morts » à la date d’une vente sans facture deviennent « vendus »', () => {
+    const animal = (id: string, statut: string, dateStatut: string) => ({ id, statut, dateStatut }) as never;
+    const ventes = [{ categorie: 'viande', choixFacture: 'sans_facture', date: '2026-03-02', animaux: 'a;b;c' }] as never;
+    const reparees = animauxSansFactureAReparer(
+      [animal('a', 'morte', '2026-03-02'), animal('b', 'morte', '2026-02-01'), animal('c', 'vivante', '')],
+      ventes,
+    );
+    expect(reparees.map((a) => [a.id, a.statut])).toEqual([['a', 'vendue']]);
   });
 });

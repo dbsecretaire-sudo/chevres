@@ -33,7 +33,11 @@ import { SelecteurEspece } from '@/features/etablissements/components/SelecteurE
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { listToutesVentes, listVentes } from '@/features/comptabilite/repository/ventes';
-import { joursAbattusAFacturer, type JourAbattu } from '@/features/comptabilite/utils/animauxVendus';
+import {
+  animauxSansFactureAReparer,
+  joursAbattusAFacturer,
+  type JourAbattu,
+} from '@/features/comptabilite/utils/animauxVendus';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import type { Vente } from '@/features/comptabilite/types';
@@ -103,7 +107,14 @@ export default function ViandeVendue() {
     ]);
     setAnnees(toutesAnnees);
     setIdsVendus(new Set(toutesVentes.flatMap((v) => idsDesAnimaux(v))));
-    const cheptel = (await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)) as Chevre[];
+    let cheptel = (await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)) as Chevre[];
+    // Une seule fois : les animaux des ventes sans facture notés « morts » par l'ancienne règle sont « vendus ».
+    if (!settings.exploitation?.reparationVentesSansFacture) {
+      const reparees = new Map(animauxSansFactureAReparer(cheptel, toutesVentes).map((a) => [a.id, a]));
+      for (const a of reparees.values()) await saveChevre(a);
+      cheptel = cheptel.map((a) => reparees.get(a.id) ?? a);
+      await patchSettings({ exploitation: { ...settings.exploitation, reparationVentesSansFacture: true } });
+    }
     setAnimaux(new Map(cheptel.map((a) => [a.id, a])));
     setAFacturer(
       joursAbattusAFacturer(
@@ -118,7 +129,7 @@ export default function ViandeVendue() {
           [espece as string, ACTIVITE_COMMUNE as string].includes(activiteVente(v)),
       ),
     );
-  }, [settings.anneeActive, regrouper, espece]);
+  }, [settings.anneeActive, regrouper, espece, settings.exploitation, patchSettings]);
 
   useFocusEffect(
     useCallback(() => {
@@ -157,8 +168,9 @@ export default function ViandeVendue() {
     )
     .sort(parNaissance);
   /** Vendues sans facture : les ventes (écritures) des animaux sans boucle, mortes (« morte » ou à l'abattoir) ou vivantes (« vendue »). */
-  const estVivante = (v: Vente) =>
-    idsDesAnimaux(v).some((id) => animaux.get(id)?.statut === STATUT_CHEVRE.VENDUE);
+  const estVivante = (v: Vente) => v.etatAnimaux === 'vivants';
+  /** Le nombre d'animaux de ces ventes (une vente peut en désigner plusieurs). */
+  const nbAnimaux = (liste: Vente[]) => liste.reduce((n, v) => n + idsDesAnimaux(v).length, 0);
   const ventesVivantes = sansFacture.filter(estVivante);
   const ventesMortes = sansFacture.filter((v) => !estVivante(v));
   const aVendreLibres = aVendre.filter((a) => !estReserve(a));
@@ -270,11 +282,13 @@ export default function ViandeVendue() {
       .filter(Boolean)
       .map((id) => animaux.get(id))
       .filter((a): a is Chevre => !!a);
-    const boucles = betes.map((a) => a.numeroBoucle || a.nom || T.sansBoucle);
+    // Les animaux sans boucle n'ont rien à lister : on en donne le nombre.
+    const boucles = betes.filter((a) => a.numeroBoucle || a.nom).map((a) => a.numeroBoucle || a.nom!);
     const poids = poidsTotal(betes) ?? v.poidsKg;
     return [
       v.dateAbattoir ? T.abattoirLe(formatDateFR(v.dateAbattoir)) : '',
       boucles.length > 0 ? T.boucles(boucles.join(', ')) : '',
+      betes.length > 0 ? T.animauxVendus(betes.length) : '',
       poids ? T.poids(String(poids).replace('.', ',')) : '',
     ]
       .filter(Boolean)
@@ -301,7 +315,7 @@ export default function ViandeVendue() {
             ...(avance
               ? [
                   { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
-                  { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(sansFacture.length) },
+                  { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(nbAnimaux(sansFacture)) },
                 ]
               : []),
           ]}
@@ -330,8 +344,8 @@ export default function ViandeVendue() {
           <>
             <PucesDefilantes<SorteDeVendus>
               puces={[
-                { valeur: 'morts', label: T.sousOnglets.morts(ventesMortes.length) },
-                { valeur: 'vivants', label: T.sousOnglets.vivants(ventesVivantes.length) },
+                { valeur: 'morts', label: T.sousOnglets.morts(nbAnimaux(ventesMortes)) },
+                { valeur: 'vivants', label: T.sousOnglets.vivants(nbAnimaux(ventesVivantes)) },
               ]}
               valeur={sousOnglet}
               onChoisir={setSousOnglet}

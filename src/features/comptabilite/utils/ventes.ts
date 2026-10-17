@@ -31,13 +31,11 @@ export const idsDesAnimaux = (vente: Pick<Vente, 'animaux'>): string[] =>
 export const sortieDesAnimauxDeLaVente = (
   vente: Pick<Vente, 'categorie' | 'date' | 'dateAbattoir' | 'choixFacture' | 'etatAnimaux'>,
 ): { statut: ValeurDe<typeof STATUT_CHEVRE>; date: string } =>
-  vente.categorie !== CATEGORIE_VENTE.VIANDE || vente.etatAnimaux === 'vivants'
+  vente.categorie !== CATEGORIE_VENTE.VIANDE || vente.etatAnimaux
     ? { statut: STATUT_CHEVRE.VENDUE, date: vente.date }
-    : vente.etatAnimaux === 'morts'
-      ? { statut: STATUT_CHEVRE.MORTE, date: vente.date }
-      : venteADeclarer(vente)
+    : venteADeclarer(vente)
       ? { statut: STATUT_CHEVRE.ABATTOIR, date: vente.dateAbattoir || vente.date }
-      : { statut: STATUT_CHEVRE.MORTE, date: vente.date };
+      : { statut: STATUT_CHEVRE.VENDUE, date: vente.date };
 
 /**
  * L'état des animaux d'une vente de viande : un client de catégorie Abattoir les reçoit toujours vivants ; pour des adultes, il suit la ligne
@@ -71,8 +69,8 @@ export const documentCirculationRequis = (
 ): boolean =>
   idsDesAnimaux(vente).length > 0 &&
   venteADeclarer(vente) &&
-  (sortieDesAnimauxDeLaVente(vente).statut === STATUT_CHEVRE.VENDUE ||
-    sortieDesAnimauxDeLaVente(vente).statut === STATUT_CHEVRE.ABATTOIR);
+  // Des animaux remis morts ne voyagent pas vivants ; les autres (vendus vivants, envoyés à l'abattoir) si.
+  (vente.categorie !== CATEGORIE_VENTE.VIANDE || vente.etatAnimaux !== 'morts');
 
 /** Les identifiants des lots de fromage d'une vente (aucun pour une vente sans fromage identifié). */
 export const idsDesFromages = (vente: Pick<Vente, 'fromages'>): string[] =>

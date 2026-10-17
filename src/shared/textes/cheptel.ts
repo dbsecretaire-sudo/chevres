@@ -959,6 +959,18 @@ export const TEXTES_CHEPTEL = {
     mereMerenumeroboucle: (mereNumeroBoucle: string) => ` · Mère : ${mereNumeroBoucle}`,
   },
   naissances: {
+    /** Où en sont aujourd'hui les petits des naissances montrées : vivants, vendus, à l'abattoir, auto-consommés, morts. */
+    repartition: (r: { vivants: number; vendus: number; abattoir: number; autoconsommes: number; morts: number }) =>
+      [
+        [r.vivants, r.vivants > 1 ? 'vivants' : 'vivant'],
+        [r.vendus, r.vendus > 1 ? 'vendus' : 'vendu'],
+        [r.abattoir, 'à l’abattoir'],
+        [r.autoconsommes, r.autoconsommes > 1 ? 'auto-consommés' : 'auto-consommé'],
+        [r.morts, r.morts > 1 ? 'morts' : 'mort'],
+      ]
+        .filter(([n]) => (n as number) > 0)
+        .map(([n, libelle]) => `${n} ${libelle}`)
+        .join(' · '),
     bilan: (naissances: number, meres: number) =>
       `${naissances} naissance${naissances > 1 ? 's' : ''} · ${meres} mère${meres > 1 ? 's' : ''}`,
     aucuneNaissanceEnregistree: 'Aucune naissance enregistrée',

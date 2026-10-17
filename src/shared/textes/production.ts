@@ -195,6 +195,7 @@ export const TEXTES_PRODUCTION = {
     sansBoucleSansFacture: 'sans boucle · sans facture',
     animaux: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`,
     boucles: (liste: string) => `boucles : ${liste}`,
+    animauxVendus: (n: number) => `animaux vendus : ${n}`,
     poids: (kg: string) => `${kg} kg`,
     sansBoucle: 'sans boucle',
     total: (montant: string) => `Total : ${montant}`,

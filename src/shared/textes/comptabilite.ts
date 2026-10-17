@@ -773,7 +773,7 @@ export const TEXTES_COMPTABILITE = {
       'Choisissez dans le cheptel au moins un animal vendu (le + à droite de « Animaux vendus »).',
     ajouterUnAnimal: 'Ajouter un animal',
     animauxNote:
-      'Chaque animal sort du cheptel : à l’abattoir si la vente est déclarée, mort sinon, et l’inventaire des animaux baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
+      'Chaque animal sort du cheptel : à l’abattoir si la vente est déclarée, vendu sinon, et l’inventaire des animaux baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
     retirerAnimal: 'Retirer cet animal',
     sansBoucle: 'Sans boucle',
     sansBoucleNom: (nom: string) => `${nom} (sans boucle)`,

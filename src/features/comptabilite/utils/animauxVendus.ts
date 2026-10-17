@@ -5,7 +5,8 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { GENRE_ARTICLE, type ROLE_VIANDE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
-import { SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import type { Vente } from '@/features/comptabilite/types';
 import { formatDateFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
@@ -88,4 +89,21 @@ export async function roleDuDetailDeVente(
   const filtre = activite === ACTIVITE_COMMUNE ? undefined : (activite as FiltreStock);
   const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, filtre).find((a) => a.libelle === precision);
   return ligne ? roleDeLaViande(ligne.cle) : undefined;
+}
+
+/**
+ * Les animaux d'une vente de viande sans facture que l'ancienne règle avait notés « morts » à la date de la vente : ils sont vendus. Rend leurs
+ * fiches corrigées (les autres morts ne sont pas touchés).
+ */
+export function animauxSansFactureAReparer(animaux: Chevre[], ventes: Vente[]): Chevre[] {
+  const parId = new Map(animaux.map((a) => [a.id, a]));
+  const reparees: Chevre[] = [];
+  for (const v of ventes) {
+    if (v.categorie !== CATEGORIE_VENTE.VIANDE || venteADeclarer(v)) continue;
+    for (const id of idsDesAnimaux(v)) {
+      const a = parId.get(id);
+      if (a && a.statut === STATUT_CHEVRE.MORTE && a.dateStatut === v.date) reparees.push({ ...a, statut: STATUT_CHEVRE.VENDUE });
+    }
+  }
+  return reparees;
 }

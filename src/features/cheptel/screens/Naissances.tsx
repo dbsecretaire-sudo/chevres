@@ -17,7 +17,7 @@ import { formatDateFR } from '@/shared/utils/dates';
 import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import { styles } from '@/shared/styles/cheptel/Naissances.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { SEXE } from '@/shared/constants/cheptel';
+import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -32,6 +32,18 @@ export default function Naissances() {
   const regrouper = !!settings.toutesAnnees;
   const annees = [...new Set(portees.map((p) => Number(p.date.slice(0, 4))))].filter(Boolean);
   const affichees = regrouper ? portees : portees.filter((p) => p.date.startsWith(String(settings.anneeActive)));
+  /** Où en sont aujourd'hui les petits de ces naissances. */
+  const repartition = (() => {
+    const petits = affichees.flatMap((p) => p.cabrits);
+    const compte = (statuts: string[]) => petits.filter((c) => statuts.includes(c.statut)).length;
+    return {
+      vivants: compte([STATUT_CHEVRE.VIVANTE]),
+      vendus: compte([STATUT_CHEVRE.VENDUE]),
+      abattoir: compte([STATUT_CHEVRE.ABATTOIR]),
+      autoconsommes: compte([STATUT_CHEVRE.AUTOCONSOMMEE]),
+      morts: compte([STATUT_CHEVRE.MORTE, STATUT_CHEVRE.MORT_NE]),
+    };
+  })();
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +80,8 @@ export default function Naissances() {
               new Set(affichees.map((p) => p.mereNumeroBoucle)).size,
             )}
           </Text>
+          {/* Où en sont aujourd'hui les petits de ces naissances : vivants, vendus, morts… */}
+          <Text style={commonStyles.note}>{TEXTES.cheptel.naissances.repartition(repartition)}</Text>
         </View>
       ) : null}
       <FlatList
