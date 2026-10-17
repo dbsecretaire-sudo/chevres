@@ -602,11 +602,11 @@ export const TEXTES_CHEPTEL = {
     recensement: {
       bouton: 'Recensement annuel (PDF)',
       aide: (annee: number) =>
-        `Pour ${annee} : le recensement ${annee + 1}, avec les effectifs au 1er janvier ${annee + 1} et les naissances du 1er janvier au 31 décembre ${annee} (sans les petits sans boucle), calculés d’après le cheptel.`,
+        `Pour ${annee} : le recensement ${annee + 1}, avec les effectifs au 1er janvier ${annee + 1} et les naissances du 1er janvier au 31 décembre ${annee} (sans les petits sans boucle, morts sur l’exploitation compris), calculés d’après le cheptel.`,
       fichier: 'recensement',
       /** Pourquoi le chiffre diffère du bilan annuel (qui compte tous les petits nés) : ceux sans boucle et ceux morts ne comptent pas au recensement. */
       detailNes: (annee: number, total: number, sansBoucle: number, morts: number, nes: number) =>
-        `Nés en ${annee} : ${total} au total, dont ${sansBoucle} sans boucle et ${morts} mort${morts > 1 ? 's' : ''} qui ne comptent pas : ${nes} au recensement (le bilan annuel compte tous les petits nés).`,
+        `Nés en ${annee} : ${total} au total, dont ${sansBoucle} sans boucle qui ne comptent pas : ${nes} au recensement (dont ${morts} mort${morts > 1 ? 's' : ''} sur l’exploitation, comme le demande le formulaire).`,
       titre: (annee: number) => `RECENSEMENT ANNUEL OVINS ET CAPRINS ${annee}`,
       monsieur: 'Mr',
       chambre: ['CHAMBRE D’AGRICULTURE', 'DE RÉGION CORSE'],
@@ -621,7 +621,7 @@ export const TEXTES_CHEPTEL = {
       effectifsCaprins: 'EFFECTIFS CAPRINS',
       ligne1: (annee: number) => `Nombre d’animaux (mâles et femelles) âgés de + de 6 mois au 01/01/${annee}`,
       ligne2: (anneeAvant: number) =>
-        `Nombre d’animaux nés (animaux encore présents + animaux vendus + animaux autoconsommés) entre le 01/01/${anneeAvant} et le 31/12/${anneeAvant}`,
+        `Nombre d’animaux nés (animaux encore présents + animaux vendus + animaux morts sur l’exploitation + animaux autoconsommés) entre le 01/01/${anneeAvant} et le 31/12/${anneeAvant}`,
       ligne3: (anneeAvant: number) =>
         `Nombre d’animaux nés sur une autre exploitation et engraissés sur l’exploitation au cours de l’année ${anneeAvant}`,
       femelles: (nombre: number) => `${nombre} femelle${nombre > 1 ? 's' : ''}`,

@@ -12,9 +12,9 @@ export interface Recensement {
   /** Les animaux de plus de 6 mois au 1er janvier : femelles, et mâles (les boucs ou les béliers). */
   femelles: number;
   males: number;
-  /** Les animaux nés pendant l'année d'avant, avec une boucle : ceux encore présents, vendus ou consommés (les morts, les mort-nés et les petits sans boucle n'y sont pas). */
+  /** Les animaux nés pendant l'année d'avant, avec une boucle : ceux encore présents, vendus, consommés ou morts sur l'exploitation, comme le demande le formulaire (les mort-nés et les petits sans boucle n'y sont pas). */
   nes: number;
-  /** De quoi retrouver le chiffre du bilan annuel : tous les petits nés l'année d'avant, dont ceux sans boucle et ceux morts (qui ne comptent pas dans `nes`). */
+  /** De quoi retrouver le chiffre du bilan annuel : tous les petits nés l'année d'avant, dont ceux sans boucle (qui ne comptent pas dans `nes`) et ceux morts (qui y comptent). */
   nesTotal: number;
   nesSansBoucle: number;
   nesMorts: number;
@@ -62,14 +62,13 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
       if (animal.sexe === SEXE.FEMELLE) femelles += 1;
       else males += 1;
     }
-    // Né l'année d'avant, avec une boucle, et pas mort : encore présent, vendu ou consommé.
+    // Né l'année d'avant, avec une boucle : encore présent, vendu, consommé ou mort sur l'exploitation (les mort-nés sont déjà écartés).
     if (
       animal.numeroBoucle?.trim() &&
       animal.dateNaissance >= debutAnneeAvant &&
       animal.dateNaissance < premierJanvier
     ) {
-      const mort = animal.statut === STATUT_CHEVRE.MORTE;
-      if (!mort) nes += 1;
+      nes += 1;
     }
   }
   return { annee, femelles, males, nes, nesTotal, nesSansBoucle, nesMorts };

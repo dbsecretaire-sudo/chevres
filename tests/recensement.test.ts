@@ -34,7 +34,7 @@ describe('recensement annuel au 1er janvier', () => {
     expect(r).toMatchObject({ femelles: 1, males: 1 });
   });
 
-  it('les nés de l’année d’avant : présents, vendus et consommés, sans les morts ni les mort-nés', () => {
+  it('les nés de l’année d’avant : présents, vendus, consommés et morts sur l’exploitation, sans les mort-nés', () => {
     const r = recensementAnnuel(
       [
         animal('2025-02-01', 'F'),
@@ -48,7 +48,7 @@ describe('recensement annuel au 1er janvier', () => {
       ],
       2026,
     );
-    expect(r.nes).toBe(4);
+    expect(r.nes).toBe(5);
   });
 
   it('les petits sans boucle ne comptent pas dans les nés', () => {
