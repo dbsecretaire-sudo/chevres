@@ -9,6 +9,7 @@ import {
   exporterCheptelExcel,
   exporterPlanComptableExcel,
 } from '@/features/export/xlsxExport';
+import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
 import { exporterInventairePdf } from '@/features/export/inventairePdf';
 import { exporterInventaireGitePdf } from '@/features/export/inventaireGitePdf';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
@@ -60,6 +61,12 @@ export function pdfsDisponibles(): PdfDisponible[] {
         titre: T.registreComplet.titre,
         aide: T.registreComplet.aide,
         generer: () => exporterRegistreCompletPdf(),
+      },
+      {
+        id: 'carnet-mise-bas',
+        titre: T.carnetMiseBas.titre,
+        aide: T.carnetMiseBas.aide,
+        generer: () => exporterCarnetMiseBasPdf('a4'),
       },
       {
         id: 'inventaire',

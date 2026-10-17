@@ -24,6 +24,10 @@ export const TEXTES_EXPORT = {
       titre: 'Registre complet du cheptel',
       aide: 'Tous les animaux bouclés de l’espèce choisie — vivants, morts, vendus, abattus, autoconsommés — avec leur statut, par année.',
     },
+    carnetMiseBas: {
+      titre: 'Carnet de mise bas (A4)',
+      aide: 'Les naissances de l’espèce choisie, en feuilles A4 portrait (le livret à plier est dans Naissances).',
+    },
     inventaire: {
       titre: 'Inventaire',
       aide: 'L’état du stock par catégorie : quantités, entrées et sorties de l’année.',
