@@ -16,7 +16,7 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
 import { ROUTES } from '@/shared/constants/routes';
-import { ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
+import { SECTION_STOCK } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import {
   estClientAbattoir,
@@ -121,6 +121,9 @@ export function VenteFormulaire({
   const especeDuStock = activite === ACTIVITE_COMMUNE ? undefined : (activite as FiltreStock);
   /** Les détails de la vente de viande : les lignes de l'inventaire de l'espèce (le détail déjà enregistré y reste). */
   const viandes = useViandesDuStock(especeDuStock);
+  /** Le rôle de la ligne choisie comme détail : cabris, animal sur pied ou animal vivant. */
+  const detailChoisi = viandes.find((v) => v.libelle === form.precision);
+  const roleDuDetail = detailChoisi ? roleDeLaViande(detailChoisi.cle) : undefined;
   const detailsVente = viandes
     .filter((v) => (roleDeLaViande(v.cle) !== undefined) === (form.categorie === CATEGORIE_VENTE.VIANDE))
     .map((v) => ({ value: v.libelle, label: v.libelle }));
@@ -312,10 +315,11 @@ export function VenteFormulaire({
           <ChampEtatAnimaux
             reglage={reglageEtatAnimaux({
               clientAbattoir: estClientAbattoir(client),
-              cabris: viandes.some((v) => v.libelle === form.precision && roleDeLaViande(v.cle) === ROLE_VIANDE.JEUNE),
+              role: roleDuDetail,
               declaree: venteADeclarer(form),
             })}
             clientAbattoir={estClientAbattoir(client)}
+            role={roleDuDetail}
             value={form.etatAnimaux}
             onChange={(etat) => onChange({ ...form, etatAnimaux: etat as 'vivants' | 'morts' })}
           />

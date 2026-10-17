@@ -3,6 +3,7 @@ import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX, TYPE_CHOIX_FACTURE } from '@/shared/constants/comptabilite';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { ROLE_VIANDE } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { capitaliser, especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
@@ -39,16 +40,27 @@ export const sortieDesAnimauxDeLaVente = (
       : { statut: STATUT_CHEVRE.MORTE, date: vente.date };
 
 /**
- * L'état des animaux d'une vente de viande : un client de catégorie Abattoir les reçoit toujours vivants (pas de choix) ; des cabris vendus à
- * un contact qui souhaite une facture sont toujours morts ; sinon, vivants ou morts, morts par défaut.
+ * L'état des animaux d'une vente de viande : un client de catégorie Abattoir les reçoit toujours vivants ; pour des adultes, il suit la ligne
+ * choisie (« sur pied » : morts ; « vivants » : vivants) ; pour des cabris, toujours morts avec facture, au choix sans facture (morts par défaut) : le seul choix est celui des cabris.
  */
 export type ReglageEtatAnimaux = { choix: true } | { choix: false; etat: 'vivants' | 'morts' | undefined };
-export const reglageEtatAnimaux = (o: { clientAbattoir: boolean; cabris: boolean; declaree: boolean }): ReglageEtatAnimaux =>
+export const reglageEtatAnimaux = (o: {
+  clientAbattoir: boolean;
+  /** La ligne de viande choisie comme détail : cabris (petits), animal sur pied ou animal vivant. */
+  role: ValeurDe<typeof ROLE_VIANDE> | undefined;
+  declaree: boolean;
+}): ReglageEtatAnimaux =>
   o.clientAbattoir
     ? { choix: false, etat: undefined }
-    : o.cabris && o.declaree
-      ? { choix: false, etat: 'morts' }
-      : { choix: true };
+    : o.role === ROLE_VIANDE.VIVANT
+      ? { choix: false, etat: 'vivants' }
+      : o.role === ROLE_VIANDE.SUR_PIED
+        ? { choix: false, etat: 'morts' }
+        : o.role === ROLE_VIANDE.JEUNE
+          ? o.declaree
+            ? { choix: false, etat: 'morts' }
+            : { choix: true }
+          : { choix: false, etat: 'morts' };
 
 /**
  * Un document de circulation est nécessaire quand la vente est déclarée et qu'il y a transport d'animaux vivants : des animaux vendus

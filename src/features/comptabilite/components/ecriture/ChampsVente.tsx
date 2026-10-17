@@ -757,10 +757,11 @@ export function ChampsVenteViande({ e }: Props) {
           <ChampEtatAnimaux
             reglage={reglageEtatAnimaux({
               clientAbattoir: estClientAbattoir(e.clientSelectionne),
-              cabris: !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.JEUNE,
+              role: choisie ? roleDeLaViande(choisie.cle) : undefined,
               declaree: e.avecFacture,
             })}
             clientAbattoir={estClientAbattoir(e.clientSelectionne)}
+            role={choisie ? roleDeLaViande(choisie.cle) : undefined}
             value={e.etatAnimaux}
             onChange={e.setEtatAnimaux}
           />

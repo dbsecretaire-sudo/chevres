@@ -19,7 +19,7 @@ import {
 } from '@/features/comptabilite/utils/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { estVenteDeCabris, totalDeLaVente } from '@/features/stock/services/stock';
+import { roleDeLaLigneDeLaVente, totalDeLaVente } from '@/features/stock/services/stock';
 import { fromagesRequis } from '@/features/stock/services/lots';
 import { roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
 import type { Vente } from '@/features/comptabilite/types';
@@ -212,10 +212,10 @@ export function useFicheVente(id: string | undefined) {
     }
 
     try {
-      // L'état des animaux d'une vente de viande : voir reglageEtatAnimaux (abattoir : vivants ; cabris avec facture : morts ; sinon morts par défaut).
+      // L'état des animaux d'une vente de viande : voir reglageEtatAnimaux (abattoir : vivants ; adultes : selon la ligne ; cabris : morts avec facture, au choix sinon).
       const reglage = reglageEtatAnimaux({
         clientAbattoir: estClientAbattoir(clientDeLaVente),
-        cabris: form.categorie === CATEGORIE_VENTE.VIANDE && estVenteDeCabris(form, await lireArchiveStock()),
+        role: form.categorie === CATEGORIE_VENTE.VIANDE ? roleDeLaLigneDeLaVente(form, await lireArchiveStock()) : undefined,
         declaree: venteADeclarer(form),
       });
       const nettoye: Vente = {

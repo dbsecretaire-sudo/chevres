@@ -44,10 +44,11 @@ describe('document de circulation : vente déclarée et transport d’animaux vi
 });
 
 describe('état des animaux d’une vente de viande', () => {
-  it('abattoir : toujours vivants ; cabris avec facture : toujours morts ; sinon au choix', () => {
-    expect(reglageEtatAnimaux({ clientAbattoir: true, cabris: true, declaree: true })).toEqual({ choix: false, etat: undefined });
-    expect(reglageEtatAnimaux({ clientAbattoir: false, cabris: true, declaree: true })).toEqual({ choix: false, etat: 'morts' });
-    expect(reglageEtatAnimaux({ clientAbattoir: false, cabris: false, declaree: true })).toEqual({ choix: true });
-    expect(reglageEtatAnimaux({ clientAbattoir: false, cabris: true, declaree: false })).toEqual({ choix: true });
+  it('abattoir : toujours vivants ; adultes : selon la ligne ; cabris : morts avec facture, au choix sans', () => {
+    expect(reglageEtatAnimaux({ clientAbattoir: true, role: 'jeune', declaree: true })).toEqual({ choix: false, etat: undefined });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'vivant', declaree: true })).toEqual({ choix: false, etat: 'vivants' });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'pied', declaree: false })).toEqual({ choix: false, etat: 'morts' });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'jeune', declaree: true })).toEqual({ choix: false, etat: 'morts' });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, role: 'jeune', declaree: false })).toEqual({ choix: true });
   });
 });
