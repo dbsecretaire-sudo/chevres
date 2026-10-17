@@ -15,12 +15,11 @@ import { AnimauxVendusEdition } from '@/features/comptabilite/components/Animaux
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { exporterDocumentCirculationPdf, FEUILLETS_CIRCULATION } from '@/features/export/documentCirculationPdf';
-import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimaux, idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 
 export default function FicheVente() {
   const { id } = useLocalSearchParams<{ id: string }>();
