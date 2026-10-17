@@ -174,7 +174,13 @@ export default function ViandeVendue() {
   const ventesVivantes = sansFacture.filter(estVivante);
   const ventesMortes = sansFacture.filter((v) => !estVivante(v));
   const aVendreLibres = aVendre.filter((a) => !estReserve(a));
-  const aVendreReserves = aVendre.filter((a) => estReserve(a));
+  // Les réservés : par réservation (un client après l'autre, donc un bon de commande après l'autre), puis du plus récent au plus ancien.
+  const aVendreReserves = aVendre
+    .filter((a) => estReserve(a))
+    .sort(
+      (a, b) =>
+        a.reservation!.client.localeCompare(b.reservation!.client, 'fr', { sensitivity: 'base' }) || parNaissance(a, b),
+    );
   const ongletActif: OngletViande =
     !avance && (onglet === 'avendre' || onglet === 'vendue') ? 'afacturer' : onglet;
   const venteDeLOnglet =
