@@ -189,10 +189,12 @@ export const TEXTES_CHEPTEL = {
       titreReglages: 'Catégories de lots (Abattoir, Vétérinaire et Mises à la reproduction sont toujours là)',
       categorie: 'Catégorie',
     },
-    /** Un lot de chèvres mises à la reproduction : sa date, et ce que le carnet de mise bas en fait. */
-    reproductionDu: (date: string) => `Mises à la reproduction du ${date}`,
-    dateReproduction: 'Date de mise à la reproduction',
-    aideReproduction: 'Le nom du lot est celui de sa date : il ne se modifie pas. Les chèvres mises à la reproduction à cette date (la liste ne propose que les femelles). Le carnet de mise bas les compte pour les mises bas qui suivent, cinq mois plus tard, et en calcule les taux de fertilité et de productivité.',
+    /** Un lot de chèvres mises à la reproduction : un par année, créé tout seul ; le carnet de mise bas en compte les animaux. */
+    reproductionAnnee: (annee: number) => `Mises à la reproduction ${annee}`,
+    anneeReproduction: 'Année des mises bas',
+    anneeMisesBas: (annee: string) => `Mises bas de ${annee}`,
+    anneeInvalide: 'Écrivez l’année des mises bas (quatre chiffres).',
+    aideReproduction: 'Un lot est créé tout seul chaque année, avec les femelles présentes au 1er janvier à leur majorité sexuelle (6 mois) : son nom ne se modifie pas, mais vous pouvez en corriger les femelles en les choisissant dans le cheptel (la liste ne propose que les femelles vivantes à cette date). Le carnet de mise bas compte les animaux du lot de l’année et en calcule les taux de fertilité et de productivité.',
     /** Le lot d'une visite vétérinaire, créé tout seul avec ses animaux. */
     visiteDu: (date: string) => `Visite vétérinaire du ${date}`,
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,

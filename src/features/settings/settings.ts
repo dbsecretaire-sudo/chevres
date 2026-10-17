@@ -123,8 +123,8 @@ export interface LotAnimaux {
   abattoir?: string;
   /** La catégorie du lot (voir CATEGORIE_LOT, ou une catégorie ajoutée) ; absente : « Autres lots ». */
   categorie?: string;
-  /** Un lot de mises à la reproduction : la date de mise à la reproduction (AAAA-MM-JJ). Les mises bas se comptent cinq mois plus tard. */
-  reproduction?: string;
+  /** Un lot de mises à la reproduction : l'année de ses mises bas. Un lot se crée tout seul chaque année (les femelles présentes au 1er janvier). */
+  reproduction?: number;
   /** Un lot créé tout seul pour une visite vétérinaire : la visite (son nom et sa date la suivent). */
   visiteId?: string;
   /** Pour un lot d'abattoir : la facture (dépense) de l'abattoir qui le concerne ; son montant est proposé en frais refacturés au client. */

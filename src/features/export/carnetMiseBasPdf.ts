@@ -6,10 +6,9 @@ import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
-import { bouclesDuLot, lotsDeReproduction } from '@/features/exploitation/services/lots';
+import { bouclesDuLot, femellesALaReproduction, lotsDeReproduction } from '@/features/exploitation/services/lots';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
-import { SEXE, STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
-import { ageAtteint } from '@/shared/utils/age';
+import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { capitaliser, especeCourante, vocabulaire, type Vocabulaire } from '@/shared/dictionnaire/animaux';
@@ -232,11 +231,10 @@ export interface ResultatsProduction {
 }
 
 /**
- * Les femelles mises à la reproduction pour les mises bas d'une année : toutes celles présentes au 1er janvier de cette année (nées avant,
- * pas encore sorties) qui avaient atteint leur majorité sexuelle (l'âge de petit de l'espèce), plus les mères de l'année qui n'y seraient pas (vendues ou mortes avant le 1er janvier d'après les statuts actuels,
- * ou mal datées) : une femelle qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être inférieur à celui des
- * mises bas. Quand un lot de mise à la reproduction existe pour cette année (voir lotsDeReproduction), ce sont ses femelles qui comptent
- * à la place de celles présentes au 1er janvier.
+ * Les femelles mises à la reproduction pour les mises bas d'une année : celles du lot de mise à la reproduction de cette année (voir
+ * lotsDeReproduction), à défaut toutes celles présentes au 1er janvier à leur majorité sexuelle (voir femellesALaReproduction) ; plus les
+ * mères de l'année qui n'y seraient pas (vendues ou mortes avant le 1er janvier d'après les statuts actuels, ou mal datées) : une femelle
+ * qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être inférieur à celui des mises bas.
  */
 export function chevresMisesALaReproduction(
   animaux: Chevre[],
@@ -244,12 +242,6 @@ export function chevresMisesALaReproduction(
   meres: string[] = [],
   lots: LotAnimaux[] = [],
 ): number {
-  const premierJanvier = `${annee}-01-01`;
-  const presentes = animaux.filter((c) => {
-    if (c.sexe !== SEXE.FEMELLE || c.statut === STATUT_CHEVRE.MORT_NE || !c.dateNaissance || c.dateNaissance >= premierJanvier) return false;
-    if (c.statut !== STATUT_CHEVRE.VIVANTE && c.dateStatut && c.dateStatut <= premierJanvier) return false;
-    return compteAuxDocuments(c) && ageAtteint(c.dateNaissance, agePetitMax(), premierJanvier);
-  });
   const deLots = lotsDeReproduction(lots, annee);
   if (deLots.length > 0) {
     // Les femelles des lots : une boucle qui n'est pas celle d'un mâle du cheptel (un animal sorti ou inconnu compte aussi).
@@ -257,6 +249,7 @@ export function chevresMisesALaReproduction(
     const desLots = new Set(deLots.flatMap((l) => bouclesDuLot(l)).filter((b) => !males.has(b)));
     return desLots.size + new Set(meres.filter((m) => m && !desLots.has(m))).size;
   }
+  const presentes = femellesALaReproduction(animaux, annee);
   const boucles = new Set(presentes.map((c) => c.numeroBoucle?.trim()));
   return presentes.length + new Set(meres.filter((m) => m && !boucles.has(m))).size;
 }

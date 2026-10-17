@@ -14,7 +14,8 @@ import {
   resultatsDeLAnnee,
 } from '@/features/export/carnetMiseBasPdf';
 import { lirePoids, poidsTotal } from '@/features/cheptel/utils/poids';
-import { anneeDesMisesBas, lotsDeReproduction } from '@/features/exploitation/services/lots';
+import { lotsDeReproductionDeLAnnee } from '@/features/exploitation/services/lots';
+import type { LotAnimaux } from '@/features/settings/settings';
 import type { PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -86,21 +87,35 @@ describe('carnet de mise bas', () => {
     expect(l).toMatchObject({ observations: 'A', age: '43 j', poids: '9 kg' });
   });
 
-  it('un lot de mise à la reproduction donne les chèvres mises à la reproduction de l’année des mises bas (cinq mois plus tard)', () => {
-    expect([anneeDesMisesBas('2025-09-15'), anneeDesMisesBas('2025-07-31'), anneeDesMisesBas('2025-08-01'), anneeDesMisesBas('2025-03-01')]).toEqual([2026, 2025, 2026, 2025]);
+  it('le lot de mise à la reproduction de l’année donne les chèvres mises à la reproduction ; il se crée tout seul chaque année', () => {
     const f = (boucle: string, extra: Partial<Chevre> = {}) => petit('F', { numeroBoucle: boucle, dateNaissance: '2020-03-01', ...extra });
-    const animaux = [f('1'), f('2'), f('3'), f('4'), petit('M', { numeroBoucle: '9', dateNaissance: '2020-03-01' })];
-    const lots = [
-      { id: 'l', nom: 'Reproduction 2025', boucles: '1, 2, 9', categorie: 'reproduction', reproduction: '2025-09-15' },
-      { id: 'm', nom: 'Autre', boucles: '3', categorie: 'veterinaire' },
+    const animaux = [
+      f('1'),
+      f('2'),
+      f('3'),
+      f('4', { statut: 'vendue', dateStatut: '2025-11-01' }), // sortie avant le 1er janvier 2026
+      f('5', { dateNaissance: '2025-09-01' }), // 4 mois au 1er janvier 2026 : pas encore à sa majorité sexuelle
+      petit('M', { numeroBoucle: '9', dateNaissance: '2020-03-01' }),
     ];
-    // Le lot de septembre 2025 : les mises bas de 2026 ; le bouc n'y compte pas ; une mère hors du lot s'y ajoute.
-    expect(lotsDeReproduction(lots, 2026)).toHaveLength(1);
-    expect(lotsDeReproduction(lots, 2025)).toHaveLength(0);
-    expect(chevresMisesALaReproduction(animaux, 2026, [], lots)).toBe(2);
-    expect(chevresMisesALaReproduction(animaux, 2026, ['3'], lots)).toBe(3);
-    // Sans lot cette année-là : le calcul d'après le cheptel.
-    expect(chevresMisesALaReproduction(animaux, 2025, [], lots)).toBe(4);
+    // Les lots manquants se créent : un par année, de la première naissance (2020) à l'année courante.
+    const crees = lotsDeReproductionDeLAnnee(animaux, [], 2026, () => 'x') as LotAnimaux[];
+    expect(crees.map((l) => [l.reproduction, l.nom])).toEqual([
+      [2021, 'Mises à la reproduction 2021'],
+      [2022, 'Mises à la reproduction 2022'],
+      [2023, 'Mises à la reproduction 2023'],
+      [2024, 'Mises à la reproduction 2024'],
+      [2025, 'Mises à la reproduction 2025'],
+      [2026, 'Mises à la reproduction 2026'],
+    ]);
+    expect(crees.find((l) => l.reproduction === 2026)?.boucles).toBe('1, 2, 3');
+    expect(crees.find((l) => l.reproduction === 2025)?.boucles).toBe('1, 2, 3, 4');
+    // Un lot déjà là (et corrigé à la main) n'est jamais refait ; rien à faire quand tout existe.
+    const corriges = crees.map((l) => (l.reproduction === 2026 ? { ...l, boucles: '1, 2' } : l));
+    expect(lotsDeReproductionDeLAnnee(animaux, corriges, 2026)).toBeNull();
+    // Le carnet compte les animaux du lot de l'année ; une mère absente du lot s'y ajoute ; sans lot : le calcul d'après le cheptel.
+    expect(chevresMisesALaReproduction(animaux, 2026, [], corriges)).toBe(2);
+    expect(chevresMisesALaReproduction(animaux, 2026, ['3'], corriges)).toBe(3);
+    expect(chevresMisesALaReproduction(animaux, 2026, [], [])).toBe(3);
   });
 
   it('un poids se lit avec une virgule ou un point', () => {
