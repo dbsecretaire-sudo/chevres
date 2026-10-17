@@ -88,22 +88,6 @@ export const TEXTES_PRODUCTION = {
     ligne: (enStock: number, total: number) => `${enStock} en stock · ${total} lot${total > 1 ? 's' : ''}`,
   },
   /** Les réglages d'une liste de lots (fromages, boucherie / charcuterie) : ajouter, remettre à zéro, supprimer les lots. */
-  reglagesLots: {
-    titre: 'Réglages',
-    remettreAZero: 'Remettre les lots à zéro',
-    supprimerLots: 'Supprimer les lots existants',
-    quelleCategorie: 'Quelle catégorie ?',
-    toutes: 'Toutes les catégories',
-    ligne: (nom: string, lots: number) => `${nom} — ${lots} lot${lots > 1 ? 's' : ''}`,
-    zeroTitre: (cible: string) => `Remettre à zéro : ${cible} ?`,
-    zeroMessage: (enStock: number) =>
-      `${enStock} lot${enStock > 1 ? 's' : ''} en stock ${enStock > 1 ? 'seront supprimés' : 'sera supprimé'} et le stock reviendra à 0. Les lots déjà vendus ou rappelés restent (traçabilité de leurs ventes).`,
-    zeroBouton: 'Remettre à zéro',
-    supprimerTitre: (cible: string) => `Supprimer les lots : ${cible} ?`,
-    supprimerMessage: (lots: number) =>
-      `${lots} lot${lots > 1 ? 's' : ''} ${lots > 1 ? 'seront supprimés' : 'sera supprimé'}, vendus et rappelés compris : la traçabilité de leurs ventes sera perdue. Le stock ne change pas et la numérotation repart de 1.`,
-    supprimerBouton: 'Supprimer les lots',
-  },
   /** La liste de la boucherie / charcuterie : un produit par ligne de l'inventaire, avec ses lots. */
   charcuterie: {
     titre: 'Boucherie / Charcuterie',
