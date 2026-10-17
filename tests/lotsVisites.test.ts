@@ -16,6 +16,15 @@ describe('lots et visites vétérinaires d’accord', () => {
     expect(r.visites[0].lotId).toBe(r.lots?.[0].id);
   });
 
+  it('une visite du troupeau entier (sans boucle) reçoit aussi son lot, vide', () => {
+    const r = accorderLotsEtVisites([visite('v1', '2026-08-26')], [], id);
+    expect(r.lots).toHaveLength(1);
+    expect(r.lots?.[0]).toMatchObject({ nom: 'Visite vétérinaire du 26/08/2026', boucles: '', visiteId: 'v1', categorie: 'veterinaire' });
+    expect(r.visites[0].lotId).toBe(r.lots?.[0].id);
+    // Le lot est là : rien de plus à faire.
+    expect(accorderLotsEtVisites([{ ...visite('v1', '2026-08-26'), lotId: r.lots?.[0].id }], r.lots ?? [], id)).toEqual({ lots: null, visites: [] });
+  });
+
   it('un lot fait à la main, aux mêmes boucles, est adopté (renommé), pas doublé', () => {
     const manuel: LotAnimaux = { id: 'm', nom: 'Visite vétérinaire du 2025-09-20', boucles: '1, 2' };
     const r = accorderLotsEtVisites([visite('v1', '2025-09-20', '2, 1')], [manuel], id);

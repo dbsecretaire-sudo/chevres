@@ -152,7 +152,7 @@ export default function FicheChevre() {
               chevre={chevre}
               visites={fiche.visites}
               controles={fiche.controles}
-              onOuvrirVisite={(v) => router.push(ROUTES.santeVisite(v.id))}
+              onOuvrirVisite={(v) => router.push(`${ROUTES.santeVisite(v.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never)}
               onOuvrirControle={(c) => router.push(ROUTES.santeControleModifier(familleDuControle(c), c.id))}
             />
 

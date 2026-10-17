@@ -230,6 +230,25 @@ export const TEXTES_CHEPTEL = {
     /** Le lot d'une visite vétérinaire, créé tout seul avec ses animaux. */
     visiteDu: (date: string) => `Visite vétérinaire du ${date}`,
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
+    /** Les onglets de la fiche d'un lot : le lot, les animaux, la visite, la facture, les fichiers, le suivi sanitaire. */
+    onglets: {
+      lot: 'Lot',
+      visite: 'Visite',
+      facture: 'Facture',
+      suivi: 'Suivi sanitaire',
+      animaux: (nombre: number) => (nombre > 0 ? `Animaux (${nombre})` : 'Animaux'),
+      fichiers: (nombre: number) => (nombre > 0 ? `Fichiers (${nombre})` : 'Fichiers'),
+    },
+    aideFactureAbattoir: 'La facture de l’abattoir fait le montant des frais d’abattoir refacturés au client quand vous facturez la viande de ce lot. Il n’y a pas de montant sans facture : la facture se modifie dans la comptabilité.',
+    /** Les onglets de la fiche d'un lot vétérinaire (une visite). */
+    ongletsVisite: {
+      visite: 'Visite',
+      animaux: (nombre: number) => (nombre > 0 ? `Animaux (${nombre})` : 'Animaux'),
+      fichiers: (nombre: number) => (nombre > 0 ? `Fichiers (${nombre})` : 'Fichiers'),
+      suivi: 'Suivi sanitaire',
+    },
+    aideVerrouille: 'Ce lot se crée tout seul (abattoir, visite vétérinaire…) : son nom et sa catégorie ne se modifient pas et il ne se supprime pas. On y change seulement les animaux.',
+    rapportNumero: (numero?: string) => (numero ? `rapport d’essais n° ${numero}` : 'rapport d’essais'),
     aFacturer: 'à facturer',
     facture: 'facturé',
     aucunAnimalDansLeLot: 'Aucun animal dans ce lot : choisissez-les dans le cheptel.',
@@ -237,6 +256,7 @@ export const TEXTES_CHEPTEL = {
     lierFacture: 'Lier la facture de l’abattoir',
     factureAbattoir: 'Facture de l’abattoir',
     aucuneFactureAbattoir: 'Aucune dépense d’un contact de la catégorie Abattoir : rangez votre abattoir dans cette catégorie (Contacts), puis saisissez sa facture.',
+    voirLaFacture: 'Voir ou modifier la facture',
     delierFacture: 'Délier cette facture',
     montantAbattoir: 'Ou noter le montant demandé par l’abattoir (€ TTC)',
     montantAbattoirAide: 'Ce que l’abattoir vous demande de payer (une dépense pour vous). Il est proposé en frais refacturés quand vous facturez la viande de ce lot au client.',

@@ -48,8 +48,9 @@ import {
   clientsPourLaRecette,
   estCategorieVente,
 } from '@/features/comptabilite/utils/recettes';
-import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimaux, libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
+import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -123,6 +124,9 @@ export function VenteFormulaire({
   const ajouteChoisi = fromageAjouteChoisi(fromages, form.typeFromage, form.typeFromageLibre);
   /** L'inventaire (prix de vente) : il fait le prix total de la vente, jamais saisi. */
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
+  // Les frais d'abattoir du lot de la vente (sa facture liée) : la case « Facturer les frais » les reprend.
+  const fraisDuJour = useFraisAbattoir();
+  const propositionFrais = fraisDuJour(form.dateAbattoir, idsDesAnimaux(form).length);
   useFocusEffect(
     useCallback(() => {
       lireArchiveStock().then(setArchive);
@@ -368,6 +372,15 @@ export function VenteFormulaire({
             onTaux={(taux) => onChange({ ...form, tauxTvaFrais: Number(taux) })}
             tauxParDefaut={String(form.tauxTva ?? '')}
             montantViande={totalInventaire ?? 0}
+            proposition={propositionFrais?.montant}
+            duLot={!!propositionFrais || !!form.dateAbattoir}
+            onFacturer={(facturer) =>
+              onChange({
+                ...form,
+                fraisAbattoir: facturer ? propositionFrais?.montant : undefined,
+                tauxTvaFrais: facturer ? (propositionFrais?.tauxTva ?? form.tauxTvaFrais) : form.tauxTvaFrais,
+              })
+            }
           />
         ) : null}
 

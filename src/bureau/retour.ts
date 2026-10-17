@@ -1,4 +1,5 @@
-import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
 
 /** Une adresse sans sa requête (« ?famille=… ») ni barre finale. */
@@ -117,7 +118,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
           ? ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.SURFACE, FAMILLE_CONTROLE.TERRAIN)
           : ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX),
   ],
-  [/^\/sante\/veterinaire\/visite$/, () => ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE)],
+  [/^\/sante\/veterinaire\/visite$/, () => ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.VETERINAIRE)],
   [/^\/organisation-categories-(client|tiers)$/, () => ROUTES.ORGANISATION_TIERS],
   [/^\/documents-identification$/, () => ROUTES.ORGANISATION_ETABLISSEMENT],
   [/^\/document-identification$/, () => ROUTES.DOCUMENTS_IDENTIFICATION],

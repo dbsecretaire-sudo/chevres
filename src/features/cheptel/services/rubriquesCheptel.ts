@@ -1,5 +1,5 @@
 import type { Ionicons } from '@expo/vector-icons';
-import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
@@ -51,13 +51,6 @@ export function groupesCheptel(avecDossierPac: boolean): GroupeRubrique[] {
       titre: C.accueil.groupes.sante,
       lignes: [
         { cle: 'traitements', titre: C.traitements.titre, aide: C.traitements.aide, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
-        {
-          cle: 'visites',
-          titre: L.visites.titre,
-          aide: L.visites.aide,
-          icone: 'clipboard',
-          route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
-        },
         { cle: 'alimentation', titre: TEXTES.commun.general.alimentation, aide: L.alimentation.aide, icone: 'nutrition', route: ROUTES.SANTE_ALIMENTATION },
       ],
     },

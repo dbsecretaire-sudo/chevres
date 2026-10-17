@@ -66,7 +66,7 @@ export function ChevreSuiviAnnuel({ chevre }: Props) {
       {dedans.length > 0 ? (
         <View style={commonStyles.rowWrap}>
           {dedans.map((lot) => (
-            <Pressable key={lot.id} onPress={() => router.push(ROUTES.lot(lot.id) as never)} hitSlop={6} accessibilityLabel={lot.nom}>
+            <Pressable key={lot.id} onPress={() => router.push(`${ROUTES.lot(lot.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never)} hitSlop={6} accessibilityLabel={lot.nom}>
               <Badge label={lot.nom} color={COULEURS[lot.categorie as CategorieAnnuelle] ?? colors.primary} />
             </Pressable>
           ))}

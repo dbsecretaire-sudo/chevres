@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
@@ -18,34 +19,69 @@ interface Props {
   tauxParDefaut: string;
   /** Le prix de la viande, sans les frais : le total de la facture s'affiche dessous. */
   montantViande: number;
+  /** Les frais que la facture de l'abattoir liée au lot propose pour les animaux de la vente (en €) ; rien : pas de facture liée. */
+  proposition?: number;
+  /** Vrai quand la vente est celle d'un lot d'abattoir : sans facture liée au lot, une note dit comment en avoir. */
+  duLot?: boolean;
+  /** Facturer ou non les frais au client : appelée avec le choix. */
+  onFacturer?: (facturer: boolean) => void;
 }
 
 /**
- * Les frais d'abattoir refacturés au client d'une vente de viande : le montant se lit seulement — il vient de la facture de l'abattoir
- * liée au lot d'abattoir (ou du montant noté sur le lot), et s'ajuste dans les Lots du cheptel — et son taux de TVA se choisit.
+ * Les frais d'abattoir refacturés au client d'une vente de viande : on choisit de les facturer ou non (la case). Le montant se lit
+ * seulement — il vient de la facture de l'abattoir liée au lot d'abattoir (Lots d'animaux › Abattoir) — et son taux de TVA se choisit.
  */
-export function ChampFraisAbattoir({ valeur, taux, onTaux, tauxParDefaut, montantViande }: Props) {
+export function ChampFraisAbattoir({
+  valeur,
+  taux,
+  onTaux,
+  tauxParDefaut,
+  montantViande,
+  proposition,
+  duLot,
+  onFacturer,
+}: Props) {
   const frais = parseDecimal(valeur);
+  const facturer = frais > 0;
   return (
     <View style={commonStyles.gap6}>
-      <View style={commonStyles.row}>
-        <View style={commonStyles.flex1}>
-          <FormField
-            label={T.fraisAbattoir}
-            aide={T.fraisAbattoirAide}
-            value={valeur}
-            editable={false}
-            style={commonStyles.verrouille}
-            placeholder="0,00"
-          />
-        </View>
-        {frais > 0 ? (
+      {onFacturer && proposition && proposition > 0 ? (
+        <Checkbox
+          label={T.facturerLesFrais(formatMontant(proposition))}
+          value={facturer}
+          onChange={onFacturer}
+        />
+      ) : null}
+      {duLot && !(proposition && proposition > 0) ? (
+        <Text style={commonStyles.note}>{T.aucuneFactureAbattoirLiee}</Text>
+      ) : null}
+      {facturer || !onFacturer ? (
+        <View style={commonStyles.row}>
           <View style={commonStyles.flex1}>
-            <SelectField label={T.tvaDesFrais} value={taux || tauxParDefaut} onChange={onTaux} options={OPTIONS_TAUX_TVA} />
+            <FormField
+              label={T.fraisAbattoir}
+              aide={T.fraisAbattoirAide}
+              value={valeur}
+              editable={false}
+              style={commonStyles.verrouille}
+              placeholder="0,00"
+            />
           </View>
-        ) : null}
-      </View>
-      {frais > 0 ? <Text style={commonStyles.note}>{T.totalAvecFrais(formatMontant(montantViande + frais))}</Text> : null}
+          {frais > 0 ? (
+            <View style={commonStyles.flex1}>
+              <SelectField
+                label={T.tvaDesFrais}
+                value={taux || tauxParDefaut}
+                onChange={onTaux}
+                options={OPTIONS_TAUX_TVA}
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+      {frais > 0 ? (
+        <Text style={commonStyles.note}>{T.totalAvecFrais(formatMontant(montantViande + frais))}</Text>
+      ) : null}
     </View>
   );
 }

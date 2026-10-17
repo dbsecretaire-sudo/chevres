@@ -5,6 +5,8 @@ import {
   designationsDesLots,
   estCategorieAutomatique,
   estCategorieDeLotsProtegee,
+  estCategorieVerrouillee,
+  estLotVerrouille,
   estLotAutomatique,
   groupesDeLots,
   boucleDesFemellesALaReproduction,
@@ -147,12 +149,25 @@ describe('gestion des catégories de lots', () => {
   });
 });
 
+describe('lots verrouillés', () => {
+  it('abattoir, visite vétérinaire et lots d’une année ne se renomment ni ne se suppriment ; un lot libre, si', () => {
+    expect(estLotVerrouille(lot({ categorie: 'abattoir', abattoir: '2026-02-25' }))).toBe(true);
+    expect(estLotVerrouille(lot({ categorie: 'veterinaire', visiteId: 'v' }))).toBe(true);
+    expect(estLotVerrouille(lot({ categorie: 'veterinaire' }))).toBe(true);
+    expect(estLotVerrouille(lot({ categorie: 'avortement', avortement: 2026 }))).toBe(true);
+    expect(estLotVerrouille(lot({ categorie: 'Chevrettes' }))).toBe(false);
+    expect(estLotVerrouille(lot({}))).toBe(false);
+    expect(['abattoir', 'veterinaire', 'reproduction', 'avortement', 'renouvellement'].every(estCategorieVerrouillee)).toBe(true);
+    expect(estCategorieVerrouillee('Chevrettes')).toBe(false);
+  });
+});
+
 describe('flèche de retour d’un lot', () => {
   it('un lot revient aux lots d’animaux, pas aux animaux', () => {
     expect(pageParente('/cheptel/lot?id=abc')).toBe('/cheptel/lots');
     expect(pageParente('/cheptel/lots-categorie?categorie=abattoir')).toBe('/cheptel/lots');
     expect(pageParente('/cheptel/traitement?id=x')).toBe('/cheptel/traitements');
     expect(pageParente('/cheptel/naissance-nouvelle')).toBe('/cheptel/naissances');
-    expect(pageParente('/sante/veterinaire/visite?id=x')).toBe('/sante/controles/liste?famille=animaux&onglet=sante');
+    expect(pageParente('/sante/veterinaire/visite?id=x')).toBe('/cheptel/lots-categorie?categorie=veterinaire');
   });
 });

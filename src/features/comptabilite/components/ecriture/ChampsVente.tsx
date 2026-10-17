@@ -499,12 +499,14 @@ export function ChampsVenteViande({ e }: Props) {
   // Les frais d'abattoir du lot choisi (sa facture liée, sinon le montant noté) : proposés pour la part des animaux de la vente.
   const fraisDuJour = useFraisAbattoir();
   const propositionFrais = jourChoisi ? fraisDuJour(jourChoisi.date, e.animaux.length) : undefined;
+  /** Facturer ou non les frais au client : la case de ChampFraisAbattoir (d'office, oui). */
+  const [fraisRefactures, setFraisRefactures] = useState(true);
   useEffect(() => {
-    if (!propositionFrais) return;
+    if (!propositionFrais || !fraisRefactures) return;
     e.setFraisAbattoir(String(propositionFrais.montant).replace('.', ','));
     if (propositionFrais.tauxTva !== undefined) e.setTauxTvaFrais(String(propositionFrais.tauxTva));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propositionFrais?.montant, propositionFrais?.tauxTva]);
+  }, [propositionFrais?.montant, propositionFrais?.tauxTva, fraisRefactures]);
   const ajouterAnimal = (id: string) => {
     const animal = animaux.find((a) => a.id === id);
     if (!animal) return;
@@ -710,7 +712,7 @@ export function ChampsVenteViande({ e }: Props) {
                 </Card>
               ) : null}
               {animauxChoisis.length > 0 && e.avecFacture ? (
-                <ChampDateAbattoir dateVente={e.date} value={e.dateAbattoir} onChange={e.setDateAbattoir} />
+                <ChampDateAbattoir dateVente={e.date} value={e.dateAbattoir} onChange={e.setDateAbattoir} verrouille={!!jourChoisi} />
               ) : null}
               {/* Les animaux choisis en délai d'attente pour la viande le jour de la vente (ou de l'abattage). */}
               {animauxChoisis.length > 0 ? (
@@ -816,6 +818,12 @@ export function ChampsVenteViande({ e }: Props) {
           onTaux={e.setTauxTvaFrais}
           tauxParDefaut={e.tauxTvaVente}
           montantViande={parseDecimal(e.montant)}
+          proposition={propositionFrais?.montant}
+          duLot={!!jourChoisi}
+          onFacturer={(facturer) => {
+            setFraisRefactures(facturer);
+            e.setFraisAbattoir(facturer && propositionFrais ? String(propositionFrais.montant).replace('.', ',') : '');
+          }}
         />
       ) : null}
       {e.prixLibre ? (
