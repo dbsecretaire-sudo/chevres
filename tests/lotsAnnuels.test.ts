@@ -9,6 +9,7 @@ import {
   lotsDAvortementDeLAnnee,
   nomDuLotAnnuel,
   peutRejoindreLeLot,
+  peutRejoindreLeLotDeLAnnee,
 } from '@/features/exploitation/services/lotsAnnuels';
 import { resultatsDeLAnnee } from '@/features/export/carnetMiseBasPdf';
 import type { LotAnimaux } from '@/features/settings/settings';
@@ -78,5 +79,24 @@ describe('lots d’une année (avortements, mises à la reproduction, renouvelle
     const portee = { date: '2026-03-01', mereNumeroBoucle: '1', cabrits: [animal('100', { dateNaissance: '2026-03-01' })] };
     expect(resultatsDeLAnnee([portee], 2026, 10, chevresAyantAvorte(avec, 2026)).avortements).toBe(2);
     expect(resultatsDeLAnnee([portee], 2026, 10).avortements).toBeUndefined();
+  });
+});
+
+describe('femelles proposées au lot d’une année', () => {
+  it('une chèvre née en décembre 2021 est proposée pour 2022 (6 mois en juin), même morte depuis', () => {
+    const nee = animal('20015', { dateNaissance: '2021-12-19', statut: 'morte', dateStatut: '2025-08-01' });
+    expect(peutRejoindreLeLotDeLAnnee(nee, 2022)).toBe(true);
+    expect(peutRejoindreLeLotDeLAnnee(nee, 2021)).toBe(false);
+    // Sortie en cours d'année : seulement si elle avait déjà 6 mois ce jour-là.
+    expect(peutRejoindreLeLotDeLAnnee(animal('1', { dateNaissance: '2021-12-19', statut: 'morte', dateStatut: '2022-03-01' }), 2022)).toBe(false);
+    expect(peutRejoindreLeLotDeLAnnee(animal('2', { dateNaissance: '2021-12-19', statut: 'morte', dateStatut: '2022-09-01' }), 2022)).toBe(true);
+    // Sortie avant l'année, mâle, sans boucle, ou née trop tard : non.
+    expect(peutRejoindreLeLotDeLAnnee(animal('3', { dateNaissance: '2020-01-01', statut: 'morte', dateStatut: '2021-06-01' }), 2022)).toBe(false);
+    expect(peutRejoindreLeLotDeLAnnee(animal('4', { sexe: 'M', dateNaissance: '2020-01-01' }), 2022)).toBe(false);
+    expect(peutRejoindreLeLotDeLAnnee(animal('5', { numeroBoucle: ' ', dateNaissance: '2020-01-01' }), 2022)).toBe(false);
+    expect(peutRejoindreLeLotDeLAnnee(animal('6', { dateNaissance: '2022-08-01' }), 2022)).toBe(false);
+    // 5 mois de gestation : née fin janvier, saillie à 6 mois fin juillet, mise bas en décembre ; née en février, c'est trop tard pour l'année.
+    expect(peutRejoindreLeLotDeLAnnee(animal('7', { dateNaissance: '2022-01-20' }), 2022)).toBe(true);
+    expect(peutRejoindreLeLotDeLAnnee(animal('8', { dateNaissance: '2022-02-10' }), 2022)).toBe(false);
   });
 });
