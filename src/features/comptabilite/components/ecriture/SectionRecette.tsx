@@ -132,7 +132,7 @@ export function SectionRecetteContact({
           />
         ) : null}
         {/* Le circuit par lequel la vente passe (facultatif) : le volet Commercial en fait le bilan. */}
-        {e.estProductionVente ? <ChampCircuit value={e.circuit} onChange={e.setCircuit} /> : null}
+        {e.estProductionVente ? <ChampCircuit value={e.circuit} onChange={e.setCircuit} required /> : null}
       </SectionForm>
 
     </>

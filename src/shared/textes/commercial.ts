@@ -5,6 +5,7 @@ export const TEXTES_COMMERCIAL = {
   circuit: {
     champ: 'Circuit de vente',
     aucun: 'Non précisé',
+    choisir: 'Choisir le circuit de vente',
     aide: 'Par où la vente est passée (marché, restaurateur, ferme…) : le volet Commercial en fait le bilan.',
     deLaVente: (circuit: string) => `Circuit : ${circuit}`,
     issueDeLaCommande: (numero: string) => `Issue de la commande ${numero}`,

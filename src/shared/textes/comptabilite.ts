@@ -689,6 +689,7 @@ export const TEXTES_COMPTABILITE = {
     detailDeLaVente: 'Détail de la vente',
     declarerLaVente: 'Le contact souhaite déclarer la vente',
     venteSurCommande: 'Vente basée sur une commande',
+    circuitRequis: 'Choisissez le circuit de vente avant de continuer.',
     choisirCommande: 'Quelle commande ?',
     commandeEnCours: (numero: string, restantes: number) =>
       `Bon de commande ${numero} : ${restantes} élément${restantes > 1 ? 's' : ''} à passer en vente. « Enregistrer et en ajouter une autre » reprend le suivant.`,

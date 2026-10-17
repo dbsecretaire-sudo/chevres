@@ -216,7 +216,14 @@ export default function NouvelleFacture() {
             <Button
               style={commonStyles.flex1}
               label={TEXTES.comptabilite.nouvelleEcriture.suivant}
-              onPress={() => setEtape('vente')}
+              onPress={() => {
+                // Le circuit de vente d'une vente de production est obligatoire : on ne passe pas à la suite sans lui.
+                if (e.estProductionVente && !e.circuit) {
+                  e.setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.circuitRequis });
+                  return;
+                }
+                setEtape('vente');
+              }}
             />
           </View>
         ) : (
