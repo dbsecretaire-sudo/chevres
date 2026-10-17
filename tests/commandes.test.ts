@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estLigneDeViande, venteDeLaLigne } from '@/features/commercial/services/commandes';
+import { elementsAFacturer, estLigneDeViande, venteDeLaLigne } from '@/features/commercial/services/commandes';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 
@@ -22,5 +22,33 @@ describe('commandes : fromages, viande et charcuterie', () => {
     const vente = venteDeLaLigne(commande, ligne('fromage:frais', 'Frais'), '2026-10-20', 'chevre' as never, false);
     expect(vente.categorie).toBe(CATEGORIE_VENTE.FROMAGE);
     expect(vente.typeFromage).toBe('frais');
+  });
+});
+
+describe('bon de commande : ce qu’il reste à facturer', () => {
+  it('liste les lignes pas encore facturées et les animaux réservés', () => {
+    const bon = {
+      id: 'c1',
+      numero: 'C-1',
+      client: 'Momo',
+      date: '2026-10-17',
+      statut: 'a_preparer',
+      lignes: [ligne('fromage:frais', 'Frais'), { ...ligne('viande:saucisson', 'Saucisson'), id: 'l2' }],
+      lignesFacturees: ['l2'],
+    } as unknown as Commande;
+    const elements = elementsAFacturer(bon, ['a1', 'a2']);
+    expect(elements.map((e) => e.type)).toEqual(['ligne', 'animaux']);
+    expect(elementsAFacturer({ ...bon, lignesFacturees: ['l', 'l2'] }, [])).toEqual([]);
+  });
+
+  it('une ligne de lots réservés désigne ses lots dans la vente', () => {
+    const vente = venteDeLaLigne(
+      commande,
+      { ...ligne('fromage:frais', 'Frais'), lotIds: ['x', 'y'] },
+      '2026-10-20',
+      'chevre' as never,
+      false,
+    );
+    expect(vente.fromages).toBe('x;y');
   });
 });

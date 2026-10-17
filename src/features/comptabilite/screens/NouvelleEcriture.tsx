@@ -20,6 +20,11 @@ import { SelectModal } from '@/shared/components/SelectModal';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { commandeOuverte, totalCommande } from '@/features/commercial/services/commandes';
 import type { Commande } from '@/features/commercial/types';
+import { elementsAFacturer, type ElementACommande } from '@/features/commercial/services/commandes';
+import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
+import { reservesDeLaCommande } from '@/features/cheptel/services/reservations';
+import type { Chevre } from '@/features/cheptel/types';
+import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
@@ -89,10 +94,27 @@ export default function NouvelleFacture() {
   /** Les commandes à transformer en vente : celles qui restent à préparer ou à livrer. */
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [choixCommande, setChoixCommande] = useState(false);
+  /** Les animaux de l'espèce : ceux réservés par un bon de commande se facturent avec lui. */
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  /** Le bon choisi quand il a plusieurs éléments : on choisit de tout facturer, ou une partie. */
+  const [partie, setPartie] = useState<{ commande: Commande; elements: ElementACommande[]; ids: string[] } | null>(null);
   const ouvrirLesCommandes = async () => {
-    setCommandes((await lireArchiveCommercial()).commandes.filter((c) => commandeOuverte(c)));
+    const [archive, tous] = await Promise.all([lireArchiveCommercial(), listTousLesAnimauxDeLEspece()]);
+    setAnimaux(tous);
+    // Les bons ouverts qui ont encore quelque chose à facturer.
+    setCommandes(
+      archive.commandes.filter(
+        (c) =>
+          commandeOuverte(c) &&
+          elementsAFacturer(c, reservesDeLaCommande(tous, c.id).map((a) => a.id)).length > 0,
+      ),
+    );
     setChoixCommande(true);
   };
+  const libelleElement = (el: ElementACommande): string =>
+    el.type === 'ligne'
+      ? `${el.ligne.quantite} × ${el.ligne.libelle}`
+      : TEXTES.comptabilite.nouvelleEcriture.animauxReserves(el.ids.length);
   // L'activité se choisit par une puce (comme dans la liste) ; elle n'apparaît que pour un établissement à plusieurs espèces.
   const activites = [...especesActives(), ...(e.avecCommunActivite ? [ACTIVITE_COMMUNE] : [])];
 
@@ -144,7 +166,7 @@ export default function NouvelleFacture() {
               <Text style={commonStyles.note}>
                 {TEXTES.comptabilite.nouvelleEcriture.commandeEnCours(
                   e.commande.numero,
-                  e.lignesRestantesDeLaCommande.length,
+                  e.elementsDeLaCommande.length,
                 )}
               </Text>
             ) : null}
@@ -210,9 +232,30 @@ export default function NouvelleFacture() {
         onSelect={(id) => {
           const choisie = commandes.find((c) => c.id === id);
           setChoixCommande(false);
-          if (choisie) e.choisirCommande(choisie);
+          if (!choisie) return;
+          const ids = reservesDeLaCommande(animaux, choisie.id).map((a) => a.id);
+          const elements = elementsAFacturer(choisie, ids);
+          // Un seul élément : on le reprend ; sinon on choisit de tout facturer ou seulement une partie du bon.
+          if (elements.length <= 1) e.demarrerCommande(choisie, elements, ids);
+          else setPartie({ commande: choisie, elements, ids });
         }}
         onClose={() => setChoixCommande(false)}
+      />
+      <SelectModalMultiple<string>
+        key={partie ? partie.commande.id : 'aucun'}
+        visible={!!partie}
+        titre={TEXTES.comptabilite.nouvelleEcriture.queFacturer}
+        options={(partie?.elements ?? []).map((el, i) => ({ value: String(i), label: libelleElement(el) }))}
+        initiales={(partie?.elements ?? []).map((_, i) => String(i))}
+        libelleValider={TEXTES.comptabilite.nouvelleEcriture.facturerLaSelection}
+        onValider={(valeurs) => {
+          if (partie) {
+            const choisis = valeurs.map(Number).sort((a, b) => a - b).map((i) => partie.elements[i]);
+            if (choisis.length > 0) e.demarrerCommande(partie.commande, choisis, partie.ids);
+          }
+          setPartie(null);
+        }}
+        onClose={() => setPartie(null)}
       />
       <InfoModal
         visible={!!e.erreur}

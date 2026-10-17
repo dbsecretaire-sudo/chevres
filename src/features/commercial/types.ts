@@ -11,6 +11,8 @@ export interface LigneCommande {
   quantite: number;
   /** Le prix à la pièce (€) : le tarif de la catégorie du client, modifiable. */
   prixUnitaire: number;
+  /** Les lots réservés pour cette commande (fromages, charcuterie) : ils sont vendus avec la ligne. */
+  lotIds?: string[];
 }
 
 /** Une commande d'un client : ce qu'il veut, pour quand, et où elle en est (préparée, livrée). */
@@ -32,6 +34,8 @@ export interface Commande {
   /** Une fois livrée : la date de livraison et les ventes que la livraison a créées. */
   dateLivraison?: string;
   venteIds?: string[];
+  /** Les lignes déjà facturées (une commande se facture en une fois ou par parties) : leurs identifiants. */
+  lignesFacturees?: string[];
   /** La livraison est à encaisser plus tard (la trésorerie compte le paiement à son échéance). */
   enAttente?: boolean;
   echeance?: string;

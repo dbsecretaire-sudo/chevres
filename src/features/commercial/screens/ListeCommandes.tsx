@@ -11,6 +11,9 @@ import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { commandeOuverte, totalAPreparer, totalCommande } from '@/features/commercial/services/commandes';
 import type { Commande } from '@/features/commercial/types';
+import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
+import { reservesDeLaCommande } from '@/features/cheptel/services/reservations';
+import type { Chevre } from '@/features/cheptel/types';
 import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -35,10 +38,13 @@ export default function ListeCommandes() {
   const router = useRouter();
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [filtre, setFiltre] = useState<Filtre>('ouvertes');
+  /** Les animaux réservés par bon de commande (ils font partie du bon, même sans ligne). */
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       lireArchiveCommercial().then((archive) => setCommandes(archive.commandes));
+      listTousLesAnimauxDeLEspece().then(setAnimaux);
     }, []),
   );
 
@@ -55,6 +61,7 @@ export default function ListeCommandes() {
         .sort((a, b) => (a.livraisonPrevue ?? a.date).localeCompare(b.livraisonPrevue ?? b.date)),
     [commandes, filtre],
   );
+  const reservesDuBon = (c: Commande) => reservesDeLaCommande(animaux, c.id);
   const aPreparer = useMemo(() => totalAPreparer(commandes), [commandes]);
 
   return (
@@ -89,9 +96,13 @@ export default function ListeCommandes() {
           <LigneDeBloc index={index} total={affichees.length}>
             <ListRow
               title={`${item.numero} · ${item.client}`}
-              subtitle={`${T.ligne.pieces(item.lignes.reduce((t, l) => t + l.quantite, 0))} · ${
-                item.livraisonPrevue ? formatDateFR(item.livraisonPrevue) : formatDateFR(item.date)
-              }`}
+              subtitle={[
+                T.ligne.pieces(item.lignes.reduce((t, l) => t + l.quantite, 0)),
+                reservesDuBon(item).length > 0 ? T.ligne.animaux(reservesDuBon(item).length) : '',
+                item.livraisonPrevue ? formatDateFR(item.livraisonPrevue) : formatDateFR(item.date),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
               trailing={
                 <View style={commonStyles.gap2}>
                   <Text style={commonStyles.lineBold}>{formatMontant(totalCommande(item))}</Text>

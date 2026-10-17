@@ -4,6 +4,7 @@ import { enregistrerVente, supprimerVente } from '@/features/comptabilite/reposi
 import type { ActiviteComptable, Vente } from '@/features/comptabilite/types';
 import {
   CATEGORIE_VENTE,
+  SEPARATEUR_ANIMAUX,
   TYPE_CHOIX_FACTURE,
   TYPE_FROMAGE,
   UNITE_VENTE,
@@ -34,6 +35,20 @@ export const totalLigne = (ligne: Pick<LigneCommande, 'quantite' | 'prixUnitaire
 /** Le montant d'une commande : la somme de ses lignes. */
 export const totalCommande = (commande: Pick<Commande, 'lignes'>): number =>
   arrondi(commande.lignes.reduce((t, l) => t + totalLigne(l), 0));
+
+/** Ce qu'une commande peut facturer d'un coup : une ligne (fromage, viande, charcuterie), ou les animaux réservés pour le contact. */
+export type ElementACommande = { type: 'ligne'; ligne: LigneCommande } | { type: 'animaux'; ids: string[] };
+
+/** Les éléments d'une commande qui restent à facturer : ses lignes pas encore facturées, et ses animaux réservés (pas encore vendus). */
+export function elementsAFacturer(commande: Commande, idsAnimauxReserves: string[]): ElementACommande[] {
+  const faites = new Set(commande.lignesFacturees ?? []);
+  return [
+    ...commande.lignes
+      .filter((l) => l.quantite > 0 && !faites.has(l.id))
+      .map((ligne): ElementACommande => ({ type: 'ligne', ligne })),
+    ...(idsAnimauxReserves.length > 0 ? [{ type: 'animaux', ids: idsAnimauxReserves } as ElementACommande] : []),
+  ];
+}
 
 /** Vrai tant que la commande reste à préparer ou à livrer. */
 export const commandeOuverte = (commande: Pick<Commande, 'statut'>): boolean =>
@@ -84,6 +99,7 @@ export function venteDeLaLigne(
       echeance: commande.enAttente && commande.echeance ? commande.echeance : undefined,
       circuit: commande.circuit,
       commandeId: commande.id,
+      fromages: ligne.lotIds?.length ? ligne.lotIds.join(SEPARATEUR_ANIMAUX) : undefined,
     };
   }
   const code = ligne.article.split(':')[1];
@@ -107,6 +123,7 @@ export function venteDeLaLigne(
     echeance: commande.enAttente && commande.echeance ? commande.echeance : undefined,
     circuit: commande.circuit,
     commandeId: commande.id,
+    fromages: ligne.lotIds?.length ? ligne.lotIds.join(SEPARATEUR_ANIMAUX) : undefined,
   };
 }
 
@@ -121,14 +138,22 @@ export async function livrerCommande(
   avecFacture: boolean,
   numeroFacture?: string,
 ): Promise<Commande> {
-  const venteIds: string[] = [];
-  for (const ligne of commande.lignes.filter((l) => l.quantite > 0)) {
+  const venteIds: string[] = [...(commande.venteIds ?? [])];
+  const faites = new Set(commande.lignesFacturees ?? []);
+  // Les lignes déjà facturées (par parties) ne sont pas refaites.
+  for (const ligne of commande.lignes.filter((l) => l.quantite > 0 && !faites.has(l.id))) {
     const vente = await enregistrerVente(
       venteDeLaLigne(commande, ligne, dateLivraison, activite, avecFacture, numeroFacture),
     );
     venteIds.push(vente.id);
   }
-  return enregistrerCommande({ ...commande, statut: STATUT_COMMANDE.LIVREE, dateLivraison, venteIds });
+  return enregistrerCommande({
+    ...commande,
+    statut: STATUT_COMMANDE.LIVREE,
+    dateLivraison,
+    venteIds,
+    lignesFacturees: commande.lignes.map((l) => l.id),
+  });
 }
 
 /** Défait une livraison : ses ventes sont supprimées (le stock revient) et la commande redevient « préparée ». */
@@ -139,5 +164,6 @@ export async function annulerLivraison(commande: Commande): Promise<Commande> {
     statut: STATUT_COMMANDE.PREPAREE,
     dateLivraison: undefined,
     venteIds: undefined,
+    lignesFacturees: undefined,
   });
 }

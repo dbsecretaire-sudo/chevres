@@ -13,7 +13,8 @@ import { listClients } from '@/features/clients/repository';
 import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { saveChevre } from '@/features/cheptel/repository/chevres';
-import { estReserve, liberer, reserver } from '@/features/cheptel/services/reservations';
+import { estReserve, liberer } from '@/features/cheptel/services/reservations';
+import { reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { nomComplet } from '@/shared/utils/personne';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
@@ -45,7 +46,7 @@ import {
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
-import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -376,7 +377,8 @@ export default function ViandeVendue() {
           setCible(null);
           if (!choisi || !client) return;
           if (choisi.action === 'ecriture') return ouvrirEcriture(choisi.animal, client.id);
-          await saveChevre(reserver(choisi.animal, { client: nomComplet(client), clientId: client.id, date: todayISO() }));
+          // L'animal rejoint le bon de commande ouvert de ce client (créé s'il n'y en a pas).
+          await reserverAnimauxPourClient([choisi.animal], client);
           charger();
         }}
         onClose={() => setCible(null)}

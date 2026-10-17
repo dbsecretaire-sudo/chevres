@@ -5,7 +5,8 @@ import { Button } from '@/shared/components/Button';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { FiltresLots, TableauLots } from '@/features/stock/components/TableauLots';
 import { useListeLots } from '@/features/stock/hooks/useListeLots';
-import { estArticleFromage, etatDuLot, reserverLots } from '@/features/stock/services/lots';
+import { estArticleFromage, etatDuLot } from '@/features/stock/services/lots';
+import { libererLotsReserves, reserverLotsPourClient } from '@/features/commercial/services/reservations';
 import { listClients } from '@/features/clients/repository';
 import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
@@ -13,7 +14,6 @@ import type { LotFromage } from '@/features/stock/types';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ETAT_LOT } from '@/shared/constants/stock';
 import { ROUTES } from '@/shared/constants/routes';
-import { todayISO } from '@/shared/utils/dates';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -129,7 +129,7 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
                       label={T.liberer}
                       variant="secondary"
                       onPress={async () => {
-                        await reserverLots(reserves.map((l) => l.id));
+                        await libererLotsReserves(reserves.map((l) => l.id));
                         terminer();
                         onChange();
                       }}
@@ -154,7 +154,8 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
               setAction(null);
               if (!client) return;
               if (choix === 'ecriture') return ouvrirEcriture(client.id);
-              await reserverLots([...choisis], { client: nomComplet(client), clientId: client.id, date: todayISO() });
+              // Les lots rejoignent le bon de commande ouvert de ce client (créé s'il n'y en a pas).
+              await reserverLotsPourClient(lotsChoisis.filter((l) => !l.reservation), article!, client);
               terminer();
               onChange();
             }}

@@ -136,6 +136,7 @@ export const TEXTES_COMMERCIAL = {
       detail: (client: string, livraison?: string) =>
         livraison ? `${client} · livraison le ${livraison}` : client,
       pieces: (n: number) => `${n} pièce${n > 1 ? 's' : ''}`,
+      animaux: (n: number) => `${n} animal${n > 1 ? 'aux' : ''}`.replace('animalaux', 'animaux'),
     },
   },
   commande: {

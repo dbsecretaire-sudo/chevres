@@ -3,7 +3,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import { enregistrerCommande } from '@/features/commercial/repository';
-import { estLigneDeViande } from '@/features/commercial/services/commandes';
+import {
+  elementsAFacturer,
+  estLigneDeViande,
+  type ElementACommande,
+} from '@/features/commercial/services/commandes';
+import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
@@ -18,9 +23,9 @@ import { fromagesRequis } from '@/features/stock/services/lots';
 import { comptesDeLInventaire } from '@/features/stock/services/stock';
 import { erreurAchatBoucles } from '@/features/stock/services/boucles';
 import { synchroniserVisiteFacture } from '@/features/exploitation/services/visitesFacture';
-import { GENRE_ARTICLE } from '@/shared/constants/stock';
+import { GENRE_ARTICLE, ROLE_VIANDE } from '@/shared/constants/stock';
 import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
-import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
+import { declarerStatutChevre, listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { sortieDesAnimauxDeLaVente, idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import {
   PREFIXE_CATEGORIE_AJOUTEE,
@@ -77,7 +82,8 @@ import type {
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
-import { memeJourDansLAnnee } from '@/shared/utils/dates';
+import { memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
+import { agePetitMax } from '@/shared/constants/cheptel';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import {
   categoriesGroupe,
@@ -148,6 +154,9 @@ export function useNouvelleEcriture(
   const [offertCoche, setOffert] = useState(false);
   /** La commande que l'on transforme en ventes (une vente par ligne) : chaque enregistrement prend la ligne suivante. */
   const [commande, setCommande] = useState<Commande | null>(null);
+  /** Ce qu'on passe en vente maintenant (le premier est celui à l'écran) et les animaux réservés de la commande pas encore vendus. */
+  const [fileDeLaCommande, setFileDeLaCommande] = useState<ElementACommande[]>([]);
+  const [animauxDuBon, setAnimauxDuBon] = useState<string[]>([]);
   /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
   const [natureUrssaf, setNatureUrssaf] = useState('');
   /** Le paiement n'a pas encore eu lieu : sa date prévue (la trésorerie la compte à cette date). */
@@ -478,7 +487,7 @@ export function useNouvelleEcriture(
    * l'autre : le type, la date, l'activité, la catégorie, le client ou le fournisseur, la TVA, la nature URSSAF.
    */
   /** La ligne de commande à reprendre après « Enregistrer et en ajouter une autre ». */
-  const suiteDeLaCommande = useRef<LigneCommande | null>(null);
+  const suiteDeLaCommande = useRef<ElementACommande | null>(null);
 
   const repartir = () => {
     setDescription('');
@@ -502,10 +511,6 @@ export function useNouvelleEcriture(
     setLignesProduction([ligneProductionVide()]);
   };
 
-  /** Les lignes d'une commande pas encore passées en vente (les ventes déjà faites suivent l'ordre des lignes). */
-  const lignesRestantes = (c: Commande): LigneCommande[] =>
-    c.lignes.filter((l) => l.quantite > 0).slice(c.venteIds?.length ?? 0);
-
   /** Reprend une ligne de commande : sa catégorie (fromage, ou viande / charcuterie), son produit et sa quantité. */
   const appliquerLigne = (ligne: LigneCommande) => {
     if (estLigneDeViande(ligne.article)) {
@@ -525,15 +530,32 @@ export function useNouvelleEcriture(
     setQuantite(String(ligne.quantite));
   };
 
-  /** Une vente basée sur une commande : le contact, le circuit, le paiement et la première ligne à passer en vente sont repris. */
-  const choisirCommande = (c: Commande) => {
+  /** Reprend un élément d'une commande : une ligne, ou les animaux réservés (vente sans facture, détail deviné d'après leur âge). */
+  const appliquerElement = async (element: ElementACommande) => {
+    if (element.type === 'ligne') return appliquerLigne(element.ligne);
+    changerCategorieRecette(CATEGORIE_RECETTE.VIANDE);
+    setAvecFacture(false);
+    setAnimaux(element.ids);
+    const [tous, archive] = await Promise.all([listTousLesAnimauxDeLEspece(), lireArchiveStock()]);
+    const choisis = tous.filter((a) => element.ids.includes(a.id));
+    if (choisis.length > 0 && choisis.every((a) => !ageAtteint(a.dateNaissance, agePetitMax(), todayISO()))) {
+      const jeune = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find(
+        (a) => roleDeLaViande(a.cle) === ROLE_VIANDE.JEUNE,
+      );
+      if (jeune) setPrecision(jeune.libelle);
+    }
+  };
+
+  /** Une vente basée sur une commande : le contact, le circuit, le paiement, puis les éléments choisis, un à un. */
+  const demarrerCommande = (c: Commande, elements: ElementACommande[], idsAnimaux: string[]) => {
     setCommande(c);
+    setFileDeLaCommande(elements);
+    setAnimauxDuBon(idsAnimaux);
     if (c.clientId) choisirClient(c.clientId);
     setCircuit(c.circuit ?? '');
     setEnAttente(!!c.enAttente);
     setEcheance(c.echeance ?? '');
-    const [premiere] = lignesRestantes(c);
-    if (premiere) appliquerLigne(premiere);
+    if (elements[0]) appliquerElement(elements[0]);
   };
 
   /** Enregistre l'écriture, puis ferme l'écran ; avec `enchainer`, reste dessus pour saisir la suivante. */
@@ -650,18 +672,30 @@ export function useNouvelleEcriture(
       }
       if ('vente' in resultat) {
         const vente = await enregistrerVente({ ...resultat.vente, commandeId: commande?.id });
-        // Une vente de commande : elle s'ajoute à la commande, livrée quand toutes ses lignes sont passées en vente.
-        let suite: LigneCommande[] = [];
-        if (commande) {
-          const venteIds = [...(commande.venteIds ?? []), vente.id];
-          const mise = { ...commande, venteIds };
-          suite = lignesRestantes(mise);
+        // Une vente de commande : elle s'ajoute au bon, livré quand tout est passé en vente (les lignes, et les animaux réservés).
+        let suite: ElementACommande | undefined;
+        if (commande && fileDeLaCommande[0]) {
+          const fait = fileDeLaCommande[0];
+          const restantsAnimaux =
+            fait.type === 'animaux' ? animauxDuBon.filter((id) => !fait.ids.includes(id)) : animauxDuBon;
+          const mise: Commande = {
+            ...commande,
+            venteIds: [...(commande.venteIds ?? []), vente.id],
+            lignesFacturees:
+              fait.type === 'ligne'
+                ? [...(commande.lignesFacturees ?? []), fait.ligne.id]
+                : commande.lignesFacturees,
+          };
+          const complete = elementsAFacturer(mise, restantsAnimaux).length === 0;
           const enregistree = await enregistrerCommande(
-            suite.length === 0 ? { ...mise, statut: STATUT_COMMANDE.LIVREE, dateLivraison: vente.date } : mise,
+            complete ? { ...mise, statut: STATUT_COMMANDE.LIVREE, dateLivraison: vente.date } : mise,
           );
-          setCommande(suite.length === 0 ? null : enregistree);
+          suite = fileDeLaCommande[1];
+          setAnimauxDuBon(restantsAnimaux);
+          setFileDeLaCommande(fileDeLaCommande.slice(1));
+          setCommande(suite ? enregistree : null);
+          if (enchainer && suite) suiteDeLaCommande.current = suite;
         }
-        if (enchainer && suite[0]) suiteDeLaCommande.current = suite[0];
         // Les animaux vendus quittent le cheptel : leur fiche passe en « abattoir » (vente de viande déclarée, à la date d'abattoir), en « morte » (non déclarée) ou en « vendue ».
         const sortie = sortieDesAnimauxDeLaVente(vente);
         for (const id of idsDesAnimaux(vente)) await declarerStatutChevre(id, sortie.statut, sortie.date);
@@ -682,7 +716,7 @@ export function useNouvelleEcriture(
         setEnchainees((n) => n + 1);
         // Une commande qui a d'autres lignes : la suivante est reprise.
         if (suiteDeLaCommande.current) {
-          appliquerLigne(suiteDeLaCommande.current);
+          await appliquerElement(suiteDeLaCommande.current);
           setEnAttente(!!commande?.enAttente);
           setEcheance(commande?.echeance ?? '');
         }
@@ -837,8 +871,8 @@ export function useNouvelleEcriture(
     offert: offertCoche,
     setOffert,
     commande,
-    choisirCommande,
-    lignesRestantesDeLaCommande: commande ? lignesRestantes(commande) : [],
+    demarrerCommande,
+    elementsDeLaCommande: fileDeLaCommande,
     // affichage
     compteAffiche,
     avecFacture,

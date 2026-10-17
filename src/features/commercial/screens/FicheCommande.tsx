@@ -17,6 +17,7 @@ import {
   totalCommande,
   totalLigne,
 } from '@/features/commercial/services/commandes';
+import { libererLotsReserves } from '@/features/commercial/services/reservations';
 import { exporterBonLivraisonPdf } from '@/features/commercial/services/bonLivraison';
 import {
   enregistrerCommande,
@@ -200,6 +201,8 @@ export default function FicheCommande() {
           l.article,
         quantite: Math.round(parseDecimal(l.quantite)),
         prixUnitaire: parseDecimal(l.prix) || 0,
+        // Les lots réservés restent attachés à la ligne.
+        lotIds: existante?.lignes.find((e) => e.id === l.id)?.lotIds,
       }))
       .filter((l) => l.quantite > 0);
 
@@ -232,6 +235,7 @@ export default function FicheCommande() {
       note: note.trim() || undefined,
       dateLivraison: existante?.dateLivraison,
       venteIds: existante?.venteIds,
+      lignesFacturees: existante?.lignesFacturees,
       enAttente: enAttente || undefined,
       echeance: enAttente && echeance ? echeance : undefined,
     };
@@ -254,7 +258,11 @@ export default function FicheCommande() {
     if (!commande) return;
     // Une commande annulée ne réserve plus rien.
     if (nouveau === STATUT_COMMANDE.ANNULEE) await libererLesAnimaux();
-    const enregistree = await enregistrer({ ...commande, statut: nouveau });
+    const enregistree = await enregistrer(
+      nouveau === STATUT_COMMANDE.ANNULEE
+        ? { ...commande, statut: nouveau, lignes: commande.lignes.map((l) => ({ ...l, lotIds: undefined })) }
+        : { ...commande, statut: nouveau },
+    );
     if (enregistree) router.back();
   };
 
@@ -286,8 +294,10 @@ export default function FicheCommande() {
     ),
     existante?.id,
   );
+  /** Les animaux et les lots réservés par cette commande redeviennent disponibles. */
   const libererLesAnimaux = async () => {
     for (const a of reserves) await saveChevre(liberer(a));
+    await libererLotsReserves((existante?.lignes ?? []).flatMap((l) => l.lotIds ?? []));
   };
   /** Réserve les animaux choisis pour le client de la commande ; ceux qui ne le sont plus sont libérés. */
   const reserverLesAnimaux = async (choisis: string[]) => {

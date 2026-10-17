@@ -684,7 +684,10 @@ export const TEXTES_COMPTABILITE = {
     venteSurCommande: 'Vente basée sur une commande',
     choisirCommande: 'Quelle commande ?',
     commandeEnCours: (numero: string, restantes: number) =>
-      `Commande ${numero} : ${restantes} ligne${restantes > 1 ? 's' : ''} à passer en vente. « Enregistrer et en ajouter une autre » reprend la suivante.`,
+      `Bon de commande ${numero} : ${restantes} élément${restantes > 1 ? 's' : ''} à passer en vente. « Enregistrer et en ajouter une autre » reprend le suivant.`,
+    queFacturer: 'Que facturer maintenant ?',
+    facturerLaSelection: (n: number) => `Facturer ${n} élément${n > 1 ? 's' : ''}`,
+    animauxReserves: (n: number) => `${n} animal${n > 1 ? 'aux' : ''} réservé${n > 1 ? 's' : ''}`.replace('animalaux', 'animaux'),
     avecFacture: 'Avec facture',
     sansFacture: 'Sans facture',
     suivant: 'Suivant',
