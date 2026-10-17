@@ -191,9 +191,12 @@ export const TEXTES_PRODUCTION = {
     onglets: {
       aFacturer: (n: number) => (n > 0 ? `À facturer (${n})` : 'À facturer'),
       facturee: (n: number) => (n > 0 ? `Facturée (${n})` : 'Facturée'),
-      sansFacture: (n: number) => (n > 0 ? `Sans facture (${n})` : 'Sans facture'),
+      sansFactureAVendre: (n: number) => (n > 0 ? `Sans facture à vendre (${n})` : 'Sans facture à vendre'),
+      sansFactureVendue: (n: number) => (n > 0 ? `Sans facture vendue (${n})` : 'Sans facture vendue'),
     },
     vendusAide: 'Un appui sur « Animaux vendus morts » ou « vivants » ouvre le lot : on y passe les animaux d’une vente de morts à vivants (leurs fiches suivent).',
+    rienASansFacture: 'Aucun animal sans boucle à vendre.',
+    sansFactureAVendreAide: 'Les animaux sans boucle déjà à l’abattoir, vendus sans facture à un particulier : un appui ouvre la vente.',
     rienAFacturer: 'Aucune viande à facturer.',
     sansFactureAVendre: 'Animaux sans boucle à vendre (sans facture)',
     aFacturer: 'Viande à facturer',

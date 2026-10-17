@@ -45,7 +45,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.viande;
 
-type OngletViande = 'afacturer' | 'facturee' | 'sansfacture';
+type OngletViande = 'afacturer' | 'facturee' | 'avendre' | 'vendue';
 
 /** La viande vendue de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
 export default function ViandeVendue() {
@@ -106,7 +106,7 @@ export default function ViandeVendue() {
   );
   const groupesAFacturer = groupes.filter((g) => g.avecBoucle);
   const groupesSansFacture = groupes.filter((g) => !g.avecBoucle);
-  const venteDeLOnglet = onglet === 'facturee' ? facturees : onglet === 'sansfacture' ? sansFacture : [];
+  const venteDeLOnglet = onglet === 'facturee' ? facturees : onglet === 'vendue' ? sansFacture : [];
   const { lots } = useLots();
   /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
   const ouvrirLot = (id: string) =>
@@ -212,10 +212,8 @@ export default function ViandeVendue() {
           puces={[
             { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length) },
             { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
-            {
-              valeur: 'sansfacture',
-              label: T.onglets.sansFacture(groupesSansFacture.length + sansFacture.length),
-            },
+            { valeur: 'avendre', label: T.onglets.sansFactureAVendre(groupesSansFacture.length) },
+            { valeur: 'vendue', label: T.onglets.sansFactureVendue(sansFacture.length) },
           ]}
           valeur={onglet}
           onChoisir={setOnglet}
@@ -233,20 +231,25 @@ export default function ViandeVendue() {
             groupesAFacturer.map(ligneDuJour)
           )}
         </View>
-      ) : onglet === 'sansfacture' ? (
-        <ScrollView contentContainerStyle={commonStyles.listeBlocAvecFab}>
-          {groupesSansFacture.length > 0 ? (
-            <View style={commonStyles.listeSimple}>
-              <Text style={commonStyles.lineBold}>{T.sansFactureAVendre}</Text>
+      ) : onglet === 'avendre' ? (
+        <View style={commonStyles.listeSimple}>
+          {groupesSansFacture.length === 0 ? (
+            <EmptyState title={T.rienASansFacture} />
+          ) : (
+            <>
+              <Text style={commonStyles.note}>{T.sansFactureAVendreAide}</Text>
               {groupesSansFacture.map(ligneDuJour)}
-            </View>
-          ) : null}
+            </>
+          )}
+        </View>
+      ) : onglet === 'vendue' ? (
+        <ScrollView contentContainerStyle={commonStyles.listeBlocAvecFab}>
           {sectionVendus('morts', morts)}
           {sectionVendus('vivants', vivants)}
           {autresSansFacture.length > 0 ? (
             <View style={commonStyles.listeSimple}>{autresSansFacture.map(ligneVente)}</View>
           ) : null}
-          {groupesSansFacture.length + sansFacture.length === 0 ? <EmptyState title={T.aucune} /> : null}
+          {sansFacture.length === 0 ? <EmptyState title={T.aucune} /> : null}
           {morts.length + vivants.length > 0 ? <Text style={commonStyles.note}>{T.vendusAide}</Text> : null}
         </ScrollView>
       ) : (
