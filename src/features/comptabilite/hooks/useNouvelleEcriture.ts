@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
+import type { Chevre } from '@/features/cheptel/types';
+import type { ArchiveStock } from '@/features/stock/types';
 import { enregistrerCommande } from '@/features/commercial/repository';
 import {
   elementsAFacturer,
@@ -493,8 +495,11 @@ export function useNouvelleEcriture(
    */
   /** La ligne de commande à reprendre après « Enregistrer et en ajouter une autre ». */
   const suiteDeLaCommande = useRef<ElementACommande | null>(null);
+  /** Les animaux d'un bon dont le détail de la vente est deviné d'après leur âge : il suit la date de la facture tant qu'on ne le change pas. */
+  const animauxAuto = useRef<{ animaux: Chevre[]; etat?: 'vivants' | 'morts'; archive: ArchiveStock } | null>(null);
 
   const repartir = () => {
+    animauxAuto.current = null;
     setDescription('');
     setMontant('');
     setNumeroFacture('');
@@ -547,14 +552,41 @@ export function useNouvelleEcriture(
     const choisis = tous.filter((a) => element.ids.includes(a.id));
     // Le détail de la vente d'après l'âge à la date de la facture : « Cabris » pour des petits, sinon la ligne des adultes (vivants s'ils
     // sont remis vivants, sinon sur pied).
-    const jourFacture = estDateISO(date) ? date : todayISO();
-    const petits = choisis.length > 0 && choisis.every((a) => !ageAtteint(a.dateNaissance, agePetitMax(), jourFacture));
-    const role = petits ? ROLE_VIANDE.JEUNE : element.etat === 'vivants' ? ROLE_VIANDE.VIVANT : ROLE_VIANDE.SUR_PIED;
-    const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find((a) => roleDeLaViande(a.cle) === role);
-    if (ligne) setPrecision(ligne.libelle);
+    animauxAuto.current = { animaux: choisis, etat: element.etat, archive };
+    const { libelle, petits } = detailDesAnimaux(choisis, element.etat, estDateISO(date) ? date : todayISO(), archive);
+    if (libelle) setPrecision(libelle);
     // Le nombre d'animaux, et petits ou adultes ; leur poids est repris par le formulaire (voir ChampsVenteViande).
     setQuantite(String(element.ids.length));
     setJeune(petits);
+  };
+
+  /** Le détail de la vente d'animaux d'un bon d'après leur âge à la date de la facture : cabris, sinon la ligne des adultes. */
+  const detailDesAnimaux = (
+    choisis: Chevre[],
+    etat: 'vivants' | 'morts' | undefined,
+    jour: string,
+    archive: ArchiveStock,
+  ): { libelle?: string; petits: boolean } => {
+    const petits = choisis.length > 0 && choisis.every((a) => !ageAtteint(a.dateNaissance, agePetitMax(), jour));
+    const role = petits ? ROLE_VIANDE.JEUNE : etat === 'vivants' ? ROLE_VIANDE.VIVANT : ROLE_VIANDE.SUR_PIED;
+    const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find((a) => roleDeLaViande(a.cle) === role);
+    return { libelle: ligne?.libelle, petits };
+  };
+
+  /** La date de la facture change : le détail deviné (cabris ou chèvre) suit, tant qu'on ne l'a pas choisi soi-même. */
+  const changerDate = (nouvelle: string) => {
+    setDate(nouvelle);
+    const auto = animauxAuto.current;
+    if (!auto || !estDateISO(nouvelle)) return;
+    const { libelle, petits } = detailDesAnimaux(auto.animaux, auto.etat, nouvelle, auto.archive);
+    if (libelle) setPrecision(libelle);
+    setJeune(petits);
+  };
+
+  /** Un détail choisi à la main : il ne suit plus la date. */
+  const choisirDetail = (detail: string) => {
+    animauxAuto.current = null;
+    setPrecision(detail);
   };
 
   /** Une vente basée sur une commande : le contact, le circuit, le paiement, puis les éléments choisis, un à un. */
@@ -756,7 +788,7 @@ export function useNouvelleEcriture(
     type,
     setType,
     date,
-    setDate,
+    setDate: changerDate,
     anneeImposee,
     anneeActive: settings.anneeActive,
     toutesAnnees: !!settings.toutesAnnees,
@@ -842,7 +874,7 @@ export function useNouvelleEcriture(
     setTauxTvaFrais,
     setAnimaux,
     precision,
-    setPrecision,
+    setPrecision: choisirDetail,
     groupeRecette: groupeRecette(categorieRecette, activite),
     groupesRecette: groupesRecetteActivite(activite),
     /** Les choix de la liste « Catégorie de recette » : celles d'office, puis celles que l'utilisateur a ajoutées. */
