@@ -9,7 +9,7 @@ export const MOIS_RECENSEMENT = 6;
 export interface Recensement {
   /** L'année du recensement : les effectifs sont ceux du 1er janvier de cette année. */
   annee: number;
-  /** Les animaux de plus de 6 mois au 1er janvier : femelles, et mâles (les boucs ou les béliers). */
+  /** Les animaux de plus de 6 mois au 1er janvier, nés avant l'année des naissances : femelles, et mâles (les boucs ou les béliers). */
   femelles: number;
   males: number;
   /** Les animaux nés pendant l'année d'avant, avec une boucle : ceux encore présents, vendus, consommés ou morts sur l'exploitation, comme le demande le formulaire (les mort-nés et les petits sans boucle n'y sont pas). */
@@ -33,8 +33,9 @@ const sortiAvant = (animal: Chevre, jour: string): boolean =>
   STATUTS_DE_SORTIE.includes(animal.statut) && !!animal.dateStatut && animal.dateStatut <= jour;
 
 /**
- * Le recensement du 1er janvier d'une année d'après le cheptel : les animaux de plus de 6 mois ce jour-là (femelles et mâles), et le
- * nombre d'animaux nés l'année d'avant (encore présents, vendus ou autoconsommés ; sans les morts, les mort-nés ni les petits sans boucle).
+ * Le recensement du 1er janvier d'une année d'après le cheptel : les animaux de plus de 6 mois ce jour-là (femelles et mâles) nés avant
+ * l'année des naissances — ceux nés l'année d'avant ne comptent que dans les naissances, pas deux fois —, et le nombre d'animaux nés
+ * l'année d'avant (encore présents, vendus, autoconsommés ou morts sur l'exploitation ; sans les mort-nés ni les petits sans boucle).
  */
 export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement {
   const premierJanvier = `${annee}-01-01`;
@@ -54,8 +55,9 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
     }
     if (animal.statut === STATUT_CHEVRE.MORT_NE) continue;
     // Présent ce jour-là, et assez âgé.
+    // (les animaux nés l'année d'avant sont déjà dans les naissances : ils ne comptent pas non plus dans les effectifs)
     if (
-      animal.dateNaissance < premierJanvier &&
+      animal.dateNaissance < debutAnneeAvant &&
       !sortiAvant(animal, premierJanvier) &&
       moisEntre(animal.dateNaissance, premierJanvier) >= MOIS_RECENSEMENT
     ) {

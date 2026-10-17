@@ -6,19 +6,19 @@ const animal = (naissance: string, sexe: 'F' | 'M', statut = 'vivante', dateStat
   ({ id: naissance + sexe + statut + numeroBoucle, sexe, statut, dateStatut, dateNaissance: naissance, numeroBoucle }) as unknown as Chevre;
 
 describe('recensement annuel au 1er janvier', () => {
-  it('compte les animaux de plus de 6 mois ce jour-là, femelles et mâles', () => {
+  it('compte les animaux de plus de 6 mois ce jour-là, nés avant l’année des naissances, femelles et mâles', () => {
     const r = recensementAnnuel(
       [
         animal('2022-03-01', 'F'),
         animal('2023-04-01', 'F'),
         animal('2021-02-01', 'M'),
         animal('2025-07-15', 'F'), // 5 mois et demi au 1er janvier : trop jeune
-        animal('2025-06-30', 'F'), // 6 mois révolus : compte
+        animal('2025-06-30', 'F'), // né l'année d'avant : il compte dans les naissances, pas dans les effectifs
         animal('2026-02-01', 'F'), // pas encore né
       ],
       2026,
     );
-    expect(r).toMatchObject({ femelles: 3, males: 1 });
+    expect(r).toMatchObject({ femelles: 2, males: 1 });
   });
 
   it('un animal sorti avant le 1er janvier n’y est plus ; sorti après, il y est encore', () => {
