@@ -91,7 +91,7 @@ export type GroupeRecette = ValeurDe<typeof GROUPE_RECETTE>;
 
 /**
  * Les groupes de recettes (et leurs recettes) proposés pour une activité : ceux de son espèce, qui reprennent les listes de
- * l'inventaire (fromages et lait, œufs, animaux, viande et charcuterie), puis l'aide et le reste. Les listes que l'utilisateur
+ * l'inventaire (fromages et lait, œufs, animaux, boucherie et charcuterie), puis l'aide et le reste. Les listes que l'utilisateur
  * ajoute à l'inventaire s'y ajoutent (voir categoriesRecetteInventaire).
  */
 const groupesDe = (activite: ActiviteComptable): GroupeRecetteDefinition[] =>

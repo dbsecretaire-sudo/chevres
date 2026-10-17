@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { listClients } from '@/features/clients/repository';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
@@ -44,6 +45,8 @@ export function useFicheVente(id: string | undefined) {
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
   const [montantTexte, setMontantTexte] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
+  /** La grille de tarifs (prix par catégorie de contact) : le prix de la vente suit la catégorie de son client. */
+  const [tarifs, setTarifs] = useState<Record<string, Record<string, number>>>({});
   const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
 
   const charger = useCallback(async () => {
@@ -53,6 +56,7 @@ export function useFicheVente(id: string | undefined) {
     setForm(v ?? null);
     setMontantTexte(montantEnTexte(v));
     setClients(await listClients());
+    setTarifs((await lireArchiveCommercial()).tarifs);
   }, [id]);
 
   useFocusEffect(
@@ -64,6 +68,14 @@ export function useFicheVente(id: string | undefined) {
   /** La fiche du client de la vente (retrouvée par son nom) : sa catégorie règle le prix et le numéro de facture. */
   const clientDeLaVente = clients.find((c) => nomComplet(c) === form?.client?.trim());
   const prixLibreVente = prixLibre(clientDeLaVente);
+  /** Les prix de la catégorie du client de la vente, par article : ils passent avant les prix de l'inventaire. */
+  const prixDuContact: Record<string, number> = {};
+  if (clientDeLaVente?.categorie) {
+    for (const [article, parCategorie] of Object.entries(tarifs)) {
+      const prix = parCategorie[clientDeLaVente.categorie];
+      if (prix !== undefined) prixDuContact[article] = prix;
+    }
+  }
 
   /** L'unité est fixe pour lait/cabris, comme à la création. */
   const changerCategorie = (categorie: Vente['categorie']) => {
@@ -175,7 +187,7 @@ export function useFicheVente(id: string | undefined) {
     const prixDeLInventaire =
       (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente;
     if (prixDeLInventaire) {
-      prix = totalDeLaVente({ ...form, quantite }, await lireArchiveStock());
+      prix = totalDeLaVente({ ...form, quantite }, await lireArchiveStock(), prixDuContact);
     }
     if (!prix || prix < 0) {
       return refuser(
@@ -259,6 +271,7 @@ export function useFicheVente(id: string | undefined) {
     montantTexte,
     changerMontant,
     clientDeLaVente,
+    prixDuContact,
     clients,
     changerCategorie,
     enregistrerModifications,

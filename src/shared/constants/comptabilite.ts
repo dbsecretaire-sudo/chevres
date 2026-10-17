@@ -47,7 +47,7 @@ export const CATEGORIE_RECETTE = {
   CABRIS: 'cabris',
   /** Viande : un animal entier (petits, animal sur pied, animal vivant), choisi dans la liste « Animaux » de l'inventaire. */
   VIANDE: 'viande',
-  /** Boucherie / charcuterie : un morceau ou un produit (côte, foie, saucisson…), choisi dans la liste « Viande et charcuterie ». */
+  /** Boucherie / charcuterie : un morceau ou un produit (côte, foie, saucisson…), choisi dans la liste « Boucherie et charcuterie ». */
   BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
   ANIMAL_SUR_PIED: 'animal_sur_pied',
   ANIMAL_VIVANT: 'animal_vivant',
@@ -346,7 +346,7 @@ const GROUPE_VIANDE: GroupeRecetteDefinition = {
   categories: [CATEGORIE_RECETTE.VIANDE],
 };
 
-/** La boucherie / charcuterie : un morceau ou un produit (côte, foie, saucisson…), choisi dans la liste « Viande et charcuterie ». */
+/** La boucherie / charcuterie : un morceau ou un produit (côte, foie, saucisson…), choisi dans la liste « Boucherie et charcuterie ». */
 const GROUPE_BOUCHERIE: GroupeRecetteDefinition = {
   groupe: GROUPE_RECETTE.BOUCHERIE,
   categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],

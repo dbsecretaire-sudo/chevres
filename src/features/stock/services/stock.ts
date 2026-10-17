@@ -810,15 +810,22 @@ export function statistiqueLait(
 export const prixDesOeufs = (archive: Pick<ArchiveStock, 'prix'>): number =>
   archive.prix[CLE_PRIX_OEUFS] ?? PRIX_OEUF_DEFAUT;
 
-export function prixUnitaireDeLaVente(vente: Vente, archive: ArchiveStock): number | undefined {
+export function prixUnitaireDeLaVente(
+  vente: Vente,
+  archive: ArchiveStock,
+  /** Les prix de la catégorie du contact de la vente, par identifiant d'article (la grille de tarifs) : ils passent avant l'inventaire. */
+  prixDuContact?: Record<string, number>,
+): number | undefined {
   if (vente.categorie === CATEGORIE_VENTE.LAIT) return archive.prix[CLE_PRIX_LAIT];
   if (vente.categorie === CATEGORIE_VENTE.OEUFS) return prixDesOeufs(archive);
   if (vente.categorie === CATEGORIE_VENTE.FROMAGE) {
     const code = codeFromageDeLaVente(vente, archive);
-    return code ? archive.prix[cleArticle(GENRE_ARTICLE.FROMAGE, code)] : undefined;
+    if (!code) return undefined;
+    const article = cleArticle(GENRE_ARTICLE.FROMAGE, code);
+    return prixDuContact?.[article] ?? archive.prix[article];
   }
   const ligne = ligneDeViandeDeLaVente(vente, archive);
-  return ligne ? archive.prix[ligne.cle] : undefined;
+  return ligne ? (prixDuContact?.[ligne.cle] ?? archive.prix[ligne.cle]) : undefined;
 }
 
 /** La ligne de viande de l'inventaire qu'une vente a choisie comme détail (un animal, un morceau, un produit). */
@@ -836,8 +843,12 @@ function ligneDeViandeDeLaVente(vente: Vente, archive: ArchiveStock): ArticleAff
  * Le prix total d'une vente, tel que l'inventaire le fixe : le prix défini là × la quantité (les litres, les fromages, les
  * morceaux) — ou × le poids pour un animal, dont le prix se compte au kilo. Rien quand l'inventaire ne donne pas de prix.
  */
-export function totalDeLaVente(vente: Vente, archive: ArchiveStock): number | undefined {
-  const unitaire = prixUnitaireDeLaVente(vente, archive);
+export function totalDeLaVente(
+  vente: Vente,
+  archive: ArchiveStock,
+  prixDuContact?: Record<string, number>,
+): number | undefined {
+  const unitaire = prixUnitaireDeLaVente(vente, archive, prixDuContact);
   if (!unitaire) return undefined;
   // Un animal se vend au kilo (son poids, 1 kg tant qu'il n'est pas saisi) ; le reste, à la pièce ou au litre.
   const ligne = ligneDeViandeDeLaVente(vente, archive);

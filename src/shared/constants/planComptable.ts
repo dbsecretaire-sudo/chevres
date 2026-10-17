@@ -67,13 +67,13 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   [CATEGORIE_RECETTE.VIANDE]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
   [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE]: {
     numero: '701500',
-    libelle: 'Ventes de produits finis — Viande et charcuterie',
+    libelle: 'Ventes de produits finis — Boucherie et charcuterie',
   },
   [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
   [CATEGORIE_RECETTE.ANIMAL_MORT]: {
     numero: '701500',
-    libelle: 'Ventes de produits finis — Viande et charcuterie',
+    libelle: 'Ventes de produits finis — Boucherie et charcuterie',
   },
   [CATEGORIE_RECETTE.OEUFS]: { numero: '701600', libelle: 'Ventes de produits finis — Œufs' },
   [CATEGORIE_RECETTE.AIDE]: { numero: '740000', libelle: 'Subventions d’exploitation' },

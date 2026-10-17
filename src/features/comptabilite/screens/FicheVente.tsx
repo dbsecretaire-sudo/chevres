@@ -82,6 +82,7 @@ export default function FicheVente() {
             onChange={fiche.setForm}
             onChangerCategorie={fiche.changerCategorie}
             client={fiche.clientDeLaVente}
+            prixDuContact={fiche.prixDuContact}
             clients={fiche.clients}
             montantTexte={fiche.montantTexte}
             onChangerMontant={fiche.changerMontant}

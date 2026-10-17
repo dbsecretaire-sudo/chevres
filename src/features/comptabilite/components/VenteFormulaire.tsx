@@ -69,6 +69,8 @@ interface Props {
   form: Vente;
   /** La fiche du client de la vente : sa catégorie (récolteur) rend le prix et le numéro de facture libres. */
   client?: Client;
+  /** Les prix de la catégorie du client, par article (la grille de tarifs) : ils passent avant ceux de l'inventaire. */
+  prixDuContact?: Record<string, number>;
   /** Les clients de l'établissement : le client de la vente se choisit dans cette liste. */
   clients: Client[];
   onChange: (form: Vente) => void;
@@ -90,6 +92,7 @@ const CLIENT_HORS_LISTE = '__hors_liste__';
 export function VenteFormulaire({
   form,
   client,
+  prixDuContact,
   clients,
   onChange,
   onChangerCategorie,
@@ -128,7 +131,7 @@ export function VenteFormulaire({
     (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) &&
     !prixLibre(client) &&
     !form.commandeId;
-  const totalInventaire = archive ? totalDeLaVente(form, archive) : undefined;
+  const totalInventaire = archive ? totalDeLaVente(form, archive, prixDuContact) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
   /** Un récolteur peut cocher « Réajustement » (vente de lait déclarée) : plus de litrage ni de numéro de facture saisis. */
   const peutReajuster = reajustementPossible(client, form.categorie, venteADeclarer(form));

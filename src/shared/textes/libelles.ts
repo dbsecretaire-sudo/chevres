@@ -298,7 +298,7 @@ export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, strin
   [GROUPE_RECETTE.LAIT]: 'Lait',
   [GROUPE_RECETTE.OEUFS]: 'Œufs',
   [GROUPE_RECETTE.VIANDE]: 'Animaux',
-  [GROUPE_RECETTE.BOUCHERIE]: 'Viande et charcuterie',
+  [GROUPE_RECETTE.BOUCHERIE]: 'Boucherie et charcuterie',
   [GROUPE_RECETTE.AIDE]: 'Aide / subvention',
   [GROUPE_RECETTE.AUTRE]: 'Autre recette',
   [GROUPE_RECETTE.PRESTATIONS]: 'Prestations de services',
@@ -366,7 +366,7 @@ export const LABEL_ATELIER: Record<ValeurDe<typeof ATELIER>, string> = {
     return capitaliser(vocabulaire().petit.pluriel);
   },
   [ATELIER.ANIMAUX]: 'Reproducteurs et réformes',
-  [ATELIER.VIANDE]: 'Viande et charcuterie',
+  [ATELIER.VIANDE]: 'Boucherie et charcuterie',
   [ATELIER.OEUFS]: 'Œufs',
   [ATELIER.AGRITOURISME]: 'Agritourisme',
   [ATELIER.AUTRES]: 'Autres recettes',

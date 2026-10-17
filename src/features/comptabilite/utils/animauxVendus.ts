@@ -29,6 +29,16 @@ export function libelleAnimalVendu(
   return T.animalOption(identifiant, a.sexe === SEXE.MALE ? T.sexeM : T.sexeF, formatDateFR(a.dateNaissance));
 }
 
+/** La valeur du choix « un par un » dans la liste des abattoirs à facturer. */
+export const UN_PAR_UN = '__un_par_un';
+
+/** Les boucles d'un lot en quelques mots : toutes quand il y en a peu, sinon de la première à la dernière (« 00836 → 00855 »). */
+export function resumeBoucles(animaux: Chevre[]): string {
+  const boucles = animaux.map((a) => a.numeroBoucle).filter((b): b is string => !!b).sort();
+  if (boucles.length <= 3) return boucles.join(', ');
+  return `${boucles[0]} → ${boucles[boucles.length - 1]}`;
+}
+
 /** Les animaux envoyés à l'abattoir un même jour. */
 export interface JourAbattu {
   date: string;
