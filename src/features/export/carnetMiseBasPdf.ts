@@ -7,7 +7,8 @@ import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation } from '@/features/settings/settings';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
-import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { SEXE, STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
+import { ageAtteint } from '@/shared/utils/age';
 import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { capitaliser, especeCourante, vocabulaire, type Vocabulaire } from '@/shared/dictionnaire/animaux';
@@ -231,17 +232,19 @@ export interface ResultatsProduction {
 
 /**
  * Les femelles mises à la reproduction pour les mises bas d'une année : toutes celles présentes au 1er janvier de cette année (nées avant,
- * pas encore sorties), sauf celles de renouvellement, trop jeunes — désignées l'année précédente ou celle-ci.
+ * pas encore sorties) qui avaient atteint leur majorité sexuelle (l'âge de petit de l'espèce), plus les mères de l'année qui n'y seraient pas (vendues ou mortes avant le 1er janvier d'après les statuts actuels,
+ * ou mal datées) : une femelle qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être inférieur à celui des
+ * mises bas.
  */
-export function chevresMisesALaReproduction(animaux: Chevre[], annee: number): number {
+export function chevresMisesALaReproduction(animaux: Chevre[], annee: number, meres: string[] = []): number {
   const premierJanvier = `${annee}-01-01`;
-  return animaux.filter((c) => {
+  const presentes = animaux.filter((c) => {
     if (c.sexe !== SEXE.FEMELLE || c.statut === STATUT_CHEVRE.MORT_NE || !c.dateNaissance || c.dateNaissance >= premierJanvier) return false;
     if (c.statut !== STATUT_CHEVRE.VIVANTE && c.dateStatut && c.dateStatut <= premierJanvier) return false;
-    if (!compteAuxDocuments(c)) return false;
-    const designation = c.renouvellementAnnee ?? Number(c.dateNaissance.slice(0, 4));
-    return !(c.renouvellement && designation >= annee - 1);
-  }).length;
+    return compteAuxDocuments(c) && ageAtteint(c.dateNaissance, agePetitMax(), premierJanvier);
+  });
+  const boucles = new Set(presentes.map((c) => c.numeroBoucle?.trim()));
+  return presentes.length + new Set(meres.filter((m) => m && !boucles.has(m))).size;
 }
 
 /**
@@ -555,7 +558,11 @@ export function carnetMiseBasHtml(
 ): string {
   const annees = porteesParAnnee(porteesAvecBoucle(portees)).reverse();
   const resultats = (annee: string, liste: PorteeNaissance[]) =>
-    resultatsDeLAnnee(liste, annee, animaux ? chevresMisesALaReproduction(animaux, Number(annee)) : undefined);
+    resultatsDeLAnnee(
+      liste,
+      annee,
+      animaux ? chevresMisesALaReproduction(animaux, Number(annee), liste.map((p) => p.mereNumeroBoucle)) : undefined,
+    );
   const parPage = format === 'livret' ? LIGNES_PAR_PAGE_LIVRET : LIGNES_PAR_PAGE;
   const pages = [
     pageCouverture(infos, annees.map((a) => a.annee)),

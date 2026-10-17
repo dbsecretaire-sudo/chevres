@@ -952,7 +952,7 @@ export const TEXTES_CHEPTEL = {
           `${Cap(petits)} vendus + ${petits} gardés reproducteurs / ${femelles} mises à la reproduction`,
         formuleMortalite: (petits: string) => `${Cap(petits)} morts / ${petits} nés`,
         aCompleter: (femelles: string) =>
-          `Les ${femelles} mises à la reproduction sont toutes celles présentes au 1er janvier, sauf celles de renouvellement (trop jeunes). Le nombre de ${femelles} ayant avorté n’est pas dans l’application : à écrire à la main.`,
+          `Les ${femelles} mises à la reproduction sont toutes celles présentes au 1er janvier à leur majorité sexuelle (6 mois), avec les mères de l’année. Le nombre de ${femelles} ayant avorté n’est pas dans l’application : à écrire à la main.`,
       },
     },
   },

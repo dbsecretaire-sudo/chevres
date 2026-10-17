@@ -218,19 +218,22 @@ describe('carnet de mise bas', () => {
     expect(r).toMatchObject({ nes: 2, doubles: 2, morts: 1, vivants: 1 });
   });
 
-  it('les femelles mises à la reproduction : toutes celles présentes au 1er janvier, sauf celles de renouvellement ; les taux en découlent', () => {
+  it('les femelles mises à la reproduction : toutes celles présentes au 1er janvier à leur majorité sexuelle et les mères de l’année ; les taux en découlent', () => {
     const f = (extra: Partial<Chevre>) => petit('F', { numeroBoucle: '1' + Math.random(), dateNaissance: '2020-03-01', ...extra });
     const animaux = [
       f({}),
       f({}),
       f({ statut: 'vendue', dateStatut: '2025-11-01' }), // sortie avant le 1er janvier
       f({ statut: 'vendue', dateStatut: '2026-05-01' }), // encore là au 1er janvier
-      f({ dateNaissance: '2025-04-01', renouvellement: true, renouvellementAnnee: 2025 }), // renouvellement : trop jeune
+      f({ dateNaissance: '2025-04-01', renouvellement: true, renouvellementAnnee: 2025 }), // renouvellement, mais 9 mois : elle compte
+      f({ dateNaissance: '2025-09-01' }), // 4 mois : pas encore à sa majorité sexuelle
       f({ dateNaissance: '2023-04-01', renouvellement: true, renouvellementAnnee: 2023 }), // ancienne désignation : adulte
       petit('M', { numeroBoucle: '9', dateNaissance: '2020-03-01' }), // un bouc
       f({ dateNaissance: '2026-02-01' }), // née après
     ];
-    expect(chevresMisesALaReproduction(animaux, 2026)).toBe(4);
+    expect(chevresMisesALaReproduction(animaux, 2026)).toBe(5);
+    // Une mère absente de la liste (sortie avant le 1er janvier) s'y ajoute : pas moins de chèvres mises à la reproduction que de mises bas.
+    expect(chevresMisesALaReproduction(animaux, 2026, ['inconnue', 'inconnue'])).toBe(6);
     const r = resultatsDeLAnnee(
       [
         portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '2', statut: 'vendue', dateStatut: '2026-09-01' })]),
