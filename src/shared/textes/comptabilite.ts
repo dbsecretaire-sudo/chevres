@@ -698,7 +698,7 @@ export const TEXTES_COMPTABILITE = {
     animauxVendus: 'Animaux vendus',
     /** Les animaux déjà à l'abattoir : on choisit le jour d'abattage, puis tous les animaux ou certains numéros. */
     fraisAbattoir: 'Frais d’abattoir refacturés (€ TTC)',
-    fraisAbattoirAide: 'Ce que l’abattoir vous demande de payer, refacturé au client : il s’ajoute au prix de la viande.',
+    fraisAbattoirAide: 'Ce que l’abattoir vous demande de payer, refacturé au client : il s’ajoute au prix de la viande. Le montant s’ajuste dans les Lots du cheptel (facture de l’abattoir liée au lot).',
     tvaDesFrais: 'TVA des frais (%)',
     totalAvecFrais: (total: string) => `Total de la facture avec les frais : ${total}`,
     fraisAbattoirLecture: (montant: string) => `Frais d’abattoir refacturés : ${montant}`,

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -11,9 +10,8 @@ import { parseDecimal } from '@/shared/utils/nombres';
 const T = TEXTES.comptabilite.nouvelleEcriture;
 
 interface Props {
-  /** Les frais, tels qu'ils s'écrivent (avec virgule) : le champ les garde tels quels pendant la frappe. */
+  /** Les frais d'abattoir à refacturer, tels qu'ils s'écrivent (avec virgule) : vides, il n'y en a pas. */
   valeur: string;
-  onChange: (texte: string) => void;
   /** Le taux de TVA des frais (vide : celui de la vente). */
   taux: string;
   onTaux: (taux: string) => void;
@@ -23,12 +21,11 @@ interface Props {
 }
 
 /**
- * Les frais d'abattoir refacturés au client d'une vente de viande : le montant (proposé d'après le lot d'abattoir) et son taux de TVA.
- * L'appelant change la `key` quand le montant est proposé de l'extérieur (un autre lot, d'autres animaux) pour que le champ le reprenne.
+ * Les frais d'abattoir refacturés au client d'une vente de viande : le montant se lit seulement — il vient de la facture de l'abattoir
+ * liée au lot d'abattoir (ou du montant noté sur le lot), et s'ajuste dans les Lots du cheptel — et son taux de TVA se choisit.
  */
-export function ChampFraisAbattoir({ valeur, onChange, taux, onTaux, tauxParDefaut, montantViande }: Props) {
-  const [texte, setTexte] = useState(valeur);
-  const frais = parseDecimal(texte);
+export function ChampFraisAbattoir({ valeur, taux, onTaux, tauxParDefaut, montantViande }: Props) {
+  const frais = parseDecimal(valeur);
   return (
     <View style={commonStyles.gap6}>
       <View style={commonStyles.row}>
@@ -36,23 +33,15 @@ export function ChampFraisAbattoir({ valeur, onChange, taux, onTaux, tauxParDefa
           <FormField
             label={T.fraisAbattoir}
             aide={T.fraisAbattoirAide}
-            value={texte}
-            onChangeText={(t) => {
-              setTexte(t);
-              onChange(t);
-            }}
-            keyboardType="decimal-pad"
+            value={valeur}
+            editable={false}
+            style={commonStyles.verrouille}
             placeholder="0,00"
           />
         </View>
         {frais > 0 ? (
           <View style={commonStyles.flex1}>
-            <SelectField
-              label={T.tvaDesFrais}
-              value={taux || tauxParDefaut}
-              onChange={onTaux}
-              options={OPTIONS_TAUX_TVA}
-            />
+            <SelectField label={T.tvaDesFrais} value={taux || tauxParDefaut} onChange={onTaux} options={OPTIONS_TAUX_TVA} />
           </View>
         ) : null}
       </View>

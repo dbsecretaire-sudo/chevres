@@ -50,7 +50,6 @@ import {
 } from '@/features/comptabilite/utils/recettes';
 import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
-import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -364,9 +363,7 @@ export function VenteFormulaire({
         {/* Les frais d'abattoir refacturés au client : leur montant et leur taux de TVA. */}
         {animalEntier && prixInventaire ? (
           <ChampFraisAbattoir
-            key={`${form.dateAbattoir ?? ''}-${form.quantite}-${form.fraisAbattoir ?? ''}`}
             valeur={form.fraisAbattoir ? String(form.fraisAbattoir).replace('.', ',') : ''}
-            onChange={(texte) => onChange({ ...form, fraisAbattoir: parseDecimal(texte) > 0 ? parseDecimal(texte) : undefined })}
             taux={form.tauxTvaFrais !== undefined ? String(form.tauxTvaFrais) : ''}
             onTaux={(taux) => onChange({ ...form, tauxTvaFrais: Number(taux) })}
             tauxParDefaut={String(form.tauxTva ?? '')}

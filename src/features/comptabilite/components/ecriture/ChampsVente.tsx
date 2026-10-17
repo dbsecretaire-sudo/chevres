@@ -811,9 +811,7 @@ export function ChampsVenteViande({ e }: Props) {
       )}
       {parAnimal && !e.prixLibre ? (
         <ChampFraisAbattoir
-          key={`${e.dateAbattoir}-${e.animaux.length}-${propositionFrais?.montant ?? ''}`}
           valeur={e.fraisAbattoir}
-          onChange={e.setFraisAbattoir}
           taux={e.tauxTvaFrais}
           onTaux={e.setTauxTvaFrais}
           tauxParDefaut={e.tauxTvaVente}
