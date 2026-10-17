@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
@@ -33,8 +33,14 @@ import {
   familleDuControle,
 } from '@/features/cheptel/components/ficheChevre/ChevreHistorique';
 import { ChevreSortieFab } from '@/features/cheptel/components/ficheChevre/ChevreSortieFab';
-import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
-import { STATUT_CHEVRE, VUE_FICHE_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
+import { categorieAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
+import {
+  CATEGORIE_ANIMAL,
+  SEXE,
+  STATUT_CHEVRE,
+  VUE_FICHE_CHEVRE,
+  agePetitMax,
+} from '@/shared/constants/cheptel';
 import { ChevreTraitements } from '@/features/cheptel/components/ChevreTraitements';
 import { ROUTES } from '@/shared/constants/routes';
 import { styles } from '@/shared/styles/cheptel/FicheChevre.styles';
@@ -72,11 +78,15 @@ export default function FicheChevre() {
   }
 
   const estVivante = chevre.statut === STATUT_CHEVRE.VIVANTE;
+  const peutAvoirDesCabris =
+    chevre.sexe === SEXE.FEMELLE && estVivante && categorieAnimal(chevre) === CATEGORIE_ANIMAL.CHEVRE;
 
   const ajouterUnCabri = async () => {
     const boucleMere = form.numeroBoucle ?? '';
-    const ok = await fiche.enregistrerModifications();
-    if (!ok) return;
+    if (fiche.editing) {
+      const ok = await fiche.enregistrerModifications();
+      if (!ok) return;
+    }
     router.push({ pathname: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE, params: { mereNumeroBoucle: boucleMere } });
   };
 
@@ -121,15 +131,29 @@ export default function FicheChevre() {
         />
 
         {/* Des onglets plutôt qu'une seule longue page : la fiche, la santé, le suivi (lots de l'année, descendance). */}
-        <PucesDefilantes<OngletFiche>
-          puces={[
-            { valeur: 'fiche', label: TEXTES.cheptel.ficheChevre.onglets.fiche },
-            { valeur: 'sante', label: TEXTES.cheptel.ficheChevre.onglets.sante },
-            { valeur: 'suivi', label: TEXTES.cheptel.ficheChevre.onglets.suivi(fiche.descendance.length) },
-          ]}
-          valeur={onglet}
-          onChoisir={setOnglet}
-        />
+        <View style={styles.ongletsEtAjout}>
+          <View style={commonStyles.flex1}>
+            <PucesDefilantes<OngletFiche>
+              puces={[
+                { valeur: 'fiche', label: TEXTES.cheptel.ficheChevre.onglets.fiche },
+                { valeur: 'sante', label: TEXTES.cheptel.ficheChevre.onglets.sante },
+                {
+                  valeur: 'suivi',
+                  label: TEXTES.cheptel.ficheChevre.onglets.suivi(fiche.descendance.length),
+                },
+              ]}
+              valeur={onglet}
+              onChoisir={setOnglet}
+            />
+          </View>
+          {/* Une mère vivante : sa nouvelle naissance, à côté des onglets. */}
+          {peutAvoirDesCabris ? (
+            <Pressable style={styles.ajouterUnCabri} onPress={ajouterUnCabri} accessibilityRole="button">
+              <Text style={styles.ajouterUnCabriTexte}>{TEXTES.cheptel.ficheChevre.ajouterUnCabri}</Text>
+              <Ionicons name="paw" size={22} color={colors.ajout} />
+            </Pressable>
+          ) : null}
+        </View>
 
         {onglet === 'fiche' ? (
           <>
@@ -139,7 +163,6 @@ export default function FicheChevre() {
                 form={form}
                 onChange={fiche.setForm}
                 onEnregistrer={() => fiche.enregistrerModifications()}
-                onAjouterCabri={ajouterUnCabri}
               />
             ) : (
               <ChevreResume

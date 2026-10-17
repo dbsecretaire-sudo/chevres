@@ -7,10 +7,8 @@ import { SelectField } from '@/shared/components/SelectField';
 import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import { BoucleField } from '@/features/cheptel/components/BoucleField';
 import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
-import { categorieAnimal } from '@/features/cheptel/utils/chevreLabel';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
 import type { Chevre } from '@/features/cheptel/types';
-import { CATEGORIE_ANIMAL, SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -19,29 +17,13 @@ interface Props {
   form: Chevre;
   onChange: (form: Chevre) => void;
   onEnregistrer: () => void;
-  /** Enregistre la fiche puis ouvre la déclaration d'une naissance pour cette mère. */
-  onAjouterCabri: () => void;
 }
 
 /** Formulaire de modification d'une chèvre. */
-export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer, onAjouterCabri }: Props) {
+export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer }: Props) {
   const meres = useMeresPossibles(form.dateNaissance, form.mereNumeroBoucle);
-  const peutAvoirDesCabris =
-    chevre.sexe === SEXE.FEMELLE &&
-    chevre.statut === STATUT_CHEVRE.VIVANTE &&
-    categorieAnimal(chevre) === CATEGORIE_ANIMAL.CHEVRE;
-
   return (
     <View style={commonStyles.gap10}>
-      <SectionForm titre={TEXTES.commun.formulaire.suivi}>
-        {peutAvoirDesCabris && (
-          <Button
-            label={TEXTES.cheptel.ficheChevre.ajouterUnCabriNouvelleNaissance}
-            variant="secondary"
-            onPress={onAjouterCabri}
-          />
-        )}
-      </SectionForm>
       <SectionForm titre={TEXTES.commun.formulaire.identite}>
         <BoucleField
           label={TEXTES.commun.general.nDeBoucle}

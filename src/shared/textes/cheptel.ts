@@ -623,8 +623,8 @@ export const TEXTES_CHEPTEL = {
       controle: 'Contrôle',
       rapportEssais: (numero?: string) => (numero ? `Rapport d’essais n° ${numero}` : 'Rapport d’essais'),
     },
-    get ajouterUnCabriNouvelleNaissance() {
-      return `Ajouter un ${V().petit.singulier} (nouvelle naissance)`;
+    get ajouterUnCabri() {
+      return `Ajouter un ${V().petit.singulier}`;
     },
     nDeBoucleDeuxPoints: 'N° de boucle : ',
     dateDeBouclageDeuxPoints: 'Date de bouclage : ',
