@@ -39,28 +39,49 @@ export interface EffectifVivant {
   sevres: number;
   /** Les femelles parmi les sevrés : le stock « Chèvre sur pied » et « Chèvre vivante » ne compte qu'elles (les boucs se vendent à part). */
   femelles: number;
+  /** Les animaux déjà à l'abattoir qui ne sont pas des petits et dont la viande n'est pas encore facturée : ils vont dans « Chèvre sur pied ». */
+  aFacturerAdultes?: number;
 }
 
 /** Un animal est un petit tant qu'il n'a pas atteint l'âge de sevrage de son espèce (2 mois pour une chèvre : un cabri). */
 export const estPetitLe = (c: Pick<Chevre, 'dateNaissance' | 'espece'>, date: string = todayISO()): boolean =>
   !ageAtteint(c.dateNaissance, PARAMETRES_ESPECE[especeDe(c)].ageSevrage, date);
 
-/** Le nombre d'animaux vivants de chaque espèce du cheptel, petits et sevrés (les espèces sans animal n'y figurent pas). */
-export async function effectifsVivants(): Promise<Partial<Record<EspeceAnimale, EffectifVivant>>> {
-  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+/**
+ * Les effectifs des animaux d'après leurs fiches : les vivants, petits ou sevrés. Avec `facturees` (les animaux que vend une facture du
+ * client), les animaux déjà à l'abattoir dont la viande n'est pas encore facturée comptent aussi : les cabris (partis petits) parmi les petits,
+ * les autres (les adultes) à part, pour « Chèvre sur pied ».
+ */
+export function effectifsDesAnimaux(
+  all: Chevre[],
+  facturees?: ReadonlySet<string>,
+): Partial<Record<EspeceAnimale, EffectifVivant>> {
   const effectifs: Partial<Record<EspeceAnimale, EffectifVivant>> = {};
+  const de = (c: Chevre) => (effectifs[especeDe(c)] ??= { petits: 0, sevres: 0, femelles: 0 });
   for (const c of all) {
+    if (c.statut === STATUT_CHEVRE.ABATTOIR && facturees && !facturees.has(c.id)) {
+      const effectif = de(c);
+      // Un cabri : parti à l'abattoir avant l'âge de petit (6 mois) ; sinon un adulte.
+      if (c.dateStatut && !ageAtteint(c.dateNaissance, PARAMETRES_ESPECE[especeDe(c)].agePetitMax, c.dateStatut)) effectif.petits += 1;
+      else effectif.aFacturerAdultes = (effectif.aFacturerAdultes ?? 0) + 1;
+      continue;
+    }
     if (c.statut !== STATUT_CHEVRE.VIVANTE) continue;
-    const espece = especeDe(c);
-    const effectif = effectifs[espece] ?? { petits: 0, sevres: 0, femelles: 0 };
+    const effectif = de(c);
     if (estPetitLe(c)) effectif.petits += 1;
     else {
       effectif.sevres += 1;
       if (c.sexe === SEXE.FEMELLE) effectif.femelles += 1;
     }
-    effectifs[espece] = effectif;
   }
   return effectifs;
+}
+
+/** Le nombre d'animaux vivants de chaque espèce du cheptel, petits et sevrés (les espèces sans animal n'y figurent pas). */
+export async function effectifsVivants(
+  facturees?: ReadonlySet<string>,
+): Promise<Partial<Record<EspeceAnimale, EffectifVivant>>> {
+  return effectifsDesAnimaux(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), facturees);
 }
 
 /** Les animaux vivants d'une espèce précise (pas forcément l'espèce courante) : on choisit celui d'une vente dans cette liste. */
