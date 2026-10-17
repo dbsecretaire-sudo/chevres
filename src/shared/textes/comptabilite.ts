@@ -118,7 +118,7 @@ export const TEXTES_COMPTABILITE = {
     fromage: 'Fromage',
     prixTotal: 'Prix total (€)',
     cetteActionSupprimeraDefinitivementCette: (valeur: string) =>
-      `Cette action supprimera définitivement cette vente de ${valeur}.`,
+      `Cette action supprimera définitivement cette vente de ${valeur}. Les animaux de la vente gardent leur statut (à l’abattoir, ils reviennent dans les animaux à facturer) : ils ne sont pas remis dans le cheptel.`,
     tetes: 'têtes',
     tete: 'tête',
   },

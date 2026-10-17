@@ -1,18 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { joursAbattusAFacturer, venteDAnimauxAbattus } from '@/features/comptabilite/utils/animauxVendus';
+import { joursAbattusAFacturer } from '@/features/comptabilite/utils/animauxVendus';
 import type { Chevre } from '@/features/cheptel/types';
 
 const abattu = (id: string, jour: string): Chevre =>
   ({ id, sexe: 'M', statut: 'abattoir', dateStatut: jour, dateNaissance: '2026-01-01', numeroBoucle: id }) as unknown as Chevre;
 
 describe('ventes d’animaux abattus', () => {
-  it('une vente de viande sans animal vivant désigne des animaux déjà à l’abattoir : ils ne redeviennent pas vivants', () => {
-    expect(venteDAnimauxAbattus('viande', undefined)).toBe(true);
-    // Des animaux vendus vivants (sur pied, vivants, petits) ou d’une autre catégorie : ils redeviennent vivants.
-    expect(venteDAnimauxAbattus('viande', 'sur_pied' as never)).toBe(false);
-    expect(venteDAnimauxAbattus('cabris', undefined)).toBe(false);
-  });
-
   it('une vente supprimée remet ses animaux abattus dans les animaux à facturer', () => {
     const animaux = [abattu('a', '2026-02-25'), abattu('b', '2026-02-25'), abattu('c', '2026-03-10')];
     const ventes = [{ id: 'v1', animaux: 'a;b' }];

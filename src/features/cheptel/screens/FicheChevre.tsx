@@ -4,6 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/Screen';
+import { useLots } from '@/features/exploitation/hooks/useLots';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -42,6 +43,7 @@ export default function FicheChevre() {
   const [onglet, setOnglet] = useState<OngletFiche>('fiche');
   /** La confirmation de « Remettre dans le cheptel actif » : on pouvait vouloir seulement corriger la date de sortie. */
   const [confirmerReactivation, setConfirmerReactivation] = useState(false);
+  const { retirerDesLotsDAbattoir } = useLots();
 
   if (!chevre || !form) {
     return (
@@ -197,8 +199,10 @@ export default function FicheChevre() {
         message={TEXTES.cheptel.ficheChevre.reactivationMessage(statutLabel(chevre.statut, chevre.sexe).toLowerCase())}
         confirmLabel={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif}
         onCancel={() => setConfirmerReactivation(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           setConfirmerReactivation(false);
+          // Un animal remis dans le cheptel à la main quitte son lot d'abattoir (sinon la mise d'accord des lots le remettrait à l'abattoir).
+          if (chevre.numeroBoucle) await retirerDesLotsDAbattoir(chevre.numeroBoucle);
           fiche.reactiver();
         }}
       />

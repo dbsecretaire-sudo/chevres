@@ -5,7 +5,7 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { GENRE_ARTICLE, type ROLE_VIANDE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
-import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import { SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
 import type { Vente } from '@/features/comptabilite/types';
 import { formatDateFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
@@ -44,14 +44,6 @@ export interface JourAbattu {
   date: string;
   animaux: Chevre[];
 }
-
-/**
- * Vrai quand les animaux d'une vente sont des animaux déjà à l'abattoir (une vente de viande sans ligne d'animal sur pied, vivant ou de
- * petit) : la vente ne les a pas fait sortir du troupeau, elle les facture seulement. Supprimée, ou quand elle les retire, ils restent à
- * l'abattoir et reviennent dans les animaux à facturer ; seuls les animaux vendus vivants redeviennent vivants.
- */
-export const venteDAnimauxAbattus = (categorie: string, role: ValeurDe<typeof ROLE_VIANDE> | undefined): boolean =>
-  categorie === CATEGORIE_VENTE.VIANDE && !role;
 
 /**
  * Les animaux à l'abattoir dont la viande n'est pas encore facturée (aucune vente ne les désigne), rangés par jour d'abattage — le

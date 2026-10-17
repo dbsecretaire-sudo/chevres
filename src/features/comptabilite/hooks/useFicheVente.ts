@@ -5,7 +5,7 @@ import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
-import { declarerStatutChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
+import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
 import {
   idsDesAnimaux,
   sortieDesAnimauxDeLaVente,
@@ -15,7 +15,7 @@ import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { totalDeLaVente } from '@/features/stock/services/stock';
 import { fromagesRequis } from '@/features/stock/services/lots';
-import { roleDuDetailDeVente, venteDAnimauxAbattus } from '@/features/comptabilite/utils/animauxVendus';
+import { roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
 import type { Vente } from '@/features/comptabilite/types';
 import {
   CATEGORIES_VENTE_ANIMAUX,
@@ -218,11 +218,8 @@ export function useFicheVente(id: string | undefined) {
         dateAbattoir: venteADeclarer(form) ? form.dateAbattoir : undefined,
       };
       await saveVente(nettoye);
-      // Les animaux retirés de la vente redeviennent vivants (ceux déjà à l'abattoir y restent : ils reviennent dans les animaux à facturer) ;
-      // ceux de la vente passent « vendus » à sa date.
-      if (vente && !venteDAnimauxAbattus(vente.categorie, await roleDuDetailDeVente(activiteVente(vente), vente.precision))) {
-        for (const id of idsDesAnimaux(vente)) if (!animauxForm.includes(id)) await reactiverChevre(id);
-      }
+      // Un animal retiré de la vente ne change pas de statut : une facture modifiée ne ressuscite personne (la fiche remet un animal dans le
+      // cheptel actif, sur demande). Ceux de la vente passent « vendus » à sa date.
       // Les animaux vendus : « abattoir » pour une vente de viande déclarée (à la date d'abattoir), « morte » si elle ne l'est pas, « vendus » sinon.
       const sortie = sortieDesAnimauxDeLaVente(nettoye);
       for (const id of animauxForm) await declarerStatutChevre(id, sortie.statut, sortie.date);
@@ -252,11 +249,8 @@ export function useFicheVente(id: string | undefined) {
     if (!vente) return;
     try {
       await supprimerVente(vente.id);
-      // Les animaux vendus vivants redeviennent vivants dans le cheptel ; ceux déjà à l'abattoir y restent et reviennent dans les animaux
-      // à facturer (et dans leur lot d'abattoir).
-      if (!venteDAnimauxAbattus(vente.categorie, await roleDuDetailDeVente(activiteVente(vente), vente.precision))) {
-        for (const id of idsDesAnimaux(vente)) await reactiverChevre(id);
-      }
+      // Annuler une facture ne ressuscite pas les animaux : ils gardent leur statut (à l'abattoir, ils reviennent dans les animaux à
+      // facturer et dans leur lot d'abattoir) ; la fiche d'un animal le remet dans le cheptel actif, sur demande.
       router.back();
     } catch (error) {
       console.error(error);

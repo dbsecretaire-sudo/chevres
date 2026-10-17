@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
+import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
@@ -10,6 +11,8 @@ import { TEXTES } from '@/shared/textes';
 export default function CheptelLayout() {
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
   useEtablissement();
+  // Les lots d'accord avec le cheptel (un animal d'un lot d'abattoir est abattu) dès l'ouverture du Cheptel.
+  useAccordDesLots();
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
