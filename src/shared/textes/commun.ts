@@ -147,6 +147,8 @@ export const TEXTES_COMMUN = {
     choisirUnLot: 'Choisir un lot',
     enregistrerCommeLot: 'Garder ces animaux comme lot',
     titreLots: 'Lots d’animaux',
+    titreCategorieLot: 'Catégorie de lot',
+    nLots: (n: number) => `${n} lot${n > 1 ? 's' : ''}`,
     nomDuLot: 'Nom du lot',
     exempleLot: 'ex : Chevrettes 2026, Chèvres en lactation',
     titreBoucles: 'Boucles du cheptel',
