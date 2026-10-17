@@ -242,13 +242,11 @@ export const TEXTES_STOCK = {
     aucun: 'Aucun lot.',
     rappele: 'Rappelé',
     reserverFacturer: 'Réserver / Facturer',
-    annulerLaSelection: 'Annuler la sélection',
-    aideSelection: (n: number) =>
-      n > 0
-        ? `${n} lot${n > 1 ? 's' : ''} choisi${n > 1 ? 's' : ''} : réservez-les pour un client particulier, ou inscrivez leur vente sans facture.`
-        : 'Sélectionner des fromages : un appui sur une ligne la choisit (les lots en stock seulement).',
-    reserverPour: 'Réserver pour un client',
-    ecritureSansFacture: 'Écriture sans facture pour un client',
+    selectionnerFromages: 'Sélectionner des fromages',
+    selectionnerProduits: 'Sélectionner des produits',
+    nChoisis: (n: number) => `${n} lot${n > 1 ? 's' : ''} choisi${n > 1 ? 's' : ''}`,
+    reserver: 'Réserver',
+    facturer: 'Facturer',
     liberer: 'Libérer la réservation',
     pourQuelClient: 'Pour quel client particulier ?',
     questionPrix: (produit: string) => `Quel prix à la pièce pour « ${produit} » (€ TTC) ?`,
