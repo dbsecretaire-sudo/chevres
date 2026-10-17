@@ -8,6 +8,7 @@ import {
   lignesDeLAnnee,
   pagesDeLAnnee,
   porteesAvecBoucle,
+  chevresMisesALaReproduction,
   pagesDeLignes,
   porteesParAnnee,
   resultatsDeLAnnee,
@@ -41,7 +42,7 @@ describe('carnet de mise bas', () => {
         petit('F', { numeroBoucle: '20003' }),
       ]),
     );
-    expect([ligne.sexe, ligne.numero]).toEqual(['M + F + F', '20001 + 20002 + 20003']);
+    expect([ligne.sexe, ligne.numero]).toEqual(['M + F + F', '20001\n20002\n20003']);
   });
 
   it('un petit mort ou vendu : son devenir en observation et son âge ; avec plusieurs petits, précédé de sa boucle', () => {
@@ -64,6 +65,15 @@ describe('carnet de mise bas', () => {
     );
     expect(deux.poids).toBe('1 : 8 kg');
     expect(ligneDeLaPortee(portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '3' })])).poids).toBe('');
+  });
+
+  it('un départ après le 31 décembre de l’année de naissance n’apparaît pas dans le carnet de cette année', () => {
+    const l = ligneDeLaPortee(
+      portee('2024-12-30', 'a', [
+        petit('F', { numeroBoucle: '30008', dateNaissance: '2024-12-30', statut: 'abattoir', dateStatut: '2026-07-30', poidsKg: 20, renouvellement: true }),
+      ]),
+    );
+    expect(l).toMatchObject({ observations: 'R', age: '', poids: '' });
   });
 
   it('un poids se lit avec une virgule ou un point', () => {
@@ -89,6 +99,20 @@ describe('carnet de mise bas', () => {
     expect(r).toMatchObject({ nes: 3, morts: 1, mortsSemaine: 1, vivants: 2 });
     // Sans année donnée, c'est celle des naissances.
     expect(resultatsDeLAnnee(portees).morts).toBe(1);
+  });
+
+  it('résultats : un petit auto-consommé compte parmi les morts, un petit vendu ou abattu non', () => {
+    const r = resultatsDeLAnnee(
+      [
+        portee('2024-03-01', 'a', [
+          petit('M', { dateNaissance: '2024-03-01', statut: 'autoconsommee', dateStatut: '2024-04-01' }),
+          petit('M', { dateNaissance: '2024-03-01', statut: 'abattoir', dateStatut: '2024-04-01' }),
+          petit('F', { dateNaissance: '2024-03-01', statut: 'vendue', dateStatut: '2024-05-01' }),
+        ]),
+      ],
+      2024,
+    );
+    expect(r).toMatchObject({ nes: 3, morts: 1, mortsSevrage: 1, vivants: 2 });
   });
 
   it('le poids total de plusieurs animaux : seulement quand chacun a le sien', () => {
@@ -174,6 +198,40 @@ describe('carnet de mise bas', () => {
     const html = carnetMiseBasHtml([portee('2026-03-06', 'b', [petit('M')])]);
     expect(html).toContain('Aucune');
     expect(html).not.toContain('Cabris — 2026');
+  });
+
+  it('un petit sans boucle auto-consommé compte (né et mort), contrairement aux autres petits sans boucle', () => {
+    const gardees = porteesAvecBoucle([
+      portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '20001' }), petit('M', { statut: 'autoconsommee', dateStatut: '2026-04-01' }), petit('M')]),
+    ]);
+    expect(gardees[0].cabrits).toHaveLength(2);
+    const r = resultatsDeLAnnee(gardees, 2026);
+    expect(r).toMatchObject({ nes: 2, doubles: 2, morts: 1, vivants: 1 });
+  });
+
+  it('les femelles mises à la reproduction : toutes celles présentes au 1er janvier, sauf celles de renouvellement ; les taux en découlent', () => {
+    const f = (extra: Partial<Chevre>) => petit('F', { numeroBoucle: '1' + Math.random(), dateNaissance: '2020-03-01', ...extra });
+    const animaux = [
+      f({}),
+      f({}),
+      f({ statut: 'vendue', dateStatut: '2025-11-01' }), // sortie avant le 1er janvier
+      f({ statut: 'vendue', dateStatut: '2026-05-01' }), // encore là au 1er janvier
+      f({ dateNaissance: '2025-04-01', renouvellement: true, renouvellementAnnee: 2025 }), // renouvellement : trop jeune
+      f({ dateNaissance: '2023-04-01', renouvellement: true, renouvellementAnnee: 2023 }), // ancienne désignation : adulte
+      petit('M', { numeroBoucle: '9', dateNaissance: '2020-03-01' }), // un bouc
+      f({ dateNaissance: '2026-02-01' }), // née après
+    ];
+    expect(chevresMisesALaReproduction(animaux, 2026)).toBe(4);
+    const r = resultatsDeLAnnee(
+      [
+        portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '2', statut: 'vendue', dateStatut: '2026-09-01' })]),
+        portee('2026-03-06', 'b', [petit('F', { numeroBoucle: '3', renouvellement: true }), petit('M', { numeroBoucle: '4', statut: 'abattoir', dateStatut: '2026-05-01' })]),
+      ],
+      2026,
+      4,
+    );
+    expect(r).toMatchObject({ misesALaReproduction: 4, vendusOuGardes: 3, fertilite: 50, productivite: 75 });
+    expect(resultatsDeLAnnee([portee('2026-03-05', 'a', [petit('F', { numeroBoucle: '2' })])], 2026).fertilite).toBeUndefined();
   });
 
   it('range les mises bas par année, la plus récente d’abord', () => {

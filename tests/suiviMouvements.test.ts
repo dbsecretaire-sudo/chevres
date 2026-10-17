@@ -21,6 +21,11 @@ describe('suivi des mouvements du dossier PAC', () => {
     expect(suivi.lignes.filter((l) => l.cause === 'V').map((l) => l.date)).toEqual(['2026-09-01']);
   });
 
+  it('un cabri sans boucle auto-consommé figure dans le document (naissance et sortie)', () => {
+    const suivi = suiviMouvements([animal('e', { numeroBoucle: undefined, statut: 'autoconsommee', dateStatut: '2026-03-01' })], [], 2026, libelles);
+    expect(suivi.lignes.filter((l) => l.cause === 'N').reduce((n, l) => n + l.entrees.jeunes, 0)).toBe(1);
+  });
+
   it('les animaux avec boucle comptent comme avant', () => {
     const suivi = suiviMouvements([animal('a', { numeroBoucle: '10001', dateNaissance: '2020-01-01' })], [], 2026, libelles);
     expect(suivi.effectifDebut.femelles).toBe(1);

@@ -606,11 +606,11 @@ export const TEXTES_CHEPTEL = {
     recensement: {
       bouton: 'Recensement annuel (PDF)',
       aide: (annee: number) =>
-        `Pour ${annee} : le recensement ${annee + 1}, avec les effectifs au 1er janvier ${annee + 1} (les animaux nés avant ${annee}) et les naissances du 1er janvier au 31 décembre ${annee} (sans les petits sans boucle, morts sur l’exploitation compris), calculés d’après le cheptel.`,
+        `Pour ${annee} : le recensement ${annee + 1}, avec les effectifs au 1er janvier ${annee + 1} (les animaux nés avant ${annee}) et les naissances du 1er janvier au 31 décembre ${annee} (sans les petits sans boucle, sauf les auto-consommés ; morts sur l’exploitation compris), calculés d’après le cheptel.`,
       fichier: 'recensement',
       /** Pourquoi le chiffre diffère du bilan annuel (qui compte tous les petits nés) : ceux sans boucle et ceux morts ne comptent pas au recensement. */
       detailNes: (annee: number, total: number, sansBoucle: number, morts: number, nes: number) =>
-        `Nés en ${annee} : ${total} au total, dont ${sansBoucle} sans boucle qui ne comptent pas : ${nes} au recensement (dont ${morts} mort${morts > 1 ? 's' : ''} sur l’exploitation, comme le demande le formulaire).`,
+        `Nés en ${annee} : ${total} au total, dont ${sansBoucle} sans boucle (hors auto-consommés) qui ne comptent pas : ${nes} au recensement (dont ${morts} mort${morts > 1 ? 's' : ''} sur l’exploitation, comme le demande le formulaire).`,
       titre: (annee: number) => `RECENSEMENT ANNUEL OVINS ET CAPRINS ${annee}`,
       monsieur: 'Mr',
       chambre: ['CHAMBRE D’AGRICULTURE', 'DE RÉGION CORSE'],
@@ -952,7 +952,7 @@ export const TEXTES_CHEPTEL = {
           `${Cap(petits)} vendus + ${petits} gardés reproducteurs / ${femelles} mises à la reproduction`,
         formuleMortalite: (petits: string) => `${Cap(petits)} morts / ${petits} nés`,
         aCompleter: (femelles: string) =>
-          `Les nombres de ${femelles} mises à la reproduction ou ayant avorté ne sont pas dans l’application : à écrire à la main, avec les taux de fertilité et de productivité qui en dépendent.`,
+          `Les ${femelles} mises à la reproduction sont toutes celles présentes au 1er janvier, sauf celles de renouvellement (trop jeunes). Le nombre de ${femelles} ayant avorté n’est pas dans l’application : à écrire à la main.`,
       },
     },
   },

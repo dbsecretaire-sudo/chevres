@@ -1,4 +1,5 @@
 import { yearOf } from '@/shared/utils/dates';
+import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments';
 import { ageAtteint } from '@/shared/utils/age';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { loadAllYears } from '@/shared/storage/localStore';
@@ -70,10 +71,9 @@ export async function calculerBilan(annee: number): Promise<Bilan> {
   const estAdulteLe = (dateNaissance: string, dateRef: string) =>
     ageAtteint(dateNaissance, agePetit, dateRef);
   const avecVendusSansBoucle = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
-  // Un animal vendu sans boucle n'est pas identifié : sa naissance (petit ou adulte) n'entre ni dans les naissances ni dans
-  // l'effectif du bilan. Sa vente reste comptée à part, « non bouclée », à titre d'information.
-  const venduSansBoucle = (c: Chevre) => c.statut === STATUT_CHEVRE.VENDUE && !c.numeroBoucle;
-  const toutes = avecVendusSansBoucle.filter((c) => !venduSansBoucle(c));
+  // Un animal sans boucle n'est pas identifié : sa naissance (petit ou adulte) n'entre ni dans les naissances ni dans l'effectif du
+  // bilan, sauf s'il a été auto-consommé. La vente d'un animal sans boucle reste comptée à part, « non bouclée », à titre d'information.
+  const toutes = avecVendusSansBoucle.filter(compteAuxDocuments);
 
   const anneeStatut = (c: Chevre) => (c.dateStatut ? yearOf(c.dateStatut) : undefined);
   const neeAvant = (c: Chevre) => yearOf(c.dateNaissance) < annee;

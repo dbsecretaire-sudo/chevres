@@ -51,6 +51,11 @@ describe('recensement annuel au 1er janvier', () => {
     expect(r.nes).toBe(5);
   });
 
+  it('un petit sans boucle auto-consommé compte dans les nés', () => {
+    const r = recensementAnnuel([animal('2026-03-01', 'M', 'autoconsommee', '2026-04-01', ''), animal('2026-03-05', 'F', 'vivante', undefined, '')], 2027);
+    expect(r.nes).toBe(1);
+  });
+
   it('les petits sans boucle ne comptent pas dans les nés', () => {
     const r = recensementAnnuel(
       [

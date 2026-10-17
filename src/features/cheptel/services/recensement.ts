@@ -1,6 +1,7 @@
 import type { Chevre } from '@/features/cheptel/types';
 import { moisEntre } from '@/features/cheptel/services/tableauDeBord';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments';
 
 /** L'âge (en mois) à partir duquel les animaux comptent dans le recensement : les plus de 6 mois. */
 export const MOIS_RECENSEMENT = 6;
@@ -35,7 +36,7 @@ const sortiAvant = (animal: Chevre, jour: string): boolean =>
 /**
  * Le recensement du 1er janvier d'une année d'après le cheptel : les animaux de plus de 6 mois ce jour-là (femelles et mâles) nés avant
  * l'année des naissances — ceux nés l'année d'avant ne comptent que dans les naissances, pas deux fois —, et le nombre d'animaux nés
- * l'année d'avant (encore présents, vendus, autoconsommés ou morts sur l'exploitation ; sans les mort-nés ni les petits sans boucle).
+ * l'année d'avant (encore présents, vendus, autoconsommés ou morts sur l'exploitation ; sans les mort-nés ni les petits sans boucle, hors auto-consommés).
  */
 export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement {
   const premierJanvier = `${annee}-01-01`;
@@ -50,7 +51,7 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
     // Les petits nés l'année d'avant : tous, puis ceux qui ne comptent pas (sans boucle, morts).
     if (animal.dateNaissance >= debutAnneeAvant && animal.dateNaissance < premierJanvier) {
       nesTotal += 1;
-      if (!animal.numeroBoucle?.trim()) nesSansBoucle += 1;
+      if (!compteAuxDocuments(animal)) nesSansBoucle += 1;
       else if (animal.statut === STATUT_CHEVRE.MORTE || animal.statut === STATUT_CHEVRE.MORT_NE) nesMorts += 1;
     }
     if (animal.statut === STATUT_CHEVRE.MORT_NE) continue;
@@ -65,11 +66,7 @@ export function recensementAnnuel(animaux: Chevre[], annee: number): Recensement
       else males += 1;
     }
     // Né l'année d'avant, avec une boucle : encore présent, vendu, consommé ou mort sur l'exploitation (les mort-nés sont déjà écartés).
-    if (
-      animal.numeroBoucle?.trim() &&
-      animal.dateNaissance >= debutAnneeAvant &&
-      animal.dateNaissance < premierJanvier
-    ) {
+    if (compteAuxDocuments(animal) && animal.dateNaissance >= debutAnneeAvant && animal.dateNaissance < premierJanvier) {
       nes += 1;
     }
   }

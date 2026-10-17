@@ -11,6 +11,7 @@ import {
   type CategorieSuivi,
 } from '@/shared/constants/suiviMouvements';
 import { yearOf } from '@/shared/utils/dates';
+import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments';
 
 /** Un nombre d'animaux par catégorie du formulaire (les jeunes, les femelles éligibles, les mâles). */
 export type Effectifs = Record<CategorieSuivi, number>;
@@ -112,10 +113,8 @@ export function suiviMouvements(
   const debut = `${annee}-01-01`;
   const fin = `${annee}-12-31`;
   // Les animaux sans boucle (les cabris qui n'en ont pas encore, vendus avant) ne figurent pas dans le document : ni leur naissance, ni
-  // leur vente, ni l'effectif.
-  const presents = animaux.filter(
-    (a) => a.statut !== STATUT_CHEVRE.MORT_NE && !!a.dateNaissance && !!a.numeroBoucle?.trim(),
-  );
+  // leur vente, ni l'effectif ; sauf les auto-consommés.
+  const presents = animaux.filter((a) => a.statut !== STATUT_CHEVRE.MORT_NE && !!a.dateNaissance && compteAuxDocuments(a));
 
   // La première mise bas de chaque femelle : la plus ancienne naissance de ses petits (mort-nés compris).
   const premiereMiseBas = new Map<string, string>();

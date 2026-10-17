@@ -1,5 +1,7 @@
+import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { listNaissancesGroupees, type PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import type { Chevre } from '@/features/cheptel/types';
+import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
@@ -58,9 +60,18 @@ function joursEntre(debut: string, fin: string): number {
 /** L'âge au départ ou à la mort : en jours, puis en mois dès qu'il dépasse deux mois. */
 const ageTexte = (jours: number): string => (jours < 60 ? C.jours(jours) : C.mois(Math.round(jours / 30)));
 
-/** Un petit est parti ou mort : il a un statut de sortie et une date. */
+/** Un petit parti après le 31 décembre de l'année de sa naissance : ce départ (et son poids) n'est pas dans le carnet de cette année. */
+const departTardif = (c: Chevre): boolean => !!c.dateStatut && c.dateStatut > `${c.dateNaissance.slice(0, 4)}-12-31`;
+
+/**
+ * Un petit est parti ou mort dans l'année de sa naissance : il a un statut de sortie et une date au plus tard le 31 décembre de cette année.
+ * Un départ plus tardif (une chevrette gardée puis partie à l'abattoir deux ans plus tard) n'a pas sa place dans le carnet de cette année.
+ */
 const estParti = (c: Chevre): boolean =>
-  c.statut !== STATUT_CHEVRE.VIVANTE && c.statut !== STATUT_CHEVRE.MORT_NE && !!c.dateStatut;
+  c.statut !== STATUT_CHEVRE.VIVANTE &&
+  c.statut !== STATUT_CHEVRE.MORT_NE &&
+  !!c.dateStatut &&
+  c.dateStatut <= `${c.dateNaissance.slice(0, 4)}-12-31`;
 
 /** Ce qu'est devenu un petit (mort-né, mort, vendu…) et son âge à ce moment-là ; rien quand il est toujours là. */
 function devenirDuCabri(c: Chevre): { devenir: string; age: string } {
@@ -88,16 +99,17 @@ export function ligneDeLaPortee(p: PorteeNaissance): LigneCabri {
       .map((x) => ({ x, v: valeur(x) }))
       .filter((e) => e.v)
       .map((e) => (plusieurs && e.x.c.numeroBoucle ? `${e.x.c.numeroBoucle} : ${e.v}` : e.v))
-      .join(', ');
+      // Plusieurs petits : une ligne par boucle (une seule valeur : rien ne change).
+      .join('\n');
   const renouvellement = p.cabrits.some((c) => c.renouvellement) ? C.renouvellement : '';
   return {
     date: jourEtMois(p.date),
-    numero: p.cabrits.map((c) => c.numeroBoucle || '').filter(Boolean).join(' + '),
+    numero: p.cabrits.map((c) => c.numeroBoucle || '').filter(Boolean).join('\n'),
     mere: p.mereNumeroBoucle || C.inconnue,
     sexe: p.cabrits.map(lettreDuSexe).filter(Boolean).join(' + '),
     observations: [texte((x) => x.devenir), renouvellement].filter(Boolean).join(' · '),
     age: texte((x) => x.age),
-    poids: texte((x) => (x.c.poidsKg !== undefined ? C.poidsKg(x.c.poidsKg) : '')),
+    poids: texte((x) => (x.c.poidsKg !== undefined && !departTardif(x.c) ? C.poidsKg(x.c.poidsKg) : '')),
   };
 }
 
@@ -166,10 +178,10 @@ export function facesA4DuLivret(pages: number): { haut: [number, number]; bas?: 
   return faces;
 }
 
-/** Les mises bas sans les petits sans boucle (mort-nés compris) : ils ne figurent pas dans le carnet ; une mise bas sans aucun petit avec boucle disparaît. */
+/** Les mises bas sans les petits sans boucle (mort-nés compris, auto-consommés exceptés) : ils ne figurent pas dans le carnet ; une mise bas sans aucun petit compté disparaît. */
 export function porteesAvecBoucle(portees: PorteeNaissance[]): PorteeNaissance[] {
   return portees
-    .map((p) => ({ ...p, cabrits: p.cabrits.filter((c) => !!c.numeroBoucle?.trim()) }))
+    .map((p) => ({ ...p, cabrits: p.cabrits.filter(compteAuxDocuments) }))
     .filter((p) => p.cabrits.length > 0);
 }
 
@@ -204,6 +216,29 @@ export interface ResultatsProduction {
   prolificite?: number;
   /** Les petits morts parmi les petits nés, en % ; absent sans naissance. */
   mortalite?: number;
+  /** Les femelles mises à la reproduction (voir chevresMisesALaReproduction) ; absent quand le cheptel n'est pas connu. */
+  misesALaReproduction?: number;
+  /** Les petits vendus (ou partis à l'abattoir) ou gardés comme reproducteurs, parmi les petits nés. */
+  vendusOuGardes: number;
+  /** Les femelles ayant mis bas parmi celles mises à la reproduction, en %. */
+  fertilite?: number;
+  /** Les petits vendus ou gardés reproducteurs par femelle mise à la reproduction, en %. */
+  productivite?: number;
+}
+
+/**
+ * Les femelles mises à la reproduction pour les mises bas d'une année : toutes celles présentes au 1er janvier de cette année (nées avant,
+ * pas encore sorties), sauf celles de renouvellement, trop jeunes — désignées l'année précédente ou celle-ci.
+ */
+export function chevresMisesALaReproduction(animaux: Chevre[], annee: number): number {
+  const premierJanvier = `${annee}-01-01`;
+  return animaux.filter((c) => {
+    if (c.sexe !== SEXE.FEMELLE || c.statut === STATUT_CHEVRE.MORT_NE || !c.dateNaissance || c.dateNaissance >= premierJanvier) return false;
+    if (c.statut !== STATUT_CHEVRE.VIVANTE && c.dateStatut && c.dateStatut <= premierJanvier) return false;
+    if (!compteAuxDocuments(c)) return false;
+    const designation = c.renouvellementAnnee ?? Number(c.dateNaissance.slice(0, 4));
+    return !(c.renouvellement && designation >= annee - 1);
+  }).length;
 }
 
 /**
@@ -211,7 +246,11 @@ export interface ResultatsProduction {
  * vivant à la fin de l'année de sa naissance, il compte parmi les vivants. `annee` : celle des naissances (à défaut, celle de la
  * première mise bas).
  */
-export function resultatsDeLAnnee(portees: PorteeNaissance[], annee: number | string = portees[0]?.date.slice(0, 4) ?? ''): ResultatsProduction {
+export function resultatsDeLAnnee(
+  portees: PorteeNaissance[],
+  annee: number | string = portees[0]?.date.slice(0, 4) ?? '',
+  misesALaReproduction?: number,
+): ResultatsProduction {
   const finAnnee = `${annee}-12-31`;
   const r: ResultatsProduction = {
     misesBas: new Set(portees.map((p) => p.mereNumeroBoucle)).size,
@@ -225,6 +264,8 @@ export function resultatsDeLAnnee(portees: PorteeNaissance[], annee: number | st
     mortsDepart: 0,
     morts: 0,
     vivants: 0,
+    vendusOuGardes: 0,
+    misesALaReproduction,
   };
   for (const p of portees) {
     const taille = p.cabrits.length;
@@ -233,10 +274,15 @@ export function resultatsDeLAnnee(portees: PorteeNaissance[], annee: number | st
     else r.triplesEtPlus += taille;
     r.nes += taille;
     for (const c of p.cabrits) {
+      // Vendus (à l'abattoir compris) ou gardés comme reproducteurs, à n'importe quelle date : un petit gardé quelques mois est vendu l'année d'après.
+      if (c.statut === STATUT_CHEVRE.VENDUE || c.statut === STATUT_CHEVRE.ABATTOIR || (c.renouvellement && c.statut === STATUT_CHEVRE.VIVANTE)) {
+        r.vendusOuGardes += 1;
+      }
       if (c.statut === STATUT_CHEVRE.MORT_NE) {
         r.mortsNaissance += 1;
         r.morts += 1;
-      } else if (c.statut === STATUT_CHEVRE.MORTE) {
+      } else if (c.statut === STATUT_CHEVRE.MORTE || c.statut === STATUT_CHEVRE.AUTOCONSOMMEE) {
+        // Un petit auto-consommé n'est ni vendu ni parti de l'élevage : il compte parmi les morts.
         // Mort après la fin de l'année : vivant au 31 décembre.
         if (c.dateStatut && c.dateStatut > finAnnee) continue;
         r.morts += 1;
@@ -251,6 +297,10 @@ export function resultatsDeLAnnee(portees: PorteeNaissance[], annee: number | st
   r.vivants = r.nes - r.morts;
   if (r.misesBas > 0) r.prolificite = Math.round((r.nes / r.misesBas) * 100);
   if (r.nes > 0) r.mortalite = Math.round((r.morts / r.nes) * 100);
+  if (misesALaReproduction) {
+    r.fertilite = Math.round((r.misesBas / misesALaReproduction) * 100);
+    r.productivite = Math.round((r.vendusOuGardes / misesALaReproduction) * 100);
+  }
   return r;
 }
 
@@ -275,10 +325,13 @@ const STYLES = `
   .face .demi5:last-child .interieur { padding-top: 2mm; padding-bottom: 5mm; }
   .face .demi5:first-child .interieur { padding-top: 5mm; padding-bottom: 2mm; }
   .a6 h1 { font-size: 9pt; margin: 0 0 1mm; }
+  .a6 h1.titre-cabris.a-droite { font-size: 14pt; text-align: right; margin: 0 0 1.5mm; }
+  /* La page de gauche n'a pas de titre : son tableau commence à la même hauteur que celui de la page de droite. */
+  .a6 .page > table:first-child { margin-top: 7.5mm; }
   .a6 th { font-size: 6pt; padding: 0.4mm 0.6mm; overflow-wrap: anywhere; }
   .a6 tr { height: 7.6mm; }
   .a6 td { height: 7.6mm; font-size: 7.5pt; padding: 0 0.8mm; }
-  .a6 td .c { max-height: 7.4mm; overflow: hidden; line-height: 1.15; overflow-wrap: anywhere; }
+  .a6 td .c { line-height: 1.15; overflow-wrap: anywhere; }
   .a6 td.libre { font-size: 7pt; }
   .a6 .note { font-size: 5.5pt; margin: 0.8mm 0 0; }
   .a6 .colonnes { flex-direction: column; gap: 2mm; }
@@ -421,11 +474,13 @@ function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire, moitie?
   const lignesHtml = lignes
     .map(
       (l) =>
-        `<tr>${choisies.map((col) => `<td${col.libre ? ' class="libre"' : ''}><div class="c">${echapper(col.valeur(l))}</div></td>`).join('')}</tr>`,
+        `<tr>${choisies.map((col) => `<td${col.libre ? ' class="libre"' : ''}><div class="c">${echapper(col.valeur(l)).replace(/\n/g, '<br>')}</div></td>`).join('')}</tr>`,
     )
     .join('');
+  // Le titre n'est que sur la page de droite du livret (du côté du poids de départ), grand et aligné à droite ; la page de gauche n'en a pas.
+  const titre = moitie === 'gauche' ? '' : `<h1 class="titre-cabris${moitie === 'droite' ? ' a-droite' : ''}">${echapper(capitaliser(v.petit.pluriel))} — ${echapper(annee)}</h1>`;
   return `<div class="page">
-    <h1>${echapper(capitaliser(v.petit.pluriel))} — ${echapper(annee)}</h1>
+    ${titre}
     <table>
       <colgroup>${choisies.map((col) => `<col style="width:${largeur(col)}%" />`).join('')}</colgroup>
       <thead><tr>${choisies.map((col) => `<th>${echapper(col.th)}</th>`).join('')}</tr></thead>
@@ -452,7 +507,7 @@ function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire)
     `<div class="taux"><div class="tete"><div class="nom">${echapper(nom)} =</div><div class="valeur">${echapper(valeur)}</div></div><div class="formule">${echapper(formule)}</div></div>`;
   return {
     gauche: `<h1>${echapper(T.titre)} — ${echapper(annee)}</h1>
-        ${boite(T.misesALaReproduction(f))}
+        ${boite(T.misesALaReproduction(f), String(r.misesALaReproduction ?? ''))}
         ${boite(T.avorte(f))}
         ${boite(T.misBas(f), String(r.misesBas))}
         ${groupe(T.nes(p), [[T.simples, r.simples], [T.doubles, r.doubles], [T.triples, r.triplesEtPlus], [T.total, r.nes]])}
@@ -465,9 +520,9 @@ function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire)
         ])}
         ${boite(T.vivants(p), String(r.vivants))}`,
     droite: `<h1>${echapper(T.taux)}</h1>
-        ${taux(T.fertilite, T.formuleFertilite(f))}
+        ${taux(T.fertilite, T.formuleFertilite(f), pourcent(r.fertilite))}
         ${taux(T.prolificite, T.formuleProlificite(p, f), pourcent(r.prolificite))}
-        ${taux(T.productivite, T.formuleProductivite(p, f))}
+        ${taux(T.productivite, T.formuleProductivite(p, f), pourcent(r.productivite))}
         ${taux(T.mortalite, T.formuleMortalite(p), pourcent(r.mortalite))}
         <p class="note">${echapper(T.aCompleter(f))}</p>`,
   };
@@ -492,8 +547,12 @@ export function carnetMiseBasHtml(
   v: Vocabulaire = vocabulaire(especeCourante()),
   format: FormatCarnet = 'a4',
   contacts: ContactsDuCarnet = { veterinaire: [], groupement: [] },
+  /** Le cheptel : il donne les femelles mises à la reproduction (sans lui, ces cases et les taux qui en dépendent restent à écrire à la main). */
+  animaux?: Chevre[],
 ): string {
   const annees = porteesParAnnee(porteesAvecBoucle(portees)).reverse();
+  const resultats = (annee: string, liste: PorteeNaissance[]) =>
+    resultatsDeLAnnee(liste, annee, animaux ? chevresMisesALaReproduction(animaux, Number(annee)) : undefined);
   const parPage = format === 'livret' ? LIGNES_PAR_PAGE_LIVRET : LIGNES_PAR_PAGE;
   const pages = [
     pageCouverture(infos, annees.map((a) => a.annee)),
@@ -508,11 +567,11 @@ export function carnetMiseBasHtml(
                   pageCabris(annee, page, v, 'gauche'),
                   pageCabris(annee, page, v, 'droite'),
                 ]),
-                ...pagesResultatsLivret(annee, resultatsDeLAnnee(liste, annee), v),
+                ...pagesResultatsLivret(annee, resultats(annee, liste), v),
               ]
             : [
                 ...pagesDeLAnnee(liste, parPage).map((page) => pageCabris(annee, page, v)),
-                pageResultats(annee, resultatsDeLAnnee(liste, annee), v),
+                pageResultats(annee, resultats(annee, liste), v),
               ],
         )),
   ];
@@ -558,13 +617,19 @@ export function carnetMiseBasHtml(
  * A4 portrait, ou en livret A6 (A4 portrait, recto verso en retournant sur le bord long, à couper en deux et à plier).
  */
 export async function exporterCarnetMiseBasPdf(format: FormatCarnet = 'a4'): Promise<void> {
-  const [portees, settings, fournisseurs] = await Promise.all([listNaissancesGroupees(), getSettings(), listFournisseurs()]);
+  const [portees, settings, fournisseurs, animaux] = await Promise.all([
+    listNaissancesGroupees(),
+    getSettings(),
+    listFournisseurs(),
+    listTousLesAnimauxDeLEspece(),
+  ]);
   const html = carnetMiseBasHtml(
     portees,
     settings.exploitation,
     vocabulaire(especeCourante()),
     format,
     contactsDuCarnet(fournisseurs),
+    animaux,
   );
   if (format === 'livret') {
     await ecrireEtPartagerPdf(html, `${C.fichierLivret}.${FORMAT_EXPORT.PDF}`, C.titre, { sansMarges: true });

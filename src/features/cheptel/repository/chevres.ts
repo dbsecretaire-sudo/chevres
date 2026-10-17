@@ -235,3 +235,8 @@ export async function resolveChevreIdParBoucle(
   const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
   return all.find((c) => c.numeroBoucle === numeroBoucle.trim() && especeDe(c) === espece)?.id;
 }
+
+/** Tous les animaux de l'espèce courante, quel que soit leur statut (vivants, morts, vendus…) : de quoi reconstituer le troupeau d'une date passée. */
+export async function listTousLesAnimauxDeLEspece(): Promise<Chevre[]> {
+  return deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
+}
