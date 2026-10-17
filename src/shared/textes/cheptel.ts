@@ -193,6 +193,7 @@ export const TEXTES_CHEPTEL = {
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
     aFacturer: 'à facturer',
     facture: 'facturé',
+    aucunAnimalDansLeLot: 'Aucun animal dans ce lot : choisissez-les dans le cheptel.',
     aideAbattoir: 'Un lot d’abattoir : les animaux (avec boucle) envoyés à l’abattoir ce jour-là. Il se crée et se complète tout seul.',
     lierFacture: 'Lier la facture de l’abattoir',
     factureAbattoir: 'Facture de l’abattoir',
