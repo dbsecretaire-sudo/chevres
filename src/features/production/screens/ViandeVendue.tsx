@@ -109,7 +109,6 @@ export default function ViandeVendue() {
       .filter((g) => g.animaux.length > 0),
   );
   const groupesAFacturer = groupes.filter((g) => g.avecBoucle);
-  const venteDeLOnglet = onglet === 'facturee' ? facturees : [];
   const { lots } = useLots();
   /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
   const ouvrirLot = (id: string) =>
@@ -125,13 +124,21 @@ export default function ViandeVendue() {
         (a.statut === STATUT_CHEVRE.VIVANTE || a.statut === STATUT_CHEVRE.ABATTOIR) && !idsVendus.has(a.id),
     )
     .sort(parNaissance);
-  /** Vendus sans facture : ceux des ventes sans facture de l'année, morts (« morte » ou à l'abattoir) ou vivants (« vendue »). */
-  const idsSansFacture = new Set(sansFacture.flatMap((v) => idsDesAnimaux(v)));
-  const vendus = sansBoucle.filter((a) => idsSansFacture.has(a.id)).sort(parNaissance);
-  const vendusMorts = vendus.filter((a) => a.statut !== STATUT_CHEVRE.VENDUE);
-  const vendusVivants = vendus.filter((a) => a.statut === STATUT_CHEVRE.VENDUE);
+  /** Vendues sans facture : les ventes (écritures) des animaux sans boucle, mortes (« morte » ou à l'abattoir) ou vivantes (« vendue »). */
+  const estVivante = (v: Vente) =>
+    idsDesAnimaux(v).some((id) => animaux.get(id)?.statut === STATUT_CHEVRE.VENDUE);
+  const ventesVivantes = sansFacture.filter(estVivante);
+  const ventesMortes = sansFacture.filter((v) => !estVivante(v));
   const ongletActif: OngletViande =
     !avance && (onglet === 'avendre' || onglet === 'vendue') ? 'afacturer' : onglet;
+  const venteDeLOnglet =
+    ongletActif === 'facturee'
+      ? facturees
+      : ongletActif === 'vendue'
+        ? sousOnglet === 'morts'
+          ? ventesMortes
+          : ventesVivantes
+        : [];
   const total = venteDeLOnglet.reduce((somme, v) => somme + (v.prix ?? 0), 0);
 
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
@@ -207,7 +214,7 @@ export default function ViandeVendue() {
             ...(avance
               ? [
                   { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
-                  { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(vendus.length) },
+                  { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(sansFacture.length) },
                 ]
               : []),
           ]}
@@ -222,6 +229,26 @@ export default function ViandeVendue() {
             patchSettings({ exploitation: { ...settings.exploitation, ventesSansFacture: v } })
           }
         />
+        {ongletActif === 'vendue' ? (
+          <>
+            <PucesDefilantes<SorteDeVendus>
+              puces={[
+                { valeur: 'morts', label: T.sousOnglets.morts(ventesMortes.length) },
+                { valeur: 'vivants', label: T.sousOnglets.vivants(ventesVivantes.length) },
+              ]}
+              valeur={sousOnglet}
+              onChoisir={setSousOnglet}
+            />
+            {/* Le lot « Animaux vendus morts / vivants » : on y passe une vente de morts à vivants (leurs fiches suivent). */}
+            {lots.some((l) => l.vendus === sousOnglet) ? (
+              <Pressable
+                onPress={() => router.push(ouvrirLot(lots.find((l) => l.vendus === sousOnglet)!.id) as never)}
+              >
+                <Text style={commonStyles.lien}>{nomDuLotVendus(sousOnglet)}</Text>
+              </Pressable>
+            ) : null}
+          </>
+        ) : null}
         {venteDeLOnglet.length > 0 ? (
           <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
         ) : null}
@@ -244,40 +271,6 @@ export default function ViandeVendue() {
           ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
           renderItem={({ item, index }) => (
             <LigneDeBloc index={index} total={aVendre.length}>
-              <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
-            </LigneDeBloc>
-          )}
-        />
-      ) : ongletActif === 'vendue' ? (
-        <FlatList
-          data={sousOnglet === 'morts' ? vendusMorts : vendusVivants}
-          keyExtractor={(a) => a.id}
-          contentContainerStyle={commonStyles.listeBlocAvecFab}
-          ListHeaderComponent={
-            <View style={commonStyles.gap6}>
-              <PucesDefilantes<SorteDeVendus>
-                puces={[
-                  { valeur: 'morts', label: T.sousOnglets.morts(vendusMorts.length) },
-                  { valeur: 'vivants', label: T.sousOnglets.vivants(vendusVivants.length) },
-                ]}
-                valeur={sousOnglet}
-                onChoisir={setSousOnglet}
-              />
-              {/* Le lot « Animaux vendus morts / vivants » : on y passe une vente de morts à vivants (leurs fiches suivent). */}
-              {lots.some((l) => l.vendus === sousOnglet) ? (
-                <Pressable
-                  onPress={() =>
-                    router.push(ouvrirLot(lots.find((l) => l.vendus === sousOnglet)!.id) as never)
-                  }
-                >
-                  <Text style={commonStyles.lien}>{nomDuLotVendus(sousOnglet)}</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          }
-          ListEmptyComponent={<EmptyState title={T.aucune} />}
-          renderItem={({ item, index }) => (
-            <LigneDeBloc index={index} total={(sousOnglet === 'morts' ? vendusMorts : vendusVivants).length}>
               <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
             </LigneDeBloc>
           )}
