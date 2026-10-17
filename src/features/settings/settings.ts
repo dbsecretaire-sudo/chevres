@@ -119,6 +119,8 @@ export interface LotAnimaux {
   id: string;
   nom: string;
   boucles: string;
+  /** Un lot d'abattoir : le jour d'abattage de ses animaux (AAAA-MM-JJ). Il se crée et se tient à jour tout seul d'après le cheptel. */
+  abattoir?: string;
 }
 
 /**

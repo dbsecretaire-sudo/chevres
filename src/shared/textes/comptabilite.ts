@@ -697,9 +697,19 @@ export const TEXTES_COMPTABILITE = {
       `${libelle} · ${sexe} · né(e) le ${naissance}`,
     animauxVendus: 'Animaux vendus',
     /** Les animaux déjà à l'abattoir : on choisit le jour d'abattage, puis tous les animaux ou certains numéros. */
-    animauxAbattus: 'Animaux abattus le',
-    animauxVivants: 'Animaux vivants (un par un)',
-    jourAbattu: (date: string, nombre: number) => `${date} — ${nombre} animal${nombre > 1 ? 'ux' : ''} à facturer`,
+    abattoirAFacturer: 'Abattoir à facturer',
+    choisirAbattoir: 'Choisir l’abattoir (tous ses animaux)',
+    unParUn: 'Choisir les animaux un par un',
+    jourAbattu: (date: string, nombre: number) => `Abattoir du ${date} — ${nombre} animal${nombre > 1 ? 'ux' : ''}`,
+    abattoirDu: (date: string) => `Abattoir du ${date}`,
+    lotResume: (nombre: number, boucles: string, poids?: number) =>
+      [`${nombre} animal${nombre > 1 ? 'ux' : ''}`, boucles, poids ? `${String(poids).replace('.', ',')} kg` : '']
+        .filter(Boolean)
+        .join(' · '),
+    retirerAbattoir: 'Retirer cet abattoir',
+    voirDetail: 'Voir le détail et retirer des animaux',
+    masquerDetail: 'Masquer le détail',
+    remettreDesAnimaux: (nombre: number) => `Remettre des animaux retirés (${nombre})`,
     poidsManquant: (nombre: number) =>
       `${nombre} animal${nombre > 1 ? 'ux n’ont' : ' n’a'} pas de poids sur sa fiche : indiquez-le sur la fiche (le prix se calcule avec le poids et le prix au kilo), ou saisissez le poids total ci-dessous.`,
     animauxAbattusLe: (date: string) => `Animaux abattus le ${date}`,

@@ -321,6 +321,16 @@ export function ChampsVenteFromage({ e }: Props) {
   );
 }
 
+/** La valeur du choix « un par un » dans la liste des abattoirs à facturer. */
+const UN_PAR_UN = '__un_par_un';
+
+/** Les boucles d'un lot en quelques mots : toutes quand il y en a peu, sinon de la première à la dernière (« 00836 → 00855 »). */
+function resumeBoucles(animaux: Chevre[]): string {
+  const boucles = animaux.map((a) => a.numeroBoucle).filter((b): b is string => !!b).sort();
+  if (boucles.length <= 3) return boucles.join(', ');
+  return `${boucles[0]} → ${boucles[boucles.length - 1]}`;
+}
+
 /** Vente de cabris : nombre, poids (facultatif), prix et TVA. */
 export function ChampsVenteCabris({ e }: Props) {
   return (
@@ -393,6 +403,9 @@ export function ChampsVenteViande({ e }: Props) {
   /** Les jours d'abattage dont la viande n'est pas encore facturée : on y choisit tous les animaux, ou certains numéros. */
   const [jours, setJours] = useState<JourAbattu[]>([]);
   const [abattusOuvert, setAbattusOuvert] = useState(false);
+  /** Les animaux se choisissent un par un (au lieu de prendre le lot d'un jour d'abattage), et le détail du lot est déroulé. */
+  const [unParUn, setUnParUn] = useState(false);
+  const [detailOuvert, setDetailOuvert] = useState(false);
   useFocusEffect(
     useCallback(() => {
       listAnimauxVivantsDe(espece).then(setAnimaux);
@@ -474,6 +487,21 @@ export function ChampsVenteViande({ e }: Props) {
     e.setJeune(estPetit(nouveaux[0]));
     e.setQuantite(String(liste.length));
   };
+  /** Prend tout le lot d'un jour d'abattage (« Abattoir du … ») : ses animaux, leur nombre et leur poids remplissent la vente. */
+  const choisirJour = (date: string) => {
+    const jour = joursProposes.find((j) => j.date === date);
+    if (!jour) return;
+    e.setDateAbattoir(date);
+    e.setAnimaux(jour.animaux.map((a) => a.id));
+    e.setJeune(estPetit(jour.animaux[0]));
+    e.setQuantite(String(jour.animaux.length));
+    reprendrePoids(jour.animaux);
+  };
+  // Un jour d'abattage d'ouverture (depuis Production › Viande), ou un autre détail de vente : le lot du jour se prend d'office.
+  useEffect(() => {
+    if (parAnimal && jourChoisi && e.animaux.length === 0 && !unParUn) choisirJour(jourChoisi.date);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parAnimal, jourChoisi?.date, e.animaux.length, unParUn]);
   const ajouterAnimal = (id: string) => {
     const animal = animaux.find((a) => a.id === id);
     if (!animal) return;
@@ -490,7 +518,19 @@ export function ChampsVenteViande({ e }: Props) {
     reprendrePoids(animauxChoisis.filter((a) => liste.includes(a.id)));
     e.setAnimaux(liste);
     e.setQuantite(String(Math.max(1, liste.length)));
-    if (liste.length === 0) e.setJeune(undefined);
+    if (liste.length === 0) {
+      e.setJeune(undefined);
+      // Plus aucun animal du lot : le jour d'abattage n'est plus choisi (le lot ne se reprend pas tout seul).
+      if (jourChoisi) e.setDateAbattoir('');
+    }
+  };
+  /** Retire tout le lot d'un jour d'abattage. */
+  const retirerLot = () => {
+    e.setAnimaux([]);
+    e.setDateAbattoir('');
+    e.setJeune(undefined);
+    e.setQuantite('1');
+    setDetailOuvert(false);
   };
   // Le prix d'un animal est modifié à l'inventaire : le total (poids × prix au kilo) suit.
   useEffect(() => {
@@ -521,7 +561,8 @@ export function ChampsVenteViande({ e }: Props) {
           if (role && !e.quantite.trim()) e.setQuantite('1');
           if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
           if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix));
-          if (role) setQuestion(nouvelle ?? null);
+          // Des jours d'abattage à facturer : le lot se choisit d'abord (une seule étape) ; sinon, on désigne l'animal.
+          if (role && joursProposes.length === 0) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
           // Un autre détail : les animaux et les lots déjà choisis ne valent plus.
           e.setAnimaux([]);
@@ -545,45 +586,111 @@ export function ChampsVenteViande({ e }: Props) {
         <>
           {parAnimal ? (
             <View style={commonStyles.gap6}>
-              {/* Des animaux déjà à l'abattoir : la facture désigne ceux d'un jour d'abattage. */}
+              {/* Des animaux déjà à l'abattoir : un jour d'abattage est un lot, choisi en une fois avec tous ses animaux. */}
               {joursProposes.length > 0 ? (
                 <SelectField<string>
-                  label={TEXTES.comptabilite.nouvelleEcriture.animauxAbattus}
-                  value={jourChoisi?.date ?? ''}
-                  placeholder={TEXTES.comptabilite.nouvelleEcriture.animauxVivants}
-                  onChange={(date) => {
-                    e.setDateAbattoir(date);
-                    e.setAnimaux([]);
-                    if (date) setAbattusOuvert(true);
+                  label={TEXTES.comptabilite.nouvelleEcriture.abattoirAFacturer}
+                  required
+                  value={jourChoisi?.date ?? (unParUn ? UN_PAR_UN : '')}
+                  placeholder={TEXTES.comptabilite.nouvelleEcriture.choisirAbattoir}
+                  onChange={(valeur) => {
+                    if (valeur === UN_PAR_UN) {
+                      setUnParUn(true);
+                      e.setDateAbattoir('');
+                      e.setAnimaux([]);
+                      setQuestion(choisie ?? null);
+                      return;
+                    }
+                    setUnParUn(false);
+                    choisirJour(valeur);
                   }}
                   options={[
-                    { value: '', label: TEXTES.comptabilite.nouvelleEcriture.animauxVivants },
                     ...joursProposes.map((j) => ({
                       value: j.date,
                       label: TEXTES.comptabilite.nouvelleEcriture.jourAbattu(formatDateFR(j.date), j.animaux.length),
                     })),
+                    { value: UN_PAR_UN, label: TEXTES.comptabilite.nouvelleEcriture.unParUn },
                   ]}
                 />
               ) : null}
-              <View style={commonStyles.rowSpaceBetween}>
-                <Text style={commonStyles.lineSemiBold}>
-                  {TEXTES.comptabilite.nouvelleEcriture.animauxVendus}
-                  <Text style={commonStyles.required}> *</Text>
-                </Text>
-                <Pressable
-                  style={commonStyles.boutonPastille}
-                  onPress={() => (jourChoisi ? setAbattusOuvert(true) : setQuestion(choisie ?? null))}
-                  accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.ajouterUnAnimal}
-                >
-                  <Ionicons name="add-circle" size={28} color={colors.ajout} />
-                </Pressable>
-              </View>
+              {/* Le lot choisi : une ligne (le jour, le nombre d'animaux, leurs boucles et leur poids) ; le détail se déroule au besoin. */}
+              {jourChoisi && animauxChoisis.length > 0 ? (
+                <Card style={commonStyles.gap10}>
+                  <View style={commonStyles.rowSpaceBetween}>
+                    <View style={commonStyles.flex1}>
+                      <Text style={commonStyles.lineSemiBold}>
+                        {TEXTES.comptabilite.nouvelleEcriture.abattoirDu(formatDateFR(jourChoisi.date))}
+                      </Text>
+                      <Text style={commonStyles.muted}>
+                        {TEXTES.comptabilite.nouvelleEcriture.lotResume(
+                          animauxChoisis.length,
+                          resumeBoucles(animauxChoisis),
+                          poidsTotal(animauxChoisis),
+                        )}
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={retirerLot}
+                      hitSlop={8}
+                      accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.retirerAbattoir}
+                    >
+                      <Ionicons name="close-circle" size={22} color={colors.danger} />
+                    </Pressable>
+                  </View>
+                  <Pressable onPress={() => setDetailOuvert((o) => !o)}>
+                    <Text style={commonStyles.lien}>
+                      {detailOuvert
+                        ? TEXTES.comptabilite.nouvelleEcriture.masquerDetail
+                        : TEXTES.comptabilite.nouvelleEcriture.voirDetail}
+                    </Text>
+                  </Pressable>
+                  {detailOuvert ? (
+                    <>
+                      {animauxChoisis.map((animal) => (
+                        <View key={animal.id} style={commonStyles.rowSpaceBetween}>
+                          <Text style={commonStyles.valueText}>{libelleAnimal(animal)}</Text>
+                          <Pressable
+                            onPress={() => retirerAnimal(animal.id)}
+                            hitSlop={8}
+                            accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.retirerAnimal}
+                          >
+                            <Ionicons name="close-circle" size={22} color={colors.danger} />
+                          </Pressable>
+                        </View>
+                      ))}
+                      {abattusProposes.length > 0 ? (
+                        <Pressable onPress={() => setAbattusOuvert(true)}>
+                          <Text style={commonStyles.lien}>
+                            {TEXTES.comptabilite.nouvelleEcriture.remettreDesAnimaux(abattusProposes.length)}
+                          </Text>
+                        </Pressable>
+                      ) : null}
+                    </>
+                  ) : null}
+                </Card>
+              ) : null}
+              {/* Sans lot à facturer (ou en choisissant un par un) : les animaux se désignent un à un. */}
+              {!jourChoisi && (joursProposes.length === 0 || unParUn) ? (
+                <View style={commonStyles.rowSpaceBetween}>
+                  <Text style={commonStyles.lineSemiBold}>
+                    {TEXTES.comptabilite.nouvelleEcriture.animauxVendus}
+                    <Text style={commonStyles.required}> *</Text>
+                  </Text>
+                  <Pressable
+                    style={commonStyles.boutonPastille}
+                    onPress={() => setQuestion(choisie ?? null)}
+                    accessibilityLabel={TEXTES.comptabilite.nouvelleEcriture.ajouterUnAnimal}
+                  >
+                    <Ionicons name="add-circle" size={28} color={colors.ajout} />
+                  </Pressable>
+                </View>
+              ) : null}
               {animauxChoisis.some((a) => a.poidsKg === undefined) && animauxChoisis.length > 0 ? (
                 <Text style={commonStyles.note}>
                   {TEXTES.comptabilite.nouvelleEcriture.poidsManquant(animauxChoisis.filter((a) => a.poidsKg === undefined).length)}
                 </Text>
               ) : null}
-              {animauxChoisis.length > 0 ? (
+              {!jourChoisi && animauxChoisis.length > 0 ? (
                 <Card style={commonStyles.gap10}>
                   {animauxChoisis.map((animal) => (
                     <View key={animal.id} style={commonStyles.rowSpaceBetween}>
