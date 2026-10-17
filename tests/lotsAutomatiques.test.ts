@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  categoriesDeLots,
   dateDuLot,
   designationsDesLots,
   estCategorieAutomatique,
+  estCategorieDeLotsProtegee,
   estLotAutomatique,
   groupesDeLots,
+  boucleDesFemellesALaReproduction,
   lotsDAbattoir,
+  lotsDeReproductionDeLAnnee,
   lotsDeRenouvellementDeLAnnee,
   retirerDesAutresLotsDeRenouvellement,
 } from '@/features/exploitation/services/lots';
@@ -66,6 +70,30 @@ describe('lots de renouvellement', () => {
   });
 });
 
+describe('lots de mise à la reproduction', () => {
+  it('les mères de l’année et les femelles vivantes à la date d’une mise bas, majeures ; recalculés une fois', () => {
+    const mere = (b: string, extra: Partial<Chevre> = {}) => animal(b, { dateNaissance: '2019-03-01', ...extra });
+    const animaux = [
+      mere('1'),
+      mere('2', { statut: 'vendue', dateStatut: '2022-01-15' }), // vendue avant la première mise bas : pas dans le lot
+      mere('3', { statut: 'morte', dateStatut: '2022-06-01' }), // vivante à la mise bas de février : dans le lot
+      mere('4', { dateNaissance: '2021-11-01' }), // 3 mois à la mise bas : pas majeure
+      animal('9', { sexe: 'M', dateNaissance: '2019-03-01' }), // un bouc
+      animal('100', { dateNaissance: '2022-02-10', mereNumeroBoucle: '1' }), // naissance du 10/02/2022
+      animal('101', { dateNaissance: '2022-02-12', mereNumeroBoucle: '77' }), // une mère inconnue du cheptel
+    ];
+    expect(boucleDesFemellesALaReproduction(animaux, 2022)).toEqual(['1', '3', '77']);
+    // Un ancien lot (sans version de calcul) est recalculé, une seule fois : le lot corrigé ensuite est gardé.
+    const ancien = lot({ id: 'r', categorie: 'reproduction', reproduction: 2022, boucles: '1, 2, 3, 4' });
+    const recalcule = lotsDeReproductionDeLAnnee(animaux, [ancien], 2022) as LotAnimaux[];
+    const lot2022 = recalcule.find((l) => l.reproduction === 2022)!;
+    expect(lot2022.boucles).toBe('1, 3, 77');
+    expect(lot2022.versionCalcul).toBe(2);
+    const corrige = recalcule.map((l) => (l.reproduction === 2022 ? { ...l, boucles: '1, 3' } : l));
+    expect(lotsDeReproductionDeLAnnee(animaux, corrige, 2022)).toBeNull();
+  });
+});
+
 describe('catégories de lots', () => {
   it('toutes les catégories ont leur bouton, les lots les plus récents d’abord', () => {
     const categories = [
@@ -99,6 +127,23 @@ describe('catégories de lots', () => {
     const lots = [lot({ id: 'a', nom: 'Abattoir du 25/02/2026', abattoir: '2026-02-25', boucles: '1' })];
     const suite = lotsDAbattoir([animal('1', { statut: 'abattoir', dateStatut: '2026-02-25' })], lots) as LotAnimaux[];
     expect(suite[0].categorie).toBe('abattoir');
+  });
+});
+
+describe('gestion des catégories de lots', () => {
+  it('sans réglage : celles d’office puis celles ajoutées ; avec une liste : ses noms et son ordre, les catégories d’office toujours là', () => {
+    expect(categoriesDeLots(['Chevrettes']).map((c) => c.id)).toEqual(['abattoir', 'veterinaire', 'reproduction', 'renouvellement', 'Chevrettes']);
+    const liste = [
+      { id: 'renouvellement', nom: 'Futures chèvres' },
+      { id: 'abc', nom: 'Chevrettes' },
+      { id: 'abattoir', nom: 'Boucherie' },
+    ];
+    const categories = categoriesDeLots([], liste);
+    // Vétérinaire et Mises à la reproduction manquaient de la liste : elles reviennent en tête.
+    expect(categories.map((c) => c.id)).toEqual(['veterinaire', 'reproduction', 'renouvellement', 'abc', 'abattoir']);
+    expect(categories.find((c) => c.id === 'renouvellement')?.nom).toBe('Futures chèvres');
+    expect(estCategorieDeLotsProtegee('abattoir')).toBe(true);
+    expect(estCategorieDeLotsProtegee('abc')).toBe(false);
   });
 });
 

@@ -79,7 +79,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/taux$/, () => ROUTES.COMPTABILITE_REGLAGES],
   [/^\/comptabilite\/detail$/, () => ROUTES.COMPTABILITE_LISTE],
   // Un lot revient aux lots d'animaux, un traitement aux traitements, une nouvelle naissance aux naissances.
-  [/^\/cheptel\/(lot|lots-categorie)$/, () => ROUTES.CHEPTEL_LOTS],
+  [/^\/cheptel\/(lot|lots-categories?)$/, () => ROUTES.CHEPTEL_LOTS],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
   [/^\/cheptel\/naissance-nouvelle$/, () => ROUTES.CHEPTEL_NAISSANCES],
   [/^\/cheptel\/(nouvelle|ajout-rapide)$/, () => ROUTES.CHEPTEL_LISTE],

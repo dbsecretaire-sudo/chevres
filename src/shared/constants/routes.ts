@@ -41,6 +41,8 @@ export const ROUTES = {
   /** Les lots d'animaux et le suivi sanitaire de chacun. */
   CHEPTEL_LOTS: '/cheptel/lots',
   CHEPTEL_LOT_NOUVEAU: '/cheptel/lot',
+  /** La gestion des catégories de lots : renommer, ajouter, supprimer, ranger. */
+  CHEPTEL_LOTS_CATEGORIES: '/cheptel/lots-categories',
   /** Les lots d'une catégorie (`autres` : ceux sans catégorie), dans leur propre page. */
   lotsDeLaCategorie: (categorie: string) => `/cheptel/lots-categorie?categorie=${encodeURIComponent(categorie)}` as const,
   /** Un nouveau lot, dans la catégorie donnée. */

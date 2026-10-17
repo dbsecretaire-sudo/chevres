@@ -6,7 +6,7 @@ import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
-import { bouclesDuLot, femellesALaReproduction, lotsDeReproduction } from '@/features/exploitation/services/lots';
+import { boucleDesFemellesALaReproduction, bouclesDuLot, lotsDeReproduction } from '@/features/exploitation/services/lots';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
@@ -232,9 +232,9 @@ export interface ResultatsProduction {
 
 /**
  * Les femelles mises à la reproduction pour les mises bas d'une année : celles du lot de mise à la reproduction de cette année (voir
- * lotsDeReproduction), à défaut toutes celles présentes au 1er janvier à leur majorité sexuelle (voir femellesALaReproduction) ; plus les
- * mères de l'année qui n'y seraient pas (vendues ou mortes avant le 1er janvier d'après les statuts actuels, ou mal datées) : une femelle
- * qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être inférieur à celui des mises bas.
+ * lotsDeReproduction), à défaut le même calcul que celui qui remplit ce lot (voir boucleDesFemellesALaReproduction) ; plus les mères de
+ * l'année qui n'y seraient pas : une femelle qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être
+ * inférieur à celui des mises bas. Le nombre est donc celui du lot de l'année.
  */
 export function chevresMisesALaReproduction(
   animaux: Chevre[],
@@ -249,9 +249,8 @@ export function chevresMisesALaReproduction(
     const desLots = new Set(deLots.flatMap((l) => bouclesDuLot(l)).filter((b) => !males.has(b)));
     return desLots.size + new Set(meres.filter((m) => m && !desLots.has(m))).size;
   }
-  const presentes = femellesALaReproduction(animaux, annee);
-  const boucles = new Set(presentes.map((c) => c.numeroBoucle?.trim()));
-  return presentes.length + new Set(meres.filter((m) => m && !boucles.has(m))).size;
+  const calculees = new Set(boucleDesFemellesALaReproduction(animaux, annee));
+  return calculees.size + new Set(meres.filter((m) => m && !calculees.has(m))).size;
 }
 
 /**

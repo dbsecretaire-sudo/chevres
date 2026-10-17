@@ -114,6 +114,12 @@ export interface InfosEntreprise {
 export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined =>
   infos?.montantTaxeSejour ?? infos?.taxeSejourParNuit;
 
+/** Une catégorie de lots d'animaux : son identifiant (celui que portent les lots) et son nom, que l'utilisateur peut changer. */
+export interface CategorieLotReglage {
+  id: string;
+  nom: string;
+}
+
 /** Un lot d'animaux : un nom (« Chevrettes 2026 ») et les boucles des animaux, séparées par des virgules. Il désigne les mêmes animaux d'un geste. */
 export interface LotAnimaux {
   id: string;
@@ -125,6 +131,8 @@ export interface LotAnimaux {
   categorie?: string;
   /** Un lot de mises à la reproduction : l'année de ses mises bas. Un lot se crée tout seul chaque année (les femelles présentes au 1er janvier). */
   reproduction?: number;
+  /** Un lot de mises à la reproduction : la version du calcul qui l'a rempli (les lots d'une version plus ancienne sont recalculés une fois). */
+  versionCalcul?: number;
   /** Un lot de renouvellement : l'année de désignation de ses animaux (renouvellementAnnee de leur fiche, que le lot tient à jour). */
   renouvellement?: number;
   /** Un lot créé tout seul pour une visite vétérinaire : la visite (son nom et sa date la suivent). */
@@ -196,6 +204,8 @@ export const reglageInvestissement = (
 export interface InfosExploitation {
   /** Les catégories de lots d'animaux ajoutées par l'utilisateur (Abattoir et Vétérinaire sont d'office). */
   categoriesLots?: string[];
+  /** La liste des catégories de lots (noms et ordre) : celles d'office et celles de l'utilisateur. Absente : celles d'office, puis `categoriesLots`. */
+  categoriesLotsListe?: CategorieLotReglage[];
   /** Un titre propre à l'utilisateur, imprimé en tête de chaque PDF (nom commercial, adresse, mention…). */
   titrePdf?: string;
   /**
