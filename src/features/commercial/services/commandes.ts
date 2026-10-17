@@ -9,6 +9,7 @@ import {
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
 import { STATUT_COMMANDE, STATUTS_COMMANDE_OUVERTE } from '@/shared/constants/commercial';
+import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 
 const arrondi = (valeur: number): number => Math.round(valeur * 100) / 100;
@@ -53,7 +54,10 @@ export function totalAPreparer(
   return [...parArticle.values()].sort((a, b) => a.libelle.localeCompare(b.libelle));
 }
 
-/** La vente que la livraison d'une ligne de commande enregistre : des fromages à la pièce, au prix de la commande. */
+/** Vrai pour une ligne de viande ou de charcuterie (une ligne de l'inventaire « viande »), sinon c'est un fromage. */
+export const estLigneDeViande = (article: string): boolean => article.startsWith(`${GENRE_ARTICLE.VIANDE}:`);
+
+/** La vente que la livraison d'une ligne de commande enregistre : des fromages, de la viande ou de la charcuterie à la pièce, au prix de la commande. */
 export function venteDeLaLigne(
   commande: Commande,
   ligne: LigneCommande,
@@ -62,6 +66,26 @@ export function venteDeLaLigne(
   avecFacture: boolean,
   numeroFacture?: string,
 ): Omit<Vente, 'id'> {
+  if (estLigneDeViande(ligne.article)) {
+    return {
+      activite,
+      date: dateLivraison,
+      categorie: CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+      // Le détail de la vente est la ligne de l'inventaire : c'est elle qui baisse au stock.
+      precision: ligne.libelle,
+      quantite: ligne.quantite,
+      unite: UNITE_VENTE.PIECE,
+      prix: totalLigne(ligne),
+      tauxTva: tauxTvaDeLaVente(CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE),
+      client: commande.client,
+      choixFacture: avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
+      numeroFacture: avecFacture ? numeroFacture?.trim() || undefined : undefined,
+      payee: commande.enAttente ? false : undefined,
+      echeance: commande.enAttente && commande.echeance ? commande.echeance : undefined,
+      circuit: commande.circuit,
+      commandeId: commande.id,
+    };
+  }
   const code = ligne.article.split(':')[1];
   const type = (Object.values(TYPE_FROMAGE) as string[]).includes(code)
     ? (code as (typeof TYPE_FROMAGE)[keyof typeof TYPE_FROMAGE])

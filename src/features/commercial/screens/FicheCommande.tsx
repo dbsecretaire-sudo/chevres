@@ -29,7 +29,8 @@ import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import { categorieDuClient, venteDeclareeParDefaut } from '@/features/clients/services/categorie';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
+import { articlesDuGenre, estLigneDuCheptel, type ArticleAffiche } from '@/features/stock/services/stock';
+import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { ajouterJours } from '@/shared/utils/calendrier';
 import { JOURS_AVANT_LIVRAISON, STATUT_COMMANDE, type StatutCommande } from '@/shared/constants/commercial';
@@ -65,6 +66,7 @@ export default function FicheCommande() {
   const [fromages, setFromages] = useState<ArticleAffiche[]>([]);
   const [prixInventaire, setPrixInventaire] = useState<Record<string, number>>({});
   const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
+  const niveaux = useNiveauxStock();
 
   const [clientId, setClientId] = useState('');
   const [clientLibre, setClientLibre] = useState('');
@@ -99,7 +101,11 @@ export default function FicheCommande() {
         id ? getCommande(id) : Promise.resolve(undefined),
       ]).then(([listeClients, stock, archive, commande]) => {
         setClients(listeClients);
-        setFromages(articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock));
+        // Les produits qu'on commande : les fromages, puis la viande et la charcuterie de l'inventaire (hors animaux du cheptel).
+        setFromages([
+          ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock),
+          ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock).filter((a) => !estLigneDuCheptel(a.cle)),
+        ]);
         setPrixInventaire(stock.prix);
         setCommercial(archive);
         if (commande) {
@@ -260,7 +266,12 @@ export default function FicheCommande() {
     { value: '', label: T.clientPlaceholder },
     ...clients.map((c) => ({ value: c.id, label: nomComplet(c) })),
   ];
-  const optionsFromages = fromages.map((f) => ({ value: f.cle, label: f.libelle }));
+  /** Le stock qu'il reste de chaque produit : dans la liste, et sous la ligne avec ce qui reste après la commande. */
+  const enStock = (article: string): number => niveaux.get(article) ?? 0;
+  const optionsFromages = fromages.map((f) => ({
+    value: f.cle,
+    label: `${f.libelle} (${T.enStock(enStock(f.cle))})`,
+  }));
 
   return (
     <Screen>
@@ -304,6 +315,13 @@ export default function FicheCommande() {
               options={optionsFromages}
               onChange={(article) => changerFromage(l.id, article)}
             />
+            {/* Ce qui reste en stock de ce produit, et ce qu'il en restera une fois la commande livrée. */}
+            <Text style={commonStyles.note}>
+              {T.resteEnStock(
+                enStock(l.article),
+                enStock(l.article) - Math.round(parseDecimal(l.quantite)),
+              )}
+            </Text>
             <View style={styles.champsLigne}>
               <View style={styles.champLigne}>
                 <FormField

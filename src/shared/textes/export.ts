@@ -347,7 +347,7 @@ export const TEXTES_EXPORT = {
         note: 'Note',
         numero: 'N°',
         livraison: 'Livraison prévue',
-        articles: 'Fromages commandés',
+        articles: 'Produits commandés',
         total: 'Total (€)',
       },
     },

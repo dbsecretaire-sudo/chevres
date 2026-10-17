@@ -148,9 +148,14 @@ export const TEXTES_COMMERCIAL = {
     date: 'Date de la commande',
     livraison: 'Livraison prévue',
     circuit: 'Circuit de vente',
-    lignes: 'Fromages commandés',
-    ajouterLigne: 'Ajouter un fromage',
-    fromage: 'Fromage',
+    lignes: 'Produits commandés',
+    ajouterLigne: 'Ajouter un produit',
+    fromage: 'Produit (fromage, viande, charcuterie)',
+    enStock: (n: number) => `${n} en stock`,
+    resteEnStock: (stock: number, apres: number) =>
+      apres < 0
+        ? `En stock : ${stock} — il en manque ${-apres} pour cette commande.`
+        : `En stock : ${stock} — il en restera ${apres} après cette commande.`,
     quantite: 'Quantité (pièces)',
     prix: 'Prix à la pièce (€)',
     total: (montant: string) => `Total : ${montant}`,
@@ -166,8 +171,8 @@ export const TEXTES_COMMERCIAL = {
     supprimerTitre: 'Supprimer cette commande ?',
     supprimerMessage: 'La commande est supprimée. Si elle a été livrée, ses ventes restent en comptabilité.',
     clientRequis: 'Choisissez ou écrivez le contact.',
-    lignesRequises: 'Ajoutez au moins un fromage avec sa quantité.',
-    aucunFromage: 'Aucun fromage à l’inventaire : ajoutez-en d’abord.',
+    lignesRequises: 'Ajoutez au moins un produit avec sa quantité.',
+    aucunFromage: 'Aucun fromage, viande ou charcuterie à l’inventaire : ajoutez-en d’abord.',
     actions: {
       preparer: 'Marquer préparée',
       livrer: 'Livrer et enregistrer les ventes',
@@ -179,13 +184,13 @@ export const TEXTES_COMMERCIAL = {
     livrer: {
       titre: 'Livrer la commande',
       message: (n: number, montant: string) =>
-        `${n} vente${n > 1 ? 's' : ''} de fromages seront enregistrées (${montant}) et retirées du stock.`,
+        `${n} vente${n > 1 ? 's' : ''} (fromages, viande ou charcuterie) seront enregistrées (${montant}) et retirées du stock.`,
       confirmer: 'Livrer',
       livree: (date: string) => `Livrée le ${date}`,
     },
     defaire: {
       titre: 'Défaire la livraison ?',
-      message: 'Les ventes créées par la livraison sont supprimées et les fromages reviennent au stock.',
+      message: 'Les ventes créées par la livraison sont supprimées et les produits reviennent au stock.',
       confirmer: 'Défaire',
     },
   },
