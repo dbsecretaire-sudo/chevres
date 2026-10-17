@@ -1128,6 +1128,8 @@ export const TEXTES_CHEPTEL = {
     },
   },
   nouvelleNaissance: {
+    /** Le titre de l'écran quand la mère est connue (on arrive de sa fiche). */
+    titrePour: (boucle: string) => `Déclarer une naissance pour ${boucle}`,
     mereRequise: 'Mère requise',
     merciDeRenseignerLeN: 'Merci de renseigner le n° de boucle de la mère.',
     leNDoublonlocalEstUtilise: (doublonLocal: string) =>

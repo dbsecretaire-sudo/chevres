@@ -116,6 +116,8 @@ export function useNouvelleNaissance() {
     setDate,
     mereNumeroBoucle,
     setMereNumeroBoucle,
+    /** Vrai quand on arrive depuis la fiche de la mère : elle est connue, on ne la redemande pas. */
+    mereImposee: !!params.mereNumeroBoucle,
     optionsMeres,
     notes,
     setNotes,

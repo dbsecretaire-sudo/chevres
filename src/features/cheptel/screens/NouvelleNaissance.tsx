@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { Stack } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -20,6 +21,10 @@ export default function NouvelleNaissance() {
 
   return (
     <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
+      {/* Depuis la fiche de la mère : son numéro est dans le titre, à la place du champ. */}
+      {e.mereImposee ? (
+        <Stack.Screen options={{ title: TEXTES.cheptel.nouvelleNaissance.titrePour(e.mereNumeroBoucle) }} />
+      ) : null}
       <Screen>
         <SectionForm titre={TEXTES.commun.formulaire.naissance}>
           <DateField
@@ -29,15 +34,17 @@ export default function NouvelleNaissance() {
             onChange={e.setDate}
           />
           {/* La mère se choisit parmi les femelles vivantes qui avaient atteint la maturité sexuelle à la date de la mise bas. */}
-          <SelectField
-            label={TEXTES.commun.general.nDeBoucleDeLa}
-            required
-            searchable
-            value={e.mereNumeroBoucle}
-            onChange={e.setMereNumeroBoucle}
-            options={e.optionsMeres}
-            placeholder={TEXTES.cheptel.nouvelleNaissance.choisirLaMere}
-          />
+          {e.mereImposee ? null : (
+            <SelectField
+              label={TEXTES.commun.general.nDeBoucleDeLa}
+              required
+              searchable
+              value={e.mereNumeroBoucle}
+              onChange={e.setMereNumeroBoucle}
+              options={e.optionsMeres}
+              placeholder={TEXTES.cheptel.nouvelleNaissance.choisirLaMere}
+            />
+          )}
         </SectionForm>
 
         <Text style={styles.sectionTitle}>
