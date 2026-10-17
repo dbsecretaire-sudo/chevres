@@ -197,6 +197,7 @@ export const TEXTES_CHEPTEL = {
     aideAbattoir: 'Un lot d’abattoir : les animaux (avec boucle) envoyés à l’abattoir ce jour-là. Il se crée et se complète tout seul.',
     lierFacture: 'Lier la facture de l’abattoir',
     factureAbattoir: 'Facture de l’abattoir',
+    aucuneFactureAbattoir: 'Aucune dépense d’un contact de la catégorie Abattoir : rangez votre abattoir dans cette catégorie (Contacts), puis saisissez sa facture.',
     delierFacture: 'Délier cette facture',
     montantAbattoir: 'Ou noter le montant demandé par l’abattoir (€ TTC)',
     montantAbattoirAide: 'Ce que l’abattoir vous demande de payer (une dépense pour vous). Il est proposé en frais refacturés quand vous facturez la viande de ce lot au client.',
