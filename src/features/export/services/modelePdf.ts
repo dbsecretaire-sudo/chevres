@@ -6,6 +6,8 @@ const ENCRE = rgb(0.1, 0.1, 0.18);
 /** De quoi écrire sur un formulaire officiel ; les ordonnées se comptent du bas de la page du modèle, en points (comme dans le PDF). */
 export interface Outils {
   page: PDFPage;
+  /** La police grasse du document, pour écrire directement sur la page (un filigrane, par exemple). */
+  policeGrasse: PDFFont;
   /** Écrit un texte, sa ligne de base en (x, y). */
   texte: (x: number, y: number, valeur: string, taille?: number, gras?: boolean) => void;
   /** Écrit un texte centré sur `xCentre`. */
@@ -103,6 +105,7 @@ export async function remplirModele<T>(
       dessiner(
         {
           page,
+          policeGrasse: gras,
           texte,
           centre: (xCentre, y, valeur, taille = 9, enGras = false) => {
             const propre = nettoyer(choisir(enGras), valeur);

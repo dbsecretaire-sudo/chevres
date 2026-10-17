@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { documentCirculationHtml, donneesDeCirculation, lieuDArrivee } from '@/features/export/documentCirculationPdf';
+import { PDFDocument } from 'pdf-lib';
+import { donneesDeCirculation, FEUILLETS_CIRCULATION, lieuDArrivee, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
@@ -47,14 +48,26 @@ describe('document de circulation', () => {
     expect(lieuDArrivee({ categorie: 'animal_vivant' } as never, { categorie: 'organisme' })).toBe('elevage');
   });
 
-  it('le document dit qu’il est pour exemple et rappelle les cinq feuillets', () => {
-    const d = donneesDeCirculation({ vente: vente(), animaux: [animal('00462')], infos, petit: () => false });
-    const html = documentCirculationHtml(d);
-    expect(html).toContain('EXEMPLE');
-    expect(html).toContain('FR20213003');
-    expect(html).toContain('FR202100462');
-    expect(html).toContain('Blanc : à garder');
-    expect(html).toContain('pour la Chambre d’agriculture');
-    expect(html).toContain('pour le transporteur');
+  it('les informations sanitaires : aucun risque, ou des animaux sous délai d’attente pour la viande', () => {
+    const traitement = { id: 't', date: '2026-03-01', produit: 'Ivermectine', delaiViandeJours: 20, chevreNumeroBoucle: '00462' } as never;
+    const sans = donneesDeCirculation({ vente: vente(), animaux: [animal('00462')], infos, petit: () => false });
+    expect(sans.sanitaire).toEqual({ risque: false, animaux: [] });
+    const avec = donneesDeCirculation({ vente: vente(), animaux: [animal('00462'), animal('00463')], infos, petit: () => false, traitements: [traitement] });
+    expect(avec.sanitaire).toEqual({ risque: true, animaux: [{ boucle: '00462', produit: 'Ivermectine', fin: '2026-03-21' }] });
+  });
+
+  it('le PDF : le formulaire de la Chambre rempli (page 1) et le rappel des cinq feuillets (page 2)', async () => {
+    const d = donneesDeCirculation({
+      vente: vente(),
+      animaux: Array.from({ length: 45 }, (_, i) => animal(String(500 + i))),
+      infos,
+      petit: () => false,
+    });
+    const pdf = await PDFDocument.load(await remplirDocumentCirculation(d));
+    expect(pdf.getPageCount()).toBe(2);
+    expect(pdf.getPage(0).getSize().width).toBeCloseTo(593, 0);
+    expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('Blanc : à garder');
+    expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('pour la Chambre d’agriculture');
+    expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('pour le transporteur');
   });
 });

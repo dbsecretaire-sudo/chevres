@@ -1,5 +1,8 @@
 import { codePostalEtCommune } from '@/features/cheptel/services/estive';
 import { estPetitLe, getChevre } from '@/features/cheptel/repository/chevres';
+import { listTousTraitements } from '@/features/exploitation/repository/traitements';
+import { delaisDeLAnimal } from '@/features/exploitation/services/delaisAttente';
+import type { Traitement } from '@/features/exploitation/types';
 import type { Chevre } from '@/features/cheptel/types';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { listClients } from '@/features/clients/repository';
@@ -8,7 +11,10 @@ import { getVente } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { avecIndicatif } from '@/features/export/services/lignesExport';
-import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
+import { ecrirePdfBase64EtPartager } from '@/features/export/services/htmlPdf';
+import { MODELE_CIRCULATION } from '@/features/export/modeles/circulation';
+import { remplirModele, type Outils } from '@/features/export/services/modelePdf';
+import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { identiteDuSuivi } from '@/features/export/suiviMouvementsPdf';
 import { getSettings, identificationCheptel, type InfosExploitation } from '@/features/settings/settings';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
@@ -45,6 +51,11 @@ export interface DonneesCirculation {
   /** Les reproducteurs et réformes : le nombre, et leur numéro individuel (indicatif + numéro). */
   reproducteurs: number;
   individuels: string[];
+  /**
+   * L'information sanitaire (la chaîne alimentaire) : des animaux sous délai d'attente pour la viande le jour du chargement — un
+   * traitement en cours — obligent à fournir le document dédié au détenteur d'arrivée ; sinon, aucun risque à signaler.
+   */
+  sanitaire: { risque: boolean; animaux: { boucle: string; produit: string; fin: string }[] };
 }
 
 /** Le lieu d'arrivée d'après la vente : l'abattoir pour de la viande déclarée, sinon d'après la catégorie du client. */
@@ -76,8 +87,15 @@ export function donneesDeCirculation(entree: {
   infos?: InfosExploitation;
   /** Vrai pour un petit à la date de la vente (voir estPetitLe). */
   petit: (animal: Chevre) => boolean;
+  /** Les traitements de l'élevage : ceux dont le délai d'attente pour la viande court le jour du chargement sont signalés. */
+  traitements?: Traitement[];
 }): DonneesCirculation {
-  const { vente, animaux, client, infos, petit } = entree;
+  const { vente, animaux, client, infos, petit, traitements = [] } = entree;
+  const jour = vente.dateAbattoir && vente.categorie === CATEGORIE_VENTE.VIANDE ? vente.dateAbattoir : vente.date;
+  const sousDelai = animaux.flatMap((a) => {
+    const delai = delaisDeLAnimal(a.numeroBoucle, traitements, jour).viande;
+    return delai ? [{ boucle: a.numeroBoucle ?? '—', produit: delai.traitement.produit, fin: delai.fin }] : [];
+  });
   const identite = identiteDuSuivi(infos);
   const espece = animaux[0] ? especeDe(animaux[0]) : undefined;
   const indicatif = (a: Chevre) => identificationCheptel(infos, especeDe(a)).indicatifMarquage ?? '';
@@ -104,136 +122,169 @@ export function donneesDeCirculation(entree: {
     boucherie: [...parIndicatif.entries()].map(([ind, nombre]) => ({ indicatif: ind, nombre })),
     reproducteurs: individuels.length,
     individuels: individuels.sort(),
+    sanitaire: { risque: sousDelai.length > 0, animaux: sousDelai },
   };
 }
-
-const STYLES = `
-  * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 0 5mm; font-size: 8.5pt; position: relative; }
-  .exemple { background: #fff3b0; border: 1.5px solid #c9a800; padding: 2mm 3mm; font-weight: 700; margin-bottom: 3mm; }
-  .filigrane { position: fixed; top: 105mm; left: 0; right: 0; text-align: center; font-size: 90pt; font-weight: 800; color: rgba(0,0,0,0.07); transform: rotate(-30deg); z-index: 0; }
-  .titre { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2mm; }
-  .titre h1 { font-size: 13pt; margin: 0; text-align: center; flex: 1; }
-  .titre h1 small { display: block; font-size: 10pt; }
-  .folio { border: 1.2px solid #111; width: 42mm; padding: 1.5mm 2mm; font-weight: 700; }
-  table { width: 100%; border-collapse: collapse; table-layout: fixed; position: relative; z-index: 1; }
-  td, th { border: 1.2px solid #111; padding: 1.2mm 2mm; vertical-align: top; }
-  .blanc td { height: 6mm; }
-  .entete { text-align: center; font-weight: 800; background: #eee; }
-  .valeur { color: #1a2a8a; font-weight: 700; }
-  .case { display: inline-block; width: 3.2mm; height: 3.2mm; border: 1px solid #111; margin: 0 1mm 0 2mm; vertical-align: -0.5mm; text-align: center; line-height: 3mm; font-size: 8pt; font-weight: 800; color: #1a2a8a; }
-  h2 { font-size: 9.5pt; margin: 4mm 0 1.5mm; }
-  .numeros td { height: 6mm; text-align: center; }
-  .signature td { height: 22mm; }
-  .rappel { margin-top: 4mm; border: 1.5px solid #111; padding: 2mm 3mm; position: relative; z-index: 1; background: #fff; }
-  .rappel h3 { margin: 0 0 1.5mm; font-size: 9.5pt; }
-  .rappel .ligne { display: flex; align-items: center; gap: 2mm; margin: 0.8mm 0; }
-  .puce { width: 5mm; height: 5mm; border: 1px solid #111; flex: none; }
-  .note { font-size: 7.5pt; color: #444; margin-top: 1.5mm; }
-`;
-
-const caseHtml = (cochee: boolean): string => `<span class="case">${cochee ? '✕' : ''}</span>`;
 
 /** Les feuillets de la liasse, avec leur couleur et ce qu'on en fait (le rappel du document de circulation). */
 export const FEUILLETS_CIRCULATION = [
-  { couleur: '#ffffff', libelle: C.feuillets.blanc },
-  { couleur: '#7ec27e', libelle: C.feuillets.vert },
-  { couleur: '#7ea8e0', libelle: C.feuillets.bleu },
-  { couleur: '#f2a6c1', libelle: C.feuillets.rose },
-  { couleur: '#f6e05e', libelle: C.feuillets.jaune },
+  { couleur: [1, 1, 1], libelle: C.feuillets.blanc },
+  { couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.vert },
+  { couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.bleu },
+  { couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.rose },
+  { couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.jaune },
 ] as const;
 
-/** Le document de circulation, rempli pour exemple d'après la vente : à recopier sur la liasse officielle de la Chambre d'agriculture. */
-export function documentCirculationHtml(d: DonneesCirculation): string {
-  const lieux: [LieuArrivee, string][] = [
-    [LIEU_ARRIVEE.ELEVAGE, C.lieux.elevage],
-    [LIEU_ARRIVEE.OPERATEUR, C.lieux.operateur],
-    [LIEU_ARRIVEE.CENTRE, C.lieux.centre],
-    [LIEU_ARRIVEE.MARCHE, C.lieux.marche],
-    [LIEU_ARRIVEE.ABATTOIR, C.lieux.abattoir],
-    [LIEU_ARRIVEE.PARTICULIER, C.lieux.particulier],
-  ];
-  const choixDepart = `${caseHtml(true)}${echapper(C.lieux.elevage)} ${caseHtml(false)}${echapper(C.lieux.operateur)} ${caseHtml(false)}${echapper(C.lieux.centre)} ${caseHtml(false)}${echapper(C.lieux.marche)}`;
-  const choixArrivee = lieux.map(([lieu, libelle]) => `${caseHtml(d.arrivee.lieu === lieu)}${echapper(libelle)}`).join(' ');
-  const nombreBoucherie = d.boucherie.reduce((t, b) => t + b.nombre, 0);
-  const ligneOvins = (valeurBoucherie: number, valeurRepro: number, ovins: boolean) =>
-    `<tr><td>${echapper(ovins ? C.ovins : C.caprins)}</td><td class="valeur">${ovins === d.ovins && valeurBoucherie > 0 ? valeurBoucherie : ''}</td><td class="valeur">${ovins === d.ovins && valeurRepro > 0 ? valeurRepro : ''}</td></tr>`;
-  const tableauComptes = `<table>
-      <tr><td></td><th>${echapper(C.boucherie)}</th><th>${echapper(C.reproducteurs)}</th></tr>
-      ${ligneOvins(nombreBoucherie, d.reproducteurs, true)}
-      ${ligneOvins(nombreBoucherie, d.reproducteurs, false)}
-    </table>`;
-  const bloc = (titre: string, entete: string, p: DonneesCirculation['depart'] | (DonneesCirculation['arrivee'] & { numeroExploitation?: string; siren?: string })) => {
-    const numero = 'numeroExploitation' in p ? (p.numeroExploitation ?? '') : '';
-    const siren = 'siren' in p ? (p.siren ?? '') : '';
-    return `<td style="width:50%">
-      <div class="entete">${echapper(titre)}</div>
-      <div>${entete}</div>
-      <div><b>${echapper(C.numeroExploitation)}</b> <span class="valeur">${echapper(numero)}</span></div>
-      <div><b>${echapper(C.siren)}</b> <span class="valeur">${echapper(siren)}</span></div>
-      <div>${echapper(C.detenteur)} : <span class="valeur">${echapper(p.nom)}</span></div>
-      <div>${echapper(C.adresse)} : <span class="valeur">${echapper(p.adresse)}</span></div>
-      <div>${echapper(C.codePostal)} : <span class="valeur">${echapper(p.codePostal)}</span> — ${echapper(C.commune)} : <span class="valeur">${echapper(p.commune)}</span></div>
-      ${tableauComptes}
-    </td>`;
+/** Le nombre de lignes du tableau des numéros individuels du formulaire (dix lignes de quatre colonnes) : le reste va sur la page d'annexe. */
+const PLACES_INDIVIDUELLES = 40;
+
+/**
+ * Écrit les valeurs d'une vente sur le formulaire (la feuille du détenteur de départ, telle que la Chambre la fournit). Les positions sont
+ * celles du modèle remis à l'endroit : points depuis le coin bas gauche de la page (593 × 839).
+ */
+function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
+  // Le bandeau du haut : pour exemple (le filigrane « EXEMPLE » passe en travers de la page).
+  o.centre(296, 829, C.bandeauCourt, 8, true);
+  o.page.drawText(C.exemple, { x: 120, y: 250, size: 120, font: o.policeGrasse, color: rgb(0, 0, 0), opacity: 0.06, rotate: degrees(40) });
+  // Le chargement : la date de la vente.
+  o.ajuste(150, 762.5, formatDateFR(d.date), 85, 9);
+  // Le départ : un élevage, avec son numéro d'exploitation (FR + chiffres, en cases) et son SIREN.
+  o.croix(43, 706, 7.5);
+  const exploitation = d.depart.numeroExploitation;
+  o.cases(145, 672.5, 11.4, exploitation.slice(0, 2), 10);
+  o.cases(177, 672.5, 11.46, exploitation.slice(2), 10);
+  o.cases(162.5, 650.5, 11.4, d.depart.siren, 10);
+  // L'arrivée : son type (case cochée) — son numéro d'exploitation ou d'abattoir reste à écrire, le client ne nous le donne pas.
+  const casesArrivee: Record<LieuArrivee, [number, number]> = {
+    elevage: [312, 705.5],
+    operateur: [357.7, 705.5],
+    centre: [424, 705.5],
+    marche: [516, 705.5],
+    abattoir: [311, 692.5],
+    particulier: [357.7, 692.5],
   };
-  const individuels = d.individuels.length > 0 ? d.individuels : [];
-  const lignesIndividuels = Array.from({ length: Math.max(8, Math.ceil(individuels.length / 4)) }, (_, r) =>
-    `<tr>${[0, 1, 2, 3].map((c) => `<td class="valeur">${echapper(individuels[c * Math.max(8, Math.ceil(individuels.length / 4)) + r] ?? '')}</td>`).join('')}</tr>`,
-  ).join('');
-  const lignesBoucherie = Array.from({ length: 3 }, (_, i) =>
-    `<td>${echapper(C.indicatif)} : <span class="valeur">${echapper(d.boucherie[i]?.indicatif ?? '')}</span></td><td class="valeur" style="width:14mm">${d.boucherie[i]?.nombre ?? ''}</td>`,
-  ).join('');
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8" />
-<style>${STYLES}</style>
-</head>
-<body>
-  <div class="filigrane">${echapper(C.exemple)}</div>
-  <div class="exemple">${echapper(C.bandeau)}</div>
-  <div class="titre">
-    <h1>${echapper(C.titre)}<small>${echapper(C.sousTitre)}</small></h1>
-    <div class="folio">${echapper(C.folio)} :</div>
-  </div>
-  <table class="blanc">
-    <tr><td>${echapper(C.transporteur)} :</td><td>${echapper(C.numeroTransporteur)} :</td><td>${echapper(C.vehicule)} :</td></tr>
-    <tr><td colspan="2">${echapper(C.chargement)} : <span class="valeur">${echapper(formatDateFR(d.date))}</span></td><td>${echapper(C.dechargement)} :</td></tr>
-  </table>
-  <table style="margin-top:2mm"><tr>
-    ${bloc(C.depart, choixDepart, d.depart)}
-    ${bloc(C.arrivee, choixArrivee, d.arrivee)}
-  </tr></table>
-  <h2>${echapper(C.aCompleter)}</h2>
-  <table><tr>${lignesBoucherie}</tr></table>
-  <div style="margin:1.5mm 0; font-weight:700">${echapper(C.titreBoucherie)}</div>
-  <div style="font-weight:700; margin-top:2mm">${echapper(C.titreReproducteurs)}</div>
-  <table class="numeros">${lignesIndividuels}</table>
-  <table class="signature" style="margin-top:3mm"><tr>
-    <td style="width:60%">${echapper(C.attestation)}<br><br>${echapper(C.dateSignature)}</td>
-    <td>${echapper(C.detenteurArrivee)}<br><br>${echapper(C.dateSignature)}</td>
-  </tr></table>
-  <div class="rappel">
-    <h3>${echapper(C.rappelTitre)}</h3>
-    ${FEUILLETS_CIRCULATION.map((f) => `<div class="ligne"><span class="puce" style="background:${f.couleur}"></span>${echapper(f.libelle)}</div>`).join('')}
-    <div class="note">${echapper(C.rappelNote)}</div>
-  </div>
-</body>
-</html>`;
+  const [cx, cy] = casesArrivee[d.arrivee.lieu];
+  o.croix(cx, cy, 7.5);
+  // Le détenteur, l'adresse, le code postal et la commune des deux côtés.
+  const coordonnees = (x: number, p: { nom: string; adresse: string; codePostal: string; commune: string }) => {
+    o.ajuste(x, 632, p.nom, 163, 9);
+    o.ajuste(x, 603.5, p.adresse, 163, 8.5);
+    o.texte(x, 590.5, p.codePostal, 9);
+    o.ajuste(x, 578, p.commune, 163, 9);
+  };
+  coordonnees(124, d.depart);
+  coordonnees(394, d.arrivee);
+  // Les nombres d'animaux : la ligne des ovins ou des caprins, la colonne des petits de boucherie ou des reproducteurs et réformes.
+  const nombreBoucherie = d.boucherie.reduce((t, b) => t + b.nombre, 0);
+  const yLigne = d.ovins ? 538 : 520;
+  const nombres = (xBoucherie: number, xRepro: number) => {
+    if (nombreBoucherie > 0) o.centre(xBoucherie, yLigne, String(nombreBoucherie), 10, true);
+    if (d.reproducteurs > 0) o.centre(xRepro, yLigne, String(d.reproducteurs), 10, true);
+  };
+  nombres(164, 249);
+  nombres(430.9, 516.8);
+  // Les petits de boucherie : l'indicatif de marquage (en cases) et leur nombre, trois indicatifs au plus.
+  const lotsBoucherie: { x0: number; pas: number; xNombre: number }[] = [
+    { x0: 79.3, pas: 11.5, xNombre: 176 },
+    { x0: 226.7, pas: 11.4, xNombre: 335 },
+    { x0: 374, pas: 11.55, xNombre: 470.5 },
+  ];
+  d.boucherie.slice(0, 3).forEach((b, i) => {
+    const { x0, pas, xNombre } = lotsBoucherie[i];
+    if (b.indicatif.length <= 6) o.cases(x0, 417.5, pas, b.indicatif, 10);
+    else o.ajuste(x0, 417.5, b.indicatif, 6 * pas, 9);
+    o.centre(xNombre, 421, String(b.nombre), 10, true);
+  });
+  // Les reproducteurs et réformes : un numéro individuel par case du tableau, colonne après colonne.
+  const colonnes = [38, 170, 302, 433];
+  d.individuels.slice(0, PLACES_INDIVIDUELLES).forEach((numero, k) => {
+    const colonne = Math.floor(k / 10);
+    const ligne = k % 10;
+    o.ajuste(colonnes[colonne], 355.3 - 17.3 * ligne - 12.3, numero, 122, 9);
+  });
+  // Les informations sanitaires : la mention utile est cochée (aucun risque, ou des animaux sous délai d'attente).
+  if (d.sanitaire.risque) o.croix(46.7, 92, 6.5);
+  else o.croix(46.7, 115, 6.5);
+  o.texte(120, 66, formatDateFR(d.date), 8.5);
 }
 
-/** Crée le document de circulation (exemple) d'une vente d'animaux et l'ouvre à l'envoi ou à l'impression ; rien (faux) sans animal. */
+/**
+ * Le document de circulation d'une vente d'animaux, rempli pour exemple sur le formulaire de la Chambre : la feuille du détenteur de départ
+ * (page 1), puis une page de rappel (les feuillets de la liasse et à qui les remettre, les animaux sous délai d'attente, les numéros qui ne
+ * tiennent pas dans le tableau). Rend le PDF en base64.
+ */
+export async function remplirDocumentCirculation(d: DonneesCirculation): Promise<string> {
+  const page1 = await remplirModele(MODELE_CIRCULATION, [[d]], (outils, element) => ecrireLeFormulaire(outils, element));
+  const doc = await PDFDocument.load(page1);
+  const police = await doc.embedFont(StandardFonts.Helvetica);
+  const gras = await doc.embedFont(StandardFonts.HelveticaBold);
+  const page = doc.addPage([595.28, 841.89]);
+  const propre = (texte: string) => [...texte].map((c) => (police.getCharacterSet().includes(c.codePointAt(0) ?? 0) ? c : '?')).join('');
+  let y = 790;
+  /** Écrit un texte en le coupant à la largeur de la page : une ligne par morceau. */
+  const ligne = (texte: string, taille = 10, enGras = false, x = 50) => {
+    const font = enGras ? gras : police;
+    const largeur = 545 - x;
+    let courante = '';
+    const ecrire = (morceau: string) => {
+      page.drawText(propre(morceau), { x, y, size: taille, font, color: rgb(0.1, 0.1, 0.18) });
+      y -= taille + 3;
+    };
+    for (const mot of propre(texte).split(' ')) {
+      const essai = courante ? `${courante} ${mot}` : mot;
+      if (courante && font.widthOfTextAtSize(essai, taille) > largeur) {
+        ecrire(courante);
+        courante = mot;
+      } else courante = essai;
+    }
+    if (courante) ecrire(courante);
+    y -= 3;
+  };
+  ligne(C.bandeau, 9, true);
+  y -= 10;
+  ligne(C.rappelTitre, 13, true);
+  y -= 4;
+  for (const f of FEUILLETS_CIRCULATION) {
+    page.drawRectangle({ x: 50, y: y - 2, width: 12, height: 12, color: rgb(f.couleur[0], f.couleur[1], f.couleur[2]), borderColor: rgb(0, 0, 0), borderWidth: 0.8 });
+    ligne(f.libelle, 10.5, false, 70);
+  }
+  y -= 4;
+  ligne(C.rappelNote, 8);
+  if (d.sanitaire.animaux.length > 0) {
+    y -= 14;
+    ligne(C.sanitaire.titre, 11, true);
+    ligne(C.sanitaire.risque, 9);
+    for (const a of d.sanitaire.animaux) ligne(`${a.boucle} : ${a.produit}, ${C.sanitaire.jusquau} ${formatDateFR(a.fin)}`, 9.5, false, 60);
+  }
+  if (d.individuels.length > PLACES_INDIVIDUELLES) {
+    y -= 14;
+    ligne(C.suiteNumeros, 11, true);
+    const reste = d.individuels.slice(PLACES_INDIVIDUELLES);
+    for (let i = 0; i < reste.length; i += 4) ligne(reste.slice(i, i + 4).join('    '), 9.5, false, 60);
+  }
+  return doc.saveAsBase64();
+}
+
+/** Crée le document de circulation (exemple) d'une vente d'animaux et l'ouvre à l'envoi ou à l'impression ; faux sans animal. */
 export async function exporterDocumentCirculationPdf(venteId: string): Promise<boolean> {
   const vente = await getVente(venteId);
   if (!vente) return false;
   const animaux = (await Promise.all(idsDesAnimaux(vente).map(getChevre))).filter((a): a is Chevre => !!a);
   if (animaux.length === 0) return false;
-  const [clients, settings] = await Promise.all([listClients(), getSettings()]);
+  const [clients, settings, traitements] = await Promise.all([listClients(), getSettings(), listTousTraitements()]);
   const client = clients.find((c) => nomComplet(c) === vente.client?.trim());
-  const html = documentCirculationHtml(
-    donneesDeCirculation({ vente, animaux, client, infos: settings.exploitation, petit: (a) => estPetitLe(a, vente.date) }),
+  const donnees = donneesDeCirculation({
+    vente,
+    animaux,
+    client,
+    infos: settings.exploitation,
+    petit: (a) => estPetitLe(a, vente.date),
+    traitements,
+  });
+  await ecrirePdfBase64EtPartager(
+    await remplirDocumentCirculation(donnees),
+    `${C.fichier}_${vente.date}.${FORMAT_EXPORT.PDF}`,
+    C.titre,
   );
-  await ecrireEtPartagerPdf(html, `${C.fichier}_${vente.date}.${FORMAT_EXPORT.PDF}`, C.titre);
   return true;
 }
