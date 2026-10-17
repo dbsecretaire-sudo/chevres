@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { Badge } from '@/shared/components/Badge';
@@ -12,12 +12,7 @@ import { VenteFormulaire } from '@/features/comptabilite/components/VenteFormula
 import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
 import { AnimauxDeLaVente } from '@/features/comptabilite/components/AnimauxDeLaVente';
 import { AnimauxVendusEdition } from '@/features/comptabilite/components/AnimauxVendusEdition';
-import { Button } from '@/shared/components/Button';
-import { Card } from '@/shared/components/Card';
-import {
-  exporterDocumentCirculationPdf,
-  FEUILLETS_CIRCULATION,
-} from '@/features/export/documentCirculationPdf';
+import { exporterDocumentCirculationPdf } from '@/features/export/documentCirculationPdf';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -41,6 +36,23 @@ export default function FicheVente() {
 
   return (
     <Screen scroll={false}>
+      {/* Des animaux vendus vivants : le document de circulation (pré-rempli, pour exemple) se génère depuis l'en-tête. */}
+      {idsDesAnimaux(vente).length > 0 && !fiche.editing ? (
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <Pressable
+                style={commonStyles.boutonEnteteDroite}
+                onPress={() => exporterDocumentCirculationPdf(vente.id).catch(() => undefined)}
+                hitSlop={10}
+                accessibilityRole="button"
+              >
+                <Text style={commonStyles.texteEntete}>{TEXTES.cheptel.circulation.bouton}</Text>
+              </Pressable>
+            ),
+          }}
+        />
+      ) : null}
       <ScrollView style={commonStyles.flex1} contentContainerStyle={commonStyles.scrollContent}>
         <View style={commonStyles.header}>
           <View style={commonStyles.flex1}>
@@ -117,22 +129,6 @@ export default function FicheVente() {
           <>
             <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} />
             <AnimauxDeLaVente vente={vente} />
-            {/* Des animaux vendus vivants : le document de circulation, rempli pour exemple, et le rappel des feuillets de la liasse. */}
-            {idsDesAnimaux(vente).length > 0 ? (
-              <Card style={commonStyles.gap8}>
-                <Button
-                  variant="secondary"
-                  label={TEXTES.cheptel.circulation.bouton}
-                  onPress={() => exporterDocumentCirculationPdf(vente.id).catch(() => undefined)}
-                />
-                <Text style={commonStyles.note}>{TEXTES.cheptel.circulation.aide}</Text>
-                {FEUILLETS_CIRCULATION.filter((f) => f.libelle).map((f) => (
-                  <Text key={f.libelle} style={commonStyles.line}>
-                    {f.libelle}
-                  </Text>
-                ))}
-              </Card>
-            ) : null}
           </>
         )}
       </ScrollView>

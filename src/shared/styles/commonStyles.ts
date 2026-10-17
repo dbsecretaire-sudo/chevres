@@ -22,6 +22,8 @@ export const commonStyles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   /** Un bouton à droite d'un en-tête d'écran : décollé du bord, comme la flèche de retour à gauche. */
   boutonEnteteDroite: { marginRight: 16 },
+  /** Un bouton texte dans l'en-tête vert (blanc, gras). */
+  texteEntete: { color: colors.blanc, fontSize: 15, fontWeight: '700' },
   /** Les boutons de l'en-tête, plus espacés (deux icônes côte à côte). */
   headerDroiteEspacee: { gap: 18 },
   headerDroite: { flexDirection: 'row', alignItems: 'center', gap: 4 },
