@@ -2,18 +2,24 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { listClients } from '@/features/clients/repository';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
-import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/clients/services/categorie';
+import {
+  estClientAbattoir,
+  numeroFactureLibre,
+  prixLibre,
+  reajustementPossible,
+} from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre } from '@/features/cheptel/repository/chevres';
 import {
   idsDesAnimaux,
+  reglageEtatAnimaux,
   sortieDesAnimauxDeLaVente,
   venteADeclarer,
 } from '@/features/comptabilite/utils/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { totalDeLaVente } from '@/features/stock/services/stock';
+import { estVenteDeCabris, totalDeLaVente } from '@/features/stock/services/stock';
 import { fromagesRequis } from '@/features/stock/services/lots';
 import { roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
 import type { Vente } from '@/features/comptabilite/types';
@@ -206,12 +212,26 @@ export function useFicheVente(id: string | undefined) {
     }
 
     try {
+      // L'état des animaux d'une vente de viande : voir reglageEtatAnimaux (abattoir : vivants ; cabris avec facture : morts ; sinon morts par défaut).
+      const reglage = reglageEtatAnimaux({
+        clientAbattoir: estClientAbattoir(clientDeLaVente),
+        cabris: form.categorie === CATEGORIE_VENTE.VIANDE && estVenteDeCabris(form, await lireArchiveStock()),
+        declaree: venteADeclarer(form),
+      });
       const nettoye: Vente = {
         ...form,
         prix,
         quantite: reajustement ? 0 : quantite,
         reajustement: reajustement ? true : undefined,
         offert: form.offert ? true : undefined,
+        etatAnimaux:
+          form.categorie !== CATEGORIE_VENTE.VIANDE
+            ? undefined
+            : reglage.choix
+              ? form.etatAnimaux === 'vivants'
+                ? 'vivants'
+                : 'morts'
+              : reglage.etat,
         client: form.client?.trim() || undefined,
         fraisAbattoir: prixDeLInventaire && frais > 0 ? frais : undefined,
         tauxTvaFrais: prixDeLInventaire && frais > 0 ? (form.tauxTvaFrais ?? form.tauxTva) : undefined,

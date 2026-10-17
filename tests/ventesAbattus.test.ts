@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { joursAbattusAFacturer } from '@/features/comptabilite/utils/animauxVendus';
-import { documentCirculationRequis, sortieDesAnimauxDeLaVente } from '@/features/comptabilite/utils/ventes';
+import { documentCirculationRequis, reglageEtatAnimaux, sortieDesAnimauxDeLaVente } from '@/features/comptabilite/utils/ventes';
 import type { Chevre } from '@/features/cheptel/types';
 
 const abattu = (id: string, jour: string): Chevre =>
@@ -40,5 +40,14 @@ describe('document de circulation : vente déclarée et transport d’animaux vi
     expect(sortieDesAnimauxDeLaVente(vente({ etatAnimaux: 'vivants' })).statut).toBe('vendue');
     expect(sortieDesAnimauxDeLaVente(vente({ etatAnimaux: 'morts' })).statut).toBe('morte');
     expect(sortieDesAnimauxDeLaVente(vente({})).statut).toBe('abattoir');
+  });
+});
+
+describe('état des animaux d’une vente de viande', () => {
+  it('abattoir : toujours vivants ; cabris avec facture : toujours morts ; sinon au choix', () => {
+    expect(reglageEtatAnimaux({ clientAbattoir: true, cabris: true, declaree: true })).toEqual({ choix: false, etat: undefined });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, cabris: true, declaree: true })).toEqual({ choix: false, etat: 'morts' });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, cabris: false, declaree: true })).toEqual({ choix: true });
+    expect(reglageEtatAnimaux({ clientAbattoir: false, cabris: true, declaree: false })).toEqual({ choix: true });
   });
 });

@@ -39,6 +39,18 @@ export const sortieDesAnimauxDeLaVente = (
       : { statut: STATUT_CHEVRE.MORTE, date: vente.date };
 
 /**
+ * L'état des animaux d'une vente de viande : un client de catégorie Abattoir les reçoit toujours vivants (pas de choix) ; des cabris vendus à
+ * un contact qui souhaite une facture sont toujours morts ; sinon, vivants ou morts, morts par défaut.
+ */
+export type ReglageEtatAnimaux = { choix: true } | { choix: false; etat: 'vivants' | 'morts' | undefined };
+export const reglageEtatAnimaux = (o: { clientAbattoir: boolean; cabris: boolean; declaree: boolean }): ReglageEtatAnimaux =>
+  o.clientAbattoir
+    ? { choix: false, etat: undefined }
+    : o.cabris && o.declaree
+      ? { choix: false, etat: 'morts' }
+      : { choix: true };
+
+/**
  * Un document de circulation est nécessaire quand la vente est déclarée et qu'il y a transport d'animaux vivants : des animaux vendus
  * vivants (au particulier, au professionnel), ou envoyés vivants à l'abattoir. Des animaux déjà morts, ou une vente sans facture : aucun.
  */

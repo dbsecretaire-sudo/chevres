@@ -20,7 +20,7 @@ import {
 } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { fromagesRequis } from '@/features/stock/services/lots';
-import { comptesDeLInventaire } from '@/features/stock/services/stock';
+import { comptesDeLInventaire, estVenteDeCabris } from '@/features/stock/services/stock';
 import { erreurAchatBoucles } from '@/features/stock/services/boucles';
 import { synchroniserVisiteFacture } from '@/features/exploitation/services/visitesFacture';
 import { GENRE_ARTICLE, ROLE_VIANDE } from '@/shared/constants/stock';
@@ -50,6 +50,7 @@ import {
   numeroFactureLibre as numeroFactureLibreDuClient,
   reajustementPossible as reajustementPossibleDuClient,
   prixLibre as prixLibreDuClient,
+  estClientAbattoir,
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
 import {
@@ -612,7 +613,13 @@ export function useNouvelleEcriture(
         setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.lotsRequis });
         return;
       }
+      // Pour l'état des animaux : des cabris (le détail est la ligne des petits), et un client de catégorie Abattoir.
+      const cabris =
+        categorieRecette === CATEGORIE_RECETTE.VIANDE &&
+        estVenteDeCabris({ categorie: CATEGORIE_VENTE.VIANDE, precision, activite }, await lireArchiveStock());
       const resultat = construireEcriture({
+        cabris,
+        clientAbattoir: estClientAbattoir(clientSelectionne),
         activite,
         type,
         date,

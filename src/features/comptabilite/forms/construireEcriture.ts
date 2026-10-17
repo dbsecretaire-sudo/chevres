@@ -57,6 +57,7 @@ import {
   UNITE_VENTE,
   TYPE_CHOIX_FACTURE,
 } from '@/shared/constants/comptabilite';
+import { reglageEtatAnimaux } from '@/features/comptabilite/utils/ventes';
 import { nomComplet } from '@/shared/utils/personne';
 import { estDateISO } from '@/shared/utils/dates';
 import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
@@ -113,6 +114,9 @@ export interface SaisieEcriture {
   jeune?: boolean;
   /** Vente de viande : l'état des animaux à la remise (vide : à l'abattoir). */
   etatAnimaux?: string;
+  /** La vente est celle de cabris (le détail est la ligne des petits), et le client est un abattoir : voir reglageEtatAnimaux. */
+  cabris?: boolean;
+  clientAbattoir?: boolean;
   /** Les fiches des animaux vendus (animal sur pied ou vivant). */
   animaux: string[];
   /** Les lots vendus (un fromage ou une charcuterie qui a des lots se vend lot par lot). */
@@ -236,8 +240,17 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       poidsKg:
         (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
       jeune: estViande && s.jeune ? true : undefined,
-      etatAnimaux:
-        estViande && (s.etatAnimaux === 'vivants' || s.etatAnimaux === 'morts') ? s.etatAnimaux : undefined,
+      etatAnimaux: !estViande
+        ? undefined
+        : (() => {
+            const reglage = reglageEtatAnimaux({
+              clientAbattoir: !!s.clientAbattoir,
+              cabris: !!s.cabris,
+              declaree: s.avecFacture,
+            });
+            // Vivants ou morts, morts par défaut ; un abattoir (vivants) ou des cabris avec facture (morts) n'ont pas de choix.
+            return reglage.choix ? (s.etatAnimaux === 'vivants' ? 'vivants' : 'morts') : reglage.etat;
+          })(),
       animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
       fromages: lotsDeFromages > 0 ? s.fromages.join(SEPARATEUR_ANIMAUX) : undefined,
       dateAbattoir:

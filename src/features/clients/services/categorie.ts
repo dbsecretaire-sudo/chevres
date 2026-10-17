@@ -7,6 +7,12 @@ import { CATEGORIE_CLIENT, GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constant
 export const categorieDuClient = (client: Pick<Client, 'categorie'> | undefined): string =>
   categorieClientDe(client?.categorie).id;
 
+/** Vrai pour un client de catégorie « Abattoir » (son identifiant ou son nom) : les animaux lui partent toujours vivants. */
+export const estClientAbattoir = (client: Pick<Client, 'categorie'> | undefined): boolean => {
+  const categorie = categorieClientDe(client?.categorie);
+  return categorie.id === 'abattoir' || /abattoir/i.test(categorie.nom);
+};
+
 /** Vrai pour un client particulier : lui seul peut recevoir une réservation ou une vente sans facture. */
 export const estParticulier = (client: Pick<Client, 'categorie'> | undefined): boolean =>
   categorieDuClient(client) === CATEGORIE_CLIENT.PARTICULIER;

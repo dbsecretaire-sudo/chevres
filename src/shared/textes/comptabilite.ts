@@ -105,8 +105,9 @@ export const TEXTES_COMPTABILITE = {
   },
   ficheVente: {
     etatAnimaux: 'Animaux remis',
-    etatAbattoir: 'Vivants, envoyés à l’abattoir',
-    etatVivants: 'Vivants, vendus au contact',
+    versAbattoir: 'Un abattoir reçoit toujours les animaux vivants : le document de circulation est nécessaire pour une vente déclarée.',
+    cabrisAvecFacture: 'Des cabris vendus à un contact qui souhaite une facture sont toujours morts : pas de document de circulation.',
+    etatVivants: 'Vivants',
     etatMorts: 'Morts',
     etatAnimauxAide:
       'Un document de circulation n’est nécessaire que pour une vente déclarée avec des animaux vivants : des animaux déjà morts n’en ont pas.',

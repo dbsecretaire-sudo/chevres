@@ -16,9 +16,15 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
 import { ROUTES } from '@/shared/constants/routes';
-import { SECTION_STOCK } from '@/shared/constants/stock';
+import { ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { numeroFactureLibre, prixLibre, reajustementPossible } from '@/features/clients/services/categorie';
+import {
+  estClientAbattoir,
+  numeroFactureLibre,
+  prixLibre,
+  reajustementPossible,
+} from '@/features/clients/services/categorie';
+import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAnimaux';
 import type { Client } from '@/features/clients/types';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import type { Vente } from '@/features/comptabilite/types';
@@ -47,7 +53,12 @@ import {
   clientsPourLaRecette,
   estCategorieVente,
 } from '@/features/comptabilite/utils/recettes';
-import { idsDesAnimaux, libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
+import {
+  idsDesAnimaux,
+  libelleCategorieVente,
+  reglageEtatAnimaux,
+  venteADeclarer,
+} from '@/features/comptabilite/utils/ventes';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { nomComplet } from '@/shared/utils/personne';
@@ -298,16 +309,15 @@ export function VenteFormulaire({
         ) : null}
 
         {animalEntier ? (
-          <SelectField<string>
-            label={TEXTES.comptabilite.ficheVente.etatAnimaux}
-            value={form.etatAnimaux ?? ''}
-            onChange={(etat) => onChange({ ...form, etatAnimaux: etat ? (etat as 'vivants' | 'morts') : undefined })}
-            options={[
-              { value: '', label: TEXTES.comptabilite.ficheVente.etatAbattoir },
-              { value: 'vivants', label: TEXTES.comptabilite.ficheVente.etatVivants },
-              { value: 'morts', label: TEXTES.comptabilite.ficheVente.etatMorts },
-            ]}
-            aide={TEXTES.comptabilite.ficheVente.etatAnimauxAide}
+          <ChampEtatAnimaux
+            reglage={reglageEtatAnimaux({
+              clientAbattoir: estClientAbattoir(client),
+              cabris: viandes.some((v) => v.libelle === form.precision && roleDeLaViande(v.cle) === ROLE_VIANDE.JEUNE),
+              declaree: venteADeclarer(form),
+            })}
+            clientAbattoir={estClientAbattoir(client)}
+            value={form.etatAnimaux}
+            onChange={(etat) => onChange({ ...form, etatAnimaux: etat as 'vivants' | 'morts' })}
           />
         ) : null}
 

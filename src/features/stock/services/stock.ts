@@ -830,6 +830,12 @@ export function prixUnitaireDeLaVente(
   return ligne ? (prixDuContact?.[ligne.cle] ?? archive.prix[ligne.cle]) : undefined;
 }
 
+/** Vrai pour une vente de cabris : son détail est la ligne des petits (cabris, agneaux…) de l'inventaire. */
+export function estVenteDeCabris(vente: Pick<Vente, 'categorie' | 'precision' | 'activite'>, archive: ArchiveStock): boolean {
+  const ligne = ligneDeViandeDeLaVente(vente as Vente, archive);
+  return !!ligne && roleDeLaViande(ligne.cle) === ROLE_VIANDE.JEUNE;
+}
+
 /** La ligne de viande de l'inventaire qu'une vente a choisie comme détail (un animal, un morceau, un produit). */
 function ligneDeViandeDeLaVente(vente: Vente, archive: ArchiveStock): ArticleAffiche | undefined {
   if (!(CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) || !vente.precision)

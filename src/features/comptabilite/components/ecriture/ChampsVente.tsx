@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
+import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAnimaux';
+import { estClientAbattoir } from '@/features/clients/services/categorie';
+import { reglageEtatAnimaux } from '@/features/comptabilite/utils/ventes';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ChampTauxImposition } from '@/features/comptabilite/components/ChampTauxImposition';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
@@ -751,16 +754,15 @@ export function ChampsVenteViande({ e }: Props) {
             />
           )}
           {/* Les animaux sont remis vivants (au client) ou morts : seuls ceux qui voyagent vivants ont un document de circulation. */}
-          <SelectField<string>
-            label={TEXTES.comptabilite.ficheVente.etatAnimaux}
+          <ChampEtatAnimaux
+            reglage={reglageEtatAnimaux({
+              clientAbattoir: estClientAbattoir(e.clientSelectionne),
+              cabris: !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.JEUNE,
+              declaree: e.avecFacture,
+            })}
+            clientAbattoir={estClientAbattoir(e.clientSelectionne)}
             value={e.etatAnimaux}
             onChange={e.setEtatAnimaux}
-            options={[
-              { value: '', label: TEXTES.comptabilite.ficheVente.etatAbattoir },
-              { value: 'vivants', label: TEXTES.comptabilite.ficheVente.etatVivants },
-              { value: 'morts', label: TEXTES.comptabilite.ficheVente.etatMorts },
-            ]}
-            aide={TEXTES.comptabilite.ficheVente.etatAnimauxAide}
           />
           <View style={styles.row3}>
             <View style={commonStyles.flex1}>
