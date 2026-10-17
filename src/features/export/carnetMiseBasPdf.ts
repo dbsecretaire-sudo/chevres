@@ -60,18 +60,21 @@ function joursEntre(debut: string, fin: string): number {
 /** L'âge au départ ou à la mort : en jours, puis en mois dès qu'il dépasse deux mois. */
 const ageTexte = (jours: number): string => (jours < 60 ? C.jours(jours) : C.mois(Math.round(jours / 30)));
 
-/** Un petit parti après le 31 décembre de l'année de sa naissance : ce départ (et son poids) n'est pas dans le carnet de cette année. */
-const departTardif = (c: Chevre): boolean => !!c.dateStatut && c.dateStatut > `${c.dateNaissance.slice(0, 4)}-12-31`;
+/** Un départ dans les deux mois qui suivent la naissance (l'abattoir des cabris) se note toujours, même après la fin de l'année. */
+const JOURS_DEUX_MOIS = 61;
+/**
+ * Un petit parti après le 31 décembre de l'année de sa naissance et plus de deux mois après elle : ce départ (et son poids) n'est pas dans
+ * le carnet de cette année. Un cabri parti à l'abattoir dans les deux mois y est, même en janvier ou février de l'année d'après.
+ */
+const departTardif = (c: Chevre): boolean =>
+  !!c.dateStatut && c.dateStatut > `${c.dateNaissance.slice(0, 4)}-12-31` && joursEntre(c.dateNaissance, c.dateStatut) > JOURS_DEUX_MOIS;
 
 /**
- * Un petit est parti ou mort dans l'année de sa naissance : il a un statut de sortie et une date au plus tard le 31 décembre de cette année.
- * Un départ plus tardif (une chevrette gardée puis partie à l'abattoir deux ans plus tard) n'a pas sa place dans le carnet de cette année.
+ * Un petit est parti ou mort : il a un statut de sortie et une date qui compte dans le carnet (dans l'année de sa naissance ou dans les deux
+ * mois qui la suivent ; voir departTardif).
  */
 const estParti = (c: Chevre): boolean =>
-  c.statut !== STATUT_CHEVRE.VIVANTE &&
-  c.statut !== STATUT_CHEVRE.MORT_NE &&
-  !!c.dateStatut &&
-  c.dateStatut <= `${c.dateNaissance.slice(0, 4)}-12-31`;
+  c.statut !== STATUT_CHEVRE.VIVANTE && c.statut !== STATUT_CHEVRE.MORT_NE && !!c.dateStatut && !departTardif(c);
 
 /** Ce qu'est devenu un petit (mort-né, mort, vendu…) et son âge à ce moment-là ; rien quand il est toujours là. */
 function devenirDuCabri(c: Chevre): { devenir: string; age: string } {

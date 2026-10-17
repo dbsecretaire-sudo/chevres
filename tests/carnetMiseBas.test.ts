@@ -76,6 +76,15 @@ describe('carnet de mise bas', () => {
     expect(l).toMatchObject({ observations: 'R', age: '', poids: '' });
   });
 
+  it('un cabri parti à l’abattoir dans les deux mois est noté, même après la fin de l’année', () => {
+    const l = ligneDeLaPortee(
+      portee('2024-12-29', 'a', [
+        petit('M', { numeroBoucle: '00715', dateNaissance: '2024-12-29', statut: 'abattoir', dateStatut: '2025-02-10', poidsKg: 9 }),
+      ]),
+    );
+    expect(l).toMatchObject({ observations: 'A', age: '43 j', poids: '9 kg' });
+  });
+
   it('un poids se lit avec une virgule ou un point', () => {
     expect([lirePoids('9,5'), lirePoids(' 12.25 '), lirePoids(''), lirePoids('abc'), lirePoids('0'), lirePoids('-3')]).toEqual([
       9.5,
