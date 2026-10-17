@@ -1,11 +1,15 @@
 import type { Client } from '@/features/clients/types';
 import { categorieClientDe, groupesRecetteDeLaCategorie } from '@/shared/dictionnaire/categoriesClient';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
-import { GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
+import { CATEGORIE_CLIENT, GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
 
 /** L'identifiant de la catégorie d'un client : celle de sa fiche, à défaut (ou si elle a été retirée) particulier. */
 export const categorieDuClient = (client: Pick<Client, 'categorie'> | undefined): string =>
   categorieClientDe(client?.categorie).id;
+
+/** Vrai pour un client particulier : lui seul peut recevoir une réservation ou une vente sans facture. */
+export const estParticulier = (client: Pick<Client, 'categorie'> | undefined): boolean =>
+  categorieDuClient(client) === CATEGORIE_CLIENT.PARTICULIER;
 
 /** Vrai quand le prix de la vente est libre (récolteur, ou toute catégorie réglée ainsi) : on le saisit, il n'est pas tiré de l'inventaire. */
 export const prixLibre = (client: Pick<Client, 'categorie'> | undefined): boolean =>

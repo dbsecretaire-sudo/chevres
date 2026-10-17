@@ -1,9 +1,20 @@
+import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
+import { SelectModal } from '@/shared/components/SelectModal';
 import { FiltresLots, TableauLots } from '@/features/stock/components/TableauLots';
 import { useListeLots } from '@/features/stock/hooks/useListeLots';
-import { estArticleFromage } from '@/features/stock/services/lots';
+import { estArticleFromage, etatDuLot, reserverLots } from '@/features/stock/services/lots';
+import { listClients } from '@/features/clients/repository';
+import { estParticulier } from '@/features/clients/services/categorie';
+import type { Client } from '@/features/clients/types';
 import type { LotFromage } from '@/features/stock/types';
+import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { ETAT_LOT } from '@/shared/constants/stock';
+import { ROUTES } from '@/shared/constants/routes';
+import { todayISO } from '@/shared/utils/dates';
+import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -16,35 +27,139 @@ interface Props {
   lots: LotFromage[];
   /** Les fromages en stock qui n'ont pas de numéro de lot (saisis avant le suivi par lot). */
   sansLot: number;
-  /** Relit les lots après un changement (la case de contrôle). */
+  /** Relit les lots après un changement (la case de contrôle, une réservation). */
   onChange: () => void;
   onFermer: () => void;
 }
 
 /**
  * Le détail d'un fromage dans l'inventaire : ses lots, sans bouton d'ajout ni de retrait (ils entrent par une fabrication et
- * sortent par une vente ou un rappel), seulement la case du contrôle.
+ * sortent par une vente ou un rappel), la case du contrôle, et le mode « Réserver / Facturer » : on choisit un ou plusieurs lots
+ * d'un appui, puis on les réserve pour un client particulier, ou on inscrit leur vente sans facture.
  */
 export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onFermer }: Props) {
+  const router = useRouter();
   const liste = useListeLots(lots, article?.cle);
+  const [selectionner, setSelectionner] = useState(false);
+  const [choisis, setChoisis] = useState<Set<string>>(new Set());
+  const [action, setAction] = useState<'reserver' | 'ecriture' | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+
+  useEffect(() => {
+    if (visible) listClients().then((liste) => setClients(liste.filter(estParticulier)));
+  }, [visible]);
+
+  const terminer = () => {
+    setSelectionner(false);
+    setChoisis(new Set());
+    setAction(null);
+  };
+  const fermer = () => {
+    terminer();
+    onFermer();
+  };
+
+  /** Un lot se choisit s'il est encore en stock (ni vendu, ni rappelé). */
+  const basculer = (lot: LotFromage) => {
+    if (etatDuLot(lot) !== ETAT_LOT.EN_STOCK) return;
+    setChoisis((courants) => {
+      const suivants = new Set(courants);
+      if (!suivants.delete(lot.id)) suivants.add(lot.id);
+      return suivants;
+    });
+  };
+  const lotsChoisis = lots.filter((l) => choisis.has(l.id));
+  const reserves = lotsChoisis.filter((l) => l.reservation);
+
+  /** L'écriture sans facture d'un client particulier : la vente s'ouvre avec les lots choisis. */
+  const ouvrirEcriture = (clientId: string) => {
+    if (!article) return;
+    const fromage = estArticleFromage(article.cle);
+    const ids = [...choisis].join(';');
+    fermer();
+    router.push({
+      pathname: ROUTES.COMPTABILITE_NOUVELLE,
+      params: {
+        type: TYPE_FACTURE.EMISE,
+        categorie: fromage ? CATEGORIE_RECETTE.FROMAGE : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+        facture: 'non',
+        client: clientId,
+        fromages: ids,
+        produit: article.cle,
+        produitLibelle: article.libelle,
+      },
+    } as never);
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onFermer}>
-      <Pressable style={commonStyles.backdrop} onPress={onFermer}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={fermer}>
+      <Pressable style={commonStyles.backdrop} onPress={fermer}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <Text style={commonStyles.subheading}>
-            {estArticleFromage(article?.cle)
-              ? T.titreFromage(article?.libelle ?? '')
-              : T.titre(article?.libelle ?? '')}
-          </Text>
+          <View style={commonStyles.rowSpaceBetween}>
+            <View style={commonStyles.flex1}>
+              <Text style={commonStyles.subheading}>
+                {estArticleFromage(article?.cle)
+                  ? T.titreFromage(article?.libelle ?? '')
+                  : T.titre(article?.libelle ?? '')}
+              </Text>
+            </View>
+            {/* Le bouton qui bascule : réserver / facturer, ou revenir à la simple liste. */}
+            <Button
+              variant="secondary"
+              label={selectionner ? T.annulerLaSelection : T.reserverFacturer}
+              onPress={() => (selectionner ? terminer() : setSelectionner(true))}
+            />
+          </View>
           {article ? (
             <View style={commonStyles.gap10}>
               <FiltresLots liste={liste} />
-              <TableauLots liste={liste} onChange={onChange} />
+              {selectionner ? <Text style={commonStyles.note}>{T.aideSelection(choisis.size)}</Text> : null}
+              <TableauLots
+                liste={liste}
+                onChange={onChange}
+                selection={selectionner ? choisis : undefined}
+                onBasculer={selectionner ? basculer : undefined}
+              />
+              {selectionner && choisis.size > 0 ? (
+                <View style={commonStyles.gap6}>
+                  <Button label={T.reserverPour} variant="secondary" onPress={() => setAction('reserver')} />
+                  <Button label={T.ecritureSansFacture} variant="secondary" onPress={() => setAction('ecriture')} />
+                  {reserves.length > 0 ? (
+                    <Button
+                      label={T.liberer}
+                      variant="secondary"
+                      onPress={async () => {
+                        await reserverLots(reserves.map((l) => l.id));
+                        terminer();
+                        onChange();
+                      }}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
               {sansLot > 0 ? <Text style={commonStyles.mutedItalic}>{T.sansLot(sansLot)}</Text> : null}
             </View>
           ) : null}
           <Text style={[commonStyles.note, commonStyles.required]}>{T.rappel}</Text>
-          <Button label={T.ok} onPress={onFermer} />
+          <Button label={T.ok} onPress={fermer} />
+          <SelectModal<string>
+            visible={!!action}
+            titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.stock.lots.pourQuelClient}
+            value=""
+            searchable
+            options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+            onSelect={async (clientId) => {
+              const client = clients.find((c) => c.id === clientId);
+              const choix = action;
+              setAction(null);
+              if (!client) return;
+              if (choix === 'ecriture') return ouvrirEcriture(client.id);
+              await reserverLots([...choisis], { client: nomComplet(client), clientId: client.id, date: todayISO() });
+              terminer();
+              onChange();
+            }}
+            onClose={() => setAction(null)}
+          />
         </Pressable>
       </Pressable>
     </Modal>

@@ -311,6 +311,22 @@ export function lotsDeLaFabrication(lots: LotFromage[], lot: LotFromage): LotFro
   );
 }
 
+/** Réserve des lots pour un client (sans réservation : ils sont libérés). */
+export function reserverLots(ids: string[], reservation?: LotFromage['reservation']): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const choisis = new Set(ids);
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).map((l) => {
+        if (!choisis.has(l.id)) return l;
+        const { reservation: _ancienne, ...reste } = l;
+        return reservation ? { ...reste, reservation } : reste;
+      }),
+    });
+  });
+}
+
 /** Coche ou décoche le contrôle de plusieurs fromages d'un coup (« tout sélectionner »). */
 export function controlerLots(ids: string[], controleOk: boolean): Promise<void> {
   return enFile(async () => {

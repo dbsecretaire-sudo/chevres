@@ -241,6 +241,17 @@ export const TEXTES_STOCK = {
     triPar: (colonne: string) => `Trier par ${colonne.replace(/\n/g, ' ').toLowerCase()}`,
     aucun: 'Aucun lot.',
     rappele: 'Rappelé',
+    reserverFacturer: 'Réserver / Facturer',
+    annulerLaSelection: 'Annuler la sélection',
+    aideSelection: (n: number) =>
+      n > 0
+        ? `${n} lot${n > 1 ? 's' : ''} choisi${n > 1 ? 's' : ''} : réservez-les pour un client particulier, ou inscrivez leur vente sans facture.`
+        : 'Sélectionner des fromages : un appui sur une ligne la choisit (les lots en stock seulement).',
+    reserverPour: 'Réserver pour un client',
+    ecritureSansFacture: 'Écriture sans facture pour un client',
+    liberer: 'Libérer la réservation',
+    pourQuelClient: 'Pour quel client particulier ?',
+    reservePour: (client: string) => `Réservé : ${client}`,
     /** Rappel : l'inventaire des fromages ne se modifie pas à la main. */
     rappel:
       'Les ajouts et les suppressions se font dans Comptabilité (suppression par vente), et dans Production (ajout par fabrication, rappels).',

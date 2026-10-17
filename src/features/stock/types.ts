@@ -119,6 +119,8 @@ export interface LotFromage {
   dateRappelValide?: string;
   /** Le contrôle du fromage est bon. */
   controleOk?: boolean;
+  /** Réservé pour un client particulier : le lot reste en stock jusqu'à sa vente. */
+  reservation?: { client: string; clientId?: string; date: string };
 }
 
 /** Le lait produit un jour : son litrage (chèvres et brebis). */

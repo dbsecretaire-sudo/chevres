@@ -10,6 +10,7 @@ import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { listClients } from '@/features/clients/repository';
+import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { saveChevre } from '@/features/cheptel/repository/chevres';
 import { estReserve, liberer, reserver } from '@/features/cheptel/services/reservations';
@@ -78,7 +79,8 @@ export default function ViandeVendue() {
   const [cible, setCible] = useState<{ animal: Chevre; action: 'reserver' | 'ecriture' } | null>(null);
 
   const charger = useCallback(async () => {
-    listClients().then(setClients);
+    // Un animal se réserve, ou se vend sans facture, pour un client particulier seulement.
+    listClients().then((liste) => setClients(liste.filter(estParticulier)));
     const [toutesAnnees, liste, toutesVentes] = await Promise.all([
       toutesLesAnneesConnues(),
       regrouper ? listToutesVentes() : listVentes(settings.anneeActive),
@@ -366,6 +368,7 @@ export default function ViandeVendue() {
         visible={!!cible}
         titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.cheptel.reservation.choisirClient}
         value=""
+        searchable
         options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
         onSelect={async (clientId) => {
           const choisi = cible;

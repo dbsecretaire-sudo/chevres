@@ -1126,7 +1126,7 @@ export const TEXTES_CHEPTEL = {
     ecriturePour: (client: string) => `Écriture sans facture pour ${client}`,
     liberer: 'Libérer la réservation',
     ouvrirLaFiche: 'Ouvrir la fiche',
-    choisirClient: 'Pour quel client ?',
+    choisirClient: 'Pour quel client particulier ?',
     aucunClient: 'Aucun client enregistré : ajoutez-en un d’abord.',
     section: 'Animaux réservés',
     aucun: 'Aucun animal réservé pour cette commande.',

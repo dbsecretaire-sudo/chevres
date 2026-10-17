@@ -43,7 +43,18 @@ export function FiltresLots({ liste }: { liste: ListeLots }) {
  * case de son contrôle, qui se coche d'un appui. Un appui sur le titre d'une colonne trie la liste d'après elle. Les fromages entrent
  * par une fabrication (Production › Fromages) et sortent par une vente (Comptabilité) ou un rappel.
  */
-export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: () => void }) {
+export function TableauLots({
+  liste,
+  onChange,
+  selection,
+  onBasculer,
+}: {
+  liste: ListeLots;
+  onChange: () => void;
+  /** Le mode « réserver / facturer » : les lots choisis, et leur bascule d'un appui sur la ligne. */
+  selection?: ReadonlySet<string>;
+  onBasculer?: (lot: LotFromage) => void;
+}) {
   const { lignes, tri, trierPar, filtres, tousLesLots } = liste;
   /** Le lot dont on modifie la date de fabrication. */
   const [lotADater, setLotADater] = useState<LotFromage | undefined>();
@@ -128,7 +139,16 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
       ) : (
         <ScrollView style={styles.liste} nestedScrollEnabled>
           {lignes.map((lot, i) => (
-            <View key={lot.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
+            <Pressable
+              key={lot.id}
+              disabled={!onBasculer}
+              onPress={() => onBasculer?.(lot)}
+              style={[
+                styles.ligne,
+                i > 0 ? styles.ligneSeparee : undefined,
+                selection?.has(lot.id) ? { backgroundColor: colors.badgeBg } : undefined,
+              ]}
+            >
               <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>
               <Pressable style={styles.colonneDate} hitSlop={6} onPress={() => setLotADater(lot)}>
                 <Text style={[styles.texteLigne, styles.dateModifiable]}>
@@ -139,7 +159,11 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
                 <Text style={[styles.datePose, styles.colonneDate]}>{T.rappele}</Text>
               ) : (
                 <Text style={[styles.texteLigne, styles.colonneDate]}>
-                  {lot.dateVente ? formatDateShortFR(lot.dateVente) : ''}
+                  {lot.dateVente
+                    ? formatDateShortFR(lot.dateVente)
+                    : lot.reservation
+                      ? T.reservePour(lot.reservation.client)
+                      : ''}
                 </Text>
               )}
               <Pressable
@@ -157,7 +181,7 @@ export function TableauLots({ liste, onChange }: { liste: ListeLots; onChange: (
                   color={colors.text}
                 />
               </Pressable>
-            </View>
+            </Pressable>
           ))}
         </ScrollView>
       )}

@@ -132,6 +132,8 @@ export function useNouvelleEcriture(
   /** Le client d'ouverture (depuis la réservation d'un animal) et les animaux à vendre. */
   clientInitial?: string,
   animauxInitiaux?: string[],
+  /** Des lots à vendre (depuis la liste des lots d'un fromage ou d'une charcuterie) : leurs identifiants, le produit (« fromage:frais ») et son nom. */
+  departLots?: { fromages: string[]; produit?: string; libelle?: string },
 ) {
   const router = useRouter();
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
@@ -233,8 +235,14 @@ export function useNouvelleEcriture(
   const [categorieRecette, setCategorieRecette] = useState<CategorieRecette>(
     categorieInitiale ?? premiereCategorieRecette(activiteInitiale),
   );
-  const [typeFromage, setTypeFromage] = useState<TypeFromage>(TYPE_FROMAGE.FRAIS);
-  const [typeFromageLibre, setTypeFromageLibre] = useState('');
+  const codeFromageDepart = departLots?.produit?.startsWith('fromage:') ? departLots.produit.split(':')[1] : undefined;
+  const fromageConnu = !!codeFromageDepart && (Object.values(TYPE_FROMAGE) as string[]).includes(codeFromageDepart);
+  const [typeFromage, setTypeFromage] = useState<TypeFromage>(
+    fromageConnu ? (codeFromageDepart as TypeFromage) : codeFromageDepart ? TYPE_FROMAGE.AUTRE : TYPE_FROMAGE.FRAIS,
+  );
+  const [typeFromageLibre, setTypeFromageLibre] = useState(
+    codeFromageDepart && !fromageConnu ? (departLots?.libelle ?? '') : '',
+  );
   const [quantite, setQuantite] = useState('');
   const [unite, setUnite] = useState<UniteVente>(UNITE_VENTE.PIECE);
   const [poidsKg, setPoidsKg] = useState('');
@@ -242,13 +250,13 @@ export function useNouvelleEcriture(
   /** Les fiches des animaux sur pied ou vivants vendus (vide : aucun choisi). */
   const [animaux, setAnimaux] = useState<string[]>(animauxInitiaux ?? []);
   /** Les lots des fromages vendus (vide : aucun choisi, ou un fromage sans lot). */
-  const [fromages, setFromages] = useState<string[]>([]);
+  const [fromages, setFromages] = useState<string[]>(departLots?.fromages ?? []);
   /** Une vente de viande avec des animaux : leur date d'abattoir (vide : la date de la vente). */
   const [dateAbattoir, setDateAbattoir] = useState(abattoirInitial ?? '');
   /** Une vente de viande : les frais d'abattoir refacturés au client (texte saisi) et leur taux de TVA (vide : celui de la vente). */
   const [fraisAbattoir, setFraisAbattoir] = useState('');
   const [tauxTvaFrais, setTauxTvaFrais] = useState('');
-  const [precision, setPrecision] = useState('');
+  const [precision, setPrecision] = useState(departLots?.produit?.startsWith('viande:') ? (departLots.libelle ?? '') : '');
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
   const [tauxImpositionLibre, setTauxImpositionLibre] = useState(

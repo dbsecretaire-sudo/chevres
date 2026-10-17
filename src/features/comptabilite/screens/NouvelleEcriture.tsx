@@ -46,6 +46,10 @@ export default function NouvelleFacture() {
     /** Le client d'ouverture (sa fiche) et les animaux à vendre (leurs identifiants séparés par « ; »), depuis la réservation. */
     client?: string;
     animaux?: string;
+    /** Des lots à vendre (identifiants séparés par « ; »), leur produit (« fromage:frais ») et son nom. */
+    fromages?: string;
+    produit?: string;
+    produitLibelle?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -58,6 +62,13 @@ export default function NouvelleFacture() {
     params.facture === 'non',
     params.client,
     params.animaux ? params.animaux.split(';').filter(Boolean) : undefined,
+    params.fromages
+      ? {
+          fromages: params.fromages.split(';').filter(Boolean),
+          produit: params.produit,
+          libelle: params.produitLibelle,
+        }
+      : undefined,
   );
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
