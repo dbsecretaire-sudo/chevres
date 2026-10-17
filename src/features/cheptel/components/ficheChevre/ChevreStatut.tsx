@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
@@ -67,6 +68,23 @@ export function ChevreStatutDeclaration({
           onPress={onConfirmer}
         />
       </View>
+    </Card>
+  );
+}
+
+/** Carte de la date de sortie d'un animal sorti (mort, abattoir, vendu) : elle se corrige, le recensement et les bordereaux la suivent. */
+export function ChevreDateSortie({ chevre, onEnregistrer }: { chevre: Chevre; onEnregistrer: (date: string) => void }) {
+  const [date, setDate] = useState(chevre.dateStatut ?? '');
+  return (
+    <Card>
+      <Text style={commonStyles.cardTitle}>{TEXTES.cheptel.ficheChevre.dateDeSortie}</Text>
+      <DateField label={TEXTES.commun.general.date} value={date} onChange={setDate} />
+      <Button
+        variant="secondary"
+        label={TEXTES.cheptel.ficheChevre.enregistrerLaDate}
+        onPress={() => onEnregistrer(date)}
+        disabled={!date || date === chevre.dateStatut}
+      />
     </Card>
   );
 }

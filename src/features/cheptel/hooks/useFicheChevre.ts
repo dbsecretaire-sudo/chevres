@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   declarerStatutChevre,
+  modifierDateDeSortie,
   getChevre,
   listDescendance,
   numeroBoucleExiste,
@@ -110,6 +111,12 @@ export function useFicheChevre(id: string | undefined) {
     charger();
   };
 
+  const enregistrerDateSortie = async (date: string) => {
+    if (!chevre) return;
+    await modifierDateDeSortie(chevre.id, date);
+    charger();
+  };
+
   const reactiver = async () => {
     if (!chevre) return;
     await reactiverChevre(chevre.id);
@@ -143,5 +150,6 @@ export function useFicheChevre(id: string | undefined) {
     choisirStatut,
     enregistrerStatut,
     reactiver,
+    enregistrerDateSortie,
   };
 }

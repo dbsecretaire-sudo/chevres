@@ -183,6 +183,23 @@ export async function declarerStatutChevre(
   await saveChevre({ ...chevre, statut, dateStatut, poidsKg: poidsKg ?? chevre.poidsKg });
 }
 
+/** Change la date de sortie (mort, abattoir, vente) d'un animal sorti : son statut reste ; le recensement et les bordereaux suivent. */
+export async function modifierDateDeSortie(id: string, dateStatut: string): Promise<void> {
+  const chevre = await getChevre(id);
+  if (!chevre || chevre.statut === STATUT_CHEVRE.VIVANTE) return;
+  await saveChevre({ ...chevre, dateStatut });
+}
+
+/**
+ * Change d'un coup la date de sortie de tous les animaux de l'espèce courante sortis à cette date (une date notée en bloc, bien après
+ * la sortie réelle) ; rend le nombre d'animaux changés.
+ */
+export async function changerDateDeSortieEnMasse(ancienne: string, nouvelle: string): Promise<number> {
+  const concernes = (await listChevresHistorique()).filter((c) => c.dateStatut === ancienne);
+  for (const c of concernes) await saveChevre({ ...c, dateStatut: nouvelle });
+  return concernes.length;
+}
+
 export async function reactiverChevre(id: string): Promise<void> {
   const chevre = await getChevre(id);
   if (!chevre) return;

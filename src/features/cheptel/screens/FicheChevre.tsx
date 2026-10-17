@@ -14,6 +14,7 @@ import { ChevreEntete } from '@/features/cheptel/components/ficheChevre/ChevreEn
 import { ChevreFormulaire } from '@/features/cheptel/components/ficheChevre/ChevreFormulaire';
 import { ChevreResume } from '@/features/cheptel/components/ficheChevre/ChevreResume';
 import {
+  ChevreDateSortie,
   ChevreReactivation,
   ChevreStatutDeclaration,
 } from '@/features/cheptel/components/ficheChevre/ChevreStatut';
@@ -117,6 +118,9 @@ export default function FicheChevre() {
           />
         )}
 
+        {!estVivante && (
+          <ChevreDateSortie key={chevre.dateStatut} chevre={chevre} onEnregistrer={fiche.enregistrerDateSortie} />
+        )}
         {!estVivante && <ChevreReactivation onReactiver={fiche.reactiver} />}
 
         <ChevreSante
