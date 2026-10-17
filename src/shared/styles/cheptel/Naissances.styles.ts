@@ -2,6 +2,8 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
 export const styles = StyleSheet.create({
+  /** Le bouton du carnet et son bilan, tout près des filtres. */
+  carnet: { paddingHorizontal: 16, gap: 10 },
   cabritsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   cabritChip: {
     flexDirection: 'row',

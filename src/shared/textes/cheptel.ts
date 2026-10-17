@@ -959,6 +959,8 @@ export const TEXTES_CHEPTEL = {
     mereMerenumeroboucle: (mereNumeroBoucle: string) => ` · Mère : ${mereNumeroBoucle}`,
   },
   naissances: {
+    bilan: (naissances: number, meres: number) =>
+      `${naissances} naissance${naissances > 1 ? 's' : ''} · ${meres} mère${meres > 1 ? 's' : ''}`,
     aucuneNaissanceEnregistree: 'Aucune naissance enregistrée',
     declarezUneNaissanceDepuisL: "Déclarez une naissance depuis l'onglet Cheptel.",
     mereEspace: 'Mère ',

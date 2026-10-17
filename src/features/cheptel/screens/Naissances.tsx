@@ -54,13 +54,20 @@ export default function Naissances() {
         <SelecteurEspece />
       </LigneFiltres>
       {portees.length > 0 ? (
-        <View style={commonStyles.topPadded}>
+        <View style={styles.carnet}>
           <Button
             variant="secondary"
             label={TEXTES.cheptel.naissances.carnetLivretBouton}
             onPress={() => exporterCarnetMiseBasPdf('livret').catch(() => undefined)}
           />
           <Text style={commonStyles.note}>{TEXTES.cheptel.naissances.carnetLivretAide}</Text>
+          {/* Pour info : les naissances et les mères de la période affichée. */}
+          <Text style={commonStyles.lineBold}>
+            {TEXTES.cheptel.naissances.bilan(
+              affichees.reduce((n, p) => n + p.cabrits.length, 0),
+              new Set(affichees.map((p) => p.mereNumeroBoucle)).size,
+            )}
+          </Text>
         </View>
       ) : null}
       <FlatList
