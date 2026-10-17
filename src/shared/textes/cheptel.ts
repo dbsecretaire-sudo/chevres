@@ -165,7 +165,7 @@ export const TEXTES_CHEPTEL = {
   lots: {
     titre: 'Lots d’animaux',
     lot: 'Lot',
-    aide: 'Des groupes d’animaux nommés (chevrettes 2026, chèvres en lactation…) : on les réutilise pour un traitement, une visite ou un contrôle, et on suit leur santé ensemble.',
+    aide: 'Groupe d’animaux nommé : utilisation sanitaire ou comptable',
     nouveau: 'Nouveau lot',
     aucun: 'Aucun lot.',
     aucunAide: 'Créez un lot avec le bouton +, ou gardez des animaux comme lot depuis un traitement.',
