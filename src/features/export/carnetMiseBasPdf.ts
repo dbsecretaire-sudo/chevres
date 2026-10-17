@@ -21,10 +21,10 @@ const JOURS_SEVRAGE = 90;
 /** Les lignes d'une page A4 : le carnet papier déplié fait une moitié d'A4 et en compte 16, la page A4 en a donc 32. */
 export const LIGNES_PAR_PAGE = 32;
 /**
- * Les lignes d'une page du livret (une page A6, comme le carnet papier) : le tableau se lit en travers de la page, ses lignes de 6 mm
- * s'empilent sur les 105 mm de largeur ; les marges que les imprimantes imposent en prennent un peu.
+ * Les lignes d'une page du livret (une page A6 en portrait, comme le carnet papier) : 18 lignes de 6,7 mm, avec le titre, l'en-tête et la
+ * légende, dans les 148 mm de hauteur moins les marges que les imprimantes imposent.
  */
-export const LIGNES_PAR_PAGE_LIVRET = 13;
+export const LIGNES_PAR_PAGE_LIVRET = 18;
 
 /**
  * Le carnet en feuilles A4 à ranger dans un classeur, ou en livret A6 : des feuilles A4 en portrait de quatre pages par face, à imprimer
@@ -257,17 +257,25 @@ const STYLES = `
   .demi5 + .demi5 { border-top: 0.2mm dotted #aaa; }
   .page6 { width: 105mm; height: 148.25mm; position: relative; overflow: hidden; }
   .page6:first-child { border-right: 0.2mm dotted #aaa; }
-  /* Les pages intérieures se lisent en travers, comme sur le carnet papier : le contenu est tourné d'un quart de tour. */
-  .pivote { position: absolute; left: 0; top: 0; width: 148.25mm; height: 105mm; padding: 6mm 7mm; transform-origin: 0 0; transform: translate(105mm, 0) rotate(90deg); overflow: hidden; }
-  .a6 h1 { font-size: 10pt; margin: 0 0 1.5mm; }
-  .a6 th { font-size: 6pt; padding: 0.4mm 1mm; }
-  .a6 td { height: 6mm; font-size: 7.5pt; padding: 0 1mm; }
+  /* Les pages intérieures, en portrait comme la couverture : une marge que les imprimantes savent tenir. */
+  .interieur { position: absolute; left: 0; top: 0; width: 105mm; height: 148.25mm; padding: 5mm; overflow: hidden; }
+  .a6 h1 { font-size: 9pt; margin: 0 0 1mm; }
+  .a6 th { font-size: 5.5pt; padding: 0.4mm 0.4mm; overflow-wrap: anywhere; }
+  .a6 td { height: 6.7mm; font-size: 7pt; padding: 0 0.6mm; }
   .a6 td.libre { font-size: 7pt; }
+  .a6 colgroup col:nth-child(1) { width: 9% !important; }
+  .a6 colgroup col:nth-child(2) { width: 17% !important; }
+  .a6 colgroup col:nth-child(3) { width: 14% !important; }
+  .a6 colgroup col:nth-child(4) { width: 11% !important; }
+  .a6 colgroup col:nth-child(5) { width: 11% !important; }
+  .a6 colgroup col:nth-child(6) { width: 9% !important; }
+  .a6 colgroup col:nth-child(7) { width: 14% !important; }
+  .a6 colgroup col:nth-child(8) { width: 15% !important; }
   .a6 .note { font-size: 5.5pt; margin: 0.8mm 0 0; }
-  .a6 .colonnes { gap: 5mm; }
-  .a6 .champ { margin-bottom: 1.8mm; font-size: 7pt; }
+  .a6 .colonnes { flex-direction: column; gap: 2mm; }
+  .a6 .champ { margin-bottom: 2.4mm; font-size: 7pt; }
   .a6 .champ .valeur { min-height: 3.5mm; }
-  .a6 .resultats { zoom: 0.55; }
+  .a6 .resultats { zoom: 0.7; }
   .a6 .page6 > .page > .couverture { height: 136mm; margin: 6mm; padding: 14mm 8mm 8mm; border-radius: 2mm; }
   .a6 .couverture .grand { font-size: 24pt; }
   .a6 .couverture .periode { font-size: 11pt; margin-top: 3mm; }
@@ -472,10 +480,10 @@ export function carnetMiseBasHtml(
     const livret = [pages[0], PAGE_BLANCHE, ...pages.slice(1)];
     while ((livret.length + 2) % 4 !== 0) livret.push(PAGE_BLANCHE);
     livret.push(PAGE_BLANCHE, QUATRIEME_DE_COUVERTURE);
-    // Pas de numéro sur les couvertures ni sur les pages blanches ; les pages intérieures sont tournées d'un quart de tour.
+    // Pas de numéro sur les couvertures ni sur les pages blanches.
     const page6 = (k: number) => {
       const speciale = /couverture|blanche/.test(livret[k]);
-      return `<div class="page6">${speciale ? livret[k] : `<div class="pivote">${livret[k]}</div><div class="numero-page">${k + 1}</div>`}</div>`;
+      return `<div class="page6">${speciale ? livret[k] : `<div class="interieur">${livret[k]}</div><div class="numero-page">${k + 1}</div>`}</div>`;
     };
     const demi5 = ([gauche, droite]: [number, number]) => `<div class="demi5">${page6(gauche)}${page6(droite)}</div>`;
     return `<!DOCTYPE html>

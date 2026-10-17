@@ -112,14 +112,14 @@ describe('carnet de mise bas', () => {
     expect(ordreDuLivret(5)).toEqual(ordreDuLivret(8));
   });
 
-  it('le livret A6 : quatre pages par face de feuille A4, 13 lignes par page', () => {
+  it('le livret A6 : quatre pages par face de feuille A4, 18 lignes par page', () => {
     const html = carnetMiseBasHtml([portee('2026-05-01', 'b', [petit('M', { numeroBoucle: '1' })])], undefined, undefined, 'livret');
     expect(html).toContain('class="a6"');
     // 8 pages A6 : 2 feuilles A5, donc 1 feuille A4 (recto et verso), chaque face avec 2 feuilles A5 de 2 pages.
     expect((html.match(/class="face"/g) ?? []).length).toBe(2);
     expect((html.match(/class="demi5"/g) ?? []).length).toBe(4);
     expect((html.match(/class="page6"/g) ?? []).length).toBe(8);
-    expect(pagesDeLignes([], 13)[0]).toHaveLength(13);
+    expect(pagesDeLignes([], 18)[0]).toHaveLength(18);
   });
 
   it('les faces A4 du livret : deux feuilles A5 par feuille A4, recto puis verso', () => {
