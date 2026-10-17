@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { ROUTES } from '@/shared/constants/routes';
 import { Alert, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
@@ -19,6 +22,8 @@ const T = TEXTES.settings.reglages;
 
 /** Les PDF : le titre imprimé en tête de chacun, puis chaque PDF à part (par activité), à générer d'un appui. */
 export default function EcranPdf() {
+  const router = useRouter();
+  const retour = useAdresseCourante();
   const { settings, patchSettings } = useAppSettings();
   const [titre, setTitre] = useState(settings.exploitation?.titrePdf ?? '');
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -74,6 +79,13 @@ export default function EcranPdf() {
           />
         ))}
       </View>
+      {/* Les PDF déjà générés : un historique, qu'on peut rouvrir. */}
+      <ListRow
+        title={TEXTES.export.bibliotheque.bouton}
+        subtitle={TEXTES.export.bibliotheque.aide}
+        trailing={<Ionicons name="time" size={24} color={colors.primary} />}
+        onPress={() => router.push(ROUTES.bibliothequeDepuis(retour) as never)}
+      />
       <ExportChoiceModal
         visible={choix !== null}
         onClose={() => setChoix(null)}

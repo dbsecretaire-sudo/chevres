@@ -44,6 +44,8 @@ export const CLE_STOCKAGE = {
   ANNEXES: 'annexes',
   /** L'onglet Commercial : les commandes des clients et les tarifs par catégorie de client. */
   COMMERCIAL: 'commercial',
+  /** Les documents (PDF) générés par l'application, gardés pour garder un historique. */
+  BIBLIOTHEQUE: 'bibliotheque',
   STOCK: 'stock',
   COMPTES_PCG: 'comptes-pcg',
   SETTINGS: 'settings',

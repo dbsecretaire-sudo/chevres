@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { archiverDocument } from '@/features/bibliotheque/services/archive';
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -256,6 +257,7 @@ const stylePageSansMargesAndroid = (paysage: boolean | undefined) =>
 export async function ecrirePdfBase64EtPartager(base64: string, nomFichier: string, titre: string): Promise<void> {
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
   await FileSystem.writeAsStringAsync(destination, base64, { encoding: FileSystem.EncodingType.Base64 });
+  await archiverDocument(destination, nomFichier, titre);
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(destination, { mimeType: MIME_PDF, dialogTitle: titre, UTI: UTI_PDF });
   }
@@ -286,6 +288,7 @@ export async function ecrireEtPartagerPdf(
   });
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
   await FileSystem.copyAsync({ from: uri, to: destination });
+  await archiverDocument(destination, nomFichier, titre);
 
   const disponible = await Sharing.isAvailableAsync();
   if (disponible) {

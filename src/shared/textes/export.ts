@@ -11,6 +11,15 @@ export const TEXTES_EXPORT = {
     excelXlsx: 'Excel (.xlsx)',
   },
   /** Les PDF qu'on génère à la demande (Organisation › Export). */
+  bibliotheque: {
+    titre: 'Documents générés',
+    bouton: 'Documents déjà générés',
+    aide: 'Tous les PDF générés par l’application, du plus récent au plus ancien : un appui le rouvre pour l’envoyer ou l’imprimer de nouveau.',
+    aucun: 'Aucun document généré pour le moment.',
+    fichierManquant: 'Le fichier de ce document n’est pas dans cet appareil (il se récupère avec Google Drive ou une sauvegarde).',
+    retirerQuestion: 'Retirer ce document ?',
+    retirerMessage: 'Il disparaît de la liste et son fichier est supprimé de cet appareil.',
+  },
   catalogue: {
     exploitation: {
       titre: 'Rapport d’exploitation',

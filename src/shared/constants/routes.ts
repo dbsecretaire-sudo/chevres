@@ -33,6 +33,9 @@ export const ROUTES = {
   CHEPTEL_HISTORIQUE: '/cheptel/historique',
   /** Le dossier PAC : suivi des mouvements, bordereaux de perte, recensement, déclaration d'estive. */
   CHEPTEL_DOSSIER_PAC: '/cheptel/dossier-pac',
+  /** La bibliothèque des documents générés ; `bibliothequeDepuis` l'ouvre depuis un écran (la flèche de retour y revient). */
+  CHEPTEL_BIBLIOTHEQUE: '/cheptel/bibliotheque',
+  bibliothequeDepuis: (retour: string) => `/cheptel/bibliotheque?retour=${encodeURIComponent(retour)}` as const,
   /** Les traitements donnés aux animaux et leurs délais d'attente. */
   CHEPTEL_TRAITEMENTS: '/cheptel/traitements',
   CHEPTEL_TRAITEMENT_NOUVEAU: '/cheptel/traitement',

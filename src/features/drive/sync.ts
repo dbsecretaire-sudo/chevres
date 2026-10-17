@@ -7,6 +7,7 @@ import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fourniss
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
 import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
+import { lireBibliotheque, normaliserBibliotheque, remplacerBibliotheque } from '@/features/bibliotheque/repository';
 import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
@@ -62,6 +63,7 @@ import {
   FICHIER_GITE,
   FICHIER_BAR,
   FICHIER_COMMERCIAL,
+  FICHIER_BIBLIOTHEQUE,
   FICHIER_STOCK,
   FICHIER_TRADING,
   MOTIF_FICHIER_ANNEE,
@@ -259,6 +261,23 @@ export async function tirerCommercial(accessToken: string, folderId: string): Pr
   }
 }
 
+/** Envoie la liste des documents générés (la bibliothèque) vers Google Drive ; leurs fichiers partent avec les pièces jointes. */
+export async function pousserBibliotheque(accessToken: string, folderId: string): Promise<void> {
+  await deposer(accessToken, FICHIER_BIBLIOTHEQUE, folderId, JSON.stringify(await lireBibliotheque()));
+}
+
+/** Récupère la liste des documents générés depuis Google Drive (elle remplace la liste locale). */
+export async function tirerBibliotheque(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_BIBLIOTHEQUE, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireBibliotheque())))) return;
+  try {
+    const liste = JSON.parse(await downloadFileText(accessToken, file.id));
+    if (Array.isArray(liste)) await remplacerBibliotheque(normaliserBibliotheque(liste));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser la liste locale.
+  }
+}
+
 /** Envoie la liste des boissons du bar vers Google Drive. */
 export async function pousserBar(accessToken: string, folderId: string): Promise<void> {
   const archive = await lireArchiveBar();
@@ -449,6 +468,7 @@ export async function pousserToutesAnnees(
   await pousserTrading(accessToken, folderId);
   await pousserBar(accessToken, folderId);
   await pousserCommercial(accessToken, folderId);
+  await pousserBibliotheque(accessToken, folderId);
   await pousserStock(accessToken, folderId);
   await pousserAnnexes(accessToken, folderId);
   await pousserPieces(accessToken, folderId);
@@ -492,6 +512,7 @@ export async function tirerToutesAnnees(
   await tirerTrading(accessToken, folderId);
   await tirerBar(accessToken, folderId);
   await tirerCommercial(accessToken, folderId);
+  await tirerBibliotheque(accessToken, folderId);
   await tirerStock(accessToken, folderId);
   await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);

@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { ROUTES } from '@/shared/constants/routes';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Text } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
@@ -29,6 +32,8 @@ const TOUTES = 'toutes';
  * bordereaux de perte, le recensement annuel et la déclaration d'estive. On choisit l'année, puis le document.
  */
 export default function DossierPac() {
+  const router = useRouter();
+  const retour = useAdresseCourante();
   const { espece } = useEtablissement();
   const [annees, setAnnees] = useState<number[]>([]);
   const [choix, setChoix] = useState(String(currentYear()));
@@ -99,6 +104,12 @@ export default function DossierPac() {
         </Text>
       ) : null}
       <Button variant="secondary" label={T.estive.bouton} onPress={() => setEstiveOuverte(true)} />
+      {/* Tous les PDF déjà générés, pour garder un historique. */}
+      <Button
+        variant="secondary"
+        label={TEXTES.export.bibliotheque.bouton}
+        onPress={() => router.push(ROUTES.bibliothequeDepuis(retour) as never)}
+      />
       <FenetreEstive visible={estiveOuverte} annee={annee} onClose={() => setEstiveOuverte(false)} />
     </Screen>
   );

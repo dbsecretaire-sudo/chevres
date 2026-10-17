@@ -16,7 +16,7 @@ export default function CheptelLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances', 'reglages')}
+      screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances', 'reglages', 'bibliotheque')}
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
@@ -26,6 +26,7 @@ export default function CheptelLayout() {
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />
       <Stack.Screen name="liste" options={{ title: TEXTES.cheptel.listeCheptel.titre }} />
+      <Stack.Screen name="bibliotheque" options={{ title: TEXTES.export.bibliotheque.titre }} />
       <Stack.Screen name="dossier-pac" options={{ title: TEXTES.cheptel.accueil.lignes.dossierPac.titre }} />
       <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
       <Stack.Screen

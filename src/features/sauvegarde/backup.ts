@@ -33,6 +33,8 @@ import {
   remplacerArchiveCommercial,
 } from '@/features/commercial/repository';
 import type { ArchiveCommercial } from '@/features/commercial/types';
+import type { DocumentGenere } from '@/features/bibliotheque/types';
+import { lireBibliotheque, normaliserBibliotheque, remplacerBibliotheque } from '@/features/bibliotheque/repository';
 import {
   lireArchiveAnnexes,
   normaliserArchiveAnnexes,
@@ -100,6 +102,8 @@ interface FichierSauvegarde {
   bar?: ArchiveBar;
   /** Commandes des clients et tarifs par catégorie de client (absent des anciennes sauvegardes). */
   commercial?: ArchiveCommercial;
+  /** Les documents générés (la bibliothèque) : leurs fichiers sont dans les pièces (absent des anciennes sauvegardes). */
+  bibliotheque?: DocumentGenere[];
   /** Stock de la fromagerie (absent des anciennes sauvegardes). */
   stock?: ArchiveStock;
   /** Les activités annexes du gîte : catégories, articles, prix, stocks, tickets (absent des anciennes sauvegardes). */
@@ -182,6 +186,7 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     trading,
     bar,
     commercial,
+    bibliotheque: await lireBibliotheque(),
     stock,
     pieces,
     comptesPcg,
@@ -358,6 +363,11 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
     await appliquerSiDifferent(await lireArchiveCommercial(), commercial, () =>
       remplacerArchiveCommercial(commercial),
     );
+  }
+
+  if (Array.isArray(sauvegarde.bibliotheque)) {
+    const bibliotheque = normaliserBibliotheque(sauvegarde.bibliotheque);
+    await appliquerSiDifferent(await lireBibliotheque(), bibliotheque, () => remplacerBibliotheque(bibliotheque));
   }
 
   if (sauvegarde.stock && Array.isArray(sauvegarde.stock.mouvements)) {
