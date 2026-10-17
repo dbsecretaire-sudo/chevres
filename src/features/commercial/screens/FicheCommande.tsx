@@ -42,6 +42,7 @@ import {
   reservesDeLaCommande,
 } from '@/features/cheptel/services/reservations';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import type { Vente } from '@/features/comptabilite/types';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
@@ -89,6 +90,8 @@ export default function FicheCommande() {
   /** Les animaux de l'espèce et ceux déjà vendus : un bon de commande réserve des animaux sans boucle à vendre. */
   const [animaux, setAnimaux] = useState<Chevre[]>([]);
   const [idsVendus, setIdsVendus] = useState<Set<string>>(new Set());
+  /** Les ventes : celles du bon gardent les animaux qu'il a vendus (leur réservation est levée à la vente). */
+  const [ventesLues, setVentesLues] = useState<Vente[]>([]);
   const [choixAnimaux, setChoixAnimaux] = useState(false);
 
   const [clientId, setClientId] = useState('');
@@ -128,6 +131,7 @@ export default function FicheCommande() {
         setClients(listeClients);
         setAnimaux(lesAnimaux);
         setIdsVendus(new Set(lesVentes.flatMap((v) => idsDesAnimaux(v))));
+        setVentesLues(lesVentes);
         // Les produits qu'on commande : les fromages, puis la viande et la charcuterie de l'inventaire (hors animaux du cheptel).
         setFromages([
           ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock),
@@ -299,6 +303,12 @@ export default function FicheCommande() {
     existante?.id,
   );
   /** Les animaux et les lots réservés par cette commande redeviennent disponibles. */
+  /** Les animaux que les ventes de ce bon ont vendus. */
+  const animauxVendusDuBon = ventesLues
+    .filter((v) => existante?.venteIds?.includes(v.id))
+    .flatMap((v) => idsDesAnimaux(v))
+    .map((id) => animaux.find((a) => a.id === id))
+    .filter((a): a is Chevre => !!a);
   const libererLesAnimaux = async () => {
     for (const a of reserves) await saveChevre(liberer(a));
     await libererLotsReserves((existante?.lignes ?? []).flatMap((l) => l.lotIds ?? []));
@@ -437,6 +447,15 @@ export default function FicheCommande() {
         <Button variant="secondary" label={T.ajouterLigne} onPress={ajouterLigne} />
         <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
       </SectionForm>
+
+      {/* Les animaux que ce bon a déjà vendus (par ses ventes) : ils restent référencés dans la commande. */}
+      {animauxVendusDuBon.length > 0 ? (
+        <SectionForm titre={TEXTES.cheptel.reservation.vendusDuBon}>
+          {animauxVendusDuBon.map((a) => (
+            <LigneChevre key={a.id} chevre={a} onPress={() => router.push(ROUTES.ficheChevre(a.id))} />
+          ))}
+        </SectionForm>
+      ) : null}
 
       {/* Le bon de commande réserve des animaux sans boucle (ils restent au troupeau jusqu'à leur vente). */}
       {existante && ouverte ? (

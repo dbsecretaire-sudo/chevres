@@ -13,6 +13,8 @@ import {
   reserverLotsPourClient,
 } from '@/features/commercial/services/reservations';
 import { NomModal } from '@/features/dossiers/components/NomModal';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { commandeOuverte } from '@/features/commercial/services/commandes';
 import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import type { LotFromage } from '@/features/stock/types';
@@ -110,20 +112,28 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
   };
 
   /** La facture du client : la vente s'ouvre avec les lots choisis (avec facture d'office, le contact peut la refuser). */
-  const ouvrirEcriture = (clientId: string) => {
+  const ouvrirEcriture = async (clientId: string) => {
     if (!article) return;
-    const ids = [...choisis].join(';');
+    const ids = [...choisis];
+    // Les lots réservés sont dans le bon de commande de leur client : la facture s'ouvre sur lui (ses lignes de ces lots), et le bon passe à
+    // « livré » une fois tout facturé. Sans bon, la vente s'ouvre avec les lots seuls.
+    const bon = (await lireArchiveCommercial()).commandes.find(
+      (c) => commandeOuverte(c) && c.lignes.some((l) => l.lotIds?.some((id) => ids.includes(id))),
+    );
+    const lignes = bon?.lignes.filter((l) => l.lotIds?.some((id) => ids.includes(id))).map((l) => l.id) ?? [];
     fermer();
     router.push({
       pathname: ROUTES.COMPTABILITE_NOUVELLE,
-      params: {
-        type: TYPE_FACTURE.EMISE,
-        categorie: fromage ? CATEGORIE_RECETTE.FROMAGE : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
-        client: clientId,
-        fromages: ids,
-        produit: article.cle,
-        produitLibelle: article.libelle,
-      },
+      params: bon
+        ? { type: TYPE_FACTURE.EMISE, commande: bon.id, lignes: lignes.join(';') }
+        : {
+            type: TYPE_FACTURE.EMISE,
+            categorie: fromage ? CATEGORIE_RECETTE.FROMAGE : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+            client: clientId,
+            fromages: ids.join(';'),
+            produit: article.cle,
+            produitLibelle: article.libelle,
+          },
     } as never);
   };
 

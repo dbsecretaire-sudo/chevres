@@ -1140,6 +1140,7 @@ export const TEXTES_CHEPTEL = {
     liberer: 'Libérer la réservation',
     validerEtVendre: 'Valider la préparation de commande et vendre',
     reservationDe: (client: string) => `Réservation ${client}`,
+    vendusDuBon: 'Animaux vendus par cette commande',
     indiquerLePoids: 'Indiquer le poids de l’animal',
     ok: 'OK',
     etatTitre: 'Ces cabris seront remis…',

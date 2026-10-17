@@ -60,6 +60,8 @@ export default function NouvelleFacture() {
     etat?: string;
     /** Un bon de commande à transformer en vente tout de suite (depuis la validation de la préparation). */
     commande?: string;
+    /** Seulement ces lignes du bon (identifiants séparés par « ; ») : la facturation depuis les lots d'un produit. */
+    lignes?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -118,10 +120,14 @@ export default function NouvelleFacture() {
     setChoixCommande(true);
   };
   /** Reprend un bon de commande : ses lignes et ses animaux réservés ; plusieurs éléments, on choisit ce qu'on facture maintenant. */
-  const commencer = (commande: Commande, tous: Chevre[]) => {
+  const commencer = (commande: Commande, tous: Chevre[], seulementLignes?: string[]) => {
     const reserves = reservesDeLaCommande(tous, commande.id);
     const ids = reserves.map((a) => a.id);
-    const elements = elementsAFacturer(commande, ids, etatCommunDesReservations(reserves));
+    const tousLesElements = elementsAFacturer(commande, ids, etatCommunDesReservations(reserves));
+    // Depuis les lots d'un produit : seulement les lignes de ces lots (le reste du bon reste à facturer).
+    const elements = seulementLignes
+      ? tousLesElements.filter((el) => el.type === 'ligne' && seulementLignes.includes(el.ligne.id))
+      : tousLesElements;
     if (elements.length <= 1) e.demarrerCommande(commande, elements, ids);
     else setPartie({ commande, elements, ids });
   };
@@ -130,7 +136,7 @@ export default function NouvelleFacture() {
     if (!params.commande) return;
     Promise.all([lireArchiveCommercial(), listTousLesAnimauxDeLEspece()]).then(([archive, tous]) => {
       const bon = archive.commandes.find((c) => c.id === params.commande);
-      if (bon) commencer(bon, tous);
+      if (bon) commencer(bon, tous, params.lignes ? params.lignes.split(';').filter(Boolean) : undefined);
     });
     // Une seule fois, à l'ouverture.
     // eslint-disable-next-line react-hooks/exhaustive-deps

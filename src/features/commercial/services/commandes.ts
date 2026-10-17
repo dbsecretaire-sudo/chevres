@@ -57,6 +57,17 @@ export function elementsAFacturer(
   ];
 }
 
+/**
+ * Le total d'un bon de commande : ce que ses ventes ont facturé (lignes et animaux), plus ses lignes pas encore facturées. Sans vente, c'est
+ * le total de ses lignes. Les animaux d'un bon n'ont pas de ligne : leur prix vient de la vente qui les a facturés.
+ */
+export function totalDuBon(commande: Commande, prixDesVentes: Map<string, number>): number {
+  const facturees = new Set(commande.lignesFacturees ?? []);
+  const factureEnVente = (commande.venteIds ?? []).reduce((t, id) => t + (prixDesVentes.get(id) ?? 0), 0);
+  const resteAFacturer = totalCommande({ lignes: commande.lignes.filter((l) => !facturees.has(l.id)) });
+  return arrondi(factureEnVente + resteAFacturer);
+}
+
 /** Vrai tant que la commande reste à préparer ou à livrer. */
 export const commandeOuverte = (commande: Pick<Commande, 'statut'>): boolean =>
   STATUTS_COMMANDE_OUVERTE.includes(commande.statut);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { elementsAFacturer, estLigneDeViande, venteDeLaLigne } from '@/features/commercial/services/commandes';
+import { elementsAFacturer, estLigneDeViande, totalDuBon, venteDeLaLigne } from '@/features/commercial/services/commandes';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 
@@ -50,5 +50,23 @@ describe('bon de commande : ce qu’il reste à facturer', () => {
       false,
     );
     expect(vente.fromages).toBe('x;y');
+  });
+});
+
+describe('total d’un bon de commande', () => {
+  it('ajoute ce que ses ventes ont facturé (animaux compris) aux lignes pas encore facturées', () => {
+    const bon = {
+      id: 'c1',
+      numero: 'C-1',
+      client: 'Momo',
+      date: '2026-10-17',
+      statut: 'livree',
+      lignes: [{ ...ligne('fromage:frais', 'Frais'), id: 'l1' }, { ...ligne('fromage:frais', 'Frais'), id: 'l2', quantite: 1, prixUnitaire: 5 }],
+      lignesFacturees: ['l1'],
+      venteIds: ['v1', 'v2'],
+    } as unknown as Commande;
+    // l1 facturée avec v1 (24 €), animaux facturés avec v2 (80 €), l2 (5 €) reste à facturer.
+    expect(totalDuBon(bon, new Map([['v1', 24], ['v2', 80]]))).toBe(109);
+    expect(totalDuBon({ ...bon, venteIds: undefined, lignesFacturees: undefined }, new Map())).toBe(29);
   });
 });
