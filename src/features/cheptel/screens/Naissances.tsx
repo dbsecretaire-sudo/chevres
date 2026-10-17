@@ -40,11 +40,6 @@ export default function Naissances() {
         <View style={commonStyles.topPadded}>
           <Button
             variant="secondary"
-            label={TEXTES.cheptel.naissances.carnetBouton}
-            onPress={() => exporterCarnetMiseBasPdf().catch(() => undefined)}
-          />
-          <Button
-            variant="secondary"
             label={TEXTES.cheptel.naissances.carnetLivretBouton}
             onPress={() => exporterCarnetMiseBasPdf('livret').catch(() => undefined)}
           />
