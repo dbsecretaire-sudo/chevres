@@ -38,3 +38,17 @@ describe('lots d’abattoir', () => {
     expect(lotsDAbattoir(bêtes, complete ?? [])).toBeNull();
   });
 });
+
+describe('lots d’abattoir : un animal remis vivant par erreur', () => {
+  it('reste dans son lot (les boucles ne sont jamais retirées), les nouveaux animaux du jour s’y ajoutent', () => {
+    const lot: LotAnimaux = { id: 'a', nom: 'Abattoir du 25/02/2026', boucles: '00836, 00837', abattoir: '2026-02-25', categorie: 'abattoir' };
+    // 00836 est redevenu vivant ; 00837 est toujours à l'abattoir ; 00838 vient d'être abattu ce jour-là.
+    const suite = lotsDAbattoir(
+      [animal('00836', 'vivante'), animal('00837', 'abattoir', '2026-02-25'), animal('00838', 'abattoir', '2026-02-25')],
+      [lot],
+    );
+    expect(suite?.[0].boucles).toBe('00836, 00837, 00838');
+    // Tout le monde est redevenu vivant : le lot ne bouge pas.
+    expect(lotsDAbattoir([animal('00836', 'vivante'), animal('00837', 'vivante')], [lot])).toBeNull();
+  });
+});
