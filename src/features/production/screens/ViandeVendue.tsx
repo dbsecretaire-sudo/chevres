@@ -1,9 +1,17 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { useLots } from '@/features/exploitation/hooks/useLots';
+import {
+  nomDuLotVendus,
+  ventesDuLotVendus,
+  type SorteDeVendus,
+} from '@/features/exploitation/services/lotsVendus';
+import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -36,6 +44,8 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.viande;
+
+type OngletViande = 'afacturer' | 'facturee' | 'sansfacture';
 
 /** La viande vendue de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
 export default function ViandeVendue() {
@@ -80,7 +90,89 @@ export default function ViandeVendue() {
     }, [charger]),
   );
 
-  const total = ventes.reduce((somme, v) => somme + (v.prix ?? 0), 0);
+  /** Trois onglets : la viande à facturer, la viande facturée, et celle vendue sans facture (les animaux sans boucle). */
+  const [onglet, setOnglet] = useState<OngletViande>('afacturer');
+  const facturees = ventes.filter((v) => venteADeclarer(v));
+  const sansFacture = ventes.filter((v) => !venteADeclarer(v));
+  /** Les animaux à l'abattoir pas encore vendus, par jour d'abattage : ceux avec boucle se facturent, ceux sans boucle se vendent sans facture. */
+  const groupes = aFacturer.flatMap((j) =>
+    [true, false]
+      .map((avecBoucle) => ({
+        date: j.date,
+        avecBoucle,
+        animaux: j.animaux.filter((a) => !!a.numeroBoucle === avecBoucle),
+      }))
+      .filter((g) => g.animaux.length > 0),
+  );
+  const groupesAFacturer = groupes.filter((g) => g.avecBoucle);
+  const groupesSansFacture = groupes.filter((g) => !g.avecBoucle);
+  const venteDeLOnglet = onglet === 'facturee' ? facturees : onglet === 'sansfacture' ? sansFacture : [];
+  const { lots } = useLots();
+  /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
+  const ouvrirLot = (id: string) =>
+    `${ROUTES.lot(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
+  /** Les animaux sans boucle vendus sans facture : les ventes déjà faites, morts ou vivants (le lot gère le passage de l'un à l'autre). */
+  const morts = ventesDuLotVendus('morts', sansFacture, animaux);
+  const vivants = ventesDuLotVendus('vivants', sansFacture, animaux);
+  const autresSansFacture = sansFacture.filter((x) => idsDesAnimaux(x).length === 0);
+  const total = venteDeLOnglet.reduce((somme, v) => somme + (v.prix ?? 0), 0);
+
+  /** La ligne d'une vente : un appui l'ouvre. */
+  const ligneVente = (item: Vente) => (
+    <ListRow
+      key={item.id}
+      title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
+      subtitle={[[formatDateFR(item.date), item.client].filter(Boolean).join(' · '), tracabilite(item)]
+        .filter(Boolean)
+        .join('\n')}
+      trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
+      onPress={() => router.push(ROUTES.ficheVente(item.id))}
+    />
+  );
+  /** Les ventes sans facture d'une sorte (morts ou vivants), sous le titre du lot : un appui sur le titre ouvre le lot. */
+  const sectionVendus = (sorte: SorteDeVendus, liste: Vente[]) => {
+    const lot = lots.find((l) => l.vendus === sorte);
+    return liste.length > 0 ? (
+      <View style={commonStyles.listeSimple} key={sorte}>
+        <Pressable disabled={!lot} onPress={() => lot && router.push(ouvrirLot(lot.id) as never)}>
+          <Text style={commonStyles.lineBold}>{`${nomDuLotVendus(sorte)} (${liste.length})`}</Text>
+        </Pressable>
+        {liste.map(ligneVente)}
+      </View>
+    ) : null;
+  };
+
+  /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
+  const ligneDuJour = (g: { date: string; avecBoucle: boolean; animaux: Chevre[] }) => {
+    const poids = poidsTotal(g.animaux);
+    return (
+      <ListRow
+        key={`${g.date}-${g.avecBoucle}`}
+        title={T.abattoirLe(formatDateFR(g.date))}
+        subtitle={[
+          T.animaux(g.animaux.length),
+          g.avecBoucle ? T.avecBoucle : T.sansBoucleSansFacture,
+          poids ? T.poids(String(poids).replace('.', ',')) : '',
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+        onPress={() => {
+          // Avec boucle : le lot d'abattoir (sa facture, ses animaux, d'où l'on facture) ; sans boucle : la vente sans facture.
+          const lot = lots.find((l) => l.abattoir === g.date);
+          if (g.avecBoucle && lot) return router.push(ouvrirLot(lot.id) as never);
+          router.push({
+            pathname: ROUTES.COMPTABILITE_NOUVELLE,
+            params: {
+              type: TYPE_FACTURE.EMISE,
+              categorie: CATEGORIE_RECETTE.VIANDE,
+              abattoir: g.date,
+              ...(g.avecBoucle ? {} : { facture: 'non' }),
+            },
+          });
+        }}
+      />
+    );
+  };
 
   /**
    * Ce que la vente dit de la viande : le jour d'abattoir, les boucles des animaux (de quoi retrouver d'où vient la viande, sans
@@ -116,67 +208,70 @@ export default function ViandeVendue() {
           />
           <SelecteurEspece />
         </LigneFiltres>
-        {ventes.length > 0 ? (
+        <PucesDefilantes<OngletViande>
+          puces={[
+            { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length) },
+            { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
+            {
+              valeur: 'sansfacture',
+              label: T.onglets.sansFacture(groupesSansFacture.length + sansFacture.length),
+            },
+          ]}
+          valeur={onglet}
+          onChoisir={setOnglet}
+        />
+        {venteDeLOnglet.length > 0 ? (
           <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
         ) : null}
       </View>
-      {/* La viande des animaux déjà à l'abattoir qui n'est pas facturée : un appui ouvre la facture, sur ce jour d'abattage. */}
-      {aFacturer.length > 0 ? (
+      {/* La viande des animaux déjà à l'abattoir qui n'est pas encore vendue : un appui ouvre la facture, sur ce jour d'abattage. */}
+      {onglet === 'afacturer' ? (
         <View style={commonStyles.listeSimple}>
-          <Text style={commonStyles.lineBold}>{T.aFacturer}</Text>
-          {/* Les animaux bouclés se facturent ; les petits sans boucle se vendent aux clients qui ne veulent pas de facture. */}
-          {aFacturer.flatMap((j) =>
-            [true, false]
-              .map((avecBoucle) => ({ avecBoucle, animaux: j.animaux.filter((a) => !!a.numeroBoucle === avecBoucle) }))
-              .filter((g) => g.animaux.length > 0)
-              .map((g) => {
-                const poids = poidsTotal(g.animaux);
-                return (
-                  <ListRow
-                    key={`${j.date}-${g.avecBoucle}`}
-                    title={T.abattoirLe(formatDateFR(j.date))}
-                    subtitle={[
-                      T.animaux(g.animaux.length),
-                      g.avecBoucle ? T.avecBoucle : T.sansBoucleSansFacture,
-                      poids ? T.poids(String(poids).replace('.', ',')) : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    onPress={() =>
-                      router.push({
-                        pathname: ROUTES.COMPTABILITE_NOUVELLE,
-                        params: {
-                          type: TYPE_FACTURE.EMISE,
-                          categorie: CATEGORIE_RECETTE.VIANDE,
-                          abattoir: j.date,
-                          ...(g.avecBoucle ? {} : { facture: 'non' }),
-                        },
-                      })
-                    }
-                  />
-                );
-              }),
+          {groupesAFacturer.length === 0 ? (
+            <EmptyState title={T.rienAFacturer} />
+          ) : (
+            groupesAFacturer.map(ligneDuJour)
           )}
         </View>
-      ) : null}
-      <FlatList
-        data={ventes}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={commonStyles.listeBlocAvecFab}
-        ListEmptyComponent={<EmptyState title={T.aucune} />}
-        renderItem={({ item, index }) => (
-          <LigneDeBloc index={index} total={ventes.length}>
-            <ListRow
-              title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
-              subtitle={[[formatDateFR(item.date), item.client].filter(Boolean).join(' · '), tracabilite(item)]
-                .filter(Boolean)
-                .join('\n')}
-              trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
-              onPress={() => router.push(ROUTES.ficheVente(item.id))}
-            />
-          </LigneDeBloc>
-        )}
-      />
+      ) : onglet === 'sansfacture' ? (
+        <ScrollView contentContainerStyle={commonStyles.listeBlocAvecFab}>
+          {groupesSansFacture.length > 0 ? (
+            <View style={commonStyles.listeSimple}>
+              <Text style={commonStyles.lineBold}>{T.sansFactureAVendre}</Text>
+              {groupesSansFacture.map(ligneDuJour)}
+            </View>
+          ) : null}
+          {sectionVendus('morts', morts)}
+          {sectionVendus('vivants', vivants)}
+          {autresSansFacture.length > 0 ? (
+            <View style={commonStyles.listeSimple}>{autresSansFacture.map(ligneVente)}</View>
+          ) : null}
+          {groupesSansFacture.length + sansFacture.length === 0 ? <EmptyState title={T.aucune} /> : null}
+          {morts.length + vivants.length > 0 ? <Text style={commonStyles.note}>{T.vendusAide}</Text> : null}
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={venteDeLOnglet}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={commonStyles.listeBlocAvecFab}
+          ListEmptyComponent={<EmptyState title={T.aucune} />}
+          renderItem={({ item, index }) => (
+            <LigneDeBloc index={index} total={venteDeLOnglet.length}>
+              <ListRow
+                title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
+                subtitle={[
+                  [formatDateFR(item.date), item.client].filter(Boolean).join(' · '),
+                  tracabilite(item),
+                ]
+                  .filter(Boolean)
+                  .join('\n')}
+                trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
+                onPress={() => router.push(ROUTES.ficheVente(item.id))}
+              />
+            </LigneDeBloc>
+          )}
+        />
+      )}
       {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
       <Fab
         options={[

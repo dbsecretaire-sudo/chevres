@@ -41,8 +41,8 @@ export const DICTIONNAIRE_ANIMAUX: Record<EspeceAnimale, Vocabulaire> = {
     petit: terme('cabri'),
     petitFemelle: 'Chevrette',
     petitMale: 'Chevreau',
-    surPied: 'Chèvre sur pied',
-    vivant: 'Chèvre vivante',
+    surPied: 'Animaux adultes sur pied',
+    vivant: 'Animaux adultes vivants',
     produits: ['lait', 'fromage', 'cabris', 'boucherie', 'charcuterie', 'animaux'],
   },
   [TYPE_ANIMAL_ETABLISSEMENT.BREBIS]: {

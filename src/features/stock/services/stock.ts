@@ -81,7 +81,7 @@ export function roleDeLaViande(cle: string): ValeurDe<typeof ROLE_VIANDE> | unde
 
 /**
  * Les lignes de viande tenues d'office : pour chaque espèce, ses petits (cabris, agneaux…), l'animal sur pied et l'animal
- * vivant, nommés d'après l'espèce (« Cochon sur pied », « Chèvre vivante »).
+ * vivant, nommés d'après l'espèce (« Cochon sur pied », « Animaux adultes vivants » pour les chèvres).
  */
 function lignesDeViandeDOffice(especes: readonly EspeceAnimale[], archive: ArchiveStock): ArticleAffiche[] {
   const nom = (cle: string, defaut: string) => archive.noms[cle] ?? defaut;
@@ -242,9 +242,9 @@ export function niveauxDeStock(
   for (const m of mouvements) niveaux.set(m.article, (niveaux.get(m.article) ?? 0) + m.delta);
   for (const [espece, effectif] of Object.entries(effectifs ?? {})) {
     niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.JEUNE}`), effectif?.petits ?? 0);
-    // L'animal vivant : les femelles adultes vivantes (le bouc se vend à part). L'animal sur pied : les chèvres mortes, déjà à l'abattoir et pas
+    // L'animal vivant : les adultes vivants, boucs compris. L'animal sur pied : les chèvres mortes, déjà à l'abattoir et pas
     // encore facturées (les adultes, hors cabris et tiptag).
-    niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.VIVANT}`), effectif?.femelles ?? effectif?.sevres ?? 0);
+    niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.VIVANT}`), effectif?.sevres ?? 0);
     niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.SUR_PIED}`), effectif?.aFacturerAdultes ?? 0);
   }
   return niveaux;
