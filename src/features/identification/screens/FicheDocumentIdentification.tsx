@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -50,6 +51,8 @@ export default function FicheDocumentIdentification() {
   const [retires, setRetires] = useState<PieceJointe[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  /** Le document existant est chargé : dès lors, ses modifications s'enregistrent toutes seules. */
+  const [charge, setCharge] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -60,6 +63,7 @@ export default function FicheDocumentIdentification() {
       setDate(document.date);
       setNotes(document.notes ?? '');
       setFichiers(document.fichiers ?? []);
+      setCharge(true);
     });
   }, [id]);
 
@@ -81,9 +85,16 @@ export default function FicheDocumentIdentification() {
     setRetires((actuels) => [...actuels, piece]);
   };
 
-  const enregistrer = async () => {
-    if (!titre.trim()) return setErreur(T.fiche.titreRequis);
-    if (!estDateISO(date)) return setErreur(TEXTES.commun.dateField.invalide);
+  /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et reste sur l'écran. */
+  const enregistrer = async (auto = false): Promise<boolean> => {
+    if (!titre.trim()) {
+      if (!auto) setErreur(T.fiche.titreRequis);
+      return false;
+    }
+    if (!estDateISO(date)) {
+      if (!auto) setErreur(TEXTES.commun.dateField.invalide);
+      return false;
+    }
     await enregistrerDocumentIdentification({
       id,
       titre: titre.trim(),
@@ -93,8 +104,17 @@ export default function FicheDocumentIdentification() {
       fichiers: fichiers.length > 0 ? fichiers : undefined,
     });
     for (const piece of retires) await supprimerPiece(piece);
-    router.back();
+    if (auto) setRetires([]);
+    else router.back();
+    return true;
   };
+
+  // Un document existant : tout changement s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: existant && charge,
+    signature: JSON.stringify([titre, nature, date, notes, fichiers]),
+    enregistrer: () => enregistrer(true),
+  });
 
   const supprimer = async () => {
     if (id) {
@@ -149,15 +169,18 @@ export default function FicheDocumentIdentification() {
           apercu
         />
 
-        <View style={commonStyles.row}>
-          <Button
-            style={commonStyles.flex1}
-            variant="secondary"
-            label={TEXTES.commun.general.annuler}
-            onPress={() => router.back()}
-          />
-          <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={enregistrer} />
-        </View>
+        {/* Un nouveau document s'enregistre avec son bouton ; un document existant, tout seul. */}
+        {existant ? null : (
+          <View style={commonStyles.row}>
+            <Button
+              style={commonStyles.flex1}
+              variant="secondary"
+              label={TEXTES.commun.general.annuler}
+              onPress={() => router.back()}
+            />
+            <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={() => enregistrer()} />
+          </View>
+        )}
         {existant ? (
           <Button variant="danger" label={T.fiche.supprimer} onPress={() => setSuppressionOuverte(true)} />
         ) : null}

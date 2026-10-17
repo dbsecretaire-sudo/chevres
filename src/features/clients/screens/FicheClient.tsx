@@ -85,8 +85,6 @@ export default function FicheClient() {
           <ClientFormulaire
             form={form}
             onChange={fiche.setForm}
-            onAnnuler={fiche.annulerModifications}
-            onEnregistrer={fiche.enregistrerModifications}
           />
         ) : (
           <ClientLecture client={client} onModifier={() => fiche.setEditing(true)} />

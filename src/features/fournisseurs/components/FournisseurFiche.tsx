@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
@@ -77,12 +77,10 @@ export function FournisseurLecture({
 interface FormulaireProps {
   form: Fournisseur;
   onChange: (form: Fournisseur) => void;
-  onAnnuler: () => void;
-  onEnregistrer: () => void;
 }
 
 /** Formulaire de modification d'un fournisseur. */
-export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer }: FormulaireProps) {
+export function FournisseurFormulaire({ form, onChange }: FormulaireProps) {
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{TEXTES.commun.general.modifierLaFiche}</Text>
@@ -148,20 +146,6 @@ export function FournisseurFormulaire({ form, onChange, onAnnuler, onEnregistrer
         autoCapitalize="none"
         placeholder={TEXTES.commun.general.facultatif}
       />
-
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={onAnnuler}
-        />
-        <Button
-          style={commonStyles.flex1}
-          label={TEXTES.commun.general.enregistrer}
-          onPress={onEnregistrer}
-        />
-      </View>
     </Card>
   );
 }

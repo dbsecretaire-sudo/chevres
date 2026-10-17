@@ -104,7 +104,6 @@ export default function FicheVente() {
             clients={fiche.clients}
             montantTexte={fiche.montantTexte}
             onChangerMontant={fiche.changerMontant}
-            onEnregistrer={() => fiche.enregistrerModifications()}
             // Les animaux vendus (cabris, adultes…) : leur boucle, M ou F et leur naissance ; les fromages et la charcuterie, désignés
             // par leur n° de lot quand le produit en a — comme dans le formulaire de vente.
             complement={

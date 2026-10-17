@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -105,21 +106,41 @@ export default function FicheContact() {
   const categorie = useMemo(() => (contact ? categorieDuContact(contact, idsConnus) : {}), [contact, idsConnus]);
   const nomDeLaCategorie = (cle: string | undefined) => categories.find((c) => c.id === cle)?.nom;
 
-  const enregistrer = async (aEnregistrer: FormulaireContact, confirme = false) => {
-    if (!contact) return;
-    // Retirer un côté supprime sa fiche : on demande avant.
+  /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
+  const enregistrer = async (aEnregistrer: FormulaireContact, confirme = false, auto = false): Promise<boolean> => {
+    if (!contact) return false;
+    // Retirer un côté supprime sa fiche : on demande avant (une seule fenêtre, même si la saisie continue).
     if (!confirme) {
-      if (contact.client && !aEnregistrer.recettes && aEnregistrer.depenses) return setRetraitAConfirmer(F.retirerClient);
-      if (contact.fournisseur && !aEnregistrer.depenses && aEnregistrer.recettes) {
-        return setRetraitAConfirmer(F.retirerFournisseur);
+      const retrait =
+        contact.client && !aEnregistrer.recettes && aEnregistrer.depenses
+          ? F.retirerClient
+          : contact.fournisseur && !aEnregistrer.depenses && aEnregistrer.recettes
+            ? F.retirerFournisseur
+            : undefined;
+      if (retrait) {
+        if (!retraitAConfirmer) setRetraitAConfirmer(retrait);
+        return false;
       }
     }
+    // Sans catégorie, rien ne s'enregistre (le contrôle est fait avant toute création de catégorie).
+    if (auto && !aEnregistrer.categorie) return false;
     if (aEnregistrer.categorie) await assurerCategorie(aEnregistrer.categorie);
     const resultat = await enregistrerContact(aEnregistrer, contact, idsConnus);
-    if ('erreur' in resultat) return setErreur(TEXTES.contacts.erreurs[resultat.erreur as ErreurContact]);
-    setForm(null);
+    if ('erreur' in resultat) {
+      if (!auto) setErreur(TEXTES.contacts.erreurs[resultat.erreur as ErreurContact]);
+      return false;
+    }
+    if (!auto) setForm(null);
     await charger();
+    return true;
   };
+
+  // Tout changement de la fiche s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: !!form,
+    signature: JSON.stringify(form),
+    enregistrer: () => (form ? enregistrer(form, false, true) : Promise.resolve(false)),
+  });
 
   const ajouterDocument = async () => {
     if (!contact) return;
@@ -223,10 +244,6 @@ export default function FicheContact() {
           <Card>
             <Text style={commonStyles.cardTitle}>{F.titreModifier}</Text>
             <FormulaireContactChamps form={form} onChange={setForm} categories={categories} />
-            <View style={commonStyles.row}>
-              <Button style={commonStyles.flex1} variant="secondary" label={F.annuler} onPress={() => setForm(null)} />
-              <Button style={commonStyles.flex1} label={F.enregistrer} onPress={() => enregistrer(form)} />
-            </View>
           </Card>
         ) : (
           <>

@@ -11,6 +11,7 @@ import type { Client } from '@/features/clients/types';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Facture, Vente } from '@/features/comptabilite/types';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
 
@@ -56,9 +57,13 @@ export function useFicheClient(id: string | undefined) {
     [ventes, factures, ecritures],
   );
 
-  const enregistrerModifications = async () => {
-    if (!form) return;
-    if (!form.nom.trim()) return setErreur(TEXTES.commun.general.nomRequis);
+  /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
+  const enregistrerModifications = async (auto = false): Promise<boolean> => {
+    if (!form) return false;
+    if (!form.nom.trim()) {
+      if (!auto) setErreur(TEXTES.commun.general.nomRequis);
+      return false;
+    }
 
     const nettoye: Client = {
       ...form,
@@ -72,14 +77,19 @@ export function useFicheClient(id: string | undefined) {
     // Son adresse, son téléphone et son e-mail passent à sa fiche fournisseur, s'il en a une.
     await partagerCoordonneesDuClient(nettoye);
     setClient(nettoye);
-    setForm(nettoye);
-    setEditing(false);
+    if (!auto) {
+      setForm(nettoye);
+      setEditing(false);
+    }
+    return true;
   };
 
-  const annulerModifications = () => {
-    setForm(client);
-    setEditing(false);
-  };
+  // Tout changement de la fiche s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: editing,
+    signature: JSON.stringify(form),
+    enregistrer: () => enregistrerModifications(true),
+  });
 
   const supprimerDefinitivement = async () => {
     if (!client) return;
@@ -102,7 +112,6 @@ export function useFicheClient(id: string | undefined) {
     erreur,
     setErreur,
     enregistrerModifications,
-    annulerModifications,
     supprimerDefinitivement,
     recharger: charger,
   };

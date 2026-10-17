@@ -1,7 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Button } from '@/shared/components/Button';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { avecPaiement } from '@/features/comptabilite/utils/paiement';
@@ -80,7 +79,6 @@ interface Props {
   /** Texte tel que saisi pour le prix (évite de perdre la virgule en cours de frappe). */
   montantTexte: string;
   onChangerMontant: (valeur: string) => void;
-  onEnregistrer: () => void;
   /** Ce que la vente a de plus (les animaux vendus, les lots) : à la fin du bloc des informations, avant le bouton. */
   complement?: ReactNode;
 }
@@ -100,7 +98,6 @@ export function VenteFormulaire({
   onChangerCategorie,
   montantTexte,
   onChangerMontant,
-  onEnregistrer,
   complement,
 }: Props) {
   const estViande = (CATEGORIES_VENTE_VIANDE as readonly string[]).includes(form.categorie);
@@ -394,7 +391,6 @@ export function VenteFormulaire({
         {complement}
       </SectionForm>
 
-      <Button label={TEXTES.commun.general.enregistrer} onPress={onEnregistrer} />
     </>
   );
 }

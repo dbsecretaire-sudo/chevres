@@ -179,11 +179,7 @@ export const TEXTES_PRODUCTION = {
         n > 0 ? `Sans facture : à vendre (${n})` : 'Sans facture : à vendre',
       sansFactureVendue: (n: number) => (n > 0 ? `Sans facture : vendue (${n})` : 'Sans facture : vendue'),
     },
-    vendusAide:
-      'Un appui sur « Animaux vendus morts » ou « vivants » ouvre le lot : on y passe les animaux d’une vente de morts à vivants (leurs fiches suivent).',
     rienASansFacture: 'Aucun animal sans boucle à vendre.',
-    sansFactureAVendreAide:
-      'Les animaux sans boucle déjà à l’abattoir, vendus sans facture à un particulier : un appui ouvre la vente.',
     avance: 'Avancé',
     sousOnglets: {
       morts: (n: number) => `Morts (${n})`,

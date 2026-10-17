@@ -1,5 +1,4 @@
 import { View } from 'react-native';
-import { Button } from '@/shared/components/Button';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
@@ -16,11 +15,10 @@ interface Props {
   chevre: Chevre;
   form: Chevre;
   onChange: (form: Chevre) => void;
-  onEnregistrer: () => void;
 }
 
 /** Formulaire de modification d'une chèvre. */
-export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer }: Props) {
+export function ChevreFormulaire({ chevre, form, onChange }: Props) {
   const meres = useMeresPossibles(form.dateNaissance, form.mereNumeroBoucle);
   return (
     <View style={commonStyles.gap10}>
@@ -98,7 +96,6 @@ export function ChevreFormulaire({ chevre, form, onChange, onEnregistrer }: Prop
           style={commonStyles.textarea}
         />
       </SectionForm>
-      <Button label={TEXTES.commun.general.enregistrer} onPress={onEnregistrer} />
     </View>
   );
 }

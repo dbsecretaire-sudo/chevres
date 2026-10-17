@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
 import { InfoModal } from '@/shared/components/InfoModal';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { structureTypeDe } from '@/features/dossiers/services/structure';
 import { colors } from '@/shared/theme/colors';
@@ -16,7 +16,6 @@ import { TEXTES } from '@/shared/textes';
 
 /** La structure type : les sous-dossiers créés dans le dossier de chaque nouveau client (modifiable à tout moment). */
 export default function StructureDossiers() {
-  const router = useRouter();
   const { settings, patchSettings, loaded } = useAppSettings();
   const infos = settings.exploitation?.entreprise;
   const [noms, setNoms] = useState<string[]>(() => structureTypeDe(infos));
@@ -30,16 +29,19 @@ export default function StructureDossiers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
 
-  const enregistrer = async () => {
-    if (noms.some((n) => !n.trim())) return setErreur(T.nomVide);
+  /** Enregistré tout seul : une structure avec un nom vide attend d'être complétée. */
+  const enregistrer = async (): Promise<boolean> => {
+    if (noms.some((n) => !n.trim())) return false;
     await patchSettings({
       exploitation: {
         ...settings.exploitation,
         entreprise: { ...infos, structureDossiers: noms.map((n) => n.trim()) },
       },
     });
-    router.back();
+    return true;
   };
+
+  useEnregistrementAuto({ actif: loaded, signature: JSON.stringify(noms), enregistrer });
 
   return (
     <Screen>
@@ -65,16 +67,6 @@ export default function StructureDossiers() {
         ))}
         <Button variant="secondary" label={T.ajouter} onPress={() => setNoms((prev) => [...prev, ''])} />
       </Card>
-
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={() => router.back()}
-        />
-        <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={enregistrer} />
-      </View>
 
       <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
     </Screen>

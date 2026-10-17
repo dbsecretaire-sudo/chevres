@@ -14,6 +14,7 @@ import {
 } from '@/features/fournisseurs/services/resumeFournisseur';
 import type { Facture } from '@/features/comptabilite/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { TEXTES } from '@/shared/textes';
 
 /** État et actions de la fiche d'un fournisseur : chargement, modification, suppression, factures liées. */
@@ -43,25 +44,34 @@ export function useFicheFournisseur(id: string | undefined) {
     }, [charger]),
   );
 
-  const enregistrerModifications = async () => {
-    if (!form) return;
+  /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
+  const enregistrerModifications = async (auto = false): Promise<boolean> => {
+    if (!form) return false;
     const resultat = nettoyerFournisseur(form, {
       entreprise: TEXTES.commun.general.nomDEntrepriseRequis,
     });
-    if ('erreur' in resultat) return setErreur(resultat.erreur);
+    if ('erreur' in resultat) {
+      if (!auto) setErreur(resultat.erreur);
+      return false;
+    }
 
     await enregistrerFournisseur(resultat.fournisseur);
     // Son adresse, son téléphone et son e-mail passent à sa fiche client, s'il en a une.
     await partagerCoordonneesDuFournisseur(resultat.fournisseur);
     setFournisseur(resultat.fournisseur);
-    setForm(resultat.fournisseur);
-    setEditing(false);
+    if (!auto) {
+      setForm(resultat.fournisseur);
+      setEditing(false);
+    }
+    return true;
   };
 
-  const annulerModifications = () => {
-    setForm(fournisseur);
-    setEditing(false);
-  };
+  // Tout changement de la fiche s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: editing,
+    signature: JSON.stringify(form),
+    enregistrer: () => enregistrerModifications(true),
+  });
 
   const supprimerDefinitivement = async () => {
     if (!fournisseur) return;
@@ -84,7 +94,6 @@ export function useFicheFournisseur(id: string | undefined) {
     erreur,
     setErreur,
     enregistrerModifications,
-    annulerModifications,
     supprimerDefinitivement,
   };
 }

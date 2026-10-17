@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
@@ -90,6 +91,9 @@ export default function EcranElement() {
   >(null);
   const [aRetirer, setARetirer] = useState<Facturation | null>(null);
 
+  /** L'élément existant est chargé : dès lors, ses modifications s'enregistrent toutes seules. */
+  const [charge, setCharge] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     getElement(id).then((e) => {
@@ -104,6 +108,7 @@ export default function EcranElement() {
       setFichiers(e.fichiers ?? []);
       setFacturations(e.facturations ?? []);
       getClient(e.clientId).then(setClient);
+      setCharge(true);
     });
   }, [id]);
 
@@ -165,12 +170,17 @@ export default function EcranElement() {
     setRetires((actuels) => [...actuels, piece]);
   };
 
-  const enregistrer = async () => {
-    if (!titre.trim()) return setErreur(T.titreRequis);
+  /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et reste sur l'écran. */
+  const enregistrer = async (auto = false): Promise<boolean> => {
+    const refuser = (message: string) => {
+      if (!auto) setErreur(message);
+      return false;
+    };
+    if (!titre.trim()) return refuser(T.titreRequis);
     if (!estDateISO(date) || (echeance && !estDateISO(echeance)))
-      return setErreur(TEXTES.commun.dateField.invalide);
+      return refuser(TEXTES.commun.dateField.invalide);
     const dossier = await getSousDossier(dossierId);
-    if (!dossier) return setErreur(TEXTES.dossiers.sousDossier.introuvable);
+    if (!dossier) return refuser(TEXTES.dossiers.sousDossier.introuvable);
     await enregistrerElement({
       id,
       clientId: dossier.clientId,
@@ -188,8 +198,17 @@ export default function EcranElement() {
         .filter(Boolean),
     });
     for (const piece of retires) await supprimerPiece(piece);
-    router.back();
+    if (auto) setRetires([]);
+    else router.back();
+    return true;
   };
+
+  // Un élément existant : tout changement s'enregistre tout seul.
+  useEnregistrementAuto({
+    actif: existant && charge,
+    signature: JSON.stringify([dossierId, titre, texte, date, echeance, statut, etiquettes, fichiers, facturations]),
+    enregistrer: () => enregistrer(true),
+  });
 
   const supprimer = async () => {
     if (id) await supprimerElement(id);
@@ -322,19 +341,22 @@ export default function EcranElement() {
           />
         ) : null}
 
-        <View style={commonStyles.row}>
-          <Button
-            style={commonStyles.flex1}
-            variant="secondary"
-            label={TEXTES.commun.general.annuler}
-            onPress={() => router.back()}
-          />
-          <Button
-            style={commonStyles.flex1}
-            label={TEXTES.commun.general.enregistrer}
-            onPress={enregistrer}
-          />
-        </View>
+        {/* Un nouveau contenu s'enregistre avec son bouton ; un contenu existant, tout seul. */}
+        {existant ? null : (
+          <View style={commonStyles.row}>
+            <Button
+              style={commonStyles.flex1}
+              variant="secondary"
+              label={TEXTES.commun.general.annuler}
+              onPress={() => router.back()}
+            />
+            <Button
+              style={commonStyles.flex1}
+              label={TEXTES.commun.general.enregistrer}
+              onPress={() => enregistrer()}
+            />
+          </View>
+        )}
         <OptionsModal
           visible={menuOuvert}
           onClose={() => setMenuOuvert(false)}

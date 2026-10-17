@@ -401,7 +401,6 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         ) : null}
       </SectionForm>
 
-      <Button label={TEXTES.commun.general.enregistrer} onPress={() => f.enregistrerModifications()} />
     </>
   );
 }

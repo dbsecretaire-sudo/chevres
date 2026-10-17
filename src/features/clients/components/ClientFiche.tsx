@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
@@ -48,12 +48,10 @@ export function ClientLecture({ client, onModifier }: { client: Client; onModifi
 interface FormulaireProps {
   form: Client;
   onChange: (form: Client) => void;
-  onAnnuler: () => void;
-  onEnregistrer: () => void;
 }
 
 /** Formulaire de modification d'un client. */
-export function ClientFormulaire({ form, onChange, onAnnuler, onEnregistrer }: FormulaireProps) {
+export function ClientFormulaire({ form, onChange }: FormulaireProps) {
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{TEXTES.commun.general.modifierLaFiche}</Text>
@@ -96,20 +94,6 @@ export function ClientFormulaire({ form, onChange, onAnnuler, onEnregistrer }: F
         style={commonStyles.textarea}
         placeholder={TEXTES.commun.general.facultatif}
       />
-
-      <View style={commonStyles.row}>
-        <Button
-          style={commonStyles.flex1}
-          variant="secondary"
-          label={TEXTES.commun.general.annuler}
-          onPress={onAnnuler}
-        />
-        <Button
-          style={commonStyles.flex1}
-          label={TEXTES.commun.general.enregistrer}
-          onPress={onEnregistrer}
-        />
-      </View>
     </Card>
   );
 }

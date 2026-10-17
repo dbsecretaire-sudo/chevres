@@ -162,7 +162,6 @@ export default function FicheChevre() {
                 chevre={chevre}
                 form={form}
                 onChange={fiche.setForm}
-                onEnregistrer={() => fiche.enregistrerModifications()}
               />
             ) : (
               <ChevreResume

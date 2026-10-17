@@ -260,7 +260,6 @@ export default function ViandeVendue() {
           data={aVendre}
           keyExtractor={(a) => a.id}
           contentContainerStyle={commonStyles.listeBlocAvecFab}
-          ListHeaderComponent={<Text style={commonStyles.note}>{T.sansFactureAVendreAide}</Text>}
           ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
           renderItem={({ item, index }) => (
             <LigneDeBloc index={index} total={aVendre.length}>

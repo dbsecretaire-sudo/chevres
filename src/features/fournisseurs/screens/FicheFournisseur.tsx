@@ -81,8 +81,6 @@ export default function FicheFournisseur() {
           <FournisseurFormulaire
             form={form}
             onChange={e.setForm}
-            onAnnuler={e.annulerModifications}
-            onEnregistrer={e.enregistrerModifications}
           />
         ) : (
           <>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { Button } from '@/shared/components/Button';
@@ -23,7 +23,6 @@ import {
 import { formatMontant } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
-import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.entreprise.informations;
@@ -71,7 +70,6 @@ export function InformationsEntreprise() {
   const [montantNuit, setMontantNuit] = useState(montantEnTexte(infos?.tarifNuit));
   const [montantRepas, setMontantRepas] = useState(montantEnTexte(infos?.tarifRepas));
   const [editing, setEditing] = useState(false);
-  const [enregistrement, setEnregistrement] = useState(false);
 
   // La taxe de séjour ne concerne que les associations (gîte, hébergement) ; suivie par défaut, désactivable.
   const concerneTaxeSejour = !!actif.activites?.includes(ACTIVITE_SOCIETE.ASSOCIATION);
@@ -94,23 +92,18 @@ export function InformationsEntreprise() {
 
   /** Enregistré tout seul (`auto`), il laisse l'écran en modification. */
   const enregistrer = async (auto = false) => {
-    if (!auto) setEnregistrement(true);
-    try {
-      const entreprise: InfosEntreprise = {
-        ...form,
-        tauxUrssaf: tauxDesTextes(tauxUrssaf),
-        regimeTva: form.tvaApplicable ? (form.regimeTva ?? REGIME_TVA_PAR_DEFAUT) : undefined,
-        tarifNuit: concerneTaxeSejour ? parseDecimal(montantNuit) || undefined : undefined,
-        tarifRepas: concerneTaxeSejour ? parseDecimal(montantRepas) || undefined : undefined,
-        montantTaxeSejour:
-          concerneTaxeSejour && taxeSejourSuivie(form) ? parseDecimal(montantTaxe) || undefined : undefined,
-        taxeSejourParNuit: undefined,
-      };
-      await patchSettings({ exploitation: { ...settings.exploitation, entreprise } });
-      if (!auto) setEditing(false);
-    } finally {
-      setEnregistrement(false);
-    }
+    const entreprise: InfosEntreprise = {
+      ...form,
+      tauxUrssaf: tauxDesTextes(tauxUrssaf),
+      regimeTva: form.tvaApplicable ? (form.regimeTva ?? REGIME_TVA_PAR_DEFAUT) : undefined,
+      tarifNuit: concerneTaxeSejour ? parseDecimal(montantNuit) || undefined : undefined,
+      tarifRepas: concerneTaxeSejour ? parseDecimal(montantRepas) || undefined : undefined,
+      montantTaxeSejour:
+        concerneTaxeSejour && taxeSejourSuivie(form) ? parseDecimal(montantTaxe) || undefined : undefined,
+      taxeSejourParNuit: undefined,
+    };
+    await patchSettings({ exploitation: { ...settings.exploitation, entreprise } });
+    if (!auto) setEditing(false);
   };
 
   // Tout changement s'enregistre tout seul.
@@ -317,16 +310,8 @@ export function InformationsEntreprise() {
         </>
       ) : null}
 
-      {editing ? (
-        <View style={styles.rowSimple}>
-          <Button
-            style={commonStyles.flex1}
-            label={TEXTES.commun.general.enregistrer}
-            onPress={() => enregistrer()}
-            loading={enregistrement}
-          />
-        </View>
-      ) : (
+      {/* En modification, tout s'enregistre tout seul : plus de bouton Enregistrer. */}
+      {editing ? null : (
         <Button
           label={TEXTES.exploitation.informationsExploitation.modifier}
           variant="secondary"
