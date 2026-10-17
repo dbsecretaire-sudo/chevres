@@ -21,10 +21,11 @@ const JOURS_SEVRAGE = 90;
 /** Les lignes d'une page A4 : le carnet papier déplié fait une moitié d'A4 et en compte 16, la page A4 en a donc 32. */
 export const LIGNES_PAR_PAGE = 32;
 /**
- * Les lignes d'une page du livret (une page A6 en portrait, comme le carnet papier) : 18 lignes de 6,7 mm, avec le titre, l'en-tête et la
- * légende, dans les 148 mm de hauteur moins les marges que les imprimantes imposent.
+ * Les lignes d'une double page du livret, comme le carnet papier : le tableau s'étend sur les deux pages face à face (à gauche la date, les
+ * n° du petit, de la mère et du père et le sexe ; à droite les observations, l'âge de départ ou de mort et le poids), 16 lignes de 7,6 mm
+ * qui se retrouvent d'une page à l'autre, avec le titre, l'en-tête et la légende dans les 148 mm de hauteur moins les marges.
  */
-export const LIGNES_PAR_PAGE_LIVRET = 18;
+export const LIGNES_PAR_PAGE_LIVRET = 16;
 
 /**
  * Le carnet en feuilles A4 à ranger dans un classeur, ou en livret A6 : des feuilles A4 en portrait de quatre pages par face, à imprimer
@@ -266,24 +267,24 @@ const STYLES = `
   .page6 { width: 105mm; height: 148.25mm; position: relative; overflow: hidden; }
   .page6:first-child { border-right: 0.2mm dotted #aaa; }
   /* Les pages intérieures, en portrait comme la couverture : une marge que les imprimantes savent tenir. */
-  .interieur { position: absolute; left: 0; top: 0; width: 105mm; height: 148.25mm; padding: 5mm; overflow: hidden; }
+  .interieur { position: absolute; left: 0; top: 0; width: 105mm; height: 148.25mm; padding: 3.5mm; overflow: hidden; }
+  /* Les marges : 5 mm sur les bords de la feuille A4 (la limite de l'imprimante), 2 mm seulement du côté de la reliure (le pli au milieu de la
+     feuille) et de la coupe entre les deux feuilles A5, où l'imprimante imprime jusqu'au bord, comme dans le carnet d'origine. */
+  .demi5 .page6:first-child .interieur { padding-left: 5mm; padding-right: 2mm; }
+  .demi5 .page6:last-child .interieur { padding-left: 2mm; padding-right: 5mm; }
+  .face .demi5:last-child .interieur { padding-top: 2mm; padding-bottom: 5mm; }
+  .face .demi5:first-child .interieur { padding-top: 5mm; padding-bottom: 2mm; }
   .a6 h1 { font-size: 9pt; margin: 0 0 1mm; }
-  .a6 th { font-size: 5.5pt; padding: 0.4mm 0.4mm; overflow-wrap: anywhere; }
-  .a6 td { height: 6.7mm; font-size: 7pt; padding: 0 0.6mm; }
+  .a6 th { font-size: 6pt; padding: 0.4mm 0.6mm; overflow-wrap: anywhere; }
+  .a6 tr { height: 7.6mm; }
+  .a6 td { height: 7.6mm; font-size: 7.5pt; padding: 0 0.8mm; }
+  .a6 td .c { max-height: 7.4mm; overflow: hidden; line-height: 1.15; overflow-wrap: anywhere; }
   .a6 td.libre { font-size: 7pt; }
-  .a6 colgroup col:nth-child(1) { width: 9% !important; }
-  .a6 colgroup col:nth-child(2) { width: 17% !important; }
-  .a6 colgroup col:nth-child(3) { width: 14% !important; }
-  .a6 colgroup col:nth-child(4) { width: 11% !important; }
-  .a6 colgroup col:nth-child(5) { width: 11% !important; }
-  .a6 colgroup col:nth-child(6) { width: 9% !important; }
-  .a6 colgroup col:nth-child(7) { width: 14% !important; }
-  .a6 colgroup col:nth-child(8) { width: 15% !important; }
   .a6 .note { font-size: 5.5pt; margin: 0.8mm 0 0; }
   .a6 .colonnes { flex-direction: column; gap: 2mm; }
   .a6 .champ { margin-bottom: 2.4mm; font-size: 7pt; }
   .a6 .champ .valeur { min-height: 3.5mm; }
-  .a6 .resultats { zoom: 0.7; }
+  .a6 .resultats { zoom: 0.85; }
   .a6 .page6 > .page > .couverture { height: 136mm; margin: 6mm; padding: 14mm 8mm 8mm; border-radius: 2mm; }
   .a6 .couverture .grand { font-size: 24pt; }
   .a6 .couverture .periode { font-size: 11pt; margin-top: 3mm; }
@@ -398,30 +399,46 @@ function pageDonnees(infos: InfosExploitation | undefined, contacts: ContactsDuC
   </div>`;
 }
 
-/** Le tableau des petits d'une année : une ligne par petit. */
-function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire): string {
+/**
+ * Le tableau des petits d'une année : une ligne par mise bas. En entier sur une page A4 ; dans le livret, la moitié gauche (date, n° du
+ * petit, n° de la mère, n° du père, sexe) ou la moitié droite (observations, âge de départ ou de mort, poids de départ) : les deux pages
+ * face à face se lisent ensemble, ligne par ligne.
+ */
+function pageCabris(annee: string, lignes: LigneCabri[], v: Vocabulaire, moitie?: 'gauche' | 'droite'): string {
   const c = C.colonnes;
+  const colonnes: { th: string; valeur: (l: LigneCabri) => string; libre?: boolean; entiere: number; gauche?: number; droite?: number }[] = [
+    { th: c.date, valeur: (l) => l.date, entiere: 9, gauche: 15 },
+    { th: c.numero(v.petit.singulier), valeur: (l) => l.numero, entiere: 18, gauche: 28 },
+    { th: c.mere, valeur: (l) => l.mere, entiere: 11, gauche: 23 },
+    { th: c.pere, valeur: () => '', entiere: 8, gauche: 20 },
+    { th: c.sexe, valeur: (l) => l.sexe, entiere: 10, gauche: 14 },
+    { th: c.observations, valeur: (l) => l.observations, libre: true, entiere: 23, droite: 38 },
+    { th: c.age, valeur: (l) => l.age, entiere: 11, droite: 34 },
+    { th: c.poids, valeur: (l) => l.poids, entiere: 10, droite: 28 },
+  ];
+  const choisies = moitie === 'gauche' ? colonnes.slice(0, 5) : moitie === 'droite' ? colonnes.slice(5) : colonnes;
+  const largeur = (col: (typeof colonnes)[number]) => (moitie === 'gauche' ? col.gauche : moitie === 'droite' ? col.droite : col.entiere);
   const lignesHtml = lignes
     .map(
       (l) =>
-        `<tr><td>${echapper(l.date)}</td><td>${echapper(l.numero)}</td><td>${echapper(l.mere)}</td><td></td><td>${echapper(l.sexe)}</td><td class="libre">${echapper(l.observations)}</td><td>${echapper(l.age)}</td><td>${echapper(l.poids)}</td></tr>`,
+        `<tr>${choisies.map((col) => `<td${col.libre ? ' class="libre"' : ''}><div class="c">${echapper(col.valeur(l))}</div></td>`).join('')}</tr>`,
     )
     .join('');
   return `<div class="page">
     <h1>${echapper(capitaliser(v.petit.pluriel))} — ${echapper(annee)}</h1>
     <table>
-      <colgroup><col style="width:9%" /><col style="width:18%" /><col style="width:11%" /><col style="width:8%" /><col style="width:10%" /><col style="width:23%" /><col style="width:11%" /><col style="width:10%" /></colgroup>
-      <thead><tr><th>${echapper(c.date)}</th><th>${echapper(c.numero(v.petit.singulier))}</th><th>${echapper(c.mere)}</th><th>${echapper(c.pere)}</th><th>${echapper(c.sexe)}</th><th>${echapper(c.observations)}</th><th>${echapper(c.age)}</th><th>${echapper(c.poids)}</th></tr></thead>
+      <colgroup>${choisies.map((col) => `<col style="width:${largeur(col)}%" />`).join('')}</colgroup>
+      <thead><tr>${choisies.map((col) => `<th>${echapper(col.th)}</th>`).join('')}</tr></thead>
       <tbody>${lignesHtml}</tbody>
     </table>
-    <p class="note">${echapper(C.legende)}</p>
+    ${moitie === 'gauche' ? '' : `<p class="note">${echapper(C.legende)}</p>`}
   </div>`;
 }
 
 const pourcent = (n: number | undefined): string => (n === undefined ? '' : `${n} %`);
 
 /** La page des résultats de production et du calcul des taux d'une année : ce que les mises bas permettent de calculer est déjà écrit. */
-function pageResultats(annee: string, r: ResultatsProduction, v: Vocabulaire): string {
+function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire): { gauche: string; droite: string } {
   const T = C.resultats;
   const f = v.femelle.pluriel;
   const p = v.petit.pluriel;
@@ -433,10 +450,8 @@ function pageResultats(annee: string, r: ResultatsProduction, v: Vocabulaire): s
       .join('')}</div></div>`;
   const taux = (nom: string, formule: string, valeur = '') =>
     `<div class="taux"><div class="tete"><div class="nom">${echapper(nom)} =</div><div class="valeur">${echapper(valeur)}</div></div><div class="formule">${echapper(formule)}</div></div>`;
-  return `<div class="page resultats">
-    <div class="colonnes">
-      <div>
-        <h1>${echapper(T.titre)} — ${echapper(annee)}</h1>
+  return {
+    gauche: `<h1>${echapper(T.titre)} — ${echapper(annee)}</h1>
         ${boite(T.misesALaReproduction(f))}
         ${boite(T.avorte(f))}
         ${boite(T.misBas(f), String(r.misesBas))}
@@ -448,19 +463,27 @@ function pageResultats(annee: string, r: ResultatsProduction, v: Vocabulaire): s
           [T.avantDepart, r.mortsDepart],
           [T.total, r.morts],
         ])}
-        ${boite(T.vivants(p), String(r.vivants))}
-      </div>
-      <div>
-        <h1>${echapper(T.taux)}</h1>
+        ${boite(T.vivants(p), String(r.vivants))}`,
+    droite: `<h1>${echapper(T.taux)}</h1>
         ${taux(T.fertilite, T.formuleFertilite(f))}
         ${taux(T.prolificite, T.formuleProlificite(p, f), pourcent(r.prolificite))}
         ${taux(T.productivite, T.formuleProductivite(p, f))}
         ${taux(T.mortalite, T.formuleMortalite(p), pourcent(r.mortalite))}
-        <p class="note">${echapper(T.aCompleter(f))}</p>
-      </div>
-    </div>
-  </div>`;
+        <p class="note">${echapper(T.aCompleter(f))}</p>`,
+  };
 }
+
+/** La page des résultats de production et du calcul des taux (feuille A4) : les deux moitiés côte à côte. */
+function pageResultats(annee: string, r: ResultatsProduction, v: Vocabulaire): string {
+  const { gauche, droite } = partiesResultats(annee, r, v);
+  return `<div class="page resultats"><div class="colonnes"><div>${gauche}</div><div>${droite}</div></div></div>`;
+}
+
+/** Les deux pages face à face du livret : les résultats de production à gauche, le calcul des taux à droite. */
+const pagesResultatsLivret = (annee: string, r: ResultatsProduction, v: Vocabulaire): string[] => {
+  const { gauche, droite } = partiesResultats(annee, r, v);
+  return [`<div class="page resultats">${gauche}</div>`, `<div class="page resultats">${droite}</div>`];
+};
 
 /** Le carnet de mise bas, sur le modèle du carnet papier : les données personnelles, puis pour chaque année les petits et les résultats de production. */
 export function carnetMiseBasHtml(
@@ -477,10 +500,21 @@ export function carnetMiseBasHtml(
     pageDonnees(infos, contacts),
     ...(annees.length === 0
       ? [`<div class="page"><p class="vide">${echapper(C.aucune)}</p></div>`]
-      : annees.flatMap(({ annee, portees: liste }) => [
-          ...pagesDeLAnnee(liste, parPage).map((page) => pageCabris(annee, page, v)),
-          pageResultats(annee, resultatsDeLAnnee(liste, annee), v),
-        ])),
+      : annees.flatMap(({ annee, portees: liste }) =>
+          format === 'livret'
+            ? [
+                // Une double page par tableau (la moitié gauche, puis la droite), puis les résultats et les taux face à face.
+                ...pagesDeLAnnee(liste, parPage).flatMap((page) => [
+                  pageCabris(annee, page, v, 'gauche'),
+                  pageCabris(annee, page, v, 'droite'),
+                ]),
+                ...pagesResultatsLivret(annee, resultatsDeLAnnee(liste, annee), v),
+              ]
+            : [
+                ...pagesDeLAnnee(liste, parPage).map((page) => pageCabris(annee, page, v)),
+                pageResultats(annee, resultatsDeLAnnee(liste, annee), v),
+              ],
+        )),
   ];
   if (format === 'livret') {
     // Comme un livre : la couverture, son verso blanc, puis les pages ; à la fin, le verso blanc de la quatrième de couverture (verte) en
