@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { DateField } from '@/shared/components/DateField';
@@ -8,6 +9,8 @@ import { AvertissementDelais } from '@/features/exploitation/components/Avertiss
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, StatutChevre } from '@/features/cheptel/types';
+import { colors } from '@/shared/theme/colors';
+import { formatDateFR } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -72,33 +75,56 @@ export function ChevreStatutDeclaration({
   );
 }
 
-/** Carte de la date de sortie d'un animal sorti (mort, abattoir, vendu) : elle se corrige, le recensement et les bordereaux la suivent. */
-export function ChevreDateSortie({ chevre, onEnregistrer }: { chevre: Chevre; onEnregistrer: (date: string) => void }) {
+/**
+ * La sortie d'un animal sorti (mort, abattoir, vendu…) : une seule carte pour sa date de sortie et son retour au cheptel actif, verrouillée
+ * d'office pour éviter les erreurs. Le cadenas la déverrouille : on y corrige la date (le recensement et les bordereaux la suivent) ou on
+ * remet l'animal dans le cheptel actif ; il se referme après un enregistrement.
+ */
+export function ChevreSortie({
+  chevre,
+  onEnregistrerDate,
+  onReactiver,
+}: {
+  chevre: Chevre;
+  onEnregistrerDate: (date: string) => void;
+  onReactiver: () => void;
+}) {
+  const T = TEXTES.cheptel.ficheChevre.sortie;
+  const [deverrouillee, setDeverrouillee] = useState(false);
   const [date, setDate] = useState(chevre.dateStatut ?? '');
+  const titre = chevre.dateStatut
+    ? T.titreAvecDate(statutLabel(chevre.statut, chevre.sexe), formatDateFR(chevre.dateStatut))
+    : statutLabel(chevre.statut, chevre.sexe);
   return (
-    <Card>
-      <Text style={commonStyles.cardTitle}>{TEXTES.cheptel.ficheChevre.dateDeSortie}</Text>
-      <DateField label={TEXTES.commun.general.date} value={date} onChange={setDate} />
-      <Button
-        variant="secondary"
-        label={TEXTES.cheptel.ficheChevre.enregistrerLaDate}
-        onPress={() => onEnregistrer(date)}
-        disabled={!date || date === chevre.dateStatut}
-      />
-    </Card>
-  );
-}
-
-/** Carte proposant de remettre dans le cheptel actif un animal sorti (morte, vendue, abattoir…). */
-export function ChevreReactivation({ onReactiver }: { onReactiver: () => void }) {
-  return (
-    <Card>
-      <Text style={commonStyles.cardTitle}>{TEXTES.commun.general.statut}</Text>
-      <Button
-        label={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif}
-        variant="secondary"
-        onPress={onReactiver}
-      />
+    <Card style={commonStyles.gap8}>
+      <View style={commonStyles.rowSpaceBetween}>
+        <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{titre}</Text>
+        <Pressable
+          onPress={() => setDeverrouillee((ouvert) => !ouvert)}
+          hitSlop={8}
+          accessibilityLabel={deverrouillee ? T.verrouiller : T.deverrouiller}
+        >
+          <Ionicons name={deverrouillee ? 'lock-open' : 'lock-closed'} size={24} color={deverrouillee ? colors.danger : colors.primary} />
+        </Pressable>
+      </View>
+      {deverrouillee ? (
+        <>
+          <DateField label={TEXTES.cheptel.ficheChevre.dateDeSortie} value={date} onChange={setDate} />
+          <Button
+            variant="secondary"
+            label={TEXTES.cheptel.ficheChevre.enregistrerLaDate}
+            onPress={() => {
+              onEnregistrerDate(date);
+              setDeverrouillee(false);
+            }}
+            disabled={!date || date === chevre.dateStatut}
+          />
+          <Button label={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif} variant="danger" onPress={onReactiver} />
+          <Button variant="secondary" label={T.verrouiller} onPress={() => setDeverrouillee(false)} />
+        </>
+      ) : (
+        <Text style={commonStyles.note}>{T.aideVerrou}</Text>
+      )}
     </Card>
   );
 }

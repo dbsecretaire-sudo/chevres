@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, Text } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/Screen';
+import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
@@ -13,11 +15,8 @@ import { useFicheChevre } from '@/features/cheptel/hooks/useFicheChevre';
 import { ChevreEntete } from '@/features/cheptel/components/ficheChevre/ChevreEntete';
 import { ChevreFormulaire } from '@/features/cheptel/components/ficheChevre/ChevreFormulaire';
 import { ChevreResume } from '@/features/cheptel/components/ficheChevre/ChevreResume';
-import {
-  ChevreDateSortie,
-  ChevreReactivation,
-  ChevreStatutDeclaration,
-} from '@/features/cheptel/components/ficheChevre/ChevreStatut';
+import { ChevreSuiviAnnuel } from '@/features/cheptel/components/ficheChevre/ChevreSuiviAnnuel';
+import { ChevreSortie, ChevreStatutDeclaration } from '@/features/cheptel/components/ficheChevre/ChevreStatut';
 import {
   ChevreDescendance,
   ChevreSante,
@@ -32,12 +31,17 @@ import { styles } from '@/shared/styles/cheptel/FicheChevre.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
+type OngletFiche = 'fiche' | 'sante' | 'suivi';
+
 export default function FicheChevre() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { settings } = useAppSettings();
   const fiche = useFicheChevre(id);
   const { chevre, form } = fiche;
+  const [onglet, setOnglet] = useState<OngletFiche>('fiche');
+  /** La confirmation de « Remettre dans le cheptel actif » : on pouvait vouloir seulement corriger la date de sortie. */
+  const [confirmerReactivation, setConfirmerReactivation] = useState(false);
 
   if (!chevre || !form) {
     return (
@@ -89,56 +93,87 @@ export default function FicheChevre() {
           ]}
         />
 
-        {fiche.editing ? (
-          <ChevreFormulaire
-            chevre={chevre}
-            form={form}
-            onChange={fiche.setForm}
-            onEnregistrer={() => fiche.enregistrerModifications()}
-            onAjouterCabri={ajouterUnCabri}
-          />
-        ) : (
-          <ChevreResume
-            chevre={chevre}
-            indicatif={identificationCheptel(settings.exploitation, especeDe(chevre)).indicatifMarquage}
-            onModifier={() => fiche.setEditing(true)}
-          />
-        )}
-
-        {estVivante && fiche.showStatutForm && (
-          <ChevreStatutDeclaration
-            chevre={chevre}
-            statut={fiche.statutForm}
-            date={fiche.dateStatutForm}
-            onDateChange={fiche.setDateStatutForm}
-            poidsKg={fiche.poidsStatutForm}
-            onPoidsChange={fiche.setPoidsStatutForm}
-            onAnnuler={() => fiche.setShowStatutForm(false)}
-            onConfirmer={fiche.enregistrerStatut}
-          />
-        )}
-
-        {!estVivante && (
-          <ChevreDateSortie key={chevre.dateStatut} chevre={chevre} onEnregistrer={fiche.enregistrerDateSortie} />
-        )}
-        {!estVivante && <ChevreReactivation onReactiver={fiche.reactiver} />}
-
-        <ChevreSante
-          chevre={chevre}
-          visites={fiche.visites}
-          controles={fiche.controles}
-          onOuvrirVisite={(v) => router.push(ROUTES.santeVisite(v.id))}
-          onOuvrirControle={(c) => router.push(ROUTES.santeControleModifier(familleDuControle(c), c.id))}
+        {/* Des onglets plutôt qu'une seule longue page : la fiche, la santé, le suivi (lots de l'année, descendance). */}
+        <PucesDefilantes<OngletFiche>
+          puces={[
+            { valeur: 'fiche', label: TEXTES.cheptel.ficheChevre.onglets.fiche },
+            { valeur: 'sante', label: TEXTES.cheptel.ficheChevre.onglets.sante },
+            { valeur: 'suivi', label: TEXTES.cheptel.ficheChevre.onglets.suivi(fiche.descendance.length) },
+          ]}
+          valeur={onglet}
+          onChoisir={setOnglet}
         />
 
-        <ChevreTraitements chevre={chevre} />
+        {onglet === 'fiche' ? (
+          <>
+            {fiche.editing ? (
+              <ChevreFormulaire
+                chevre={chevre}
+                form={form}
+                onChange={fiche.setForm}
+                onEnregistrer={() => fiche.enregistrerModifications()}
+                onAjouterCabri={ajouterUnCabri}
+              />
+            ) : (
+              <ChevreResume
+                chevre={chevre}
+                indicatif={identificationCheptel(settings.exploitation, especeDe(chevre)).indicatifMarquage}
+                onModifier={() => fiche.setEditing(true)}
+              />
+            )}
 
-        {fiche.descendance.length > 0 && (
-          <ChevreDescendance
-            descendance={fiche.descendance}
-            onOuvrir={(idPetit) => router.push(ROUTES.ficheChevre(idPetit))}
-          />
-        )}
+            {estVivante && fiche.showStatutForm && (
+              <ChevreStatutDeclaration
+                chevre={chevre}
+                statut={fiche.statutForm}
+                date={fiche.dateStatutForm}
+                onDateChange={fiche.setDateStatutForm}
+                poidsKg={fiche.poidsStatutForm}
+                onPoidsChange={fiche.setPoidsStatutForm}
+                onAnnuler={() => fiche.setShowStatutForm(false)}
+                onConfirmer={fiche.enregistrerStatut}
+              />
+            )}
+
+            {!estVivante && (
+              <ChevreSortie
+                key={chevre.dateStatut}
+                chevre={chevre}
+                onEnregistrerDate={fiche.enregistrerDateSortie}
+                onReactiver={() => setConfirmerReactivation(true)}
+              />
+            )}
+          </>
+        ) : null}
+
+        {onglet === 'sante' ? (
+          <>
+            <ChevreSante
+              chevre={chevre}
+              visites={fiche.visites}
+              controles={fiche.controles}
+              onOuvrirVisite={(v) => router.push(ROUTES.santeVisite(v.id))}
+              onOuvrirControle={(c) => router.push(ROUTES.santeControleModifier(familleDuControle(c), c.id))}
+            />
+
+            <ChevreTraitements chevre={chevre} />
+          </>
+        ) : null}
+
+        {onglet === 'suivi' ? (
+          <>
+            <ChevreSuiviAnnuel chevre={chevre} />
+
+            {fiche.descendance.length > 0 ? (
+              <ChevreDescendance
+                descendance={fiche.descendance}
+                onOuvrir={(idPetit) => router.push(ROUTES.ficheChevre(idPetit))}
+              />
+            ) : (
+              <Text style={commonStyles.mutedItalic}>{TEXTES.cheptel.ficheChevre.aucuneDescendance}</Text>
+            )}
+          </>
+        ) : null}
       </ScrollView>
 
       <ConfirmModal
@@ -154,6 +189,18 @@ export default function FicheChevre() {
         confirmLabel={TEXTES.commun.general.supprimerDefinitivement}
         onCancel={() => fiche.setVueSecondaire(null)}
         onConfirm={fiche.supprimerDefinitivement}
+      />
+
+      <ConfirmModal
+        visible={confirmerReactivation}
+        title={TEXTES.cheptel.ficheChevre.reactivationQuestion}
+        message={TEXTES.cheptel.ficheChevre.reactivationMessage(statutLabel(chevre.statut, chevre.sexe).toLowerCase())}
+        confirmLabel={TEXTES.cheptel.ficheChevre.remettreDansLeCheptelActif}
+        onCancel={() => setConfirmerReactivation(false)}
+        onConfirm={() => {
+          setConfirmerReactivation(false);
+          fiche.reactiver();
+        }}
       />
 
       <InfoModal

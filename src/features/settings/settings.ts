@@ -133,6 +133,8 @@ export interface LotAnimaux {
   reproduction?: number;
   /** Un lot de mises à la reproduction : la version du calcul qui l'a rempli (les lots d'une version plus ancienne sont recalculés une fois). */
   versionCalcul?: number;
+  /** Un lot d'avortements : l'année des avortements de ses femelles. */
+  avortement?: number;
   /** Un lot de renouvellement : l'année de désignation de ses animaux (renouvellementAnnee de leur fiche, que le lot tient à jour). */
   renouvellement?: number;
   /** Un lot créé tout seul pour une visite vétérinaire : la visite (son nom et sa date la suivent). */

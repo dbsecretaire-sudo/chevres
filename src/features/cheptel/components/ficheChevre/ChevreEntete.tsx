@@ -1,10 +1,9 @@
 import { Text, View } from 'react-native';
 import { Badge } from '@/shared/components/Badge';
-import { colors, statutColors } from '@/shared/theme/colors';
+import { statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
 import {
   accordNe,
-  afficherBadgeRenouvellement,
   libelleChevre,
   statutLabel,
 } from '@/features/cheptel/utils/chevreLabel';
@@ -32,16 +31,6 @@ export function ChevreEntete({ chevre }: Props) {
       <View style={commonStyles.headerDroite}>
         <View style={styles.badges}>
           <Badge label={statutLabel(chevre.statut, chevre.sexe)} color={statutColors[chevre.statut]} />
-          {chevre.renouvellement && afficherBadgeRenouvellement(chevre.dateNaissance) && (
-            <Badge
-              label={
-                chevre.renouvellementAnnee
-                  ? TEXTES.cheptel.ficheChevre.renouvellementRenouvellementannee(chevre.renouvellementAnnee)
-                  : TEXTES.commun.general.renouvellement
-              }
-              color={colors.primary}
-            />
-          )}
         </View>
       </View>
     </View>

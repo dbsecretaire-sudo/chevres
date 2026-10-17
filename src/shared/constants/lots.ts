@@ -6,4 +6,6 @@ export const CATEGORIE_LOT = {
   REPRODUCTION: 'reproduction',
   /** Les animaux désignés pour le renouvellement d'une année : un lot par année, créé tout seul, où l'on ajoute et retire des animaux. */
   RENOUVELLEMENT: 'renouvellement',
+  /** Les femelles qui ont avorté une année : un lot par année, créé tout seul. */
+  AVORTEMENT: 'avortement',
 } as const;

@@ -6,6 +6,7 @@ import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { echapper, ecrireEtPartagerPdf } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
+import { chevresAyantAvorte } from '@/features/exploitation/services/lotsAnnuels';
 import { boucleDesFemellesALaReproduction, bouclesDuLot, lotsDeReproduction } from '@/features/exploitation/services/lots';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
@@ -222,6 +223,8 @@ export interface ResultatsProduction {
   mortalite?: number;
   /** Les femelles mises à la reproduction (voir chevresMisesALaReproduction) ; absent quand le cheptel n'est pas connu. */
   misesALaReproduction?: number;
+  /** Les femelles ayant avorté (le lot d'avortements de l'année) ; absent quand l'année n'a pas de lot : à écrire à la main. */
+  avortements?: number;
   /** Les petits vendus (ou partis à l'abattoir) ou gardés comme reproducteurs, parmi les petits nés. */
   vendusOuGardes: number;
   /** Les femelles ayant mis bas parmi celles mises à la reproduction, en %. */
@@ -262,6 +265,7 @@ export function resultatsDeLAnnee(
   portees: PorteeNaissance[],
   annee: number | string = portees[0]?.date.slice(0, 4) ?? '',
   misesALaReproduction?: number,
+  avortements?: number,
 ): ResultatsProduction {
   const finAnnee = `${annee}-12-31`;
   const r: ResultatsProduction = {
@@ -278,6 +282,7 @@ export function resultatsDeLAnnee(
     vivants: 0,
     vendusOuGardes: 0,
     misesALaReproduction,
+    avortements,
   };
   for (const p of portees) {
     const taille = p.cabrits.length;
@@ -520,7 +525,7 @@ function partiesResultats(annee: string, r: ResultatsProduction, v: Vocabulaire)
   return {
     gauche: `<h1>${echapper(T.titre)} — ${echapper(annee)}</h1>
         ${boite(T.misesALaReproduction(f), String(r.misesALaReproduction ?? ''))}
-        ${boite(T.avorte(f))}
+        ${boite(T.avorte(f), String(r.avortements ?? ''))}
         ${boite(T.misBas(f), String(r.misesBas))}
         ${groupe(T.nes(p), [[T.simples, r.simples], [T.doubles, r.doubles], [T.triples, r.triplesEtPlus], [T.total, r.nes]])}
         ${groupe(T.morts(p), [
@@ -570,6 +575,7 @@ export function carnetMiseBasHtml(
       liste,
       annee,
       animaux ? chevresMisesALaReproduction(animaux, Number(annee), liste.map((p) => p.mereNumeroBoucle), lots) : undefined,
+      chevresAyantAvorte(lots, Number(annee)),
     );
   const parPage = format === 'livret' ? LIGNES_PAR_PAGE_LIVRET : LIGNES_PAR_PAGE;
   const pages = [
