@@ -179,6 +179,17 @@ export const TEXTES_CHEPTEL = {
     enDelai: (nombre: number) => `${nombre} en délai d’attente`,
     /** Les lots d'abattoir : un par jour d'abattage, créés tout seuls d'après le cheptel. */
     abattoirDu: (date: string) => `Abattoir du ${date}`,
+    /** Les catégories de lots : Abattoir et Vétérinaire d'office, puis celles qu'on ajoute (le bouton réglages du titre). */
+    categories: {
+      abattoir: 'Abattoir',
+      veterinaire: 'Vétérinaire',
+      autres: 'Autres lots',
+      reglages: 'Gérer les catégories de lots',
+      titreReglages: 'Catégories de lots (Abattoir et Vétérinaire sont toujours là)',
+      categorie: 'Catégorie',
+    },
+    /** Le lot d'une visite vétérinaire, créé tout seul avec ses animaux. */
+    visiteDu: (date: string) => `Visite vétérinaire du ${date}`,
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
     aFacturer: 'à facturer',
     facture: 'facturé',

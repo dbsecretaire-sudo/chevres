@@ -1,6 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
-import { FlatList, View } from 'react-native';
+import { Alert, FlatList, View } from 'react-native';
+import { Button } from '@/shared/components/Button';
+import { SelectModal } from '@/shared/components/SelectModal';
+import { exporterBordereauxPertePdf } from '@/features/export/bordereauPertePdf';
+import { anneesDuSuivi } from '@/features/cheptel/services/suiviMouvements';
+import { deEspeceCourante } from '@/features/cheptel/utils/espece';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+import { loadAllYears } from '@/shared/storage/localStore';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Badge } from '@/shared/components/Badge';
@@ -10,7 +17,7 @@ import { SelectField } from '@/shared/components/SelectField';
 import { statutColors } from '@/shared/theme/colors';
 import { listChevresHistorique } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
-import { formatDateFR } from '@/shared/utils/dates';
+import { currentYear, formatDateFR } from '@/shared/utils/dates';
 import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import { styles } from '@/shared/styles/cheptel/Historique.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -44,10 +51,16 @@ export default function Historique() {
   const { espece } = useEtablissement();
   const [chevres, setChevres] = useState<Chevre[]>([]);
   const [tri, setTri] = useState<Tri>(TRI_HISTORIQUE.SORTIE);
+  /** Les années où l'on peut imprimer les bordereaux de perte, et la fenêtre où l'on choisit. */
+  const [annees, setAnnees] = useState<number[]>([]);
+  const [choixAnnee, setChoixAnnee] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       listChevresHistorique().then(setChevres);
+      loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL).then((tous) =>
+        setAnnees(anneesDuSuivi(deEspeceCourante(tous), currentYear())),
+      );
       // L'espèce n'est pas lue dans le chargement : elle sert à le relancer quand elle change.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [espece]),
@@ -61,9 +74,29 @@ export default function Historique() {
     });
   }, [chevres, tri]);
 
+  /** Imprime les bordereaux de perte de l'année choisie (« toutes » : toutes les années) ; rien à imprimer sans perte. */
+  const imprimerBordereaux = async (choix: string) => {
+    setChoixAnnee(false);
+    const liste = choix === 'toutes' ? annees : [Number(choix)];
+    try {
+      if ((await exporterBordereauxPertePdf(liste)) === 0) Alert.alert(TEXTES.cheptel.suiviMouvements.aucunePerte);
+    } catch (e: unknown) {
+      Alert.alert(e instanceof Error ? e.message : TEXTES.commun.general.erreur);
+    }
+  };
+
   return (
     <Screen scroll={false}>
       <SelecteurEspece />
+      {/* Les bordereaux de perte : un par jour où des animaux sont morts, d'après l'historique. */}
+      <View style={commonStyles.topPadded}>
+        <Button
+          variant="secondary"
+          label={TEXTES.cheptel.suiviMouvements.genererBordereaux}
+          onPress={() => setChoixAnnee(true)}
+          disabled={annees.length === 0}
+        />
+      </View>
       <View style={styles.filtre}>
         <SelectField
           label={TEXTES.cheptel.historique.trierPar}
@@ -72,6 +105,17 @@ export default function Historique() {
           options={OPTIONS_TRI}
         />
       </View>
+      <SelectModal<string>
+        visible={choixAnnee}
+        titre={TEXTES.cheptel.suiviMouvements.annee}
+        value=""
+        options={[
+          { value: 'toutes', label: TEXTES.cheptel.suiviMouvements.toutesLesAnnees },
+          ...[...annees].reverse().map((a) => ({ value: String(a), label: String(a) })),
+        ]}
+        onSelect={imprimerBordereaux}
+        onClose={() => setChoixAnnee(false)}
+      />
       <FlatList
         data={triees}
         keyExtractor={(item) => item.id}

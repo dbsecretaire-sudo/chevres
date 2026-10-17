@@ -1,4 +1,6 @@
 import { FlatList, View } from 'react-native';
+import { Button } from '@/shared/components/Button';
+import { commonStyles } from '@/shared/styles/commonStyles';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
@@ -20,6 +22,14 @@ export default function CheptelIndex() {
     <Screen scroll={false}>
       <View style={styles.choixEspece}>
         <SelecteurEspece />
+      </View>
+      {/* Le bilan annuel : le même bouton que celui des naissances. */}
+      <View style={commonStyles.topPadded}>
+        <Button
+          variant="secondary"
+          label={TEXTES.commun.general.bilanAnnuel}
+          onPress={() => router.push(ROUTES.CHEPTEL_BILAN as never)}
+        />
       </View>
       <FiltresCheptel e={e} />
 

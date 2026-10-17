@@ -121,6 +121,10 @@ export interface LotAnimaux {
   boucles: string;
   /** Un lot d'abattoir : le jour d'abattage de ses animaux (AAAA-MM-JJ). Il se crée et se tient à jour tout seul d'après le cheptel. */
   abattoir?: string;
+  /** La catégorie du lot (voir CATEGORIE_LOT, ou une catégorie ajoutée) ; absente : « Autres lots ». */
+  categorie?: string;
+  /** Un lot créé tout seul pour une visite vétérinaire : la visite (son nom et sa date la suivent). */
+  visiteId?: string;
   /** Pour un lot d'abattoir : la facture (dépense) de l'abattoir qui le concerne ; son montant est proposé en frais refacturés au client. */
   factureId?: string;
   /** Sans facture liée : le montant que l'abattoir demande de payer (€ TTC), noté à la main. */
@@ -186,6 +190,8 @@ export const reglageInvestissement = (
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
+  /** Les catégories de lots d'animaux ajoutées par l'utilisateur (Abattoir et Vétérinaire sont d'office). */
+  categoriesLots?: string[];
   /** Un titre propre à l'utilisateur, imprimé en tête de chaque PDF (nom commercial, adresse, mention…). */
   titrePdf?: string;
   /**
