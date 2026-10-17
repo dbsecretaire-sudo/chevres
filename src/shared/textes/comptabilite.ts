@@ -104,6 +104,12 @@ export const TEXTES_COMPTABILITE = {
     recue: 'Reçue',
   },
   ficheVente: {
+    etatAnimaux: 'Animaux remis',
+    etatAbattoir: 'Vivants, envoyés à l’abattoir',
+    etatVivants: 'Vivants, vendus au contact',
+    etatMorts: 'Morts',
+    etatAnimauxAide:
+      'Un document de circulation n’est nécessaire que pour une vente déclarée avec des animaux vivants : des animaux déjà morts n’en ont pas.',
     impossibleDeSupprimerLaVente: 'Impossible de supprimer la vente.',
     venteIntrouvable: 'Vente introuvable.',
     modifierLaVente: 'Modifier la vente',

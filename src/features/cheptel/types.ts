@@ -13,6 +13,8 @@ export interface ReservationAnimal {
   clientId?: string;
   /** Le bon de commande qui a réservé l'animal, quand il y en a un. */
   commandeId?: string;
+  /** Les animaux seront remis vivants ou morts (absent : pas encore décidé). */
+  etat?: 'vivants' | 'morts';
   date: string; // YYYY-MM-DD
 }
 

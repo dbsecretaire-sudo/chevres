@@ -28,13 +28,27 @@ export const idsDesAnimaux = (vente: Pick<Vente, 'animaux'>): string[] =>
  * de date d'abattoir, il passe en « morte » à la date de la vente. Les autres ventes d'animaux le passent en « vendue ».
  */
 export const sortieDesAnimauxDeLaVente = (
-  vente: Pick<Vente, 'categorie' | 'date' | 'dateAbattoir' | 'choixFacture'>,
+  vente: Pick<Vente, 'categorie' | 'date' | 'dateAbattoir' | 'choixFacture' | 'etatAnimaux'>,
 ): { statut: ValeurDe<typeof STATUT_CHEVRE>; date: string } =>
-  vente.categorie !== CATEGORIE_VENTE.VIANDE
+  vente.categorie !== CATEGORIE_VENTE.VIANDE || vente.etatAnimaux === 'vivants'
     ? { statut: STATUT_CHEVRE.VENDUE, date: vente.date }
-    : venteADeclarer(vente)
+    : vente.etatAnimaux === 'morts'
+      ? { statut: STATUT_CHEVRE.MORTE, date: vente.date }
+      : venteADeclarer(vente)
       ? { statut: STATUT_CHEVRE.ABATTOIR, date: vente.dateAbattoir || vente.date }
       : { statut: STATUT_CHEVRE.MORTE, date: vente.date };
+
+/**
+ * Un document de circulation est nécessaire quand la vente est déclarée et qu'il y a transport d'animaux vivants : des animaux vendus
+ * vivants (au particulier, au professionnel), ou envoyés vivants à l'abattoir. Des animaux déjà morts, ou une vente sans facture : aucun.
+ */
+export const documentCirculationRequis = (
+  vente: Pick<Vente, 'categorie' | 'date' | 'dateAbattoir' | 'choixFacture' | 'etatAnimaux' | 'animaux'>,
+): boolean =>
+  idsDesAnimaux(vente).length > 0 &&
+  venteADeclarer(vente) &&
+  (sortieDesAnimauxDeLaVente(vente).statut === STATUT_CHEVRE.VENDUE ||
+    sortieDesAnimauxDeLaVente(vente).statut === STATUT_CHEVRE.ABATTOIR);
 
 /** Les identifiants des lots de fromage d'une vente (aucun pour une vente sans fromage identifié). */
 export const idsDesFromages = (vente: Pick<Vente, 'fromages'>): string[] =>

@@ -59,8 +59,13 @@ export interface DonneesCirculation {
 }
 
 /** Le lieu d'arrivée d'après la vente : l'abattoir pour de la viande déclarée, sinon d'après la catégorie du client. */
-export function lieuDArrivee(vente: Pick<Vente, 'categorie' | 'choixFacture'>, client?: Pick<Client, 'categorie'>): LieuArrivee {
-  if (vente.categorie === CATEGORIE_VENTE.VIANDE && venteADeclarer(vente)) return LIEU_ARRIVEE.ABATTOIR;
+export function lieuDArrivee(
+  vente: Pick<Vente, 'categorie' | 'choixFacture' | 'etatAnimaux'>,
+  client?: Pick<Client, 'categorie'>,
+): LieuArrivee {
+  // Des animaux vendus vivants à un client (même pour leur viande) vont chez lui ; sinon, la viande déclarée passe par l'abattoir.
+  if (vente.categorie === CATEGORIE_VENTE.VIANDE && venteADeclarer(vente) && vente.etatAnimaux !== 'vivants')
+    return LIEU_ARRIVEE.ABATTOIR;
   if (client?.categorie === CATEGORIE_CLIENT.ENTREPRISE) return LIEU_ARRIVEE.OPERATEUR;
   if (!client?.categorie || client.categorie === CATEGORIE_CLIENT.PARTICULIER) return LIEU_ARRIVEE.PARTICULIER;
   return LIEU_ARRIVEE.ELEVAGE;
@@ -263,6 +268,47 @@ export async function remplirDocumentCirculation(d: DonneesCirculation): Promise
     for (let i = 0; i < reste.length; i += 4) ligne(reste.slice(i, i + 4).join('    '), 9.5, false, 60);
   }
   return doc.saveAsBase64();
+}
+
+/**
+ * Le document de circulation d'un lot d'abattoir : les animaux partent vivants de l'exploitation vers l'abattoir à la date d'abattage. Faux
+ * quand aucun animal du lot n'est retrouvé.
+ */
+export async function exporterDocumentCirculationAbattoirPdf(
+  date: string,
+  idsAnimaux: string[],
+  abattoir?: string,
+): Promise<boolean> {
+  const animaux = (await Promise.all(idsAnimaux.map(getChevre))).filter((a): a is Chevre => !!a);
+  if (animaux.length === 0) return false;
+  const [settings, traitements] = await Promise.all([getSettings(), listTousTraitements()]);
+  // Une vente déclarée de viande, pour l'abattoir : le lieu d'arrivée est l'abattoir.
+  const vente = {
+    id: '',
+    activite: '',
+    date,
+    dateAbattoir: date,
+    categorie: CATEGORIE_VENTE.VIANDE,
+    quantite: animaux.length,
+    unite: 'piece',
+    prix: 0,
+    tauxTva: 0,
+    client: abattoir,
+    choixFacture: undefined,
+  } as unknown as Vente;
+  const donnees = donneesDeCirculation({
+    vente,
+    animaux,
+    infos: settings.exploitation,
+    petit: (a) => estPetitLe(a, date),
+    traitements,
+  });
+  await ecrirePdfBase64EtPartager(
+    await remplirDocumentCirculation(donnees),
+    `${C.fichier}_abattoir_${date}.${FORMAT_EXPORT.PDF}`,
+    C.titre,
+  );
+  return true;
 }
 
 /** Crée le document de circulation (exemple) d'une vente d'animaux et l'ouvre à l'envoi ou à l'impression ; faux sans animal. */

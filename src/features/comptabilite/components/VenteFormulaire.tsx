@@ -298,6 +298,20 @@ export function VenteFormulaire({
         ) : null}
 
         {animalEntier ? (
+          <SelectField<string>
+            label={TEXTES.comptabilite.ficheVente.etatAnimaux}
+            value={form.etatAnimaux ?? ''}
+            onChange={(etat) => onChange({ ...form, etatAnimaux: etat ? (etat as 'vivants' | 'morts') : undefined })}
+            options={[
+              { value: '', label: TEXTES.comptabilite.ficheVente.etatAbattoir },
+              { value: 'vivants', label: TEXTES.comptabilite.ficheVente.etatVivants },
+              { value: 'morts', label: TEXTES.comptabilite.ficheVente.etatMorts },
+            ]}
+            aide={TEXTES.comptabilite.ficheVente.etatAnimauxAide}
+          />
+        ) : null}
+
+        {animalEntier ? (
           <FormField
             label={TEXTES.commun.general.poidsKg}
             required

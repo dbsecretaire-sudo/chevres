@@ -9,6 +9,8 @@ import { ListRow } from '@/shared/components/ListRow';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { listClients } from '@/features/clients/repository';
+import { rattacherLesReservations } from '@/features/commercial/services/reservations';
 import { commandeOuverte, totalAPreparer, totalCommande } from '@/features/commercial/services/commandes';
 import type { Commande } from '@/features/commercial/types';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
@@ -43,8 +45,14 @@ export default function ListeCommandes() {
 
   useFocusEffect(
     useCallback(() => {
-      lireArchiveCommercial().then((archive) => setCommandes(archive.commandes));
-      listTousLesAnimauxDeLEspece().then(setAnimaux);
+      // Les réservations (animaux, lots) se rangent d'elles-mêmes dans le bon de commande de leur client.
+      listClients()
+        .then(rattacherLesReservations)
+        .catch(() => undefined)
+        .then(() => {
+          lireArchiveCommercial().then((archive) => setCommandes(archive.commandes));
+          listTousLesAnimauxDeLEspece().then(setAnimaux);
+        });
     }, []),
   );
 

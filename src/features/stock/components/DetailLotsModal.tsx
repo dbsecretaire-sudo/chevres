@@ -6,7 +6,13 @@ import { SelectModal } from '@/shared/components/SelectModal';
 import { FiltresLots, TableauLots } from '@/features/stock/components/TableauLots';
 import { useListeLots } from '@/features/stock/hooks/useListeLots';
 import { estArticleFromage, etatDuLot } from '@/features/stock/services/lots';
-import { libererLotsReserves, reserverLotsPourClient } from '@/features/commercial/services/reservations';
+import {
+  libererLotsReserves,
+  prixDuProduitPourClient,
+  reserverLotsPourClient,
+} from '@/features/commercial/services/reservations';
+import { NomModal } from '@/features/dossiers/components/NomModal';
+import { parseDecimal } from '@/shared/utils/nombres';
 import { listClients } from '@/features/clients/repository';
 import { estParticulier } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
@@ -49,6 +55,14 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
     if (visible) listClients().then((liste) => setClients(liste.filter(estParticulier)));
   }, [visible]);
 
+  /** Le prix à la pièce à demander : ni le tarif du contact ni l'inventaire n'en donnent. */
+  const [questionPrix, setQuestionPrix] = useState<{ client: Client } | null>(null);
+  /** Les lots choisis rejoignent le bon de commande ouvert de ce client (créé s'il n'y en a pas). */
+  const reserverLesLots = async (client: Client, prix?: number) => {
+    await reserverLotsPourClient(lotsChoisis.filter((l) => !l.reservation), article!, client, prix);
+    terminer();
+    onChange();
+  };
   const terminer = () => {
     setSelectionner(false);
     setChoisis(new Set());
@@ -142,6 +156,18 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
           ) : null}
           <Text style={[commonStyles.note, commonStyles.required]}>{T.rappel}</Text>
           <Button label={T.ok} onPress={fermer} />
+          <NomModal
+            visible={!!questionPrix}
+            titre={TEXTES.stock.lots.questionPrix(article?.libelle ?? '')}
+            placeholder="0,00"
+            onValider={async (texte) => {
+              const client = questionPrix?.client;
+              setQuestionPrix(null);
+              const prix = parseDecimal(texte);
+              if (client && prix > 0) await reserverLesLots(client, prix);
+            }}
+            onAnnuler={() => setQuestionPrix(null)}
+          />
           <SelectModal<string>
             visible={!!action}
             titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.stock.lots.pourQuelClient}
@@ -154,10 +180,10 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
               setAction(null);
               if (!client) return;
               if (choix === 'ecriture') return ouvrirEcriture(client.id);
-              // Les lots rejoignent le bon de commande ouvert de ce client (créé s'il n'y en a pas).
-              await reserverLotsPourClient(lotsChoisis.filter((l) => !l.reservation), article!, client);
-              terminer();
-              onChange();
+              // Le prix à la pièce : demandé s'il manque (ni tarif de ce contact, ni prix dans l'inventaire).
+              const prix = await prixDuProduitPourClient(article!.cle, client);
+              if (prix === undefined) return setQuestionPrix({ client });
+              await reserverLesLots(client, prix);
             }}
             onClose={() => setAction(null)}
           />

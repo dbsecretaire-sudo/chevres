@@ -246,6 +246,11 @@ export interface Vente {
   poidsKg?: number;
   /** Pour la vente d'un animal sur pied ou vivant : vrai si c'est un petit (cabri, agneau…), faux ou absent pour un adulte. */
   jeune?: boolean;
+  /**
+   * Vente de viande : l'état des animaux à la remise. Absent : ils partent vivants à l'abattoir (d'office, pour une vente déclarée) ; « vivants » :
+   * ils sont vendus vivants au client ; « morts » : ils sont déjà morts (pas de transport d'animaux vivants, donc pas de document de circulation).
+   */
+  etatAnimaux?: 'vivants' | 'morts';
   /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */
   animaux?: string;
   /** Pour une vente de viande avec des animaux : la date d'abattoir (celle de la sortie du cheptel) ; absente : la date de la vente. */

@@ -140,6 +140,8 @@ export function useNouvelleEcriture(
   animauxInitiaux?: string[],
   /** Des lots à vendre (depuis la liste des lots d'un fromage ou d'une charcuterie) : leurs identifiants, le produit (« fromage:frais ») et son nom. */
   departLots?: { fromages: string[]; produit?: string; libelle?: string },
+  /** L'état des animaux (depuis leur réservation) : « vivants » ou « morts ». */
+  etatInitial?: string,
 ) {
   const router = useRouter();
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
@@ -256,6 +258,8 @@ export function useNouvelleEcriture(
   const [unite, setUnite] = useState<UniteVente>(UNITE_VENTE.PIECE);
   const [poidsKg, setPoidsKg] = useState('');
   const [jeune, setJeune] = useState<boolean | undefined>();
+  /** L'état des animaux d'une vente de viande à la remise : « vivants », « morts », ou vide (vivants à l'abattoir). */
+  const [etatAnimaux, setEtatAnimaux] = useState(etatInitial ?? '');
   /** Les fiches des animaux sur pied ou vivants vendus (vide : aucun choisi). */
   const [animaux, setAnimaux] = useState<string[]>(animauxInitiaux ?? []);
   /** Les lots des fromages vendus (vide : aucun choisi, ou un fromage sans lot). */
@@ -638,6 +642,7 @@ export function useNouvelleEcriture(
         tauxTvaAchat,
         poidsKg,
         jeune,
+        etatAnimaux,
         animaux,
         fromages,
         dateAbattoir,
@@ -810,6 +815,8 @@ export function useNouvelleEcriture(
     setPoidsKg,
     jeune,
     setJeune,
+    etatAnimaux,
+    setEtatAnimaux,
     animaux,
     fromages,
     setFromages,

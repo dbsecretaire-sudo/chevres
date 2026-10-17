@@ -32,7 +32,7 @@ export function LigneChevre({ chevre, onPress }: { chevre: Chevre; onPress: () =
     ? TEXTES.cheptel.listeCheptel.mereMerenumeroboucle(chevre.mereNumeroBoucle)
     : '';
 
-  const reserve = estReserve(chevre) ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}` : '';
+  const reserve = estReserve(chevre) ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}${chevre.reservation!.etat ? ` (${chevre.reservation!.etat})` : ''}` : '';
 
   return (
     <ListRow

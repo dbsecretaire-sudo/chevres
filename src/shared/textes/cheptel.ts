@@ -1047,6 +1047,7 @@ export const TEXTES_CHEPTEL = {
   /** Le document de circulation des animaux vendus vivants (sur pied, vivants, petits de boucherie), rempli pour exemple d'après la vente. */
   circulation: {
     bouton: 'Générer le document de circulation',
+    boutonAbattoir: 'Document de circulation vers l’abattoir',
     aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',
     fichier: 'document_circulation',
     exemple: 'EXEMPLE',
@@ -1125,6 +1126,9 @@ export const TEXTES_CHEPTEL = {
     ecriture: 'Écriture comptable sans facture pour un client',
     ecriturePour: (client: string) => `Écriture sans facture pour ${client}`,
     liberer: 'Libérer la réservation',
+    etatTitre: 'Ces cabris seront remis…',
+    etatPlusTard: 'Pas encore décidé',
+    remis: { vivants: 'Remis vivants', morts: 'Remis morts' },
     ouvrirLaFiche: 'Ouvrir la fiche',
     choisirClient: 'Pour quel client particulier ?',
     aucunClient: 'Aucun client enregistré : ajoutez-en un d’abord.',

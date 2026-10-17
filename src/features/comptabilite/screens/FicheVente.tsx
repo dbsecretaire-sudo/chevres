@@ -17,7 +17,7 @@ import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendus
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { idsDesAnimaux, idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
+import { documentCirculationRequis, idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 
 export default function FicheVente() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,7 +37,7 @@ export default function FicheVente() {
   return (
     <Screen scroll={false}>
       {/* Des animaux vendus vivants : le document de circulation (pré-rempli, pour exemple) se génère depuis l'en-tête. */}
-      {idsDesAnimaux(vente).length > 0 && !fiche.editing ? (
+      {documentCirculationRequis(vente) && !fiche.editing ? (
         <Stack.Screen
           options={{
             headerRight: () => (

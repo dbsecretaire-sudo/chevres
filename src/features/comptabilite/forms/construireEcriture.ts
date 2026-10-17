@@ -111,6 +111,8 @@ export interface SaisieEcriture {
   precision: string;
   /** Pour un animal sur pied ou vivant : vrai si c'est un petit, faux si c'est un adulte. */
   jeune?: boolean;
+  /** Vente de viande : l'état des animaux à la remise (vide : à l'abattoir). */
+  etatAnimaux?: string;
   /** Les fiches des animaux vendus (animal sur pied ou vivant). */
   animaux: string[];
   /** Les lots vendus (un fromage ou une charcuterie qui a des lots se vend lot par lot). */
@@ -234,6 +236,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       poidsKg:
         (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
       jeune: estViande && s.jeune ? true : undefined,
+      etatAnimaux:
+        estViande && (s.etatAnimaux === 'vivants' || s.etatAnimaux === 'morts') ? s.etatAnimaux : undefined,
       animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
       fromages: lotsDeFromages > 0 ? s.fromages.join(SEPARATEUR_ANIMAUX) : undefined,
       dateAbattoir:

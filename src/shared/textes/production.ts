@@ -184,6 +184,8 @@ export const TEXTES_PRODUCTION = {
     sousOnglets: {
       morts: (n: number) => `Morts (${n})`,
       vivants: (n: number) => `Vivants (${n})`,
+      disponibles: (n: number) => `Disponibles (${n})`,
+      reserves: (n: number) => `Réservés (${n})`,
     },
     vendreSansFacture: 'Vendre sans facture',
     rienAFacturer: 'Aucune viande à facturer.',

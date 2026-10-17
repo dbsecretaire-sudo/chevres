@@ -55,6 +55,8 @@ export default function NouvelleFacture() {
     fromages?: string;
     produit?: string;
     produitLibelle?: string;
+    /** L'état des animaux (depuis leur réservation) : « vivants » ou « morts ». */
+    etat?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -74,6 +76,7 @@ export default function NouvelleFacture() {
           libelle: params.produitLibelle,
         }
       : undefined,
+    params.etat,
   );
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);

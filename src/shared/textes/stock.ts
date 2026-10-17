@@ -251,6 +251,7 @@ export const TEXTES_STOCK = {
     ecritureSansFacture: 'Écriture sans facture pour un client',
     liberer: 'Libérer la réservation',
     pourQuelClient: 'Pour quel client particulier ?',
+    questionPrix: (produit: string) => `Quel prix à la pièce pour « ${produit} » (€ TTC) ?`,
     reservePour: (client: string) => `Réservé : ${client}`,
     /** Rappel : l'inventaire des fromages ne se modifie pas à la main. */
     rappel:

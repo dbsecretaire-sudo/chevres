@@ -750,6 +750,18 @@ export function ChampsVenteViande({ e }: Props) {
               options={optionsAnimaux}
             />
           )}
+          {/* Les animaux sont remis vivants (au client) ou morts : seuls ceux qui voyagent vivants ont un document de circulation. */}
+          <SelectField<string>
+            label={TEXTES.comptabilite.ficheVente.etatAnimaux}
+            value={e.etatAnimaux}
+            onChange={e.setEtatAnimaux}
+            options={[
+              { value: '', label: TEXTES.comptabilite.ficheVente.etatAbattoir },
+              { value: 'vivants', label: TEXTES.comptabilite.ficheVente.etatVivants },
+              { value: 'morts', label: TEXTES.comptabilite.ficheVente.etatMorts },
+            ]}
+            aide={TEXTES.comptabilite.ficheVente.etatAnimauxAide}
+          />
           <View style={styles.row3}>
             <View style={commonStyles.flex1}>
               <FormField

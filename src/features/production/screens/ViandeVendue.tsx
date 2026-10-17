@@ -16,8 +16,9 @@ import { saveChevre } from '@/features/cheptel/repository/chevres';
 import { estReserve, liberer } from '@/features/cheptel/services/reservations';
 import { reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import { ageAtteint } from '@/shared/utils/age';
 import { nomComplet } from '@/shared/utils/personne';
-import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
@@ -46,7 +47,7 @@ import {
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
-import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -78,6 +79,11 @@ export default function ViandeVendue() {
   const [clients, setClients] = useState<Client[]>([]);
   const [menu, setMenu] = useState<Chevre | null>(null);
   const [cible, setCible] = useState<{ animal: Chevre; action: 'reserver' | 'ecriture' } | null>(null);
+  /** Des cabris réservés : remis vivants ou morts (morts : pas de document de circulation). */
+  const [choixEtat, setChoixEtat] = useState<{ animal: Chevre; client: Client } | null>(null);
+  /** « À vendre » : les animaux libres, ou ceux déjà réservés pour un client. */
+  const [dispo, setDispo] = useState<'disponibles' | 'reserves'>('disponibles');
+  const estPetit = (a: Chevre) => !ageAtteint(a.dateNaissance, agePetitMax(), todayISO());
 
   const charger = useCallback(async () => {
     // Un animal se réserve, ou se vend sans facture, pour un client particulier seulement.
@@ -147,6 +153,8 @@ export default function ViandeVendue() {
     idsDesAnimaux(v).some((id) => animaux.get(id)?.statut === STATUT_CHEVRE.VENDUE);
   const ventesVivantes = sansFacture.filter(estVivante);
   const ventesMortes = sansFacture.filter((v) => !estVivante(v));
+  const aVendreLibres = aVendre.filter((a) => !estReserve(a));
+  const aVendreReserves = aVendre.filter((a) => estReserve(a));
   const ongletActif: OngletViande =
     !avance && (onglet === 'avendre' || onglet === 'vendue') ? 'afacturer' : onglet;
   const venteDeLOnglet =
@@ -169,6 +177,7 @@ export default function ViandeVendue() {
         facture: 'non',
         animaux: animal.id,
         ...(clientId ? { client: clientId } : {}),
+        ...(animal.reservation?.etat ? { etat: animal.reservation.etat } : {}),
       },
     });
 
@@ -260,6 +269,16 @@ export default function ViandeVendue() {
             patchSettings({ exploitation: { ...settings.exploitation, ventesSansFacture: v } })
           }
         />
+        {ongletActif === 'avendre' ? (
+          <PucesDefilantes<'disponibles' | 'reserves'>
+            puces={[
+              { valeur: 'disponibles', label: T.sousOnglets.disponibles(aVendreLibres.length) },
+              { valeur: 'reserves', label: T.sousOnglets.reserves(aVendreReserves.length) },
+            ]}
+            valeur={dispo}
+            onChoisir={setDispo}
+          />
+        ) : null}
         {ongletActif === 'vendue' ? (
           <>
             <PucesDefilantes<SorteDeVendus>
@@ -287,12 +306,12 @@ export default function ViandeVendue() {
         </View>
       ) : ongletActif === 'avendre' ? (
         <FlatList
-          data={aVendre}
+          data={dispo === 'disponibles' ? aVendreLibres : aVendreReserves}
           keyExtractor={(a) => a.id}
           contentContainerStyle={commonStyles.listeBlocAvecFab}
           ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
           renderItem={({ item, index }) => (
-            <LigneDeBloc index={index} total={aVendre.length}>
+            <LigneDeBloc index={index} total={(dispo === 'disponibles' ? aVendreLibres : aVendreReserves).length}>
               <LigneChevre chevre={item} onPress={() => setMenu(item)} />
             </LigneDeBloc>
           )}
@@ -335,6 +354,18 @@ export default function ViandeVendue() {
                         icon: 'receipt' as const,
                         onPress: () => ouvrirEcriture(menu, menu.reservation!.clientId),
                       },
+                      ...(estPetit(menu)
+                        ? (['vivants', 'morts'] as const)
+                            .filter((etat) => menu.reservation?.etat !== etat)
+                            .map((etat) => ({
+                              label: TEXTES.cheptel.reservation.remis[etat],
+                              icon: (etat === 'vivants' ? 'heart' : 'skull') as 'heart' | 'skull',
+                              onPress: async () => {
+                                await saveChevre({ ...menu, reservation: { ...menu.reservation!, etat } });
+                                charger();
+                              },
+                            }))
+                        : []),
                       {
                         label: TEXTES.cheptel.reservation.liberer,
                         icon: 'lock-open' as const,
@@ -365,6 +396,37 @@ export default function ViandeVendue() {
             : []
         }
       />
+      <OptionsModal
+        visible={!!choixEtat}
+        onClose={() => setChoixEtat(null)}
+        title={TEXTES.cheptel.reservation.etatTitre}
+        options={[
+          {
+            label: TEXTES.cheptel.reservation.remis.vivants,
+            icon: 'heart',
+            onPress: async () => {
+              if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client, 'vivants');
+              charger();
+            },
+          },
+          {
+            label: TEXTES.cheptel.reservation.remis.morts,
+            icon: 'skull',
+            onPress: async () => {
+              if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client, 'morts');
+              charger();
+            },
+          },
+          {
+            label: TEXTES.cheptel.reservation.etatPlusTard,
+            icon: 'time',
+            onPress: async () => {
+              if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client);
+              charger();
+            },
+          },
+        ]}
+      />
       <SelectModal<string>
         visible={!!cible}
         titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.cheptel.reservation.choisirClient}
@@ -377,7 +439,8 @@ export default function ViandeVendue() {
           setCible(null);
           if (!choisi || !client) return;
           if (choisi.action === 'ecriture') return ouvrirEcriture(choisi.animal, client.id);
-          // L'animal rejoint le bon de commande ouvert de ce client (créé s'il n'y en a pas).
+          // Un cabri : vivant ou mort à la remise. Les autres animaux rejoignent tout de suite le bon de commande ouvert du client.
+          if (estPetit(choisi.animal)) return setChoixEtat({ animal: choisi.animal, client });
           await reserverAnimauxPourClient([choisi.animal], client);
           charger();
         }}
