@@ -3,11 +3,12 @@ import { SectionForm } from '@/shared/components/SectionForm';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
-import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
+import { useMeresPossibles, useParentsPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
 import { BoucleField } from '@/features/cheptel/components/BoucleField';
 import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
 import type { Chevre } from '@/features/cheptel/types';
+import { SEXE } from '@/shared/constants/cheptel';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/cheptel/ChevreFormulaire.styles';
 import { TEXTES } from '@/shared/textes';
@@ -21,6 +22,7 @@ interface Props {
 /** Formulaire de modification d'une chèvre. */
 export function ChevreFormulaire({ chevre, form, onChange }: Props) {
   const meres = useMeresPossibles(form.dateNaissance, form.mereNumeroBoucle);
+  const peres = useParentsPossibles(form.dateNaissance, SEXE.MALE, form.pereNumeroBoucle);
   return (
     <View style={commonStyles.gap10}>
       {/* L'identité : le nom et le poids, le sexe et la naissance, deux par ligne. */}
@@ -98,6 +100,14 @@ export function ChevreFormulaire({ chevre, form, onChange }: Props) {
           value={form.mereNumeroBoucle ?? ''}
           onChange={(v) => onChange({ ...form, mereNumeroBoucle: v })}
           options={[{ value: '', label: TEXTES.cheptel.nouvelleChevre.mereInconnue }, ...meres]}
+          placeholder={TEXTES.commun.general.facultatif}
+        />
+        <SelectField
+          label={TEXTES.commun.general.nDeBoucleDuPere}
+          searchable
+          value={form.pereNumeroBoucle ?? ''}
+          onChange={(v) => onChange({ ...form, pereNumeroBoucle: v || undefined })}
+          options={[{ value: '', label: TEXTES.cheptel.nouvelleChevre.mereInconnue }, ...peres]}
           placeholder={TEXTES.commun.general.facultatif}
         />
       </SectionForm>

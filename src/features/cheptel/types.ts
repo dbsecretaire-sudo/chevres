@@ -38,6 +38,8 @@ export interface Chevre {
   dateNaissance: string; // YYYY-MM-DD
   mereId?: string;
   mereNumeroBoucle?: string;
+  /** Le n° de boucle du père, quand on le connaît (il se choisit dans la fiche, parmi les mâles du cheptel). */
+  pereNumeroBoucle?: string;
   statut: StatutChevre;
   dateStatut?: string; // YYYY-MM-DD, présent quand statut !== 'vivante'
   /** Désigné(e) pour rester dans le troupeau reproducteur (indépendant du statut vivant/mort). */

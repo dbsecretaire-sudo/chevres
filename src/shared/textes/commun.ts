@@ -78,6 +78,7 @@ export const TEXTES_COMMUN = {
     dateDeNaissance: 'Date de naissance',
     effacer: 'Effacer',
     nDeBoucleDeLa: 'N° de boucle de la mère',
+    nDeBoucleDuPere: 'N° de boucle du père',
     notes: 'Notes',
     enregistrer: 'Enregistrer',
     nomDeuxPoints: 'Nom : ',

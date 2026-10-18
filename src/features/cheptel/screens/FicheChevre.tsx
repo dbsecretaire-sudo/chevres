@@ -226,15 +226,17 @@ export default function FicheChevre() {
           <>
             <ChevreSuiviAnnuel chevre={chevre} />
 
-            {fiche.mere || chevre.mereNumeroBoucle ? (
-              <ChevreAscendance
-                mere={fiche.mere}
-                boucleMere={chevre.mereNumeroBoucle}
-                onOuvrir={(idMere) => router.push(ROUTES.ficheChevre(idMere))}
-                ouverte={familleOuverte === 'ascendance'}
-                onBasculer={() => basculerFamille('ascendance')}
-              />
-            ) : null}
+            <ChevreAscendance
+              dateNaissance={chevre.dateNaissance}
+              mere={fiche.mere}
+              boucleMere={chevre.mereNumeroBoucle}
+              pere={fiche.pere}
+              bouclePere={chevre.pereNumeroBoucle}
+              onOuvrir={(idParent) => router.push(ROUTES.ficheChevre(idParent))}
+              onChoisir={fiche.definirParent}
+              ouverte={familleOuverte === 'ascendance'}
+              onBasculer={() => basculerFamille('ascendance')}
+            />
 
             {fiche.descendance.length > 0 ? (
               <ChevreDescendance

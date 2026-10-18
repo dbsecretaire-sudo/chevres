@@ -31,6 +31,8 @@ export function useFicheChevre(id: string | undefined) {
   const [descendance, setDescendance] = useState<Chevre[]>([]);
   /** La mère de l'animal, quand elle est dans le cheptel (même sortie : vendue, morte…). */
   const [mere, setMere] = useState<Chevre | null>(null);
+  /** Le père de l'animal, quand son n° de boucle est connu et qu'il est dans le cheptel. */
+  const [pere, setPere] = useState<Chevre | null>(null);
   const [visites, setVisites] = useState<VisiteVeterinaire[]>([]);
   const [controles, setControles] = useState<Controle[]>([]);
 
@@ -54,6 +56,8 @@ export function useFicheChevre(id: string | undefined) {
       setDescendance(await listDescendance(c.id));
       const idMere = c.mereId ?? (await resolveChevreIdParBoucle(c.mereNumeroBoucle, especeDe(c)));
       setMere((idMere ? await getChevre(idMere) : undefined) ?? null);
+      const idPere = await resolveChevreIdParBoucle(c.pereNumeroBoucle, especeDe(c));
+      setPere((idPere ? await getChevre(idPere) : undefined) ?? null);
       setVisites(await listVisitesPourChevre(c));
       setControles(await listControlesPourChevre(c));
     }
@@ -109,6 +113,14 @@ export function useFicheChevre(id: string | undefined) {
     setShowStatutForm(true);
   };
 
+  /** Choisit (ou retire, avec une boucle vide) la mère ou le père depuis l'ascendance : enregistré tout de suite. */
+  const definirParent = async (parent: 'mere' | 'pere', boucle: string) => {
+    if (!chevre) return;
+    const champ = parent === 'mere' ? 'mereNumeroBoucle' : 'pereNumeroBoucle';
+    await saveChevre({ ...chevre, [champ]: boucle || undefined });
+    charger();
+  };
+
   const enregistrerStatut = async () => {
     if (!chevre) return;
     await declarerStatutChevre(chevre.id, statutForm, dateStatutForm, poidsStatutForm);
@@ -134,6 +146,8 @@ export function useFicheChevre(id: string | undefined) {
     setForm,
     descendance,
     mere,
+    pere,
+    definirParent,
     visites,
     controles,
     editing,

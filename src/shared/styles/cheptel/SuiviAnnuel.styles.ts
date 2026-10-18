@@ -17,3 +17,18 @@ export const styles = StyleSheet.create({
   },
   avortementTexte: { fontSize: 12, color: colors.text, textAlign: 'center' },
 });
+
+/** L'ascendance : les parents inconnus, un bouton rond chacun (♀ la mère, ♂ le père). */
+export const stylesAscendance = StyleSheet.create({
+  boutons: { flexDirection: 'row', gap: 16, paddingHorizontal: 8, paddingVertical: 4 },
+  rond: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.ajout,
+    backgroundColor: colors.ajoutBadgeBg,
+  },
+});

@@ -650,6 +650,10 @@ export const TEXTES_CHEPTEL = {
     aucuneDescendance: 'Aucune descendance enregistrée.',
     ascendance: 'Ascendance',
     mereHorsCheptel: 'Cette mère n’est pas dans le cheptel.',
+    pereHorsCheptel: 'Ce père n’est pas dans le cheptel.',
+    choisirLaMere: 'Choisir la mère',
+    choisirLePere: 'Choisir le père',
+    retirerLeParent: 'Retirer',
     declarerDeuxPoints: 'Déclarer : ',
     remettreDansLeCheptelActif: 'Remettre dans le cheptel actif',
     /** La carte de sortie d'un animal sorti : date et retour au cheptel actif, verrouillés d'office. */

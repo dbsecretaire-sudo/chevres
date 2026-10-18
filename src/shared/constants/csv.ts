@@ -26,6 +26,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'dateNaissance',
     'mereId',
     'mereNumeroBoucle',
+    'pereNumeroBoucle',
     'statut',
     'dateStatut',
     'renouvellement',

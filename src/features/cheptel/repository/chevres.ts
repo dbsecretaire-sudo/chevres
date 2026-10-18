@@ -236,10 +236,17 @@ export async function numeroBoucleExiste(
   return all.some((c) => c.numeroBoucle === numeroBoucle && c.id !== excludeId && especeDe(c) === espece);
 }
 
+/** Les petits d'un animal : ceux dont il est la mère, ou le père (par son n° de boucle). */
 export async function listDescendance(chevreId: string): Promise<Chevre[]> {
   const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
+  const parent = all.find((c) => c.id === chevreId);
+  const boucle = parent?.numeroBoucle?.trim();
   return all
-    .filter((c) => c.mereId === chevreId)
+    .filter(
+      (c) =>
+        c.mereId === chevreId ||
+        (!!boucle && c.pereNumeroBoucle === boucle && !!parent && especeDe(c) === especeDe(parent)),
+    )
     .sort((a, b) => b.dateNaissance.localeCompare(a.dateNaissance));
 }
 

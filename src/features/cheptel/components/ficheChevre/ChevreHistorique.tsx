@@ -1,8 +1,13 @@
-import { Text } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '@/shared/components/Badge';
 import { Card } from '@/shared/components/Card';
 import { ListRow } from '@/shared/components/ListRow';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { SelectModal } from '@/shared/components/SelectModal';
+import { useParentsPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
+import { stylesAscendance } from '@/shared/styles/cheptel/SuiviAnnuel.styles';
 import { colors, statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
 import { demonstratifAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
@@ -13,35 +18,87 @@ import { SEXE } from '@/shared/constants/cheptel';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-/** La mère de l'animal (cliquable pour ouvrir sa fiche) ; sa boucle seule quand elle n'est pas dans le cheptel. */
+/**
+ * L'ascendance : la mère et le père connus (une ligne chacun, un appui ouvre sa fiche ; leur boucle seule quand ils ne sont pas dans le
+ * cheptel), et pour chaque parent inconnu un bouton rond (♀ la mère, ♂ le père) qui propose les animaux présents à la naissance.
+ */
 export function ChevreAscendance({
+  dateNaissance,
   mere,
   boucleMere,
+  pere,
+  bouclePere,
   onOuvrir,
+  onChoisir,
   ouverte,
   onBasculer,
 }: {
+  dateNaissance: string;
   mere: Chevre | null;
   boucleMere?: string;
+  pere: Chevre | null;
+  bouclePere?: string;
   onOuvrir: (id: string) => void;
+  onChoisir: (parent: 'mere' | 'pere', boucle: string) => void;
   ouverte: boolean;
   onBasculer: () => void;
 }) {
+  const T = TEXTES.cheptel.ficheChevre;
+  const [choix, setChoix] = useState<'mere' | 'pere' | null>(null);
+  const meres = useParentsPossibles(dateNaissance, SEXE.FEMELLE);
+  const peres = useParentsPossibles(dateNaissance, SEXE.MALE);
+  const parents = [
+    { cle: 'mere' as const, animal: mere, boucle: boucleMere, icone: 'female' as const, absent: T.mereHorsCheptel, choisir: T.choisirLaMere },
+    { cle: 'pere' as const, animal: pere, boucle: bouclePere, icone: 'male' as const, absent: T.pereHorsCheptel, choisir: T.choisirLePere },
+  ];
+  const connus = parents.filter((p) => p.animal || p.boucle);
+  const inconnus = parents.filter((p) => !p.animal && !p.boucle);
   return (
-    <SectionDeroulante titre={TEXTES.cheptel.ficheChevre.ascendance} ouverte={ouverte} onBasculer={onBasculer}>
-      {mere ? (
-        <ListRow
-          title={libelleChevre(mere)}
-          subtitle={TEXTES.commun.general.accordNeLeDate(
-            TEXTES.cheptel.ficheChevre.nee,
-            formatDateFR(mere.dateNaissance),
-          )}
-          trailing={<Badge label={statutLabel(mere.statut, mere.sexe)} color={statutColors[mere.statut]} />}
-          onPress={() => onOuvrir(mere.id)}
-        />
-      ) : (
-        <ListRow title={boucleMere ?? ''} subtitle={TEXTES.cheptel.ficheChevre.mereHorsCheptel} />
+    <SectionDeroulante titre={T.ascendance} ouverte={ouverte} onBasculer={onBasculer}>
+      {connus.map((p) =>
+        p.animal ? (
+          <ListRow
+            key={p.cle}
+            icone={p.icone}
+            title={libelleChevre(p.animal)}
+            subtitle={TEXTES.commun.general.accordNeLeDate(
+              p.animal.sexe === SEXE.FEMELLE ? T.nee : T.ne,
+              formatDateFR(p.animal.dateNaissance),
+            )}
+            trailing={<Badge label={statutLabel(p.animal.statut, p.animal.sexe)} color={statutColors[p.animal.statut]} />}
+            onPress={() => onOuvrir(p.animal!.id)}
+          />
+        ) : (
+          <ListRow key={p.cle} icone={p.icone} title={p.boucle ?? ''} subtitle={p.absent} />
+        ),
       )}
+      {inconnus.length > 0 ? (
+        <View style={stylesAscendance.boutons}>
+          {inconnus.map((p) => (
+            <Pressable
+              key={p.cle}
+              style={stylesAscendance.rond}
+              onPress={() => setChoix(p.cle)}
+              accessibilityRole="button"
+              accessibilityLabel={p.choisir}
+            >
+              <Ionicons name={p.icone} size={28} color={colors.ajout} />
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      <SelectModal<string>
+        visible={choix !== null}
+        titre={choix === 'pere' ? T.choisirLePere : T.choisirLaMere}
+        value=""
+        searchable
+        options={choix === 'pere' ? peres : meres}
+        onSelect={(boucle) => {
+          if (choix) onChoisir(choix, boucle);
+          setChoix(null);
+        }}
+        onClose={() => setChoix(null)}
+      />
     </SectionDeroulante>
   );
 }
