@@ -24,6 +24,7 @@ import {
   sansFactureAffichee,
   type CategorieFournisseurReglage,
 } from '@/shared/dictionnaire/categoriesFournisseur';
+import { comparerAlphabetique } from '@/shared/utils/personne';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
 import { generateId } from '@/shared/utils/id';
@@ -33,6 +34,7 @@ import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 
 const T = TEXTES.fournisseurs.categories;
+/** Les catégories dans l'ordre alphabétique de leur nom (l'ordre enregistré ne change pas). */const parNom = <C extends { nom: string }>(liste: C[]): C[] => [...liste].sort((a, b) => comparerAlphabetique(a.nom, b.nom));
 
 /**
  * Organisation › Clients et fournisseurs › Catégories de tiers : la liste proposée dans la fiche d'un fournisseur. Chaque catégorie se
@@ -86,7 +88,7 @@ export default function RubriqueCategoriesTiers() {
       {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
       {parOption ? (
         <ReglagesParOption
-          categories={categories}
+          categories={parNom(categories)}
           groupes={[
             {
               titre: T.affichage,
@@ -125,7 +127,7 @@ export default function RubriqueCategoriesTiers() {
           ]}
         />
       ) : null}
-      {(parOption ? [] : categories).map((c) => {
+      {(parOption ? [] : parNom(categories)).map((c) => {
         // Sans réglage, un vétérinaire n'a que la dépense vétérinaire et les autres catégories les ont toutes.
         const permises = depensesDeLaCategorie(c) ?? depensesProposees;
         return (

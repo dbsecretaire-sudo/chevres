@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { comparerAlphabetique } from '@/shared/utils/personne';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { colors } from '@/shared/theme/colors';
@@ -72,7 +73,10 @@ export function SelectModal<T extends string>({
   const groupes = puces ?? [];
   const avecPuces = groupes.length > 0;
   /** Les catégories (groupes) des options, dans l'ordre de la liste. */
-  const categories = useMemo(() => (parCategories ? [...new Set(options.flatMap((o) => (o.groupe ? [o.groupe] : [])))] : []), [options, parCategories]);
+  const categories = useMemo(
+    () => (parCategories ? [...new Set(options.flatMap((o) => (o.groupe ? [o.groupe] : [])))].sort(comparerAlphabetique) : []),
+    [options, parCategories],
+  );
   /** Les options sans catégorie (« Aucun »…) : elles restent proposées à côté des catégories. */
   const sansCategorie = parCategories ? options.filter((o) => !o.groupe) : [];
   /** La recherche tapée sur la liste des catégories : seules restent celles qui ont un contact correspondant, avec les noms trouvés. */

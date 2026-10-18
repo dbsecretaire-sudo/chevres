@@ -20,6 +20,7 @@ import { ChoixVueCategories } from '@/features/settings/components/ChoixVueCateg
 import { ReglagesParOption } from '@/features/settings/components/ReglagesParOption';
 import { groupesRecetteProposes } from '@/features/comptabilite/utils/recettes';
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
+import { comparerAlphabetique } from '@/shared/utils/personne';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
 import { generateId } from '@/shared/utils/id';
@@ -28,6 +29,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.clients.categories;
+/** Les catégories dans l'ordre alphabétique de leur nom (l'ordre enregistré ne change pas). */const parNom = <C extends { nom: string }>(liste: C[]): C[] => [...liste].sort((a, b) => comparerAlphabetique(a.nom, b.nom));
 
 /**
  * Organisation › Clients et fournisseurs › Catégories de client : la liste proposée dans la fiche d'un client. Chaque catégorie se renomme
@@ -79,7 +81,7 @@ export default function RubriqueCategoriesClient() {
       {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
       {parOption ? (
         <ReglagesParOption
-          categories={categories}
+          categories={parNom(categories)}
           groupes={[
             {
               titre: T.dansLesVentes,
@@ -129,7 +131,7 @@ export default function RubriqueCategoriesClient() {
           ]}
         />
       ) : null}
-      {(parOption ? [] : categories).map((c) => {
+      {(parOption ? [] : parNom(categories)).map((c) => {
         const recettes = groupesRecetteDeLaCategorie(c);
         return (
           <SectionDeroulante
