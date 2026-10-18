@@ -10,7 +10,7 @@ export const TEXTES_CONTACTS = {
     tousLesAchats: 'Tous les achats',
     autresDepenses: 'Autres dépenses (sans stock)',
     autresRecettes: 'Autres recettes',
-    aideAchats: 'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre.',
+    aideAchats: 'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre. Seule exception, « Animaux » propose aussi « Vente » : des animaux vivants envoyés à l’abattoir sortent de l’inventaire (une vente) mais se facturent en dépense.',
     aideVentes: 'Une recette est une vente : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous acheter.',
   },
   titreFiche: 'Contact',

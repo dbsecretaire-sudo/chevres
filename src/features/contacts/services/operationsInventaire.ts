@@ -109,6 +109,20 @@ const decouper = (id: string): { categorie: string; liste: string; sens: SensOpe
   return { categorie, liste: reste, sens };
 };
 
+/**
+ * Les sens qu'une liste propose dans les dépenses : l'achat, et pour les animaux aussi la vente — des animaux vivants envoyés à l'abattoir
+ * sortent de l'inventaire (une vente) mais se facturent en dépense. C'est la seule vente qu'une dépense compte.
+ */
+export function sensDansLesDepenses(categorie: string, liste: string): SensOperation[] {
+  return categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX ? ['achat', 'vente'] : ['achat'];
+}
+
+/** Une opération que les dépenses comptent : un achat, ou la vente d'animaux (vers l'abattoir). */
+export const estPermiseEnDepense = (id: string): boolean => {
+  const o = decouper(id);
+  return !!o && sensDansLesDepenses(o.categorie, o.liste).includes(o.sens);
+};
+
 /** Les catégories de dépense que des opérations ouvrent (chacune une fois). */
 export const depensesDesOperations = (operations: readonly string[]): string[] => [
   ...new Set(operations.flatMap((id) => {

@@ -152,6 +152,9 @@ function definitionDesMenus(): DefinitionMenu[] {
       ];
 }
 
+/** Les noms des menus de la barre du haut, de gauche à droite (sans « Affichage », que Windows ajoute en dernier). */
+export const libellesDesMenus = (): string[] => definitionDesMenus().map((m) => m.label);
+
 /**
  * Dans la version Windows, la barre d'onglets du bas laisse la place aux menus de la fenêtre, en haut à gauche (comme dans les
  * programmes de bureau). Ce composant les donne à la fenêtre et suit les choix qu'on y fait ; il ne montre rien.

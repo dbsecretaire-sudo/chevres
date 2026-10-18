@@ -29,7 +29,9 @@ import { ChoixOperations } from '@/features/contacts/components/ChoixOperations'
 import {
   depensesDesOperations,
   lireRubriquesDOperations,
+  estPermiseEnDepense,
   operationsDesDepenses,
+  sensDansLesDepenses,
   type RubriqueOperations,
 } from '@/features/contacts/services/operationsInventaire';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
@@ -43,9 +45,6 @@ import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 
 const T = TEXTES.fournisseurs.categories;
-
-/** Les dépenses ne comptent que des achats : une vente est une recette. */
-const estUnAchat = (operation: string): boolean => operation.endsWith(':achat');
 
 /** Les dépenses qui ouvrent une liste de l'inventaire (un achat d'animaux, d'aliments, de fournitures) : elles se règlent par les opérations. */
 const DEPENSES_A_LISTE: readonly string[] = [
@@ -110,11 +109,11 @@ export default function RubriqueCategoriesTiers() {
   /** Une opération cochée ou décochée : les dépenses de la catégorie suivent (celles des listes, plus les autres). */
   const majOperations = (c: CategorieFournisseurReglage, permises: readonly string[], ops: string[]) => {
     const autres = autresDe(c, permises);
-    maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops.filter(estUnAchat)), ...autres])] });
+    maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops.filter(estPermiseEnDepense)), ...autres])] });
   };
   const majAutres = (c: CategorieFournisseurReglage, permises: readonly string[], autres: string[]) => {
     const ops = operationsDe(c, permises);
-    maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops.filter(estUnAchat)), ...autres])] });
+    maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops.filter(estPermiseEnDepense)), ...autres])] });
   };
 
   return (
@@ -209,6 +208,7 @@ export default function RubriqueCategoriesTiers() {
                   <ChoixOperations
                     rubriques={rubriques}
                     sens="achat"
+                    sensPermis={sensDansLesDepenses}
                     valeur={operationsDe(c, permises)}
                     onChange={(ops) => majOperations(c, permises, ops)}
                   />

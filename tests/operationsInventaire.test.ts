@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   depensesDesOperations,
+  estPermiseEnDepense,
   groupesRecetteDesOperations,
   idOperation,
   libelleOperation,
   operationsDeLaRubrique,
   operationsDesDepenses,
   operationsDesRecettes,
+  sensDansLesDepenses,
   type RubriqueOperations,
 } from '@/features/contacts/services/operationsInventaire';
 
@@ -47,5 +49,16 @@ describe('opérations d’une catégorie de contact', () => {
       'produits_finis:fromages:vente',
       'produits_animaux:animaux:vente',
     ]);
+  });
+});
+
+describe('les dépenses et la vente d’animaux', () => {
+  it('les dépenses ne comptent que des achats, sauf la vente d’animaux (vers l’abattoir)', () => {
+    expect(sensDansLesDepenses('produits_animaux', 'animaux')).toEqual(['achat', 'vente']);
+    expect(sensDansLesDepenses('produits_finis', 'fromages')).toEqual(['achat']);
+    expect(estPermiseEnDepense('produits_animaux:animaux:vente')).toBe(true);
+    expect(estPermiseEnDepense('produits_finis:fromages:vente')).toBe(false);
+    expect(estPermiseEnDepense('matieres_premieres:aliments:achat')).toBe(true);
+    expect(depensesDesOperations(['produits_animaux:animaux:vente'].filter(estPermiseEnDepense))).toEqual(['animaux_vivants']);
   });
 });

@@ -18,6 +18,8 @@ interface Props {
   valeur: readonly string[];
   /** Le seul sens proposé : un achat est une dépense, une vente est une recette. */
   sens: SensOperation;
+  /** Les sens qu'une liste propose, quand il y a des exceptions à « sens » (par défaut, seulement « sens »). */
+  sensPermis?: (categorie: string, liste: string) => SensOperation[];
   onChange: (operations: string[]) => void;
 }
 
@@ -26,7 +28,8 @@ interface Props {
  * d'un coup ou avec « Tous les achats » (ou « Toutes les ventes »), puis un tableau : une ligne par liste, avec sa case. Les dépenses ne proposent
  * que des achats, les recettes que des ventes.
  */
-export function ChoixOperations({ rubriques, valeur, sens, onChange }: Props) {
+export function ChoixOperations({ rubriques, valeur, sens, sensPermis, onChange }: Props) {
+  const permis = (categorie: string, liste: string): SensOperation[] => sensPermis?.(categorie, liste) ?? [sens];
   const choisies = new Set(valeur);
   const poser = (ids: string[], cocher: boolean) => {
     const suivantes = new Set(choisies);
@@ -42,10 +45,12 @@ export function ChoixOperations({ rubriques, valeur, sens, onChange }: Props) {
     <View style={commonStyles.gap10}>
       {rubriques.map((rubrique) => {
         const ids = operationsDeLaRubrique(rubrique, sens);
+        const idsPermis = rubrique.listes.flatMap((l) => permis(rubrique.categorie, l.cle).map((s) => idOperation(rubrique.categorie, l.cle, s)));
+        const colonnes = (['achat', 'vente'] as const).filter((s) => rubrique.listes.some((l) => permis(rubrique.categorie, l.cle).includes(s)));
         return (
           <View key={rubrique.categorie} style={styles.cadre}>
             <View style={styles.entete}>
-              <Checkbox label={rubrique.titre} value={toutes(ids)} onChange={(cochee) => poser(ids, cochee)} />
+              <Checkbox label={rubrique.titre} value={toutes(idsPermis)} onChange={(cochee) => poser(idsPermis, cochee)} />
             </View>
             <View style={styles.raccourcis}>
               <Pressable onPress={() => poser(ids, !toutes(ids))} hitSlop={6} accessibilityRole="button">
@@ -54,18 +59,26 @@ export function ChoixOperations({ rubriques, valeur, sens, onChange }: Props) {
             </View>
             <View style={styles.ligneTitres}>
               <Text style={[styles.titreColonne, styles.colonneNom]}>{T.liste}</Text>
-              <Text style={[styles.titreColonne, styles.colonneCase]}>{sens === 'vente' ? T.vente : T.achat}</Text>
+              {colonnes.map((s) => (
+                <Text key={s} style={[styles.titreColonne, styles.colonneCase]}>
+                  {s === 'vente' ? T.vente : T.achat}
+                </Text>
+              ))}
             </View>
             {rubrique.listes.map((liste) => (
               <View key={liste.cle} style={styles.ligne}>
                 <Text style={[styles.nom, styles.colonneNom]}>{liste.titre}</Text>
-                <View style={styles.colonneCase}>
-                  <Checkbox
-                    label=""
-                    value={choisies.has(idOperation(rubrique.categorie, liste.cle, sens))}
-                    onChange={(cochee) => poser([idOperation(rubrique.categorie, liste.cle, sens)], cochee)}
-                  />
-                </View>
+                {colonnes.map((s) => (
+                  <View key={s} style={styles.colonneCase}>
+                    {permis(rubrique.categorie, liste.cle).includes(s) ? (
+                      <Checkbox
+                        label=""
+                        value={choisies.has(idOperation(rubrique.categorie, liste.cle, s))}
+                        onChange={(cochee) => poser([idOperation(rubrique.categorie, liste.cle, s)], cochee)}
+                      />
+                    ) : null}
+                  </View>
+                ))}
               </View>
             ))}
           </View>

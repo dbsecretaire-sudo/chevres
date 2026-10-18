@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { ancreDe } from '@/features/didacticiel/components/AncreVisite';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
+import { centreDuMenu, libelleDuMenu } from '@/features/didacticiel/services/menuHaut';
 import { ONGLETS_DU_BAS } from '@/features/didacticiel/services/visiteGuidee';
+import { libellesDesMenus } from '@/bureau/MenuBureau';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { estBureau } from '@/shared/utils/plateforme';
@@ -21,8 +23,18 @@ const MARGE = 6;
 const HAUTEUR_BARRE = 64;
 const VOILE = 'rgba(18, 28, 14, 0.66)';
 const LARGEUR_BULLE = 420;
+/** La largeur de la flèche qui désigne un menu de la barre du haut (sur Windows). */
+const FLECHE = 28;
 /** Toute la fenêtre (écrit à la main : le style d'office n'est pas un objet sur toutes les plateformes). */
 const PLEIN_ECRAN = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
+
+/** La largeur d'un texte dans la police des menus de Windows (Segoe UI, 12 px). */
+function largeurDansLaBarre(texte: string): number {
+  const contexte = document.createElement('canvas').getContext('2d');
+  if (!contexte) return texte.length * 7;
+  contexte.font = '12px "Segoe UI", system-ui, sans-serif';
+  return contexte.measureText(texte).width;
+}
 
 const memeZone = (a: Zone | null, b: Zone): boolean =>
   !!a && Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1 && Math.abs(a.w - b.w) < 1 && Math.abs(a.h - b.h) < 1;
@@ -73,6 +85,10 @@ export function SuperpositionVisite() {
 
   if (!visite.actif || !etape) return null;
 
+  // Sur Windows, l'onglet est un menu de la barre du haut, que la page ne peut pas entourer : une flèche le désigne, d'après son nom.
+  const menuDuHaut = estBureau() && onglet && !ancre ? libelleDuMenu(onglet) : null;
+  const centreMenu = menuDuHaut ? centreDuMenu(libellesDesMenus(), menuDuHaut, largeurDansLaBarre) : null;
+
   // Éloigné de la page de l'étape : une pastille propose de reprendre ou de quitter.
   if (!visite.surLaPage) {
     return (
@@ -107,8 +123,10 @@ export function SuperpositionVisite() {
     ? zone.y + zone.h / 2 > height / 2
       ? { bottom: Math.max(12, height - haut + 12) }
       : { top: bas + 12 }
-    : attendUnClic
-      ? { bottom: HAUTEUR_BARRE + 24 }
+    : menuDuHaut
+      ? { top: 64 }
+      : attendUnClic
+        ? { bottom: HAUTEUR_BARRE + 24 }
       : { top: height * 0.22 };
 
   return (
@@ -127,6 +145,12 @@ export function SuperpositionVisite() {
       ) : attendUnClic ? null : (
         <View style={[styles.voile, PLEIN_ECRAN]} />
       )}
+      {menuDuHaut ? (
+        <View pointerEvents="none" style={[styles.fleche, { left: Math.max(40, centreMenu ?? 40) }]}>
+          <Text style={styles.flecheTriangle}>▲</Text>
+          <Text style={styles.flecheNom} numberOfLines={1}>{menuDuHaut}</Text>
+        </View>
+      ) : null}
       <View style={[styles.bulle, placement, { width: largeurBulle, left: (width - largeurBulle) / 2 }]}>
         <Text style={styles.compteur}>{T.etape(visite.index + 1, visite.total)}</Text>
         <Text style={styles.titre}>{etape.titre}</Text>
@@ -148,6 +172,19 @@ export function SuperpositionVisite() {
 const styles = StyleSheet.create({
   racine: { ...PLEIN_ECRAN, zIndex: 9999, elevation: 9999 },
   voile: { position: 'absolute', backgroundColor: VOILE },
+  fleche: { position: 'absolute', top: 0, width: 0, alignItems: 'center' },
+  flecheTriangle: { fontSize: FLECHE, lineHeight: FLECHE, color: '#FFD54A' },
+  flecheNom: {
+    marginTop: 2,
+    backgroundColor: '#FFD54A',
+    color: colors.primaryDark,
+    fontSize: 14,
+    fontWeight: '800',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    overflow: 'hidden',
+  },
   anneau: { position: 'absolute', borderWidth: 3, borderColor: '#FFD54A', borderRadius: 12 },
   bulle: {
     position: 'absolute',
