@@ -194,9 +194,74 @@ export function pagesDeLAnnee(
   const debut = portees.filter((p) => Number(p.date.slice(5, 7)) < MOIS_FIN_D_ANNEE);
   const fin = portees.filter((p) => Number(p.date.slice(5, 7)) >= MOIS_FIN_D_ANNEE);
   return [
-    ...pagesDeLignes(lignesDeLAnnee(debut, tiptags), parPage),
+    // Sans naissance en début d'année, pas de page à part : la page vide qui suit suffit (une seule page vide avant celles de l'année).
+    ...(debut.length > 0 ? pagesDeLignes(lignesDeLAnnee(debut, tiptags), parPage) : []),
     ...pagesDeLignes([], parPage),
     ...(fin.length > 0 ? pagesDeLignes(lignesDeLAnnee(fin, tiptags), parPage) : []),
+  ];
+}
+
+/** La hauteur utile des lignes d'une page A4 (mm) : 32 lignes de 7 mm et une de marge, sans déborder sur une page de plus avec le titre, l'en-tête et la légende. */
+export const HAUTEUR_UTILE_A4_MM = 231;
+const HAUTEUR_LIGNE_MM = 7;
+const HAUTEUR_LIGNE_DE_TEXTE_MM = 4.4;
+
+/** Le nombre de lignes de texte qu'un contenu prend dans une colonne (les retours à la ligne, et ce qui dépasse la largeur de la colonne). */
+const lignesDeTexte = (texte: string, caracteresParLigne: number): number =>
+  texte.split('\n').reduce((n, partie) => n + Math.max(1, Math.ceil(partie.length / caracteresParLigne)), 0);
+
+/**
+ * La hauteur d'une ligne du tableau (mm), estimée largement d'après ce qu'elle contient : une ligne à deux petits (deux numéros, ou des
+ * observations et des âges par petit) est plus haute que la ligne simple de 7 mm.
+ */
+export function hauteurDeLaLigne(l: LigneCabri): number {
+  const lignes = Math.max(
+    1,
+    lignesDeTexte(l.numero, 11),
+    lignesDeTexte(l.mere, 7),
+    lignesDeTexte(l.sexe, 8),
+    lignesDeTexte(l.observations, 20),
+    lignesDeTexte(l.age, 9),
+    lignesDeTexte(l.poids, 8),
+  );
+  return Math.max(HAUTEUR_LIGNE_MM, 2 + lignes * HAUTEUR_LIGNE_DE_TEXTE_MM);
+}
+
+/**
+ * Les lignes coupées en pages A4 d'après leur hauteur (et non d'après leur nombre : des lignes à deux petits sont plus hautes), la dernière
+ * page étant complétée de lignes vides jusqu'au bas de la page, où écrire à la main les naissances suivantes. Sans ligne : une page de lignes vides.
+ */
+export function pagesA4DeLignes(lignes: LigneCabri[]): LigneCabri[][] {
+  const vide: LigneCabri = { date: '', numero: '', mere: '', sexe: '', observations: '', age: '', poids: '' };
+  const pages: LigneCabri[][] = [];
+  let page: LigneCabri[] = [];
+  let utilise = 0;
+  for (const l of lignes) {
+    const hauteur = hauteurDeLaLigne(l);
+    if (page.length > 0 && utilise + hauteur > HAUTEUR_UTILE_A4_MM) {
+      pages.push(page);
+      page = [];
+      utilise = 0;
+    }
+    page.push(l);
+    utilise += hauteur;
+  }
+  while (utilise + HAUTEUR_LIGNE_MM <= HAUTEUR_UTILE_A4_MM) {
+    page.push(vide);
+    utilise += HAUTEUR_LIGNE_MM;
+  }
+  pages.push(page);
+  return pages;
+}
+
+/** Les pages A4 des petits d'une année : celles du début d'année, une seule page vide, puis celles de la fin d'année (voir pagesDeLAnnee). */
+export function pagesA4DeLAnnee(portees: PorteeNaissance[], tiptags: ReadonlySet<string> = new Set()): LigneCabri[][] {
+  const debut = portees.filter((p) => Number(p.date.slice(5, 7)) < MOIS_FIN_D_ANNEE);
+  const fin = portees.filter((p) => Number(p.date.slice(5, 7)) >= MOIS_FIN_D_ANNEE);
+  return [
+    ...(debut.length > 0 ? pagesA4DeLignes(lignesDeLAnnee(debut, tiptags)) : []),
+    ...pagesA4DeLignes([]),
+    ...(fin.length > 0 ? pagesA4DeLignes(lignesDeLAnnee(fin, tiptags)) : []),
   ];
 }
 
@@ -685,7 +750,7 @@ export function carnetMiseBasHtml(
                 ...pagesResultatsLivret(annee, resultats(annee, liste), v),
               ]
             : [
-                ...pagesDeLAnnee(liste, parPage, tiptags).map((page) => pageCabris(annee, page, v)),
+                ...pagesA4DeLAnnee(liste, tiptags).map((page) => pageCabris(annee, page, v)),
                 pageResultats(annee, resultats(annee, liste), v),
               ],
         )),

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { BadgeDejaGenere } from '@/features/bibliotheque/components/BadgeDejaGenere';
+import { useBibliotheque } from '@/features/bibliotheque/hooks/useBibliotheque';
+import { documentsDuType } from '@/features/bibliotheque/services/recherche';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '@/shared/constants/routes';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
@@ -68,6 +71,7 @@ export default function DossierPac() {
   // Le recensement de l'année choisie d'après le cheptel : de quoi expliquer son nombre de petits nés.
   const recensement = animauxDuCheptel.length > 0 ? recensementAnnuel(animauxDuCheptel, annee + 1) : null;
   const rienAFaire = annees.length === 0;
+  const generes = useBibliotheque();
   const generer = async (document: Document, creer: (annees: number[]) => Promise<number | void>) => {
     setEncours(document);
     setSansPerte(false);
@@ -82,11 +86,15 @@ export default function DossierPac() {
   const appui = (document: Document, creer: (annees: number[]) => Promise<number | void>) =>
     encours || rienAFaire ? undefined : () => generer(document, creer);
   /** À droite d'une ligne : un indicateur pendant sa génération, sinon l'icône du document. */
-  const droite = (document: Document) =>
+  const droite = (document: Document, racines: string[]) =>
     encours === document ? (
       <ActivityIndicator color={colors.primary} />
     ) : (
-      <Ionicons name="download-outline" size={22} color={rienAFaire ? colors.textMuted : colors.primary} />
+      <View style={commonStyles.row}>
+        {/* Déjà généré : la date du dernier, en vert. */}
+        <BadgeDejaGenere faits={documentsDuType(generes, racines)} />
+        <Ionicons name="download-outline" size={22} color={rienAFaire ? colors.textMuted : colors.primary} />
+      </View>
     );
 
   return (
@@ -115,19 +123,19 @@ export default function DossierPac() {
         <ListRow
           title={T.lignes.suivi.titre}
           subtitle={T.lignes.suivi.aide}
-          trailing={droite('suivi')}
+          trailing={droite('suivi', ['suivi_mouvements'])}
           onPress={appui('suivi', exporterSuiviMouvementsPdf)}
         />
         <ListRow
           title={T.lignes.bordereaux.titre}
           subtitle={T.lignes.bordereaux.aide}
-          trailing={droite('bordereaux')}
+          trailing={droite('bordereaux', ['bordereaux_perte'])}
           onPress={appui('bordereaux', exporterBordereauxPertePdf)}
         />
         <ListRow
           title={`${T.recensement.bouton.replace(' (PDF)', '')} ${annee + 1}`}
           subtitle={T.lignes.recensement.aide(annee)}
-          trailing={droite('recensement')}
+          trailing={droite('recensement', ['recensement'])}
           onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
         />
         <ListRow

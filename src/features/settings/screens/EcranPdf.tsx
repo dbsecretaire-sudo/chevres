@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { BadgeDejaGenere } from '@/features/bibliotheque/components/BadgeDejaGenere';
+import { useBibliotheque } from '@/features/bibliotheque/hooks/useBibliotheque';
+import { documentsDuType } from '@/features/bibliotheque/services/recherche';
 import { useRouter } from 'expo-router';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { ROUTES } from '@/shared/constants/routes';
@@ -51,6 +54,7 @@ export default function EcranPdf() {
   };
 
   const pdfs = pdfsDisponibles();
+  const generes = useBibliotheque();
   return (
     <Screen>
       <SectionForm titre={T.titrePdf} aide={T.titrePdfAide}>
@@ -72,7 +76,13 @@ export default function EcranPdf() {
             key={pdf.id}
             title={pdf.titre}
             subtitle={enCours === pdf.id ? T.generationEnCours : pdf.aide}
-            trailing={<Ionicons name="document-text" size={24} color={colors.primary} />}
+            trailing={
+              <View style={commonStyles.row}>
+                {/* Déjà généré : la date du dernier, en vert. */}
+                <BadgeDejaGenere faits={documentsDuType(generes, [pdf.fichier])} />
+                <Ionicons name="document-text" size={24} color={colors.primary} />
+              </View>
+            }
             onPress={
               enCours ? undefined : () => (pdf.genererExcel ? setChoix(pdf) : generer(pdf.id, pdf.generer))
             }

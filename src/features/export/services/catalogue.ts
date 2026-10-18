@@ -13,6 +13,13 @@ import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
 import { exporterInventairePdf } from '@/features/export/inventairePdf';
 import { exporterInventaireGitePdf } from '@/features/export/inventaireGitePdf';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
+import {
+  NOM_FICHIER_EXPORT_CHEPTEL,
+  NOM_FICHIER_EXPORT_EXPLOITATION,
+  NOM_FICHIER_EXPORT_INVENTAIRE,
+  NOM_FICHIER_EXPORT_PLAN_COMPTABLE,
+  NOM_FICHIER_EXPORT_REGISTRE_COMPLET,
+} from '@/shared/constants/export';
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
@@ -22,6 +29,8 @@ export interface PdfDisponible {
   titre: string;
   aide: string;
   generer: (annee: number) => Promise<void>;
+  /** La racine du nom de son fichier (« plan_comptable ») : elle retrouve, dans la bibliothèque, les documents déjà générés. */
+  fichier?: string;
   /** Quand le même document existe en Excel : on choisit alors le format (PDF ou Excel) avant de le générer. */
   genererExcel?: (annee: number) => Promise<void>;
 }
@@ -35,6 +44,7 @@ export function pdfsDisponibles(): PdfDisponible[] {
   // Le plan comptable de l'année : pour tous, en PDF ou en Excel.
   const planComptable: PdfDisponible = {
     id: 'plan-comptable',
+    fichier: NOM_FICHIER_EXPORT_PLAN_COMPTABLE,
     titre: T.planComptable.titre,
     aide: T.planComptable.aide,
     generer: exporterPlanComptablePdf,
@@ -44,6 +54,7 @@ export function pdfsDisponibles(): PdfDisponible[] {
     return [
       {
         id: 'exploitation',
+        fichier: NOM_FICHIER_EXPORT_EXPLOITATION,
         titre: T.exploitation.titre,
         aide: T.exploitation.aide,
         generer: exporterExploitationPdf,
@@ -51,6 +62,7 @@ export function pdfsDisponibles(): PdfDisponible[] {
       },
       {
         id: 'cheptel',
+        fichier: NOM_FICHIER_EXPORT_CHEPTEL,
         titre: T.cheptel.titre,
         aide: T.cheptel.aide,
         generer: () => exporterCheptelPdf(),
@@ -58,18 +70,21 @@ export function pdfsDisponibles(): PdfDisponible[] {
       },
       {
         id: 'registre-complet',
+        fichier: NOM_FICHIER_EXPORT_REGISTRE_COMPLET,
         titre: T.registreComplet.titre,
         aide: T.registreComplet.aide,
         generer: () => exporterRegistreCompletPdf(),
       },
       {
         id: 'carnet-mise-bas',
+        fichier: 'carnet_mise_bas',
         titre: T.carnetMiseBas.titre,
         aide: T.carnetMiseBas.aide,
         generer: () => exporterCarnetMiseBasPdf('a4'),
       },
       {
         id: 'inventaire',
+        fichier: NOM_FICHIER_EXPORT_INVENTAIRE,
         titre: T.inventaire.titre,
         aide: T.inventaire.aide,
         generer: exporterInventairePdf,

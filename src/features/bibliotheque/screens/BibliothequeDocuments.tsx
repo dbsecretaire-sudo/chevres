@@ -74,9 +74,16 @@ export default function BibliothequeDocuments() {
           const document = aRetirer;
           setARetirer(null);
           if (!document) return;
-          await retirerDocument(document.id);
-          await supprimerPiece(document.piece);
-          charger();
+          // La ligne disparaît tout de suite ; le fichier (qui peut manquer) s'efface ensuite sans bloquer la liste.
+          setDocuments((courants) => courants.filter((d) => d.id !== document.id));
+          try {
+            await retirerDocument(document.id);
+            await supprimerPiece(document.piece);
+          } catch {
+            // Le fichier n'est plus là : la liste, elle, est déjà à jour.
+          } finally {
+            charger();
+          }
         }}
       />
     </Screen>

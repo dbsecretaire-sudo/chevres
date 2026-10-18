@@ -7,6 +7,10 @@ import {
   ordreDuLivret,
   lignesDeLAnnee,
   pagesDeLAnnee,
+  pagesA4DeLAnnee,
+  pagesA4DeLignes,
+  hauteurDeLaLigne,
+  HAUTEUR_UTILE_A4_MM,
   porteesAvecBoucle,
   chevresMisesALaReproduction,
   pagesDeLignes,
@@ -328,5 +332,39 @@ describe('carnet de mise bas', () => {
     expect(html).toContain('Résultats de production — 2026');
     expect(html).toContain('Taux de prolificité');
     expect(carnetMiseBasHtml([])).toContain('Aucune');
+  });
+});
+
+describe('carnet A4 : pages remplies jusqu’au bas', () => {
+  const l = (numero: string, age = '') => ({ date: '10/02', numero, mere: '1', sexe: 'F', observations: 'A', age, poids: '' });
+
+  it('une année sans naissance de début d’année n’a qu’une page vide avant la suite', () => {
+    const fin = portee('2026-11-02', 'b', [petit('M', { dateNaissance: '2026-11-02' })]);
+    expect(pagesDeLAnnee([fin])).toHaveLength(2);
+    expect(pagesDeLAnnee([])).toHaveLength(1);
+    expect(pagesA4DeLAnnee([fin])).toHaveLength(2);
+    expect(pagesA4DeLAnnee([])).toHaveLength(1);
+  });
+
+  it('la dernière page est complétée de lignes vides, sans dépasser la hauteur d’une page', () => {
+    const pages = pagesA4DeLignes([l('1'), l('2'), l('3\n4', '3 : 34 j\n4 : 34 j')]);
+    expect(pages).toHaveLength(1);
+    const hauteur = pages[0].reduce((t, ligne) => t + hauteurDeLaLigne(ligne), 0);
+    expect(hauteur).toBeLessThanOrEqual(HAUTEUR_UTILE_A4_MM);
+    // Il reste moins d'une ligne de place : la page est pleine.
+    expect(HAUTEUR_UTILE_A4_MM - hauteur).toBeLessThan(7);
+    // Les trois lignes saisies d'abord, puis du vide.
+    expect(pages[0].slice(0, 3).map((x) => x.numero)).toEqual(['1', '2', '3\n4']);
+    expect(pages[0][3].numero).toBe('');
+  });
+
+  it('des lignes plus hautes (deux petits) font passer à la page suivante plus tôt qu’au 32e', () => {
+    const hautes = Array.from({ length: 30 }, (_, i) => l(`${i}a\n${i}b`, `${i}a : 34 j\n${i}b : 34 j`));
+    const pages = pagesA4DeLignes(hautes);
+    expect(pages.length).toBeGreaterThan(1);
+    for (const page of pages) {
+      expect(page.reduce((t, ligne) => t + hauteurDeLaLigne(ligne), 0)).toBeLessThanOrEqual(HAUTEUR_UTILE_A4_MM);
+    }
+    expect(pages.flat().filter((x) => x.numero).length).toBe(30);
   });
 });
