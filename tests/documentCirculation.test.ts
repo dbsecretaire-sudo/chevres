@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { donneesDeCirculation, FEUILLETS_CIRCULATION, lieuDArrivee, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
+import { donneesDeCirculation, FEUILLETS_CIRCULATION, lieuDArrivee, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
@@ -79,5 +79,19 @@ describe('indicatif de marquage du formulaire', () => {
     expect(chiffresDeLIndicatif('FR212282')).toBe('212282');
     expect(chiffresDeLIndicatif(' fr 21 22 82 ')).toBe('212282');
     expect(chiffresDeLIndicatif('212282')).toBe('212282');
+  });
+});
+
+describe('les tiptag vont avec les chevreaux de boucherie', () => {
+  it('un tiptag, même d’un animal plus âgé, est compté en boucherie et non en reproducteur', () => {
+    const tiptags = new Set(['3']);
+    const d = donneesDeCirculation({ vente: vente(), animaux: [animal('1'), animal('2'), animal('3')], infos, petit: petitOuTiptag('2026-03-10', tiptags) });
+    expect(d.boucherie).toEqual([{ indicatif: 'FR2021', nombre: 1 }]);
+    expect(d.reproducteurs).toBe(2);
+    expect(d.individuels).toHaveLength(2);
+  });
+
+  it('sans tiptag, un animal adulte reste un reproducteur', () => {
+    expect(petitOuTiptag('2026-03-10', new Set())(animal('1'))).toBe(false);
   });
 });

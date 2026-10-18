@@ -1,5 +1,8 @@
 import { codePostalEtCommune } from '@/features/cheptel/services/estive';
 import { estPetitLe, getChevre } from '@/features/cheptel/repository/chevres';
+import { estTiptag } from '@/features/cheptel/utils/tiptag';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { numerosTiptag } from '@/features/stock/services/boucles';
 import { listTousTraitements } from '@/features/exploitation/repository/traitements';
 import { delaisDeLAnimal } from '@/features/exploitation/services/delaisAttente';
 import type { Traitement } from '@/features/exploitation/types';
@@ -149,6 +152,19 @@ export const FEUILLETS_CIRCULATION = [
 const PLACES_INDIVIDUELLES = 40;
 
 /** L'indicatif de marquage tel qu'il s'écrit dans les cases du formulaire : sans « FR » ni espaces (« FR 212282 » devient « 212282 »). */
+/**
+ * Les animaux de « agneaux / chevreaux de boucherie » du formulaire : les petits à la date du document, et les tiptag de l'inventaire (un
+ * tiptag est destiné à l'abattoir : il compte avec les chevreaux de boucherie, par indicatif de marquage, et non parmi les reproducteurs et
+ * réformes, un par un).
+ */
+export const petitOuTiptag =
+  (date: string, tiptags: ReadonlySet<string>) =>
+  (animal: Chevre): boolean =>
+    estPetitLe(animal, date) || estTiptag(animal, tiptags);
+
+/** Les tiptag de l'inventaire de l'établissement (relus à chaque document). */
+const tiptagsDeLInventaire = async (): Promise<ReadonlySet<string>> => numerosTiptag((await lireArchiveStock()).boucles);
+
 export const chiffresDeLIndicatif = (indicatif: string): string =>
   indicatif.replace(/^\s*FR/i, '').replace(/\s+/g, '');
 
@@ -312,7 +328,7 @@ export async function exporterDocumentCirculationAbattoirPdf(
     vente,
     animaux,
     infos: settings.exploitation,
-    petit: (a) => estPetitLe(a, date),
+    petit: petitOuTiptag(date, await tiptagsDeLInventaire()),
     traitements,
   });
   await ecrirePdfBase64EtPartager(
@@ -349,7 +365,7 @@ export async function exporterDocumentCirculationAchatPdf(factureId: string): Pr
     vente,
     animaux,
     infos: settings.exploitation,
-    petit: (a) => estPetitLe(a, facture.date),
+    petit: petitOuTiptag(facture.date, await tiptagsDeLInventaire()),
     traitements,
   });
   const identite = identiteDuSuivi(settings.exploitation);
@@ -386,7 +402,7 @@ export async function exporterDocumentCirculationPdf(venteId: string): Promise<b
     animaux,
     client,
     infos: settings.exploitation,
-    petit: (a) => estPetitLe(a, vente.date),
+    petit: petitOuTiptag(vente.date, await tiptagsDeLInventaire()),
     traitements,
   });
   await ecrirePdfBase64EtPartager(
