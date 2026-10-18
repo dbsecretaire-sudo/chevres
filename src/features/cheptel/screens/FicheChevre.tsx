@@ -10,7 +10,7 @@ import { Screen } from '@/shared/components/Screen';
 import { useTiptags } from '@/features/stock/hooks/useTiptags';
 import { estTiptag } from '@/features/cheptel/utils/tiptag';
 import { ageAtteint } from '@/shared/utils/age';
-import { todayISO } from '@/shared/utils/dates';
+import { formatDateFR, todayISO } from '@/shared/utils/dates';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
@@ -199,6 +199,13 @@ export default function FicheChevre() {
                   chevre.statut === STATUT_CHEVRE.ABATTOIR &&
                   ventes.some((v) => idsDesAnimaux(v).includes(chevre.id))
                 }
+                facturesDuClient={ventes
+                  .filter((v) => idsDesAnimaux(v).includes(chevre.id))
+                  .map((v) => ({
+                    id: v.id,
+                    libelle: [formatDateFR(v.date), v.client, v.numeroFacture].filter(Boolean).join(' · '),
+                  }))}
+                onOuvrirFacture={(idVente) => router.push(ROUTES.ficheVente(idVente) as never)}
               />
             )}
           </>

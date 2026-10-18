@@ -660,6 +660,7 @@ export const TEXTES_CHEPTEL = {
     /** La carte de sortie d'un animal sorti : date et retour au cheptel actif, verrouillés d'office. */
     sortie: {
       titreAvecDate: (statut: string, date: string) => `${statut} le ${date}`,
+      voirLaFacture: (facture: string) => `Facture du client : ${facture}`,
       figee: 'Cet animal est dans un lot d’abattoir vendu : sa sortie est figée. Pour la modifier, supprimez d’abord la facture du client.',
       deverrouiller: 'Déverrouiller pour modifier',
       verrouiller: 'Verrouiller',

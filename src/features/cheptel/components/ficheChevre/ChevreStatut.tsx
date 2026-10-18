@@ -87,12 +87,17 @@ export function ChevreSortie({
   onEnregistrerDate,
   onReactiver,
   figee = false,
+  facturesDuClient = [],
+  onOuvrirFacture,
 }: {
   chevre: Chevre;
   onEnregistrerDate: (date: string) => void;
   onReactiver: () => void;
   /** Vrai : l'animal est d'un lot d'abattoir vendu — sa sortie est figée tant que la facture du client existe. */
   figee?: boolean;
+  /** Les factures du client qui portent encore cet animal (ce qui fige sa sortie) : un appui ouvre la facture. */
+  facturesDuClient?: { id: string; libelle: string }[];
+  onOuvrirFacture?: (id: string) => void;
 }) {
   const T = TEXTES.cheptel.ficheChevre.sortie;
   const [deverrouillee, setDeverrouillee] = useState(false);
@@ -118,7 +123,14 @@ export function ChevreSortie({
         </Pressable>
       </View>
       {figee ? (
-        <Text style={commonStyles.note}>{T.figee}</Text>
+        <>
+          <Text style={commonStyles.note}>{T.figee}</Text>
+          {facturesDuClient.map((f) => (
+            <Pressable key={f.id} onPress={() => onOuvrirFacture?.(f.id)} hitSlop={8} accessibilityRole="link">
+              <Text style={commonStyles.lien}>{T.voirLaFacture(f.libelle)}</Text>
+            </Pressable>
+          ))}
+        </>
       ) : deverrouillee ? (
         <>
           <DateField label={TEXTES.cheptel.ficheChevre.dateDeSortie} value={date} onChange={setDate} />
