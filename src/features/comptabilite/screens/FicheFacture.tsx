@@ -16,6 +16,11 @@ import { useFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { nomsDesAbattoirs, tiersEstUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import type { Vente } from '@/features/comptabilite/types';
+import {
+  supprimerLaVenteEtRemettreLesAnimaux,
+  ventesDuLotDeLaFacture,
+} from '@/features/comptabilite/services/suppressionVente';
 import { ROUTES } from '@/shared/constants/routes';
 import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -28,6 +33,8 @@ export default function FicheFacture() {
   const router = useRouter();
   const retour = useAdresseCourante();
   const [abattoirs, setAbattoirs] = useState<Set<string>>(new Set());
+  /** Les ventes aux clients qui portent les mêmes animaux que le lot de cette dépense d'abattoir : on demande s'il faut les supprimer aussi. */
+  const [ventesLiees, setVentesLiees] = useState<Vente[] | null>(null);
   useEffect(() => {
     nomsDesAbattoirs().then(setAbattoirs).catch(() => undefined);
   }, []);
@@ -118,7 +125,40 @@ export default function FicheFacture() {
         message={TEXTES.comptabilite.ficheFacture.cetteActionSupprimeraDefinitivementLa(facture.tiers)}
         confirmLabel={TEXTES.commun.general.supprimerDefinitivement}
         onCancel={() => f.setSuppressionOuverte(false)}
-        onConfirm={f.supprimerDefinitivement}
+        onConfirm={async () => {
+          f.setSuppressionOuverte(false);
+          const liees = await ventesDuLotDeLaFacture(facture).catch(() => []);
+          if (liees.length === 0) return f.supprimerDefinitivement();
+          setVentesLiees(liees);
+        }}
+      />
+
+      {/* Une vente porte les mêmes animaux : la supprimer aussi (les animaux reviennent vivants), ou garder la vente. */}
+      <OptionsModal
+        visible={!!ventesLiees}
+        onClose={() => setVentesLiees(null)}
+        title={`${TEXTES.comptabilite.ficheFacture.venteLiee.titre(ventesLiees?.[0]?.client ?? '', ventesLiees?.[0] ? formatDateFR(ventesLiees[0].date) : '')} ${TEXTES.comptabilite.ficheFacture.venteLiee.aide}`}
+        options={[
+          {
+            label: TEXTES.comptabilite.ficheFacture.venteLiee.lesDeux,
+            icon: 'trash',
+            color: colors.danger,
+            onPress: async () => {
+              const liees = ventesLiees ?? [];
+              setVentesLiees(null);
+              for (const v of liees) await supprimerLaVenteEtRemettreLesAnimaux(v);
+              await f.supprimerDefinitivement();
+            },
+          },
+          {
+            label: TEXTES.comptabilite.ficheFacture.venteLiee.seulement,
+            icon: 'document',
+            onPress: async () => {
+              setVentesLiees(null);
+              await f.supprimerDefinitivement();
+            },
+          },
+        ]}
       />
 
       <InfoModal

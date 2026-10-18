@@ -9,7 +9,8 @@ import {
   reajustementPossible,
 } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
-import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
+import { getVente, saveVente } from '@/features/comptabilite/repository/ventes';
+import { supprimerLaVenteEtRemettreLesAnimaux } from '@/features/comptabilite/services/suppressionVente';
 import { declarerStatutChevre, getChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
 import {
   idsDesAnimaux,
@@ -275,13 +276,8 @@ export function useFicheVente(id: string | undefined) {
   const supprimerDefinitivement = async () => {
     if (!vente) return;
     try {
-      await supprimerVente(vente.id);
-      // Les animaux vendus par cette vente (vivants ou morts) reviennent dans le cheptel actif, et ceux envoyés vivants à l'abattoir aussi (la
-      // facture de leur identification et de leur transport est supprimée) ; ils quittent alors leur lot d'abattoir au prochain accord des lots.
-      // Un animal abattu dont la vente portait sur la viande (morts) garde son statut.
-      for (const id of idsDesAnimaux(vente)) {
-        if (revientVivantApresLaVente((await getChevre(id))?.statut, vente)) await reactiverChevre(id);
-      }
+      await supprimerLaVenteEtRemettreLesAnimaux(vente);
+      // Les animaux vendus (et ceux envoyés vivants à l'abattoir) reviennent dans le cheptel : voir supprimerLaVenteEtRemettreLesAnimaux.
       router.back();
     } catch (error) {
       console.error(error);

@@ -98,6 +98,13 @@ export const TEXTES_COMPTABILITE = {
     factureIntrouvable: 'Facture introuvable.',
     nonModifiableLaCategorieLe:
       'Non modifiable : la catégorie, le compte comptable et les rapports sont liés au type choisi à la création. Supprimez la facture et recréez-la si le type est erroné.',
+    /** La dépense d'un abattoir supprimée alors qu'une vente à un client porte les mêmes animaux : on propose de supprimer aussi la vente. */
+    venteLiee: {
+      titre: (client: string, date: string) => `La vente à ${client || 'un client'} (${date}) porte les mêmes animaux. La supprimer aussi ?`,
+      lesDeux: 'Supprimer la facture et la vente',
+      seulement: 'Supprimer seulement la facture',
+      aide: 'Supprimer la vente remet les animaux vivants dans le cheptel.',
+    },
     cetteActionSupprimeraDefinitivementLa: (tiers: string) =>
       `Cette action supprimera définitivement la facture de ${tiers}.`,
     emise: 'Émise',
