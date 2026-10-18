@@ -1,5 +1,6 @@
 import { FlatList, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useRouter } from 'expo-router';
@@ -45,7 +46,13 @@ export default function CheptelIndex() {
         }
         renderItem={({ item, index }) => (
           <LigneDeBloc index={index} total={e.filtrees.length}>
-            <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+            {index === 0 ? (
+              <AncreVisite id="cheptel.premiereLigne">
+                <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+              </AncreVisite>
+            ) : (
+              <LigneChevre chevre={item} onPress={() => router.push(ROUTES.ficheChevre(item.id))} />
+            )}
           </LigneDeBloc>
         )}
       />

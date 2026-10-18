@@ -796,6 +796,17 @@ export const TEXTES_COMPTABILITE = {
       achetePar: (tiers: string, date: string) => `Acheté à ${tiers} le ${date}`,
       nAnimaux: (n: number) => `${n} ${n > 1 ? 'animaux achetés' : 'animal acheté'}`,
     },
+    /** Une dépense « Animaux vivants (vente) » : les animaux qui partent (à l'abattoir), choisis dans le cheptel. */
+    animauxEnvoyes: {
+      titre: 'Animaux envoyés',
+      choisir: 'Choisir les animaux',
+      modifier: 'Modifier le choix',
+      valider: (n: number) => (n > 1 ? `Valider (${n} animaux)` : n === 1 ? 'Valider (1 animal)' : 'Valider'),
+      aucun: 'Choisissez au moins un animal envoyé.',
+      aide: 'Chaque animal choisi sort du cheptel : sa fiche passe à « abattoir » à la date de la dépense (elle revient vivante si vous supprimez la dépense). Le document de circulation se génère ensuite depuis la dépense.',
+      nAnimaux: (n: number) => `${n} ${n > 1 ? 'animaux envoyés' : 'animal envoyé'}`,
+      sansBoucle: 'sans boucle',
+    },
     animauxNote:
       'Chaque animal sort du cheptel : à l’abattoir si la vente est déclarée, vendu sinon, et l’inventaire des animaux baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
     retirerAnimal: 'Retirer cet animal',

@@ -61,7 +61,7 @@ export function ChoixOperations({ rubriques, valeur, sens, sensPermis, onChange 
               <Text style={[styles.titreColonne, styles.colonneNom]}>{T.liste}</Text>
               {colonnes.map((s) => (
                 <Text key={s} style={[styles.titreColonne, styles.colonneCase]}>
-                  {s === 'vente' ? T.vente : T.achat}
+                  {s === 'vente' ? (sens === 'achat' ? T.sortie : T.vente) : T.achat}
                 </Text>
               ))}
             </View>

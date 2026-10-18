@@ -38,6 +38,10 @@ export const idsDesAnimaux = (vente: Pick<Vente, 'animaux'>): string[] =>
 export const idsDesAnimauxAchetes = (facture: { animauxAchetes?: string }): string[] =>
   facture.animauxAchetes ? facture.animauxAchetes.split(SEPARATEUR_ANIMAUX).filter(Boolean) : [];
 
+/** Les identifiants des animaux envoyés avec une dépense « Animaux vivants (vente) » (aucun pour une autre dépense). */
+export const idsDesAnimauxEnvoyes = (facture: { animauxEnvoyes?: string }): string[] =>
+  facture.animauxEnvoyes ? facture.animauxEnvoyes.split(SEPARATEUR_ANIMAUX).filter(Boolean) : [];
+
 /**
  * Ce que devient un animal du cheptel quand il est vendu : pour une vente de viande, il a forcément été abattu avant. Vente
  * déclarée : son statut est « abattoir », à sa date d'abattoir. Vente non déclarée (le client ne veut pas de facture) : il n'y a pas

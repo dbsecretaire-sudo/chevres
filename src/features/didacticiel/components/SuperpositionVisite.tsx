@@ -21,6 +21,8 @@ interface Zone {
 /** La marge autour de l'élément mis en surbrillance, et la hauteur de la barre des onglets du bas. */
 const MARGE = 6;
 const HAUTEUR_BARRE = 64;
+/** La hauteur de l'en-tête d'un écran (sa flèche de retour est à gauche). */
+const HAUTEUR_ENTETE = 56;
 const VOILE = 'rgba(18, 28, 14, 0.66)';
 const LARGEUR_BULLE = 420;
 /** La largeur de la flèche qui désigne un menu de la barre du haut (sur Windows). */
@@ -57,6 +59,7 @@ export function SuperpositionVisite() {
       : null;
   const ancre = etape?.ancre;
   const onglet = etape?.onglet;
+  const retour = etape?.retour;
 
   // Où est l'élément à toucher : relu régulièrement (la page peut se charger, ou défiler).
   useEffect(() => {
@@ -68,6 +71,15 @@ export function SuperpositionVisite() {
         ancreDe(ancre)?.measureInWindow((x, y, w, h) => {
           if (vivant && w > 0 && h > 0) setZone((avant) => (avant?.id === id && memeZone(avant, { x, y, w, h }) ? avant : { id, x, y, w, h }));
         });
+      } else if (retour && estBureau()) {
+        // Windows : la flèche de l'en-tête est un élément de la page (absente d'un écran du menu de gauche : rien n'est alors désigné).
+        ancreDe('retour')?.measureInWindow((x, y, w, h) => {
+          if (vivant && w > 0 && h > 0) setZone((avant) => (avant?.id === id && memeZone(avant, { x, y, w, h }) ? avant : { id, x, y, w, h }));
+        });
+      } else if (retour) {
+        // Téléphone : la flèche est celle de l'en-tête natif, en haut à gauche.
+        const flecheRetour = { x: 0, y: 0, w: 64, h: HAUTEUR_ENTETE };
+        setZone((avant) => (avant?.id === id && memeZone(avant, flecheRetour) ? avant : { id, ...flecheRetour }));
       } else if (onglet && !estBureau()) {
         const largeur = width / ONGLETS_DU_BAS.length;
         const suivante = { x: ONGLETS_DU_BAS.indexOf(onglet) * largeur, y: height - HAUTEUR_BARRE, w: largeur, h: HAUTEUR_BARRE };
@@ -81,12 +93,12 @@ export function SuperpositionVisite() {
       clearTimeout(depart);
       clearInterval(minuteur);
     };
-  }, [visite.actif, visite.surLaPage, etape, ancre, onglet, width, height]);
+  }, [visite.actif, visite.surLaPage, etape, ancre, onglet, retour, width, height]);
 
   if (!visite.actif || !etape) return null;
 
   // Sur Windows, l'onglet est un menu de la barre du haut, que la page ne peut pas entourer : une flèche le désigne, d'après son nom.
-  const menuDuHaut = estBureau() && onglet && !ancre ? libelleDuMenu(onglet) : null;
+  const menuDuHaut = estBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet) : null;
   const centreMenu = menuDuHaut ? centreDuMenu(libellesDesMenus(), menuDuHaut, largeurDansLaBarre) : null;
 
   // Éloigné de la page de l'étape : une pastille propose de reprendre ou de quitter.

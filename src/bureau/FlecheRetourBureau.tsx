@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter, usePathname, useGlobalSearchParams, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAncre } from '@/features/didacticiel/components/AncreVisite';
 import { dansLeMenuDeGauche, pageParente } from '@/bureau/retour';
 import { useDeuxColonnes } from '@/bureau/colonnes';
 import { colors } from '@/shared/theme/colors';
@@ -29,6 +30,7 @@ export const EspaceSansFleche = () => <View style={styles.espaceSansFleche} />;
  */
 export function FlecheRetourBureau() {
   const router = useRouter();
+  const ancre = useAncre('retour');
   const adresse = usePathname();
   const { famille, groupementId, retour } = useGlobalSearchParams<{
     famille?: string;
@@ -42,7 +44,7 @@ export function FlecheRetourBureau() {
   if (masquee || !parent) return <EspaceSansFleche />;
   // Sans nom : la flèche est un dessin seul (les autres boutons d'en-tête, eux, écrivent leur nom à côté).
   return (
-    <Pressable style={commonStyles.boutonCompact} onPress={() => router.replace(parent as Href)}>
+    <Pressable ref={ancre} style={commonStyles.boutonCompact} onPress={() => router.replace(parent as Href)}>
       <Ionicons name="arrow-back" size={24} color={colors.blanc} />
     </Pressable>
   );

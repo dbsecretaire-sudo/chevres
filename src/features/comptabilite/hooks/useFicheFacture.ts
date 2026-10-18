@@ -61,6 +61,9 @@ import {
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import { totalMontants } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
+import { getChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
+import { idsDesAnimauxEnvoyes } from '@/features/comptabilite/utils/ventes';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { TEXTES } from '@/shared/textes';
 
 const montantEnTexte = (f: Facture) => String(f.montant).replace('.', ',');
@@ -328,6 +331,10 @@ export function useFicheFacture(id: string | undefined) {
     if (!facture) return;
     try {
       await supprimerFacture(facture.id);
+      // Les animaux envoyés avec la dépense reviennent vivants dans le cheptel.
+      for (const id of idsDesAnimauxEnvoyes(facture)) {
+        if ((await getChevre(id))?.statut === STATUT_CHEVRE.ABATTOIR) await reactiverChevre(id);
+      }
       await retirerVisiteFacture(facture.id);
       // Supprimer l'achat retire du stock ce qu'il y avait ajouté.
       if (facture.stockApplique)

@@ -85,6 +85,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'lignesMarchandises',
     'lignesProduction',
     'animauxAchetes',
+    'animauxEnvoyes',
     'lignesChambre',
     'elementAgri',
     'stockApplique',

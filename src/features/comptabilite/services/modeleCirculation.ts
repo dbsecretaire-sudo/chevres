@@ -1,6 +1,6 @@
 import type { EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
 import { getFacture } from '@/features/comptabilite/repository/factures';
-import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimauxAchetes, idsDesAnimauxEnvoyes } from '@/features/comptabilite/utils/ventes';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { animauxDuLot } from '@/features/exploitation/services/lots';
 import {
@@ -24,6 +24,11 @@ export async function genererLeModeleDeCirculation(ecriture: Pick<EcritureACircu
   if (!facture) return;
   if (idsDesAnimauxAchetes(facture).length > 0) {
     await exporterDocumentCirculationAchatPdf(facture.id);
+    return;
+  }
+  // Des animaux envoyés avec la dépense : ils partent à la date de la dépense, vers ce contact.
+  if (idsDesAnimauxEnvoyes(facture).length > 0) {
+    await exporterDocumentCirculationAbattoirPdf(facture.date, idsDesAnimauxEnvoyes(facture), facture.tiers, true);
     return;
   }
   const lot = (await getSettings()).exploitation?.lots?.find((l) => l.factureId === facture.id && l.abattoir);

@@ -1,6 +1,6 @@
 import type { DocumentCirculationDepose, Facture, Vente } from '@/features/comptabilite/types';
 import { activiteFacture, activiteVente } from '@/features/comptabilite/utils/activite';
-import { documentCirculationRequis, idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
+import { documentCirculationRequis, idsDesAnimauxAchetes, idsDesAnimauxEnvoyes } from '@/features/comptabilite/utils/ventes';
 import { getFacture, remplacerFacture } from '@/features/comptabilite/repository/factures';
 import { getVente } from '@/features/comptabilite/repository/ventes';
 import { upsertRecord } from '@/shared/storage/localStore';
@@ -58,7 +58,7 @@ export function ecrituresACirculation(
   const deDepenses = factures
     .filter(
       (f) =>
-        f.type === TYPE_FACTURE.RECUE && (idsDesAnimauxAchetes(f).length > 0 || tiersEstUnAbattoir(f.tiers, abattoirs)),
+        f.type === TYPE_FACTURE.RECUE && (idsDesAnimauxAchetes(f).length > 0 || idsDesAnimauxEnvoyes(f).length > 0 || tiersEstUnAbattoir(f.tiers, abattoirs)),
     )
     .map<EcritureACirculation>((f) => ({
       cle: `facture:${f.id}`,

@@ -59,6 +59,11 @@ describe('les dépenses et la vente d’animaux', () => {
     expect(estPermiseEnDepense('produits_animaux:animaux:vente')).toBe(true);
     expect(estPermiseEnDepense('produits_finis:fromages:vente')).toBe(false);
     expect(estPermiseEnDepense('matieres_premieres:aliments:achat')).toBe(true);
-    expect(depensesDesOperations(['produits_animaux:animaux:vente'].filter(estPermiseEnDepense))).toEqual(['animaux_vivants']);
+    expect(depensesDesOperations(['produits_animaux:animaux:vente'].filter(estPermiseEnDepense))).toEqual(['animaux_vivants_vente']);
+  });
+  it('la sortie d’animaux (vivant vers abattu) ouvre « Animaux vivants (sortie) » dans les dépenses, l’achat « Animaux vivants (achat) »', () => {
+    expect(depensesDesOperations(['produits_animaux:animaux:vente'])).toEqual(['animaux_vivants_vente']);
+    expect(depensesDesOperations(['produits_animaux:animaux:achat'])).toEqual(['animaux_vivants']);
+    expect(operationsDesDepenses(['animaux_vivants_vente'], rubriques)).toEqual(['produits_animaux:animaux:vente']);
   });
 });

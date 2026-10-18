@@ -17,6 +17,8 @@ export const CATEGORIE_DEPENSE = {
   PRODUCTION: 'production',
   /** L'achat d'animaux vivants (à un autre éleveur) : chaque animal acheté a sa fiche dans le cheptel, et un document de circulation. */
   ANIMAUX_VIVANTS: 'animaux_vivants',
+  /** Des animaux vivants qui partent (à l'abattoir) : une vente de l'inventaire, facturée en dépense. Leur fiche sort du cheptel. */
+  ANIMAUX_VIVANTS_VENTE: 'animaux_vivants_vente',
   IMPOTS: 'impots',
   AUTRE: 'autre',
   // --- Entreprise (hors élevage) ---
@@ -295,6 +297,7 @@ export const ORDRE_CATEGORIE_DEPENSE = [
   CATEGORIE_DEPENSE.VETERINAIRE,
   CATEGORIE_DEPENSE.PRODUCTION,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
+  CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE,
   CATEGORIE_DEPENSE.IMPOTS,
   CATEGORIE_DEPENSE.AUTRE,
 ] as const;

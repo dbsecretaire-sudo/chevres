@@ -51,6 +51,7 @@ const DEPENSES_A_LISTE: readonly string[] = [
   CATEGORIE_DEPENSE.ALIMENTATION,
   CATEGORIE_DEPENSE.PRODUCTION,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
+  CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE,
 ];
 /** Les catégories dans l'ordre alphabétique de leur nom (l'ordre enregistré ne change pas). */const parNom = <C extends { nom: string }>(liste: C[]): C[] => [...liste].sort((a, b) => comparerAlphabetique(a.nom, b.nom));
 

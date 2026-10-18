@@ -75,8 +75,9 @@ export const libelleOperation = (sens: SensOperation, liste: string): string =>
 // --- Le lien avec les catégories d'écriture : ce que chaque liste ouvre dans une nouvelle écriture -----------------------------------------
 
 /** La catégorie de dépense qu'ouvre une liste de l'inventaire (achat, ou vente dans les dépenses). */
-export function depenseDeLaListe(categorie: string, liste: string): string {
-  if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX) return CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
+export function depenseDeLaListe(categorie: string, liste: string, sens: SensOperation = 'achat'): string {
+  if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX)
+    return sens === 'vente' ? CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE : CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
   if (categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES && liste === SECTION_STOCK.ALIMENTS) return CATEGORIE_DEPENSE.ALIMENTATION;
   if (
     categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES ||
@@ -127,7 +128,7 @@ export const estPermiseEnDepense = (id: string): boolean => {
 export const depensesDesOperations = (operations: readonly string[]): string[] => [
   ...new Set(operations.flatMap((id) => {
     const o = decouper(id);
-    return o ? [depenseDeLaListe(o.categorie, o.liste)] : [];
+    return o ? [depenseDeLaListe(o.categorie, o.liste, o.sens)] : [];
   })),
 ];
 
@@ -145,9 +146,11 @@ export const groupesRecetteDesOperations = (operations: readonly string[]): stri
  */
 export function operationsDesDepenses(depenses: readonly string[], rubriques: RubriqueOperations[]): string[] {
   return rubriques.flatMap((r) =>
-    r.listes
-      .filter((l) => depenses.includes(depenseDeLaListe(r.categorie, l.cle)) && depenseDeLaListe(r.categorie, l.cle) !== CATEGORIE_DEPENSE.AUTRE)
-      .map((l) => idOperation(r.categorie, l.cle, 'achat')),
+    r.listes.flatMap((l) =>
+      sensDansLesDepenses(r.categorie, l.cle)
+        .filter((s) => depenses.includes(depenseDeLaListe(r.categorie, l.cle, s)) && depenseDeLaListe(r.categorie, l.cle, s) !== CATEGORIE_DEPENSE.AUTRE)
+        .map((s) => idOperation(r.categorie, l.cle, s)),
+    ),
   );
 }
 

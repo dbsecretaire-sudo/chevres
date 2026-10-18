@@ -1,5 +1,6 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { AnimauxAchetesEditor } from '@/features/comptabilite/components/AnimauxAchetesEditor';
+import { AnimauxEnvoyesChoix } from '@/features/comptabilite/components/AnimauxEnvoyesChoix';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
@@ -199,6 +200,9 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
           />
         )}
         {estAnimauxVivants && <AnimauxAchetesEditor animaux={e.animauxAchetes} onChange={e.setAnimauxAchetes} />}
+        {e.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE && (
+          <AnimauxEnvoyesChoix valeur={e.animauxEnvoyes} onChange={e.setAnimauxEnvoyes} />
+        )}
         {estProduction && (
           <>
             <LignesProductionEditor

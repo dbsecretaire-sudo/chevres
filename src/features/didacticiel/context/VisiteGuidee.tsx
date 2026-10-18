@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname, useRouter } from 'expo-router';
-import { etapesDeLaVisite, pageDeLEtape, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
+import { etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 
 const CLE_STOCKAGE = 'troupeau:v1:visite-guidee';
 
@@ -46,19 +46,17 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
         charge.current = true;
       });
   }, []);
-  // La visite suit l'utilisateur : une page qui est celle d'une étape suivante (ou, à défaut, d'une étape précédente) reprend la visite à cette étape.
-  const index = useMemo(() => {
-    if (!etat.actif) return etat.index;
-    const courante = etapes[etat.index];
-    if (courante && pageDeLEtape(courante.route, adresse)) return etat.index;
-    const avant = etapes.findIndex((e, i) => i > etat.index && pageDeLEtape(e.route, adresse));
-    if (avant >= 0) return avant;
-    for (let i = etat.index - 1; i >= 0; i--) if (pageDeLEtape(etapes[i].route, adresse)) return i;
-    return etat.index;
-  }, [etapes, etat, adresse]);
-
-  // L'étape retrouvée devient l'étape en cours (pour que la suite reparte d'elle).
-  if (etat.actif && index !== etat.index) setEtat({ actif: true, index });
+  // La visite suit l'utilisateur quand il change de page : une page qui est celle d'une étape suivante (ou, à défaut, d'une étape précédente)
+  // reprend la visite à cette étape. Seul un changement de page y touche : « Suivant » choisit son étape, et la page suit.
+  const [pageVue, setPageVue] = useState(adresse);
+  if (adresse !== pageVue) {
+    setPageVue(adresse);
+    if (etat.actif) {
+      const trouvee = etapeDeLaPage(etapes, etat.index, adresse);
+      if (trouvee !== etat.index) setEtat({ actif: true, index: trouvee });
+    }
+  }
+  const index = etat.index;
 
   // L'étape en cours est gardée sur l'appareil.
   useEffect(() => {
@@ -70,10 +68,15 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
     router.push('/' as never);
   }, [router]);
   const quitter = useCallback(() => setEtat({ actif: false, index: 0 }), []);
-  const suivant = useCallback(
-    () => setEtat(index + 1 >= etapes.length ? { actif: false, index: 0 } : { actif: true, index: index + 1 }),
-    [index, etapes.length],
-  );
+  const suivant = useCallback(() => {
+    const prochaine = etapeSuivante(etapes, index, adresse);
+    if (!prochaine) {
+      setEtat({ actif: false, index: 0 });
+      return;
+    }
+    setEtat({ actif: true, index: prochaine.index });
+    if (prochaine.ouvrir) router.push(prochaine.ouvrir as never);
+  }, [etapes, index, adresse, router]);
   const etape = etat.actif ? etapes[index] : undefined;
   const reprendre = useCallback(() => {
     const route = etape?.route;

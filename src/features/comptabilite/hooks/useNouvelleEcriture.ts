@@ -96,7 +96,7 @@ import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { estDateISO, formatDateFR, memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
-import { agePetitMax } from '@/shared/constants/cheptel';
+import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import {
   categoriesGroupe,
@@ -229,6 +229,8 @@ export function useNouvelleEcriture(
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
   /** Une dépense « Animaux vivants » : les animaux achetés (leurs fiches se créent à l'enregistrement). */
   const [animauxAchetes, setAnimauxAchetes] = useState<AnimalAcheteForm[]>([animalAcheteVide()]);
+  /** Une dépense « Animaux vivants (vente) » : les animaux du cheptel qui partent (leur fiche passe à « abattoir »). */
+  const [animauxEnvoyes, setAnimauxEnvoyes] = useState<string[]>([]);
   /** Achat de production : le détail par fourniture. */
   const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([ligneProductionVide()]);
   /** Les articles d'une facture de la Chambre d'agriculture (forfait d'identification, équarrissage ATM, conseils et analyses). */
@@ -533,6 +535,7 @@ export function useNouvelleEcriture(
     setLignesCarburant([ligneCarburantVide()]);
     setLignesProduction([ligneProductionVide()]);
     setAnimauxAchetes([animalAcheteVide()]);
+    setAnimauxEnvoyes([]);
   };
 
   /** Reprend une ligne de commande : sa catégorie (fromage, ou viande / charcuterie), son produit et sa quantité. */
@@ -682,6 +685,12 @@ export function useNouvelleEcriture(
           }
         }
       }
+      // Des animaux vivants qui partent : au moins un, choisi dans le cheptel.
+      const envoiAnimaux = type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE;
+      if (envoiAnimaux && animauxEnvoyes.length === 0) {
+        setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.animauxEnvoyes.aucun });
+        return;
+      }
       // Pour l'état des animaux : le rôle de la ligne choisie (cabris, sur pied, vivant), et un client de catégorie Abattoir.
       const roleDuDetail =
         categorieRecette === CATEGORIE_RECETTE.VIANDE
@@ -804,10 +813,13 @@ export function useNouvelleEcriture(
           }
           animauxCrees = ids.join(SEPARATEUR_ANIMAUX);
         }
+        // Les animaux envoyés quittent le cheptel : leur fiche passe à « abattoir », à la date de la dépense.
+        if (envoiAnimaux) for (const id of animauxEnvoyes) await declarerStatutChevre(id, STATUT_CHEVRE.ABATTOIR, date);
         const enregistree = await enregistrerFacture({
           ...resultat.facture,
           stockApplique: achat?.length ? true : undefined,
           animauxAchetes: animauxCrees,
+          animauxEnvoyes: envoiAnimaux ? animauxEnvoyes.join(SEPARATEUR_ANIMAUX) : undefined,
         });
         // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
         await synchroniserStockAchat(undefined, achat, enregistree.date);
@@ -892,6 +904,8 @@ export function useNouvelleEcriture(
     totalCarburant,
     animauxAchetes,
     setAnimauxAchetes,
+    animauxEnvoyes,
+    setAnimauxEnvoyes,
     tauxTvaAchat,
     setTauxTvaAchat,
     compteDepenseAutre,

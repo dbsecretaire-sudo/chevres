@@ -5,12 +5,14 @@ export const TEXTES_CONTACTS = {
   operations: {
     liste: 'Liste',
     vente: 'Vente',
+    /** Dans les dépenses, la seule « vente » est la sortie d'animaux vivants (vers l'abattoir) : on la paie, on ne la vend pas. */
+    sortie: 'Sortie',
     achat: 'Achat',
     toutesLesVentes: 'Toutes les ventes',
     tousLesAchats: 'Tous les achats',
     autresDepenses: 'Autres dépenses (sans stock)',
     autresRecettes: 'Autres recettes',
-    aideAchats: 'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre. Seule exception, « Animaux » propose aussi « Vente » : des animaux vivants envoyés à l’abattoir sortent de l’inventaire (une vente) mais se facturent en dépense.',
+    aideAchats: 'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre. Seule exception, « Animaux » propose aussi « Sortie » : des animaux vivants qui partent à l’abattoir (de vivant à abattu) se facturent en dépense.',
     aideVentes: 'Une recette est une vente : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous acheter.',
   },
   titreFiche: 'Contact',

@@ -20,6 +20,8 @@ export interface EtapeVisite {
   ancre?: string;
   /** L'onglet de la barre du bas à toucher (téléphone) : mis en surbrillance. */
   onglet?: OngletDuBas;
+  /** La flèche de retour de l'en-tête (en haut à gauche) est à toucher : mise en surbrillance (sur Windows, quand la page en a une). */
+  retour?: boolean;
   /** Vrai : l'étape attend qu'on touche la zone (on passe à la page suivante en la touchant) ; sinon, un bouton « Suivant » la termine. */
   clic?: boolean;
 }
@@ -35,6 +37,35 @@ export function pageDeLEtape(route: string | RegExp | undefined, adresse: string
   if (!route) return true;
   const propre = adresse.replace(/\/+$/, '') || '/';
   return typeof route === 'string' ? propre === route : route.test(propre);
+}
+
+/**
+ * L'étape à afficher sur une page : l'étape en cours si c'est la sienne, sinon la première étape suivante de cette page (l'utilisateur a
+ * avancé en touchant un bouton), sinon la dernière étape précédente (il est revenu en arrière), sinon l'étape en cours (page hors visite).
+ */
+export function etapeDeLaPage(etapes: readonly EtapeVisite[], index: number, adresse: string): number {
+  const courante = etapes[index];
+  if (courante && pageDeLEtape(courante.route, adresse)) return index;
+  const apres = etapes.findIndex((e, i) => i > index && pageDeLEtape(e.route, adresse));
+  if (apres >= 0) return apres;
+  for (let i = index - 1; i >= 0; i--) if (pageDeLEtape(etapes[i].route, adresse)) return i;
+  return index;
+}
+
+/**
+ * L'étape où « Suivant » ou « Passer cette étape » mène, et la page à ouvrir pour s'y rendre (rien si l'on y est déjà). Une étape qui n'a pas
+ * d'adresse précise (la fiche d'un animal, dont on ignore laquelle) est passée quand on n'y est pas.
+ */
+export function etapeSuivante(
+  etapes: readonly EtapeVisite[],
+  index: number,
+  adresse: string,
+): { index: number; ouvrir?: string } | null {
+  let suivante = index + 1;
+  while (suivante < etapes.length && etapes[suivante].route instanceof RegExp && !pageDeLEtape(etapes[suivante].route, adresse)) suivante++;
+  if (suivante >= etapes.length) return null;
+  const route = etapes[suivante].route;
+  return { index: suivante, ouvrir: typeof route === 'string' && !pageDeLEtape(route, adresse) ? route : undefined };
 }
 
 /**
@@ -89,6 +120,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
     {
       id: 'cheptel.fiche.ouvrir',
       route: ROUTES.CHEPTEL_LISTE,
+      ancre: 'cheptel.premiereLigne',
       titre: 'Ouvrir une fiche',
       texte: 'Touchez un animal de la liste pour ouvrir sa fiche.',
       clic: true,
@@ -102,9 +134,20 @@ export function etapesDeLaVisite(): EtapeVisite[] {
     {
       id: 'cheptel.retour',
       route: FICHE_ANIMAL,
-      titre: 'Revenir au menu',
-      texte: 'La flèche en haut à gauche ramène à la page précédente. Revenez au menu du Cheptel pour la suite.',
-      texteBureau: 'La flèche en haut à gauche ramène à la page précédente. Revenez au menu du Cheptel (barre du haut) pour la suite.',
+      retour: true,
+      clic: true,
+      titre: 'Revenir à la liste',
+      texte: 'Touchez la flèche en haut à gauche : elle ramène à la page précédente, ici la liste des animaux.',
+    },
+    {
+      id: 'cheptel.retour.menu',
+      route: ROUTES.CHEPTEL_LISTE,
+      retour: true,
+      onglet: 'cheptel',
+      clic: true,
+      titre: 'Revenir au menu du Cheptel',
+      texte: 'Touchez encore la flèche en haut à gauche pour revenir au menu du Cheptel.',
+      texteBureau: 'Ouvrez le menu Cheptel, dans la barre du haut de la fenêtre, pour la suite.',
     },
     {
       id: 'cheptel.naissances',
