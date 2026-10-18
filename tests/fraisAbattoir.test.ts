@@ -24,4 +24,12 @@ describe('frais d’abattoir refacturés', () => {
     expect(fraisDuLotPourLaVente({ boucles: '1, 2' }, 2)).toBeUndefined();
     expect(fraisDuLotPourLaVente(undefined, 2)).toBeUndefined();
   });
+
+  it('le montant de l’abattoir est fixe : les bêtes écartées ne le réduisent pas', () => {
+    const lot = { boucles: '1, 2, 3, 4, 5', fraisAbattoir: 190.32 };
+    // 4 bêtes à facturer sur 5 (une morte pendant le transport) : la vente qui les prend toutes paie toute la facture.
+    expect(fraisDuLotPourLaVente(lot, 4, 1)).toBe(190.32);
+    // Vendu à deux clients : réparti entre les bêtes à facturer.
+    expect(fraisDuLotPourLaVente(lot, 2, 1)).toBe(95.16);
+  });
 });
