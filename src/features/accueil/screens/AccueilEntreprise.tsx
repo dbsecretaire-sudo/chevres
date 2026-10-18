@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BoutonInformations } from '@/features/accueil/components/BoutonInformations';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
+import { BlocDidacticiel } from '@/features/didacticiel/components/BlocDidacticiel';
 import { Screen } from '@/shared/components/Screen';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -126,6 +127,7 @@ export default function AccueilEntreprise() {
       </GrilleChiffres>
 
       <BlocRappels />
+      <BlocDidacticiel />
 
       {gite ? (
         <CalendrierMois

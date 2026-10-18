@@ -19,6 +19,8 @@ const baseControles = (famille: string): string =>
 export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
   RAPPELS_HISTORIQUE: '/rappels-historique',
+  /** Le didacticiel : toutes les options de l'application, expliquées (activable sur l'accueil). */
+  DIDACTICIEL: '/didacticiel',
   REGLAGES: '/reglages',
 
   /** L'onglet Cheptel : le cheptel (la liste des animaux) et ce qui s'y rapporte. */

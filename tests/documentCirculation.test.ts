@@ -71,3 +71,13 @@ describe('document de circulation', () => {
     expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('pour le transporteur');
   });
 });
+
+describe('indicatif de marquage du formulaire', () => {
+  it('s’écrit sans « FR » ni espaces, pour tenir un chiffre par case', async () => {
+    const { chiffresDeLIndicatif } = await import('@/features/export/documentCirculationPdf');
+    expect(chiffresDeLIndicatif('FR 212282')).toBe('212282');
+    expect(chiffresDeLIndicatif('FR212282')).toBe('212282');
+    expect(chiffresDeLIndicatif(' fr 21 22 82 ')).toBe('212282');
+    expect(chiffresDeLIndicatif('212282')).toBe('212282');
+  });
+});

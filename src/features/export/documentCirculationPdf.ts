@@ -148,6 +148,10 @@ export const FEUILLETS_CIRCULATION = [
 /** Le nombre de lignes du tableau des numéros individuels du formulaire (dix lignes de quatre colonnes) : le reste va sur la page d'annexe. */
 const PLACES_INDIVIDUELLES = 40;
 
+/** L'indicatif de marquage tel qu'il s'écrit dans les cases du formulaire : sans « FR » ni espaces (« FR 212282 » devient « 212282 »). */
+export const chiffresDeLIndicatif = (indicatif: string): string =>
+  indicatif.replace(/^\s*FR/i, '').replace(/\s+/g, '');
+
 /**
  * Écrit les valeurs d'une vente sur le formulaire (la feuille du détenteur de départ, telle que la Chambre la fournit). Les positions sont
  * celles du modèle remis à l'endroit : points depuis le coin bas gauche de la page (593 × 839).
@@ -201,8 +205,10 @@ function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
   ];
   d.boucherie.slice(0, 3).forEach((b, i) => {
     const { x0, pas, xNombre } = lotsBoucherie[i];
-    if (b.indicatif.length <= 6) o.cases(x0, 417.5, pas, b.indicatif, 10);
-    else o.ajuste(x0, 417.5, b.indicatif, 6 * pas, 9);
+    // L'indicatif de marquage s'écrit sans « FR » : ses six chiffres, un par case.
+    const chiffres = chiffresDeLIndicatif(b.indicatif);
+    if (chiffres.length <= 6) o.cases(x0, 417.5, pas, chiffres, 10);
+    else o.ajuste(x0, 417.5, chiffres, 6 * pas, 9);
     o.centre(xNombre, 421, String(b.nombre), 10, true);
   });
   // Les reproducteurs et réformes : un numéro individuel par case du tableau, colonne après colonne.

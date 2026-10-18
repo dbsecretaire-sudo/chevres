@@ -190,6 +190,15 @@ function Onglets() {
         }}
       />
       <Tabs.Screen
+        name="didacticiel"
+        options={{
+          href: null,
+          title: TEXTES.didacticiel.titre,
+          // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to="/" />,
+        }}
+      />
+      <Tabs.Screen
         name="rappels-historique"
         options={{
           href: null,

@@ -1212,6 +1212,16 @@ export const TEXTES_CHEPTEL = {
     },
     enregistrerLaNaissance: 'Enregistrer la naissance',
   },
+  /** Cheptel › Réglages › Mettre à jour le cheptel. */
+  miseAJour: {
+    titre: 'Mettre à jour le cheptel',
+    aide: 'Remet dans le cheptel des animaux « vendus » ou « à l’abattoir » que plus aucune vente ne porte (une facture supprimée, par exemple). Vous choisissez ceux à remettre vivants.',
+    bouton: 'Mettre à jour les animaux présents',
+    choisir: 'Animaux à remettre dans le cheptel',
+    remettre: (n: number) => `Remettre ${n} animal${n > 1 ? 'aux' : ''}`.replace('animalaux', 'animaux'),
+    aucun: 'Rien à mettre à jour : tous les animaux vendus ou à l’abattoir ont leur vente.',
+    remis: (n: number) => `${n} animal${n > 1 ? 'aux' : ''} remis vivant${n > 1 ? 's' : ''} dans le cheptel.`.replace('animalaux', 'animaux'),
+  },
   chevreLabel: {
     nomSansBoucle: (nom: string) => `${nom} (sans boucle)`,
     /** Un animal sans boucle ni nom : son type, et rien d'autre (sa naissance et sa sortie sont sur la ligne du dessous). */

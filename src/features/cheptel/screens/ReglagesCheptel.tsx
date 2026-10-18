@@ -8,6 +8,7 @@ import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
+import { MiseAJourCheptel } from '@/features/cheptel/components/MiseAJourCheptel';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -692,6 +693,8 @@ export default function ReglagesCheptel() {
         annee={settings.anneeActive}
         espece={espece}
       />
+      {/* Remettre dans le cheptel les animaux dont la vente a disparu. */}
+      <MiseAJourCheptel />
     </Screen>
   );
 }
