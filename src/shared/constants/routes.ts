@@ -179,6 +179,7 @@ export const ROUTES = {
   // Les données (écrans ouverts depuis l'onglet Organisation)
   ORGANISATION_ETABLISSEMENT: '/organisation-etablissement',
   ORGANISATION_DONNEES: '/organisation-donnees',
+  ORGANISATION_REGLES: '/organisation-regles',
   ORGANISATION_TIERS: '/organisation-tiers',
   ORGANISATION_CATEGORIES_CLIENT: '/organisation-categories-client',
   ORGANISATION_CATEGORIES_TIERS: '/organisation-categories-tiers',

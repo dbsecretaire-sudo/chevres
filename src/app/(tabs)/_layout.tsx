@@ -213,6 +213,7 @@ function Onglets() {
           ROUTES.ORGANISATION_TIERS,
         ],
         ['organisation-donnees', TEXTES.settings.reglages.sectionDonnees, ROUTES.REGLAGES],
+        ['organisation-regles', TEXTES.settings.reglages.sectionRegles, ROUTES.REGLAGES],
         ['export-donnees', TEXTES.settings.reglages.export, ROUTES.ORGANISATION_DONNEES],
         ['pdf-donnees', TEXTES.settings.reglages.pdf, ROUTES.ORGANISATION_DONNEES],
         ['sauvegarde-locale', TEXTES.settings.reglages.sauvegardeLocale, ROUTES.ORGANISATION_DONNEES],

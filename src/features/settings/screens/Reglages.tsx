@@ -39,6 +39,12 @@ export default function Reglages() {
           icone="server"
           route={ROUTES.ORGANISATION_DONNEES}
         />
+        <LigneRubrique
+          titre={T.sectionRegles}
+          aide={T.aideRubriqueRegles}
+          icone="list"
+          route={ROUTES.ORGANISATION_REGLES}
+        />
       </BlocLignes>
       <Text style={styles.footer}>{T.troupeauChevresToutesLesDonnees}</Text>
     </Screen>

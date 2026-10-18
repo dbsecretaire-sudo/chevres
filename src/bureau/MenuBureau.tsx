@@ -133,6 +133,8 @@ function definitionDesMenus(): DefinitionMenu[] {
       { label: TEXTES.settings.reglages.pdf, route: ROUTES.PDF_DONNEES },
       { label: TEXTES.settings.reglages.sauvegardeLocale, route: ROUTES.SAUVEGARDE_LOCALE },
       { label: TEXTES.settings.reglages.googleDrive, route: ROUTES.GOOGLE_DRIVE },
+      { separateur: true },
+      { label: TEXTES.settings.reglages.sectionRegles, route: ROUTES.ORGANISATION_REGLES },
     ],
   };
   // Une entreprise a ses clients à la place du cheptel et de la production.
