@@ -45,13 +45,16 @@ export function AnimauxAchetesEditor({ animaux, onChange }: Props) {
               </Pressable>
             ) : null}
           </View>
-          <FormField
-            label={T.boucle}
-            value={a.boucle}
-            onChangeText={(boucle) => maj(a.key, { boucle: boucle.trim() })}
-            aide={T.boucleAide}
-          />
+          {/* La boucle, le sexe et la naissance sur une même ligne (à la ligne sur téléphone). */}
           <View style={styles.ligne}>
+            <View style={styles.champ}>
+              <FormField
+                label={T.boucle}
+                value={a.boucle}
+                onChangeText={(boucle) => maj(a.key, { boucle: boucle.trim() })}
+                placeholder={T.boucleAide}
+              />
+            </View>
             <View style={styles.champ}>
               <SelectField
                 label={TEXTES.commun.general.sexe}

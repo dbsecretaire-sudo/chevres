@@ -778,7 +778,7 @@ export const TEXTES_COMPTABILITE = {
       titre: 'Animaux achetés',
       animal: (n: number) => `Animal ${n}`,
       boucle: 'N° de boucle',
-      boucleAide: 'Facultatif : celui que le vendeur a posé.',
+      boucleAide: 'Facultatif',
       naissance: 'Date de naissance',
       retirer: 'Retirer cet animal',
       aide: 'Chaque animal a sa fiche dans le cheptel, créée à l’enregistrement ; le document de circulation (arrivée chez vous) se génère ensuite depuis la dépense.',
