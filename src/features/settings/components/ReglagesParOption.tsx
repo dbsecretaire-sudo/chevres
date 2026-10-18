@@ -44,6 +44,7 @@ export function ReglagesParOption({ categories, groupes }: Props) {
                 key={cle}
                 titre={option.titre}
                 nombre={nombre}
+                accordeon
                 ouverte={ouverte === cle}
                 onBasculer={() => setOuverte((actuelle) => (actuelle === cle ? null : cle))}
               >

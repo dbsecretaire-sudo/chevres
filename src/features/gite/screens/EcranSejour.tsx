@@ -60,6 +60,7 @@ import { nomComplet } from '@/shared/utils/personne';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 const T = TEXTES.gite.sejour;
 
@@ -492,7 +493,8 @@ export default function EcranSejour() {
             searchable
             placeholder={T.aucuneFiche}
             value={clientId}
-            options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+            options={clients.map(optionClient)}
+            parCategories
             onChange={setClientId}
             onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
           />

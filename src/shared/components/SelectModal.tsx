@@ -33,6 +33,11 @@ interface Props<T extends string> {
   placeholderRecherche?: string;
   /** Quand il est donné, ce qu'on tape dans la recherche, s'il n'est pas dans la liste, se propose comme valeur (« Utiliser le n° 123 »). */
   libelleSaisieLibre?: (texte: string) => string;
+  /**
+   * Les groupes des options (leur `groupe`) se choisissent d'abord, en liste : un appui sur un groupe montre ses options, et « Catégories » revient
+   * à la liste des groupes. Une recherche tapée cherche dans tous les groupes. Un seul groupe : on passe directement à ses options.
+   */
+  parCategories?: boolean;
 }
 
 /** Fenêtre de choix dans une liste, partagée par SelectField (champ) et SelectLien (lien souligné). */
@@ -48,6 +53,7 @@ export function SelectModal<T extends string>({
   puceParDefaut,
   placeholderRecherche,
   libelleSaisieLibre,
+  parCategories = false,
 }: Props<T>) {
   const accent = useAccentColor();
   const [recherche, setRecherche] = useState('');
@@ -60,16 +66,31 @@ export function SelectModal<T extends string>({
     if (visible && puceParDefaut) {
       setGroupeChoisi(options.find((o) => o.value === value)?.groupe ?? puceParDefaut);
     }
+    // Par catégories : on rouvre sur celle de la valeur déjà choisie, sinon sur la liste des catégories.
+    if (visible && parCategories) setGroupeChoisi((value && options.find((o) => o.value === value)?.groupe) || null);
   }
   const groupes = puces ?? [];
   const avecPuces = groupes.length > 0;
+  /** Les catégories (groupes) des options, dans l'ordre de la liste. */
+  const categories = useMemo(() => (parCategories ? [...new Set(options.flatMap((o) => (o.groupe ? [o.groupe] : [])))] : []), [options, parCategories]);
+  /** Les options sans catégorie (« Aucun »…) : elles restent proposées à côté des catégories. */
+  const sansCategorie = parCategories ? options.filter((o) => !o.groupe) : [];
+  /** La recherche tapée sur la liste des catégories : seules restent celles qui ont un contact correspondant, avec les noms trouvés. */
+  const correspond = (o: SelectOption<T>) => {
+    const q = recherche.trim().toLowerCase();
+    return !q || o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q);
+  };
+  const lignesDesCategories: { nom: string; categorie: boolean; option?: SelectOption<T>; trouves: SelectOption<T>[] }[] = [...categories.map((nom) => ({ nom, categorie: true, trouves: options.filter((o) => o.groupe === nom && correspond(o)) })).filter((c) => c.trouves.length > 0), ...sansCategorie.filter(correspond).map((o) => ({ nom: o.label, categorie: false, option: o, trouves: [] as SelectOption<T>[] }))];
+  /** Un seul groupe : directement ses options, sans liste de catégories. */
+  const categorieActive = parCategories ? (groupeChoisi ?? (categories.length === 1 ? categories[0] : null)) : null;
+  const enListeDeCategories = parCategories && categories.length > 1 && !groupeChoisi;
 
   const optionsFiltrees = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    const duGroupe = groupeChoisi ? options.filter((o) => o.groupe === groupeChoisi) : options;
+    const duGroupe = (groupeChoisi ?? categorieActive) ? options.filter((o) => o.groupe === (groupeChoisi ?? categorieActive)) : options;
     if (!q) return duGroupe;
     return duGroupe.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
-  }, [options, recherche, groupeChoisi]);
+  }, [options, recherche, groupeChoisi, categorieActive]);
 
   /** Ce qu'on tape n'est pas dans la liste : on le propose comme valeur (quand la saisie libre est permise). */
   const propositionLibre =
@@ -86,7 +107,7 @@ export function SelectModal<T extends string>({
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           {/* Une liste en groupes porte déjà ses titres : celui de la fenêtre ferait doublon. */}
-          {options.some((o) => o.groupe) && !avecPuces ? null : (
+          {options.some((o) => o.groupe) && !avecPuces && !parCategories ? null : (
             <Text style={styles.sheetTitle}>{titre}</Text>
           )}
           {searchable && (
@@ -103,6 +124,15 @@ export function SelectModal<T extends string>({
               <FiltresExclusifs choix={groupes} valeur={groupeChoisi} onChoisir={setGroupeChoisi} />
             </View>
           ) : null}
+          {/* Une catégorie ouverte : le retour à la liste des catégories, et son nom. */}
+          {parCategories && categories.length > 1 && groupeChoisi ? (
+            <Pressable style={styles.option} onPress={() => setGroupeChoisi(null)} accessibilityRole="button">
+              <Text style={[commonStyles.valueText, { color: accent, fontWeight: '700' }]}>
+                {'‹ '}
+                {TEXTES.commun.selectField.categories} · {groupeChoisi}
+              </Text>
+            </Pressable>
+          ) : null}
           {propositionLibre ? (
             <Pressable
               style={styles.option}
@@ -116,19 +146,51 @@ export function SelectModal<T extends string>({
               </Text>
             </Pressable>
           ) : null}
+          {/* La liste des catégories : un appui en montre les options. */}
+          {enListeDeCategories ? (
+            <FlatList
+              style={styles.liste}
+              data={lignesDesCategories}
+              keyExtractor={(item, index) => `${item.nom}|${index}`}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.option}
+                  onPress={() => {
+                    if (item.categorie) setGroupeChoisi(item.nom);
+                    else if (item.option) {
+                      onSelect(item.option.value);
+                      fermer();
+                    }
+                  }}
+                >
+                  <Text style={commonStyles.valueText}>
+                    {item.nom}
+                    {item.categorie ? ` (${item.trouves.length})` : ''}
+                  </Text>
+                  {/* Une recherche : les contacts trouvés dans cette catégorie. */}
+                  {item.categorie && recherche.trim() ? (
+                    <Text style={commonStyles.note} numberOfLines={2}>
+                      {item.trouves.slice(0, 4).map((o) => o.label).join(' · ')}
+                      {item.trouves.length > 4 ? ' …' : ''}
+                    </Text>
+                  ) : null}
+                </Pressable>
+              )}
+            />
+          ) : (
           <FlatList
             style={styles.liste}
             data={optionsFiltrees}
             keyExtractor={(item, index) => `${item.value}|${index}`}
             renderItem={({ item, index }) => (
               <>
-                {!avecPuces && item.groupe && item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
+                {!avecPuces && !parCategories && item.groupe && item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
                   <Text style={[commonStyles.lineBold, styles.groupe]}>{item.groupe}</Text>
                 ) : null}
                 <Pressable
                   style={[
                     styles.option,
-                    item.groupe && !avecPuces && styles.optionGroupee,
+                    item.groupe && !avecPuces && !parCategories && styles.optionGroupee,
                     item.value === value && styles.optionSelected,
                   ]}
                   onPress={() => {
@@ -153,6 +215,7 @@ export function SelectModal<T extends string>({
               )
             }
           />
+          )}
         </Pressable>
       </Pressable>
     </Modal>

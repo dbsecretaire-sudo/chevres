@@ -22,7 +22,6 @@ import type { Commande } from '@/features/commercial/types';
 import { bonOuvertDuClient, reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
-import { nomComplet } from '@/shared/utils/personne';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
@@ -60,6 +59,7 @@ import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 const T = TEXTES.production.viande;
 
@@ -564,7 +564,8 @@ export default function ViandeVendue() {
         titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.cheptel.reservation.choisirClient}
         value=""
         searchable
-        options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+        options={clients.map(optionClient)}
+        parCategories
         onSelect={async (clientId) => {
           const choisi = cible;
           const client = clients.find((c) => c.id === clientId);

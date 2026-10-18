@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { BoutonEnteteCirculation } from '@/features/comptabilite/components/BoutonEnteteCirculation';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { Badge } from '@/shared/components/Badge';
@@ -17,7 +18,11 @@ import { useLots } from '@/features/exploitation/hooks/useLots';
 import { animauxDuLot } from '@/features/exploitation/services/lots';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { nomsDesAbattoirs, tiersEstUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
-import { exporterDocumentCirculationAbattoirPdf } from '@/features/export/documentCirculationPdf';
+import {
+  exporterDocumentCirculationAbattoirPdf,
+  exporterDocumentCirculationAchatPdf,
+} from '@/features/export/documentCirculationPdf';
+import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -40,9 +45,15 @@ export default function FicheFacture() {
   }
 
   const estEmise = facture.type === TYPE_FACTURE.EMISE;
+  /** Des animaux vivants achetés (à un autre éleveur) : le document de circulation part de chez le vendeur, avec ces animaux. */
+  const achatAnimaux = !estEmise && idsDesAnimauxAchetes(facture).length > 0;
   /** La dépense d'un abattoir : le document de circulation (modèle pré-rempli) se génère depuis l'en-tête, avec les animaux du lot qui y est lié. */
   const depenseAbattoir = !estEmise && tiersEstUnAbattoir(facture.tiers, abattoirs);
   const genererLeDocument = async () => {
+    if (achatAnimaux) {
+      await exporterDocumentCirculationAchatPdf(facture.id);
+      return;
+    }
     const lot = lots.find((l) => l.factureId === facture.id && l.abattoir);
     const animaux = lot ? animauxDuLot(lot, await listTousLesAnimauxDeLEspece()) : [];
     await exporterDocumentCirculationAbattoirPdf(
@@ -55,18 +66,11 @@ export default function FicheFacture() {
 
   return (
     <Screen scroll={false}>
-      {depenseAbattoir && !f.editing ? (
+      {(achatAnimaux || depenseAbattoir) && !f.editing ? (
         <Stack.Screen
           options={{
             headerRight: () => (
-              <Pressable
-                style={commonStyles.boutonEnteteDroite}
-                onPress={() => genererLeDocument().catch(() => undefined)}
-                hitSlop={10}
-                accessibilityRole="button"
-              >
-                <Text style={commonStyles.texteEntete}>{TEXTES.cheptel.circulation.bouton}</Text>
-              </Pressable>
+              <BoutonEnteteCirculation onPress={() => genererLeDocument().catch(() => undefined)} />
             ),
           }}
         />

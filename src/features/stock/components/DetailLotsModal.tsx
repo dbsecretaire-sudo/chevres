@@ -27,6 +27,7 @@ import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/stock/DetailLots.styles';
 import { TEXTES } from '@/shared/textes';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 const T = TEXTES.stock.lots;
 
@@ -217,7 +218,8 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
             titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : T.pourQuelClient}
             value=""
             searchable
-            options={clients.map((c) => ({ value: c.id, label: nomComplet(c) }))}
+            options={clients.map(optionClient)}
+            parCategories
             onSelect={async (clientId) => {
               const client = clients.find((c) => c.id === clientId);
               const choix = action;

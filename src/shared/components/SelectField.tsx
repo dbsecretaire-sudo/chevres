@@ -28,6 +28,8 @@ interface Props<T extends string> {
   puces?: string[];
   /** La puce choisie d'office à l'ouverture de la liste (voir SelectModal). */
   puceParDefaut?: string;
+  /** Les options se choisissent par catégorie : d'abord la liste des catégories, puis les options de celle qu'on ouvre (voir SelectModal). */
+  parCategories?: boolean;
 }
 
 export function SelectField<T extends string>({
@@ -43,6 +45,7 @@ export function SelectField<T extends string>({
   aide,
   puces,
   puceParDefaut,
+  parCategories,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
@@ -79,6 +82,7 @@ export function SelectField<T extends string>({
         searchable={searchable}
         puces={puces}
         puceParDefaut={puceParDefaut}
+        parCategories={parCategories}
         onSelect={onChange}
         onClose={() => setOpen(false)}
       />

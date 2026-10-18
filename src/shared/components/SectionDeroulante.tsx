@@ -15,13 +15,16 @@ interface Props {
   onBasculer: () => void;
   /** Vrai quand quelque chose, dans la section, demande l'attention : une pastille rouge « ! » s'affiche sur son titre. */
   alerte?: boolean;
+  /** Vrai : même sur ordinateur, la section reste enroulée tant qu'on ne l'ouvre pas (une longue liste de catégories, dont une seule se lit à la fois). */
+  accordeon?: boolean;
   children: ReactNode;
 }
 
 /** Une section qui se déroule d'un appui sur son titre : plusieurs peuvent être ouvertes en même temps. */
-export function SectionDeroulante({ titre, nombre, ouverte, onBasculer, alerte, children }: Props) {
-  // Sur ordinateur, toutes les sections sont déroulées : il y a la place, et rien à dérouler.
-  const deplie = estBureau() || ouverte;
+export function SectionDeroulante({ titre, nombre, ouverte, onBasculer, alerte, accordeon = false, children }: Props) {
+  // Sur ordinateur, toutes les sections sont déroulées (il y a la place), sauf en accordéon : une seule se lit à la fois.
+  const toujoursDeplie = estBureau() && !accordeon;
+  const deplie = toujoursDeplie || ouverte;
   return (
     <View style={[commonStyles.gap10, deplie && styles.panneau]}>
       <Pressable style={[styles.entete, deplie && styles.enteteOuverte]} onPress={onBasculer}>
@@ -30,7 +33,7 @@ export function SectionDeroulante({ titre, nombre, ouverte, onBasculer, alerte, 
           {nombre !== undefined ? ` (${nombre})` : ''}
         </Text>
         {alerte ? <PastilleAlerte /> : null}
-        {estBureau() ? null : (
+        {toujoursDeplie ? null : (
           <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
         )}
       </Pressable>

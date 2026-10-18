@@ -15,6 +15,8 @@ export const CATEGORIE_DEPENSE = {
   REPARATION: 'reparation',
   VETERINAIRE: 'veterinaire',
   PRODUCTION: 'production',
+  /** L'achat d'animaux vivants (à un autre éleveur) : chaque animal acheté a sa fiche dans le cheptel, et un document de circulation. */
+  ANIMAUX_VIVANTS: 'animaux_vivants',
   IMPOTS: 'impots',
   AUTRE: 'autre',
   // --- Entreprise (hors élevage) ---
@@ -292,6 +294,7 @@ export const ORDRE_CATEGORIE_DEPENSE = [
   CATEGORIE_DEPENSE.REPARATION,
   CATEGORIE_DEPENSE.VETERINAIRE,
   CATEGORIE_DEPENSE.PRODUCTION,
+  CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
   CATEGORIE_DEPENSE.IMPOTS,
   CATEGORIE_DEPENSE.AUTRE,
 ] as const;

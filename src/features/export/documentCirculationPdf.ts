@@ -8,9 +8,11 @@ import { especeDe } from '@/features/cheptel/utils/espece';
 import { listClients } from '@/features/clients/repository';
 import { estClientAbattoir } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
+import { getFacture } from '@/features/comptabilite/repository/factures';
 import { getVente } from '@/features/comptabilite/repository/ventes';
+import { listFournisseurs } from '@/features/fournisseurs/repository';
 import type { Vente } from '@/features/comptabilite/types';
-import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimaux, idsDesAnimauxAchetes, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { avecIndicatif } from '@/features/export/services/lignesExport';
 import { ecrirePdfBase64EtPartager } from '@/features/export/services/htmlPdf';
 import { MODELE_CIRCULATION } from '@/features/export/modeles/circulation';
@@ -310,6 +312,56 @@ export async function exporterDocumentCirculationAbattoirPdf(
   await ecrirePdfBase64EtPartager(
     await remplirDocumentCirculation(donnees),
     `${C.fichier}_abattoir_${date}.${FORMAT_EXPORT.PDF}`,
+    C.titre,
+  );
+  return true;
+}
+
+/**
+ * Le document de circulation d'un achat d'animaux vivants (dépense « Animaux vivants ») : le vendeur est le détenteur de départ (son nom et
+ * son adresse d'après le contact), l'exploitation est le lieu d'arrivée. Faux sans animal retrouvé.
+ */
+export async function exporterDocumentCirculationAchatPdf(factureId: string): Promise<boolean> {
+  const facture = await getFacture(factureId);
+  if (!facture) return false;
+  const animaux = (await Promise.all(idsDesAnimauxAchetes(facture).map(getChevre))).filter((a): a is Chevre => !!a);
+  if (animaux.length === 0) return false;
+  const [fournisseurs, settings, traitements] = await Promise.all([listFournisseurs(), getSettings(), listTousTraitements()]);
+  const vendeur = fournisseurs.find((f) => (f.nomEntreprise || f.nom).trim().toLowerCase() === facture.tiers.trim().toLowerCase());
+  const vente = {
+    id: '',
+    activite: '',
+    date: facture.date,
+    categorie: CATEGORIE_VENTE.ANIMAL_VIVANT,
+    quantite: animaux.length,
+    unite: 'piece',
+    prix: 0,
+    tauxTva: 0,
+    client: facture.tiers,
+  } as unknown as Vente;
+  const donnees = donneesDeCirculation({
+    vente,
+    animaux,
+    infos: settings.exploitation,
+    petit: (a) => estPetitLe(a, facture.date),
+    traitements,
+  });
+  const identite = identiteDuSuivi(settings.exploitation);
+  // L'achat inverse le trajet : de chez le vendeur vers l'exploitation (un élevage).
+  donnees.depart = {
+    numeroExploitation: '',
+    siren: (vendeur?.siret ?? '').slice(0, 9),
+    nom: vendeur ? vendeur.nomEntreprise || vendeur.nom : facture.tiers,
+    ...adresseEnPartie(vendeur?.adressePostale),
+  };
+  donnees.arrivee = {
+    lieu: LIEU_ARRIVEE.ELEVAGE,
+    nom: identite.nom,
+    ...adresseEnPartie(settings.exploitation?.adresseExploitant),
+  };
+  await ecrirePdfBase64EtPartager(
+    await remplirDocumentCirculation(donnees),
+    `${C.fichier}_achat_${facture.date}.${FORMAT_EXPORT.PDF}`,
     C.titre,
   );
   return true;

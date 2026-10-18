@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { BoutonEnteteCirculation } from '@/features/comptabilite/components/BoutonEnteteCirculation';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { Badge } from '@/shared/components/Badge';
@@ -41,14 +42,7 @@ export default function FicheVente() {
         <Stack.Screen
           options={{
             headerRight: () => (
-              <Pressable
-                style={commonStyles.boutonEnteteDroite}
-                onPress={() => exporterDocumentCirculationPdf(vente.id).catch(() => undefined)}
-                hitSlop={10}
-                accessibilityRole="button"
-              >
-                <Text style={commonStyles.texteEntete}>{TEXTES.cheptel.circulation.bouton}</Text>
-              </Pressable>
+              <BoutonEnteteCirculation onPress={() => exporterDocumentCirculationPdf(vente.id).catch(() => undefined)} />
             ),
           }}
         />

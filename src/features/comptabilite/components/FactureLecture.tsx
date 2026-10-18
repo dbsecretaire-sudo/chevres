@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
 import type { ArchiveStock } from '@/features/stock/types';
 import { libelleArticle } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -142,6 +143,12 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
             {reservation.nom} — {formatDateShortFR(reservation.arrivee)} →{' '}
             {formatDateShortFR(reservation.depart)}
           </Text>
+        </Text>
+      ) : null}
+
+      {idsDesAnimauxAchetes(facture).length > 0 ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.comptabilite.nouvelleEcriture.animauxAchetes.nAnimaux(idsDesAnimauxAchetes(facture).length)}
         </Text>
       ) : null}
 

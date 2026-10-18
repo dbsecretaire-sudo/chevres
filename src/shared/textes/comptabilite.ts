@@ -773,6 +773,22 @@ export const TEXTES_COMPTABILITE = {
     animauxRequisMessage:
       'Choisissez dans le cheptel au moins un animal vendu (le + à droite de « Animaux vendus »).',
     ajouterUnAnimal: 'Ajouter un animal',
+    /** Une dépense « Animaux vivants » : les animaux achetés, dont les fiches se créent dans le cheptel. */
+    animauxAchetes: {
+      titre: 'Animaux achetés',
+      animal: (n: number) => `Animal ${n}`,
+      boucle: 'N° de boucle',
+      boucleAide: 'Facultatif : celui que le vendeur a posé.',
+      naissance: 'Date de naissance',
+      retirer: 'Retirer cet animal',
+      aide: 'Chaque animal a sa fiche dans le cheptel, créée à l’enregistrement ; le document de circulation (arrivée chez vous) se génère ensuite depuis la dépense.',
+      aucun: 'Ajoutez au moins un animal acheté.',
+      naissanceRequise: 'Chaque animal acheté a sa date de naissance (AAAA-MM-JJ).',
+      boucleRepetee: 'Deux animaux ont le même n° de boucle.',
+      boucleExiste: (boucle: string) => `Le n° de boucle ${boucle} existe déjà dans le cheptel.`,
+      achetePar: (tiers: string, date: string) => `Acheté à ${tiers} le ${date}`,
+      nAnimaux: (n: number) => `${n} ${n > 1 ? 'animaux achetés' : 'animal acheté'}`,
+    },
     animauxNote:
       'Chaque animal sort du cheptel : à l’abattoir si la vente est déclarée, vendu sinon, et l’inventaire des animaux baisse d’autant. Les animaux d’une même vente sont tous des petits, ou tous des adultes.',
     retirerAnimal: 'Retirer cet animal',

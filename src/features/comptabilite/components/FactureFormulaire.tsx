@@ -69,6 +69,7 @@ import {
   LABEL_TYPE_AIDE,
 } from '@/shared/textes/libelles';
 import type { TypeAide } from '@/features/comptabilite/types';
+import { optionClient, optionFournisseur } from '@/features/contacts/services/optionsContacts';
 
 const T = TEXTES.comptabilite.nouvelleEcriture;
 
@@ -215,9 +216,8 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             placeholder={TEXTES.commun.general.choixDuClient}
             value={clients.find((c) => nomComplet(c) === form.tiers)?.id ?? ''}
             onChange={f.choisirClient}
-            options={clientsPourLaRecette(clients, form.categorieRecette, f.activiteForm, form.tiers).map(
-              (c) => ({ value: c.id, label: nomComplet(c) }),
-            )}
+            options={clientsPourLaRecette(clients, form.categorieRecette, f.activiteForm, form.tiers).map(optionClient)}
+            parCategories
             onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
           />
         ) : (
@@ -228,10 +228,8 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             placeholder={TEXTES.commun.general.choixDuFournisseur}
             value={fournisseur?.id ?? ''}
             onChange={f.choisirFournisseur}
-            options={fournisseursPourLaDepense(fournisseurs, form.categorieDepense, form.tiers).map((x) => ({
-              value: x.id,
-              label: x.nomEntreprise,
-            }))}
+            options={fournisseursPourLaDepense(fournisseurs, form.categorieDepense, form.tiers).map(optionFournisseur)}
+            parCategories
             onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
           />
         )}

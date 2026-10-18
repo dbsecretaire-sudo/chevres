@@ -253,6 +253,7 @@ export const TEXTES_COMMUN = {
   },
   selectField: {
     rechercherParNOuLibellePoints: 'Rechercher par n° ou libellé…',
+    categories: 'Catégories',
     aucunResultat: 'Aucun résultat.',
     selectionnerPoints: 'Sélectionner…',
     /** La liste où l'on coche plusieurs lignes : la recherche, une plage de numéros, tout cocher. */

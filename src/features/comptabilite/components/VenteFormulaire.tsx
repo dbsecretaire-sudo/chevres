@@ -64,6 +64,7 @@ import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 /** Produits proposés pour l'espèce de la vente (le produit déjà enregistré y reste, même s'il n'en fait plus partie). */
 function optionsProduit(vente: Vente) {
@@ -190,12 +191,10 @@ export function VenteFormulaire({
             if (choisi) onChange({ ...form, client: nomComplet(choisi) });
           }}
           options={[
-            ...clientsPourLaRecette(clients, form.categorie, activite, form.client).map((c) => ({
-              value: c.id,
-              label: nomComplet(c),
-            })),
+            ...clientsPourLaRecette(clients, form.categorie, activite, form.client).map(optionClient),
             ...(client || !form.client ? [] : [{ value: CLIENT_HORS_LISTE, label: form.client }]),
           ]}
+          parCategories
           onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
         />
 

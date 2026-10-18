@@ -1079,6 +1079,8 @@ export const TEXTES_CHEPTEL = {
   /** Le document de circulation des animaux vendus vivants (sur pied, vivants, petits de boucherie), rempli pour exemple d'après la vente. */
   circulation: {
     bouton: 'Générer le document de circulation',
+    /** Le nom court du bouton de l'en-tête (la place manque sur téléphone). */
+    boutonEntete: 'Document de circulation',
     boutonAbattoir: 'Document de circulation vers l’abattoir',
     aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',
     fichier: 'document_circulation',

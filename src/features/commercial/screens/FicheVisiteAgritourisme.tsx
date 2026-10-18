@@ -32,6 +32,7 @@ import { TEXTES } from '@/shared/textes';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 const T = TEXTES.commercial.agritourisme.visite;
 
@@ -173,10 +174,11 @@ export default function FicheVisiteAgritourisme() {
           value={clientId}
           options={[
             { value: '', label: T.clientPlaceholder },
-            ...clients.map((c) => ({ value: c.id, label: nomComplet(c) })),
+            ...clients.map(optionClient),
           ]}
           onChange={setClientId}
           searchable
+          parCategories
         />
         {!clientId ? (
           <FormField

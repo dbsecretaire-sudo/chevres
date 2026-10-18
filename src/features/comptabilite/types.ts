@@ -151,6 +151,8 @@ export interface Facture {
   lignesMarchandises?: LigneMarchandise[];
   /** Achat de production : le détail par fourniture (chacune entre au stock). Les anciennes factures n'ont que stockArticle, stockQuantite et bouclesDebut (voir lignesProductionDe). */
   lignesProduction?: LigneProduction[];
+  /** Une dépense « Animaux vivants » : les identifiants des fiches créées dans le cheptel pour les animaux achetés, séparés par des points-virgules. */
+  animauxAchetes?: string;
   /** Une facture de la Chambre d'agriculture détaillée par article (forfait d'identification, équarrissage ATM, conseils et analyses). */
   lignesChambre?: LigneChambre[];
   /** Une dépense vétérinaire : tout ce qui a été fait lors de la visite (voir LigneVeterinaire), repris par le carnet sanitaire. */

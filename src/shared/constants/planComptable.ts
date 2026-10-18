@@ -31,6 +31,7 @@ export const COMPTE_PAR_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>, Comp
     numero: '602200',
     libelle: 'Fournitures consommables — Fournitures liées à la production (sel, présure...)',
   },
+  [CATEGORIE_DEPENSE.ANIMAUX_VIVANTS]: { numero: '601200', libelle: 'Achats stockés — Animaux vivants' },
   [CATEGORIE_DEPENSE.IMPOTS]: { numero: '635000', libelle: 'Autres impôts, taxes et versements assimilés' },
   [CATEGORIE_DEPENSE.AUTRE]: { numero: '606800', libelle: 'Autres matières et fournitures' },
   [CATEGORIE_DEPENSE.ACHATS_MARCHANDISES]: { numero: '607000', libelle: 'Achats de marchandises' },

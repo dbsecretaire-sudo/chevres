@@ -11,7 +11,10 @@ import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
-import { SectionDepense } from '@/features/comptabilite/components/ecriture/SectionDepense';
+import {
+  SectionDepenseContact,
+  SectionDepenseDetail,
+} from '@/features/comptabilite/components/ecriture/SectionDepense';
 import {
   SectionRecetteContact,
   SectionRecetteVente,
@@ -90,13 +93,20 @@ export default function NouvelleFacture() {
       toutesLesAnneesConnues().then((connues) => setAnnees([...new Set([...connues, currentYear() - 1])]));
     }, []),
   );
-  /** Un crédit se saisit en deux étapes : le contact (et la facture), puis la vente (ce qui est vendu, son montant, son paiement). */
+  /**
+   * Une écriture se saisit en deux étapes, pour une dépense comme pour une recette : le contact (la date, le tiers, la facture), puis
+   * ce qui est acheté ou vendu (son détail, son montant, son paiement).
+   */
   const [etape, setEtape] = useState<'contact' | 'vente'>('contact');
-  const enDeuxEtapes = e.type !== TYPE_FACTURE.RECUE;
-  // Une écriture enchaînée repart de la première étape.
+  // Une écriture enchaînée, ou un autre type d'écriture (dépense, recette), repart de la première étape.
   const [enchaineesVues, setEnchaineesVues] = useState(0);
   if (enchaineesVues !== e.enchainees) {
     setEnchaineesVues(e.enchainees);
+    setEtape('contact');
+  }
+  const [typeVu, setTypeVu] = useState(e.type);
+  if (typeVu !== e.type) {
+    setTypeVu(e.type);
     setEtape('contact');
   }
   /** Les commandes à transformer en vente : celles qui restent à préparer ou à livrer. */
@@ -188,7 +198,11 @@ export default function NouvelleFacture() {
         </LigneFiltres>
 
         {e.type === TYPE_FACTURE.RECUE ? (
-          <SectionDepense e={e} date={champDate} />
+          etape === 'contact' ? (
+            <SectionDepenseContact e={e} date={champDate} />
+          ) : (
+            <SectionDepenseDetail e={e} />
+          )
         ) : etape === 'contact' ? (
           <>
             <SectionRecetteContact e={e} date={champDate} onCommande={ouvrirLesCommandes} />
@@ -210,8 +224,8 @@ export default function NouvelleFacture() {
             {TEXTES.comptabilite.nouvelleEcriture.enchainees(e.enchainees)}
           </Text>
         ) : null}
-        {enDeuxEtapes && etape === 'contact' ? (
-          // Première étape : annuler, ou passer à la vente.
+        {etape === 'contact' ? (
+          // Première étape : annuler, ou passer à la suite.
           <View style={commonStyles.row}>
             <Button
               style={commonStyles.flex1}
@@ -244,8 +258,8 @@ export default function NouvelleFacture() {
               <Button
                 style={commonStyles.flex1}
                 variant="secondary"
-                label={enDeuxEtapes ? TEXTES.comptabilite.nouvelleEcriture.precedent : TEXTES.commun.general.annuler}
-                onPress={enDeuxEtapes ? () => setEtape('contact') : e.annuler}
+                label={TEXTES.comptabilite.nouvelleEcriture.precedent}
+                onPress={() => setEtape('contact')}
               />
               <Button
                 style={commonStyles.flex1}

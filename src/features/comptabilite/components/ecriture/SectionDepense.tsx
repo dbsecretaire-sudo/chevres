@@ -1,4 +1,5 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
+import { AnimauxAchetesEditor } from '@/features/comptabilite/components/AnimauxAchetesEditor';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
@@ -51,6 +52,7 @@ import { todayISO } from '@/shared/utils/dates';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
+import { optionFournisseur } from '@/features/contacts/services/optionsContacts';
 
 /** Les catégories proposées : celles d'une entreprise, ou celles d'un élevage. */
 const optionsCategorieDepense = (fournisseur: Fournisseur | undefined) => {
@@ -65,11 +67,18 @@ const optionsCategorieDepense = (fournisseur: Fournisseur | undefined) => {
 
 /** Champs d'un débit (facture reçue) : catégorie, fournisseur, TVA et détail des montants. */
 export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
+  return (
+    <>
+      <SectionDepenseContact e={e} date={date} />
+      <SectionDepenseDetail e={e} />
+    </>
+  );
+}
+
+/** La première étape d'une dépense : la date, le fournisseur, le numéro de la facture et le paiement. */
+export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
   const router = useRouter();
   const retour = useAdresseCourante();
-  const estAlimentation = e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
-  const estProduction = e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
-  const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   /** La catégorie du fournisseur choisi : elle dit quelles cases (paiement, non facturée) s'affichent. */
   const categorieDuTiers = e.fournisseurSelectionne
     ? categorieFournisseurDe(e.fournisseurSelectionne.categorie)
@@ -87,7 +96,8 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           placeholder={TEXTES.commun.general.choixDuFournisseur}
           value={e.fournisseurId}
           onChange={e.changerFournisseur}
-          options={e.fournisseurs.map((f) => ({ value: f.id, label: f.nomEntreprise }))}
+          options={e.fournisseurs.map(optionFournisseur)}
+          parCategories
           onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
         />
 
@@ -121,7 +131,20 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
           <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
         ) : null}
       </SectionForm>
+    </>
+  );
+}
 
+/** La seconde étape d'une dépense : la catégorie, ce qui est acheté (le détail), la TVA et le montant. */
+export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
+  const router = useRouter();
+  const estAlimentation = e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
+  const estProduction = e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
+  const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
+  const estAnimauxVivants = e.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
+
+  return (
+    <>
       {/* Les informations : la catégorie, la TVA et les montants. */}
       <SectionForm>
         <ChampCategorieCompte
@@ -175,6 +198,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
             }}
           />
         )}
+        {estAnimauxVivants && <AnimauxAchetesEditor animaux={e.animauxAchetes} onChange={e.setAnimauxAchetes} />}
         {estProduction && (
           <>
             <LignesProductionEditor
@@ -262,7 +286,7 @@ export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: Rea
         )}
         {e.atelier === ATELIER.AGRITOURISME ? (
           <ChampElementAgritourisme value={e.elementAgri} onChange={e.setElementAgri} />
-        ) : null}{' '}
+        ) : null}
       </SectionForm>
     </>
   );

@@ -135,6 +135,7 @@ export default function RubriqueCategoriesClient() {
           <SectionDeroulante
             key={c.id}
             titre={c.nom}
+            accordeon
             ouverte={ouverte === c.id}
             onBasculer={() => setOuverte((actuelle) => (actuelle === c.id ? null : c.id))}
           >

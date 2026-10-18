@@ -33,7 +33,6 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK, SECTION_STOCK_PAR_CATEGORIE_RECETTE } from '@/shared/constants/stock';
-import { nomComplet } from '@/shared/utils/personne';
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
 import { TEXTES } from '@/shared/textes';
 import { SelectField } from '@/shared/components/SelectField';
@@ -44,6 +43,7 @@ import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement'
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { todayISO } from '@/shared/utils/dates';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 /**
  * Première étape d'un crédit : la date, le contact, et pour une vente de production son numéro de facture (avec ou sans facture) et son
@@ -60,7 +60,7 @@ export function SectionRecetteContact({
 }) {
   const router = useRouter();
   const retour = useAdresseCourante();
-  const optionsClients = e.clients.map((c) => ({ value: c.id, label: nomComplet(c) }));
+  const optionsClients = e.clients.map(optionClient);
 
   return (
     <>
@@ -88,6 +88,7 @@ export function SectionRecetteContact({
           value={e.clientId}
           onChange={e.choisirClient}
           options={optionsClients}
+          parCategories
           onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
         />
         {e.estProductionVente ? (

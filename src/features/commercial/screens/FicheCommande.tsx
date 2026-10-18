@@ -63,6 +63,7 @@ import { TEXTES } from '@/shared/textes';
 import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
+import { optionClient } from '@/features/contacts/services/optionsContacts';
 
 const T = TEXTES.commercial.commande;
 
@@ -348,7 +349,7 @@ export default function FicheCommande() {
 
   const optionsClients = [
     { value: '', label: T.clientPlaceholder },
-    ...clients.map((c) => ({ value: c.id, label: nomComplet(c) })),
+    ...clients.map(optionClient),
   ];
   /** Le stock qu'il reste de chaque produit : dans la liste, et sous la ligne avec ce qui reste après la commande. */
   const enStock = (article: string): number => niveaux.get(article) ?? 0;
