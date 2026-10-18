@@ -197,6 +197,7 @@ export const TEXTES_COMMUN = {
   /** Les titres des sections des formulaires. */
   formulaire: {
     identite: 'Identité',
+    bouclage: 'Bouclage',
     filiation: 'Filiation',
     suivi: 'Suivi',
     naissance: 'Naissance',

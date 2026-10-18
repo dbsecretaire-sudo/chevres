@@ -620,6 +620,9 @@ export const TEXTES_CHEPTEL = {
     dateDeBouclageDeuxPoints: 'Date de bouclage : ',
     /** La boucle rouge et le rebouclage n'ont pas de numéro : seulement la date. */
     dateBouclageRouge: 'Date bouclage (boucle rouge)',
+    /** Les libellés courts du formulaire, où les trois dates de pose sont côte à côte. */
+    dateBoucleRougeCourt: 'Boucle rouge',
+    dateRebouclageCourt: 'Rebouclage',
     dateBouclageRougeDeuxPoints: 'Date bouclage (boucle rouge) : ',
     dateRebouclage: 'Date rebouclage (boucle de rebouclage)',
     dateRebouclageDeuxPoints: 'Date rebouclage (boucle de rebouclage) : ',

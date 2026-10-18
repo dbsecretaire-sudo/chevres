@@ -9,6 +9,7 @@ import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
 import { OPTIONS_SEXE } from '@/features/cheptel/utils/optionsSexe';
 import type { Chevre } from '@/features/cheptel/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { styles } from '@/shared/styles/cheptel/ChevreFormulaire.styles';
 import { TEXTES } from '@/shared/textes';
 
 interface Props {
@@ -22,27 +23,22 @@ export function ChevreFormulaire({ chevre, form, onChange }: Props) {
   const meres = useMeresPossibles(form.dateNaissance, form.mereNumeroBoucle);
   return (
     <View style={commonStyles.gap10}>
+      {/* L'identité : le nom et le poids, le sexe et la naissance, deux par ligne. */}
       <SectionForm titre={TEXTES.commun.formulaire.identite}>
-        <BoucleField
-          label={TEXTES.commun.general.nDeBoucle}
-          value={form.numeroBoucle ?? ''}
-          onChangeText={(v) => onChange({ ...form, numeroBoucle: v || undefined })}
-          placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
-        />
-        {!!form.numeroBoucle?.trim() && (
-          <DateField
-            label={TEXTES.commun.general.dateDeBouclage}
-            value={form.dateBouclage ?? ''}
-            onChange={(v) => onChange({ ...form, dateBouclage: v || undefined })}
-          />
-        )}
-        <FormField
-          label={TEXTES.commun.general.nom}
-          value={form.nom ?? ''}
-          onChangeText={(v) => onChange({ ...form, nom: v })}
-        />
-        <View style={commonStyles.row}>
-          <View style={commonStyles.flex1}>
+        <View style={styles.ligne}>
+          <View style={styles.champ}>
+            <FormField
+              label={TEXTES.commun.general.nom}
+              value={form.nom ?? ''}
+              onChangeText={(v) => onChange({ ...form, nom: v })}
+            />
+          </View>
+          <View style={styles.champ}>
+            <ChampPoids value={form.poidsKg} onChange={(poidsKg) => onChange({ ...form, poidsKg })} sansAide />
+          </View>
+        </View>
+        <View style={styles.ligne}>
+          <View style={styles.champ}>
             <SelectField
               label={TEXTES.commun.general.sexe}
               required
@@ -51,7 +47,7 @@ export function ChevreFormulaire({ chevre, form, onChange }: Props) {
               options={OPTIONS_SEXE}
             />
           </View>
-          <View style={commonStyles.flex1}>
+          <View style={styles.champ}>
             <DateField
               label={TEXTES.commun.general.dateDeNaissance}
               required
@@ -61,21 +57,39 @@ export function ChevreFormulaire({ chevre, form, onChange }: Props) {
           </View>
         </View>
       </SectionForm>
-      <SectionForm>
-        <ChampPoids value={form.poidsKg} onChange={(poidsKg) => onChange({ ...form, poidsKg })} />
-      </SectionForm>
-      {/* La boucle rouge (remplacement provisoire) et la boucle de rebouclage : seulement leur date de pose, elles n'ont pas de numéro. */}
-      <SectionForm>
-        <DateField
-          label={TEXTES.cheptel.ficheChevre.dateBouclageRouge}
-          value={form.dateBoucleRouge ?? ''}
-          onChange={(v) => onChange({ ...form, dateBoucleRouge: v || undefined })}
+      {/* Le bouclage : le numéro, puis les dates de pose (boucle, boucle rouge de remplacement provisoire, rebouclage) sur une même ligne. */}
+      <SectionForm titre={TEXTES.commun.formulaire.bouclage}>
+        <BoucleField
+          label={TEXTES.commun.general.nDeBoucle}
+          value={form.numeroBoucle ?? ''}
+          onChangeText={(v) => onChange({ ...form, numeroBoucle: v || undefined })}
+          placeholder={TEXTES.commun.general.facultatifAvantAgeMax}
         />
-        <DateField
-          label={TEXTES.cheptel.ficheChevre.dateRebouclage}
-          value={form.dateRebouclage ?? ''}
-          onChange={(v) => onChange({ ...form, dateRebouclage: v || undefined })}
-        />
+        <View style={styles.ligne}>
+          {!!form.numeroBoucle?.trim() && (
+            <View style={styles.champ}>
+              <DateField
+                label={TEXTES.commun.general.dateDeBouclage}
+                value={form.dateBouclage ?? ''}
+                onChange={(v) => onChange({ ...form, dateBouclage: v || undefined })}
+              />
+            </View>
+          )}
+          <View style={styles.champ}>
+            <DateField
+              label={TEXTES.cheptel.ficheChevre.dateBoucleRougeCourt}
+              value={form.dateBoucleRouge ?? ''}
+              onChange={(v) => onChange({ ...form, dateBoucleRouge: v || undefined })}
+            />
+          </View>
+          <View style={styles.champ}>
+            <DateField
+              label={TEXTES.cheptel.ficheChevre.dateRebouclageCourt}
+              value={form.dateRebouclage ?? ''}
+              onChange={(v) => onChange({ ...form, dateRebouclage: v || undefined })}
+            />
+          </View>
+        </View>
       </SectionForm>
       <SectionForm titre={TEXTES.commun.formulaire.filiation}>
         <SelectField
