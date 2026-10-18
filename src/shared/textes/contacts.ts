@@ -3,11 +3,15 @@ export const TEXTES_CONTACTS = {
   titre: 'Contacts',
   /** Les opérations d'une catégorie de contact, rangées comme l'inventaire. */
   operations: {
+    liste: 'Liste',
+    vente: 'Vente',
+    achat: 'Achat',
     toutesLesVentes: 'Toutes les ventes',
     tousLesAchats: 'Tous les achats',
     autresDepenses: 'Autres dépenses (sans stock)',
     autresRecettes: 'Autres recettes',
-    aide: 'Un contact peut acheter comme vendre, dans les dépenses comme dans les recettes : cochez, pour chaque liste de l’inventaire, ce que sa catégorie peut faire.',
+    aideAchats: 'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre.',
+    aideVentes: 'Une recette est une vente : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous acheter.',
   },
   titreFiche: 'Contact',
   titreDocument: 'Document du contact',

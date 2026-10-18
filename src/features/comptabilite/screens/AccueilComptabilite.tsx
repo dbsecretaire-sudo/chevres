@@ -4,6 +4,7 @@ import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { ROUTES } from '@/shared/constants/routes';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
@@ -110,14 +111,15 @@ export default function AccueilComptabilite() {
         <GroupeAccueil key={groupe.titre} titre={groupe.titre}>
           <BlocLignes>
             {groupe.lignes.map((l) => (
-              <ListRow
-                key={l.cle}
-                title={l.titre}
-                subtitle={l.aide}
-                icone={l.icone}
-                actif={estActive(l.route)}
-                onPress={() => router.push(l.route as never)}
-              />
+              <AncreVisite key={l.cle} id={`rubrique:${l.route}`}>
+                <ListRow
+                  title={l.titre}
+                  subtitle={l.aide}
+                  icone={l.icone}
+                  actif={estActive(l.route)}
+                  onPress={() => router.push(l.route as never)}
+                />
+              </AncreVisite>
             ))}
           </BlocLignes>
         </GroupeAccueil>

@@ -1,5 +1,6 @@
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { BlocDidacticiel } from '@/features/didacticiel/components/BlocDidacticiel';
 import { BlocSante } from '@/features/exploitation/components/BlocSante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
@@ -20,10 +21,12 @@ function AccueilElevage() {
 
   return (
     <Screen>
-      <LigneFiltres>
-        <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
-        <SelecteurEspece />
-      </LigneFiltres>
+      <AncreVisite id="accueil.filtres">
+        <LigneFiltres>
+          <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
+          <SelecteurEspece />
+        </LigneFiltres>
+      </AncreVisite>
 
       {/* Ce qui demande qu'on s'en occupe : les délais d'attente, le bilan sanitaire, les déclarations à faire (rien quand tout va bien). */}
       <BlocSante />

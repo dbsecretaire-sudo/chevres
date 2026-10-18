@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { Screen } from '@/shared/components/Screen';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { didacticielDeLApplication } from '@/features/didacticiel/services/didacticiel';
@@ -16,10 +18,13 @@ const T = TEXTES.didacticiel;
  */
 export default function Didacticiel() {
   const router = useRouter();
+  const { demarrer } = useVisiteGuidee();
   const chapitres = didacticielDeLApplication();
   const [ouvert, setOuvert] = useState<string | null>(null);
   return (
     <Screen>
+      <Text style={commonStyles.note}>{T.aideVisite}</Text>
+      <Button label={T.commencer} onPress={demarrer} />
       <Text style={commonStyles.note}>{T.aide}</Text>
       {chapitres.map((chapitre) => (
         <SectionDeroulante

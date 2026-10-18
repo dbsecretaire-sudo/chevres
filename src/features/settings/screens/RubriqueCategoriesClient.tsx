@@ -39,6 +39,9 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.clients.categories;
 
+/** Les recettes ne comptent que des ventes : un achat est une dépense. */
+const estUneVente = (operation: string): boolean => operation.endsWith(':vente');
+
 /** Les groupes de recette qui ouvrent une liste de l'inventaire (fromages, lait, œufs, animaux, boucherie) : ils se règlent par les opérations. */
 const GROUPES_A_LISTE: readonly string[] = [
   GROUPE_RECETTE.FROMAGES,
@@ -101,11 +104,11 @@ export default function RubriqueCategoriesClient() {
   /** Une opération cochée ou décochée : les recettes de la catégorie suivent (celles des listes, plus les autres). */
   const majOperations = (c: CategorieClientReglage, recettes: readonly string[], ops: string[]) => {
     const autres = autresDe(c, recettes);
-    maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops), ...autres])] });
+    maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops.filter(estUneVente)), ...autres])] });
   };
   const majAutres = (c: CategorieClientReglage, recettes: readonly string[], autres: string[]) => {
     const ops = operationsDe(c, recettes);
-    maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops), ...autres])] });
+    maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops.filter(estUneVente)), ...autres])] });
   };
 
   return (
@@ -212,9 +215,10 @@ export default function RubriqueCategoriesClient() {
               <Text style={commonStyles.lineSemiBold}>{T.recettes}</Text>
               {parInventaire ? (
                 <>
-                  <Text style={commonStyles.note}>{TEXTES.contacts.operations.aide}</Text>
+                  <Text style={commonStyles.note}>{TEXTES.contacts.operations.aideVentes}</Text>
                   <ChoixOperations
                     rubriques={rubriques}
+                    sens="vente"
                     valeur={operationsDe(c, recettes)}
                     onChange={(ops) => majOperations(c, recettes, ops)}
                   />

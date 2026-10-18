@@ -1,0 +1,188 @@
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ancreDe } from '@/features/didacticiel/components/AncreVisite';
+import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
+import { ONGLETS_DU_BAS } from '@/features/didacticiel/services/visiteGuidee';
+import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
+
+const T = TEXTES.didacticiel.visite;
+
+interface Zone {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** La marge autour de l'élément mis en surbrillance, et la hauteur de la barre des onglets du bas. */
+const MARGE = 6;
+const HAUTEUR_BARRE = 64;
+const VOILE = 'rgba(18, 28, 14, 0.66)';
+const LARGEUR_BULLE = 420;
+/** Toute la fenêtre (écrit à la main : le style d'office n'est pas un objet sur toutes les plateformes). */
+const PLEIN_ECRAN = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
+
+const memeZone = (a: Zone | null, b: Zone): boolean =>
+  !!a && Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1 && Math.abs(a.w - b.w) < 1 && Math.abs(a.h - b.h) < 1;
+
+/**
+ * La visite guidée à l'écran : l'élément à toucher est mis en surbrillance (le reste est voilé, mais l'élément reste actif : le toucher
+ * ouvre la page suivante), avec une bulle qui présente la page et dit quoi faire. « Suivant » passe à l'étape d'après sans toucher.
+ */
+export function SuperpositionVisite() {
+  const visite = useVisiteGuidee();
+  const { width, height } = useWindowDimensions();
+  /** La zone relevée, avec l'étape à laquelle elle appartient (celle d'une étape précédente ne compte plus). */
+  const [relevee, setZone] = useState<(Zone & { id: string }) | null>(null);
+  const etape = visite.etape;
+  // Un élément qui n'est pas à l'écran (page défilée) ne peut pas être montré : la bulle reste alors au centre.
+  const zoneRelevee = relevee && etape && relevee.id === etape.id ? relevee : null;
+  const zone =
+    zoneRelevee && zoneRelevee.y + zoneRelevee.h > 0 && zoneRelevee.y < height && zoneRelevee.x + zoneRelevee.w > 0 && zoneRelevee.x < width
+      ? zoneRelevee
+      : null;
+  const ancre = etape?.ancre;
+  const onglet = etape?.onglet;
+
+  // Où est l'élément à toucher : relu régulièrement (la page peut se charger, ou défiler).
+  useEffect(() => {
+    if (!visite.actif || !etape || !visite.surLaPage) return;
+    const id = etape.id;
+    let vivant = true;
+    const mesurer = () => {
+      if (ancre) {
+        ancreDe(ancre)?.measureInWindow((x, y, w, h) => {
+          if (vivant && w > 0 && h > 0) setZone((avant) => (avant?.id === id && memeZone(avant, { x, y, w, h }) ? avant : { id, x, y, w, h }));
+        });
+      } else if (onglet && !estBureau()) {
+        const largeur = width / ONGLETS_DU_BAS.length;
+        const suivante = { x: ONGLETS_DU_BAS.indexOf(onglet) * largeur, y: height - HAUTEUR_BARRE, w: largeur, h: HAUTEUR_BARRE };
+        setZone((avant) => (avant?.id === id && memeZone(avant, suivante) ? avant : { id, ...suivante }));
+      }
+    };
+    const depart = setTimeout(mesurer, 0);
+    const minuteur = setInterval(mesurer, 400);
+    return () => {
+      vivant = false;
+      clearTimeout(depart);
+      clearInterval(minuteur);
+    };
+  }, [visite.actif, visite.surLaPage, etape, ancre, onglet, width, height]);
+
+  if (!visite.actif || !etape) return null;
+
+  // Éloigné de la page de l'étape : une pastille propose de reprendre ou de quitter.
+  if (!visite.surLaPage) {
+    return (
+      <View style={styles.racine} pointerEvents="box-none">
+        <View style={styles.pastille}>
+          <Text style={styles.pastilleTexte}>{T.enCours(visite.index + 1, visite.total)}</Text>
+          <Pressable onPress={visite.reprendre} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.lienClair}>{T.reprendre}</Text>
+          </Pressable>
+          <Pressable onPress={visite.quitter} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.lienClair}>{T.quitter}</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  const derniere = visite.index + 1 >= visite.total;
+  const attendUnClic = !!etape.clic;
+  const texte = estBureau() && etape.texteBureau ? etape.texteBureau : etape.texte;
+  const largeurBulle = Math.min(width - 24, LARGEUR_BULLE);
+
+  // Le voile : autour de l'élément (qui reste libre d'être touché), ou sur tout l'écran pour une page qu'on présente ; rien quand on attend
+  // un appui sur un élément qu'on ne repère pas (l'écran reste utilisable).
+  const haut = zone ? Math.max(0, zone.y - MARGE) : 0;
+  const bas = zone ? zone.y + zone.h + MARGE : 0;
+  const gauche = zone ? Math.max(0, zone.x - MARGE) : 0;
+  const droite = zone ? zone.x + zone.w + MARGE : 0;
+
+  // La bulle : au-dessus ou au-dessous de l'élément (le côté où il y a le plus de place), au centre pour une page sans élément.
+  const placement = zone
+    ? zone.y + zone.h / 2 > height / 2
+      ? { bottom: Math.max(12, height - haut + 12) }
+      : { top: bas + 12 }
+    : attendUnClic
+      ? { bottom: HAUTEUR_BARRE + 24 }
+      : { top: height * 0.22 };
+
+  return (
+    <View style={styles.racine} pointerEvents="box-none">
+      {zone ? (
+        <>
+          <View style={[styles.voile, { top: 0, left: 0, right: 0, height: haut }]} />
+          <View style={[styles.voile, { top: bas, left: 0, right: 0, bottom: 0 }]} />
+          <View style={[styles.voile, { top: haut, height: bas - haut, left: 0, width: gauche }]} />
+          <View style={[styles.voile, { top: haut, height: bas - haut, left: droite, right: 0 }]} />
+          <View
+            pointerEvents="none"
+            style={[styles.anneau, { top: haut, left: gauche, width: droite - gauche, height: bas - haut }]}
+          />
+        </>
+      ) : attendUnClic ? null : (
+        <View style={[styles.voile, PLEIN_ECRAN]} />
+      )}
+      <View style={[styles.bulle, placement, { width: largeurBulle, left: (width - largeurBulle) / 2 }]}>
+        <Text style={styles.compteur}>{T.etape(visite.index + 1, visite.total)}</Text>
+        <Text style={styles.titre}>{etape.titre}</Text>
+        <Text style={styles.texte}>{texte}</Text>
+        {attendUnClic ? <Text style={styles.invitation}>{zone ? T.touchezLaZone : T.touchezLeBouton}</Text> : null}
+        <View style={styles.boutons}>
+          <Pressable onPress={visite.quitter} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.lien}>{T.quitter}</Text>
+          </Pressable>
+          <Pressable style={styles.suivant} onPress={visite.suivant} accessibilityRole="button">
+            <Text style={styles.suivantTexte}>{derniere ? T.terminer : attendUnClic ? T.passer : T.suivant}</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  racine: { ...PLEIN_ECRAN, zIndex: 9999, elevation: 9999 },
+  voile: { position: 'absolute', backgroundColor: VOILE },
+  anneau: { position: 'absolute', borderWidth: 3, borderColor: '#FFD54A', borderRadius: 12 },
+  bulle: {
+    position: 'absolute',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 12,
+  },
+  compteur: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  titre: { fontSize: 18, fontWeight: '800', color: colors.primaryDark },
+  texte: { fontSize: 15, lineHeight: 21, color: colors.text },
+  invitation: { fontSize: 14, fontWeight: '700', color: colors.accent },
+  boutons: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  lien: { fontSize: 14, color: colors.textMuted, textDecorationLine: 'underline' },
+  suivant: { backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18 },
+  suivantTexte: { color: colors.blanc, fontWeight: '700', fontSize: 15 },
+  pastille: {
+    position: 'absolute',
+    bottom: HAUTEUR_BARRE + 16,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: colors.primaryDark,
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  pastilleTexte: { color: colors.blanc, fontSize: 13, fontWeight: '700' },
+  lienClair: { color: '#FFD54A', fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+});

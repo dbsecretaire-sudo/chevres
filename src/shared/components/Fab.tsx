@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
 import { styles } from '@/shared/styles/components/Fab.styles';
+import { useAncre } from '@/features/didacticiel/components/AncreVisite';
 
 interface Props {
   options: Option[];
@@ -23,10 +24,13 @@ interface Props {
  */
 export function Fab({ options, color = colors.primary, icon = 'add', cote = 'droite' }: Props) {
   const [ouvert, setOuvert] = useState(false);
+  // Repéré par la visite guidée : c'est le bouton « + » qu'elle invite à toucher.
+  const repere = useAncre('fab');
 
   return (
     <>
       <Pressable
+        ref={repere}
         style={[styles.fab, cote === 'droite' ? styles.droite : styles.gauche, { backgroundColor: color }]}
         onPress={() => (options.length === 1 ? options[0].onPress() : setOuvert(true))}
       >

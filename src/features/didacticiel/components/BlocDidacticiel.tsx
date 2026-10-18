@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
+import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -18,6 +19,7 @@ export function BlocDidacticiel() {
   const router = useRouter();
   const { settings, patchSettings } = useAppSettings();
   const infos = settings.exploitation;
+  const { demarrer } = useVisiteGuidee();
   const actif = !infos?.didacticielMasque;
   return (
     <Card style={commonStyles.gap8}>
@@ -32,6 +34,7 @@ export function BlocDidacticiel() {
       {actif ? (
         <>
           <Text style={commonStyles.note}>{T.presentation}</Text>
+          <Button label={T.commencer} onPress={demarrer} />
           <Button variant="secondary" label={T.parcourir} onPress={() => router.push(ROUTES.DIDACTICIEL as never)} />
         </>
       ) : null}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BadgeDejaGenere } from '@/features/bibliotheque/components/BadgeDejaGenere';
 import { useBibliotheque } from '@/features/bibliotheque/hooks/useBibliotheque';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { useDocumentsCirculationManquants } from '@/features/comptabilite/hooks/useDocumentsCirculationManquants';
 import { documentsDuType } from '@/features/bibliotheque/services/recherche';
 import { useRouter } from 'expo-router';
@@ -142,6 +143,7 @@ export default function DossierPac() {
           trailing={droite('recensement', ['recensement'])}
           onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
         />
+        <AncreVisite id="dossier.circulation">
         <ListRow
           title={TEXTES.cheptel.circulation.ligneDossier}
           subtitle={TEXTES.cheptel.circulation.aideDossier}
@@ -153,6 +155,7 @@ export default function DossierPac() {
           }
           onPress={() => router.push(ROUTES.documentsCirculationDepuis(retour) as never)}
         />
+        </AncreVisite>
         <ListRow
           title={T.estive.bouton.replace('…', '')}
           subtitle={T.lignes.estive.aide}

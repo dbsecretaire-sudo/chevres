@@ -3,6 +3,7 @@ import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
@@ -33,14 +34,15 @@ export default function AccueilCheptel() {
         <GroupeAccueil key={groupe.cle} titre={groupe.titre}>
           <BlocLignes>
             {groupe.lignes.map((l) => (
-              <ListRow
-                key={l.cle}
-                title={l.titre}
-                subtitle={l.aide}
-                icone={l.icone}
-                actif={estActive(l.route)}
-                onPress={vers(l.route)}
-              />
+              <AncreVisite key={l.cle} id={`rubrique:${l.route}`}>
+                <ListRow
+                  title={l.titre}
+                  subtitle={l.aide}
+                  icone={l.icone}
+                  actif={estActive(l.route)}
+                  onPress={vers(l.route)}
+                />
+              </AncreVisite>
             ))}
           </BlocLignes>
         </GroupeAccueil>

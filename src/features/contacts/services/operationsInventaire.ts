@@ -19,6 +19,9 @@ export interface ListeOperation {
   titre: string;
 }
 
+/** Le nom d'une liste sans son préfixe : « Achat — Aliment » devient « Aliment », « Ventes — Fromages » devient « Fromages » (le sens est dans la case). */
+export const nomDeLaListe = (titre: string): string => titre.replace(/^\s*(?:ventes?|achats?)\s*[—–-]\s*/i, '').trim() || titre;
+
 /** Une catégorie de l'inventaire (Produits finis, Produits animaux…) et ses listes. */
 export interface RubriqueOperations {
   categorie: string;
@@ -50,11 +53,11 @@ export function rubriquesDOperations(archive: Pick<ArchiveStock, 'listes' | 'cat
       titre: c.nom,
       listes: [
         ...SECTIONS.filter((s) => s.categorie === c.categorie && (fromagerie || !s.fromagerie) && (poules || !s.poules)).map(
-          (s) => ({ cle: s.section, titre: s.titre }),
+          (s) => ({ cle: s.section, titre: nomDeLaListe(s.titre) }),
         ),
         ...(archive.listes ?? [])
           .filter((l) => l.categorie === c.categorie && !l.masquePour?.includes(espece))
-          .map((l) => ({ cle: `perso:${l.id}`, titre: l.nom })),
+          .map((l) => ({ cle: `perso:${l.id}`, titre: nomDeLaListe(l.nom) })),
       ],
     }))
     .filter((r) => r.listes.length > 0);
