@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { Badge } from '@/shared/components/Badge';
@@ -12,6 +13,11 @@ import { FactureFormulaire } from '@/features/comptabilite/components/FactureFor
 import { FactureLecture } from '@/features/comptabilite/components/FactureLecture';
 import { useFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { useLots } from '@/features/exploitation/hooks/useLots';
+import { animauxDuLot } from '@/features/exploitation/services/lots';
+import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
+import { nomsDesAbattoirs, tiersEstUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
+import { exporterDocumentCirculationAbattoirPdf } from '@/features/export/documentCirculationPdf';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -19,6 +25,11 @@ export default function FicheFacture() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const f = useFicheFacture(id);
   const { facture, form } = f;
+  const { lots } = useLots();
+  const [abattoirs, setAbattoirs] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    nomsDesAbattoirs().then(setAbattoirs).catch(() => undefined);
+  }, []);
 
   if (!facture || !form) {
     return (
@@ -29,9 +40,37 @@ export default function FicheFacture() {
   }
 
   const estEmise = facture.type === TYPE_FACTURE.EMISE;
+  /** La dépense d'un abattoir : le document de circulation (modèle pré-rempli) se génère depuis l'en-tête, avec les animaux du lot qui y est lié. */
+  const depenseAbattoir = !estEmise && tiersEstUnAbattoir(facture.tiers, abattoirs);
+  const genererLeDocument = async () => {
+    const lot = lots.find((l) => l.factureId === facture.id && l.abattoir);
+    const animaux = lot ? animauxDuLot(lot, await listTousLesAnimauxDeLEspece()) : [];
+    await exporterDocumentCirculationAbattoirPdf(
+      lot?.abattoir ?? facture.date,
+      animaux.map((a) => a.id),
+      facture.tiers,
+      true,
+    );
+  };
 
   return (
     <Screen scroll={false}>
+      {depenseAbattoir && !f.editing ? (
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <Pressable
+                style={commonStyles.boutonEnteteDroite}
+                onPress={() => genererLeDocument().catch(() => undefined)}
+                hitSlop={10}
+                accessibilityRole="button"
+              >
+                <Text style={commonStyles.texteEntete}>{TEXTES.cheptel.circulation.bouton}</Text>
+              </Pressable>
+            ),
+          }}
+        />
+      ) : null}
       <ScrollView style={commonStyles.flex1} contentContainerStyle={commonStyles.scrollContent}>
         <View style={commonStyles.header}>
           <View style={commonStyles.flex1}>

@@ -6,6 +6,7 @@ import type { Traitement } from '@/features/exploitation/types';
 import type { Chevre } from '@/features/cheptel/types';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { listClients } from '@/features/clients/repository';
+import { estClientAbattoir } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { getVente } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
@@ -63,6 +64,8 @@ export function lieuDArrivee(
   vente: Pick<Vente, 'categorie' | 'choixFacture' | 'etatAnimaux'>,
   client?: Pick<Client, 'categorie'>,
 ): LieuArrivee {
+  // Un client de catégorie Abattoir : l'abattoir est le lieu d'arrivée, que les animaux y partent vivants ou non.
+  if (estClientAbattoir(client)) return LIEU_ARRIVEE.ABATTOIR;
   // Des animaux vendus vivants à un client (même pour leur viande) vont chez lui ; sinon, la viande déclarée passe par l'abattoir.
   if (vente.categorie === CATEGORIE_VENTE.VIANDE && venteADeclarer(vente) && vente.etatAnimaux !== 'vivants')
     return LIEU_ARRIVEE.ABATTOIR;
@@ -272,15 +275,16 @@ export async function remplirDocumentCirculation(d: DonneesCirculation): Promise
 
 /**
  * Le document de circulation d'un lot d'abattoir : les animaux partent vivants de l'exploitation vers l'abattoir à la date d'abattage. Faux
- * quand aucun animal du lot n'est retrouvé.
+ * quand aucun animal n'est retrouvé, sauf `sansAnimal` (la dépense d'un abattoir sans lot : le modèle pré-rempli, animaux à écrire à la main).
  */
 export async function exporterDocumentCirculationAbattoirPdf(
   date: string,
   idsAnimaux: string[],
   abattoir?: string,
+  sansAnimal = false,
 ): Promise<boolean> {
   const animaux = (await Promise.all(idsAnimaux.map(getChevre))).filter((a): a is Chevre => !!a);
-  if (animaux.length === 0) return false;
+  if (animaux.length === 0 && !sansAnimal) return false;
   const [settings, traitements] = await Promise.all([getSettings(), listTousTraitements()]);
   // Une vente déclarée de viande, pour l'abattoir : le lieu d'arrivée est l'abattoir.
   const vente = {
