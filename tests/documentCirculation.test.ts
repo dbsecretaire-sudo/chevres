@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { donneesDeCirculation, FEUILLETS_CIRCULATION, lieuDArrivee, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
+import { donneesDeCirculation, FEUILLETS_CIRCULATION, lieuDArrivee, mortsTransportDuJour, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
@@ -103,5 +103,15 @@ describe('animaux morts pendant le transport', () => {
     expect(donneesDeCirculation({ vente: vente(), animaux: [animal('1')], infos, petit: () => true }).mortsTransport).toBe(0);
     const pdf = await PDFDocument.load(await remplirDocumentCirculation(d));
     expect(pdf.getPageCount()).toBe(2);
+  });
+});
+
+describe('morts pendant le transport lus dans le lot', () => {
+  it('compte les bêtes du jour déclarées mortes pendant le transport, pas les saisies sanitaires', () => {
+    const lots = [{ id: 'l', nom: 'L', boucles: '', abattoir: '2025-02-12', inconsommables: [{ id: 'a', motif: 'transport' }, { id: 'b', motif: 'sanitaire' }, { id: 'c', motif: 'transport' }] }] as never;
+    expect(mortsTransportDuJour(lots, '2025-02-12', ['a', 'b'])).toBe(1);
+    expect(mortsTransportDuJour(lots, '2025-02-12', ['a', 'c'])).toBe(2);
+    expect(mortsTransportDuJour(lots, '2025-08-04', ['a'])).toBe(0);
+    expect(mortsTransportDuJour(undefined, '2025-02-12', ['a'])).toBe(0);
   });
 });

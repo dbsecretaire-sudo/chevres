@@ -22,7 +22,7 @@ import { MODELE_CIRCULATION } from '@/features/export/modeles/circulation';
 import { remplirModele, type Outils } from '@/features/export/services/modelePdf';
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { identiteDuSuivi } from '@/features/export/suiviMouvementsPdf';
-import { getSettings, identificationCheptel, type InfosExploitation } from '@/features/settings/settings';
+import { getSettings, identificationCheptel, type InfosExploitation, type LotAnimaux } from '@/features/settings/settings';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { FORMAT_EXPORT } from '@/shared/constants/export';
@@ -307,6 +307,16 @@ export async function remplirDocumentCirculation(d: DonneesCirculation): Promise
 }
 
 /**
+ * Les animaux morts pendant le transport, d'après les lots d'abattage des réglages : ceux de `animaux` déclarés « morte pendant le
+ * transport » dans le lot du jour d'abattage. Le document les lit lui-même, d'où qu'on le génère.
+ */
+export const mortsTransportDuJour = (lots: readonly LotAnimaux[] | undefined, jour: string, ids: readonly string[]): number =>
+  (lots ?? [])
+    .filter((l) => l.abattoir === jour)
+    .flatMap((l) => l.inconsommables ?? [])
+    .filter((i) => i.motif === 'transport' && ids.includes(i.id)).length;
+
+/**
  * Le document de circulation d'un lot d'abattoir : les animaux partent vivants de l'exploitation vers l'abattoir à la date d'abattage. Faux
  * quand aucun animal n'est retrouvé, sauf `sansAnimal` (la dépense d'un abattoir sans lot : le modèle pré-rempli, animaux à écrire à la main).
  */
@@ -315,8 +325,8 @@ export async function exporterDocumentCirculationAbattoirPdf(
   idsAnimaux: string[],
   abattoir?: string,
   sansAnimal = false,
-  /** Les animaux déclarés morts pendant le transport (voir le suivi sanitaire du lot) : écrits sur « Nb de morts transport ». */
-  mortsTransport = 0,
+  /** Les animaux déclarés morts pendant le transport (voir le suivi sanitaire du lot) : écrits sur « Nb de morts transport » ; sinon, lus dans le lot. */
+  mortsTransport?: number,
 ): Promise<boolean> {
   const animaux = (await Promise.all(idsAnimaux.map(getChevre))).filter((a): a is Chevre => !!a);
   if (animaux.length === 0 && !sansAnimal) return false;
@@ -341,7 +351,7 @@ export async function exporterDocumentCirculationAbattoirPdf(
     infos: settings.exploitation,
     petit: petitOuTiptag(date, await tiptagsDeLInventaire()),
     traitements,
-    mortsTransport,
+    mortsTransport: mortsTransport ?? mortsTransportDuJour(settings.exploitation?.lots, date, idsAnimaux),
   });
   await ecrirePdfBase64EtPartager(
     await remplirDocumentCirculation(donnees),
@@ -416,6 +426,8 @@ export async function exporterDocumentCirculationPdf(venteId: string): Promise<b
     infos: settings.exploitation,
     petit: petitOuTiptag(vente.date, await tiptagsDeLInventaire()),
     traitements,
+    // Une vente de viande d'un jour d'abattage : les bêtes mortes pendant le transport sont celles du lot de ce jour.
+    mortsTransport: vente.dateAbattoir ? mortsTransportDuJour(settings.exploitation?.lots, vente.dateAbattoir, idsDesAnimaux(vente)) : 0,
   });
   await ecrirePdfBase64EtPartager(
     await remplirDocumentCirculation(donnees),
