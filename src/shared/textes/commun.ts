@@ -153,7 +153,7 @@ export const TEXTES_COMMUN = {
     nomDuLot: 'Nom du lot',
     exempleLot: 'ex : Chevrettes 2026, Chèvres en lactation',
     titreBoucles: 'Boucles du cheptel',
-    ajouterLesBoucles: (nombre: number) => `Ajouter ${nombre} boucle${nombre > 1 ? 's' : ''}`,
+    ajouterLesBoucles: () => 'Mettre à jour',
     nomDEntreprise: 'Nom d’entreprise',
     siret: 'SIRET',
     tvaIntracommunautaire: 'TVA intracommunautaire',
