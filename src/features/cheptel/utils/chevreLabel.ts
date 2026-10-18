@@ -67,6 +67,10 @@ export function cleTriChevre(c: Pick<Chevre, 'numeroBoucle' | 'nom'>): string {
   return c.numeroBoucle ? `0_${c.numeroBoucle}` : `1_${c.nom ?? ''}`;
 }
 
+/** Le tri des animaux par numéro de boucle croissant (00786 avant 00790), ceux sans boucle à la fin. */
+export const parBoucleCroissante = (a: Pick<Chevre, 'numeroBoucle' | 'nom'>, b: Pick<Chevre, 'numeroBoucle' | 'nom'>): number =>
+  cleTriChevre(a).localeCompare(cleTriChevre(b), 'fr', { numeric: true });
+
 export type CategorieAnimal = ValeurDe<typeof CATEGORIE_ANIMAL>;
 
 /**

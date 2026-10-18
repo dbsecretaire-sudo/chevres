@@ -2,7 +2,7 @@ import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
-import { libelleChevreAvecDate } from '@/features/cheptel/utils/chevreLabel';
+import { libelleChevreAvecDate, parBoucleCroissante } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre } from '@/features/cheptel/types';
 import { LIBELLES_STATUT_CHEVRE } from '@/shared/textes/libelles';
 import { SEXE } from '@/shared/constants/cheptel';
@@ -29,7 +29,7 @@ export function ListeAnimauxCliquables({
   if (animaux.length === 0) return vide ? <Text style={commonStyles.mutedItalic}>{vide}</Text> : null;
   return (
     <BlocLignes>
-      {animaux.map((a) => (
+      {[...animaux].sort(parBoucleCroissante).map((a) => (
         <ListRow
           key={a.id}
           title={libelleChevreAvecDate(a)}
