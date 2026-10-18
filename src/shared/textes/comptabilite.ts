@@ -800,6 +800,9 @@ export const TEXTES_COMPTABILITE = {
     animauxEnvoyes: {
       titre: 'Animaux envoyés',
       choisir: 'Choisir les animaux',
+      parmi: 'Choisir parmi',
+      tiptag: 'Tiptag',
+      boucles: 'Boucles',
       modifier: 'Modifier le choix',
       valider: (n: number) => (n > 1 ? `Valider (${n} animaux)` : n === 1 ? 'Valider (1 animal)' : 'Valider'),
       aucun: 'Choisissez au moins un animal envoyé.',

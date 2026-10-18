@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
@@ -15,6 +16,8 @@ const charcuterie = (params: object | undefined): boolean =>
 export default function ProductionLayout() {
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
   useEtablissement();
+  // Les lots d'accord avec le cheptel et les factures (la viande vendue part des jours d'abattage) dès l'ouverture de la Production.
+  useAccordDesLots();
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.

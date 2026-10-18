@@ -13,6 +13,8 @@ import {
 } from '@/features/comptabilite/forms/lignesChambre';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { retirerLesLotsDAbattoir } from '@/features/exploitation/services/lotsSansFacture';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -71,6 +73,7 @@ const montantEnTexte = (f: Facture) => String(f.montant).replace('.', ',');
 /** État et actions de la fiche d'une facture : chargement, modification (lignes, tiers, TVA), suppression. */
 export function useFicheFacture(id: string | undefined) {
   const router = useRouter();
+  const { settings, patchSettings } = useAppSettings();
 
   const [facture, setFacture] = useState<Facture | null>(null);
   const [form, setForm] = useState<Facture | null>(null);
@@ -331,6 +334,13 @@ export function useFicheFacture(id: string | undefined) {
     if (!facture) return;
     try {
       await supprimerFacture(facture.id);
+      // Un lot d'abattoir lié à cette facture n'a plus de raison d'être : il disparaît, et ses animaux (hors vente) reviennent vivants.
+      const lotsActuels = settings.exploitation?.lots ?? [];
+      const lies = lotsActuels.filter((l) => l.abattoir && l.factureId === facture.id);
+      if (lies.length > 0) {
+        const { lots } = await retirerLesLotsDAbattoir(lotsActuels, lies);
+        await patchSettings({ exploitation: { ...settings.exploitation, lots } });
+      }
       // Les animaux envoyés avec la dépense reviennent vivants dans le cheptel.
       for (const id of idsDesAnimauxEnvoyes(facture)) {
         if ((await getChevre(id))?.statut === STATUT_CHEVRE.ABATTOIR) await reactiverChevre(id);
