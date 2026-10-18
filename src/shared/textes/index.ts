@@ -13,6 +13,7 @@ import { TEXTES_DIDACTICIEL } from '@/shared/textes/didacticiel';
 import { TEXTES_DOSSIERS } from '@/shared/textes/dossiers';
 import { TEXTES_DRIVE } from '@/shared/textes/drive';
 import { TEXTES_ENTREPRISE } from '@/shared/textes/entreprise';
+import { TEXTES_ERREUR_ECRAN } from '@/shared/textes/erreurEcran';
 import { TEXTES_ESPECES } from '@/shared/textes/especes';
 import { TEXTES_ETABLISSEMENTS } from '@/shared/textes/etablissements';
 import { TEXTES_EXPLOITATION } from '@/shared/textes/exploitation';
@@ -44,6 +45,7 @@ export const TEXTES = {
   comptesPcg: TEXTES_COMPTES_PCG,
   contacts: TEXTES_CONTACTS,
   didacticiel: TEXTES_DIDACTICIEL,
+  erreurEcran: TEXTES_ERREUR_ECRAN,
   dossiers: TEXTES_DOSSIERS,
   drive: TEXTES_DRIVE,
   entreprise: TEXTES_ENTREPRISE,

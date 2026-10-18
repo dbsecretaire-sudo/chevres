@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { AnimauxEnvoyesListe } from '@/features/comptabilite/components/AnimauxEnvoyesListe';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
@@ -282,6 +283,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           aide={TEXTES.comptabilite.ficheFacture.nonModifiableLaCategorieLe}
         />
         {f.compteAffiche ? <NoteComptePcg compte={f.compteAffiche} /> : null}
+        <AnimauxEnvoyesListe facture={form} />
 
         {/* Une aide se décrit par son type (DPB, ICHN…). */}
         {estAide && (

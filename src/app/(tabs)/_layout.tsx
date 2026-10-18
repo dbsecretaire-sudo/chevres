@@ -1,4 +1,5 @@
 import { Tabs, useSegments } from 'expo-router';
+import { EcranErreur } from '@/shared/components/EcranErreur';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { useBarreAjoutBleue } from '@/shared/navigation/barreAjout';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -281,6 +282,11 @@ function Onglets() {
 }
 
 /** Dans la version Windows : la barre de menus en haut, et deux colonnes (menu de la rubrique à gauche, écran à droite) quand la fenêtre est large. */
+/** Un écran qui plante montre son erreur (à recopier) au lieu d'une page blanche. */
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+  return <EcranErreur error={error} retry={retry} />;
+}
+
 export default function TabsLayout() {
   return (
     <>

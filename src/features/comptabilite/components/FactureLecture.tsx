@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { idsDesAnimauxAchetes, idsDesAnimauxEnvoyes } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
 import type { ArchiveStock } from '@/features/stock/types';
 import { libelleArticle } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { Text, View } from 'react-native';
+import { AnimauxEnvoyesListe } from '@/features/comptabilite/components/AnimauxEnvoyesListe';
 import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/dates';
 import {
   LABEL_ACTIVITE_COMPTABLE,
+  LABEL_CATEGORIE_DEPENSE,
   LABEL_RUBRIQUE_MARCHANDISE,
   LABEL_NATURE_URSSAF,
   LABEL_TYPE_AIDE,
@@ -108,7 +110,7 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
       {facture.categorieDepense ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.categorieDeDepenseDeuxPoints}
-          {facture.categorieDepense}
+          {LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
         </Text>
       ) : null}
       {facture.categorieRecette ? (
@@ -152,11 +154,7 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         </Text>
       ) : null}
 
-      {idsDesAnimauxEnvoyes(facture).length > 0 ? (
-        <Text style={commonStyles.line}>
-          {TEXTES.comptabilite.nouvelleEcriture.animauxEnvoyes.nAnimaux(idsDesAnimauxEnvoyes(facture).length)}
-        </Text>
-      ) : null}
+      <AnimauxEnvoyesListe facture={facture} />
 
       {facture.lignesAlimentation && facture.lignesAlimentation.length > 0 ? (
         <View style={commonStyles.gap2}>
