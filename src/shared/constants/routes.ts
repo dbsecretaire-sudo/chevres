@@ -171,6 +171,8 @@ export const ROUTES = {
   /** La fiche d'un animal ouverte depuis une liste (les naissances, l'historique, la viande…) : la flèche de retour y ramène. */
   ficheChevreDepuis: (id: string, retour: string) => `/cheptel/${id}?retour=${encodeURIComponent(retour)}` as const,
   ficheFacture: (id: string) => `/comptabilite/facture/${id}` as const,
+  /** La fiche d'une facture ouverte d'un écran précis : sa flèche de retour y ramène. */
+  ficheFactureDepuis: (id: string, retour: string) => `/comptabilite/facture/${id}?retour=${encodeURIComponent(retour)}` as const,
   ficheVente: (id: string) => `/comptabilite/vente/${id}` as const,
   /** La fiche d'une vente ouverte d'un écran précis : sa flèche de retour y ramène (Production › Viande, par exemple). */
   ficheVenteDepuis: (id: string, retour: string) => `/comptabilite/vente/${id}?retour=${encodeURIComponent(retour)}` as const,
