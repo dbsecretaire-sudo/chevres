@@ -217,11 +217,11 @@ const lignesDeTexte = (texte: string, caracteresParLigne: number): number =>
 export function hauteurDeLaLigne(l: LigneCabri): number {
   const lignes = Math.max(
     1,
-    lignesDeTexte(l.numero, 11),
+    lignesDeTexte(l.numero, 8),
     lignesDeTexte(l.mere, 7),
     lignesDeTexte(l.sexe, 8),
     lignesDeTexte(l.observations, 20),
-    lignesDeTexte(l.age, 9),
+    lignesDeTexte(l.age, 13),
     lignesDeTexte(l.poids, 8),
   );
   return Math.max(HAUTEUR_LIGNE_MM, 2 + lignes * HAUTEUR_LIGNE_DE_TEXTE_MM);
@@ -605,12 +605,12 @@ function pageCabris(
     droite?: number;
   }[] = [
     { th: c.date, valeur: (l) => l.date, entiere: 9, gauche: 15 },
-    { th: c.numero(v.petit.singulier), valeur: (l) => l.numero, entiere: 18, gauche: 28 },
-    { th: c.mere, valeur: (l) => l.mere, entiere: 11, gauche: 23 },
-    { th: c.pere, valeur: () => '', entiere: 8, gauche: 20 },
-    { th: c.sexe, valeur: (l) => l.sexe, entiere: 10, gauche: 14 },
-    { th: c.observations, valeur: (l) => l.observations, libre: true, entiere: 23, droite: 38 },
-    { th: c.age, valeur: (l) => l.age, entiere: 11, droite: 34 },
+    { th: c.numero(v.petit.singulier), valeur: (l) => l.numero, entiere: 13, gauche: 22 },
+    { th: c.mere, valeur: (l) => l.mere, entiere: 11, gauche: 26 },
+    { th: c.pere, valeur: () => '', entiere: 8, gauche: 21 },
+    { th: c.sexe, valeur: (l) => l.sexe, entiere: 10, gauche: 16 },
+    { th: c.observations, valeur: (l) => l.observations, libre: true, entiere: 23, droite: 32 },
+    { th: c.age, valeur: (l) => l.age, entiere: 16, droite: 42 },
     { th: c.poids, valeur: (l) => l.poids, entiere: 10, droite: 28 },
   ];
   const choisies =
