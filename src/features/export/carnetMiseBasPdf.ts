@@ -334,10 +334,9 @@ export interface ResultatsProduction {
 }
 
 /**
- * Les femelles mises à la reproduction pour les mises bas d'une année : celles du lot de mise à la reproduction de cette année (voir
- * lotsDeReproduction), à défaut le même calcul que celui qui remplit ce lot (voir boucleDesFemellesALaReproduction) ; plus les mères de
- * l'année qui n'y seraient pas : une femelle qui a mis bas était forcément mise à la reproduction, et leur nombre ne peut pas être
- * inférieur à celui des mises bas. Le nombre est donc celui du lot de l'année.
+ * Les femelles mises à la reproduction pour les mises bas d'une année : exactement les animaux du lot de mise à la reproduction de cette
+ * année (voir lotsDeReproduction), comme on les voit dans Lots d'animaux : le nombre du carnet est celui du lot. Sans lot, le même calcul
+ * que celui qui le remplit (voir boucleDesFemellesALaReproduction), plus les mères de l'année qui n'y seraient pas.
  */
 export function chevresMisesALaReproduction(
   animaux: Chevre[],
@@ -346,14 +345,7 @@ export function chevresMisesALaReproduction(
   lots: LotAnimaux[] = [],
 ): number {
   const deLots = lotsDeReproduction(lots, annee);
-  if (deLots.length > 0) {
-    // Les femelles des lots : une boucle qui n'est pas celle d'un mâle du cheptel (un animal sorti ou inconnu compte aussi).
-    const males = new Set(
-      animaux.filter((c) => c.sexe === SEXE.MALE && c.numeroBoucle).map((c) => c.numeroBoucle),
-    );
-    const desLots = new Set(deLots.flatMap((l) => bouclesDuLot(l)).filter((b) => !males.has(b)));
-    return desLots.size + new Set(meres.filter((m) => m && !desLots.has(m))).size;
-  }
+  if (deLots.length > 0) return new Set(deLots.flatMap((l) => bouclesDuLot(l))).size;
   const calculees = new Set(boucleDesFemellesALaReproduction(animaux, annee));
   return calculees.size + new Set(meres.filter((m) => m && !calculees.has(m))).size;
 }

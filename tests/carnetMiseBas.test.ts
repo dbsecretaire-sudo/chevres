@@ -122,9 +122,9 @@ describe('carnet de mise bas', () => {
     // Un lot déjà là (et corrigé à la main) n'est jamais refait ; rien à faire quand tout existe.
     const corriges = crees.map((l) => (l.reproduction === 2026 ? { ...l, boucles: '1, 2' } : l));
     expect(lotsDeReproductionDeLAnnee(animaux, corriges, 2026)).toBeNull();
-    // Le carnet compte les animaux du lot de l'année ; une mère absente du lot s'y ajoute ; sans lot : le calcul d'après le cheptel.
+    // Le carnet compte les animaux du lot de l'année ; une mère absente du lot ne s'y ajoute pas ; sans lot : le calcul d'après le cheptel.
     expect(chevresMisesALaReproduction(animaux, 2026, [], corriges)).toBe(2);
-    expect(chevresMisesALaReproduction(animaux, 2026, ['3'], corriges)).toBe(3);
+    expect(chevresMisesALaReproduction(animaux, 2026, ['3'], corriges)).toBe(2);
     expect(chevresMisesALaReproduction(animaux, 2026, [], [])).toBe(3);
   });
 
