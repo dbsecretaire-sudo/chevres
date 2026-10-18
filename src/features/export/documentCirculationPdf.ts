@@ -57,6 +57,8 @@ export interface DonneesCirculation {
   /** Les reproducteurs et réformes : le nombre, et leur numéro individuel (indicatif + numéro). */
   reproducteurs: number;
   individuels: string[];
+  /** Les animaux morts pendant le transport (déclarés dans le lot d'abattage) : la ligne « Nb de morts transport » de l'arrivée. */
+  mortsTransport: number;
   /**
    * L'information sanitaire (la chaîne alimentaire) : des animaux sous délai d'attente pour la viande le jour du chargement — un
    * traitement en cours — obligent à fournir le document dédié au détenteur d'arrivée ; sinon, aucun risque à signaler.
@@ -102,8 +104,10 @@ export function donneesDeCirculation(entree: {
   petit: (animal: Chevre) => boolean;
   /** Les traitements de l'élevage : ceux dont le délai d'attente pour la viande court le jour du chargement sont signalés. */
   traitements?: Traitement[];
+  /** Le nombre d'animaux morts pendant le transport (écrit sur la ligne « Nb de morts transport »). */
+  mortsTransport?: number;
 }): DonneesCirculation {
-  const { vente, animaux, client, infos, petit, traitements = [] } = entree;
+  const { vente, animaux, client, infos, petit, traitements = [], mortsTransport = 0 } = entree;
   const jour = vente.dateAbattoir && vente.categorie === CATEGORIE_VENTE.VIANDE ? vente.dateAbattoir : vente.date;
   const sousDelai = animaux.flatMap((a) => {
     const delai = delaisDeLAnimal(a.numeroBoucle, traitements, jour).viande;
@@ -135,6 +139,7 @@ export function donneesDeCirculation(entree: {
     boucherie: [...parIndicatif.entries()].map(([ind, nombre]) => ({ indicatif: ind, nombre })),
     reproducteurs: individuels.length,
     individuels: individuels.sort(),
+    mortsTransport,
     sanitaire: { risque: sousDelai.length > 0, animaux: sousDelai },
   };
 }
@@ -207,12 +212,16 @@ function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
   // Les nombres d'animaux : la ligne des ovins ou des caprins, la colonne des petits de boucherie ou des reproducteurs et réformes.
   const nombreBoucherie = d.boucherie.reduce((t, b) => t + b.nombre, 0);
   const yLigne = d.ovins ? 538 : 520;
+  /** La ligne « Nb de morts transport » est sous celle des caprins. */
+  const yMortsTransport = yLigne - 14;
   const nombres = (xBoucherie: number, xRepro: number) => {
     if (nombreBoucherie > 0) o.centre(xBoucherie, yLigne, String(nombreBoucherie), 10, true);
     if (d.reproducteurs > 0) o.centre(xRepro, yLigne, String(d.reproducteurs), 10, true);
   };
   nombres(164, 249);
   nombres(430.9, 516.8);
+  // Les animaux morts pendant le transport : la ligne « Nb de morts transport » du tableau de l'arrivée.
+  if (d.mortsTransport > 0) o.centre(430.9, yMortsTransport, String(d.mortsTransport), 10, true);
   // Les petits de boucherie : l'indicatif de marquage (en cases) et leur nombre, trois indicatifs au plus.
   const lotsBoucherie: { x0: number; pas: number; xNombre: number }[] = [
     { x0: 79.3, pas: 11.5, xNombre: 176 },
@@ -306,6 +315,8 @@ export async function exporterDocumentCirculationAbattoirPdf(
   idsAnimaux: string[],
   abattoir?: string,
   sansAnimal = false,
+  /** Les animaux déclarés morts pendant le transport (voir le suivi sanitaire du lot) : écrits sur « Nb de morts transport ». */
+  mortsTransport = 0,
 ): Promise<boolean> {
   const animaux = (await Promise.all(idsAnimaux.map(getChevre))).filter((a): a is Chevre => !!a);
   if (animaux.length === 0 && !sansAnimal) return false;
@@ -330,6 +341,7 @@ export async function exporterDocumentCirculationAbattoirPdf(
     infos: settings.exploitation,
     petit: petitOuTiptag(date, await tiptagsDeLInventaire()),
     traitements,
+    mortsTransport,
   });
   await ecrirePdfBase64EtPartager(
     await remplirDocumentCirculation(donnees),

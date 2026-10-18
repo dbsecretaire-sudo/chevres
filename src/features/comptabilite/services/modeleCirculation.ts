@@ -38,5 +38,6 @@ export async function genererLeModeleDeCirculation(ecriture: Pick<EcritureACircu
     animaux.map((a) => a.id),
     facture.tiers,
     true,
+    (lot?.inconsommables ?? []).filter((i) => i.motif === 'transport').length,
   );
 }

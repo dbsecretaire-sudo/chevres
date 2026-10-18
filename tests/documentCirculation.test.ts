@@ -95,3 +95,13 @@ describe('les tiptag vont avec les chevreaux de boucherie', () => {
     expect(petitOuTiptag('2026-03-10', new Set())(animal('1'))).toBe(false);
   });
 });
+
+describe('animaux morts pendant le transport', () => {
+  it('le nombre est repris dans les données et le document se remplit', async () => {
+    const d = donneesDeCirculation({ vente: vente(), animaux: [animal('1'), animal('2')], infos, petit: () => true, mortsTransport: 2 });
+    expect(d.mortsTransport).toBe(2);
+    expect(donneesDeCirculation({ vente: vente(), animaux: [animal('1')], infos, petit: () => true }).mortsTransport).toBe(0);
+    const pdf = await PDFDocument.load(await remplirDocumentCirculation(d));
+    expect(pdf.getPageCount()).toBe(2);
+  });
+});

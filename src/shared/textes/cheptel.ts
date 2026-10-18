@@ -230,6 +230,9 @@ export const TEXTES_CHEPTEL = {
     aideReproduction: 'Un lot est créé tout seul chaque année, avec les femelles qui ont mis bas et toutes celles à leur majorité sexuelle (6 mois) et vivantes à la date d’une mise bas de l’année : son nom ne se modifie pas, mais vous pouvez en corriger les femelles en les choisissant dans le cheptel. Le carnet de mise bas compte les animaux du lot de l’année et en calcule les taux de fertilité et de productivité.',
     /** Le lot d'une visite vétérinaire, créé tout seul avec ses animaux. */
     visiteDu: (date: string) => `Visite vétérinaire du ${date}`,
+    /** Le titre de la liste des animaux d'un lot d'abattage où des bêtes sont mortes pendant le transport : « 50 animaux, dont 49 abattus ». */
+    animauxDuLot: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux' : 'animal'}`,
+    dontAbattus: (nombre: number) => `, dont ${nombre} ${nombre > 1 ? 'abattus' : 'abattu'}`,
     abattus: (nombre: number) => `${nombre} ${nombre > 1 ? 'animaux abattus' : 'animal abattu'}`,
     /** Les onglets de la fiche d'un lot : le lot, les animaux, la visite, la facture, les fichiers, le suivi sanitaire. */
     onglets: {
@@ -255,6 +258,8 @@ export const TEXTES_CHEPTEL = {
       retirer: 'Retirer de la liste',
       nBetes: (n: number) => `${n} ${n > 1 ? 'bêtes inconsommables' : 'bête inconsommable'}`,
       motifs: { sanitaire: 'Problème sanitaire (saisie)', transport: 'Morte pendant le transport' },
+      /** Le motif écrit à droite d'une ligne de la liste des animaux (accordé au sexe de la bête). */
+      motifsListe: { transport: (femelle: boolean) => (femelle ? 'Morte pendant le transport' : 'Mort pendant le transport') },
     },
     poidsDuLot: 'Poids de tout le lot (kg)',
     poidsDuLotAide: 'Le poids total de la viande de ce lot (bon d’abattage). Il remplit le poids de la facture au client, qui ne se modifie plus.',
