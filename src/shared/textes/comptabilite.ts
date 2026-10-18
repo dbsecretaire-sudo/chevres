@@ -821,6 +821,10 @@ export const TEXTES_COMPTABILITE = {
     sexeF: 'F',
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
+    /** Un prix au kilo propre à une vente, exceptionnel : le prix de l'inventaire ne change pas. */
+    prixPersonnalise: 'Prix du produit personnalisé',
+    prixPersonnaliseAide: 'À titre exceptionnel, pour tous les produits de cette facture : le prix de l’inventaire ne change pas. Le total peut aussi se saisir directement.',
+    prixParUnite: { kg: 'Prix au kg (€)', piece: 'Prix / pièce (€)', litre: 'Prix au litre (€)' },
     prixDuStock: (prix: string) => `Prix défini à l’inventaire : ${prix} l’unité.`,
     aucuneViandeAuStock:
       'Aucune viande dans l’inventaire pour cet animal : touchez le crayon pour en ajouter, ou précisez-la ci-dessous.',

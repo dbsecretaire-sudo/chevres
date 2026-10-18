@@ -16,6 +16,8 @@ import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
+import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
+import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
 import { usePoidsDuLot } from '@/features/exploitation/hooks/usePoidsDuLot';
 import { prixDuTarif } from '@/features/commercial/services/commandes';
 import {
@@ -91,16 +93,18 @@ function useTotalVerrouille(
   actif = true,
 ) {
   const { setMontant, prixLibre } = e;
+  // Le prix personnalisé (exceptionnel) remplace celui de l'inventaire pour tous les produits de la facture.
+  const prix = prixUnitaireEffectif(e, prixUnitaire);
   useEffect(() => {
     // Le prix d'un récolteur est libre : il se saisit, l'inventaire ne le fixe pas.
     if (!actif || prixLibre) return;
     const nombre = parseDecimal(quantite);
     setMontant(
-      prixUnitaire && nombre > 0
-        ? (Math.round(prixUnitaire * nombre * 100) / 100).toFixed(2).replace('.', ',')
+      prix && nombre > 0
+        ? (Math.round(prix * nombre * 100) / 100).toFixed(2).replace('.', ',')
         : '',
     );
-  }, [actif, prixLibre, prixUnitaire, quantite, setMontant]);
+  }, [actif, prixLibre, prix, quantite, setMontant]);
 }
 
 /**
@@ -213,13 +217,14 @@ export function ChampsVenteLait({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
-            editable={e.prixLibre}
+            editable={e.prixLibre || e.prixPersonnalise}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
+      <ChampPrixPersonnalise e={e} unite="litre" prixInventaire={prixDuLitre} />
       {e.prixLibre ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
       ) : (
@@ -318,14 +323,15 @@ export function ChampsVenteFromage({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
-            // Le prix défini à l'inventaire fait le total (quantité × prix) : on ne le saisit pas.
-            editable={e.prixLibre}
+            // Le prix défini à l'inventaire fait le total (quantité × prix) : on ne le saisit pas, sauf prix personnalisé.
+            editable={e.prixLibre || e.prixPersonnalise}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
+      <ChampPrixPersonnalise e={e} unite="piece" prixInventaire={prixDuChoix} />
       {e.prixLibre ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
       ) : (
@@ -414,6 +420,8 @@ export function ChampsVenteViande({ e }: Props) {
   /** Les animaux se choisissent un par un (au lieu de prendre le lot d'un jour d'abattage), et le détail du lot est déroulé. */
   const [unParUn, setUnParUn] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState(false);
+  /** Le prix au kilo : le prix personnalisé de la facture (exceptionnel), sinon celui de l'inventaire. */
+  const prixEffectif = prixUnitaireEffectif(e, prixDuDetail);
   useFocusEffect(
     useCallback(() => {
       listAnimauxVivantsDe(espece).then(setAnimaux);
@@ -425,7 +433,7 @@ export function ChampsVenteViande({ e }: Props) {
   /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
   const libelleAnimal = libelleAnimalVendu;
   /** Prix total d'un animal vendu au kilo : le poids × le prix au kilo du stock (pour 1 kg tant qu'aucun poids n'est saisi). */
-  const totalAuKilo = (poids: string, prixAuKilo = prixDuDetail) => {
+  const totalAuKilo = (poids: string, prixAuKilo = prixEffectif) => {
     if (e.prixLibre) return;
     if (!prixAuKilo) return e.setMontant('');
     const kilos = parseDecimal(poids) > 0 ? parseDecimal(poids) : 1;
@@ -573,7 +581,7 @@ export function ChampsVenteViande({ e }: Props) {
   useEffect(() => {
     if (auKiloLigne) totalAuKilo(e.poidsKg);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prixDuDetail, e.poidsKg, auKiloLigne]);
+  }, [prixEffectif, e.poidsKg, auKiloLigne]);
   const maximum = maximumAnimaux(choisie, e.jeune);
   /** Choisit le détail de la vente (la ligne de l'inventaire) : la même chose que dans la liste, pour un détail choisi d'office. */
   const choisirDetail = (v: string) => {
@@ -819,27 +827,31 @@ export function ChampsVenteViande({ e }: Props) {
               />
             </View>
             <View style={commonStyles.flex1}>
-              {/* Le prix unitaire vient du stock : on ne le change pas ici. */}
+              {/* Le prix unitaire vient du stock ; « Prix du produit personnalisé » le remplace, pour cette vente seulement. */}
               <FormField
                 label={TEXTES.comptabilite.nouvelleEcriture.prixUnitaireKg}
-                value={prixDuDetail ? prixDuDetail.toFixed(2).replace('.', ',') : ''}
-                editable={false}
-                style={commonStyles.verrouille}
+                value={e.prixPersonnalise ? e.prixUnitaireSaisi : prixDuDetail ? prixDuDetail.toFixed(2).replace('.', ',') : ''}
+                onChangeText={e.setPrixUnitaireSaisi}
+                editable={e.prixPersonnalise}
+                placeholder={prixDuDetail ? prixDuDetail.toFixed(2).replace('.', ',') : ''}
+                style={e.prixPersonnalise ? undefined : commonStyles.verrouille}
+                keyboardType="decimal-pad"
               />
             </View>
             <View style={commonStyles.flex1}>
               <ChampTauxTvaVente e={e} />
             </View>
           </View>
+          <ChampPrixPersonnalise e={e} unite="kg" prixInventaire={prixDuDetail} sansChamp />
           {/* Le prix total est calculé (poids × prix au kilo) : on ne le saisit pas. */}
           <FormField
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             required
             value={e.montant}
             onChangeText={e.setMontant}
-            editable={e.prixLibre}
+            editable={e.prixLibre || e.prixPersonnalise}
             keyboardType="decimal-pad"
-            style={e.prixLibre ? undefined : commonStyles.verrouille}
+            style={e.prixLibre || e.prixPersonnalise ? undefined : commonStyles.verrouille}
           />
         </>
       ) : (
@@ -874,13 +886,14 @@ export function ChampsVenteViande({ e }: Props) {
                 label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
                 value={e.montant}
                 onChange={e.setMontant}
-                editable={e.prixLibre}
+                editable={e.prixLibre || e.prixPersonnalise}
               />
             </View>
             <View style={commonStyles.flex1}>
               <ChampTauxTvaVente e={e} />
             </View>
           </View>
+          <ChampPrixPersonnalise e={e} unite="piece" prixInventaire={prixDuDetail} />
         </>
       )}
       {parAnimal && !e.prixLibre ? (
@@ -902,7 +915,7 @@ export function ChampsVenteViande({ e }: Props) {
       ) : null}
       {e.prixLibre ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.prixLibreRecolteur}</Text>
-      ) : choisie && !prixDuDetail ? (
+      ) : choisie && !prixDuDetail && !e.prixPersonnalise ? (
         <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.aucunPrixInventaire}</Text>
       ) : prixDuDetail ? (
         <Text style={commonStyles.note}>
@@ -963,13 +976,14 @@ export function ChampsVenteOeufs({ e }: Props) {
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             value={e.montant}
             onChange={e.setMontant}
-            editable={e.prixLibre}
+            editable={e.prixLibre || e.prixPersonnalise}
           />
         </View>
         <View style={commonStyles.flex1}>
           <ChampTauxTvaVente e={e} />
         </View>
       </View>
+      <ChampPrixPersonnalise e={e} unite="piece" prixInventaire={prixDeLOeuf} />
       {/* Le crayon mène à la liste des œufs de l'inventaire, où se change le prix (le total se recalcule au retour). */}
       <View style={commonStyles.rowSpaceBetween}>
         <Text style={[commonStyles.note, commonStyles.flex1]}>

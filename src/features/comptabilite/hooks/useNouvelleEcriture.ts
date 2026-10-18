@@ -288,6 +288,13 @@ export function useNouvelleEcriture(
   const [fraisAbattoir, setFraisAbattoir] = useState('');
   const [tauxTvaFrais, setTauxTvaFrais] = useState('');
   const [precision, setPrecision] = useState(departLots?.produit?.startsWith('viande:') ? (departLots.libelle ?? '') : '');
+  /** Un prix personnalisé (exceptionnel) pour les produits de cette facture : l'option reste cochée d'une ligne à l'autre, le prix se saisit pour chaque produit. */
+  const [prixPersonnalise, setPrixPersonnalise] = useState(false);
+  const [prixPerso, setPrixPerso] = useState<{ cle: string; valeur: string }>({ cle: '', valeur: '' });
+  /** Le produit auquel le prix saisi appartient : un autre produit repart du prix de l'inventaire. */
+  const clePrix = [categorieRecette, precision, typeFromage].join('|');
+  const prixUnitaireSaisi = prixPerso.cle === clePrix ? prixPerso.valeur : '';
+  const setPrixUnitaireSaisi = (valeur: string) => setPrixPerso({ cle: clePrix, valeur });
   const [typeAide, setTypeAide] = useState<TypeAide>(TYPE_AIDE.PAIEMENT_BASE);
   const [typeAideLibre, setTypeAideLibre] = useState('');
   const [tauxImpositionLibre, setTauxImpositionLibre] = useState(
@@ -906,6 +913,10 @@ export function useNouvelleEcriture(
     setAnimauxAchetes,
     animauxEnvoyes,
     setAnimauxEnvoyes,
+    prixPersonnalise,
+    setPrixPersonnalise,
+    prixUnitaireSaisi,
+    setPrixUnitaireSaisi,
     tauxTvaAchat,
     setTauxTvaAchat,
     compteDepenseAutre,
