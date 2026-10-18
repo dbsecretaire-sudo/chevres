@@ -19,6 +19,9 @@ import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendus
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { useLots } from '@/features/exploitation/hooks/useLots';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { documentCirculationRequis, idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 
 export default function FicheVente() {
@@ -26,6 +29,7 @@ export default function FicheVente() {
   const fiche = useFicheVente(id);
   const router = useRouter();
   const retour = useAdresseCourante();
+  const { lots, creer } = useLots();
   const { vente, form } = fiche;
 
   if (!vente || !form) {
@@ -36,7 +40,16 @@ export default function FicheVente() {
     );
   }
 
-  const titre = libelleCategorieVente(vente);
+  // Une vente de viande d'un jour d'abattage : le lot « Abattoir du … » en titre, et un bouton qui l'ouvre.
+  const jourAbattage = vente.categorie === CATEGORIE_VENTE.VIANDE ? vente.dateAbattoir : undefined;
+  const titre = jourAbattage ? TEXTES.cheptel.lots.abattoirDu(formatDateFR(jourAbattage)) : libelleCategorieVente(vente);
+  const ouvrirLeLot = async () => {
+    if (!jourAbattage) return;
+    const lot =
+      lots.find((l) => l.abattoir === jourAbattage) ??
+      (await creer(TEXTES.cheptel.lots.abattoirDu(formatDateFR(jourAbattage)), '', { abattoir: jourAbattage, categorie: CATEGORIE_LOT.ABATTOIR }));
+    router.push(`${ROUTES.lot(lot.id)}&retour=${encodeURIComponent(retour)}` as never);
+  };
 
   return (
     <Screen scroll={false}>
@@ -125,7 +138,7 @@ export default function FicheVente() {
           />
         ) : (
           <>
-            <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} />
+            <VenteLecture vente={vente} onModifier={() => fiche.setEditing(true)} surLeLot={jourAbattage ? ouvrirLeLot : undefined} />
             <AnimauxDeLaVente vente={vente} />
           </>
         )}

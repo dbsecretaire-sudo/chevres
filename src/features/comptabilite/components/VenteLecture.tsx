@@ -28,7 +28,16 @@ function libelleQuantite(v: Vente): string {
 }
 
 /** Fiche d'une vente de production en lecture seule. */
-export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: () => void }) {
+export function VenteLecture({
+  vente,
+  onModifier,
+  surLeLot,
+}: {
+  vente: Vente;
+  onModifier: () => void;
+  /** Une vente de viande d'un jour d'abattage : le bouton qui ouvre le lot (la vente se modifie alors depuis le menu de la fiche). */
+  surLeLot?: () => void;
+}) {
   const compte = COMPTE_PAR_RECETTE[vente.categorie];
   return (
     <Card>
@@ -116,9 +125,9 @@ export function VenteLecture({ vente, onModifier }: { vente: Vente; onModifier: 
         </Text>
       ) : null}
       <Button
-        label={TEXTES.comptabilite.ficheVente.modifierLaVente}
+        label={surLeLot ? TEXTES.comptabilite.ficheVente.voirLesDetailsDuLot : TEXTES.comptabilite.ficheVente.modifierLaVente}
         variant="secondary"
-        onPress={onModifier}
+        onPress={surLeLot ?? onModifier}
       />
     </Card>
   );

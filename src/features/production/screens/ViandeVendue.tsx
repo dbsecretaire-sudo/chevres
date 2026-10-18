@@ -462,17 +462,8 @@ export default function ViandeVendue() {
                   .filter(Boolean)
                   .join('\n')}
                 trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
-                onPress={() => {
-                  // Une vente de viande d'un jour d'abattage : la fiche de ce lot (la vente y figure dans les écritures liées).
-                  const jour = ongletActif === 'facturee' ? item.dateAbattoir : undefined;
-                  if (!jour) return router.push(ROUTES.ficheVente(item.id));
-                  const boucles = (item.animaux ?? '')
-                    .split(SEPARATEUR_ANIMAUX)
-                    .filter(Boolean)
-                    .map((id) => animaux.get(id)?.numeroBoucle?.trim() ?? '')
-                    .filter(Boolean);
-                  return ouvrirLeLotDuJour(jour, boucles);
-                }}
+                // La vente : sa fiche porte le jour d'abattage en titre et mène au lot.
+                onPress={() => router.push(ROUTES.ficheVente(item.id))}
               />
             </LigneDeBloc>
           )}

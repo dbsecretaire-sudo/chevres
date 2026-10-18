@@ -120,6 +120,7 @@ export const TEXTES_COMPTABILITE = {
       'Un document de circulation n’est nécessaire que pour une vente déclarée avec des animaux vivants : des animaux déjà morts n’en ont pas.',
     impossibleDeSupprimerLaVente: 'Impossible de supprimer la vente.',
     venteIntrouvable: 'Vente introuvable.',
+    voirLesDetailsDuLot: 'Voir les détails du lot',
     modifierLaVente: 'Modifier la vente',
     declaree: (declaree: boolean) => `Le contact souhaite déclarer la vente : ${declaree ? 'oui' : 'non'}`,
     typeVenteDeProduction: 'Type : Vente de production',
