@@ -40,7 +40,8 @@ import {
 } from '@/features/stock/services/boucles';
 import { ModalSynchroBoucles } from '@/features/stock/components/ModalSynchroBoucles';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { synchroBouclesActive } from '@/features/settings/settings';
+import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
+import { idsDesInconsommables } from '@/features/exploitation/services/lots';
 import { JournalLait } from '@/features/stock/components/JournalLait';
 import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';
@@ -214,8 +215,13 @@ export default function StockFromagerie() {
     ]);
     setArchive(stock);
     setAchats(factures);
-    // Les animaux à l'abattoir que vend une facture du client ne comptent plus ; les autres (à facturer) sont du stock.
-    setEffectifs(await effectifsVivants(new Set(ventes.flatMap((v) => idsDesAnimaux(v))), numerosTiptag(stock.boucles)));
+    // Les animaux à l'abattoir que vend une facture du client ne comptent plus, ni les bêtes écartées d'un lot (jamais facturées) ; les autres (à facturer) sont du stock.
+    setEffectifs(
+      await effectifsVivants(
+        new Set([...ventes.flatMap((v) => idsDesAnimaux(v)), ...idsDesInconsommables((await getSettings()).exploitation?.lots)]),
+        numerosTiptag(stock.boucles),
+      ),
+    );
     setPossibles(await bouclesPossiblesDuCheptel());
     setVentesLait(
       ventes

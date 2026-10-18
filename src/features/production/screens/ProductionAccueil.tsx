@@ -7,6 +7,7 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuProduit, estArticleAvecLots } from '@/features/stock/services/lots';
 import {
   articlesDuGenre,
+  estLigneDuCheptel,
   niveauxDeStock,
   resynchroniserStockDesVentes,
   type ArticleAffiche,
@@ -53,8 +54,9 @@ export default function ProductionAccueil() {
             charcuterie: aUnNegatif(articlesDuProduit(PRODUIT_A_LOTS.CHARCUTERIE, archive, espece)),
             // La viande vendue : les animaux entiers de l'inventaire (les produits de charcuterie ont leur ligne à part).
             viande: aUnNegatif(
+              // Le niveau d'un animal suit le cheptel, pas les mouvements : il n'a pas d'alerte de stock négatif.
               articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter(
-                (a) => !estArticleAvecLots(a.cle),
+                (a) => !estArticleAvecLots(a.cle) && !estLigneDuCheptel(a.cle),
               ),
             ),
           });

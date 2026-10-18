@@ -319,9 +319,8 @@ export function consommationDeLaVente(
         quantite: vente.quantite,
       }),
     );
-    // Les petits, l'animal sur pied et l'animal vivant suivent le cheptel (voir estLigneDuCheptel) : la vente n'y touche pas, ce
-    // sont les fiches des animaux vendus qui changent de statut : seuls leurs emballages baissent.
-    if (estLigneDuCheptel(article.cle)) return emballages;
+    // Les petits, l'animal sur pied et l'animal vivant : le niveau suit le cheptel (voir estLigneDuCheptel, les fiches des animaux vendus
+    // changent de statut), mais la vente a son mouvement dans l'historique de l'inventaire — lié à elle : il la suit et disparaît avec elle.
     return [{ article: article.cle, quantite: vente.quantite }, ...emballages];
   }
   const fromage = codeFromageDeLaVente(vente, archive);

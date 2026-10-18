@@ -6,6 +6,8 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { numerosTiptag } from '@/features/stock/services/boucles';
 import { niveauxDeStock } from '@/features/stock/services/stock';
+import { idsDesInconsommables } from '@/features/exploitation/services/lots';
+import { getSettings } from '@/features/settings/settings';
 
 /**
  * Le niveau de chaque article du stock (par identifiant « genre:code »), relu à chaque retour sur l'écran. L'animal sur pied
@@ -16,13 +18,14 @@ export function useNiveauxStock(): Map<string, number> {
 
   useFocusEffect(
     useCallback(() => {
-      Promise.all([lireArchiveStock(), listToutesVentes()])
-        .then(async ([archive, ventes]) =>
+      Promise.all([lireArchiveStock(), listToutesVentes(), getSettings()])
+        .then(async ([archive, ventes, reglages]) =>
           setNiveaux(
             niveauxDeStock(
               archive.mouvements,
               await effectifsVivants(
-                new Set(ventes.flatMap((v) => idsDesAnimaux(v))),
+                // Les animaux d'une vente, et les bêtes écartées d'un lot d'abattage (jamais facturées), ne sont plus du stock à facturer.
+                new Set([...ventes.flatMap((v) => idsDesAnimaux(v)), ...idsDesInconsommables(reglages.exploitation?.lots)]),
                 numerosTiptag(archive.boucles),
               ),
             ),
