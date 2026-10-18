@@ -288,7 +288,7 @@ export const TEXTES_CHEPTEL = {
     lotVendu: 'Ce lot est vendu : il est figé.',
     lotVenduAide: 'Rien ne s’y modifie (animaux, facture de l’abattoir). Pour le modifier, supprimez la facture du client.',
     facturerCeLot: 'Facturer la viande de ce lot au client',
-    voirLaFactureDuClient: 'Voir la facture du client',
+    voirLaFactureDuClient: 'Voir la facture',
     aucuneFactureAbattoirLiee: 'Aucune facture d’abattoir n’était liée à ce lot.',
     factureDuClient: 'Facture du client',
     aucuneFactureClient: 'Aucune facture du client pour ce lot : il est à facturer.',
