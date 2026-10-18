@@ -1193,6 +1193,8 @@ export const TEXTES_CHEPTEL = {
   },
   chevreLabel: {
     nomSansBoucle: (nom: string) => `${nom} (sans boucle)`,
+    /** Un animal sans boucle ni nom : son type, et rien d'autre (sa naissance et sa sortie sont sur la ligne du dessous). */
+    typeSansBoucle: (type: string) => `${type} sans boucle`,
     get chevrette() {
       return V().petitFemelle;
     },

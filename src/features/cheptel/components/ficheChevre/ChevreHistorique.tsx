@@ -10,7 +10,7 @@ import { useParentsPossibles } from '@/features/cheptel/hooks/useMeresPossibles'
 import { stylesAscendance } from '@/shared/styles/cheptel/SuiviAnnuel.styles';
 import { colors, statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
-import { demonstratifAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
+import { demonstratifAnimal, detailDeLAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
@@ -67,10 +67,7 @@ export function ChevreAscendance({
             key={p.cle}
             icone={p.icone}
             title={libelleChevre(p.animal)}
-            subtitle={TEXTES.commun.general.accordNeLeDate(
-              p.animal.sexe === SEXE.FEMELLE ? T.nee : T.ne,
-              formatDateFR(p.animal.dateNaissance),
-            )}
+            subtitle={detailDeLAnimal(p.animal)}
             trailing={
               <View style={commonStyles.row}>
                 <Badge label={statutLabel(p.animal.statut, p.animal.sexe)} color={statutColors[p.animal.statut]} />
@@ -141,10 +138,7 @@ export function ChevreDescendance({
         <ListRow
           key={d.id}
           title={libelleChevre(d)}
-          subtitle={TEXTES.commun.general.accordNeLeDate(
-            d.sexe === SEXE.FEMELLE ? TEXTES.cheptel.ficheChevre.nee : TEXTES.cheptel.ficheChevre.ne,
-            formatDateFR(d.dateNaissance),
-          )}
+          subtitle={detailDeLAnimal(d)}
           trailing={<Badge label={statutLabel(d.statut, d.sexe)} color={statutColors[d.statut]} />}
           onPress={() => onOuvrir(d.id)}
         />

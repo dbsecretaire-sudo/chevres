@@ -4,6 +4,7 @@ import { colors, statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
 import {
   afficherBadgeRenouvellement,
+  detailDeLAnimal,
   libelleChevre,
   statutLabel,
 } from '@/features/cheptel/utils/chevreLabel';
@@ -46,7 +47,12 @@ export function LigneChevre({
   return (
     <ListRow
       title={titre ?? libelleChevre(chevre)}
-      subtitle={`${LABEL_SEXE[chevre.sexe]} · ${formatDateFR(chevre.dateNaissance)} - ${dateSortie}${mere}${reserve}`}
+      subtitle={
+        // Sans boucle ni nom : la ligne du dessous dit sa naissance et sa sortie, le titre dit déjà ce que c'est.
+        !chevre.numeroBoucle && !chevre.nom
+          ? `${detailDeLAnimal(chevre)}${mere}${reserve}`
+          : `${LABEL_SEXE[chevre.sexe]} · ${formatDateFR(chevre.dateNaissance)} - ${dateSortie}${mere}${reserve}`
+      }
       trailing={<BadgeChevre chevre={chevre} />}
       onPress={onPress}
     />

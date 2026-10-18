@@ -43,10 +43,6 @@ export function ChevreResume({ chevre, indicatif, onModifier }: Props) {
         </Text>
       )}
       <Text style={commonStyles.line}>
-        {TEXTES.commun.general.nomDeuxPoints}
-        {chevre.nom ?? '—'}
-      </Text>
-      <Text style={commonStyles.line}>
         {TEXTES.cheptel.ficheChevre.sexeDeuxPoints}
         {LABEL_SEXE[chevre.sexe]}
       </Text>

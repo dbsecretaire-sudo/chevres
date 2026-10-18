@@ -7,6 +7,7 @@ import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -15,7 +16,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { statutColors } from '@/shared/theme/colors';
 import { listNaissancesGroupees, type PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import { formatDateFR } from '@/shared/utils/dates';
-import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
+import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import { styles } from '@/shared/styles/cheptel/Naissances.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
@@ -34,7 +35,9 @@ export default function Naissances() {
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
   const regrouper = !!settings.toutesAnnees;
   const annees = [...new Set(portees.map((p) => Number(p.date.slice(0, 4))))].filter(Boolean);
-  const affichees = regrouper ? portees : portees.filter((p) => p.date.startsWith(String(settings.anneeActive)));
+  const affichees = regrouper
+    ? portees
+    : portees.filter((p) => p.date.startsWith(String(settings.anneeActive)));
   /** Où en sont aujourd'hui les petits de ces naissances. */
   const repartition = (() => {
     const petits = affichees.flatMap((p) => p.cabrits);
@@ -90,39 +93,44 @@ export default function Naissances() {
       <FlatList
         data={affichees}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}
-        contentContainerStyle={commonStyles.listeSimple}
+        contentContainerStyle={styles.liste}
         ListEmptyComponent={
           <EmptyState
             title={TEXTES.cheptel.naissances.aucuneNaissanceEnregistree}
             subtitle={TEXTES.cheptel.naissances.declarezUneNaissanceDepuisL}
           />
         }
-        renderItem={({ item }) => (
-          <Card>
-            <View style={commonStyles.rowSpaceBetween}>
-              <Text style={commonStyles.cardTitle}>
-                {TEXTES.cheptel.naissances.mereEspace}
-                {item.mereNumeroBoucle}
+        renderItem={({ item, index }) => (
+          <LigneDeBloc index={index} total={affichees.length}>
+            <Card style={styles.carte}>
+              <View style={commonStyles.rowSpaceBetween}>
+                <Text style={commonStyles.cardTitle}>
+                  {TEXTES.cheptel.naissances.mereEspace}
+                  {item.mereNumeroBoucle}
+                </Text>
+                <Text style={commonStyles.muted}>{formatDateFR(item.date)}</Text>
+              </View>
+              <Text style={commonStyles.muted}>
+                {item.cabrits.length} {TEXTES.cheptel.naissances.cabri}
+                {item.cabrits.length > 1 ? 's' : ''} ·{' '}
+                {item.cabrits.filter((c) => c.sexe === SEXE.FEMELLE).length} F ·{' '}
+                {item.cabrits.filter((c) => c.sexe === SEXE.MALE).length} M
               </Text>
-              <Text style={commonStyles.muted}>{formatDateFR(item.date)}</Text>
-            </View>
-            <Text style={commonStyles.muted}>
-              {item.cabrits.length} {TEXTES.cheptel.naissances.cabri}
-              {item.cabrits.length > 1 ? 's' : ''} ·{' '}
-              {item.cabrits.filter((c) => c.sexe === SEXE.FEMELLE).length} F ·{' '}
-              {item.cabrits.filter((c) => c.sexe === SEXE.MALE).length} M
-            </Text>
-            <View style={styles.cabritsRow}>
-              {item.cabrits.map((c) => (
-                <View key={c.id} style={styles.cabritChip}>
-                  <Text style={styles.cabritChipText} onPress={() => router.push(ROUTES.ficheChevreDepuis(c.id, retour))}>
-                    {c.numeroBoucle ?? TEXTES.cheptel.naissances.sansBoucleSexe(c.sexe)}
-                  </Text>
-                  <Badge label={statutLabel(c.statut, c.sexe)} color={statutColors[c.statut]} />
-                </View>
-              ))}
-            </View>
-          </Card>
+              <View style={styles.cabritsRow}>
+                {item.cabrits.map((c) => (
+                  <View key={c.id} style={styles.cabritChip}>
+                    <Text
+                      style={styles.cabritChipText}
+                      onPress={() => router.push(ROUTES.ficheChevreDepuis(c.id, retour))}
+                    >
+                      {libelleChevre(c)}
+                    </Text>
+                    <Badge label={statutLabel(c.statut, c.sexe)} color={statutColors[c.statut]} />
+                  </View>
+                ))}
+              </View>
+            </Card>
+          </LigneDeBloc>
         )}
       />
     </Screen>

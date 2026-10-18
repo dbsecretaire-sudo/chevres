@@ -39,12 +39,6 @@ export default function NouvelleChevre() {
               onChange={e.setDateBouclage}
             />
           )}
-          <FormField
-            label={TEXTES.commun.general.nom}
-            value={e.nom}
-            onChangeText={e.setNom}
-            placeholder={TEXTES.commun.general.facultatif}
-          />
           <View style={commonStyles.row}>
             <View style={commonStyles.flex1}>
               <SelectField

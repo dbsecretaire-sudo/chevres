@@ -29,7 +29,37 @@ export function libelleChevre(c: Pick<Chevre, 'numeroBoucle' | 'nom' | 'sexe' | 
       : petit
         ? mots.chevreau
         : mots.maleAdulte;
-  return TEXTES.cheptel.chevreLabel.typeSansBoucleNeE(type, formatDateFR(c.dateNaissance));
+  return TEXTES.cheptel.chevreLabel.typeSansBoucle(type);
+}
+
+/**
+ * Le libellé sur une seule ligne (une liste déroulante, où deux animaux sans boucle se distingueraient mal) : comme libelleChevre, mais un
+ * animal sans boucle ni nom y garde sa date de naissance (« Bouc sans boucle — né(e) le 05/01/2026 »).
+ */
+export function libelleChevreAvecDate(c: Pick<Chevre, 'numeroBoucle' | 'nom' | 'sexe' | 'dateNaissance'>): string {
+  if (c.numeroBoucle || c.nom) return libelleChevre(c);
+  const petit = categorieAnimal(c) === CATEGORIE_ANIMAL.CABRIT;
+  const mots = TEXTES.cheptel.chevreLabel;
+  const type =
+    c.sexe === SEXE.FEMELLE
+      ? petit
+        ? mots.chevrette
+        : mots.femelleAdulte
+      : petit
+        ? mots.chevreau
+        : mots.maleAdulte;
+  return mots.typeSansBoucleNeE(type, formatDateFR(c.dateNaissance));
+}
+
+/** La ligne du dessous d'un animal : sa naissance, et sa sortie quand il est parti (« Né le 05/01/2026 - Mort le 18/10/2026 »). */
+export function detailDeLAnimal(
+  c: Pick<Chevre, 'sexe' | 'dateNaissance' | 'statut' | 'dateStatut'>,
+): string {
+  const ne = accordNe(c.sexe);
+  const naissance = `${ne.charAt(0).toUpperCase()}${ne.slice(1)} le ${formatDateFR(c.dateNaissance)}`;
+  return c.statut !== 'vivante' && c.dateStatut
+    ? `${naissance} - ${statutLabel(c.statut, c.sexe)} le ${formatDateFR(c.dateStatut)}`
+    : naissance;
 }
 
 /** Clé de tri stable : les chèvres bouclées d'abord (par n° de boucle), puis les autres par nom. */

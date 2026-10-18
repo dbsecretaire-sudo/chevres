@@ -35,7 +35,7 @@ import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repo
 import type { Chevre } from '@/features/cheptel/types';
 import type { LotFromage } from '@/features/stock/types';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
-import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import { libelleChevreAvecDate } from '@/features/cheptel/utils/chevreLabel';
 import {
   disponiblesPourLaCommande,
   liberer,
@@ -551,7 +551,7 @@ export default function FicheCommande() {
         key={choixAnimaux ? 'ouverte' : 'fermee'}
         visible={choixAnimaux}
         titre={TEXTES.cheptel.reservation.titreChoix}
-        options={aReserver.map((a) => ({ value: a.id, label: libelleChevre(a) }))}
+        options={aReserver.map((a) => ({ value: a.id, label: libelleChevreAvecDate(a) }))}
         initiales={reserves.map((a) => a.id)}
         libelleValider={TEXTES.cheptel.reservation.valider}
         onValider={reserverLesAnimaux}

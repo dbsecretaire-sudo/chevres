@@ -21,21 +21,12 @@ interface Props {
 export function ChevreFormulaire({ chevre, form, onChange }: Props) {
   return (
     <View style={commonStyles.gap10}>
-      {/* L'identité : le nom et le poids, le sexe et la naissance, deux par ligne. */}
+      {/* L'identité : le poids, le sexe et la naissance, sur une même ligne (à la ligne sur téléphone). */}
       <SectionForm titre={TEXTES.commun.formulaire.identite}>
         <View style={styles.ligne}>
           <View style={styles.champ}>
-            <FormField
-              label={TEXTES.commun.general.nom}
-              value={form.nom ?? ''}
-              onChangeText={(v) => onChange({ ...form, nom: v })}
-            />
-          </View>
-          <View style={styles.champ}>
             <ChampPoids value={form.poidsKg} onChange={(poidsKg) => onChange({ ...form, poidsKg })} sansAide />
           </View>
-        </View>
-        <View style={styles.ligne}>
           <View style={styles.champ}>
             <SelectField
               label={TEXTES.commun.general.sexe}

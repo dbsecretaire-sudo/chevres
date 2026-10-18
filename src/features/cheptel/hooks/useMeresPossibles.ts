@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listChevresPresentesLe } from '@/features/cheptel/repository/chevres';
 import { parentsPossiblesLe } from '@/features/cheptel/services/meresPossibles';
-import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
+import { libelleChevreAvecDate } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre } from '@/features/cheptel/types';
 import { SEXE } from '@/shared/constants/cheptel';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -25,7 +25,7 @@ export function useParentsPossibles(date: string, sexe: ValeurDe<typeof SEXE>, i
     () =>
       parentsPossiblesLe(presentes, jour, sexe, incluse).map((c) => ({
         value: c.numeroBoucle as string,
-        label: libelleChevre(c),
+        label: libelleChevreAvecDate(c),
       })),
     [presentes, jour, sexe, incluse],
   );

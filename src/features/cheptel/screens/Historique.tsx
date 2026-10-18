@@ -13,13 +13,14 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Badge } from '@/shared/components/Badge';
 import { ListRow } from '@/shared/components/ListRow';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { SelectField } from '@/shared/components/SelectField';
 import { statutColors } from '@/shared/theme/colors';
 import { listChevresHistorique } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { currentYear, formatDateFR } from '@/shared/utils/dates';
-import { libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
+import { detailDeLAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import { styles } from '@/shared/styles/cheptel/Historique.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -123,23 +124,31 @@ export default function Historique() {
       <FlatList
         data={triees}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={commonStyles.listeSimple}
+        contentContainerStyle={{ paddingBottom: 24 }}
         ListEmptyComponent={
           <EmptyState
             title={TEXTES.cheptel.historique.aucunHistorique}
             subtitle={TEXTES.cheptel.historique.lesChevresMortesEnvoyeesA}
           />
         }
-        renderItem={({ item }) => (
-          <ListRow
-            title={libelleChevre(item)}
-            subtitle={TEXTES.commun.general.accordNeLeDate(
-              statutLabel(item.statut, item.sexe),
-              formatDateFR(item.dateStatut),
-            )}
-            trailing={<Badge label={statutLabel(item.statut, item.sexe)} color={statutColors[item.statut]} />}
-            onPress={() => router.push(ROUTES.ficheChevreDepuis(item.id, retour))}
-          />
+        renderItem={({ item, index }) => (
+          <LigneDeBloc index={index} total={triees.length}>
+            <ListRow
+              title={libelleChevre(item)}
+              subtitle={
+                item.numeroBoucle || item.nom
+                  ? TEXTES.commun.general.accordNeLeDate(
+                      statutLabel(item.statut, item.sexe),
+                      formatDateFR(item.dateStatut),
+                    )
+                  : detailDeLAnimal(item)
+              }
+              trailing={
+                <Badge label={statutLabel(item.statut, item.sexe)} color={statutColors[item.statut]} />
+              }
+              onPress={() => router.push(ROUTES.ficheChevreDepuis(item.id, retour))}
+            />
+          </LigneDeBloc>
         )}
       />
     </Screen>
