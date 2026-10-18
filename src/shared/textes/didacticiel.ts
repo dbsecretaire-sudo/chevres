@@ -1,10 +1,10 @@
 /** Textes de l'interface — le didacticiel (toutes les options de l'application, expliquées). À modifier ici uniquement. */
 export const TEXTES_DIDACTICIEL = {
   titre: 'Didacticiel',
-  afficher: 'Afficher le didacticiel',
-  presentation: 'Toutes les options de l’application, onglet par onglet : où les trouver et ce qu’elles font.',
+  activer: 'Activer le didacticiel',
+  desactiver: 'Désactiver le didacticiel',
   parcourir: 'Parcourir le didacticiel',
-  aide: 'Toutes les options de l’application, onglet par onglet. Un appui sur « Ouvrir » mène à l’écran de l’option. On l’active ou le désactive depuis l’accueil.',
+  aide: 'Toutes les options de l’application, onglet par onglet. Un appui sur « Ouvrir » mène à l’écran de l’option. On l’active ou le désactive depuis le bouton en haut à droite de l’accueil.',
   ouvrir: 'Ouvrir',
   commencer: 'Commencer la visite guidée',
   aideVisite: 'La visite guidée présente chaque page, au fur et à mesure, et vous invite à toucher les boutons de l’interface.',

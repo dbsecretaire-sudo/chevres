@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BoutonInformations } from '@/features/accueil/components/BoutonInformations';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
-import { BlocDidacticiel } from '@/features/didacticiel/components/BlocDidacticiel';
+import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
 import { Screen } from '@/shared/components/Screen';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -109,6 +109,7 @@ export default function AccueilEntreprise() {
       <View style={stylesAccueil.ligneAnnee}>
         <YearPicker annees={accueil.annees} value={accueil.annee} onChange={changerAnnee} />
         <BoutonInformations titre={TEXTES.commun.general.informationsDeLEntreprise} />
+        <BoutonDidacticiel />
       </View>
 
       <GrilleChiffres>
@@ -127,7 +128,6 @@ export default function AccueilEntreprise() {
       </GrilleChiffres>
 
       <BlocRappels />
-      <BlocDidacticiel />
 
       {gite ? (
         <CalendrierMois

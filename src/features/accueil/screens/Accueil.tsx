@@ -1,7 +1,7 @@
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
-import { BlocDidacticiel } from '@/features/didacticiel/components/BlocDidacticiel';
+import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
 import { BlocSante } from '@/features/exploitation/components/BlocSante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Screen } from '@/shared/components/Screen';
@@ -25,13 +25,13 @@ function AccueilElevage() {
         <LigneFiltres>
           <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
           <SelecteurEspece />
+          <BoutonDidacticiel />
         </LigneFiltres>
       </AncreVisite>
 
       {/* Ce qui demande qu'on s'en occupe : les délais d'attente, le bilan sanitaire, les déclarations à faire (rien quand tout va bien). */}
       <BlocSante />
       <BlocRappels />
-      <BlocDidacticiel />
 
       {/* Les quatre chiffres de l'élevage ; le détail (pyramide des âges, mouvements) est dans Cheptel › Statistiques. */}
       <TuilesAccueil stats={stats} annee={annee} />
