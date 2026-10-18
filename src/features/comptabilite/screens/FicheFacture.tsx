@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { BoutonEnteteCirculation } from '@/features/comptabilite/components/BoutonEnteteCirculation';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
@@ -14,14 +14,9 @@ import { FactureFormulaire } from '@/features/comptabilite/components/FactureFor
 import { FactureLecture } from '@/features/comptabilite/components/FactureLecture';
 import { useFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
-import { useLots } from '@/features/exploitation/hooks/useLots';
-import { animauxDuLot } from '@/features/exploitation/services/lots';
-import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { nomsDesAbattoirs, tiersEstUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
-import {
-  exporterDocumentCirculationAbattoirPdf,
-  exporterDocumentCirculationAchatPdf,
-} from '@/features/export/documentCirculationPdf';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { ROUTES } from '@/shared/constants/routes';
 import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -30,7 +25,8 @@ export default function FicheFacture() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const f = useFicheFacture(id);
   const { facture, form } = f;
-  const { lots } = useLots();
+  const router = useRouter();
+  const retour = useAdresseCourante();
   const [abattoirs, setAbattoirs] = useState<Set<string>>(new Set());
   useEffect(() => {
     nomsDesAbattoirs().then(setAbattoirs).catch(() => undefined);
@@ -47,22 +43,8 @@ export default function FicheFacture() {
   const estEmise = facture.type === TYPE_FACTURE.EMISE;
   /** Des animaux vivants achetés (à un autre éleveur) : le document de circulation part de chez le vendeur, avec ces animaux. */
   const achatAnimaux = !estEmise && idsDesAnimauxAchetes(facture).length > 0;
-  /** La dépense d'un abattoir : le document de circulation (modèle pré-rempli) se génère depuis l'en-tête, avec les animaux du lot qui y est lié. */
+  /** La dépense d'un abattoir : comme un achat d'animaux, elle a son document de circulation (à déposer, ou le modèle à générer). */
   const depenseAbattoir = !estEmise && tiersEstUnAbattoir(facture.tiers, abattoirs);
-  const genererLeDocument = async () => {
-    if (achatAnimaux) {
-      await exporterDocumentCirculationAchatPdf(facture.id);
-      return;
-    }
-    const lot = lots.find((l) => l.factureId === facture.id && l.abattoir);
-    const animaux = lot ? animauxDuLot(lot, await listTousLesAnimauxDeLEspece()) : [];
-    await exporterDocumentCirculationAbattoirPdf(
-      lot?.abattoir ?? facture.date,
-      animaux.map((a) => a.id),
-      facture.tiers,
-      true,
-    );
-  };
 
   return (
     <Screen scroll={false}>
@@ -70,7 +52,9 @@ export default function FicheFacture() {
         <Stack.Screen
           options={{
             headerRight: () => (
-              <BoutonEnteteCirculation onPress={() => genererLeDocument().catch(() => undefined)} />
+              <BoutonEnteteCirculation
+                onPress={() => router.push(ROUTES.documentsCirculationDepuis(retour, `facture:${facture.id}`) as never)}
+              />
             ),
           }}
         />

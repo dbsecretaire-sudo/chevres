@@ -1,5 +1,7 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { ROUTES } from '@/shared/constants/routes';
 import { BoutonEnteteCirculation } from '@/features/comptabilite/components/BoutonEnteteCirculation';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
@@ -13,7 +15,6 @@ import { VenteFormulaire } from '@/features/comptabilite/components/VenteFormula
 import { VenteLecture } from '@/features/comptabilite/components/VenteLecture';
 import { AnimauxDeLaVente } from '@/features/comptabilite/components/AnimauxDeLaVente';
 import { AnimauxVendusEdition } from '@/features/comptabilite/components/AnimauxVendusEdition';
-import { exporterDocumentCirculationPdf } from '@/features/export/documentCirculationPdf';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -23,6 +24,8 @@ import { documentCirculationRequis, idsDesFromages, libelleCategorieVente } from
 export default function FicheVente() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const fiche = useFicheVente(id);
+  const router = useRouter();
+  const retour = useAdresseCourante();
   const { vente, form } = fiche;
 
   if (!vente || !form) {
@@ -42,7 +45,9 @@ export default function FicheVente() {
         <Stack.Screen
           options={{
             headerRight: () => (
-              <BoutonEnteteCirculation onPress={() => exporterDocumentCirculationPdf(vente.id).catch(() => undefined)} />
+              <BoutonEnteteCirculation
+              onPress={() => router.push(ROUTES.documentsCirculationDepuis(retour, `vente:${vente.id}`) as never)}
+            />
             ),
           }}
         />

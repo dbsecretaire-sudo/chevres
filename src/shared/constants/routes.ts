@@ -35,6 +35,10 @@ export const ROUTES = {
   CHEPTEL_DOSSIER_PAC: '/cheptel/dossier-pac',
   /** La bibliothèque des documents générés ; `bibliothequeDepuis` l'ouvre depuis un écran (la flèche de retour y revient). */
   CHEPTEL_BIBLIOTHEQUE: '/cheptel/bibliotheque',
+  /** Les documents de circulation à déposer (ventes et dépenses d'animaux vivants) ; `documentsCirculationDepuis` l'ouvre, avec éventuellement l'écriture à mettre en évidence. */
+  CHEPTEL_DOCUMENTS_CIRCULATION: '/cheptel/documents-circulation',
+  documentsCirculationDepuis: (retour: string, ecriture?: string) =>
+    `/cheptel/documents-circulation?retour=${encodeURIComponent(retour)}${ecriture ? `&ecriture=${encodeURIComponent(ecriture)}` : ''}` as const,
   bibliothequeDepuis: (retour: string) => `/cheptel/bibliotheque?retour=${encodeURIComponent(retour)}` as const,
   /** Les traitements donnés aux animaux et leurs délais d'attente. */
   CHEPTEL_TRAITEMENTS: '/cheptel/traitements',

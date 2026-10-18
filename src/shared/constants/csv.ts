@@ -69,6 +69,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'id',
     'date',
     'activite',
+    'documentCirculation',
     'type',
     'tiers',
     'description',
@@ -136,6 +137,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     // Vente de viande : vivants ou morts à la remise ; vente offerte au client.
     'etatAnimaux',
     'offert',
+    // Le document de circulation déposé (le fichier et son moment de dépôt) : en JSON dans sa cellule.
+    'documentCirculation',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
@@ -238,7 +241,7 @@ export const CHAMPS_LIGNES_CARBURANT = new Set(['lignesCarburant']);
 export const CHAMPS_FICHIERS = new Set(['fichiers']);
 
 /** Les champs écrits tels quels en JSON dans leur cellule (les contenus d'un groupement, avec leurs fichiers). */
-export const CHAMPS_JSON = new Set(['contenus', 'lignesProduction', 'lignesChambre', 'reservation']);
+export const CHAMPS_JSON = new Set(['contenus', 'lignesProduction', 'lignesChambre', 'reservation', 'documentCirculation']);
 
 export const CHAMPS_LIGNES_MARCHANDISES = new Set(['lignesMarchandises']);
 

@@ -7,6 +7,7 @@ import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
+import { useDocumentsCirculationManquants } from '@/features/comptabilite/hooks/useDocumentsCirculationManquants';
 import { useLotsARappeler, type RappelDeLot } from '@/features/stock/hooks/useLotsARappeler';
 import { destinationRappel } from '@/features/rappels/services/destination';
 import { ROUTES } from '@/shared/constants/routes';
@@ -26,10 +27,12 @@ function BlocRappelsDeclarations() {
   const router = useRouter();
   const { rappels, genres, valider } = useRappels();
   const { aRappeler: lots, aValider, valider: validerLot } = useLotsARappeler();
+  /** Les ventes et dépenses d'animaux vivants dont le document de circulation n'est pas déposé : rappelés tant qu'il manque. */
+  const circulation = useDocumentsCirculationManquants().length;
   /** Le rappel de lot dont on confirme la validation. */
   const [lotAValider, setLotAValider] = useState<RappelDeLot | null>(null);
   // Les activités qui ont des rappels gardent le bloc (et son historique) même quand rien n'est à valider.
-  if (rappels.length === 0 && lots === 0 && aValider.length === 0 && genres.length === 0) return null;
+  if (rappels.length === 0 && lots === 0 && aValider.length === 0 && genres.length === 0 && circulation === 0) return null;
   return (
     <View style={styles.conteneur}>
       <View style={styles.enTete}>
@@ -51,10 +54,25 @@ function BlocRappelsDeclarations() {
           </Pressable>
         </View>
       </View>
-      {rappels.length === 0 && lots === 0 && aValider.length === 0 ? (
+      {rappels.length === 0 && lots === 0 && aValider.length === 0 && circulation === 0 ? (
         <Text style={commonStyles.mutedItalic}>{T.aucun}</Text>
       ) : null}
       <BlocLignes>
+        {circulation > 0 ? (
+          <View style={styles.ligne}>
+            <Pressable
+              style={styles.texte}
+              onPress={() => router.push(ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION as never)}
+            >
+              <View style={styles.titreLigne}>
+                <Text style={styles.libelle}>{TEXTES.cheptel.circulation.nManquants(circulation)}</Text>
+                <PastilleAlerte taille={18} />
+              </View>
+              <Text style={[styles.detail, styles.detailRetard]}>{TEXTES.cheptel.circulation.rappelDetail}</Text>
+            </Pressable>
+            <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
+          </View>
+        ) : null}
         {lots > 0 ? (
           <View style={styles.ligne}>
             <Pressable

@@ -17,6 +17,14 @@ import type {
   TYPE_CHOIX_FACTURE,
 } from '@/shared/constants/comptabilite';
 import type { NATURE_URSSAF } from '@/shared/constants/entreprise';
+import type { PieceJointe } from '@/features/fichiers/types';
+
+/** Le document de circulation déposé pour une vente ou une dépense d'animaux vivants : le fichier (scan, photo, PDF) et le moment du dépôt. */
+export interface DocumentCirculationDepose {
+  piece: PieceJointe;
+  /** Date et heure du dépôt (ISO) : « Document ajouté le 18/10/2026 à 13:34 ». */
+  deposeLe: string;
+}
 
 export type TypeFacture = ValeurDe<typeof TYPE_FACTURE>;
 
@@ -124,6 +132,8 @@ export interface Facture {
   date: string;
   type: TypeFacture;
   tiers: string; // fournisseur ou client
+  /** Une dépense d'animaux vivants (achat, abattoir) : le document de circulation déposé ; absent tant qu'il manque. */
+  documentCirculation?: DocumentCirculationDepose;
   /** Activité de la facture ; absente sur les anciennes factures (voir activiteFacture). */
   activite?: ActiviteComptable;
   description: string;
@@ -253,6 +263,8 @@ export interface Vente {
    * ils sont vendus vivants au client ; « morts » : ils sont déjà morts (pas de transport d'animaux vivants, donc pas de document de circulation).
    */
   etatAnimaux?: 'vivants' | 'morts';
+  /** Le document de circulation déposé (le scan du document rempli) ; absent tant qu'il manque. */
+  documentCirculation?: DocumentCirculationDepose;
   /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */
   animaux?: string;
   /** Pour une vente de viande avec des animaux : la date d'abattoir (celle de la sortie du cheptel) ; absente : la date de la vente. */

@@ -4,19 +4,28 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-/** Le bouton de l'en-tête qui génère le document de circulation (modèle pré-rempli) : son nom court, et une icône de document. */
+/** Le bouton de l'en-tête qui mène aux documents de circulation : son nom court, et le logo d'un document (blanc sur le vert de l'en-tête). */
 export function BoutonEnteteCirculation({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
-      style={[commonStyles.boutonEnteteDroite, commonStyles.row]}
+      style={[commonStyles.boutonEnteteDroite, commonStyles.row, { alignItems: 'center' }]}
       onPress={onPress}
       hitSlop={10}
       accessibilityRole="button"
-      accessibilityLabel={TEXTES.cheptel.circulation.bouton}
+      accessibilityLabel={TEXTES.cheptel.circulation.boutonEntete}
     >
-      <Text style={commonStyles.texteEntete}>{TEXTES.cheptel.circulation.boutonEntete}</Text>
-      <View style={{ backgroundColor: colors.blanc, borderRadius: 6, padding: 4 }}>
-        <Ionicons name="document-text" size={20} color={colors.primary} />
+      <Text style={[commonStyles.texteEntete, { textAlignVertical: 'center' }]}>{TEXTES.cheptel.circulation.boutonEntete}</Text>
+      <View
+        style={{
+          borderWidth: 1.5,
+          borderColor: colors.blanc,
+          borderRadius: 6,
+          padding: 3,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ionicons name="document-text" size={20} color={colors.blanc} />
       </View>
     </Pressable>
   );

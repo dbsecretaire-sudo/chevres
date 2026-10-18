@@ -25,7 +25,7 @@ import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
-import { LigneDeBloc } from '@/shared/components/BlocListe';
+import { BlocLignes, LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -400,13 +400,12 @@ export default function ViandeVendue() {
       </View>
       {/* La viande des animaux déjà à l'abattoir qui n'est pas encore vendue : un appui ouvre la facture, sur ce jour d'abattage. */}
       {ongletActif === 'afacturer' ? (
-        <View style={commonStyles.listeSimple}>
-          {groupesAFacturer.length === 0 ? (
-            <EmptyState title={T.rienAFacturer} />
-          ) : (
-            groupesAFacturer.map(ligneDuJour)
-          )}
-        </View>
+        // Un seul bloc blanc : les jours d'abattage se suivent sans espace, séparés par un trait.
+        groupesAFacturer.length === 0 ? (
+          <EmptyState title={T.rienAFacturer} />
+        ) : (
+          <BlocLignes>{groupesAFacturer.map(ligneDuJour)}</BlocLignes>
+        )
       ) : ongletActif === 'avendre' ? (
         <FlatList
           data={dispo === 'disponibles' ? aVendreLibres : aVendreReserves}

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BadgeDejaGenere } from '@/features/bibliotheque/components/BadgeDejaGenere';
 import { useBibliotheque } from '@/features/bibliotheque/hooks/useBibliotheque';
+import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
+import { useDocumentsCirculationManquants } from '@/features/comptabilite/hooks/useDocumentsCirculationManquants';
 import { documentsDuType } from '@/features/bibliotheque/services/recherche';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
@@ -72,6 +74,8 @@ export default function DossierPac() {
   const recensement = animauxDuCheptel.length > 0 ? recensementAnnuel(animauxDuCheptel, annee + 1) : null;
   const rienAFaire = annees.length === 0;
   const generes = useBibliotheque();
+  /** Les documents de circulation qui manquent (ventes et dépenses d'animaux vivants) : une pastille sur la ligne. */
+  const manquants = useDocumentsCirculationManquants().length;
   const generer = async (document: Document, creer: (annees: number[]) => Promise<number | void>) => {
     setEncours(document);
     setSansPerte(false);
@@ -137,6 +141,17 @@ export default function DossierPac() {
           subtitle={T.lignes.recensement.aide(annee)}
           trailing={droite('recensement', ['recensement'])}
           onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
+        />
+        <ListRow
+          title={TEXTES.cheptel.circulation.ligneDossier}
+          subtitle={TEXTES.cheptel.circulation.aideDossier}
+          trailing={
+            <View style={commonStyles.row}>
+              {manquants > 0 ? <PastilleAlerte taille={18} /> : null}
+              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            </View>
+          }
+          onPress={() => router.push(ROUTES.documentsCirculationDepuis(retour) as never)}
         />
         <ListRow
           title={T.estive.bouton.replace('…', '')}

@@ -1,0 +1,237 @@
+import { useCallback, useState } from 'react';
+import { Alert, FlatList, Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Screen } from '@/shared/components/Screen';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
+import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { ListRow } from '@/shared/components/ListRow';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import {
+  anneesDesEcritures,
+  deposerDocumentCirculation,
+  ecrituresACirculation,
+  rechercherEcritures,
+  type EcritureACirculation,
+} from '@/features/comptabilite/services/documentsCirculation';
+import { genererLeModeleDeCirculation } from '@/features/comptabilite/services/modeleCirculation';
+import { nomsDesAbattoirs } from '@/features/fournisseurs/services/abattoirs';
+import {
+  choisirFichiers,
+  ouvrirPiece,
+  piecesDisponibles,
+  pieceExiste,
+  rangerFichier,
+  supprimerPiece,
+} from '@/features/fichiers/services/pieces';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
+import { ROUTES } from '@/shared/constants/routes';
+import { colors } from '@/shared/theme/colors';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+import { currentYear, formatDateFR, formatMontant } from '@/shared/utils/dates';
+
+const T = TEXTES.cheptel.circulation;
+const TOUTES = 'toutes';
+
+/** « 18/10/2026 », « 13:34 » : la date et l'heure locales d'un dépôt. */
+const quand = (iso: string): { date: string; heure: string } => {
+  const d = new Date(iso);
+  const deux = (n: number) => String(n).padStart(2, '0');
+  return {
+    date: formatDateFR(`${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`),
+    heure: `${deux(d.getHours())}:${deux(d.getMinutes())}`,
+  };
+};
+
+/**
+ * Dossier PAC › Documents de circulation : les ventes et les dépenses d'animaux vivants (achat, abattoir), de l'année et de l'espèce choisies,
+ * avec leur document de circulation. Tant qu'il manque, l'écriture porte un « ! » rouge (et l'accueil le rappelle) ; l'icône à droite dépose
+ * le document rempli (scan, photo), le rouvre, le remplace, ou génère le modèle pré-rempli. Une recherche retrouve une écriture.
+ */
+export default function DocumentsCirculation() {
+  const router = useRouter();
+  const { espece } = useEtablissement();
+  const { ecriture: aMettreEnEvidence } = useLocalSearchParams<{ ecriture?: string }>();
+  const [toutes, setToutes] = useState<EcritureACirculation[]>([]);
+  const [annee, setAnnee] = useState(String(currentYear()));
+  const [recherche, setRecherche] = useState('');
+  const [menu, setMenu] = useState<EcritureACirculation | null>(null);
+
+  const charger = useCallback(async () => {
+    const [ventes, factures, abattoirs] = await Promise.all([
+      listToutesVentes(),
+      listToutesFactures(),
+      nomsDesAbattoirs(),
+    ]);
+    setToutes(ecrituresACirculation(ventes, factures, abattoirs));
+  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      charger().catch(() => undefined);
+    }, [charger]),
+  );
+
+  // Celles de l'espèce choisie (ou communes à toutes), de l'année choisie, qui répondent à la recherche.
+  const deLEspece = toutes.filter((e) => e.activite === espece || e.activite === ACTIVITE_COMMUNE);
+  const annees = anneesDesEcritures(deLEspece);
+  const affichees = rechercherEcritures(
+    annee === TOUTES ? deLEspece : deLEspece.filter((e) => e.date.startsWith(annee)),
+    recherche,
+  );
+
+  const deposer = async (e: EcritureACirculation) => {
+    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
+    try {
+      const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
+      if (!choisi) return;
+      const piece = await rangerFichier(choisi);
+      // Le fichier remplacé est effacé de l'appareil.
+      if (e.depose) await supprimerPiece(e.depose.piece);
+      await deposerDocumentCirculation(e, { piece, deposeLe: new Date().toISOString() });
+      await charger();
+    } catch (erreur: unknown) {
+      Alert.alert(erreur instanceof Error ? erreur.message : TEXTES.fichiers.erreurAjout);
+    }
+  };
+  const ouvrir = async (e: EcritureACirculation) => {
+    if (!e.depose) return;
+    if (!(await pieceExiste(e.depose.piece))) return Alert.alert(T.fichierIntrouvable);
+    await ouvrirPiece(e.depose.piece);
+  };
+  const retirer = async (e: EcritureACirculation) => {
+    if (!e.depose) return;
+    await supprimerPiece(e.depose.piece);
+    await deposerDocumentCirculation(e, undefined);
+    await charger();
+  };
+
+  const optionsDuMenu = menu
+    ? [
+        {
+          label: menu.depose ? T.remplacer : T.deposer,
+          icon: 'cloud-upload' as const,
+          onPress: () => deposer(menu),
+        },
+        ...(menu.depose
+          ? [
+              { label: T.ouvrir, icon: 'document-text' as const, onPress: () => ouvrir(menu) },
+              { label: T.retirer, icon: 'trash' as const, color: colors.danger, onPress: () => retirer(menu) },
+            ]
+          : []),
+        { label: T.modele, icon: 'print' as const, onPress: () => genererLeModeleDeCirculation(menu).catch(() => undefined) },
+        {
+          label: T.ouvrirEcriture,
+          icon: 'open' as const,
+          onPress: () =>
+            router.push((menu.type === 'vente' ? ROUTES.ficheVente(menu.id) : ROUTES.ficheFacture(menu.id)) as never),
+        },
+      ]
+    : [];
+
+  return (
+    <Screen scroll={false}>
+      <LigneFiltres>
+        <ChoixDeroulant<string>
+          titre={TEXTES.cheptel.suiviMouvements.annee}
+          valeur={annee}
+          options={[
+            { value: TOUTES, label: T.toutesLesAnnees },
+            ...annees.map((a) => ({ value: String(a), label: String(a) })),
+          ]}
+          onChoisir={setAnnee}
+        />
+        <SelecteurEspece />
+      </LigneFiltres>
+      <Text style={commonStyles.note}>{T.aideEcran}</Text>
+      <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.rechercher} />
+      <Text style={commonStyles.cardTitle}>{T.ecritures(affichees.length)}</Text>
+      <FlatList
+        data={affichees}
+        keyExtractor={(e) => e.cle}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        ListEmptyComponent={<EmptyState title={T.aucune} />}
+        renderItem={({ item, index }) => {
+          const depot = item.depose ? quand(item.depose.deposeLe) : null;
+          return (
+            <LigneDeBloc index={index} total={affichees.length}>
+              <ListRow
+                title={item.tiers || '—'}
+                surlignee={item.cle === aMettreEnEvidence}
+                subtitle={
+                  <View>
+                    <Text style={commonStyles.muted}>
+                      {[formatDateFR(item.date), item.reference].filter(Boolean).join(' · ')}
+                    </Text>
+                    <Text style={[commonStyles.lineBold, { color: item.montant < 0 ? colors.danger : colors.primary }]}>
+                      {formatMontant(item.montant)}
+                    </Text>
+                  </View>
+                }
+                trailing={
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text
+                      style={[
+                        commonStyles.mutedItalic,
+                        { textAlign: 'right', maxWidth: 150, color: depot ? colors.primary : colors.danger },
+                      ]}
+                    >
+                      {depot ? T.ajoute(depot.date, depot.heure) : T.manquant}
+                    </Text>
+                    <Pressable
+                      onPress={() => setMenu(item)}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={depot ? T.ouvrir : T.deposer}
+                      style={{ backgroundColor: colors.primary, borderRadius: 8, padding: 6 }}
+                    >
+                      <Ionicons name="document-text" size={22} color={colors.blanc} />
+                      {depot ? null : (
+                        <View
+                          style={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            width: 18,
+                            height: 18,
+                            borderRadius: 9,
+                            backgroundColor: colors.danger,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Text style={{ color: colors.blanc, fontSize: 12, fontWeight: '800' }}>!</Text>
+                        </View>
+                      )}
+                    </Pressable>
+                  </View>
+                }
+                onPress={() => setMenu(item)}
+              />
+            </LigneDeBloc>
+          );
+        }}
+      />
+      <OptionsModal
+        visible={!!menu}
+        onClose={() => setMenu(null)}
+        title={menu?.tiers}
+        options={optionsDuMenu.map((o) => ({
+          ...o,
+          onPress: () => {
+            setMenu(null);
+            o.onPress();
+          },
+        }))}
+      />
+    </Screen>
+  );
+}

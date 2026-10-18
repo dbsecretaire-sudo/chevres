@@ -27,6 +27,7 @@ export default function CheptelLayout() {
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />
       <Stack.Screen name="liste" options={{ title: TEXTES.cheptel.listeCheptel.titre }} />
       <Stack.Screen name="bibliotheque" options={{ title: TEXTES.export.bibliotheque.titre }} />
+      <Stack.Screen name="documents-circulation" options={{ title: TEXTES.cheptel.circulation.titreEcran }} />
       <Stack.Screen name="dossier-pac" options={{ title: TEXTES.cheptel.accueil.lignes.dossierPac.titre }} />
       <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
       <Stack.Screen

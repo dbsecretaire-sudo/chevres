@@ -10,7 +10,7 @@ import { listDocumentsIdentification } from '@/features/identification/repositor
 
 /** Tous les fichiers joints de l'établissement : ceux des contenus des dossiers et les captures des trades, les analyses du contrôle laitier, les visites vétérinaires, les documents d'identification et les déclarations jointes au bilan annuel. */
 export async function toutesLesPieces(): Promise<PieceJointe[]> {
-  const [dossiers, trading, controles, visites, traitements, settings, identification, bibliotheque] = await Promise.all([
+  const [dossiers, trading, controles, visites, traitements, settings, identification, bibliotheque, ventes, factures] = await Promise.all([
     lireArchiveDossiers(),
     lireArchiveTrading(),
     loadAllYears(CATEGORIE_STOCKAGE.CONTROLES) as Promise<Controle[]>,
@@ -19,9 +19,13 @@ export async function toutesLesPieces(): Promise<PieceJointe[]> {
     getSettings(),
     listDocumentsIdentification(),
     lireBibliotheque(),
+    loadAllYears(CATEGORIE_STOCKAGE.VENTES),
+    loadAllYears(CATEGORIE_STOCKAGE.FACTURES),
   ]);
   return [
     ...bibliotheque.map((d) => d.piece),
+    // Les documents de circulation déposés avec les ventes et les dépenses d'animaux vivants.
+    ...[...ventes, ...factures].flatMap((e) => (e.documentCirculation ? [e.documentCirculation.piece] : [])),
     ...identification.flatMap((d) => d.fichiers ?? []),
     ...dossiers.elements.flatMap((e) => e.fichiers ?? []),
     ...trading.trades.flatMap((t) => t.captures ?? []),
