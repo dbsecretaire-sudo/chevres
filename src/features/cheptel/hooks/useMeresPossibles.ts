@@ -1,30 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
-import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
+import { listChevresPresentesLe } from '@/features/cheptel/repository/chevres';
+import { meresPossiblesLe } from '@/features/cheptel/services/meresPossibles';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre } from '@/features/cheptel/types';
-import { SEXE, agePetitMax } from '@/shared/constants/cheptel';
-import { ageAtteint } from '@/shared/utils/age';
+import { todayISO } from '@/shared/utils/dates';
 
-/**
- * Les mères possibles pour une liste déroulante : les femelles vivantes, avec un n° de boucle, qui avaient atteint la maturité
- * sexuelle à la date donnée (celle de la mise bas, ou de la naissance du petit). `incluse` est une mère qui y figure toujours
- * (celle déjà choisie, ou donnée à l'ouverture de l'écran).
- */
+/** Les mères possibles pour une liste déroulante, d'après la date de naissance du petit (celle de la mise bas) ; sans date, celles d'aujourd'hui (voir meresPossiblesLe). */
 export function useMeresPossibles(date: string, incluse?: string) {
-  const [vivantes, setVivantes] = useState<Chevre[]>([]);
+  const jour = date || todayISO();
+  const [presentes, setPresentes] = useState<Chevre[]>([]);
   useEffect(() => {
-    listChevresVivantes().then(setVivantes);
-  }, []);
+    let actuel = true;
+    listChevresPresentesLe(jour).then((liste) => {
+      if (actuel) setPresentes(liste);
+    });
+    return () => {
+      actuel = false;
+    };
+  }, [jour]);
 
-  return useMemo(() => {
-    const maturite = agePetitMax();
-    return vivantes
-      .filter(
-        (c) =>
-          c.sexe === SEXE.FEMELLE &&
-          !!c.numeroBoucle &&
-          (ageAtteint(c.dateNaissance, maturite, date) || c.numeroBoucle === incluse),
-      )
-      .map((c) => ({ value: c.numeroBoucle as string, label: libelleChevre(c) }));
-  }, [vivantes, date, incluse]);
+  return useMemo(
+    () =>
+      meresPossiblesLe(presentes, jour, incluse).map((c) => ({
+        value: c.numeroBoucle as string,
+        label: libelleChevre(c),
+      })),
+    [presentes, jour, incluse],
+  );
 }
