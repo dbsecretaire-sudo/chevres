@@ -13,6 +13,8 @@ export const colors = {
   primaryDark: '#2C4D29',
   /** Bandeaux (en-tête + barre d'onglets) pendant un ajout, pour le distinguer visuellement de la navigation normale. */
   ajout: '#2D6CA6',
+  /** Le bleu foncé du texte des boutons d'ajout (Ajouter un cabri). */
+  ajoutFonce: '#173F69',
   /** Icônes de la barre d'onglets quand elle est bleue (ajout) : blanc pour les onglets inactifs… */
   ajoutIconInactif: '#FFFFFF',
   /** …et bleu clair pour l'onglet actif. */
@@ -24,6 +26,8 @@ export const colors = {
   textMuted: '#6B6F63',
   border: '#E1DDD0',
   danger: '#B3432B',
+  /** Le rouge foncé du texte des boutons d'alerte (Signaler un avortement). */
+  dangerFonce: '#7A2412',
   /** Fond d'une carte en négatif (un solde déficitaire) : le rouge, très clair. */
   dangerFond: '#F6E2DC',
   success: '#3F6B3A',

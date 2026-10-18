@@ -28,6 +28,8 @@ interface Props<T extends string> {
    * (« 12-30 ») propose de cocher d'un coup toutes les lignes de ce nombre à celui-là.
    */
   numeroDe?: (valeur: T) => number | undefined;
+  /** Un raccourci à côté de « Tout cocher » : coche d'un appui les lignes données (son libellé reçoit leur nombre, parmi celles que la recherche montre). */
+  raccourci?: { libelle: (nombre: number) => string; valeurs: readonly T[] };
 }
 
 /**
@@ -43,6 +45,7 @@ export function SelectModalMultiple<T extends string>({
   onClose,
   numeroDe,
   initiales,
+  raccourci,
 }: Props<T>) {
   const accent = useAccentColor();
   const [recherche, setRecherche] = useState('');
@@ -58,6 +61,12 @@ export function SelectModalMultiple<T extends string>({
   const dansLaPlageTapee = useMemo(
     () => (plage && numeroDe ? dansLaPlage(options, plage, (o) => numeroDe(o.value)) : []),
     [options, plage, numeroDe],
+  );
+
+  /** Les lignes du raccourci que la recherche montre. */
+  const duRaccourci = useMemo(
+    () => (raccourci ? optionsFiltrees.filter((o) => raccourci.valeurs.includes(o.value)) : []),
+    [raccourci, optionsFiltrees],
   );
 
   const toutesCochees = optionsFiltrees.length > 0 && optionsFiltrees.every((o) => cochees.has(o.value));
@@ -119,11 +128,20 @@ export function SelectModalMultiple<T extends string>({
             </Pressable>
           ) : null}
           {optionsFiltrees.length > 0 ? (
-            <Pressable style={styles.option} onPress={() => basculeEnBloc(optionsFiltrees, !toutesCochees)}>
-              <Text style={[commonStyles.valueText, { color: accent, fontWeight: '700' }]}>
-                {toutesCochees ? T.toutDecocher : T.toutCocher(optionsFiltrees.length)}
-              </Text>
-            </Pressable>
+            <View style={commonStyles.rowWrap}>
+              <Pressable style={styles.option} onPress={() => basculeEnBloc(optionsFiltrees, !toutesCochees)}>
+                <Text style={[commonStyles.valueText, { color: accent, fontWeight: '700' }]}>
+                  {toutesCochees ? T.toutDecocher : T.toutCocher(optionsFiltrees.length)}
+                </Text>
+              </Pressable>
+              {raccourci && duRaccourci.length > 0 ? (
+                <Pressable style={styles.option} onPress={() => basculeEnBloc(duRaccourci, true)}>
+                  <Text style={[commonStyles.valueText, { color: accent, fontWeight: '700' }]}>
+                    {raccourci.libelle(duRaccourci.length)}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           ) : null}
           <FlatList
             style={styles.liste}

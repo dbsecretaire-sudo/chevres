@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { meresAyantMisBas } from '@/features/exploitation/services/lots';
 import { meresPossiblesLe } from '@/features/cheptel/services/meresPossibles';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -21,5 +22,24 @@ describe('mères possibles d’un petit', () => {
 
   it('la mère déjà choisie reste proposée', () => {
     expect(meresPossiblesLe(presentes, '2026-03-05', '2').map((c) => c.numeroBoucle)).toEqual(['1', '2', '4', '5']);
+  });
+});
+
+describe('mères ayant mis bas dans l’année', () => {
+  it('les mères des petits nés cette année-là, sans les mort-nés ni les autres années', () => {
+    const petit = (extra: Partial<Chevre>): Chevre => animal('x', 'F', '2024-03-01', extra);
+    const meres = meresAyantMisBas(
+      [
+        petit({ mereNumeroBoucle: '1' }),
+        petit({ mereNumeroBoucle: '1', numeroBoucle: '9' }),
+        petit({ mereNumeroBoucle: '2', dateNaissance: '2023-03-01' }),
+        petit({ mereNumeroBoucle: '3', numeroBoucle: '8' }),
+        petit({ mereNumeroBoucle: ' 4 ', numeroBoucle: '7' }),
+      ],
+      2024,
+    );
+    expect(meres.has('3')).toBe(true);
+    expect(meres.has('4')).toBe(true);
+    expect(meres.has('2')).toBe(false);
   });
 });

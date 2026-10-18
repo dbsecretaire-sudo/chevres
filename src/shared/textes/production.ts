@@ -175,9 +175,8 @@ export const TEXTES_PRODUCTION = {
     onglets: {
       aFacturer: (n: number) => (n > 0 ? `À facturer (${n})` : 'À facturer'),
       facturee: (n: number) => (n > 0 ? `Facturée (${n})` : 'Facturée'),
-      sansFactureAVendre: (n: number) =>
-        n > 0 ? `Sans facture : à vendre (${n})` : 'Sans facture : à vendre',
-      sansFactureVendue: (n: number) => (n > 0 ? `Sans facture : vendue (${n})` : 'Sans facture : vendue'),
+      sansFactureAVendre: (n: number) => (n > 0 ? `À vendre (${n})` : 'À vendre'),
+      sansFactureVendue: (n: number) => (n > 0 ? `Vendue (${n})` : 'Vendue'),
     },
     rienASansFacture: 'Aucun animal sans boucle à vendre.',
     avance: 'Avancé',

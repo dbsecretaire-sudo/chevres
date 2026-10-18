@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
     borderColor: colors.danger,
     backgroundColor: colors.dangerFond,
   },
-  avortementTexte: { fontSize: 12, color: colors.text, textAlign: 'center' },
+  avortementTexte: { fontSize: 12, fontWeight: '700', color: colors.dangerFonce, textAlign: 'center' },
 });
 
 /** L'ascendance : les parents inconnus, un bouton rond chacun (♀ la mère, ♂ le père). */

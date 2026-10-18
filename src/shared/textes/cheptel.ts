@@ -651,6 +651,7 @@ export const TEXTES_CHEPTEL = {
     ascendance: 'Ascendance',
     mereHorsCheptel: 'Cette mère n’est pas dans le cheptel.',
     pereHorsCheptel: 'Ce père n’est pas dans le cheptel.',
+    parentInconnu: 'Aucune / inconnue',
     choisirLaMere: 'Choisir la mère',
     choisirLePere: 'Choisir le père',
     retirerLeParent: 'Retirer',

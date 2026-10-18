@@ -51,6 +51,12 @@ export function ChevreAscendance({
     { cle: 'mere' as const, animal: mere, boucle: boucleMere, icone: 'female' as const, absent: T.mereHorsCheptel, choisir: T.choisirLaMere },
     { cle: 'pere' as const, animal: pere, boucle: bouclePere, icone: 'male' as const, absent: T.pereHorsCheptel, choisir: T.choisirLePere },
   ];
+  /** Le crayon d'un parent connu : il rouvre le choix (où « Aucune / inconnue » le retire). */
+  const crayon = (cle: 'mere' | 'pere', libelle: string) => (
+    <Pressable onPress={() => setChoix(cle)} hitSlop={10} accessibilityRole="button" accessibilityLabel={libelle}>
+      <Ionicons name="create-outline" size={22} color={colors.textMuted} />
+    </Pressable>
+  );
   const connus = parents.filter((p) => p.animal || p.boucle);
   const inconnus = parents.filter((p) => !p.animal && !p.boucle);
   return (
@@ -65,11 +71,16 @@ export function ChevreAscendance({
               p.animal.sexe === SEXE.FEMELLE ? T.nee : T.ne,
               formatDateFR(p.animal.dateNaissance),
             )}
-            trailing={<Badge label={statutLabel(p.animal.statut, p.animal.sexe)} color={statutColors[p.animal.statut]} />}
+            trailing={
+              <View style={commonStyles.row}>
+                <Badge label={statutLabel(p.animal.statut, p.animal.sexe)} color={statutColors[p.animal.statut]} />
+                {crayon(p.cle, p.choisir)}
+              </View>
+            }
             onPress={() => onOuvrir(p.animal!.id)}
           />
         ) : (
-          <ListRow key={p.cle} icone={p.icone} title={p.boucle ?? ''} subtitle={p.absent} />
+          <ListRow key={p.cle} icone={p.icone} title={p.boucle ?? ''} subtitle={p.absent} trailing={crayon(p.cle, p.choisir)} />
         ),
       )}
       {inconnus.length > 0 ? (
@@ -92,7 +103,11 @@ export function ChevreAscendance({
         titre={choix === 'pere' ? T.choisirLePere : T.choisirLaMere}
         value=""
         searchable
-        options={choix === 'pere' ? peres : meres}
+        // Un parent déjà connu peut aussi être retiré : « Aucune / inconnue » vide son n° de boucle.
+        options={[
+          ...(choix && connus.some((p) => p.cle === choix) ? [{ value: '', label: T.parentInconnu }] : []),
+          ...(choix === 'pere' ? peres : meres),
+        ]}
         onSelect={(boucle) => {
           if (choix) onChoisir(choix, boucle);
           setChoix(null);

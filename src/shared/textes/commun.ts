@@ -141,6 +141,13 @@ export const TEXTES_COMMUN = {
     supprimer: 'Supprimer',
     modifier: 'Modifier',
     nDeBoucleConcerne: 'N° de boucle concerné',
+    /** Le raccourci du choix des boucles d'un lot de mises à la reproduction. */
+    cocherAyantMisBas: (femelles: string, nombre: number) => `Cocher les ${femelles} ayant mis bas (${nombre})`,
+    /** Un lot de mises à la reproduction : celles qui n'ont pas mis bas dans l'année du lot sont en évidence. */
+    sansMiseBas: (n: number, annee: number) =>
+      n === 0
+        ? `Toutes ont mis bas en ${annee}.`
+        : `En orange : ${n} n’${n > 1 ? 'ont' : 'a'} pas mis bas en ${annee}.`,
     animauxSelectionnes: (n: number) => `${n} ${n > 1 ? 'animaux' : 'animal'} sélectionné${n > 1 ? 's' : ''}`,
     videTroupeauEntier: 'Vide = troupeau entier',
     /** Le choix des boucles dans la liste des animaux vivants du cheptel (contrôles, visites vétérinaires). */

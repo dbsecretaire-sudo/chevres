@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
     borderColor: colors.ajout,
     backgroundColor: colors.ajoutBadgeBg,
   },
-  ajouterUnCabriTexte: { fontSize: 13, color: colors.text },
+  ajouterUnCabriTexte: { fontSize: 13, fontWeight: '700', color: colors.ajoutFonce },
   badges: { flexDirection: 'row', gap: 6 },
   entry: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8, marginTop: 4, gap: 2 },
 });
