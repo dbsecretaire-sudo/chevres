@@ -7,6 +7,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { Screen } from '@/shared/components/Screen';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { TuilesChiffres, type TuileChiffre } from '@/features/commercial/components/TuilesChiffres';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
@@ -156,22 +157,23 @@ export default function CommercialAccueil() {
         <GroupeAccueil key={groupe.titre} titre={groupe.titre}>
           <BlocLignes>
             {groupe.lignes.map((l) => (
-              <ListRow
-                key={l.cle}
-                title={l.titre}
-                subtitle={l.aide}
-                icone={l.icone}
-                actif={estActive(l.route)}
-                trailing={
-                  l.alerte ? (
-                    <View style={commonStyles.row}>
-                      <PastilleAlerte />
-                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                    </View>
-                  ) : undefined
-                }
-                onPress={() => router.push(l.route as never)}
-              />
+              <AncreVisite key={l.cle} id={`rubrique:${l.route}`}>
+                <ListRow
+                  title={l.titre}
+                  subtitle={l.aide}
+                  icone={l.icone}
+                  actif={estActive(l.route)}
+                  trailing={
+                    l.alerte ? (
+                      <View style={commonStyles.row}>
+                        <PastilleAlerte />
+                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                      </View>
+                    ) : undefined
+                  }
+                  onPress={() => router.push(l.route as never)}
+                />
+              </AncreVisite>
             ))}
           </BlocLignes>
         </GroupeAccueil>

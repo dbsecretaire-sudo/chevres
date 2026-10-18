@@ -143,6 +143,8 @@ export interface LotAnimaux {
   factureId?: string;
   /** Sans facture liée : le montant que l'abattoir demande de payer (€ TTC), noté à la main. */
   fraisAbattoir?: number;
+  /** Pour un lot d'abattoir : les fichiers de cet abattage ou de sa vente (poids, bon d'abattage, documents), joints à la fiche du lot. */
+  fichiers?: PieceJointe[];
 }
 
 /**

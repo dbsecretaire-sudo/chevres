@@ -236,10 +236,14 @@ export const TEXTES_CHEPTEL = {
       lot: 'Lot',
       visite: 'Visite',
       facture: 'Facture',
+      /** Le lot d'un jour d'abattage : l'écriture de l'abattoir et celles des clients. */
+      ecritures: 'Écritures',
       suivi: 'Suivi sanitaire',
       animaux: (nombre: number) => (nombre > 0 ? `Animaux (${nombre})` : 'Animaux'),
       fichiers: (nombre: number) => (nombre > 0 ? `Fichiers (${nombre})` : 'Fichiers'),
     },
+    ecrituresLiees: 'Écritures liées',
+    aideFichiersAbattage: 'Les poids, le bon d’abattage et les autres documents de cet abattage ou de sa vente (scan, photo, PDF).',
     aideFactureAbattoir: 'La facture de l’abattoir fait le montant des frais d’abattoir refacturés au client quand vous facturez la viande de ce lot. Il n’y a pas de montant sans facture : la facture se modifie dans la comptabilité.',
     /** Les onglets de la fiche d'un lot vétérinaire (une visite). */
     ongletsVisite: {

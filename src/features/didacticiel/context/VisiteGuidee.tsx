@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname, useRouter } from 'expo-router';
-import { etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
+import { useDeuxColonnes } from '@/bureau/colonnes';
+import { estBureau } from '@/shared/utils/plateforme';
+import { etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, etapesPourLEcran, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 
 const CLE_STOCKAGE = 'troupeau:v1:visite-guidee';
 
@@ -23,6 +25,8 @@ interface ContexteVisite {
   quitter: () => void;
   /** Un choix dans un menu de la barre du haut (Windows) : si l'étape demandait d'ouvrir un menu, elle est validée. */
   menuChoisi: (route: string) => void;
+  /** L'élément à toucher de l'étape vient d'être touché : l'étape est validée, même quand le toucher ne change pas de page. */
+  valider: () => void;
   /** Ramène à la page de l'étape en cours (quand on s'en est éloigné). */
   reprendre: () => void;
 }
@@ -33,7 +37,9 @@ const Contexte = createContext<ContexteVisite | null>(null);
 export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const adresse = usePathname();
-  const etapes = useMemo(() => etapesDeLaVisite(), []);
+  // Sur Windows (deux colonnes), le menu de la rubrique est toujours à gauche : les étapes « revenir au menu » n'ont pas lieu d'être.
+  const colonnes = useDeuxColonnes();
+  const etapes = useMemo(() => etapesPourLEcran(etapesDeLaVisite(), estBureau(), colonnes), [colonnes]);
   const [etat, setEtat] = useState<EtatVisite>({ actif: false, index: 0 });
   const charge = useRef(false);
 
@@ -54,7 +60,7 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
   if (adresse !== pageVue) {
     setPageVue(adresse);
     if (etat.actif) {
-      const trouvee = etapeDeLaPage(etapes, etat.index, adresse);
+      const trouvee = etapeDeLaPage(etapes, etat.index, adresse, colonnes);
       if (trouvee !== etat.index) setEtat({ actif: true, index: trouvee });
     }
   }
@@ -74,20 +80,25 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
     (route: string) =>
       setEtat((avant) => {
         if (!avant.actif) return avant;
-        const suite = etapeApresUnMenu(etapes, avant.index, route);
+        const suite = etapeApresUnMenu(etapes, avant.index, route, colonnes);
         return suite === null || suite === avant.index ? avant : { actif: true, index: suite };
       }),
-    [etapes],
+    [etapes, colonnes],
+  );
+  const valider = useCallback(
+    () =>
+      setEtat((avant) => (avant.actif && avant.index + 1 < etapes.length ? { actif: true, index: avant.index + 1 } : avant)),
+    [etapes.length],
   );
   const suivant = useCallback(() => {
-    const prochaine = etapeSuivante(etapes, index, adresse);
+    const prochaine = etapeSuivante(etapes, index, adresse, colonnes);
     if (!prochaine) {
       setEtat({ actif: false, index: 0 });
       return;
     }
     setEtat({ actif: true, index: prochaine.index });
     if (prochaine.ouvrir) router.push(prochaine.ouvrir as never);
-  }, [etapes, index, adresse, router]);
+  }, [etapes, index, adresse, colonnes, router]);
   const etape = etat.actif ? etapes[index] : undefined;
   const reprendre = useCallback(() => {
     const route = etape?.route;
@@ -100,14 +111,15 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       index,
       total: etapes.length,
       etape,
-      surLaPage: !!etape && pageDeLEtape(etape.route, adresse),
+      surLaPage: etapeSurLaPage(etape, adresse, colonnes),
       demarrer,
       suivant,
       quitter,
       menuChoisi,
+      valider,
       reprendre,
     }),
-    [etat.actif, index, etapes.length, etape, adresse, demarrer, suivant, quitter, menuChoisi, reprendre],
+    [etat.actif, index, etapes.length, etape, adresse, colonnes, demarrer, suivant, quitter, menuChoisi, valider, reprendre],
   );
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }
@@ -126,6 +138,7 @@ export function useVisiteGuidee(): ContexteVisite {
       suivant: () => undefined,
       quitter: () => undefined,
       menuChoisi: () => undefined,
+      valider: () => undefined,
       reprendre: () => undefined,
     };
   }

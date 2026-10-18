@@ -31,6 +31,8 @@ export async function toutesLesPieces(): Promise<PieceJointe[]> {
     ...trading.trades.flatMap((t) => t.captures ?? []),
     ...visites.flatMap((v) => v.fichiers ?? []),
     ...traitements.flatMap((t) => t.fichiers ?? []),
+    // Les fichiers joints à un lot d'abattage.
+    ...(settings.exploitation?.lots ?? []).flatMap((l) => l.fichiers ?? []),
     ...Object.values(settings.exploitation?.declarationsChambre ?? {}).flatMap(piecesDeLaDeclaration),
     ...controles.flatMap((c) => [
       ...(c.fichiers ?? []),

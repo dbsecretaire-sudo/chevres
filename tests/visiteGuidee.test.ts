@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FICHE_ANIMAL, etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape } from '@/features/didacticiel/services/visiteGuidee';
+import { FICHE_ANIMAL, etapesPourLEcran, etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, pageDeLEtape } from '@/features/didacticiel/services/visiteGuidee';
 import { nomDeLaListe } from '@/features/contacts/services/operationsInventaire';
 
 describe('visite guidée', () => {
@@ -74,7 +74,7 @@ describe('choisir un menu de la barre du haut (Windows)', () => {
   });
 
   it('une entrée que la visite ne connaît pas, ou la page où l’on est déjà, valide quand même l’étape', () => {
-    expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/cheptel/traitements')).toBe(position('accueil.cheptel') + 1);
+    expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/cheptel/historique')).toBe(position('accueil.cheptel') + 1);
     expect(etapeApresUnMenu(etapes, position('cheptel.retour.menu'), '/cheptel/liste')).toBe(position('cheptel.retour.menu') + 1);
   });
 
@@ -88,5 +88,38 @@ describe('noms des listes dans les opérations', () => {
     expect(nomDeLaListe('Achat — Aliment')).toBe('Aliment');
     expect(nomDeLaListe('Ventes — Boucherie et charcuterie')).toBe('Boucherie et charcuterie');
     expect(nomDeLaListe('Laine, Peaux')).toBe('Laine, Peaux');
+  });
+});
+
+describe('sur Windows, avec deux colonnes', () => {
+  const toutes = etapesDeLaVisite();
+  // Le menu de la rubrique reste à gauche : les étapes « revenir au menu » n'ont pas lieu d'être.
+  const etapes = etapesPourLEcran(toutes, true, true);
+  const position = (id: string) => etapes.findIndex((e) => e.id === id);
+
+  it('une étape de menu vaut pour toutes les pages de sa rubrique, pas pour celles des autres', () => {
+    const menu = etapes[position('cheptel.naissances')];
+    expect(etapeSurLaPage(menu, '/cheptel/liste', true)).toBe(true);
+    expect(etapeSurLaPage(menu, '/cheptel/liste', false)).toBe(false);
+    expect(etapeSurLaPage(menu, '/production/fromages', true)).toBe(false);
+  });
+
+  it('« Passer » sur la liste des animaux ne rouvre pas le menu qui est déjà à gauche', () => {
+    const suite = etapeSuivante(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/liste', true);
+    // La fiche d'un animal n'est pas ouverte : ses étapes sont passées, on arrive au menu du cheptel (déjà affiché).
+    expect(suite?.index).toBe(position('cheptel.naissances'));
+    expect(suite?.ouvrir).toBeUndefined();
+  });
+
+  it('sur Windows, aucune étape ne demande d’ouvrir un menu ou de revenir au menu', () => {
+    expect(etapes.some((e) => e.onglet || e.etroit)).toBe(false);
+    // Sur téléphone, elles y sont.
+    expect(etapesPourLEcran(toutes, false, false).some((e) => e.onglet)).toBe(true);
+    // « Suivant » depuis l'accueil mène à la page suivante, sans passer par un menu.
+    expect(etapeSuivante(etapes, position('accueil.filtres'), '/', true)?.index).toBe(position('cheptel.menu'));
+  });
+
+  it('les étapes ont toutes une page, et celles des menus de rubrique sont des adresses exactes', () => {
+    for (const e of toutes) if (e.menu) expect(typeof e.route).toBe('string');
   });
 });

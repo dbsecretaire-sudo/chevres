@@ -24,6 +24,7 @@ import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { useLots } from '@/features/exploitation/hooks/useLots';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { BlocLignes, LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
@@ -160,7 +161,7 @@ export default function ViandeVendue() {
       .filter((g) => g.animaux.length > 0),
   );
   const groupesAFacturer = groupes.filter((g) => g.avecBoucle);
-  const { lots } = useLots();
+  const { lots, creer } = useLots();
   /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
   const ouvrirLot = (id: string) =>
     `${ROUTES.lot(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
@@ -282,6 +283,20 @@ export default function ViandeVendue() {
     await finirLaFactureDirecte(animal, client);
   };
 
+  /**
+   * Ouvre la fiche du lot d'un jour d'abattage (« Abattoir du … » : écritures liées, animaux, fichiers, suivi sanitaire), créée si elle
+   * manque. « À facturer » et « Facturée » pointent vers le même lot.
+   */
+  const ouvrirLeLotDuJour = async (date: string, boucles: string[]) => {
+    const lot =
+      lots.find((l) => l.abattoir === date) ??
+      (await creer(TEXTES.cheptel.lots.abattoirDu(formatDateFR(date)), boucles.join(', '), {
+        abattoir: date,
+        categorie: CATEGORIE_LOT.ABATTOIR,
+      }));
+    router.push(ouvrirLot(lot.id) as never);
+  };
+
   /** La ligne d'un jour d'abattage : un appui ouvre la facture (ou la vente sans facture), sur ce jour d'abattage. */
   const ligneDuJour = (g: { date: string; avecBoucle: boolean; animaux: Chevre[] }) => {
     const poids = poidsTotal(g.animaux);
@@ -296,10 +311,14 @@ export default function ViandeVendue() {
         ]
           .filter(Boolean)
           .join(' · ')}
-        onPress={() => {
-          // Avec boucle : le lot d'abattoir (sa facture, ses animaux, d'où l'on facture) ; sans boucle : la vente sans facture.
-          const lot = lots.find((l) => l.abattoir === g.date);
-          if (g.avecBoucle && lot) return router.push(ouvrirLot(lot.id) as never);
+        onPress={async () => {
+          // Avec boucle : la fiche du lot d'abattage (écritures liées, animaux, fichiers, suivi sanitaire), créée si elle manque ; sans boucle : la vente sans facture.
+          if (g.avecBoucle) {
+            return ouvrirLeLotDuJour(
+              g.date,
+              g.animaux.map((a) => a.numeroBoucle?.trim() ?? '').filter(Boolean),
+            );
+          }
           router.push({
             pathname: ROUTES.COMPTABILITE_NOUVELLE,
             params: {
@@ -440,7 +459,17 @@ export default function ViandeVendue() {
                   .filter(Boolean)
                   .join('\n')}
                 trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
-                onPress={() => router.push(ROUTES.ficheVente(item.id))}
+                onPress={() => {
+                  // Une vente de viande d'un jour d'abattage : la fiche de ce lot (la vente y figure dans les écritures liées).
+                  const jour = ongletActif === 'facturee' ? item.dateAbattoir : undefined;
+                  if (!jour) return router.push(ROUTES.ficheVente(item.id));
+                  const boucles = (item.animaux ?? '')
+                    .split(SEPARATEUR_ANIMAUX)
+                    .filter(Boolean)
+                    .map((id) => animaux.get(id)?.numeroBoucle?.trim() ?? '')
+                    .filter(Boolean);
+                  return ouvrirLeLotDuJour(jour, boucles);
+                }}
               />
             </LigneDeBloc>
           )}

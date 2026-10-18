@@ -102,6 +102,18 @@ export function SuperpositionVisite() {
     };
   }, [visite.actif, visite.surLaPage, etape, ancre, onglet, retour, width, height]);
 
+  // Un clic dans la zone en surbrillance valide l'étape qui attend un toucher (web et Windows ; sur téléphone, la page ouverte la valide).
+  const attendUnToucher = visite.actif && visite.surLaPage && !!etape?.clic && !!zone;
+  const valider = visite.valider;
+  useEffect(() => {
+    if (!attendUnToucher || !zone || typeof document === 'undefined') return;
+    const surClic = (e: MouseEvent) => {
+      if (e.clientX >= zone.x && e.clientX <= zone.x + zone.w && e.clientY >= zone.y && e.clientY <= zone.y + zone.h) valider();
+    };
+    document.addEventListener('click', surClic, true);
+    return () => document.removeEventListener('click', surClic, true);
+  }, [attendUnToucher, zone, valider]);
+
   if (!visite.actif || !etape) return null;
 
   // Sur Windows, l'onglet est un menu de la barre du haut, que la page ne peut pas entourer : une flèche le désigne, d'après son nom.

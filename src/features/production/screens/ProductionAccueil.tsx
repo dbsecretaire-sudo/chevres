@@ -15,6 +15,7 @@ import { GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { Screen } from '@/shared/components/Screen';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
@@ -147,22 +148,23 @@ export default function ProductionAccueil() {
         <GroupeAccueil key={groupe.titre} titre={groupe.titre}>
           <BlocLignes>
             {groupe.lignes.map((l) => (
-              <ListRow
-                key={l.cle}
-                title={l.titre}
-                subtitle={l.aide}
-                icone={l.icone}
-                actif={estActive(l.route)}
-                trailing={
-                  negatifs[l.cle] ? (
-                    <View style={commonStyles.row}>
-                      <PastilleAlerte />
-                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                    </View>
-                  ) : undefined
-                }
-                onPress={() => router.push(l.route as never)}
-              />
+              <AncreVisite key={l.cle} id={`rubrique:${l.route}`}>
+                <ListRow
+                  title={l.titre}
+                  subtitle={l.aide}
+                  icone={l.icone}
+                  actif={estActive(l.route)}
+                  trailing={
+                    negatifs[l.cle] ? (
+                      <View style={commonStyles.row}>
+                        <PastilleAlerte />
+                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                      </View>
+                    ) : undefined
+                  }
+                  onPress={() => router.push(l.route as never)}
+                />
+              </AncreVisite>
             ))}
           </BlocLignes>
         </GroupeAccueil>
