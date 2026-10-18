@@ -795,6 +795,9 @@ export function useNouvelleEcriture(
               numeroBoucle: a.boucle.trim() || undefined,
               sexe: a.sexe,
               dateNaissance: a.naissance,
+              // L'animal entre dans l'exploitation à la date de l'achat : le suivi des mouvements l'y compte en « achat », chez ce vendeur.
+              dateEntree: date,
+              vendeur: tiers,
               notes: TEXTES.comptabilite.nouvelleEcriture.animauxAchetes.achetePar(tiers, formatDateFR(date)),
             });
             ids.push(fiche.id);

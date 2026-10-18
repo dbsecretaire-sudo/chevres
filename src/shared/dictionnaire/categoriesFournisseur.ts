@@ -16,6 +16,10 @@ export interface CategorieFournisseurReglage {
   id: string;
   nom: string;
   depenses?: string[];
+  /** Les opérations de l'inventaire (voir idOperation) : vendre ou acheter chaque liste. Absentes, elles se déduisent de `depenses`. */
+  operations?: string[];
+  /** Les dépenses sans liste d'inventaire (carburant, réparation, impôts…) que la catégorie propose. */
+  autresDepenses?: string[];
   /** Afficher la case « Pas encore payée » dans les factures de ses fournisseurs (d'office : oui). */
   pasPayee?: boolean;
   /** Afficher la case « Cette dépense n'a pas été facturée » dans les factures de ses fournisseurs (d'office : oui). */

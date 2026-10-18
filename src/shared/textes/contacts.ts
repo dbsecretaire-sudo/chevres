@@ -1,6 +1,14 @@
 /** Textes de l'interface — « contacts » : une personne ou une organisation qui est client, fournisseur, ou les deux. À modifier ici uniquement. */
 export const TEXTES_CONTACTS = {
   titre: 'Contacts',
+  /** Les opérations d'une catégorie de contact, rangées comme l'inventaire. */
+  operations: {
+    toutesLesVentes: 'Toutes les ventes',
+    tousLesAchats: 'Tous les achats',
+    autresDepenses: 'Autres dépenses (sans stock)',
+    autresRecettes: 'Autres recettes',
+    aide: 'Un contact peut acheter comme vendre, dans les dépenses comme dans les recettes : cochez, pour chaque liste de l’inventaire, ce que sa catégorie peut faire.',
+  },
   titreFiche: 'Contact',
   titreDocument: 'Document du contact',
   aide: 'Un contact reçoit des recettes, fait des dépenses, ou les deux. Une seule fiche, une seule catégorie.',

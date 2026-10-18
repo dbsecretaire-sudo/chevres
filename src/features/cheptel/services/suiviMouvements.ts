@@ -101,8 +101,8 @@ function dateDeChangement(animal: Chevre, premiereMiseBas: string | undefined): 
  * Le suivi des mouvements d'une année pour les animaux d'une espèce (les brebis ou les chèvres) : les naissances, les
  * changements de catégorie, les ventes (avec l'acheteur que la vente donne), les morts et les autres sorties, rangés par date et par
  * cause, avec l'effectif au 1er janvier et en fin d'année. Les mort-nés n'entrent pas au troupeau, ni les animaux sans boucle (cabris
- * vendus sans boucle) ; les animaux achetés ne se
- * distinguent pas dans les fiches (ils comptent à leur naissance).
+ * vendus sans boucle) ; un animal acheté (fiche créée par une dépense « Animaux vivants ») entre à la date de l'achat, avec sa cause « achat »
+ * et le nom de son vendeur, et non à sa naissance.
  */
 export function suiviMouvements(
   animaux: Chevre[],
@@ -141,7 +141,7 @@ export function suiviMouvements(
 
   const effectifDebut = effectifsNuls();
   for (const animal of presents) {
-    if (animal.dateNaissance >= debut) continue;
+    if ((animal.dateEntree ?? animal.dateNaissance) >= debut) continue;
     const sortie = dateDeSortie(animal);
     if (sortie && sortie < debut) continue;
     effectifDebut[categorieAvant(animal, debut)] += 1;
@@ -160,13 +160,19 @@ export function suiviMouvements(
 
   for (const animal of presents) {
     const sortie = dateDeSortie(animal);
-    // La naissance : une entrée de jeune.
-    if (animal.dateNaissance >= debut && animal.dateNaissance <= fin)
+    const entree = animal.dateEntree ?? animal.dateNaissance;
+    if (animal.dateEntree) {
+      // L'achat : une entrée, dans la catégorie où l'animal était ce jour-là, depuis son vendeur.
+      if (entree >= debut && entree <= fin)
+        ligne(entree, CAUSE_ENTREE.ACHAT, animal.vendeur?.trim() || undefined).entrees[categorieAvant(animal, entree)] += 1;
+    } else if (animal.dateNaissance >= debut && animal.dateNaissance <= fin) {
+      // La naissance : une entrée de jeune.
       ligne(animal.dateNaissance, CAUSE_ENTREE.NAISSANCE).entrees[CATEGORIE_SUIVI.JEUNES] += 1;
+    }
 
     // Le changement de catégorie : le jeune sort de sa catégorie et entre dans celle des adultes.
     const changement = dateDeChangement(animal, premiereMiseBas.get(animal.id));
-    if (changement >= debut && changement <= fin && (!sortie || changement < sortie)) {
+    if (changement >= debut && changement <= fin && changement > entree && (!sortie || changement < sortie)) {
       const l = ligne(changement, CAUSE_ENTREE.CHANGEMENT_CATEGORIE);
       l.sorties[CATEGORIE_SUIVI.JEUNES] += 1;
       l.entrees[animal.sexe === SEXE.FEMELLE ? CATEGORIE_SUIVI.FEMELLES : CATEGORIE_SUIVI.MALES] += 1;
@@ -187,7 +193,7 @@ export function suiviMouvements(
 
   // Le jour même : les naissances, puis les changements de catégorie, puis les sorties.
   const ordreCause = (cause: string) =>
-    cause === CAUSE_ENTREE.NAISSANCE ? 0 : cause === CAUSE_ENTREE.CHANGEMENT_CATEGORIE ? 1 : 2;
+    cause === CAUSE_ENTREE.NAISSANCE || cause === CAUSE_ENTREE.ACHAT ? 0 : cause === CAUSE_ENTREE.CHANGEMENT_CATEGORIE ? 1 : 2;
   const triees = [...lignes.values()].sort(
     (a, b) =>
       a.date.localeCompare(b.date) ||

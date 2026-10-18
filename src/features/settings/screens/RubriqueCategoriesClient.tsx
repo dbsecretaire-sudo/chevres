@@ -16,6 +16,15 @@ import {
   type CategorieClientReglage,
 } from '@/shared/dictionnaire/categoriesClient';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { ChoixOperations } from '@/features/contacts/components/ChoixOperations';
+import {
+  groupesRecetteDesOperations,
+  lireRubriquesDOperations,
+  operationsDesRecettes,
+  type RubriqueOperations,
+} from '@/features/contacts/services/operationsInventaire';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { GROUPE_RECETTE } from '@/shared/constants/comptabilite';
 import { ChoixVueCategories } from '@/features/settings/components/ChoixVueCategories';
 import { ReglagesParOption } from '@/features/settings/components/ReglagesParOption';
 import { groupesRecetteProposes } from '@/features/comptabilite/utils/recettes';
@@ -29,6 +38,15 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.clients.categories;
+
+/** Les groupes de recette qui ouvrent une liste de l'inventaire (fromages, lait, œufs, animaux, boucherie) : ils se règlent par les opérations. */
+const GROUPES_A_LISTE: readonly string[] = [
+  GROUPE_RECETTE.FROMAGES,
+  GROUPE_RECETTE.LAIT,
+  GROUPE_RECETTE.OEUFS,
+  GROUPE_RECETTE.VIANDE,
+  GROUPE_RECETTE.BOUCHERIE,
+];
 /** Les catégories dans l'ordre alphabétique de leur nom (l'ordre enregistré ne change pas). */const parNom = <C extends { nom: string }>(liste: C[]): C[] => [...liste].sort((a, b) => comparerAlphabetique(a.nom, b.nom));
 
 /**
@@ -52,6 +70,12 @@ export default function RubriqueCategoriesClient() {
   const [aRetirer, setARetirer] = useState<string | null>(null);
   /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
   const [parOption, setParOption] = useState(false);
+  /** Les rubriques de l'inventaire et leurs listes : les opérations (vente, achat) se règlent liste par liste (élevage ; une entreprise garde sa liste). */
+  const [rubriques, setRubriques] = useState<RubriqueOperations[]>([]);
+  useEffect(() => {
+    lireRubriquesDOperations().then(setRubriques).catch(() => undefined);
+  }, []);
+  const parInventaire = !modeEntreprise() && rubriques.length > 0;
 
   useEffect(() => {
     // Chargement initial unique depuis les réglages.
@@ -68,6 +92,21 @@ export default function RubriqueCategoriesClient() {
 
   const maj = (id: string, patch: Partial<CategorieClientReglage>) =>
     setCategories((liste) => liste.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  /** Les opérations d'une catégorie : celles réglées, sinon celles que ses recettes d'office ouvraient. */
+  const operationsDe = (c: CategorieClientReglage, recettes: readonly string[]) =>
+    c.operations ?? operationsDesRecettes(recettes, rubriques);
+  /** Les recettes sans liste : celles réglées, sinon celles des recettes d'office qui n'ouvrent pas une liste. */
+  const autresDe = (c: CategorieClientReglage, recettes: readonly string[]) =>
+    c.autresRecettes ?? recettes.filter((g) => !GROUPES_A_LISTE.includes(g));
+  /** Une opération cochée ou décochée : les recettes de la catégorie suivent (celles des listes, plus les autres). */
+  const majOperations = (c: CategorieClientReglage, recettes: readonly string[], ops: string[]) => {
+    const autres = autresDe(c, recettes);
+    maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops), ...autres])] });
+  };
+  const majAutres = (c: CategorieClientReglage, recettes: readonly string[], autres: string[]) => {
+    const ops = operationsDe(c, recettes);
+    maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops), ...autres])] });
+  };
 
   return (
     <Screen>
@@ -124,7 +163,11 @@ export default function RubriqueCategoriesClient() {
                   const c = categories.find((x) => x.id === id);
                   if (!c) return;
                   const recettes = groupesRecetteDeLaCategorie(c);
-                  maj(id, { recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g) });
+                  maj(id, {
+                    recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g),
+                    operations: undefined,
+                    autresRecettes: undefined,
+                  });
                 },
               })),
             },
@@ -167,18 +210,46 @@ export default function RubriqueCategoriesClient() {
               <Text style={commonStyles.note}>{T.aideAffichage}</Text>
               {/* Les recettes que ses clients peuvent recevoir : l'aide n'est cochée que pour un organisme, d'office. */}
               <Text style={commonStyles.lineSemiBold}>{T.recettes}</Text>
-              {groupesProposes.map((g) => (
-                <Checkbox
-                  key={g}
-                  label={LABEL_GROUPE_RECETTE[g]}
-                  value={recettes.includes(g)}
-                  onChange={(cochee) =>
-                    maj(c.id, {
-                      recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g),
-                    })
-                  }
-                />
-              ))}
+              {parInventaire ? (
+                <>
+                  <Text style={commonStyles.note}>{TEXTES.contacts.operations.aide}</Text>
+                  <ChoixOperations
+                    rubriques={rubriques}
+                    valeur={operationsDe(c, recettes)}
+                    onChange={(ops) => majOperations(c, recettes, ops)}
+                  />
+                  <Text style={commonStyles.lineSemiBold}>{TEXTES.contacts.operations.autresRecettes}</Text>
+                  {groupesProposes
+                    .filter((g) => !GROUPES_A_LISTE.includes(g))
+                    .map((g) => (
+                      <Checkbox
+                        key={g}
+                        label={LABEL_GROUPE_RECETTE[g]}
+                        value={autresDe(c, recettes).includes(g)}
+                        onChange={(cochee) =>
+                          majAutres(
+                            c,
+                            recettes,
+                            cochee ? [...autresDe(c, recettes), g] : autresDe(c, recettes).filter((x) => x !== g),
+                          )
+                        }
+                      />
+                    ))}
+                </>
+              ) : (
+                groupesProposes.map((g) => (
+                  <Checkbox
+                    key={g}
+                    label={LABEL_GROUPE_RECETTE[g]}
+                    value={recettes.includes(g)}
+                    onChange={(cochee) =>
+                      maj(c.id, {
+                        recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g),
+                      })
+                    }
+                  />
+                ))
+              )}
               <Text style={commonStyles.note}>{T.aideRecettes}</Text>
               {CATEGORIES_CLIENT_PROTEGEES.includes(c.id) ? (
                 <Text style={commonStyles.note}>

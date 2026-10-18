@@ -32,6 +32,10 @@ export interface Chevre {
   /** Le rebouclage (boucle de rebouclage, qui remplace une boucle perdue ou cassée) : la date seulement, sans numéro. */
   dateRebouclage?: string; // YYYY-MM-DD
   nom?: string;
+  /** Un animal acheté : la date de son entrée dans l'exploitation (celle de la dépense) ; absente, il est entré à sa naissance. */
+  dateEntree?: string;
+  /** Un animal acheté : le vendeur (le contact de la dépense), nommé dans le suivi des mouvements. */
+  vendeur?: string;
   /** Réservé pour un client (voir ReservationAnimal) ; absent : disponible. */
   reservation?: ReservationAnimal;
   sexe: Sexe;

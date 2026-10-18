@@ -27,7 +27,8 @@ export async function listChevresPresentesLe(date: string): Promise<Chevre[]> {
   const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
   return all
     .filter((c) => {
-      if (c.dateNaissance && c.dateNaissance > date) return false;
+      // Un animal acheté est présent à partir de son entrée (celle de l'achat), non de sa naissance.
+      if ((c.dateEntree ?? c.dateNaissance) && (c.dateEntree ?? c.dateNaissance) > date) return false;
       if (c.statut === STATUT_CHEVRE.VIVANTE || !c.dateStatut) return true;
       return c.dateStatut >= date;
     })
@@ -157,6 +158,9 @@ export async function creerChevre(input: {
   nom?: string;
   sexe: Sexe;
   dateNaissance: string;
+  /** Un animal acheté : sa date d'entrée dans l'exploitation et son vendeur. */
+  dateEntree?: string;
+  vendeur?: string;
   mereId?: string;
   mereNumeroBoucle?: string;
   notes?: string;
@@ -172,6 +176,8 @@ export async function creerChevre(input: {
     numeroBoucle: input.numeroBoucle,
     dateBouclage: input.dateBouclage,
     nom: input.nom,
+    dateEntree: input.dateEntree,
+    vendeur: input.vendeur,
     sexe: input.sexe,
     dateNaissance: input.dateNaissance,
     mereId: input.mereId,

@@ -32,3 +32,27 @@ describe('suivi des mouvements du dossier PAC', () => {
     expect(suivi.effectifFin.femelles).toBe(1);
   });
 });
+
+describe('animaux achetés', () => {
+  it('un animal acheté entre à la date de l’achat, en « achat » chez son vendeur, et non à sa naissance', () => {
+    const suivi = suiviMouvements(
+      [animal('x', { numeroBoucle: '30001', dateNaissance: '2024-03-01', dateEntree: '2026-05-10', vendeur: 'Casanova' })],
+      [],
+      2026,
+      libelles,
+    );
+    expect(suivi.effectifDebut.femelles).toBe(0);
+    const achat = suivi.lignes.find((l) => l.cause === 'A');
+    expect(achat?.date).toBe('2026-05-10');
+    expect(achat?.nom).toBe('Casanova');
+    expect(achat?.entrees.femelles).toBe(1);
+    expect(suivi.lignes.some((l) => l.cause === 'N')).toBe(false);
+    expect(suivi.effectifFin.femelles).toBe(1);
+  });
+
+  it('acheté l’année d’avant, il compte dans l’effectif de début', () => {
+    const suivi = suiviMouvements([animal('y', { numeroBoucle: '30002', dateNaissance: '2024-03-01', dateEntree: '2025-05-10' })], [], 2026, libelles);
+    expect(suivi.effectifDebut.femelles).toBe(1);
+    expect(suivi.lignes.some((l) => l.cause === 'A')).toBe(false);
+  });
+});

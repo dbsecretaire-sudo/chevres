@@ -22,6 +22,10 @@ export interface CategorieClientReglage {
    * organisme, et toutes les recettes sauf l'aide pour les autres catégories. Seul un organisme a une aide, sauf réglage contraire.
    */
   recettes?: string[];
+  /** Les opérations de l'inventaire (voir idOperation) : vendre ou acheter chaque liste. Absentes, elles se déduisent de `recettes`. */
+  operations?: string[];
+  /** Les recettes sans liste d'inventaire (l'aide, les prestations…) que la catégorie propose. */
+  autresRecettes?: string[];
   /** Afficher la case « Pas encore encaissée » dans les factures de ses clients (d'office : oui). */
   pasEncaissee?: boolean;
 }

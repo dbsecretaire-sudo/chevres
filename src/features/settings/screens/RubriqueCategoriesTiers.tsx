@@ -25,6 +25,15 @@ import {
   type CategorieFournisseurReglage,
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import { comparerAlphabetique } from '@/shared/utils/personne';
+import { ChoixOperations } from '@/features/contacts/components/ChoixOperations';
+import {
+  depensesDesOperations,
+  lireRubriquesDOperations,
+  operationsDesDepenses,
+  type RubriqueOperations,
+} from '@/features/contacts/services/operationsInventaire';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
 import { generateId } from '@/shared/utils/id';
@@ -34,6 +43,13 @@ import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 
 const T = TEXTES.fournisseurs.categories;
+
+/** Les dépenses qui ouvrent une liste de l'inventaire (un achat d'animaux, d'aliments, de fournitures) : elles se règlent par les opérations. */
+const DEPENSES_A_LISTE: readonly string[] = [
+  CATEGORIE_DEPENSE.ALIMENTATION,
+  CATEGORIE_DEPENSE.PRODUCTION,
+  CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
+];
 /** Les catégories dans l'ordre alphabétique de leur nom (l'ordre enregistré ne change pas). */const parNom = <C extends { nom: string }>(liste: C[]): C[] => [...liste].sort((a, b) => comparerAlphabetique(a.nom, b.nom));
 
 /**
@@ -75,6 +91,28 @@ export default function RubriqueCategoriesTiers() {
 
   const maj = (id: string, patch: Partial<CategorieFournisseurReglage>) =>
     setCategories((liste) => liste.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+
+  /** Les rubriques de l'inventaire et leurs listes : les opérations (vente, achat) se règlent liste par liste (élevage ; une entreprise garde sa liste). */
+  const [rubriques, setRubriques] = useState<RubriqueOperations[]>([]);
+  useEffect(() => {
+    lireRubriquesDOperations().then(setRubriques).catch(() => undefined);
+  }, []);
+  const parInventaire = !modeEntreprise() && rubriques.length > 0;
+  /** Les opérations d'une catégorie : celles réglées, sinon celles que ses dépenses d'office ouvraient. */
+  const operationsDe = (c: CategorieFournisseurReglage, permises: readonly string[]) =>
+    c.operations ?? operationsDesDepenses(permises, rubriques);
+  /** Les dépenses sans liste : celles réglées, sinon celles des dépenses d'office qui n'ouvrent pas une liste. */
+  const autresDe = (c: CategorieFournisseurReglage, permises: readonly string[]) =>
+    c.autresDepenses ?? permises.filter((d) => !DEPENSES_A_LISTE.includes(d));
+  /** Une opération cochée ou décochée : les dépenses de la catégorie suivent (celles des listes, plus les autres). */
+  const majOperations = (c: CategorieFournisseurReglage, permises: readonly string[], ops: string[]) => {
+    const autres = autresDe(c, permises);
+    maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops), ...autres])] });
+  };
+  const majAutres = (c: CategorieFournisseurReglage, permises: readonly string[], autres: string[]) => {
+    const ops = operationsDe(c, permises);
+    maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops), ...autres])] });
+  };
 
   return (
     <Screen>
@@ -120,7 +158,11 @@ export default function RubriqueCategoriesTiers() {
                   const c = categories.find((x) => x.id === id);
                   if (!c) return;
                   const permises = depensesDeLaCategorie(c) ?? depensesProposees;
-                  maj(id, { depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d) });
+                  maj(id, {
+                    depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d),
+                    operations: undefined,
+                    autresDepenses: undefined,
+                  });
                 },
               })),
             },
@@ -158,16 +200,44 @@ export default function RubriqueCategoriesTiers() {
               />
               <Text style={commonStyles.note}>{T.aideAffichage}</Text>
               <Text style={commonStyles.lineSemiBold}>{T.depenses}</Text>
-              {depensesProposees.map((d) => (
-                <Checkbox
-                  key={d}
-                  label={LABEL_CATEGORIE_DEPENSE[d]}
-                  value={permises.includes(d)}
-                  onChange={(cochee) =>
-                    maj(c.id, { depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d) })
-                  }
-                />
-              ))}
+              {parInventaire ? (
+                <>
+                  <Text style={commonStyles.note}>{TEXTES.contacts.operations.aide}</Text>
+                  <ChoixOperations
+                    rubriques={rubriques}
+                    valeur={operationsDe(c, permises)}
+                    onChange={(ops) => majOperations(c, permises, ops)}
+                  />
+                  <Text style={commonStyles.lineSemiBold}>{TEXTES.contacts.operations.autresDepenses}</Text>
+                  {depensesProposees
+                    .filter((d) => !DEPENSES_A_LISTE.includes(d))
+                    .map((d) => (
+                      <Checkbox
+                        key={d}
+                        label={LABEL_CATEGORIE_DEPENSE[d]}
+                        value={autresDe(c, permises).includes(d)}
+                        onChange={(cochee) =>
+                          majAutres(
+                            c,
+                            permises,
+                            cochee ? [...autresDe(c, permises), d] : autresDe(c, permises).filter((x) => x !== d),
+                          )
+                        }
+                      />
+                    ))}
+                </>
+              ) : (
+                depensesProposees.map((d) => (
+                  <Checkbox
+                    key={d}
+                    label={LABEL_CATEGORIE_DEPENSE[d]}
+                    value={permises.includes(d)}
+                    onChange={(cochee) =>
+                      maj(c.id, { depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d) })
+                    }
+                  />
+                ))
+              )}
               <Text style={commonStyles.note}>{T.aideDepenses}</Text>
               {CATEGORIES_FOURNISSEUR_PROTEGEES.includes(c.id) ? (
                 <Text style={commonStyles.note}>
