@@ -462,8 +462,8 @@ export default function ViandeVendue() {
                   .filter(Boolean)
                   .join('\n')}
                 trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
-                // La vente : sa fiche porte le jour d'abattage en titre et mène au lot.
-                onPress={() => router.push(ROUTES.ficheVente(item.id))}
+                // La vente : sa fiche porte le jour d'abattage en titre et mène au lot ; sa flèche de retour ramène ici.
+                onPress={() => router.push(ROUTES.ficheVenteDepuis(item.id, ROUTES.PRODUCTION_VIANDE) as never)}
               />
             </LigneDeBloc>
           )}
