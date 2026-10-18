@@ -11,10 +11,10 @@ import {
 import type { Client } from '@/features/clients/types';
 import { getVente, saveVente, supprimerVente } from '@/features/comptabilite/repository/ventes';
 import { declarerStatutChevre, getChevre, reactiverChevre } from '@/features/cheptel/repository/chevres';
-import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import {
   idsDesAnimaux,
   reglageEtatAnimaux,
+  revientVivantApresLaVente,
   sortieDesAnimauxDeLaVente,
   venteADeclarer,
 } from '@/features/comptabilite/utils/ventes';
@@ -245,7 +245,7 @@ export function useFicheVente(id: string | undefined) {
       // Un animal retiré de la vente (il y était, il n'y est plus) qui avait été vendu revient dans le cheptel actif ; ceux à l'abattoir gardent
       // leur statut. Ceux de la vente passent « vendus » à sa date.
       for (const id of (vente ? idsDesAnimaux(vente) : []).filter((x) => !animauxForm.includes(x))) {
-        if ((await getChevre(id))?.statut === STATUT_CHEVRE.VENDUE) await reactiverChevre(id);
+        if (vente && revientVivantApresLaVente((await getChevre(id))?.statut, vente)) await reactiverChevre(id);
       }
       // Les animaux vendus : « abattoir » pour une vente de viande déclarée (à la date d'abattoir), « morte » si elle ne l'est pas, « vendus » sinon.
       const sortie = sortieDesAnimauxDeLaVente(nettoye);
@@ -276,10 +276,11 @@ export function useFicheVente(id: string | undefined) {
     if (!vente) return;
     try {
       await supprimerVente(vente.id);
-      // Les animaux vendus par cette vente (vivants ou morts) reviennent dans le cheptel actif. Ceux à l'abattoir gardent leur statut (ils
-      // reviennent dans les animaux à facturer et dans leur lot d'abattoir) : annuler une facture ne ressuscite pas un animal abattu.
+      // Les animaux vendus par cette vente (vivants ou morts) reviennent dans le cheptel actif, et ceux envoyés vivants à l'abattoir aussi (la
+      // facture de leur identification et de leur transport est supprimée) ; ils quittent alors leur lot d'abattoir au prochain accord des lots.
+      // Un animal abattu dont la vente portait sur la viande (morts) garde son statut.
       for (const id of idsDesAnimaux(vente)) {
-        if ((await getChevre(id))?.statut === STATUT_CHEVRE.VENDUE) await reactiverChevre(id);
+        if (revientVivantApresLaVente((await getChevre(id))?.statut, vente)) await reactiverChevre(id);
       }
       router.back();
     } catch (error) {

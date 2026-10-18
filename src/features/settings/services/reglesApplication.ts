@@ -180,7 +180,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'ventes.supprimer',
           titre: 'Supprimer ou modifier une vente',
-          texte: 'Supprimer ou modifier une vente ou une réservation remet les animaux concernés à vendre.',
+          texte: 'Supprimer une vente (ou en retirer un animal) remet dans le cheptel les animaux vendus, et ceux envoyés vivants à l’abattoir (la facture de leur identification et de leur transport). Un animal abattu dont la vente portait sur la viande garde son statut. Supprimer ou modifier une réservation remet les animaux concernés à vendre.',
         },
         {
           id: 'ventes.reserver',

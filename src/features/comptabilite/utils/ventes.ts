@@ -19,6 +19,17 @@ export function libelleCategorieVente(v: Pick<Vente, 'categorie' | 'activite'>):
   return capitaliser(vocabulaire(espece).petit.pluriel);
 }
 
+/**
+ * Vrai quand un animal d'une vente supprimée (ou dont on retire l'animal) revient vivant dans le cheptel : un animal « vendu », et un animal
+ * « à l'abattoir » quand la vente concernait le transport d'animaux vivants (un client Abattoir : la facture de l'identification et du
+ * transport des animaux vivants). Un animal abattu dont la vente portait sur la viande (morts) garde son statut.
+ */
+export const revientVivantApresLaVente = (
+  statut: string | undefined,
+  vente: Parameters<typeof documentCirculationRequis>[0],
+): boolean =>
+  statut === STATUT_CHEVRE.VENDUE || (statut === STATUT_CHEVRE.ABATTOIR && documentCirculationRequis(vente));
+
 /** Les identifiants des fiches du cheptel des animaux d'une vente (aucun pour une vente sans animal choisi). */
 export const idsDesAnimaux = (vente: Pick<Vente, 'animaux'>): string[] =>
   vente.animaux ? vente.animaux.split(SEPARATEUR_ANIMAUX).filter(Boolean) : [];
