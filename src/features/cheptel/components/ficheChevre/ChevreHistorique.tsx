@@ -2,6 +2,7 @@ import { Text } from 'react-native';
 import { Badge } from '@/shared/components/Badge';
 import { Card } from '@/shared/components/Card';
 import { ListRow } from '@/shared/components/ListRow';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { colors, statutColors } from '@/shared/theme/colors';
 import { formatDateFR } from '@/shared/utils/dates';
 import { demonstratifAnimal, libelleChevre, statutLabel } from '@/features/cheptel/utils/chevreLabel';
@@ -12,20 +13,58 @@ import { SEXE } from '@/shared/constants/cheptel';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-/** Liste des petits d'une chèvre (cliquables pour ouvrir leur fiche). */
+/** La mère de l'animal (cliquable pour ouvrir sa fiche) ; sa boucle seule quand elle n'est pas dans le cheptel. */
+export function ChevreAscendance({
+  mere,
+  boucleMere,
+  onOuvrir,
+  ouverte,
+  onBasculer,
+}: {
+  mere: Chevre | null;
+  boucleMere?: string;
+  onOuvrir: (id: string) => void;
+  ouverte: boolean;
+  onBasculer: () => void;
+}) {
+  return (
+    <SectionDeroulante titre={TEXTES.cheptel.ficheChevre.ascendance} ouverte={ouverte} onBasculer={onBasculer}>
+      {mere ? (
+        <ListRow
+          title={libelleChevre(mere)}
+          subtitle={TEXTES.commun.general.accordNeLeDate(
+            TEXTES.cheptel.ficheChevre.nee,
+            formatDateFR(mere.dateNaissance),
+          )}
+          trailing={<Badge label={statutLabel(mere.statut, mere.sexe)} color={statutColors[mere.statut]} />}
+          onPress={() => onOuvrir(mere.id)}
+        />
+      ) : (
+        <ListRow title={boucleMere ?? ''} subtitle={TEXTES.cheptel.ficheChevre.mereHorsCheptel} />
+      )}
+    </SectionDeroulante>
+  );
+}
+
+/** Liste des petits d'une chèvre (cliquables pour ouvrir leur fiche), dans une section qui se déroule. */
 export function ChevreDescendance({
   descendance,
   onOuvrir,
+  ouverte,
+  onBasculer,
 }: {
   descendance: Chevre[];
   onOuvrir: (id: string) => void;
+  ouverte: boolean;
+  onBasculer: () => void;
 }) {
   return (
-    <Card>
-      <Text style={commonStyles.cardTitle}>
-        {TEXTES.cheptel.ficheChevre.descendance}
-        {descendance.length})
-      </Text>
+    <SectionDeroulante
+      titre={TEXTES.cheptel.ficheChevre.descendance}
+      nombre={descendance.length}
+      ouverte={ouverte}
+      onBasculer={onBasculer}
+    >
       {descendance.map((d) => (
         <ListRow
           key={d.id}
@@ -38,7 +77,7 @@ export function ChevreDescendance({
           onPress={() => onOuvrir(d.id)}
         />
       ))}
-    </Card>
+    </SectionDeroulante>
   );
 }
 

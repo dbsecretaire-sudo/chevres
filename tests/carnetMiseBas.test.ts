@@ -11,6 +11,7 @@ import {
   pagesA4DeLignes,
   hauteurDeLaLigne,
   HAUTEUR_UTILE_A4_MM,
+  HAUTEUR_LIGNE_A4_MM,
   porteesAvecBoucle,
   chevresMisesALaReproduction,
   pagesDeLignes,
@@ -352,13 +353,13 @@ describe('carnet A4 : pages remplies jusqu’au bas', () => {
     const hauteur = pages[0].reduce((t, ligne) => t + hauteurDeLaLigne(ligne), 0);
     expect(hauteur).toBeLessThanOrEqual(HAUTEUR_UTILE_A4_MM);
     // Il reste moins d'une ligne de place : la page est pleine.
-    expect(HAUTEUR_UTILE_A4_MM - hauteur).toBeLessThan(7);
+    expect(HAUTEUR_UTILE_A4_MM - hauteur).toBeLessThan(HAUTEUR_LIGNE_A4_MM);
     // Les trois lignes saisies d'abord, puis du vide.
     expect(pages[0].slice(0, 3).map((x) => x.numero)).toEqual(['1', '2', '3\n4']);
     expect(pages[0][3].numero).toBe('');
   });
 
-  it('des lignes plus hautes (deux petits) font passer à la page suivante plus tôt qu’au 32e', () => {
+  it('des lignes plus hautes (deux petits) font passer à la page suivante plus tôt qu’à la 27e', () => {
     const hautes = Array.from({ length: 30 }, (_, i) => l(`${i}a\n${i}b`, `${i}a : 34 j\n${i}b : 34 j`));
     const pages = pagesA4DeLignes(hautes);
     expect(pages.length).toBeGreaterThan(1);

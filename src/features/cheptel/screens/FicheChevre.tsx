@@ -28,6 +28,7 @@ import {
   ChevreStatutDeclaration,
 } from '@/features/cheptel/components/ficheChevre/ChevreStatut';
 import {
+  ChevreAscendance,
   ChevreDescendance,
   ChevreSante,
   familleDuControle,
@@ -56,6 +57,10 @@ export default function FicheChevre() {
   const fiche = useFicheChevre(id);
   const { chevre, form } = fiche;
   const [onglet, setOnglet] = useState<OngletFiche>('fiche');
+  /** La section de la famille déroulée (Ascendance ou Descendance) : une seule à la fois, sur téléphone ; sur ordinateur, tout est déroulé. */
+  const [familleOuverte, setFamilleOuverte] = useState<'ascendance' | 'descendance' | null>(null);
+  const basculerFamille = (section: 'ascendance' | 'descendance') =>
+    setFamilleOuverte((courante) => (courante === section ? null : section));
   const tiptags = useTiptags();
   /** Les ventes : un animal d'un lot d'abattoir vendu a une sortie figée. */
   const [ventes, setVentes] = useState<Vente[]>([]);
@@ -139,7 +144,7 @@ export default function FicheChevre() {
                 { valeur: 'sante', label: TEXTES.cheptel.ficheChevre.onglets.sante },
                 {
                   valeur: 'suivi',
-                  label: TEXTES.cheptel.ficheChevre.onglets.suivi(fiche.descendance.length),
+                  label: TEXTES.cheptel.ficheChevre.onglets.suivi,
                 },
               ]}
               valeur={onglet}
@@ -221,10 +226,22 @@ export default function FicheChevre() {
           <>
             <ChevreSuiviAnnuel chevre={chevre} />
 
+            {fiche.mere || chevre.mereNumeroBoucle ? (
+              <ChevreAscendance
+                mere={fiche.mere}
+                boucleMere={chevre.mereNumeroBoucle}
+                onOuvrir={(idMere) => router.push(ROUTES.ficheChevre(idMere))}
+                ouverte={familleOuverte === 'ascendance'}
+                onBasculer={() => basculerFamille('ascendance')}
+              />
+            ) : null}
+
             {fiche.descendance.length > 0 ? (
               <ChevreDescendance
                 descendance={fiche.descendance}
                 onOuvrir={(idPetit) => router.push(ROUTES.ficheChevre(idPetit))}
+                ouverte={familleOuverte === 'descendance'}
+                onBasculer={() => basculerFamille('descendance')}
               />
             ) : (
               <Text style={commonStyles.mutedItalic}>{TEXTES.cheptel.ficheChevre.aucuneDescendance}</Text>

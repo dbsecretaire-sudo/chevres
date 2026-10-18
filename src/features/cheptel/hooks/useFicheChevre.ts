@@ -5,6 +5,7 @@ import {
   modifierDateDeSortie,
   getChevre,
   listDescendance,
+  resolveChevreIdParBoucle,
   numeroBoucleExiste,
   reactiverChevre,
   saveChevre,
@@ -28,6 +29,8 @@ export function useFicheChevre(id: string | undefined) {
   const [chevre, setChevre] = useState<Chevre | null>(null);
   const [form, setForm] = useState<Chevre | null>(null);
   const [descendance, setDescendance] = useState<Chevre[]>([]);
+  /** La mère de l'animal, quand elle est dans le cheptel (même sortie : vendue, morte…). */
+  const [mere, setMere] = useState<Chevre | null>(null);
   const [visites, setVisites] = useState<VisiteVeterinaire[]>([]);
   const [controles, setControles] = useState<Controle[]>([]);
 
@@ -49,6 +52,8 @@ export function useFicheChevre(id: string | undefined) {
     setForm(c ?? null);
     if (c) {
       setDescendance(await listDescendance(c.id));
+      const idMere = c.mereId ?? (await resolveChevreIdParBoucle(c.mereNumeroBoucle, especeDe(c)));
+      setMere((idMere ? await getChevre(idMere) : undefined) ?? null);
       setVisites(await listVisitesPourChevre(c));
       setControles(await listControlesPourChevre(c));
     }
@@ -128,6 +133,7 @@ export function useFicheChevre(id: string | undefined) {
     form,
     setForm,
     descendance,
+    mere,
     visites,
     controles,
     editing,

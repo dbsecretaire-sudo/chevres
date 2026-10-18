@@ -201,10 +201,15 @@ export function pagesDeLAnnee(
   ];
 }
 
-/** La hauteur utile des lignes d'une page A4 (mm) : 32 lignes de 7 mm et une de marge, sans déborder sur une page de plus avec le titre, l'en-tête et la légende. */
-export const HAUTEUR_UTILE_A4_MM = 231;
-const HAUTEUR_LIGNE_MM = 7;
-const HAUTEUR_LIGNE_DE_TEXTE_MM = 4.4;
+/**
+ * La hauteur fixe d'une ligne du tableau A4 (mm) : la même partout, de quoi écrire deux petits (deux lignes de texte). Avec la hauteur utile,
+ * 26 lignes remplissent la page entre le titre, l'en-tête et la légende (feuille de 297 mm, marges de 10 mm, 3,5 mm de réserve).
+ */
+export const HAUTEUR_LIGNE_A4_MM = 9.4;
+/** La hauteur utile des lignes d'une page A4 (mm) : 26 lignes de 9,4 mm. */
+export const HAUTEUR_UTILE_A4_MM = 245;
+const HAUTEUR_LIGNE_MM = HAUTEUR_LIGNE_A4_MM;
+const HAUTEUR_LIGNE_DE_TEXTE_MM = 4.1;
 
 /** Le nombre de lignes de texte qu'un contenu prend dans une colonne (les retours à la ligne, et ce qui dépasse la largeur de la colonne). */
 const lignesDeTexte = (texte: string, caracteresParLigne: number): number =>
@@ -212,7 +217,7 @@ const lignesDeTexte = (texte: string, caracteresParLigne: number): number =>
 
 /**
  * La hauteur d'une ligne du tableau (mm), estimée largement d'après ce qu'elle contient : une ligne à deux petits (deux numéros, ou des
- * observations et des âges par petit) est plus haute que la ligne simple de 7 mm.
+ * observations et des âges par petit) tient dans la ligne fixe de 9,4 mm ; au-delà de deux lignes de texte, elle s'agrandit.
  */
 export function hauteurDeLaLigne(l: LigneCabri): number {
   const lignes = Math.max(
@@ -224,7 +229,7 @@ export function hauteurDeLaLigne(l: LigneCabri): number {
     lignesDeTexte(l.age, 13),
     lignesDeTexte(l.poids, 8),
   );
-  return Math.max(HAUTEUR_LIGNE_MM, 2 + lignes * HAUTEUR_LIGNE_DE_TEXTE_MM);
+  return Math.max(HAUTEUR_LIGNE_MM, 1 + lignes * HAUTEUR_LIGNE_DE_TEXTE_MM);
 }
 
 /**
@@ -474,7 +479,7 @@ const STYLES = `
   tr { page-break-inside: avoid; }
   th, td { border: 1.3px solid #111; padding: 1mm 2mm; text-align: center; vertical-align: middle; }
   th { font-size: 9.5pt; font-weight: 700; }
-  td { height: 7mm; padding-top: 0; padding-bottom: 0; font-size: 10pt; }
+  td { height: ${HAUTEUR_LIGNE_A4_MM}mm; padding-top: 0; padding-bottom: 0; font-size: 10pt; }
   td.libre { text-align: center; font-size: 9.5pt; overflow-wrap: anywhere; }
   .boite { display: flex; margin: 0 0 4mm; }
   .boite .intitule { flex: 1; border: 1.3px solid #111; padding: 2mm 3mm; }

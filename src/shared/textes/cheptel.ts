@@ -216,6 +216,7 @@ export const TEXTES_CHEPTEL = {
       renouvellement: 'Ajouter au renouvellement',
       reproduction: 'Mettre à la reproduction',
       avorte: (femelle: string) => `Cette ${femelle} a avorté`,
+      signalerAvortement: 'Signaler un avortement',
       aide: (annee: number) => `Les boutons ajoutent l’animal au lot de ${annee} (créé s’il manque) ; l’année se change ensuite dans le lot.`,
     },
     anneeDuLot: 'Année du lot',
@@ -641,9 +642,11 @@ export const TEXTES_CHEPTEL = {
     onglets: {
       fiche: 'Fiche',
       sante: 'Santé',
-      suivi: (descendants: number) => (descendants > 0 ? `Suivi (${descendants})` : 'Suivi'),
+      suivi: 'Reproduction',
     },
     aucuneDescendance: 'Aucune descendance enregistrée.',
+    ascendance: 'Ascendance',
+    mereHorsCheptel: 'Cette mère n’est pas dans le cheptel.',
     declarerDeuxPoints: 'Déclarer : ',
     remettreDansLeCheptelActif: 'Remettre dans le cheptel actif',
     /** La carte de sortie d'un animal sorti : date et retour au cheptel actif, verrouillés d'office. */
@@ -657,7 +660,7 @@ export const TEXTES_CHEPTEL = {
     reactivationQuestion: 'Remettre cet animal dans le cheptel actif ?',
     reactivationMessage: (statut: string) =>
       `Voulez-vous vraiment remettre cet animal dans le cheptel actif ? Il n’aura plus de date de sortie (statut « ${statut} »). Si vous vouliez seulement corriger la date de sortie ou de décès, annulez et modifiez-la dans « Date de sortie ».`,
-    descendance: 'Descendance (',
+    descendance: 'Descendance',
     contrairementAValeurAbattoirValeur2: (
       valeur: string,
       valeur2: string,
