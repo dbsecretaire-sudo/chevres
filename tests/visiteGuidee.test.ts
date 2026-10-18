@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FICHE_ANIMAL, etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape } from '@/features/didacticiel/services/visiteGuidee';
+import { FICHE_ANIMAL, etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape } from '@/features/didacticiel/services/visiteGuidee';
 import { nomDeLaListe } from '@/features/contacts/services/operationsInventaire';
 
 describe('visite guidée', () => {
@@ -61,6 +61,25 @@ describe('avancer dans la visite', () => {
     expect(etapeDeLaPage(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/abc')).toBe(position('cheptel.fiche'));
     // De retour à la liste depuis la fiche : l'étape qui invite à revenir au menu.
     expect(etapeDeLaPage(etapes, position('cheptel.retour'), '/cheptel/liste')).toBe(position('cheptel.retour.menu'));
+  });
+});
+
+describe('choisir un menu de la barre du haut (Windows)', () => {
+  const etapes = etapesDeLaVisite();
+  const position = (id: string) => etapes.findIndex((e) => e.id === id);
+
+  it('l’entrée choisie ouvre la page d’une étape suivante : la visite y passe', () => {
+    expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/cheptel/liste')).toBe(position('cheptel.liste'));
+    expect(etapeApresUnMenu(etapes, position('cheptel.retour.menu'), '/cheptel/naissances')).toBe(position('cheptel.naissances.page'));
+  });
+
+  it('une entrée que la visite ne connaît pas, ou la page où l’on est déjà, valide quand même l’étape', () => {
+    expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/cheptel/traitements')).toBe(position('accueil.cheptel') + 1);
+    expect(etapeApresUnMenu(etapes, position('cheptel.retour.menu'), '/cheptel/liste')).toBe(position('cheptel.retour.menu') + 1);
+  });
+
+  it('une étape qui ne demande pas de menu n’est pas touchée', () => {
+    expect(etapeApresUnMenu(etapes, position('cheptel.liste'), '/cheptel/naissances')).toBeNull();
   });
 });
 

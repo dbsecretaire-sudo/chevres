@@ -10,6 +10,7 @@ import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { laiterieActive, oeufsActifs, productionActive } from '@/features/comptabilite/utils/recettes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { estBureau } from '@/shared/utils/plateforme';
 import { TEXTES } from '@/shared/textes';
@@ -163,10 +164,15 @@ export function MenuBureau() {
   const router = useRouter();
   // Les menus changent avec l'établissement (une entreprise n'a ni cheptel ni production) : on les redonne quand il change.
   const etablissement = useEtablissement();
+  // Un choix de menu valide l'étape de la visite guidée qui demandait de l'ouvrir (même quand il mène à la page où l'on est déjà).
+  const { menuChoisi } = useVisiteGuidee();
   useEffect(() => {
     if (!estBureau() || !window.bureau) return;
     window.bureau.menu.definir(definitionDesMenus());
-    return window.bureau.menu.surChoix((route) => router.push(route as never));
-  }, [router, etablissement]);
+    return window.bureau.menu.surChoix((route) => {
+      menuChoisi(route);
+      router.push(route as never);
+    });
+  }, [router, etablissement, menuChoisi]);
   return null;
 }

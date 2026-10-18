@@ -67,6 +67,13 @@ export function SuperpositionVisite() {
     const id = etape.id;
     let vivant = true;
     const mesurer = () => {
+      try {
+        mesurerLElement();
+      } catch {
+        // Un élément qui vient de disparaître (la page change) : rien à mesurer, la mesure suivante reprend.
+      }
+    };
+    const mesurerLElement = () => {
       if (ancre) {
         ancreDe(ancre)?.measureInWindow((x, y, w, h) => {
           if (vivant && w > 0 && h > 0) setZone((avant) => (avant?.id === id && memeZone(avant, { x, y, w, h }) ? avant : { id, x, y, w, h }));

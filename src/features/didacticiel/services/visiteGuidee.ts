@@ -53,6 +53,18 @@ export function etapeDeLaPage(etapes: readonly EtapeVisite[], index: number, adr
 }
 
 /**
+ * L'étape où la visite passe quand l'utilisateur choisit une entrée d'un menu de la barre du haut (Windows), si l'étape en cours demandait
+ * d'ouvrir un menu : celle de la page qu'il ouvre, ou, si aucune étape ne la connaît (ou si c'est la page où il est déjà), l'étape d'après.
+ * Rien (null) quand l'étape en cours ne demande pas de menu.
+ */
+export function etapeApresUnMenu(etapes: readonly EtapeVisite[], index: number, route: string): number | null {
+  if (!etapes[index]?.onglet) return null;
+  const chemin = route.split('?')[0];
+  const apres = etapes.findIndex((e, i) => i > index && pageDeLEtape(e.route, chemin));
+  return apres >= 0 ? apres : Math.min(index + 1, etapes.length - 1);
+}
+
+/**
  * L'étape où « Suivant » ou « Passer cette étape » mène, et la page à ouvrir pour s'y rendre (rien si l'on y est déjà). Une étape qui n'a pas
  * d'adresse précise (la fiche d'un animal, dont on ignore laquelle) est passée quand on n'y est pas.
  */

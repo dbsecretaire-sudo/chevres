@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname, useRouter } from 'expo-router';
-import { etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
+import { etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapesDeLaVisite, pageDeLEtape, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 
 const CLE_STOCKAGE = 'troupeau:v1:visite-guidee';
 
@@ -21,6 +21,8 @@ interface ContexteVisite {
   demarrer: () => void;
   suivant: () => void;
   quitter: () => void;
+  /** Un choix dans un menu de la barre du haut (Windows) : si l'étape demandait d'ouvrir un menu, elle est validée. */
+  menuChoisi: (route: string) => void;
   /** Ramène à la page de l'étape en cours (quand on s'en est éloigné). */
   reprendre: () => void;
 }
@@ -68,6 +70,15 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
     router.push('/' as never);
   }, [router]);
   const quitter = useCallback(() => setEtat({ actif: false, index: 0 }), []);
+  const menuChoisi = useCallback(
+    (route: string) =>
+      setEtat((avant) => {
+        if (!avant.actif) return avant;
+        const suite = etapeApresUnMenu(etapes, avant.index, route);
+        return suite === null || suite === avant.index ? avant : { actif: true, index: suite };
+      }),
+    [etapes],
+  );
   const suivant = useCallback(() => {
     const prochaine = etapeSuivante(etapes, index, adresse);
     if (!prochaine) {
@@ -93,9 +104,10 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       demarrer,
       suivant,
       quitter,
+      menuChoisi,
       reprendre,
     }),
-    [etat.actif, index, etapes.length, etape, adresse, demarrer, suivant, quitter, reprendre],
+    [etat.actif, index, etapes.length, etape, adresse, demarrer, suivant, quitter, menuChoisi, reprendre],
   );
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }
@@ -113,6 +125,7 @@ export function useVisiteGuidee(): ContexteVisite {
       demarrer: () => undefined,
       suivant: () => undefined,
       quitter: () => undefined,
+      menuChoisi: () => undefined,
       reprendre: () => undefined,
     };
   }
