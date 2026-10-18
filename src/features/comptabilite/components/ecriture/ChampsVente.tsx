@@ -15,6 +15,8 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
+import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
+import { usePoidsDuLot } from '@/features/exploitation/hooks/usePoidsDuLot';
 import { prixDuTarif } from '@/features/commercial/services/commandes';
 import {
   cleJeunes,
@@ -445,8 +447,10 @@ export function ChampsVenteViande({ e }: Props) {
   /** Un animal de la liste est un petit (cabri, agneau…) s'il n'a pas encore l'âge de sevrage de son espèce le jour de la vente. */
   const estPetit = (animal: Chevre) => estPetitLe(animal, e.date);
   /** Les animaux déjà choisis : le nombre d'animaux de la vente est leur nombre. */
+  // Une bête déclarée inconsommable dans le lot (saisie sanitaire, morte pendant le transport) ne se facture pas au client.
+  const inconsommables = useInconsommables();
   const joursProposes = jours
-    .map((j) => ({ date: j.date, animaux: j.animaux.filter((a) => !!a.numeroBoucle === e.avecFacture) }))
+    .map((j) => ({ date: j.date, animaux: j.animaux.filter((a) => !!a.numeroBoucle === e.avecFacture && !inconsommables.has(a.id)) }))
     .filter((j) => j.animaux.length > 0);
   const jourChoisi = joursProposes.find((j) => j.date === e.dateAbattoir);
   const animauxChoisis = e.animaux
@@ -492,6 +496,9 @@ export function ChampsVenteViande({ e }: Props) {
     e.setJeune(estPetit(nouveaux[0]));
     e.setQuantite(String(liste.length));
   };
+  const poidsDuJour = usePoidsDuLot();
+  /** Le lot entier d'un jour d'abattage est pris, avec son poids noté dans sa fiche : ce poids ne se modifie pas ici. */
+  const poidsDuLotVerrouille = !!jourChoisi && !unParUn && e.animaux.length === jourChoisi.animaux.length && !!poidsDuJour(jourChoisi.date);
   /** Prend tout le lot d'un jour d'abattage (« Abattoir du … ») : ses animaux, leur nombre et leur poids remplissent la vente. */
   const choisirJour = (date: string) => {
     const jour = joursProposes.find((j) => j.date === date);
@@ -500,7 +507,13 @@ export function ChampsVenteViande({ e }: Props) {
     e.setAnimaux(jour.animaux.map((a) => a.id));
     e.setJeune(estPetit(jour.animaux[0]));
     e.setQuantite(String(jour.animaux.length));
-    reprendrePoids(jour.animaux);
+    // Le poids de tout le lot, noté dans sa fiche, a la priorité ; sinon, la somme des poids des fiches (quand ils sont tous donnés).
+    const poidsDuLotNote = poidsDuJour(date);
+    if (poidsDuLotNote) {
+      const texte = String(poidsDuLotNote).replace('.', ',');
+      e.setPoidsKg(texte);
+      totalAuKilo(texte);
+    } else reprendrePoids(jour.animaux);
   };
   // Des animaux déjà choisis (depuis un bon de commande) : leur poids, noté sur leur fiche, remplit le poids de la vente.
   useEffect(() => {
@@ -561,6 +574,34 @@ export function ChampsVenteViande({ e }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prixDuDetail, e.poidsKg, auKiloLigne]);
   const maximum = maximumAnimaux(choisie, e.jeune);
+  /** Choisit le détail de la vente (la ligne de l'inventaire) : la même chose que dans la liste, pour un détail choisi d'office. */
+  const choisirDetail = (v: string) => {
+          e.setPrecision(v);
+          const nouvelle = viandes.find((x) => x.libelle === v);
+          const role = nouvelle ? roleDeLaViande(nouvelle.cle) : undefined;
+          // Un animal se vend à l'unité d'abord : le nombre d'animaux vaut 1 d'office.
+          if (role && !e.quantite.trim()) e.setQuantite('1');
+          if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
+          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix));
+          // Des jours d'abattage à facturer : le lot se choisit d'abord (une seule étape) ; sinon, on désigne l'animal.
+          if (role && joursProposes.length === 0) setQuestion(nouvelle ?? null);
+          else e.setJeune(undefined);
+          // Un autre détail : les animaux et les lots déjà choisis ne valent plus.
+          e.setAnimaux([]);
+          e.setFromages([]);
+  };
+  // Un jour d'abattage d'ouverture (depuis la fiche du lot) : la ligne de l'inventaire se choisit d'office — les petits (cabris) ou les adultes.
+  useEffect(() => {
+    if (e.precision || !e.dateAbattoir || !jourChoisi || viandes.length === 0) return;
+    const petits = estPetit(jourChoisi.animaux[0]);
+    const ligne =
+      viandes.find((v) => roleDeLaViande(v.cle) === (petits ? ROLE_VIANDE.JEUNE : ROLE_VIANDE.SUR_PIED)) ??
+      viandes.find((v) => roleDeLaViande(v.cle) !== undefined);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (ligne) choisirDetail(ligne.libelle);
+    // Le détail se choisit une fois, quand le jour d'abattage et l'inventaire sont lus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [e.precision, e.dateAbattoir, jourChoisi?.date, viandes.length]);
   const optionsAnimaux = Array.from(
     { length: Math.max(maximum, Math.round(parseDecimal(e.quantite)) || 1) },
     (_, i) => ({
@@ -576,21 +617,7 @@ export function ChampsVenteViande({ e }: Props) {
         searchable
         placeholder={TEXTES.comptabilite.nouvelleEcriture.choixDuDetail}
         value={e.precision}
-        onChange={(v) => {
-          e.setPrecision(v);
-          const nouvelle = viandes.find((x) => x.libelle === v);
-          const role = nouvelle ? roleDeLaViande(nouvelle.cle) : undefined;
-          // Un animal se vend à l'unité d'abord : le nombre d'animaux vaut 1 d'office.
-          if (role && !e.quantite.trim()) e.setQuantite('1');
-          if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
-          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix));
-          // Des jours d'abattage à facturer : le lot se choisit d'abord (une seule étape) ; sinon, on désigne l'animal.
-          if (role && joursProposes.length === 0) setQuestion(nouvelle ?? null);
-          else e.setJeune(undefined);
-          // Un autre détail : les animaux et les lots déjà choisis ne valent plus.
-          e.setAnimaux([]);
-          e.setFromages([]);
-        }}
+        onChange={choisirDetail}
         options={viandes.map((v) => ({ value: v.libelle, label: v.libelle }))}
         onEdit={() =>
           router.push(
@@ -782,6 +809,9 @@ export function ChampsVenteViande({ e }: Props) {
                   e.setPoidsKg(v);
                   totalAuKilo(v);
                 }}
+                editable={!poidsDuLotVerrouille}
+                style={poidsDuLotVerrouille ? commonStyles.verrouille : undefined}
+                aide={poidsDuLotVerrouille ? TEXTES.comptabilite.nouvelleEcriture.poidsDuLot : undefined}
                 keyboardType="decimal-pad"
                 placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
               />

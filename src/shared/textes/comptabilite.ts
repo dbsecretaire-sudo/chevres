@@ -797,6 +797,8 @@ export const TEXTES_COMPTABILITE = {
       nAnimaux: (n: number) => `${n} ${n > 1 ? 'animaux achetés' : 'animal acheté'}`,
     },
     /** Une dépense « Animaux vivants (vente) » : les animaux qui partent (à l'abattoir), choisis dans le cheptel. */
+    /** Le poids d'une vente d'un lot d'abattage entier : celui du lot, qu'on ne change que dans sa fiche. */
+    poidsDuLot: 'Poids de tout le lot : il se modifie dans la fiche du lot (Production › Viande).',
     animauxEnvoyes: {
       titre: 'Animaux envoyés',
       choisir: 'Choisir les animaux',

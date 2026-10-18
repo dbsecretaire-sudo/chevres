@@ -243,6 +243,22 @@ export const TEXTES_CHEPTEL = {
       fichiers: (nombre: number) => (nombre > 0 ? `Fichiers (${nombre})` : 'Fichiers'),
     },
     ecrituresLiees: 'Écritures liées',
+    /** Le suivi sanitaire d'un lot d'abattage : les bêtes inconsommables (au lieu des traitements). */
+    inconsommables: {
+      titre: 'Bêtes inconsommables',
+      aide: 'Les bêtes de ce lot qui ne sont pas consommables : un problème sanitaire (saisie à l’abattoir), ou la mort pendant le transport. Elles ne se facturent pas au client.',
+      declarer: 'Déclarer des bêtes inconsommables',
+      pourquoi: 'Pour quelle raison ?',
+      choisir: 'Choisir les bêtes',
+      valider: (n: number) => (n > 0 ? `Déclarer (${n})` : 'Déclarer'),
+      aucune: 'Aucune bête déclarée inconsommable.',
+      retirer: 'Retirer de la liste',
+      nBetes: (n: number) => `${n} ${n > 1 ? 'bêtes inconsommables' : 'bête inconsommable'}`,
+      motifs: { sanitaire: 'Problème sanitaire (saisie)', transport: 'Morte pendant le transport' },
+    },
+    poidsDuLot: 'Poids de tout le lot (kg)',
+    poidsDuLotAide: 'Le poids total de la viande de ce lot (bon d’abattage). Il remplit le poids de la facture au client, qui ne se modifie plus.',
+    poidsDesFiches: (kilos: string) => `Poids des fiches des animaux : ${kilos} kg`,
     aideFichiersAbattage: 'Les poids, le bon d’abattage et les autres documents de cet abattage ou de sa vente (scan, photo, PDF).',
     aideFactureAbattoir: 'La facture de l’abattoir fait le montant des frais d’abattoir refacturés au client quand vous facturez la viande de ce lot. Il n’y a pas de montant sans facture : la facture se modifie dans la comptabilité.',
     /** Les onglets de la fiche d'un lot vétérinaire (une visite). */

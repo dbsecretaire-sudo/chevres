@@ -121,6 +121,16 @@ export interface CategorieLotReglage {
 }
 
 /** Un lot d'animaux : un nom (« Chevrettes 2026 ») et les boucles des animaux, séparées par des virgules. Il désigne les mêmes animaux d'un geste. */
+/** Pourquoi une bête d'un lot d'abattage n'est pas consommable : un problème sanitaire, ou sa mort pendant le transport. */
+export type MotifInconsommable = 'sanitaire' | 'transport';
+
+/** Une bête d'un lot d'abattage déclarée inconsommable. */
+export interface InconsommableDuLot {
+  /** L'identifiant de sa fiche du cheptel. */
+  id: string;
+  motif: MotifInconsommable;
+}
+
 export interface LotAnimaux {
   id: string;
   nom: string;
@@ -143,6 +153,10 @@ export interface LotAnimaux {
   factureId?: string;
   /** Sans facture liée : le montant que l'abattoir demande de payer (€ TTC), noté à la main. */
   fraisAbattoir?: number;
+  /** Pour un lot d'abattoir : les bêtes déclarées inconsommables (saisie sanitaire, ou mortes pendant le transport) : elles ne se facturent pas au client. */
+  inconsommables?: InconsommableDuLot[];
+  /** Pour un lot d'abattoir : le poids de toute la viande du lot (kg) : il remplit le poids de la facture au client. */
+  poidsKg?: number;
   /** Pour un lot d'abattoir : les fichiers de cet abattage ou de sa vente (poids, bon d'abattage, documents), joints à la fiche du lot. */
   fichiers?: PieceJointe[];
 }

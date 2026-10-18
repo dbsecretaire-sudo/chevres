@@ -23,6 +23,7 @@ import { bonOuvertDuClient, reserverAnimauxPourClient } from '@/features/commerc
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
+import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
 import { useLots } from '@/features/exploitation/hooks/useLots';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
@@ -151,12 +152,14 @@ export default function ViandeVendue() {
   const facturees = ventes.filter((v) => venteADeclarer(v));
   const sansFacture = ventes.filter((v) => !venteADeclarer(v));
   /** Les animaux à l'abattoir pas encore vendus, par jour d'abattage : ceux avec boucle se facturent, ceux sans boucle se vendent sans facture. */
+  // Une bête déclarée inconsommable (saisie sanitaire, morte pendant le transport) est abattue mais ne se facture pas.
+  const inconsommables = useInconsommables();
   const groupes = aFacturer.flatMap((j) =>
     [true, false]
       .map((avecBoucle) => ({
         date: j.date,
         avecBoucle,
-        animaux: j.animaux.filter((a) => !!a.numeroBoucle === avecBoucle),
+        animaux: j.animaux.filter((a) => !!a.numeroBoucle === avecBoucle && !inconsommables.has(a.id)),
       }))
       .filter((g) => g.animaux.length > 0),
   );
