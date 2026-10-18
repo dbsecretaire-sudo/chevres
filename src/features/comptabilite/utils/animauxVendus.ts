@@ -8,6 +8,7 @@ import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { CATEGORIE_VENTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import type { Vente } from '@/features/comptabilite/types';
+import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { formatDateFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
@@ -75,6 +76,13 @@ export function joursAbattusAFacturer(
       animaux: liste.sort((a, b) => (a.numeroBoucle ?? '').localeCompare(b.numeroBoucle ?? '')),
     }));
 }
+
+/**
+ * Un jour d'abattage dans les deux mois qui précèdent la date de la facture : ce sont d'office des cabris. Plus ancien (ou après la facture),
+ * on s'en remet à l'âge des animaux (`premierEstPetit`).
+ */
+export const sontDesCabris = (jourAbattage: string, dateFacture: string, premierEstPetit: boolean): boolean =>
+  (dateFacture >= jourAbattage && dateFacture <= ajouterMois(jourAbattage, 2)) || premierEstPetit;
 
 /**
  * Le rôle de la ligne de viande qu'une vente a choisie comme détail (les petits, l'animal sur pied, l'animal vivant) ; rien pour

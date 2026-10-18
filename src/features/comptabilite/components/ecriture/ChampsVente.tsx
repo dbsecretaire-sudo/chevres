@@ -43,6 +43,7 @@ import {
   joursAbattusAFacturer,
   libelleAnimalVendu,
   resumeBoucles,
+  sontDesCabris,
   UN_PAR_UN,
   type JourAbattu,
 } from '@/features/comptabilite/utils/animauxVendus';
@@ -593,7 +594,8 @@ export function ChampsVenteViande({ e }: Props) {
   // Un jour d'abattage d'ouverture (depuis la fiche du lot) : la ligne de l'inventaire se choisit d'office — les petits (cabris) ou les adultes.
   useEffect(() => {
     if (e.precision || !e.dateAbattoir || !jourChoisi || viandes.length === 0) return;
-    const petits = estPetit(jourChoisi.animaux[0]);
+    // Un jour d'abattage dans les deux mois avant la facture : d'office des cabris ; sinon, l'âge des animaux décide.
+    const petits = sontDesCabris(jourChoisi.date, e.date, estPetit(jourChoisi.animaux[0]));
     const ligne =
       viandes.find((v) => roleDeLaViande(v.cle) === (petits ? ROLE_VIANDE.JEUNE : ROLE_VIANDE.SUR_PIED)) ??
       viandes.find((v) => roleDeLaViande(v.cle) !== undefined);
@@ -601,7 +603,7 @@ export function ChampsVenteViande({ e }: Props) {
     if (ligne) choisirDetail(ligne.libelle);
     // Le détail se choisit une fois, quand le jour d'abattage et l'inventaire sont lus.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [e.precision, e.dateAbattoir, jourChoisi?.date, viandes.length]);
+  }, [e.precision, e.dateAbattoir, e.date, jourChoisi?.date, viandes.length]);
   const optionsAnimaux = Array.from(
     { length: Math.max(maximum, Math.round(parseDecimal(e.quantite)) || 1) },
     (_, i) => ({
