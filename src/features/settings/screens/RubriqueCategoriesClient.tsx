@@ -73,7 +73,7 @@ export default function RubriqueCategoriesClient() {
   const groupesProposes = groupesRecetteProposes();
   const [aRetirer, setARetirer] = useState<string | null>(null);
   /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
-  const [parOption, setParOption] = useState(false);
+  const [parOption, setParOption] = useState(true);
   /** Les rubriques de l'inventaire et leurs listes : les opérations (vente, achat) se règlent liste par liste (élevage ; une entreprise garde sa liste). */
   const [rubriques, setRubriques] = useState<RubriqueOperations[]>([]);
   useEffect(() => {

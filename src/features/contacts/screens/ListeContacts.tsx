@@ -5,6 +5,7 @@ import { Screen } from '@/shared/components/ScreenList';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
+import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Fab } from '@/shared/components/Fab';
 import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
 import { convertirGroupementsEnContacts, lierLesFichesDeMemeNom, listContacts } from '@/features/contacts/repository';
@@ -16,6 +17,9 @@ import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.contacts;
+/** Les puces de catégorie : toutes les catégories, ou celles dont le choix reste à faire. */
+const TOUTES = 'toutes';
+const A_CHOISIR = 'a-choisir';
 
 /**
  * Les contacts : les clients et les fournisseurs en une seule liste, chacun une fois — avec « Recettes » s'il a une fiche client,
@@ -27,6 +31,8 @@ export default function ListeContacts() {
   const { retour } = useLocalSearchParams<{ retour?: string }>();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [recherche, setRecherche] = useState('');
+  /** La catégorie choisie en puce (rien : toutes ; `A_CHOISIR` : les contacts dont la catégorie est à choisir). */
+  const [categorieChoisie, setCategorieChoisie] = useState(TOUTES);
   const { categories, idsConnus } = useCategoriesContact();
 
   /** Ce que dit la ligne d'un contact : recettes et/ou dépenses, sa catégorie (ou « à choisir »), ses coordonnées. */
@@ -43,6 +49,20 @@ export default function ListeContacts() {
       .join(' · ');
   };
   const aClasser = contacts.filter((c) => categorieDuContact(c, idsConnus).conflit).length;
+  /** La catégorie d'un contact pour les puces (celles à choisir ensemble). */
+  const cleCategorieDe = (c: Contact): string => {
+    const categorie = categorieDuContact(c, idsConnus);
+    return categorie.conflit ? A_CHOISIR : (categorie.id ?? A_CHOISIR);
+  };
+  /** Les puces : « Toutes », puis chaque catégorie qui a des contacts (avec leur nombre). */
+  const puces = [
+    { valeur: TOUTES, label: T.toutesLesCategories(contacts.length) },
+    ...categories
+      .map((x) => ({ valeur: x.id, label: `${x.nom} (${contacts.filter((c) => cleCategorieDe(c) === x.id).length})`, n: contacts.filter((c) => cleCategorieDe(c) === x.id).length }))
+      .filter((p) => p.n > 0)
+      .map(({ valeur, label }) => ({ valeur, label })),
+    ...(aClasser > 0 ? [{ valeur: A_CHOISIR, label: T.categorieAChoisirPuce(aClasser) }] : []),
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -58,13 +78,15 @@ export default function ListeContacts() {
 
   const filtres = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    if (!q) return contacts;
-    return contacts.filter((c) =>
+    const deLaCategorie = categorieChoisie === TOUTES ? contacts : contacts.filter((c) => cleCategorieDe(c) === categorieChoisie);
+    if (!q) return deLaCategorie;
+    return deLaCategorie.filter((c) =>
       [c.nom, c.client?.telephone, c.client?.email, c.fournisseur?.telephone, c.fournisseur?.email, c.fournisseur?.nom].some((v) =>
         v?.toLowerCase().includes(q),
       ),
     );
-  }, [contacts, recherche]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contacts, recherche, categorieChoisie, idsConnus]);
 
   return (
     <Screen scroll={false}>
@@ -73,6 +95,7 @@ export default function ListeContacts() {
         <Text style={commonStyles.note}>{T.aide}</Text>
         {aClasser > 0 ? <Text style={commonStyles.lineBold}>{T.aClasser(aClasser)}</Text> : null}
         <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.recherche} />
+        {puces.length > 2 ? <PucesDefilantes puces={puces} valeur={categorieChoisie} onChoisir={setCategorieChoisie} /> : null}
       </View>
 
       <FlatList

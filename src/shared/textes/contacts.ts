@@ -20,6 +20,8 @@ export const TEXTES_CONTACTS = {
   aide: 'Un contact reçoit des recettes, fait des dépenses, ou les deux. Une seule fiche, une seule catégorie.',
   aideRubrique: 'Clients et fournisseurs réunis : chaque contact une fois, avec ses recettes et ses dépenses.',
   recherche: 'Nom, téléphone, e-mail…',
+  toutesLesCategories: (n: number) => `Toutes (${n})`,
+  categorieAChoisirPuce: (n: number) => `À choisir (${n})`,
   aucun: 'Aucun contact.',
   aucunSousTitre: 'Ajoutez un contact avec le bouton +.',
   recettes: 'Recettes',

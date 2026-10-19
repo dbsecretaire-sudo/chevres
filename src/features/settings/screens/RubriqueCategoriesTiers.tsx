@@ -73,7 +73,7 @@ export default function RubriqueCategoriesTiers() {
   /** La catégorie déroulée (une seule à la fois) : toutes sont enroulées au départ. */
   const [ouverte, setOuverte] = useState<string | null>(null);
   /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
-  const [parOption, setParOption] = useState(false);
+  const [parOption, setParOption] = useState(true);
   const depensesProposees = categoriesDepenseDuMode();
   const manquantes = categoriesFournisseurManquantes(categories);
 
