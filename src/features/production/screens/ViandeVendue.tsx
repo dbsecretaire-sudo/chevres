@@ -424,7 +424,7 @@ export default function ViandeVendue() {
       {ongletActif === 'afacturer' ? (
         // Un seul bloc blanc : les jours d'abattage se suivent sans espace, séparés par un trait.
         groupesAFacturer.length === 0 ? (
-          <EmptyState title={T.rienAFacturer} />
+          <EmptyState title={T.rienAFacturer} subtitle={T.rienAFacturerNote} />
         ) : (
           <BlocLignes>{groupesAFacturer.map(ligneDuJour)}</BlocLignes>
         )
@@ -433,7 +433,13 @@ export default function ViandeVendue() {
           data={dispo === 'disponibles' ? aVendreLibres : aVendreReserves}
           keyExtractor={(a) => a.id}
           contentContainerStyle={commonStyles.listeBlocAvecFab}
-          ListEmptyComponent={<EmptyState title={T.rienASansFacture} />}
+          ListEmptyComponent={
+            dispo === 'disponibles' ? (
+              <EmptyState title={T.rienAVendre} subtitle={T.rienAVendreNote} />
+            ) : (
+              <EmptyState title={T.rienASansFacture} />
+            )
+          }
           renderItem={({ item, index }) => (
             <LigneDeBloc index={index} total={(dispo === 'disponibles' ? aVendreLibres : aVendreReserves).length}>
               {/* Un animal réservé : « Réservation » et le nom du client en titre. */}
