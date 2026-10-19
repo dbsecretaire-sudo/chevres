@@ -98,18 +98,22 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   const declaree = venteADeclarer(form);
   // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
   // Les adultes (boucs compris) ne comptent pas les tiptag : destinés à l'abattoir, ils ne sont pas des animaux vivants à vendre.
-  const proposes = vivants.filter(
-    (a) =>
-      !ids.includes(a.id) &&
-      estPetitLe(a, form.date) === petits &&
-      !!a.numeroBoucle === declaree &&
-      (petits || !estTiptag(a, tiptags)),
-  );
-  /** La liste à cocher : les animaux proposés et ceux déjà choisis (cochés). */
-  const aCocher = [...choisis, ...proposes].sort(parBoucleCroissante);
+  // Un tiptag est destiné à l'abattoir : c'est un cabri, quel que soit son âge le jour de la facture.
+  const estPetit = (a: Chevre) => estPetitLe(a, form.date) || estTiptag(a, tiptags);
   const joursProposes = jours
     .map((j) => ({ date: j.date, animaux: j.animaux.filter((a) => !!a.numeroBoucle === declaree) }))
     .filter((j) => j.animaux.length > 0);
+  /** Un animal sur pied vendu avec facture est déjà passé à l'abattoir : seuls ceux-là (à boucle, sans les tiptag) sont proposés. */
+  const surPiedDeclare = role === ROLE_VIANDE.SUR_PIED && declaree;
+  const proposes = surPiedDeclare
+    ? [...new Map(joursProposes.flatMap((j) => j.animaux).map((a) => [a.id, a])).values()].filter(
+        (a) => !ids.includes(a.id) && !estPetit(a),
+      )
+    : vivants.filter(
+        (a) => !ids.includes(a.id) && estPetit(a) === petits && !!a.numeroBoucle === declaree && (petits || !estTiptag(a, tiptags)),
+      );
+  /** La liste à cocher : les animaux proposés et ceux déjà choisis (cochés). */
+  const aCocher = [...choisis, ...proposes].sort(parBoucleCroissante);
   /** Le lot de la vente : un jour d'abattage dont tous les animaux choisis font partie. */
   const jourChoisi = joursProposes.find(
     (j) =>

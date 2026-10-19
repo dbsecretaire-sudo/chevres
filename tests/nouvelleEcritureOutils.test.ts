@@ -44,4 +44,13 @@ describe('détail d’une vente d’animaux d’un bon', () => {
     expect(d.petits).toBe(true);
     expect(d.libelle).toBe(libelle(ROLE_VIANDE.JEUNE));
   });
+
+  it('un tiptag est un cabri : la ligne des cabris, même quand il a passé l’âge des petits à la date de la facture', () => {
+    const avecTiptag = { ...archive, boucles: [{ id: 'b', article: 'boucle:tiptag', numero: '00771' }] } as unknown as ArchiveStock;
+    const grand = { ...animal('2020-01-01'), numeroBoucle: '00771' } as Chevre;
+    expect(detailDesAnimaux([grand], 'morts', '2026-10-19', archive).libelle).toBe(libelle(ROLE_VIANDE.SUR_PIED));
+    const d = detailDesAnimaux([grand], 'morts', '2026-10-19', avecTiptag);
+    expect(d.petits).toBe(true);
+    expect(d.libelle).toBe(libelle(ROLE_VIANDE.JEUNE));
+  });
 });

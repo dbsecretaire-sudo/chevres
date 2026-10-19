@@ -92,6 +92,8 @@ export function ChampsVenteViande({ e }: Props) {
   const [animaux, setAnimaux] = useState<Chevre[]>([]);
   /** Les numéros des tiptag de l'inventaire : un animal qui en porte un est destiné à l'abattoir, il n'est pas proposé comme animal vivant. */
   const [tiptags, setTiptags] = useState<ReadonlySet<string>>(new Set());
+  /** Vrai quand les tiptag sont lus : le détail deviné d'après un jour d'abattage attend de les connaître (un tiptag est un cabri). */
+  const [tiptagsLus, setTiptagsLus] = useState(false);
   /** Les jours d'abattage dont la viande n'est pas encore facturée : on y choisit tous les animaux, ou certains numéros. */
   const [jours, setJours] = useState<JourAbattu[]>([]);
   const [abattusOuvert, setAbattusOuvert] = useState(false);
@@ -108,7 +110,12 @@ export function ChampsVenteViande({ e }: Props) {
     useCallback(() => {
       // Les animaux présents sur l'exploitation à la date de la facture (pas seulement ceux d'aujourd'hui).
       listAnimauxPresentsLe(espece, estDateISO(e.date) ? e.date : todayISO()).then(setAnimaux);
-      lireArchiveStock().then((archive) => setTiptags(numerosTiptag(archive.boucles))).catch(() => undefined);
+      lireArchiveStock()
+        .then((archive) => {
+          setTiptags(numerosTiptag(archive.boucles));
+          setTiptagsLus(true);
+        })
+        .catch(() => setTiptagsLus(true));
       Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
         setJours(joursAbattusAFacturer(abattus, ventes)),
       );
@@ -142,8 +149,8 @@ export function ChampsVenteViande({ e }: Props) {
   const limiterAnimaux = (maximum: number) => {
     if (Math.round(parseDecimal(e.quantite)) > maximum) e.setQuantite(String(maximum));
   };
-  /** Un animal de la liste est un petit (cabri, agneau…) s'il n'a pas encore l'âge de sevrage de son espèce le jour de la vente. */
-  const estPetit = (animal: Chevre) => estPetitLe(animal, e.date);
+  /** Un animal de la liste est un petit (cabri, agneau…) s'il n'a pas encore l'âge de sevrage de son espèce le jour de la vente, ou s'il porte un tiptag (destiné à l'abattoir). */
+  const estPetit = (animal: Chevre) => estPetitLe(animal, e.date) || estTiptag(animal, tiptags);
   /** Les animaux déjà choisis : le nombre d'animaux de la vente est leur nombre. */
   // Une bête déclarée inconsommable dans le lot (saisie sanitaire, morte pendant le transport) ne se facture pas au client.
   const inconsommables = useInconsommables();
@@ -164,13 +171,19 @@ export function ChampsVenteViande({ e }: Props) {
    * Les animaux de la liste (cochés : ceux déjà choisis) : ceux de l'espèce de la vente et de la catégorie de la ligne choisie — les
    * petits pour la ligne des petits ; pour un animal sur pied ou vivant, les adultes, boucs compris, sans les tiptag (destinés à l'abattoir).
    */
-  const animauxProposes = animaux.filter(
-    (a) =>
-      // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
-      !!a.numeroBoucle === e.avecFacture &&
-      (!lignePetits || estPetit(a)) &&
-      (!ligneAdultes || (!estPetit(a) && !estTiptag(a, tiptags))),
-  );
+  /** Un animal sur pied vendu avec facture est déjà passé à l'abattoir : seuls ceux-là (à boucle, sans les tiptag) sont proposés. */
+  const surPiedDeclare = !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.SUR_PIED && e.avecFacture;
+  const animauxProposes = surPiedDeclare
+    ? [...new Map(joursProposes.flatMap((j) => j.animaux).map((a) => [a.id, a])).values()].filter(
+        (a) => !estPetit(a) && !estTiptag(a, tiptags),
+      )
+    : animaux.filter(
+        (a) =>
+          // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
+          !!a.numeroBoucle === e.avecFacture &&
+          (!lignePetits || estPetit(a)) &&
+          (!ligneAdultes || (!estPetit(a) && !estTiptag(a, tiptags))),
+      );
   /** La liste à cocher : les animaux proposés, plus ceux déjà choisis qui n'en font plus partie (un animal d'un lot, par exemple). */
   const animauxACocher = [...animauxChoisis.filter((c) => !animauxProposes.some((a) => a.id === c.id)), ...animauxProposes].sort(
     parBoucleCroissante,
@@ -309,7 +322,7 @@ export function ChampsVenteViande({ e }: Props) {
   };
   // Un jour d'abattage d'ouverture (depuis la fiche du lot) : la ligne de l'inventaire se choisit d'office — les petits (cabris) ou les adultes.
   useEffect(() => {
-    if (e.precision || !e.dateAbattoir || !jourChoisi || viandes.length === 0) return;
+    if (e.precision || !e.dateAbattoir || !jourChoisi || viandes.length === 0 || !tiptagsLus) return;
     // Un jour d'abattage dans les deux mois avant la facture : d'office des cabris ; sinon, l'âge des animaux décide.
     const petits = sontDesCabris(jourChoisi.date, e.date, estPetit(jourChoisi.animaux[0]));
     const ligne =
@@ -319,7 +332,7 @@ export function ChampsVenteViande({ e }: Props) {
     if (ligne) choisirDetail(ligne.libelle);
     // Le détail se choisit une fois, quand le jour d'abattage et l'inventaire sont lus.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [e.precision, e.dateAbattoir, e.date, jourChoisi?.date, viandes.length]);
+  }, [e.precision, e.dateAbattoir, e.date, jourChoisi?.date, viandes.length, tiptagsLus]);
   const optionsAnimaux = Array.from(
     { length: Math.max(maximum, Math.round(parseDecimal(e.quantite)) || 1) },
     (_, i) => ({

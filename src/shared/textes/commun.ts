@@ -160,6 +160,8 @@ export const TEXTES_COMMUN = {
     nomDuLot: 'Nom du lot',
     exempleLot: 'ex : Chevrettes 2026, Chèvres en lactation',
     titreBoucles: 'Boucles du cheptel',
+    filtreTiptag: 'Tiptag',
+    filtreBoucles: 'Boucles',
     ajouterLesBoucles: () => 'Mettre à jour',
     nomDEntreprise: 'Nom d’entreprise',
     siret: 'SIRET',

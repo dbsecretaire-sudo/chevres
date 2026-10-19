@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/shared/components/Button';
+import { PucesDefilantes, type Puce } from '@/shared/components/PucesDefilantes';
 import type { SelectOption } from '@/shared/components/SelectModal';
 import { colors } from '@/shared/theme/colors';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
@@ -30,6 +31,11 @@ interface Props<T extends string> {
   numeroDe?: (valeur: T) => number | undefined;
   /** Un raccourci à côté de « Tout cocher » : coche d'un appui les lignes données (son libellé reçoit leur nombre, parmi celles que la recherche montre). */
   raccourci?: { libelle: (nombre: number) => string; valeurs: readonly T[] };
+  /**
+   * Des puces sous le titre pour ne voir qu'une partie des lignes (la puce `defaut` d'abord) : `appartient` dit si une ligne fait partie d'une
+   * puce. Les lignes cochées d'une autre puce restent cochées, et sont validées avec les autres.
+   */
+  filtres?: { puces: Puce<string>[]; defaut: string; appartient: (valeur: T, puce: string) => boolean };
 }
 
 /**
@@ -46,16 +52,21 @@ export function SelectModalMultiple<T extends string>({
   numeroDe,
   initiales,
   raccourci,
+  filtres,
 }: Props<T>) {
   const accent = useAccentColor();
   const [recherche, setRecherche] = useState('');
+  const [puce, setPuce] = useState(filtres?.defaut ?? '');
   const [cochees, setCochees] = useState<Set<T>>(() => new Set(initiales));
 
   const q = recherche.trim().toLowerCase();
   const plage = numeroDe ? lirePlage(recherche) : null;
   const optionsFiltrees = useMemo(
-    () => (!q || plage ? options : options.filter((o) => o.label.toLowerCase().includes(q))),
-    [options, q, plage],
+    () => {
+      const dansLaPuce = filtres ? options.filter((o) => filtres.appartient(o.value, puce)) : options;
+      return !q || plage ? dansLaPuce : dansLaPuce.filter((o) => o.label.toLowerCase().includes(q));
+    },
+    [options, q, plage, filtres, puce],
   );
   /** Les lignes d'une plage tapée : celles dont le numéro est entre les deux nombres (dans un sens ou dans l'autre). */
   const dansLaPlageTapee = useMemo(
@@ -92,6 +103,7 @@ export function SelectModalMultiple<T extends string>({
 
   const fermer = () => {
     setRecherche('');
+    setPuce(filtres?.defaut ?? '');
     setCochees(new Set());
     onClose();
   };
@@ -107,6 +119,7 @@ export function SelectModalMultiple<T extends string>({
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.sheetTitle}>{titre}</Text>
+          {filtres ? <PucesDefilantes puces={filtres.puces} valeur={puce} onChoisir={setPuce} /> : null}
           <TextInput
             style={styles.recherche}
             placeholder={numeroDe ? T.rechercherOuPlage : T.rechercherParNOuLibellePoints}
