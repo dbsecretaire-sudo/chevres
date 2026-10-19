@@ -97,6 +97,19 @@ export const TEXTES_PRODUCTION = {
     facturer: 'Facturer des produits',
     rappeler: 'Rappeler des produits',
   },
+  /** La laiterie : le lait, sa qualité, et tout ce qui concerne le récolteur (ses contacts, ses factures). */
+  laiterie: {
+    groupeLait: 'Le lait',
+    groupeRecolteur: 'Le récolteur',
+    groupeFactures: 'Les factures de lait',
+    contacts: 'Contacts du récolteur',
+    aucunRecolteur: 'Aucun récolteur dans vos contacts.',
+    ajouterRecolteur: 'Ajouter un récolteur',
+    aucuneFacture: 'Aucune facture de lait cette année.',
+    nouvelleFacture: 'Nouvelle facture de lait',
+    toutesLesFactures: 'Toutes les écritures',
+    plusDeFactures: (n: number) => `${n} autres factures de lait dans les écritures`,
+  },
   /** La page de la production de lait. */
   productionLait: {
     nonCalcule: 'Le lait par animal se calcule pour les chèvres et les brebis.',

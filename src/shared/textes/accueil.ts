@@ -24,14 +24,13 @@ export const TEXTES_ACCUEIL = {
     toutAJour: 'Tout est à jour, bravo !',
     rienAFaire: 'Rien à faire pour l’instant',
     menus: {
-      cheptel: 'Animaux',
       production: 'Production',
       commercial: 'Commerce',
       stock: 'Stock',
-      ecritures: 'Écritures',
       contacts: 'Contacts',
       reglages: 'Réglages',
     },
+    outils: { annee: 'Année', espece: 'Animal' },
     cloche: { libelle: 'Rappels', titre: 'Rappels' },
     zones: {
       enclos: (femelles: string) => `Enclos des ${femelles}`,

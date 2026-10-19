@@ -3,16 +3,12 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { ActionsFerme } from '@/features/accueil/ferme/ActionsFerme';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { MenuFerme, MinuteursFerme } from '@/features/accueil/ferme/CotesFerme';
+import { OutilsFerme } from '@/features/accueil/ferme/OutilsFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { ProgressionFerme } from '@/features/accueil/ferme/ProgressionFerme';
 import { ScenePrincipale } from '@/features/accueil/ferme/ScenePrincipale';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
-import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
-import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
-import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
 
 /**
@@ -29,18 +25,16 @@ export default function AccueilFerme() {
       <View style={styles.page}>
         <ScrollView contentContainerStyle={styles.contenu} showsVerticalScrollIndicator={false}>
           <View style={styles.colonne}>
-            <AncreVisite id="accueil.filtres">
-              <LigneFiltres>
-                <YearPicker annees={f.annees} value={f.annee} onChange={f.setAnneeActive} />
-                <SelecteurEspece />
-                <BoutonDidacticiel />
-              </LigneFiltres>
-            </AncreVisite>
             <BandeauFerme balance={f.stats?.soldeFactures} nombreAnimaux={f.stats?.totalVivantes} naissances={f.stats?.cabritsAnnee} aliments={f.aliments} />
             <ProgressionFerme faits={f.papiers.faits} total={f.papiers.total} prochaine={f.prochaine} onOuvrir={() => setRappelsOuverts(true)} />
             <RappelSauvegarde />
             <View style={styles.corps}>
-              <MinuteursFerme minuteurs={f.minuteurs.slice(0, 5)} nombreDeRappels={f.nombreDeRappels} onOuvrirRappels={() => setRappelsOuverts(true)} />
+              <MinuteursFerme
+                minuteurs={f.minuteurs.slice(0, 5)}
+                nombreDeRappels={f.nombreDeRappels}
+                onOuvrirRappels={() => setRappelsOuverts(true)}
+                bas={<OutilsFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />}
+              />
               <ScenePrincipale
                 vedettes={f.vedettes}
                 nombreAnimaux={f.stats?.totalVivantes}

@@ -93,6 +93,8 @@ export const ROUTES = {
 
   // L'onglet Production d'un élevage : fromages, viande vendue, contrôle laitier, groupements
   PRODUCTION: '/production',
+  /** La laiterie : le lait, sa qualité, le récolteur (contacts et factures). */
+  PRODUCTION_LAITERIE: '/production/laiterie',
   /** La page de la production de lait : le lait par animal et par traite. */
   PRODUCTION_LAIT: '/production/lait',
   PRODUCTION_FROMAGES: '/production/fromages',

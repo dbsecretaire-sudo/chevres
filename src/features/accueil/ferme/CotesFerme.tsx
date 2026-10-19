@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,7 +25,7 @@ const ICONES_MINUTEUR: Record<IconeMinuteur, keyof typeof Ionicons.glyphMap> = {
  * Les minuteurs, en colonne sur le côté gauche : une pastille ronde par échéance (un délai d'attente, une déclaration, des documents à
  * envoyer…), avec ce qu'il reste ; rouge et qui pulse quand c'est en retard. Un appui ouvre l'écran à traiter.
  */
-export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels }: { minuteurs: readonly Minuteur[]; nombreDeRappels: number; onOuvrirRappels: () => void }) {
+export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels, bas }: { minuteurs: readonly Minuteur[]; nombreDeRappels: number; onOuvrirRappels: () => void; bas?: ReactNode }) {
   const router = useRouter();
   const [cloche, setCloche] = useState(false);
   const aller = (route: string) => {
@@ -69,6 +69,7 @@ export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels }: 
           <Text style={styles.libelle}>{TEXTES.accueil.ferme.cloche.libelle}</Text>
         </Pressable>
       </Apparition>
+      {bas}
       <OptionsModal
         visible={cloche}
         onClose={() => setCloche(false)}
@@ -91,11 +92,9 @@ export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels }: 
 }
 
 const MENUS: { cle: keyof typeof M; icone: keyof typeof Ionicons.glyphMap; route: string }[] = [
-  { cle: 'cheptel', icone: 'paw', route: ROUTES.CHEPTEL },
   { cle: 'production', icone: 'leaf', route: ROUTES.PRODUCTION },
   { cle: 'commercial', icone: 'cart', route: ROUTES.COMMERCIAL },
   { cle: 'stock', icone: 'cube', route: ROUTES.COMPTABILITE_STOCKS },
-  { cle: 'ecritures', icone: 'book', route: ROUTES.COMPTABILITE_LISTE },
   { cle: 'contacts', icone: 'people', route: ROUTES.CONTACTS },
   { cle: 'reglages', icone: 'settings', route: ROUTES.REGLAGES },
 ];

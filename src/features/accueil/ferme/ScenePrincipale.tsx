@@ -82,7 +82,7 @@ export function ScenePrincipale({ vedettes, nombreAnimaux, naissances, lotsAFact
   const router = useRouter();
   const femelles = vocabulaire().femelle.pluriel;
   const lieux = [
-    { cle: 'laiterie', icone: <Ionicons name="water" size={24} color={colors.primary} />, titre: T.laiterie, route: ROUTES.PRODUCTION_LAIT, pastille: undefined },
+    { cle: 'laiterie', icone: <Ionicons name="water" size={24} color={colors.primary} />, titre: T.laiterie, route: ROUTES.PRODUCTION_LAITERIE, pastille: undefined },
     { cle: 'fromagerie', icone: <MaterialCommunityIcons name="cheese" size={26} color={colors.primary} />, titre: T.fromagerie, route: ROUTES.PRODUCTION_FROMAGES, pastille: lotsARappeler > 0 ? T.lotsARappeler(lotsARappeler) : undefined },
     { cle: 'charcuterie', icone: <MaterialCommunityIcons name="food-steak" size={26} color={colors.primary} />, titre: T.charcuterie, route: ROUTES.PRODUCTION_CHARCUTERIE, pastille: undefined },
     { cle: 'abattoir', icone: <Ionicons name="business" size={24} color={colors.primary} />, titre: T.abattoir, route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer`, pastille: lotsAFacturer > 0 ? T.lotsAFacturer(lotsAFacturer) : undefined },

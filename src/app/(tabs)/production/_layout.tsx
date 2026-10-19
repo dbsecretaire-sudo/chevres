@@ -39,6 +39,7 @@ export default function ProductionLayout() {
       <Stack.Screen name="index" options={{ title: TEXTES.production.titre }} />
       <Stack.Screen name="fromages" options={{ title: TEXTES.production.fromages.titre }} />
       <Stack.Screen name="lait" options={{ title: TEXTES.production.accueil.productionLait.titre }} />
+      <Stack.Screen name="laiterie" options={{ title: TEXTES.accueil.ferme.zones.laiterie }} />
       <Stack.Screen name="charcuterie" options={{ title: TEXTES.production.charcuterie.titre }} />
       <Stack.Screen
         name="fabrication"
