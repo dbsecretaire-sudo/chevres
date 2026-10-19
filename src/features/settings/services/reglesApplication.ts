@@ -255,6 +255,11 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
           texte: `Un achat de l’élevage : ${pourcent(TAUX_TVA_ACHAT_DEFAUT)} ; le carburant : ${pourcent(TAUX_TVA_CARBURANT)} ; un achat d’entreprise : ${pourcent(TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT)}. On peut les changer écriture par écriture.`,
         },
         {
+          id: 'compta.ateliers',
+          titre: 'Marge par atelier',
+          texte: 'Une vente va dans l’atelier de sa catégorie : le lait, le fromage ; la viande selon son détail — les petits (cabris) dans l’atelier « Viande », un animal sur pied ou vivant dans « Reproducteurs et réformes » ; la boucherie et la charcuterie dans « Boucherie et charcuterie ». Une dépense sans atelier choisi est une charge commune, répartie entre les ateliers au prorata de leurs recettes ; la liste des ateliers d’une dépense suit l’espèce (pas d’œufs pour des chèvres).',
+        },
+        {
           id: 'compta.nonFacturee',
           titre: 'Dépense non facturée',
           texte: 'Sans facture, la TVA de la dépense n’est pas déductible : elle reste dans la trésorerie et dans la rentabilité.',

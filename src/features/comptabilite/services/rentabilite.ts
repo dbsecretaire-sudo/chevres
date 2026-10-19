@@ -7,7 +7,7 @@ import { activiteFacture, activiteVente, partsDeFacture } from '@/features/compt
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { bilanLait } from '@/features/stock/services/stock';
+import { bilanLait, roleDeLaLigneDeLaVente } from '@/features/stock/services/stock';
 import { ATELIER, ATELIER_PAR_CATEGORIE_VENTE, type Atelier } from '@/shared/constants/ateliers';
 import {
   CATEGORIE_DEPENSE,
@@ -16,6 +16,7 @@ import {
   TYPE_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { COMPTE_PAR_DEPENSE } from '@/shared/constants/planComptable';
+import { ROLE_VIANDE } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { yearOf } from '@/shared/utils/dates';
 
@@ -88,6 +89,11 @@ export interface EntreeRentabilite {
   effectif?: number;
   /** Les noms des comptes comptables par numéro, pour nommer les postes « Autre » d'après leur compte. */
   comptes?: Record<string, string>;
+  /**
+   * L'atelier de certaines ventes (par identifiant), quand leur catégorie ne le dit pas : une vente de viande dont le détail est un petit
+   * (« Cabris ») va dans l'atelier des petits, un animal sur pied ou vivant dans celui des reproducteurs et réformes (voir ateliersDesVentesDeViande).
+   */
+  ateliersDesVentes?: Record<string, Atelier>;
 }
 
 /** Ce qui sépare le groupe d'un compte de son détail dans son nom (« Assurance — Multirisques »). */
@@ -122,7 +128,7 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
 
   for (const v of entree.ventes) {
     if (!retenue(activiteVente(v))) continue;
-    const atelier = ATELIER_PAR_CATEGORIE_VENTE[v.categorie] ?? ATELIER.AUTRES;
+    const atelier = entree.ateliersDesVentes?.[v.id] ?? ATELIER_PAR_CATEGORIE_VENTE[v.categorie] ?? ATELIER.AUTRES;
     const parts = partsDeLaVente(v).reduce((t, p) => t + montant(p.ttc, p.taux), 0);
     recettes.set(atelier, (recettes.get(atelier) ?? 0) + parts);
   }
@@ -238,6 +244,23 @@ export async function litresProduitsDeLAnnee(annee: number, ventes: Vente[]): Pr
   ).produit;
 }
 
+/**
+ * L'atelier des ventes de viande d'après le détail choisi dans l'inventaire : les petits (cabris, chevreaux…) forment leur atelier, et les
+ * animaux sur pied ou vivants (réformes, reproducteurs) le leur ; la boucherie et la charcuterie restent dans l'atelier de la viande.
+ */
+export function ateliersDesVentesDeViande(
+  ventes: readonly Vente[],
+  roleDe: (vente: Vente) => string | undefined,
+): Record<string, Atelier> {
+  const ateliers: Record<string, Atelier> = {};
+  for (const v of ventes) {
+    const role = roleDe(v);
+    if (role === ROLE_VIANDE.JEUNE) ateliers[v.id] = ATELIER.PETITS;
+    else if (role === ROLE_VIANDE.SUR_PIED || role === ROLE_VIANDE.VIVANT) ateliers[v.id] = ATELIER.ANIMAUX;
+  }
+  return ateliers;
+}
+
 /** La rentabilité d'une année, d'après les ventes et factures enregistrées. */
 export async function rentabilite(
   annee: number,
@@ -247,5 +270,7 @@ export async function rentabilite(
   // Pas de lait pour une espèce qui n'en produit pas (cochons, poules) : le coût du litre n'a pas de sens.
   const litresProduits = options.laitier === false ? 0 : await litresProduitsDeLAnnee(annee, ventes);
   const comptes = Object.fromEntries((await listComptesPcg()).map((c) => [c.numero, c.libelle]));
-  return calculerRentabilite({ annee, ventes, factures, litresProduits, comptes, ...options });
+  const archive = await lireArchiveStock();
+  const ateliersDesVentes = ateliersDesVentesDeViande(ventes, (v) => roleDeLaLigneDeLaVente(v, archive));
+  return calculerRentabilite({ annee, ventes, factures, litresProduits, comptes, ateliersDesVentes, ...options });
 }

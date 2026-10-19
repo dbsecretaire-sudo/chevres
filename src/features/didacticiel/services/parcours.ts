@@ -102,6 +102,7 @@ const etapesDeStock = (premier: number, onglet: string, ancreStock: string, ancr
 ];
 
 const ATELIER = 'Vérifiez que l’atelier concerné (l’espèce) est le bon.';
+const CATEGORIE_DE_RECETTE = 'Vérifiez la catégorie de recette (la liste en surbrillance) : c’est elle, avec le détail de la vente, qui décide de l’atelier où la vente compte dans la rentabilité (cabris, lait, fromage…).';
 
 /**
  * Les parcours de cas du didacticiel : chacun suit un cas de bout en bout (une vente, un traitement…), dans l'ordre où on le fait dans
@@ -123,7 +124,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('5A', 'Je vois les commandes en cours', 'Les réservations non encore facturées sont dans les commandes à traiter.', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDES),
         etape('6', 'Je vérifie les informations préremplies', 'Vérifiez que « Sans facture » est bien sélectionné. L’écriture apparaît dans la liste des écritures, mais elle ne sera comptée ni pour les impôts ni pour le RSA.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, false, '&detail=jeune')),
         etape('7', 'Cabri mort ou vivant', 'Dans le menu déroulant « Animaux remis », choisissez morts ou vivants selon la demande du client : un cabri vivant a un document de circulation, un cabri mort non.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true, '&detail=jeune'), 'ecriture.etat'),
-        etape('8', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true, '&detail=jeune'), 'ecriture.activite'),
+        etape('8', 'Je vérifie la catégorie de recette', CATEGORIE_DE_RECETTE, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true, '&detail=jeune'), 'ecriture.categorie'),
         etape('9', 'Je vois la liste des ventes sans facture', 'L’onglet « Vendue » de la viande liste les animaux vendus sans facture : ici, ceux remis morts.', 'Production › Viande › Vendue › Morts', VIANDE('vendue', 'morts')),
         etape('9A', 'Où sont les animaux vendus vivants', 'Le sous-onglet « Vivants » liste ceux qui sont partis vivants chez le client.', 'Production › Viande › Vendue › Vivants', VIANDE('vendue', 'vivants')),
         ...etapesDeStock(10, 'animaux', 'stock.animaux', 'historique.viande'),
@@ -145,7 +146,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('3D', 'J’envoie le feuillet à la chambre d’agriculture', 'Vous gardez le blanc et le jaune, vous donnez le vert et le bleu à l’abattoir, et vous gardez le rose avant de l’envoyer à la chambre d’agriculture : sur l’accueil, le rappel « Envoyer le document du … (rose) » reste à valider tant qu’il n’est pas envoyé.', 'Cheptel › Dossier PAC › Documents de circulation', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION),
         etape('4', 'Je facture ce lot à un client', 'Le bouton « Facturer la viande de ce lot au client » (onglet Écritures) ouvre la facture, déjà préremplie.', 'Production › Viande › lot › Écritures', LOT('facture'), 'lot.facturer'),
         etape('5', 'Je termine la facture', 'Complétez les informations demandées (contact, date, TVA, paiement) puis enregistrez.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', false, true)),
-        etape('6', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', false, true), 'ecriture.activite'),
+        etape('6', 'Je vérifie la catégorie de recette', CATEGORIE_DE_RECETTE, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', false, true), 'ecriture.categorie'),
         etape('7', 'La liste des factures', 'Les ventes de viande facturées sont dans l’onglet « Facturée ».', 'Production › Viande › Facturée', VIANDE('facturee')),
         ...etapesDeStock(8, 'viande', 'stock.viande', 'historique.viande'),
       ],
@@ -161,7 +162,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('3', 'Je choisis la catégorie Lait', 'La catégorie de recette « Lait » demande le litrage vendu (2e étape de la saisie, bouton « Suivant »).', 'Comptabilité › Écritures › + › Crédit', ECRITURE('emise', 'lait', false, true)),
         etape('4', 'J’indique le litrage vendu', 'Le nombre de litres livrés au récolteur.', 'Comptabilité › Écritures › + › Crédit', ECRITURE('emise', 'lait', false, true)),
         etape('5', 'J’indique le montant payé par le récolteur', 'Le récolteur fixe son prix : saisissez le montant qu’il vous paie. La case « Prix du produit personnalisé » se règle par catégorie de contact, dans Organisation › Contacts : elle n’est utile qu’aux contacts qui en ont besoin.', 'Comptabilité › Écritures › + › Crédit', ECRITURE('emise', 'lait', false, true)),
-        etape('5A', 'Je précise l’atelier', 'Vérifiez l’atelier (l’espèce) concerné par cette vente de lait.', 'Comptabilité › Écritures › + › Crédit', ECRITURE('emise', 'lait', false, true), 'ecriture.activite'),
+        etape('5A', 'Je vérifie la catégorie de recette', CATEGORIE_DE_RECETTE, 'Comptabilité › Écritures › + › Crédit', ECRITURE('emise', 'lait', false, true), 'ecriture.categorie'),
         etape('6', 'Je complète les analyses obligatoires', 'Pour chaque mois, ajoutez les analyses du lait.', 'Production › Qualité du lait › Analyses', ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.LAITIER, FAMILLE_CONTROLE.ANALYSE)),
         etape('7', 'Je constate l’évolution de la qualité', 'L’onglet « Résumé » montre l’évolution de la qualité du lait.', 'Production › Qualité du lait › Résumé', ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.LAITIER, FAMILLE_CONTROLE.RESUME)),
         etape('8', 'La production du lait', 'Précisez la date de début et de fin de traite et le nombre de chèvres à la traite : on obtient la quantité de lait par chèvre et par traite.', 'Production › Production du lait', ROUTES.PRODUCTION_LAIT),
@@ -179,7 +180,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('1', 'Le lot de fromage', 'Chaque fabrication est un lot numéroté : c’est lui qu’on vend et qu’on suit.', 'Production › Fromages', ROUTES.PRODUCTION_FROMAGES),
         etape('2', 'Le plus simple : je réserve sur un bon de commande', 'Dans le bon de commande du client, ajoutez une ligne de fromage et choisissez ses lots : ils sont réservés, et la facture se remplit toute seule d’après la réservation (c’est le plus simple pour facturer ensuite).', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDE),
         etape('3', 'Sans bon de commande : je choisis les fromages dans la facture', 'Sans réservation, crédit, catégorie « Fromages » : choisissez le type de fromage et les lots vendus dans la facture (leurs numéros sont repris pour le suivi).', 'Comptabilité › Écritures › + › Crédit › Fromages', ECRITURE('emise', 'fromage', false, true)),
-        etape('4', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Fromages', ECRITURE('emise', 'fromage', false, true), 'ecriture.activite'),
+        etape('4', 'Je vérifie la catégorie de recette', CATEGORIE_DE_RECETTE, 'Comptabilité › Écritures › + › Crédit › Fromages', ECRITURE('emise', 'fromage', false, true), 'ecriture.categorie'),
         ...etapesDeStock(5, 'fromages', 'stock.fromages', 'historique.fromage'),
         etape('7', 'Le rappel de lots', 'Si le contrôle d’un lot vendu n’est pas bon, le lot est à rappeler : il apparaît dans les rappels de lots (et sur l’accueil) jusqu’à ce que le rappel soit validé.', 'Production › Rappels de lots', ROUTES.PRODUCTION_RAPPELS_LOTS),
       ],
@@ -193,7 +194,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('1', 'Le lot de charcuterie', 'Chaque fabrication est un lot numéroté : c’est lui qu’on vend et qu’on suit.', 'Production › Boucherie / Charcuterie', ROUTES.PRODUCTION_CHARCUTERIE),
         etape('2', 'Le plus simple : je réserve sur un bon de commande', 'Dans le bon de commande du client, ajoutez une ligne de charcuterie et choisissez ses lots : ils sont réservés, et la facture se remplit toute seule d’après la réservation (c’est le plus simple pour facturer ensuite).', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDE),
         etape('3', 'Sans bon de commande : je choisis les produits dans la facture', 'Sans réservation, crédit, catégorie « Boucherie / charcuterie » : choisissez le produit et les lots vendus dans la facture.', 'Comptabilité › Écritures › + › Crédit › Boucherie / charcuterie', ECRITURE('emise', 'boucherie_charcuterie', false, true)),
-        etape('4', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Boucherie / charcuterie', ECRITURE('emise', 'boucherie_charcuterie', false, true), 'ecriture.activite'),
+        etape('4', 'Je vérifie la catégorie de recette', CATEGORIE_DE_RECETTE, 'Comptabilité › Écritures › + › Crédit › Boucherie / charcuterie', ECRITURE('emise', 'boucherie_charcuterie', false, true), 'ecriture.categorie'),
         ...etapesDeStock(5, 'viande', 'stock.viande', 'historique.viande'),
         etape('7', 'Le rappel de lots', 'Si le contrôle d’un lot vendu n’est pas bon, le lot est à rappeler : il apparaît dans les rappels de lots (et sur l’accueil) jusqu’à ce que le rappel soit validé.', 'Production › Rappels de lots', ROUTES.PRODUCTION_RAPPELS_LOTS),
       ],

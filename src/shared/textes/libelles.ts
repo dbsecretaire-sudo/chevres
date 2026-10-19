@@ -365,9 +365,8 @@ export const LABEL_PERIODICITE_TVA: Record<ValeurDe<typeof PERIODICITE_TVA>, str
 export const LABEL_ATELIER: Record<ValeurDe<typeof ATELIER>, string> = {
   [ATELIER.LAIT]: 'Lait',
   [ATELIER.FROMAGE]: 'Fromage',
-  get [ATELIER.PETITS]() {
-    return capitaliser(vocabulaire().petit.pluriel);
-  },
+  // Les petits (cabris, agneaux…) vendus pour leur viande : l'atelier de la viande.
+  [ATELIER.PETITS]: 'Viande',
   [ATELIER.ANIMAUX]: 'Reproducteurs et réformes',
   [ATELIER.VIANDE]: 'Boucherie et charcuterie',
   [ATELIER.OEUFS]: 'Œufs',

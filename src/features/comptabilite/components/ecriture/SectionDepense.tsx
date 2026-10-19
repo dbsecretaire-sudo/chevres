@@ -317,7 +317,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
           <AncreVisite id="ecriture.atelier">
-            <ChampAtelier value={e.atelier} onChange={e.setAtelier} />
+            <ChampAtelier value={e.atelier} onChange={e.setAtelier} activite={e.activite} />
           </AncreVisite>
         )}
         {e.atelier === ATELIER.AGRITOURISME ? (

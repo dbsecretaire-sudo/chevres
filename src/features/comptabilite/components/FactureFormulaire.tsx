@@ -409,6 +409,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
         {!estEmise && !modeEntreprise() && !depenseImposee(fournisseur) ? (
           <ChampAtelier
+            activite={form.activite}
             value={form.atelier ?? ''}
             onChange={(atelier) =>
               f.setForm({

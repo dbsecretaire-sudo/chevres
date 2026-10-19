@@ -27,6 +27,7 @@ import type { Vente } from '@/features/comptabilite/types';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
@@ -149,6 +150,7 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
     <>
       {/* Les informations : la catégorie, ce qui est vendu et son montant. */}
       <SectionForm>
+        <AncreVisite id="ecriture.categorie">
         <ChampCategorieCompte
           label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
           // Le libellé est un lien : l'inventaire, à la section de la catégorie choisie (c'est lui qui tient ses prix et ses lignes).
@@ -186,6 +188,7 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           optionsCompte={e.optionsCompteRecette}
           onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
         />
+        </AncreVisite>
 
         {/* Seconde liste : lait ou fromage ; boucherie, petits, animal sur pied ou vivant. */}
         {e.categoriesDuGroupe.length > 1 && (
