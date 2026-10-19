@@ -374,7 +374,7 @@ export default function ViandeVendue() {
         </LigneFiltres>
         <PucesDefilantes<OngletViande>
           puces={[
-            { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length) },
+            { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length), aide: T.rienAFacturerNote },
             { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
             ...(avance
               ? [
@@ -397,7 +397,7 @@ export default function ViandeVendue() {
         {ongletActif === 'avendre' ? (
           <PucesDefilantes<'disponibles' | 'reserves'>
             puces={[
-              { valeur: 'disponibles', label: T.sousOnglets.disponibles(aVendreLibres.length) },
+              { valeur: 'disponibles', label: T.sousOnglets.disponibles(aVendreLibres.length), aide: T.rienAVendreNote },
               { valeur: 'reserves', label: T.sousOnglets.reserves(aVendreReserves.length) },
             ]}
             valeur={dispo}
