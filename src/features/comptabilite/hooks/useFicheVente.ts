@@ -21,6 +21,7 @@ import {
 } from '@/features/comptabilite/utils/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { ROLE_VIANDE } from '@/shared/constants/stock';
 import { roleDeLaLigneDeLaVente, totalDeLaVente } from '@/features/stock/services/stock';
 import { fromagesRequis } from '@/features/stock/services/lots';
 import { roleDuDetailDeVente } from '@/features/comptabilite/utils/animauxVendus';
@@ -172,7 +173,12 @@ export function useFicheVente(id: string | undefined) {
     ) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.numeroFactureNumerique });
     }
-    if (form.categorie === CATEGORIE_VENTE.VIANDE && !(form.poidsKg && form.poidsKg > 0)) {
+    // Le poids est facultatif pour un animal vivant vendu à la tête ; il est requis pour les autres (au kilo).
+    if (
+      form.categorie === CATEGORIE_VENTE.VIANDE &&
+      !(form.poidsKg && form.poidsKg > 0) &&
+      (form.venduAuPoids || roleDeLaLigneDeLaVente(form, await lireArchiveStock()) !== ROLE_VIANDE.VIVANT)
+    ) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.poidsRequis });
     }
 

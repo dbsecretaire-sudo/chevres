@@ -676,7 +676,9 @@ export function useNouvelleEcriture(
             });
             return;
           }
-          if (!(parseDecimal(poidsKg) > 0)) {
+          // Le poids est facultatif pour un animal vivant vendu à la tête ; il est requis pour les autres (au kilo).
+          const poidsExige = roleDeLaViande(ligne.cle) !== ROLE_VIANDE.VIVANT || venduAuPoids;
+          if (poidsExige && !(parseDecimal(poidsKg) > 0)) {
             setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.poidsRequis });
             return;
           }
