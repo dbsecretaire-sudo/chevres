@@ -241,6 +241,8 @@ export interface InfosExploitation {
   rappelsDesactives?: string[];
   /** Vrai : le didacticiel est désactivé sur l'accueil (absent : activé). */
   didacticielMasque?: boolean;
+  /** Vrai : l'accueil classique, en liste (absent : l'accueil « ferme », en images). */
+  accueilClassique?: boolean;
   /**
    * Le paramétrage du cheptel : les coefficients UGB choisis par espèce (à défaut ceux d'UGB_PAR_DEFAUT) et, pour chaque prime
    * (PRIMES), si elle compte dans la prime prévisionnelle, son taux en euros et ce sur quoi il s'applique (par UGB, par animal ou par hectare ; à défaut, la base d'office de la prime) ; `nom` renomme une aide d'office.

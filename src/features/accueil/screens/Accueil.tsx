@@ -10,10 +10,15 @@ import AccueilEntreprise from '@/features/accueil/screens/AccueilEntreprise';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TuilesAccueil } from '@/features/accueil/components/TuilesAccueil';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
+import AccueilFerme from '@/features/accueil/ferme/AccueilFerme';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 
 /** Accueil de l'élevage, ou celui de l'entreprise quand l'établissement actif n'est pas un élevage. */
 export default function Accueil() {
-  return modeEntreprise() ? <AccueilEntreprise /> : <AccueilElevage />;
+  const { settings } = useAppSettings();
+  if (modeEntreprise()) return <AccueilEntreprise />;
+  // L'élevage : la ferme (d'office), ou l'accueil classique en liste quand le réglage le demande.
+  return settings.exploitation?.accueilClassique ? <AccueilElevage /> : <AccueilFerme />;
 }
 
 function AccueilElevage() {

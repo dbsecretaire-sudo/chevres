@@ -11,4 +11,55 @@ export const TEXTES_ACCUEIL = {
     repartitionAnimaux: (femelles: number, males: number, petits: number) =>
       `${femelles} ${accorder(V().femelle, femelles)} · ${males} ${accorder(V().male, males)} · ${petits} ${accorder(V().petit, petits)}`,
   },
+  /** L'accueil « ferme » : le bandeau, les papiers à jour, les minuteurs, les boutons flottants, l'enclos et les actions. */
+  ferme: {
+    bandeau: {
+      portrait: 'Informations de l’exploitation',
+      balance: 'Balance de l’année : recettes moins dépenses',
+      animaux: (n: number) => `${n} animaux vivants`,
+      aliments: 'Aliment en stock',
+      reglages: 'Réglages',
+    },
+    papiers: (faits: number, total: number) => `Papiers à jour ${faits}/${total}`,
+    toutAJour: 'Tout est à jour, bravo !',
+    rienAFaire: 'Rien à faire pour l’instant',
+    menus: {
+      cheptel: 'Animaux',
+      production: 'Production',
+      commercial: 'Commerce',
+      stock: 'Stock',
+      ecritures: 'Écritures',
+      contacts: 'Contacts',
+      reglages: 'Réglages',
+    },
+    cloche: { libelle: 'Rappels', titre: 'Rappels' },
+    zones: {
+      enclos: (femelles: string) => `Enclos des ${femelles}`,
+      laiterie: 'Laiterie',
+      fromagerie: 'Fromagerie',
+      charcuterie: 'Boucherie / charcuterie',
+      abattoir: 'Abattoir',
+      contacts: 'Clients et fournisseurs',
+      lotsAFacturer: (n: number) => `${n} à facturer`,
+      lotsARappeler: (n: number) => `${n} à rappeler`,
+      aucunAnimal: 'Aucun animal',
+      nes: (n: number) => `${n} nés cette année`,
+    },
+    actions: {
+      ecriture: 'Écriture',
+      naissance: 'Naissance',
+      traitement: 'Traitement',
+      vente: 'Vendre',
+    },
+    jour: {
+      titre: 'Rappels du jour',
+      intro: 'Voici ce qui attend aujourd’hui :',
+      compris: 'Compris',
+      plusTard: 'Plus tard',
+    },
+    reglage: {
+      classique: 'Accueil classique (sans la ferme)',
+      aide: 'La ferme est l’accueil en images : enclos, boutons flottants, minuteurs. Cochez pour revenir à l’accueil simple, en liste.',
+    },
+  },
 } as const;

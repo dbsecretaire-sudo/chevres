@@ -9,6 +9,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { productionActive } from '@/features/comptabilite/utils/recettes';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
@@ -49,6 +50,9 @@ function Onglets() {
   const entreprise = modeEntreprise();
   // Le stock : un onglet en bas pour une exploitation agricole (fromagerie, aliments) et pour un gîte (boissons, nourriture).
   const stockGite = entreprise && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
+  // L'accueil « ferme » (un élevage) a ses propres boutons : la barre d'icônes du bas y est masquée, elle revient sur les autres écrans.
+  const { settings } = useAppSettings();
+  const accueilFerme = !entreprise && !settings.exploitation?.accueilClassique;
   return (
     <Tabs
       // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
@@ -78,6 +82,7 @@ function Onglets() {
         options={{
           title: TEXTES.navigation.layout.accueil,
           headerRight: () => <EtablissementHeaderButton />,
+          tabBarStyle: accueilFerme ? { display: 'none' } : estBureau() ? { display: 'none' } : undefined,
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
