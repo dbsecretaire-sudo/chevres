@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { carteEstLegere } from '@/features/accueil/services/carteFerme';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ActionsFerme } from '@/features/accueil/ferme/ActionsFerme';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { CarteFerme } from '@/features/accueil/ferme/CarteFerme';
@@ -23,6 +25,8 @@ import { TEXTES } from '@/shared/textes';
  */
 export default function AccueilFerme() {
   const f = useFermeAccueil();
+  const { settings } = useAppSettings();
+  const legere = carteEstLegere(settings.exploitation?.carteLegere, Platform.OS !== 'web');
   // Sans en-tête, le contenu commence sous l'encoche et la barre d'état.
   const { top: haut } = useSafeAreaInsets();
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
@@ -46,6 +50,7 @@ export default function AccueilFerme() {
           lotsARappeler={f.lotsARappeler}
           morts={f.morts}
           estive={f.estive}
+          legere={legere}
           aliments={f.aliments}
         />
         {/* Les menus flottants : fixes par-dessus la carte ; chaque colonne défile seule quand l'écran est court. */}

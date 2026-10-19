@@ -214,3 +214,9 @@ export function bornesEnPerspective(vue: number, carte: number): { min: number; 
 /** L'échelle qui fait tenir toute la carte dans la vue (la vue d'ensemble) : sa largeur, et sa hauteur un peu réduite par la perspective. */
 export const echelleVueDEnsemble = (largeur: number, hauteur: number): number =>
   Math.min(1, Math.max(0.05, Math.min(largeur / CARTE.largeur, hauteur / (CARTE.hauteur * 0.88)) * 0.96));
+
+/**
+ * Vrai quand la carte est « légère » : à plat (sans perspective), sans nuages ni tracteur ni camions qui roulent, avec moins d'arbres. Le choix
+ * de l'utilisateur l'emporte ; à défaut, la carte est légère sur téléphone (plus modeste en puissance) et complète sur ordinateur.
+ */
+export const carteEstLegere = (choix: boolean | undefined, surTelephone: boolean): boolean => choix ?? surTelephone;

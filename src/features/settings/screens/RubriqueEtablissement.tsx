@@ -1,4 +1,5 @@
-import { Text } from 'react-native';
+import { Platform, Text } from 'react-native';
+import { carteEstLegere } from '@/features/accueil/services/carteFerme';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -54,6 +55,16 @@ export default function RubriqueEtablissement() {
             onChange={(classique) => patchSettings({ exploitation: { ...settings.exploitation, accueilClassique: classique || undefined } })}
           />
           <Text style={commonStyles.note}>{TEXTES.accueil.ferme.reglage.aide}</Text>
+          {!settings.exploitation?.accueilClassique ? (
+            <>
+              <Checkbox
+                label={TEXTES.accueil.ferme.reglage.legere}
+                value={carteEstLegere(settings.exploitation?.carteLegere, Platform.OS !== 'web')}
+                onChange={(legere) => patchSettings({ exploitation: { ...settings.exploitation, carteLegere: legere } })}
+              />
+              <Text style={commonStyles.note}>{TEXTES.accueil.ferme.reglage.aideLegere}</Text>
+            </>
+          ) : null}
         </>
       )}
     </Screen>

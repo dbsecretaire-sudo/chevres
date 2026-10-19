@@ -15,6 +15,7 @@ import {
   ENTREE,
   positionsEnEventail,
   bornesEnPerspective,
+  carteEstLegere,
   echelleVueDEnsemble,
   rectDuLieu,
 } from '@/features/accueil/services/carteFerme';
@@ -124,5 +125,14 @@ describe('la ferme clôturée', () => {
       const dansLaFerme = a.x + a.taille > FERME.x && a.x < FERME.x + FERME.largeur && a.y + a.taille > FERME.y && a.y < FERME.y + FERME.hauteur;
       expect(dansLaFerme).toBe(false);
     }
+  });
+});
+
+describe('carte légère', () => {
+  it('le choix de l’utilisateur l’emporte ; à défaut, légère sur téléphone seulement', () => {
+    expect(carteEstLegere(undefined, true)).toBe(true);
+    expect(carteEstLegere(undefined, false)).toBe(false);
+    expect(carteEstLegere(false, true)).toBe(false);
+    expect(carteEstLegere(true, false)).toBe(true);
   });
 });

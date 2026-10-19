@@ -103,6 +103,8 @@ export const TEXTES_ACCUEIL = {
       plusTard: 'Plus tard',
     },
     reglage: {
+      legere: 'Carte légère (téléphone lent)',
+      aideLegere: 'À plat, sans nuages ni camions qui roulent, avec moins d’arbres : la carte demande moins au téléphone. Décochez pour la carte complète, en perspective.',
       classique: 'Accueil classique (sans la ferme)',
       aide: 'La ferme est l’accueil en images : enclos, boutons flottants, minuteurs. Cochez pour revenir à l’accueil simple, en liste.',
     },

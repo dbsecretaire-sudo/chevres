@@ -15,6 +15,8 @@ interface Props {
   libelle: string;
   /** Pour décaler les camions entre eux : le temps qu'il attend avant son premier passage (ms). */
   delai?: number;
+  /** Carte légère : le camion reste arrêté à son bâtiment, avec sa bulle, sans rouler. */
+  immobile?: boolean;
   onAppui: () => void;
 }
 
@@ -22,8 +24,9 @@ interface Props {
  * Un camion vivant sur sa route : il arrive à son bâtiment, s'arrête (une bulle apparaît : le lait à prendre, le foin livré), puis repart,
  * et revient plus tard. Le récolteur du lait et le livreur de foin en sont deux. Il se place à l'endroit où il s'arrête : la carte le pose.
  */
-export function CamionVivant({ emoji, bulle, axe, depart, libelle, delai = 0, onAppui }: Props) {
-  const reduit = useMouvementReduit();
+export function CamionVivant({ emoji, bulle, axe, depart, libelle, delai = 0, immobile = false, onAppui }: Props) {
+  const reduitSysteme = useMouvementReduit();
+  const reduit = reduitSysteme || immobile;
   // 0 : au départ de la route ; 1 : arrêté à son bâtiment.
   const [avance] = useState(() => new Animated.Value(reduit ? 1 : 0));
   // Sur une route horizontale, le dessin (tourné vers la gauche) est retourné quand le camion va vers la droite.
