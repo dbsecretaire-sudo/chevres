@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   autonomieAliments,
+  compterBouclesPosees,
   construireMinuteurs,
   dureeCourte,
   enTranshumance,
@@ -104,5 +105,12 @@ describe('transhumance', () => {
     expect(enTranshumance({ dateMontee: '2026-06-10' }, '2026-12-01')).toBe(true);
     expect(enTranshumance({ dateDescente: '2026-09-25' }, '2026-08-01')).toBe(false);
     expect(enTranshumance(undefined, '2026-08-01')).toBe(false);
+  });
+});
+
+describe('boucles posées', () => {
+  it('compte les boucles et les tiptag des animaux vivants, sans les animaux sans numéro', () => {
+    const vivants = [{ numeroBoucle: '00463' }, { numeroBoucle: ' 00467 ' }, { numeroBoucle: 'T-1' }, { numeroBoucle: '' }, {}];
+    expect(compterBouclesPosees(vivants, new Set(['T-1']))).toEqual({ boucles: 2, tiptag: 1 });
   });
 });

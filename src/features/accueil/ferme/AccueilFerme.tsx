@@ -31,7 +31,7 @@ export default function AccueilFerme() {
       <View style={styles.page}>
         <ScrollView contentContainerStyle={[styles.contenu, estBureau() ? null : { paddingTop: 12 + haut }]} showsVerticalScrollIndicator={false}>
           <View style={styles.colonne}>
-            <BandeauFerme balance={f.stats?.soldeFactures} boucles={f.boucles} naissances={f.stats?.cabritsAnnee} aliments={f.aliments} />
+            <BandeauFerme balance={f.stats?.soldeFactures} boucles={f.boucles} aliments={f.aliments} />
             {estBureau() ? null : <NomFerme />}
             <RappelSauvegarde />
             <View style={styles.corps}>

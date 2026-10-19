@@ -12,10 +12,8 @@ const T = TEXTES.accueil.ferme.bandeau;
 interface Props {
   /** La balance de l'année : les recettes moins les dépenses. */
   balance?: number;
-  /** Les boucles d'identification en stock, pas encore posées (la pastille de la boucle). */
-  boucles?: number;
-  /** Les petits nés dans l'année : le petit badge sur la pastille des boucles (ils sont bouclés à la naissance). */
-  naissances?: number;
+  /** Les boucles posées sur les animaux vivants, et les tiptag posés (le petit badge). */
+  boucles?: { boucles: number; tiptag: number };
   /** Le stock d'aliment : les jours qu'il tient, à défaut les kilos. */
   aliments: { kg: number; jours?: number } | null;
 }
@@ -47,9 +45,9 @@ const montant = (valeur: number) => `${Math.round(valeur).toLocaleString(LOCALE)
 
 /**
  * Le bandeau du haut de l'accueil, comme le tableau de bord d'un jeu : le portrait de l'exploitation, la balance de l'année (les pièces),
- * les boucles à poser (l'étiquette), l'aliment en stock (la pomme) et les réglages.
+ * les boucles posées et les tiptag (l'étiquette), l'aliment en stock (la pomme) et les réglages.
  */
-export function BandeauFerme({ balance, boucles, naissances, aliments }: Props) {
+export function BandeauFerme({ balance, boucles, aliments }: Props) {
   const router = useRouter();
   const peuDAliment = aliments?.jours !== undefined && aliments.jours <= 7;
   return (
@@ -71,8 +69,8 @@ export function BandeauFerme({ balance, boucles, naissances, aliments }: Props) 
       />
       <Pastille
         icone="pricetag"
-        valeur={boucles === undefined ? '…' : String(boucles)}
-        badge={naissances ? `+${naissances}` : undefined}
+        valeur={boucles === undefined ? '…' : String(boucles.boucles)}
+        badge={boucles?.tiptag ? `+${boucles.tiptag}` : undefined}
         couleur={colors.accent}
         libelle={T.boucles}
         route={ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)}

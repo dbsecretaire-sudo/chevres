@@ -3,6 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 import {
   autonomieAliments,
+  compterBouclesPosees,
   construireMinuteurs,
   enTranshumance,
   progressionPapiers,
@@ -25,8 +26,8 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { useLotsARappeler } from '@/features/stock/hooks/useLotsARappeler';
 import { articlesDuGenre } from '@/features/stock/services/stock';
 import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
-import { bouclesDeLInventaire, nePasPoser } from '@/features/stock/services/boucles';
-import { ETAT_BOUCLE, GENRE_ARTICLE } from '@/shared/constants/stock';
+import { numerosTiptag } from '@/features/stock/services/boucles';
+import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { todayISO } from '@/shared/utils/dates';
@@ -76,7 +77,8 @@ export function useFermeAccueil() {
   const enEstive = enTranshumance(estive, aujourdhui);
 
   const [aliments, setAliments] = useState<{ kg: number; jours?: number } | null>(null);
-  const [boucles, setBoucles] = useState<number | undefined>();
+  // Les boucles posées sur les animaux vivants : les boucles, et les tiptag (le petit badge).
+  const [boucles, setBoucles] = useState<{ boucles: number; tiptag: number } | undefined>();
   const [vedettes, setVedettes] = useState<Chevre[]>([]);
   useFocusEffect(
     useCallback(() => {
@@ -84,12 +86,13 @@ export function useFermeAccueil() {
         .then((archive) => {
           const articles = new Set(articlesDuGenre(GENRE_ARTICLE.ALIMENT, archive, especeCourante()).map((a) => a.cle));
           setAliments(autonomieAliments(archive.mouvements, articles, todayISO()));
-          // Les boucles à poser : en stock, sans animal, et sans remarque « ne pas poser ».
-          setBoucles(bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE).filter((b) => !nePasPoser(b)).length);
         })
         .catch(() => undefined);
-      listChevresVivantes()
-        .then((vivants) => setVedettes(animauxVedettes(vivants)))
+      Promise.all([lireArchiveStock(), listChevresVivantes()])
+        .then(([archive, vivants]) => {
+          setVedettes(animauxVedettes(vivants));
+          setBoucles(compterBouclesPosees(vivants, numerosTiptag(archive.boucles)));
+        })
         .catch(() => undefined);
     }, [espece]),
   );

@@ -17,7 +17,7 @@ export const TEXTES_ACCUEIL = {
       portrait: 'Informations de l’exploitation',
       balance: 'Balance de l’année : recettes moins dépenses',
       animaux: (n: number) => `${n} animaux vivants`,
-      boucles: 'Boucles en stock, à poser',
+      boucles: 'Boucles posées sur les animaux vivants (le badge : les tiptag)',
       aliments: 'Aliment en stock',
       reglages: 'Réglages',
     },

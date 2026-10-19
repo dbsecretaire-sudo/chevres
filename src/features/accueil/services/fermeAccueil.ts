@@ -155,3 +155,22 @@ export function enTranshumance(estive: { dateMontee?: string; dateDescente?: str
   if (!estive?.dateMontee || aujourdhui < estive.dateMontee) return false;
   return !estive.dateDescente || aujourdhui <= estive.dateDescente;
 }
+
+/**
+ * Les boucles posées sur les animaux vivants, d'après leurs fiches : les boucles d'un côté, les tiptag (numéros de l'inventaire) de l'autre.
+ * Un animal sans numéro n'en compte pas ; une boucle d'un animal mort ne compte pas non plus (seuls les vivants sont donnés).
+ */
+export function compterBouclesPosees(
+  vivants: readonly { numeroBoucle?: string }[],
+  numerosTiptag: ReadonlySet<string>,
+): { boucles: number; tiptag: number } {
+  let tiptag = 0;
+  let boucles = 0;
+  for (const a of vivants) {
+    const numero = a.numeroBoucle?.trim();
+    if (!numero) continue;
+    if (numerosTiptag.has(numero)) tiptag += 1;
+    else boucles += 1;
+  }
+  return { boucles, tiptag };
+}
