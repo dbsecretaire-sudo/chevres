@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FICHE_ANIMAL, etapesPourLEcran, etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, pageDeLEtape } from '@/features/didacticiel/services/visiteGuidee';
+import { zoneDeLaFlecheRetour, zoneDeLOnglet, FICHE_ANIMAL, etapesPourLEcran, etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, pageDeLEtape } from '@/features/didacticiel/services/visiteGuidee';
 import { nomDeLaListe } from '@/features/contacts/services/operationsInventaire';
 
 describe('visite guidée', () => {
@@ -121,5 +121,20 @@ describe('sur Windows, avec deux colonnes', () => {
 
   it('les étapes ont toutes une page, et celles des menus de rubrique sont des adresses exactes', () => {
     for (const e of toutes) if (e.menu) expect(typeof e.route).toBe('string');
+  });
+});
+
+describe('où mettre en surbrillance sur téléphone', () => {
+  it('la flèche de retour est sous la barre d’état', () => {
+    expect(zoneDeLaFlecheRetour(0)).toEqual({ x: 0, y: 0, w: 64, h: 56 });
+    expect(zoneDeLaFlecheRetour(43).y).toBe(43);
+  });
+
+  it('un onglet est au-dessus de la barre de navigation, à sa place dans la rangée', () => {
+    const sansMarge = zoneDeLOnglet('cheptel', 600, 900, 0);
+    expect(sansMarge).toEqual({ x: 100, y: 844, w: 100, h: 56 });
+    // Avec une barre de navigation de 48 : toute la zone remonte d'autant.
+    expect(zoneDeLOnglet('cheptel', 600, 900, 48).y).toBe(796);
+    expect(zoneDeLOnglet('organisation', 600, 900, 0).x).toBe(500);
   });
 });

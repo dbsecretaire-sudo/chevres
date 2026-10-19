@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-na
 import { ancreDe } from '@/features/didacticiel/components/AncreVisite';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { centreDuMenu, libelleDuMenu } from '@/features/didacticiel/services/menuHaut';
-import { ONGLETS_DU_BAS } from '@/features/didacticiel/services/visiteGuidee';
+import { HAUTEUR_BARRE_ONGLETS, zoneDeLaFlecheRetour, zoneDeLOnglet } from '@/features/didacticiel/services/visiteGuidee';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { libellesDesMenus } from '@/bureau/MenuBureau';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -18,11 +19,10 @@ interface Zone {
   h: number;
 }
 
-/** La marge autour de l'élément mis en surbrillance, et la hauteur de la barre des onglets du bas. */
+/** La marge autour de l'élément mis en surbrillance. */
 const MARGE = 6;
-const HAUTEUR_BARRE = 64;
-/** La hauteur de l'en-tête d'un écran (sa flèche de retour est à gauche). */
-const HAUTEUR_ENTETE = 56;
+/** Ce que la barre des onglets du bas occupe : la bulle et la pastille se placent au-dessus. */
+const HAUTEUR_BARRE = HAUTEUR_BARRE_ONGLETS + 8;
 const VOILE = 'rgba(18, 28, 14, 0.66)';
 const LARGEUR_BULLE = 420;
 /** La largeur de la flèche qui désigne un menu de la barre du haut (sur Windows). */
@@ -48,6 +48,8 @@ const memeZone = (a: Zone | null, b: Zone): boolean =>
 export function SuperpositionVisite() {
   const visite = useVisiteGuidee();
   const { width, height } = useWindowDimensions();
+  // Sur téléphone l'écran s'étend sous la barre d'état et la barre de navigation : les repères de l'en-tête et des onglets en tiennent compte.
+  const { top: insetHaut, bottom: insetBas } = useSafeAreaInsets();
   /** La zone relevée, avec l'étape à laquelle elle appartient (celle d'une étape précédente ne compte plus). */
   const [relevee, setZone] = useState<(Zone & { id: string }) | null>(null);
   const etape = visite.etape;
@@ -85,11 +87,10 @@ export function SuperpositionVisite() {
         });
       } else if (retour) {
         // Téléphone : la flèche est celle de l'en-tête natif, en haut à gauche.
-        const flecheRetour = { x: 0, y: 0, w: 64, h: HAUTEUR_ENTETE };
+        const flecheRetour = zoneDeLaFlecheRetour(insetHaut);
         setZone((avant) => (avant?.id === id && memeZone(avant, flecheRetour) ? avant : { id, ...flecheRetour }));
       } else if (onglet && !estBureau()) {
-        const largeur = width / ONGLETS_DU_BAS.length;
-        const suivante = { x: ONGLETS_DU_BAS.indexOf(onglet) * largeur, y: height - HAUTEUR_BARRE, w: largeur, h: HAUTEUR_BARRE };
+        const suivante = zoneDeLOnglet(onglet, width, height, insetBas);
         setZone((avant) => (avant?.id === id && memeZone(avant, suivante) ? avant : { id, ...suivante }));
       }
     };
@@ -100,7 +101,7 @@ export function SuperpositionVisite() {
       clearTimeout(depart);
       clearInterval(minuteur);
     };
-  }, [visite.actif, visite.surLaPage, etape, ancre, onglet, retour, width, height]);
+  }, [visite.actif, visite.surLaPage, etape, ancre, onglet, retour, width, height, insetHaut, insetBas]);
 
   // Un clic dans la zone en surbrillance valide l'étape qui attend un toucher (web et Windows ; sur téléphone, la page ouverte la valide).
   const attendUnToucher = visite.actif && visite.surLaPage && !!etape?.clic && !!zone;
@@ -124,7 +125,7 @@ export function SuperpositionVisite() {
   if (!visite.surLaPage) {
     return (
       <View style={styles.racine} pointerEvents="box-none">
-        <View style={styles.pastille}>
+        <View style={[styles.pastille, { bottom: HAUTEUR_BARRE + insetBas + 16 }]}>
           <Text style={styles.pastilleTexte}>{T.enCours(visite.index + 1, visite.total)}</Text>
           <Pressable onPress={visite.reprendre} hitSlop={8} accessibilityRole="button">
             <Text style={styles.lienClair}>{T.reprendre}</Text>
@@ -157,7 +158,7 @@ export function SuperpositionVisite() {
     : menuDuHaut
       ? { top: 64 }
       : attendUnClic
-        ? { bottom: HAUTEUR_BARRE + 24 }
+        ? { bottom: HAUTEUR_BARRE + insetBas + 24 }
       : { top: height * 0.22 };
 
   return (
@@ -241,7 +242,6 @@ const styles = StyleSheet.create({
   suivantTexte: { color: colors.blanc, fontWeight: '700', fontSize: 15 },
   pastille: {
     position: 'absolute',
-    bottom: HAUTEUR_BARRE + 16,
     right: 12,
     flexDirection: 'row',
     alignItems: 'center',

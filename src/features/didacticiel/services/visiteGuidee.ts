@@ -4,6 +4,30 @@ import { ROUTES } from '@/shared/constants/routes';
 export const ONGLETS_DU_BAS = ['accueil', 'cheptel', 'production', 'commercial', 'comptabilite', 'organisation'] as const;
 export type OngletDuBas = (typeof ONGLETS_DU_BAS)[number];
 
+/** La hauteur d'un en-tête d'écran et celle de la barre des onglets du bas (sans la marge du système : barre d'état en haut, barre de navigation en bas). */
+export const HAUTEUR_ENTETE = 56;
+export const HAUTEUR_BARRE_ONGLETS = 56;
+const LARGEUR_FLECHE_RETOUR = 64;
+
+export interface ZoneEcran {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/**
+ * La flèche de retour de l'en-tête natif (téléphone) : en haut à gauche, SOUS la barre d'état du système (`insetHaut`) — l'écran s'étend
+ * derrière elle sur Android.
+ */
+export const zoneDeLaFlecheRetour = (insetHaut: number): ZoneEcran => ({ x: 0, y: insetHaut, w: LARGEUR_FLECHE_RETOUR, h: HAUTEUR_ENTETE });
+
+/** Un onglet de la barre du bas (téléphone) : la barre est AU-DESSUS de la barre de navigation du système (`insetBas`). */
+export const zoneDeLOnglet = (onglet: OngletDuBas, largeur: number, hauteur: number, insetBas: number): ZoneEcran => {
+  const part = largeur / ONGLETS_DU_BAS.length;
+  return { x: ONGLETS_DU_BAS.indexOf(onglet) * part, y: hauteur - insetBas - HAUTEUR_BARRE_ONGLETS, w: part, h: HAUTEUR_BARRE_ONGLETS };
+};
+
 /**
  * Une étape de la visite guidée : une page, ce qu'on y montre, et ce que l'utilisateur est invité à toucher. L'étape s'affiche quand on est
  * sur sa page ; toucher la zone en surbrillance ouvre la page suivante, dont l'étape prend le relais.
