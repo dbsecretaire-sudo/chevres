@@ -16,6 +16,11 @@ describe('parcours de cas du didacticiel', () => {
       'veterinaire-traitement',
       'aliments',
       'boucles-pac',
+      'achat-animaux',
+      'naissance-carnet',
+      'commande-client',
+      'declaration-rsa',
+      'sauvegarde',
     ]);
     expect(parcoursDe('vente-lait')?.etapes.map((e) => e.numero)).toEqual(['1', '2', '3', '4', '5', '5A', '6', '7', '8', '9', '10', '11']);
     expect(parcoursDe('vente-sans-facture')?.etapes.map((e) => e.numero).slice(0, 7)).toEqual(['1', '2', '3', '4', '5', '5A', '6']);
@@ -28,7 +33,7 @@ describe('parcours de cas du didacticiel', () => {
       for (const e of p.etapes) {
         expect(e.titre.length).toBeGreaterThan(0);
         expect(e.texte.length).toBeGreaterThan(0);
-        if (e.route) expect(e.route).toMatch(/^\/[a-z-]/);
+        if (e.route) expect(e.route).toMatch(/^\/([a-z-]|$)/);
         if (e.route) expect(e.route).not.toContain('?');
         if (e.ouvrir) expect(e.ouvrir.split('?')[0]).toBe(e.route);
       }
