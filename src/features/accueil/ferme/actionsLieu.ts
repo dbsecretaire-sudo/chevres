@@ -1,13 +1,15 @@
 import type { Ionicons } from '@expo/vector-icons';
-import type { CleLieu } from '@/features/accueil/services/carteFerme';
 import { LIEUX_TIERS, type CleLieuTiers } from '@/features/accueil/services/lieuxTiers';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
-import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
+import { PRODUIT_A_LOTS, SECTION_STOCK } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
-/** Une bulle d'action autour d'un lieu de la carte : son icône, son nom, et l'écran qu'elle ouvre. */
+/** Le marqueur d'une bulle qui n'ouvre pas un écran mais la liste des rappels à valider (une fenêtre de l'accueil). */
+export const OUVRIR_LES_RAPPELS = '#rappels';
+
+/** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre (ou `OUVRIR_LES_RAPPELS`). */
 export interface ActionDeLieu {
   cle: string;
   titre: string;
@@ -15,24 +17,32 @@ export interface ActionDeLieu {
   route: string;
 }
 
-/** Le lieu dont les bulles s'ouvrent : un lieu de la carte, ou l'enclos du troupeau. */
-export type CibleDesBulles = CleLieu | 'enclos';
+/** Les boutons de l'accueil qui ouvrent des bulles : l'enclos, et les lieux des deux colonnes. */
+export type CibleDesBulles =
+  | 'enclos'
+  | 'rappels'
+  | 'fromagerie'
+  | 'viande'
+  | 'charcuterie'
+  | 'laiterie'
+  | 'abattoir'
+  | 'fournisseurs'
+  | 'veterinaire'
+  | 'equarrissage'
+  | 'organismes'
+  | 'contacts';
 
 const B = TEXTES.accueil.ferme.bulles;
 const L = TEXTES.production.lieux;
 const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
 
-/** Le lieu à tiers (sa page, ses rubriques) qui correspond à un lieu de la carte, quand il y en a un. */
-const LIEU_A_TIERS: Partial<Record<CleLieu, CleLieuTiers>> = {
-  foin: 'aliments',
+/** Le lieu à tiers (sa page, ses rubriques) qui correspond à un bouton, quand il y en a un. */
+const LIEU_A_TIERS: Partial<Record<CibleDesBulles, CleLieuTiers>> = {
   organismes: 'organismes',
-  pompe: 'carburant',
   veterinaire: 'veterinaire',
   equarrissage: 'equarrissage',
   abattoir: 'abattoir',
   charcuterie: 'boucherie',
-  entrepot: 'entrepot',
-  commercial: 'commercial',
 };
 
 /** Combien de rubriques d'un lieu à tiers passent en bulles (en plus de sa page et de « Nouvelle facture »). */
@@ -43,13 +53,12 @@ function bullesDuLieuATiers(cle: CleLieuTiers): ActionDeLieu[] {
   const config = LIEUX_TIERS[cle];
   const textes = L[cle];
   const liens = textes.liens as Record<string, { titre: string }>;
-  const rubriques = config.liens.slice(0, config.avecTiers ? RUBRIQUES_EN_BULLES : 5).map((l) => ({
+  const rubriques = config.liens.slice(0, RUBRIQUES_EN_BULLES).map((l) => ({
     cle: l.cle,
     titre: liens[l.cle]?.titre ?? l.cle,
     icone: l.icone,
     route: l.route,
   }));
-  if (!config.avecTiers) return rubriques;
   const nouvelle = (textes as { nouvelle?: string }).nouvelle ?? '';
   return [
     ...rubriques,
@@ -58,16 +67,24 @@ function bullesDuLieuATiers(cle: CleLieuTiers): ActionDeLieu[] {
   ];
 }
 
-/** Les actions qui sortent en bulles quand on touche un lieu de la carte (ou l'enclos) : les écrans qu'on y ouvre le plus. */
+/** Les actions qui sortent en bulles quand on touche un bouton de l'accueil : les écrans qu'on y ouvre le plus. */
 export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
     case 'enclos':
       return [
         { cle: 'animaux', titre: B.animaux, icone: 'paw', route: ROUTES.CHEPTEL_LISTE },
-        { cle: 'naissances', titre: B.naissances, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCES },
+        { cle: 'naissances', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
+        { cle: 'traitement', titre: B.traitement, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU },
         { cle: 'lots', titre: B.lots, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
-        { cle: 'traitements', titre: B.traitements, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+        { cle: 'vendre', titre: B.vendre, icone: 'cash', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}` },
+        { cle: 'ecriture', titre: B.ecriture, icone: 'receipt', route: NOUVELLE },
         { cle: 'cheptel', titre: B.menuCheptel, icone: 'list', route: ROUTES.CHEPTEL },
+      ];
+    case 'rappels':
+      return [
+        { cle: 'liste', titre: TEXTES.rappels.titre, icone: 'notifications', route: OUVRIR_LES_RAPPELS },
+        { cle: 'historique', titre: TEXTES.rappels.historique.titre, icone: 'time', route: ROUTES.RAPPELS_HISTORIQUE },
+        { cle: 'gerer', titre: TEXTES.rappels.gerer, icone: 'settings', route: ROUTES.COMPTABILITE_REGLAGES },
       ];
     case 'laiterie':
       return [
@@ -83,8 +100,23 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
         { cle: 'rappeler', titre: B.rappeler, icone: 'notifications', route: ROUTES.productionRappel(PRODUIT_A_LOTS.FROMAGE) },
         { cle: 'vendre', titre: B.vendreFromage, icone: 'add-circle', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.FROMAGE}` },
       ];
+    case 'viande':
+      return [
+        { cle: 'lots', titre: L.abattoir.liens.lots.titre, icone: 'business', route: ROUTES.PRODUCTION_VIANDE },
+        { cle: 'afacturer', titre: L.abattoir.liens.afacturer.titre, icone: 'receipt', route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer` },
+        { cle: 'stock', titre: L.abattoir.liens.stock.titre, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?onglet=${SECTION_STOCK.VIANDE}` },
+        { cle: 'vendre', titre: B.vendreViande, icone: 'add-circle', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}` },
+      ];
+    case 'fournisseurs':
+      return [
+        { cle: 'aliments', titre: L.aliments.titre, icone: 'nutrition', route: ROUTES.lieu('aliments') },
+        { cle: 'carburant', titre: L.carburant.titre, icone: 'car', route: ROUTES.lieu('carburant') },
+        { cle: 'contacts', titre: B.contacts, icone: 'people', route: ROUTES.CONTACTS },
+        { cle: 'nouveau', titre: B.nouveauContact, icone: 'add-circle', route: ROUTES.CONTACT_NOUVEAU },
+      ];
     case 'contacts':
       return [
+        { cle: 'commerce', titre: B.clients, icone: 'cart', route: ROUTES.lieu('commercial') },
         { cle: 'contacts', titre: B.contacts, icone: 'people', route: ROUTES.CONTACTS },
         { cle: 'nouveau', titre: B.nouveauContact, icone: 'add-circle', route: ROUTES.CONTACT_NOUVEAU },
       ];

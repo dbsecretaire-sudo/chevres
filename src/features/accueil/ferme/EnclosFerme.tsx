@@ -39,7 +39,7 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
   const petit = categorieAccueil(animal) === CATEGORIE_ANIMAL.CABRIT;
   const boucle = animal.numeroBoucle?.trim();
   return (
-    <Balade amplitude={6 + (rang % 2) * 4} duree={2600 + rang * 700}>
+    <Balade amplitude={14 + (rang % 2) * 8} amplitudeY={10 + (rang % 3) * 4} duree={2600 + rang * 700}>
       <View style={styles.animal}>
         <Text style={{ fontSize: petit ? 28 : 44 }} accessibilityElementsHidden importantForAccessibility="no">
           {DESSIN_PAR_ESPECE[especeCourante()] ?? '🐐'}
@@ -55,8 +55,9 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
 }
 
 /**
- * L'enclos du troupeau, au centre de la carte : l'espèce choisie, trois ou quatre animaux (leurs boucles) qui représentent le troupeau, et
- * l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui ouvre le menu du cheptel (animaux, naissances, lots d'animaux, santé, boucles).
+ * L'enclos du troupeau, au centre de l'accueil : l'espèce choisie, trois ou quatre animaux (leurs boucles) qui se promènent et représentent le
+ * troupeau, et l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui fait sortir les bulles du cheptel ; la petite
+ * porte entre dans la chèvrerie.
  */
 export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onAppui, onEntrer }: Props) {
   const femelles = vocabulaire().femelle.pluriel;
@@ -73,7 +74,7 @@ export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onApp
           🏔️ ⛰️ 🏔️
         </Text>
       ) : null}
-      <Text style={styles.titre} numberOfLines={1}>
+      <Text style={styles.titre} numberOfLines={2}>
         {estive ? T.estive(estive.zone) : T.enclos(femelles)}
       </Text>
       {vedettes.length > 0 ? (
@@ -102,12 +103,12 @@ const styles = StyleSheet.create({
   conteneur: { flex: 1 },
   porte: { position: 'absolute', right: -10, bottom: -10, width: 44, height: 44, borderRadius: 22, backgroundColor: colors.blanc, borderWidth: 2, borderColor: '#A9794A', alignItems: 'center', justifyContent: 'center' },
   porteEmoji: { fontSize: 24 },
-  enclos: { flex: 1, backgroundColor: '#D9E8BE', borderRadius: 16, borderWidth: 3, borderColor: '#A9794A', borderStyle: 'dashed', padding: 8, gap: 4, alignItems: 'center', justifyContent: 'center' },
+  enclos: { flex: 1, backgroundColor: '#D9E8BE', borderRadius: 16, borderWidth: 3, borderColor: '#A9794A', borderStyle: 'dashed', padding: 14, gap: 8, alignItems: 'center', justifyContent: 'center' },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
   sommets: { fontSize: 30, letterSpacing: 2 },
   descente: { fontSize: 12, color: colors.primaryDark },
   titre: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
-  troupeau: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end', gap: 6 },
+  troupeau: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end', gap: 22, paddingVertical: 14 },
   animal: { alignItems: 'center', gap: 2 },
   etiquette: { backgroundColor: '#F2C94C', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1, borderColor: '#B58B1A' },
   etiquetteTexte: { fontSize: 11, fontWeight: '700', color: '#4A3A07' },

@@ -103,7 +103,7 @@ export default function Laiterie() {
           ))}
           {factures.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucuneFacture}</Text> : null}
           {factures.length > FACTURES_MONTREES ? (
-            <ListRow title={T.plusDeFactures(factures.length - FACTURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.comptabiliteDuLieu(factures.map((t) => t.id), TEXTES.accueil.ferme.zones.laiterie) as never)} />
+            <ListRow title={T.plusDeFactures(factures.length - FACTURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.comptabiliteDuLieu(factures.map((t) => t.id), T.titre) as never)} />
           ) : null}
           <ListRow
             title={T.nouvelleFacture}

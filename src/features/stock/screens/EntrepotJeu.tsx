@@ -4,16 +4,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Apparition } from '@/features/accueil/ferme/animations';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { laiterieActive } from '@/features/comptabilite/utils/recettes';
+import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import {
+  carteDuLait,
   cartesDeLOnglet,
   formaterQuantite,
   nombreEnStock,
   ONGLETS_ENTREPOT,
   type CarteStock,
 } from '@/features/stock/services/entrepotJeu';
-import { articlesDuGenre, estLigneDuCheptel, niveauxDeStock, type ArticleAffiche } from '@/features/stock/services/stock';
+import { articlesDuGenre, bilanLait, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
@@ -33,7 +38,7 @@ function Carte({ carte, rang }: { carte: CarteStock; rang: number }) {
         style={styles.carte}
         onPress={() => router.push(`${ROUTES.COMPTABILITE_STOCKS}?onglet=${carte.section}` as never)}
         accessibilityRole="button"
-        accessibilityLabel={`${carte.titre} : ${formaterQuantite(carte.niveau)}`}
+        accessibilityLabel={`${carte.titre} : ${formaterQuantite(carte.niveau)}${carte.unite ? ` ${carte.unite}` : ''}`}
       >
         <Text style={styles.dessin} accessibilityElementsHidden importantForAccessibility="no">
           {carte.emoji}
@@ -45,7 +50,10 @@ function Carte({ carte, rang }: { carte: CarteStock; rang: number }) {
           <View style={styles.piece}>
             <Ionicons name="cube" size={12} color="#7A5410" />
           </View>
-          <Text style={styles.quantite}>{formaterQuantite(carte.niveau)}</Text>
+          <Text style={styles.quantite}>
+            {formaterQuantite(carte.niveau)}
+            {carte.unite ? ` ${carte.unite}` : ''}
+          </Text>
         </View>
       </Pressable>
     </Apparition>
@@ -61,6 +69,10 @@ export default function EntrepotJeu() {
   const router = useRouter();
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
+  // Les litres de lait vendus : le bilan du lait en a besoin pour dire ce qu'il en reste.
+  const [litresVendus, setLitresVendus] = useState(0);
+  // Le niveau de chaque article, y compris les lignes qui suivent le cheptel (cabris, animal sur pied, animal vivant).
+  const niveauxDuCheptel = useNiveauxStock();
   const [onglet, setOnglet] = useState<(typeof ONGLETS_ENTREPOT)[number]['cle']>('vente');
   const defilement = useRef<ScrollView>(null);
   const position = useRef(0);
@@ -70,17 +82,21 @@ export default function EntrepotJeu() {
       lireArchiveStock()
         .then(setArchive)
         .catch(() => undefined);
+      listToutesVentes()
+        .then((ventes) => setLitresVendus(ventes.filter((v) => v.categorie === CATEGORIE_VENTE.LAIT).reduce((total, v) => total + (v.quantite ?? 0), 0)))
+        .catch(() => undefined);
     }, []),
   );
 
   // Les cartes de chaque onglet : les articles de l'espèce active, avec ce qu'il en reste d'après les mouvements du stock.
   const parOnglet = useMemo(() => {
     if (!archive) return null;
-    const niveaux = niveauxDeStock(archive.mouvements);
+    // Le lait n'est pas un article : sa carte vient du bilan du lait, pour les espèces qui ont une laiterie.
+    const lait = laiterieActive(espece) ? [carteDuLait(T.lait, bilanLait(archive, litresVendus).restant)] : [];
     const articles = new Map<(typeof GENRE_ARTICLE)[keyof typeof GENRE_ARTICLE], ArticleAffiche[]>();
     for (const genre of Object.values(GENRE_ARTICLE)) articles.set(genre, articlesDuGenre(genre, archive, espece));
-    return new Map(ONGLETS_ENTREPOT.map((o) => [o.cle, cartesDeLOnglet(o, articles, niveaux, estLigneDuCheptel)]));
-  }, [archive, espece]);
+    return new Map(ONGLETS_ENTREPOT.map((o) => [o.cle, cartesDeLOnglet(o, articles, niveauxDuCheptel, () => false, lait)]));
+  }, [archive, espece, litresVendus, niveauxDuCheptel]);
 
   const cartes = parOnglet?.get(onglet) ?? [];
   const defiler = (pas: number) => {

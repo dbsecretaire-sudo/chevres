@@ -99,6 +99,7 @@ export const TEXTES_PRODUCTION = {
   },
   /** La laiterie : le lait, sa qualité, et tout ce qui concerne le récolteur (ses contacts, ses factures). */
   laiterie: {
+    titre: 'Laiterie',
     groupeLait: 'Le lait',
     groupeRecolteur: 'Le récolteur',
     groupeFactures: 'Les factures de lait',
@@ -159,6 +160,7 @@ export const TEXTES_PRODUCTION = {
       titre: 'Entrepôt',
       onglets: { vente: 'À vendre', aliments: 'Aliments', consommables: 'Consommables', materiel: 'Matériel' },
       vide: 'Rien dans ce rayon pour le moment.',
+      lait: 'Lait',
       fermer: 'Fermer l’entrepôt',
       stockComplet: 'Tout le stock',
       liens: {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  carteDuLait,
   cartesDeLOnglet,
   emojiDeLArticle,
   formaterQuantite,
@@ -51,5 +52,25 @@ describe('entrepôt en style jeu', () => {
     const genres = ONGLETS_ENTREPOT.flatMap((o) => o.genres);
     expect(new Set(genres).size).toBe(genres.length);
     expect(genres).toEqual(expect.arrayContaining(Object.values(GENRE_ARTICLE)));
+  });
+});
+
+describe('le lait et les animaux dans « à vendre »', () => {
+  it('ajoute la carte du lait, en litres, à l’onglet « à vendre » seulement', () => {
+    const lait = carteDuLait('Lait', 42);
+    expect(lait).toMatchObject({ emoji: '🥛', niveau: 42, unite: 'L', section: SECTION_STOCK.LAIT });
+    const vente = ONGLETS_ENTREPOT.find((o) => o.cle === 'vente')!;
+    const aliments = ONGLETS_ENTREPOT.find((o) => o.cle === 'aliments')!;
+    const vide = new Map() as never;
+    expect(cartesDeLOnglet(vente, vide, new Map(), () => false, [lait]).map((c) => c.cle)).toEqual(['lait']);
+    expect(cartesDeLOnglet(aliments, vide, new Map(), () => false, [lait])).toEqual([]);
+  });
+
+  it('garde les lignes des animaux (cabris, sur pied, vivant) quand on ne les écarte pas, avec la quantité du troupeau', () => {
+    const vente = ONGLETS_ENTREPOT.find((o) => o.cle === 'vente')!;
+    const par = new Map([[GENRE_ARTICLE.VIANDE, [{ cle: 'viande:chevres_jeune', libelle: 'Cabris' }]]]) as never;
+    const cartes = cartesDeLOnglet(vente, par, new Map([['viande:chevres_jeune', 18]]), () => false);
+    expect(cartes).toHaveLength(1);
+    expect(cartes[0]).toMatchObject({ titre: 'Cabris', niveau: 18 });
   });
 });

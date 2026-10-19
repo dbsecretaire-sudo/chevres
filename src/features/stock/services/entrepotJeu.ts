@@ -6,7 +6,10 @@ type Genre = ValeurDe<typeof GENRE_ARTICLE>;
 /** Un article du stock tel que l'entrepôt le montre : sa carte (son dessin, son nom) et ce qu'il en reste. */
 export interface CarteStock {
   cle: string;
-  genre: Genre;
+  /** Le genre de l'article ; absent pour le lait, qui n'est pas un article mais un bilan en litres. */
+  genre?: Genre;
+  /** L'unité de la quantité (« L » pour le lait) ; absente pour un nombre d'articles. */
+  unite?: string;
   titre: string;
   emoji: string;
   niveau: number;
@@ -97,15 +100,18 @@ interface ArticleBrut {
 
 /**
  * Les cartes d'un onglet : les articles de ses genres avec leur niveau, ceux qui en ont (positif ou négatif) d'abord, puis les autres, par
- * nom. Les lignes qui suivent le cheptel (les animaux) en sont exclues : leur quantité est celle du troupeau.
+ * nom. Une ligne qui suit le cheptel (les cabris, l'animal sur pied, l'animal vivant) en fait partie si `estLigneDuCheptel` ne l'écarte pas : sa
+ * quantité est celle du troupeau, que les niveaux donnent déjà.
  */
 export function cartesDeLOnglet(
   onglet: OngletEntrepot,
   articlesParGenre: ReadonlyMap<Genre, readonly ArticleBrut[]>,
   niveaux: ReadonlyMap<string, number>,
   estLigneDuCheptel: (cle: string) => boolean,
+  /** Des cartes en plus, pour l'onglet « à vendre » seulement (le lait). */
+  enPlus: readonly CarteStock[] = [],
 ): CarteStock[] {
-  const cartes: CarteStock[] = [];
+  const cartes: CarteStock[] = onglet.cle === 'vente' ? [...enPlus] : [];
   for (const genre of onglet.genres) {
     for (const a of articlesParGenre.get(genre) ?? []) {
       if (estLigneDuCheptel(a.cle)) continue;
@@ -124,3 +130,13 @@ export function cartesDeLOnglet(
 
 /** Combien d'articles d'un onglet ont du stock (la pastille de l'onglet). */
 export const nombreEnStock = (cartes: readonly CarteStock[]): number => cartes.filter((c) => c.niveau > 0).length;
+
+/** La carte du lait : ce qu'il en reste (en litres), d'après le bilan du lait ; sa rubrique est celle du lait dans le stock. */
+export const carteDuLait = (titre: string, litresRestants: number): CarteStock => ({
+  cle: 'lait',
+  titre,
+  emoji: '🥛',
+  niveau: litresRestants,
+  unite: 'L',
+  section: SECTION_STOCK.LAIT,
+});

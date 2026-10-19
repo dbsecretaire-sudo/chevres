@@ -116,7 +116,7 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir }: Props) {
 }
 
 const styles = StyleSheet.create({
-  fond: { flex: 1, backgroundColor: '#E9D8A6', paddingTop: 10, paddingHorizontal: 86, alignItems: 'center', gap: 10 },
+  fond: { flex: 1, backgroundColor: '#E9D8A6', paddingTop: 10, paddingHorizontal: 10, alignItems: 'center', gap: 10 },
   mur: { position: 'absolute', left: 0, right: 0, top: 0, height: 150, backgroundColor: '#B98A5B', borderBottomWidth: 6, borderBottomColor: '#8A6238' },
   tete: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sortir: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.blanc, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 2, borderColor: '#8A6238' },

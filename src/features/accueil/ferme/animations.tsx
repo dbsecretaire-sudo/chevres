@@ -63,9 +63,34 @@ export function Pulsation({ actif, children, style }: { actif: boolean; children
  * Une vue qui se balade : elle va et vient de `amplitude` points, avec un petit saut à chaque pas (une chèvre dans son enclos). `duree`
  * varie d'une chèvre à l'autre pour qu'elles ne marchent pas en rang.
  */
-export function Balade({ amplitude = 10, duree = 3200, children }: { amplitude?: number; duree?: number; children: ReactNode }) {
+export function Balade({
+  amplitude = 10,
+  amplitudeY = 0,
+  duree = 3200,
+  children,
+}: {
+  amplitude?: number;
+  /** De combien l'animal avance et recule aussi (haut-bas), à son propre rythme : il se promène au lieu d'aller et venir sur une ligne. */
+  amplitudeY?: number;
+  duree?: number;
+  children: ReactNode;
+}) {
   const reduit = useMouvementReduit();
   const [valeur] = useState(() => new Animated.Value(0));
+  const [profondeur] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduit || amplitudeY === 0) return;
+    // Un second va-et-vient, plus lent et décalé : avec le premier, la trajectoire dessine une courbe.
+    const dureeY = Math.round(duree * 1.37);
+    const boucle = Animated.loop(
+      Animated.sequence([
+        Animated.timing(profondeur, { toValue: 1, duration: dureeY, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(profondeur, { toValue: 0, duration: dureeY, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+      ]),
+    );
+    boucle.start();
+    return () => boucle.stop();
+  }, [amplitudeY, duree, profondeur, reduit]);
   useEffect(() => {
     if (reduit) return;
     const boucle = Animated.loop(
@@ -84,68 +109,10 @@ export function Balade({ amplitude = 10, duree = 3200, children }: { amplitude?:
           { translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [-amplitude, amplitude] }) },
           // Un petit saut à chaque demi-parcours.
           { translateY: valeur.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: [0, -3, 0, -3, 0] }) },
+          { translateY: profondeur.interpolate({ inputRange: [0, 1], outputRange: [-amplitudeY, amplitudeY] }) },
         ],
       }}
     >
-      {children}
-    </Animated.View>
-  );
-}
-
-/**
- * Une vue qui traverse la carte de `de` à `vers` (en points, en largeur) en `duree` ms, puis recommence à `de` : un nuage. `depart` (0 à 1)
- * dit où elle en est à l'affichage, pour que plusieurs nuages ne partent pas ensemble.
- */
-export function Derive({ de, vers, duree, depart = 0, children }: { de: number; vers: number; duree: number; depart?: number; children: ReactNode }) {
-  const reduit = useMouvementReduit();
-  const [valeur] = useState(() => new Animated.Value(depart));
-  useEffect(() => {
-    if (reduit) return;
-    let actif = true;
-    let animation: Animated.CompositeAnimation | undefined;
-    const lancer = (debut: number) => {
-      valeur.setValue(debut);
-      animation = Animated.timing(valeur, { toValue: 1, duration: Math.max(1, (1 - debut) * duree), easing: Easing.linear, useNativeDriver: true, isInteraction: false });
-      animation.start(({ finished }) => {
-        if (finished && actif) lancer(0);
-      });
-    };
-    lancer(depart);
-    return () => {
-      actif = false;
-      animation?.stop();
-    };
-  }, [depart, duree, reduit, valeur]);
-  return <Animated.View style={{ transform: [{ translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [de, vers] }) }] }}>{children}</Animated.View>;
-}
-
-/**
- * Une vue qui va et vient de `de` à `vers` (en largeur) en `duree` ms chaque sens, et se retourne à chaque bout : un tracteur sur sa
- * route. Son dessin regarde vers la gauche : il est retourné quand il va vers la droite.
- */
-export function AllerRetour({ de, vers, duree, children }: { de: number; vers: number; duree: number; children: ReactNode }) {
-  const reduit = useMouvementReduit();
-  const [valeur] = useState(() => new Animated.Value(0));
-  const [sens] = useState(() => new Animated.Value(1));
-  useEffect(() => {
-    if (reduit) return;
-    let actif = true;
-    let animation: Animated.CompositeAnimation | undefined;
-    const lancer = (versLaDroite: boolean) => {
-      sens.setValue(versLaDroite ? -1 : 1);
-      animation = Animated.timing(valeur, { toValue: versLaDroite ? 1 : 0, duration: duree, easing: Easing.linear, useNativeDriver: true, isInteraction: false });
-      animation.start(({ finished }) => {
-        if (finished && actif) lancer(!versLaDroite);
-      });
-    };
-    lancer(true);
-    return () => {
-      actif = false;
-      animation?.stop();
-    };
-  }, [duree, reduit, sens, valeur]);
-  return (
-    <Animated.View style={{ transform: [{ translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [de, vers] }) }, { scaleX: sens }] }}>
       {children}
     </Animated.View>
   );
