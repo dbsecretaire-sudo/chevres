@@ -10,7 +10,6 @@ import {
   estLigneDeViande,
   type ElementACommande,
 } from '@/features/commercial/services/commandes';
-import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
@@ -34,9 +33,7 @@ import {
   numeroBoucleExiste,
 } from '@/features/cheptel/repository/chevres';
 import {
-  animalAcheteVide,
   controleDesAnimauxAchetes,
-  type AnimalAcheteForm,
 } from '@/features/comptabilite/forms/animauxAchetes';
 import { sortieDesAnimauxDeLaVente, idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import {
@@ -69,27 +66,17 @@ import {
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
 import {
-  compteProposePour,
   listComptesPcg,
   type CompteComptableEnregistre,
 } from '@/features/comptes-pcg/repository';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
-import { ligneAlimentVide, type LigneAlimentForm } from '@/features/comptabilite/forms/lignesAlimentation';
-import {
-  ligneMarchandiseVide,
-  type LigneMarchandiseForm,
-} from '@/features/comptabilite/forms/lignesMarchandises';
-import { lignesChambreParDefaut, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
-import {
-  ligneProductionVide,
-  type LigneProductionForm,
-} from '@/features/comptabilite/forms/lignesProduction';
-import { ligneCarburantVide, type LigneCarburantForm } from '@/features/comptabilite/forms/lignesCarburant';
+import { useLignesDepense } from '@/features/comptabilite/hooks/nouvelleEcriture/useLignesDepense';
+import { detailDesAnimaux } from '@/features/comptabilite/forms/detailDesAnimaux';
+import { optionsDesComptes } from '@/features/comptabilite/utils/optionsComptes';
 import type {
   ActiviteComptable,
   CategorieDepense,
   CategorieRecette,
-  LigneVeterinaire,
   TypeAide,
   TypeFacture,
   TypeFromage,
@@ -99,7 +86,9 @@ import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { estDateISO, formatDateFR, memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
-import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
+import {
+  STATUT_CHEVRE,
+} from '@/shared/constants/cheptel';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import {
   categoriesGroupe,
@@ -139,10 +128,6 @@ import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planC
 /** Taux de TVA proposé pour une recette (celui de la vente de production, 0 pour une aide ou autre). */
 const tauxTvaParDefaut = (categorie: CategorieRecette): number =>
   estCategorieVente(categorie) ? tauxTvaDeLaVente(categorie) : 0;
-
-/** Préfixes des comptes PCG de charges (6…) et de produits (7…) proposés dans les listes. */
-const PREFIXE_COMPTES_DEPENSE = '6';
-const PREFIXE_COMPTES_RECETTE = '7';
 
 /** État, valeurs calculées et actions du formulaire « Nouvelle écriture » (débit/crédit). */
 export function useNouvelleEcriture(
@@ -233,21 +218,26 @@ export function useNouvelleEcriture(
   const [categorieDepense, setCategorieDepense] = useState<CategorieDepense>(
     entreprise ? CATEGORIES_DEPENSE_ENTREPRISE[0] : CATEGORIE_DEPENSE.ALIMENTATION,
   );
-  const [lignesAlimentation, setLignesAlimentation] = useState<LigneAlimentForm[]>([ligneAlimentVide()]);
-  const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([
-    ligneMarchandiseVide(),
-  ]);
-  const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
-  /** Une dépense « Animaux vivants » : les animaux achetés (leurs fiches se créent à l'enregistrement). */
-  const [animauxAchetes, setAnimauxAchetes] = useState<AnimalAcheteForm[]>([animalAcheteVide()]);
-  /** Une dépense « Animaux vivants (vente) » : les animaux du cheptel qui partent (leur fiche passe à « abattoir »). */
-  const [animauxEnvoyes, setAnimauxEnvoyes] = useState<string[]>([]);
-  /** Achat de production : le détail par fourniture. */
-  const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([ligneProductionVide()]);
-  /** Les articles d'une facture de la Chambre d'agriculture (forfait d'identification, équarrissage ATM, conseils et analyses). */
-  const [lignesChambre, setLignesChambre] = useState<LigneChambreForm[]>(lignesChambreParDefaut);
-  /** Une dépense vétérinaire : tout ce qui a été fait lors de la visite (pour le carnet sanitaire). */
-  const [lignesVeterinaire, setLignesVeterinaire] = useState<LigneVeterinaire[]>([]);
+  // Les lignes saisies d'une dépense (aliments, marchandises, carburant, fournitures, Chambre, vétérinaire, animaux achetés ou envoyés).
+  const {
+    lignesAlimentation,
+    setLignesAlimentation,
+    lignesMarchandises,
+    setLignesMarchandises,
+    lignesCarburant,
+    setLignesCarburant,
+    animauxAchetes,
+    setAnimauxAchetes,
+    animauxEnvoyes,
+    setAnimauxEnvoyes,
+    lignesProduction,
+    setLignesProduction,
+    lignesChambre,
+    setLignesChambre,
+    lignesVeterinaire,
+    setLignesVeterinaire,
+    reinitialiserLesLignes,
+  } = useLignesDepense();
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise
       ? tvaEntreprise
@@ -387,28 +377,12 @@ export function useNouvelleEcriture(
     categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
     activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
 
-  // Les comptes retirés pour l'espèce de l'écriture n'y sont plus proposés (une écriture commune les garde tous).
-  const comptesDeLActivite = comptes.filter((c) =>
-    compteProposePour(c, activite === ACTIVITE_COMMUNE ? [] : [activite]),
+  // Les comptes proposés (de charges et de produits), selon l’espèce de l’écriture ; ceux de l’inventaire d’abord pour une dépense.
+  const { comptesDepense, comptesRecette, optionsCompteDepense, optionsCompteRecette } = optionsDesComptes(
+    comptes,
+    activite,
+    comptesInventaire,
   );
-  const comptesDepense = comptesDeLActivite.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_DEPENSE));
-  const comptesRecette = comptesDeLActivite.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_RECETTE));
-  const versOptionCompte = (c: CompteComptableEnregistre) => ({
-    value: c.numero,
-    label: `${c.numero} — ${c.libelle}`,
-    shortLabel: c.numero,
-  });
-  // Les comptes de l'inventaire d'abord, sous leur titre, pour les retrouver dans toute la liste.
-  const optionsCompteDepense = comptesDepense
-    .map((c) => ({ ...versOptionCompte(c), inventaire: comptesInventaire.includes(c.numero) }))
-    .sort((a, b) => Number(b.inventaire) - Number(a.inventaire))
-    .map(({ inventaire, ...option }) => ({
-      ...option,
-      groupe: inventaire
-        ? TEXTES.comptabilite.nouvelleEcriture.groupeInventaire
-        : TEXTES.comptabilite.nouvelleEcriture.groupeAutresComptes,
-    }));
-  const optionsCompteRecette = comptesRecette.map(versOptionCompte);
 
   const compteAffiche =
     type === TYPE_FACTURE.RECUE
@@ -564,12 +538,7 @@ export function useNouvelleEcriture(
     setAnimaux([]);
     setPrecision('');
     setJeune(undefined);
-    setLignesAlimentation([ligneAlimentVide()]);
-    setLignesMarchandises([ligneMarchandiseVide()]);
-    setLignesCarburant([ligneCarburantVide()]);
-    setLignesProduction([ligneProductionVide()]);
-    setAnimauxAchetes([animalAcheteVide()]);
-    setAnimauxEnvoyes([]);
+    reinitialiserLesLignes();
   };
 
   /** Reprend une ligne de commande : sa catégorie (fromage, ou viande / charcuterie), son produit et sa quantité. */
@@ -614,18 +583,6 @@ export function useNouvelleEcriture(
     setJeune(petits);
   };
 
-  /** Le détail de la vente d'animaux d'un bon d'après leur âge à la date de la facture : cabris, sinon la ligne des adultes. */
-  const detailDesAnimaux = (
-    choisis: Chevre[],
-    etat: 'vivants' | 'morts' | undefined,
-    jour: string,
-    archive: ArchiveStock,
-  ): { libelle?: string; petits: boolean } => {
-    const petits = choisis.length > 0 && choisis.every((a) => !ageAtteint(a.dateNaissance, agePetitMax(), jour));
-    const role = petits ? ROLE_VIANDE.JEUNE : etat === 'vivants' ? ROLE_VIANDE.VIVANT : ROLE_VIANDE.SUR_PIED;
-    const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, especeCourante()).find((a) => roleDeLaViande(a.cle) === role);
-    return { libelle: ligne?.libelle, petits };
-  };
 
   /** La date de la facture change : le détail deviné (cabris ou chèvre) suit, tant qu'on ne l'a pas choisi soi-même. */
   const changerDate = (nouvelle: string) => {
