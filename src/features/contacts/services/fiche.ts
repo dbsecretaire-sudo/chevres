@@ -99,6 +99,8 @@ export interface FormulaireContact {
   personne: string;
   /** Vide : pas de catégorie choisie (elle reste celle de la fiche). */
   categorie: string;
+  /** Le circuit de vente privilégié d'un contact qui reçoit des recettes (obligatoire pour lui). */
+  circuit: string;
   recettes: boolean;
   depenses: boolean;
   siret: string;
@@ -114,6 +116,7 @@ export const FORMULAIRE_CONTACT_VIDE: FormulaireContact = {
   prenom: '',
   personne: '',
   categorie: '',
+  circuit: '',
   recettes: true,
   depenses: false,
   siret: '',
@@ -139,6 +142,7 @@ export function formulaireDuContact(
       ? [fournisseur.nom, fournisseur.prenom].filter(Boolean).join(' ')
       : (client?.contact ?? ''),
     categorie: categorieDuContact(contact, idsConnus).id ?? '',
+    circuit: client?.circuit ?? '',
     recettes: !!client,
     depenses: !!fournisseur,
     siret: fournisseur?.siret ?? '',
@@ -179,6 +183,7 @@ export function fichesDuFormulaire(
       email: ouRien(form.email),
       adressePostale: ouRien(form.adressePostale),
       categorie: form.categorie || base?.categorie,
+      circuit: form.circuit || base?.circuit,
       contact: personneModifiee || !base ? ouRien(form.personne) : base.contact,
     };
   }

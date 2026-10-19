@@ -43,6 +43,8 @@ function serializeValue(key: string, value: unknown): string {
           l.materiel ? GENRE_MATERIEL : l.equipement ? GENRE_EQUIPEMENT : '',
           // Le cheptel concerné quand il diffère de celui de la facture (8e champ : absent des anciens fichiers).
           l.activite ?? '',
+          // Une ligne offerte par le fournisseur (9e champ : absent des anciens fichiers).
+          l.offert ? CSV_OUI : '',
         ].join(SEPARATEUR_CHAMPS),
       )
       .join(SEPARATEUR_LIGNES);
@@ -50,7 +52,8 @@ function serializeValue(key: string, value: unknown): string {
   if (CHAMPS_LIGNES_MARCHANDISES.has(key)) {
     return (value as LigneMarchandise[])
       .map((l) =>
-        [proteger(l.marchandise), l.rubrique, l.quantite ?? '', l.unite ?? '', l.montant].join(
+        // Le dernier champ : une ligne offerte par le fournisseur (absent des anciens fichiers).
+        [proteger(l.marchandise), l.rubrique, l.quantite ?? '', l.unite ?? '', l.montant, l.offert ? CSV_OUI : ''].join(
           SEPARATEUR_CHAMPS,
         ),
       )
@@ -87,6 +90,7 @@ function deserializeValue(key: string, raw: string): unknown {
           nombreUnitesConditionnement,
           genre,
           activite,
+          offert,
         ] = part.split(SEPARATEUR_CHAMPS);
         const n = Number(montant);
         if (!type || !Number.isFinite(n)) return undefined;
@@ -103,6 +107,7 @@ function deserializeValue(key: string, raw: string): unknown {
           materiel: genre === GENRE_MATERIEL ? true : undefined,
           equipement: genre === GENRE_EQUIPEMENT ? true : undefined,
           activite: activite || undefined,
+          offert: offert === CSV_OUI ? true : undefined,
         } as LigneAlimentation;
       })
       .filter((l): l is LigneAlimentation => !!l);
@@ -112,7 +117,7 @@ function deserializeValue(key: string, raw: string): unknown {
     const lignes = raw
       .split(SEPARATEUR_LIGNES)
       .map((part) => {
-        const [marchandise, rubrique, quantite, unite, montant] = part.split(SEPARATEUR_CHAMPS);
+        const [marchandise, rubrique, quantite, unite, montant, offert] = part.split(SEPARATEUR_CHAMPS);
         const n = Number(montant);
         if (!rubrique || !Number.isFinite(n)) return undefined;
         const q = Number(quantite);
@@ -122,6 +127,7 @@ function deserializeValue(key: string, raw: string): unknown {
           quantite: quantite && Number.isFinite(q) ? q : undefined,
           unite: unite || undefined,
           montant: n,
+          offert: offert === CSV_OUI ? true : undefined,
         } as LigneMarchandise;
       })
       .filter((l): l is LigneMarchandise => !!l);

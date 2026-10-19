@@ -85,7 +85,7 @@ export async function partagerCoordonneesDuFournisseur(fournisseur: Fournisseur)
 }
 
 /** Pourquoi un contact ne s'enregistre pas. */
-export type ErreurContact = 'nomRequis' | 'categorieRequise' | 'rienCoche' | 'ecrituresRecettes' | 'ecrituresDepenses';
+export type ErreurContact = 'nomRequis' | 'categorieRequise' | 'circuitRequis' | 'rienCoche' | 'ecrituresRecettes' | 'ecrituresDepenses';
 
 /** Vrai si le client a des ventes ou des factures : on ne retire pas son côté « recettes ». */
 async function clientAEcritures(client: Client): Promise<boolean> {
@@ -110,6 +110,8 @@ export async function enregistrerContact(
 ): Promise<{ erreur: ErreurContact } | { contact: Contact }> {
   if (!form.nom.trim()) return { erreur: 'nomRequis' };
   if (!form.categorie) return { erreur: 'categorieRequise' };
+  // Un contact qui reçoit des recettes a son circuit de vente privilégié : il est repris d'office dans ses ventes.
+  if (form.recettes && !form.circuit) return { erreur: 'circuitRequis' };
   if (!form.recettes && !form.depenses) return { erreur: 'rienCoche' };
   if (existant?.client && !form.recettes && (await clientAEcritures(existant.client))) {
     return { erreur: 'ecrituresRecettes' };

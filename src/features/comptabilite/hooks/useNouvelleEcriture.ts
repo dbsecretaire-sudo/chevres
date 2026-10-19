@@ -365,6 +365,8 @@ export function useNouvelleEcriture(
       if (permis) changerCategorieRecette(categoriesGroupe(permis, activite)[0]);
     }
     const clientChoisi = clients.find((c) => c.id === id);
+    // Le circuit de vente privilégié du contact se prérempli (on peut le changer pour cette vente).
+    if (clientChoisi?.circuit) setCircuit(clientChoisi.circuit);
     // Une case que la catégorie du client n'affiche pas ne reste pas cochée.
     if (clientChoisi && !pasEncaisseeAffichee(categorieClientDe(clientChoisi.categorie))) setEnAttente(false);
     const declaree = venteDeclareeParDefaut(clients.find((c) => c.id === id));
@@ -647,7 +649,8 @@ export function useNouvelleEcriture(
     setFileDeLaCommande(elements);
     setAnimauxDuBon(idsAnimaux);
     if (c.clientId) choisirClient(c.clientId);
-    setCircuit(c.circuit ?? '');
+    // Le circuit est celui du contact ; celui de la commande ne sert que sans circuit privilégié.
+    if (!clients.find((x) => x.id === c.clientId)?.circuit) setCircuit(c.circuit ?? '');
     setEnAttente(!!c.enAttente);
     setEcheance(c.echeance ?? '');
     if (elements[0]) appliquerElement(elements[0]);

@@ -2,6 +2,7 @@ import { Text } from 'react-native';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
+import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import type { FormulaireContact } from '@/features/contacts/services/fiche';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -37,6 +38,16 @@ export function FormulaireContactChamps({ form, onChange, categories }: Props) {
         options={categories.map((c) => ({ value: c.id, label: c.nom }))}
         aide={T.aideCategorie}
       />
+      {/* Un contact qui reçoit des recettes a son circuit de vente privilégié : ses ventes, ses réservations et ses commandes le reprennent. */}
+      {form.recettes ? (
+        <ChampCircuit
+          label={T.circuitPrivilegie}
+          aide={T.aideCircuit}
+          required
+          value={form.circuit}
+          onChange={(circuit) => maj({ circuit })}
+        />
+      ) : null}
       <FormField label={T.nom} required value={form.nom} onChangeText={(nom) => maj({ nom })} />
       <FormField
         label={T.prenom}

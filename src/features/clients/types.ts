@@ -14,4 +14,6 @@ export interface Client {
   fournisseurId?: string;
   /** La personne à contacter, quand le client est une organisation. */
   contact?: string;
+  /** Son circuit de vente privilégié (voir CIRCUIT_VENTE) : repris d'office dans ses ventes, ses réservations et ses commandes. */
+  circuit?: string;
 }

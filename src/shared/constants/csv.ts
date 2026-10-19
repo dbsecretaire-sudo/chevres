@@ -108,6 +108,8 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'partHorsCaUrssaf',
     'tauxTva',
     'sansFacture',
+    // Dépense offerte par le fournisseur (cadeau) : ses lignes offertes comptent 0 € (voir leur champ « offert »).
+    'offert',
   ],
   [CATEGORIE_STOCKAGE.VENTES]: [
     'id',
@@ -137,9 +139,11 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'commandeId',
     'fraisAbattoir',
     'tauxTvaFrais',
-    // Vente de viande : vivants ou morts à la remise ; vente offerte au client.
+    // Vente de viande : vivants ou morts à la remise ; vente offerte au client ; animaux vivants vendus au poids vif ; prix unitaire personnalisé.
     'etatAnimaux',
     'offert',
+    'venduAuPoids',
+    'prixUnitairePersonnalise',
     // Le document de circulation déposé (le fichier et son moment de dépôt) : en JSON dans sa cellule.
     'documentCirculation',
   ],
@@ -183,6 +187,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
 };
 
 export const CHAMPS_NOMBRE = new Set([
+  'prixUnitairePersonnalise',
   'fraisAbattoir',
   'tauxTvaFrais',
   'cout',
@@ -227,6 +232,7 @@ export const CHAMPS_BOOLEEN = new Set([
   'reajustement',
   'rapportEssais',
   'offert',
+  'venduAuPoids',
 ]);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */

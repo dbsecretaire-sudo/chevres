@@ -11,13 +11,17 @@ interface Props {
   onChange: (circuit: string) => void;
   /** Le circuit est obligatoire (une vente de production) : pas de choix « Non précisé », il se choisit avant de continuer. */
   required?: boolean;
+  /** Un autre nom pour le champ (« Circuit de vente privilégié » dans la fiche d'un contact). */
+  label?: string;
+  /** Une autre aide sous le champ. */
+  aide?: string;
 }
 
 /** Le circuit de vente d'une vente ou d'une commande : un choix facultatif parmi les circuits de l'exploitation. */
-export function ChampCircuit({ value, onChange, required = false }: Props) {
+export function ChampCircuit({ value, onChange, required = false, label, aide }: Props) {
   return (
     <SelectField
-      label={T.champ}
+      label={label ?? T.champ}
       value={value}
       onChange={onChange}
       required={required}
@@ -26,7 +30,7 @@ export function ChampCircuit({ value, onChange, required = false }: Props) {
         ...(required ? [] : [{ value: '', label: T.aucun }]),
         ...Object.values(CIRCUIT_VENTE).map((c) => ({ value: c as string, label: LABEL_CIRCUIT_VENTE[c] })),
       ]}
-      aide={T.aide}
+      aide={aide ?? T.aide}
     />
   );
 }

@@ -173,6 +173,8 @@ export default function FicheCommande() {
     const fiche = clients.find((c) => c.id === nouveau);
     const nouvelleCategorie = fiche ? categorieDuClient(fiche) : undefined;
     setClientId(nouveau);
+    // Le circuit de vente privilégié du contact se prérempli.
+    if (fiche?.circuit) setCircuit(fiche.circuit);
     // Les prix que l'utilisateur n'a pas modifiés suivent le tarif de la catégorie du nouveau client.
     setLignes((courantes) =>
       courantes.map((l) => {

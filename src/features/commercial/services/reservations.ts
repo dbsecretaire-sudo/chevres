@@ -11,7 +11,7 @@ import type { Client } from '@/features/clients/types';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { reserverLots } from '@/features/stock/services/lots';
 import type { LotFromage } from '@/features/stock/types';
-import { CIRCUIT_VENTE, JOURS_AVANT_LIVRAISON, STATUT_COMMANDE } from '@/shared/constants/commercial';
+import { JOURS_AVANT_LIVRAISON, STATUT_COMMANDE } from '@/shared/constants/commercial';
 import { ajouterJours } from '@/shared/utils/calendrier';
 import { libelleArticle } from '@/features/stock/services/stock';
 import { generateId } from '@/shared/utils/id';
@@ -27,14 +27,14 @@ import { loadAllYears } from '@/shared/storage/localStore';
 export async function bonDeCommandeOuvert(client: Client): Promise<Commande> {
   const archive = await lireArchiveCommercial();
   const ouvert = archive.commandes.find((c) => c.clientId === client.id && commandeOuverte(c));
-  // Une réservation se retire à la ferme : un bon sans circuit prend « Vente à la ferme » (à adapter à la facturation si besoin).
-  if (ouvert) return ouvert.circuit ? ouvert : enregistrerCommande({ ...ouvert, circuit: CIRCUIT_VENTE.FERME });
+  // Le circuit de vente est celui du contact (sa fiche), plus celui de la commande : un bon sans circuit prend celui de son contact.
+  if (ouvert) return ouvert.circuit || !client.circuit ? ouvert : enregistrerCommande({ ...ouvert, circuit: client.circuit });
   return enregistrerCommande({
     client: nomComplet(client),
     clientId: client.id,
     date: todayISO(),
     livraisonPrevue: ajouterJours(todayISO(), JOURS_AVANT_LIVRAISON),
-    circuit: CIRCUIT_VENTE.FERME,
+    circuit: client.circuit || undefined,
     statut: STATUT_COMMANDE.A_PREPARER,
     lignes: [],
   });
@@ -47,9 +47,7 @@ export async function reserverAnimauxPourClient(
   /** Les cabris seront remis vivants ou morts (absent : pas encore décidé). */
   etat?: 'vivants' | 'morts',
 ): Promise<Commande> {
-  let bon = await bonDeCommandeOuvert(client);
-  // Des animaux sans boucle réservés depuis Production › Viande : la vente se fait à la ferme.
-  if (bon.circuit !== CIRCUIT_VENTE.FERME) bon = await enregistrerCommande({ ...bon, circuit: CIRCUIT_VENTE.FERME });
+  const bon = await bonDeCommandeOuvert(client);
   const reservation = { client: nomComplet(client), clientId: client.id, commandeId: bon.id, etat, date: todayISO() };
   for (const animal of animaux) await saveChevre(reserver(animal, reservation));
   return bon;

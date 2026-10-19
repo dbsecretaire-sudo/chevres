@@ -123,7 +123,7 @@ export default function FicheContact() {
       }
     }
     // Sans catégorie, rien ne s'enregistre (le contrôle est fait avant toute création de catégorie).
-    if (auto && !aEnregistrer.categorie) return false;
+    if (auto && (!aEnregistrer.categorie || (aEnregistrer.recettes && !aEnregistrer.circuit))) return false;
     if (aEnregistrer.categorie) await assurerCategorie(aEnregistrer.categorie);
     const resultat = await enregistrerContact(aEnregistrer, contact, idsConnus);
     if ('erreur' in resultat) {
