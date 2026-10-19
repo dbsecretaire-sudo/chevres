@@ -4,6 +4,7 @@ import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 import {
   autonomieAliments,
   construireMinuteurs,
+  enTranshumance,
   progressionPapiers,
   prochaineEcheance,
   type DeclarationAFaire,
@@ -16,6 +17,7 @@ import { joursAbattusAFacturer } from '@/features/comptabilite/utils/animauxVend
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
 import { useSanteDuTroupeau } from '@/features/exploitation/hooks/useSanteDuTroupeau';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
 import { destinationRappel } from '@/features/rappels/services/destination';
@@ -66,6 +68,11 @@ export function useFermeAccueil() {
   const { aRappeler, aValider } = useLotsARappeler();
   const lotsAFacturer = useLotsAFacturer();
   const { espece } = useEtablissement();
+  const { settings } = useAppSettings();
+  // La transhumance de l'année en cours : le décor de la ferme passe à la montagne entre la montée et la descente.
+  const aujourdhui = todayISO();
+  const estive = settings.exploitation?.estives?.[aujourdhui.slice(0, 4)];
+  const enEstive = enTranshumance(estive, aujourdhui);
 
   const [aliments, setAliments] = useState<{ kg: number; jours?: number } | null>(null);
   const [vedettes, setVedettes] = useState<Chevre[]>([]);
@@ -127,6 +134,8 @@ export function useFermeAccueil() {
     papiers,
     aliments,
     vedettes,
+    /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
+    estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,
     lotsAFacturer,
     lotsARappeler: aRappeler + aValider.length,
     /** Les animaux en délai d'attente (lait et viande confondus). */

@@ -3,6 +3,7 @@ import {
   autonomieAliments,
   construireMinuteurs,
   dureeCourte,
+  enTranshumance,
   joursJusqua,
   progressionPapiers,
   prochaineEcheance,
@@ -87,5 +88,21 @@ describe('aliments restants', () => {
 
   it('ignore les autres articles', () => {
     expect(autonomieAliments([m('2026-10-01', 500, 'fromage:frais')], aliments, '2026-10-19')).toEqual({ kg: 0 });
+  });
+});
+
+describe('transhumance', () => {
+  const estive = { dateMontee: '2026-06-10', dateDescente: '2026-09-25' };
+  it('à l’estive de la montée à la descente incluses, à la ferme avant et après', () => {
+    expect(enTranshumance(estive, '2026-06-09')).toBe(false);
+    expect(enTranshumance(estive, '2026-06-10')).toBe(true);
+    expect(enTranshumance(estive, '2026-08-01')).toBe(true);
+    expect(enTranshumance(estive, '2026-09-25')).toBe(true);
+    expect(enTranshumance(estive, '2026-09-26')).toBe(false);
+  });
+  it('sans date de descente le troupeau reste à l’estive ; sans montée, à la ferme', () => {
+    expect(enTranshumance({ dateMontee: '2026-06-10' }, '2026-12-01')).toBe(true);
+    expect(enTranshumance({ dateDescente: '2026-09-25' }, '2026-08-01')).toBe(false);
+    expect(enTranshumance(undefined, '2026-08-01')).toBe(false);
   });
 });

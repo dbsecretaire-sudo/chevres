@@ -146,3 +146,12 @@ export function autonomieAliments(
   if (consomme <= 0 || etendue < 7 || kg <= 0) return { kg: Math.round(kg * 10) / 10 };
   return { kg: Math.round(kg * 10) / 10, jours: Math.floor(kg / (consomme / etendue)) };
 }
+
+/**
+ * Vrai quand le troupeau est à l'estive à cette date : de la montée à la descente incluses (sans date de descente, il y reste). Sans date
+ * de montée, rien n'est décidé : il est à la ferme.
+ */
+export function enTranshumance(estive: { dateMontee?: string; dateDescente?: string } | undefined, aujourdhui: string): boolean {
+  if (!estive?.dateMontee || aujourdhui < estive.dateMontee) return false;
+  return !estive.dateDescente || aujourdhui <= estive.dateDescente;
+}

@@ -41,6 +41,8 @@ export const TEXTES_ACCUEIL = {
       contacts: 'Clients et fournisseurs',
       lotsAFacturer: (n: number) => `${n} à facturer`,
       lotsARappeler: (n: number) => `${n} à rappeler`,
+      estive: (zone?: string) => (zone?.trim() ? `À l’estive : ${zone.trim()}` : 'À l’estive'),
+      descenteLe: (date: string) => `Descente le ${date}`,
       aucunAnimal: 'Aucun animal',
       nes: (n: number) => `${n} nés cette année`,
     },

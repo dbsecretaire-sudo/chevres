@@ -11,6 +11,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
+import { formatDateFR } from '@/shared/utils/dates';
 
 const T = TEXTES.accueil.ferme.zones;
 
@@ -31,6 +32,8 @@ interface Props {
   naissances?: number;
   lotsAFacturer: number;
   lotsARappeler: number;
+  /** Le troupeau est à l'estive : le décor passe de l'enclos à la montagne (sa zone, sa date de descente). */
+  estive?: { zone?: string; descente?: string };
 }
 
 /** Un animal de l'enclos : son dessin (plus petit pour un petit), sa boucle en étiquette, et il se balade. */
@@ -78,7 +81,7 @@ const Chemin = () => <View style={styles.chemin} />;
  * La ferme : l'enclos de l'espèce choisie, avec trois ou quatre animaux (leurs boucles) qui représentent le troupeau, puis la laiterie, la
  * fromagerie, la boucherie et charcuterie, l'abattoir, et les clients et fournisseurs. Chaque lieu ouvre sa rubrique et porte une pastille de ce qui attend.
  */
-export function ScenePrincipale({ vedettes, nombreAnimaux, naissances, lotsAFacturer, lotsARappeler }: Props) {
+export function ScenePrincipale({ vedettes, nombreAnimaux, naissances, lotsAFacturer, lotsARappeler, estive }: Props) {
   const router = useRouter();
   const femelles = vocabulaire().femelle.pluriel;
   const lieux = [
@@ -89,9 +92,19 @@ export function ScenePrincipale({ vedettes, nombreAnimaux, naissances, lotsAFact
     { cle: 'contacts', icone: <Ionicons name="people" size={24} color={colors.primary} />, titre: T.contacts, route: ROUTES.CONTACTS, pastille: undefined },
   ];
   return (
-    <View style={styles.scene}>
-      <Pressable style={styles.enclos} onPress={() => router.push(ROUTES.CHEPTEL_LISTE as never)} accessibilityRole="button" accessibilityLabel={T.enclos(femelles)}>
-        <Text style={styles.titreEnclos}>{T.enclos(femelles)}</Text>
+    <View style={[styles.scene, estive ? styles.sceneEstive : null]}>
+      <Pressable
+        style={[styles.enclos, estive ? styles.montagne : null]}
+        onPress={() => router.push(ROUTES.CHEPTEL_LISTE as never)}
+        accessibilityRole="button"
+        accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos(femelles)}
+      >
+        {estive ? (
+          <Text style={styles.sommets} accessibilityElementsHidden importantForAccessibility="no">
+            🏔️ ⛰️ 🏔️
+          </Text>
+        ) : null}
+        <Text style={styles.titreEnclos}>{estive ? T.estive(estive.zone) : T.enclos(femelles)}</Text>
         {vedettes.length > 0 ? (
           <View style={styles.troupeau}>
             {vedettes.map((a, i) => (
@@ -101,6 +114,7 @@ export function ScenePrincipale({ vedettes, nombreAnimaux, naissances, lotsAFact
         ) : (
           <Text style={styles.vide}>{T.aucunAnimal}</Text>
         )}
+        {estive?.descente ? <Text style={styles.descente}>{T.descenteLe(formatDateFR(estive.descente))}</Text> : null}
         <Text style={styles.effectif}>
           {nombreAnimaux === undefined ? '…' : TEXTES.accueil.ferme.bandeau.animaux(nombreAnimaux)}
           {naissances ? ` · ${T.nes(naissances)}` : ''}
@@ -119,6 +133,10 @@ export function ScenePrincipale({ vedettes, nombreAnimaux, naissances, lotsAFact
 const styles = StyleSheet.create({
   scene: { flex: 1, minWidth: 0, backgroundColor: '#E8F0D8', borderRadius: 20, padding: 10, alignItems: 'stretch' },
   enclos: { backgroundColor: '#D9E8BE', borderRadius: 16, borderWidth: 3, borderColor: '#A9794A', borderStyle: 'dashed', padding: 10, gap: 6, alignItems: 'center' },
+  sceneEstive: { backgroundColor: '#DCE8F2' },
+  montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
+  sommets: { fontSize: 34, letterSpacing: 2 },
+  descente: { fontSize: 12, color: colors.primaryDark },
   titreEnclos: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
   troupeau: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end', gap: 8, paddingVertical: 6, minHeight: 80 },
   animal: { alignItems: 'center', gap: 2 },

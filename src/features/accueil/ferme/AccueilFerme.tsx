@@ -41,6 +41,7 @@ export default function AccueilFerme() {
                 naissances={f.stats?.cabritsAnnee}
                 lotsAFacturer={f.lotsAFacturer}
                 lotsARappeler={f.lotsARappeler}
+                estive={f.estive}
               />
               <MenuFerme />
             </View>
