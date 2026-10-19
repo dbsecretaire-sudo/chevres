@@ -151,22 +151,22 @@ export function donneesDeCirculation(entree: {
  * (elle est au départ), ou d'achat (elle est à l'arrivée).
  */
 export const feuilletsCirculation = (sens: 'vente' | 'achat') =>
-  // Rangés par action : ceux qu'on garde, ceux qu'on donne, puis celui qu'on garde d'abord avant de l'envoyer à la Chambre.
+  // Rangés par action, un groupe après l'autre (une ligne les sépare) : ceux qu'on garde, ceux qu'on donne, puis celui qu'on garde d'abord avant de l'envoyer à la Chambre.
   (sens === 'vente'
     ? [
-        { couleur: [1, 1, 1], libelle: C.feuillets.vente.blanc },
-        { couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.vente.jaune },
-        { couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.vente.vert },
-        { couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.vente.bleu },
-        { couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.vente.rose },
+        { groupe: 'garde', couleur: [1, 1, 1], libelle: C.feuillets.vente.blanc },
+        { groupe: 'garde', couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.vente.jaune },
+        { groupe: 'donne', couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.vente.vert },
+        { groupe: 'donne', couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.vente.bleu },
+        { groupe: 'chambre', couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.vente.rose },
       ]
     : [
-        { couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.achat.bleu },
-        { couleur: [1, 1, 1], libelle: C.feuillets.achat.blanc },
-        { couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.achat.jaune },
-        { couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.achat.rose },
-        { couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.achat.vert },
-      ]) as readonly { couleur: readonly number[]; libelle: string }[];
+        { groupe: 'garde', couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.achat.bleu },
+        { groupe: 'donne', couleur: [1, 1, 1], libelle: C.feuillets.achat.blanc },
+        { groupe: 'donne', couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.achat.jaune },
+        { groupe: 'donne', couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.achat.rose },
+        { groupe: 'chambre', couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.achat.vert },
+      ]) as readonly { groupe: 'garde' | 'donne' | 'chambre'; couleur: readonly number[]; libelle: string }[];
 
 /** Le nombre de lignes du tableau des numéros individuels du formulaire (dix lignes de quatre colonnes) : le reste va sur la page d'annexe. */
 const PLACES_INDIVIDUELLES = 40;
@@ -187,6 +187,16 @@ const tiptagsDeLInventaire = async (): Promise<ReadonlySet<string>> => numerosTi
 
 export const chiffresDeLIndicatif = (indicatif: string): string =>
   indicatif.replace(/^\s*FR/i, '').replace(/\s+/g, '');
+
+/** Les cases à cocher du type de lieu d'arrivée : le coin bas gauche de chacune (points). */
+const CASES_ARRIVEE: Record<LieuArrivee, [number, number]> = {
+  elevage: [312, 705.5],
+  operateur: [357.7, 705.5],
+  centre: [424, 705.5],
+  marche: [516, 705.5],
+  abattoir: [311, 692.5],
+  particulier: [357.7, 692.5],
+};
 
 /** Une zone du formulaire que l'application ne peut pas remplir : le coin bas gauche, la largeur et la hauteur (points). */
 type ZoneACompleter = [x: number, y: number, largeur: number, hauteur: number];
@@ -223,14 +233,61 @@ export function zonesACompleter(d: DonneesCirculation): ZoneACompleter[] {
 }
 
 /**
+ * Les zones que l'application remplit, elles aussi surlignées en jaune (le jaune d'abord, puis la valeur écrite dessus) : le chargement, le
+ * départ et l'arrivée, les nombres d'animaux, les indicatifs et les numéros individuels, la mention sanitaire, la date, et, tout en bas, le
+ * mouvement que l'exploitation notifie à l'EDE (« je notifie un départ » pour une vente, « une arrivée » pour un achat).
+ */
+export function zonesPrerempliees(d: DonneesCirculation): ZoneACompleter[] {
+  const zones: ZoneACompleter[] = [
+    [148, 759, 50, 11],
+    [143, 666, 26, 12],
+    [175, 666, 94, 12],
+    [162, 644, 103, 12],
+    [118, 63, 45, 11],
+    d.notifie === 'arrivee' ? [458, 17, 92, 11] : [309, 17, 86, 11],
+  ];
+  const lieu = CASES_ARRIVEE[d.arrivee.lieu];
+  zones.push([42, 705, 9.5, 9.5], [lieu[0] - 1, lieu[1] - 1, 9.5, 9.5]);
+  const coordonnees = (x: number, p: { nom: string; adresse: string; codePostal: string; commune: string }) => {
+    if (p.nom) zones.push([x - 2, 629, 165, 12]);
+    if (p.adresse) zones.push([x - 2, 601, 165, 12]);
+    if (p.codePostal) zones.push([x - 2, 588, 60, 12]);
+    if (p.commune) zones.push([x - 2, 575.5, 165, 12]);
+  };
+  coordonnees(124, d.depart);
+  coordonnees(394, d.arrivee);
+  const yLigne = d.ovins ? 538 : 520;
+  const nombreBoucherie = d.boucherie.reduce((t, b) => t + b.nombre, 0);
+  for (const [xBoucherie, xRepro] of [[164, 249], [430.9, 516.8]]) {
+    if (nombreBoucherie > 0) zones.push([xBoucherie - 36, yLigne - 4, 72, 14]);
+    if (d.reproducteurs > 0) zones.push([xRepro - 36, yLigne - 4, 72, 14]);
+  }
+  if (d.mortsTransport > 0) zones.push([391, 498, 80, 12]);
+  const lotsBoucherie = [
+    { x0: 79.3, pas: 11.5, xNombre: 176 },
+    { x0: 226.7, pas: 11.4, xNombre: 335 },
+    { x0: 374, pas: 11.55, xNombre: 470.5 },
+  ];
+  d.boucherie.slice(0, 3).forEach((_, i) => {
+    zones.push([lotsBoucherie[i].x0, 417, 6 * lotsBoucherie[i].pas, 12], [lotsBoucherie[i].xNombre - 12, 415, 24, 13]);
+  });
+  const colonnes = [38, 170, 302, 433];
+  d.individuels.slice(0, PLACES_INDIVIDUELLES).forEach((_, k) => {
+    zones.push([colonnes[Math.floor(k / 10)] - 2, 355.3 - 17.3 * (k % 10) - 12.3 - 3, 124, 12]);
+  });
+  zones.push(d.sanitaire.risque ? [45.7, 91, 8.5, 8.5] : [45.7, 114, 8.5, 8.5]);
+  return zones;
+}
+
+/**
  * Écrit les valeurs d'une vente sur le formulaire (la feuille du détenteur de départ, telle que la Chambre la fournit). Les positions sont
  * celles du modèle remis à l'endroit : points depuis le coin bas gauche de la page (593 × 839).
  */
 function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
   // Le bandeau du haut : pour exemple (le filigrane « EXEMPLE » passe en travers de la page).
   o.centre(296, 829, C.bandeauCourt, 8, true);
-  // Ce qui reste à compléter à la main se détache en jaune (sous les valeurs écrites ensuite).
-  for (const [x, y, largeur, hauteur] of zonesACompleter(d)) {
+  // Ce que l'application écrit et ce qui reste à compléter à la main se détachent en jaune (sous les valeurs écrites ensuite).
+  for (const [x, y, largeur, hauteur] of [...zonesPrerempliees(d), ...zonesACompleter(d)]) {
     o.page.drawRectangle({ x, y, width: largeur, height: hauteur, color: rgb(1, 0.88, 0.1), opacity: 0.5, borderColor: rgb(0.9, 0.55, 0), borderWidth: 0.8, borderOpacity: 0.9 });
   }
   o.page.drawText(C.exemple, { x: 120, y: 250, size: 120, font: o.policeGrasse, color: rgb(0, 0, 0), opacity: 0.06, rotate: degrees(40) });
@@ -243,15 +300,7 @@ function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
   o.cases(177, 672.5, 11.46, exploitation.slice(2), 10);
   o.cases(162.5, 650.5, 11.4, d.depart.siren, 10);
   // L'arrivée : son type (case cochée) — son numéro d'exploitation ou d'abattoir reste à écrire, le client ne nous le donne pas.
-  const casesArrivee: Record<LieuArrivee, [number, number]> = {
-    elevage: [312, 705.5],
-    operateur: [357.7, 705.5],
-    centre: [424, 705.5],
-    marche: [516, 705.5],
-    abattoir: [311, 692.5],
-    particulier: [357.7, 692.5],
-  };
-  const [cx, cy] = casesArrivee[d.arrivee.lieu];
+  const [cx, cy] = CASES_ARRIVEE[d.arrivee.lieu];
   o.croix(cx, cy, 7.5);
   // Le détenteur, l'adresse, le code postal et la commune des deux côtés.
   const coordonnees = (x: number, p: { nom: string; adresse: string; codePostal: string; commune: string }) => {
@@ -300,6 +349,10 @@ function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
   if (d.sanitaire.risque) o.croix(46.7, 92, 6.5);
   else o.croix(46.7, 115, 6.5);
   o.texte(120, 66, formatDateFR(d.date), 8.5);
+  // Tout en bas : « je notifie un départ » (une vente) ou « une arrivée » (un achat), cochée d'une croix devant la mention.
+  const xCroix = d.notifie === 'arrivee' ? 446 : 298;
+  o.page.drawRectangle({ x: xCroix, y: 18, width: 9, height: 9, borderColor: rgb(0, 0, 0), borderWidth: 0.8 });
+  o.croix(xCroix, 18, 9);
 }
 
 /**
@@ -339,7 +392,15 @@ export async function remplirDocumentCirculation(d: DonneesCirculation): Promise
   const sens = d.notifie === 'arrivee' ? 'achat' : 'vente';
   ligne(C.rappelTitre[sens], 13, true);
   y -= 4;
+  let groupe = '';
   for (const f of feuilletsCirculation(sens)) {
+    // Une ligne sépare les feuillets qu'on garde, ceux qu'on donne et celui qu'on envoie à la Chambre.
+    if (groupe && f.groupe !== groupe) {
+      y -= 2;
+      page.drawLine({ start: { x: 50, y: y + 6 }, end: { x: 545, y: y + 6 }, thickness: 0.7, color: rgb(0.6, 0.6, 0.6) });
+      y -= 8;
+    }
+    groupe = f.groupe;
     page.drawRectangle({ x: 50, y: y - 2, width: 12, height: 12, color: rgb(f.couleur[0], f.couleur[1], f.couleur[2]), borderColor: rgb(0, 0, 0), borderWidth: 0.8 });
     ligne(f.libelle, 10.5, false, 70);
   }
