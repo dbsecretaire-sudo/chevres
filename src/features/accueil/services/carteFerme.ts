@@ -25,7 +25,9 @@ export type CleLieu =
   | 'equarrissage'
   | 'veterinaire'
   | 'contacts'
-  | 'pompe';
+  | 'pompe'
+  | 'entrepot'
+  | 'commercial';
 
 export interface Lieu {
   cle: CleLieu;
@@ -51,6 +53,8 @@ export const LIEUX: readonly Lieu[] = [
   lieu('contacts', '🤝', -520, 340),
   lieu('veterinaire', '🩺', -560, 0),
   lieu('pompe', '⛽', -520, -340),
+  lieu('entrepot', '📦', 820, -340),
+  lieu('commercial', '🛒', -820, 340),
 ];
 
 /** Le petit coin de l'équarrissage sur l'exploitation, à côté de l'enclos : une stèle, avec les animaux morts de l'année. */
@@ -76,11 +80,11 @@ export const ROUTES_GRISES: readonly Rect[] = [
   verticale(CENTRE.x, CENTRE.y - 900, CENTRE.y + 900),
   horizontale(CENTRE.y, CENTRE.x - 560, CENTRE.x + 560),
   verticale(CENTRE.x + 260, CENTRE.y - 340, CENTRE.y + 340),
-  horizontale(CENTRE.y - 340, CENTRE.x + 260, CENTRE.x + 520),
+  horizontale(CENTRE.y - 340, CENTRE.x + 260, CENTRE.x + 820),
   horizontale(CENTRE.y + 340, CENTRE.x + 260, CENTRE.x + 520),
   verticale(CENTRE.x - 260, CENTRE.y - 340, CENTRE.y + 340),
   horizontale(CENTRE.y - 340, CENTRE.x - 520, CENTRE.x - 260),
-  horizontale(CENTRE.y + 340, CENTRE.x - 520, CENTRE.x - 260),
+  horizontale(CENTRE.y + 340, CENTRE.x - 820, CENTRE.x - 260),
 ];
 
 /** Les bornes du décalage de la carte pour une vue de `vue` points : la carte ne laisse jamais voir au-delà de ses bords (centrée si elle est plus petite). */

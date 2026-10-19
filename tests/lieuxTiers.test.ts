@@ -34,7 +34,7 @@ describe('lieux avec tiers', () => {
 
   it('chaque lieu ouvre « Nouvelle facture » dans une catégorie, et ses rubriques ont une route', () => {
     for (const c of Object.values(LIEUX_TIERS)) {
-      expect(c.nouvelle).toMatch(/^\/comptabilite\/nouvelle\?type=(recue|emise)/);
+      if (c.avecTiers) expect(c.nouvelle).toMatch(/^\/comptabilite\/nouvelle\?type=(recue|emise)/);
       c.liens.forEach((l) => expect(l.route.startsWith('/')).toBe(true));
     }
   });
@@ -63,5 +63,20 @@ describe('écritures rangées par tiers', () => {
     ];
     ecrituresParTiers(liste);
     expect(liste[0].titre).toBe('B');
+  });
+});
+
+describe('rangement des rubriques', () => {
+  it('l’entrepôt n’a que des rubriques de stock, sans tiers', () => {
+    expect(LIEUX_TIERS.entrepot.avecTiers).toBe(false);
+    expect(LIEUX_TIERS.entrepot.liens.length).toBeGreaterThan(5);
+  });
+  it('les organismes rassemblent le dossier PAC, les terrains et le bilan annuel', () => {
+    const cles = LIEUX_TIERS.organismes.liens.map((l) => l.cle);
+    expect(cles).toEqual(expect.arrayContaining(['dossierPac', 'terrains', 'bilan']));
+  });
+  it('le commerce a ses rubriques de vente et des clients pour tiers', () => {
+    expect(LIEUX_TIERS.commercial.liens.map((l) => l.cle)).toEqual(expect.arrayContaining(['ventes', 'commandes', 'tarifs']));
+    expect(LIEUX_TIERS.commercial.categoriesContact.length).toBeGreaterThan(0);
   });
 });

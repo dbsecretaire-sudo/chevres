@@ -38,6 +38,8 @@ const ROUTE_DU_LIEU: Record<CleLieu, string> = {
   veterinaire: ROUTES.lieu('veterinaire'),
   contacts: ROUTES.CONTACTS,
   pompe: ROUTES.lieu('carburant'),
+  entrepot: ROUTES.lieu('entrepot'),
+  commercial: ROUTES.lieu('commercial'),
 };
 
 interface Props {
@@ -202,6 +204,8 @@ export function CarteFerme({ vedettes, nombreAnimaux, naissances, lotsAFacturer,
     organismes: T.zones.organismes,
     equarrissage: T.zones.equarrissage,
     pompe: T.zones.pompe,
+    entrepot: T.zones.entrepot,
+    commercial: T.zones.commercial,
     laiterie: T.zones.laiterie,
     fromagerie: T.zones.fromagerie,
     charcuterie: T.zones.charcuterie,

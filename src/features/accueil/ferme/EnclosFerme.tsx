@@ -54,7 +54,7 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
 
 /**
  * L'enclos du troupeau, au centre de la carte : l'espèce choisie, trois ou quatre animaux (leurs boucles) qui représentent le troupeau, et
- * l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui ouvre la liste du cheptel.
+ * l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui ouvre le menu du cheptel (animaux, naissances, lots d'animaux, santé, boucles).
  */
 export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive }: Props) {
   const router = useRouter();
@@ -62,7 +62,7 @@ export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive }: Pro
   return (
     <Pressable
       style={[styles.enclos, estive ? styles.montagne : null]}
-      onPress={() => router.push(ROUTES.CHEPTEL_LISTE as never)}
+      onPress={() => router.push(ROUTES.CHEPTEL as never)}
       accessibilityRole="button"
       accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos(femelles)}
     >

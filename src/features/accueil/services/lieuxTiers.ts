@@ -1,6 +1,8 @@
+import type { Ionicons } from '@expo/vector-icons';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 
@@ -9,12 +11,21 @@ import { SECTION_STOCK } from '@/shared/constants/stock';
  * lieu, les factures qui le concernent, et les rubriques de l'application qui s'y rattachent. Ici la configuration, sans rien d'affichage ;
  * les textes sont dans `TEXTES.production.lieux`.
  */
-export type CleLieuTiers = 'aliments' | 'carburant' | 'veterinaire' | 'organismes' | 'equarrissage' | 'abattoir' | 'boucherie';
+export type CleLieuTiers =
+  | 'aliments'
+  | 'carburant'
+  | 'veterinaire'
+  | 'organismes'
+  | 'equarrissage'
+  | 'abattoir'
+  | 'boucherie'
+  | 'entrepot'
+  | 'commercial';
 
 export interface LienDuLieu {
   /** La clé de ses textes (`TEXTES.production.lieux[lieu].liens[cle]`). */
   cle: string;
-  icone: 'cube' | 'nutrition' | 'medkit' | 'document-text' | 'time' | 'business' | 'receipt' | 'flask' | 'restaurant' | 'notifications' | 'list';
+  icone: keyof typeof Ionicons.glyphMap;
   route: string;
 }
 
@@ -22,6 +33,8 @@ export interface ConfigLieuTiers {
   cle: CleLieuTiers;
   /** Son dessin sur la carte (un emoji). */
   emoji: string;
+  /** Faux pour un lieu sans tiers (l'entrepôt : que des rubriques) : ni contacts ni écritures sur sa page. */
+  avecTiers: boolean;
   /** Les identifiants de catégories de contact dont les fiches sont les tiers du lieu. */
   categoriesContact: readonly string[];
   /** Les écritures du lieu : les factures de ces catégories (dépense ou recette), les ventes de ces catégories, et celles de ses tiers. */
@@ -38,6 +51,7 @@ const stock = (section: string) => `${ROUTES.COMPTABILITE_STOCKS}?onglet=${secti
 export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   aliments: {
     cle: 'aliments',
+    avecTiers: true,
     emoji: '🌾🌽',
     categoriesContact: [CATEGORIE_FOURNISSEUR.ALIMENTS],
     categoriesFacture: [CATEGORIE_DEPENSE.ALIMENTATION],
@@ -50,6 +64,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   },
   carburant: {
     cle: 'carburant',
+    avecTiers: true,
     emoji: '⛽',
     categoriesContact: [CATEGORIE_FOURNISSEUR.CARBURANT],
     categoriesFacture: [CATEGORIE_DEPENSE.CARBURANT],
@@ -59,6 +74,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   },
   veterinaire: {
     cle: 'veterinaire',
+    avecTiers: true,
     emoji: '🩺',
     categoriesContact: [CATEGORIE_FOURNISSEUR.VETERINAIRE],
     categoriesFacture: [CATEGORIE_DEPENSE.VETERINAIRE],
@@ -68,6 +84,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   },
   organismes: {
     cle: 'organismes',
+    avecTiers: true,
     emoji: '🏛️',
     categoriesContact: [
       CATEGORIE_FOURNISSEUR.ORGANISME,
@@ -79,10 +96,15 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_RECETTE.AIDE],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
-    liens: [{ cle: 'dossierPac', icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC }],
+    liens: [
+      { cle: 'dossierPac', icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
+      { cle: 'terrains', icone: 'map', route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE) },
+      { cle: 'bilan', icone: 'stats-chart', route: ROUTES.CHEPTEL_BILAN },
+    ],
   },
   equarrissage: {
     cle: 'equarrissage',
+    avecTiers: true,
     emoji: '🚛',
     categoriesContact: [CATEGORIE_FOURNISSEUR.EQUARRISSAGE],
     categoriesFacture: [],
@@ -95,6 +117,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   },
   abattoir: {
     cle: 'abattoir',
+    avecTiers: true,
     emoji: '🏭',
     categoriesContact: [CATEGORIE_FOURNISSEUR.ABATTOIR],
     categoriesFacture: [CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE],
@@ -108,6 +131,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   },
   boucherie: {
     cle: 'boucherie',
+    avecTiers: true,
     emoji: '🥩',
     categoriesContact: [],
     categoriesFacture: [],
@@ -118,6 +142,42 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       { cle: 'charcuterie', icone: 'restaurant', route: ROUTES.PRODUCTION_CHARCUTERIE },
       { cle: 'fabrication', icone: 'flask', route: ROUTES.productionFabrication('charcuterie') },
       { cle: 'rappels', icone: 'notifications', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
+    ],
+  },
+  entrepot: {
+    cle: 'entrepot',
+    avecTiers: false,
+    emoji: '📦',
+    categoriesContact: [],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: NOUVELLE,
+    liens: [
+      { cle: 'tout', icone: 'cube', route: ROUTES.COMPTABILITE_STOCKS },
+      { cle: 'aliments', icone: 'nutrition', route: stock(SECTION_STOCK.ALIMENTS) },
+      { cle: 'fromages', icone: 'restaurant', route: stock(SECTION_STOCK.FROMAGES) },
+      { cle: 'lait', icone: 'water', route: stock(SECTION_STOCK.LAIT) },
+      { cle: 'viande', icone: 'restaurant', route: stock(SECTION_STOCK.VIANDE) },
+      { cle: 'boucles', icone: 'pricetag', route: stock(SECTION_STOCK.BOUCLES) },
+      { cle: 'emballages', icone: 'cube', route: stock(SECTION_STOCK.EMBALLAGES) },
+      { cle: 'equipement', icone: 'construct', route: stock(SECTION_STOCK.EQUIPEMENT) },
+      { cle: 'historique', icone: 'time', route: ROUTES.stockHistorique() },
+    ],
+  },
+  commercial: {
+    cle: 'commercial',
+    avecTiers: true,
+    emoji: '🛒',
+    categoriesContact: [CATEGORIE_CLIENT.PARTICULIER, CATEGORIE_CLIENT.ENTREPRISE],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=emise`,
+    liens: [
+      { cle: 'ventes', icone: 'cash', route: ROUTES.COMMERCIAL_VENTES },
+      { cle: 'commandes', icone: 'receipt', route: ROUTES.COMMERCIAL_COMMANDES },
+      { cle: 'tarifs', icone: 'pricetag', route: ROUTES.COMMERCIAL_TARIFS },
+      { cle: 'circuits', icone: 'navigate', route: ROUTES.COMMERCIAL_CIRCUITS },
+      { cle: 'agritourisme', icone: 'home', route: ROUTES.COMMERCIAL_AGRITOURISME },
     ],
   },
 };

@@ -39,6 +39,8 @@ export const TEXTES_ACCUEIL = {
       organismes: 'Organismes',
       equarrissage: 'Équarrissage',
       pompe: 'Pompe à essence',
+      entrepot: 'Entrepôt (stock)',
+      commercial: 'Commerce',
       morts: (n: number) => (n === 1 ? '1 mort cette année' : `${n} morts cette année`),
       veterinaire: 'Vétérinaire',
       laiterie: 'Laiterie',

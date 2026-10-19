@@ -7,7 +7,12 @@ import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesCon
 import { listContacts } from '@/features/contacts/repository';
 import type { Contact } from '@/features/contacts/services/contacts';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
-import { ecrituresDuLieu, estLieuTiers, LIEUX_TIERS, type CleLieuTiers } from '@/features/accueil/services/lieuxTiers';
+import {
+  ecrituresDuLieu,
+  estLieuTiers,
+  LIEUX_TIERS,
+  type CleLieuTiers,
+} from '@/features/accueil/services/lieuxTiers';
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
@@ -20,6 +25,16 @@ import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.lieux;
+
+/** Les textes d'un lieu : un lieu sans tiers (l'entrepôt) n'a que son titre et ses rubriques. */
+interface TextesLieu {
+  titre: string;
+  groupeTiers?: string;
+  ajouterTiers?: string;
+  groupeEcritures?: string;
+  nouvelle?: string;
+  liens: object;
+}
 /** Combien d'écritures la page en montre : les plus récentes ; les autres sont dans la comptabilité. */
 const ECRITURES_MONTREES = 5;
 
@@ -33,7 +48,7 @@ export default function LieuTiers() {
   const { lieu } = useLocalSearchParams<{ lieu?: string }>();
   const cle: CleLieuTiers = estLieuTiers(lieu) ? lieu : 'aliments';
   const config = LIEUX_TIERS[cle];
-  const textes = T[cle];
+  const textes: TextesLieu = T[cle];
   const { settings } = useAppSettings();
   const { idsConnus } = useCategoriesContact();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -51,7 +66,8 @@ export default function LieuTiers() {
   );
 
   const tiers = useMemo(
-    () => contacts.filter((c) => config.categoriesContact.includes(categorieDuContact(c, idsConnus).id ?? '')),
+    () =>
+      contacts.filter((c) => config.categoriesContact.includes(categorieDuContact(c, idsConnus).id ?? '')),
     [contacts, idsConnus, config],
   );
   const ecritures = useMemo(
@@ -64,7 +80,10 @@ export default function LieuTiers() {
       ),
     [config, transactions, tiers],
   );
-  const liens = config.liens.map((l) => ({ ...l, ...(textes.liens as Record<string, { titre: string; aide: string }>)[l.cle] }));
+  const liens = config.liens.map((l) => ({
+    ...l,
+    ...(textes.liens as Record<string, { titre: string; aide: string }>)[l.cle],
+  }));
 
   return (
     <Screen>
@@ -72,40 +91,75 @@ export default function LieuTiers() {
         <GroupeAccueil titre={T.groupeLiens}>
           <BlocLignes>
             {liens.map((l) => (
-              <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => router.push(l.route as never)} />
+              <ListRow
+                key={l.cle}
+                title={l.titre}
+                subtitle={l.aide}
+                icone={l.icone}
+                onPress={() => router.push(l.route as never)}
+              />
             ))}
           </BlocLignes>
         </GroupeAccueil>
       ) : null}
 
-      <GroupeAccueil titre={textes.groupeTiers}>
-        <BlocLignes>
-          {tiers.map((c) => (
-            <ListRow
-              key={c.cle}
-              title={c.nom}
-              subtitle={[(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email].filter(Boolean).join(' · ') || undefined}
-              emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
-              onPress={() => router.push(ROUTES.ficheContact(c.cle) as never)}
-            />
-          ))}
-          {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
-          <ListRow title={textes.ajouterTiers} icone="add-circle" onPress={() => router.push(ROUTES.CONTACT_NOUVEAU as never)} />
-        </BlocLignes>
-      </GroupeAccueil>
+      {config.avecTiers ? (
+        <>
+          <GroupeAccueil titre={textes.groupeTiers ?? ''}>
+            <BlocLignes>
+              {tiers.map((c) => (
+                <ListRow
+                  key={c.cle}
+                  title={c.nom}
+                  subtitle={
+                    [(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email]
+                      .filter(Boolean)
+                      .join(' · ') || undefined
+                  }
+                  emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
+                  onPress={() => router.push(ROUTES.ficheContact(c.cle) as never)}
+                />
+              ))}
+              {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
+              <ListRow
+                title={textes.ajouterTiers ?? ''}
+                icone="add-circle"
+                onPress={() => router.push(ROUTES.CONTACT_NOUVEAU as never)}
+              />
+            </BlocLignes>
+          </GroupeAccueil>
 
-      <GroupeAccueil titre={textes.groupeEcritures}>
-        <BlocLignes>
-          {ecritures.slice(0, ECRITURES_MONTREES).map((t) => (
-            <LigneTransaction key={`${t.id}:${t.activite}`} item={t} />
-          ))}
-          {ecritures.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucuneEcriture}</Text> : null}
-          {ecritures.length > ECRITURES_MONTREES ? (
-            <ListRow title={T.plusDEcritures(ecritures.length - ECRITURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.comptabiliteDuLieu(ecritures.map((t) => t.id), textes.titre) as never)} />
-          ) : null}
-          <ListRow title={textes.nouvelle} icone="add-circle" onPress={() => router.push(config.nouvelle as never)} />
-        </BlocLignes>
-      </GroupeAccueil>
+          <GroupeAccueil titre={textes.groupeEcritures ?? ''}>
+            <BlocLignes>
+              {ecritures.slice(0, ECRITURES_MONTREES).map((t) => (
+                <LigneTransaction key={`${t.id}:${t.activite}`} item={t} />
+              ))}
+              {ecritures.length === 0 ? (
+                <Text style={commonStyles.mutedItalic}>{T.aucuneEcriture}</Text>
+              ) : null}
+              {ecritures.length > ECRITURES_MONTREES ? (
+                <ListRow
+                  title={T.plusDEcritures(ecritures.length - ECRITURES_MONTREES)}
+                  icone="list"
+                  onPress={() =>
+                    router.push(
+                      ROUTES.comptabiliteDuLieu(
+                        ecritures.map((t) => t.id),
+                        textes.titre,
+                      ) as never,
+                    )
+                  }
+                />
+              ) : null}
+              <ListRow
+                title={textes.nouvelle ?? ''}
+                icone="add-circle"
+                onPress={() => router.push(config.nouvelle as never)}
+              />
+            </BlocLignes>
+          </GroupeAccueil>
+        </>
+      ) : null}
     </Screen>
   );
 }
