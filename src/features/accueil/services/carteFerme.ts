@@ -12,8 +12,8 @@ export const CENTRE = { x: 750, y: 720 } as const;
 /** L'enclos du troupeau, au centre. */
 export const ENCLOS = { largeur: 260, hauteur: 230 } as const;
 
-/** La taille d'un lieu (sa façade) et la profondeur de son volume (le toit au-dessus, le flanc à droite). */
-export const LIEU = { largeur: 140, hauteur: 108, profondeur: 22 } as const;
+/** La place d'un lieu sur la carte : le bâtiment dessiné, ses compagnons à ses pieds, et la pancarte de son nom. */
+export const LIEU = { largeur: 140, hauteur: 118, profondeur: 0 } as const;
 
 export type CleLieu =
   | 'foin'
@@ -31,36 +31,42 @@ export type CleLieu =
 
 export interface Lieu {
   cle: CleLieu;
-  /** Son dessin (un emoji, remplaçable par une illustration). */
-  emoji: string;
-  /** La couleur de son toit (le haut du volume). */
-  toit: string;
-  /** Le centre de sa façade sur la carte. */
+  /** Son bâtiment, dessiné en grand (un emoji de maison, d'usine, d'hôpital… remplaçable par une illustration). */
+  principal: string;
+  /** Ce qui l'accompagne à ses pieds : ses produits, son matériel. */
+  compagnons: string;
+  /** Le centre du lieu sur la carte. */
   x: number;
   y: number;
 }
 
 /** Un lieu placé à (dx, dy) du centre de la carte. */
-const lieu = (cle: CleLieu, emoji: string, toit: string, dx: number, dy: number): Lieu => ({ cle, emoji, toit, x: CENTRE.x + dx, y: CENTRE.y + dy });
+const lieu = (cle: CleLieu, principal: string, compagnons: string, dx: number, dy: number): Lieu => ({
+  cle,
+  principal,
+  compagnons,
+  x: CENTRE.x + dx,
+  y: CENTRE.y + dy,
+});
 
 /**
- * Les lieux de la carte : un village serré, comme dans un jeu de ferme. Trois rangées autour de l'enclos : en haut les aliments, les
- * organismes, la pompe, la laiterie et l'entrepôt ; sur les côtés le vétérinaire et la fromagerie ; en bas le commerce, les clients,
- * l'abattoir, la boucherie et l'équarrissage.
+ * Les lieux de la carte : un village serré, comme dans un jeu de ferme. Trois rangées autour de l'enclos : en haut la pompe, les organismes,
+ * le foin et le maïs, la laiterie et l'entrepôt ; sur les côtés le vétérinaire et la fromagerie ; en bas le commerce, les clients, l'abattoir,
+ * la boucherie et l'équarrissage.
  */
 export const LIEUX: readonly Lieu[] = [
-  lieu('pompe', '⛽', '#C75B4A', -340, -255),
-  lieu('organismes', '🏛️', '#7A6BA8', -170, -255),
-  lieu('foin', '🌾🌽', '#D9A93B', 0, -255),
-  lieu('laiterie', '🥛', '#5E9BD1', 170, -255),
-  lieu('entrepot', '📦', '#A9774B', 340, -255),
-  lieu('veterinaire', '🩺', '#4FA58A', -300, 0),
-  lieu('fromagerie', '🧀', '#E0A93B', 300, 0),
-  lieu('commercial', '🛒', '#D9743F', -340, 255),
-  lieu('contacts', '🤝', '#7B8B5B', -170, 255),
-  lieu('abattoir', '🏭', '#8C6A6A', 0, 255),
-  lieu('charcuterie', '🥩', '#B54A4A', 170, 255),
-  lieu('equarrissage', '🚛', '#6F7A83', 340, 255),
+  lieu('pompe', '⛽', '🛢️', -340, -255),
+  lieu('organismes', '🏛️', '📄', -170, -255),
+  lieu('foin', '🛖', '🌾🌽', 0, -255),
+  lieu('laiterie', '🏡', '🥛🐄', 170, -255),
+  lieu('entrepot', '🏢', '📦', 340, -255),
+  lieu('veterinaire', '🏥', '🩺', -300, 0),
+  lieu('fromagerie', '🏠', '🧀', 300, 0),
+  lieu('commercial', '🏬', '🛒', -340, 255),
+  lieu('contacts', '🏘️', '🤝', -170, 255),
+  lieu('abattoir', '🏭', '🥩', 0, 255),
+  lieu('charcuterie', '🏪', '🥓🥩', 170, 255),
+  lieu('equarrissage', '🏚️', '🚛', 340, 255),
 ];
 
 /** Le petit coin de l'équarrissage sur l'exploitation, à côté de l'enclos : une stèle, avec les animaux morts de l'année. */

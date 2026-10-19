@@ -73,13 +73,13 @@ interface Props {
 }
 
 /**
- * Un lieu de la carte, en volume : sa façade (le dessin et le nom), son toit coloré au-dessus, son flanc à droite et son ombre au sol. Une
- * bulle dit ce qui attend. Un appui l'écrase puis il rebondit. En vue d'ensemble il grossit (`contre` annule le rapetissement de la carte)
- * pour rester lisible.
+ * Un lieu de la carte : son bâtiment dessiné en grand et debout sur la pelouse, ses compagnons à ses pieds, son ombre et la pancarte de bois
+ * de son nom. Une bulle dit ce qui attend. Un appui l'écrase puis il rebondit. En vue d'ensemble il grossit (`contre` annule le
+ * rapetissement de la carte) pour rester lisible.
  */
 function LieuDeLaCarte({
-  emoji,
-  toit,
+  principal,
+  compagnons,
   titre,
   pastille,
   x,
@@ -88,8 +88,8 @@ function LieuDeLaCarte({
   contre,
   onAppui,
 }: {
-  emoji: string;
-  toit: string;
+  principal: string;
+  compagnons: string;
   titre: string;
   pastille?: string;
   x: number;
@@ -104,7 +104,7 @@ function LieuDeLaCarte({
   const appuyer = () => {
     if (!reduit) {
       Animated.sequence([
-        Animated.timing(ecrasement, { toValue: 0.88, duration: 70, useNativeDriver: false, isInteraction: false }),
+        Animated.timing(ecrasement, { toValue: 0.9, duration: 70, useNativeDriver: false, isInteraction: false }),
         Animated.spring(ecrasement, { toValue: 1, friction: 3, tension: 160, useNativeDriver: false, isInteraction: false }),
       ]).start();
     }
@@ -114,19 +114,17 @@ function LieuDeLaCarte({
   const profondeur = Math.round(y / 10) + (ouvert ? 1000 : 0);
   return (
     <Animated.View
-      style={[
-        styles.lieuConteneur,
-        { left: x - LIEU.largeur / 2, top: y - LIEU.hauteur / 2 - LIEU.profondeur, zIndex: profondeur, transform: [{ scale: echelle }] },
-      ]}
+      style={[styles.lieuConteneur, { left: x - LIEU.largeur / 2, top: y - LIEU.hauteur / 2, zIndex: profondeur, transform: [{ scale: echelle }] }]}
     >
-      <Pressable style={styles.volume} onPress={appuyer} accessibilityRole="button" accessibilityLabel={pastille ? `${titre} : ${pastille}` : titre}>
-        <View style={styles.ombre} />
-        <View style={[styles.toit, { backgroundColor: toit }]} />
-        <View style={styles.flanc} />
-        <View style={[styles.facade, ouvert ? styles.lieuOuvert : null]}>
-          <Text style={styles.emoji} accessibilityElementsHidden importantForAccessibility="no">
-            {emoji}
-          </Text>
+      <Pressable style={styles.lieu} onPress={appuyer} accessibilityRole="button" accessibilityLabel={pastille ? `${titre} : ${pastille}` : titre}>
+        <View style={[styles.ombre, ouvert ? styles.ombreOuverte : null]} />
+        <Text style={styles.batiment} accessibilityElementsHidden importantForAccessibility="no">
+          {principal}
+        </Text>
+        <Text style={styles.compagnons} accessibilityElementsHidden importantForAccessibility="no">
+          {compagnons}
+        </Text>
+        <View style={[styles.pancarteLieu, ouvert ? styles.pancarteOuverte : null]}>
           <Text style={styles.titreLieu} numberOfLines={2}>
             {titre}
           </Text>
@@ -517,8 +515,8 @@ export function CarteFerme({ vedettes, nombreAnimaux, naissances, lotsAFacturer,
             {LIEUX.map((l) => (
               <LieuDeLaCarte
                 key={l.cle}
-                emoji={l.emoji}
-                toit={l.toit}
+                principal={l.principal}
+                compagnons={l.compagnons}
                 titre={titres[l.cle]}
                 pastille={pastilles[l.cle]}
                 x={l.x}
@@ -586,38 +584,22 @@ const styles = StyleSheet.create({
   carte: { position: 'absolute', left: 0, top: 0, backgroundColor: SOL },
   decor: { position: 'absolute' },
   route: { position: 'absolute', backgroundColor: '#B4B4AC', borderRadius: 6, borderWidth: 2, borderColor: '#8E8E86' },
-  lieuConteneur: { position: 'absolute', width: LIEU.largeur + LIEU.profondeur, height: LIEU.hauteur + LIEU.profondeur },
-  volume: { width: LIEU.largeur + LIEU.profondeur, height: LIEU.hauteur + LIEU.profondeur },
-  // L'ombre au sol, sous le bas du volume.
-  ombre: { position: 'absolute', left: 8, top: LIEU.profondeur + LIEU.hauteur - 8, width: LIEU.largeur + LIEU.profondeur - 6, height: 16, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.2)' },
-  // Le toit : un parallélogramme au-dessus de la façade, penché vers la droite.
-  toit: { position: 'absolute', left: 0, top: 0, width: LIEU.largeur, height: LIEU.profondeur, transformOrigin: '0% 100%', transform: [{ skewX: '-45deg' }], borderTopLeftRadius: 4 },
-  // Le flanc : un parallélogramme à droite de la façade, relevé vers le haut.
-  flanc: { position: 'absolute', left: LIEU.largeur, top: LIEU.profondeur, width: LIEU.profondeur, height: LIEU.hauteur, transformOrigin: '0% 0%', transform: [{ skewY: '-45deg' }], backgroundColor: '#C9C2AE' },
-  facade: {
-    position: 'absolute',
-    left: 0,
-    top: LIEU.profondeur,
-    width: LIEU.largeur,
-    height: LIEU.hauteur,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    padding: 6,
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: '#B8B2A0',
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 4,
-  },
-  lieuOuvert: { borderColor: colors.accent, borderWidth: 3 },
+  lieuConteneur: { position: 'absolute', width: LIEU.largeur, height: LIEU.hauteur },
+  lieu: { width: LIEU.largeur, height: LIEU.hauteur, alignItems: 'center', justifyContent: 'flex-end' },
+  // L'ombre au sol, sous le bâtiment.
+  ombre: { position: 'absolute', bottom: 18, width: 104, height: 24, borderRadius: 52, backgroundColor: 'rgba(40,60,20,0.28)' },
+  ombreOuverte: { backgroundColor: 'rgba(232,137,43,0.55)' },
+  batiment: { position: 'absolute', top: 0, fontSize: 76, textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 3, height: 4 }, textShadowRadius: 4 },
+  compagnons: { position: 'absolute', bottom: 20, right: 6, fontSize: 28 },
+  // La pancarte de bois du nom, plantée devant le bâtiment.
+  pancarteLieu: { backgroundColor: '#B07A3E', borderRadius: 8, borderWidth: 2, borderColor: '#6F4A25', paddingHorizontal: 8, paddingVertical: 1, maxWidth: LIEU.largeur + 24 },
+  pancarteOuverte: { backgroundColor: '#E8892B', borderColor: '#8E3A12' },
   ferme: { position: 'absolute', backgroundColor: 'rgba(214,236,168,0.55)', borderWidth: 7, borderColor: '#A9794A', borderRadius: 26 },
   pancarte: { position: 'absolute', width: 140, alignItems: 'center' },
   pancarteEmoji: { fontSize: 30 },
   pancarteTexte: { fontSize: 12, fontWeight: '800', color: '#5B3A12', backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
-  emoji: { fontSize: 38 },
-  titreLieu: { fontSize: 13, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  bulleAttente: { position: 'absolute', top: -40, left: 0, right: 0, alignItems: 'center' },
+  titreLieu: { fontSize: 12, fontWeight: '800', color: colors.blanc, textAlign: 'center' },
+  bulleAttente: { position: 'absolute', top: -34, left: 0, right: 0, alignItems: 'center' },
   bulleAttenteCorps: { backgroundColor: colors.blanc, borderRadius: 12, borderWidth: 2, borderColor: colors.border, paddingHorizontal: 8, paddingVertical: 3 },
   bulleAttenteQueue: { width: 10, height: 10, backgroundColor: colors.blanc, borderRightWidth: 2, borderBottomWidth: 2, borderColor: colors.border, transform: [{ rotate: '45deg' }], marginTop: -6 },
   pastilleTexte: { color: colors.danger, fontSize: 12, fontWeight: '700' },

@@ -157,6 +157,10 @@ export const TEXTES_PRODUCTION = {
     },
     entrepot: {
       titre: 'Entrepôt',
+      onglets: { vente: 'À vendre', aliments: 'Aliments', consommables: 'Consommables', materiel: 'Matériel' },
+      vide: 'Rien dans ce rayon pour le moment.',
+      fermer: 'Fermer l’entrepôt',
+      stockComplet: 'Tout le stock',
       liens: {
         tout: { titre: 'Tout le stock', aide: 'Les trois onglets : ce qui se vend, ce qui nourrit, le matériel.' },
         aliments: { titre: 'Aliments', aide: 'Le foin, le maïs, les concentrés : ce qu’il reste.' },
