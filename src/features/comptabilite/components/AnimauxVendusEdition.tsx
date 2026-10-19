@@ -11,7 +11,7 @@ import {
   estPetitLe,
   getChevre,
   listAnimauxAbattusDe,
-  listAnimauxVivantsDe,
+  listAnimauxPresentsLe,
 } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
@@ -39,7 +39,7 @@ import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animau
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { formatDateFR } from '@/shared/utils/dates';
+import { estDateISO, formatDateFR, todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.comptabilite.nouvelleEcriture;
 
@@ -77,13 +77,14 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
 
   useFocusEffect(
     useCallback(() => {
-      listAnimauxVivantsDe(espece).then(setVivants);
+      // Les animaux présents sur l'exploitation à la date de la facture.
+      listAnimauxPresentsLe(espece, estDateISO(form.date) ? form.date : todayISO()).then(setVivants);
       lireArchiveStock().then((archive) => setTiptags(numerosTiptag(archive.boucles))).catch(() => undefined);
       // Les jours d'abattage à facturer : les animaux de cette vente y restent (ils sont à elle).
       Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
         setJours(joursAbattusAFacturer(abattus, ventes, form.id)),
       );
-    }, [espece, form.id]),
+    }, [espece, form.id, form.date]),
   );
 
   useEffect(() => {
@@ -129,7 +130,8 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
       animaux: liste.length > 0 ? liste.map((a) => a.id).join(SEPARATEUR_ANIMAUX) : undefined,
       quantite: Math.max(1, liste.length),
       jeune: liste.length > 0 && petits ? true : undefined,
-      ...(poids !== undefined ? { poidsKg: poids } : {}),
+      // Un animal vivant n'est pas pesé : son poids n'est pas repris des fiches.
+      ...(poids !== undefined && role !== ROLE_VIANDE.VIVANT ? { poidsKg: poids } : {}),
       ...(frais ? { fraisAbattoir: frais.montant, tauxTvaFrais: frais.tauxTva ?? form.tauxTvaFrais } : {}),
       ...(liste.length === 0 ? { fraisAbattoir: undefined, tauxTvaFrais: undefined } : {}),
       ...supplement,
@@ -250,7 +252,7 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
           ) : null}
         </>
       ) : null}
-      {choisis.some((a) => a.poidsKg === undefined) && choisis.length > 0 ? (
+      {role !== ROLE_VIANDE.VIVANT && choisis.some((a) => a.poidsKg === undefined) && choisis.length > 0 ? (
         <Text style={commonStyles.note}>
           {T.poidsManquant(choisis.filter((a) => a.poidsKg === undefined).length)}
         </Text>

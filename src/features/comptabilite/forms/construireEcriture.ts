@@ -265,8 +265,11 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       tauxTvaFrais:
         frais > 0 ? parseDecimal(s.tauxTvaFrais.trim() ? s.tauxTvaFrais : s.tauxTvaVente) : undefined,
       client: s.clientSelectionne ? nomComplet(s.clientSelectionne) : undefined,
+      // Un animal vivant vendu à la tête n'a pas de poids ; vendu au poids vif, le poids n'est qu'une estimation (il est gardé).
       poidsKg:
-        (estAnimal || estViande) && s.poidsKg.trim() ? parseDecimal(s.poidsKg) || undefined : undefined,
+        (estAnimal || estViande) && s.poidsKg.trim() && !(s.roleDuDetail === ROLE_VIANDE.VIVANT && !s.venduAuPoids)
+          ? parseDecimal(s.poidsKg) || undefined
+          : undefined,
       jeune: estViande && s.jeune ? true : undefined,
       etatAnimaux: !estViande
         ? undefined

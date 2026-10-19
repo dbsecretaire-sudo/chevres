@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
@@ -101,14 +102,16 @@ export default function ListeContacts() {
       <FlatList
         data={filtres}
         keyExtractor={(item) => item.cle}
-        contentContainerStyle={commonStyles.listFab}
+        contentContainerStyle={commonStyles.listeBlocAvecFab}
         ListEmptyComponent={<EmptyState title={T.aucun} subtitle={T.aucunSousTitre} />}
-        renderItem={({ item }) => (
-          <ListRow
-            title={item.nom}
-            subtitle={sousTitreDe(item) || undefined}
-            onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
-          />
+        renderItem={({ item, index }) => (
+          <LigneDeBloc index={index} total={filtres.length}>
+            <ListRow
+              title={item.nom}
+              subtitle={sousTitreDe(item) || undefined}
+              onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
+            />
+          </LigneDeBloc>
         )}
       />
 

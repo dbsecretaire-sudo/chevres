@@ -833,6 +833,8 @@ export const TEXTES_COMPTABILITE = {
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
     prixUnitaireAnimal: 'PU (€/animal)',
+    poidsEstime: 'Poids estimé (kg)',
+    animauxNoteVivants: 'Chaque animal vendu vivant sort du cheptel (vendu) et l’inventaire des animaux baisse d’autant. Un animal vivant n’est ni pesé ni envoyé à l’abattoir : s’il y passe, il se vend sur pied ou en cabri.',
     venduAuPoids: 'Vendu au poids vif (animal de réforme)',
     venduAuPoidsAide: 'Un animal vivant se vend à la tête (le prix de l’inventaire) ; un animal de réforme, au kilo vif : saisissez le prix au kilo.',
     /** Un prix au kilo propre à une vente, exceptionnel : le prix de l'inventaire ne change pas. */

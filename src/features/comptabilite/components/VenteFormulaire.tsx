@@ -340,10 +340,11 @@ export function VenteFormulaire({
             onChange={(v) => onChange({ ...form, venduAuPoids: v ? true : undefined })}
           />
         ) : null}
-        {animalEntier ? (
+        {/* Un animal vivant vendu à la tête n'a pas de poids ; au poids vif, ce n'est qu'une estimation. */}
+        {animalEntier && (roleDuDetail !== ROLE_VIANDE.VIVANT || form.venduAuPoids) ? (
           <FormField
-            label={TEXTES.commun.general.poidsKg}
-            required={roleDuDetail !== ROLE_VIANDE.VIVANT || !!form.venduAuPoids}
+            label={roleDuDetail === ROLE_VIANDE.VIVANT ? T.poidsEstime : TEXTES.commun.general.poidsKg}
+            required
             value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
             onChangeText={(valeur) =>
               onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
@@ -354,7 +355,7 @@ export function VenteFormulaire({
             aide={poidsDuLotDAbattoir ? T.poidsDuLot : undefined}
             placeholder={T.ex2}
           />
-        ) : (
+        ) : animalEntier ? null : (
           <View style={commonStyles.row}>
             {reajustement ? null : (
               <View style={commonStyles.flex1}>

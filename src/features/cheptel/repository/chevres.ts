@@ -24,7 +24,12 @@ export async function listChevresVivantes(): Promise<Chevre[]> {
  * sorti le jour même y était encore. Sert à lister les boucles d'un contrôle ou d'une visite passés.
  */
 export async function listChevresPresentesLe(date: string): Promise<Chevre[]> {
-  const all = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
+  return listAnimauxPresentsLe(especeCourante(), date);
+}
+
+/** Les animaux d'une espèce précise présents à une date (voir listChevresPresentesLe) : ceux qu'une facture de cette date peut désigner. */
+export async function listAnimauxPresentsLe(espece: EspeceAnimale, date: string): Promise<Chevre[]> {
+  const all = (await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)).filter((c) => especeDe(c) === espece);
   return all
     .filter((c) => {
       // Un animal acheté est présent à partir de son entrée (celle de l'achat), non de sa naissance.

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { estDateISO, formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAnimaux';
 import { estClientAbattoir } from '@/features/clients/services/categorie';
@@ -33,7 +33,7 @@ import { colors } from '@/shared/theme/colors';
 import {
   estPetitLe,
   listAnimauxAbattusDe,
-  listAnimauxVivantsDe,
+  listAnimauxPresentsLe,
 } from '@/features/cheptel/repository/chevres';
 import {
   joursAbattusAFacturer,
@@ -106,12 +106,13 @@ export function ChampsVenteViande({ e }: Props) {
     : prixUnitaireEffectif(e, prixDuDetail);
   useFocusEffect(
     useCallback(() => {
-      listAnimauxVivantsDe(espece).then(setAnimaux);
+      // Les animaux présents sur l'exploitation à la date de la facture (pas seulement ceux d'aujourd'hui).
+      listAnimauxPresentsLe(espece, estDateISO(e.date) ? e.date : todayISO()).then(setAnimaux);
       lireArchiveStock().then((archive) => setTiptags(numerosTiptag(archive.boucles))).catch(() => undefined);
       Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
         setJours(joursAbattusAFacturer(abattus, ventes)),
       );
-    }, [espece]),
+    }, [espece, e.date]),
   );
   /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
   const libelleAnimal = libelleAnimalVendu;
@@ -176,6 +177,8 @@ export function ChampsVenteViande({ e }: Props) {
   );
   /** Le poids des animaux choisis, quand l'abattoir l'a donné pour chacun : il remplit le poids de la vente, et le total au kilo suit. */
   const reprendrePoids = (choisis: Chevre[]) => {
+    // Un animal vivant ne passe ni sur la balance ni par l'abattoir : son poids n'est pas repris des fiches.
+    if (vivantLigne) return;
     const total = poidsTotal(choisis);
     if (total === undefined) return;
     const texte = String(total).replace('.', ',');
@@ -452,7 +455,7 @@ export function ChampsVenteViande({ e }: Props) {
                   </Pressable>
                 </View>
               ) : null}
-              {animauxChoisis.some((a) => a.poidsKg === undefined) && animauxChoisis.length > 0 ? (
+              {!vivantLigne && animauxChoisis.some((a) => a.poidsKg === undefined) && animauxChoisis.length > 0 ? (
                 <Text style={commonStyles.note}>
                   {TEXTES.comptabilite.nouvelleEcriture.poidsManquant(
                     animauxChoisis.filter((a) => a.poidsKg === undefined).length,
@@ -476,7 +479,7 @@ export function ChampsVenteViande({ e }: Props) {
                 </Card>
               ) : null}
               {/* Un animal vivant n'est pas abattu : pas de date d'abattoir (le circuit de l'abattoir est celui des animaux abattus). */}
-              {animauxChoisis.length > 0 && e.avecFacture && !aLaTete ? (
+              {animauxChoisis.length > 0 && e.avecFacture && !vivantLigne ? (
                 <ChampDateAbattoir
                   dateVente={e.date}
                   value={e.dateAbattoir}
@@ -492,7 +495,11 @@ export function ChampsVenteViande({ e }: Props) {
                   boucles={animauxChoisis.map((a) => a.numeroBoucle).filter((b): b is string => !!b)}
                 />
               ) : null}
-              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.animauxNote}</Text>
+              <Text style={commonStyles.note}>
+                {vivantLigne
+                  ? TEXTES.comptabilite.nouvelleEcriture.animauxNoteVivants
+                  : TEXTES.comptabilite.nouvelleEcriture.animauxNote}
+              </Text>
             </View>
           ) : (
             <SelectField<string>
@@ -531,10 +538,12 @@ export function ChampsVenteViande({ e }: Props) {
             </>
           ) : null}
           <View style={styles.row3}>
+            {/* Un animal vivant vendu à la tête n'a pas de poids : seuls le prix de l'animal, la TVA et le total comptent. */}
+            {aLaTete ? null : (
             <View style={commonStyles.flex1}>
               <FormField
-                label={TEXTES.commun.general.poidsKg}
-                required={!aLaTete}
+                label={vivantLigne ? TEXTES.comptabilite.nouvelleEcriture.poidsEstime : TEXTES.commun.general.poidsKg}
+                required
                 value={e.poidsKg}
                 onChangeText={(v) => {
                   e.setPoidsKg(v);
@@ -547,6 +556,7 @@ export function ChampsVenteViande({ e }: Props) {
                 placeholder={TEXTES.comptabilite.nouvelleEcriture.ex2}
               />
             </View>
+            )}
             <View style={commonStyles.flex1}>
               {/* Le prix unitaire vient du stock ; « Prix du produit personnalisé » le remplace, pour cette vente seulement. */}
               <FormField
