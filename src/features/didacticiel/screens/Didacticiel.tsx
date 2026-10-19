@@ -1,48 +1,65 @@
-import { Pressable, Text } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { Screen } from '@/shared/components/Screen';
 import { parcoursDeCas } from '@/features/didacticiel/services/parcours';
+import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.didacticiel;
 
 /**
- * Le didacticiel : les parcours de cas, tous déroulés l'un sous l'autre. Chaque parcours suit un cas du quotidien étape par étape (le chemin
- * dans les menus, ce qu'on y fait, et un appui sur « Ouvrir » mène à son écran), ou se parcourt en visite guidée.
+ * Le didacticiel : les parcours de cas, une carte chacun. Sous son titre, la carte dit ce que couvre le parcours et lance sa visite guidée ;
+ * la flèche déroule ses étapes (le chemin dans les menus, ce qu'on y fait, et « Ouvrir » mène à l'écran).
  */
 export default function Didacticiel() {
   const router = useRouter();
-  const { demarrer, demarrerParcours } = useVisiteGuidee();
+  const { demarrerParcours } = useVisiteGuidee();
   const parcours = parcoursDeCas();
+  /** Les parcours dont les étapes sont déroulées. */
+  const [deroules, setDeroules] = useState<ReadonlySet<string>>(new Set());
+  const basculer = (id: string) =>
+    setDeroules((avant) => {
+      const apres = new Set(avant);
+      if (!apres.delete(id)) apres.add(id);
+      return apres;
+    });
   return (
     <Screen>
-      <Text style={commonStyles.note}>{T.aideVisite}</Text>
-      <Button label={T.commencer} onPress={demarrer} />
-      <Text style={commonStyles.note}>{T.aide}</Text>
-      <Text style={commonStyles.note}>{T.parcours.presentation}</Text>
-      {parcours.map((p) => (
-        <Card key={p.id}>
-          <Text style={commonStyles.cardTitle}>{p.titre}</Text>
-          <Text style={commonStyles.note}>{p.resume}</Text>
-          <Button label={T.parcours.lancer} onPress={() => demarrerParcours(p.id)} />
-          {p.etapes.map((etape) => (
-            <Card key={etape.numero}>
-              <Text style={commonStyles.lineBold}>{`${etape.numero}. ${etape.titre}`}</Text>
-              {etape.chemin ? <Text style={commonStyles.muted}>{etape.chemin}</Text> : null}
-              <Text style={commonStyles.line}>{etape.texte}</Text>
-              {etape.route ? (
-                <Pressable onPress={() => router.push((etape.ouvrir ?? etape.route) as never)} hitSlop={8} accessibilityRole="link">
-                  <Text style={commonStyles.lien}>{T.ouvrir}</Text>
-                </Pressable>
-              ) : null}
-            </Card>
-          ))}
-        </Card>
-      ))}
+      {parcours.map((p) => {
+        const ouvert = deroules.has(p.id);
+        return (
+          <Card key={p.id}>
+            <Pressable onPress={() => basculer(p.id)} accessibilityRole="button" accessibilityState={{ expanded: ouvert }}>
+              <View style={commonStyles.rowSpaceBetween}>
+                <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{p.titre}</Text>
+                <Ionicons name={ouvert ? 'chevron-up' : 'chevron-down'} size={22} color={colors.textMuted} />
+              </View>
+            </Pressable>
+            <Text style={commonStyles.note}>{p.resume}</Text>
+            <Button label={T.parcours.lancer} onPress={() => demarrerParcours(p.id)} />
+            {ouvert
+              ? p.etapes.map((etape) => (
+                  <Card key={etape.numero}>
+                    <Text style={commonStyles.lineBold}>{`${etape.numero}. ${etape.titre}`}</Text>
+                    {etape.chemin ? <Text style={commonStyles.muted}>{etape.chemin}</Text> : null}
+                    <Text style={commonStyles.line}>{etape.texte}</Text>
+                    {etape.route ? (
+                      <Pressable onPress={() => router.push((etape.ouvrir ?? etape.route) as never)} hitSlop={8} accessibilityRole="link">
+                        <Text style={commonStyles.lien}>{T.ouvrir}</Text>
+                      </Pressable>
+                    ) : null}
+                  </Card>
+                ))
+              : null}
+          </Card>
+        );
+      })}
     </Screen>
   );
 }
