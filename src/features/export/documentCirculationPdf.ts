@@ -57,6 +57,8 @@ export interface DonneesCirculation {
   /** Les reproducteurs et réformes : le nombre, et leur numéro individuel (indicatif + numéro). */
   reproducteurs: number;
   individuels: string[];
+  /** Qui de l'exploitation notifie le mouvement, en bas du document : le départ (une vente, un envoi à l'abattoir) ou l'arrivée (un achat). D'office, le départ. */
+  notifie?: 'depart' | 'arrivee';
   /** Les animaux morts pendant le transport (déclarés dans le lot d'abattage) : la ligne « Nb de morts transport » de l'arrivée. */
   mortsTransport: number;
   /**
@@ -144,14 +146,27 @@ export function donneesDeCirculation(entree: {
   };
 }
 
-/** Les feuillets de la liasse, avec leur couleur et ce qu'on en fait (le rappel du document de circulation). */
-export const FEUILLETS_CIRCULATION = [
-  { couleur: [1, 1, 1], libelle: C.feuillets.blanc },
-  { couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.vert },
-  { couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.bleu },
-  { couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.rose },
-  { couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.jaune },
-] as const;
+/**
+ * Les feuillets de la liasse, avec leur couleur et ce qu'en fait l'exploitation (le rappel du document de circulation) : en cas de vente
+ * (elle est au départ), ou d'achat (elle est à l'arrivée).
+ */
+export const feuilletsCirculation = (sens: 'vente' | 'achat') =>
+  // Rangés par action : ceux qu'on garde, ceux qu'on donne, puis celui qu'on garde d'abord avant de l'envoyer à la Chambre.
+  (sens === 'vente'
+    ? [
+        { couleur: [1, 1, 1], libelle: C.feuillets.vente.blanc },
+        { couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.vente.jaune },
+        { couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.vente.vert },
+        { couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.vente.bleu },
+        { couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.vente.rose },
+      ]
+    : [
+        { couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.achat.bleu },
+        { couleur: [1, 1, 1], libelle: C.feuillets.achat.blanc },
+        { couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.achat.jaune },
+        { couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.achat.rose },
+        { couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.achat.vert },
+      ]) as readonly { couleur: readonly number[]; libelle: string }[];
 
 /** Le nombre de lignes du tableau des numéros individuels du formulaire (dix lignes de quatre colonnes) : le reste va sur la page d'annexe. */
 const PLACES_INDIVIDUELLES = 40;
@@ -173,6 +188,40 @@ const tiptagsDeLInventaire = async (): Promise<ReadonlySet<string>> => numerosTi
 export const chiffresDeLIndicatif = (indicatif: string): string =>
   indicatif.replace(/^\s*FR/i, '').replace(/\s+/g, '');
 
+/** Une zone du formulaire que l'application ne peut pas remplir : le coin bas gauche, la largeur et la hauteur (points). */
+type ZoneACompleter = [x: number, y: number, largeur: number, hauteur: number];
+
+/**
+ * Les zones à compléter à la main, en jaune sur le document : le transporteur et son véhicule, l'heure du chargement, le déchargement, les
+ * signatures, le numéro d'exploitation (ou d'abattoir) et le SIREN de l'arrivée. Les coordonnées du détenteur de départ ou d'arrivée, et
+ * les morts pendant le transport, n'y sont que lorsqu'elles ne sont pas connues.
+ */
+export function zonesACompleter(d: DonneesCirculation): ZoneACompleter[] {
+  const zones: ZoneACompleter[] = [
+    [105, 771, 75, 12],
+    [247, 771, 143, 12],
+    [443, 771, 112, 12],
+    [199, 758, 37, 11],
+    [428, 758, 75, 11],
+    [40, 735, 256, 11],
+    [302, 735, 256, 11],
+    [406, 666, 127, 12],
+    [423, 644, 105, 12],
+    // En bas du document, l'exploitation notifie le départ (une vente) ou l'arrivée (un achat) : sa date et sa signature.
+    d.notifie === 'arrivee' ? [428, 50, 130, 38] : [165, 60, 250, 16],
+  ];
+  const coordonnees = (x: number, p: { nom: string; adresse: string; codePostal: string; commune: string }) => {
+    if (!p.nom) zones.push([x - 2, 629, 165, 12]);
+    if (!p.adresse) zones.push([x - 2, 601, 165, 12]);
+    if (!p.codePostal) zones.push([x - 2, 588, 60, 12]);
+    if (!p.commune) zones.push([x - 2, 575.5, 165, 12]);
+  };
+  coordonnees(124, d.depart);
+  coordonnees(394, d.arrivee);
+  if (d.mortsTransport === 0) zones.push([391, 498, 80, 12]);
+  return zones;
+}
+
 /**
  * Écrit les valeurs d'une vente sur le formulaire (la feuille du détenteur de départ, telle que la Chambre la fournit). Les positions sont
  * celles du modèle remis à l'endroit : points depuis le coin bas gauche de la page (593 × 839).
@@ -180,6 +229,10 @@ export const chiffresDeLIndicatif = (indicatif: string): string =>
 function ecrireLeFormulaire(o: Outils, d: DonneesCirculation): void {
   // Le bandeau du haut : pour exemple (le filigrane « EXEMPLE » passe en travers de la page).
   o.centre(296, 829, C.bandeauCourt, 8, true);
+  // Ce qui reste à compléter à la main se détache en jaune (sous les valeurs écrites ensuite).
+  for (const [x, y, largeur, hauteur] of zonesACompleter(d)) {
+    o.page.drawRectangle({ x, y, width: largeur, height: hauteur, color: rgb(1, 0.88, 0.1), opacity: 0.5, borderColor: rgb(0.9, 0.55, 0), borderWidth: 0.8, borderOpacity: 0.9 });
+  }
   o.page.drawText(C.exemple, { x: 120, y: 250, size: 120, font: o.policeGrasse, color: rgb(0, 0, 0), opacity: 0.06, rotate: degrees(40) });
   // Le chargement : la date de la vente.
   o.ajuste(150, 762.5, formatDateFR(d.date), 85, 9);
@@ -283,9 +336,10 @@ export async function remplirDocumentCirculation(d: DonneesCirculation): Promise
   };
   ligne(C.bandeau, 9, true);
   y -= 10;
-  ligne(C.rappelTitre, 13, true);
+  const sens = d.notifie === 'arrivee' ? 'achat' : 'vente';
+  ligne(C.rappelTitre[sens], 13, true);
   y -= 4;
-  for (const f of FEUILLETS_CIRCULATION) {
+  for (const f of feuilletsCirculation(sens)) {
     page.drawRectangle({ x: 50, y: y - 2, width: 12, height: 12, color: rgb(f.couleur[0], f.couleur[1], f.couleur[2]), borderColor: rgb(0, 0, 0), borderWidth: 0.8 });
     ligne(f.libelle, 10.5, false, 70);
   }
@@ -398,6 +452,8 @@ export async function exporterDocumentCirculationAchatPdf(factureId: string): Pr
     nom: vendeur ? vendeur.nomEntreprise || vendeur.nom : facture.tiers,
     ...adresseEnPartie(vendeur?.adressePostale),
   };
+  // Un achat : l'exploitation notifie l'arrivée des animaux (en bas à droite du document).
+  donnees.notifie = 'arrivee';
   donnees.arrivee = {
     lieu: LIEU_ARRIVEE.ELEVAGE,
     nom: identite.nom,

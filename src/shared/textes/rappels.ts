@@ -28,6 +28,15 @@ export const TEXTES_RAPPELS = {
     validerMessage: 'Le rappel sera marqué comme fait.',
     valider: 'Valider',
   },
+  /** L'envoi à la chambre d'agriculture du document de circulation (vert pour un achat, rose pour un abattoir ou une recette). */
+  circulation: {
+    envoi: (date: string, couleur: 'vert' | 'rose') => `Envoyer le document du ${date} (${couleur}) à la chambre d’agriculture`,
+    nature: {
+      achat: 'Achat d’animaux vivants',
+      abattoir: 'Envoi à l’abattoir',
+      vente: 'Vente d’animaux vivants',
+    },
+  },
   validerLeRappel: 'Marquer comme fait',
   reglages: {
     titre: 'Rappels de déclarations',

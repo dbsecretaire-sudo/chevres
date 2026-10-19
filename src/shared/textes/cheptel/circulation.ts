@@ -31,9 +31,9 @@ export const circulationTextes = {
   aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',
   fichier: 'document_circulation',
   exemple: 'EXEMPLE',
-  bandeauCourt: 'POUR EXEMPLE : à recopier sur la liasse officielle (voir le rappel des feuillets en page 2)',
+  bandeauCourt: 'POUR EXEMPLE : à recopier sur la liasse officielle (feuillets en page 2) · zones jaunes : à compléter à la main',
   suiteNumeros: 'Autres numéros individuels (ils ne tiennent pas dans le tableau du formulaire)',
-  bandeau: 'Pour exemple : ce document est pré-rempli d’après la vente. Recopiez-le sur la liasse officielle de 5 feuillets de la Chambre d’agriculture.',
+  bandeau: 'Pour exemple : ce document est pré-rempli d’après l’écriture comptable. Recopiez-le sur la liasse officielle de 5 feuillets de la Chambre d’agriculture.',
   titre: 'Document de circulation',
   sousTitre: 'Feuillet à conserver par le détenteur de départ',
   folio: 'N° Folio',
@@ -78,13 +78,26 @@ export const circulationTextes = {
   attestation: 'Je soussigné, détenteur de départ, atteste que les informations sont exactes. La signature est obligatoire.',
   detenteurArrivee: 'Détenteur d’arrivée : j’atteste que les informations sont exactes.',
   dateSignature: 'Date et signature :',
-  rappelTitre: 'Les feuillets de la liasse : à qui les remettre',
-  feuillets: {
-    blanc: 'Blanc : à garder (détenteur de départ)',
-    vert: 'Vert : au détenteur d’arrivée',
-    bleu: 'Bleu : au détenteur d’arrivée (2 feuillets pour lui, vert et bleu)',
-    rose: 'Rose : pour la Chambre d’agriculture (EDE)',
-    jaune: 'Jaune : pour le transporteur',
+  rappelTitre: {
+    vente: 'En cas de vente : que faire des feuillets de la liasse',
+    achat: 'En cas d’achat : que faire des feuillets de la liasse',
   },
-  rappelNote: 'Les couleurs sont données de mémoire : vérifiez-les sur votre liasse. Le détenteur d’arrivée reçoit 2 feuillets (vert et bleu), la Chambre 1 (rose), le transporteur 1 (jaune), et vous gardez le blanc.',
+  /** Ce que l'exploitation fait de chaque feuillet (je garde, je donne, ou je garde d'abord puis j'envoie à la Chambre) : en cas de vente (elle est au départ), puis d'achat (elle est à l'arrivée), rangés par action. */
+  feuillets: {
+    vente: {
+      blanc: 'Blanc : je garde',
+      jaune: 'Jaune : je garde',
+      vert: 'Vert : je donne à l’acheteur',
+      bleu: 'Bleu : je donne à l’acheteur',
+      rose: 'Rose : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
+    },
+    achat: {
+      bleu: 'Bleu : je garde',
+      blanc: 'Blanc : je donne',
+      jaune: 'Jaune : je donne',
+      rose: 'Rose : je donne',
+      vert: 'Vert : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
+    },
+  },
+  rappelNote: 'Les couleurs et le nombre de feuillets peuvent changer d’une liasse à l’autre : vérifiez-les sur la vôtre.',
 } as const;

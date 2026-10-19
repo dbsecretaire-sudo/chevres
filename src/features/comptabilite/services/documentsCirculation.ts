@@ -29,6 +29,8 @@ export interface EcritureACirculation {
   montant: number;
   /** L'activité (l'espèce) de l'écriture, pour ne montrer que celle choisie. */
   activite: string;
+  /** Ce que raconte l'écriture : un achat d'animaux (feuillet vert), un envoi à l'abattoir ou une vente d'animaux vivants (feuillet rose). */
+  nature: 'achat' | 'abattoir' | 'vente';
   /** Le document déposé ; absent tant qu'il manque. */
   depose?: DocumentCirculationDepose;
 }
@@ -53,6 +55,7 @@ export function ecrituresACirculation(
       reference: v.numeroFacture ?? '',
       montant: v.prix ?? 0,
       activite: activiteVente(v),
+      nature: 'vente',
       depose: v.documentCirculation,
     }));
   const deDepenses = factures
@@ -69,6 +72,7 @@ export function ecrituresACirculation(
       reference: f.description ?? '',
       montant: -f.montant,
       activite: activiteFacture(f),
+      nature: idsDesAnimauxAchetes(f).length > 0 ? 'achat' : 'abattoir',
       depose: f.documentCirculation,
     }));
   return [...deVentes, ...deDepenses].sort((a, b) => b.date.localeCompare(a.date));

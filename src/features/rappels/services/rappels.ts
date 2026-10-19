@@ -5,6 +5,7 @@ import {
   PERIODES_RAPPELEES,
 } from '@/shared/constants/rappels';
 import { ROUTES } from '@/shared/constants/routes';
+import { libelleDeRappelCirculation, periodeDeRappelCirculation } from '@/features/rappels/services/rappelsCirculation';
 import { ajouterJours } from '@/shared/utils/calendrier';
 import { ACTIVITE_SOCIETE, ACTIVITES_ENTREPRISE } from '@/shared/constants/etablissements';
 import { MOIS_PAR_AN } from '@/shared/constants/temps';
@@ -13,18 +14,23 @@ import { TEXTES } from '@/shared/textes';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /** Les déclarations qu'on peut activer ou non (RSA, URSSAF) ; une échéance de groupement s'y ajoute dans les rappels (voir Rappel.genre). */
-export type GenreRappel = Exclude<ValeurDe<typeof GENRE_RAPPEL>, typeof GENRE_RAPPEL.GROUPEMENT>;
+export type GenreRappel = Exclude<
+  ValeurDe<typeof GENRE_RAPPEL>,
+  typeof GENRE_RAPPEL.GROUPEMENT | typeof GENRE_RAPPEL.CIRCULATION
+>;
 
 /** Une déclaration à faire (ou à valider) pour une période terminée. */
 export interface Rappel {
   /** Identifiant de la période (« rsa:2026-T3 »), enregistré quand le rappel est validé. */
   id: string;
-  genre: GenreRappel | typeof GENRE_RAPPEL.GROUPEMENT;
+  genre: GenreRappel | typeof GENRE_RAPPEL.GROUPEMENT | typeof GENRE_RAPPEL.CIRCULATION;
   /** « Déclaration RSA · 3e trimestre 2026 ». */
   libelle: string;
   /** Le dernier jour pour la faire : la fin du mois qui suit la période (AAAA-MM-JJ). */
   echeance: string;
   enRetard: boolean;
+  /** Ce qui remplace la ligne « À faire avant le… » (un envoi de document de circulation n'a pas d'échéance : la date est celle de l'écriture). */
+  detail?: string;
   /** Pour l'échéance d'un groupement : l'écran du contenu, et de quoi le passer à « terminé ». */
   cible?: string;
   groupementId?: string;
@@ -34,6 +40,8 @@ export interface Rappel {
 /** « Déclaration RSA · 3e trimestre 2026 » (ou le mois de l'URSSAF) d'après l'identifiant d'un rappel ; rien si l'identifiant est inconnu. */
 export function libelleDeRappel(id: string): string | null {
   const T = TEXTES.rappels;
+  const envoi = libelleDeRappelCirculation(id);
+  if (envoi) return envoi;
   const [genre, periode = ''] = id.split(':');
   const trimestre = /^(\d{4})-T([1-4])$/.exec(periode);
   if (genre === GENRE_RAPPEL.RSA && trimestre) {
@@ -48,6 +56,8 @@ export function libelleDeRappel(id: string): string | null {
 
 /** Le dernier mois de la période d'un rappel (AAAAMM) : pour ranger l'historique du plus récent au plus ancien. */
 export function periodeDeRappel(id: string): number {
+  const envoi = periodeDeRappelCirculation(id);
+  if (envoi) return envoi;
   const periode = id.split(':')[1] ?? '';
   const trimestre = /^(\d{4})-T([1-4])$/.exec(periode);
   if (trimestre) return Number(trimestre[1]) * 100 + Number(trimestre[2]) * MOIS_PAR_TRIMESTRE;

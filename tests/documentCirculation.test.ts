@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { donneesDeCirculation, FEUILLETS_CIRCULATION, lieuDArrivee, mortsTransportDuJour, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
+import { donneesDeCirculation, feuilletsCirculation, lieuDArrivee, mortsTransportDuJour, zonesACompleter, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
@@ -66,9 +66,41 @@ describe('document de circulation', () => {
     const pdf = await PDFDocument.load(await remplirDocumentCirculation(d));
     expect(pdf.getPageCount()).toBe(2);
     expect(pdf.getPage(0).getSize().width).toBeCloseTo(593, 0);
-    expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('Blanc : à garder');
-    expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('pour la Chambre d’agriculture');
-    expect(FEUILLETS_CIRCULATION.map((f) => f.libelle).join(' ')).toContain('pour le transporteur');
+    expect(feuilletsCirculation('vente').map((f) => f.libelle)).toEqual([
+      'Blanc : je garde',
+      'Jaune : je garde',
+      'Vert : je donne à l’acheteur',
+      'Bleu : je donne à l’acheteur',
+      'Rose : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
+    ]);
+    expect(feuilletsCirculation('achat').map((f) => f.libelle)).toEqual([
+      'Bleu : je garde',
+      'Blanc : je donne',
+      'Jaune : je donne',
+      'Rose : je donne',
+      'Vert : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
+    ]);
+  });
+});
+
+describe('zones à compléter à la main', () => {
+  const base = () => donneesDeCirculation({ vente: vente(), animaux: [animal('00462')], infos, petit: () => false });
+  const signatureDepart = (z: number[]) => z[0] === 165 && z[1] === 60;
+  const signatureArrivee = (z: number[]) => z[0] === 428 && z[1] === 50;
+  it('une vente : l’exploitation notifie le départ (en bas à gauche)', () => {
+    const zones = zonesACompleter(base());
+    expect(zones.some(signatureDepart)).toBe(true);
+    expect(zones.some(signatureArrivee)).toBe(false);
+  });
+  it('un achat : l’exploitation notifie l’arrivée (en bas à droite)', () => {
+    const zones = zonesACompleter({ ...base(), notifie: 'arrivee' });
+    expect(zones.some(signatureArrivee)).toBe(true);
+    expect(zones.some(signatureDepart)).toBe(false);
+  });
+  it('une adresse inconnue de l’arrivée est à compléter aussi', () => {
+    const d = base();
+    const sans = zonesACompleter({ ...d, arrivee: { ...d.arrivee, nom: 'Client', adresse: 'Rue', codePostal: '20000', commune: 'Ajaccio' } }).length;
+    expect(zonesACompleter({ ...d, arrivee: { ...d.arrivee, nom: '', adresse: '', codePostal: '', commune: '' } }).length).toBe(sans + 4);
   });
 });
 
