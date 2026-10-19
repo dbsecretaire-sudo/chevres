@@ -7,6 +7,13 @@ export const TEXTES_DIDACTICIEL = {
   aide: 'Toutes les options de l’application, onglet par onglet. Un appui sur « Ouvrir » mène à l’écran de l’option. On l’active ou le désactive depuis le bouton en haut à droite de l’accueil.',
   ouvrir: 'Ouvrir',
   commencer: 'Commencer la visite guidée',
+  /** L'onglet « Parcours de cas » : un cas du quotidien suivi pas à pas, en lecture ou en visite guidée. */
+  parcours: {
+    titre: 'Parcours de cas',
+    presentation: 'Un cas du quotidien suivi pas à pas, dans l’ordre où on le fait dans l’application : on le lit ici, ou on le parcourt en visite guidée (une bulle sur chaque écran, avec « Suivant »).',
+    lancer: 'Lancer la visite guidée de ce parcours',
+    nEtapes: (n: number) => `${n} étape${n > 1 ? 's' : ''}`,
+  },
   aideVisite: 'La visite guidée présente chaque page, au fur et à mesure, et vous invite à toucher les boutons de l’interface.',
   /** La visite guidée : la bulle qui présente une page et dit quoi toucher. */
   visite: {

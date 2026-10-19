@@ -12,6 +12,7 @@ import { CATEGORIE_CLIENT_PAR_DEFAUT, CATEGORIES_CLIENT_PROTEGEES } from '@/shar
 import {
   categoriesClientParDefaut,
   fraisAbattoirFactures,
+  prixPersonnalisePropose,
   groupesRecetteDeLaCategorie,
   pasEncaisseeAffichee,
   type CategorieClientReglage,
@@ -147,6 +148,12 @@ export default function RubriqueCategoriesClient() {
                   coche: (id) => fraisAbattoirFactures(categories.find((c) => c.id === id)),
                   definir: (id, fraisAbattoir) => maj(id, { fraisAbattoir }),
                 },
+                {
+                  cle: 'prixPersonnalise',
+                  titre: T.prixPersonnalise,
+                  coche: (id) => prixPersonnalisePropose(categories.find((c) => c.id === id)),
+                  definir: (id, prixPersonnalise) => maj(id, { prixPersonnalise }),
+                },
               ],
             },
             {
@@ -215,6 +222,11 @@ export default function RubriqueCategoriesClient() {
                 label={T.fraisAbattoir}
                 value={fraisAbattoirFactures(c)}
                 onChange={(fraisAbattoir) => maj(c.id, { fraisAbattoir })}
+              />
+              <Checkbox
+                label={T.prixPersonnalise}
+                value={prixPersonnalisePropose(c)}
+                onChange={(prixPersonnalise) => maj(c.id, { prixPersonnalise })}
               />
               <Text style={commonStyles.lineSemiBold}>{T.affichage}</Text>
               <Checkbox

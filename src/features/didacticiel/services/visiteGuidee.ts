@@ -36,6 +36,10 @@ export interface EtapeVisite {
   id: string;
   /** La page où l'étape s'affiche : son adresse, ou un motif d'adresse ; sans elle, partout. */
   route?: string | RegExp;
+  /** L'adresse à ouvrir pour s'y rendre (« Suivant »), quand elle diffère de `route` : un onglet, un filtre. */
+  ouvrir?: string;
+  /** Vrai : l'écran n'est pas voilé (une étape d'un parcours de cas : la page reste utilisable, la bulle se pose en bas). */
+  sansVoile?: boolean;
   titre: string;
   texte: string;
   /** Le texte sur ordinateur, quand il diffère (les onglets du bas y sont des menus en haut de la fenêtre). */
@@ -133,7 +137,10 @@ export function etapeSuivante(
   while (suivante < etapes.length && etapes[suivante].route instanceof RegExp && !etapeSurLaPage(etapes[suivante], adresse, colonnes)) suivante++;
   if (suivante >= etapes.length) return null;
   const route = etapes[suivante].route;
-  return { index: suivante, ouvrir: typeof route === 'string' && !etapeSurLaPage(etapes[suivante], adresse, colonnes) ? route : undefined };
+  return {
+    index: suivante,
+    ouvrir: typeof route === 'string' && !etapeSurLaPage(etapes[suivante], adresse, colonnes) ? (etapes[suivante].ouvrir ?? route) : undefined,
+  };
 }
 
 /**

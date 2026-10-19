@@ -1,5 +1,5 @@
 import type { Client } from '@/features/clients/types';
-import { categorieClientDe, fraisAbattoirFactures, groupesRecetteDeLaCategorie } from '@/shared/dictionnaire/categoriesClient';
+import { categorieClientDe, fraisAbattoirFactures, groupesRecetteDeLaCategorie, prixPersonnalisePropose } from '@/shared/dictionnaire/categoriesClient';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_CLIENT, GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
 
@@ -24,6 +24,10 @@ export const prixLibre = (client: Pick<Client, 'categorie'> | undefined): boolea
 /** Vrai quand les frais d'abattoir se facturent à ce client (selon sa catégorie : réglage, sinon oui sauf à prix libre). */
 export const fraisAbattoirFacturesAuClient = (client: Pick<Client, 'categorie'> | undefined): boolean =>
   fraisAbattoirFactures(categorieClientDe(client?.categorie));
+
+/** Vrai quand la case « Prix du produit personnalisé » se propose à ce client (selon sa catégorie : réglage, sinon oui sauf à prix libre). */
+export const prixPersonnaliseAuClient = (client: Pick<Client, 'categorie'> | undefined): boolean =>
+  prixPersonnalisePropose(categorieClientDe(client?.categorie));
 
 /** Vrai quand sa catégorie les facture expressément (réglage coché) : même pour une vente offerte. */
 export const fraisAbattoirMemeOfferts = (client: Pick<Client, 'categorie'> | undefined): boolean =>

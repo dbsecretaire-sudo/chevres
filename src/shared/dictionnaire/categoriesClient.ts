@@ -30,6 +30,8 @@ export interface CategorieClientReglage {
   pasEncaissee?: boolean;
   /** Facturer les frais d'abattoir à ses clients, même à prix libre ou pour une vente offerte (d'office : oui, sauf à prix libre). */
   fraisAbattoir?: boolean;
+  /** Proposer la case « Prix du produit personnalisé » dans les factures de ses clients (d'office : oui, sauf à prix libre, où le total se saisit déjà). */
+  prixPersonnalise?: boolean;
 }
 
 /** Vrai quand la case « Pas encore encaissée » s'affiche pour les clients de cette catégorie (sans catégorie connue : oui). */
@@ -39,6 +41,10 @@ export const pasEncaisseeAffichee = (categorie?: CategorieClientReglage): boolea
 /** Vrai quand les frais d'abattoir se facturent aux clients de cette catégorie (réglé, sinon oui sauf à prix libre). */
 export const fraisAbattoirFactures = (categorie?: Pick<CategorieClientReglage, 'fraisAbattoir' | 'prixLibre'>): boolean =>
   categorie?.fraisAbattoir ?? !categorie?.prixLibre;
+
+/** Vrai quand la case « Prix du produit personnalisé » se propose aux clients de cette catégorie (réglée, sinon oui sauf à prix libre). */
+export const prixPersonnalisePropose = (categorie?: Pick<CategorieClientReglage, 'prixPersonnalise' | 'prixLibre'>): boolean =>
+  categorie?.prixPersonnalise ?? !categorie?.prixLibre;
 
 /** Les catégories proposées d'office : un particulier n'est pas déclaré ; le récolteur facture lui-même, à prix libre. */
 export const categoriesClientParDefaut = (): CategorieClientReglage[] => [

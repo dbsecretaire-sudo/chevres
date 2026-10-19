@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { Checkbox } from '@/shared/components/Checkbox';
+import { prixPersonnaliseAuClient } from '@/features/clients/services/categorie';
 import { FormField } from '@/shared/components/FormField';
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -22,6 +23,8 @@ interface Props {
  * l'inventaire ne change pas). Cochée, le prix de l'unité (au kilo, à la pièce, au litre) et le prix total se saisissent.
  */
 export function ChampPrixPersonnalise({ e, unite, prixInventaire, sansChamp }: Props) {
+  // La catégorie du contact règle si la case est utile (Organisation › Contacts) ; une facture qui l'a déjà cochée la garde.
+  if (!prixPersonnaliseAuClient(e.clientSelectionne) && !e.prixPersonnalise) return null;
   return (
     <View style={commonStyles.gap6}>
       <Checkbox label={T.prixPersonnalise} value={e.prixPersonnalise} onChange={e.setPrixPersonnalise} />

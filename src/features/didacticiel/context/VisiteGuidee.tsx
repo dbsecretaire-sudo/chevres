@@ -4,23 +4,30 @@ import { usePathname, useRouter } from 'expo-router';
 import { useDeuxColonnes } from '@/bureau/colonnes';
 import { estBureau } from '@/shared/utils/plateforme';
 import { etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, etapesPourLEcran, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
+import { etapesDuParcours, parcoursDe } from '@/features/didacticiel/services/parcours';
 
 const CLE_STOCKAGE = 'troupeau:v1:visite-guidee';
 
 interface EtatVisite {
   actif: boolean;
   index: number;
+  /** Le parcours de cas suivi (voir parcoursDeCas) ; absent : la visite de l'application. */
+  parcours?: string;
 }
 
 interface ContexteVisite {
   actif: boolean;
   index: number;
   total: number;
+  /** Le titre du parcours de cas suivi ; rien pour la visite de l'application. */
+  parcoursTitre?: string;
   /** L'étape en cours, quelle que soit la page où l'on est. */
   etape: EtapeVisite | undefined;
   /** Vrai quand la page courante est celle de l'étape en cours : sinon, la visite attend qu'on y revienne. */
   surLaPage: boolean;
   demarrer: () => void;
+  /** Lance la visite guidée d'un parcours de cas, à sa première étape. */
+  demarrerParcours: (id: string) => void;
   suivant: () => void;
   quitter: () => void;
   /** Un choix dans un menu de la barre du haut (Windows) : si l'étape demandait d'ouvrir un menu, elle est validée. */
@@ -39,8 +46,12 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
   const adresse = usePathname();
   // Sur Windows (deux colonnes), le menu de la rubrique est toujours à gauche : les étapes « revenir au menu » n'ont pas lieu d'être.
   const colonnes = useDeuxColonnes();
-  const etapes = useMemo(() => etapesPourLEcran(etapesDeLaVisite(), estBureau(), colonnes), [colonnes]);
   const [etat, setEtat] = useState<EtatVisite>({ actif: false, index: 0 });
+  const parcours = etat.parcours;
+  const etapes = useMemo(
+    () => etapesPourLEcran(parcours ? etapesDuParcours(parcours) : etapesDeLaVisite(), estBureau(), colonnes),
+    [colonnes, parcours],
+  );
   const charge = useRef(false);
 
   // L'étape reprise au démarrage de l'application.
@@ -61,33 +72,42 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
     setPageVue(adresse);
     if (etat.actif) {
       const trouvee = etapeDeLaPage(etapes, etat.index, adresse, colonnes);
-      if (trouvee !== etat.index) setEtat({ actif: true, index: trouvee });
+      if (trouvee !== etat.index) setEtat({ actif: true, index: trouvee, parcours });
     }
   }
   const index = etat.index;
 
   // L'étape en cours est gardée sur l'appareil.
   useEffect(() => {
-    if (charge.current) AsyncStorage.setItem(CLE_STOCKAGE, JSON.stringify({ actif: etat.actif, index })).catch(() => undefined);
-  }, [etat.actif, index]);
+    if (charge.current) AsyncStorage.setItem(CLE_STOCKAGE, JSON.stringify({ actif: etat.actif, index, parcours })).catch(() => undefined);
+  }, [etat.actif, index, parcours]);
 
   const demarrer = useCallback(() => {
     setEtat({ actif: true, index: 0 });
     router.push('/' as never);
   }, [router]);
+  const demarrerParcours = useCallback(
+    (id: string) => {
+      const premiere = etapesDuParcours(id)[0];
+      if (!premiere) return;
+      setEtat({ actif: true, index: 0, parcours: id });
+      router.push((premiere.ouvrir ?? (typeof premiere.route === 'string' ? premiere.route : '/')) as never);
+    },
+    [router],
+  );
   const quitter = useCallback(() => setEtat({ actif: false, index: 0 }), []);
   const menuChoisi = useCallback(
     (route: string) =>
       setEtat((avant) => {
         if (!avant.actif) return avant;
         const suite = etapeApresUnMenu(etapes, avant.index, route, colonnes);
-        return suite === null || suite === avant.index ? avant : { actif: true, index: suite };
+        return suite === null || suite === avant.index ? avant : { actif: true, index: suite, parcours: avant.parcours };
       }),
     [etapes, colonnes],
   );
   const valider = useCallback(
     () =>
-      setEtat((avant) => (avant.actif && avant.index + 1 < etapes.length ? { actif: true, index: avant.index + 1 } : avant)),
+      setEtat((avant) => (avant.actif && avant.index + 1 < etapes.length ? { actif: true, index: avant.index + 1, parcours: avant.parcours } : avant)),
     [etapes.length],
   );
   const suivant = useCallback(() => {
@@ -96,13 +116,13 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       setEtat({ actif: false, index: 0 });
       return;
     }
-    setEtat({ actif: true, index: prochaine.index });
+    setEtat({ actif: true, index: prochaine.index, parcours });
     if (prochaine.ouvrir) router.push(prochaine.ouvrir as never);
-  }, [etapes, index, adresse, colonnes, router]);
+  }, [etapes, index, adresse, colonnes, router, parcours]);
   const etape = etat.actif ? etapes[index] : undefined;
   const reprendre = useCallback(() => {
     const route = etape?.route;
-    router.push((typeof route === 'string' ? route : '/') as never);
+    router.push((etape?.ouvrir ?? (typeof route === 'string' ? route : '/')) as never);
   }, [etape, router]);
 
   const valeur = useMemo<ContexteVisite>(
@@ -111,15 +131,17 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       index,
       total: etapes.length,
       etape,
+      parcoursTitre: parcours ? parcoursDe(parcours)?.titre : undefined,
       surLaPage: etapeSurLaPage(etape, adresse, colonnes),
       demarrer,
+      demarrerParcours,
       suivant,
       quitter,
       menuChoisi,
       valider,
       reprendre,
     }),
-    [etat.actif, index, etapes.length, etape, adresse, colonnes, demarrer, suivant, quitter, menuChoisi, valider, reprendre],
+    [etat.actif, index, etapes.length, etape, adresse, colonnes, parcours, demarrer, demarrerParcours, suivant, quitter, menuChoisi, valider, reprendre],
   );
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }
@@ -135,6 +157,7 @@ export function useVisiteGuidee(): ContexteVisite {
       etape: undefined,
       surLaPage: false,
       demarrer: () => undefined,
+      demarrerParcours: () => undefined,
       suivant: () => undefined,
       quitter: () => undefined,
       menuChoisi: () => undefined,

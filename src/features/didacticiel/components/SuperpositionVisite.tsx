@@ -140,6 +140,8 @@ export function SuperpositionVisite() {
 
   const derniere = visite.index + 1 >= visite.total;
   const attendUnClic = !!etape.clic;
+  /** Une étape de parcours : l'écran reste utilisable, la bulle se pose en bas. */
+  const sansVoile = !!etape.sansVoile;
   const texte = estBureau() && etape.texteBureau ? etape.texteBureau : etape.texte;
   const largeurBulle = Math.min(width - 24, LARGEUR_BULLE);
 
@@ -157,7 +159,7 @@ export function SuperpositionVisite() {
       : { top: bas + 12 }
     : menuDuHaut
       ? { top: 64 }
-      : attendUnClic
+      : attendUnClic || sansVoile
         ? { bottom: HAUTEUR_BARRE + insetBas + 24 }
       : { top: height * 0.22 };
 
@@ -174,7 +176,7 @@ export function SuperpositionVisite() {
             style={[styles.anneau, { top: haut, left: gauche, width: droite - gauche, height: bas - haut }]}
           />
         </>
-      ) : attendUnClic ? null : (
+      ) : attendUnClic || sansVoile ? null : (
         <View style={[styles.voile, PLEIN_ECRAN]} />
       )}
       {menuDuHaut ? (
@@ -184,7 +186,10 @@ export function SuperpositionVisite() {
         </View>
       ) : null}
       <View style={[styles.bulle, placement, { width: largeurBulle, left: (width - largeurBulle) / 2 }]}>
-        <Text style={styles.compteur}>{T.etape(visite.index + 1, visite.total)}</Text>
+        <Text style={styles.compteur}>
+          {visite.parcoursTitre ? `${visite.parcoursTitre} · ` : ''}
+          {T.etape(visite.index + 1, visite.total)}
+        </Text>
         <Text style={styles.titre}>{etape.titre}</Text>
         <Text style={styles.texte}>{texte}</Text>
         {attendUnClic ? <Text style={styles.invitation}>{zone ? T.touchezLaZone : T.touchezLeBouton}</Text> : null}

@@ -303,7 +303,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'contacts.categorieClient',
           titre: 'Catégorie d’un client',
-          texte: 'Elle règle le prix libre ou tiré de l’inventaire, si la vente est déclarée d’office, et les recettes possibles (un organisme n’a que l’aide ou les prestations).',
+          texte: 'Elle règle le prix libre ou tiré de l’inventaire, si la vente est déclarée d’office, si les frais d’abattoir se facturent, si la case « Prix du produit personnalisé » est proposée dans ses factures (d’office oui, sauf à prix libre où le total se saisit déjà), et les recettes possibles (un organisme n’a que l’aide ou les prestations).',
         },
         {
           id: 'contacts.choix',

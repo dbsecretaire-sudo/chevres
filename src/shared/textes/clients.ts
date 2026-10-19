@@ -56,6 +56,7 @@ export const TEXTES_CLIENTS = {
     declaree: 'Vente déclarée d’office (avec facture)',
     prixLibre: 'Prix libre, n° de facture avec lettres, réajustement',
     fraisAbattoir: 'Facturer les frais d’abattoir (même à prix libre ou offert)',
+    prixPersonnalise: 'Proposer « Prix du produit personnalisé » dans les factures',
     parDefaut: 'Catégorie d’office des contacts : elle ne se retire pas.',
     protegee:
       'Les groupements (Production) se choisissent parmi les contacts de cette catégorie : elle ne se retire pas.',

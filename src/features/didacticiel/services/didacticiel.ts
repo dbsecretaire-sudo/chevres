@@ -48,7 +48,7 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
         {
           id: 'accueil.rappels',
           titre: 'Rappels',
-          texte: 'Les déclarations à valider (RSA, URSSAF), les lots à rappeler et les documents de circulation manquants. Le crayon règle les rappels, l’horloge montre ceux déjà validés.',
+          texte: 'Les déclarations à valider (RSA, URSSAF), les lots à rappeler, les documents de circulation manquants et ceux à envoyer à la chambre d’agriculture (à valider une fois envoyés). Le crayon règle les rappels, l’horloge montre ceux déjà validés.',
           route: ROUTES.RAPPELS_HISTORIQUE,
         },
         {
@@ -104,7 +104,7 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
         {
           id: 'cheptel.circulation',
           titre: 'Documents de circulation',
-          texte: 'Pour chaque vente ou achat d’animaux vivants, déposez le document de circulation rempli (scan ou photo), ou générez le modèle pré-rempli. Tant qu’il manque, un rappel s’affiche sur l’accueil.',
+          texte: 'Pour chaque vente ou achat d’animaux vivants, déposez le document de circulation rempli (scan ou photo), ou générez le modèle pré-rempli. Tant qu’il manque, un rappel s’affiche sur l’accueil ; une fois déposé, un autre rappelle de l’envoyer à la chambre d’agriculture.',
           chemin: 'Cheptel › Dossier PAC › Documents de circulation',
           route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION,
         },
