@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  useRouter,
+} from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import type { Chevre } from '@/features/cheptel/types';
@@ -21,7 +27,9 @@ import {
 } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { fromagesRequis } from '@/features/stock/services/lots';
-import { comptesDeLInventaire, roleDeLaLigneDeLaVente } from '@/features/stock/services/stock';
+import {
+  roleDeLaLigneDeLaVente,
+} from '@/features/stock/services/stock';
 import { erreurAchatBoucles } from '@/features/stock/services/boucles';
 import { synchroniserVisiteFacture } from '@/features/exploitation/services/visitesFacture';
 import { GENRE_ARTICLE, ROLE_VIANDE } from '@/shared/constants/stock';
@@ -41,9 +49,7 @@ import {
   categoriesAjoutees,
 } from '@/features/comptabilite/utils/categoriesRecetteInventaire';
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
-import { chargerCategoriesRecetteInventaire } from '@/features/comptabilite/repository/categoriesRecetteInventaire';
 import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
-import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { categorieDepenseAutorisee, estChambreAgriculture } from '@/features/fournisseurs/services/categorie';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import {
@@ -54,7 +60,6 @@ import {
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
-import { listClients } from '@/features/clients/repository';
 import {
   groupeRecetteAutorise,
   numeroFactureLibre as numeroFactureLibreDuClient,
@@ -65,12 +70,9 @@ import {
   estClientAbattoir,
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
-import {
-  listComptesPcg,
-  type CompteComptableEnregistre,
-} from '@/features/comptes-pcg/repository';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
 import { useLignesDepense } from '@/features/comptabilite/hooks/nouvelleEcriture/useLignesDepense';
+import { useDonneesDeReference } from '@/features/comptabilite/hooks/nouvelleEcriture/useDonneesDeReference';
 import { detailDesAnimaux } from '@/features/comptabilite/forms/detailDesAnimaux';
 import { optionsDesComptes } from '@/features/comptabilite/utils/optionsComptes';
 import type {
@@ -82,8 +84,6 @@ import type {
   TypeFromage,
   UniteVente,
 } from '@/features/comptabilite/types';
-import type { Client } from '@/features/clients/types';
-import type { Fournisseur } from '@/features/fournisseurs/types';
 import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
 import { estDateISO, formatDateFR, memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
 import {
@@ -248,7 +248,8 @@ export function useNouvelleEcriture(
   const [compteDepenseAutre, setCompteDepenseAutre] = useState(
     COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero,
   );
-  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
+  // Ce qui se lit à chaque ouverture : fournisseurs, clients, comptes, listes de l'inventaire.
+  const { fournisseurs, clients, comptes, comptesInventaire, versionGroupes } = useDonneesDeReference();
   const [fournisseurId, setFournisseurId] = useState('');
   /** Achat de production : l'article du stock acheté et sa quantité. */
   const [stockArticle, setStockArticle] = useState('');
@@ -311,24 +312,9 @@ export function useNouvelleEcriture(
       ? tauxTvaEntreprise(premiereCategorieRecette(activiteInitiale))
       : String(tauxTvaParDefaut(categorieInitiale ?? premiereCategorieRecette(especeCourante()))),
   );
-  const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState(clientInitial ?? '');
 
-  const [comptes, setComptes] = useState<CompteComptableEnregistre[]>([]);
 
-  /** Les comptes des listes de l'inventaire : un achat sur l'un d'eux entre au stock. */
-  const [comptesInventaire, setComptesInventaire] = useState<string[]>([]);
-  // Les listes ajoutées à l'inventaire (35. Produits finis, 33. Produits animaux) : relues à chaque ouverture.
-  const [versionGroupes, setVersionGroupes] = useState(0);
-  useFocusEffect(
-    useCallback(() => {
-      chargerCategoriesRecetteInventaire().then(() => setVersionGroupes((v) => v + 1));
-      listFournisseurs().then(setFournisseurs);
-      listClients().then(setClients);
-      listComptesPcg().then(setComptes);
-      lireArchiveStock().then((archive) => setComptesInventaire(comptesDeLInventaire(archive)));
-    }, []),
-  );
 
   // --- Valeurs calculées ---
   const clientSelectionne = clients.find((c) => c.id === clientId);
