@@ -860,9 +860,11 @@ export function totalDeLaVente(
 ): number | undefined {
   const unitaire = prixUnitaireDeLaVente(vente, archive, prixDuContact);
   if (!unitaire) return undefined;
-  // Un animal se vend au kilo (son poids, 1 kg tant qu'il n'est pas saisi) ; le reste, à la pièce ou au litre.
+  // Un petit ou un animal sur pied se vend au kilo (son poids, 1 kg tant qu'il n'est pas saisi) ; un animal vivant (élevage, lait, compagnie), à
+  // la tête ; le reste, à la pièce ou au litre.
   const ligne = ligneDeViandeDeLaVente(vente, archive);
-  const auKilo = !!ligne && roleDeLaViande(ligne.cle) !== undefined;
+  const role = ligne ? roleDeLaViande(ligne.cle) : undefined;
+  const auKilo = role !== undefined && role !== ROLE_VIANDE.VIVANT;
   const multiplicateur = auKilo ? (vente.poidsKg ?? 0) || 1 : vente.quantite;
   if (!(multiplicateur > 0)) return undefined;
   return Math.round(unitaire * multiplicateur * 100) / 100;

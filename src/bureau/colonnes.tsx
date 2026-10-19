@@ -1,7 +1,7 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { Redirect, useGlobalSearchParams, useIsFocused, usePathname, type Href } from 'expo-router';
-import { ligneDuMenuDe } from '@/bureau/retour';
+import { useGlobalSearchParams, useIsFocused, usePathname, useRouter, type Href } from 'expo-router';
+import { estLaRacineDUneRubrique, ligneDuMenuDe } from '@/bureau/retour';
 import { estBureau } from '@/shared/utils/plateforme';
 
 /** À partir de cette largeur de fenêtre (en pixels), la version Windows montre deux colonnes : le menu de la rubrique et l'écran ouvert. */
@@ -13,6 +13,9 @@ export function useDeuxColonnes(): boolean {
   return estBureau() && width >= LARGEUR_DEUX_COLONNES;
 }
 
+/** Combien de temps (ms) l'accueil d'une rubrique attend avant de rediriger : de quoi laisser un écran plus profond, demandé d'ailleurs, arriver. */
+const DELAI_AVANT_REDIRECTION = 80;
+
 /** Vrai pour ce qui est affiché dans la colonne de gauche (le menu de la rubrique), faux pour l'écran de la colonne de droite. */
 export const DansColonneGauche = createContext(false);
 
@@ -21,13 +24,23 @@ export const DansColonneGauche = createContext(false);
  * montre directement l'écran principal de la rubrique. Rend la redirection à afficher (rien sinon) ; à appeler en haut de l'écran.
  *
  * L'accueil n'y redirige que lorsqu'il est l'écran affiché : quand on arrive dans la rubrique par un écran plus profond (le courrier
- * d'un contact, depuis un autre onglet), l'accueil se monte d'abord dessous, et sa redirection écraserait l'écran demandé.
+ * d'un contact, un rappel de l'accueil), l'accueil se monte d'abord seul, l'écran demandé n'arrivant qu'un instant plus tard : une
+ * redirection immédiate le remplacerait. Elle attend donc un instant, et s'annule si un autre écran est alors affiché.
  */
 export function useAccueilEnDeuxColonnes(ecranPrincipal: string) {
   const deuxColonnes = useDeuxColonnes();
   const dansMenu = useContext(DansColonneGauche);
   const affiche = useIsFocused();
-  return deuxColonnes && !dansMenu && affiche ? <Redirect href={ecranPrincipal as Href} /> : null;
+  // Un écran plus profond de la rubrique est demandé (l'adresse n'est pas celle de la rubrique) : l'accueil ne redirige pas, il se monte dessous.
+  const surLaRacine = estLaRacineDUneRubrique(usePathname());
+  const router = useRouter();
+  const doitRediriger = deuxColonnes && !dansMenu && affiche && surLaRacine;
+  useEffect(() => {
+    if (!doitRediriger) return;
+    const minuteur = setTimeout(() => router.replace(ecranPrincipal as Href), DELAI_AVANT_REDIRECTION);
+    return () => clearTimeout(minuteur);
+  }, [doitRediriger, ecranPrincipal, router]);
+  return null;
 }
 
 /**

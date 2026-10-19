@@ -79,12 +79,15 @@ function EnDeuxColonnesBureau({ children }: PropsWithChildren) {
       document.documentElement.style.removeProperty(VARIABLE_LARGEUR_MENU);
     };
   }, [avecMenu]);
-  if (!avecMenu) return <>{children}</>;
+  // Toujours la même structure (le menu de gauche s'ajoute devant, rien ne change autour de l'écran) : en changeant de forme en entrant dans une
+  // rubrique, React recréerait la navigation entière, qui oublierait l'écran demandé (un rappel de l'accueil) pour ne garder que la rubrique.
   return (
     <View style={styles.deuxColonnes}>
-      <View style={styles.gauche}>
-        <DansColonneGauche.Provider value>{menu}</DansColonneGauche.Provider>
-      </View>
+      {avecMenu ? (
+        <View style={styles.gauche}>
+          <DansColonneGauche.Provider value>{menu}</DansColonneGauche.Provider>
+        </View>
+      ) : null}
       <View style={styles.droite}>{children}</View>
     </View>
   );

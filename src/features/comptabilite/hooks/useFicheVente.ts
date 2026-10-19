@@ -245,7 +245,8 @@ export function useFicheVente(id: string | undefined) {
         precision: form.precision?.trim() || undefined,
         numeroFacture: venteADeclarer(form) && !reajustement ? form.numeroFacture?.trim() : undefined,
         // Pas de date d'abattoir quand la vente n'est pas déclarée : l'animal passe en « morte ».
-        dateAbattoir: venteADeclarer(form) ? form.dateAbattoir : undefined,
+        // Pas de date d'abattoir quand la vente n'est pas déclarée, ni pour des animaux vendus vivants (ils ne sont pas abattus).
+        dateAbattoir: venteADeclarer(form) && !(reglage.choix ? form.etatAnimaux === 'vivants' : reglage.etat === 'vivants') ? form.dateAbattoir : undefined,
       };
       await saveVente(nettoye);
       // Un animal retiré de la vente (il y était, il n'y est plus) qui avait été vendu revient dans le cheptel actif ; ceux à l'abattoir gardent

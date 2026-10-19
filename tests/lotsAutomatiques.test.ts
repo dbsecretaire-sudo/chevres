@@ -15,7 +15,7 @@ import {
   lotsDeRenouvellementDeLAnnee,
   retirerDesAutresLotsDeRenouvellement,
 } from '@/features/exploitation/services/lots';
-import { ligneDuMenuDe, pageParente } from '@/bureau/retour';
+import { estLaRacineDUneRubrique, ligneDuMenuDe, pageParente } from '@/bureau/retour';
 import type { LotAnimaux } from '@/features/settings/settings';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -187,5 +187,16 @@ describe('déclarations fiscales (Windows)', () => {
       expect(ligneDuMenuDe(ecran)).toBe('/comptabilite/fiscalite');
       expect(pageParente(ecran)).toBe('/comptabilite/fiscalite');
     }
+  });
+});
+
+describe('accueil de rubrique (Windows)', () => {
+  it('ne redirige que sur l’adresse de la rubrique elle-même, jamais sur un écran plus profond ni sur l’accueil', () => {
+    expect(estLaRacineDUneRubrique('/comptabilite')).toBe(true);
+    expect(estLaRacineDUneRubrique('/cheptel/')).toBe(true);
+    expect(estLaRacineDUneRubrique('/comptabilite/fiscalite-rsa')).toBe(false);
+    expect(estLaRacineDUneRubrique('/cheptel/documents-circulation?retour=%2F')).toBe(false);
+    // Pendant le passage de l'accueil vers un écran plus profond, l'adresse est encore « / » : on ne redirige pas.
+    expect(estLaRacineDUneRubrique('/')).toBe(false);
   });
 });

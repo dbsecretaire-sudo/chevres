@@ -16,7 +16,7 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
 import { ROUTES } from '@/shared/constants/routes';
-import { SECTION_STOCK } from '@/shared/constants/stock';
+import { ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import {
   estClientAbattoir,
@@ -334,7 +334,7 @@ export function VenteFormulaire({
         {animalEntier ? (
           <FormField
             label={TEXTES.commun.general.poidsKg}
-            required
+            required={roleDuDetail !== ROLE_VIANDE.VIVANT}
             value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
             onChangeText={(valeur) =>
               onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })

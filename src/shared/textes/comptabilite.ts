@@ -832,6 +832,7 @@ export const TEXTES_COMPTABILITE = {
     sexeF: 'F',
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
+    prixUnitaireAnimal: 'PU (€/animal)',
     /** Un prix au kilo propre à une vente, exceptionnel : le prix de l'inventaire ne change pas. */
     prixPersonnalise: 'Prix du produit personnalisé',
     prixPersonnaliseAide: 'À titre exceptionnel, pour tous les produits de cette facture : le prix de l’inventaire ne change pas. Le total peut aussi se saisir directement.',

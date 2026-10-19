@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
 import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
 import { SelectField } from '@/shared/components/SelectField';
-import { SelectModal } from '@/shared/components/SelectModal';
+
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import {
   estPetitLe,
@@ -17,6 +17,10 @@ import type { Chevre } from '@/features/cheptel/types';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { numerosTiptag } from '@/features/stock/services/boucles';
+import { estTiptag } from '@/features/cheptel/utils/tiptag';
+import { parBoucleCroissante } from '@/features/cheptel/utils/chevreLabel';
 import type { Vente } from '@/features/comptabilite/types';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import {
@@ -55,6 +59,8 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   const espece = (activite === ACTIVITE_COMMUNE ? especeCourante() : activite) as EspeceAnimale;
   const [role, setRole] = useState<string | undefined>();
   const [vivants, setVivants] = useState<Chevre[]>([]);
+  /** Les numéros des tiptag de l'inventaire : un animal qui en porte un est destiné à l'abattoir, il n'est pas proposé comme animal vivant. */
+  const [tiptags, setTiptags] = useState<ReadonlySet<string>>(new Set());
   const [choisis, setChoisis] = useState<Chevre[]>([]);
   const [jours, setJours] = useState<JourAbattu[]>([]);
   const [ouvert, setOuvert] = useState(false);
@@ -72,6 +78,7 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   useFocusEffect(
     useCallback(() => {
       listAnimauxVivantsDe(espece).then(setVivants);
+      lireArchiveStock().then((archive) => setTiptags(numerosTiptag(archive.boucles))).catch(() => undefined);
       // Les jours d'abattage à facturer : les animaux de cette vente y restent (ils sont à elle).
       Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
         setJours(joursAbattusAFacturer(abattus, ventes, form.id)),
@@ -89,9 +96,16 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   const petits = role === ROLE_VIANDE.JEUNE;
   const declaree = venteADeclarer(form);
   // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
+  // Les adultes (boucs compris) ne comptent pas les tiptag : destinés à l'abattoir, ils ne sont pas des animaux vivants à vendre.
   const proposes = vivants.filter(
-    (a) => !ids.includes(a.id) && estPetitLe(a, form.date) === petits && !!a.numeroBoucle === declaree,
+    (a) =>
+      !ids.includes(a.id) &&
+      estPetitLe(a, form.date) === petits &&
+      !!a.numeroBoucle === declaree &&
+      (petits || !estTiptag(a, tiptags)),
   );
+  /** La liste à cocher : les animaux proposés et ceux déjà choisis (cochés). */
+  const aCocher = [...choisis, ...proposes].sort(parBoucleCroissante);
   const joursProposes = jours
     .map((j) => ({ date: j.date, animaux: j.animaux.filter((a) => !!a.numeroBoucle === declaree) }))
     .filter((j) => j.animaux.length > 0);
@@ -241,7 +255,8 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
           {T.poidsManquant(choisis.filter((a) => a.poidsKg === undefined).length)}
         </Text>
       ) : null}
-      {!jourChoisi && ids.length > 0 && form.categorie === CATEGORIE_VENTE.VIANDE && declaree ? (
+      {/* Un animal vivant n'est pas abattu : pas de date d'abattoir. */}
+      {!jourChoisi && ids.length > 0 && form.categorie === CATEGORIE_VENTE.VIANDE && declaree && role !== ROLE_VIANDE.VIVANT ? (
         <ChampDateAbattoir
           dateVente={form.date}
           value={form.dateAbattoir}
@@ -266,18 +281,21 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
           return chiffres ? Number(chiffres[1]) : undefined;
         }}
       />
-      <SelectModal<string>
+      {/* Les animaux vivants : des cases à cocher (ceux de la vente sont cochés) ; on valide d'un coup. */}
+      <SelectModalMultiple<string>
+        key={`vivants-${ouvert}-${ids.join(',')}`}
         visible={ouvert}
         titre={T.animalVendu(form.precision ?? '')}
-        value=""
-        options={proposes.map((a) => ({ value: a.id, label: libelleAnimalVendu(a) }))}
-        onSelect={(id) => {
-          const animal = proposes.find((a) => a.id === id);
-          if (animal) appliquer([...choisis, animal]);
+        options={aCocher.map((a) => ({ value: a.id, label: libelleAnimalVendu(a) }))}
+        initiales={ids}
+        libelleValider={T.ajouterLesAnimaux}
+        onValider={(valeurs) => {
           setOuvert(false);
+          // Exactement ceux qui sont cochés : ceux de la vente d'abord (dans leur ordre), puis ceux qu'on vient d'ajouter.
+          const gardes = choisis.filter((a) => valeurs.includes(a.id));
+          appliquer([...gardes, ...proposes.filter((a) => valeurs.includes(a.id))]);
         }}
         onClose={() => setOuvert(false)}
-        searchable
       />
     </View>
   );

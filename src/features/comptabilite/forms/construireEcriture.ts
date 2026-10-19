@@ -63,7 +63,7 @@ import {
   TYPE_CHOIX_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { reglageEtatAnimaux } from '@/features/comptabilite/utils/ventes';
-import type { ROLE_VIANDE } from '@/shared/constants/stock';
+import { ROLE_VIANDE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { nomComplet } from '@/shared/utils/personne';
 import { estDateISO } from '@/shared/utils/dates';
@@ -278,7 +278,13 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
       fromages: lotsDeFromages > 0 ? s.fromages.join(SEPARATEUR_ANIMAUX) : undefined,
       dateAbattoir:
-        estViande && s.avecFacture && s.animaux.length > 0 && s.dateAbattoir && s.dateAbattoir !== s.date
+        estViande &&
+        s.avecFacture &&
+        s.animaux.length > 0 &&
+        s.dateAbattoir &&
+        s.dateAbattoir !== s.date &&
+        // Un animal vivant n'est pas abattu : il n'a pas de date d'abattoir.
+        s.roleDuDetail !== ROLE_VIANDE.VIVANT
           ? s.dateAbattoir
           : undefined,
       precision: (CATEGORIES_VENTE_AVEC_PRECISION as readonly string[]).includes(categorie)

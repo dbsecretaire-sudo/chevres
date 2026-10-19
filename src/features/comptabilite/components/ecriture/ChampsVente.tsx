@@ -12,6 +12,9 @@ import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { numerosTiptag } from '@/features/stock/services/boucles';
+import { estTiptag } from '@/features/cheptel/utils/tiptag';
+import { parBoucleCroissante } from '@/features/cheptel/utils/chevreLabel';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
@@ -33,7 +36,6 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/shared/components/Card';
-import { SelectModal } from '@/shared/components/SelectModal';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { colors } from '@/shared/theme/colors';
@@ -407,6 +409,8 @@ export function ChampsVenteViande({ e }: Props) {
   const prixDuDetail = prixSelonLeContact(choisie?.cle, choisie?.prix);
   // Un morceau ou un produit : prix de l'inventaire × quantité (un animal se calcule au kilo, avec son poids).
   const auKiloLigne = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
+  /** Un animal vivant (élevage, lait, compagnie) se vend à la tête : son prix est celui d'un animal ; un animal sur pied ou un petit, au kilo. */
+  const aLaTete = !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.VIVANT;
   useTotalVerrouille(e, prixDuDetail, e.quantite, !auKiloLigne);
   /** Les animaux (petits, sur pied, vivants) se vendent au kilo ; la charcuterie et les autres lignes, à la quantité. */
   const auKilo = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
@@ -415,6 +419,8 @@ export function ChampsVenteViande({ e }: Props) {
   const espece: EspeceAnimale =
     e.activite === ACTIVITE_COMMUNE ? especeCourante() : (e.activite as EspeceAnimale);
   const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  /** Les numéros des tiptag de l'inventaire : un animal qui en porte un est destiné à l'abattoir, il n'est pas proposé comme animal vivant. */
+  const [tiptags, setTiptags] = useState<ReadonlySet<string>>(new Set());
   /** Les jours d'abattage dont la viande n'est pas encore facturée : on y choisit tous les animaux, ou certains numéros. */
   const [jours, setJours] = useState<JourAbattu[]>([]);
   const [abattusOuvert, setAbattusOuvert] = useState(false);
@@ -426,6 +432,7 @@ export function ChampsVenteViande({ e }: Props) {
   useFocusEffect(
     useCallback(() => {
       listAnimauxVivantsDe(espece).then(setAnimaux);
+      lireArchiveStock().then((archive) => setTiptags(numerosTiptag(archive.boucles))).catch(() => undefined);
       Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
         setJours(joursAbattusAFacturer(abattus, ventes)),
       );
@@ -434,11 +441,16 @@ export function ChampsVenteViande({ e }: Props) {
   /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
   const libelleAnimal = libelleAnimalVendu;
   /** Prix total d'un animal vendu au kilo : le poids × le prix au kilo du stock (pour 1 kg tant qu'aucun poids n'est saisi). */
-  const totalAuKilo = (poids: string, prixAuKilo = prixEffectif) => {
+  const totalAuKilo = (poids: string, prixAuKilo = prixEffectif, tete = aLaTete) => {
     if (e.prixLibre) return;
     if (!prixAuKilo) return e.setMontant('');
-    const kilos = parseDecimal(poids) > 0 ? parseDecimal(poids) : 1;
-    e.setMontant((Math.round(prixAuKilo * kilos * 100) / 100).toFixed(2).replace('.', ','));
+    // À la tête : le prix d'un animal × leur nombre (le poids est facultatif) ; au kilo : le poids (1 kg tant qu'il n'est pas saisi).
+    const multiple = tete
+      ? Math.max(1, Math.round(parseDecimal(e.quantite)) || 1)
+      : parseDecimal(poids) > 0
+        ? parseDecimal(poids)
+        : 1;
+    e.setMontant((Math.round(prixAuKilo * multiple * 100) / 100).toFixed(2).replace('.', ','));
   };
   /**
    * Le plus d'animaux qu'on peut vendre : ce qu'il reste dans la ligne des petits pour un petit (la ligne choisie, ou celle des
@@ -473,17 +485,19 @@ export function ChampsVenteViande({ e }: Props) {
   /** Les animaux d'un animal sur pied ou vivant sont des adultes : ceux qui ont l'âge de sevrage de leur espèce, pas les petits. */
   const ligneAdultes = parAnimal && !lignePetits;
   /**
-   * Les animaux qu'on peut encore ajouter : ceux de l'espèce de la vente qui ne sont pas déjà choisis, et de la catégorie de la
-   * ligne choisie — les petits pour la ligne des petits, les adultes pour un animal sur pied ou vivant.
+   * Les animaux de la liste (cochés : ceux déjà choisis) : ceux de l'espèce de la vente et de la catégorie de la ligne choisie — les
+   * petits pour la ligne des petits ; pour un animal sur pied ou vivant, les adultes, boucs compris, sans les tiptag (destinés à l'abattoir).
    */
   const animauxProposes = animaux.filter(
     (a) =>
-      !e.animaux.includes(a.id) &&
       // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
       !!a.numeroBoucle === e.avecFacture &&
       (!lignePetits || estPetit(a)) &&
-      (!ligneAdultes || !estPetit(a)) &&
-      (animauxChoisis.length === 0 || estPetit(a) === estPetit(animauxChoisis[0])),
+      (!ligneAdultes || (!estPetit(a) && !estTiptag(a, tiptags))),
+  );
+  /** La liste à cocher : les animaux proposés, plus ceux déjà choisis qui n'en font plus partie (un animal d'un lot, par exemple). */
+  const animauxACocher = [...animauxChoisis.filter((c) => !animauxProposes.some((a) => a.id === c.id)), ...animauxProposes].sort(
+    parBoucleCroissante,
   );
   /** Le poids des animaux choisis, quand l'abattoir l'a donné pour chacun : il remplit le poids de la vente, et le total au kilo suit. */
   const reprendrePoids = (choisis: Chevre[]) => {
@@ -547,16 +561,25 @@ export function ChampsVenteViande({ e }: Props) {
     if (propositionFrais.tauxTva !== undefined) e.setTauxTvaFrais(String(propositionFrais.tauxTva));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propositionFrais?.montant, propositionFrais?.tauxTva, fraisRefactures]);
-  const ajouterAnimal = (id: string) => {
-    const animal = animaux.find((a) => a.id === id);
-    if (!animal) return;
-    const liste = [...e.animaux, id];
-    reprendrePoids([...animauxChoisis, animal]);
-    e.setAnimaux(liste);
-    e.setJeune(estPetit(animal));
-    e.setQuantite(String(liste.length));
-    limiterAnimaux(maximumAnimaux(question ?? choisie, estPetit(animal)));
+  /** Valide les animaux cochés : la vente prend exactement ceux-là (ceux décochés sont retirés), leur nombre, leur âge et leur poids suivent. */
+  const choisirAnimaux = (ids: string[]) => {
     setQuestion(null);
+    const ordre = [...e.animaux.filter((id) => ids.includes(id)), ...ids.filter((id) => !e.animaux.includes(id))];
+    const objets = ordre
+      .map((id) => animauxACocher.find((a) => a.id === id))
+      .filter((a): a is Chevre => !!a);
+    if (objets.length === 0) {
+      e.setAnimaux([]);
+      e.setJeune(undefined);
+      e.setQuantite('1');
+      if (jourChoisi) e.setDateAbattoir('');
+      return;
+    }
+    reprendrePoids(objets);
+    e.setAnimaux(objets.map((a) => a.id));
+    e.setJeune(estPetit(objets[0]));
+    e.setQuantite(String(objets.length));
+    limiterAnimaux(maximumAnimaux(question ?? choisie, estPetit(objets[0])));
   };
   const retirerAnimal = (id: string) => {
     const liste = e.animaux.filter((x) => x !== id);
@@ -582,7 +605,7 @@ export function ChampsVenteViande({ e }: Props) {
   useEffect(() => {
     if (auKiloLigne) totalAuKilo(e.poidsKg);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prixEffectif, e.poidsKg, auKiloLigne]);
+  }, [prixEffectif, e.poidsKg, auKiloLigne, aLaTete ? e.quantite : '']);
   const maximum = maximumAnimaux(choisie, e.jeune);
   /** Choisit le détail de la vente (la ligne de l'inventaire) : la même chose que dans la liste, pour un détail choisi d'office. */
   const choisirDetail = (v: string) => {
@@ -592,7 +615,7 @@ export function ChampsVenteViande({ e }: Props) {
           // Un animal se vend à l'unité d'abord : le nombre d'animaux vaut 1 d'office.
           if (role && !e.quantite.trim()) e.setQuantite('1');
           if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
-          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix));
+          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix), role === ROLE_VIANDE.VIVANT);
           // Des jours d'abattage à facturer : le lot se choisit d'abord (une seule étape) ; sinon, on désigne l'animal.
           if (role && joursProposes.length === 0) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
@@ -772,7 +795,8 @@ export function ChampsVenteViande({ e }: Props) {
                   ))}
                 </Card>
               ) : null}
-              {animauxChoisis.length > 0 && e.avecFacture ? (
+              {/* Un animal vivant n'est pas abattu : pas de date d'abattoir (le circuit de l'abattoir est celui des animaux abattus). */}
+              {animauxChoisis.length > 0 && e.avecFacture && !aLaTete ? (
                 <ChampDateAbattoir
                   dateVente={e.date}
                   value={e.dateAbattoir}
@@ -814,7 +838,7 @@ export function ChampsVenteViande({ e }: Props) {
             <View style={commonStyles.flex1}>
               <FormField
                 label={TEXTES.commun.general.poidsKg}
-                required
+                required={!aLaTete}
                 value={e.poidsKg}
                 onChangeText={(v) => {
                   e.setPoidsKg(v);
@@ -830,7 +854,7 @@ export function ChampsVenteViande({ e }: Props) {
             <View style={commonStyles.flex1}>
               {/* Le prix unitaire vient du stock ; « Prix du produit personnalisé » le remplace, pour cette vente seulement. */}
               <FormField
-                label={TEXTES.comptabilite.nouvelleEcriture.prixUnitaireKg}
+                label={aLaTete ? TEXTES.comptabilite.nouvelleEcriture.prixUnitaireAnimal : TEXTES.comptabilite.nouvelleEcriture.prixUnitaireKg}
                 value={e.prixPersonnalise ? e.prixUnitaireSaisi : prixDuDetail ? prixDuDetail.toFixed(2).replace('.', ',') : ''}
                 onChangeText={e.setPrixUnitaireSaisi}
                 editable={e.prixPersonnalise}
@@ -843,8 +867,8 @@ export function ChampsVenteViande({ e }: Props) {
               <ChampTauxTvaVente e={e} />
             </View>
           </View>
-          <ChampPrixPersonnalise e={e} unite="kg" prixInventaire={prixDuDetail} sansChamp />
-          {/* Le prix total est calculé (poids × prix au kilo) : on ne le saisit pas. */}
+          <ChampPrixPersonnalise e={e} unite={aLaTete ? 'piece' : 'kg'} prixInventaire={prixDuDetail} sansChamp />
+          {/* Le prix total est calculé (poids × prix au kilo, ou prix de l'animal × leur nombre) : on ne le saisit pas. */}
           <FormField
             label={TEXTES.comptabilite.nouvelleEcriture.prixTotalTtc}
             required
@@ -948,14 +972,16 @@ export function ChampsVenteViande({ e }: Props) {
           return chiffres ? Number(chiffres[1]) : undefined;
         }}
       />
-      <SelectModal<string>
+      {/* Les animaux vivants : des cases à cocher (ceux déjà choisis sont cochés) ; on valide d'un coup. */}
+      <SelectModalMultiple<string>
+        key={`vivants-${!!question}-${e.animaux.join(',')}`}
         visible={!!question}
         titre={TEXTES.comptabilite.nouvelleEcriture.animalVendu(question?.libelle ?? '')}
-        value=""
-        options={animauxProposes.map((a) => ({ value: a.id, label: libelleAnimal(a) }))}
-        onSelect={ajouterAnimal}
+        options={animauxACocher.map((a) => ({ value: a.id, label: libelleAnimal(a) }))}
+        initiales={e.animaux}
+        libelleValider={TEXTES.comptabilite.nouvelleEcriture.ajouterLesAnimaux}
+        onValider={choisirAnimaux}
         onClose={() => setQuestion(null)}
-        searchable
       />
     </>
   );

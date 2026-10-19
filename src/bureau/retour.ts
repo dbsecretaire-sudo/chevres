@@ -149,6 +149,13 @@ export const ligneDuMenuDe = (adresse: string): string => {
 };
 
 /**
+ * Vrai quand l'adresse est celle d'un accueil de rubrique lui-même (« /cheptel », « /comptabilite »…) et non celle d'un écran de dessous.
+ * Sur Windows, l'accueil d'une rubrique redirige vers son écran principal ; il ne doit jamais écraser un écran plus profond demandé
+ * d'ailleurs (un rappel de l'accueil, le courrier d'un contact) : l'accueil de la rubrique se monte alors sous l'écran, sans être l'adresse.
+ */
+export const estLaRacineDUneRubrique = (adresse: string): boolean => sansRequete(adresse).split('/').filter(Boolean).length === 1;
+
+/**
  * La page vers laquelle la flèche de retour mène : la page parente de l'écran, à défaut l'accueil de sa rubrique. Rien sur l'accueil
  * et sur l'accueil d'une rubrique, qui n'ont pas de flèche.
  */
