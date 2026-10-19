@@ -82,6 +82,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/detail$/, () => ROUTES.COMPTABILITE_LISTE],
   // Un lot revient aux lots d'animaux, un traitement aux traitements, une nouvelle naissance aux naissances.
   [/^\/cheptel\/(lot|lots-categories?)$/, () => ROUTES.CHEPTEL_LOTS],
+  // Les documents de circulation se trouvent dans le dossier PAC : on y revient (que l'écran s'ouvre d'ici ou d'un rappel de l'accueil).
+  [/^\/cheptel\/documents-circulation$/, () => ROUTES.CHEPTEL_DOSSIER_PAC],
   // Un lot ouvert depuis la Production revient à la viande.
   [/^\/production\/lot$/, () => ROUTES.PRODUCTION_VIANDE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
@@ -133,6 +135,15 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
 
 /** Les rubriques de l'application : chacune a son accueil, à son adresse. */
 const RUBRIQUES = ['cheptel', 'production', 'commercial', 'comptabilite', 'clients'];
+
+/**
+ * La ligne du menu de gauche qui représente un écran absent du menu (un écran « de dessous ») : celle de sa page parente. Les documents
+ * de circulation s'ouvrent du dossier PAC, même depuis un rappel de l'accueil : c'est la ligne « Dossier PAC » qui s'allume.
+ */
+export const ligneDuMenuDe = (adresse: string): string => {
+  const chemin = sansRequete(adresse);
+  return /^\/cheptel\/documents-circulation$/.test(chemin) ? ROUTES.CHEPTEL_DOSSIER_PAC : adresse;
+};
 
 /**
  * La page vers laquelle la flèche de retour mène : la page parente de l'écran, à défaut l'accueil de sa rubrique. Rien sur l'accueil

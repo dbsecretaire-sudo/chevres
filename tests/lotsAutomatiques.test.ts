@@ -15,7 +15,7 @@ import {
   lotsDeRenouvellementDeLAnnee,
   retirerDesAutresLotsDeRenouvellement,
 } from '@/features/exploitation/services/lots';
-import { pageParente } from '@/bureau/retour';
+import { ligneDuMenuDe, pageParente } from '@/bureau/retour';
 import type { LotAnimaux } from '@/features/settings/settings';
 import type { Chevre } from '@/features/cheptel/types';
 
@@ -169,5 +169,14 @@ describe('flèche de retour d’un lot', () => {
     expect(pageParente('/cheptel/traitement?id=x')).toBe('/cheptel/traitements');
     expect(pageParente('/cheptel/naissance-nouvelle')).toBe('/cheptel/naissances');
     expect(pageParente('/sante/veterinaire/visite?id=x')).toBe('/cheptel/lots-categorie?categorie=veterinaire');
+  });
+});
+
+describe('documents de circulation (Windows)', () => {
+  it('se rattachent au dossier PAC : retour et ligne du menu de gauche', () => {
+    expect(pageParente('/cheptel/documents-circulation')).toBe('/cheptel/dossier-pac');
+    expect(ligneDuMenuDe('/cheptel/documents-circulation')).toBe('/cheptel/dossier-pac');
+    // Les autres écrans gardent leur propre adresse.
+    expect(ligneDuMenuDe('/cheptel/liste')).toBe('/cheptel/liste');
   });
 });

@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Redirect, useGlobalSearchParams, useIsFocused, usePathname, type Href } from 'expo-router';
+import { ligneDuMenuDe } from '@/bureau/retour';
 import { estBureau } from '@/shared/utils/plateforme';
 
 /** À partir de cette largeur de fenêtre (en pixels), la version Windows montre deux colonnes : le menu de la rubrique et l'écran ouvert. */
@@ -36,7 +37,7 @@ export function useAccueilEnDeuxColonnes(ecranPrincipal: string) {
 export function useLigneActive(): (route: string) => boolean {
   const deuxColonnes = useDeuxColonnes();
   const dansMenu = useContext(DansColonneGauche);
-  const adresse = usePathname();
+  const adresse = ligneDuMenuDe(usePathname());
   const { famille, onglet } = useGlobalSearchParams<{ famille?: string; onglet?: string }>();
   return (route) => {
     if (!deuxColonnes || !dansMenu) return false;
