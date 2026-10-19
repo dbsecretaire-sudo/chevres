@@ -1,5 +1,5 @@
 import type { Client } from '@/features/clients/types';
-import { categorieClientDe, groupesRecetteDeLaCategorie } from '@/shared/dictionnaire/categoriesClient';
+import { categorieClientDe, fraisAbattoirFactures, groupesRecetteDeLaCategorie } from '@/shared/dictionnaire/categoriesClient';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_CLIENT, GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
 
@@ -20,6 +20,14 @@ export const estParticulier = (client: Pick<Client, 'categorie'> | undefined): b
 /** Vrai quand le prix de la vente est libre (récolteur, ou toute catégorie réglée ainsi) : on le saisit, il n'est pas tiré de l'inventaire. */
 export const prixLibre = (client: Pick<Client, 'categorie'> | undefined): boolean =>
   categorieClientDe(client?.categorie).prixLibre;
+
+/** Vrai quand les frais d'abattoir se facturent à ce client (selon sa catégorie : réglage, sinon oui sauf à prix libre). */
+export const fraisAbattoirFacturesAuClient = (client: Pick<Client, 'categorie'> | undefined): boolean =>
+  fraisAbattoirFactures(categorieClientDe(client?.categorie));
+
+/** Vrai quand sa catégorie les facture expressément (réglage coché) : même pour une vente offerte. */
+export const fraisAbattoirMemeOfferts = (client: Pick<Client, 'categorie'> | undefined): boolean =>
+  categorieClientDe(client?.categorie).fraisAbattoir === true;
 
 /** Vrai quand le numéro de facture peut contenir des lettres ; sinon chiffres, tirets et barres seulement. */
 export const numeroFactureLibre = prixLibre;

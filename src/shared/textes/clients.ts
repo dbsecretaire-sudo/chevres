@@ -55,6 +55,7 @@ export const TEXTES_CLIENTS = {
       'Seul un organisme a l’aide / subvention d’office (ou une facture de prestations) ; les autres catégories ne la proposent pas tant que vous ne la cochez pas.',
     declaree: 'Vente déclarée d’office (avec facture)',
     prixLibre: 'Prix libre, n° de facture avec lettres, réajustement',
+    fraisAbattoir: 'Facturer les frais d’abattoir (même à prix libre ou offert)',
     parDefaut: 'Catégorie d’office des contacts : elle ne se retire pas.',
     protegee:
       'Les groupements (Production) se choisissent parmi les contacts de cette catégorie : elle ne se retire pas.',

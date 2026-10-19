@@ -28,11 +28,17 @@ export interface CategorieClientReglage {
   autresRecettes?: string[];
   /** Afficher la case « Pas encore encaissée » dans les factures de ses clients (d'office : oui). */
   pasEncaissee?: boolean;
+  /** Facturer les frais d'abattoir à ses clients, même à prix libre ou pour une vente offerte (d'office : oui, sauf à prix libre). */
+  fraisAbattoir?: boolean;
 }
 
 /** Vrai quand la case « Pas encore encaissée » s'affiche pour les clients de cette catégorie (sans catégorie connue : oui). */
 export const pasEncaisseeAffichee = (categorie?: CategorieClientReglage): boolean =>
   categorie?.pasEncaissee !== false;
+
+/** Vrai quand les frais d'abattoir se facturent aux clients de cette catégorie (réglé, sinon oui sauf à prix libre). */
+export const fraisAbattoirFactures = (categorie?: Pick<CategorieClientReglage, 'fraisAbattoir' | 'prixLibre'>): boolean =>
+  categorie?.fraisAbattoir ?? !categorie?.prixLibre;
 
 /** Les catégories proposées d'office : un particulier n'est pas déclaré ; le récolteur facture lui-même, à prix libre. */
 export const categoriesClientParDefaut = (): CategorieClientReglage[] => [

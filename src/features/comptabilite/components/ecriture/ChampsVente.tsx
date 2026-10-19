@@ -896,7 +896,7 @@ export function ChampsVenteViande({ e }: Props) {
           <ChampPrixPersonnalise e={e} unite="piece" prixInventaire={prixDuDetail} />
         </>
       )}
-      {parAnimal && !e.prixLibre ? (
+      {parAnimal && e.fraisAbattoirAffiches ? (
         <ChampFraisAbattoir
           valeur={e.fraisAbattoir}
           taux={e.tauxTvaFrais}

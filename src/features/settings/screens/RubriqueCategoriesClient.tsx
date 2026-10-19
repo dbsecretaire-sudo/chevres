@@ -11,6 +11,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { CATEGORIE_CLIENT_PAR_DEFAUT, CATEGORIES_CLIENT_PROTEGEES } from '@/shared/constants/clients';
 import {
   categoriesClientParDefaut,
+  fraisAbattoirFactures,
   groupesRecetteDeLaCategorie,
   pasEncaisseeAffichee,
   type CategorieClientReglage,
@@ -140,6 +141,12 @@ export default function RubriqueCategoriesClient() {
                   coche: (id) => !!categories.find((c) => c.id === id)?.prixLibre,
                   definir: (id, prixLibre) => maj(id, { prixLibre }),
                 },
+                {
+                  cle: 'fraisAbattoir',
+                  titre: T.fraisAbattoir,
+                  coche: (id) => fraisAbattoirFactures(categories.find((c) => c.id === id)),
+                  definir: (id, fraisAbattoir) => maj(id, { fraisAbattoir }),
+                },
               ],
             },
             {
@@ -203,6 +210,11 @@ export default function RubriqueCategoriesClient() {
                 label={T.prixLibre}
                 value={c.prixLibre}
                 onChange={(prixLibre) => maj(c.id, { prixLibre })}
+              />
+              <Checkbox
+                label={T.fraisAbattoir}
+                value={fraisAbattoirFactures(c)}
+                onChange={(fraisAbattoir) => maj(c.id, { fraisAbattoir })}
               />
               <Text style={commonStyles.lineSemiBold}>{T.affichage}</Text>
               <Checkbox

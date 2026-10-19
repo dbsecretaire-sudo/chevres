@@ -35,7 +35,12 @@ import type {
 } from '@/features/comptabilite/types';
 import { lignesChambreFinales, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
-import { numeroFactureLibre, prixLibre } from '@/features/clients/services/categorie';
+import {
+  fraisAbattoirFacturesAuClient,
+  fraisAbattoirMemeOfferts,
+  numeroFactureLibre,
+  prixLibre,
+} from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { MOTIF_NUMERO_FACTURE_NUMERIQUE } from '@/shared/constants/clients';
@@ -216,7 +221,14 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   const estFromage = s.categorieRecette === CATEGORIE_RECETTE.FROMAGE;
-  const frais = categorie === CATEGORIE_VENTE.VIANDE && !s.offert ? parseDecimal(s.fraisAbattoir) : 0;
+  // Les frais d'abattoir se facturent quand la catégorie du client les facture ; une vente offerte n'en a pas, sauf si sa catégorie les
+  // facture expressément (cochée dans Organisation › Catégories de contact).
+  const frais =
+    categorie === CATEGORIE_VENTE.VIANDE &&
+    fraisAbattoirFacturesAuClient(s.clientSelectionne) &&
+    (!s.offert || fraisAbattoirMemeOfferts(s.clientSelectionne))
+      ? parseDecimal(s.fraisAbattoir)
+      : 0;
   return {
     vente: {
       activite: s.activite,

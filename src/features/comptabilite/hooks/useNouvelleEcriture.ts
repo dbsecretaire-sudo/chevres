@@ -62,6 +62,7 @@ import {
   numeroFactureLibre as numeroFactureLibreDuClient,
   reajustementPossible as reajustementPossibleDuClient,
   prixLibre as prixLibreDuClient,
+  fraisAbattoirFacturesAuClient,
   estClientAbattoir,
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
@@ -331,6 +332,8 @@ export function useNouvelleEcriture(
   const clientSelectionne = clients.find((c) => c.id === clientId);
   /** Le prix d'un récolteur est libre (saisi) ; son numéro de facture peut avoir des lettres, celui des autres seulement des chiffres. */
   const prixLibre = prixLibreDuClient(clientSelectionne);
+  /** Les frais d'abattoir se facturent à ce client (sa catégorie : réglage, sinon oui sauf à prix libre). */
+  const fraisAbattoirAffiches = fraisAbattoirFacturesAuClient(clientSelectionne);
   const numeroFactureLibre = numeroFactureLibreDuClient(clientSelectionne);
   /** « Réajustement » : une vente de lait déclarée d'un récolteur ; coché, elle n'a ni litrage ni numéro de facture. */
   const reajustementPossible = reajustementPossibleDuClient(clientSelectionne, categorieRecette, avecFacture);
@@ -998,6 +1001,7 @@ export function useNouvelleEcriture(
     setClientId,
     choisirClient,
     prixLibre,
+    fraisAbattoirAffiches,
     numeroFactureLibre,
     reajustementPossible,
     reajustement,
