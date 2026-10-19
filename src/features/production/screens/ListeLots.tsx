@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { Screen } from '@/shared/components/ScreenList';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -107,6 +108,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
           />
           <SelecteurEspece />
         </LigneFiltres>
+        <SuggestionParcours parcoursId={fromage ? 'vente-fromage' : 'vente-charcuterie'} />
         {articles.length === 0 ? (
           <EmptyState title={T.aucun} />
         ) : (

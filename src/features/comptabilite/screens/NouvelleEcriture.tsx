@@ -6,6 +6,7 @@ import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
@@ -65,6 +66,8 @@ export default function NouvelleFacture() {
     commande?: string;
     /** Seulement ces lignes du bon (identifiants séparés par « ; ») : la facturation depuis les lots d'un produit. */
     lignes?: string;
+    /** « vente » : s'ouvre sur la 2e étape (ce qui est vendu ou acheté), sans passer par le contact : le didacticiel y montre ses champs. */
+    etape?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -97,7 +100,13 @@ export default function NouvelleFacture() {
    * Une écriture se saisit en deux étapes, pour une dépense comme pour une recette : le contact (la date, le tiers, la facture), puis
    * ce qui est acheté ou vendu (son détail, son montant, son paiement).
    */
-  const [etape, setEtape] = useState<'contact' | 'vente'>('contact');
+  const [etape, setEtape] = useState<'contact' | 'vente'>(params.etape === 'vente' ? 'vente' : 'contact');
+  // L'adresse demande une autre étape (le didacticiel passe d'une étape de la saisie à l'autre) : l'écran la suit.
+  const [etapeDemandeeVue, setEtapeDemandeeVue] = useState(params.etape);
+  if (params.etape !== etapeDemandeeVue) {
+    setEtapeDemandeeVue(params.etape);
+    setEtape(params.etape === 'vente' ? 'vente' : 'contact');
+  }
   // Une écriture enchaînée, ou un autre type d'écriture (dépense, recette), repart de la première étape.
   const [enchaineesVues, setEnchaineesVues] = useState(0);
   if (enchaineesVues !== e.enchainees) {
@@ -188,12 +197,14 @@ export default function NouvelleFacture() {
             onChoisir={e.setType}
           />
           {plusieursEspeces() ? (
-            <ChoixDeroulant
-              titre={TEXTES.comptabilite.activite.activite}
-              valeur={e.activite}
-              options={activites.map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
-              onChoisir={e.changerActivite}
-            />
+            <AncreVisite id="ecriture.activite">
+              <ChoixDeroulant
+                titre={TEXTES.comptabilite.activite.activite}
+                valeur={e.activite}
+                options={activites.map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
+                onChoisir={e.changerActivite}
+              />
+            </AncreVisite>
           ) : null}
         </LigneFiltres>
 

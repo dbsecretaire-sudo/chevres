@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { formatMontant } from '@/shared/utils/dates';
+import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
 import { FormField } from '@/shared/components/FormField';
@@ -14,6 +15,7 @@ export function ChampsVenteLait({ e }: Props) {
   useTotalVerrouille(e, prixDuLitre, e.quantite);
   return (
     <>
+      <SuggestionParcours parcoursId="vente-lait" />
       {/* Des femelles traitées, dont le lait ne doit pas être livré : l'avertissement s'affiche tant que leur délai court. */}
       <AvertissementDelais type="lait" date={e.date} />
       {/* Un réajustement n'a pas de litrage. */}

@@ -79,6 +79,19 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
   }
   const index = etat.index;
 
+  /** Ouvre l'adresse d'une étape ; sur l'écran déjà ouvert, seuls ses paramètres changent (l'onglet voulu, par exemple). */
+  const aller = useCallback(
+    (cible: string) => {
+      const [chemin, requete = ''] = cible.split('?');
+      if (chemin === adresse && requete) {
+        router.setParams(Object.fromEntries(new URLSearchParams(requete)) as never);
+        return;
+      }
+      router.push(cible as never);
+    },
+    [adresse, router],
+  );
+
   // L'étape en cours est gardée sur l'appareil.
   useEffect(() => {
     if (charge.current) AsyncStorage.setItem(CLE_STOCKAGE, JSON.stringify({ actif: etat.actif, index, parcours })).catch(() => undefined);
@@ -93,9 +106,9 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       const premiere = etapesDuParcours(id)[0];
       if (!premiere) return;
       setEtat({ actif: true, index: 0, parcours: id });
-      router.push((premiere.ouvrir ?? (typeof premiere.route === 'string' ? premiere.route : '/')) as never);
+      aller(premiere.ouvrir ?? (typeof premiere.route === 'string' ? premiere.route : '/'));
     },
-    [router],
+    [aller],
   );
   const quitter = useCallback(() => setEtat({ actif: false, index: 0 }), []);
   const menuChoisi = useCallback(
@@ -119,19 +132,19 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       return;
     }
     setEtat({ actif: true, index: prochaine.index, parcours });
-    if (prochaine.ouvrir) router.push(prochaine.ouvrir as never);
-  }, [etapes, index, adresse, colonnes, router, parcours]);
+    if (prochaine.ouvrir) aller(prochaine.ouvrir);
+  }, [etapes, index, adresse, colonnes, aller, parcours]);
   const precedent = useCallback(() => {
     const avant = etapePrecedente(etapes, index, adresse, colonnes);
     if (!avant) return;
     setEtat({ actif: true, index: avant.index, parcours });
-    if (avant.ouvrir) router.push(avant.ouvrir as never);
-  }, [etapes, index, adresse, colonnes, router, parcours]);
+    if (avant.ouvrir) aller(avant.ouvrir);
+  }, [etapes, index, adresse, colonnes, aller, parcours]);
   const etape = etat.actif ? etapes[index] : undefined;
   const reprendre = useCallback(() => {
     const route = etape?.route;
-    router.push((etape?.ouvrir ?? (typeof route === 'string' ? route : '/')) as never);
-  }, [etape, router]);
+    aller(etape?.ouvrir ?? (typeof route === 'string' ? route : '/'));
+  }, [etape, aller]);
 
   const valeur = useMemo<ContexteVisite>(
     () => ({

@@ -12,6 +12,11 @@ export const TEXTES_DIDACTICIEL = {
     lancer: 'Lancer',
     lancerLeParcours: (titre: string) => `Lancer la visite guidée : ${titre}`,
   },
+  /** La suggestion posée sur l'écran d'un cas (vendre du fromage…) : elle propose le parcours qui le suit pas à pas. */
+  suggestion: {
+    titre: 'Besoin d’aide ? Suivez le parcours',
+    lancer: 'Lancer',
+  },
   /** La visite guidée : la bulle qui présente une page et dit quoi toucher. */
   visite: {
     etape: (i: number, n: number) => `Étape ${i} sur ${n}`,

@@ -3,6 +3,7 @@ import { formatMontant } from '@/shared/utils/dates';
 import { useRouter } from 'expo-router';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
@@ -51,6 +52,7 @@ export function ChampsVenteFromage({ e }: Props) {
 
   return (
     <>
+      <SuggestionParcours parcoursId="vente-fromage" />
       <AvertissementDelais type="lait" date={e.date} />
       <SelectFieldEditable
         label={TEXTES.comptabilite.nouvelleEcriture.typeDeFromage}

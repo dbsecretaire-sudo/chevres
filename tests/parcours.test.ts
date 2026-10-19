@@ -28,7 +28,7 @@ describe('parcours de cas du didacticiel', () => {
 
   it('chaque parcours a son schéma en pictogrammes', () => {
     for (const p of parcours) expect(p.schema.length).toBeGreaterThanOrEqual(2);
-    expect(parcoursDe('vente-sans-facture')?.schema).toEqual(['animal', 'facture-barree', 'argent']);
+    expect(parcoursDe('vente-sans-facture')?.schema).toEqual(['animal', 'commande', 'facture-barree', 'argent']);
   });
 
   it('une étape a un titre, un texte, et des adresses qui existent', () => {
@@ -64,9 +64,11 @@ describe('parcours de cas du didacticiel', () => {
     const iAnalyses = etapes.findIndex((e) => e.titre.startsWith('6.'));
     const avant = etapePrecedente(etapes, iAnalyses, '/production/controles/liste');
     expect(avant?.index).toBe(iAnalyses - 1);
-    expect(avant?.ouvrir).toBe('/comptabilite/nouvelle');
-    // L’étape d’avant est sur la même page : rien à ouvrir.
-    expect(etapePrecedente(etapes, 3, '/comptabilite/nouvelle')).toEqual({ index: 2, ouvrir: undefined });
+    expect(avant?.ouvrir).toContain('/comptabilite/nouvelle?type=emise&categorie=lait');
+    // L’étape d’avant est sur la même page, mais précise son écran (étape de saisie, catégorie) : il s’ouvre pour la montrer.
+    expect(etapePrecedente(etapes, 3, '/comptabilite/nouvelle')?.ouvrir).toContain('etape=vente');
+    // Une étape sans paramètres, déjà ouverte : rien à ouvrir.
+    expect(etapePrecedente(etapesDuParcours('vente-abattoir'), 5, '/comptabilite/nouvelle')?.ouvrir).toContain('/comptabilite/nouvelle');
     expect(etapePrecedente(etapes, 0, '/comptabilite/nouvelle')).toBeNull();
   });
 

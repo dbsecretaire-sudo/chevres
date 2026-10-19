@@ -18,6 +18,7 @@ import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
+import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
 import { usePoidsDuLot } from '@/features/exploitation/hooks/usePoidsDuLot';
@@ -342,6 +343,7 @@ export function ChampsVenteViande({ e }: Props) {
   );
   return (
     <>
+      <SuggestionParcours parcoursId={animalEntier ? (e.avecFacture ? 'vente-abattoir' : 'vente-sans-facture') : 'vente-charcuterie'} />
       <SelectFieldEditable<string>
         label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
         required

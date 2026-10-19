@@ -124,6 +124,16 @@ export function etapeApresUnMenu(etapes: readonly EtapeVisite[], index: number, 
 }
 
 /**
+ * L'adresse à ouvrir pour se rendre à une étape : celle de sa page quand on n'y est pas, ou, quand l'étape précise un onglet ou un filtre
+ * (`ouvrir`), cette adresse-là même si l'on est déjà sur la page (l'onglet change). Rien quand on y est et qu'elle n'en précise pas.
+ */
+function adresseAOuvrir(etape: EtapeVisite, adresse: string, colonnes: boolean): string | undefined {
+  if (typeof etape.route !== 'string') return undefined;
+  if (etape.ouvrir) return etape.ouvrir;
+  return etapeSurLaPage(etape, adresse, colonnes) ? undefined : etape.route;
+}
+
+/**
  * L'étape où « Suivant » ou « Passer cette étape » mène, et la page à ouvrir pour s'y rendre (rien si l'on y est déjà). Une étape qui n'a pas
  * d'adresse précise (la fiche d'un animal, dont on ignore laquelle) est passée quand on n'y est pas.
  */
@@ -137,10 +147,7 @@ export function etapeSuivante(
   while (suivante < etapes.length && etapes[suivante].route instanceof RegExp && !etapeSurLaPage(etapes[suivante], adresse, colonnes)) suivante++;
   if (suivante >= etapes.length) return null;
   const route = etapes[suivante].route;
-  return {
-    index: suivante,
-    ouvrir: typeof route === 'string' && !etapeSurLaPage(etapes[suivante], adresse, colonnes) ? (etapes[suivante].ouvrir ?? route) : undefined,
-  };
+  return { index: suivante, ouvrir: adresseAOuvrir(etapes[suivante], adresse, colonnes) };
 }
 
 /**
@@ -156,11 +163,7 @@ export function etapePrecedente(
   let precedente = index - 1;
   while (precedente >= 0 && etapes[precedente].route instanceof RegExp && !etapeSurLaPage(etapes[precedente], adresse, colonnes)) precedente--;
   if (precedente < 0) return null;
-  const route = etapes[precedente].route;
-  return {
-    index: precedente,
-    ouvrir: typeof route === 'string' && !etapeSurLaPage(etapes[precedente], adresse, colonnes) ? (etapes[precedente].ouvrir ?? route) : undefined,
-  };
+  return { index: precedente, ouvrir: adresseAOuvrir(etapes[precedente], adresse, colonnes) };
 }
 
 /**

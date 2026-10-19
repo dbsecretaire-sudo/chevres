@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { FlatList, Text, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
@@ -148,7 +150,17 @@ export default function ViandeVendue() {
   );
 
   /** Trois onglets : la viande à facturer, la viande facturée, et celle vendue sans facture (les animaux sans boucle). */
-  const [onglet, setOnglet] = useState<OngletViande>('afacturer');
+  // Un lien (le didacticiel, un rappel) peut ouvrir un onglet : il s'ouvre dessus, et change d'onglet quand l'adresse en demande un autre.
+  const { onglet: ongletDemande } = useLocalSearchParams<{ onglet?: string }>();
+  const ongletValide = (o?: string): OngletViande | undefined =>
+    (['afacturer', 'facturee', 'avendre', 'vendue'] as string[]).includes(o ?? '') ? (o as OngletViande) : undefined;
+  const [onglet, setOnglet] = useState<OngletViande>(ongletValide(ongletDemande) ?? 'afacturer');
+  const [ongletVu, setOngletVu] = useState(ongletDemande);
+  if (ongletDemande !== ongletVu) {
+    setOngletVu(ongletDemande);
+    const demande = ongletValide(ongletDemande);
+    if (demande) setOnglet(demande);
+  }
   const facturees = ventes.filter((v) => venteADeclarer(v));
   const sansFacture = ventes.filter((v) => !venteADeclarer(v));
   /** Les animaux à l'abattoir pas encore vendus, par jour d'abattage : ceux avec boucle se facturent, ceux sans boucle se vendent sans facture. */
@@ -362,6 +374,7 @@ export default function ViandeVendue() {
   return (
     <Screen scroll={false}>
       <View style={commonStyles.enteteListe}>
+        <SuggestionParcours parcoursId={ongletActif === 'avendre' || ongletActif === 'vendue' ? 'vente-sans-facture' : 'vente-abattoir'} />
         <LigneFiltres>
           <YearPicker
             annees={annees}
@@ -387,13 +400,15 @@ export default function ViandeVendue() {
           onChoisir={setOnglet}
         />
         {/* Avancé : activer ou désactiver les onglets des animaux sans boucle vendus sans facture. */}
-        <Checkbox
-          label={T.avance}
-          value={avance}
-          onChange={(v) =>
-            patchSettings({ exploitation: { ...settings.exploitation, ventesSansFacture: v } })
-          }
-        />
+        <AncreVisite id="viande.avance">
+          <Checkbox
+            label={T.avance}
+            value={avance}
+            onChange={(v) =>
+              patchSettings({ exploitation: { ...settings.exploitation, ventesSansFacture: v } })
+            }
+          />
+        </AncreVisite>
         {ongletActif === 'avendre' ? (
           <PucesDefilantes<'disponibles' | 'reserves'>
             puces={[

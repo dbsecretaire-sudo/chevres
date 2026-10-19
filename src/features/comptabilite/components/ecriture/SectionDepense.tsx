@@ -1,4 +1,5 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { AnimauxAchetesEditor } from '@/features/comptabilite/components/AnimauxAchetesEditor';
 import { AnimauxEnvoyesChoix } from '@/features/comptabilite/components/AnimauxEnvoyesChoix';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
@@ -315,7 +316,9 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
-          <ChampAtelier value={e.atelier} onChange={e.setAtelier} />
+          <AncreVisite id="ecriture.atelier">
+            <ChampAtelier value={e.atelier} onChange={e.setAtelier} />
+          </AncreVisite>
         )}
         {e.atelier === ATELIER.AGRITOURISME ? (
           <ChampElementAgritourisme value={e.elementAgri} onChange={e.setElementAgri} />
