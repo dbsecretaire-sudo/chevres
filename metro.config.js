@@ -22,11 +22,16 @@ const remplacements =
 // Le téléphone : le stockage garde toutes les données en mémoire (comme Windows) au lieu de relire le téléphone à chaque écran. Seul ce
 // module-là importe l'original.
 const STOCKAGE_NATIF = '@react-native-async-storage/async-storage';
-const STOCKAGE_EN_MEMOIRE = path.join(__dirname, 'src', 'shared', 'storage', 'asyncStorageEnMemoire.ts');
+const STOCKAGE_EN_MEMOIRE = path.join(__dirname, 'src', 'shared', 'stockage-en-memoire', 'asyncStorageEnMemoire.ts');
+// Ce module est reconnu à la fin de son chemin (la forme complète que Metro donne peut différer de __dirname : accents, disque, séparateurs).
+// Il doit rester SEUL dans son dossier : Metro mémorise la résolution d'un module par dossier, donc un voisin qui importe le stockage
+// (comme src/shared/storage/localStore.ts) lui ferait recevoir sa propre réponse — il s'importerait lui-même et l'application resterait
+// blanche, sans aucune erreur (le vrai stockage n'était même pas dans le paquet). Un test le garde.
+const estLeStockageEnMemoire = (chemin) => /[\\/]src[\\/]shared[\\/]stockage-en-memoire[\\/]asyncStorageEnMemoire\.ts$/.test(chemin ?? '');
 
 const resolutionInitiale = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (platform !== 'web' && moduleName === STOCKAGE_NATIF && context.originModulePath !== STOCKAGE_EN_MEMOIRE) {
+  if (platform !== 'web' && moduleName === STOCKAGE_NATIF && !estLeStockageEnMemoire(context.originModulePath)) {
     return { type: 'sourceFile', filePath: STOCKAGE_EN_MEMOIRE };
   }
   // pdf-lib (qui remplit les formulaires PDF officiels) : sur le web et Windows, Metro prendrait sa version « module », qui importe tslib

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import Natif from '@react-native-async-storage/async-storage';
-import AsyncStorage from '@/shared/storage/asyncStorageEnMemoire';
+import AsyncStorage from '@/shared/stockage-en-memoire/asyncStorageEnMemoire';
 
 // Dans les tests, « @react-native-async-storage/async-storage » est une mémoire (tests/stubs) : elle joue ici le stockage du téléphone.
 describe('stockage du téléphone gardé en mémoire', () => {
