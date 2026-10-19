@@ -858,15 +858,16 @@ export function totalDeLaVente(
   archive: ArchiveStock,
   prixDuContact?: Record<string, number>,
 ): number | undefined {
-  // Des animaux vivants vendus au poids vif (réforme) : le prix au kilo se saisit, l'inventaire ne le donne pas (il donne celui d'un animal).
-  if (vente.venduAuPoids) return undefined;
-  const unitaire = prixUnitaireDeLaVente(vente, archive, prixDuContact);
+  // Le prix unitaire personnalisé de la vente (s'il y en a un) remplace celui de l'inventaire. Des animaux vivants vendus au poids vif (réforme) :
+  // le prix au kilo se saisit, l'inventaire ne le donne pas (il donne celui d'un animal).
+  if (vente.venduAuPoids && !vente.prixUnitairePersonnalise) return undefined;
+  const unitaire = vente.prixUnitairePersonnalise || prixUnitaireDeLaVente(vente, archive, prixDuContact);
   if (!unitaire) return undefined;
   // Un petit ou un animal sur pied se vend au kilo (son poids, 1 kg tant qu'il n'est pas saisi) ; un animal vivant (élevage, lait, compagnie), à
   // la tête ; le reste, à la pièce ou au litre.
   const ligne = ligneDeViandeDeLaVente(vente, archive);
   const role = ligne ? roleDeLaViande(ligne.cle) : undefined;
-  const auKilo = role !== undefined && role !== ROLE_VIANDE.VIVANT;
+  const auKilo = role !== undefined && (role !== ROLE_VIANDE.VIVANT || !!vente.venduAuPoids);
   const multiplicateur = auKilo ? (vente.poidsKg ?? 0) || 1 : vente.quantite;
   if (!(multiplicateur > 0)) return undefined;
   return Math.round(unitaire * multiplicateur * 100) / 100;

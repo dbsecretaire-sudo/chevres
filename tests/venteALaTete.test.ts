@@ -35,3 +35,17 @@ describe('animaux vivants de réforme vendus au poids vif', () => {
     expect(totalDeLaVente(vente(libelle, { poidsKg: 55 }), a)).toBe(360);
   });
 });
+
+describe('prix unitaire personnalisé gardé à la modification', () => {
+  const cle = cleArticle(GENRE_ARTICLE.VIANDE, `chevres_${ROLE_VIANDE.VIVANT}`);
+  const a = archive({ [cle]: 120 });
+  const libelle = articlesDuGenre(GENRE_ARTICLE.VIANDE, a, 'chevres' as never).find((x) => x.cle === cle)!.libelle;
+
+  it('à la tête : le prix personnalisé remplace celui de l’inventaire', () => {
+    expect(totalDeLaVente(vente(libelle, { prixUnitairePersonnalise: 90 }), a)).toBe(270);
+  });
+
+  it('au poids vif : le prix au kilo saisi × le poids', () => {
+    expect(totalDeLaVente(vente(libelle, { venduAuPoids: true, prixUnitairePersonnalise: 5, poidsKg: 55 }), a)).toBe(275);
+  });
+});

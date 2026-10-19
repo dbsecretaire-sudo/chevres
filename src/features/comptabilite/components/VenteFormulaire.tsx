@@ -150,7 +150,7 @@ export function VenteFormulaire({
     (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) &&
     !prixLibre(client) &&
     // Des animaux vivants vendus au poids vif : le prix est saisi, l'inventaire n'en donne pas.
-    !form.venduAuPoids &&
+    (!form.venduAuPoids || !!form.prixUnitairePersonnalise) &&
     !form.commandeId;
   const totalInventaire = archive ? totalDeLaVente(form, archive, prixDuContact) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;

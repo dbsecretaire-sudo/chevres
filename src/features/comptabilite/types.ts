@@ -293,6 +293,8 @@ export interface Vente {
   reajustement?: boolean;
   /** Une vente offerte (un cadeau au client) : son prix est de 0 €, les animaux et les produits sortent quand même du stock. */
   offert?: boolean;
+  /** Le prix unitaire personnalisé de cette vente (€ la pièce, le kilo ou le litre) quand il remplace celui de l'inventaire : le total de la vente le garde à la modification. */
+  prixUnitairePersonnalise?: number;
   /** Des animaux vivants vendus au poids vif (des animaux de réforme) : le prix se compte au kilo, saisi (sinon, un animal vivant se vend à la tête). */
   venduAuPoids?: boolean;
   /** Formulaire de modification seulement (jamais enregistré) : vente offerte, le bouton « Cadeau » des animaux (faux : ils sont facturés). */

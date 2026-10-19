@@ -197,7 +197,7 @@ export function useFicheVente(id: string | undefined) {
     const fraisOfferts = !!form.offert && (form.cadeauFrais ?? !((form.fraisAbattoir ?? 0) > 0));
     const frais = form.categorie === CATEGORIE_VENTE.VIANDE && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
     const prixDeLInventaire =
-      (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente && !form.venduAuPoids;
+      (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente && (!form.venduAuPoids || !!form.prixUnitairePersonnalise);
     if (prixDeLInventaire) {
       prix = totalDeLaVente({ ...form, quantite }, await lireArchiveStock(), prixDuContact);
       // Les frais d'abattoir refacturés s'ajoutent au prix de la viande.

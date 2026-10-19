@@ -786,6 +786,7 @@ export function useNouvelleEcriture(
         offert: offertCoche && estProductionVente,
         cadeauProduit,
         venduAuPoids,
+        prixUnitairePersonnalise: prixPersonnalise ? parseDecimal(prixUnitaireSaisi) || undefined : undefined,
         fraisOfferts: cadeauFrais,
         natureUrssaf,
         circuit,

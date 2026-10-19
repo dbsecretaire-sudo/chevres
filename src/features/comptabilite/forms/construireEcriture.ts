@@ -158,6 +158,8 @@ export interface SaisieEcriture {
   offert?: boolean;
   /** Des animaux vivants vendus au poids vif (réforme) : le prix au kilo se saisit. */
   venduAuPoids?: boolean;
+  /** Le prix unitaire personnalisé saisi (il remplace celui de l'inventaire pour cette vente). */
+  prixUnitairePersonnalise?: number;
   /** Vente offerte : les animaux (la viande) sont offerts ; faux, ils sont facturés (d'office : offerts). */
   cadeauProduit?: boolean;
   /** Vente offerte : les frais d'abattoir sont offerts (non facturés) ; faux, ils sont refacturés. */
@@ -298,6 +300,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       // Offerte : les animaux le sont ; sinon la vente a son prix (les frais seuls, ou tout, sont facturés).
       offert: produitOffert ? true : undefined,
       venduAuPoids: estViande && s.venduAuPoids && s.roleDuDetail === ROLE_VIANDE.VIVANT ? true : undefined,
+      prixUnitairePersonnalise:
+        s.prixUnitairePersonnalise && s.prixUnitairePersonnalise > 0 ? s.prixUnitairePersonnalise : undefined,
       payee: s.enAttente ? false : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       circuit: s.circuit || undefined,
