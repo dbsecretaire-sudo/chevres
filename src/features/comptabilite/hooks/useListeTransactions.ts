@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import type { FiltresTransactions } from '@/features/comptabilite/components/FiltreTransactionsModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
@@ -11,6 +11,7 @@ import {
   type RubriqueComptabilite,
   filtrerTransactions,
   filtresSontActifs,
+  ecrituresParTiers,
 } from '@/features/comptabilite/services/filtresTransactions';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { RUBRIQUE_COMPTABILITE } from '@/shared/constants/comptabilite';
@@ -24,7 +25,14 @@ import { memeJourDansLAnnee } from '@/shared/utils/dates';
  * avec leurs soldes. Les dates d'un filtre en cours suivent l'année active ; avec « Tout », leur année est libre.
  */
 export function useListeTransactions() {
+  const router = useRouter();
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  // Ouverte depuis la page d'un lieu de la ferme : seulement ses écritures (leurs identifiants), rangées par tiers.
+  const { ecritures: idsDemandes, titre: titreDemande } = useLocalSearchParams<{ ecritures?: string; titre?: string }>();
+  const restriction = useMemo(
+    () => (idsDemandes ? { ids: new Set(idsDemandes.split(';')), titre: titreDemande ?? '' } : undefined),
+    [idsDemandes, titreDemande],
+  );
   const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -71,12 +79,14 @@ export function useListeTransactions() {
 
   const filtrees = useMemo(
     () =>
-      filtrerTransactions(
-        filtrerParRubrique(filtrerParActivite(transactions, filtreActivite), rubrique),
-        filtres,
-        recherche,
-      ),
-    [transactions, filtreActivite, rubrique, filtres, recherche],
+      restriction
+        ? ecrituresParTiers(transactions.filter((t) => restriction.ids.has(t.id)))
+        : filtrerTransactions(
+            filtrerParRubrique(filtrerParActivite(transactions, filtreActivite), rubrique),
+            filtres,
+            recherche,
+          ),
+    [transactions, filtreActivite, rubrique, filtres, recherche, restriction],
   );
 
   return {
@@ -100,5 +110,8 @@ export function useListeTransactions() {
     recherche,
     setRecherche,
     recharger: charger,
+    /** Les écritures d'un lieu seulement (rangées par tiers) : son nom, et de quoi revenir à toute la liste. */
+    restriction: restriction ? { titre: restriction.titre } : undefined,
+    effacerRestriction: () => router.setParams({ ecritures: undefined, titre: undefined }),
   };
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ecrituresDuLieu, estLieuTiers, LIEUX_TIERS } from '@/features/accueil/services/lieuxTiers';
+import { ecrituresParTiers } from '@/features/comptabilite/services/filtresTransactions';
 
 const ecritures = [
   { titre: 'Station Total', categorie: 'carburant' },
@@ -36,5 +37,31 @@ describe('lieux avec tiers', () => {
       expect(c.nouvelle).toMatch(/^\/comptabilite\/nouvelle\?type=(recue|emise)/);
       c.liens.forEach((l) => expect(l.route.startsWith('/')).toBe(true));
     }
+  });
+});
+
+describe('écritures rangées par tiers', () => {
+  it('range par nom de tiers sans tenir compte de la casse ni des accents, puis du plus récent au plus ancien', () => {
+    const rangees = ecrituresParTiers([
+      { titre: 'Zèbre SARL', date: '2026-01-01' },
+      { titre: 'agri sud', date: '2026-02-01' },
+      { titre: 'Agri Sud', date: '2026-05-01' },
+      { titre: 'École', date: '2026-03-01' },
+    ]);
+    expect(rangees.map((e) => `${e.titre}@${e.date}`)).toEqual([
+      'Agri Sud@2026-05-01',
+      'agri sud@2026-02-01',
+      'École@2026-03-01',
+      'Zèbre SARL@2026-01-01',
+    ]);
+  });
+
+  it('ne modifie pas la liste d’origine', () => {
+    const liste = [
+      { titre: 'B', date: '2026-01-01' },
+      { titre: 'A', date: '2026-01-01' },
+    ];
+    ecrituresParTiers(liste);
+    expect(liste[0].titre).toBe('B');
   });
 });

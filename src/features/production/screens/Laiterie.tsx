@@ -7,6 +7,7 @@ import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesCon
 import { listContacts } from '@/features/contacts/repository';
 import type { Contact } from '@/features/contacts/services/contacts';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
+import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
@@ -86,7 +87,7 @@ export default function Laiterie() {
               key={c.cle}
               title={c.nom}
               subtitle={[(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email].filter(Boolean).join(' · ') || undefined}
-              icone="person"
+              emoji={portraitDeTiers(CATEGORIE_CLIENT.RECOLTEUR).emoji}
               onPress={() => router.push(ROUTES.ficheContact(c.cle) as never)}
             />
           ))}
@@ -102,7 +103,7 @@ export default function Laiterie() {
           ))}
           {factures.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucuneFacture}</Text> : null}
           {factures.length > FACTURES_MONTREES ? (
-            <ListRow title={T.plusDeFactures(factures.length - FACTURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.COMPTABILITE_LISTE as never)} />
+            <ListRow title={T.plusDeFactures(factures.length - FACTURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.comptabiliteDuLieu(factures.map((t) => t.id), TEXTES.accueil.ferme.zones.laiterie) as never)} />
           ) : null}
           <ListRow
             title={T.nouvelleFacture}

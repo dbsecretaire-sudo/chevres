@@ -93,6 +93,9 @@ export const ROUTES = {
 
   // L'onglet Production d'un élevage : fromages, viande vendue, contrôle laitier, groupements
   PRODUCTION: '/production',
+  /** La liste des écritures, réduite à celles données (leurs identifiants) et rangées par tiers : « 24 autres écritures » d'un lieu de la ferme. */
+  comptabiliteDuLieu: (ids: readonly string[], titre: string) =>
+    `/comptabilite/liste?ecritures=${[...new Set(ids)].join(';')}&titre=${encodeURIComponent(titre)}` as const,
   /** La page d'un lieu de la carte de la ferme qui a un tiers (pompe, vétérinaire, foin et maïs, organismes, équarrissage, abattoir, boucherie). */
   lieu: (cle: string) => `/production/lieu?lieu=${cle}` as const,
   /** La laiterie : le lait, sa qualité, le récolteur (contacts et factures). */

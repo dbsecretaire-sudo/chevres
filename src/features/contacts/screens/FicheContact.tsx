@@ -18,6 +18,7 @@ import { estVente } from '@/features/clients/components/ClientResume';
 import type { EcritureClient } from '@/features/clients/services/resumeClient';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { PortraitTiers } from '@/features/contacts/components/PortraitTiers';
 import { FormulaireContactChamps } from '@/features/contacts/components/FormulaireContactChamps';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import {
@@ -213,6 +214,15 @@ export default function FicheContact() {
             },
           ]}
         />
+
+        {/* Le portrait vivant du tiers : son dessin, sa catégorie et sa balance. */}
+        {!form ? (
+          <PortraitTiers
+            categorieId={categorie.id}
+            categorie={nomDeLaCategorie(categorie.id)}
+            balance={ecritures.length > 0 ? formatMontant(balance) : undefined}
+          />
+        ) : null}
 
         {/* Deux catégories différentes sur les deux anciennes fiches : on demande laquelle garder, contact par contact. */}
         {categorie.conflit && !form ? (

@@ -177,6 +177,8 @@ export const TEXTES_COMPTABILITE = {
       'Sources à consulter en cas de doute : votre espace personnel caf.fr, le formulaire de déclaration trimestrielle reçu par courrier/email, ou votre conseiller MSA.',
   },
   listeTransactions: {
+    restriction: (lieu: string) => `Écritures de : ${lieu}, rangées par tiers`,
+    toutAfficher: 'Tout afficher',
     soldeEspace: 'Solde ',
     toutesLesAnnees: 'toutes les années',
     sansFacture: 'sans facture',

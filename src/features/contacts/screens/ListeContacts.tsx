@@ -12,6 +12,7 @@ import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
 import { convertirGroupementsEnContacts, lierLesFichesDeMemeNom, listContacts } from '@/features/contacts/repository';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import type { Contact } from '@/features/contacts/services/contacts';
+import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ROUTES } from '@/shared/constants/routes';
@@ -109,6 +110,7 @@ export default function ListeContacts() {
             <ListRow
               title={item.nom}
               subtitle={sousTitreDe(item) || undefined}
+              emoji={portraitDeTiers(categorieDuContact(item, idsConnus).id).emoji}
               onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
             />
           </LigneDeBloc>

@@ -8,6 +8,7 @@ import { listContacts } from '@/features/contacts/repository';
 import type { Contact } from '@/features/contacts/services/contacts';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { ecrituresDuLieu, estLieuTiers, LIEUX_TIERS, type CleLieuTiers } from '@/features/accueil/services/lieuxTiers';
+import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
@@ -84,7 +85,7 @@ export default function LieuTiers() {
               key={c.cle}
               title={c.nom}
               subtitle={[(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email].filter(Boolean).join(' · ') || undefined}
-              icone="person"
+              emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
               onPress={() => router.push(ROUTES.ficheContact(c.cle) as never)}
             />
           ))}
@@ -100,7 +101,7 @@ export default function LieuTiers() {
           ))}
           {ecritures.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucuneEcriture}</Text> : null}
           {ecritures.length > ECRITURES_MONTREES ? (
-            <ListRow title={T.plusDEcritures(ecritures.length - ECRITURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.COMPTABILITE_LISTE as never)} />
+            <ListRow title={T.plusDEcritures(ecritures.length - ECRITURES_MONTREES)} icone="list" onPress={() => router.push(ROUTES.comptabiliteDuLieu(ecritures.map((t) => t.id), textes.titre) as never)} />
           ) : null}
           <ListRow title={textes.nouvelle} icone="add-circle" onPress={() => router.push(config.nouvelle as never)} />
         </BlocLignes>

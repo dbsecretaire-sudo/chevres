@@ -133,3 +133,10 @@ export const filtrerParRubrique = (
 /** Garde les écritures d'une activité (toutes si le filtre est « toutes »). */
 export const filtrerParActivite = (transactions: Transaction[], filtre: FiltreActivite): Transaction[] =>
   filtre === TOUTES_ACTIVITES ? transactions : transactions.filter((t) => t.activite === filtre);
+
+/** Les écritures rangées par tiers (leur nom, sans tenir compte de la casse ni des accents), puis de la plus récente à la plus ancienne. */
+export function ecrituresParTiers<T extends { titre: string; date: string }>(ecritures: readonly T[]): T[] {
+  return [...ecritures].sort(
+    (a, b) => a.titre.localeCompare(b.titre, 'fr', { sensitivity: 'base' }) || b.date.localeCompare(a.date),
+  );
+}

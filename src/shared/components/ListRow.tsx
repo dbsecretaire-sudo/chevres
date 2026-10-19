@@ -19,9 +19,11 @@ interface Props {
   actif?: boolean;
   /** Une icône dans une pastille teintée à gauche, et une flèche à droite (les lignes d'un menu). */
   icone?: keyof typeof Ionicons.glyphMap;
+  /** Un dessin (un emoji) dans la pastille à gauche, à la place de l'icône : le tiers que la ligne représente. */
+  emoji?: string;
 }
 
-export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, actif, icone }: Props) {
+export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, actif, icone, emoji }: Props) {
   const dansBloc = useDansBloc();
   return (
     <Pressable
@@ -34,9 +36,9 @@ export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, 
         pressed && onPress ? commonStyles.pressed : null,
       ]}
     >
-      {icone ? (
+      {icone || emoji ? (
         <View style={styles.pastille}>
-          <Ionicons name={icone} size={22} color={colors.primary} />
+          {emoji ? <Text style={{ fontSize: 22 }}>{emoji}</Text> : icone ? <Ionicons name={icone} size={22} color={colors.primary} /> : null}
         </View>
       ) : null}
       <View style={commonStyles.textWrap}>
@@ -44,7 +46,7 @@ export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, 
         {subtitle ? <Text style={commonStyles.muted}>{subtitle}</Text> : null}
       </View>
       {trailing ??
-        (icone && onPress ? <Ionicons name="chevron-forward" size={20} color={colors.textMuted} /> : null)}
+        ((icone || emoji) && onPress ? <Ionicons name="chevron-forward" size={20} color={colors.textMuted} /> : null)}
     </Pressable>
   );
 }
