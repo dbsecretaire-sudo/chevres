@@ -10,7 +10,11 @@ import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { listClients } from '@/features/clients/repository';
-import { rattacherLesReservations } from '@/features/commercial/services/reservations';
+import {
+  completerLesPrixManquants,
+  rattacherLesReservations,
+  retirerLesBonsVides,
+} from '@/features/commercial/services/reservations';
 import { commandeOuverte, totalAPreparer, totalDuBon } from '@/features/commercial/services/commandes';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
@@ -52,7 +56,12 @@ export default function ListeCommandes() {
     useCallback(() => {
       // Les réservations (animaux, lots) se rangent d'elles-mêmes dans le bon de commande de leur client.
       listClients()
-        .then(rattacherLesReservations)
+        .then(async (clients) => {
+          await rattacherLesReservations(clients);
+          await completerLesPrixManquants(clients);
+          // Un bon dont toutes les réservations ont été libérées (depuis Production › Viande) n'a plus de raison d'être.
+          await retirerLesBonsVides();
+        })
         .catch(() => undefined)
         .then(() => {
           lireArchiveCommercial().then((archive) => setCommandes(archive.commandes));

@@ -19,7 +19,7 @@ import type { Client } from '@/features/clients/types';
 import { getChevre, saveChevre } from '@/features/cheptel/repository/chevres';
 import { estReserve, liberer, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
 import type { Commande } from '@/features/commercial/types';
-import { bonOuvertDuClient, reserverAnimauxPourClient } from '@/features/commercial/services/reservations';
+import { bonOuvertDuClient, reserverAnimauxPourClient, retirerLesBonsVides } from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
@@ -506,6 +506,8 @@ export default function ViandeVendue() {
                         icon: 'lock-open' as const,
                         onPress: async () => {
                           await saveChevre(liberer(menu));
+                          // Le bon de commande du client, s'il n'a plus rien, disparaît de l'onglet Commandes.
+                          await retirerLesBonsVides().catch(() => undefined);
                           charger();
                         },
                       },

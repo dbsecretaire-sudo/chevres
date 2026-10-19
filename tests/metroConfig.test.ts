@@ -12,4 +12,15 @@ describe('configuration Metro', () => {
     expect(resolution.type).toBe('sourceFile');
     expect(resolution.filePath.replace(/\\/g, '/')).toMatch(/pdf-lib\/dist\/pdf-lib\.js$/);
   });
+
+  it('sur le téléphone, le stockage garde les données en mémoire (sauf pour ce module lui-même, qui importe l’original)', () => {
+    const config = require('../metro.config.js') as { resolver: { resolveRequest: Resolveur } };
+    const nom = '@react-native-async-storage/async-storage';
+    const original = () => ({ type: 'ORIGINAL', filePath: '' });
+    const enMemoire = config.resolver.resolveRequest({ originModulePath: '/app/src/x.ts', resolveRequest: original }, nom, 'android');
+    expect(enMemoire.filePath.replace(/\\/g, '/')).toMatch(/src\/shared\/storage\/asyncStorageEnMemoire\.ts$/);
+    // Le module lui-même importe le vrai stockage, pas lui-même.
+    const duModule = { originModulePath: enMemoire.filePath, resolveRequest: original };
+    expect(config.resolver.resolveRequest(duModule, nom, 'android').type).toBe('ORIGINAL');
+  });
 });

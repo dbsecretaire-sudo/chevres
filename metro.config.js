@@ -19,8 +19,16 @@ const remplacements =
       }
     : {};
 
+// Le téléphone : le stockage garde toutes les données en mémoire (comme Windows) au lieu de relire le téléphone à chaque écran. Seul ce
+// module-là importe l'original.
+const STOCKAGE_NATIF = '@react-native-async-storage/async-storage';
+const STOCKAGE_EN_MEMOIRE = path.join(__dirname, 'src', 'shared', 'storage', 'asyncStorageEnMemoire.ts');
+
 const resolutionInitiale = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (platform !== 'web' && moduleName === STOCKAGE_NATIF && context.originModulePath !== STOCKAGE_EN_MEMOIRE) {
+    return { type: 'sourceFile', filePath: STOCKAGE_EN_MEMOIRE };
+  }
   // pdf-lib (qui remplit les formulaires PDF officiels) : sur le web et Windows, Metro prendrait sa version « module », qui importe tslib
   // avec une interopérabilité cassée (« Cannot destructure property '__extends' of 'n.default' ») et laisse la fenêtre blanche. On lui
   // donne sa version autonome (tslib inclus), qui ne dépend de rien. Le téléphone garde la version d'origine.

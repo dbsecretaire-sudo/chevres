@@ -2,7 +2,7 @@ import { enregistrerCommande, lireArchiveCommercial, supprimerCommande } from '@
 import { commandeOuverte, prixDuTarif } from '@/features/commercial/services/commandes';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repository/chevres';
-import { estReserve, reserver } from '@/features/cheptel/services/reservations';
+import { estReserve, reserver, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
 import type { Chevre } from '@/features/cheptel/types';
 import { categorieDuClient } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
@@ -15,6 +15,8 @@ import { libelleArticle } from '@/features/stock/services/stock';
 import { generateId } from '@/shared/utils/id';
 import { todayISO } from '@/shared/utils/dates';
 import { nomComplet } from '@/shared/utils/personne';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+import { loadAllYears } from '@/shared/storage/localStore';
 
 /**
  * Le bon de commande ouvert d'un client : celui qui est déjà à préparer ou à livrer pour lui, sinon un nouveau. Tout ce qu'on réserve
@@ -124,6 +126,40 @@ export async function libererLotsReserves(identifiants: string[]): Promise<void>
 /** Supprime un bon de commande resté vide (aucune ligne, aucun animal réservé) : il n'a plus de raison d'être. */
 export async function retirerLeBonVide(bon: Commande, animauxReserves: number): Promise<void> {
   if (bon.lignes.length === 0 && animauxReserves === 0) await supprimerCommande(bon.id);
+}
+
+/**
+ * Supprime les bons de commande ouverts restés vides : ni ligne, ni vente, ni animal réservé (leurs réservations ont été libérées depuis
+ * Production › Viande, sans passer par la commande). Les animaux se lisent toutes espèces confondues : un bon d'une autre espèce n'est
+ * pas vide pour autant.
+ */
+export async function retirerLesBonsVides(): Promise<void> {
+  const [archive, animaux] = await Promise.all([lireArchiveCommercial(), loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)]);
+  for (const bon of archive.commandes.filter(commandeOuverte)) {
+    if ((bon.venteIds ?? []).length === 0) await retirerLeBonVide(bon, reservesDeLaCommande(animaux as Chevre[], bon.id).length);
+  }
+}
+
+/**
+ * Les lignes d'un bon ouvert qui n'ont pas de prix (rangées d'office depuis une réservation, quand aucun tarif ne le donnait encore) le
+ * prennent du tarif de la catégorie du client, à défaut du prix de l'inventaire. Rien n'est changé quand aucun n'est défini, ni pour un bon livré.
+ */
+export async function completerLesPrixManquants(clients: Client[]): Promise<void> {
+  const [commercial, stock] = await Promise.all([lireArchiveCommercial(), lireArchiveStock()]);
+  const parId = new Map(clients.map((c) => [c.id, c]));
+  for (const bon of commercial.commandes.filter(commandeOuverte)) {
+    const faites = new Set(bon.lignesFacturees ?? []);
+    const client = bon.clientId ? parId.get(bon.clientId) : undefined;
+    let change = false;
+    const lignes = bon.lignes.map((l) => {
+      if (l.quantite <= 0 || l.prixUnitaire > 0 || faites.has(l.id)) return l;
+      const prix = prixDuTarif(l.article, client ? categorieDuClient(client) : undefined, commercial.tarifs, stock.prix);
+      if (!(prix !== undefined && prix > 0)) return l;
+      change = true;
+      return { ...l, prixUnitaire: prix };
+    });
+    if (change) await enregistrerCommande({ ...bon, lignes });
+  }
 }
 
 /**
