@@ -1,6 +1,6 @@
 // Troupeau Chèvres pour Windows : la version web de l'application dans une fenêtre de bureau, qui fonctionne sans internet.
 // Les données sont rangées dans des fichiers de l'ordinateur (dossier de l'application dans %APPDATA%) ; internet ne sert qu'à Google Drive.
-const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, session, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, screen, session, shell } = require('electron');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -309,10 +309,18 @@ function servirApplication() {
   });
 }
 
+/** La largeur de la fenêtre à l'ouverture : celle d'un grand téléphone, que l'accueil « ferme » remplit bien. */
+const LARGEUR_PAR_DEFAUT = 800;
+
 function creerFenetre() {
+  // Haute comme l'écran (sa zone utile, sans la barre des tâches), étroite, et posée au milieu : l'accueil « ferme » est pensé en hauteur.
+  const zone = screen.getPrimaryDisplay().workArea;
+  const largeur = Math.min(LARGEUR_PAR_DEFAUT, zone.width);
   const fenetre = new BrowserWindow({
-    width: 1100,
-    height: 860,
+    width: largeur,
+    height: zone.height,
+    x: zone.x + Math.round((zone.width - largeur) / 2),
+    y: zone.y,
     minWidth: 420,
     minHeight: 600,
     title: TEXTES.titre,
