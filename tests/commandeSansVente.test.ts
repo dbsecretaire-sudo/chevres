@@ -31,6 +31,17 @@ describe('une facture supprimée défait sa commande', () => {
     expect(lots.find((l) => l.id === 'AUTRE')?.reservation?.client).toBe('Estelle');
   });
 
+  it('même chose pour la charcuterie : ses lots, réservés dans le même stock, sont libérés', async () => {
+    const archive = await lireArchiveStock();
+    const saucisson = (id: string) => ({ id, article: 'viande:saucisson', numero: id, dateFabrication: '2026-05-17', reservation: { client: 'Estelle', date: '2026-05-19' } });
+    await remplacerArchiveStock({ ...archive, lots: [saucisson('BS1'), saucisson('BS2')] });
+    const lignesCharcuterie = [{ id: 'l2', article: 'viande:saucisson', libelle: 'Saucisson', quantite: 2, prixUnitaire: 9, lotIds: ['BS1', 'BS2'] }];
+    const bon = await enregistrerCommande({ ...base, statut: STATUT_COMMANDE.LIVREE, lignes: lignesCharcuterie, venteIds: ['v7'] });
+    await commandeApresSuppressionDeVente({ id: 'v7', commandeId: bon.id });
+    expect((await getCommande(bon.id))?.statut).toBe(STATUT_COMMANDE.ANNULEE);
+    expect(((await lireArchiveStock()).lots ?? []).filter((l) => l.reservation)).toEqual([]);
+  });
+
   it('garde la commande livrée quand une autre de ses ventes existe, en oubliant seulement celle-ci', async () => {
     const bon = await enregistrerCommande({ ...base, statut: STATUT_COMMANDE.LIVREE, lignes: [ligne], venteIds: ['v1', 'v2'] });
     await commandeApresSuppressionDeVente({ id: 'v1', commandeId: bon.id });
