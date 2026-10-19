@@ -240,7 +240,10 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   const fraisOffertsParDefaut = !fraisAbattoirMemeOfferts(s.clientSelectionne);
   const fraisOfferts = !!s.offert && (s.fraisOfferts ?? fraisOffertsParDefaut);
   const frais =
-    categorie === CATEGORIE_VENTE.VIANDE && fraisAbattoirFacturesAuClient(s.clientSelectionne) && !fraisOfferts
+    categorie === CATEGORIE_VENTE.VIANDE &&
+    s.roleDuDetail !== ROLE_VIANDE.VIVANT &&
+    fraisAbattoirFacturesAuClient(s.clientSelectionne) &&
+    !fraisOfferts
       ? parseDecimal(s.fraisAbattoir)
       : 0;
   return {

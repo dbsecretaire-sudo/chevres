@@ -158,7 +158,8 @@ export function VenteFormulaire({
   const produitOffert = !!form.offert && form.cadeauProduit !== false;
   const fraisOfferts = !!form.offert && (form.cadeauFrais ?? !((form.fraisAbattoir ?? 0) > 0));
   /** Les frais d'abattoir refacturés comptent dans le prix total (viande à l'inventaire seulement). */
-  const frais = animalEntier && prixInventaire && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
+  // Un animal vivant ne passe pas par l'abattoir : pas de frais d'abattoir.
+  const frais = animalEntier && roleDuDetail !== ROLE_VIANDE.VIVANT && prixInventaire && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
   /** Le poids d'un lot d'abattoir ne se modifie que dans la fiche du lot (Production › Viande). */
   const poidsDuLotDAbattoir = animalEntier && !!form.dateAbattoir;
   /** Un récolteur peut cocher « Réajustement » (vente de lait déclarée) : plus de litrage ni de numéro de facture saisis. */
@@ -423,7 +424,7 @@ export function VenteFormulaire({
             ligne={T.cadeauAnimaux}
           />
         ) : null}
-        {animalEntier && (prixInventaire || fraisAbattoirFacturesAuClient(client)) ? (
+        {animalEntier && roleDuDetail !== ROLE_VIANDE.VIVANT && (prixInventaire || fraisAbattoirFacturesAuClient(client)) ? (
           <ChampFraisAbattoir
             valeur={form.fraisAbattoir ? String(form.fraisAbattoir).replace('.', ',') : ''}
             taux={form.tauxTvaFrais !== undefined ? String(form.tauxTvaFrais) : ''}

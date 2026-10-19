@@ -230,7 +230,8 @@ export function ChampsVenteViande({ e }: Props) {
   }, [parAnimal, jourChoisi?.date, e.animaux.length, unParUn]);
   // Les frais d'abattoir du lot choisi (sa facture liée, sinon le montant noté) : proposés pour la part des animaux de la vente.
   const fraisDuJour = useFraisAbattoir();
-  const propositionFrais = jourChoisi ? fraisDuJour(jourChoisi.date, e.animaux.length) : undefined;
+  // Un animal vivant ne passe pas par l'abattoir : jamais de frais d'abattoir à lui refacturer.
+  const propositionFrais = jourChoisi && !vivantLigne ? fraisDuJour(jourChoisi.date, e.animaux.length) : undefined;
   /** Facturer ou non les frais au client : la case de ChampFraisAbattoir (d'office, oui). */
   const [fraisRefactures, setFraisRefactures] = useState(true);
   useEffect(() => {
@@ -635,7 +636,7 @@ export function ChampsVenteViande({ e }: Props) {
           <ChampPrixPersonnalise e={e} unite="piece" prixInventaire={prixDuDetail} />
         </>
       )}
-      {parAnimal && e.fraisAbattoirAffiches ? (
+      {parAnimal && !vivantLigne && e.fraisAbattoirAffiches ? (
         <ChampFraisAbattoir
           valeur={e.fraisAbattoir}
           taux={e.tauxTvaFrais}

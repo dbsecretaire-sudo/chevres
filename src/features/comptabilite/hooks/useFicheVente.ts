@@ -201,7 +201,9 @@ export function useFicheVente(id: string | undefined) {
     // Une vente offerte : chaque ligne (les animaux, les frais d'abattoir) a son bouton « Cadeau » ; la ligne offerte ne se facture pas.
     const produitOffert = !!form.offert && form.cadeauProduit !== false;
     const fraisOfferts = !!form.offert && (form.cadeauFrais ?? !((form.fraisAbattoir ?? 0) > 0));
-    const frais = form.categorie === CATEGORIE_VENTE.VIANDE && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
+    // Un animal vivant ne passe pas par l'abattoir : pas de frais d'abattoir.
+    const vivant = form.categorie === CATEGORIE_VENTE.VIANDE && roleDeLaLigneDeLaVente(form, await lireArchiveStock()) === ROLE_VIANDE.VIVANT;
+    const frais = form.categorie === CATEGORIE_VENTE.VIANDE && !vivant && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
     const prixDeLInventaire =
       (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) && !prixLibreVente && (!form.venduAuPoids || !!form.prixUnitairePersonnalise);
     if (prixDeLInventaire) {

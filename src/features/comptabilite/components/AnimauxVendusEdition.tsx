@@ -124,7 +124,8 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
     const poids = poidsTotal(liste);
     // Les frais d'abattoir du lot : proposés pour la part des animaux de la vente.
     const jour = 'dateAbattoir' in supplement ? supplement.dateAbattoir : form.dateAbattoir;
-    const frais = liste.length > 0 ? fraisDuJour(jour, liste.length) : undefined;
+    // Un animal vivant ne passe pas par l'abattoir : pas de frais d'abattoir.
+    const frais = liste.length > 0 && role !== ROLE_VIANDE.VIVANT ? fraisDuJour(jour, liste.length) : undefined;
     onChange({
       ...form,
       animaux: liste.length > 0 ? liste.map((a) => a.id).join(SEPARATEUR_ANIMAUX) : undefined,
