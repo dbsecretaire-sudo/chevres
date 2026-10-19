@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionsFerme } from '@/features/accueil/ferme/ActionsFerme';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { CarteFerme } from '@/features/accueil/ferme/CarteFerme';
-import { MenuFerme, MinuteursFerme } from '@/features/accueil/ferme/CotesFerme';
+import { BoutonDeCoin, MenuFerme, MinuteursFerme } from '@/features/accueil/ferme/CotesFerme';
 import { OutilsFerme } from '@/features/accueil/ferme/OutilsFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
@@ -12,7 +12,9 @@ import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { estBureau } from '@/shared/utils/plateforme';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
+import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
 
 /**
  * L'accueil « ferme » de l'élevage : un bandeau comme celui d'un jeu (la balance, les boucles, l'aliment), le nom de l'établissement, puis
@@ -44,10 +46,11 @@ export default function AccueilFerme() {
           lotsARappeler={f.lotsARappeler}
           morts={f.morts}
           estive={f.estive}
+          aliments={f.aliments}
         />
         {/* Les menus flottants : fixes par-dessus la carte ; chaque colonne défile seule quand l'écran est court. */}
         <View style={[styles.flottant, styles.gauche]} pointerEvents="box-none">
-          <ScrollView contentContainerStyle={styles.pile} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.defilement} contentContainerStyle={styles.pile} showsVerticalScrollIndicator={false}>
             <MinuteursFerme
               minuteurs={f.minuteurs.slice(0, 5)}
               nombreDeRappels={f.nombreDeRappels}
@@ -56,11 +59,13 @@ export default function AccueilFerme() {
               bas={<OutilsFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />}
             />
           </ScrollView>
+          <BoutonDeCoin icone="barn" libelle={TEXTES.accueil.ferme.coins.stockage} route={ROUTES.lieu('entrepot')} />
         </View>
         <View style={[styles.flottant, styles.droite]} pointerEvents="box-none">
-          <ScrollView contentContainerStyle={styles.pile} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.defilement} contentContainerStyle={styles.pile} showsVerticalScrollIndicator={false}>
             <MenuFerme onEstive={() => setEstiveOuverte(true)} />
           </ScrollView>
+          <BoutonDeCoin icone="storefront" libelle={TEXTES.accueil.ferme.coins.production} route={ROUTES.PRODUCTION} />
         </View>
       </View>
       <ActionsFerme />
@@ -85,7 +90,8 @@ const styles = StyleSheet.create({
   haut: { paddingHorizontal: 12, paddingBottom: 8 },
   colonne: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 8 },
   zone: { flex: 1, overflow: 'hidden' },
-  flottant: { position: 'absolute', top: 0, bottom: 0, width: 76 },
+  flottant: { position: 'absolute', top: 0, bottom: 0, width: 76, justifyContent: 'space-between' },
+  defilement: { flexGrow: 0, flexShrink: 1 },
   gauche: { left: 4 },
   droite: { right: 4 },
   pile: { paddingVertical: 8, alignItems: 'center' },

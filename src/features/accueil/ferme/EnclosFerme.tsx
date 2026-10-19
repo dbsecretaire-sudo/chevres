@@ -1,11 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
 import type { Chevre } from '@/features/cheptel/types';
 import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
-import { ROUTES } from '@/shared/constants/routes';
 import { especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -30,6 +28,10 @@ interface Props {
   naissances?: number;
   /** Le troupeau est à l'estive : le décor passe de l'enclos à la montagne (sa zone, sa date de descente). */
   estive?: { zone?: string; descente?: string };
+  /** Un appui sur l'enclos : la carte ouvre ses bulles d'actions (puis le menu du cheptel). */
+  onAppui: () => void;
+  /** Le petit bouton « porte » de l'enclos : entrer dans la chèvrerie (un autre décor). */
+  onEntrer: () => void;
 }
 
 /** Un animal de l'enclos : son dessin (plus petit pour un petit), sa boucle en étiquette, et il se balade. */
@@ -56,13 +58,13 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
  * L'enclos du troupeau, au centre de la carte : l'espèce choisie, trois ou quatre animaux (leurs boucles) qui représentent le troupeau, et
  * l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui ouvre le menu du cheptel (animaux, naissances, lots d'animaux, santé, boucles).
  */
-export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive }: Props) {
-  const router = useRouter();
+export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onAppui, onEntrer }: Props) {
   const femelles = vocabulaire().femelle.pluriel;
   return (
+    <View style={styles.conteneur}>
     <Pressable
       style={[styles.enclos, estive ? styles.montagne : null]}
-      onPress={() => router.push(ROUTES.CHEPTEL as never)}
+      onPress={onAppui}
       accessibilityRole="button"
       accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos(femelles)}
     >
@@ -89,10 +91,17 @@ export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive }: Pro
         {naissances ? ` · ${T.nes(naissances)}` : ''}
       </Text>
     </Pressable>
+    <Pressable style={styles.porte} onPress={onEntrer} accessibilityRole="button" accessibilityLabel={TEXTES.accueil.ferme.chevrerie.entrer} hitSlop={6}>
+      <Text style={styles.porteEmoji}>🚪</Text>
+    </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  conteneur: { flex: 1 },
+  porte: { position: 'absolute', right: -10, bottom: -10, width: 44, height: 44, borderRadius: 22, backgroundColor: colors.blanc, borderWidth: 2, borderColor: '#A9794A', alignItems: 'center', justifyContent: 'center' },
+  porteEmoji: { fontSize: 24 },
   enclos: { flex: 1, backgroundColor: '#D9E8BE', borderRadius: 16, borderWidth: 3, borderColor: '#A9794A', borderStyle: 'dashed', padding: 8, gap: 4, alignItems: 'center', justifyContent: 'center' },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
   sommets: { fontSize: 30, letterSpacing: 2 },

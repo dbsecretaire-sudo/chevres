@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Apparition, Pulsation } from '@/features/accueil/ferme/animations';
 import type { IconeMinuteur, Minuteur } from '@/features/accueil/services/fermeAccueil';
@@ -107,9 +107,7 @@ export function MinuteursFerme({
 /** Un bouton sans route ouvre la fenêtre de l'estive (la déclaration de transhumance) sur place. */
 const MENUS: { cle: keyof typeof M; icone: keyof typeof Ionicons.glyphMap; route?: string }[] = [
   { cle: 'estive', icone: 'trail-sign' },
-  { cle: 'production', icone: 'leaf', route: ROUTES.PRODUCTION },
   { cle: 'commercial', icone: 'cart', route: ROUTES.COMMERCIAL },
-  { cle: 'stock', icone: 'cube', route: ROUTES.COMPTABILITE_STOCKS },
   { cle: 'contacts', icone: 'people', route: ROUTES.CONTACTS },
   { cle: 'reglages', icone: 'settings', route: ROUTES.REGLAGES },
 ];
@@ -144,8 +142,28 @@ const styles = StyleSheet.create({
   valeurUrgente: { backgroundColor: colors.dangerFonce },
   valeurTexte: { color: colors.blanc, fontSize: 12, fontWeight: '700' },
   libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 6, paddingHorizontal: 4 },
+  coin: { alignItems: 'center', gap: 2, width: 76, paddingVertical: 4 },
+  rondCoin: { width: 62, height: 62, borderRadius: 18, backgroundColor: '#B5792E', borderWidth: 3, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
   rondCloche: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.accent, borderWidth: 2, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
   badgeCloche: { position: 'absolute', top: -6, right: -6, minWidth: 20, backgroundColor: colors.danger, borderRadius: 999, paddingHorizontal: 5, paddingVertical: 1, alignItems: 'center' },
   badgeClocheTexte: { color: colors.blanc, fontSize: 11, fontWeight: '700' },
   rondMenu: { width: 54, height: 54, borderRadius: 27, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
 });
+
+/**
+ * Un gros bouton de coin, épinglé en bas d'une colonne comme la grange et la boutique d'un jeu de ferme : la grange (en bas à gauche)
+ * ouvre le stockage, la boutique (en bas à droite) la production.
+ */
+export function BoutonDeCoin({ icone, libelle, route }: { icone: 'barn' | 'storefront'; libelle: string; route: string }) {
+  const router = useRouter();
+  return (
+    <Pressable style={styles.coin} onPress={() => router.push(route as never)} accessibilityRole="button" accessibilityLabel={libelle}>
+      <View style={styles.rondCoin}>
+        <MaterialCommunityIcons name={icone} size={32} color={colors.blanc} />
+      </View>
+      <Text style={styles.libelle} numberOfLines={1}>
+        {libelle}
+      </Text>
+    </Pressable>
+  );
+}
