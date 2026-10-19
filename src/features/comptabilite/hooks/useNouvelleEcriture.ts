@@ -17,33 +17,14 @@ import {
   type ElementACommande,
 } from '@/features/commercial/services/commandes';
 import { STATUT_COMMANDE } from '@/shared/constants/commercial';
-import { enregistrerFacture } from '@/features/comptabilite/repository/factures';
-import { synchroniserStockAchat } from '@/features/bar/services/achats';
-import {
-  articlesDuGenre,
-  roleDeLaViande,
-  synchroniserStockAlimentation,
-  type FiltreStock,
-} from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { fromagesRequis } from '@/features/stock/services/lots';
 import {
   roleDeLaLigneDeLaVente,
 } from '@/features/stock/services/stock';
 import { erreurAchatBoucles } from '@/features/stock/services/boucles';
-import { synchroniserVisiteFacture } from '@/features/exploitation/services/visitesFacture';
-import { GENRE_ARTICLE, ROLE_VIANDE } from '@/shared/constants/stock';
-import { enregistrerVente } from '@/features/comptabilite/repository/ventes';
 import {
-  creerChevre,
-  declarerStatutChevre,
   listTousLesAnimauxDeLEspece,
-  numeroBoucleExiste,
 } from '@/features/cheptel/repository/chevres';
-import {
-  controleDesAnimauxAchetes,
-} from '@/features/comptabilite/forms/animauxAchetes';
-import { sortieDesAnimauxDeLaVente, idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import {
   PREFIXE_CATEGORIE_AJOUTEE,
   categoriesAjoutees,
@@ -73,6 +54,12 @@ import {
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
 import { useLignesDepense } from '@/features/comptabilite/hooks/nouvelleEcriture/useLignesDepense';
 import { useDonneesDeReference } from '@/features/comptabilite/hooks/nouvelleEcriture/useDonneesDeReference';
+import {
+  controlerAvantEnregistrement,
+  enregistrerLaDepense,
+  enregistrerLaVente,
+  sortirLesAnimauxDeLaVente,
+} from '@/features/comptabilite/hooks/nouvelleEcriture/enregistrement';
 import { detailDesAnimaux } from '@/features/comptabilite/forms/detailDesAnimaux';
 import { optionsDesComptes } from '@/features/comptabilite/utils/optionsComptes';
 import type {
@@ -85,10 +72,11 @@ import type {
   UniteVente,
 } from '@/features/comptabilite/types';
 import { useAnneeImposee } from '@/features/settings/hooks/useAnneeImposee';
-import { estDateISO, formatDateFR, memeJourDansLAnnee, todayISO } from '@/shared/utils/dates';
 import {
-  STATUT_CHEVRE,
-} from '@/shared/constants/cheptel';
+  estDateISO,
+  memeJourDansLAnnee,
+  todayISO,
+} from '@/shared/utils/dates';
 import { typesAlimentEspece } from '@/features/comptabilite/utils/alimentation';
 import {
   categoriesGroupe,
@@ -103,12 +91,10 @@ import { ACTIVITE_COMMUNE, ACTIVITE_SOCIETE } from '@/shared/constants/etablisse
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
-import { TEXTES } from '@/shared/textes';
 import {
   CATEGORIES_DEPENSE_ENTREPRISE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
-  SEPARATEUR_ANIMAUX,
   GROUPE_RECETTE,
   CATEGORIE_VENTE,
   POURCENTAGE_MIN,
@@ -119,7 +105,6 @@ import {
   TYPE_AIDE,
   TYPE_ALIMENT,
   TYPE_FACTURE,
-  CATEGORIES_VENTE_VIANDE,
   TYPE_FROMAGE,
   UNITE_VENTE,
 } from '@/shared/constants/comptabilite';
@@ -603,72 +588,27 @@ export function useNouvelleEcriture(
   const enregistrer = async (enchainer = false) => {
     setEnregistrement(true);
     try {
-      // Un animal sur pied, vivant ou un petit ne se vend pas sans dire lesquels ni leur poids : les fiches du cheptel et le poids
-      // sont obligatoires.
-      if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(categorieRecette)) {
-        const archive = await lireArchiveStock();
-        const filtre = activite === ACTIVITE_COMMUNE ? undefined : (activite as FiltreStock);
-        const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, filtre).find(
-          (a) => a.libelle === precision,
-        );
-        if (ligne && roleDeLaViande(ligne.cle)) {
-          if (animaux.length === 0) {
-            setErreur({
-              titre: TEXTES.comptabilite.nouvelleEcriture.animauxRequis,
-              message: TEXTES.comptabilite.nouvelleEcriture.animauxRequisMessage,
-            });
-            return;
-          }
-          // Le poids est facultatif pour un animal vivant vendu à la tête ; il est requis pour les autres (au kilo).
-          const poidsExige = roleDeLaViande(ligne.cle) !== ROLE_VIANDE.VIVANT || venduAuPoids;
-          if (poidsExige && !(parseDecimal(poidsKg) > 0)) {
-            setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.poidsRequis });
-            return;
-          }
-        }
-      }
-      // Un fromage ou une charcuterie qui a des lots en stock se vend lot par lot : on les désigne.
-      if (
-        estProductionVente &&
-        (categorieRecette === CATEGORIE_RECETTE.FROMAGE ||
-          categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) &&
-        fromagesRequis(await lireArchiveStock(), {
-          id: '',
-          categorie:
-            categorieRecette === CATEGORIE_RECETTE.FROMAGE
-              ? CATEGORIE_VENTE.FROMAGE
-              : CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
-          typeFromage,
-          typeFromageLibre,
-          precision,
-          activite,
-          fromages: fromages.join(';'),
-        })
-      ) {
-        setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.lotsRequis });
-        return;
-      }
-      // Un achat d'animaux vivants : chacun a sa date de naissance et une boucle libre ; leurs fiches se créent plus bas.
+      // Les contrôles de ce que la saisie désigne : animaux et poids d'une vente, lots, animaux achetés ou envoyés d'une dépense.
       const achatAnimaux = type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
-      if (achatAnimaux) {
-        const T = TEXTES.comptabilite.nouvelleEcriture.animauxAchetes;
-        const controle = controleDesAnimauxAchetes(animauxAchetes);
-        if (!controle.ok) {
-          setErreur({ titre: controle.erreur === 'aucun' ? T.aucun : controle.erreur === 'naissance' ? T.naissanceRequise : T.boucleRepetee });
-          return;
-        }
-        for (const a of animauxAchetes) {
-          const boucle = a.boucle.trim();
-          if (boucle && (await numeroBoucleExiste(boucle))) {
-            setErreur({ titre: T.boucleExiste(boucle) });
-            return;
-          }
-        }
-      }
-      // Des animaux vivants qui partent : au moins un, choisi dans le cheptel.
       const envoiAnimaux = type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE;
-      if (envoiAnimaux && animauxEnvoyes.length === 0) {
-        setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.animauxEnvoyes.aucun });
+      const erreurDeSaisie = await controlerAvantEnregistrement({
+        type,
+        categorieRecette,
+        categorieDepense,
+        activite,
+        precision,
+        animaux,
+        poidsKg,
+        venduAuPoids,
+        estProductionVente,
+        typeFromage,
+        typeFromageLibre,
+        fromages,
+        animauxAchetes,
+        animauxEnvoyes,
+      });
+      if (erreurDeSaisie) {
+        setErreur(erreurDeSaisie);
         return;
       }
       // Pour l'état des animaux : le rôle de la ligne choisie (cabris, sur pied, vivant), et un client de catégorie Abattoir.
@@ -751,7 +691,7 @@ export function useNouvelleEcriture(
         }
       }
       if ('vente' in resultat) {
-        const vente = await enregistrerVente({ ...resultat.vente, commandeId: commande?.id });
+        const vente = await enregistrerLaVente(resultat.vente, commande?.id);
         // Une vente de commande : elle s'ajoute au bon, livré quand tout est passé en vente (les lignes, et les animaux réservés).
         let suite: ElementACommande | undefined;
         if (commande && fileDeLaCommande[0]) {
@@ -776,42 +716,11 @@ export function useNouvelleEcriture(
           setCommande(suite ? enregistree : null);
           if (enchainer && suite) suiteDeLaCommande.current = suite;
         }
-        // Les animaux vendus quittent le cheptel : leur fiche passe en « abattoir » (vente de viande déclarée, à la date d'abattoir), en « morte » (non déclarée) ou en « vendue ».
-        const sortie = sortieDesAnimauxDeLaVente(vente);
-        for (const id of idsDesAnimaux(vente)) await declarerStatutChevre(id, sortie.statut, sortie.date);
+        // Les animaux vendus quittent le cheptel (abattoir, morte ou vendue, selon la vente).
+        await sortirLesAnimauxDeLaVente(vente);
       } else {
-        const achat = resultat.facture.lignesMarchandises;
-        // Les animaux achetés entrent au cheptel : une fiche chacun, à la date de naissance saisie.
-        let animauxCrees: string | undefined;
-        if (achatAnimaux) {
-          const ids: string[] = [];
-          for (const a of animauxAchetes) {
-            const fiche = await creerChevre({
-              numeroBoucle: a.boucle.trim() || undefined,
-              sexe: a.sexe,
-              dateNaissance: a.naissance,
-              // L'animal entre dans l'exploitation à la date de l'achat : le suivi des mouvements l'y compte en « achat », chez ce vendeur.
-              dateEntree: date,
-              vendeur: tiers,
-              notes: TEXTES.comptabilite.nouvelleEcriture.animauxAchetes.achetePar(tiers, formatDateFR(date)),
-            });
-            ids.push(fiche.id);
-          }
-          animauxCrees = ids.join(SEPARATEUR_ANIMAUX);
-        }
-        // Les animaux envoyés quittent le cheptel : leur fiche passe à « abattoir », à la date de la dépense.
-        if (envoiAnimaux) for (const id of animauxEnvoyes) await declarerStatutChevre(id, STATUT_CHEVRE.ABATTOIR, date);
-        const enregistree = await enregistrerFacture({
-          ...resultat.facture,
-          stockApplique: achat?.length ? true : undefined,
-          animauxAchetes: animauxCrees,
-          animauxEnvoyes: envoiAnimaux ? animauxEnvoyes.join(SEPARATEUR_ANIMAUX) : undefined,
-        });
-        // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
-        await synchroniserStockAchat(undefined, achat, enregistree.date);
-        await synchroniserStockAlimentation(enregistree);
-        // Une dépense vétérinaire peut inscrire sa visite dans les visites vétérinaires.
-        await synchroniserVisiteFacture(enregistree);
+        // Les fiches des animaux achetés ou envoyés, le stock acheté et la visite du vétérinaire suivent la dépense.
+        await enregistrerLaDepense(resultat.facture, { date, tiers, achatAnimaux, animauxAchetes, envoiAnimaux, animauxEnvoyes });
       }
       if (enchainer) {
         repartir();
