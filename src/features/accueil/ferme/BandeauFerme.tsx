@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
@@ -11,9 +12,8 @@ const T = TEXTES.accueil.ferme.bandeau;
 interface Props {
   /** La balance de l'année : les recettes moins les dépenses. */
   balance?: number;
-  nombreAnimaux?: number;
-  /** Les petits nés dans l'année (la pastille du cœur). */
-  naissances?: number;
+  /** Les boucles d'identification en stock, pas encore posées (la pastille de la boucle). */
+  boucles?: number;
   /** Le stock d'aliment : les jours qu'il tient, à défaut les kilos. */
   aliments: { kg: number; jours?: number } | null;
 }
@@ -45,9 +45,9 @@ const montant = (valeur: number) => `${Math.round(valeur).toLocaleString(LOCALE)
 
 /**
  * Le bandeau du haut de l'accueil, comme le tableau de bord d'un jeu : le portrait de l'exploitation, la balance de l'année (les pièces),
- * le nombre d'animaux (les cœurs), l'aliment en stock (la pomme) et les réglages.
+ * les boucles à poser (l'étiquette), l'aliment en stock (la pomme) et les réglages.
  */
-export function BandeauFerme({ balance, nombreAnimaux, naissances, aliments }: Props) {
+export function BandeauFerme({ balance, boucles, aliments }: Props) {
   const router = useRouter();
   const peuDAliment = aliments?.jours !== undefined && aliments.jours <= 7;
   return (
@@ -68,12 +68,11 @@ export function BandeauFerme({ balance, nombreAnimaux, naissances, aliments }: P
         route={ROUTES.COMPTABILITE_LISTE}
       />
       <Pastille
-        icone="heart"
-        valeur={nombreAnimaux === undefined ? '…' : String(nombreAnimaux)}
-        badge={naissances ? `+${naissances}` : undefined}
-        couleur={colors.danger}
-        libelle={nombreAnimaux === undefined ? T.animaux(0) : T.animaux(nombreAnimaux)}
-        route={ROUTES.CHEPTEL_LISTE}
+        icone="pricetag"
+        valeur={boucles === undefined ? '…' : String(boucles)}
+        couleur={colors.accent}
+        libelle={T.boucles}
+        route={ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)}
       />
       <Pastille
         icone="nutrition"

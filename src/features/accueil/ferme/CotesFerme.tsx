@@ -25,7 +25,20 @@ const ICONES_MINUTEUR: Record<IconeMinuteur, keyof typeof Ionicons.glyphMap> = {
  * Les minuteurs, en colonne sur le côté gauche : une pastille ronde par échéance (un délai d'attente, une déclaration, des documents à
  * envoyer…), avec ce qu'il reste ; rouge et qui pulse quand c'est en retard. Un appui ouvre l'écran à traiter.
  */
-export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels, bas }: { minuteurs: readonly Minuteur[]; nombreDeRappels: number; onOuvrirRappels: () => void; bas?: ReactNode }) {
+export function MinuteursFerme({
+  minuteurs,
+  nombreDeRappels,
+  papiers,
+  onOuvrirRappels,
+  bas,
+}: {
+  minuteurs: readonly Minuteur[];
+  nombreDeRappels: number;
+  /** Les papiers de l'année faits sur à faire : ils se lisent dans le titre du menu de la cloche. */
+  papiers?: { faits: number; total: number };
+  onOuvrirRappels: () => void;
+  bas?: ReactNode;
+}) {
   const router = useRouter();
   const [cloche, setCloche] = useState(false);
   const aller = (route: string) => {
@@ -73,7 +86,7 @@ export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels, ba
       <OptionsModal
         visible={cloche}
         onClose={() => setCloche(false)}
-        title={TEXTES.accueil.ferme.cloche.titre}
+        title={papiers && papiers.total > 0 ? `${TEXTES.accueil.ferme.cloche.titre} · ${TEXTES.accueil.ferme.papiers(papiers.faits, papiers.total)}` : TEXTES.accueil.ferme.cloche.titre}
         options={[
           {
             label: TEXTES.rappels.titre,
@@ -91,7 +104,9 @@ export function MinuteursFerme({ minuteurs, nombreDeRappels, onOuvrirRappels, ba
   );
 }
 
-const MENUS: { cle: keyof typeof M; icone: keyof typeof Ionicons.glyphMap; route: string }[] = [
+/** Un bouton sans route ouvre la fenêtre de l'estive (la déclaration de transhumance) sur place. */
+const MENUS: { cle: keyof typeof M; icone: keyof typeof Ionicons.glyphMap; route?: string }[] = [
+  { cle: 'estive', icone: 'trail-sign' },
   { cle: 'production', icone: 'leaf', route: ROUTES.PRODUCTION },
   { cle: 'commercial', icone: 'cart', route: ROUTES.COMMERCIAL },
   { cle: 'stock', icone: 'cube', route: ROUTES.COMPTABILITE_STOCKS },
@@ -99,14 +114,14 @@ const MENUS: { cle: keyof typeof M; icone: keyof typeof Ionicons.glyphMap; route
   { cle: 'reglages', icone: 'settings', route: ROUTES.REGLAGES },
 ];
 
-/** Les boutons flottants du côté droit, comme un sac à dos : chacun ouvre une rubrique de l'application. */
-export function MenuFerme() {
+/** Les boutons flottants du côté droit, comme un sac à dos : chacun ouvre une rubrique de l'application (l'estive, sa fenêtre). */
+export function MenuFerme({ onEstive }: { onEstive: () => void }) {
   const router = useRouter();
   return (
     <View style={styles.colonne}>
       {MENUS.map((m, i) => (
         <Apparition key={m.cle} delai={i * 70}>
-          <Pressable style={styles.element} onPress={() => router.push(m.route as never)} accessibilityRole="button" accessibilityLabel={M[m.cle]}>
+          <Pressable style={styles.element} onPress={() => (m.route ? router.push(m.route as never) : onEstive())} accessibilityRole="button" accessibilityLabel={M[m.cle]}>
             <View style={styles.rondMenu}>
               <Ionicons name={m.icone} size={26} color={colors.blanc} />
             </View>

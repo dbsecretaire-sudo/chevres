@@ -82,6 +82,8 @@ function Onglets() {
         options={{
           title: TEXTES.navigation.layout.accueil,
           headerRight: () => <EtablissementHeaderButton />,
+          // L'accueil « ferme » (hors Windows) n'a pas d'en-tête : le nom de l'établissement y est une carte, pour gagner de la hauteur.
+          headerShown: !(accueilFerme && !estBureau()),
           tabBarStyle: accueilFerme ? { display: 'none' } : estBureau() ? { display: 'none' } : undefined,
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}

@@ -25,7 +25,8 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { useLotsARappeler } from '@/features/stock/hooks/useLotsARappeler';
 import { articlesDuGenre } from '@/features/stock/services/stock';
 import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
-import { GENRE_ARTICLE } from '@/shared/constants/stock';
+import { bouclesDeLInventaire, nePasPoser } from '@/features/stock/services/boucles';
+import { ETAT_BOUCLE, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { todayISO } from '@/shared/utils/dates';
@@ -75,6 +76,7 @@ export function useFermeAccueil() {
   const enEstive = enTranshumance(estive, aujourdhui);
 
   const [aliments, setAliments] = useState<{ kg: number; jours?: number } | null>(null);
+  const [boucles, setBoucles] = useState<number | undefined>();
   const [vedettes, setVedettes] = useState<Chevre[]>([]);
   useFocusEffect(
     useCallback(() => {
@@ -82,6 +84,8 @@ export function useFermeAccueil() {
         .then((archive) => {
           const articles = new Set(articlesDuGenre(GENRE_ARTICLE.ALIMENT, archive, especeCourante()).map((a) => a.cle));
           setAliments(autonomieAliments(archive.mouvements, articles, todayISO()));
+          // Les boucles à poser : en stock, sans animal, et sans remarque « ne pas poser ».
+          setBoucles(bouclesDeLInventaire(archive, ETAT_BOUCLE.NON_POSEE).filter((b) => !nePasPoser(b)).length);
         })
         .catch(() => undefined);
       listChevresVivantes()
@@ -133,6 +137,7 @@ export function useFermeAccueil() {
     prochaine: prochaineEcheance(minuteurs),
     papiers,
     aliments,
+    boucles,
     vedettes,
     /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
     estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,
