@@ -42,6 +42,7 @@ export default function AccueilFerme() {
           naissances={f.stats?.cabritsAnnee}
           lotsAFacturer={f.lotsAFacturer}
           lotsARappeler={f.lotsARappeler}
+          morts={f.morts}
           estive={f.estive}
         />
         {/* Les menus flottants : fixes par-dessus la carte ; chaque colonne défile seule quand l'écran est court. */}

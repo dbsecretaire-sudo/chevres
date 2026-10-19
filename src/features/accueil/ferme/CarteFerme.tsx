@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMouvementReduit } from '@/features/accueil/ferme/animations';
+import { AllerRetour, Derive, Pulsation, useMouvementReduit } from '@/features/accueil/ferme/animations';
 import { EnclosFerme } from '@/features/accueil/ferme/EnclosFerme';
 import {
   CARTE,
@@ -11,10 +11,12 @@ import {
   LIEU,
   LIEUX,
   ROUTES_GRISES,
+  STELE,
   borner,
   bornes,
   centrerSur,
   decor,
+  montagnes,
   type CleLieu,
 } from '@/features/accueil/services/carteFerme';
 import type { Chevre } from '@/features/cheptel/types';
@@ -26,13 +28,16 @@ const T = TEXTES.accueil.ferme;
 
 /** Où mène chaque lieu de la carte. */
 const ROUTE_DU_LIEU: Record<CleLieu, string> = {
-  foin: `${ROUTES.COMPTABILITE_STOCKS}?onglet=aliments`,
+  foin: ROUTES.lieu('aliments'),
+  organismes: ROUTES.lieu('organismes'),
   laiterie: ROUTES.PRODUCTION_LAITERIE,
   fromagerie: ROUTES.PRODUCTION_FROMAGES,
-  charcuterie: ROUTES.PRODUCTION_CHARCUTERIE,
-  abattoir: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer`,
-  veterinaire: ROUTES.CHEPTEL_TRAITEMENTS,
+  charcuterie: ROUTES.lieu('boucherie'),
+  abattoir: ROUTES.lieu('abattoir'),
+  equarrissage: ROUTES.lieu('equarrissage'),
+  veterinaire: ROUTES.lieu('veterinaire'),
   contacts: ROUTES.CONTACTS,
+  pompe: ROUTES.lieu('carburant'),
 };
 
 interface Props {
@@ -41,6 +46,8 @@ interface Props {
   naissances?: number;
   lotsAFacturer: number;
   lotsARappeler: number;
+  /** Les animaux morts dans l'année : la stèle près de l'enclos. */
+  morts: number;
   /** Le troupeau est à l'estive : l'enclos devient une montagne. */
   estive?: { zone?: string; descente?: string };
 }
@@ -63,9 +70,39 @@ function LieuDeLaCarte({ emoji, titre, pastille, route, x, y }: { emoji: string;
       </Text>
       {pastille ? (
         <View style={styles.pastille}>
-          <Text style={styles.pastilleTexte}>{pastille}</Text>
+          <Pulsation actif>
+            <Text style={styles.pastilleTexte}>{pastille}</Text>
+          </Pulsation>
         </View>
       ) : null}
+    </Pressable>
+  );
+}
+
+/** Les nuages qui passent sur la carte : leur hauteur, leur taille, le temps qu'ils mettent à la traverser, et où ils en sont au départ. */
+const NUAGES = [
+  { y: 180, taille: 64, duree: 140000, depart: 0.1 },
+  { y: 640, taille: 48, duree: 190000, depart: 0.45 },
+  { y: 1280, taille: 72, duree: 160000, depart: 0.7 },
+  { y: 1700, taille: 52, duree: 210000, depart: 0.3 },
+] as const;
+
+/** La stèle près de l'enclos : l'équarrissage sur l'exploitation, avec les animaux morts de l'année. Un appui ouvre la page de l'équarrissage. */
+function LaStele({ morts }: { morts: number }) {
+  const router = useRouter();
+  const titre = T.zones.equarrissage;
+  const pastille = morts > 0 ? T.zones.morts(morts) : undefined;
+  return (
+    <Pressable
+      style={[styles.stele, { left: STELE.x, top: STELE.y, width: STELE.largeur, height: STELE.hauteur }]}
+      onPress={() => router.push(ROUTES.lieu('equarrissage') as never)}
+      accessibilityRole="button"
+      accessibilityLabel={pastille ? `${titre} : ${pastille}` : titre}
+    >
+      <Text style={styles.steleEmoji} accessibilityElementsHidden importantForAccessibility="no">
+        🪦
+      </Text>
+      {pastille ? <Text style={styles.steleTexte}>{pastille}</Text> : null}
     </Pressable>
   );
 }
@@ -75,14 +112,14 @@ function LieuDeLaCarte({ emoji, titre, pastille, route, x, y }: { emoji: string;
  * abattoir, vétérinaire, clients) au bout des routes. On la fait glisser du doigt (sur ordinateur, en gardant le bouton de la souris
  * enfoncé) : elle suit le doigt, puis glisse encore un peu. Elle ne montre jamais au-delà de ses bords.
  */
-export function CarteFerme({ vedettes, nombreAnimaux, naissances, lotsAFacturer, lotsARappeler, estive }: Props) {
+export function CarteFerme({ vedettes, nombreAnimaux, naissances, lotsAFacturer, lotsARappeler, morts, estive }: Props) {
   const reduit = useMouvementReduit();
   const [x] = useState(() => new Animated.Value(0));
   const [y] = useState(() => new Animated.Value(0));
   // Ce que la main sait de la carte : la taille de la vue, la position actuelle et celle d'où le doigt est parti.
   const etat = useRef({ largeur: 0, hauteur: 0, x: 0, y: 0, departX: 0, departY: 0 });
   const [aideVisible, setAideVisible] = useState(true);
-  const [arbres] = useState(decor);
+  const [arbres] = useState(() => [...montagnes(), ...decor()]);
 
   useEffect(() => {
     const ix = x.addListener(({ value }) => {
@@ -162,6 +199,9 @@ export function CarteFerme({ vedettes, nombreAnimaux, naissances, lotsAFacturer,
 
   const titres: Record<CleLieu, string> = {
     foin: T.zones.foin,
+    organismes: T.zones.organismes,
+    equarrissage: T.zones.equarrissage,
+    pompe: T.zones.pompe,
     laiterie: T.zones.laiterie,
     fromagerie: T.zones.fromagerie,
     charcuterie: T.zones.charcuterie,
@@ -185,11 +225,25 @@ export function CarteFerme({ vedettes, nombreAnimaux, naissances, lotsAFacturer,
         {ROUTES_GRISES.map((r, i) => (
           <View key={i} style={[styles.route, { left: r.x, top: r.y, width: r.largeur, height: r.hauteur }]} />
         ))}
+        {/* Le tracteur fait l'aller-retour sur la grande route, derrière l'enclos et les lieux. */}
+        <View style={[styles.vehicule, { left: CENTRE.x - 540, top: CENTRE.y - 40 }]} pointerEvents="none">
+          <AllerRetour de={0} vers={1000} duree={32000}>
+            <Text style={styles.vehiculeEmoji}>🚜</Text>
+          </AllerRetour>
+        </View>
         <View style={{ position: 'absolute', left: CENTRE.x - ENCLOS.largeur / 2, top: CENTRE.y - ENCLOS.hauteur / 2, width: ENCLOS.largeur, height: ENCLOS.hauteur }}>
           <EnclosFerme vedettes={vedettes} nombreAnimaux={nombreAnimaux} naissances={naissances} estive={estive} />
         </View>
         {LIEUX.map((l) => (
           <LieuDeLaCarte key={l.cle} emoji={l.emoji} titre={titres[l.cle]} pastille={pastilles[l.cle]} route={ROUTE_DU_LIEU[l.cle]} x={l.x} y={l.y} />
+        ))}
+        <LaStele morts={morts} />
+        {NUAGES.map((n, i) => (
+          <View key={i} style={[styles.nuage, { left: 0, top: n.y }]} pointerEvents="none">
+            <Derive de={-120} vers={CARTE.largeur + 60} duree={n.duree} depart={n.depart}>
+              <Text style={{ fontSize: n.taille, opacity: 0.8 }}>☁️</Text>
+            </Derive>
+          </View>
         ))}
       </Animated.View>
       {aideVisible ? (
@@ -228,5 +282,11 @@ const styles = StyleSheet.create({
   pastilleTexte: { color: colors.blanc, fontSize: 12, fontWeight: '700' },
   aide: { position: 'absolute', bottom: 62, left: 0, right: 0, alignItems: 'center' },
   aideTexte: { backgroundColor: 'rgba(0,0,0,0.55)', color: colors.blanc, fontSize: 13, fontWeight: '600', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, overflow: 'hidden' },
+  vehicule: { position: 'absolute', width: 60, height: 44 },
+  vehiculeEmoji: { fontSize: 34 },
+  nuage: { position: 'absolute', width: 40, height: 80 },
+  stele: { position: 'absolute', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 14, borderWidth: 1, borderColor: colors.border },
+  steleEmoji: { fontSize: 32 },
+  steleTexte: { fontSize: 10, fontWeight: '700', color: colors.danger, textAlign: 'center' },
   recentrer: { position: 'absolute', bottom: 12, alignSelf: 'center', width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
 });

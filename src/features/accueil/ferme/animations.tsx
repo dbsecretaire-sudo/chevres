@@ -92,6 +92,65 @@ export function Balade({ amplitude = 10, duree = 3200, children }: { amplitude?:
   );
 }
 
+/**
+ * Une vue qui traverse la carte de `de` à `vers` (en points, en largeur) en `duree` ms, puis recommence à `de` : un nuage. `depart` (0 à 1)
+ * dit où elle en est à l'affichage, pour que plusieurs nuages ne partent pas ensemble.
+ */
+export function Derive({ de, vers, duree, depart = 0, children }: { de: number; vers: number; duree: number; depart?: number; children: ReactNode }) {
+  const reduit = useMouvementReduit();
+  const [valeur] = useState(() => new Animated.Value(depart));
+  useEffect(() => {
+    if (reduit) return;
+    let actif = true;
+    let animation: Animated.CompositeAnimation | undefined;
+    const lancer = (debut: number) => {
+      valeur.setValue(debut);
+      animation = Animated.timing(valeur, { toValue: 1, duration: Math.max(1, (1 - debut) * duree), easing: Easing.linear, useNativeDriver: true, isInteraction: false });
+      animation.start(({ finished }) => {
+        if (finished && actif) lancer(0);
+      });
+    };
+    lancer(depart);
+    return () => {
+      actif = false;
+      animation?.stop();
+    };
+  }, [depart, duree, reduit, valeur]);
+  return <Animated.View style={{ transform: [{ translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [de, vers] }) }] }}>{children}</Animated.View>;
+}
+
+/**
+ * Une vue qui va et vient de `de` à `vers` (en largeur) en `duree` ms chaque sens, et se retourne à chaque bout : un tracteur sur sa
+ * route. Son dessin regarde vers la gauche : il est retourné quand il va vers la droite.
+ */
+export function AllerRetour({ de, vers, duree, children }: { de: number; vers: number; duree: number; children: ReactNode }) {
+  const reduit = useMouvementReduit();
+  const [valeur] = useState(() => new Animated.Value(0));
+  const [sens] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (reduit) return;
+    let actif = true;
+    let animation: Animated.CompositeAnimation | undefined;
+    const lancer = (versLaDroite: boolean) => {
+      sens.setValue(versLaDroite ? -1 : 1);
+      animation = Animated.timing(valeur, { toValue: versLaDroite ? 1 : 0, duration: duree, easing: Easing.linear, useNativeDriver: true, isInteraction: false });
+      animation.start(({ finished }) => {
+        if (finished && actif) lancer(!versLaDroite);
+      });
+    };
+    lancer(true);
+    return () => {
+      actif = false;
+      animation?.stop();
+    };
+  }, [duree, reduit, sens, valeur]);
+  return (
+    <Animated.View style={{ transform: [{ translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [de, vers] }) }, { scaleX: sens }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+
 /** Une barre qui se remplit jusqu'à `ratio` (0 à 1) à l'affichage et à chaque changement. */
 export function useRemplissage(ratio: number): Animated.AnimatedInterpolation<string> {
   const reduit = useMouvementReduit();

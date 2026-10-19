@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';
+import { estLieuTiers } from '@/features/accueil/services/lieuxTiers';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
@@ -40,6 +41,13 @@ export default function ProductionLayout() {
       <Stack.Screen name="fromages" options={{ title: TEXTES.production.fromages.titre }} />
       <Stack.Screen name="lait" options={{ title: TEXTES.production.accueil.productionLait.titre }} />
       <Stack.Screen name="laiterie" options={{ title: TEXTES.accueil.ferme.zones.laiterie }} />
+      <Stack.Screen
+        name="lieu"
+        options={({ route }) => {
+          const lieu = (route.params as { lieu?: string } | undefined)?.lieu;
+          return { title: estLieuTiers(lieu) ? TEXTES.production.lieux[lieu].titre : TEXTES.production.titre };
+        }}
+      />
       <Stack.Screen name="charcuterie" options={{ title: TEXTES.production.charcuterie.titre }} />
       <Stack.Screen
         name="fabrication"

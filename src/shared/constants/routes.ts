@@ -93,6 +93,8 @@ export const ROUTES = {
 
   // L'onglet Production d'un élevage : fromages, viande vendue, contrôle laitier, groupements
   PRODUCTION: '/production',
+  /** La page d'un lieu de la carte de la ferme qui a un tiers (pompe, vétérinaire, foin et maïs, organismes, équarrissage, abattoir, boucherie). */
+  lieu: (cle: string) => `/production/lieu?lieu=${cle}` as const,
   /** La laiterie : le lait, sa qualité, le récolteur (contacts et factures). */
   PRODUCTION_LAITERIE: '/production/laiterie',
   /** La page de la production de lait : le lait par animal et par traite. */

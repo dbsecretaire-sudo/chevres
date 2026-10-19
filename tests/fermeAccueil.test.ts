@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   autonomieAliments,
   compterBouclesPosees,
+  compterMortsDeLAnnee,
   construireMinuteurs,
   dureeCourte,
   enTranshumance,
@@ -112,5 +113,18 @@ describe('boucles posées', () => {
   it('compte les boucles et les tiptag des animaux vivants, sans les animaux sans numéro', () => {
     const vivants = [{ numeroBoucle: '00463' }, { numeroBoucle: ' 00467 ' }, { numeroBoucle: 'T-1' }, { numeroBoucle: '' }, {}];
     expect(compterBouclesPosees(vivants, new Set(['T-1']))).toEqual({ boucles: 2, tiptag: 1 });
+  });
+});
+
+describe('animaux morts dans l’année', () => {
+  it('ne compte que les morts de l’année en cours', () => {
+    const animaux = [
+      { statut: 'morte', dateStatut: '2026-03-02' },
+      { statut: 'morte', dateStatut: '2025-12-30' },
+      { statut: 'vivante' },
+      { statut: 'mort_ne', dateStatut: '2026-04-01' },
+      { statut: 'morte', dateStatut: '2026-09-10' },
+    ];
+    expect(compterMortsDeLAnnee(animaux, '2026-10-19', 'morte')).toBe(2);
   });
 });

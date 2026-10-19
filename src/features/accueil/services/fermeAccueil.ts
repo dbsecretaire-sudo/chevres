@@ -174,3 +174,13 @@ export function compterBouclesPosees(
   }
   return { boucles, tiptag };
 }
+
+/** Les animaux morts dans l'année de `aujourdhui` (les mort-nés n'en font pas partie) : ceux que l'équarrisseur a pris ou prendra. */
+export function compterMortsDeLAnnee(
+  animaux: readonly { statut?: string; dateStatut?: string }[],
+  aujourdhui: string,
+  statutMort: string,
+): number {
+  const annee = aujourdhui.slice(0, 4);
+  return animaux.filter((a) => a.statut === statutMort && a.dateStatut?.startsWith(annee)).length;
+}

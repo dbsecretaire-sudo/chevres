@@ -36,6 +36,10 @@ export const TEXTES_ACCUEIL = {
     zones: {
       enclos: (femelles: string) => `Enclos des ${femelles}`,
       foin: 'Foin et maïs',
+      organismes: 'Organismes',
+      equarrissage: 'Équarrissage',
+      pompe: 'Pompe à essence',
+      morts: (n: number) => (n === 1 ? '1 mort cette année' : `${n} morts cette année`),
       veterinaire: 'Vétérinaire',
       laiterie: 'Laiterie',
       fromagerie: 'Fromagerie',

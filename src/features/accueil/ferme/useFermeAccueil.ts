@@ -4,6 +4,7 @@ import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 import {
   autonomieAliments,
   compterBouclesPosees,
+  compterMortsDeLAnnee,
   construireMinuteurs,
   enTranshumance,
   progressionPapiers,
@@ -25,7 +26,7 @@ import { destinationRappel } from '@/features/rappels/services/destination';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { useLotsARappeler } from '@/features/stock/hooks/useLotsARappeler';
 import { articlesDuGenre } from '@/features/stock/services/stock';
-import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
+import { CATEGORIE_ANIMAL, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { numerosTiptag } from '@/features/stock/services/boucles';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
@@ -79,6 +80,7 @@ export function useFermeAccueil() {
   const [aliments, setAliments] = useState<{ kg: number; jours?: number } | null>(null);
   // Les boucles posées sur les animaux vivants : les boucles, et les tiptag (le petit badge).
   const [boucles, setBoucles] = useState<{ boucles: number; tiptag: number } | undefined>();
+  const [morts, setMorts] = useState(0);
   const [vedettes, setVedettes] = useState<Chevre[]>([]);
   useFocusEffect(
     useCallback(() => {
@@ -87,6 +89,9 @@ export function useFermeAccueil() {
           const articles = new Set(articlesDuGenre(GENRE_ARTICLE.ALIMENT, archive, especeCourante()).map((a) => a.cle));
           setAliments(autonomieAliments(archive.mouvements, articles, todayISO()));
         })
+        .catch(() => undefined);
+      listTousLesAnimauxDeLEspece()
+        .then((tous) => setMorts(compterMortsDeLAnnee(tous, todayISO(), STATUT_CHEVRE.MORTE)))
         .catch(() => undefined);
       Promise.all([lireArchiveStock(), listChevresVivantes()])
         .then(([archive, vivants]) => {
@@ -141,6 +146,8 @@ export function useFermeAccueil() {
     papiers,
     aliments,
     boucles,
+    /** Les animaux morts dans l'année (la stèle près de l'enclos, l'équarrissage). */
+    morts,
     vedettes,
     /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
     estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,
