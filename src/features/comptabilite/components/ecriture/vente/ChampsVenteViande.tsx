@@ -5,7 +5,7 @@ import { parseDecimal } from '@/shared/utils/nombres';
 import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAnimaux';
 import { estClientAbattoir } from '@/features/clients/services/categorie';
 import { reglageEtatAnimaux } from '@/features/comptabilite/utils/ventes';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
@@ -18,6 +18,7 @@ import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
@@ -334,6 +335,16 @@ export function ChampsVenteViande({ e }: Props) {
     // Le détail se choisit une fois, quand le jour d'abattage et l'inventaire sont lus.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [e.precision, e.dateAbattoir, e.date, jourChoisi?.date, viandes.length, tiptagsLus]);
+  // Un détail demandé par l'adresse (le didacticiel : « jeune », « pied » ou « vivant ») : la ligne de l'inventaire se choisit d'office, sans ouvrir la liste des animaux.
+  const { detail: detailDemande } = useLocalSearchParams<{ detail?: string }>();
+  useEffect(() => {
+    if (e.precision || !detailDemande || viandes.length === 0 || !animalEntier) return;
+    const ligne = viandes.find((v) => roleDeLaViande(v.cle) === detailDemande);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (ligne) e.setPrecision(ligne.libelle);
+    // Le détail se choisit une fois, quand l'inventaire est lu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [e.precision, detailDemande, viandes.length, animalEntier]);
   const optionsAnimaux = Array.from(
     { length: Math.max(maximum, Math.round(parseDecimal(e.quantite)) || 1) },
     (_, i) => ({
@@ -526,17 +537,19 @@ export function ChampsVenteViande({ e }: Props) {
             />
           )}
           {/* Les animaux sont remis vivants (au client) ou morts : seuls ceux qui voyagent vivants ont un document de circulation. */}
-          <ChampEtatAnimaux
-            reglage={reglageEtatAnimaux({
-              clientAbattoir: estClientAbattoir(e.clientSelectionne),
-              role: choisie ? roleDeLaViande(choisie.cle) : undefined,
-              declaree: e.avecFacture,
-            })}
-            clientAbattoir={estClientAbattoir(e.clientSelectionne)}
-            role={choisie ? roleDeLaViande(choisie.cle) : undefined}
-            value={e.etatAnimaux}
-            onChange={e.setEtatAnimaux}
-          />
+          <AncreVisite id="ecriture.etat">
+            <ChampEtatAnimaux
+              reglage={reglageEtatAnimaux({
+                clientAbattoir: estClientAbattoir(e.clientSelectionne),
+                role: choisie ? roleDeLaViande(choisie.cle) : undefined,
+                declaree: e.avecFacture,
+              })}
+              clientAbattoir={estClientAbattoir(e.clientSelectionne)}
+              role={choisie ? roleDeLaViande(choisie.cle) : undefined}
+              value={e.etatAnimaux}
+              onChange={e.setEtatAnimaux}
+            />
+          </AncreVisite>
           {/* Un animal vivant de réforme se vend au kilo vif : le prix au kilo est saisi (sinon, à la tête, au prix de l'inventaire). */}
           {vivantLigne ? (
             <>

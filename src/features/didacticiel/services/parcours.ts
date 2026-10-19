@@ -1,6 +1,7 @@
 import type { EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
+import { LOT_ABATTOIR } from '@/features/didacticiel/services/adresses';
 
 /** Une étape d'un parcours de cas : ce qu'on fait, où, et l'écran qui s'ouvre. */
 export interface EtapeParcours {
@@ -16,6 +17,8 @@ export interface EtapeParcours {
   ouvrir?: string;
   /** L'élément de l'écran que la visite guidée met en surbrillance (voir AncreVisite). */
   ancre?: string;
+  /** Vrai : l'étape attend qu'on touche l'élément en surbrillance (ce qu'il ouvre est l'étape d'après). */
+  clic?: boolean;
 }
 
 /** Les pictogrammes qui résument un parcours d'un coup d'œil (voir SchemaParcours). */
@@ -57,14 +60,17 @@ export interface Parcours {
 }
 
 /** Les adresses où mènent les étapes : l'écran voulu, ouvert sur le bon onglet, la bonne catégorie ou le bon type d'écriture. */
-const ECRITURE = (type: 'emise' | 'recue', categorie?: string, sansFacture = false, deuxiemeEtape = false): string =>
-  `${ROUTES.COMPTABILITE_NOUVELLE}?type=${type}${categorie ? `&categorie=${categorie}` : ''}${sansFacture ? '&facture=non' : ''}${deuxiemeEtape ? '&etape=vente' : '&etape=contact'}`;
-const VIANDE = (onglet?: 'afacturer' | 'facturee' | 'avendre' | 'vendue'): string =>
-  `${ROUTES.PRODUCTION_VIANDE}${onglet ? `?onglet=${onglet}` : ''}`;
+const ECRITURE = (type: 'emise' | 'recue', categorie?: string, sansFacture = false, deuxiemeEtape = false, supplement = ''): string =>
+  `${ROUTES.COMPTABILITE_NOUVELLE}?type=${type}${categorie ? `&categorie=${categorie}` : ''}${sansFacture ? '&facture=non' : ''}${deuxiemeEtape ? '&etape=vente' : '&etape=contact'}${supplement}`;
+/** La viande vendue : son onglet, son sous-onglet (Disponibles, Réservés, Morts, Vivants) et, quand on le demande, le menu d'actions du premier animal. */
+const VIANDE = (onglet: 'afacturer' | 'facturee' | 'avendre' | 'vendue', sous?: string, menu = false): string =>
+  `${ROUTES.PRODUCTION_VIANDE}?onglet=${onglet}${sous ? `&sous=${sous}` : ''}&menu=${menu ? 'premier' : 'non'}`;
+/** La fiche du lot d'abattoir le plus récent, ouverte sur un de ses onglets (facture : écritures, poids ; animaux ; suivi : sanitaire). */
+const LOT = (onglet: 'facture' | 'animaux' | 'suivi'): string => `${ROUTES.PRODUCTION}/lot?id=${LOT_ABATTOIR}&onglet=${onglet}`;
 const STOCKS = (onglet: string): string => `${ROUTES.COMPTABILITE_STOCKS}?onglet=${onglet}`;
 
 /** Une étape : `adresse` est l'écran à ouvrir ; sa page (sans paramètres) sert à la reconnaître en visite guidée. */
-const etape = (numero: string, titre: string, texte: string, chemin?: string, adresse?: string, ancre?: string): EtapeParcours => ({
+const etape = (numero: string, titre: string, texte: string, chemin?: string, adresse?: string, ancre?: string, clic = false): EtapeParcours => ({
   numero,
   titre,
   texte,
@@ -72,23 +78,26 @@ const etape = (numero: string, titre: string, texte: string, chemin?: string, ad
   route: adresse?.split('?')[0],
   ouvrir: adresse?.includes('?') ? adresse : undefined,
   ancre,
+  clic: clic || undefined,
 });
 
 /** Les étapes de l'inventaire, communes à plusieurs parcours : le stock restant, puis ses mouvements. */
-const etapesDeStock = (premier: number, onglet: string): EtapeParcours[] => [
+const etapesDeStock = (premier: number, onglet: string, ancreStock: string, ancreHistorique: string): EtapeParcours[] => [
   etape(
     String(premier),
     'Le stock restant',
-    'Dans l’inventaire, le stock de ce que vous venez de vendre a baissé : on y lit ce qui reste.',
+    'Dans l’inventaire, le stock de ce que vous venez de vendre a baissé : on y lit ce qui reste (la ligne en surbrillance).',
     'Comptabilité › Inventaire › Stocks',
     STOCKS(onglet),
+    ancreStock,
   ),
   etape(
     String(premier + 1),
     'Les mouvements de stock',
-    'L’historique de l’inventaire garde chaque mouvement : la vente y figure avec sa date et sa quantité.',
+    'L’historique de l’inventaire garde chaque mouvement : « Détails » déroule les mois, et chaque mois la vente avec sa date et sa quantité.',
     'Comptabilité › Inventaire › Historique',
     ROUTES.stockHistorique(),
+    ancreHistorique,
   ),
 ];
 
@@ -108,15 +117,16 @@ export function parcoursDeCas(): Parcours[] {
       etapes: [
         etape('1', 'Je déclare une naissance sans boucle', 'Notez la naissance du petit sans lui poser de boucle : un animal sans boucle se vend sans facture.', 'Cheptel › Naissances › +', ROUTES.CHEPTEL_NAISSANCE_NOUVELLE),
         etape('2', 'J’active l’option « Avancé »', 'Dans Production › Viande, cochez « Avancé », sous les onglets : les onglets « À vendre » et « Vendue » apparaissent.', 'Production › Viande', VIANDE('afacturer'), 'viande.avance'),
-        etape('3', 'Je récupère l’animal', 'Ouvrez l’onglet « À vendre » (visible une fois « Avancé » coché) : l’animal né sans boucle y est proposé.', 'Production › Viande › À vendre', VIANDE('avendre')),
-        etape('4', 'Je le réserve sur un bon de commande ou je le facture de suite', 'Réservez l’animal pour le client : il rejoint son bon de commande, et la facture se remplit toute seule ensuite. Ou facturez-le tout de suite.', 'Production › Viande › À vendre', VIANDE('avendre')),
-        etape('5', 'Réservé : je le facture', 'Les animaux réservés sont rangés par client dans « À vendre » : un appui les facture.', 'Production › Viande › À vendre', VIANDE('avendre')),
+        etape('3', 'Je récupère l’animal', 'Ouvrez l’onglet « À vendre » (visible une fois « Avancé » coché) : l’animal né sans boucle y est proposé, dans « Disponibles ».', 'Production › Viande › À vendre › Disponibles', VIANDE('avendre', 'disponibles')),
+        etape('4', 'Je le réserve sur un bon de commande ou je le facture de suite', 'Touchez un animal : un menu d’actions propose de le réserver pour le client (il rejoint son bon de commande, et la facture se remplit toute seule ensuite) ou de le facturer tout de suite.', 'Production › Viande › À vendre › un animal', VIANDE('avendre', 'disponibles', true)),
+        etape('5', 'Réservé : je le facture', 'Les animaux réservés sont rangés par client dans le sous-onglet « Réservés » : touchez-en un, puis « Valider et facturer ».', 'Production › Viande › À vendre › Réservés', VIANDE('avendre', 'reserves')),
         etape('5A', 'Je vois les commandes en cours', 'Les réservations non encore facturées sont dans les commandes à traiter.', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDES),
-        etape('6', 'Je vérifie les informations préremplies', 'Vérifiez que « Sans facture » est bien sélectionné. L’écriture apparaît dans la liste des écritures, mais elle ne sera comptée ni pour les impôts ni pour le RSA.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true)),
-        etape('7', 'Cabri mort ou vivant', 'À la 2e étape de la saisie (« Suivant »), cochez « morts » ou « vivants » selon la demande du client.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true)),
-        etape('8', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true), 'ecriture.activite'),
-        etape('9', 'Je vois la liste des ventes sans facture', 'L’onglet « Vendue » de la viande liste les animaux vendus sans facture.', 'Production › Viande › Vendue', VIANDE('vendue')),
-        ...etapesDeStock(10, 'animaux'),
+        etape('6', 'Je vérifie les informations préremplies', 'Vérifiez que « Sans facture » est bien sélectionné. L’écriture apparaît dans la liste des écritures, mais elle ne sera comptée ni pour les impôts ni pour le RSA.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, false, '&detail=jeune')),
+        etape('7', 'Cabri mort ou vivant', 'Dans le menu déroulant « Animaux remis », choisissez morts ou vivants selon la demande du client : un cabri vivant a un document de circulation, un cabri mort non.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true, '&detail=jeune'), 'ecriture.etat'),
+        etape('8', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', true, true, '&detail=jeune'), 'ecriture.activite'),
+        etape('9', 'Je vois la liste des ventes sans facture', 'L’onglet « Vendue » de la viande liste les animaux vendus sans facture : ici, ceux remis morts.', 'Production › Viande › Vendue › Morts', VIANDE('vendue', 'morts')),
+        etape('9A', 'Où sont les animaux vendus vivants', 'Le sous-onglet « Vivants » liste ceux qui sont partis vivants chez le client.', 'Production › Viande › Vendue › Vivants', VIANDE('vendue', 'vivants')),
+        ...etapesDeStock(10, 'animaux', 'stock.animaux', 'historique.viande'),
       ],
     },
     {
@@ -125,14 +135,19 @@ export function parcoursDeCas(): Parcours[] {
       resume: 'De la facture de l’abattoir à la facture du client.',
       schema: ['animal', 'facture', 'abattoir', 'argent'],
       etapes: [
-        etape('1', 'Je crée la facture de l’abattoir', 'Une dépense au nom de l’abattoir : c’est elle qui donne les frais d’abattoir refacturés au client.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue')),
-        etape('2', 'Je récupère le lot', 'Dans l’onglet « À facturer », ouvrez le lot (le jour d’abattage) et vérifiez qu’aucun animal n’est mort ni saisi par l’abattoir.', 'Production › Viande › À facturer', VIANDE('afacturer')),
-        etape('3', 'Je vérifie le poids total', 'Dans la fiche du lot, contrôlez le poids total noté à l’abattoir : il remplit le poids de la facture au client.', 'Production › Viande › À facturer › lot › Écritures', VIANDE('afacturer')),
-        etape('4', 'Je facture ce lot à un client', 'Le bouton « Facturer la viande de ce lot au client » ouvre la facture, déjà préremplie.', 'Production › Viande › À facturer › lot', VIANDE('afacturer')),
+        etape('1', 'Je crée la facture de l’abattoir', 'Une dépense au nom de l’abattoir : choisissez le contact en ouvrant sa catégorie « Abattoir ». C’est cette facture qui donne les frais d’abattoir refacturés au client.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue')),
+        etape('1A', 'Je choisis les animaux', 'Catégorie « Animaux vivants (sortie) » : « Choisir les animaux » ouvre la liste (Tiptag ou Boucles). Chaque animal choisi passe à « abattoir » à la date de la dépense.', 'Comptabilité › Écritures › + › Débit › Animaux vivants (sortie)', ECRITURE('recue', undefined, false, true, '&depense=animaux_vivants_vente'), 'ecriture.animauxEnvoyes'),
+        etape('2', 'Je récupère le lot', 'Dans l’onglet « À facturer », touchez le lot (le jour d’abattage) pour ouvrir sa fiche. Vérifiez ensuite qu’aucun animal n’est mort ni saisi par l’abattoir.', 'Production › Viande › À facturer', VIANDE('afacturer'), 'viande.premierLot', true),
+        etape('3', 'Je vérifie le poids total', 'Dans l’onglet Écritures du lot, contrôlez le poids total noté à l’abattoir : il remplit le poids de la facture au client.', 'Production › Viande › À facturer › lot › Écritures', LOT('facture'), 'lot.poids'),
+        etape('3A', 'Animaux morts ou saisis', 'Dans le suivi sanitaire du lot, déclarez les bêtes saisies par l’abattoir ou mortes pendant le transport : elles ne se facturent pas au client et ne comptent pas parmi les animaux abattus.', 'Production › Viande › lot › Suivi sanitaire', LOT('suivi'), 'lot.inconsommables'),
+        etape('3B', 'Comment elles s’affichent', 'Dans l’onglet Animaux, ces bêtes sont en rouge dans la liste des animaux du lot.', 'Production › Viande › lot › Animaux', LOT('animaux'), 'lot.animaux'),
+        etape('3C', 'Le document de circulation vers l’abattoir', 'Les animaux partent vivants à l’abattoir : ce bouton ouvre un menu pour déposer votre document (ou le remplacer, l’ouvrir, le retirer), ou générer le modèle pré-rempli. En bas du document, vous notifiez un départ.', 'Production › Viande › lot › Animaux', LOT('animaux'), 'lot.circulation'),
+        etape('3D', 'J’envoie le feuillet à la chambre d’agriculture', 'Vous gardez le blanc et le jaune, vous donnez le vert et le bleu à l’abattoir, et vous gardez le rose avant de l’envoyer à la chambre d’agriculture : sur l’accueil, le rappel « Envoyer le document du … (rose) » reste à valider tant qu’il n’est pas envoyé.', 'Cheptel › Dossier PAC › Documents de circulation', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION),
+        etape('4', 'Je facture ce lot à un client', 'Le bouton « Facturer la viande de ce lot au client » (onglet Écritures) ouvre la facture, déjà préremplie.', 'Production › Viande › lot › Écritures', LOT('facture'), 'lot.facturer'),
         etape('5', 'Je termine la facture', 'Complétez les informations demandées (contact, date, TVA, paiement) puis enregistrez.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', false, true)),
         etape('6', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', false, true), 'ecriture.activite'),
         etape('7', 'La liste des factures', 'Les ventes de viande facturées sont dans l’onglet « Facturée ».', 'Production › Viande › Facturée', VIANDE('facturee')),
-        ...etapesDeStock(8, 'viande'),
+        ...etapesDeStock(8, 'viande', 'stock.viande', 'historique.viande'),
       ],
     },
     {
@@ -152,7 +167,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('8', 'La production du lait', 'Précisez la date de début et de fin de traite et le nombre de chèvres à la traite : on obtient la quantité de lait par chèvre et par traite.', 'Production › Production du lait', ROUTES.PRODUCTION_LAIT),
         etape('9', 'Le chiffre d’affaires', 'Une vision globale du chiffre d’affaires, par produit, par contact et par mois.', 'Commercial › Chiffre d’affaires', ROUTES.COMMERCIAL_VENTES),
         etape('10', 'La rentabilité par atelier', 'Ce que rapporte et ce que coûte chaque atelier.', 'Comptabilité › Rentabilité', ROUTES.RENTABILITE),
-        etape('11', 'Le stock et ses mouvements', 'Le stock de lait se lit dans l’inventaire (Stocks), et ses mouvements dans l’historique de l’inventaire.', 'Comptabilité › Inventaire › Stocks + Historique', STOCKS('lait')),
+        etape('11', 'Le stock et ses mouvements', 'Le stock de lait se lit dans l’inventaire (Stocks), et ses mouvements dans l’historique de l’inventaire.', 'Comptabilité › Inventaire › Stocks + Historique', STOCKS('lait'), 'stock.lait'),
       ],
     },
     {
@@ -165,7 +180,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('2', 'Le plus simple : je réserve sur un bon de commande', 'Dans le bon de commande du client, ajoutez une ligne de fromage et choisissez ses lots : ils sont réservés, et la facture se remplit toute seule d’après la réservation (c’est le plus simple pour facturer ensuite).', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDE),
         etape('3', 'Sans bon de commande : je choisis les fromages dans la facture', 'Sans réservation, crédit, catégorie « Fromages » : choisissez le type de fromage et les lots vendus dans la facture (leurs numéros sont repris pour le suivi).', 'Comptabilité › Écritures › + › Crédit › Fromages', ECRITURE('emise', 'fromage', false, true)),
         etape('4', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Fromages', ECRITURE('emise', 'fromage', false, true), 'ecriture.activite'),
-        ...etapesDeStock(5, 'fromages'),
+        ...etapesDeStock(5, 'fromages', 'stock.fromages', 'historique.fromage'),
         etape('7', 'Le rappel de lots', 'Si le contrôle d’un lot vendu n’est pas bon, le lot est à rappeler : il apparaît dans les rappels de lots (et sur l’accueil) jusqu’à ce que le rappel soit validé.', 'Production › Rappels de lots', ROUTES.PRODUCTION_RAPPELS_LOTS),
       ],
     },
@@ -179,7 +194,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('2', 'Le plus simple : je réserve sur un bon de commande', 'Dans le bon de commande du client, ajoutez une ligne de charcuterie et choisissez ses lots : ils sont réservés, et la facture se remplit toute seule d’après la réservation (c’est le plus simple pour facturer ensuite).', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDE),
         etape('3', 'Sans bon de commande : je choisis les produits dans la facture', 'Sans réservation, crédit, catégorie « Boucherie / charcuterie » : choisissez le produit et les lots vendus dans la facture.', 'Comptabilité › Écritures › + › Crédit › Boucherie / charcuterie', ECRITURE('emise', 'boucherie_charcuterie', false, true)),
         etape('4', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Crédit › Boucherie / charcuterie', ECRITURE('emise', 'boucherie_charcuterie', false, true), 'ecriture.activite'),
-        ...etapesDeStock(5, 'viande'),
+        ...etapesDeStock(5, 'viande', 'stock.viande', 'historique.viande'),
         etape('7', 'Le rappel de lots', 'Si le contrôle d’un lot vendu n’est pas bon, le lot est à rappeler : il apparaît dans les rappels de lots (et sur l’accueil) jusqu’à ce que le rappel soit validé.', 'Production › Rappels de lots', ROUTES.PRODUCTION_RAPPELS_LOTS),
       ],
     },
@@ -204,7 +219,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('1', 'La facture d’aliments', 'Une dépense, catégorie alimentation : le fournisseur, la date et le numéro de la facture.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue')),
         etape('2', 'Le détail par aliment', 'Une ligne par aliment : choisissez l’aliment, indiquez la quantité et le montant. C’est ce détail qui permet de calculer le prix par animal.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue', undefined, false, true)),
         etape('3', 'Je vérifie l’atelier', 'L’atelier (l’espèce) est facultatif : il sert à la marge par atelier. L’aliment d’un autre cheptel reste une charge commune.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue', undefined, false, true), 'ecriture.atelier'),
-        etape('4', 'Le stock d’aliments', 'Les aliments achetés entrent dans l’inventaire, et se consomment au fil de la distribution.', 'Comptabilité › Inventaire › Stocks › Aliments', STOCKS('aliments')),
+        etape('4', 'Le stock d’aliments', 'Les aliments achetés entrent dans l’inventaire, et se consomment au fil de la distribution.', 'Comptabilité › Inventaire › Stocks › Aliments', STOCKS('aliments'), 'stock.aliments'),
         etape('5', 'Ce que mangent les animaux et ce que ça coûte', 'La distribution d’aliments et son coût, avec des repères d’alimentation par espèce (des ordres de grandeur, jamais une ration).', 'Cheptel › Santé › Alimentation', ROUTES.SANTE_ALIMENTATION),
         etape('6', 'Le prix par animal', 'Le coût d’aliment par animal et par jour se lit dans les chiffres de l’année, sur l’accueil, et dans le détail du tableau de bord du cheptel.', 'Cheptel › Tableau de bord', ROUTES.CHEPTEL_TABLEAU_DE_BORD),
         etape('7', 'La rentabilité', 'La rentabilité compare ce que coûte l’aliment à ce que rapporte l’atelier (par exemple, le coût d’aliment par litre de lait).', 'Comptabilité › Rentabilité', ROUTES.RENTABILITE),
@@ -265,7 +280,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('4', 'Je réserve du fromage ou de la charcuterie', 'Dans le bon de commande, ajoutez une ligne de fromage ou de charcuterie et choisissez ses lots : ils sont réservés, et leurs numéros sont repris à la facturation.', 'Commercial › Commandes à traiter › une commande', ROUTES.COMMERCIAL_COMMANDE),
         etape('5', 'Les commandes en cours', 'Tout ce qui est réservé se retrouve dans les commandes à traiter, avec le total du bon.', 'Commercial › Commandes à traiter', ROUTES.COMMERCIAL_COMMANDES),
         etape('6', 'Je facture', 'La commande se facture d’un appui : la facture est préremplie d’après les réservations (vérifiez le prix, la TVA et l’atelier). La commande passe en terminée.', 'Commercial › Commandes à traiter › une commande', ROUTES.COMMERCIAL_COMMANDES),
-        ...etapesDeStock(7, 'animaux'),
+        ...etapesDeStock(7, 'animaux', 'stock.animaux', 'historique.viande'),
       ],
     },
     {
@@ -310,6 +325,7 @@ export function etapesDuParcours(id: string): EtapeVisite[] {
     route: e.route,
     ouvrir: e.ouvrir,
     ancre: e.ancre,
+    clic: e.clic,
     titre: `${e.numero}. ${e.titre}`,
     texte: e.chemin ? `${e.texte}\n\n${e.chemin}` : e.texte,
     sansVoile: true,

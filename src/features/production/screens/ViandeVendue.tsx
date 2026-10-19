@@ -151,7 +151,7 @@ export default function ViandeVendue() {
 
   /** Trois onglets : la viande à facturer, la viande facturée, et celle vendue sans facture (les animaux sans boucle). */
   // Un lien (le didacticiel, un rappel) peut ouvrir un onglet : il s'ouvre dessus, et change d'onglet quand l'adresse en demande un autre.
-  const { onglet: ongletDemande } = useLocalSearchParams<{ onglet?: string }>();
+  const { onglet: ongletDemande, sous: sousDemande, menu: menuDemande } = useLocalSearchParams<{ onglet?: string; sous?: string; menu?: string }>();
   const ongletValide = (o?: string): OngletViande | undefined =>
     (['afacturer', 'facturee', 'avendre', 'vendue'] as string[]).includes(o ?? '') ? (o as OngletViande) : undefined;
   const [onglet, setOnglet] = useState<OngletViande>(ongletValide(ongletDemande) ?? 'afacturer');
@@ -160,6 +160,13 @@ export default function ViandeVendue() {
     setOngletVu(ongletDemande);
     const demande = ongletValide(ongletDemande);
     if (demande) setOnglet(demande);
+  }
+  // Le sous-onglet demandé : Disponibles ou Réservés (à vendre), Morts ou Vivants (vendue).
+  const [sousVu, setSousVu] = useState<string | undefined>(undefined);
+  if (sousDemande !== sousVu) {
+    setSousVu(sousDemande);
+    if (sousDemande === 'disponibles' || sousDemande === 'reserves') setDispo(sousDemande);
+    if (sousDemande === 'morts' || sousDemande === 'vivants') setSousOnglet(sousDemande);
   }
   const facturees = ventes.filter((v) => venteADeclarer(v));
   const sansFacture = ventes.filter((v) => !venteADeclarer(v));
@@ -207,6 +214,13 @@ export default function ViandeVendue() {
     );
   const ongletActif: OngletViande =
     !avance && (onglet === 'avendre' || onglet === 'vendue') ? 'afacturer' : onglet;
+  // Le menu d'actions du premier animal à vendre, ouvert quand l'adresse le demande (le didacticiel le montre), dès que la liste est lue.
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  if (menuDemande === 'premier' && !menuOuvert && ongletActif === 'avendre' && aVendreLibres.length > 0) {
+    setMenuOuvert(true);
+    setMenu(aVendreLibres[0]);
+  }
+  if (menuDemande !== 'premier' && menuOuvert) setMenuOuvert(false);
   const venteDeLOnglet =
     ongletActif === 'facturee'
       ? facturees
@@ -441,7 +455,17 @@ export default function ViandeVendue() {
         groupesAFacturer.length === 0 ? (
           <EmptyState title={T.rienAFacturer} subtitle={T.rienAFacturerNote} />
         ) : (
-          <BlocLignes>{groupesAFacturer.map(ligneDuJour)}</BlocLignes>
+          <BlocLignes>
+            {groupesAFacturer.map((g, i) =>
+              i === 0 ? (
+                <AncreVisite key={`${g.date}-${g.avecBoucle}`} id="viande.premierLot">
+                  {ligneDuJour(g)}
+                </AncreVisite>
+              ) : (
+                ligneDuJour(g)
+              ),
+            )}
+          </BlocLignes>
         )
       ) : ongletActif === 'avendre' ? (
         <FlatList
@@ -458,11 +482,21 @@ export default function ViandeVendue() {
           renderItem={({ item, index }) => (
             <LigneDeBloc index={index} total={(dispo === 'disponibles' ? aVendreLibres : aVendreReserves).length}>
               {/* Un animal réservé : « Réservation » et le nom du client en titre. */}
-              <LigneChevre
-                chevre={item}
-                titre={estReserve(item) ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client) : undefined}
-                onPress={() => setMenu(item)}
-              />
+              {index === 0 ? (
+                <AncreVisite id="viande.premierAnimal">
+                  <LigneChevre
+                    chevre={item}
+                    titre={estReserve(item) ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client) : undefined}
+                    onPress={() => setMenu(item)}
+                  />
+                </AncreVisite>
+              ) : (
+                <LigneChevre
+                  chevre={item}
+                  titre={estReserve(item) ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client) : undefined}
+                  onPress={() => setMenu(item)}
+                />
+              )}
             </LigneDeBloc>
           )}
         />

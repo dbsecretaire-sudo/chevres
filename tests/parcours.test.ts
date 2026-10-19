@@ -68,7 +68,11 @@ describe('parcours de cas du didacticiel', () => {
     // L’étape d’avant est sur la même page, mais précise son écran (étape de saisie, catégorie) : il s’ouvre pour la montrer.
     expect(etapePrecedente(etapes, 3, '/comptabilite/nouvelle')?.ouvrir).toContain('etape=vente');
     // Une étape sans paramètres, déjà ouverte : rien à ouvrir.
-    expect(etapePrecedente(etapesDuParcours('vente-abattoir'), 5, '/comptabilite/nouvelle')?.ouvrir).toContain('/comptabilite/nouvelle');
+    const abattoir = etapesDuParcours('vente-abattoir');
+    const iAtelier = abattoir.findIndex((e) => e.titre.startsWith('6.'));
+    expect(etapePrecedente(abattoir, iAtelier, '/comptabilite/nouvelle')?.ouvrir).toContain('/comptabilite/nouvelle');
+    // Une fiche de lot : l’adresse garde le repère du lot d’abattoir, résolu au moment d’ouvrir.
+    expect(abattoir.some((e) => e.ouvrir?.includes('{lotAbattoir}') && e.ancre === 'lot.poids')).toBe(true);
     expect(etapePrecedente(etapes, 0, '/comptabilite/nouvelle')).toBeNull();
   });
 

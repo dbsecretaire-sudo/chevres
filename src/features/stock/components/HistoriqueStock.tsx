@@ -1,3 +1,4 @@
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -345,7 +346,8 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
             (m) => duMois(annee, m).length > 0 || duMois(annee - 1, m).length > 0,
           );
           return (
-            <View key={idCarte} style={commonStyles.gap10}>
+            <AncreVisite key={idCarte} id={`historique.${idCarte}`}>
+            <View style={commonStyles.gap10}>
               {premiereDeSaNature ? (
                 <Text style={commonStyles.subheading}>
                   {T.enteteCategorie(
@@ -412,6 +414,7 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
                 })}
               </Card>
             </View>
+            </AncreVisite>
           );
         })}
     </View>

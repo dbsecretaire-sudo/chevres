@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
@@ -58,7 +59,9 @@ export function AnimauxEnvoyesChoix({ valeur, onChange }: Props) {
       ))}
       <Text style={commonStyles.labelMuted}>{T.parmi}</Text>
       <FiltresExclusifs choix={[T.tiptag, T.boucles]} valeur={sorte} onChoisir={(v) => v && setSorte(v)} />
-      <Button variant="secondary" label={valeur.length > 0 ? T.modifier : T.choisir} onPress={() => setOuvert(true)} />
+      <AncreVisite id="ecriture.animauxEnvoyes">
+        <Button variant="secondary" label={valeur.length > 0 ? T.modifier : T.choisir} onPress={() => setOuvert(true)} />
+      </AncreVisite>
       <SelectModalMultiple
         key={`${sorte}:${valeur.join(',')}`}
         visible={ouvert}

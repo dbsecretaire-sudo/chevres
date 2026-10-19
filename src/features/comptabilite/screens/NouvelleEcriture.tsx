@@ -31,8 +31,8 @@ import { etatCommunDesReservations } from '@/features/commercial/services/reserv
 import type { Chevre } from '@/features/cheptel/types';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
-import type { CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
-import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import type { CategorieDepense, CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
@@ -68,6 +68,8 @@ export default function NouvelleFacture() {
     lignes?: string;
     /** « vente » : s'ouvre sur la 2e étape (ce qui est vendu ou acheté), sans passer par le contact : le didacticiel y montre ses champs. */
     etape?: string;
+    /** La catégorie de dépense d'ouverture (une facture reçue) : le didacticiel y montre ses champs. */
+    depense?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -89,6 +91,12 @@ export default function NouvelleFacture() {
       : undefined,
     params.etat,
   );
+  // La catégorie de dépense demandée par l'adresse (une catégorie connue) : elle se choisit d'office, et change quand l'adresse en demande une autre.
+  const [depenseVue, setDepenseVue] = useState<string | undefined>(undefined);
+  if (params.depense !== depenseVue) {
+    setDepenseVue(params.depense);
+    if (params.depense && (Object.values(CATEGORIE_DEPENSE) as string[]).includes(params.depense)) e.changerCategorieDepense(params.depense as CategorieDepense);
+  }
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
   useFocusEffect(

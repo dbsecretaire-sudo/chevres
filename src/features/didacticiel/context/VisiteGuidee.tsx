@@ -5,6 +5,7 @@ import { useDeuxColonnes } from '@/bureau/colonnes';
 import { estBureau } from '@/shared/utils/plateforme';
 import { etapeApresUnMenu, etapeDeLaPage, etapePrecedente, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, etapesPourLEcran, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 import { etapesDuParcours, parcoursDe } from '@/features/didacticiel/services/parcours';
+import { adresseReelle } from '@/features/didacticiel/services/adresses';
 
 const CLE_STOCKAGE = 'troupeau:v1:visite-guidee';
 
@@ -82,12 +83,16 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
   /** Ouvre l'adresse d'une étape ; sur l'écran déjà ouvert, seuls ses paramètres changent (l'onglet voulu, par exemple). */
   const aller = useCallback(
     (cible: string) => {
-      const [chemin, requete = ''] = cible.split('?');
-      if (chemin === adresse && requete) {
-        router.setParams(Object.fromEntries(new URLSearchParams(requete)) as never);
-        return;
-      }
-      router.push(cible as never);
+      adresseReelle(cible)
+        .then((reelle) => {
+          const [chemin, requete = ''] = reelle.split('?');
+          if (chemin === adresse && requete) {
+            router.setParams(Object.fromEntries(new URLSearchParams(requete)) as never);
+            return;
+          }
+          router.push(reelle as never);
+        })
+        .catch(() => undefined);
     },
     [adresse, router],
   );

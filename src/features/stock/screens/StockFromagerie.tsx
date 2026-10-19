@@ -6,6 +6,7 @@ import {
   categoriesAvecAjoutees,
   type Section,
 } from '@/features/stock/utils/categories';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
@@ -536,7 +537,8 @@ export default function StockFromagerie() {
                 {listes.map(({ section, titre, genre }) => {
                   const compte = COMPTE_PAR_SECTION_INVENTAIRE[section];
                   return (
-                    <View key={section} style={commonStyles.gap10}>
+                    <AncreVisite key={section} id={`stock.${section}`}>
+                    <View style={commonStyles.gap10}>
                       <View style={commonStyles.rowSpaceBetween}>
                         <View style={commonStyles.gap2}>
                           <Text style={commonStyles.lineBold}>{titre}</Text>
@@ -600,6 +602,7 @@ export default function StockFromagerie() {
                         </Card>
                       ) : null}
                     </View>
+                    </AncreVisite>
                   );
                 })}
                 {listesPerso.map((l) => (
