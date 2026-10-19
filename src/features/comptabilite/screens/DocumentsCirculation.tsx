@@ -22,7 +22,7 @@ import {
   rechercherEcritures,
   type EcritureACirculation,
 } from '@/features/comptabilite/services/documentsCirculation';
-import { genererLeModeleDeCirculation } from '@/features/comptabilite/services/modeleCirculation';
+import { useActionsDocumentCirculation } from '@/features/comptabilite/hooks/useActionsDocumentCirculation';
 import { nomsDesAbattoirs } from '@/features/fournisseurs/services/abattoirs';
 import {
   choisirFichiers,
@@ -93,53 +93,18 @@ export default function DocumentsCirculation() {
     : deLEspece.filter((e) => !e.depose && !e.date.startsWith(String(settings.anneeActive)));
   const anneesDesManquants = anneesDesEcritures(manquantsAilleurs);
 
-  const deposer = async (e: EcritureACirculation) => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
-    try {
-      const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
-      if (!choisi) return;
-      const piece = await rangerFichier(choisi);
-      // Le fichier remplacé est effacé de l'appareil.
-      if (e.depose) await supprimerPiece(e.depose.piece);
-      await deposerDocumentCirculation(e, { piece, deposeLe: new Date().toISOString() });
-      await charger();
-    } catch (erreur: unknown) {
-      Alert.alert(erreur instanceof Error ? erreur.message : TEXTES.fichiers.erreurAjout);
-    }
-  };
-  const ouvrir = async (e: EcritureACirculation) => {
-    if (!e.depose) return;
-    if (!(await pieceExiste(e.depose.piece))) return Alert.alert(T.fichierIntrouvable);
-    await ouvrirPiece(e.depose.piece);
-  };
-  const retirer = async (e: EcritureACirculation) => {
-    if (!e.depose) return;
-    await supprimerPiece(e.depose.piece);
-    await deposerDocumentCirculation(e, undefined);
-    await charger();
-  };
-
+  const { options } = useActionsDocumentCirculation(charger);
   const optionsDuMenu = menu
-    ? [
-        {
-          label: menu.depose ? T.remplacer : T.deposer,
-          icon: 'cloud-upload' as const,
-          onPress: () => deposer(menu),
-        },
-        ...(menu.depose
-          ? [
-              { label: T.ouvrir, icon: 'document-text' as const, onPress: () => ouvrir(menu) },
-              { label: T.retirer, icon: 'trash' as const, color: colors.danger, onPress: () => retirer(menu) },
-            ]
-          : []),
-        { label: T.modele, icon: 'print' as const, onPress: () => genererLeModeleDeCirculation(menu).catch(() => undefined) },
-        {
-          label: T.ouvrirEcriture,
-          icon: 'open' as const,
-          onPress: () =>
-            router.push((menu.type === 'vente' ? ROUTES.ficheVente(menu.id) : ROUTES.ficheFacture(menu.id)) as never),
-        },
-      ]
+    ? options(menu, {
+        supplement: [
+          {
+            label: T.ouvrirEcriture,
+            icon: 'open' as const,
+            onPress: () =>
+              router.push((menu.type === 'vente' ? ROUTES.ficheVente(menu.id) : ROUTES.ficheFacture(menu.id)) as never),
+          },
+        ],
+      })
     : [];
 
   return (

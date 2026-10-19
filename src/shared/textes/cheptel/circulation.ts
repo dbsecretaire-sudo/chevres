@@ -27,6 +27,7 @@ export const circulationTextes = {
   autresAnnees: (n: number, annees: number[]) =>
     `${n} ${n > 1 ? 'documents manquent' : 'document manque'} en ${annees.join(', ')} (autre${annees.length > 1 ? 's' : ''} année${annees.length > 1 ? 's' : ''} que celle choisie).`,
   voirToutesLesAnnees: 'Voir toutes les années',
+  sansFactureLiee: 'Pour déposer votre propre document, liez d’abord la facture de l’abattoir (onglet Écritures) : le document y est rattaché.',
   boutonAbattoir: 'Document de circulation vers l’abattoir',
   aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',
   fichier: 'document_circulation',

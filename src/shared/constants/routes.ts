@@ -59,6 +59,8 @@ export const ROUTES = {
   lot: (id: string) => `/cheptel/lot?id=${id}` as const,
   /** Un lot ouvert depuis la Production (viande) : le même écran, mais l'onglet du bas reste Production au lieu de passer à Cheptel. */
   lotDeProduction: (id: string) => `/production/lot?id=${id}` as const,
+  /** Le lot ouvert depuis la Comptabilité (une vente, une dépense) : il reste dans la Comptabilité. */
+  lotDeComptabilite: (id: string) => `/comptabilite/lot?id=${id}` as const,
   traitement: (id: string) => `/cheptel/traitement?id=${id}` as const,
   /** Les réglages du cheptel : UGB, primes, effectif déclaré. */
   CHEPTEL_REGLAGES: '/cheptel/reglages',

@@ -84,8 +84,9 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/cheptel\/(lot|lots-categories?)$/, () => ROUTES.CHEPTEL_LOTS],
   // Les documents de circulation se trouvent dans le dossier PAC : on y revient (que l'écran s'ouvre d'ici ou d'un rappel de l'accueil).
   [/^\/cheptel\/documents-circulation$/, () => ROUTES.CHEPTEL_DOSSIER_PAC],
-  // Un lot ouvert depuis la Production revient à la viande.
+  // Un lot ouvert depuis la Production revient à la viande ; depuis la Comptabilité, aux écritures.
   [/^\/production\/lot$/, () => ROUTES.PRODUCTION_VIANDE],
+  [/^\/comptabilite\/lot$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
   [/^\/cheptel\/naissance-nouvelle$/, () => ROUTES.CHEPTEL_NAISSANCES],
   [/^\/cheptel\/(nouvelle|ajout-rapide)$/, () => ROUTES.CHEPTEL_LISTE],
@@ -145,6 +146,8 @@ export const ligneDuMenuDe = (adresse: string): string => {
   const chemin = sansRequete(adresse);
   if (/^\/cheptel\/documents-circulation$/.test(chemin)) return ROUTES.CHEPTEL_DOSSIER_PAC;
   if (/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|urssaf)$/.test(chemin)) return ROUTES.FISCALITE;
+  // Un lot ouvert depuis une vente reste dans la Comptabilité : c'est la ligne des écritures qui s'allume.
+  if (/^\/comptabilite\/lot$/.test(chemin)) return ROUTES.COMPTABILITE_LISTE;
   return adresse;
 };
 

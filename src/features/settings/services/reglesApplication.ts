@@ -57,7 +57,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'animaux.tiptag',
           titre: 'Tiptag',
-          texte: 'Tout animal à tiptag est destiné à l’abattoir : il n’entre pas dans un classement de renouvellement et il est proposé aux lots d’abattoir.',
+          texte: 'Tout animal à tiptag est destiné à l’abattoir : c’est toujours un cabri, quel que soit son âge à la date de la facture ; il n’entre pas dans un classement de renouvellement et il est proposé aux lots d’abattoir.',
         },
         {
           id: 'animaux.sorties',
@@ -129,7 +129,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'lots.abattoir',
           titre: 'Lots d’abattoir',
-          texte: 'Un animal ajouté à un lot d’abattoir passe en statut « abattoir » à la date d’abattage ; on n’en retire pas. Quand une facture du client vend ses animaux, le lot est figé : il faut supprimer la facture pour le modifier.',
+          texte: 'Un animal ajouté à un lot d’abattoir passe en statut « abattoir » à la date d’abattage ; on n’en retire pas. Quand une facture du client vend ses animaux, le lot est figé : il faut supprimer la facture pour le modifier. La liste du cheptel où l’on choisit ses animaux se filtre par Tiptag (d’office) ou Boucles ; les animaux déjà choisis restent cochés.',
         },
         {
           id: 'lots.veterinaire',
@@ -170,7 +170,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'ventes.datePied',
           titre: 'Cabri ou chèvre sur pied',
-          texte: 'Le détail de la vente (cabri ou chèvre sur pied) se choisit d’après l’âge de l’animal à la date de la facture.',
+          texte: 'Le détail de la vente (cabri ou chèvre sur pied) se choisit d’après l’âge de l’animal à la date de la facture ; un tiptag est toujours un cabri. Une vente ouverte d’un jour d’abattage dans les deux mois qui précèdent la facture est d’office une vente de cabris.',
         },
         {
           id: 'ventes.sortie',
@@ -200,7 +200,12 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'ventes.poids',
           titre: 'Poids',
-          texte: 'Un animal sur pied, vivant ou un petit ne se vend pas sans dire lesquels ni leur poids.',
+          texte: 'Un animal sur pied ou un petit ne se vend pas sans dire lesquels ni leur poids. Un animal vivant se vend à la tête (prix d’un animal × leur nombre, sans poids) ; vendu au poids vif (réforme), son poids n’est qu’une estimation : il ne passe ni sur la balance ni par l’abattoir, donc ni date d’abattoir ni frais d’abattoir à refacturer.',
+        },
+        {
+          id: 'ventes.animauxProposes',
+          titre: 'Animaux proposés',
+          texte: 'La liste des animaux d’une vente propose ceux présents sur l’exploitation à la date de la facture. Pour un animal sur pied vendu avec facture, seuls sont proposés ceux déjà passés à l’abattoir (avec boucle, sans les tiptag) et pas encore facturés.',
         },
       ],
     },
@@ -214,6 +219,16 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
           texte: 'Un document de circulation (modèle pré-rempli) est proposé quand la vente est déclarée et que des animaux voyagent vivants : au particulier, au professionnel ou à l’abattoir. Des animaux déjà morts, ou une vente sans facture : aucun.',
         },
         {
+          id: 'circulation.envoi',
+          titre: 'Envoi à la chambre d’agriculture',
+          texte: 'Chaque achat, envoi à l’abattoir ou vente d’animaux vivants des 90 derniers jours donne un rappel sur l’accueil : envoyer le document de l’écriture à la chambre d’agriculture (feuillet vert pour un achat, rose pour un abattoir ou une recette). Il se valide une fois envoyé, comme une déclaration, et reste dans l’historique des rappels.',
+        },
+        {
+          id: 'circulation.feuillets',
+          titre: 'Feuillets de la liasse',
+          texte: 'En cas de vente : je garde le blanc et le jaune, je donne le vert et le bleu à l’acheteur, je garde le rose avant de l’envoyer à la Chambre. En cas d’achat : je garde le bleu, je donne le blanc, le jaune et le rose, je garde le vert avant de l’envoyer à la Chambre. La zone à compléter à la main est surlignée en jaune sur le document, ainsi que ce que l’application remplit.',
+        },
+        {
           id: 'circulation.achat',
           titre: 'Achat d’animaux vivants',
           texte: 'Pour des animaux achetés à un autre éleveur, le document part de chez le vendeur et arrive chez vous.',
@@ -221,7 +236,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'circulation.abattoir',
           titre: 'Abattoir',
-          texte: 'Pour les animaux d’un lot d’abattoir et pour la dépense d’un contact de catégorie Abattoir, le document va de l’exploitation à l’abattoir. Un client de catégorie Abattoir est toujours le lieu d’arrivée.',
+          texte: 'Pour les animaux d’un lot d’abattoir et pour la dépense d’un contact de catégorie Abattoir, le document va de l’exploitation à l’abattoir. Un client de catégorie Abattoir est toujours le lieu d’arrivée. Depuis le lot, un menu permet de déposer son propre document (rattaché à la facture de l’abattoir liée), de l’ouvrir, de le retirer, ou de générer le modèle pré-rempli ; le document déposé s’affiche en aperçu.',
         },
         {
           id: 'circulation.sanitaire',

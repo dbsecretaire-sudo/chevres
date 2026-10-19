@@ -48,8 +48,8 @@ export default function FicheVente() {
     const lot =
       lots.find((l) => l.abattoir === jourAbattage) ??
       (await creer(TEXTES.cheptel.lots.abattoirDu(formatDateFR(jourAbattage)), '', { abattoir: jourAbattage, categorie: CATEGORIE_LOT.ABATTOIR }));
-    // La flèche de retour du lot ramène à Production › Viande.
-    router.push(`${ROUTES.lotDeProduction(lot.id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}` as never);
+    // Le lot s'ouvre dans la Comptabilité, et sa flèche de retour ramène à cette vente (non à Production › Viande).
+    router.push(`${ROUTES.lotDeComptabilite(lot.id)}&retour=${encodeURIComponent(ROUTES.ficheVente(vente.id))}` as never);
   };
 
   return (

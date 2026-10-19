@@ -58,6 +58,7 @@ export default function ComptabiliteLayout() {
       />
       <Stack.Screen name="facture/[id]" options={{ title: TEXTES.commun.general.facture }} />
       <Stack.Screen name="vente/[id]" options={{ title: TEXTES.commun.general.vente }} />
+      <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />
       <Stack.Screen name="detail" options={{ title: TEXTES.commun.general.detail }} />
       <Stack.Screen name="fiscalite" options={{ title: TEXTES.comptabilite.fiscalite.titre }} />
       <Stack.Screen
