@@ -83,6 +83,10 @@ export function documentsManquants(
   return ecritures.filter((e) => !e.depose && e.date >= limite);
 }
 
+/** Tous les documents qui manquent, de toutes les années (les plus anciens aussi : un document manquant reste à déposer). */
+export const documentsManquantsToutesAnnees = (ecritures: EcritureACirculation[]): EcritureACirculation[] =>
+  ecritures.filter((e) => !e.depose);
+
 /** Les écritures qui correspondent à une recherche : le tiers, la référence, la date ou le montant contiennent le texte tapé. */
 export function rechercherEcritures(ecritures: EcritureACirculation[], texte: string): EcritureACirculation[] {
   const q = texte.trim().toLowerCase();

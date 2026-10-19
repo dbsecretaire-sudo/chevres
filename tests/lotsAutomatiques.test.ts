@@ -180,3 +180,12 @@ describe('documents de circulation (Windows)', () => {
     expect(ligneDuMenuDe('/cheptel/liste')).toBe('/cheptel/liste');
   });
 });
+
+describe('déclarations fiscales (Windows)', () => {
+  it('s’allument sous Comptabilité › Fiscalité, et reviennent à la Fiscalité', () => {
+    for (const ecran of ['/comptabilite/fiscalite-rsa', '/comptabilite/urssaf', '/comptabilite/fiscalite-impots']) {
+      expect(ligneDuMenuDe(ecran)).toBe('/comptabilite/fiscalite');
+      expect(pageParente(ecran)).toBe('/comptabilite/fiscalite');
+    }
+  });
+});

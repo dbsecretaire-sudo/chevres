@@ -1,6 +1,7 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { AnimauxAchetesEditor } from '@/features/comptabilite/components/AnimauxAchetesEditor';
 import { AnimauxEnvoyesChoix } from '@/features/comptabilite/components/AnimauxEnvoyesChoix';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
@@ -35,6 +36,7 @@ import {
 } from '@/features/fournisseurs/services/categorie';
 import {
   categorieFournisseurDe,
+  offertAffiche,
   pasPayeeAffichee,
   sansFactureAffichee,
 } from '@/shared/dictionnaire/categoriesFournisseur';
@@ -131,6 +133,17 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
         {e.sansFacture && sansFactureAffichee(categorieDuTiers) ? (
           <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
         ) : null}
+        {/* Offerte par le fournisseur (un cadeau) : les lignes offertes comptent 0 € (le bouton « Cadeau » de chaque ligne, à l'étape suivante). */}
+        {offertAffiche(categorieDuTiers) ? (
+          <Checkbox
+            label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+            value={e.offertDepenseCoche}
+            onChange={e.setOffertDepense}
+          />
+        ) : null}
+        {e.offertDepense ? (
+          <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
+        ) : null}
       </SectionForm>
     </>
   );
@@ -209,6 +222,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
               lignes={e.lignesProduction}
               onChange={e.setLignesProduction}
               seulementBoucles={fournituresSeulementBoucles(e.fournisseurSelectionne)}
+              offerte={e.offertDepense}
             />
             <Card style={commonStyles.gap10}>
               <Text style={styles.total}>
@@ -241,6 +255,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
               lignes={e.lignesAlimentation}
               onChange={e.setLignesAlimentation}
               activite={e.activite}
+              offerte={e.offertDepense}
             />
             <Card style={commonStyles.gap10}>
               <Text style={styles.total}>
@@ -252,7 +267,11 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         )}
         {e.estMarchandisesGite && (
           <>
-            <LignesMarchandisesEditor lignes={e.lignesMarchandises} onChange={e.setLignesMarchandises} />
+            <LignesMarchandisesEditor
+              lignes={e.lignesMarchandises}
+              onChange={e.setLignesMarchandises}
+              offerte={e.offertDepense}
+            />
             <Card style={commonStyles.gap10}>
               <Text style={styles.total}>
                 {TEXTES.commun.general.totalFactureTtcDeuxPoints}
@@ -273,7 +292,17 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
           </>
         )}
         {!estAlimentation && !estProduction && !estCarburant && !e.estMarchandisesGite && !e.estChambre && (
-          <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+          <>
+            <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+            {/* Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (actif d'office : 0 €). */}
+            {e.offertDepense ? (
+              <BoutonCadeau
+                actif={e.cadeauMontantDepense}
+                onChange={e.setCadeauMontantDepense}
+                ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauMontantDepense}
+              />
+            ) : null}
+          </>
         )}
         {e.afficherTva && (
           <SelectField

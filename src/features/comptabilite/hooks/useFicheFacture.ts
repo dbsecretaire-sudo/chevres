@@ -108,10 +108,12 @@ export function useFicheFacture(id: string | undefined) {
     ((facture.lignesChambre?.length ?? 0) > 0 || detaillerChambre);
   /** Activité affichée dans le formulaire (celle de la facture, ou celle déduite pour les anciennes factures). */
   const activiteForm: ActiviteComptable = form ? activiteFacture(form) : especeCourante();
-  const totalAlimentation = totalMontants(lignes);
+  /** Une dépense offerte par le fournisseur (un cadeau) : ses lignes dont le bouton « Cadeau » est actif comptent 0 € (ni la Chambre, ni le carburant). */
+  const offerteLignes = !!form?.offert && !estChambre && !estCarburant;
+  const totalAlimentation = totalMontants(lignes, offerteLignes);
   const totalCarburant = totalMontants(lignesCarburant);
-  const totalMarchandises = totalMontants(lignesMarchandises);
-  const totalProduction = totalMontants(lignesProduction);
+  const totalMarchandises = totalMontants(lignesMarchandises, offerteLignes);
+  const totalProduction = totalMontants(lignesProduction, offerteLignes);
   /** Le total d'une facture de la Chambre : ses articles, plus les boucles qu'elle commande. */
   const totalChambre = totalMontants(lignesChambre) + totalProduction;
 
@@ -198,9 +200,11 @@ export function useFicheFacture(id: string | undefined) {
     }
 
     let aEnregistrer = form;
+    /** Dépense offerte sans détail par ligne : son bouton « Cadeau » (actif d'office) la compte 0 €. */
+    let montantOfferte = false;
 
     if (estAlimentation) {
-      const lignesFinales = lignesAlimentationFinales(lignes, activiteForm);
+      const lignesFinales = lignesAlimentationFinales(lignes, activiteForm, offerteLignes);
       if (lignesFinales.length === 0) {
         return refuser({
           titre: TEXTES.commun.general.montantInvalide,
@@ -218,7 +222,7 @@ export function useFicheFacture(id: string | undefined) {
       }
       aEnregistrer = { ...form, montant: totalCarburant, lignesCarburant: lignesRetenues };
     } else if (estProduction) {
-      const lignesRetenues = lignesProductionFinales(lignesProduction);
+      const lignesRetenues = lignesProductionFinales(lignesProduction, offerteLignes);
       if (lignesRetenues.length === 0) {
         return refuser({
           titre: TEXTES.commun.general.montantInvalide,
@@ -260,7 +264,7 @@ export function useFicheFacture(id: string | undefined) {
         bouclesDebut: undefined,
       };
     } else if (estMarchandises) {
-      const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises);
+      const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises, offerteLignes);
       if (lignesRetenues.length === 0) {
         return refuser({
           titre: TEXTES.commun.general.montantInvalide,
@@ -268,9 +272,20 @@ export function useFicheFacture(id: string | undefined) {
         });
       }
       aEnregistrer = { ...form, montant: totalMarchandises, lignesMarchandises: lignesRetenues };
-    } else if (!form.montant || form.montant <= 0) {
-      return refuser({ titre: TEXTES.commun.general.montantInvalide });
+    } else {
+      montantOfferte = offerteLignes && form.cadeauMontant !== false;
+      if (montantOfferte) aEnregistrer = { ...form, montant: 0 };
+      else if (!form.montant || form.montant <= 0) return refuser({ titre: TEXTES.commun.general.montantInvalide });
     }
+    // Offerte : le montant sans détail est offert, ou au moins une ligne l'est (le bouton « Cadeau » du formulaire n'est jamais enregistré).
+    const aDesOfferts =
+      montantOfferte ||
+      [
+        ...(aEnregistrer.lignesAlimentation ?? []),
+        ...(aEnregistrer.lignesProduction ?? []),
+        ...(aEnregistrer.lignesMarchandises ?? []),
+      ].some((l) => l.offert);
+    aEnregistrer = { ...aEnregistrer, offert: offerteLignes && aDesOfferts ? true : undefined, cadeauMontant: undefined };
 
     if (aEnregistrer.stockArticle && !(aEnregistrer.stockQuantite && aEnregistrer.stockQuantite > 0)) {
       return refuser({ titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise });

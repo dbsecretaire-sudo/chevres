@@ -60,3 +60,13 @@ describe('documents de circulation à déposer', () => {
     expect(anneesDesEcritures(liste)).toEqual([2026, 2024]);
   });
 });
+
+describe('documents manquants de toutes les années', () => {
+  it('compte aussi ceux qui sont plus anciens que douze mois', async () => {
+    const { documentsManquantsToutesAnnees } = await import('@/features/comptabilite/services/documentsCirculation');
+    const ecriture = (id: string, date: string, depose?: boolean) =>
+      ({ cle: id, type: 'vente', id, date, tiers: 'X', reference: '', montant: 1, activite: 'caprin', depose: depose ? { piece: {}, deposeLe: '2026-01-01' } : undefined }) as never;
+    const liste = [ecriture('recent', '2026-05-01'), ecriture('ancien', '2023-12-26'), ecriture('fait', '2023-12-27', true)];
+    expect(documentsManquantsToutesAnnees(liste).map((e: { id: string }) => e.id)).toEqual(['recent', 'ancien']);
+  });
+});

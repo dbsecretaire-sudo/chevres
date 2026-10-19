@@ -28,6 +28,8 @@ export interface LigneAlimentForm {
   materiel?: boolean;
   /** La ligne est un achat d'équipement (consommable) : sa liste ne propose que l'équipement. Pas enregistré tel quel. */
   equipement?: boolean;
+  /** Dépense offerte : le bouton « Cadeau » de la ligne (faux : elle est facturée ; absent : offerte). */
+  offert?: boolean;
 }
 
 /** Nouvelle ligne : le premier aliment de l'espèce courante par défaut. */
@@ -52,6 +54,8 @@ export function versLignesAlimentationForm(facture: Facture): LigneAlimentForm[]
     typeLibre: l.typeLibre ?? '',
     materiel: l.materiel,
     equipement: l.equipement,
+    // Dans une dépense offerte, une ligne sans cadeau garde son montant : son bouton est désactivé.
+    offert: facture.offert && !l.offert ? false : undefined,
     uniteConditionnement: l.uniteConditionnement ?? UNITE_CONDITIONNEMENT.MATELAS,
     nombreUnitesConditionnement:
       l.nombreUnitesConditionnement !== undefined ? String(l.nombreUnitesConditionnement) : '',
@@ -66,6 +70,8 @@ export function lignesAlimentationFinales(
   lignes: LigneAlimentForm[],
   /** Activité de la facture : une ligne n'enregistre son cheptel que s'il en diffère. */
   activiteDeLaFacture: ActiviteComptable,
+  /** La dépense est offerte : une ligne dont le bouton « Cadeau » est actif compte 0 € et reste, avec sa quantité. */
+  offerte = false,
 ): LigneAlimentation[] {
   return lignes
     .map((l) => {
@@ -73,10 +79,14 @@ export function lignesAlimentationFinales(
       const nombreUnites = estConditionne
         ? parseDecimal(l.nombreUnitesConditionnement) || undefined
         : undefined;
+      const offertee = offerte && l.offert !== false;
       return {
         type: l.type,
         activite: l.activite && l.activite !== activiteDeLaFacture ? l.activite : undefined,
-        montant: parseDecimal(l.montant),
+        montant: offertee ? 0 : parseDecimal(l.montant),
+        offert: offertee ? true : undefined,
+        // Ce que dit une ligne offerte : une quantité ou un montant indicatif (sinon la ligne est vide).
+        indicatif: parseDecimal(l.montant) > 0,
         quantiteKg: estConditionne
           ? nombreUnites
             ? nombreUnites * POIDS_UNITE_CONDITIONNEMENT[l.uniteConditionnement]
@@ -89,5 +99,6 @@ export function lignesAlimentationFinales(
         equipement: l.equipement || undefined,
       };
     })
-    .filter((l) => l.montant > 0);
+    .filter((l) => l.montant > 0 || (l.offert && (l.indicatif || !!l.quantiteKg)))
+    .map(({ indicatif: _indicatif, ...ligne }) => ligne);
 }

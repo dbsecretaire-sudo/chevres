@@ -20,6 +20,7 @@ import {
   categoriesFournisseurManquantes,
   categoriesFournisseurParDefaut,
   depensesDeLaCategorie,
+  offertAffiche,
   pasPayeeAffichee,
   sansFactureAffichee,
   type CategorieFournisseurReglage,
@@ -146,6 +147,12 @@ export default function RubriqueCategoriesTiers() {
                   coche: (id) => sansFactureAffichee(categories.find((c) => c.id === id)),
                   definir: (id, sansFacture) => maj(id, { sansFacture }),
                 },
+                {
+                  cle: 'offert',
+                  titre: TEXTES.comptabilite.nouvelleEcriture.offertFournisseur,
+                  coche: (id) => offertAffiche(categories.find((c) => c.id === id)),
+                  definir: (id, offert) => maj(id, { offert }),
+                },
               ],
             },
             {
@@ -200,6 +207,11 @@ export default function RubriqueCategoriesTiers() {
                 label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
                 value={sansFactureAffichee(c)}
                 onChange={(sansFacture) => maj(c.id, { sansFacture })}
+              />
+              <Checkbox
+                label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+                value={offertAffiche(c)}
+                onChange={(offert) => maj(c.id, { offert })}
               />
               <Text style={commonStyles.note}>{T.aideAffichage}</Text>
               <Text style={commonStyles.lineSemiBold}>{T.depenses}</Text>

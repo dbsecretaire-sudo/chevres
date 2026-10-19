@@ -93,6 +93,7 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
       <Text style={commonStyles.line}>
         {TEXTES.commun.general.montantDeuxPoints}
         {facture.montant.toFixed(2)} €
+        {facture.offert ? ` · ${TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}` : ""}
       </Text>
       {facture.tauxTva !== undefined ? (
         <Text style={commonStyles.line}>

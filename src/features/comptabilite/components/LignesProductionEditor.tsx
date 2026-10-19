@@ -19,6 +19,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 
 interface Props {
   lignes: LigneProductionForm[];
@@ -27,6 +28,8 @@ interface Props {
   seulementBoucles?: boolean;
   /** Le titre de la carte (par défaut : « Détail par fourniture »). */
   titre?: string;
+  /** La dépense est offerte par le fournisseur : chaque fourniture a son bouton « Cadeau ». */
+  offerte?: boolean;
 }
 
 const T = TEXTES.comptabilite.lignesProductionEditor;
@@ -36,7 +39,7 @@ const T = TEXTES.comptabilite.lignesProductionEditor;
  * (avec recherche) dans la liste de l'inventaire — emballages, matériel, boucles… ; le crayon mène à l'inventaire et la liste s'y met
  * à jour. La quantité de chaque fourniture entre au stock ; le total de la facture est la somme des montants.
  */
-export function LignesProductionEditor({ lignes, onChange, seulementBoucles, titre }: Props) {
+export function LignesProductionEditor({ lignes, onChange, seulementBoucles, titre, offerte }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
@@ -134,6 +137,14 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
                 />
               </View>
             </View>
+            {/* Dépense offerte : le bouton « Cadeau » de la ligne (actif d'office : elle compte 0 € ; désactivé, elle est facturée). */}
+            {offerte ? (
+              <BoutonCadeau
+                actif={ligne.offert !== false}
+                onChange={(actif) => maj(ligne.key, { offert: actif ? undefined : false })}
+                ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauLigne}
+              />
+            ) : null}
             {numerotee ? (
               <>
                 <FormField

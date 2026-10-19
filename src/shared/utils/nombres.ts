@@ -11,9 +11,12 @@ export function parseMontant(texte: string): number {
   return parseDecimal(texte.replace(/[^\d,.-]/g, ''));
 }
 
-/** Somme des montants saisis (en texte) d'une liste de lignes de formulaire. */
-export function totalMontants(lignes: { montant: string }[]): number {
-  return lignes.reduce((total, ligne) => total + parseDecimal(ligne.montant), 0);
+/**
+ * Somme des montants saisis (en texte) d'une liste de lignes de formulaire. Dans une dépense offerte (`offerte`), une ligne compte 0 €
+ * tant que son bouton « Cadeau » n'est pas désactivé (`offert` à faux).
+ */
+export function totalMontants(lignes: { montant: string; offert?: boolean }[], offerte = false): number {
+  return lignes.reduce((total, ligne) => total + (offerte && ligne.offert !== false ? 0 : parseDecimal(ligne.montant)), 0);
 }
 
 /** Formate un total en euros pour l'affichage dans un formulaire (ex : « 12,50 € »). */

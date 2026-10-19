@@ -1131,6 +1131,9 @@ export const TEXTES_CHEPTEL = {
     fichierIntrouvable: 'Ce fichier n’est plus sur cet appareil : déposez-le de nouveau.',
     nManquants: (n: number) => `${n} ${n > 1 ? 'documents de circulation manquants' : 'document de circulation manquant'}`,
     rappelDetail: 'À déposer : obligatoire lors du transport d’animaux vivants.',
+    autresAnnees: (n: number, annees: number[]) =>
+      `${n} ${n > 1 ? 'documents manquent' : 'document manque'} en ${annees.join(', ')} (autre${annees.length > 1 ? 's' : ''} année${annees.length > 1 ? 's' : ''} que celle choisie).`,
+    voirToutesLesAnnees: 'Voir toutes les années',
     boutonAbattoir: 'Document de circulation vers l’abattoir',
     aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',
     fichier: 'document_circulation',

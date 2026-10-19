@@ -23,6 +23,7 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { LABEL_RUBRIQUE_MARCHANDISE, LABEL_UNITE_MARCHANDISE } from '@/shared/textes/libelles';
 
 type Rubrique = ValeurDe<typeof RUBRIQUE_MARCHANDISE>;
@@ -30,6 +31,8 @@ type Rubrique = ValeurDe<typeof RUBRIQUE_MARCHANDISE>;
 interface Props {
   lignes: LigneMarchandiseForm[];
   onChange: (lignes: LigneMarchandiseForm[]) => void;
+  /** La dépense est offerte par le fournisseur : chaque ligne a son bouton « Cadeau ». */
+  offerte?: boolean;
 }
 
 const T = TEXTES.comptabilite.lignesMarchandisesEditor;
@@ -39,7 +42,7 @@ const T = TEXTES.comptabilite.lignesMarchandisesEditor;
  * annexe), la marchandise dans la liste du stock du bar (le crayon mène au stock et la liste s'y met à jour), la quantité
  * avec son unité, et le montant TTC.
  */
-export function LignesMarchandisesEditor({ lignes, onChange }: Props) {
+export function LignesMarchandisesEditor({ lignes, onChange, offerte }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const [articles, setArticles] = useState<{ nom: string; rubrique?: string }[]>([]);
@@ -145,6 +148,14 @@ export function LignesMarchandisesEditor({ lignes, onChange }: Props) {
                 </Pressable>
               )}
             </View>
+            {/* Dépense offerte : le bouton « Cadeau » de la ligne (actif d'office : elle compte 0 € ; désactivé, elle est facturée). */}
+            {offerte ? (
+              <BoutonCadeau
+                actif={ligne.offert !== false}
+                onChange={(actif) => maj(ligne.key, { offert: actif ? undefined : false })}
+                ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauLigne}
+              />
+            ) : null}
           </View>
         );
       })}

@@ -52,6 +52,7 @@ import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import {
   categorieFournisseurDe,
   pasPayeeAffichee,
+  offertAffiche,
   sansFactureAffichee,
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
@@ -185,6 +186,10 @@ export function useNouvelleEcriture(
   const [enAttente, setEnAttente] = useState(false);
   /** Une dépense qui n'a pas été facturée (pas de TVA à déduire). */
   const [sansFacture, setSansFacture] = useState(false);
+  /** Une dépense offerte par le fournisseur (un cadeau) : la case cochée. */
+  const [offertDepenseCoche, setOffertDepense] = useState(false);
+  /** Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (d'office : actif). */
+  const [cadeauMontantDepense, setCadeauMontantDepense] = useState(true);
   const [echeance, setEcheance] = useState('');
   /** Le circuit de vente d'une vente (vide : non précisé). */
   const [circuit, setCircuit] = useState('');
@@ -377,12 +382,6 @@ export function useNouvelleEcriture(
     type === TYPE_FACTURE.RECUE &&
     categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
     activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
-  const totalMarchandises = totalMontants(lignesMarchandises);
-  const totalAlimentation = totalMontants(lignesAlimentation);
-  const totalCarburant = totalMontants(lignesCarburant);
-  const totalProduction = totalMontants(lignesProduction);
-  /** Le total d'une facture de la Chambre : ses articles, plus les boucles qu'elle commande. */
-  const totalChambre = totalMontants(lignesChambre) + totalProduction;
 
   // Les comptes retirés pour l'espèce de l'écriture n'y sont plus proposés (une écriture commune les garde tous).
   const comptesDeLActivite = comptes.filter((c) =>
@@ -441,6 +440,21 @@ export function useNouvelleEcriture(
     type === TYPE_FACTURE.RECUE &&
     categorieDepense === CATEGORIE_DEPENSE.AUTRE &&
     estChambreAgriculture(fournisseurSelectionne);
+  /** La catégorie du fournisseur choisi : elle dit si la case « Offert par le fournisseur » s'affiche. */
+  const categorieDuFournisseur = fournisseurSelectionne ? categorieFournisseurDe(fournisseurSelectionne.categorie) : undefined;
+  /** Une dépense offerte (la case est cochée, la catégorie la propose, et la dépense a des montants que le fournisseur peut offrir : ni la Chambre, ni le carburant). */
+  const offertDepense =
+    type === TYPE_FACTURE.RECUE &&
+    offertDepenseCoche &&
+    offertAffiche(categorieDuFournisseur) &&
+    !estChambre &&
+    categorieDepense !== CATEGORIE_DEPENSE.CARBURANT;
+  const totalMarchandises = totalMontants(lignesMarchandises, offertDepense);
+  const totalAlimentation = totalMontants(lignesAlimentation, offertDepense);
+  const totalCarburant = totalMontants(lignesCarburant);
+  const totalProduction = totalMontants(lignesProduction, offertDepense);
+  /** Le total d'une facture de la Chambre : ses articles, plus les boucles qu'elle commande. */
+  const totalChambre = totalMontants(lignesChambre) + totalProduction;
   const changerFournisseur = (id: string) => {
     setFournisseurId(id);
     const choisi = fournisseurs.find((x) => x.id === id);
@@ -761,6 +775,8 @@ export function useNouvelleEcriture(
         numeroFacture,
         enAttente,
         sansFacture,
+        offertDepense,
+        cadeauMontant: cadeauMontantDepense,
         echeance,
         atelier,
         elementAgri,
@@ -1036,6 +1052,11 @@ export function useNouvelleEcriture(
     setEnAttente,
     sansFacture,
     setSansFacture,
+    offertDepense,
+    offertDepenseCoche,
+    setOffertDepense,
+    cadeauMontantDepense,
+    setCadeauMontantDepense,
     echeance,
     setEcheance,
     circuit,

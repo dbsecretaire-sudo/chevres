@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { YearPicker } from '@/shared/components/YearPicker';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
@@ -37,10 +38,9 @@ import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { currentYear, formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 
 const T = TEXTES.cheptel.circulation;
-const TOUTES = 'toutes';
 
 /** « 18/10/2026 », « 13:34 » : la date et l'heure locales d'un dépôt. */
 const quand = (iso: string): { date: string; heure: string } => {
@@ -62,7 +62,9 @@ export default function DocumentsCirculation() {
   const { espece } = useEtablissement();
   const { ecriture: aMettreEnEvidence } = useLocalSearchParams<{ ecriture?: string }>();
   const [toutes, setToutes] = useState<EcritureACirculation[]>([]);
-  const [annee, setAnnee] = useState(String(currentYear()));
+  // L'année de l'écran est l'année active de l'application (ou toutes, quand elles sont regroupées), comme partout ailleurs.
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const regrouper = !!settings.toutesAnnees;
   const [recherche, setRecherche] = useState('');
   const [menu, setMenu] = useState<EcritureACirculation | null>(null);
 
@@ -83,10 +85,13 @@ export default function DocumentsCirculation() {
   // Celles de l'espèce choisie (ou communes à toutes), de l'année choisie, qui répondent à la recherche.
   const deLEspece = toutes.filter((e) => e.activite === espece || e.activite === ACTIVITE_COMMUNE);
   const annees = anneesDesEcritures(deLEspece);
-  const affichees = rechercherEcritures(
-    annee === TOUTES ? deLEspece : deLEspece.filter((e) => e.date.startsWith(annee)),
-    recherche,
-  );
+  const deLAnnee = regrouper ? deLEspece : deLEspece.filter((e) => e.date.startsWith(String(settings.anneeActive)));
+  const affichees = rechercherEcritures(deLAnnee, recherche);
+  /** Les documents qui manquent dans les autres années (ni ceux de l'année choisie, ni les déposés) : on le dit, avec de quoi les voir. */
+  const manquantsAilleurs = regrouper
+    ? []
+    : deLEspece.filter((e) => !e.depose && !e.date.startsWith(String(settings.anneeActive)));
+  const anneesDesManquants = anneesDesEcritures(manquantsAilleurs);
 
   const deposer = async (e: EcritureACirculation) => {
     if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
@@ -140,17 +145,22 @@ export default function DocumentsCirculation() {
   return (
     <Screen scroll={false}>
       <LigneFiltres>
-        <ChoixDeroulant<string>
-          titre={TEXTES.cheptel.suiviMouvements.annee}
-          valeur={annee}
-          options={[
-            { value: TOUTES, label: T.toutesLesAnnees },
-            ...annees.map((a) => ({ value: String(a), label: String(a) })),
-          ]}
-          onChoisir={setAnnee}
+        <YearPicker
+          annees={annees}
+          value={settings.anneeActive}
+          onChange={setAnneeActive}
+          tout={regrouper}
+          onChoisirTout={choisirToutesAnnees}
         />
         <SelecteurEspece />
       </LigneFiltres>
+      {manquantsAilleurs.length > 0 ? (
+        <Pressable onPress={() => choisirToutesAnnees()} accessibilityRole="button">
+          <Text style={[commonStyles.note, { color: colors.danger, fontWeight: "700" }]}>
+            {T.autresAnnees(manquantsAilleurs.length, anneesDesManquants)} {T.voirToutesLesAnnees}
+          </Text>
+        </Pressable>
+      ) : null}
       <Text style={commonStyles.note}>{T.aideEcran}</Text>
       <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.rechercher} />
       <Text style={commonStyles.cardTitle}>{T.ecritures(affichees.length)}</Text>

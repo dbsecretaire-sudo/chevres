@@ -68,6 +68,8 @@ export interface LigneAlimentation {
   materiel?: boolean;
   /** Un équipement (consommable : gants, filtres…) acheté sur la facture, pas un aliment. */
   equipement?: boolean;
+  /** Offert par le fournisseur (cadeau) : la ligne compte 0 € ; sa quantité entre quand même au stock. */
+  offert?: boolean;
 }
 
 /** Une marchandise achetée pour le gîte : celle du stock, la rubrique qu'elle sert, sa quantité et son montant TTC. */
@@ -77,6 +79,8 @@ export interface LigneMarchandise {
   quantite?: number;
   unite?: ValeurDe<typeof UNITE_MARCHANDISE>;
   montant: number;
+  /** Offert par le fournisseur (cadeau) : la ligne compte 0 € ; sa quantité entre quand même au stock. */
+  offert?: boolean;
 }
 
 /** Une fourniture d'un achat de production : l'article de l'inventaire (voir cleArticle), sa quantité, son montant TTC et, pour des boucles, le numéro de la première. */
@@ -85,6 +89,8 @@ export interface LigneProduction {
   quantite?: number;
   montant: number;
   bouclesDebut?: string;
+  /** Offert par le fournisseur (cadeau) : la ligne compte 0 € ; sa quantité entre quand même au stock. */
+  offert?: boolean;
 }
 
 export interface LigneCarburant {
@@ -140,6 +146,10 @@ export interface Facture {
   montant: number;
   /** Uniquement pour type === 'recue'. */
   categorieDepense?: CategorieDepense;
+  /** Une dépense offerte par le fournisseur (un cadeau) : ses lignes offertes comptent 0 € (voir `offert` des lignes) ; une dépense sans détail vaut 0 €. Les quantités entrent quand même au stock. */
+  offert?: boolean;
+  /** Formulaire de modification seulement (jamais enregistré) : dépense offerte sans détail par ligne, le bouton « Cadeau » du montant (faux : il est facturé). */
+  cadeauMontant?: boolean;
   /** Le paiement : faux = pas encore réglé ou encaissé (voir echeance) ; absent : réglé à la date de la facture (le cas d'office). */
   payee?: boolean;
   /** Une dépense qui n'a pas été facturée : pas de facture, donc pas de TVA à déduire. Elle reste dans la trésorerie et la rentabilité. */

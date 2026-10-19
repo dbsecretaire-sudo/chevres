@@ -24,6 +24,8 @@ export interface CategorieFournisseurReglage {
   pasPayee?: boolean;
   /** Afficher la case « Cette dépense n'a pas été facturée » dans les factures de ses fournisseurs (d'office : oui). */
   sansFacture?: boolean;
+  /** Afficher la case « Offert par le fournisseur (cadeau) » (et les boutons « Cadeau » des lignes) dans les factures de ses fournisseurs (d'office : oui). */
+  offert?: boolean;
 }
 
 /** Vrai quand la case « Pas encore payée » s'affiche pour les fournisseurs de cette catégorie (sans catégorie connue : oui). */
@@ -33,6 +35,9 @@ export const pasPayeeAffichee = (categorie?: CategorieFournisseurReglage): boole
 /** Vrai quand la case « Cette dépense n'a pas été facturée » s'affiche pour les fournisseurs de cette catégorie (sans catégorie connue : oui). */
 export const sansFactureAffichee = (categorie?: CategorieFournisseurReglage): boolean =>
   categorie?.sansFacture !== false;
+
+/** Vrai quand la case « Offert par le fournisseur (cadeau) » s'affiche pour les fournisseurs de cette catégorie (sans catégorie connue : oui). */
+export const offertAffiche = (categorie?: CategorieFournisseurReglage): boolean => categorie?.offert !== false;
 
 /** Les catégories proposées d'office. */
 export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] => [

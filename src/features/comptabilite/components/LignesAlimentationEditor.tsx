@@ -25,12 +25,15 @@ import { CHOIX_EQUIPEMENT, CHOIX_MATERIEL, GENRE_ARTICLE, SECTION_STOCK } from '
 import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { TYPE_ALIMENT } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 
 interface Props {
   lignes: LigneAlimentForm[];
   onChange: (lignes: LigneAlimentForm[]) => void;
   /** Activité de la facture : le cheptel des lignes qui n'en précisent pas (et qui fixe leurs aliments). */
   activite: ActiviteComptable;
+  /** La dépense est offerte par le fournisseur : chaque ligne a son bouton « Cadeau ». */
+  offerte?: boolean;
 }
 
 /** Début de la valeur d'un aliment ajouté au stock (suivie de son nom) : il s'enregistre comme « autre » avec ce nom. */
@@ -51,7 +54,7 @@ const ARCHIVE_VIDE: ArchiveStock = {
  * (avec recherche) dans la liste du stock — ceux d'office de l'espèce, puis ceux qu'on y a ajoutés ; le crayon mène au
  * stock et la liste s'y met à jour.
  */
-export function LignesAlimentationEditor({ lignes, onChange, activite }: Props) {
+export function LignesAlimentationEditor({ lignes, onChange, activite, offerte }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const especeFacture = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
@@ -243,6 +246,14 @@ export function LignesAlimentationEditor({ lignes, onChange, activite }: Props) 
                 />
               </View>
             </View>
+            {/* Dépense offerte : le bouton « Cadeau » de la ligne (actif d'office : elle compte 0 € ; désactivé, elle est facturée). */}
+            {offerte ? (
+              <BoutonCadeau
+                actif={ligne.offert !== false}
+                onChange={(actif) => maj(ligne.key, { offert: actif ? undefined : false })}
+                ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauLigne}
+              />
+            ) : null}
 
             {estConditionne && (
               <>

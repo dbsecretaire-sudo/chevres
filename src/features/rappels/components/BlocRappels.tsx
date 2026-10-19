@@ -8,6 +8,8 @@ import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
 import { useDocumentsCirculationManquants } from '@/features/comptabilite/hooks/useDocumentsCirculationManquants';
+import { anneesDesEcritures } from '@/features/comptabilite/services/documentsCirculation';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useLotsARappeler, type RappelDeLot } from '@/features/stock/hooks/useLotsARappeler';
 import { destinationRappel } from '@/features/rappels/services/destination';
 import { ROUTES } from '@/shared/constants/routes';
@@ -28,7 +30,14 @@ function BlocRappelsDeclarations() {
   const { rappels, genres, valider } = useRappels();
   const { aRappeler: lots, aValider, valider: validerLot } = useLotsARappeler();
   /** Les ventes et dépenses d'animaux vivants dont le document de circulation n'est pas déposé : rappelés tant qu'il manque. */
-  const circulation = useDocumentsCirculationManquants().length;
+  const manquantsCirculation = useDocumentsCirculationManquants();
+  const circulation = manquantsCirculation.length;
+  const { settings } = useAppSettings();
+  /** Les années (autres que celle choisie) où des documents manquent : l'accueil le dit. */
+  const anneesAilleurs = settings.toutesAnnees
+    ? []
+    : anneesDesEcritures(manquantsCirculation.filter((e) => !e.date.startsWith(String(settings.anneeActive))));
+  const nAilleurs = manquantsCirculation.filter((e) => !e.date.startsWith(String(settings.anneeActive))).length;
   /** Le rappel de lot dont on confirme la validation. */
   const [lotAValider, setLotAValider] = useState<RappelDeLot | null>(null);
   // Les activités qui ont des rappels gardent le bloc (et son historique) même quand rien n'est à valider.
@@ -69,6 +78,11 @@ function BlocRappelsDeclarations() {
                 <PastilleAlerte taille={18} />
               </View>
               <Text style={[styles.detail, styles.detailRetard]}>{TEXTES.cheptel.circulation.rappelDetail}</Text>
+              {nAilleurs > 0 && anneesAilleurs.length > 0 ? (
+                <Text style={[styles.detail, styles.detailRetard]}>
+                  {TEXTES.cheptel.circulation.autresAnnees(nAilleurs, anneesAilleurs)}
+                </Text>
+              ) : null}
             </Pressable>
             <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
           </View>

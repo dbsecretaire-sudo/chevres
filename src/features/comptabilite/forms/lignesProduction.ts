@@ -12,6 +12,8 @@ export interface LigneProductionForm {
   montant: string;
   /** Un achat de boucles : le numéro de la première. */
   bouclesDebut: string;
+  /** Dépense offerte : le bouton « Cadeau » de la fourniture (faux : elle est facturée ; absent : offerte). */
+  offert?: boolean;
 }
 
 /** Nouvelle fourniture : sans article, sans quantité ni montant. */
@@ -34,16 +36,28 @@ export const versLignesProductionForm = (facture: Facture): LigneProductionForm[
     quantite: l.quantite !== undefined ? String(l.quantite).replace('.', ',') : '',
     montant: String(l.montant).replace('.', ','),
     bouclesDebut: l.bouclesDebut ?? '',
+    offert: facture.offert && !l.offert ? false : undefined,
   }));
 };
 
-/** Convertit les fournitures saisies en lignes enregistrables : seules celles qui ont un montant sont gardées. */
-export const lignesProductionFinales = (lignes: LigneProductionForm[]): LigneProduction[] =>
+/**
+ * Convertit les fournitures saisies en lignes enregistrables : seules celles qui ont un montant sont gardées — ou, dans une dépense offerte
+ * (`offerte`), celles dont le bouton « Cadeau » est actif et qui ont un article et sa quantité : elles comptent 0 € et entrent quand même au stock.
+ */
+export const lignesProductionFinales = (lignes: LigneProductionForm[], offerte = false): LigneProduction[] =>
   lignes
-    .map((l) => ({
-      article: l.article,
-      quantite: l.article ? parseDecimal(l.quantite) || undefined : undefined,
-      montant: parseDecimal(l.montant),
-      bouclesDebut: l.article && l.bouclesDebut.trim() ? l.bouclesDebut.trim() : undefined,
-    }))
-    .filter((l) => l.montant > 0);
+    .map((l) => {
+      const offertee = offerte && l.offert !== false;
+      const quantite = l.article ? parseDecimal(l.quantite) || undefined : undefined;
+      return {
+        article: l.article,
+        quantite,
+        montant: offertee ? 0 : parseDecimal(l.montant),
+        bouclesDebut: l.article && l.bouclesDebut.trim() ? l.bouclesDebut.trim() : undefined,
+        offert: offertee ? true : undefined,
+        // Une fourniture offerte se retient par son article et sa quantité.
+        aDuContenu: !!l.article && !!quantite,
+      };
+    })
+    .filter((l) => l.montant > 0 || (l.offert && l.aDuContenu))
+    .map(({ aDuContenu: _aDuContenu, ...ligne }) => ligne);

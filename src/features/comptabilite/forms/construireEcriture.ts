@@ -84,6 +84,10 @@ export interface SaisieEcriture {
   stockQuantite?: number;
   /** Une dépense qui n'a pas été facturée (pas de TVA à déduire). */
   sansFacture?: boolean;
+  /** Une dépense offerte par le fournisseur (un cadeau) : ses lignes dont le bouton « Cadeau » est actif comptent 0 €. */
+  offertDepense?: boolean;
+  /** Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (faux : il est facturé ; absent : offert). */
+  cadeauMontant?: boolean;
   /** Un achat de boucles : le numéro de la première. */
   bouclesDebut?: string;
   /** Une dépense vétérinaire : le motif de la visite, et son inscription dans les visites vétérinaires. */
@@ -315,11 +319,14 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
   let lignesMarchandises: LigneMarchandise[] | undefined;
   let lignesChambre: LigneChambre[] | undefined;
   let lignesProduction: LigneProduction[] | undefined;
+  /** Dépense offerte : la case est cochée et la dépense a des montants que le fournisseur peut offrir (ni la Chambre, ni le carburant). */
+  const offerte = estRecue && !!s.offertDepense && !estCarburant && !(s.lignesChambre && s.lignesChambre.length > 0);
+  let montantOfferte = false;
   const estProduction =
     estRecue && s.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION && !!s.lignesProduction;
 
   if (estAlimentation) {
-    lignesAlimentation = lignesAlimentationFinales(s.lignesAlimentation, s.activite);
+    lignesAlimentation = lignesAlimentationFinales(s.lignesAlimentation, s.activite, offerte);
     if (lignesAlimentation.length === 0) {
       return {
         erreur: {
@@ -328,9 +335,9 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
         },
       };
     }
-    montantFinal = totalMontants(s.lignesAlimentation);
+    montantFinal = totalMontants(s.lignesAlimentation, offerte);
   } else if (estProduction && s.lignesProduction) {
-    lignesProduction = lignesProductionFinales(s.lignesProduction);
+    lignesProduction = lignesProductionFinales(s.lignesProduction, offerte);
     if (lignesProduction.length === 0) {
       return {
         erreur: {
@@ -343,7 +350,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     if (lignesProduction.some((l) => l.article && !(l.quantite && l.quantite > 0))) {
       return { erreur: { titre: TEXTES.comptabilite.nouvelleEcriture.stockProduction.quantiteRequise } };
     }
-    montantFinal = totalMontants(s.lignesProduction);
+    montantFinal = totalMontants(s.lignesProduction, offerte);
   } else if (estRecue && s.lignesChambre) {
     lignesChambre = lignesChambreFinales(s.lignesChambre);
     if (lignesChambre.length === 0) {
@@ -362,7 +369,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     lignesProduction = boucles.length > 0 ? boucles : undefined;
     montantFinal = [...lignesChambre, ...boucles].reduce((total, l) => total + l.montant, 0);
   } else if (estRecue && s.lignesMarchandises) {
-    lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises);
+    lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises, offerte);
     if (lignesMarchandises.length === 0) {
       return {
         erreur: {
@@ -371,7 +378,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
         },
       };
     }
-    montantFinal = totalMontants(s.lignesMarchandises);
+    montantFinal = totalMontants(s.lignesMarchandises, offerte);
   } else if (estCarburant) {
     lignesCarburant = lignesCarburantFinales(s.lignesCarburant);
     if (lignesCarburant.length === 0) {
@@ -384,8 +391,10 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     }
     montantFinal = totalMontants(s.lignesCarburant);
   } else {
-    montantFinal = parseDecimal(s.montant);
-    if (montantFinal <= 0) return { erreur: { titre: TEXTES.commun.general.montantInvalide } };
+    // Une dépense offerte sans détail par ligne : son bouton « Cadeau » (actif d'office) la compte 0 €.
+    montantOfferte = offerte && s.cadeauMontant !== false;
+    montantFinal = montantOfferte ? 0 : parseDecimal(s.montant);
+    if (!montantOfferte && montantFinal <= 0) return { erreur: { titre: TEXTES.commun.general.montantInvalide } };
   }
 
   // Un achat classé « Autre » dans une liste de l'inventaire garde son article unique ; la production a son détail par fourniture.
@@ -407,6 +416,13 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       tiers: tiersFinal,
       description: s.description.trim(),
       montant: montantFinal,
+      // Offerte : le montant sans détail est offert, ou au moins une ligne l'est.
+      offert:
+        offerte &&
+        (montantOfferte ||
+          [...(lignesAlimentation ?? []), ...(lignesProduction ?? []), ...(lignesMarchandises ?? [])].some((l) => l.offert))
+          ? true
+          : undefined,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       atelier: estRecue && s.atelier ? s.atelier : undefined,
       elementAgri:

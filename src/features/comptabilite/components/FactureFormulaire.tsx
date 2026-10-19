@@ -2,6 +2,7 @@ import { Text, View } from 'react-native';
 import { AnimauxEnvoyesListe } from '@/features/comptabilite/components/AnimauxEnvoyesListe';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -48,6 +49,7 @@ import { nomComplet } from '@/shared/utils/personne';
 import {
   categorieFournisseurDe,
   pasPayeeAffichee,
+  offertAffiche,
   sansFactureAffichee,
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
@@ -97,6 +99,8 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
     ? pasEncaisseeAffichee(clientDuTiers ? categorieClientDe(clientDuTiers.categorie) : undefined)
     : pasPayeeAffichee(categorieFournisseurDuTiers);
   const estAide = estEmise && form.categorieRecette === CATEGORIE_RECETTE.AIDE;
+  /** Une dépense offerte par le fournisseur : la case est cochée et sa catégorie la propose ; chaque ligne a son bouton « Cadeau ». */
+  const offerte = !estEmise && !!form.offert && offertAffiche(categorieFournisseurDuTiers) && !f.estChambre && !f.estCarburant;
   const fournisseur = fournisseurs.find((x) => x.nomEntreprise === form.tiers);
   // Une entreprise non assujettie à la TVA n'a pas de taux à saisir.
   const sansTva = modeEntreprise() && !settings.exploitation?.entreprise?.tvaApplicable;
@@ -125,7 +129,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   /** Le montant : un seul champ, ou le total des lignes (alimentation, carburant, marchandises) qui le font. */
   const montant = f.estAlimentation ? (
     <>
-      <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} />
+      <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} offerte={offerte} />
       <Text style={styles.total}>
         {TEXTES.commun.general.totalFactureTtcDeuxPoints}
         {formatTotalEuros(f.totalAlimentation)}
@@ -133,7 +137,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
     </>
   ) : f.estMarchandises ? (
     <>
-      <LignesMarchandisesEditor lignes={f.lignesMarchandises} onChange={f.setLignesMarchandises} />
+      <LignesMarchandisesEditor lignes={f.lignesMarchandises} onChange={f.setLignesMarchandises} offerte={offerte} />
       <Text style={styles.total}>
         {TEXTES.commun.general.totalFactureTtcDeuxPoints}
         {formatTotalEuros(f.totalMarchandises)}
@@ -159,6 +163,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         lignes={f.lignesProduction}
         onChange={f.setLignesProduction}
         seulementBoucles={fournituresSeulementBoucles(fournisseur)}
+        offerte={offerte}
       />
       <Text style={styles.total}>
         {TEXTES.commun.general.totalFactureTtcDeuxPoints}
@@ -176,6 +181,14 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   ) : (
     <>
       <ChampMontantTtc value={f.montantTexte} onChange={f.changerMontant} />
+      {/* Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (actif d'office : 0 €). */}
+      {offerte ? (
+        <BoutonCadeau
+          actif={form.cadeauMontant !== false}
+          onChange={(actif) => f.setForm({ ...form, cadeauMontant: actif ? undefined : false })}
+          ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauMontantDepense}
+        />
+      ) : null}
       {/* Une dépense « Autre » d'un fournisseur de la Chambre d'agriculture : on peut la détailler par article. */}
       {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && estChambreAgriculture(fournisseur) ? (
         <Button
@@ -268,6 +281,19 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
               <Text style={commonStyles.note}>
                 {TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
               </Text>
+            ) : null}
+          </>
+        )}
+        {/* Offerte par le fournisseur (un cadeau) : le bouton « Cadeau » de chaque ligne l'offre ou la facture. */}
+        {estEmise || !offertAffiche(categorieFournisseurDuTiers) ? null : (
+          <>
+            <Checkbox
+              label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+              value={!!form.offert}
+              onChange={(offert) => f.setForm({ ...form, offert: offert || undefined })}
+            />
+            {offerte ? (
+              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
             ) : null}
           </>
         )}

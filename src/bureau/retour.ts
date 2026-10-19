@@ -138,11 +138,14 @@ const RUBRIQUES = ['cheptel', 'production', 'commercial', 'comptabilite', 'clien
 
 /**
  * La ligne du menu de gauche qui représente un écran absent du menu (un écran « de dessous ») : celle de sa page parente. Les documents
- * de circulation s'ouvrent du dossier PAC, même depuis un rappel de l'accueil : c'est la ligne « Dossier PAC » qui s'allume.
+ * de circulation s'ouvrent du dossier PAC, même depuis un rappel de l'accueil : c'est la ligne « Dossier PAC » qui s'allume. De même la
+ * déclaration RSA, l'URSSAF et les impôts : ce sont des écrans de la Fiscalité (Comptabilité › Fiscalité › Déclaration RSA).
  */
 export const ligneDuMenuDe = (adresse: string): string => {
   const chemin = sansRequete(adresse);
-  return /^\/cheptel\/documents-circulation$/.test(chemin) ? ROUTES.CHEPTEL_DOSSIER_PAC : adresse;
+  if (/^\/cheptel\/documents-circulation$/.test(chemin)) return ROUTES.CHEPTEL_DOSSIER_PAC;
+  if (/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|urssaf)$/.test(chemin)) return ROUTES.FISCALITE;
+  return adresse;
 };
 
 /**
