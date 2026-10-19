@@ -197,9 +197,16 @@ export function SuperpositionVisite() {
           <Pressable onPress={visite.quitter} hitSlop={8} accessibilityRole="button">
             <Text style={styles.lien}>{T.quitter}</Text>
           </Pressable>
-          <Pressable style={styles.suivant} onPress={visite.suivant} accessibilityRole="button">
-            <Text style={styles.suivantTexte}>{derniere ? T.terminer : attendUnClic ? T.passer : T.suivant}</Text>
-          </Pressable>
+          <View style={styles.groupeBoutons}>
+            {visite.index > 0 ? (
+              <Pressable style={styles.precedent} onPress={visite.precedent} accessibilityRole="button">
+                <Text style={styles.precedentTexte}>{T.precedent}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable style={styles.suivant} onPress={visite.suivant} accessibilityRole="button">
+              <Text style={styles.suivantTexte}>{derniere ? T.terminer : attendUnClic ? T.passer : T.suivant}</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>
@@ -243,6 +250,9 @@ const styles = StyleSheet.create({
   invitation: { fontSize: 14, fontWeight: '700', color: colors.accent },
   boutons: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   lien: { fontSize: 14, color: colors.textMuted, textDecorationLine: 'underline' },
+  groupeBoutons: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  precedent: { borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.primary },
+  precedentTexte: { color: colors.primary, fontWeight: '700', fontSize: 15 },
   suivant: { backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18 },
   suivantTexte: { color: colors.blanc, fontWeight: '700', fontSize: 15 },
   pastille: {

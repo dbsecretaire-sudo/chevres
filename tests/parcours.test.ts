@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { etapesDuParcours, parcoursDeCas, parcoursDe } from '@/features/didacticiel/services/parcours';
-import { etapeSuivante, etapeSurLaPage } from '@/features/didacticiel/services/visiteGuidee';
+import { etapePrecedente, etapeSuivante, etapeSurLaPage } from '@/features/didacticiel/services/visiteGuidee';
 import { prixPersonnalisePropose } from '@/shared/dictionnaire/categoriesClient';
 
 describe('parcours de cas du didacticiel', () => {
@@ -52,6 +52,17 @@ describe('parcours de cas du didacticiel', () => {
     expect(suite?.ouvrir).toContain('/production/controles/liste?famille=laitier');
     // Sur l’écran des analyses (sans son filtre dans l’adresse), l’étape est bien reconnue.
     expect(etapeSurLaPage(etapes[iAnalyses], '/production/controles/liste')).toBe(true);
+  });
+
+  it('« Précédent » revient à l’étape d’avant et rouvre sa page ; rien à la première étape', () => {
+    const etapes = etapesDuParcours('vente-lait');
+    const iAnalyses = etapes.findIndex((e) => e.titre.startsWith('6.'));
+    const avant = etapePrecedente(etapes, iAnalyses, '/production/controles/liste');
+    expect(avant?.index).toBe(iAnalyses - 1);
+    expect(avant?.ouvrir).toBe('/comptabilite/nouvelle');
+    // L’étape d’avant est sur la même page : rien à ouvrir.
+    expect(etapePrecedente(etapes, 3, '/comptabilite/nouvelle')).toEqual({ index: 2, ouvrir: undefined });
+    expect(etapePrecedente(etapes, 0, '/comptabilite/nouvelle')).toBeNull();
   });
 
   it('un parcours inconnu n’a pas d’étapes', () => {

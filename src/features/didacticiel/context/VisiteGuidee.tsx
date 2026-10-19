@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname, useRouter } from 'expo-router';
 import { useDeuxColonnes } from '@/bureau/colonnes';
 import { estBureau } from '@/shared/utils/plateforme';
-import { etapeApresUnMenu, etapeDeLaPage, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, etapesPourLEcran, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
+import { etapeApresUnMenu, etapeDeLaPage, etapePrecedente, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, etapesPourLEcran, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 import { etapesDuParcours, parcoursDe } from '@/features/didacticiel/services/parcours';
 
 const CLE_STOCKAGE = 'troupeau:v1:visite-guidee';
@@ -29,6 +29,8 @@ interface ContexteVisite {
   /** Lance la visite guidée d'un parcours de cas, à sa première étape. */
   demarrerParcours: (id: string) => void;
   suivant: () => void;
+  /** Revient à l'étape d'avant (et rouvre sa page). */
+  precedent: () => void;
   quitter: () => void;
   /** Un choix dans un menu de la barre du haut (Windows) : si l'étape demandait d'ouvrir un menu, elle est validée. */
   menuChoisi: (route: string) => void;
@@ -119,6 +121,12 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
     setEtat({ actif: true, index: prochaine.index, parcours });
     if (prochaine.ouvrir) router.push(prochaine.ouvrir as never);
   }, [etapes, index, adresse, colonnes, router, parcours]);
+  const precedent = useCallback(() => {
+    const avant = etapePrecedente(etapes, index, adresse, colonnes);
+    if (!avant) return;
+    setEtat({ actif: true, index: avant.index, parcours });
+    if (avant.ouvrir) router.push(avant.ouvrir as never);
+  }, [etapes, index, adresse, colonnes, router, parcours]);
   const etape = etat.actif ? etapes[index] : undefined;
   const reprendre = useCallback(() => {
     const route = etape?.route;
@@ -136,12 +144,13 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
       demarrer,
       demarrerParcours,
       suivant,
+      precedent,
       quitter,
       menuChoisi,
       valider,
       reprendre,
     }),
-    [etat.actif, index, etapes.length, etape, adresse, colonnes, parcours, demarrer, demarrerParcours, suivant, quitter, menuChoisi, valider, reprendre],
+    [etat.actif, index, etapes.length, etape, adresse, colonnes, parcours, demarrer, demarrerParcours, suivant, precedent, quitter, menuChoisi, valider, reprendre],
   );
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }
@@ -159,6 +168,7 @@ export function useVisiteGuidee(): ContexteVisite {
       demarrer: () => undefined,
       demarrerParcours: () => undefined,
       suivant: () => undefined,
+      precedent: () => undefined,
       quitter: () => undefined,
       menuChoisi: () => undefined,
       valider: () => undefined,

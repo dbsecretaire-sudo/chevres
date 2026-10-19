@@ -144,6 +144,26 @@ export function etapeSuivante(
 }
 
 /**
+ * L'étape où « Précédent » mène, et la page à ouvrir pour s'y rendre (rien si l'on y est déjà). Une étape qui n'a pas d'adresse précise (la
+ * fiche d'un animal) est passée quand on n'y est pas. Rien (null) à la première étape.
+ */
+export function etapePrecedente(
+  etapes: readonly EtapeVisite[],
+  index: number,
+  adresse: string,
+  colonnes = false,
+): { index: number; ouvrir?: string } | null {
+  let precedente = index - 1;
+  while (precedente >= 0 && etapes[precedente].route instanceof RegExp && !etapeSurLaPage(etapes[precedente], adresse, colonnes)) precedente--;
+  if (precedente < 0) return null;
+  const route = etapes[precedente].route;
+  return {
+    index: precedente,
+    ouvrir: typeof route === 'string' && !etapeSurLaPage(etapes[precedente], adresse, colonnes) ? (etapes[precedente].ouvrir ?? route) : undefined,
+  };
+}
+
+/**
  * La visite guidée, page après page : elle présente chaque page et invite à toucher les boutons de l'interface pour passer à la suivante.
  * Elle commence sur l'accueil, passe par le cheptel, la production, la comptabilité et l'organisation.
  */
