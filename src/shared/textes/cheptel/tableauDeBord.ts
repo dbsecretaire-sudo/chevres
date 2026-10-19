@@ -1,0 +1,30 @@
+/** Le tableau de bord du cheptel : effectifs, pyramide des âges, mouvements de l'année, santé. */
+export const tableauDeBordTextes = {
+  titre: 'Tableau de bord',
+  aide: 'Effectifs, pyramide des âges, mouvements de l’année et santé du troupeau.',
+  effectif: 'Effectif',
+  total: 'Animaux vivants',
+  femelles: 'Femelles',
+  males: 'Mâles',
+  pyramide: 'Pyramide des âges',
+  vide: 'Aucun animal ni mouvement pour l’instant.',
+  legende: 'Vert : femelles. Orangé : mâles.',
+  repartition: (femelles: number, males: number) => `${femelles + males} · ${femelles} F · ${males} M`,
+  classes: {
+    moins6: 'Moins de 6 mois',
+    de6a12: '6 à 12 mois',
+    de1a2: '1 à 2 ans',
+    de2a3: '2 à 3 ans',
+    de3a4: '3 à 4 ans',
+    de4a5: '4 à 5 ans',
+    plus5: '5 ans et plus',
+  },
+  mouvements: (annee: number) => `Mouvements de ${annee}`,
+  mouvementsLibelles: {
+    naissances: 'Naissances',
+    achats: 'Achats',
+    ventes: 'Ventes',
+    morts: 'Morts',
+    autresSorties: 'Autres sorties (abattoir, pension…)',
+  },
+} as const;
