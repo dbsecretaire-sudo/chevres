@@ -82,6 +82,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/detail$/, () => ROUTES.COMPTABILITE_LISTE],
   // Un lot revient aux lots d'animaux, un traitement aux traitements, une nouvelle naissance aux naissances.
   [/^\/cheptel\/(lot|lots-categories?)$/, () => ROUTES.CHEPTEL_LOTS],
+  // Un lot ouvert depuis la Production revient à la viande.
+  [/^\/production\/lot$/, () => ROUTES.PRODUCTION_VIANDE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
   [/^\/cheptel\/naissance-nouvelle$/, () => ROUTES.CHEPTEL_NAISSANCES],
   [/^\/cheptel\/(nouvelle|ajout-rapide)$/, () => ROUTES.CHEPTEL_LISTE],

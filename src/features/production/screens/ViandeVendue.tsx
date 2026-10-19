@@ -167,7 +167,7 @@ export default function ViandeVendue() {
   const { lots, creer } = useLots();
   /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
   const ouvrirLot = (id: string) =>
-    `${ROUTES.lot(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
+    `${ROUTES.lotDeProduction(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
   /** Le mode avancé : les animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants) ont leurs onglets. */
   const avance = !!settings.exploitation?.ventesSansFacture;
   const parNaissance = (a: Chevre, b: Chevre) => b.dateNaissance.localeCompare(a.dateNaissance);
