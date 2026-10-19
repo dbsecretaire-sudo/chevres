@@ -26,6 +26,11 @@ describe('parcours de cas du didacticiel', () => {
     expect(parcoursDe('vente-sans-facture')?.etapes.map((e) => e.numero).slice(0, 7)).toEqual(['1', '2', '3', '4', '5', '5A', '6']);
   });
 
+  it('chaque parcours a son schéma en pictogrammes', () => {
+    for (const p of parcours) expect(p.schema.length).toBeGreaterThanOrEqual(2);
+    expect(parcoursDe('vente-sans-facture')?.schema).toEqual(['animal', 'facture-barree', 'argent']);
+  });
+
   it('une étape a un titre, un texte, et des adresses qui existent', () => {
     for (const p of parcours) {
       const numeros = p.etapes.map((e) => e.numero);

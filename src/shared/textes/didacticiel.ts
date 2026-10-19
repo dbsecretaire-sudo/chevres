@@ -9,7 +9,8 @@ export const TEXTES_DIDACTICIEL = {
   /** L'onglet « Parcours de cas » : un cas du quotidien suivi pas à pas, en lecture ou en visite guidée. */
   parcours: {
     titre: 'Parcours de cas',
-    lancer: 'Lancer la visite guidée de ce parcours',
+    lancer: 'Lancer',
+    lancerLeParcours: (titre: string) => `Lancer la visite guidée : ${titre}`,
   },
   /** La visite guidée : la bulle qui présente une page et dit quoi toucher. */
   visite: {

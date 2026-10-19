@@ -16,11 +16,41 @@ export interface EtapeParcours {
   ouvrir?: string;
 }
 
+/** Les pictogrammes qui résument un parcours d'un coup d'œil (voir SchemaParcours). */
+export type Picto =
+  | 'animal'
+  | 'facture'
+  | 'facture-barree'
+  | 'argent'
+  | 'abattoir'
+  | 'lait'
+  | 'fromage'
+  | 'charcuterie'
+  | 'rappel'
+  | 'veterinaire'
+  | 'traitement'
+  | 'delai'
+  | 'aliment'
+  | 'boucle'
+  | 'pac'
+  | 'envoi'
+  | 'circulation'
+  | 'naissance'
+  | 'carnet'
+  | 'commande'
+  | 'declaration'
+  | 'valide'
+  | 'donnees'
+  | 'nuage'
+  | 'restaure';
+
 /** Un cas du quotidien suivi pas à pas : on le lit dans le didacticiel, ou on le parcourt en visite guidée. */
 export interface Parcours {
   id: string;
   titre: string;
   resume: string;
+  /** Le parcours en pictogrammes, de gauche à droite (séparés par des flèches). */
+  schema: Picto[];
   etapes: EtapeParcours[];
 }
 
@@ -56,6 +86,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'vente-sans-facture',
       titre: 'Je vends un animal à un particulier sans facture',
       resume: 'Du petit sans boucle à l’écriture de vente, sans facture.',
+      schema: ['animal', 'facture-barree', 'argent'],
       etapes: [
         {
           numero: '1',
@@ -134,6 +165,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'vente-abattoir',
       titre: 'Je vends un animal passé à l’abattoir',
       resume: 'De la facture de l’abattoir à la facture du client.',
+      schema: ['animal', 'facture', 'abattoir', 'argent'],
       etapes: [
         {
           numero: '1',
@@ -191,6 +223,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'vente-lait',
       titre: 'Je vends le lait',
       resume: 'De la recette au récolteur jusqu’à la rentabilité de l’atelier.',
+      schema: ['lait', 'facture', 'argent'],
       etapes: [
         {
           numero: '1',
@@ -284,6 +317,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'vente-fromage',
       titre: 'Je vends du fromage',
       resume: 'La vente d’un lot de fromage, et son rappel si un contrôle n’est pas bon.',
+      schema: ['fromage', 'facture', 'argent', 'rappel'],
       etapes: [
         {
           numero: '1',
@@ -320,6 +354,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'vente-charcuterie',
       titre: 'Je vends de la boucherie ou de la charcuterie',
       resume: 'La vente d’un lot de charcuterie ou de morceaux, et son rappel.',
+      schema: ['charcuterie', 'facture', 'argent', 'rappel'],
       etapes: [
         {
           numero: '1',
@@ -356,6 +391,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'veterinaire-traitement',
       titre: 'Visite du vétérinaire et traitement',
       resume: 'De la dépense du vétérinaire au délai d’attente des animaux traités.',
+      schema: ['veterinaire', 'facture', 'traitement', 'delai'],
       etapes: [
         {
           numero: '1',
@@ -391,6 +427,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'aliments',
       titre: 'Je remplis les factures d’aliments',
       resume: 'De la facture d’aliments au prix par animal.',
+      schema: ['aliment', 'facture', 'animal', 'argent'],
       etapes: [
         {
           numero: '1',
@@ -447,6 +484,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'boucles-pac',
       titre: 'Boucles et dossier PAC',
       resume: 'Des boucles achetées au dossier PAC et aux documents de circulation.',
+      schema: ['boucle', 'animal', 'pac', 'envoi'],
       etapes: [
         {
           numero: '1',
@@ -505,6 +543,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'achat-animaux',
       titre: 'J’achète des animaux vivants',
       resume: 'De la facture du vendeur au document de circulation (feuillet vert).',
+      schema: ['argent', 'animal', 'circulation', 'rappel'],
       etapes: [
         {
           numero: '1',
@@ -561,6 +600,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'naissance-carnet',
       titre: 'Je déclare une naissance et je tiens le carnet de mise bas',
       resume: 'De la naissance du petit au carnet de mise bas imprimé.',
+      schema: ['naissance', 'carnet'],
       etapes: [
         {
           numero: '1',
@@ -603,6 +643,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'commande-client',
       titre: 'Une commande client avec réservation',
       resume: 'Du contact à la facture, en passant par le bon de commande.',
+      schema: ['commande', 'animal', 'facture', 'argent'],
       etapes: [
         {
           numero: '1',
@@ -653,6 +694,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'declaration-rsa',
       titre: 'La déclaration RSA trimestrielle',
       resume: 'Du rappel de l’accueil à la déclaration validée.',
+      schema: ['rappel', 'facture', 'declaration', 'valide'],
       etapes: [
         {
           numero: '1',
@@ -688,6 +730,7 @@ export function parcoursDeCas(): Parcours[] {
       id: 'sauvegarde',
       titre: 'La sauvegarde et la reprise des données',
       resume: 'Protéger ses données, et les retrouver après une réinstallation ou sur un autre appareil.',
+      schema: ['donnees', 'nuage', 'restaure'],
       etapes: [
         {
           numero: '1',

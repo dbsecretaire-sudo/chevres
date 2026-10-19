@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Button } from '@/shared/components/Button';
+import { SchemaParcours } from '@/features/didacticiel/components/SchemaParcours';
 import { Card } from '@/shared/components/Card';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { Screen } from '@/shared/components/Screen';
@@ -42,7 +42,19 @@ export default function Didacticiel() {
               </View>
             </Pressable>
             <Text style={commonStyles.note}>{p.resume}</Text>
-            <Button label={T.parcours.lancer} onPress={() => demarrerParcours(p.id)} />
+            {/* Le parcours en pictogrammes, et de quoi le lancer en visite guidée. */}
+            <View style={styles.schema}>
+              <SchemaParcours schema={p.schema} />
+              <Pressable
+                style={styles.lancer}
+                onPress={() => demarrerParcours(p.id)}
+                accessibilityRole="button"
+                accessibilityLabel={T.parcours.lancerLeParcours(p.titre)}
+              >
+                <Text style={styles.lancerTexte}>{T.parcours.lancer}</Text>
+                <Ionicons name="play" size={18} color={colors.blanc} />
+              </Pressable>
+            </View>
             {ouvert
               ? p.etapes.map((etape) => (
                   <Card key={etape.numero}>
@@ -63,3 +75,17 @@ export default function Didacticiel() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  schema: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  lancer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+  },
+  lancerTexte: { color: colors.blanc, fontSize: 16, fontWeight: '700' },
+});
