@@ -2,7 +2,9 @@ import { enregistrerCommande, lireArchiveCommercial, supprimerCommande } from '@
 import { commandeOuverte, prixDuTarif } from '@/features/commercial/services/commandes';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repository/chevres';
-import { estReserve, reserver, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
+import { estReserve, liberer, reserver, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import type { Vente } from '@/features/comptabilite/types';
 import type { Chevre } from '@/features/cheptel/types';
 import { categorieDuClient } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
@@ -126,6 +128,55 @@ export async function libererLotsReserves(identifiants: string[]): Promise<void>
 /** Supprime un bon de commande resté vide (aucune ligne, aucun animal réservé) : il n'a plus de raison d'être. */
 export async function retirerLeBonVide(bon: Commande, animauxReserves: number): Promise<void> {
   if (bon.lignes.length === 0 && animauxReserves === 0) await supprimerCommande(bon.id);
+}
+
+/**
+ * Annule une commande : les animaux et les lots de fromage qu'elle réservait sont libérés, ses lignes ne gardent plus de lots, elle ne
+ * garde plus de vente. Elle reste dans la liste (onglet « Toutes »), avec l'étiquette « Annulée ».
+ */
+async function annulerLaCommande(bon: Commande): Promise<void> {
+  const animaux = (await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)) as Chevre[];
+  for (const animal of reservesDeLaCommande(animaux, bon.id)) await saveChevre(liberer(animal));
+  await libererLotsReserves(bon.lignes.flatMap((l) => l.lotIds ?? []));
+  await enregistrerCommande({
+    ...bon,
+    statut: STATUT_COMMANDE.ANNULEE,
+    dateLivraison: undefined,
+    venteIds: undefined,
+    lignesFacturees: undefined,
+    lignes: bon.lignes.map((l) => ({ ...l, lotIds: undefined })),
+  });
+}
+
+/**
+ * Une vente supprimée (sa facture supprimée) défait ce que sa commande en savait. Une commande livrée dont c'était la seule vente est
+ * annulée (ses animaux et ses lots de fromage ne sont plus réservés) ; une commande encore ouverte retrouve ses lignes à facturer.
+ */
+export async function commandeApresSuppressionDeVente(vente: Pick<Vente, 'id' | 'commandeId'>): Promise<void> {
+  if (!vente.commandeId) return;
+  const bon = (await lireArchiveCommercial()).commandes.find((c) => c.id === vente.commandeId);
+  if (!bon || bon.statut === STATUT_COMMANDE.ANNULEE) return;
+  const restantes = (bon.venteIds ?? []).filter((id) => id !== vente.id);
+  if (restantes.length > 0) {
+    await enregistrerCommande({ ...bon, venteIds: restantes });
+  } else if (bon.statut === STATUT_COMMANDE.LIVREE) {
+    await annulerLaCommande(bon);
+  } else {
+    await enregistrerCommande({ ...bon, venteIds: undefined, lignesFacturees: undefined });
+  }
+}
+
+/**
+ * Annule les commandes livrées dont toutes les ventes ont disparu (leur facture a été supprimée avant que la commande le sache) : elles
+ * quittent « Livrées » et libèrent leurs réservations.
+ */
+export async function annulerLesCommandesSansVente(): Promise<void> {
+  const [archive, ventes] = await Promise.all([lireArchiveCommercial(), listToutesVentes()]);
+  const existantes = new Set(ventes.map((v) => v.id));
+  for (const bon of archive.commandes) {
+    const ids = bon.venteIds ?? [];
+    if (bon.statut === STATUT_COMMANDE.LIVREE && ids.length > 0 && !ids.some((id) => existantes.has(id))) await annulerLaCommande(bon);
+  }
 }
 
 /**

@@ -11,6 +11,7 @@ import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { listClients } from '@/features/clients/repository';
 import {
+  annulerLesCommandesSansVente,
   completerLesPrixManquants,
   rattacherLesReservations,
   retirerLesBonsVides,
@@ -57,6 +58,8 @@ export default function ListeCommandes() {
       // Les réservations (animaux, lots) se rangent d'elles-mêmes dans le bon de commande de leur client.
       listClients()
         .then(async (clients) => {
+          // Une commande livrée dont la facture a été supprimée est annulée (elle quitte « Livrées », ses fromages ne sont plus réservés).
+          await annulerLesCommandesSansVente();
           await rattacherLesReservations(clients);
           await completerLesPrixManquants(clients);
           // Un bon dont toutes les réservations ont été libérées (depuis Production › Viande) n'a plus de raison d'être.

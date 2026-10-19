@@ -1,5 +1,6 @@
 import { getChevre, listTousLesAnimauxDeLEspece, reactiverChevre } from '@/features/cheptel/repository/chevres';
 import { listToutesVentes, supprimerVente } from '@/features/comptabilite/repository/ventes';
+import { commandeApresSuppressionDeVente } from '@/features/commercial/services/reservations';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import { idsDesAnimaux, revientVivantApresLaVente } from '@/features/comptabilite/utils/ventes';
 import { animauxDuLot } from '@/features/exploitation/services/lots';
@@ -11,6 +12,8 @@ import { getSettings } from '@/features/settings/settings';
  */
 export async function supprimerLaVenteEtRemettreLesAnimaux(vente: Vente): Promise<void> {
   await supprimerVente(vente.id);
+  // La commande de cette vente (livrée) est annulée : ses réservations sont libérées.
+  await commandeApresSuppressionDeVente(vente);
   for (const id of idsDesAnimaux(vente)) {
     if (revientVivantApresLaVente((await getChevre(id))?.statut, vente)) await reactiverChevre(id);
   }
