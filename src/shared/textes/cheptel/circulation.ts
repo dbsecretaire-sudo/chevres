@@ -82,22 +82,16 @@ export const circulationTextes = {
     vente: 'En cas de vente : que faire des feuillets de la liasse',
     achat: 'En cas d’achat : que faire des feuillets de la liasse',
   },
-  /** Ce que l'exploitation fait de chaque feuillet (je garde, je donne, ou je garde d'abord puis j'envoie à la Chambre) : en cas de vente (elle est au départ), puis d'achat (elle est à l'arrivée), rangés par action. */
+  /** Les deux colonnes des feuillets de la liasse (je garde, je donne) et le nom de chaque feuillet. */
   feuillets: {
-    vente: {
-      blanc: 'Blanc : je garde',
-      jaune: 'Jaune : je garde',
-      vert: 'Vert : je donne à l’acheteur',
-      bleu: 'Bleu : je donne à l’acheteur',
-      rose: 'Rose : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
-    },
-    achat: {
-      bleu: 'Bleu : je garde',
-      blanc: 'Blanc : je donne',
-      jaune: 'Jaune : je donne',
-      rose: 'Rose : je donne',
-      vert: 'Vert : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
-    },
+    garde: 'Je garde',
+    donne: { vente: 'Je donne à l’acheteur', achat: 'Je donne' },
+    envoiChambre: 'j’envoie à la Chambre d’agriculture',
+    blanc: 'Blanc',
+    vert: 'Vert',
+    bleu: 'Bleu',
+    rose: 'Rose',
+    jaune: 'Jaune',
   },
   rappelNote: 'Les couleurs et le nombre de feuillets peuvent changer d’une liasse à l’autre : vérifiez-les sur la vôtre.',
 } as const;

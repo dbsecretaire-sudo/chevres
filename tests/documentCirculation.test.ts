@@ -66,20 +66,18 @@ describe('document de circulation', () => {
     const pdf = await PDFDocument.load(await remplirDocumentCirculation(d));
     expect(pdf.getPageCount()).toBe(2);
     expect(pdf.getPage(0).getSize().width).toBeCloseTo(593, 0);
-    expect(feuilletsCirculation('vente').map((f) => f.libelle)).toEqual([
-      'Blanc : je garde',
-      'Jaune : je garde',
-      'Vert : je donne à l’acheteur',
-      'Bleu : je donne à l’acheteur',
-      'Rose : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
-    ]);
-    expect(feuilletsCirculation('achat').map((f) => f.libelle)).toEqual([
-      'Bleu : je garde',
-      'Blanc : je donne',
-      'Jaune : je donne',
-      'Rose : je donne',
-      'Vert : je garde d’abord, puis j’envoie à la Chambre d’agriculture',
-    ]);
+    const colonnes = (sens: 'vente' | 'achat') => {
+      const f = feuilletsCirculation(sens);
+      return { garde: f.filter((e) => e.groupe === 'garde').map((e) => e.libelle), donne: f.filter((e) => e.groupe === 'donne').map((e) => e.libelle) };
+    };
+    expect(colonnes('vente')).toEqual({
+      garde: ['Blanc', 'Jaune', 'Rose : j’envoie à la Chambre d’agriculture'],
+      donne: ['Vert', 'Bleu'],
+    });
+    expect(colonnes('achat')).toEqual({
+      garde: ['Bleu', 'Vert : j’envoie à la Chambre d’agriculture'],
+      donne: ['Blanc', 'Jaune', 'Rose'],
+    });
   });
 });
 

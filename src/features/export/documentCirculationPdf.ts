@@ -147,26 +147,39 @@ export function donneesDeCirculation(entree: {
 }
 
 /**
- * Les feuillets de la liasse, avec leur couleur et ce qu'en fait l'exploitation (le rappel du document de circulation) : en cas de vente
- * (elle est au départ), ou d'achat (elle est à l'arrivée).
+ * Les feuillets de la liasse, avec leur couleur et ce qu'en fait l'exploitation (le rappel du document de circulation), en deux colonnes :
+ * ceux qu'elle garde (celui qu'elle envoie ensuite à la Chambre d'agriculture en fait partie : elle le garde d'abord) et ceux qu'elle donne.
+ * En cas de vente elle est au départ, en cas d'achat à l'arrivée.
  */
-export const feuilletsCirculation = (sens: 'vente' | 'achat') =>
-  // Rangés par action, un groupe après l'autre (une ligne les sépare) : ceux qu'on garde, ceux qu'on donne, puis celui qu'on garde d'abord avant de l'envoyer à la Chambre.
-  (sens === 'vente'
+export const feuilletsCirculation = (sens: 'vente' | 'achat') => {
+  const F = C.feuillets;
+  const feuillet = (groupe: 'garde' | 'donne', couleur: readonly number[], nom: string, chambre = false) => ({
+    groupe,
+    couleur,
+    chambre,
+    libelle: chambre ? `${nom} : ${F.envoiChambre}` : nom,
+  });
+  const BLANC = [1, 1, 1];
+  const JAUNE = [0.96, 0.88, 0.37];
+  const VERT = [0.49, 0.76, 0.49];
+  const BLEU = [0.49, 0.66, 0.88];
+  const ROSE = [0.95, 0.65, 0.76];
+  return sens === 'vente'
     ? [
-        { groupe: 'garde', couleur: [1, 1, 1], libelle: C.feuillets.vente.blanc },
-        { groupe: 'garde', couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.vente.jaune },
-        { groupe: 'donne', couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.vente.vert },
-        { groupe: 'donne', couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.vente.bleu },
-        { groupe: 'chambre', couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.vente.rose },
+        feuillet('garde', BLANC, F.blanc),
+        feuillet('garde', JAUNE, F.jaune),
+        feuillet('garde', ROSE, F.rose, true),
+        feuillet('donne', VERT, F.vert),
+        feuillet('donne', BLEU, F.bleu),
       ]
     : [
-        { groupe: 'garde', couleur: [0.49, 0.66, 0.88], libelle: C.feuillets.achat.bleu },
-        { groupe: 'donne', couleur: [1, 1, 1], libelle: C.feuillets.achat.blanc },
-        { groupe: 'donne', couleur: [0.96, 0.88, 0.37], libelle: C.feuillets.achat.jaune },
-        { groupe: 'donne', couleur: [0.95, 0.65, 0.76], libelle: C.feuillets.achat.rose },
-        { groupe: 'chambre', couleur: [0.49, 0.76, 0.49], libelle: C.feuillets.achat.vert },
-      ]) as readonly { groupe: 'garde' | 'donne' | 'chambre'; couleur: readonly number[]; libelle: string }[];
+        feuillet('garde', BLEU, F.bleu),
+        feuillet('garde', VERT, F.vert, true),
+        feuillet('donne', BLANC, F.blanc),
+        feuillet('donne', JAUNE, F.jaune),
+        feuillet('donne', ROSE, F.rose),
+      ];
+};
 
 /** Le nombre de lignes du tableau des numéros individuels du formulaire (dix lignes de quatre colonnes) : le reste va sur la page d'annexe. */
 const PLACES_INDIVIDUELLES = 40;
@@ -391,18 +404,28 @@ export async function remplirDocumentCirculation(d: DonneesCirculation): Promise
   const sens = d.notifie === 'arrivee' ? 'achat' : 'vente';
   ligne(C.rappelTitre[sens], 13, true);
   y -= 4;
-  let groupe = '';
-  for (const f of feuilletsCirculation(sens)) {
-    // Une ligne sépare les feuillets qu'on garde, ceux qu'on donne et celui qu'on envoie à la Chambre.
-    if (groupe && f.groupe !== groupe) {
-      y -= 2;
-      page.drawLine({ start: { x: 50, y: y + 6 }, end: { x: 545, y: y + 6 }, thickness: 0.7, color: rgb(0.6, 0.6, 0.6) });
-      y -= 8;
+  // Deux colonnes : « je garde » (à gauche) et « je donne » (à droite), chacune sous son titre et sa ligne.
+  const feuillets = feuilletsCirculation(sens);
+  const yDebut = y;
+  let yFin = y;
+  for (const colonne of [
+    { groupe: 'garde', x: 50, titre: C.feuillets.garde },
+    { groupe: 'donne', x: 315, titre: C.feuillets.donne[sens] },
+  ] as const) {
+    y = yDebut;
+    page.drawText(propre(colonne.titre), { x: colonne.x, y, size: 12, font: gras, color: rgb(0.1, 0.1, 0.18) });
+    page.drawLine({ start: { x: colonne.x, y: y - 8 }, end: { x: colonne.x + 230, y: y - 8 }, thickness: 0.8, color: rgb(0.55, 0.55, 0.55) });
+    y -= 30;
+    for (const f of feuillets.filter((x) => x.groupe === colonne.groupe)) {
+      page.drawRectangle({ x: colonne.x + 4, y: y - 2, width: 13, height: 13, color: rgb(f.couleur[0], f.couleur[1], f.couleur[2]), borderColor: rgb(0, 0, 0), borderWidth: 0.8 });
+      ligne(f.libelle, 10.5, false, colonne.x + 26);
+      y -= 12;
     }
-    groupe = f.groupe;
-    page.drawRectangle({ x: 50, y: y - 2, width: 12, height: 12, color: rgb(f.couleur[0], f.couleur[1], f.couleur[2]), borderColor: rgb(0, 0, 0), borderWidth: 0.8 });
-    ligne(f.libelle, 10.5, false, 70);
+    yFin = Math.min(yFin, y);
   }
+  // Un trait vertical sépare les deux colonnes.
+  page.drawLine({ start: { x: 302, y: yDebut + 10 }, end: { x: 302, y: yFin + 8 }, thickness: 0.8, color: rgb(0.55, 0.55, 0.55) });
+  y = yFin;
   y -= 4;
   ligne(C.rappelNote, 8);
   if (d.sanitaire.animaux.length > 0) {
