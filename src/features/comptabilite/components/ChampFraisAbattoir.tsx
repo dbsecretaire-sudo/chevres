@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -25,6 +26,8 @@ interface Props {
   duLot?: boolean;
   /** Facturer ou non les frais au client : appelée avec le choix. */
   onFacturer?: (facturer: boolean) => void;
+  /** Vente offerte : le bouton « Cadeau » de la ligne (actif : les frais sont offerts, non facturés) remplace la case. */
+  cadeau?: { actif: boolean; onChange: (actif: boolean) => void };
 }
 
 /**
@@ -40,12 +43,16 @@ export function ChampFraisAbattoir({
   proposition,
   duLot,
   onFacturer,
+  cadeau,
 }: Props) {
   const frais = parseDecimal(valeur);
-  const facturer = frais > 0;
+  const facturer = cadeau ? !cadeau.actif : frais > 0;
   return (
     <View style={commonStyles.gap6}>
-      {onFacturer && proposition && proposition > 0 ? (
+      {cadeau ? (
+        <BoutonCadeau actif={cadeau.actif} onChange={cadeau.onChange} ligne={T.cadeauFrais} />
+      ) : null}
+      {!cadeau && onFacturer && proposition && proposition > 0 ? (
         <Checkbox
           label={T.facturerLesFrais(formatMontant(proposition))}
           value={facturer}
@@ -55,7 +62,7 @@ export function ChampFraisAbattoir({
       {duLot && !(proposition && proposition > 0) ? (
         <Text style={commonStyles.note}>{T.aucuneFactureAbattoirLiee}</Text>
       ) : null}
-      {facturer || !onFacturer ? (
+      {(facturer || !onFacturer) && !cadeau?.actif ? (
         <View style={commonStyles.row}>
           <View style={commonStyles.flex1}>
             <FormField
@@ -79,7 +86,8 @@ export function ChampFraisAbattoir({
           ) : null}
         </View>
       ) : null}
-      {frais > 0 ? (
+      {cadeau?.actif ? <Text style={commonStyles.note}>{T.fraisOffertsNote}</Text> : null}
+      {frais > 0 && !cadeau?.actif ? (
         <Text style={commonStyles.note}>{T.totalAvecFrais(formatMontant(montantViande + frais))}</Text>
       ) : null}
     </View>

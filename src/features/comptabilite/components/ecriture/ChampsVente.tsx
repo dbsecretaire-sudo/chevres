@@ -13,6 +13,7 @@ import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
@@ -853,6 +854,14 @@ export function ChampsVenteViande({ e }: Props) {
             keyboardType="decimal-pad"
             style={e.prixLibre || e.prixPersonnalise ? undefined : commonStyles.verrouille}
           />
+          {/* Vente offerte : le bouton « Cadeau » des animaux (actif d'office) ; désactivé, ils sont facturés. */}
+          {e.offert ? (
+            <BoutonCadeau
+              actif={e.cadeauProduit}
+              onChange={e.setCadeauProduit}
+              ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauAnimaux}
+            />
+          ) : null}
         </>
       ) : (
         <>
@@ -902,7 +911,8 @@ export function ChampsVenteViande({ e }: Props) {
           taux={e.tauxTvaFrais}
           onTaux={e.setTauxTvaFrais}
           tauxParDefaut={e.tauxTvaVente}
-          montantViande={parseDecimal(e.montant)}
+          montantViande={e.offert && e.cadeauProduit ? 0 : parseDecimal(e.montant)}
+          cadeau={e.offert ? { actif: e.cadeauFrais, onChange: e.setCadeauFrais } : undefined}
           proposition={propositionFrais?.montant}
           duLot={!!jourChoisi}
           onFacturer={(facturer) => {

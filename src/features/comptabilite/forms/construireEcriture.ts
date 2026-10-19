@@ -152,6 +152,10 @@ export interface SaisieEcriture {
   reajustement?: boolean;
   /** La vente est offerte au client : prix à 0 €. */
   offert?: boolean;
+  /** Vente offerte : les animaux (la viande) sont offerts ; faux, ils sont facturés (d'office : offerts). */
+  cadeauProduit?: boolean;
+  /** Vente offerte : les frais d'abattoir sont offerts (non facturés) ; faux, ils sont refacturés. */
+  fraisOfferts?: boolean;
   /** Le circuit de vente d'une vente (vide : non précisé). */
   circuit?: string;
 }
@@ -206,8 +210,10 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   // Le prix total est obligatoire pour toute vente ; quand il vient de l'inventaire, c'est qu'il n'y est pas défini.
-  const prixNum = s.offert ? 0 : parseDecimal(s.montant);
-  if (!s.offert && (!prixNum || prixNum < 0)) {
+  // Une vente offerte : chaque ligne (les animaux, les frais d'abattoir) a son bouton « Cadeau » ; la ligne offerte ne se facture pas.
+  const produitOffert = !!s.offert && s.cadeauProduit !== false;
+  const prixNum = produitOffert ? 0 : parseDecimal(s.montant);
+  if (!produitOffert && (!prixNum || prixNum < 0)) {
     return {
       erreur:
         (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(categorie) &&
@@ -221,12 +227,12 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
   }
 
   const estFromage = s.categorieRecette === CATEGORIE_RECETTE.FROMAGE;
-  // Les frais d'abattoir se facturent quand la catégorie du client les facture ; une vente offerte n'en a pas, sauf si sa catégorie les
-  // facture expressément (cochée dans Organisation › Catégories de contact).
+  // Les frais d'abattoir se facturent quand la catégorie du client les facture ; dans une vente offerte, seul le bouton « Cadeau » des frais
+  // les offre (d'office : offerts, sauf si la catégorie les facture expressément : Organisation › Catégories de contact).
+  const fraisOffertsParDefaut = !fraisAbattoirMemeOfferts(s.clientSelectionne);
+  const fraisOfferts = !!s.offert && (s.fraisOfferts ?? fraisOffertsParDefaut);
   const frais =
-    categorie === CATEGORIE_VENTE.VIANDE &&
-    fraisAbattoirFacturesAuClient(s.clientSelectionne) &&
-    (!s.offert || fraisAbattoirMemeOfferts(s.clientSelectionne))
+    categorie === CATEGORIE_VENTE.VIANDE && fraisAbattoirFacturesAuClient(s.clientSelectionne) && !fraisOfferts
       ? parseDecimal(s.fraisAbattoir)
       : 0;
   return {
@@ -277,7 +283,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       choixFacture: s.avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
       numeroFacture: s.avecFacture && !s.reajustement ? s.numeroFacture.trim() : undefined,
       reajustement: s.reajustement ? true : undefined,
-      offert: s.offert ? true : undefined,
+      // Offerte : les animaux le sont ; sinon la vente a son prix (les frais seuls, ou tout, sont facturés).
+      offert: produitOffert ? true : undefined,
       payee: s.enAttente ? false : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       circuit: s.circuit || undefined,

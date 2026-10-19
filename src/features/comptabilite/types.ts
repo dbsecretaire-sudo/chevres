@@ -283,6 +283,10 @@ export interface Vente {
   reajustement?: boolean;
   /** Une vente offerte (un cadeau au client) : son prix est de 0 €, les animaux et les produits sortent quand même du stock. */
   offert?: boolean;
+  /** Formulaire de modification seulement (jamais enregistré) : vente offerte, le bouton « Cadeau » des animaux (faux : ils sont facturés). */
+  cadeauProduit?: boolean;
+  /** Formulaire de modification seulement (jamais enregistré) : vente offerte, le bouton « Cadeau » des frais d'abattoir (vrai : non facturés ; absent : selon que la vente en a). */
+  cadeauFrais?: boolean;
   /** Le paiement : faux = pas encore encaissé (voir echeance) ; absent : encaissé à la date de la vente (le cas d'office). */
   payee?: boolean;
   /** Pour une vente pas encore encaissée : la date prévue du paiement. */

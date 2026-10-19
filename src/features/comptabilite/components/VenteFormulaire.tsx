@@ -20,6 +20,7 @@ import { SECTION_STOCK } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import {
   estClientAbattoir,
+  fraisAbattoirFacturesAuClient,
   numeroFactureLibre,
   prixLibre,
   reajustementPossible,
@@ -59,6 +60,7 @@ import {
   reglageEtatAnimaux,
   venteADeclarer,
 } from '@/features/comptabilite/utils/ventes';
+import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { nomComplet } from '@/shared/utils/personne';
@@ -150,8 +152,13 @@ export function VenteFormulaire({
     !form.commandeId;
   const totalInventaire = archive ? totalDeLaVente(form, archive, prixDuContact) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
+  /** Vente offerte : chaque ligne (les animaux, les frais d'abattoir) a son bouton « Cadeau » (actif : offerte ; désactivé : facturée). */
+  const produitOffert = !!form.offert && form.cadeauProduit !== false;
+  const fraisOfferts = !!form.offert && (form.cadeauFrais ?? !((form.fraisAbattoir ?? 0) > 0));
   /** Les frais d'abattoir refacturés comptent dans le prix total (viande à l'inventaire seulement). */
-  const frais = animalEntier && prixInventaire ? (form.fraisAbattoir ?? 0) : 0;
+  const frais = animalEntier && prixInventaire && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
+  /** Le poids d'un lot d'abattoir ne se modifie que dans la fiche du lot (Production › Viande). */
+  const poidsDuLotDAbattoir = animalEntier && !!form.dateAbattoir;
   /** Un récolteur peut cocher « Réajustement » (vente de lait déclarée) : plus de litrage ni de numéro de facture saisis. */
   const peutReajuster = reajustementPossible(client, form.categorie, venteADeclarer(form));
   const reajustement = peutReajuster && !!form.reajustement;
@@ -333,6 +340,9 @@ export function VenteFormulaire({
               onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })
             }
             keyboardType="decimal-pad"
+            editable={!poidsDuLotDAbattoir}
+            style={poidsDuLotDAbattoir ? commonStyles.verrouille : undefined}
+            aide={poidsDuLotDAbattoir ? T.poidsDuLot : undefined}
             placeholder={T.ex2}
           />
         ) : (
@@ -378,8 +388,8 @@ export function VenteFormulaire({
           label={TEXTES.comptabilite.ficheVente.prixTotal}
           required
           value={
-            form.offert
-              ? '0,00'
+            produitOffert
+              ? String(fraisOfferts ? 0 : (form.fraisAbattoir ?? 0)).replace('.', ',')
               : prixInventaire
                 ? totalInventaire !== undefined
                   ? String(Math.round((totalInventaire + frais) * 100) / 100).replace('.', ',')
@@ -387,8 +397,8 @@ export function VenteFormulaire({
                 : montantTexte
           }
           onChangeText={onChangerMontant}
-          editable={!prixInventaire && !form.offert}
-          style={prixInventaire || form.offert ? commonStyles.verrouille : undefined}
+          editable={!prixInventaire && !produitOffert}
+          style={prixInventaire || produitOffert ? commonStyles.verrouille : undefined}
           keyboardType="decimal-pad"
           placeholder="0,00"
         />
@@ -396,13 +406,39 @@ export function VenteFormulaire({
           <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
         ) : null}
         {/* Les frais d'abattoir refacturés au client : leur montant et leur taux de TVA. */}
-        {animalEntier && prixInventaire ? (
+        {form.offert && animalEntier ? (
+          <BoutonCadeau
+            actif={produitOffert}
+            onChange={(actif) => onChange({ ...form, cadeauProduit: actif })}
+            ligne={T.cadeauAnimaux}
+          />
+        ) : null}
+        {animalEntier && (prixInventaire || fraisAbattoirFacturesAuClient(client)) ? (
           <ChampFraisAbattoir
             valeur={form.fraisAbattoir ? String(form.fraisAbattoir).replace('.', ',') : ''}
             taux={form.tauxTvaFrais !== undefined ? String(form.tauxTvaFrais) : ''}
             onTaux={(taux) => onChange({ ...form, tauxTvaFrais: Number(taux) })}
             tauxParDefaut={String(form.tauxTva ?? '')}
-            montantViande={totalInventaire ?? 0}
+            montantViande={produitOffert ? 0 : (totalInventaire ?? 0)}
+            cadeau={
+              form.offert
+                ? {
+                    actif: fraisOfferts,
+                    // Facturer les frais : ceux de la facture de l'abattoir liée au lot (ou ceux déjà enregistrés).
+                    onChange: (actif) =>
+                      onChange(
+                        actif
+                          ? { ...form, cadeauFrais: true }
+                          : {
+                              ...form,
+                              cadeauFrais: false,
+                              fraisAbattoir: form.fraisAbattoir ?? propositionFrais?.montant,
+                              tauxTvaFrais: form.tauxTvaFrais ?? propositionFrais?.tauxTva,
+                            },
+                      ),
+                  }
+                : undefined
+            }
             proposition={propositionFrais?.montant}
             duLot={!!propositionFrais || !!form.dateAbattoir}
             onFacturer={(facturer) =>

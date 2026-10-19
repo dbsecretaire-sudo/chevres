@@ -63,6 +63,7 @@ import {
   reajustementPossible as reajustementPossibleDuClient,
   prixLibre as prixLibreDuClient,
   fraisAbattoirFacturesAuClient,
+  fraisAbattoirMemeOfferts,
   estClientAbattoir,
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
@@ -169,6 +170,10 @@ export function useNouvelleEcriture(
   const [reajustementCoche, setReajustement] = useState(false);
   /** Une vente offerte au client : prix à 0 €. */
   const [offertCoche, setOffert] = useState(false);
+  /** Vente offerte : le bouton « Cadeau » des animaux (d'office : actif). */
+  const [cadeauProduit, setCadeauProduit] = useState(true);
+  /** Vente offerte : le bouton « Cadeau » des frais d'abattoir ; non touché, il suit la catégorie du client. */
+  const [cadeauFraisChoisi, setCadeauFrais] = useState<boolean | undefined>(undefined);
   /** La commande que l'on transforme en ventes (une vente par ligne) : chaque enregistrement prend la ligne suivante. */
   const [commande, setCommande] = useState<Commande | null>(null);
   /** Ce qu'on passe en vente maintenant (le premier est celui à l'écran) et les animaux réservés de la commande pas encore vendus. */
@@ -334,6 +339,7 @@ export function useNouvelleEcriture(
   const prixLibre = prixLibreDuClient(clientSelectionne);
   /** Les frais d'abattoir se facturent à ce client (sa catégorie : réglage, sinon oui sauf à prix libre). */
   const fraisAbattoirAffiches = fraisAbattoirFacturesAuClient(clientSelectionne);
+  const cadeauFrais = cadeauFraisChoisi ?? !fraisAbattoirMemeOfferts(clientSelectionne);
   const numeroFactureLibre = numeroFactureLibreDuClient(clientSelectionne);
   /** « Réajustement » : une vente de lait déclarée d'un récolteur ; coché, elle n'a ni litrage ni numéro de facture. */
   const reajustementPossible = reajustementPossibleDuClient(clientSelectionne, categorieRecette, avecFacture);
@@ -760,6 +766,8 @@ export function useNouvelleEcriture(
         elementAgri,
         reajustement,
         offert: offertCoche && estProductionVente,
+        cadeauProduit,
+        fraisOfferts: cadeauFrais,
         natureUrssaf,
         circuit,
       });
@@ -1008,6 +1016,10 @@ export function useNouvelleEcriture(
     setReajustement,
     offert: offertCoche,
     setOffert,
+    cadeauProduit,
+    setCadeauProduit,
+    cadeauFrais,
+    setCadeauFrais,
     commande,
     demarrerCommande,
     elementsDeLaCommande: fileDeLaCommande,
