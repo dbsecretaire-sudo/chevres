@@ -215,8 +215,8 @@ export function zonesACompleter(d: DonneesCirculation): ZoneACompleter[] {
     [428, 758, 75, 11],
     [40, 735, 256, 11],
     [302, 735, 256, 11],
-    [406, 666, 127, 12],
-    [423, 644, 105, 12],
+    [406, 670, 127, 11],
+    [423, 648.5, 105, 11],
     // En bas du document, l'exploitation notifie le départ (une vente) ou l'arrivée (un achat) : sa date et sa signature.
     d.notifie === 'arrivee' ? [428, 50, 130, 38] : [165, 60, 250, 16],
   ];
@@ -240,9 +240,8 @@ export function zonesACompleter(d: DonneesCirculation): ZoneACompleter[] {
 export function zonesPrerempliees(d: DonneesCirculation): ZoneACompleter[] {
   const zones: ZoneACompleter[] = [
     [148, 759, 50, 11],
-    [143, 666, 26, 12],
-    [175, 666, 94, 12],
-    [162, 644, 103, 12],
+    [143, 670, 126, 11],
+    [162, 648.5, 103, 11],
     [118, 63, 45, 11],
     d.notifie === 'arrivee' ? [458, 17, 92, 11] : [309, 17, 86, 11],
   ];
