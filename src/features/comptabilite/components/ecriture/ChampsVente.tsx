@@ -57,6 +57,7 @@ import { AvertissementDelais } from '@/features/exploitation/components/Avertiss
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import type { Chevre } from '@/features/cheptel/types';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
+import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
@@ -410,7 +411,9 @@ export function ChampsVenteViande({ e }: Props) {
   // Un morceau ou un produit : prix de l'inventaire × quantité (un animal se calcule au kilo, avec son poids).
   const auKiloLigne = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
   /** Un animal vivant (élevage, lait, compagnie) se vend à la tête : son prix est celui d'un animal ; un animal sur pied ou un petit, au kilo. */
-  const aLaTete = !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.VIVANT;
+  const vivantLigne = !!choisie && roleDeLaViande(choisie.cle) === ROLE_VIANDE.VIVANT;
+  /** Des animaux vivants de réforme se vendent au poids vif : le prix au kilo se saisit (celui de l'inventaire est celui d'un animal). */
+  const aLaTete = vivantLigne && !e.venduAuPoids;
   useTotalVerrouille(e, prixDuDetail, e.quantite, !auKiloLigne);
   /** Les animaux (petits, sur pied, vivants) se vendent au kilo ; la charcuterie et les autres lignes, à la quantité. */
   const auKilo = !!choisie && roleDeLaViande(choisie.cle) !== undefined;
@@ -428,7 +431,11 @@ export function ChampsVenteViande({ e }: Props) {
   const [unParUn, setUnParUn] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState(false);
   /** Le prix au kilo : le prix personnalisé de la facture (exceptionnel), sinon celui de l'inventaire. */
-  const prixEffectif = prixUnitaireEffectif(e, prixDuDetail);
+  const prixEffectif = e.venduAuPoids
+    ? parseDecimal(e.prixUnitaireSaisi) > 0
+      ? parseDecimal(e.prixUnitaireSaisi)
+      : undefined
+    : prixUnitaireEffectif(e, prixDuDetail);
   useFocusEffect(
     useCallback(() => {
       listAnimauxVivantsDe(espece).then(setAnimaux);
@@ -615,7 +622,12 @@ export function ChampsVenteViande({ e }: Props) {
           // Un animal se vend à l'unité d'abord : le nombre d'animaux vaut 1 d'office.
           if (role && !e.quantite.trim()) e.setQuantite('1');
           if (role === ROLE_VIANDE.JEUNE) limiterAnimaux(maximumAnimaux(nouvelle, undefined));
-          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix), role === ROLE_VIANDE.VIVANT);
+          // Seul un animal vivant se vend au poids vif (réforme) : un autre détail l'annule.
+          if (role !== ROLE_VIANDE.VIVANT && e.venduAuPoids) {
+            e.setVenduAuPoids(false);
+            e.setPrixPersonnalise(false);
+          }
+          if (role) totalAuKilo(e.poidsKg, prixSelonLeContact(nouvelle?.cle, nouvelle?.prix), role === ROLE_VIANDE.VIVANT && !e.venduAuPoids);
           // Des jours d'abattage à facturer : le lot se choisit d'abord (une seule étape) ; sinon, on désigne l'animal.
           if (role && joursProposes.length === 0) setQuestion(nouvelle ?? null);
           else e.setJeune(undefined);
@@ -834,6 +846,22 @@ export function ChampsVenteViande({ e }: Props) {
             value={e.etatAnimaux}
             onChange={e.setEtatAnimaux}
           />
+          {/* Un animal vivant de réforme se vend au kilo vif : le prix au kilo est saisi (sinon, à la tête, au prix de l'inventaire). */}
+          {vivantLigne ? (
+            <>
+              <Checkbox
+                label={TEXTES.comptabilite.nouvelleEcriture.venduAuPoids}
+                value={e.venduAuPoids}
+                onChange={(v) => {
+                  e.setVenduAuPoids(v);
+                  e.setPrixPersonnalise(v);
+                }}
+              />
+              {e.venduAuPoids ? (
+                <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.venduAuPoidsAide}</Text>
+              ) : null}
+            </>
+          ) : null}
           <View style={styles.row3}>
             <View style={commonStyles.flex1}>
               <FormField

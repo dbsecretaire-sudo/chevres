@@ -301,6 +301,8 @@ export function useNouvelleEcriture(
   const [precision, setPrecision] = useState(departLots?.produit?.startsWith('viande:') ? (departLots.libelle ?? '') : '');
   /** Un prix personnalisé (exceptionnel) pour les produits de cette facture : l'option reste cochée d'une ligne à l'autre, le prix se saisit pour chaque produit. */
   const [prixPersonnalise, setPrixPersonnalise] = useState(false);
+  /** Des animaux vivants vendus au poids vif (réforme) : le prix au kilo se saisit ; sinon, à la tête. */
+  const [venduAuPoids, setVenduAuPoids] = useState(false);
   const [prixPerso, setPrixPerso] = useState<{ cle: string; valeur: string }>({ cle: '', valeur: '' });
   /** Le produit auquel le prix saisi appartient : un autre produit repart du prix de l'inventaire. */
   const clePrix = [categorieRecette, precision, typeFromage].join('|');
@@ -783,6 +785,7 @@ export function useNouvelleEcriture(
         reajustement,
         offert: offertCoche && estProductionVente,
         cadeauProduit,
+        venduAuPoids,
         fraisOfferts: cadeauFrais,
         natureUrssaf,
         circuit,
@@ -942,6 +945,8 @@ export function useNouvelleEcriture(
     setAnimauxEnvoyes,
     prixPersonnalise,
     setPrixPersonnalise,
+    venduAuPoids,
+    setVenduAuPoids,
     prixUnitaireSaisi,
     setPrixUnitaireSaisi,
     tauxTvaAchat,

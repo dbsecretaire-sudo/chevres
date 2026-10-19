@@ -833,6 +833,8 @@ export const TEXTES_COMPTABILITE = {
     nombreDAnimaux: 'Nombre d’animaux',
     prixUnitaireKg: 'PU (€/kg)',
     prixUnitaireAnimal: 'PU (€/animal)',
+    venduAuPoids: 'Vendu au poids vif (animal de réforme)',
+    venduAuPoidsAide: 'Un animal vivant se vend à la tête (le prix de l’inventaire) ; un animal de réforme, au kilo vif : saisissez le prix au kilo.',
     /** Un prix au kilo propre à une vente, exceptionnel : le prix de l'inventaire ne change pas. */
     prixPersonnalise: 'Prix du produit personnalisé',
     prixPersonnaliseAide: 'À titre exceptionnel, pour tous les produits de cette facture : le prix de l’inventaire ne change pas. Le total peut aussi se saisir directement.',

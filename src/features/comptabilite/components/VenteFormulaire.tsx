@@ -149,6 +149,8 @@ export function VenteFormulaire({
   const prixInventaire =
     (CATEGORIES_VENTE_PRIX_INVENTAIRE as readonly string[]).includes(form.categorie) &&
     !prixLibre(client) &&
+    // Des animaux vivants vendus au poids vif : le prix est saisi, l'inventaire n'en donne pas.
+    !form.venduAuPoids &&
     !form.commandeId;
   const totalInventaire = archive ? totalDeLaVente(form, archive, prixDuContact) : undefined;
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
@@ -331,10 +333,17 @@ export function VenteFormulaire({
           />
         ) : null}
 
+        {animalEntier && roleDuDetail === ROLE_VIANDE.VIVANT ? (
+          <Checkbox
+            label={T.venduAuPoids}
+            value={!!form.venduAuPoids}
+            onChange={(v) => onChange({ ...form, venduAuPoids: v ? true : undefined })}
+          />
+        ) : null}
         {animalEntier ? (
           <FormField
             label={TEXTES.commun.general.poidsKg}
-            required={roleDuDetail !== ROLE_VIANDE.VIVANT}
+            required={roleDuDetail !== ROLE_VIANDE.VIVANT || !!form.venduAuPoids}
             value={form.poidsKg !== undefined ? String(form.poidsKg) : ''}
             onChangeText={(valeur) =>
               onChange({ ...form, poidsKg: Number(valeur.replace(',', '.')) || undefined })

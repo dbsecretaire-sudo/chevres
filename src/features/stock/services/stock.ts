@@ -858,6 +858,8 @@ export function totalDeLaVente(
   archive: ArchiveStock,
   prixDuContact?: Record<string, number>,
 ): number | undefined {
+  // Des animaux vivants vendus au poids vif (réforme) : le prix au kilo se saisit, l'inventaire ne le donne pas (il donne celui d'un animal).
+  if (vente.venduAuPoids) return undefined;
   const unitaire = prixUnitaireDeLaVente(vente, archive, prixDuContact);
   if (!unitaire) return undefined;
   // Un petit ou un animal sur pied se vend au kilo (son poids, 1 kg tant qu'il n'est pas saisi) ; un animal vivant (élevage, lait, compagnie), à

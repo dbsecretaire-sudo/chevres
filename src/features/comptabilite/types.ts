@@ -293,6 +293,8 @@ export interface Vente {
   reajustement?: boolean;
   /** Une vente offerte (un cadeau au client) : son prix est de 0 €, les animaux et les produits sortent quand même du stock. */
   offert?: boolean;
+  /** Des animaux vivants vendus au poids vif (des animaux de réforme) : le prix se compte au kilo, saisi (sinon, un animal vivant se vend à la tête). */
+  venduAuPoids?: boolean;
   /** Formulaire de modification seulement (jamais enregistré) : vente offerte, le bouton « Cadeau » des animaux (faux : ils sont facturés). */
   cadeauProduit?: boolean;
   /** Formulaire de modification seulement (jamais enregistré) : vente offerte, le bouton « Cadeau » des frais d'abattoir (vrai : non facturés ; absent : selon que la vente en a). */

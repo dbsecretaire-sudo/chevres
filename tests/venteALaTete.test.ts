@@ -25,3 +25,13 @@ describe('prix d’une vente d’animaux : à la tête pour un animal vivant, au
     expect(totalDeLaVente(vente(libelle(ROLE_VIANDE.SUR_PIED, a), { poidsKg: 55 }), a)).toBe(220);
   });
 });
+
+describe('animaux vivants de réforme vendus au poids vif', () => {
+  it('l’inventaire ne donne pas le total : le prix au kilo se saisit', () => {
+    const cle = cleArticle(GENRE_ARTICLE.VIANDE, `chevres_${ROLE_VIANDE.VIVANT}`);
+    const a = archive({ [cle]: 120 });
+    const libelle = articlesDuGenre(GENRE_ARTICLE.VIANDE, a, 'chevres' as never).find((x) => x.cle === cle)!.libelle;
+    expect(totalDeLaVente(vente(libelle, { poidsKg: 55, venduAuPoids: true }), a)).toBeUndefined();
+    expect(totalDeLaVente(vente(libelle, { poidsKg: 55 }), a)).toBe(360);
+  });
+});
