@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   valeur: { marginTop: -8, backgroundColor: colors.primaryDark, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 },
   valeurUrgente: { backgroundColor: colors.dangerFonce },
   valeurTexte: { color: colors.blanc, fontSize: 12, fontWeight: '700' },
-  libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600' },
+  libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 6, paddingHorizontal: 4 },
   rondCloche: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.accent, borderWidth: 2, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
   badgeCloche: { position: 'absolute', top: -6, right: -6, minWidth: 20, backgroundColor: colors.danger, borderRadius: 999, paddingHorizontal: 5, paddingVertical: 1, alignItems: 'center' },
   badgeClocheTexte: { color: colors.blanc, fontSize: 11, fontWeight: '700' },

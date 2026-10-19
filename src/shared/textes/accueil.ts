@@ -32,8 +32,11 @@ export const TEXTES_ACCUEIL = {
     },
     outils: { annee: 'Année', espece: 'Animal' },
     cloche: { libelle: 'Rappels', titre: 'Rappels' },
+    carte: { aide: 'Faites glisser la carte pour explorer la ferme', recentrer: 'Recentrer la carte' },
     zones: {
       enclos: (femelles: string) => `Enclos des ${femelles}`,
+      foin: 'Foin et maïs',
+      veterinaire: 'Vétérinaire',
       laiterie: 'Laiterie',
       fromagerie: 'Fromagerie',
       charcuterie: 'Boucherie / charcuterie',

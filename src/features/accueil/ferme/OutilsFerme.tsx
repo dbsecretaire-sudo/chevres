@@ -93,5 +93,5 @@ const styles = StyleSheet.create({
   rond: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
   valeur: { marginTop: -8, backgroundColor: colors.primaryDark, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 },
   valeurTexte: { color: colors.blanc, fontSize: 12, fontWeight: '700' },
-  libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600' },
+  libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 6, paddingHorizontal: 4 },
 });

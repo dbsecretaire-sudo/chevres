@@ -73,5 +73,5 @@ export function BoutonDidacticiel({ rond = false }: { rond?: boolean }) {
 const stylesRond = StyleSheet.create({
   element: { alignItems: 'center', gap: 2, width: 72 },
   rond: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
-  libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600' },
+  libelle: { fontSize: 11, color: colors.text, textAlign: 'center', fontWeight: '600', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 6, paddingHorizontal: 4 },
 });
