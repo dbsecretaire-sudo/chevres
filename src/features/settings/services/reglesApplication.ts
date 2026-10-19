@@ -221,7 +221,7 @@ export function reglesDeLApplication(): GroupeDeRegles[] {
         {
           id: 'circulation.envoi',
           titre: 'Envoi à la chambre d’agriculture',
-          texte: 'Chaque achat, envoi à l’abattoir ou vente d’animaux vivants des 90 derniers jours donne un rappel sur l’accueil : envoyer le document de l’écriture à la chambre d’agriculture (feuillet vert pour un achat, rose pour un abattoir ou une recette). Il se valide une fois envoyé, comme une déclaration, et reste dans l’historique des rappels.',
+          texte: 'Chaque achat, envoi à l’abattoir ou vente d’animaux vivants (de toutes les années) donne un rappel sur l’accueil : envoyer le document de l’écriture à la chambre d’agriculture (feuillet vert pour un achat, rose pour un abattoir ou une recette). Tant qu’il n’est pas validé, il est considéré comme non réalisé : il se valide une fois le document envoyé, comme une déclaration, et reste alors dans l’historique des rappels.',
         },
         {
           id: 'circulation.feuillets',

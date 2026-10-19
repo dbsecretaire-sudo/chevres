@@ -1,8 +1,7 @@
 import type { Rappel } from '@/features/rappels/services/rappels';
 import type { EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
-import { GENRE_RAPPEL, JOURS_RAPPEL_ENVOI_CIRCULATION } from '@/shared/constants/rappels';
+import { GENRE_RAPPEL } from '@/shared/constants/rappels';
 import { ROUTES } from '@/shared/constants/routes';
-import { ajouterJours } from '@/shared/utils/calendrier';
 import { formatDateFR } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
@@ -12,17 +11,16 @@ const T = TEXTES.rappels.circulation;
 const MOTIF_ID = /^circulation:(vert|rose):(\d{4})-(\d{2})-(\d{2}):/;
 
 /**
- * Les rappels d'envoi à la chambre d'agriculture : un par écriture d'animaux vivants (vente, achat, abattoir) des derniers jours, tant que
- * l'envoi n'est pas validé. Le feuillet vert part pour un achat, le rose pour un envoi à l'abattoir ou une recette.
+ * Les rappels d'envoi à la chambre d'agriculture : un par écriture d'animaux vivants (vente, achat, abattoir), de toutes les années, tant que
+ * l'envoi n'est pas validé (une écriture datée d'un jour à venir n'est pas encore à envoyer). Le feuillet vert part pour un achat, le rose pour un envoi à l'abattoir ou une recette.
  */
 export function rappelsEnvoiCirculation(
   ecritures: readonly EcritureACirculation[],
   valides: readonly string[],
   aujourdhui: string,
 ): Rappel[] {
-  const limite = ajouterJours(aujourdhui, -JOURS_RAPPEL_ENVOI_CIRCULATION);
   return ecritures
-    .filter((e) => e.date >= limite && e.date <= aujourdhui)
+    .filter((e) => e.date <= aujourdhui)
     .map<Rappel>((e) => {
       const couleur = e.nature === 'achat' ? 'vert' : 'rose';
       const id = `${GENRE_RAPPEL.CIRCULATION}:${couleur}:${e.date}:${e.cle}`;

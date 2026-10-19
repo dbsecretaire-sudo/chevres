@@ -10,9 +10,6 @@ export const GENRE_RAPPEL = {
   CIRCULATION: 'circulation',
 } as const;
 
-/** Le rappel d'envoi d'un document de circulation couvre les écritures des derniers jours (au-delà, on ne réclame plus : l'historique ne se remplit pas d'anciennes écritures). */
-export const JOURS_RAPPEL_ENVOI_CIRCULATION = 90;
-
 /** Une échéance de groupement non terminée est rappelée sur l'accueil à partir de ce nombre de jours avant (ou si elle est passée). */
 export const JOURS_ECHEANCE_GROUPEMENT = 30;
 
