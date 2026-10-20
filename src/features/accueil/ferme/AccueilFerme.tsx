@@ -36,10 +36,9 @@ import { estBureau } from '@/shared/utils/plateforme';
 
 const C = TEXTES.accueil.ferme.colonnes;
 const TAILLE_ICONE = 30;
-/** Les couleurs des lieux : un achat est bordeaux, une vente (une recette) est verte (la couleur de la ferme), le stock et les contacts sont neutres. */
+/** Les couleurs des lieux : un achat est bordeaux, une vente (une recette) est verte (la couleur de la ferme), une démarche est orange. */
 const ACHAT = '#8E1F33';
 const VENTE = colors.primary;
-const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
 
 /**
@@ -65,9 +64,10 @@ const ROUTE_DIRECTE: Record<string, string> = {
   organismes: ROUTES.lieu('organismes'),
   emballages: ROUTES.lieu('emballages'),
   laiterie: ROUTES.PRODUCTION_LAITERIE,
-  contacts: ROUTES.CONTACTS,
-  // Les clients et leurs ventes.
-  clients: ROUTES.lieu('commercial'),
+  // Les clients du travail du produit, par catégorie.
+  particuliers: ROUTES.lieu('particuliers'),
+  surfacesCommerciales: ROUTES.lieu('surfacesCommerciales'),
+  entreprises: ROUTES.lieu('entreprises'),
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   fabriquerFromage: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
   fabriquerCharcuterie: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE),
@@ -200,9 +200,11 @@ export default function AccueilFerme() {
   ];
   const commerce: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
-    { cle: 'clients', titre: C.clients, icone: iconeIon('cart'), couleur: VENTE },
+    // Les clients, par catégorie : les particuliers, les surfaces commerciales, les entreprises.
+    { cle: 'particuliers', titre: C.particuliers, icone: iconeIon('person'), couleur: VENTE },
+    { cle: 'surfacesCommerciales', titre: C.surfacesCommerciales, icone: iconeIon('storefront'), couleur: VENTE },
+    { cle: 'entreprises', titre: C.entreprises, icone: iconeIon('business'), couleur: VENTE },
     { cle: 'emballages', titre: C.emballages, icone: iconeMCI('package-variant-closed'), couleur: ACHAT },
-    { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
   ];
   const demarchesTransformation: EntreeDeColonne[] = [
     { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: ORANGE },

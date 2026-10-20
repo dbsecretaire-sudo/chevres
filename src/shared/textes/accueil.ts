@@ -39,7 +39,9 @@ export const TEXTES_ACCUEIL = {
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
       alimentation: 'Aliments',
-      clients: 'Commerce',
+      particuliers: 'Particuliers',
+      surfacesCommerciales: 'Surfaces commerciales',
+      entreprises: 'Entreprises',
       sante: 'Santé',
       grange: 'Grange',
       nouveau: 'Nouveau',
@@ -78,7 +80,7 @@ export const TEXTES_ACCUEIL = {
       acheterNourriture: 'Acheter de la nourriture',
       stockNourriture: 'Stock de nourriture',
       traitements: 'Traitements',
-      carnetSanitaire: 'Carnet sanitaire',
+      carnetSanitaire: 'Visites du vétérinaire',
       abattoir: 'Amener à l’abattoir',
       perte: 'Déclarer une perte',
       clients: 'Clients et ventes',

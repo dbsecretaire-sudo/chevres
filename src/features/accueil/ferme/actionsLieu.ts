@@ -1,7 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { SEXE } from '@/shared/constants/cheptel';
-import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
@@ -51,7 +50,8 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           cle: 'carnetSanitaire',
           titre: B.carnetSanitaire,
           icone: 'clipboard',
-          route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
+          // Les visites du vétérinaire sont dans sa fiche (depuis qu'elles ne sont plus un onglet des contrôles).
+          route: ROUTES.lieu('veterinaire'),
         },
       ];
     case 'grange':

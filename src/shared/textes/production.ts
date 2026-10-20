@@ -1,3 +1,11 @@
+/** Les rubriques que proposent les fiches des clients (particuliers, surfaces commerciales, entreprises) : celles du commerce. */
+const LIENS_DES_CLIENTS = {
+  ventes: { titre: 'Chiffre d’affaires', aide: 'Par produit, par contact et par mois ; paiements en attente.' },
+  commandes: { titre: 'Commandes', aide: 'Ce que les contacts ont commandé : à préparer, à livrer, livré.' },
+  tarifs: { titre: 'Grille de tarifs', aide: 'Le prix de chaque fromage selon la catégorie de contact, et sa marge.' },
+  circuits: { titre: 'Circuits de vente', aide: 'Ce que rapporte chaque circuit : ferme, marché, restaurateurs…' },
+};
+
 /** Textes de l'interface — l'onglet Production (fromages, viande vendue, contrôle laitier). À modifier ici uniquement. */
 export const TEXTES_PRODUCTION = {
   titre: 'Production',
@@ -174,7 +182,7 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter un groupement sanitaire',
       groupeEcritures: 'Les cotisations et analyses',
       nouvelle: 'Nouvelle facture du groupement sanitaire',
-      liens: { carnet: { titre: 'Carnet sanitaire', aide: 'Les contrôles et les traitements du troupeau.' } },
+      liens: { carnet: { titre: 'Contrôles des animaux', aide: 'Les contrôles et autocontrôles sanitaires du troupeau.' } },
     },
     emballages: {
       titre: 'Emballages',
@@ -238,6 +246,30 @@ export const TEXTES_PRODUCTION = {
         circuits: { titre: 'Circuits de vente', aide: 'Ce que rapporte chaque circuit : ferme, marché, restaurateurs…' },
         agritourisme: { titre: 'Visites de la ferme', aide: 'Visite, parcours en 4x4, repas et dégustation : les groupes et ce que ça rapporte.' },
       },
+    },
+    particuliers: {
+      titre: 'Particuliers',
+      groupeTiers: 'Clients particuliers',
+      ajouterTiers: 'Ajouter un particulier',
+      groupeEcritures: 'Les ventes aux particuliers',
+      nouvelle: 'Nouvelle vente',
+      liens: LIENS_DES_CLIENTS,
+    },
+    surfacesCommerciales: {
+      titre: 'Surfaces commerciales',
+      groupeTiers: 'Surfaces commerciales',
+      ajouterTiers: 'Ajouter une surface commerciale',
+      groupeEcritures: 'Les ventes aux surfaces commerciales',
+      nouvelle: 'Nouvelle vente',
+      liens: LIENS_DES_CLIENTS,
+    },
+    entreprises: {
+      titre: 'Entreprises',
+      groupeTiers: 'Entreprises clientes',
+      ajouterTiers: 'Ajouter une entreprise',
+      groupeEcritures: 'Les ventes aux entreprises',
+      nouvelle: 'Nouvelle vente',
+      liens: LIENS_DES_CLIENTS,
     },
     equarrissage: {
       titre: 'Équarrissage',

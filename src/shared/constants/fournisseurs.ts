@@ -45,6 +45,8 @@ export const CATEGORIES_FOURNISSEUR_PROTEGEES: readonly string[] = [
   CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
   CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE,
   CATEGORIE_FOURNISSEUR.ABATTOIR,
+  // Le bouton « Emballages » du travail du produit en dépend : la catégorie est toujours dans la liste, même enregistrée avant son arrivée.
+  CATEGORIE_FOURNISSEUR.EMBALLAGES,
 ];
 
 /** Les dépenses d'office d'un vétérinaire. Les autres catégories n'en limitent aucune, sauf réglage contraire. */

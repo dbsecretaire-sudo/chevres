@@ -63,6 +63,12 @@ export const categoriesClientParDefaut = (): CategorieClientReglage[] => [
     prixLibre: false,
   },
   {
+    id: CATEGORIE_CLIENT.SURFACE_COMMERCIALE,
+    nom: LABEL_CATEGORIE_CLIENT.surface_commerciale,
+    declaree: true,
+    prixLibre: false,
+  },
+  {
     id: CATEGORIE_CLIENT.GROUPEMENT,
     nom: LABEL_CATEGORIE_CLIENT.groupement,
     declaree: true,

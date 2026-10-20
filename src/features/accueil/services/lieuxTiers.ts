@@ -2,7 +2,7 @@ import type { Ionicons } from '@expo/vector-icons';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
-import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 
@@ -20,6 +20,9 @@ export type CleLieuTiers =
   | 'groupement'
   | 'groupementSanitaire'
   | 'emballages'
+  | 'particuliers'
+  | 'surfacesCommerciales'
+  | 'entreprises'
   | 'veterinaire'
   | 'organismes'
   | 'equarrissage'
@@ -53,6 +56,13 @@ export interface ConfigLieuTiers {
 
 const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
 const stock = (section: string) => `${ROUTES.COMPTABILITE_STOCKS}?onglet=${section}`;
+
+const LIENS_DES_CLIENTS: readonly LienDuLieu[] = [
+  { cle: 'ventes', icone: 'cash', route: ROUTES.COMMERCIAL_VENTES },
+  { cle: 'commandes', icone: 'receipt', route: ROUTES.COMMERCIAL_COMMANDES },
+  { cle: 'tarifs', icone: 'pricetag', route: ROUTES.COMMERCIAL_TARIFS },
+  { cle: 'circuits', icone: 'navigate', route: ROUTES.COMMERCIAL_CIRCUITS },
+];
 
 export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
   aliments: {
@@ -131,7 +141,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       {
         cle: 'carnet',
         icone: 'clipboard',
-        route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
+        route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX),
       },
     ],
   },
@@ -144,6 +154,37 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.PRODUCTION}`,
     liens: [{ cle: 'stock', icone: 'cube', route: stock(SECTION_STOCK.EMBALLAGES) }],
+  },
+  // Les clients du travail du produit, une fiche par catégorie : leurs contacts, et les rubriques du commerce (ventes, commandes, tarifs, circuits).
+  particuliers: {
+    cle: 'particuliers',
+    avecTiers: true,
+    emoji: '🧑',
+    categoriesContact: [CATEGORIE_CLIENT.PARTICULIER],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=emise`,
+    liens: LIENS_DES_CLIENTS,
+  },
+  surfacesCommerciales: {
+    cle: 'surfacesCommerciales',
+    avecTiers: true,
+    emoji: '🏬',
+    categoriesContact: [CATEGORIE_CLIENT.SURFACE_COMMERCIALE],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=emise`,
+    liens: LIENS_DES_CLIENTS,
+  },
+  entreprises: {
+    cle: 'entreprises',
+    avecTiers: true,
+    emoji: '🏢',
+    categoriesContact: [CATEGORIE_CLIENT.ENTREPRISE],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=emise`,
+    liens: LIENS_DES_CLIENTS,
   },
   veterinaire: {
     cle: 'veterinaire',

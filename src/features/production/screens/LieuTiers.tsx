@@ -124,7 +124,13 @@ export default function LieuTiers() {
               <ListRow
                 title={textes.ajouterTiers ?? ''}
                 icone="add-circle"
-                onPress={() => router.push(ROUTES.CONTACT_NOUVEAU as never)}
+                onPress={() =>
+                  router.push(
+                    (config.categoriesContact[0]
+                      ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`
+                      : ROUTES.CONTACT_NOUVEAU) as never,
+                  )
+                }
               />
             </BlocLignes>
           </GroupeAccueil>

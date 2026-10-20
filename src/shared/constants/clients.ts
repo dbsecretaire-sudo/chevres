@@ -6,6 +6,8 @@ export const CATEGORIE_CLIENT = {
   RECOLTEUR: 'recolteur',
   ORGANISME: 'organisme',
   ENTREPRISE: 'entreprise',
+  /** Une grande ou moyenne surface, un magasin : un client du travail du produit, comme un particulier ou une entreprise. */
+  SURFACE_COMMERCIALE: 'surface_commerciale',
   /** Un groupement (GDS, achat groupé…) : les groupements du volet Production se choisissent parmi les clients de cette catégorie. */
   GROUPEMENT: 'groupement',
 } as const;
@@ -22,10 +24,15 @@ export const GROUPES_RECETTE_ORGANISME: readonly string[] = [GROUPE_RECETTE.AIDE
 /** La catégorie d'un client dont la fiche n'en a pas (ou dont la catégorie a été retirée) : elle ne se retire pas de la liste. */
 export const CATEGORIE_CLIENT_PAR_DEFAUT = CATEGORIE_CLIENT.PARTICULIER;
 
-/** Les catégories qui ne se retirent pas de la liste : celle d'office des clients, et celle dont les groupements ont besoin. */
+/**
+ * Les catégories qui ne se retirent pas de la liste : celle d'office des clients, celle dont les groupements ont besoin, et celles des clients
+ * du travail du produit (particulier, surface commerciale, entreprise), qui ont chacune leur bouton sur l'accueil.
+ */
 export const CATEGORIES_CLIENT_PROTEGEES: readonly string[] = [
   CATEGORIE_CLIENT_PAR_DEFAUT,
   CATEGORIE_CLIENT.GROUPEMENT,
+  CATEGORIE_CLIENT.ENTREPRISE,
+  CATEGORIE_CLIENT.SURFACE_COMMERCIALE,
 ];
 
 /** Ce que peut contenir le numéro de facture d'un client dont la catégorie n'est pas « libre » : chiffres, tirets, barres et points. */

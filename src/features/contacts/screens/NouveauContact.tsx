@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
@@ -19,7 +19,19 @@ const F = TEXTES.contacts.formulaire;
 export default function NouveauContact() {
   const router = useRouter();
   const { categories, idsConnus, assurerCategorie } = useCategoriesContact();
-  const [form, setForm] = useState<FormulaireContact>(FORMULAIRE_CONTACT_VIDE);
+  /** Ouvert depuis la fiche d'un lieu (garage, emballages, surfaces commerciales…) : la catégorie du lieu est déjà choisie, du côté qui lui convient. */
+  const { categorie } = useLocalSearchParams<{ categorie?: string }>();
+  const [form, setForm] = useState<FormulaireContact>(() => {
+    if (!categorie || !categories.some((c) => c.id === categorie)) return FORMULAIRE_CONTACT_VIDE;
+    const client = idsConnus.client.includes(categorie);
+    const fournisseur = idsConnus.fournisseur.includes(categorie);
+    return {
+      ...FORMULAIRE_CONTACT_VIDE,
+      categorie,
+      recettes: client,
+      depenses: fournisseur,
+    };
+  });
   const [enregistrement, setEnregistrement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
