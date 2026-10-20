@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Balade } from '@/features/accueil/ferme/animations';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
@@ -8,6 +9,16 @@ import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.transformation;
+
+/** La hauteur au moins de chaque carte de l'accueil : de quoi loger la colonne de ses boutons (quatre au plus). */
+export const HAUTEUR_MIN_DES_CARTES = 248;
+
+/** Les symboles qui se baladent sur la carte, comme les chèvres de l'exploitation : le lait, la viande, le fromage. */
+const SYMBOLES = [
+  { cle: 'lait', emoji: '🥛' },
+  { cle: 'viande', emoji: '🥩' },
+  { cle: 'fromage', emoji: '🧀' },
+];
 
 const LIGNES_DU_CARRELAGE = 3;
 const COLONNES_DU_CARRELAGE = 9;
@@ -43,7 +54,9 @@ export function LignesDeTransformation({ compte }: { compte: CompteTransformatio
     <View style={styles.lignes}>
       {lignes.map((l) => (
         <Pressable key={l.cle} onPress={() => vers(l.section)} accessibilityRole="button" hitSlop={4}>
-          <Text style={styles.ligne}>{l.texte}</Text>
+          <Text style={styles.ligne} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+            {l.texte}
+          </Text>
         </Pressable>
       ))}
     </View>
@@ -69,8 +82,22 @@ export function TransformationFerme({
       <View style={styles.zone}>
         <View style={styles.cadre}>
           <Carrelage />
-          <Text style={styles.titre}>{T.titre}</Text>
-          <LignesDeTransformation compte={compte} />
+          {/* Le texte sur une bulle blanche translucide : il ressort du carrelage. */}
+          <View style={styles.bulle}>
+            <Text style={styles.titre} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+              {T.titre}
+            </Text>
+            <View style={styles.symboles}>
+              {SYMBOLES.map((s, i) => (
+                <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
+                  <Text style={styles.symbole} accessibilityElementsHidden importantForAccessibility="no">
+                    {s.emoji}
+                  </Text>
+                </Balade>
+              ))}
+            </View>
+            <LignesDeTransformation compte={compte} />
+          </View>
         </View>
         <Pressable
           style={styles.porte}
@@ -90,7 +117,7 @@ export function TransformationFerme({
 const styles = StyleSheet.create({
   carte: {
     flex: 1,
-    minHeight: 236,
+    minHeight: HAUTEUR_MIN_DES_CARTES,
     flexDirection: 'row',
     gap: 8,
     backgroundColor: '#E1ECCB',
@@ -110,9 +137,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    padding: 14,
+    padding: 8,
   },
+  bulle: {
+    maxWidth: '100%',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderRadius: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  symboles: { flexDirection: 'row', gap: 14, paddingVertical: 4 },
+  symbole: { fontSize: 30 },
   carrelage: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   ligneDeCarreaux: { flex: 1, flexDirection: 'row' },
   carreau: {
@@ -122,9 +159,9 @@ const styles = StyleSheet.create({
     borderColor: '#BDB8AD',
   },
   carreauClair: { backgroundColor: '#F2F0EA' },
-  titre: { fontSize: 17, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
+  titre: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
   lignes: { alignItems: 'center', gap: 2 },
-  ligne: { fontSize: 15, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
+  ligne: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
   porte: {
     position: 'absolute',
     right: -4,

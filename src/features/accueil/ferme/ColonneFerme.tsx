@@ -175,9 +175,9 @@ export function ColonneFerme({
 const styles = StyleSheet.create({
   colonne: { width: 92, flexGrow: 0 },
   // Sur le côté d'une carte : les boutons s'empilent, centrés, sans texte.
-  cote: { gap: 8, alignItems: 'center', justifyContent: 'center' },
-  boutonCote: { width: 52 },
-  rondCote: { width: 48, height: 48, borderRadius: 24, borderWidth: 2 },
+  cote: { gap: 6, alignItems: 'center', justifyContent: 'center' },
+  boutonCote: { width: 48 },
+  rondCote: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   grilleCompacte: { gap: 4 },
   // Six boutons au plus par ligne, chacun sur une part égale de la largeur ; le suivant passe à la ligne.
@@ -187,9 +187,9 @@ const styles = StyleSheet.create({
   bouton: { width: 92, alignItems: 'center', gap: 3 },
   boutonEtroit: { width: 74 },
   boutonRangee: { width: '100%' },
-  boutonMoyen: { width: 66 },
+  boutonMoyen: { width: 54 },
   rondMoyen: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
-  titreMoyen: { fontSize: 10, letterSpacing: -0.2 },
+  titreMoyen: { fontSize: 9, letterSpacing: -0.2 },
   rondEtroit: { width: 56, height: 56, borderRadius: 28 },
   rondRangee: { width: 46, height: 46, borderRadius: 23, borderWidth: 2 },
   rond: {

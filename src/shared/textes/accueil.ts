@@ -21,13 +21,13 @@ export const TEXTES_ACCUEIL = {
       rappels: 'Rappels à valider',
       reglages: 'Réglages',
     },
-    /** La carte « Transformation » : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
+    /** La carte « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
     transformation: {
-      titre: 'Transformation',
+      titre: 'Travail du produit',
       fromages: (n: number) => `${n} ${n === 1 ? 'fromage' : 'fromages'}`,
       charcuterie: (n: number) => `${n} boucherie/charcuterie`,
       viande: (n: number) => `${n} viande`,
-      entrer: 'Entrer dans la transformation',
+      entrer: 'Entrer dans le travail du produit',
     },
     chevrerie: {
       sortir: 'Sortir',
@@ -37,15 +37,15 @@ export const TEXTES_ACCUEIL = {
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
       alimentation: 'Alimentation',
-      clients: 'Clients',
+      clients: 'Commerce',
       lots: 'Lots d’animaux',
       traitements: 'Traitements',
       boucles: 'Boucles',
-      suivi: 'Suivi des mouvements',
-      circulation: 'Document de circulation',
-      bordereau: 'Bordereau de perte',
-      recensement: 'Recensement annuel',
-      generes: 'Documents générés',
+      dossierPac: 'Dossier PAC',
+      bilanAnnuel: 'Bilan annuel',
+      aidesPac: 'Aides PAC',
+      carnetNaissance: 'Carnet de naissance',
+      carnetSanitaire: 'Carnet sanitaire',
       fabriquerFromage: 'Fabriquer un fromage',
       fabriquerCharcuterie: 'Fabriquer de la charcuterie',
       lotsFromages: 'Lots de fromages',
@@ -69,7 +69,6 @@ export const TEXTES_ACCUEIL = {
       naissance: 'Ajouter une naissance',
       ajouterAnimal: 'Ajouter chèvre ou bouc',
       abattoir: 'Amener à l’abattoir',
-      reserver: 'Réserver pour client',
       perte: 'Déclarer une perte',
       clients: 'Clients et ventes',
       lait: 'Lait par animal',

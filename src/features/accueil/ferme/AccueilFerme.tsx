@@ -12,7 +12,7 @@ import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features
 import { EnclosFerme } from '@/features/accueil/ferme/EnclosFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
-import { TransformationFerme } from '@/features/accueil/ferme/TransformationFerme';
+import { HAUTEUR_MIN_DES_CARTES, TransformationFerme } from '@/features/accueil/ferme/TransformationFerme';
 import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
@@ -23,7 +23,8 @@ import {
 } from '@/features/accueil/services/bullesFerme';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
@@ -39,8 +40,6 @@ const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
 /** Le bleu de l'estive : la carte de l'exploitation et ses bulles, quand le troupeau est à la montagne. */
 const ESTIVE = '#3E7CB1';
-/** La hauteur au moins de chaque carte : de quoi y loger la colonne de ses boutons. */
-const HAUTEUR_MIN_DES_CARTES = 236;
 
 /**
  * Les boutons de la chèvrerie qui ouvrent directement leur écran, sans bulles. Le suivi des mouvements, le bordereau de perte et le recensement
@@ -51,11 +50,12 @@ const ROUTE_DIRECTE: Record<string, string> = {
   lots: ROUTES.CHEPTEL_LOTS,
   traitements: ROUTES.CHEPTEL_TRAITEMENTS,
   boucles: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
-  suivi: ROUTES.CHEPTEL_DOSSIER_PAC,
-  circulation: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION,
-  bordereau: ROUTES.CHEPTEL_DOSSIER_PAC,
-  recensement: ROUTES.CHEPTEL_DOSSIER_PAC,
-  generes: ROUTES.CHEPTEL_BIBLIOTHEQUE,
+  // Le dossier PAC garde le suivi des mouvements, les bordereaux de perte, le recensement, les documents de circulation et les documents générés.
+  dossierPac: ROUTES.CHEPTEL_DOSSIER_PAC,
+  bilanAnnuel: ROUTES.CHEPTEL_BILAN,
+  aidesPac: `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
+  carnetNaissance: ROUTES.CHEPTEL_NAISSANCES,
+  carnetSanitaire: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
   // Sur la carte de la transformation : les clients et leurs ventes.
   clients: ROUTES.lieu('commercial'),
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
@@ -68,24 +68,21 @@ const ROUTE_DIRECTE: Record<string, string> = {
 };
 
 /** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
-type Zone = 'lieux' | 'exploitation' | 'interieur' | 'cote';
+type Zone = 'exploitation' | 'interieur' | 'cote';
 
 /** Ce qu'on a ouvert en entrant par la porte d'une carte : la chèvrerie (l'exploitation) ou la transformation. */
 type Interieur = 'exploitation' | 'transformation';
 
 /**
  * La direction de l'arc des bulles d'après la place du bouton (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
- * les lieux du haut ouvrent vers le côté libre (la droite au bord gauche, la gauche au bord droit) ou vers le bas ; les boutons de l'exploitation, vers le haut.
+ * la carte de l'exploitation ouvre vers le haut, les boutons sur le côté d'une carte vers la gauche, ceux d'un intérieur vers le bas.
  */
 export function directionDesBulles(zone: Zone, x: number, largeur: number): number {
   if (zone === 'exploitation') return 90;
   // Un bouton sur le côté d'une carte : les bulles s'ouvrent vers la gauche, sur la carte.
   if (zone === 'cote') return 180;
   // Dans un intérieur, les boutons sont en haut : les bulles s'ouvrent vers le bas, de biais vers le côté libre près d'un bord.
-  if (zone === 'interieur') return x < largeur / 3 ? 315 : x > (2 * largeur) / 3 ? 225 : 270;
-  if (x < largeur / 3) return 0;
-  if (x > (2 * largeur) / 3) return 180;
-  return 270;
+  return x < largeur / 3 ? 315 : x > (2 * largeur) / 3 ? 225 : 270;
 }
 
 /** Ce qui reste éclairé quand le reste s'assombrit : la carte touchée (la zone telle quelle), ou le bouton touché (refait par-dessus l'ombre). */
@@ -152,10 +149,9 @@ export default function AccueilFerme() {
   const [interieur, setInterieur] = useState<Interieur | null>(null);
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
-  // Les intervenants extérieurs, en trois groupes, sans texte (le nom s'affiche quand on touche le bouton) :
-  // ceux qui interviennent sur les bêtes (le vétérinaire, l'équarrisseur, l'abattoir, l'aliment), en colonne sur la carte de l'exploitation ;
-  // le commerce (la laiterie, les clients), en colonne sur la carte de la transformation ; et le fonctionnement (fournisseurs, organismes,
-  // contacts), en haut.
+  // Les intervenants extérieurs, en colonnes sans texte sur les cartes (le nom s'affiche quand on touche le bouton) : ceux qui interviennent
+  // sur les bêtes (le vétérinaire, l'équarrisseur, l'abattoir, l'aliment) sur celle de l'exploitation, et le commerce (la laiterie, les clients,
+  // les contacts, les fournisseurs) sur celle de la transformation. Les organismes sont dans l'intérieur de l'exploitation.
   const surLesBetes: EntreeDeColonne[] = [
     { cle: 'veterinaire', titre: C.veterinaire, icone: iconeIon('add'), couleur: ACHAT },
     {
@@ -177,11 +173,8 @@ export default function AccueilFerme() {
   const commerce: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
     { cle: 'clients', titre: C.clients, icone: iconeIon('cart'), couleur: VENTE },
-  ];
-  const fonctionnement: EntreeDeColonne[] = [
-    { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
-    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: VENTE },
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
+    { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
   const interneExploitation: EntreeDeColonne[] = [
@@ -190,11 +183,12 @@ export default function AccueilFerme() {
     { cle: 'traitements', titre: C.traitements, icone: iconeIon('medkit'), couleur: ORANGE },
     { cle: 'boucles', titre: C.boucles, icone: iconeIon('pricetag'), couleur: ORANGE },
     { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
-    { cle: 'suivi', titre: C.suivi, icone: iconeIon('document-text'), couleur: ORANGE },
-    { cle: 'circulation', titre: C.circulation, icone: iconeIon('document-text'), couleur: ORANGE },
-    { cle: 'bordereau', titre: C.bordereau, icone: iconeIon('document-text'), couleur: ORANGE },
-    { cle: 'recensement', titre: C.recensement, icone: iconeIon('document-text'), couleur: ORANGE },
-    { cle: 'generes', titre: C.generes, icone: iconeIon('document-text'), couleur: ORANGE },
+    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
+    { cle: 'dossierPac', titre: C.dossierPac, icone: iconeIon('document-text'), couleur: ORANGE },
+    { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
+    { cle: 'aidesPac', titre: C.aidesPac, icone: iconeIon('cash'), couleur: ORANGE },
+    { cle: 'carnetNaissance', titre: C.carnetNaissance, icone: iconeIon('book'), couleur: ORANGE },
+    { cle: 'carnetSanitaire', titre: C.carnetSanitaire, icone: iconeIon('clipboard'), couleur: ORANGE },
   ];
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   const interneTransformation: EntreeDeColonne[] = [
@@ -239,17 +233,12 @@ export default function AccueilFerme() {
     else if (cle === 'stock') router.push(ROUTES.lieu('entrepot') as never);
     else if (ROUTE_DIRECTE[cle]) router.push(ROUTE_DIRECTE[cle] as never);
     else {
-      const entree = [
-        ...surLesBetes,
-        ...commerce,
-        ...fonctionnement,
-        ...interneExploitation,
-        ...interneTransformation,
-      ].find((e) => e.cle === cle);
+      const entree = [...surLesBetes, ...commerce, ...interneExploitation, ...interneTransformation].find(
+        (e) => e.cle === cle,
+      );
       ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
     }
   };
-  const surLieu = (cle: string, ancre: AncreBouton) => surBouton('lieux', cle, ancre);
   const surCote = (cle: string, ancre: AncreBouton) => surBouton('cote', cle, ancre);
   const surInterne = (cle: string, ancre: AncreBouton) => surBouton('interieur', cle, ancre);
   const surEnclos = () => {
@@ -292,12 +281,6 @@ export default function AccueilFerme() {
         contentContainerStyle={[styles.corpsContenu, interieur ? styles.corpsInterieur : null]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Le fonctionnement de l'exploitation, en haut : pas dans un intérieur, où l'on est chez soi. */}
-        {interieur ? null : (
-          <View style={styles.lieux}>
-            <ColonneFerme entrees={fonctionnement} onAppui={surLieu} grille sansTitre />
-          </View>
-        )}
         <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
           {interieur === 'exploitation' ? (
             <View style={styles.interieur}>
@@ -442,7 +425,6 @@ const styles = StyleSheet.create({
   // Le corps remplit la hauteur : les deux cartes (exploitation et transformation) se la partagent à parts égales, sans dépasser l'écran.
   corpsContenu: { flexGrow: 1, paddingHorizontal: 10, paddingBottom: 12, gap: 10 },
   // Les six premiers intervenants se partagent la largeur ; les contacts, seuls au bout, ont la part d'un bouton.
-  lieux: { marginBottom: 16 },
   centre: { flex: 1, gap: 10 },
   panneau: {
     flex: 1,

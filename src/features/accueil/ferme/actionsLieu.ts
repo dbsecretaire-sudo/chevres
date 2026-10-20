@@ -67,14 +67,6 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
       return [
         { cle: 'naissance', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
         { cle: 'ajouter', titre: B.ajouterAnimal, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
-        {
-          cle: 'abattoir',
-          titre: B.abattoir,
-          icone: 'cut',
-          // Une nouvelle facture de l'abattoir (le premier contact de cette catégorie, d'office) : « Suivant » mène au choix des animaux.
-          route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&abattoirContact=1`,
-        },
-        { cle: 'reserver', titre: B.reserver, icone: 'bookmark', route: ROUTES.COMMERCIAL_COMMANDE },
         { cle: 'perte', titre: B.perte, icone: 'skull', route: ROUTES.CHEPTEL_LISTE },
       ];
     case 'laiterie':
@@ -106,6 +98,19 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
         { cle: 'commerce', titre: B.clients, icone: 'cart', route: ROUTES.lieu('commercial') },
         { cle: 'contacts', titre: B.contacts, icone: 'people', route: ROUTES.CONTACTS },
         { cle: 'nouveau', titre: B.nouveauContact, icone: 'add-circle', route: ROUTES.CONTACT_NOUVEAU },
+      ];
+    case 'abattoir':
+      // Quatre actions distinctes : amener des animaux, les lots (« à facturer » est un onglet de la même page, et le badge du bouton le dit), vendre la
+      // viande, et la page de l'abattoir (contacts et écritures). Le stock de viande se voit dans le travail du produit.
+      return [
+        {
+          cle: 'abattoir',
+          titre: B.abattoir,
+          icone: 'cut',
+          // Une nouvelle facture de l'abattoir (le premier contact de cette catégorie, d'office) : « Suivant » mène au choix des animaux.
+          route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&abattoirContact=1`,
+        },
+        ...bullesDuLieuATiers('abattoir').filter((bulle) => ['lots', 'page', 'nouvelle'].includes(bulle.cle)),
       ];
     default: {
       const lieu = LIEU_A_TIERS[cible];
