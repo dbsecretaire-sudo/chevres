@@ -47,7 +47,12 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onA
     <View style={styles.fond}>
       <View style={styles.mur}>
         <View style={styles.tete}>
-          <Pressable style={styles.sortir} onPress={onSortir} accessibilityRole="button" accessibilityLabel={T.sortir}>
+          <Pressable
+            style={styles.sortir}
+            onPress={onSortir}
+            accessibilityRole="button"
+            accessibilityLabel={T.sortir}
+          >
             <Text style={styles.sortirEmoji}>🚪</Text>
             <Text style={styles.sortirTexte}>{T.sortir}</Text>
           </Pressable>
@@ -72,23 +77,44 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onA
       </View>
 
       <View style={styles.sol}>
-        <Pressable style={styles.donner} onPress={() => router.push(ROUTES.SANTE_ALIMENTATION as never)} accessibilityRole="button" accessibilityLabel={T.donner}>
+        <Pressable
+          style={styles.donner}
+          onPress={() => router.push(ROUTES.SANTE_ALIMENTATION as never)}
+          accessibilityRole="button"
+          accessibilityLabel={T.donner}
+        >
           <Ionicons name="nutrition" size={20} color={colors.blanc} />
-          <Text style={styles.donnerTexte}>{jours !== undefined ? `${T.donner} · ${T.jours(jours)}` : T.donner}</Text>
+          <Text style={styles.donnerTexte}>
+            {jours !== undefined ? `${T.donner} · ${T.jours(jours)}` : T.donner}
+          </Text>
         </Pressable>
 
         <FiltresCheptel e={liste} />
         {visibles.length === 0 ? (
-          <EmptyState title={liste.titreListeVide} subtitle={TEXTES.cheptel.listeCheptel.aucunAnimalNeCorrespondAux} />
+          <EmptyState
+            title={liste.titreListeVide}
+            subtitle={TEXTES.cheptel.listeCheptel.aucunAnimalNeCorrespondAux}
+          />
         ) : (
-          visibles.map((chevre, index) => (
-            <LigneDeBloc key={chevre.id} index={index} total={visibles.length}>
-              <LigneChevre chevre={chevre} emoji={dessin} onPress={() => router.push(ROUTES.ficheChevre(chevre.id) as never)} />
-            </LigneDeBloc>
-          ))
+          // Un seul bloc : les lignes se touchent, séparées par un fin trait (l'écart de la paille ne s'applique qu'entre blocs).
+          <View>
+            {visibles.map((chevre, index) => (
+              <LigneDeBloc key={chevre.id} index={index} total={visibles.length}>
+                <LigneChevre
+                  chevre={chevre}
+                  emoji={dessin}
+                  onPress={() => router.push(ROUTES.ficheChevre(chevre.id) as never)}
+                />
+              </LigneDeBloc>
+            ))}
+          </View>
         )}
         {liste.filtrees.length > affiches ? (
-          <Pressable style={styles.plus} onPress={() => setAffiches((n) => n + PAGE)} accessibilityRole="button">
+          <Pressable
+            style={styles.plus}
+            onPress={() => setAffiches((n) => n + PAGE)}
+            accessibilityRole="button"
+          >
             <Text style={styles.plusTexte}>{T.voirPlus(liste.filtrees.length - affiches)}</Text>
           </Pressable>
         ) : null}
@@ -99,18 +125,67 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onA
 
 const styles = StyleSheet.create({
   fond: { flex: 1, backgroundColor: '#E9D8A6' },
-  mur: { backgroundColor: '#B98A5B', paddingTop: 10, paddingHorizontal: 8, gap: 10, borderBottomWidth: 8, borderBottomColor: '#8A6238' },
+  mur: {
+    backgroundColor: '#B98A5B',
+    paddingTop: 10,
+    paddingHorizontal: 8,
+    gap: 10,
+    borderBottomWidth: 8,
+    borderBottomColor: '#8A6238',
+  },
   tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sortir: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.blanc, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 2, borderColor: '#8A6238' },
+  sortir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.blanc,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 2,
+    borderColor: '#8A6238',
+  },
   sortirEmoji: { fontSize: 20 },
   sortirTexte: { fontSize: 13, fontWeight: '700', color: colors.text },
-  titre: { fontSize: 15, fontWeight: '700', color: colors.blanc, textShadowColor: 'rgba(0,0,0,0.4)', textShadowRadius: 3, textAlign: 'right', flexShrink: 1 },
+  titre: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.blanc,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowRadius: 3,
+    textAlign: 'right',
+    flexShrink: 1,
+  },
   boutons: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16, padding: 6 },
-  rebord: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', minHeight: 56, marginBottom: -4 },
+  rebord: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    minHeight: 56,
+    marginBottom: -4,
+  },
   chevre: { fontSize: 44 },
   sol: { padding: 8, gap: 8 },
-  donner: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 2, borderColor: colors.blanc },
+  donner: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: colors.blanc,
+  },
   donnerTexte: { color: colors.blanc, fontSize: 14, fontWeight: '700' },
-  plus: { alignSelf: 'center', backgroundColor: '#8A6238', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 8, marginTop: 4 },
+  plus: {
+    alignSelf: 'center',
+    backgroundColor: '#8A6238',
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    marginTop: 4,
+  },
   plusTexte: { color: colors.blanc, fontSize: 13, fontWeight: '700' },
 });
