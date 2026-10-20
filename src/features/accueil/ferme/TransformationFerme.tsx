@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
@@ -56,26 +57,32 @@ export function LignesDeTransformation({ compte }: { compte: CompteTransformatio
 export function TransformationFerme({
   compte,
   onEntrer,
+  cote,
 }: {
   compte: CompteTransformation;
   onEntrer: () => void;
+  /** Les boutons de ceux qui y interviennent (la laiterie, les clients), en colonne à droite de la carte. */
+  cote?: ReactNode;
 }) {
   return (
     <View style={styles.carte}>
-      <View style={styles.cadre}>
-        <Carrelage />
-        <Text style={styles.titre}>{T.titre}</Text>
-        <LignesDeTransformation compte={compte} />
+      <View style={styles.zone}>
+        <View style={styles.cadre}>
+          <Carrelage />
+          <Text style={styles.titre}>{T.titre}</Text>
+          <LignesDeTransformation compte={compte} />
+        </View>
+        <Pressable
+          style={styles.porte}
+          onPress={onEntrer}
+          accessibilityRole="button"
+          accessibilityLabel={T.entrer}
+          hitSlop={6}
+        >
+          <Text style={styles.porteEmoji}>🚪</Text>
+        </Pressable>
       </View>
-      <Pressable
-        style={styles.porte}
-        onPress={onEntrer}
-        accessibilityRole="button"
-        accessibilityLabel={T.entrer}
-        hitSlop={6}
-      >
-        <Text style={styles.porteEmoji}>🚪</Text>
-      </Pressable>
+      {cote}
     </View>
   );
 }
@@ -83,12 +90,16 @@ export function TransformationFerme({
 const styles = StyleSheet.create({
   carte: {
     flex: 1,
+    minHeight: 236,
+    flexDirection: 'row',
+    gap: 8,
     backgroundColor: '#E1ECCB',
     borderRadius: 18,
     padding: 10,
     borderWidth: 2,
     borderColor: '#B8CC94',
   },
+  zone: { flex: 1 },
   cadre: {
     flex: 1,
     minHeight: 130,
@@ -116,8 +127,8 @@ const styles = StyleSheet.create({
   ligne: { fontSize: 15, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
   porte: {
     position: 'absolute',
-    right: 0,
-    bottom: 0,
+    right: -4,
+    bottom: -4,
     width: 44,
     height: 44,
     borderRadius: 22,

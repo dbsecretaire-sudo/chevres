@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,6 +39,8 @@ const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
 /** Le bleu de l'estive : la carte de l'exploitation et ses bulles, quand le troupeau est à la montagne. */
 const ESTIVE = '#3E7CB1';
+/** La hauteur au moins de chaque carte : de quoi y loger la colonne de ses boutons. */
+const HAUTEUR_MIN_DES_CARTES = 236;
 
 /**
  * Les boutons de la chèvrerie qui ouvrent directement leur écran, sans bulles. Le suivi des mouvements, le bordereau de perte et le recensement
@@ -54,6 +56,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   bordereau: ROUTES.CHEPTEL_DOSSIER_PAC,
   recensement: ROUTES.CHEPTEL_DOSSIER_PAC,
   generes: ROUTES.CHEPTEL_BIBLIOTHEQUE,
+  // Sur la carte de la transformation : les clients et leurs ventes.
+  clients: ROUTES.lieu('commercial'),
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   fabriquerFromage: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
   fabriquerCharcuterie: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE),
@@ -64,7 +68,7 @@ const ROUTE_DIRECTE: Record<string, string> = {
 };
 
 /** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
-type Zone = 'lieux' | 'exploitation' | 'interieur';
+type Zone = 'lieux' | 'exploitation' | 'interieur' | 'cote';
 
 /** Ce qu'on a ouvert en entrant par la porte d'une carte : la chèvrerie (l'exploitation) ou la transformation. */
 type Interieur = 'exploitation' | 'transformation';
@@ -75,6 +79,8 @@ type Interieur = 'exploitation' | 'transformation';
  */
 export function directionDesBulles(zone: Zone, x: number, largeur: number): number {
   if (zone === 'exploitation') return 90;
+  // Un bouton sur le côté d'une carte : les bulles s'ouvrent vers la gauche, sur la carte.
+  if (zone === 'cote') return 180;
   // Dans un intérieur, les boutons sont en haut : les bulles s'ouvrent vers le bas, de biais vers le côté libre près d'un bord.
   if (zone === 'interieur') return x < largeur / 3 ? 315 : x > (2 * largeur) / 3 ? 225 : 270;
   if (x < largeur / 3) return 0;
@@ -99,6 +105,8 @@ interface Menu {
   /** La couleur des bulles : celle du bouton touché. */
   couleur: string;
   lumiere: Lumiere;
+  /** Le nom du bouton touché : on l'écrit sous lui, puisque les boutons n'ont pas de texte. */
+  titre?: string;
 }
 
 /** Les quatre plaques d'ombre autour d'une zone éclairée (en haut, en bas, à gauche, à droite) : la zone elle-même reste à découvert. */
@@ -144,19 +152,11 @@ export default function AccueilFerme() {
   const [interieur, setInterieur] = useState<Interieur | null>(null);
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
-  // Les intervenants extérieurs, en haut : ceux à qui l'on vend (le récolteur du lait, des organismes qui versent des aides), ceux à qui l'on achète
-  // (l'abattoir, les fournisseurs, le vétérinaire, l'équarrisseur) et les contacts. Six par ligne au plus, puis on passe à la ligne.
-  const intervenants: EntreeDeColonne[] = [
-    { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
-    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: VENTE },
-    {
-      cle: 'abattoir',
-      titre: C.abattoir,
-      icone: iconeMCI('factory'),
-      pastille: f.lotsAFacturer,
-      couleur: ACHAT,
-    },
-    { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
+  // Les intervenants extérieurs, en trois groupes, sans texte (le nom s'affiche quand on touche le bouton) :
+  // ceux qui interviennent sur les bêtes (le vétérinaire, l'équarrisseur, l'abattoir, l'aliment), en colonne sur la carte de l'exploitation ;
+  // le commerce (la laiterie, les clients), en colonne sur la carte de la transformation ; et le fonctionnement (fournisseurs, organismes,
+  // contacts), en haut.
+  const surLesBetes: EntreeDeColonne[] = [
     { cle: 'veterinaire', titre: C.veterinaire, icone: iconeIon('add'), couleur: ACHAT },
     {
       cle: 'equarrissage',
@@ -165,6 +165,22 @@ export default function AccueilFerme() {
       pastille: f.morts,
       couleur: ACHAT,
     },
+    {
+      cle: 'abattoir',
+      titre: C.abattoir,
+      icone: iconeMCI('factory'),
+      pastille: f.lotsAFacturer,
+      couleur: ACHAT,
+    },
+    { cle: 'aliments', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ACHAT },
+  ];
+  const commerce: EntreeDeColonne[] = [
+    { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
+    { cle: 'clients', titre: C.clients, icone: iconeIon('cart'), couleur: VENTE },
+  ];
+  const fonctionnement: EntreeDeColonne[] = [
+    { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
+    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: VENTE },
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
@@ -210,6 +226,7 @@ export default function AccueilFerme() {
         hauteur,
         largeur,
         // Les bulles ont la couleur du bouton d'où elles sortent ; l'exploitation, la sienne (le bleu quand le troupeau est à l'estive).
+        titre: entree?.titre,
         couleur: entree?.couleur ?? (f.estive ? ESTIVE : colors.primary),
         lumiere: entree
           ? { forme: 'bouton', gauche, haut, diametre: ancre.largeur, icone: entree.icone }
@@ -222,13 +239,18 @@ export default function AccueilFerme() {
     else if (cle === 'stock') router.push(ROUTES.lieu('entrepot') as never);
     else if (ROUTE_DIRECTE[cle]) router.push(ROUTE_DIRECTE[cle] as never);
     else {
-      const entree = [...intervenants, ...interneExploitation, ...interneTransformation].find(
-        (e) => e.cle === cle,
-      );
+      const entree = [
+        ...surLesBetes,
+        ...commerce,
+        ...fonctionnement,
+        ...interneExploitation,
+        ...interneTransformation,
+      ].find((e) => e.cle === cle);
       ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
     }
   };
   const surLieu = (cle: string, ancre: AncreBouton) => surBouton('lieux', cle, ancre);
+  const surCote = (cle: string, ancre: AncreBouton) => surBouton('cote', cle, ancre);
   const surInterne = (cle: string, ancre: AncreBouton) => surBouton('interieur', cle, ancre);
   const surEnclos = () => {
     enclos.current?.measureInWindow((x, y, largeur, hauteur) =>
@@ -270,10 +292,10 @@ export default function AccueilFerme() {
         contentContainerStyle={[styles.corpsContenu, interieur ? styles.corpsInterieur : null]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Les intervenants extérieurs, six par ligne au plus : pas dans un intérieur, où l'on est chez soi. */}
+        {/* Le fonctionnement de l'exploitation, en haut : pas dans un intérieur, où l'on est chez soi. */}
         {interieur ? null : (
           <View style={styles.lieux}>
-            <ColonneFerme entrees={intervenants} onAppui={surLieu} rangee />
+            <ColonneFerme entrees={fonctionnement} onAppui={surLieu} grille sansTitre />
           </View>
         )}
         <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
@@ -312,10 +334,12 @@ export default function AccueilFerme() {
                     onEntrer={() => setInterieur('exploitation')}
                   />
                 </View>
+                <ColonneFerme entrees={surLesBetes} onAppui={surCote} cote />
               </View>
               <TransformationFerme
                 compte={f.transformation}
                 onEntrer={() => setInterieur('transformation')}
+                cote={<ColonneFerme entrees={commerce} onAppui={surCote} cote />}
               />
             </>
           )}
@@ -364,6 +388,23 @@ export default function AccueilFerme() {
               >
                 {menu.lumiere.icone}
               </View>
+              {menu.titre ? (
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.etiquette,
+                    {
+                      left: Math.min(
+                        Math.max(4, menu.lumiere.gauche + menu.lumiere.diametre / 2 - 70),
+                        menu.largeur - 144,
+                      ),
+                      top: menu.lumiere.haut + menu.lumiere.diametre + 4,
+                    },
+                  ]}
+                >
+                  <Text style={styles.etiquetteTexte}>{menu.titre}</Text>
+                </View>
+              ) : null}
             </>
           )}
           <BullesLieu
@@ -405,6 +446,8 @@ const styles = StyleSheet.create({
   centre: { flex: 1, gap: 10 },
   panneau: {
     flex: 1,
+    flexDirection: 'row',
+    minHeight: HAUTEUR_MIN_DES_CARTES,
     backgroundColor: '#E1ECCB',
     borderRadius: 18,
     padding: 10,
@@ -420,6 +463,17 @@ const styles = StyleSheet.create({
   centreInterieur: { flexGrow: 1 },
   couche: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50 },
   fond: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.28)' },
+  etiquette: { position: 'absolute', width: 140, alignItems: 'center' },
+  etiquetteTexte: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.text,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
   boutonEclaire: {
     position: 'absolute',
     borderWidth: 3,

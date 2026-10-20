@@ -16,6 +16,7 @@ export interface ActionDeLieu {
 /** Les boutons de l'accueil qui ouvrent des bulles : l'enclos, et les lieux des deux colonnes. */
 export type CibleDesBulles =
   | 'enclos'
+  | 'aliments'
   | 'laiterie'
   | 'abattoir'
   | 'fournisseurs'
@@ -34,6 +35,7 @@ const LIEU_A_TIERS: Partial<Record<CibleDesBulles, CleLieuTiers>> = {
   veterinaire: 'veterinaire',
   equarrissage: 'equarrissage',
   abattoir: 'abattoir',
+  aliments: 'aliments',
 };
 
 /** Combien de rubriques d'un lieu à tiers passent en bulles (en plus de sa page et de « Nouvelle facture »). */

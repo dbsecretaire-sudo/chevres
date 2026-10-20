@@ -23,7 +23,7 @@ export interface EntreeDeColonne {
 }
 
 /** La taille d'un bouton : normale (une colonne), étroite (une grille) ou en rangée (tous sur une ligne, à parts égales). */
-type Taille = 'normal' | 'etroit' | 'moyen' | 'rangee';
+type Taille = 'normal' | 'etroit' | 'moyen' | 'rangee' | 'cote';
 
 interface Props {
   entrees: readonly EntreeDeColonne[];
@@ -31,6 +31,10 @@ interface Props {
   grille?: boolean;
   /** Avec la grille : des boutons plus petits (six par ligne sur un téléphone), quand il y en a beaucoup. */
   compacte?: boolean;
+  /** Les boutons les uns sous les autres, sur le côté d'une carte (sans texte, pour ne pas alourdir). */
+  cote?: boolean;
+  /** Sans le nom sous chaque bouton : le nom reste pour les lecteurs d'écran, et s'affiche quand on touche le bouton. */
+  sansTitre?: boolean;
   /** En rangée : les boutons côte à côte, six par ligne au plus, chacun prenant une part égale de la largeur. */
   rangee?: boolean;
   /** Un appui sur un bouton, avec sa place à l'écran (mesurée dans la fenêtre). */
@@ -42,11 +46,13 @@ function Bouton({
   rang,
   onAppui,
   taille,
+  sansTitre,
 }: {
   entree: EntreeDeColonne;
   rang: number;
   onAppui: Props['onAppui'];
   taille: Taille;
+  sansTitre: boolean;
 }) {
   const ref = useRef<View>(null);
   const appuyer = () => {
@@ -61,6 +67,7 @@ function Bouton({
           styles.bouton,
           taille === 'etroit' ? styles.boutonEtroit : null,
           taille === 'moyen' ? styles.boutonMoyen : null,
+          taille === 'cote' ? styles.boutonCote : null,
           enRangee ? styles.boutonRangee : null,
         ]}
         onPress={appuyer}
@@ -74,6 +81,7 @@ function Bouton({
             styles.rond,
             taille === 'etroit' ? styles.rondEtroit : null,
             taille === 'moyen' ? styles.rondMoyen : null,
+            taille === 'cote' ? styles.rondCote : null,
             enRangee ? styles.rondRangee : null,
             { backgroundColor: entree.couleur ?? colors.primary },
           ]}
@@ -85,18 +93,20 @@ function Bouton({
             </View>
           ) : null}
         </View>
-        <Text
-          style={[
-            styles.titre,
-            enRangee ? styles.titreRangee : null,
-            taille === 'moyen' ? styles.titreMoyen : null,
-          ]}
-          numberOfLines={enRangee ? 1 : taille === 'moyen' ? 3 : 2}
-          adjustsFontSizeToFit={enRangee}
-          minimumFontScale={0.7}
-        >
-          {entree.titre}
-        </Text>
+        {sansTitre ? null : (
+          <Text
+            style={[
+              styles.titre,
+              enRangee ? styles.titreRangee : null,
+              taille === 'moyen' ? styles.titreMoyen : null,
+            ]}
+            numberOfLines={enRangee ? 1 : taille === 'moyen' ? 3 : 2}
+            adjustsFontSizeToFit={enRangee}
+            minimumFontScale={0.7}
+          >
+            {entree.titre}
+          </Text>
+        )}
       </Pressable>
     </Apparition>
   );
@@ -106,12 +116,29 @@ function Bouton({
  * Des boutons ronds de l'accueil : les lieux de la ferme. Chaque bouton fait sortir ses actions en bulles. En colonne (qui défile seule quand
  * l'écran est court), en grille qui passe à la ligne, ou en rangée sur une seule ligne.
  */
-export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false, compacte = false }: Props) {
+export function ColonneFerme({
+  entrees,
+  onAppui,
+  grille = false,
+  rangee = false,
+  compacte = false,
+  cote = false,
+  sansTitre = false,
+}: Props) {
+  if (cote) {
+    return (
+      <View style={styles.cote}>
+        {entrees.map((e, i) => (
+          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="cote" sansTitre />
+        ))}
+      </View>
+    );
+  }
   if (rangee) {
     return (
       <View style={styles.rangee}>
         {entrees.map((e, i) => (
-          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="rangee" />
+          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="rangee" sansTitre={sansTitre} />
         ))}
       </View>
     );
@@ -120,7 +147,14 @@ export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false,
     return (
       <View style={[styles.grille, compacte ? styles.grilleCompacte : null]}>
         {entrees.map((e, i) => (
-          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille={compacte ? 'moyen' : 'etroit'} />
+          <Bouton
+            key={e.cle}
+            entree={e}
+            rang={i}
+            onAppui={onAppui}
+            taille={compacte ? 'moyen' : 'etroit'}
+            sansTitre={sansTitre}
+          />
         ))}
       </View>
     );
@@ -132,7 +166,7 @@ export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false,
       showsVerticalScrollIndicator={false}
     >
       {entrees.map((e, i) => (
-        <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="normal" />
+        <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="normal" sansTitre={sansTitre} />
       ))}
     </ScrollView>
   );
@@ -140,6 +174,10 @@ export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false,
 
 const styles = StyleSheet.create({
   colonne: { width: 92, flexGrow: 0 },
+  // Sur le côté d'une carte : les boutons s'empilent, centrés, sans texte.
+  cote: { gap: 8, alignItems: 'center', justifyContent: 'center' },
+  boutonCote: { width: 52 },
+  rondCote: { width: 48, height: 48, borderRadius: 24, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   grilleCompacte: { gap: 4 },
   // Six boutons au plus par ligne, chacun sur une part égale de la largeur ; le suivant passe à la ligne.
