@@ -306,7 +306,7 @@ export default function AccueilFerme() {
             <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
           ) : (
             // Sur le téléphone : les menus qu'on touche rarement sont en haut, loin du pouce ; le bandeau qu'on utilise sans cesse est tout en bas.
-            <BarreHauteFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />
+            <BarreHauteFerme />
           )}
           {estBureau() ? null : <NomFerme />}
           <RappelSauvegarde />
@@ -366,21 +366,9 @@ export default function AccueilFerme() {
       </ScrollView>
       {/* Les boutons de l'intérieur où l'on est : en bas, sous le pouce, juste au-dessus de la barre du bas. */}
       {interieur === 'exploitation' ? (
-        <PanneauInterieur
-          titre={TEXTES.accueil.ferme.chevrerie.titre}
-          lignes={interneExploitation}
-          onAppui={surInterne}
-          onSortir={() => setInterieur(null)}
-          accent={ORANGE}
-        />
+        <PanneauInterieur lignes={interneExploitation} onAppui={surInterne} accent={ORANGE} />
       ) : interieur === 'transformation' ? (
-        <PanneauInterieur
-          titre={TEXTES.accueil.ferme.transformation.titre}
-          lignes={[interneTransformation]}
-          onAppui={surInterne}
-          onSortir={() => setInterieur(null)}
-          accent={VENTE}
-        />
+        <PanneauInterieur lignes={[interneTransformation]} onAppui={surInterne} accent={VENTE} />
       ) : null}
       {/* Sous Windows, les menus sont en bas comme avant ; sur le téléphone, ils sont dans la barre du haut. */}
       {estBureau() ? (

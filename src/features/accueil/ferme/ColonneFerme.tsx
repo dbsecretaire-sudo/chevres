@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   boutonCote: { width: 48 },
   rondCote: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },
-  grilleCompacte: { gap: 4 },
+  grilleCompacte: { gap: 4, paddingVertical: 2 },
   // Six boutons au plus par ligne, chacun sur une part égale de la largeur ; le suivant passe à la ligne.
   rangee: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', rowGap: 8 },
   celluleRangee: { width: '16.6667%', minWidth: 0 },
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   boutonEtroit: { width: 74 },
   boutonRangee: { width: '100%' },
   boutonMoyen: { width: 54 },
-  rondMoyen: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
+  rondMoyen: { width: 40, height: 40, borderRadius: 20, borderWidth: 2 },
   titreMoyen: { fontSize: 9, letterSpacing: -0.2 },
   rondEtroit: { width: 56, height: 56, borderRadius: 28 },
   rondRangee: { width: 46, height: 46, borderRadius: 23, borderWidth: 2 },

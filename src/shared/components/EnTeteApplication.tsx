@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
+import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -46,9 +47,9 @@ function FlecheRetour({ onPress }: { onPress: () => void }) {
 }
 
 /**
- * L'en-tête de toutes les pages : une barre étroite avec, s'il y en a une, la flèche de retour, le titre de la page et ses boutons (elle garde la
- * couleur de l'écran : verte, ou bleue pendant un ajout). Le bandeau de la ferme (la maison, la balance, les rappels) est en bas de l'écran sur le
- * téléphone (`BarreDuBas`), et au-dessus de cette barre sous Windows.
+ * L'en-tête de toutes les pages. Sur le téléphone : la capsule du haut (année, espèce, didacticiel, menus), puis, sans seconde bulle, la ligne du
+ * titre de la page avec sa flèche de retour et ses boutons (de la couleur de l'écran : verte, ou bleue pendant un ajout) ; le bandeau de la
+ * ferme est en bas (`BarreDuBas`). Sous Windows : le bandeau en haut, et dessous la barre du titre.
  */
 export function EnTeteApplication({ options, back, navigation, route }: PropsEnTeteApplication) {
   const router = useRouter();
@@ -80,16 +81,30 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
           <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
         </View>
       ) : (
-        <View style={{ height: top + 8 }} />
+        <View style={[styles.haut, { paddingTop: 12 + top }]}>
+          <BarreHauteFerme />
+        </View>
       )}
       {gauche || droite || titre ? (
-        <View style={[styles.barre, { backgroundColor: couleur }]}>
-          {gauche}
-          <Text style={styles.titre} numberOfLines={1}>
-            {titre}
-          </Text>
-          {droite}
-        </View>
+        bandeauEnHaut ? (
+          <View style={[styles.barre, { backgroundColor: couleur }]}>
+            {gauche}
+            <Text style={styles.titre} numberOfLines={1}>
+              {titre}
+            </Text>
+            {droite}
+          </View>
+        ) : (
+          // Sur le téléphone, le titre n'est pas une seconde bulle sous la capsule : le texte est posé sur la page, avec la flèche et les
+          // boutons de l'écran dans de petites pastilles de sa couleur.
+          <View style={styles.titreLibre}>
+            {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
+            <Text style={[styles.titre, { color: couleur }]} numberOfLines={1}>
+              {titre}
+            </Text>
+            {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
+          </View>
+        )
       ) : null}
       <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
     </View>
@@ -112,4 +127,20 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   titre: { flex: 1, fontSize: 18, fontWeight: '700', color: colors.blanc },
+  // Le titre sur la page (téléphone) : une ligne sans fond.
+  titreLibre: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 14,
+    marginBottom: 6,
+    minHeight: 44,
+  },
+  pastilleBouton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 999,
+    paddingHorizontal: 2,
+    minHeight: 40,
+  },
 });

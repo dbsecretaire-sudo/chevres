@@ -30,8 +30,8 @@ export function SelecteursFerme({ annees, annee, onChoisirAnnee, forme }: Props)
   const listeAnnees = [...new Set([...annees, annee])].sort((a, b) => b - a);
   const libelleEspece = LABEL_TYPE_ANIMAL_ETABLISSEMENT[espece] ?? espece;
   const ouvrirAnnee = () => setAnneeOuverte(true);
-  const ouvrirEspece = () =>
-    especes.length > 1 ? setEspeceOuverte(true) : router.push(ROUTES.INFORMATIONS_EXPLOITATION as never);
+  // Toujours la liste des animaux (même avec une seule espèce) ; son dernier choix mène aux informations de l'exploitation, pour en ajouter.
+  const ouvrirEspece = () => setEspeceOuverte(true);
   return (
     <>
       {forme === 'barre' ? (
@@ -70,14 +70,21 @@ export function SelecteursFerme({ annees, annee, onChoisirAnnee, forme }: Props)
         visible={especeOuverte}
         onClose={() => setEspeceOuverte(false)}
         title={TEXTES.commun.choix.animal}
-        options={especes.map((e) => ({
-          label: LABEL_TYPE_ANIMAL_ETABLISSEMENT[e] ?? e,
-          icon: e === espece ? 'checkmark-circle' : 'paw-outline',
-          onPress: () => {
-            setEspeceOuverte(false);
-            changerEspece(e);
+        options={[
+          ...especes.map((e) => ({
+            label: LABEL_TYPE_ANIMAL_ETABLISSEMENT[e] ?? e,
+            icon: (e === espece ? 'checkmark-circle' : 'paw-outline') as 'checkmark-circle' | 'paw-outline',
+            onPress: () => {
+              setEspeceOuverte(false);
+              changerEspece(e);
+            },
+          })),
+          {
+            label: TEXTES.commun.choix.ajouterAnimal,
+            icon: 'add-circle-outline' as const,
+            onPress: () => router.push(ROUTES.INFORMATIONS_EXPLOITATION as never),
           },
-        }))}
+        ]}
       />
     </>
   );

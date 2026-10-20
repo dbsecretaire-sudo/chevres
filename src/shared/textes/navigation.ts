@@ -4,6 +4,8 @@ const V = vocabulaire;
 
 /** Textes de l'interface — « navigation ». À modifier ici uniquement. */
 export const TEXTES_NAVIGATION = {
+  /** La pastille de la capsule du haut qui déroule les rubriques : Cheptel, Production, Commercial, Comptabilité, Organisation. */
+  menus: 'Menus',
   /** Les menus de la version Windows (barre du haut). */
   menuBureau: {
     historiqueDesStocks: 'Historique des stocks',

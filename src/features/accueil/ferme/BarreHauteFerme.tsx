@@ -1,32 +1,34 @@
+import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
 import { SelecteursFerme } from '@/features/accueil/ferme/SelecteursFerme';
-import { PastilleDeMenu } from '@/shared/components/PastilleDeMenu';
-import { ROUTES } from '@/shared/constants/routes';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { PastilleMenus } from '@/shared/components/PastilleMenus';
+import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { colors } from '@/shared/theme/colors';
-import { TEXTES } from '@/shared/textes';
-
-interface Props {
-  annees: number[];
-  annee: number;
-  onChoisirAnnee: (annee: number) => void;
-}
 
 /**
- * La barre du haut de l'accueil, sur le téléphone : l'année, l'espèce, le didacticiel et l'organisation. On les touche rarement : ils sont dans la
- * zone du haut, que le pouce atteint le moins bien, et le bandeau qu'on utilise sans cesse (la maison, la balance, les rappels) est en bas.
+ * La capsule du haut de toutes les pages du téléphone : l'année, l'espèce, le didacticiel et « Menus », qui déroule les rubriques (Cheptel,
+ * Production, Commercial, Comptabilité, Organisation). On les touche moins que le bandeau du bas (la maison, la balance, les rappels) : ils sont
+ * dans la zone du haut, que le pouce atteint le moins bien.
  */
-export function BarreHauteFerme({ annees, annee, onChoisirAnnee }: Props) {
-  const router = useRouter();
+export function BarreHauteFerme() {
+  const { settings, setAnneeActive } = useAppSettings();
+  const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
+  // Les années connues, relues à chaque retour sur l'écran.
+  useFocusEffect(
+    useCallback(() => {
+      toutesLesAnneesConnues()
+        .then(setAnnees)
+        .catch(() => undefined);
+    }, []),
+  );
   return (
     <View style={styles.barre}>
-      <SelecteursFerme annees={annees} annee={annee} onChoisirAnnee={onChoisirAnnee} forme="pastille" />
+      <SelecteursFerme annees={annees} annee={settings.anneeActive} onChoisirAnnee={setAnneeActive} forme="pastille" />
       <BoutonDidacticiel forme="pastille" />
-      <PastilleDeMenu
-        libelle={TEXTES.accueil.ferme.barre.reglages}
-        onPress={() => router.push(ROUTES.REGLAGES as never)}
-      />
+      <PastilleMenus />
     </View>
   );
 }

@@ -32,8 +32,6 @@ export const TEXTES_ACCUEIL = {
       entrer: 'Entrer dans le travail du produit',
     },
     chevrerie: {
-      sortir: 'Sortir',
-      titre: 'Intérieur de l’exploitation',
       entrer: 'Entrer dans l’exploitation',
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */

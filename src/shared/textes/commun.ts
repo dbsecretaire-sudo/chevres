@@ -220,6 +220,8 @@ export const TEXTES_COMMUN = {
     annee: 'Année',
     toutesAnnees: 'Tout',
     animal: 'Animal',
+    /** Dernière ligne de la liste des animaux : ouvre les informations de l'exploitation, où l'on choisit les animaux élevés. */
+    ajouterAnimal: 'Ajouter un animal',
     rubrique: 'Rubrique',
     activite: 'Activité',
   },
