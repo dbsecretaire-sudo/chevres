@@ -48,7 +48,7 @@ export function emojiDeLArticle(genre: Genre, libelle: string): string {
     case GENRE_ARTICLE.FROMAGE:
       return '🧀';
     case GENRE_ARTICLE.VIANDE:
-      if (/chèvre|chevre|brebis|cabri|agneau|animal|veau|porcelet|poussin/.test(nom)) return '🐐';
+      if (/chèvre|chevre|brebis|cabri|agneau|animal|vivant|veau|porcelet|poussin/.test(nom)) return '🐐';
       return /saucisson|jambon|charcut|pâté|terrine/.test(nom) ? '🥓' : '🥩';
     case GENRE_ARTICLE.ALIMENT:
       if (/ma[iï]s/.test(nom)) return '🌽';

@@ -38,6 +38,8 @@ describe('entrepôt en style jeu', () => {
     expect(emojiDeLArticle(GENRE_ARTICLE.ALIMENT, 'Luzerne')).toBe('🌿');
     expect(emojiDeLArticle(GENRE_ARTICLE.VIANDE, 'Saucisson')).toBe('🥓');
     expect(emojiDeLArticle(GENRE_ARTICLE.VIANDE, 'Cabris')).toBe('🐐');
+    expect(emojiDeLArticle(GENRE_ARTICLE.VIANDE, 'Animaux adultes vivants')).toBe('🐐');
+    expect(emojiDeLArticle(GENRE_ARTICLE.VIANDE, 'Animaux adultes sur pied')).toBe('🥩');
   });
 
   it('range les rubriques comme le stock : les rubriques d’office, puis les listes ajoutées, avec ce qui est en stock d’abord', () => {
