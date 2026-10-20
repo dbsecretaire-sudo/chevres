@@ -48,6 +48,8 @@ export function emojiDeLArticle(genre: Genre, libelle: string): string {
     case GENRE_ARTICLE.FROMAGE:
       return '🧀';
     case GENRE_ARTICLE.VIANDE:
+      // Un animal sur pied se vend comme de la viande : la viande rouge, quelle que soit l'espèce ; les autres animaux gardent leur dessin.
+      if (/sur pied/.test(nom)) return '🥩';
       if (/chèvre|chevre|brebis|cabri|agneau|animal|vivant|veau|porcelet|poussin/.test(nom)) return '🐐';
       return /saucisson|jambon|charcut|pâté|terrine/.test(nom) ? '🥓' : '🥩';
     case GENRE_ARTICLE.ALIMENT:
