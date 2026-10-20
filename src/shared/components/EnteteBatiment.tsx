@@ -40,12 +40,16 @@ function FlecheRetour() {
   );
 }
 
-/** La gauche de l'en-tête d'un bâtiment de la ferme (laiterie, abattoir, vétérinaire…) : le retour à l'accueil, puis la flèche de retour. */
+/**
+ * La gauche de l'en-tête d'un bâtiment de la ferme (laiterie, abattoir, vétérinaire…). Sur le téléphone, le bandeau de la ferme porte déjà la
+ * maison : il ne reste que la flèche de retour. Sous Windows, qui n'a pas de bandeau, le retour à l'accueil puis la flèche de retour.
+ */
 export function EnteteBatiment(): ReactElement {
+  if (!estBureau()) return <FlecheRetour />;
   return (
     <View style={styles.rangee}>
       <BoutonAccueil />
-      {estBureau() ? <FlecheRetourBureau /> : <FlecheRetour />}
+      <FlecheRetourBureau />
     </View>
   );
 }

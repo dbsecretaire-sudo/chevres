@@ -137,7 +137,7 @@ export default function AccueilFerme() {
   // sur les bêtes (le vétérinaire, l'équarrisseur, l'abattoir, l'aliment) sur celle de l'exploitation, et le commerce (la laiterie, les clients,
   // les contacts, les fournisseurs) sur celle de la transformation. Les organismes sont dans l'intérieur de l'exploitation.
   const surLesBetes: EntreeDeColonne[] = [
-    { cle: 'veterinaire', titre: C.veterinaire, icone: iconeIon('add'), couleur: ACHAT },
+    { cle: 'veterinaire', titre: C.veterinaire, icone: iconeMCI('stethoscope'), couleur: ACHAT },
     {
       cle: 'equarrissage',
       titre: C.equarrissage,

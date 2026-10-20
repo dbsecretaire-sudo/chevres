@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
@@ -46,6 +47,7 @@ function FlecheRetour({ onPress }: { onPress: () => void }) {
  * s'il y en a une, la flèche de retour, le titre de la page et ses boutons. La barre garde la couleur de l'écran (verte, ou bleue pendant un ajout).
  */
 export function EnTeteApplication({ options, back, navigation }: PropsEnTeteApplication) {
+  const router = useRouter();
   const { balance, rappels } = useBandeauFerme();
   // L'en-tête n'a plus de barre d'état sous lui : le bandeau commence sous l'encoche.
   const { top } = useSafeAreaInsets();
@@ -54,8 +56,9 @@ export function EnTeteApplication({ options, back, navigation }: PropsEnTeteAppl
   // Un écran qui a sa propre flèche (retour vers un endroit précis) la garde ; sinon, la flèche de retour de la pile.
   const gauche = options.headerLeft ? (
     options.headerLeft(parametres)
-  ) : back ? (
-    <FlecheRetour onPress={navigation.goBack} />
+  ) : back || router.canGoBack() ? (
+    // Le premier écran d'une pile (ouvert depuis l'accueil) n'a pas d'écran d'avant dans sa pile : le retour du routeur ramène d'où l'on vient.
+    <FlecheRetour onPress={() => (back ? navigation.goBack() : router.back())} />
   ) : null;
   const droite = options.headerRight ? options.headerRight(parametres) : null;
   const titre = typeof options.title === 'string' ? options.title : '';
