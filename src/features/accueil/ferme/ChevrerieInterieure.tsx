@@ -26,8 +26,8 @@ interface Props {
   /** Les animaux qui représentent le troupeau (jusqu'à quatre) : ils se tiennent sur le rebord du mur. */
   vedettes: readonly Chevre[];
   onSortir: () => void;
-  /** Les boutons de ce qui se passe chez soi (alimentation, lots, traitements, boucles, estive, documents) et ce que fait un appui sur l'un d'eux. */
-  boutons: readonly EntreeDeColonne[];
+  /** Les boutons de ce qui se passe chez soi, ligne par ligne, et ce que fait un appui sur l'un d'eux. */
+  boutons: readonly (readonly EntreeDeColonne[])[];
   onAppuiBouton: (cle: string, ancre: AncreBouton) => void;
 }
 
@@ -60,7 +60,9 @@ export function ChevrerieInterieure({ vedettes, onSortir, boutons, onAppuiBouton
 
         {/* Ce qui se passe chez soi : l'alimentation, les lots, les traitements, les boucles, l'estive, les documents. */}
         <View style={styles.boutons}>
-          <ColonneFerme entrees={boutons} onAppui={onAppuiBouton} grille compacte />
+          {boutons.map((ligne, i) => (
+            <ColonneFerme key={i} entrees={ligne} onAppui={onAppuiBouton} grille compacte />
+          ))}
         </View>
 
         {/* Les chèvres sur le rebord du mur, qui se promènent. */}

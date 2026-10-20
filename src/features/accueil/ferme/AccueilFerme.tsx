@@ -170,16 +170,22 @@ export default function AccueilFerme() {
     { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
-  const interneExploitation: EntreeDeColonne[] = [
-    { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
-    { cle: 'grange', titre: C.grange, icone: iconeMCI('corn'), couleur: ORANGE },
-    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
-    { cle: 'nouveau', titre: C.nouveau, icone: iconeIon('add-circle'), couleur: ORANGE },
-    { cle: 'lots', titre: C.lots, icone: iconeIon('layers'), couleur: ORANGE },
-    { cle: 'boucles', titre: C.boucles, icone: iconeIon('pricetag'), couleur: ORANGE },
-    { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
-    { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
-    { cle: 'carnetNaissance', titre: C.carnetNaissance, icone: iconeIon('book'), couleur: ORANGE },
+  const interneExploitation: EntreeDeColonne[][] = [
+    // La ligne du haut : le troupeau au quotidien (la santé, la grange, ce qu'on ajoute, les lots).
+    [
+      { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
+      { cle: 'grange', titre: C.grange, icone: iconeMCI('corn'), couleur: ORANGE },
+      { cle: 'nouveau', titre: C.nouveau, icone: iconeIon('add-circle'), couleur: ORANGE },
+      { cle: 'lots', titre: C.lots, icone: iconeIon('layers'), couleur: ORANGE },
+    ],
+    // La ligne du bas : l'administratif et les suivis (organismes, boucles, estive, bilan, carnet).
+    [
+      { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
+      { cle: 'boucles', titre: C.boucles, icone: iconeIon('pricetag'), couleur: ORANGE },
+      { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
+      { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
+      { cle: 'carnetNaissance', titre: C.carnetNaissance, icone: iconeIon('book'), couleur: ORANGE },
+    ],
   ];
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   const interneTransformation: EntreeDeColonne[] = [
@@ -224,9 +230,12 @@ export default function AccueilFerme() {
     else if (cle === 'stock') router.push(ROUTES.lieu('entrepot') as never);
     else if (ROUTE_DIRECTE[cle]) router.push(ROUTE_DIRECTE[cle] as never);
     else {
-      const entree = [...surLesBetes, ...commerce, ...interneExploitation, ...interneTransformation].find(
-        (e) => e.cle === cle,
-      );
+      const entree = [
+        ...surLesBetes,
+        ...commerce,
+        ...interneExploitation.flat(),
+        ...interneTransformation,
+      ].find((e) => e.cle === cle);
       ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
     }
   };
