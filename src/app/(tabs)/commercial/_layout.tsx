@@ -1,3 +1,4 @@
+import { enteteApplication } from '@/shared/navigation/enteteApplication';
 import { Stack } from 'expo-router';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
@@ -8,6 +9,8 @@ export default function CommercialLayout() {
   return (
     <Stack
       screenOptions={{
+        // Sur le téléphone : le bandeau de la ferme à la place de l'en-tête de navigation.
+        ...enteteApplication(),
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },

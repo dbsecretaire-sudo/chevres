@@ -1,3 +1,4 @@
+import { enteteApplication } from '@/shared/navigation/enteteApplication';
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';
@@ -18,6 +19,8 @@ export default function CheptelLayout() {
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
       screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances', 'reglages', 'bibliotheque')}
       screenOptions={{
+        // Sur le téléphone : le bandeau de la ferme à la place de l'en-tête de navigation.
+        ...enteteApplication(),
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },

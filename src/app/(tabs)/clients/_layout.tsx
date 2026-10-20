@@ -1,3 +1,4 @@
+import { enteteApplication } from '@/shared/navigation/enteteApplication';
 import { Stack, type Href } from 'expo-router';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
@@ -17,6 +18,8 @@ export default function ClientsLayout() {
   return (
     <Stack
       screenOptions={{
+        // Sur le téléphone : le bandeau de la ferme à la place de l'en-tête de navigation.
+        ...enteteApplication(),
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },

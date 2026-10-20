@@ -1,3 +1,4 @@
+import { enteteApplication } from '@/shared/navigation/enteteApplication';
 import { Tabs, useSegments } from 'expo-router';
 import { EcranErreur } from '@/shared/components/EcranErreur';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
@@ -67,6 +68,8 @@ function Onglets() {
         'index',
       )}
       screenOptions={{
+        // Sur le téléphone : le bandeau de la ferme à la place de l'en-tête de navigation.
+        ...enteteApplication(),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarShowLabel: false,
@@ -81,6 +84,8 @@ function Onglets() {
         name="index"
         options={{
           title: TEXTES.navigation.layout.accueil,
+          // L'accueil n'a plus d'onglet : la maison du bandeau, présent sur chaque page, y ramène.
+          href: null,
           headerRight: () => <EtablissementHeaderButton />,
           // L'accueil « ferme » (hors Windows) n'a pas d'en-tête : le nom de l'établissement y est une carte, pour gagner de la hauteur.
           headerShown: !(accueilFerme && !estBureau()),
