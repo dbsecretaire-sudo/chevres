@@ -118,7 +118,7 @@ export const TEXTES_PRODUCTION = {
     aucuneEcriture: 'Aucune écriture de ce lieu cette année.',
     plusDEcritures: (n: number) => `${n} autres écritures dans la comptabilité`,
     aliments: {
-      titre: 'Foin et maïs',
+      titre: 'Aliments',
       groupeTiers: 'Fournisseurs d’aliments',
       ajouterTiers: 'Ajouter un fournisseur d’aliments',
       groupeEcritures: 'Les achats d’aliments',
@@ -140,7 +140,7 @@ export const TEXTES_PRODUCTION = {
       titre: 'Vétérinaire',
       groupeTiers: 'Vétérinaires',
       ajouterTiers: 'Ajouter un vétérinaire',
-      groupeEcritures: 'Les factures vétérinaires',
+      groupeEcritures: 'Les visites et factures du vétérinaire',
       nouvelle: 'Nouvelle visite',
       liens: { traitements: { titre: 'Traitements', aide: 'Les soins donnés aux animaux, avec leurs délais d’attente.' } },
     },
@@ -183,11 +183,12 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les ventes aux clients',
       nouvelle: 'Nouvelle vente',
       liens: {
-        ventes: { titre: 'Ventes et clients', aide: 'Les ventes, les paiements à encaisser, les clients à relancer.' },
-        commandes: { titre: 'Commandes et livraisons', aide: 'Les bons de commande et leur préparation.' },
-        tarifs: { titre: 'Tarifs', aide: 'La grille de prix par produit et par catégorie de client.' },
-        circuits: { titre: 'Circuits de vente', aide: 'Marchés, magasins, vente à la ferme…' },
-        agritourisme: { titre: 'Agritourisme', aide: 'Les visites et les formules.' },
+        // Les mêmes titres et aides que le menu de l'onglet Commercial, dont ces lignes ouvrent les pages.
+        ventes: { titre: 'Chiffre d’affaires', aide: 'Par produit, par contact et par mois ; paiements en attente.' },
+        commandes: { titre: 'Commandes', aide: 'Ce que les contacts ont commandé : à préparer, à livrer, livré.' },
+        tarifs: { titre: 'Grille de tarifs', aide: 'Le prix de chaque fromage selon la catégorie de contact, et sa marge.' },
+        circuits: { titre: 'Circuits de vente', aide: 'Ce que rapporte chaque circuit : ferme, marché, restaurateurs…' },
+        agritourisme: { titre: 'Visites de la ferme', aide: 'Visite, parcours en 4x4, repas et dégustation : les groupes et ce que ça rapporte.' },
       },
     },
     equarrissage: {

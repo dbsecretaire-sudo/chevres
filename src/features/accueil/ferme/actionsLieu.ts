@@ -1,5 +1,5 @@
 import type { Ionicons } from '@expo/vector-icons';
-import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { SEXE } from '@/shared/constants/cheptel';
 import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
@@ -14,10 +14,10 @@ export interface ActionDeLieu {
 }
 
 /**
- * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange, organismes, nouveau) et les fournisseurs. Les
+ * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange, nouveau) et les fournisseurs. Les
  * autres intervenants ouvrent directement leur fiche, qui regroupe toutes leurs actions.
  */
-export type CibleDesBulles = 'nouveau' | 'sante' | 'grange' | 'fournisseurs' | 'organismes';
+export type CibleDesBulles = 'nouveau' | 'sante' | 'grange' | 'fournisseurs';
 
 const B = TEXTES.accueil.ferme.bulles;
 const L = TEXTES.production.lieux;
@@ -59,16 +59,6 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ALIMENTATION}`,
         },
         { cle: 'stock', titre: B.stockNourriture, icone: 'cube', route: ROUTES.lieu('grange') },
-      ];
-    case 'organismes':
-      return [
-        { cle: 'dossierPac', titre: B.dossierPac, icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
-        {
-          cle: 'aides',
-          titre: B.aides,
-          icone: 'cash',
-          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
-        },
       ];
     case 'fournisseurs':
       return [

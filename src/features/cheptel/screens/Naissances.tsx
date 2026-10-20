@@ -5,6 +5,7 @@ import { Button } from '@/shared/components/Button';
 import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { Fab } from '@/shared/components/Fab';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
@@ -132,6 +133,16 @@ export default function Naissances() {
             </Card>
           </LigneDeBloc>
         )}
+      />
+      {/* Déclarer une naissance : le bouton + en bas à droite, sous le pouce. */}
+      <Fab
+        options={[
+          {
+            label: TEXTES.accueil.ferme.bulles.naissance,
+            icon: 'heart',
+            onPress: () => router.push(ROUTES.CHEPTEL_NAISSANCE_NOUVELLE as never),
+          },
+        ]}
       />
     </Screen>
   );

@@ -43,7 +43,8 @@ function Onglets() {
   // Les écrans de santé font partie du cheptel : son onglet y reste en couleur.
   const dansSante = page === 'sante' && !barreBleue;
   // Un écran de la comptabilité ouvert depuis l'Organisation : c'est l'onglet Organisation qui reste en couleur.
-  const depuisOrganisation = retourContexte !== null && page !== 'sante' && !barreBleue;
+  const depuisOrganisation =
+    retourContexte !== null && !retourContexte.startsWith('/cheptel') && page !== 'sante' && !barreBleue;
   const dansOrganisation =
     !barreBleue && (depuisOrganisation || PAGES_ORGANISATION.some((p) => page.startsWith(p)));
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
@@ -78,7 +79,9 @@ function Onglets() {
         ...enteteApplication(),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarShowLabel: false,
+        // Chaque icône garde son nom dessous : l'onglet se reconnaît sans deviner le dessin.
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         // Dans la version Windows, les menus de la barre du haut remplacent la barre d'icônes du bas.
         tabBarStyle: estBureau() ? { display: 'none' } : undefined,
         headerStyle: { backgroundColor: colors.primary },

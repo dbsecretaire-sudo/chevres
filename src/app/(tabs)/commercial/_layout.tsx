@@ -30,7 +30,7 @@ export default function CommercialLayout() {
         })}
       />
       <Stack.Screen name="circuits" options={{ title: TEXTES.commercial.circuits.titre }} />
-      <Stack.Screen name="agritourisme" options={{ title: TEXTES.commercial.agritourisme.titre }} />
+      <Stack.Screen name="agritourisme" options={{ title: TEXTES.commercial.accueil.visitesAgri.titre }} />
       <Stack.Screen
         name="visite"
         options={({ route }) => ({

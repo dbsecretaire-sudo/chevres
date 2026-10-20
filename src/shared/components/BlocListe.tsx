@@ -1,5 +1,5 @@
-import { Children, createContext, useContext, type PropsWithChildren } from 'react';
-import { View } from 'react-native';
+import { Children, createContext, isValidElement, useContext, type PropsWithChildren } from 'react';
+import { Text, View } from 'react-native';
 import { styles } from '@/shared/styles/components/BlocListe.styles';
 
 const BlocListeContext = createContext(false);
@@ -27,7 +27,12 @@ export function BlocLignes({ children }: PropsWithChildren) {
     <BlocListe>
       {Children.toArray(children).map((ligne, i) => (
         <View key={i} style={i > 0 ? separationBloc : undefined}>
-          {ligne}
+          {/* Un simple texte (« Aucun contact pour ce lieu ») ne colle pas au bord arrondi du bloc : il a la marge d'une ligne. */}
+          {isValidElement(ligne) && ligne.type === Text ? (
+            <View style={styles.texteSeul}>{ligne}</View>
+          ) : (
+            ligne
+          )}
         </View>
       ))}
     </BlocListe>

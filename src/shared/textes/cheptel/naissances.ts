@@ -19,7 +19,7 @@ export const naissancesTextes = {
   bilan: (naissances: number, meres: number) =>
     `${naissances} naissance${naissances > 1 ? 's' : ''} · ${meres} mère${meres > 1 ? 's' : ''}`,
   aucuneNaissanceEnregistree: 'Aucune naissance enregistrée',
-  declarezUneNaissanceDepuisL: "Déclarez une naissance depuis l'onglet Cheptel.",
+  declarezUneNaissanceDepuisL: 'Déclarez une naissance avec le bouton +.',
   mereEspace: 'Mère ',
   get cabri() {
     return V().petit.singulier;

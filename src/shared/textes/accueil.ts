@@ -38,7 +38,7 @@ export const TEXTES_ACCUEIL = {
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
-      alimentation: 'Alimentation',
+      alimentation: 'Aliments',
       clients: 'Commerce',
       sante: 'Santé',
       grange: 'Grange',
@@ -64,7 +64,7 @@ export const TEXTES_ACCUEIL = {
       contacts: 'Contacts',
     },
     /** La barre du bas. */
-    barre: { annee: 'Année', espece: 'Animal', didacticiel: 'Didacticiel', reglages: 'Réglages' },
+    barre: { annee: 'Année', espece: 'Animal', didacticiel: 'Didacticiel', reglages: 'Organisation' },
     bulles: {
       contactsEtEcritures: 'Contacts et écritures',
       naissance: 'Ajouter une naissance',
@@ -75,8 +75,6 @@ export const TEXTES_ACCUEIL = {
       stockNourriture: 'Stock de nourriture',
       traitements: 'Traitements',
       carnetSanitaire: 'Carnet sanitaire',
-      dossierPac: 'Dossier PAC',
-      aides: 'Aides financières',
       abattoir: 'Amener à l’abattoir',
       perte: 'Déclarer une perte',
       clients: 'Clients et ventes',

@@ -1,7 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Balade } from '@/features/accueil/ferme/animations';
-import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features/accueil/ferme/ColonneFerme';
 import { dessinDeLEspece } from '@/features/accueil/ferme/EnclosFerme';
 import { fondDeLAnimal } from '@/features/accueil/services/fondDeLAnimal';
 import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
@@ -18,26 +17,20 @@ import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
-const T = TEXTES.accueil.ferme.chevrerie;
-
 /** La tête dessinée d'une chèvre (le trait fin) : elle remplace l'emoji devant chaque chèvre de la liste. */
 const TETE_DE_CHEVRE = require('../../../../assets/images/tete-chevre.png');
 
 interface Props {
   /** Les animaux qui représentent le troupeau (jusqu'à quatre) : ils se tiennent sur le rebord du mur. */
   vedettes: readonly Chevre[];
-  onSortir: () => void;
-  /** Les boutons de ce qui se passe chez soi, ligne par ligne, et ce que fait un appui sur l'un d'eux. */
-  boutons: readonly (readonly EntreeDeColonne[])[];
-  onAppuiBouton: (cle: string, ancre: AncreBouton) => void;
 }
 
 /**
- * L'intérieur de la chèvrerie : un autre décor, le mur de bois et la paille. Sur le mur, les boutons de ce qui se passe chez soi, et sur son
- * rebord, les chèvres qui se promènent. Sur la paille, la liste des animaux du cheptel, avec sa recherche et ses filtres : chaque ligne ouvre
+ * L'intérieur de la chèvrerie : un autre décor, le mur et la paille. Sur le rebord du mur, les chèvres se promènent. Les boutons de ce qui se
+ * passe chez soi sont dans le panneau du bas (`PanneauInterieur`), sous le pouce. Sur la paille, la liste des animaux du cheptel, avec sa recherche et ses filtres : chaque ligne ouvre
  * la fiche de l'animal.
  */
-export function ChevrerieInterieure({ vedettes, onSortir, boutons, onAppuiBouton }: Props) {
+export function ChevrerieInterieure({ vedettes }: Props) {
   const router = useRouter();
   const liste = useListeCheptel();
   const dessin = dessinDeLEspece();
@@ -46,26 +39,6 @@ export function ChevrerieInterieure({ vedettes, onSortir, boutons, onAppuiBouton
   return (
     <View style={styles.fond}>
       <View style={styles.mur}>
-        <View style={styles.tete}>
-          <Pressable
-            style={styles.sortir}
-            onPress={onSortir}
-            accessibilityRole="button"
-            accessibilityLabel={T.sortir}
-          >
-            <Text style={styles.sortirEmoji}>🚪</Text>
-            <Text style={styles.sortirTexte}>{T.sortir}</Text>
-          </Pressable>
-          <Text style={styles.titre}>{T.titre}</Text>
-        </View>
-
-        {/* Ce qui se passe chez soi : l'alimentation, les lots, les traitements, les boucles, l'estive, les documents. */}
-        <View style={styles.boutons}>
-          {boutons.map((ligne, i) => (
-            <ColonneFerme key={i} entrees={ligne} onAppui={onAppuiBouton} grille compacte />
-          ))}
-        </View>
-
         {/* Les chèvres sur le rebord du mur, qui se promènent. */}
         <View style={styles.rebord}>
           {vedettes.map((a, i) => (
@@ -121,7 +94,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 8,
     borderBottomColor: '#8A6238',
   },
-  tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sortir: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -133,8 +105,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#8A6238',
   },
-  sortirEmoji: { fontSize: 20 },
-  sortirTexte: { fontSize: 13, fontWeight: '700', color: colors.text },
   titre: {
     fontSize: 15,
     fontWeight: '700',
@@ -142,7 +112,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     flexShrink: 1,
   },
-  boutons: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16, padding: 6 },
   rebord: {
     flexDirection: 'row',
     alignItems: 'flex-end',

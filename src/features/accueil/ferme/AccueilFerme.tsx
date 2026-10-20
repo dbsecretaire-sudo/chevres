@@ -23,6 +23,7 @@ import {
   rayonDesBulles,
 } from '@/features/accueil/services/bullesFerme';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
+import { PanneauInterieur } from '@/features/accueil/ferme/PanneauInterieur';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
@@ -53,7 +54,7 @@ const ROUTE_DIRECTE: Record<string, string> = {
   veterinaire: ROUTES.lieu('veterinaire'),
   aliments: ROUTES.lieu('aliments'),
   equarrissage: ROUTES.lieu('equarrissage'),
-  organismesFiche: ROUTES.lieu('organismes'),
+  organismes: ROUTES.lieu('organismes'),
   laiterie: ROUTES.PRODUCTION_LAITERIE,
   contacts: ROUTES.CONTACTS,
   // Les clients et leurs ventes.
@@ -75,13 +76,13 @@ type Interieur = 'exploitation' | 'transformation';
 
 /**
  * La direction de l'arc des bulles d'après la place du bouton (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
- * la carte de l'exploitation ouvre vers le haut, les boutons sur le côté d'une carte vers la gauche, ceux d'un intérieur vers le bas.
+ * les boutons sur le côté d'une carte ouvrent vers la gauche, ceux d'un intérieur (en bas de l'écran) vers le haut.
  */
 export function directionDesBulles(zone: Zone, x: number, largeur: number): number {
   // Un bouton sur le côté d'une carte : les bulles s'ouvrent vers la gauche, sur la carte.
   if (zone === 'cote') return 180;
-  // Dans un intérieur, les boutons sont en haut : les bulles s'ouvrent vers le bas, de biais vers le côté libre près d'un bord.
-  return x < largeur / 3 ? 315 : x > (2 * largeur) / 3 ? 225 : 270;
+  // Dans un intérieur, les boutons sont en bas : les bulles s'ouvrent vers le haut, de biais vers le côté libre près d'un bord.
+  return x < largeur / 3 ? 45 : x > (2 * largeur) / 3 ? 135 : 90;
 }
 
 /** Ce qui reste éclairé quand le reste s'assombrit : le bouton touché, refait par-dessus l'ombre (sa place, sa taille, son dessin). */
@@ -177,7 +178,7 @@ export default function AccueilFerme() {
   ];
   // Les démarches (les organismes, les contrôles) se distinguent des personnes et des entreprises par leur couleur : l'orange.
   const demarchesExploitation: EntreeDeColonne[] = [
-    { cle: 'organismesFiche', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
+    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
   ];
   const commerce: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
@@ -294,20 +295,11 @@ export default function AccueilFerme() {
         <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
           {interieur === 'exploitation' ? (
             <View style={styles.interieur}>
-              <ChevrerieInterieure
-                vedettes={f.vedettes}
-                onSortir={() => setInterieur(null)}
-                boutons={interneExploitation}
-                onAppuiBouton={surInterne}
-              />
+              <ChevrerieInterieure vedettes={f.vedettes} />
             </View>
           ) : interieur === 'transformation' ? (
             <View style={styles.interieur}>
-              <TransformationInterieure
-                onSortir={() => setInterieur(null)}
-                boutons={interneTransformation}
-                onAppuiBouton={surInterne}
-              />
+              <TransformationInterieure />
             </View>
           ) : (
             <>
@@ -345,6 +337,24 @@ export default function AccueilFerme() {
           )}
         </View>
       </ScrollView>
+      {/* Les boutons de l'intérieur où l'on est : en bas, sous le pouce, juste au-dessus de la barre du bas. */}
+      {interieur === 'exploitation' ? (
+        <PanneauInterieur
+          titre={TEXTES.accueil.ferme.chevrerie.titre}
+          lignes={interneExploitation}
+          onAppui={surInterne}
+          onSortir={() => setInterieur(null)}
+          accent={ORANGE}
+        />
+      ) : interieur === 'transformation' ? (
+        <PanneauInterieur
+          titre={TEXTES.accueil.ferme.transformation.titre}
+          lignes={[interneTransformation]}
+          onAppui={surInterne}
+          onSortir={() => setInterieur(null)}
+          accent={VENTE}
+        />
+      ) : null}
       <BarreBasseFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />
 
       {/* Les bulles du bouton touché : par-dessus tout ; un appui à côté les referme. */}

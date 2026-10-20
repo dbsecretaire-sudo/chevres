@@ -21,4 +21,6 @@ export const styles = StyleSheet.create({
   derniere: { borderBottomLeftRadius: 14, borderBottomRightRadius: 14, borderBottomWidth: 1 },
   /** Le trait entre deux lignes d'un bloc. */
   separation: { borderTopWidth: 1, borderTopColor: colors.border },
+  // Un texte seul dans un bloc (« Aucun contact pour ce lieu ») : la marge d'une ligne.
+  texteSeul: { paddingHorizontal: 14, paddingVertical: 12 },
 });

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
@@ -47,7 +47,7 @@ export function BarreBasseFerme({ annees, annee, onChoisirAnnee }: Props) {
       />
       <BoutonDidacticiel forme="barre" />
       <BoutonDeBarre
-        icone={<Ionicons name="settings" size={26} color={colors.blanc} />}
+        icone={<MaterialCommunityIcons name="sitemap-outline" size={26} color={colors.blanc} />}
         libelle={T.reglages}
         onPress={() => router.push(ROUTES.REGLAGES as never)}
       />

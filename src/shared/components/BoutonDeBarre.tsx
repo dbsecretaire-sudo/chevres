@@ -20,7 +20,7 @@ export function BoutonDeBarre({
       accessibilityLabel={libelle}
     >
       {icone}
-      <Text style={styles.libelle} numberOfLines={1}>
+      <Text style={styles.libelle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
         {libelle}
       </Text>
     </Pressable>
@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 16,
     paddingVertical: 10,
+    paddingHorizontal: 2,
     borderWidth: 2,
     borderColor: colors.primaryDark,
   },
