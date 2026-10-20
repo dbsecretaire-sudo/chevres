@@ -141,7 +141,7 @@ export const TEXTES_PRODUCTION = {
       groupeTiers: 'Vétérinaires',
       ajouterTiers: 'Ajouter un vétérinaire',
       groupeEcritures: 'Les factures vétérinaires',
-      nouvelle: 'Nouvelle facture vétérinaire',
+      nouvelle: 'Nouvelle visite',
       liens: { traitements: { titre: 'Traitements', aide: 'Les soins donnés aux animaux, avec leurs délais d’attente.' } },
     },
     organismes: {
