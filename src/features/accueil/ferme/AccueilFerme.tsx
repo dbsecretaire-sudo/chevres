@@ -46,10 +46,9 @@ const ORANGE = '#D2793B';
  * se génèrent depuis le dossier PAC, qui garde leur année et leur état.
  */
 const ROUTE_DIRECTE: Record<string, string> = {
-  lots: ROUTES.CHEPTEL_LOTS,
-  boucles: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
-  bilanAnnuel: ROUTES.CHEPTEL_BILAN,
-  carnetNaissance: ROUTES.CHEPTEL_NAISSANCES,
+  // Les pages de l'intérieur de l'exploitation : le cheptel (lots, ajouts, boucles, carnet de naissance) et les documents.
+  cheptel: ROUTES.lieu('cheptel'),
+  documents: ROUTES.lieu('documents'),
   // Les fiches des intervenants : une page qui regroupe leurs contacts, leurs factures et toutes leurs actions.
   abattoir: ROUTES.lieu('abattoir'),
   veterinaire: ROUTES.lieu('veterinaire'),
@@ -209,25 +208,17 @@ export default function AccueilFerme() {
   const demarchesTransformation: EntreeDeColonne[] = [
     { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: ORANGE },
   ];
-  // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
-  const interneExploitation: EntreeDeColonne[][] = [
-    // La ligne du haut : le troupeau au quotidien (la santé, la grange, ce qu'on ajoute, les lots).
-    [
-      { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
-      { cle: 'grange', titre: C.grange, icone: iconeMCI('corn'), couleur: ORANGE },
-      { cle: 'nouveau', titre: C.nouveau, icone: iconeIon('add-circle'), couleur: ORANGE },
-      { cle: 'lots', titre: C.lots, icone: iconeIon('layers'), couleur: ORANGE },
-    ],
-    // La ligne du bas : l'administratif et les suivis (organismes, boucles, estive, bilan, carnet).
-    [
-      { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
-      { cle: 'boucles', titre: C.boucles, icone: iconeIon('pricetag'), couleur: ORANGE },
-      { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
-      { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
-      { cle: 'carnetNaissance', titre: C.carnetNaissance, icone: iconeIon('book'), couleur: ORANGE },
-    ],
+  // Dans la chèvrerie, six boutons sur une ligne : la santé et la grange (en bulles), le cheptel (les animaux : lots, ajouts, boucles, carnet de
+  // naissance), l'estive, les organismes, et les documents (bilan, dossier PAC, circulation, identification, historique).
+  const interneExploitation: EntreeDeColonne[] = [
+    { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
+    { cle: 'grange', titre: C.grange, icone: iconeMCI('corn'), couleur: ORANGE },
+    { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
+    { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
+    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
+    { cle: 'documents', titre: C.documents, icone: iconeIon('document-text'), couleur: ORANGE },
   ];
-  // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
+  // Dans la transformation : fabriquer, les lots, leurs rappels et la réservation d'un produit (la qualité du lait est parmi les intervenants).
   const interneTransformation: EntreeDeColonne[] = [
     { cle: 'fabriquerFromage', titre: C.fabriquerFromage, icone: iconeMCI('pot-mix'), couleur: VENTE },
     { cle: 'fabriquerCharcuterie', titre: C.fabriquerCharcuterie, icone: iconeMCI('knife'), couleur: VENTE },
@@ -239,7 +230,6 @@ export default function AccueilFerme() {
       pastille: f.lotsARappeler,
       couleur: VENTE,
     },
-    { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: VENTE },
     { cle: 'reserver', titre: C.reserver, icone: iconeIon('bookmark'), couleur: VENTE },
   ];
 
@@ -273,7 +263,7 @@ export default function AccueilFerme() {
         ...demarchesExploitation,
         ...commerce,
         ...demarchesTransformation,
-        ...interneExploitation.flat(),
+        ...interneExploitation,
         ...interneTransformation,
       ].find((e) => e.cle === cle);
       if (entree) ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
@@ -366,7 +356,7 @@ export default function AccueilFerme() {
       </ScrollView>
       {/* Les boutons de l'intérieur où l'on est : en bas, sous le pouce, juste au-dessus de la barre du bas. */}
       {interieur === 'exploitation' ? (
-        <PanneauInterieur lignes={interneExploitation} onAppui={surInterne} accent={ORANGE} />
+        <PanneauInterieur lignes={[interneExploitation]} onAppui={surInterne} accent={ORANGE} />
       ) : interieur === 'transformation' ? (
         <PanneauInterieur lignes={[interneTransformation]} onAppui={surInterne} accent={VENTE} />
       ) : null}

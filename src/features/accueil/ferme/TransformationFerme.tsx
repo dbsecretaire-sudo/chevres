@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
+import { DecorFromagerie, hauteurDuDecor } from '@/features/accueil/ferme/DecorFromagerie';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -12,7 +13,9 @@ const T = TEXTES.accueil.ferme.transformation;
  * d'intervenants, est la plus haute ; le travail du produit, avec cinq, la plus basse.
  */
 export const HAUTEUR_MIN_EXPLOITATION = 260;
-export const HAUTEUR_MIN_TRANSFORMATION = 210;
+export const HAUTEUR_MIN_TRANSFORMATION = 245;
+/** La taille du mur de la fromagerie sur la carte, par rapport à son dessin d'origine. */
+const ECHELLE_DU_DECOR = 0.5;
 
 /** Les symboles qui se baladent sur la carte, comme les chèvres de l'exploitation : le lait, la viande, le fromage. */
 const SYMBOLES = [
@@ -85,6 +88,10 @@ export function TransformationFerme({
           accessibilityLabel={T.entrer}
         >
           <Carrelage />
+          {/* Le mur de la fromagerie en haut de la pièce : frigo, évier et armoires en inox. */}
+          <View style={styles.decor} pointerEvents="none">
+            <DecorFromagerie echelle={ECHELLE_DU_DECOR} />
+          </View>
           {/* Le texte sur une bulle blanche translucide : il ressort du carrelage. */}
           <View style={styles.bulle}>
             <Text style={styles.titre} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
@@ -141,7 +148,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 8,
+    // Sous le mur de la fromagerie.
+    paddingTop: hauteurDuDecor(ECHELLE_DU_DECOR) + 8,
   },
+  decor: { position: 'absolute', left: 0, right: 0, top: 0 },
   bulle: {
     maxWidth: '100%',
     alignItems: 'center',
@@ -151,8 +161,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
-  symboles: { flexDirection: 'row', gap: 14, paddingVertical: 4 },
-  symbole: { fontSize: 30 },
+  symboles: { flexDirection: 'row', gap: 14, paddingVertical: 2 },
+  symbole: { fontSize: 26 },
   carrelage: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   ligneDeCarreaux: { flex: 1, flexDirection: 'row' },
   carreau: {

@@ -1,4 +1,5 @@
 import type { Ionicons } from '@expo/vector-icons';
+import { SEXE } from '@/shared/constants/cheptel';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
@@ -23,6 +24,8 @@ export type CleLieuTiers =
   | 'particuliers'
   | 'surfacesCommerciales'
   | 'entreprises'
+  | 'cheptel'
+  | 'documents'
   | 'veterinaire'
   | 'organismes'
   | 'equarrissage'
@@ -153,7 +156,11 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.PRODUCTION}`,
-    liens: [{ cle: 'stock', icone: 'cube', route: stock(SECTION_STOCK.EMBALLAGES) }],
+    liens: [
+      { cle: 'stock', icone: 'cube', route: stock(SECTION_STOCK.EMBALLAGES) },
+      // Les emballages consommés à chaque fromage vendu : un réglage de l'inventaire.
+      { cle: 'conditionnement', icone: 'options', route: ROUTES.COMPTABILITE_CONDITIONNEMENT },
+    ],
   },
   // Les clients du travail du produit, une fiche par catégorie : leurs contacts, et les rubriques du commerce (ventes, commandes, tarifs, circuits).
   particuliers: {
@@ -185,6 +192,44 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise`,
     liens: LIENS_DES_CLIENTS,
+  },
+  // Les deux pages de l'intérieur de l'exploitation qui ne sont que des rubriques (sans tiers) : le cheptel (les animaux, les ajouts) et les documents.
+  cheptel: {
+    cle: 'cheptel',
+    avecTiers: false,
+    emoji: '🐐',
+    categoriesContact: [],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: NOUVELLE,
+    liens: [
+      { cle: 'lots', icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
+      { cle: 'male', icone: 'male', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.MALE}` },
+      { cle: 'femelle', icone: 'female', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.FEMELLE}` },
+      { cle: 'petit', icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
+      {
+        cle: 'boucles',
+        icone: 'pricetag',
+        route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
+      },
+      { cle: 'carnet', icone: 'book', route: ROUTES.CHEPTEL_NAISSANCES },
+    ],
+  },
+  documents: {
+    cle: 'documents',
+    avecTiers: false,
+    emoji: '📄',
+    categoriesContact: [],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: NOUVELLE,
+    liens: [
+      { cle: 'bilan', icone: 'stats-chart', route: ROUTES.CHEPTEL_BILAN },
+      { cle: 'dossierPac', icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
+      { cle: 'circulation', icone: 'paper-plane', route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION },
+      { cle: 'identification', icone: 'card', route: ROUTES.DOCUMENTS_IDENTIFICATION },
+      { cle: 'historique', icone: 'time', route: ROUTES.CHEPTEL_HISTORIQUE },
+    ],
   },
   veterinaire: {
     cle: 'veterinaire',

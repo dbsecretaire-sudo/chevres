@@ -1,3 +1,7 @@
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
+
+const V = vocabulaire;
+
 /** Les rubriques que proposent les fiches des clients (particuliers, surfaces commerciales, entreprises) : celles du commerce. */
 const LIENS_DES_CLIENTS = {
   ventes: { titre: 'Chiffre d’affaires', aide: 'Par produit, par contact et par mois ; paiements en attente.' },
@@ -190,7 +194,40 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter un fournisseur d’emballages',
       groupeEcritures: 'Les achats d’emballages',
       nouvelle: 'Nouvelle facture d’emballages',
-      liens: { stock: { titre: 'Stock d’emballages', aide: 'Les barquettes, sacs et étiquettes qui restent.' } },
+      liens: {
+        stock: { titre: 'Stock d’emballages', aide: 'Les barquettes, sacs et étiquettes qui restent.' },
+        conditionnement: {
+          titre: 'Conditionnement',
+          aide: 'Les emballages consommés à chaque fromage vendu.',
+        },
+      },
+    },
+    cheptel: {
+      titre: 'Cheptel',
+      liens: {
+        lots: { titre: 'Lots d’animaux', aide: 'Les lots : vétérinaire, abattoir, vente…' },
+        get male() {
+          return { titre: `Nouveau ${V().male.singulier}`, aide: 'Ajouter un mâle au troupeau.' };
+        },
+        get femelle() {
+          return { titre: `Nouvelle ${V().femelle.singulier}`, aide: 'Ajouter une femelle au troupeau.' };
+        },
+        get petit() {
+          return { titre: `Nouveau ${V().petit.singulier}`, aide: 'Déclarer une naissance.' };
+        },
+        boucles: { titre: 'Boucles', aide: 'L’inventaire des boucles, les repères et les boucles rouges.' },
+        carnet: { titre: 'Carnet de naissance', aide: 'Les naissances de l’année et leurs mères.' },
+      },
+    },
+    documents: {
+      titre: 'Documents',
+      liens: {
+        bilan: { titre: 'Bilan annuel', aide: 'Le bilan du cheptel de l’année : entrées, sorties, effectifs.' },
+        dossierPac: { titre: 'Dossier PAC', aide: 'Suivi des mouvements, recensement, déclaration d’estive.' },
+        circulation: { titre: 'Documents de circulation', aide: 'Ceux des animaux vivants vendus ou achetés.' },
+        identification: { titre: 'Documents d’identification', aide: 'Les pièces d’identification de l’exploitation.' },
+        historique: { titre: 'Historique du cheptel', aide: 'Les sorties : morts, ventes, abattages.' },
+      },
     },
     veterinaire: {
       titre: 'Vétérinaire',

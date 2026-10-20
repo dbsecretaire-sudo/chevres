@@ -1,8 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
-import { SEXE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
-import { capitaliser, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 /** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre. */
@@ -14,10 +12,10 @@ export interface ActionDeLieu {
 }
 
 /**
- * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange, nouveau). Les intervenants ouvrent
- * directement leur fiche, qui regroupe toutes leurs actions.
+ * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange). Les autres boutons (les intervenants, le
+ * cheptel, les documents) ouvrent directement leur page, qui regroupe toutes leurs actions.
  */
-export type CibleDesBulles = 'nouveau' | 'sante' | 'grange';
+export type CibleDesBulles = 'sante' | 'grange';
 
 const B = TEXTES.accueil.ferme.bulles;
 const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
@@ -25,24 +23,6 @@ const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
 /** Les actions qui sortent en bulles quand on touche un bouton de l'accueil : les écrans qu'on y ouvre le plus. */
 export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
-    case 'nouveau':
-      // Ce qu'on ajoute au troupeau : une naissance, une femelle, un mâle (les mots de l'espèce active), et une perte (une morte).
-      return [
-        { cle: 'naissance', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
-        {
-          cle: 'chevre',
-          titre: capitaliser(vocabulaire().femelle.singulier),
-          icone: 'female',
-          route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.FEMELLE}`,
-        },
-        {
-          cle: 'bouc',
-          titre: capitaliser(vocabulaire().male.singulier),
-          icone: 'male',
-          route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.MALE}`,
-        },
-        { cle: 'perte', titre: B.perte, icone: 'skull', route: ROUTES.CHEPTEL_LISTE },
-      ];
     case 'sante':
       return [
         { cle: 'traitements', titre: B.traitements, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
