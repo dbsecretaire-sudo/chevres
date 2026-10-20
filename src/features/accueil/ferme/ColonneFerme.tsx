@@ -33,6 +33,8 @@ interface Props {
   compacte?: boolean;
   /** Les boutons les uns sous les autres, sur le côté d'une carte (sans texte, pour ne pas alourdir). */
   cote?: boolean;
+  /** Avec `cote` : un titre au-dessus des boutons (« Intervenants »). */
+  titre?: string;
   /** Sans le nom sous chaque bouton : le nom reste pour les lecteurs d'écran, et s'affiche quand on touche le bouton. */
   sansTitre?: boolean;
   /** En rangée : les boutons côte à côte, six par ligne au plus, chacun prenant une part égale de la largeur. */
@@ -123,14 +125,18 @@ export function ColonneFerme({
   rangee = false,
   compacte = false,
   cote = false,
+  titre,
   sansTitre = false,
 }: Props) {
   if (cote) {
     return (
-      <View style={styles.cote}>
-        {entrees.map((e, i) => (
-          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="cote" sansTitre />
-        ))}
+      <View style={styles.panneauCote}>
+        {titre ? <Text style={styles.titreCote}>{titre}</Text> : null}
+        <View style={styles.cote}>
+          {entrees.map((e, i) => (
+            <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="cote" sansTitre />
+          ))}
+        </View>
       </View>
     );
   }
@@ -175,7 +181,10 @@ export function ColonneFerme({
 const styles = StyleSheet.create({
   colonne: { width: 92, flexGrow: 0 },
   // Sur le côté d'une carte : les boutons s'empilent, centrés, sans texte.
-  cote: { gap: 6, alignItems: 'center', justifyContent: 'center' },
+  // Sur le côté d'une carte : un titre, puis les boutons sur deux colonnes (sans texte).
+  panneauCote: { alignItems: 'center', justifyContent: 'center', gap: 8 },
+  titreCote: { fontSize: 14, fontWeight: '800', color: colors.primaryDark },
+  cote: { flexDirection: 'row', flexWrap: 'wrap', width: 108, gap: 8, justifyContent: 'center' },
   boutonCote: { width: 48 },
   rondCote: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },

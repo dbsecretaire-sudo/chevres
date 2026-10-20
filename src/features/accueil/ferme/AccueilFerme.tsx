@@ -137,14 +137,6 @@ export default function AccueilFerme() {
   // sur les bêtes (le vétérinaire, l'équarrisseur, l'abattoir, l'aliment) sur celle de l'exploitation, et le commerce (la laiterie, les clients,
   // les contacts, les fournisseurs) sur celle de la transformation. Les organismes sont dans l'intérieur de l'exploitation.
   const surLesBetes: EntreeDeColonne[] = [
-    { cle: 'veterinaire', titre: C.veterinaire, icone: iconeMCI('stethoscope'), couleur: ACHAT },
-    {
-      cle: 'equarrissage',
-      titre: C.equarrissage,
-      icone: iconeMCI('grave-stone'),
-      pastille: f.morts,
-      couleur: ACHAT,
-    },
     {
       cle: 'abattoir',
       titre: C.abattoir,
@@ -152,13 +144,35 @@ export default function AccueilFerme() {
       pastille: f.lotsAFacturer,
       couleur: ACHAT,
     },
+    { cle: 'veterinaire', titre: C.veterinaire, icone: iconeMCI('stethoscope'), couleur: ACHAT },
     { cle: 'aliments', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ACHAT },
+    {
+      cle: 'equarrissage',
+      titre: C.equarrissage,
+      icone: iconeMCI('grave-stone'),
+      pastille: f.morts,
+      couleur: ACHAT,
+    },
+  ];
+  // Les démarches (les organismes, les contrôles) se distinguent des personnes et des entreprises par leur couleur : l'orange.
+  const demarchesExploitation: EntreeDeColonne[] = [
+    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
   ];
   const commerce: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
     { cle: 'clients', titre: C.clients, icone: iconeIon('cart'), couleur: VENTE },
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
     { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
+  ];
+  const demarchesTransformation: EntreeDeColonne[] = [
+    {
+      cle: 'rappelsLots',
+      titre: C.rappelsLots,
+      icone: iconeIon('notifications'),
+      pastille: f.lotsARappeler,
+      couleur: ORANGE,
+    },
+    { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: ORANGE },
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
   const interneExploitation: EntreeDeColonne[][] = [
@@ -221,7 +235,9 @@ export default function AccueilFerme() {
     else {
       const entree = [
         ...surLesBetes,
+        ...demarchesExploitation,
         ...commerce,
+        ...demarchesTransformation,
         ...interneExploitation.flat(),
         ...interneTransformation,
       ].find((e) => e.cle === cle);
@@ -296,12 +312,24 @@ export default function AccueilFerme() {
                     onEntrer={() => setInterieur('exploitation')}
                   />
                 </View>
-                <ColonneFerme entrees={surLesBetes} onAppui={surCote} cote />
+                <ColonneFerme
+                  entrees={[...surLesBetes, ...demarchesExploitation]}
+                  onAppui={surCote}
+                  cote
+                  titre={TEXTES.accueil.ferme.intervenants}
+                />
               </View>
               <TransformationFerme
                 compte={f.transformation}
                 onEntrer={() => setInterieur('transformation')}
-                cote={<ColonneFerme entrees={commerce} onAppui={surCote} cote />}
+                cote={
+                  <ColonneFerme
+                    entrees={[...commerce, ...demarchesTransformation]}
+                    onAppui={surCote}
+                    cote
+                    titre={TEXTES.accueil.ferme.intervenants}
+                  />
+                }
               />
             </>
           )}

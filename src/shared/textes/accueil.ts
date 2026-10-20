@@ -20,6 +20,8 @@ export const TEXTES_ACCUEIL = {
       aliments: 'Aliment en stock',
       rappels: 'Rappels à valider',
     },
+    /** Le titre du panneau des personnes et entreprises (les intervenants) sur le côté des cartes. */
+    intervenants: 'Intervenants',
     /** La carte « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
     transformation: {
       titre: 'Travail du produit',
