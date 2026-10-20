@@ -7,8 +7,12 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.transformation;
 
-/** La hauteur au moins de chaque carte de l'accueil : de quoi loger la colonne de ses boutons (quatre au plus). */
-export const HAUTEUR_MIN_DES_CARTES = 248;
+/**
+ * La hauteur au moins de chaque carte de l'accueil, de quoi loger la colonne de ses boutons (trois par ligne) : l'exploitation, avec une dizaine
+ * d'intervenants, est la plus haute ; le travail du produit, avec cinq, la plus basse.
+ */
+export const HAUTEUR_MIN_EXPLOITATION = 260;
+export const HAUTEUR_MIN_TRANSFORMATION = 210;
 
 /** Les symboles qui se baladent sur la carte, comme les chèvres de l'exploitation : le lait, la viande, le fromage. */
 const SYMBOLES = [
@@ -67,11 +71,12 @@ export function TransformationFerme({
 }: {
   compte: CompteTransformation;
   onEntrer: () => void;
-  /** Les boutons de ceux qui y interviennent (la laiterie, les clients), en colonne à droite de la carte. */
+  /** Les boutons de ceux qui y interviennent (la laiterie, les clients), en colonne à gauche de la carte. */
   cote?: ReactNode;
 }) {
   return (
     <View style={styles.carte}>
+      {cote}
       <View style={styles.zone}>
         <Pressable
           style={styles.cadre}
@@ -107,15 +112,15 @@ export function TransformationFerme({
           <Text style={styles.porteEmoji}>🚪</Text>
         </Pressable>
       </View>
-      {cote}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   carte: {
-    flex: 1,
-    minHeight: HAUTEUR_MIN_DES_CARTES,
+    // Elle se partage la hauteur avec l'exploitation, qui en prend davantage (3 parts contre 2).
+    flex: 2,
+    minHeight: HAUTEUR_MIN_TRANSFORMATION,
     flexDirection: 'row',
     gap: 8,
     backgroundColor: '#E4E2DC',

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/shared/theme/colors';
 import { BoutonDeBarre } from '@/shared/components/BoutonDeBarre';
 import { OptionsModal } from '@/shared/components/OptionsModal';
+import { PastilleDeMenu } from '@/shared/components/PastilleDeMenu';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
@@ -18,7 +19,7 @@ const T = TEXTES.didacticiel;
  * Le didacticiel en haut à droite de l'accueil (propre à chaque établissement). Désactivé, un bouton « Activer le didacticiel » l'allume et
  * lance la visite guidée ; activé, le bouton ouvre un petit menu : visite guidée, liste des options, ou désactiver.
  */
-export function BoutonDidacticiel({ forme = 'puce' }: { forme?: 'puce' | 'barre' }) {
+export function BoutonDidacticiel({ forme = 'puce' }: { forme?: 'puce' | 'barre' | 'pastille' }) {
   const router = useRouter();
   const accent = useAccentColor();
   const accentSoft = useAccentSoftColor();
@@ -41,6 +42,8 @@ export function BoutonDidacticiel({ forme = 'puce' }: { forme?: 'puce' | 'barre'
     <>
       {forme === 'barre' ? (
         <BoutonDeBarre icone={<Ionicons name="book" size={26} color={colors.blanc} />} libelle={libelle} onPress={appuyer} />
+      ) : forme === 'pastille' ? (
+        <PastilleDeMenu libelle={libelle} onPress={appuyer} />
       ) : (
         <Pressable
           accessibilityRole="button"

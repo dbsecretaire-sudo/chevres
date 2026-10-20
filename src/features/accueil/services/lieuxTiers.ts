@@ -2,7 +2,7 @@ import type { Ionicons } from '@expo/vector-icons';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 
@@ -14,6 +14,12 @@ import { SECTION_STOCK } from '@/shared/constants/stock';
 export type CleLieuTiers =
   | 'aliments'
   | 'carburant'
+  | 'garage'
+  | 'assurance'
+  | 'banque'
+  | 'groupement'
+  | 'groupementSanitaire'
+  | 'emballages'
   | 'veterinaire'
   | 'organismes'
   | 'equarrissage'
@@ -72,6 +78,73 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.CARBURANT}`,
     liens: [],
   },
+  garage: {
+    cle: 'garage',
+    avecTiers: true,
+    emoji: '🔧',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.GARAGE],
+    categoriesFacture: [CATEGORIE_DEPENSE.REPARATION],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.REPARATION}`,
+    liens: [],
+  },
+  assurance: {
+    cle: 'assurance',
+    avecTiers: true,
+    emoji: '🛡️',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.ASSUREUR],
+    categoriesFacture: [CATEGORIE_DEPENSE.ASSURANCES],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ASSURANCES}`,
+    liens: [],
+  },
+  banque: {
+    cle: 'banque',
+    avecTiers: true,
+    emoji: '🏦',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.BANQUE],
+    categoriesFacture: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.FRAIS_BANCAIRES}`,
+    liens: [],
+  },
+  // Un groupement n'a pas de dépense propre (cotisation, achat groupé…) : ses écritures sont celles qui portent son nom.
+  groupement: {
+    cle: 'groupement',
+    avecTiers: true,
+    emoji: '🤝',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.GROUPEMENT],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
+    liens: [],
+  },
+  groupementSanitaire: {
+    cle: 'groupementSanitaire',
+    avecTiers: true,
+    emoji: '🛡️🐐',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
+    liens: [
+      {
+        cle: 'carnet',
+        icone: 'clipboard',
+        route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
+      },
+    ],
+  },
+  emballages: {
+    cle: 'emballages',
+    avecTiers: true,
+    emoji: '📦',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.EMBALLAGES],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.PRODUCTION}`,
+    liens: [{ cle: 'stock', icone: 'cube', route: stock(SECTION_STOCK.EMBALLAGES) }],
+  },
   veterinaire: {
     cle: 'veterinaire',
     avecTiers: true,
@@ -89,8 +162,6 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesContact: [
       CATEGORIE_FOURNISSEUR.ORGANISME,
       CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE,
-      CATEGORIE_FOURNISSEUR.GROUPEMENT,
-      CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE,
       CATEGORIE_CLIENT.ORGANISME,
     ],
     categoriesFacture: [CATEGORIE_RECETTE.AIDE],

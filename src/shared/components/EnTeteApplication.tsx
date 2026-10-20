@@ -9,6 +9,7 @@ import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 interface ParametresBouton {
   tintColor?: string;
@@ -45,16 +46,19 @@ function FlecheRetour({ onPress }: { onPress: () => void }) {
 }
 
 /**
- * L'en-tête de toutes les pages du téléphone : le bandeau de la ferme (la maison, la balance, les rappels), et dessous une barre étroite avec,
- * s'il y en a une, la flèche de retour, le titre de la page et ses boutons. La barre garde la couleur de l'écran (verte, ou bleue pendant un ajout).
+ * L'en-tête de toutes les pages : une barre étroite avec, s'il y en a une, la flèche de retour, le titre de la page et ses boutons (elle garde la
+ * couleur de l'écran : verte, ou bleue pendant un ajout). Le bandeau de la ferme (la maison, la balance, les rappels) est en bas de l'écran sur le
+ * téléphone (`BarreDuBas`), et au-dessus de cette barre sous Windows.
  */
 export function EnTeteApplication({ options, back, navigation, route }: PropsEnTeteApplication) {
   const router = useRouter();
   const origine = useOrigineRetour();
   // Depuis un bouton, la flèche ramène à l'endroit du clic ; sinon à l'écran d'avant de la pile.
   const retour = useRetour(back ? navigation.goBack : undefined);
-  // L'en-tête n'a plus de barre d'état sous lui : le bandeau commence sous l'encoche.
+  // L'en-tête n'a plus de barre d'état sous lui : il commence sous l'encoche.
   const { top } = useSafeAreaInsets();
+  // Sur le téléphone, le bandeau est en bas de l'écran (sous le pouce) ; sous Windows, il reste ici, en haut.
+  const bandeauEnHaut = estBureau();
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
   // La page d'accueil d'un onglet (Cheptel, Production… ou l'Organisation) n'a pas de flèche : la barre du bas est sa navigation.
   const pageDOnglet = route?.name === 'index' || route?.name === 'reglages';
@@ -71,9 +75,13 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
     colors.primary) as string;
   return (
     <View style={styles.fond}>
-      <View style={[styles.haut, { paddingTop: 12 + top }]}>
-        <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
-      </View>
+      {bandeauEnHaut ? (
+        <View style={[styles.haut, { paddingTop: 12 + top }]}>
+          <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+        </View>
+      ) : (
+        <View style={{ height: top + 8 }} />
+      )}
       {gauche || droite || titre ? (
         <View style={[styles.barre, { backgroundColor: couleur }]}>
           {gauche}

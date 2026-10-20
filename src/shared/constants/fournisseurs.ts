@@ -28,6 +28,8 @@ export const CATEGORIE_FOURNISSEUR = {
   EQUARRISSAGE: 'equarrissage',
   ASSUREUR: 'assureur',
   BANQUE: 'banque',
+  /** Un fournisseur d'emballages (barquettes, sacs, étiquettes…) : il intervient dans le travail du produit. */
+  EMBALLAGES: 'emballages',
   /** Un fournisseur qui ne remet pas de facture : ses dépenses sont notées « non facturées » (pas de TVA à déduire). */
   NON_FACTURABLE: 'non_facturable',
 } as const;
@@ -67,4 +69,5 @@ export const DEPENSES_PAR_CATEGORIE_FOURNISSEUR: Record<string, readonly string[
   [CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE]: [CATEGORIE_DEPENSE.AUTRE, CATEGORIE_DEPENSE.PRODUCTION],
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: [CATEGORIE_DEPENSE.ASSURANCES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.BANQUE]: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES, CATEGORIE_DEPENSE.AUTRE],
+  [CATEGORIE_FOURNISSEUR.EMBALLAGES]: [CATEGORIE_DEPENSE.PRODUCTION, CATEGORIE_DEPENSE.AUTRE],
 };

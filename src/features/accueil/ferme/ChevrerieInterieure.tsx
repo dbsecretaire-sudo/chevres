@@ -44,7 +44,7 @@ export function ChevrerieInterieure({ vedettes }: Props) {
           {vedettes.map((a, i) => (
             <Balade key={a.id} amplitude={10} duree={2200 + i * 450}>
               <Text style={styles.chevre} accessibilityElementsHidden importantForAccessibility="no">
-                🐐
+                {dessin}
               </Text>
             </Balade>
           ))}

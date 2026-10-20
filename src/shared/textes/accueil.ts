@@ -34,7 +34,7 @@ export const TEXTES_ACCUEIL = {
     chevrerie: {
       sortir: 'Sortir',
       titre: 'Intérieur de l’exploitation',
-      entrer: 'Entrer dans la chèvrerie',
+      entrer: 'Entrer dans l’exploitation',
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
@@ -55,7 +55,13 @@ export const TEXTES_ACCUEIL = {
       reserver: 'Réserver',
       laiterie: 'Laiterie',
       abattoir: 'Abattoir',
-      fournisseurs: 'Fournisseurs',
+      carburant: 'Pompe à essence',
+      garage: 'Garage',
+      assurance: 'Assurance',
+      banque: 'Banque',
+      groupement: 'Groupement',
+      groupementSanitaire: 'Groupement sanitaire',
+      emballages: 'Emballages',
       estive: 'Estive',
       veterinaire: 'Vétérinaire',
       equarrissage: 'Équarrissage',
@@ -68,8 +74,6 @@ export const TEXTES_ACCUEIL = {
     bulles: {
       contactsEtEcritures: 'Contacts et écritures',
       naissance: 'Ajouter une naissance',
-      chevre: 'Chèvre',
-      bouc: 'Bouc',
       alimentation: 'Alimentation',
       acheterNourriture: 'Acheter de la nourriture',
       stockNourriture: 'Stock de nourriture',
@@ -82,8 +86,6 @@ export const TEXTES_ACCUEIL = {
       qualite: 'Qualité du lait',
       recolteur: 'Récolteur et factures',
       factureLait: 'Facture de lait',
-      contacts: 'Contacts',
-      nouveauContact: 'Nouveau contact',
     },
     zones: {
       enclos: 'Exploitation',

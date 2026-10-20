@@ -1,4 +1,5 @@
 import { enteteApplication } from '@/shared/navigation/enteteApplication';
+import { BarreDuBas } from '@/shared/navigation/BarreDuBas';
 import { Tabs, useSegments } from 'expo-router';
 import { EcranErreur } from '@/shared/components/EcranErreur';
 import { effacerOrigine } from '@/shared/navigation/origineRetour';
@@ -60,6 +61,8 @@ function Onglets() {
     <Tabs
       // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
       backBehavior="history"
+      // Sous les onglets, le bandeau de la ferme : en bas de chaque page, sous le pouce.
+      tabBar={(props) => <BarreDuBas {...props} />}
       screenListeners={{
         tabPress: () => {
           quitterRetour();
@@ -83,7 +86,8 @@ function Onglets() {
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         // Dans la version Windows, les menus de la barre du haut remplacent la barre d'icônes du bas.
-        tabBarStyle: estBureau() ? { display: 'none' } : undefined,
+        // Sur le téléphone, la barre a la hauteur de son icône et de son nom (la barre de navigation du système est sous le bandeau, plus bas).
+        tabBarStyle: estBureau() ? { display: 'none' } : { height: 60 },
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },

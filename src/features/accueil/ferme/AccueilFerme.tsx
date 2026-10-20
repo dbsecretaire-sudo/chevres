@@ -7,13 +7,14 @@ import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { actionsDuLieu, type ActionDeLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { BarreBasseFerme } from '@/features/accueil/ferme/BarreBasseFerme';
+import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { BullesLieu } from '@/features/accueil/ferme/BullesLieu';
 import { ChevrerieInterieure } from '@/features/accueil/ferme/ChevrerieInterieure';
 import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features/accueil/ferme/ColonneFerme';
 import { EnclosFerme } from '@/features/accueil/ferme/EnclosFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
-import { HAUTEUR_MIN_DES_CARTES, TransformationFerme } from '@/features/accueil/ferme/TransformationFerme';
+import { HAUTEUR_MIN_EXPLOITATION, TransformationFerme } from '@/features/accueil/ferme/TransformationFerme';
 import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
@@ -23,6 +24,7 @@ import {
   rayonDesBulles,
 } from '@/features/accueil/services/bullesFerme';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { PanneauInterieur } from '@/features/accueil/ferme/PanneauInterieur';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
@@ -54,7 +56,14 @@ const ROUTE_DIRECTE: Record<string, string> = {
   veterinaire: ROUTES.lieu('veterinaire'),
   aliments: ROUTES.lieu('aliments'),
   equarrissage: ROUTES.lieu('equarrissage'),
+  carburant: ROUTES.lieu('carburant'),
+  garage: ROUTES.lieu('garage'),
+  assurance: ROUTES.lieu('assurance'),
+  banque: ROUTES.lieu('banque'),
+  groupement: ROUTES.lieu('groupement'),
+  groupementSanitaire: ROUTES.lieu('groupementSanitaire'),
   organismes: ROUTES.lieu('organismes'),
+  emballages: ROUTES.lieu('emballages'),
   laiterie: ROUTES.PRODUCTION_LAITERIE,
   contacts: ROUTES.CONTACTS,
   // Les clients et leurs ventes.
@@ -68,7 +77,7 @@ const ROUTE_DIRECTE: Record<string, string> = {
   reserver: ROUTES.COMMERCIAL_COMMANDE,
 };
 
-/** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
+/** Où est le bouton : dans la colonne des intervenants, à gauche d'une carte, ou dans le panneau du bas d'un intérieur. */
 type Zone = 'interieur' | 'cote';
 
 /** Ce qu'on a ouvert en entrant par la porte d'une carte : la chèvrerie (l'exploitation) ou la transformation. */
@@ -76,11 +85,11 @@ type Interieur = 'exploitation' | 'transformation';
 
 /**
  * La direction de l'arc des bulles d'après la place du bouton (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
- * les boutons sur le côté d'une carte ouvrent vers la gauche, ceux d'un intérieur (en bas de l'écran) vers le haut.
+ * les boutons à gauche d'une carte ouvrent vers la droite, sur la carte ; ceux d'un intérieur (en bas de l'écran) vers le haut.
  */
 export function directionDesBulles(zone: Zone, x: number, largeur: number): number {
-  // Un bouton sur le côté d'une carte : les bulles s'ouvrent vers la gauche, sur la carte.
-  if (zone === 'cote') return 180;
+  // Un bouton à gauche d'une carte : les bulles s'ouvrent vers la droite, sur la carte.
+  if (zone === 'cote') return 0;
   // Dans un intérieur, les boutons sont en bas : les bulles s'ouvrent vers le haut, de biais vers le côté libre près d'un bord.
   return x < largeur / 3 ? 45 : x > (2 * largeur) / 3 ? 135 : 90;
 }
@@ -126,6 +135,7 @@ const iconeIon = (nom: keyof typeof Ionicons.glyphMap) => (
 export default function AccueilFerme() {
   const router = useRouter();
   const f = useFermeAccueil();
+  const { espece } = useEtablissement();
   // Sans en-tête, le contenu commence sous l'encoche et la barre d'état.
   const { top: haut } = useSafeAreaInsets();
   const racine = useRef<View>(null);
@@ -155,9 +165,10 @@ export default function AccueilFerme() {
   };
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
-  // Les intervenants extérieurs, en colonnes sans texte sur les cartes (le nom s'affiche quand on touche le bouton) : ceux qui interviennent
-  // sur les bêtes (le vétérinaire, l'équarrisseur, l'abattoir, l'aliment) sur celle de l'exploitation, et le commerce (la laiterie, les clients,
-  // les contacts, les fournisseurs) sur celle de la transformation. Les organismes sont dans l'intérieur de l'exploitation.
+  // Les intervenants extérieurs, en colonnes sans texte sur les cartes (le nom s'affiche quand on touche le bouton) : sur celle de l'exploitation,
+  // ceux qui interviennent sur les bêtes (l'abattoir, le vétérinaire, l'aliment, l'équarrisseur) et ses fournisseurs et partenaires (la pompe,
+  // le garage, l'assurance, la banque, les groupements) ; sur celle de la transformation, les clients (la laiterie, le commerce), les fournisseurs
+  // d'emballages et les contacts. Les organismes et la qualité du lait (des démarches) sont en orange.
   const surLesBetes: EntreeDeColonne[] = [
     {
       cle: 'abattoir',
@@ -175,6 +186,13 @@ export default function AccueilFerme() {
       pastille: f.morts,
       couleur: ACHAT,
     },
+    // Les fournisseurs et partenaires de l'exploitation : le carburant, les réparations, l'assurance, la banque, les groupements.
+    { cle: 'carburant', titre: C.carburant, icone: iconeMCI('gas-station'), couleur: ACHAT },
+    { cle: 'garage', titre: C.garage, icone: iconeMCI('car-wrench'), couleur: ACHAT },
+    { cle: 'assurance', titre: C.assurance, icone: iconeIon('shield-checkmark'), couleur: ACHAT },
+    { cle: 'banque', titre: C.banque, icone: iconeIon('card'), couleur: ACHAT },
+    { cle: 'groupement', titre: C.groupement, icone: iconeMCI('handshake'), couleur: ACHAT },
+    { cle: 'groupementSanitaire', titre: C.groupementSanitaire, icone: iconeMCI('shield-cross'), couleur: ACHAT },
   ];
   // Les démarches (les organismes, les contrôles) se distinguent des personnes et des entreprises par leur couleur : l'orange.
   const demarchesExploitation: EntreeDeColonne[] = [
@@ -183,8 +201,8 @@ export default function AccueilFerme() {
   const commerce: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
     { cle: 'clients', titre: C.clients, icone: iconeIon('cart'), couleur: VENTE },
+    { cle: 'emballages', titre: C.emballages, icone: iconeMCI('package-variant-closed'), couleur: ACHAT },
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
-    { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
   ];
   const demarchesTransformation: EntreeDeColonne[] = [
     { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: ORANGE },
@@ -282,7 +300,12 @@ export default function AccueilFerme() {
     <View ref={racine} collapsable={false} style={styles.racine}>
       <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + haut }]}>
         <View style={styles.colonneHaut}>
-          <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+          {estBureau() ? (
+            <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+          ) : (
+            // Sur le téléphone : les menus qu'on touche rarement sont en haut, loin du pouce ; le bandeau qu'on utilise sans cesse est tout en bas.
+            <BarreHauteFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />
+          )}
           {estBureau() ? null : <NomFerme />}
           <RappelSauvegarde />
         </View>
@@ -292,7 +315,8 @@ export default function AccueilFerme() {
         contentContainerStyle={[styles.corpsContenu, interieur ? styles.corpsInterieur : null]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
+        {/* Le contenu est recréé quand l'espèce change : il relit ses données et reprend les mots et les dessins de la nouvelle espèce. */}
+        <View key={espece} style={[styles.centre, interieur ? styles.centreInterieur : null]}>
           {interieur === 'exploitation' ? (
             <View style={styles.interieur}>
               <ChevrerieInterieure vedettes={f.vedettes} />
@@ -304,6 +328,12 @@ export default function AccueilFerme() {
           ) : (
             <>
               <View style={[styles.panneau, f.estive ? styles.panneauEstive : null]}>
+                <ColonneFerme
+                  entrees={[...surLesBetes, ...demarchesExploitation]}
+                  onAppui={surCote}
+                  cote
+                  titre={TEXTES.accueil.ferme.intervenants}
+                />
                 <View style={styles.enclos}>
                   <EnclosFerme
                     vedettes={f.vedettes}
@@ -314,12 +344,6 @@ export default function AccueilFerme() {
                     onEntrer={() => setInterieur('exploitation')}
                   />
                 </View>
-                <ColonneFerme
-                  entrees={[...surLesBetes, ...demarchesExploitation]}
-                  onAppui={surCote}
-                  cote
-                  titre={TEXTES.accueil.ferme.intervenants}
-                />
               </View>
               <TransformationFerme
                 compte={f.transformation}
@@ -329,6 +353,7 @@ export default function AccueilFerme() {
                     entrees={[...commerce, ...demarchesTransformation]}
                     onAppui={surCote}
                     cote
+                    deuxColonnes
                     titre={TEXTES.accueil.ferme.intervenants}
                   />
                 }
@@ -355,7 +380,10 @@ export default function AccueilFerme() {
           accent={VENTE}
         />
       ) : null}
-      <BarreBasseFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />
+      {/* Sous Windows, les menus sont en bas comme avant ; sur le téléphone, ils sont dans la barre du haut. */}
+      {estBureau() ? (
+        <BarreBasseFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />
+      ) : null}
 
       {/* Les bulles du bouton touché : par-dessus tout ; un appui à côté les referme. */}
       {menu ? (
@@ -440,9 +468,9 @@ const styles = StyleSheet.create({
   // Les six premiers intervenants se partagent la largeur ; les contacts, seuls au bout, ont la part d'un bouton.
   centre: { flex: 1, gap: 10 },
   panneau: {
-    flex: 1,
+    flex: 3,
     flexDirection: 'row',
-    minHeight: HAUTEUR_MIN_DES_CARTES,
+    minHeight: HAUTEUR_MIN_EXPLOITATION,
     backgroundColor: '#E1ECCB',
     borderRadius: 18,
     padding: 10,

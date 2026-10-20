@@ -33,6 +33,8 @@ interface Props {
   compacte?: boolean;
   /** Les boutons les uns sous les autres, sur le côté d'une carte (sans texte, pour ne pas alourdir). */
   cote?: boolean;
+  /** Avec `cote` : deux boutons par ligne au lieu de trois (une carte qui en a peu garde sa largeur pour son dessin). */
+  deuxColonnes?: boolean;
   /** Avec `cote` : un titre au-dessus des boutons (« Intervenants »). */
   titre?: string;
   /** Sans le nom sous chaque bouton : le nom reste pour les lecteurs d'écran, et s'affiche quand on touche le bouton. */
@@ -125,6 +127,7 @@ export function ColonneFerme({
   rangee = false,
   compacte = false,
   cote = false,
+  deuxColonnes = false,
   titre,
   sansTitre = false,
 }: Props) {
@@ -132,7 +135,7 @@ export function ColonneFerme({
     return (
       <View style={styles.panneauCote}>
         {titre ? <Text style={styles.titreCote}>{titre}</Text> : null}
-        <View style={styles.cote}>
+        <View style={[styles.cote, deuxColonnes ? styles.coteEtroit : null]}>
           {entrees.map((e, i) => (
             <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="cote" sansTitre />
           ))}
@@ -184,7 +187,9 @@ const styles = StyleSheet.create({
   // Sur le côté d'une carte : un titre, puis les boutons sur deux colonnes (sans texte).
   panneauCote: { alignItems: 'center', justifyContent: 'center', gap: 8 },
   titreCote: { fontSize: 14, fontWeight: '800', color: colors.primaryDark },
-  cote: { flexDirection: 'row', flexWrap: 'wrap', width: 108, gap: 8, justifyContent: 'center' },
+  // Trois boutons par ligne : l'exploitation a une dizaine d'intervenants ; deux seulement pour la carte qui en a cinq.
+  cote: { flexDirection: 'row', flexWrap: 'wrap', width: 168, gap: 8, justifyContent: 'center' },
+  coteEtroit: { width: 112 },
   boutonCote: { width: 48 },
   rondCote: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },

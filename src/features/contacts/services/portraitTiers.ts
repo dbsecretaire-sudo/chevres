@@ -24,6 +24,7 @@ const PORTRAITS: Record<string, PortraitTiers> = {
   [CATEGORIE_FOURNISSEUR.GARAGE]: { emoji: '🔧', decor: '🚜 ⚙️ 🔩', fond: '#E4E4DC' },
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: { emoji: '🛡️', decor: '📑 ✍️ 📑', fond: '#DCE6F0' },
   [CATEGORIE_FOURNISSEUR.BANQUE]: { emoji: '🏦', decor: '💶 🪙 💶', fond: '#DCE9DC' },
+  [CATEGORIE_FOURNISSEUR.EMBALLAGES]: { emoji: '📦', decor: '🏷️ 📦 🏷️', fond: '#EDE3D2' },
   [CATEGORIE_FOURNISSEUR.ETAT]: { emoji: '🏛️', decor: '🇫🇷 📄 🇫🇷', fond: '#DCE2F0' },
   [CATEGORIE_CLIENT.RECOLTEUR]: { emoji: '🚚', decor: '🥛 🥛 🥛', fond: '#E6EEF5' },
   [CATEGORIE_CLIENT.PARTICULIER]: { emoji: '🧑', decor: '🧀 🥩 🛒', fond: '#F2E6D8' },

@@ -4,33 +4,36 @@ import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 interface Props {
-  /** Le nom du lieu où l'on est (l'intérieur de l'exploitation, le travail du produit). */
+  /** Le nom du lieu où l'on est (l'intérieur de l'exploitation, le travail du produit), ou « Intervenants » sur l'accueil. */
   titre: string;
   /** Les boutons, ligne par ligne, et ce que fait un appui sur l'un d'eux. */
   lignes: readonly (readonly EntreeDeColonne[])[];
   onAppui: (cle: string, ancre: AncreBouton) => void;
-  onSortir: () => void;
+  /** La porte « Sortir » : absente sur l'accueil, où l'on n'est dans aucun intérieur. */
+  onSortir?: () => void;
   /** La couleur du lieu : le filet du haut du panneau. */
   accent: string;
 }
 
 /**
- * Le panneau de boutons d'un intérieur, fixé en bas de l'écran, juste au-dessus de la barre du bas : c'est la zone que le pouce atteint sans
- * effort, et ces boutons sont ceux qu'on touche le plus. La porte « Sortir » y est aussi, à portée.
+ * Le panneau de boutons de l'accueil et de ses intérieurs, fixé en bas de l'écran, juste au-dessus de la barre du bas : c'est la zone que le
+ * pouce atteint sans effort, et ces boutons sont ceux qu'on touche le plus. La porte « Sortir » y est aussi, à portée.
  */
 export function PanneauInterieur({ titre, lignes, onAppui, onSortir, accent }: Props) {
   return (
     <View style={[styles.panneau, { borderTopColor: accent }]}>
       <View style={styles.tete}>
-        <Pressable
-          style={[styles.sortir, { borderColor: accent }]}
-          onPress={onSortir}
-          accessibilityRole="button"
-          accessibilityLabel={TEXTES.accueil.ferme.chevrerie.sortir}
-        >
-          <Text style={styles.sortirEmoji}>🚪</Text>
-          <Text style={styles.sortirTexte}>{TEXTES.accueil.ferme.chevrerie.sortir}</Text>
-        </Pressable>
+        {onSortir ? (
+          <Pressable
+            style={[styles.sortir, { borderColor: accent }]}
+            onPress={onSortir}
+            accessibilityRole="button"
+            accessibilityLabel={TEXTES.accueil.ferme.chevrerie.sortir}
+          >
+            <Text style={styles.sortirEmoji}>🚪</Text>
+            <Text style={styles.sortirTexte}>{TEXTES.accueil.ferme.chevrerie.sortir}</Text>
+          </Pressable>
+        ) : null}
         <Text style={styles.titre} numberOfLines={1}>
           {titre}
         </Text>
