@@ -39,17 +39,36 @@ export default function ProductionLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.production.titre }} />
-      <Stack.Screen name="fromages" options={{ title: TEXTES.production.fromages.titre, headerLeft: enteteDuBatiment() }} />
-      <Stack.Screen name="lait" options={{ title: TEXTES.production.accueil.productionLait.titre, headerLeft: enteteDuBatiment() }} />
-      <Stack.Screen name="laiterie" options={{ title: TEXTES.production.laiterie.titre, headerLeft: enteteDuBatiment() }} />
+      <Stack.Screen
+        name="fromages"
+        options={{ title: TEXTES.production.fromages.titre, headerLeft: enteteDuBatiment() }}
+      />
+      <Stack.Screen
+        name="lait"
+        options={{ title: TEXTES.production.accueil.productionLait.titre, headerLeft: enteteDuBatiment() }}
+      />
+      <Stack.Screen
+        name="laiterie"
+        options={{ title: TEXTES.production.laiterie.titre, headerLeft: enteteDuBatiment() }}
+      />
       <Stack.Screen
         name="lieu"
         options={({ route }) => {
           const lieu = (route.params as { lieu?: string } | undefined)?.lieu;
-          return { title: estLieuTiers(lieu) ? TEXTES.production.lieux[lieu].titre : TEXTES.production.titre, headerLeft: enteteDuBatiment() };
+          return {
+            title: estLieuTiers(lieu)
+              ? TEXTES.production.lieux[lieu].titre
+              : lieu === 'grange'
+                ? TEXTES.production.lieux.entrepot.grange
+                : TEXTES.production.titre,
+            headerLeft: enteteDuBatiment(),
+          };
         }}
       />
-      <Stack.Screen name="charcuterie" options={{ title: TEXTES.production.charcuterie.titre, headerLeft: enteteDuBatiment() }} />
+      <Stack.Screen
+        name="charcuterie"
+        options={{ title: TEXTES.production.charcuterie.titre, headerLeft: enteteDuBatiment() }}
+      />
       <Stack.Screen
         name="fabrication"
         options={({ route }) => ({
@@ -71,7 +90,10 @@ export default function ProductionLayout() {
         })}
       />
       <Stack.Screen name="rappels-lots" options={{ title: TEXTES.production.rappelsLots.titre }} />
-      <Stack.Screen name="viande" options={{ title: TEXTES.production.viande.titre, headerLeft: enteteDuBatiment() }} />
+      <Stack.Screen
+        name="viande"
+        options={{ title: TEXTES.production.viande.titre, headerLeft: enteteDuBatiment() }}
+      />
       <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />
       <Stack.Screen name="oeufs" options={{ title: TEXTES.production.oeufs.titre }} />
       <Stack.Screen name="statistiques" options={{ title: TEXTES.stock.statistiques.titre }} />

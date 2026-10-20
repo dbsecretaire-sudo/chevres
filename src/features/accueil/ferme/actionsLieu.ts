@@ -1,7 +1,8 @@
 import type { Ionicons } from '@expo/vector-icons';
 import { LIEUX_TIERS, type CleLieuTiers } from '@/features/accueil/services/lieuxTiers';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { SEXE } from '@/shared/constants/cheptel';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
@@ -16,6 +17,9 @@ export interface ActionDeLieu {
 /** Les boutons de l'accueil qui ouvrent des bulles : l'enclos, et les lieux des deux colonnes. */
 export type CibleDesBulles =
   | 'enclos'
+  | 'nouveau'
+  | 'sante'
+  | 'alimentation'
   | 'aliments'
   | 'laiterie'
   | 'abattoir'
@@ -31,7 +35,6 @@ const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
 
 /** Le lieu à tiers (sa page, ses rubriques) qui correspond à un bouton, quand il y en a un. */
 const LIEU_A_TIERS: Partial<Record<CibleDesBulles, CleLieuTiers>> = {
-  organismes: 'organismes',
   veterinaire: 'veterinaire',
   equarrissage: 'equarrissage',
   abattoir: 'abattoir',
@@ -64,10 +67,49 @@ function bullesDuLieuATiers(cle: CleLieuTiers): ActionDeLieu[] {
 export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
     case 'enclos':
+    case 'nouveau':
+      // Ce qu'on ajoute au troupeau : une naissance, une chèvre, un bouc, et une perte (une morte).
       return [
         { cle: 'naissance', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
-        { cle: 'ajouter', titre: B.ajouterAnimal, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
+        {
+          cle: 'chevre',
+          titre: B.chevre,
+          icone: 'female',
+          route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.FEMELLE}`,
+        },
+        { cle: 'bouc', titre: B.bouc, icone: 'male', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.MALE}` },
         { cle: 'perte', titre: B.perte, icone: 'skull', route: ROUTES.CHEPTEL_LISTE },
+      ];
+    case 'sante':
+      return [
+        { cle: 'traitements', titre: B.traitements, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+        {
+          cle: 'carnetSanitaire',
+          titre: B.carnetSanitaire,
+          icone: 'clipboard',
+          route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
+        },
+      ];
+    case 'alimentation':
+      return [
+        { cle: 'alimentation', titre: B.alimentation, icone: 'nutrition', route: ROUTES.SANTE_ALIMENTATION },
+        {
+          cle: 'acheter',
+          titre: B.acheterNourriture,
+          icone: 'cart',
+          route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ALIMENTATION}`,
+        },
+        { cle: 'grange', titre: B.grange, icone: 'cube', route: ROUTES.lieu('grange') },
+      ];
+    case 'organismes':
+      return [
+        { cle: 'dossierPac', titre: B.dossierPac, icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
+        {
+          cle: 'aides',
+          titre: B.aides,
+          icone: 'cash',
+          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
+        },
       ];
     case 'laiterie':
       return [

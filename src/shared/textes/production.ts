@@ -158,6 +158,7 @@ export const TEXTES_PRODUCTION = {
     },
     entrepot: {
       titre: 'Entrepôt',
+      grange: 'Grange',
       oeufs: 'Œufs',
       vide: 'Rien dans ce rayon pour le moment.',
       lait: 'Lait',

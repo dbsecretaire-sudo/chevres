@@ -23,8 +23,7 @@ import {
 } from '@/features/accueil/services/bullesFerme';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
-import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
-import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
@@ -46,16 +45,10 @@ const ESTIVE = '#3E7CB1';
  * se génèrent depuis le dossier PAC, qui garde leur année et leur état.
  */
 const ROUTE_DIRECTE: Record<string, string> = {
-  alimentation: ROUTES.SANTE_ALIMENTATION,
   lots: ROUTES.CHEPTEL_LOTS,
-  traitements: ROUTES.CHEPTEL_TRAITEMENTS,
   boucles: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
-  // Le dossier PAC garde le suivi des mouvements, les bordereaux de perte, le recensement, les documents de circulation et les documents générés.
-  dossierPac: ROUTES.CHEPTEL_DOSSIER_PAC,
   bilanAnnuel: ROUTES.CHEPTEL_BILAN,
-  aidesPac: `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
   carnetNaissance: ROUTES.CHEPTEL_NAISSANCES,
-  carnetSanitaire: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
   // Sur la carte de la transformation : les clients et leurs ventes.
   clients: ROUTES.lieu('commercial'),
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
@@ -178,17 +171,15 @@ export default function AccueilFerme() {
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
   const interneExploitation: EntreeDeColonne[] = [
+    { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
     { cle: 'alimentation', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ORANGE },
+    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
+    { cle: 'nouveau', titre: C.nouveau, icone: iconeIon('add-circle'), couleur: ORANGE },
     { cle: 'lots', titre: C.lots, icone: iconeIon('layers'), couleur: ORANGE },
-    { cle: 'traitements', titre: C.traitements, icone: iconeIon('medkit'), couleur: ORANGE },
     { cle: 'boucles', titre: C.boucles, icone: iconeIon('pricetag'), couleur: ORANGE },
     { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
-    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
-    { cle: 'dossierPac', titre: C.dossierPac, icone: iconeIon('document-text'), couleur: ORANGE },
     { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
-    { cle: 'aidesPac', titre: C.aidesPac, icone: iconeIon('cash'), couleur: ORANGE },
     { cle: 'carnetNaissance', titre: C.carnetNaissance, icone: iconeIon('book'), couleur: ORANGE },
-    { cle: 'carnetSanitaire', titre: C.carnetSanitaire, icone: iconeIon('clipboard'), couleur: ORANGE },
   ];
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   const interneTransformation: EntreeDeColonne[] = [

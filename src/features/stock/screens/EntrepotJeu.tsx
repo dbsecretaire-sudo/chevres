@@ -18,9 +18,11 @@ const PAS_DE_DEFILEMENT = 190;
  * 33. Produits animaux, 31. Matières premières…), puis les rubriques de la catégorie comme dans le stock, chacune avec ses cartes et leur
  * quantité en dessous. Il lit le stock lui-même : tout changement du stock s'y retrouve, et chaque carte ouvre sa rubrique du stock.
  */
-export default function EntrepotJeu() {
+export default function EntrepotJeu({ seulement, titre }: { seulement?: string; titre?: string }) {
   const router = useRouter();
-  const { categories, groupesParCategorie } = useEntrepot();
+  const { categories: toutes, groupesParCategorie } = useEntrepot();
+  // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
+  const categories = seulement ? toutes.filter((c) => c.categorie === seulement) : toutes;
   const [onglet, setOnglet] = useState<string | null>(null);
   const defilement = useRef<ScrollView>(null);
   const position = useRef(0);
@@ -49,39 +51,41 @@ export default function EntrepotJeu() {
           <Ionicons name="close" size={30} color={colors.blanc} />
         </Pressable>
         <View style={styles.panneau}>
-          <View style={styles.tetes}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.onglets}
-              style={styles.ongletsDefile}
-            >
-              {categories.map((c) => {
-                const actif = c.categorie === actuelle?.categorie;
-                const enStock = nombreEnStock(groupesParCategorie.get(c.categorie) ?? []);
-                return (
-                  <Pressable
-                    key={c.categorie}
-                    style={[styles.onglet, actif ? styles.ongletActif : null]}
-                    onPress={() => choisir(c.categorie)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: actif }}
-                    accessibilityLabel={TEXTES.stock.enteteCategorie(c.classe, c.nom)}
-                  >
-                    <Text style={styles.ongletEmoji}>{emojiDeLaCategorie(c.categorie)}</Text>
-                    {enStock > 0 ? (
-                      <View style={styles.badge}>
-                        <Text style={styles.badgeTexte}>{enStock}</Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
+          {seulement ? null : (
+            <View style={styles.tetes}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.onglets}
+                style={styles.ongletsDefile}
+              >
+                {categories.map((c) => {
+                  const actif = c.categorie === actuelle?.categorie;
+                  const enStock = nombreEnStock(groupesParCategorie.get(c.categorie) ?? []);
+                  return (
+                    <Pressable
+                      key={c.categorie}
+                      style={[styles.onglet, actif ? styles.ongletActif : null]}
+                      onPress={() => choisir(c.categorie)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: actif }}
+                      accessibilityLabel={TEXTES.stock.enteteCategorie(c.classe, c.nom)}
+                    >
+                      <Text style={styles.ongletEmoji}>{emojiDeLaCategorie(c.categorie)}</Text>
+                      {enStock > 0 ? (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeTexte}>{enStock}</Text>
+                        </View>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
           {actuelle ? (
-            <Text style={styles.titre} numberOfLines={1}>
-              {TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom)}
+            <Text style={[styles.titre, seulement ? { paddingRight: 44 } : null]} numberOfLines={1}>
+              {titre ?? TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom)}
             </Text>
           ) : null}
           <View style={styles.corps}>

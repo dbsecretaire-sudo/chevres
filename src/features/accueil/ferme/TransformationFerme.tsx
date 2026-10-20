@@ -120,11 +120,11 @@ const styles = StyleSheet.create({
     minHeight: HAUTEUR_MIN_DES_CARTES,
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: '#E1ECCB',
+    backgroundColor: '#E4E2DC',
     borderRadius: 18,
     padding: 10,
     borderWidth: 2,
-    borderColor: '#B8CC94',
+    borderColor: '#BDB8AD',
   },
   zone: { flex: 1 },
   cadre: {
