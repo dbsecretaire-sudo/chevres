@@ -30,13 +30,7 @@ export function Carrelage({ lignes = LIGNES_DU_CARRELAGE }: { lignes?: number })
 }
 
 /** Les trois lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. Un appui ouvre la rubrique du stock. */
-export function LignesDeTransformation({
-  compte,
-  grand = false,
-}: {
-  compte: CompteTransformation;
-  grand?: boolean;
-}) {
+export function LignesDeTransformation({ compte }: { compte: CompteTransformation }) {
   const router = useRouter();
   const vers = (section: string) => router.push(`${ROUTES.COMPTABILITE_STOCKS}?onglet=${section}` as never);
   const lignes: { cle: string; texte: string; section: string }[] = [
@@ -48,7 +42,7 @@ export function LignesDeTransformation({
     <View style={styles.lignes}>
       {lignes.map((l) => (
         <Pressable key={l.cle} onPress={() => vers(l.section)} accessibilityRole="button" hitSlop={4}>
-          <Text style={[styles.ligne, grand ? styles.ligneGrande : null]}>{l.texte}</Text>
+          <Text style={styles.ligne}>{l.texte}</Text>
         </Pressable>
       ))}
     </View>
@@ -120,7 +114,6 @@ const styles = StyleSheet.create({
   titre: { fontSize: 17, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
   lignes: { alignItems: 'center', gap: 2 },
   ligne: { fontSize: 15, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
-  ligneGrande: { fontSize: 18 },
   porte: {
     position: 'absolute',
     right: 0,

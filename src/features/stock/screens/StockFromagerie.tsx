@@ -20,7 +20,6 @@ import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
 import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
-import { listeValablePour, retireePourToutes } from '@/features/stock/utils/listesEspece';
 import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { SelectField } from '@/shared/components/SelectField';

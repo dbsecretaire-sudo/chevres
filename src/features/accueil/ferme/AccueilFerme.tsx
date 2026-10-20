@@ -25,6 +25,7 @@ import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
+import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { estBureau } from '@/shared/utils/plateforme';
@@ -53,6 +54,13 @@ const ROUTE_DIRECTE: Record<string, string> = {
   bordereau: ROUTES.CHEPTEL_DOSSIER_PAC,
   recensement: ROUTES.CHEPTEL_DOSSIER_PAC,
   generes: ROUTES.CHEPTEL_BIBLIOTHEQUE,
+  // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
+  fabriquerFromage: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
+  fabriquerCharcuterie: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE),
+  lotsFromages: ROUTES.PRODUCTION_FROMAGES,
+  rappelsLots: ROUTES.PRODUCTION_RAPPELS_LOTS,
+  qualiteLait: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
+  reserver: ROUTES.COMMERCIAL_COMMANDE,
 };
 
 /** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
@@ -67,8 +75,8 @@ type Interieur = 'exploitation' | 'transformation';
  */
 export function directionDesBulles(zone: Zone, x: number, largeur: number): number {
   if (zone === 'exploitation') return 90;
-  // Dans la chèvrerie, les boutons sont en haut : les bulles s'ouvrent vers le bas.
-  if (zone === 'interieur') return 270;
+  // Dans un intérieur, les boutons sont en haut : les bulles s'ouvrent vers le bas, de biais vers le côté libre près d'un bord.
+  if (zone === 'interieur') return x < largeur / 3 ? 315 : x > (2 * largeur) / 3 ? 225 : 270;
   if (x < largeur / 3) return 0;
   if (x > (2 * largeur) / 3) return 180;
   return 270;
@@ -172,18 +180,20 @@ export default function AccueilFerme() {
     { cle: 'recensement', titre: C.recensement, icone: iconeIon('document-text'), couleur: ORANGE },
     { cle: 'generes', titre: C.generes, icone: iconeIon('document-text'), couleur: ORANGE },
   ];
-  // Dans la transformation : la fromagerie, la viande, la charcuterie, et le stock.
+  // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   const interneTransformation: EntreeDeColonne[] = [
+    { cle: 'fabriquerFromage', titre: C.fabriquerFromage, icone: iconeMCI('pot-mix'), couleur: VENTE },
+    { cle: 'fabriquerCharcuterie', titre: C.fabriquerCharcuterie, icone: iconeMCI('knife'), couleur: VENTE },
+    { cle: 'lotsFromages', titre: C.lotsFromages, icone: iconeIon('layers'), couleur: VENTE },
     {
-      cle: 'fromagerie',
-      titre: C.fromagerie,
-      icone: iconeMCI('cheese'),
+      cle: 'rappelsLots',
+      titre: C.rappelsLots,
+      icone: iconeIon('notifications'),
       pastille: f.lotsARappeler,
       couleur: VENTE,
     },
-    { cle: 'viande', titre: C.viande, icone: iconeMCI('food-steak'), couleur: VENTE },
-    { cle: 'charcuterie', titre: C.charcuterie, icone: iconeMCI('food-drumstick'), couleur: VENTE },
-    { cle: 'stock', titre: C.stock, icone: iconeIon('cube'), couleur: NEUTRE },
+    { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: VENTE },
+    { cle: 'reserver', titre: C.reserver, icone: iconeIon('bookmark'), couleur: VENTE },
   ];
 
   /** Ouvre le menu d'un bouton à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
@@ -279,7 +289,6 @@ export default function AccueilFerme() {
           ) : interieur === 'transformation' ? (
             <View style={styles.interieur}>
               <TransformationInterieure
-                compte={f.transformation}
                 onSortir={() => setInterieur(null)}
                 boutons={interneTransformation}
                 onAppuiBouton={surInterne}

@@ -1,9 +1,8 @@
 import type { Ionicons } from '@expo/vector-icons';
 import { LIEUX_TIERS, type CleLieuTiers } from '@/features/accueil/services/lieuxTiers';
-import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
-import { PRODUIT_A_LOTS, SECTION_STOCK } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
 /** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre. */
@@ -17,9 +16,6 @@ export interface ActionDeLieu {
 /** Les boutons de l'accueil qui ouvrent des bulles : l'enclos, et les lieux des deux colonnes. */
 export type CibleDesBulles =
   | 'enclos'
-  | 'fromagerie'
-  | 'viande'
-  | 'charcuterie'
   | 'laiterie'
   | 'abattoir'
   | 'fournisseurs'
@@ -38,7 +34,6 @@ const LIEU_A_TIERS: Partial<Record<CibleDesBulles, CleLieuTiers>> = {
   veterinaire: 'veterinaire',
   equarrissage: 'equarrissage',
   abattoir: 'abattoir',
-  charcuterie: 'boucherie',
 };
 
 /** Combien de rubriques d'un lieu à tiers passent en bulles (en plus de sa page et de « Nouvelle facture »). */
@@ -70,7 +65,13 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
       return [
         { cle: 'naissance', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
         { cle: 'ajouter', titre: B.ajouterAnimal, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
-        { cle: 'abattoir', titre: B.abattoir, icone: 'cut', route: ROUTES.PRODUCTION_VIANDE },
+        {
+          cle: 'abattoir',
+          titre: B.abattoir,
+          icone: 'cut',
+          // Une nouvelle facture de l'abattoir (le premier contact de cette catégorie, d'office) : « Suivant » mène au choix des animaux.
+          route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&abattoirContact=1`,
+        },
         { cle: 'reserver', titre: B.reserver, icone: 'bookmark', route: ROUTES.COMMERCIAL_COMMANDE },
         { cle: 'perte', titre: B.perte, icone: 'skull', route: ROUTES.CHEPTEL_LISTE },
       ];
@@ -89,55 +90,6 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           titre: B.factureLait,
           icone: 'add-circle',
           route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.LAIT}`,
-        },
-      ];
-    case 'fromagerie':
-      return [
-        { cle: 'fromages', titre: B.fromages, icone: 'restaurant', route: ROUTES.PRODUCTION_FROMAGES },
-        {
-          cle: 'fabriquer',
-          titre: B.fabriquer,
-          icone: 'flask',
-          route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
-        },
-        {
-          cle: 'rappeler',
-          titre: B.rappeler,
-          icone: 'notifications',
-          route: ROUTES.productionRappel(PRODUIT_A_LOTS.FROMAGE),
-        },
-        {
-          cle: 'vendre',
-          titre: B.vendreFromage,
-          icone: 'add-circle',
-          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.FROMAGE}`,
-        },
-      ];
-    case 'viande':
-      return [
-        {
-          cle: 'lots',
-          titre: L.abattoir.liens.lots.titre,
-          icone: 'business',
-          route: ROUTES.PRODUCTION_VIANDE,
-        },
-        {
-          cle: 'afacturer',
-          titre: L.abattoir.liens.afacturer.titre,
-          icone: 'receipt',
-          route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer`,
-        },
-        {
-          cle: 'stock',
-          titre: L.abattoir.liens.stock.titre,
-          icone: 'cube',
-          route: `${ROUTES.COMPTABILITE_STOCKS}?onglet=${SECTION_STOCK.VIANDE}`,
-        },
-        {
-          cle: 'vendre',
-          titre: B.vendreViande,
-          icone: 'add-circle',
-          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
         },
       ];
     case 'fournisseurs':

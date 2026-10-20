@@ -30,6 +30,7 @@ import { reservesDeLaCommande } from '@/features/cheptel/services/reservations';
 import { etatCommunDesReservations } from '@/features/commercial/services/reservations';
 import type { Chevre } from '@/features/cheptel/types';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
+import { estUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { CategorieDepense, CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
@@ -70,6 +71,8 @@ export default function NouvelleFacture() {
     etape?: string;
     /** La catégorie de dépense d'ouverture (une facture reçue) : le didacticiel y montre ses champs. */
     depense?: string;
+    /** « 1 » : le premier contact de catégorie Abattoir est choisi d'office (amener des animaux à l'abattoir : « Suivant » mène au choix des animaux). */
+    abattoirContact?: string;
   }>();
   // La catégorie de recette d'ouverture : seulement une catégorie connue.
   const categorie = (Object.values(CATEGORIE_RECETTE) as string[]).includes(params.categorie ?? '')
@@ -96,6 +99,18 @@ export default function NouvelleFacture() {
   if (params.depense !== depenseVue) {
     setDepenseVue(params.depense);
     if (params.depense && (Object.values(CATEGORIE_DEPENSE) as string[]).includes(params.depense)) e.changerCategorieDepense(params.depense as CategorieDepense);
+  }
+  // Amener des animaux à l'abattoir : une fois la dépense « Animaux vivants (sortie) » choisie, le premier abattoir des contacts est sélectionné.
+  const [abattoirChoisi, setAbattoirChoisi] = useState(false);
+  if (
+    params.abattoirContact === '1' &&
+    !abattoirChoisi &&
+    e.fournisseurs.length > 0 &&
+    e.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE
+  ) {
+    setAbattoirChoisi(true);
+    const abattoir = e.fournisseurs.find(estUnAbattoir);
+    if (abattoir) e.changerFournisseur(abattoir.id);
   }
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);
