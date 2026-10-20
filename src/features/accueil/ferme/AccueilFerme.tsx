@@ -192,19 +192,21 @@ export default function AccueilFerme() {
       </View>
       <ScrollView
         style={styles.corps}
-        contentContainerStyle={styles.corpsContenu}
+        contentContainerStyle={[styles.corpsContenu, interieur ? styles.corpsInterieur : null]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Les lieux de la ferme, en haut : la production en grille à gauche, le stock et les contacts à droite. */}
-        <View style={styles.lieux}>
-          <View style={styles.lieuxGauche}>
-            <ColonneFerme entrees={gauche} onAppui={surLieu} grille />
+        {/* Les intervenants extérieurs, en haut : pas dans la chèvrerie, où l'on est chez soi. */}
+        {interieur ? null : (
+          <View style={styles.lieux}>
+            <View style={styles.lieuxGauche}>
+              <ColonneFerme entrees={gauche} onAppui={surLieu} grille />
+            </View>
+            <View style={styles.lieuxDroite}>
+              <ColonneFerme entrees={droite} onAppui={surLieu} grille />
+            </View>
           </View>
-          <View style={styles.lieuxDroite}>
-            <ColonneFerme entrees={droite} onAppui={surLieu} grille />
-          </View>
-        </View>
-        <View style={styles.centre}>
+        )}
+        <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
           {interieur ? (
             <View style={styles.interieur}>
               <ChevrerieInterieure
@@ -289,7 +291,10 @@ const styles = StyleSheet.create({
   },
   panneauEstive: { backgroundColor: '#DCE8F2', borderColor: '#B4C9DC' },
   enclos: { minHeight: 300 },
+  // Dans la chèvrerie, l'intérieur remplit toute la place, jusqu'à la barre du bas.
   interieur: { minHeight: 520, flexGrow: 1, borderRadius: 16, overflow: 'hidden' },
+  corpsInterieur: { flexGrow: 1 },
+  centreInterieur: { flexGrow: 1 },
   couche: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50 },
   fond: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.28)' },
 });
