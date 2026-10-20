@@ -2,8 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 import {
-  autonomieAliments,
-  compterBouclesPosees,
   compterMortsDeLAnnee,
   construireMinuteurs,
   enTranshumance,
@@ -30,10 +28,8 @@ import { articlesDuGenre, roleDeLaViande } from '@/features/stock/services/stock
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import type { ArchiveStock } from '@/features/stock/types';
 import { CATEGORIE_ANIMAL, STATUT_CHEVRE } from '@/shared/constants/cheptel';
-import { numerosTiptag } from '@/features/stock/services/boucles';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
-import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { todayISO } from '@/shared/utils/dates';
 
 /** Le nom court d'une déclaration à faire : « RSA », « URSSAF », ou le nom de l'échéance. */
@@ -52,7 +48,8 @@ function useLotsAFacturer(): number {
     }, [espece]),
   );
   // Seuls les animaux à boucle (non écartés du lot) se facturent ; sans boucle, la vente se fait sans facture.
-  return jours.filter((animaux) => animaux.some((a) => !!a.numeroBoucle?.trim() && !inconsommables.has(a.id))).length;
+  return jours.filter((animaux) => animaux.some((a) => !!a.numeroBoucle?.trim() && !inconsommables.has(a.id)))
+    .length;
 }
 
 /** Jusqu'à quatre animaux qui représentent le troupeau dans l'enclos : une femelle, un mâle, un petit, une autre femelle. */
@@ -80,9 +77,6 @@ export function useFermeAccueil() {
   const estive = settings.exploitation?.estives?.[aujourdhui.slice(0, 4)];
   const enEstive = enTranshumance(estive, aujourdhui);
 
-  const [aliments, setAliments] = useState<{ kg: number; jours?: number } | null>(null);
-  // Les boucles posées sur les animaux vivants : les boucles, et les tiptag (le petit badge).
-  const [boucles, setBoucles] = useState<{ boucles: number; tiptag: number } | undefined>();
   const [morts, setMorts] = useState(0);
   // Le stock et le niveau de chaque article : de quoi compter ce que la Transformation fabrique et garde.
   const [archiveStock, setArchiveStock] = useState<ArchiveStock | null>(null);
@@ -91,21 +85,15 @@ export function useFermeAccueil() {
   useFocusEffect(
     useCallback(() => {
       lireArchiveStock()
-        .then((archive) => {
-          setArchiveStock(archive);
-          const articles = new Set(articlesDuGenre(GENRE_ARTICLE.ALIMENT, archive, especeCourante()).map((a) => a.cle));
-          setAliments(autonomieAliments(archive.mouvements, articles, todayISO()));
-        })
+        .then(setArchiveStock)
         .catch(() => undefined);
       listTousLesAnimauxDeLEspece()
         .then((tous) => setMorts(compterMortsDeLAnnee(tous, todayISO(), STATUT_CHEVRE.MORTE)))
         .catch(() => undefined);
-      Promise.all([lireArchiveStock(), listChevresVivantes()])
-        .then(([archive, vivants]) => {
-          setVedettes(animauxVedettes(vivants));
-          setBoucles(compterBouclesPosees(vivants, numerosTiptag(archive.boucles)));
-        })
+      listChevresVivantes()
+        .then((vivants) => setVedettes(animauxVedettes(vivants)))
         .catch(() => undefined);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- l'espèce change ce que les listes renvoient : on relit alors tout
     }, [espece]),
   );
 
@@ -147,7 +135,16 @@ export function useFermeAccueil() {
         lotsAFacturer,
         lotsARappeler: aRappeler + aValider.length,
       }),
-    [sante.finLait, sante.finViande, bilan, declarations, envois.length, lotsAFacturer, aRappeler, aValider.length],
+    [
+      sante.finLait,
+      sante.finViande,
+      bilan,
+      declarations,
+      envois.length,
+      lotsAFacturer,
+      aRappeler,
+      aValider.length,
+    ],
   );
   const papiers = progressionPapiers({
     annee: accueil.annee,
@@ -164,8 +161,6 @@ export function useFermeAccueil() {
     minuteurs,
     prochaine: prochaineEcheance(minuteurs),
     papiers,
-    aliments,
-    boucles,
     /** Les animaux morts dans l'année (la stèle près de l'enclos, l'équarrissage). */
     morts,
     /** Ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. */

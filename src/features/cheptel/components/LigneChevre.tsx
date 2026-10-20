@@ -1,3 +1,4 @@
+import type { ImageSourcePropType } from 'react-native';
 import { Badge } from '@/shared/components/Badge';
 import { ListRow } from '@/shared/components/ListRow';
 import { colors, statutColors } from '@/shared/theme/colors';
@@ -31,6 +32,8 @@ export function LigneChevre({
   onPress,
   titre,
   emoji,
+  image,
+  fond,
 }: {
   chevre: Chevre;
   onPress: () => void;
@@ -38,6 +41,10 @@ export function LigneChevre({
   titre?: string;
   /** Un dessin (un emoji) à gauche de la ligne : la tête de l'animal, dans la chèvrerie de l'accueil. */
   emoji?: string;
+  /** Une image à la place de l'emoji (la tête dessinée de la chèvre). */
+  image?: ImageSourcePropType;
+  /** La couleur de fond du dessin. */
+  fond?: string;
 }) {
   const dateSortie =
     chevre.statut !== STATUT_CHEVRE.VIVANTE && chevre.dateStatut ? formatDateFR(chevre.dateStatut) : '';
@@ -45,7 +52,10 @@ export function LigneChevre({
     ? TEXTES.cheptel.listeCheptel.mereMerenumeroboucle(chevre.mereNumeroBoucle)
     : '';
 
-  const reserve = !titre && estReserve(chevre) ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}${chevre.reservation!.etat ? ` (${chevre.reservation!.etat})` : ''}` : '';
+  const reserve =
+    !titre && estReserve(chevre)
+      ? ` · ${TEXTES.cheptel.reservation.pour(chevre.reservation!.client)}${chevre.reservation!.etat ? ` (${chevre.reservation!.etat})` : ''}`
+      : '';
 
   return (
     <ListRow
@@ -58,6 +68,8 @@ export function LigneChevre({
       }
       trailing={<BadgeChevre chevre={chevre} />}
       emoji={emoji}
+      image={image}
+      fondPastille={fond}
       onPress={onPress}
     />
   );

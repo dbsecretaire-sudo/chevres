@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View, type ImageSourcePropType } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDansBloc } from '@/shared/components/BlocListe';
 import { colors } from '@/shared/theme/colors';
@@ -21,9 +21,25 @@ interface Props {
   icone?: keyof typeof Ionicons.glyphMap;
   /** Un dessin (un emoji) dans la pastille à gauche, à la place de l'icône : le tiers que la ligne représente. */
   emoji?: string;
+  /** Une image dans la pastille à gauche (la tête de l'animal), à la place de l'emoji. */
+  image?: ImageSourcePropType;
+  /** La couleur de fond de la pastille du dessin (le sexe et l'âge de l'animal). */
+  fondPastille?: string;
 }
 
-export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, actif, icone, emoji }: Props) {
+export function ListRow({
+  title,
+  subtitle,
+  trailing,
+  onPress,
+  grise,
+  surlignee,
+  actif,
+  icone,
+  emoji,
+  image,
+  fondPastille,
+}: Props) {
   const dansBloc = useDansBloc();
   return (
     <Pressable
@@ -36,9 +52,20 @@ export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, 
         pressed && onPress ? commonStyles.pressed : null,
       ]}
     >
-      {icone || emoji ? (
-        <View style={styles.pastille}>
-          {emoji ? <Text style={{ fontSize: 22 }}>{emoji}</Text> : icone ? <Ionicons name={icone} size={22} color={colors.primary} /> : null}
+      {icone || emoji || image ? (
+        <View style={[styles.pastille, fondPastille ? { backgroundColor: fondPastille } : null]}>
+          {image ? (
+            <Image
+              source={image}
+              style={styles.image}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            />
+          ) : emoji ? (
+            <Text style={{ fontSize: 22 }}>{emoji}</Text>
+          ) : icone ? (
+            <Ionicons name={icone} size={22} color={colors.primary} />
+          ) : null}
         </View>
       ) : null}
       <View style={commonStyles.textWrap}>
@@ -46,7 +73,9 @@ export function ListRow({ title, subtitle, trailing, onPress, grise, surlignee, 
         {subtitle ? <Text style={commonStyles.muted}>{subtitle}</Text> : null}
       </View>
       {trailing ??
-        ((icone || emoji) && onPress ? <Ionicons name="chevron-forward" size={20} color={colors.textMuted} /> : null)}
+        ((icone || emoji || image) && onPress ? (
+          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+        ) : null)}
     </Pressable>
   );
 }

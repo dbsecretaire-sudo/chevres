@@ -33,14 +33,24 @@ export function BarreBasseFerme({ annees, annee, onChoisirAnnee }: Props) {
   const listeAnnees = [...new Set([...annees, annee])].sort((a, b) => b - a);
   return (
     <View style={[styles.barre, { paddingBottom: 8 + bottom }]}>
-      <BoutonDeBarre icone={<Ionicons name="calendar" size={26} color={colors.blanc} />} libelle={String(annee)} onPress={() => setAnneeOuverte(true)} />
+      <BoutonDeBarre
+        icone={<Ionicons name="calendar" size={26} color={colors.blanc} />}
+        libelle={String(annee)}
+        onPress={() => setAnneeOuverte(true)}
+      />
       <BoutonDeBarre
         icone={<Ionicons name="swap-horizontal" size={26} color={colors.blanc} />}
         libelle={LABEL_TYPE_ANIMAL_ETABLISSEMENT[espece]}
-        onPress={() => (especes.length > 1 ? setEspeceOuverte(true) : router.push(ROUTES.INFORMATIONS_EXPLOITATION as never))}
+        onPress={() =>
+          especes.length > 1 ? setEspeceOuverte(true) : router.push(ROUTES.INFORMATIONS_EXPLOITATION as never)
+        }
       />
       <BoutonDidacticiel forme="barre" />
-      <BoutonDeBarre icone={<Ionicons name="settings" size={26} color={colors.blanc} />} libelle={T.reglages} onPress={() => router.push(ROUTES.REGLAGES as never)} />
+      <BoutonDeBarre
+        icone={<Ionicons name="settings" size={26} color={colors.blanc} />}
+        libelle={T.reglages}
+        onPress={() => router.push(ROUTES.REGLAGES as never)}
+      />
       <OptionsModal
         visible={anneeOuverte}
         onClose={() => setAnneeOuverte(false)}
@@ -72,5 +82,13 @@ export function BarreBasseFerme({ annees, annee, onChoisirAnnee }: Props) {
 }
 
 const styles = StyleSheet.create({
-  barre: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 8, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border },
+  barre: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
 });

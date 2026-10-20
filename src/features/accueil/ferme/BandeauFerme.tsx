@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
@@ -12,8 +11,10 @@ const T = TEXTES.accueil.ferme.bandeau;
 interface Props {
   /** La balance de l'année : les recettes moins les dépenses. */
   balance?: number;
-  /** Les boucles posées sur les animaux vivants, et les tiptag posés (le petit badge). */
-  boucles?: { boucles: number; tiptag: number };
+  /** Combien de rappels attendent d'être validés. */
+  rappels?: number;
+  /** Un appui sur la cloche : ouvre la liste des rappels. */
+  onRappels: () => void;
 }
 
 /** Une pastille du bandeau : son icône, sa valeur, et un appui qui ouvre l'écran qui la détaille. */
@@ -25,6 +26,7 @@ function Pastille({
   badge,
   libelle,
   route,
+  onAppui,
   poids = 1,
 }: {
   icone: keyof typeof Ionicons.glyphMap;
@@ -32,14 +34,16 @@ function Pastille({
   couleur?: string;
   badge?: string;
   libelle: string;
-  route: string;
+  /** L'écran que la pastille ouvre ; ou `onAppui`, pour une fenêtre de l'accueil. */
+  route?: string;
+  onAppui?: () => void;
   poids?: number;
 }) {
   const router = useRouter();
   return (
     <Pressable
       style={[styles.pastille, { flex: poids }]}
-      onPress={() => router.push(route as never)}
+      onPress={() => (onAppui ? onAppui() : router.push(route as never))}
       accessibilityRole="button"
       accessibilityLabel={`${libelle} : ${valeur}`}
     >
@@ -60,9 +64,9 @@ const montant = (valeur: number) => `${Math.round(valeur).toLocaleString(LOCALE)
 
 /**
  * Le bandeau du haut de l'accueil, comme le tableau de bord d'un jeu : le portrait de l'exploitation, la balance de l'année (les pièces),
- * les boucles posées et les tiptag (l'étiquette) et les réglages.
+ * les rappels à valider et les réglages.
  */
-export function BandeauFerme({ balance, boucles }: Props) {
+export function BandeauFerme({ balance, rappels, onRappels }: Props) {
   const router = useRouter();
   return (
     <View style={styles.bandeau}>
@@ -83,12 +87,11 @@ export function BandeauFerme({ balance, boucles }: Props) {
         poids={2}
       />
       <Pastille
-        icone="pricetag"
-        valeur={boucles === undefined ? '…' : String(boucles.boucles)}
-        badge={boucles?.tiptag ? `+${boucles.tiptag}` : undefined}
-        couleur={colors.accent}
-        libelle={T.boucles}
-        route={ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)}
+        icone="notifications"
+        valeur={rappels === undefined ? '…' : String(rappels)}
+        couleur={rappels ? colors.accent : undefined}
+        libelle={T.rappels}
+        onAppui={onRappels}
       />
       <Pressable
         style={styles.reglages}

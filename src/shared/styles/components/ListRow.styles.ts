@@ -25,6 +25,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  /** L'image (la tête d'un animal) dans la pastille. */
+  image: { width: 30, height: 31 },
   /** La ligne du menu dont l'écran est ouvert à côté : un fond plus soutenu et une barre à gauche. */
   rowActive: { backgroundColor: colors.ligneActive, borderLeftWidth: 4, borderLeftColor: colors.primary },
   rowSurlignee: { borderColor: colors.primary, borderWidth: 2 },

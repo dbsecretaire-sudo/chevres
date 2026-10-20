@@ -3,12 +3,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  actionsDuLieu,
-  OUVRIR_LES_RAPPELS,
-  type ActionDeLieu,
-  type CibleDesBulles,
-} from '@/features/accueil/ferme/actionsLieu';
+import { actionsDuLieu, type ActionDeLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { BarreBasseFerme } from '@/features/accueil/ferme/BarreBasseFerme';
 import { BullesLieu } from '@/features/accueil/ferme/BullesLieu';
@@ -28,6 +23,7 @@ import {
 } from '@/features/accueil/services/bullesFerme';
 import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -40,6 +36,22 @@ const ACHAT = '#8E1F33';
 const VENTE = colors.primary;
 const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
+
+/**
+ * Les boutons de la chèvrerie qui ouvrent directement leur écran, sans bulles. Le suivi des mouvements, le bordereau de perte et le recensement
+ * se génèrent depuis le dossier PAC, qui garde leur année et leur état.
+ */
+const ROUTE_DIRECTE: Record<string, string> = {
+  alimentation: ROUTES.SANTE_ALIMENTATION,
+  lots: ROUTES.CHEPTEL_LOTS,
+  traitements: ROUTES.CHEPTEL_TRAITEMENTS,
+  boucles: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
+  suivi: ROUTES.CHEPTEL_DOSSIER_PAC,
+  circulation: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION,
+  bordereau: ROUTES.CHEPTEL_DOSSIER_PAC,
+  recensement: ROUTES.CHEPTEL_DOSSIER_PAC,
+  generes: ROUTES.CHEPTEL_BIBLIOTHEQUE,
+};
 
 /** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
 type Zone = 'lieux' | 'exploitation' | 'interieur';
@@ -80,7 +92,7 @@ const iconeIon = (nom: keyof typeof Ionicons.glyphMap) => (
 /**
  * L'accueil « ferme » de l'élevage : un bandeau comme celui d'un jeu (la balance, les boucles, l'aliment), le nom de l'établissement, puis
  * les intervenants extérieurs en haut (ceux à qui l'on vend ou achète), puis l'enclos du troupeau et ses chèvres qui se promènent ; dans la
- * chèvrerie, le stock, l'estive et les rappels ; sous elle la carte Transformation (fromages, boucherie / charcuterie, viande), dont l'intérieur a la
+ * chèvrerie, ses boutons (alimentation, lots, traitements, boucles, estive, documents) ; sous elle la carte Transformation (fromages, boucherie / charcuterie, viande), dont l'intérieur a la
  * fromagerie, la viande, la charcuterie et le stock. Chaque bouton fait sortir ses actions en bulles. En bas, l'année, l'espèce, le didacticiel
  * et les réglages. Une fenêtre annonce une fois par jour ce qui attend.
  */
@@ -122,17 +134,18 @@ export default function AccueilFerme() {
   const droite: EntreeDeColonne[] = [
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
   ];
-  // Dans la chèvrerie : le stock, l'estive et les rappels.
+  // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
   const interneExploitation: EntreeDeColonne[] = [
-    { cle: 'stock', titre: C.stock, icone: iconeIon('cube'), couleur: NEUTRE },
+    { cle: 'alimentation', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ORANGE },
+    { cle: 'lots', titre: C.lots, icone: iconeIon('layers'), couleur: ORANGE },
+    { cle: 'traitements', titre: C.traitements, icone: iconeIon('medkit'), couleur: ORANGE },
+    { cle: 'boucles', titre: C.boucles, icone: iconeIon('pricetag'), couleur: ORANGE },
     { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
-    {
-      cle: 'rappels',
-      titre: C.rappels,
-      icone: iconeIon('notifications'),
-      pastille: f.nombreDeRappels,
-      couleur: ORANGE,
-    },
+    { cle: 'suivi', titre: C.suivi, icone: iconeIon('document-text'), couleur: ORANGE },
+    { cle: 'circulation', titre: C.circulation, icone: iconeIon('document-text'), couleur: ORANGE },
+    { cle: 'bordereau', titre: C.bordereau, icone: iconeIon('document-text'), couleur: ORANGE },
+    { cle: 'recensement', titre: C.recensement, icone: iconeIon('document-text'), couleur: ORANGE },
+    { cle: 'generes', titre: C.generes, icone: iconeIon('document-text'), couleur: ORANGE },
   ];
   // Dans la transformation : la fromagerie, la viande, la charcuterie, et le stock.
   const interneTransformation: EntreeDeColonne[] = [
@@ -164,6 +177,7 @@ export default function AccueilFerme() {
   const surBouton = (zone: Zone, cle: string, ancre: AncreBouton) => {
     if (cle === 'estive') setEstiveOuverte(true);
     else if (cle === 'stock') router.push(ROUTES.lieu('entrepot') as never);
+    else if (ROUTE_DIRECTE[cle]) router.push(ROUTE_DIRECTE[cle] as never);
     else ouvrirMenu(cle as CibleDesBulles, zone, ancre);
   };
   const surLieu = (cle: string, ancre: AncreBouton) => surBouton('lieux', cle, ancre);
@@ -175,8 +189,7 @@ export default function AccueilFerme() {
   };
   const choisir = (action: ActionDeLieu) => {
     setMenu(null);
-    if (action.route === OUVRIR_LES_RAPPELS) setRappelsOuverts(true);
-    else router.push(action.route as never);
+    router.push(action.route as never);
   };
 
   // Les bulles du menu ouvert : le bouton est décalé si elles sortaient de l'écran.
@@ -195,7 +208,11 @@ export default function AccueilFerme() {
     <View ref={racine} collapsable={false} style={styles.racine}>
       <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + haut }]}>
         <View style={styles.colonneHaut}>
-          <BandeauFerme balance={f.stats?.soldeFactures} boucles={f.boucles} />
+          <BandeauFerme
+            balance={f.stats?.soldeFactures}
+            rappels={f.nombreDeRappels}
+            onRappels={() => setRappelsOuverts(true)}
+          />
           {estBureau() ? null : <NomFerme />}
           <RappelSauvegarde />
         </View>
@@ -221,7 +238,6 @@ export default function AccueilFerme() {
             <View style={styles.interieur}>
               <ChevrerieInterieure
                 vedettes={f.vedettes}
-                aliments={f.aliments}
                 onSortir={() => setInterieur(null)}
                 boutons={interneExploitation}
                 onAppuiBouton={surInterne}
@@ -300,13 +316,15 @@ const styles = StyleSheet.create({
   haut: { paddingHorizontal: 12, paddingBottom: 8 },
   colonneHaut: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 8 },
   corps: { flex: 1 },
-  corpsContenu: { paddingHorizontal: 10, paddingBottom: 12, gap: 10 },
+  // Le corps remplit la hauteur : les deux cartes (exploitation et transformation) se la partagent à parts égales, sans dépasser l'écran.
+  corpsContenu: { flexGrow: 1, paddingHorizontal: 10, paddingBottom: 12, gap: 10 },
   // Les six premiers intervenants se partagent la largeur ; les contacts, seuls au bout, ont la part d'un bouton.
   lieux: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 16 },
   lieuxGauche: { flex: 6 },
   lieuxDroite: { flex: 1 },
-  centre: { gap: 10 },
+  centre: { flex: 1, gap: 10 },
   panneau: {
+    flex: 1,
     backgroundColor: '#E1ECCB',
     borderRadius: 18,
     padding: 10,
@@ -315,7 +333,7 @@ const styles = StyleSheet.create({
     borderColor: '#B8CC94',
   },
   panneauEstive: { backgroundColor: '#DCE8F2', borderColor: '#B4C9DC' },
-  enclos: { minHeight: 290 },
+  enclos: { flex: 1, minHeight: 130 },
   // Dans la chèvrerie, l'intérieur remplit toute la place, jusqu'à la barre du bas.
   interieur: { minHeight: 520, flexGrow: 1, borderRadius: 16, overflow: 'hidden' },
   corpsInterieur: { flexGrow: 1 },

@@ -18,7 +18,10 @@ export function Carrelage({ lignes = LIGNES_DU_CARRELAGE }: { lignes?: number })
       {Array.from({ length: lignes }, (_, ligne) => (
         <View key={ligne} style={styles.ligneDeCarreaux}>
           {Array.from({ length: COLONNES_DU_CARRELAGE }, (_, colonne) => (
-            <View key={colonne} style={[styles.carreau, (ligne + colonne) % 2 === 0 ? styles.carreauClair : null]} />
+            <View
+              key={colonne}
+              style={[styles.carreau, (ligne + colonne) % 2 === 0 ? styles.carreauClair : null]}
+            />
           ))}
         </View>
       ))}
@@ -27,7 +30,13 @@ export function Carrelage({ lignes = LIGNES_DU_CARRELAGE }: { lignes?: number })
 }
 
 /** Les trois lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. Un appui ouvre la rubrique du stock. */
-export function LignesDeTransformation({ compte, grand = false }: { compte: CompteTransformation; grand?: boolean }) {
+export function LignesDeTransformation({
+  compte,
+  grand = false,
+}: {
+  compte: CompteTransformation;
+  grand?: boolean;
+}) {
   const router = useRouter();
   const vers = (section: string) => router.push(`${ROUTES.COMPTABILITE_STOCKS}?onglet=${section}` as never);
   const lignes: { cle: string; texte: string; section: string }[] = [
@@ -50,7 +59,13 @@ export function LignesDeTransformation({ compte, grand = false }: { compte: Comp
  * La carte « Transformation » de l'accueil, sous l'exploitation : un sol carrelé dans un cadre en pointillés, avec ce qu'on fabrique et garde
  * chez soi (les fromages, la boucherie et la charcuterie, la viande). La petite porte entre dans la transformation.
  */
-export function TransformationFerme({ compte, onEntrer }: { compte: CompteTransformation; onEntrer: () => void }) {
+export function TransformationFerme({
+  compte,
+  onEntrer,
+}: {
+  compte: CompteTransformation;
+  onEntrer: () => void;
+}) {
   return (
     <View style={styles.carte}>
       <View style={styles.cadre}>
@@ -58,7 +73,13 @@ export function TransformationFerme({ compte, onEntrer }: { compte: CompteTransf
         <Text style={styles.titre}>{T.titre}</Text>
         <LignesDeTransformation compte={compte} />
       </View>
-      <Pressable style={styles.porte} onPress={onEntrer} accessibilityRole="button" accessibilityLabel={T.entrer} hitSlop={6}>
+      <Pressable
+        style={styles.porte}
+        onPress={onEntrer}
+        accessibilityRole="button"
+        accessibilityLabel={T.entrer}
+        hitSlop={6}
+      >
         <Text style={styles.porteEmoji}>🚪</Text>
       </Pressable>
     </View>
@@ -66,16 +87,52 @@ export function TransformationFerme({ compte, onEntrer }: { compte: CompteTransf
 }
 
 const styles = StyleSheet.create({
-  carte: { backgroundColor: '#E1ECCB', borderRadius: 18, padding: 10, borderWidth: 2, borderColor: '#B8CC94' },
-  cadre: { minHeight: 200, borderRadius: 16, borderWidth: 3, borderColor: '#A9794A', borderStyle: 'dashed', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 14 },
+  carte: {
+    flex: 1,
+    backgroundColor: '#E1ECCB',
+    borderRadius: 18,
+    padding: 10,
+    borderWidth: 2,
+    borderColor: '#B8CC94',
+  },
+  cadre: {
+    flex: 1,
+    minHeight: 130,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#A9794A',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 14,
+  },
   carrelage: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   ligneDeCarreaux: { flex: 1, flexDirection: 'row' },
-  carreau: { flex: 1, backgroundColor: '#EBE8E1', borderWidth: StyleSheet.hairlineWidth, borderColor: '#BDB8AD' },
+  carreau: {
+    flex: 1,
+    backgroundColor: '#EBE8E1',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#BDB8AD',
+  },
   carreauClair: { backgroundColor: '#F2F0EA' },
   titre: { fontSize: 17, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
   lignes: { alignItems: 'center', gap: 2 },
   ligne: { fontSize: 15, fontWeight: '700', color: '#1F1F1F', textAlign: 'center' },
   ligneGrande: { fontSize: 18 },
-  porte: { position: 'absolute', right: 0, bottom: 0, width: 44, height: 44, borderRadius: 22, backgroundColor: colors.blanc, borderWidth: 2, borderColor: '#A9794A', alignItems: 'center', justifyContent: 'center' },
+  porte: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.blanc,
+    borderWidth: 2,
+    borderColor: '#A9794A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   porteEmoji: { fontSize: 24 },
 });

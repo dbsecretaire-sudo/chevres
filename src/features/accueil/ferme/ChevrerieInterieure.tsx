@@ -1,32 +1,32 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features/accueil/ferme/ColonneFerme';
 import { dessinDeLEspece } from '@/features/accueil/ferme/EnclosFerme';
+import { fondDeLAnimal } from '@/features/accueil/services/fondDeLAnimal';
+import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
 import { FiltresCheptel } from '@/features/cheptel/components/FiltresCheptel';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { useListeCheptel } from '@/features/cheptel/hooks/useListeCheptel';
 import type { Chevre } from '@/features/cheptel/types';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
+import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.chevrerie;
 
-/** Combien d'animaux la liste montre d'abord, et de combien elle s'allonge à chaque « Voir plus » (un grand troupeau ne s'affiche pas d'un coup). */
-const PAGE = 30;
+/** La tête dessinée d'une chèvre (le trait fin) : elle remplace l'emoji devant chaque chèvre de la liste. */
+const TETE_DE_CHEVRE = require('../../../../assets/images/tete-chevre.png');
 
 interface Props {
   /** Les animaux qui représentent le troupeau (jusqu'à quatre) : ils se tiennent sur le rebord du mur. */
   vedettes: readonly Chevre[];
-  /** Le stock d'aliment : les jours qu'il tient, à défaut les kilos. */
-  aliments: { kg: number; jours?: number } | null;
   onSortir: () => void;
-  /** Les boutons de ce qui se passe chez soi (fromagerie, viande, charcuterie, stock, estive, rappels) et ce que fait un appui sur l'un d'eux. */
+  /** Les boutons de ce qui se passe chez soi (alimentation, lots, traitements, boucles, estive, documents) et ce que fait un appui sur l'un d'eux. */
   boutons: readonly EntreeDeColonne[];
   onAppuiBouton: (cle: string, ancre: AncreBouton) => void;
 }
@@ -34,15 +34,14 @@ interface Props {
 /**
  * L'intérieur de la chèvrerie : un autre décor, le mur de bois et la paille. Sur le mur, les boutons de ce qui se passe chez soi, et sur son
  * rebord, les chèvres qui se promènent. Sur la paille, la liste des animaux du cheptel, avec sa recherche et ses filtres : chaque ligne ouvre
- * la fiche de l'animal. « Donner à manger » dit ce qu'il reste d'aliment.
+ * la fiche de l'animal.
  */
-export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onAppuiBouton }: Props) {
+export function ChevrerieInterieure({ vedettes, onSortir, boutons, onAppuiBouton }: Props) {
   const router = useRouter();
   const liste = useListeCheptel();
-  const [affiches, setAffiches] = useState(PAGE);
-  const jours = aliments?.jours;
   const dessin = dessinDeLEspece();
-  const visibles = liste.filtrees.slice(0, affiches);
+  const tetes = especeCourante() === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES;
+  const visibles = liste.filtrees;
   return (
     <View style={styles.fond}>
       <View style={styles.mur}>
@@ -59,9 +58,9 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onA
           <Text style={styles.titre}>{T.titre}</Text>
         </View>
 
-        {/* Ce qui se passe chez soi : la fromagerie, la viande, la charcuterie, le stock, l'estive, les rappels. */}
+        {/* Ce qui se passe chez soi : l'alimentation, les lots, les traitements, les boucles, l'estive, les documents. */}
         <View style={styles.boutons}>
-          <ColonneFerme entrees={boutons} onAppui={onAppuiBouton} grille />
+          <ColonneFerme entrees={boutons} onAppui={onAppuiBouton} grille compacte />
         </View>
 
         {/* Les chèvres sur le rebord du mur, qui se promènent. */}
@@ -77,18 +76,6 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onA
       </View>
 
       <View style={styles.sol}>
-        <Pressable
-          style={styles.donner}
-          onPress={() => router.push(ROUTES.SANTE_ALIMENTATION as never)}
-          accessibilityRole="button"
-          accessibilityLabel={T.donner}
-        >
-          <Ionicons name="nutrition" size={20} color={colors.blanc} />
-          <Text style={styles.donnerTexte}>
-            {jours !== undefined ? `${T.donner} · ${T.jours(jours)}` : T.donner}
-          </Text>
-        </Pressable>
-
         <FiltresCheptel e={liste} />
         {visibles.length === 0 ? (
           <EmptyState
@@ -103,21 +90,14 @@ export function ChevrerieInterieure({ vedettes, aliments, onSortir, boutons, onA
                 <LigneChevre
                   chevre={chevre}
                   emoji={dessin}
+                  image={tetes ? TETE_DE_CHEVRE : undefined}
+                  fond={fondDeLAnimal(categorieAccueil(chevre))}
                   onPress={() => router.push(ROUTES.ficheChevre(chevre.id) as never)}
                 />
               </LigneDeBloc>
             ))}
           </View>
         )}
-        {liste.filtrees.length > affiches ? (
-          <Pressable
-            style={styles.plus}
-            onPress={() => setAffiches((n) => n + PAGE)}
-            accessibilityRole="button"
-          >
-            <Text style={styles.plusTexte}>{T.voirPlus(liste.filtrees.length - affiches)}</Text>
-          </Pressable>
-        ) : null}
       </View>
     </View>
   );
@@ -166,26 +146,4 @@ const styles = StyleSheet.create({
   },
   chevre: { fontSize: 44 },
   sol: { padding: 8, gap: 8 },
-  donner: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 2,
-    borderColor: colors.blanc,
-  },
-  donnerTexte: { color: colors.blanc, fontSize: 14, fontWeight: '700' },
-  plus: {
-    alignSelf: 'center',
-    backgroundColor: '#8A6238',
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    marginTop: 4,
-  },
-  plusTexte: { color: colors.blanc, fontSize: 13, fontWeight: '700' },
 });

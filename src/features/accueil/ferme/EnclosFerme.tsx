@@ -44,7 +44,11 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
   return (
     <Balade amplitude={14 + (rang % 2) * 8} amplitudeY={10 + (rang % 3) * 4} duree={2600 + rang * 700}>
       <View style={styles.animal}>
-        <Text style={{ fontSize: petit ? 28 : 44 }} accessibilityElementsHidden importantForAccessibility="no">
+        <Text
+          style={{ fontSize: petit ? 28 : 44 }}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        >
           {DESSIN_PAR_ESPECE[especeCourante()] ?? '🐐'}
         </Text>
         {boucle ? (
@@ -65,54 +69,99 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
 export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onAppui, onEntrer }: Props) {
   return (
     <View style={styles.conteneur}>
-    <Pressable
-      style={[styles.enclos, estive ? styles.montagne : null]}
-      onPress={onAppui}
-      accessibilityRole="button"
-      accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos}
-    >
-      {estive ? (
-        <Text style={styles.sommets} accessibilityElementsHidden importantForAccessibility="no">
-          🏔️ ⛰️ 🏔️
+      <Pressable
+        style={[styles.enclos, estive ? styles.montagne : null]}
+        onPress={onAppui}
+        accessibilityRole="button"
+        accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos}
+      >
+        {estive ? (
+          <Text style={styles.sommets} accessibilityElementsHidden importantForAccessibility="no">
+            🏔️ ⛰️ 🏔️
+          </Text>
+        ) : null}
+        <Text style={styles.titre} numberOfLines={2}>
+          {estive ? T.estive(estive.zone) : T.enclos}
         </Text>
-      ) : null}
-      <Text style={styles.titre} numberOfLines={2}>
-        {estive ? T.estive(estive.zone) : T.enclos}
-      </Text>
-      {vedettes.length > 0 ? (
-        <View style={styles.troupeau}>
-          {vedettes.map((a, i) => (
-            <AnimalDeLEnclos key={a.id} animal={a} rang={i} />
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.vide}>{T.aucunAnimal}</Text>
-      )}
-      {estive?.descente ? <Text style={styles.descente}>{T.descenteLe(formatDateFR(estive.descente))}</Text> : null}
-      <Text style={styles.effectif} numberOfLines={2}>
-        {nombreAnimaux === undefined ? '…' : TEXTES.accueil.ferme.bandeau.animaux(nombreAnimaux)}
-        {naissances ? ` · ${T.nes(naissances)}` : ''}
-      </Text>
-    </Pressable>
-    <Pressable style={styles.porte} onPress={onEntrer} accessibilityRole="button" accessibilityLabel={TEXTES.accueil.ferme.chevrerie.entrer} hitSlop={6}>
-      <Text style={styles.porteEmoji}>🚪</Text>
-    </Pressable>
+        {vedettes.length > 0 ? (
+          <View style={styles.troupeau}>
+            {vedettes.map((a, i) => (
+              <AnimalDeLEnclos key={a.id} animal={a} rang={i} />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.vide}>{T.aucunAnimal}</Text>
+        )}
+        {estive?.descente ? (
+          <Text style={styles.descente}>{T.descenteLe(formatDateFR(estive.descente))}</Text>
+        ) : null}
+        <Text style={styles.effectif} numberOfLines={2}>
+          {nombreAnimaux === undefined ? '…' : TEXTES.accueil.ferme.bandeau.animaux(nombreAnimaux)}
+          {naissances ? ` · ${T.nes(naissances)}` : ''}
+        </Text>
+      </Pressable>
+      <Pressable
+        style={styles.porte}
+        onPress={onEntrer}
+        accessibilityRole="button"
+        accessibilityLabel={TEXTES.accueil.ferme.chevrerie.entrer}
+        hitSlop={6}
+      >
+        <Text style={styles.porteEmoji}>🚪</Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1 },
-  porte: { position: 'absolute', right: -10, bottom: -10, width: 44, height: 44, borderRadius: 22, backgroundColor: colors.blanc, borderWidth: 2, borderColor: '#A9794A', alignItems: 'center', justifyContent: 'center' },
+  porte: {
+    position: 'absolute',
+    right: -10,
+    bottom: -10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.blanc,
+    borderWidth: 2,
+    borderColor: '#A9794A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   porteEmoji: { fontSize: 24 },
-  enclos: { flex: 1, backgroundColor: '#D9E8BE', borderRadius: 16, borderWidth: 3, borderColor: '#A9794A', borderStyle: 'dashed', padding: 14, gap: 8, alignItems: 'center', justifyContent: 'center' },
+  enclos: {
+    flex: 1,
+    backgroundColor: '#D9E8BE',
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#A9794A',
+    borderStyle: 'dashed',
+    padding: 14,
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
   sommets: { fontSize: 30, letterSpacing: 2 },
   descente: { fontSize: 12, color: colors.primaryDark },
   titre: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
-  troupeau: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end', gap: 22, paddingVertical: 14 },
+  troupeau: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    gap: 22,
+    paddingVertical: 14,
+  },
   animal: { alignItems: 'center', gap: 2 },
-  etiquette: { backgroundColor: '#F2C94C', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1, borderColor: '#B58B1A' },
+  etiquette: {
+    backgroundColor: '#F2C94C',
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: '#B58B1A',
+  },
   etiquetteTexte: { fontSize: 11, fontWeight: '700', color: '#4A3A07' },
   vide: { fontSize: 13, color: colors.textMuted, paddingVertical: 16 },
   effectif: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },

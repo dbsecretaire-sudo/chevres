@@ -31,7 +31,13 @@ function Bulle({
     }
     const animation = Animated.sequence([
       Animated.delay(rang * 70),
-      Animated.spring(valeur, { toValue: 1, friction: 4, tension: 120, useNativeDriver: true, isInteraction: false }),
+      Animated.spring(valeur, {
+        toValue: 1,
+        friction: 4,
+        tension: 120,
+        useNativeDriver: true,
+        isInteraction: false,
+      }),
     ]);
     animation.start();
     return () => animation.stop();
@@ -43,7 +49,11 @@ function Bulle({
         {
           left: dx - TAILLE / 2,
           top: dy - TAILLE / 2,
-          opacity: valeur.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+          opacity: valeur.interpolate({
+            inputRange: [0, 0.4, 1],
+            outputRange: [0, 1, 1],
+            extrapolate: 'clamp',
+          }),
           // Elle part du bouton (au centre) et gagne sa place.
           transform: [
             { translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [-dx, 0] }) },
@@ -53,7 +63,12 @@ function Bulle({
         },
       ]}
     >
-      <Pressable style={styles.rond} onPress={() => onChoisir(action)} accessibilityRole="button" accessibilityLabel={action.titre}>
+      <Pressable
+        style={styles.rond}
+        onPress={() => onChoisir(action)}
+        accessibilityRole="button"
+        accessibilityLabel={action.titre}
+      >
         <Ionicons name={action.icone} size={32} color={colors.blanc} />
       </Pressable>
       <Text style={styles.libelle} numberOfLines={2}>
@@ -80,11 +95,23 @@ export function BullesLieu({
   centreDeg: number;
   onChoisir: (a: ActionDeLieu) => void;
 }) {
-  const positions = positionsEnArc(actions.length, rayonDesBulles(actions.length), centreDeg, ecartDesBulles(actions.length));
+  const positions = positionsEnArc(
+    actions.length,
+    rayonDesBulles(actions.length),
+    centreDeg,
+    ecartDesBulles(actions.length),
+  );
   return (
     <View style={[styles.ancre, { left: x, top: y }]} pointerEvents="box-none">
       {actions.map((a, i) => (
-        <Bulle key={a.cle} action={a} dx={positions[i].x} dy={positions[i].y} rang={i} onChoisir={onChoisir} />
+        <Bulle
+          key={a.cle}
+          action={a}
+          dx={positions[i].x}
+          dy={positions[i].y}
+          rang={i}
+          onChoisir={onChoisir}
+        />
       ))}
     </View>
   );

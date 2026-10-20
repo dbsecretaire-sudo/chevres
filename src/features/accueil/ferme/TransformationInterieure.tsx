@@ -25,7 +25,12 @@ export function TransformationInterieure({ compte, onSortir, boutons, onAppuiBou
       <Carrelage lignes={10} />
       <View style={styles.contenu}>
         <View style={styles.tete}>
-          <Pressable style={styles.sortir} onPress={onSortir} accessibilityRole="button" accessibilityLabel={TEXTES.accueil.ferme.chevrerie.sortir}>
+          <Pressable
+            style={styles.sortir}
+            onPress={onSortir}
+            accessibilityRole="button"
+            accessibilityLabel={TEXTES.accueil.ferme.chevrerie.sortir}
+          >
             <Text style={styles.sortirEmoji}>🚪</Text>
             <Text style={styles.sortirTexte}>{TEXTES.accueil.ferme.chevrerie.sortir}</Text>
           </Pressable>
@@ -46,7 +51,17 @@ const styles = StyleSheet.create({
   fond: { flex: 1, backgroundColor: '#EBE8E1' },
   contenu: { padding: 8, gap: 10 },
   tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sortir: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.blanc, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 2, borderColor: '#A9794A' },
+  sortir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.blanc,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 2,
+    borderColor: '#A9794A',
+  },
   sortirEmoji: { fontSize: 20 },
   sortirTexte: { fontSize: 13, fontWeight: '700', color: colors.text },
   titre: { fontSize: 16, fontWeight: '700', color: '#1F1F1F' },

@@ -17,7 +17,15 @@ export function useMouvementReduit(): boolean {
 }
 
 /** Une vue qui apparaît en fondu en montant un peu, après `delai` ms (les boutons du menu se posent l'un après l'autre). */
-export function Apparition({ delai = 0, children, style }: { delai?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+export function Apparition({
+  delai = 0,
+  children,
+  style,
+}: {
+  delai?: number;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
   const reduit = useMouvementReduit();
   const [valeur] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -25,13 +33,26 @@ export function Apparition({ delai = 0, children, style }: { delai?: number; chi
       valeur.setValue(1);
       return;
     }
-    const animation = Animated.timing(valeur, { toValue: 1, duration: 380, delay: delai, easing: Easing.out(Easing.cubic), useNativeDriver: true, isInteraction: false });
+    const animation = Animated.timing(valeur, {
+      toValue: 1,
+      duration: 380,
+      delay: delai,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+      isInteraction: false,
+    });
     animation.start();
     return () => animation.stop();
   }, [delai, reduit, valeur]);
   return (
     <Animated.View
-      style={[style, { opacity: valeur, transform: [{ translateY: valeur.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}
+      style={[
+        style,
+        {
+          opacity: valeur,
+          transform: [{ translateY: valeur.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+        },
+      ]}
     >
       {children}
     </Animated.View>
@@ -39,7 +60,15 @@ export function Apparition({ delai = 0, children, style }: { delai?: number; chi
 }
 
 /** Une vue qui pulse doucement tant que `actif` (une échéance en retard attire l'œil). */
-export function Pulsation({ actif, children, style }: { actif: boolean; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+export function Pulsation({
+  actif,
+  children,
+  style,
+}: {
+  actif: boolean;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
   const reduit = useMouvementReduit();
   const [valeur] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -49,14 +78,35 @@ export function Pulsation({ actif, children, style }: { actif: boolean; children
     }
     const boucle = Animated.loop(
       Animated.sequence([
-        Animated.timing(valeur, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true, isInteraction: false }),
-        Animated.timing(valeur, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(valeur, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+          isInteraction: false,
+        }),
+        Animated.timing(valeur, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+          isInteraction: false,
+        }),
       ]),
     );
     boucle.start();
     return () => boucle.stop();
   }, [actif, reduit, valeur]);
-  return <Animated.View style={[style, { transform: [{ scale: valeur.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] }) }] }]}>{children}</Animated.View>;
+  return (
+    <Animated.View
+      style={[
+        style,
+        { transform: [{ scale: valeur.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] }) }] },
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
 }
 
 /**
@@ -84,8 +134,20 @@ export function Balade({
     const dureeY = Math.round(duree * 1.37);
     const boucle = Animated.loop(
       Animated.sequence([
-        Animated.timing(profondeur, { toValue: 1, duration: dureeY, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
-        Animated.timing(profondeur, { toValue: 0, duration: dureeY, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(profondeur, {
+          toValue: 1,
+          duration: dureeY,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+          isInteraction: false,
+        }),
+        Animated.timing(profondeur, {
+          toValue: 0,
+          duration: dureeY,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+          isInteraction: false,
+        }),
       ]),
     );
     boucle.start();
@@ -95,8 +157,20 @@ export function Balade({
     if (reduit) return;
     const boucle = Animated.loop(
       Animated.sequence([
-        Animated.timing(valeur, { toValue: 1, duration: duree, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
-        Animated.timing(valeur, { toValue: 0, duration: duree, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+        Animated.timing(valeur, {
+          toValue: 1,
+          duration: duree,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+          isInteraction: false,
+        }),
+        Animated.timing(valeur, {
+          toValue: 0,
+          duration: duree,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+          isInteraction: false,
+        }),
       ]),
     );
     boucle.start();
@@ -108,8 +182,18 @@ export function Balade({
         transform: [
           { translateX: valeur.interpolate({ inputRange: [0, 1], outputRange: [-amplitude, amplitude] }) },
           // Un petit saut à chaque demi-parcours.
-          { translateY: valeur.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: [0, -3, 0, -3, 0] }) },
-          { translateY: profondeur.interpolate({ inputRange: [0, 1], outputRange: [-amplitudeY, amplitudeY] }) },
+          {
+            translateY: valeur.interpolate({
+              inputRange: [0, 0.25, 0.5, 0.75, 1],
+              outputRange: [0, -3, 0, -3, 0],
+            }),
+          },
+          {
+            translateY: profondeur.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-amplitudeY, amplitudeY],
+            }),
+          },
         ],
       }}
     >
@@ -127,7 +211,13 @@ export function useRemplissage(ratio: number): Animated.AnimatedInterpolation<st
       valeur.setValue(ratio);
       return;
     }
-    const animation = Animated.timing(valeur, { toValue: ratio, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: false, isInteraction: false });
+    const animation = Animated.timing(valeur, {
+      toValue: ratio,
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+      isInteraction: false,
+    });
     animation.start();
     return () => animation.stop();
   }, [ratio, reduit, valeur]);
@@ -147,5 +237,11 @@ export function Rebond({ declencheur, children }: { declencheur: boolean; childr
     animation.start();
     return () => animation.stop();
   }, [declencheur, reduit, valeur]);
-  return <Animated.View style={{ transform: [{ scale: valeur.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }) }] }}>{children}</Animated.View>;
+  return (
+    <Animated.View
+      style={{ transform: [{ scale: valeur.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }) }] }}
+    >
+      {children}
+    </Animated.View>
+  );
 }

@@ -7,7 +7,6 @@ import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { BlocSante } from '@/features/exploitation/components/BlocSante';
 import type { Minuteur } from '@/features/accueil/services/fermeAccueil';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { todayISO } from '@/shared/utils/dates';
@@ -21,7 +20,12 @@ export function FeuilleRappels({ visible, onFermer }: { visible: boolean; onFerm
       <View style={styles.feuille}>
         <View style={styles.entete}>
           <Text style={styles.titreFeuille}>{TEXTES.rappels.titre}</Text>
-          <Pressable onPress={onFermer} hitSlop={10} accessibilityRole="button" accessibilityLabel={TEXTES.commun.general.fermer}>
+          <Pressable
+            onPress={onFermer}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={TEXTES.commun.general.fermer}
+          >
             <Ionicons name="close" size={28} color={colors.text} />
           </Pressable>
         </View>
@@ -64,7 +68,19 @@ export function useFenetreDuJour(minuteurs: readonly Minuteur[], pret: boolean) 
 }
 
 /** La fenêtre du jour : la liste de ce qui attend, chaque ligne ouvrant son écran. */
-export function FenetreDuJour({ minuteurs, ouverte, onCompris, onPlusTard, onVoirTout }: { minuteurs: readonly Minuteur[]; ouverte: boolean; onCompris: () => void; onPlusTard: () => void; onVoirTout: () => void }) {
+export function FenetreDuJour({
+  minuteurs,
+  ouverte,
+  onCompris,
+  onPlusTard,
+  onVoirTout,
+}: {
+  minuteurs: readonly Minuteur[];
+  ouverte: boolean;
+  onCompris: () => void;
+  onPlusTard: () => void;
+  onVoirTout: () => void;
+}) {
   const router = useRouter();
   return (
     <Modal visible={ouverte} transparent animationType="fade" onRequestClose={onPlusTard}>
@@ -85,7 +101,9 @@ export function FenetreDuJour({ minuteurs, ouverte, onCompris, onPlusTard, onVoi
                 accessibilityRole="button"
               >
                 <Text style={styles.ligneLibelle}>{m.titre ?? m.libelle}</Text>
-                <Text style={[styles.ligneValeur, m.urgent ? { color: colors.danger } : null]}>{m.valeur}</Text>
+                <Text style={[styles.ligneValeur, m.urgent ? { color: colors.danger } : null]}>
+                  {m.valeur}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -107,22 +125,65 @@ export function FenetreDuJour({ minuteurs, ouverte, onCompris, onPlusTard, onVoi
 }
 
 const styles = StyleSheet.create({
-  voile: { flex: 1, backgroundColor: colors.voile, alignItems: 'center', justifyContent: 'center', padding: 20 },
-  fenetre: { width: '100%', maxWidth: 420, backgroundColor: colors.surface, borderRadius: 20, padding: 18, gap: 8, alignItems: 'center', borderWidth: 2, borderColor: colors.primary },
+  voile: {
+    flex: 1,
+    backgroundColor: colors.voile,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  fenetre: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 18,
+    gap: 8,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
   titre: { fontSize: 20, fontWeight: '800', color: colors.primaryDark },
   intro: { fontSize: 14, color: colors.textMuted },
   lignes: { alignSelf: 'stretch', gap: 6, marginVertical: 4 },
-  ligne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.badgeBg, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12 },
+  ligne: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.badgeBg,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
   ligneLibelle: { fontSize: 15, fontWeight: '600', color: colors.text, flexShrink: 1 },
   ligneValeur: { fontSize: 15, fontWeight: '800', color: colors.primaryDark },
   voirTout: { fontSize: 14, color: colors.primary, textDecorationLine: 'underline' },
   boutons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 4 },
-  secondaire: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.primary },
+  secondaire: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
   secondaireTexte: { color: colors.primary, fontWeight: '700', fontSize: 15 },
-  principal: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, backgroundColor: colors.primary },
+  principal: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+  },
   principalTexte: { color: colors.blanc, fontWeight: '700', fontSize: 15 },
   feuille: { flex: 1, backgroundColor: colors.background, paddingTop: 16 },
-  entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 8 },
+  entete: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
   titreFeuille: { fontSize: 20, fontWeight: '800', color: colors.primaryDark },
   contenuFeuille: { padding: 16, gap: 12 },
 });

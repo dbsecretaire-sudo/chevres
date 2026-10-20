@@ -6,10 +6,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS, SECTION_STOCK } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
-/** Le marqueur d'une bulle qui n'ouvre pas un écran mais la liste des rappels à valider (une fenêtre de l'accueil). */
-export const OUVRIR_LES_RAPPELS = '#rappels';
-
-/** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre (ou `OUVRIR_LES_RAPPELS`). */
+/** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre. */
 export interface ActionDeLieu {
   cle: string;
   titre: string;
@@ -20,7 +17,6 @@ export interface ActionDeLieu {
 /** Les boutons de l'accueil qui ouvrent des bulles : l'enclos, et les lieux des deux colonnes. */
 export type CibleDesBulles =
   | 'enclos'
-  | 'rappels'
   | 'fromagerie'
   | 'viande'
   | 'charcuterie'
@@ -76,36 +72,80 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
         { cle: 'naissances', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
         { cle: 'traitement', titre: B.traitement, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU },
         { cle: 'lots', titre: B.lots, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
-        { cle: 'vendre', titre: B.vendre, icone: 'cash', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}` },
+        {
+          cle: 'vendre',
+          titre: B.vendre,
+          icone: 'cash',
+          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
+        },
         { cle: 'ecriture', titre: B.ecriture, icone: 'receipt', route: NOUVELLE },
         { cle: 'cheptel', titre: B.menuCheptel, icone: 'list', route: ROUTES.CHEPTEL },
-      ];
-    case 'rappels':
-      return [
-        { cle: 'liste', titre: TEXTES.rappels.titre, icone: 'notifications', route: OUVRIR_LES_RAPPELS },
-        { cle: 'historique', titre: TEXTES.rappels.historique.titre, icone: 'time', route: ROUTES.RAPPELS_HISTORIQUE },
-        { cle: 'gerer', titre: TEXTES.rappels.gerer, icone: 'settings', route: ROUTES.COMPTABILITE_REGLAGES },
       ];
     case 'laiterie':
       return [
         { cle: 'lait', titre: B.lait, icone: 'water', route: ROUTES.PRODUCTION_LAIT },
-        { cle: 'qualite', titre: B.qualite, icone: 'flask', route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
+        {
+          cle: 'qualite',
+          titre: B.qualite,
+          icone: 'flask',
+          route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
+        },
         { cle: 'recolteur', titre: B.recolteur, icone: 'people', route: ROUTES.PRODUCTION_LAITERIE },
-        { cle: 'facture', titre: B.factureLait, icone: 'add-circle', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.LAIT}` },
+        {
+          cle: 'facture',
+          titre: B.factureLait,
+          icone: 'add-circle',
+          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.LAIT}`,
+        },
       ];
     case 'fromagerie':
       return [
         { cle: 'fromages', titre: B.fromages, icone: 'restaurant', route: ROUTES.PRODUCTION_FROMAGES },
-        { cle: 'fabriquer', titre: B.fabriquer, icone: 'flask', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE) },
-        { cle: 'rappeler', titre: B.rappeler, icone: 'notifications', route: ROUTES.productionRappel(PRODUIT_A_LOTS.FROMAGE) },
-        { cle: 'vendre', titre: B.vendreFromage, icone: 'add-circle', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.FROMAGE}` },
+        {
+          cle: 'fabriquer',
+          titre: B.fabriquer,
+          icone: 'flask',
+          route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
+        },
+        {
+          cle: 'rappeler',
+          titre: B.rappeler,
+          icone: 'notifications',
+          route: ROUTES.productionRappel(PRODUIT_A_LOTS.FROMAGE),
+        },
+        {
+          cle: 'vendre',
+          titre: B.vendreFromage,
+          icone: 'add-circle',
+          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.FROMAGE}`,
+        },
       ];
     case 'viande':
       return [
-        { cle: 'lots', titre: L.abattoir.liens.lots.titre, icone: 'business', route: ROUTES.PRODUCTION_VIANDE },
-        { cle: 'afacturer', titre: L.abattoir.liens.afacturer.titre, icone: 'receipt', route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer` },
-        { cle: 'stock', titre: L.abattoir.liens.stock.titre, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?onglet=${SECTION_STOCK.VIANDE}` },
-        { cle: 'vendre', titre: B.vendreViande, icone: 'add-circle', route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}` },
+        {
+          cle: 'lots',
+          titre: L.abattoir.liens.lots.titre,
+          icone: 'business',
+          route: ROUTES.PRODUCTION_VIANDE,
+        },
+        {
+          cle: 'afacturer',
+          titre: L.abattoir.liens.afacturer.titre,
+          icone: 'receipt',
+          route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer`,
+        },
+        {
+          cle: 'stock',
+          titre: L.abattoir.liens.stock.titre,
+          icone: 'cube',
+          route: `${ROUTES.COMPTABILITE_STOCKS}?onglet=${SECTION_STOCK.VIANDE}`,
+        },
+        {
+          cle: 'vendre',
+          titre: B.vendreViande,
+          icone: 'add-circle',
+          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
+        },
       ];
     case 'fournisseurs':
       return [

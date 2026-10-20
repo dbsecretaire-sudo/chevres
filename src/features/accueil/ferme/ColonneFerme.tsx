@@ -23,12 +23,14 @@ export interface EntreeDeColonne {
 }
 
 /** La taille d'un bouton : normale (une colonne), étroite (une grille) ou en rangée (tous sur une ligne, à parts égales). */
-type Taille = 'normal' | 'etroit' | 'rangee';
+type Taille = 'normal' | 'etroit' | 'moyen' | 'rangee';
 
 interface Props {
   entrees: readonly EntreeDeColonne[];
   /** En grille : les boutons passent à la ligne et se centrent, au lieu de s'empiler dans une colonne qui défile. */
   grille?: boolean;
+  /** Avec la grille : des boutons plus petits (six par ligne sur un téléphone), quand il y en a beaucoup. */
+  compacte?: boolean;
   /** En rangée : tous les boutons sur une seule ligne, chacun prenant une part égale de la largeur. */
   rangee?: boolean;
   /** Un appui sur un bouton, avec sa place à l'écran (mesurée dans la fenêtre). */
@@ -58,6 +60,7 @@ function Bouton({
         style={[
           styles.bouton,
           taille === 'etroit' ? styles.boutonEtroit : null,
+          taille === 'moyen' ? styles.boutonMoyen : null,
           enRangee ? styles.boutonRangee : null,
         ]}
         onPress={appuyer}
@@ -70,6 +73,7 @@ function Bouton({
           style={[
             styles.rond,
             taille === 'etroit' ? styles.rondEtroit : null,
+            taille === 'moyen' ? styles.rondMoyen : null,
             enRangee ? styles.rondRangee : null,
             { backgroundColor: entree.couleur ?? colors.primary },
           ]}
@@ -82,8 +86,12 @@ function Bouton({
           ) : null}
         </View>
         <Text
-          style={[styles.titre, enRangee ? styles.titreRangee : null]}
-          numberOfLines={enRangee ? 1 : 2}
+          style={[
+            styles.titre,
+            enRangee ? styles.titreRangee : null,
+            taille === 'moyen' ? styles.titreMoyen : null,
+          ]}
+          numberOfLines={enRangee ? 1 : taille === 'moyen' ? 3 : 2}
           adjustsFontSizeToFit={enRangee}
           minimumFontScale={0.7}
         >
@@ -98,7 +106,7 @@ function Bouton({
  * Des boutons ronds de l'accueil : les lieux de la ferme. Chaque bouton fait sortir ses actions en bulles. En colonne (qui défile seule quand
  * l'écran est court), en grille qui passe à la ligne, ou en rangée sur une seule ligne.
  */
-export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false }: Props) {
+export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false, compacte = false }: Props) {
   if (rangee) {
     return (
       <View style={styles.rangee}>
@@ -110,9 +118,9 @@ export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false 
   }
   if (grille) {
     return (
-      <View style={styles.grille}>
+      <View style={[styles.grille, compacte ? styles.grilleCompacte : null]}>
         {entrees.map((e, i) => (
-          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="etroit" />
+          <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille={compacte ? 'moyen' : 'etroit'} />
         ))}
       </View>
     );
@@ -133,12 +141,16 @@ export function ColonneFerme({ entrees, onAppui, grille = false, rangee = false 
 const styles = StyleSheet.create({
   colonne: { width: 92, flexGrow: 0 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },
+  grilleCompacte: { gap: 4 },
   rangee: { flexDirection: 'row', alignItems: 'flex-start' },
   celluleRangee: { flex: 1, minWidth: 0 },
   pile: { gap: 10, paddingVertical: 4, alignItems: 'center' },
   bouton: { width: 92, alignItems: 'center', gap: 3 },
   boutonEtroit: { width: 74 },
   boutonRangee: { width: '100%' },
+  boutonMoyen: { width: 66 },
+  rondMoyen: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
+  titreMoyen: { fontSize: 10, letterSpacing: -0.2 },
   rondEtroit: { width: 56, height: 56, borderRadius: 28 },
   rondRangee: { width: 46, height: 46, borderRadius: 23, borderWidth: 2 },
   rond: {
