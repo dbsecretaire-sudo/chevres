@@ -47,7 +47,15 @@ const ROUTE_DIRECTE: Record<string, string> = {
   boucles: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
   bilanAnnuel: ROUTES.CHEPTEL_BILAN,
   carnetNaissance: ROUTES.CHEPTEL_NAISSANCES,
-  // Sur la carte de la transformation : les clients et leurs ventes.
+  // Les fiches des intervenants : une page qui regroupe leurs contacts, leurs factures et toutes leurs actions.
+  abattoir: ROUTES.lieu('abattoir'),
+  veterinaire: ROUTES.lieu('veterinaire'),
+  aliments: ROUTES.lieu('aliments'),
+  equarrissage: ROUTES.lieu('equarrissage'),
+  organismesFiche: ROUTES.lieu('organismes'),
+  laiterie: ROUTES.PRODUCTION_LAITERIE,
+  contacts: ROUTES.CONTACTS,
+  // Les clients et leurs ventes.
   clients: ROUTES.lieu('commercial'),
   // Dans la transformation : fabriquer, les lots, leurs rappels, la qualité du lait et la réservation d'un produit.
   fabriquerFromage: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
@@ -156,7 +164,7 @@ export default function AccueilFerme() {
   ];
   // Les démarches (les organismes, les contrôles) se distinguent des personnes et des entreprises par leur couleur : l'orange.
   const demarchesExploitation: EntreeDeColonne[] = [
-    { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
+    { cle: 'organismesFiche', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
   ];
   const commerce: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
@@ -165,13 +173,6 @@ export default function AccueilFerme() {
     { cle: 'fournisseurs', titre: C.fournisseurs, icone: iconeMCI('truck-delivery'), couleur: ACHAT },
   ];
   const demarchesTransformation: EntreeDeColonne[] = [
-    {
-      cle: 'rappelsLots',
-      titre: C.rappelsLots,
-      icone: iconeIon('notifications'),
-      pastille: f.lotsARappeler,
-      couleur: ORANGE,
-    },
     { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: ORANGE },
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).

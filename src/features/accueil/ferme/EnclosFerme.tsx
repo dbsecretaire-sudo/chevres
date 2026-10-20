@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
+import { DecorEnclos } from '@/features/accueil/ferme/DecorEnclos';
+import { DecorEstive } from '@/features/accueil/ferme/DecorEstive';
 import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
 import type { Chevre } from '@/features/cheptel/types';
 import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
@@ -75,11 +77,8 @@ export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onApp
         accessibilityRole="button"
         accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos}
       >
-        {estive ? (
-          <Text style={styles.sommets} accessibilityElementsHidden importantForAccessibility="no">
-            🏔️ ⛰️ 🏔️
-          </Text>
-        ) : null}
+        {/* Le décor, fixe et en fond : sentier, arbres, maquis et fleurs ; en estive, montagnes, nuages et cailloux. */}
+        {estive ? <DecorEstive /> : <DecorEnclos />}
         <Text style={styles.titre} numberOfLines={2}>
           {estive ? T.estive(estive.zone) : T.enclos}
         </Text>
@@ -142,7 +141,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
-  sommets: { fontSize: 30, letterSpacing: 2 },
   descente: { fontSize: 12, color: colors.primaryDark },
   titre: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
   troupeau: {

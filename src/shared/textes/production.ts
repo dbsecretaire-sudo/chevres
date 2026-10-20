@@ -208,6 +208,10 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les ventes et factures de l’abattoir',
       nouvelle: 'Nouvelle vente de viande',
       liens: {
+        amener: {
+          titre: 'Amener des animaux',
+          aide: 'Une facture de l’abattoir, déjà choisi : « Suivant » mène au choix des animaux.',
+        },
         lots: { titre: 'Lots d’abattoir', aide: 'Les animaux déposés à l’abattoir et leur viande, par jour d’abattage.' },
         afacturer: { titre: 'Lots à facturer', aide: 'La viande récoltée, pas encore facturée à un client.' },
         stock: { titre: 'Stock de viande', aide: 'Ce qui est rentré de l’abattoir et reste à vendre.' },
