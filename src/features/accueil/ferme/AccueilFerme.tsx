@@ -125,7 +125,7 @@ const iconeIon = (nom: keyof typeof Ionicons.glyphMap) => (
 /**
  * L'accueil « ferme » de l'élevage : un bandeau comme celui d'un jeu (la balance, les boucles, l'aliment), le nom de l'établissement, puis
  * les intervenants extérieurs en haut (ceux à qui l'on vend ou achète), puis l'enclos du troupeau et ses chèvres qui se promènent ; dans la
- * chèvrerie, ses boutons (alimentation, lots, traitements, boucles, estive, documents) ; sous elle la carte Transformation (fromages, boucherie / charcuterie, viande), dont l'intérieur a la
+ * chèvrerie, ses boutons (santé, grange, organismes, nouveau, lots, boucles, estive, bilan, carnet) ; sous elle la carte Transformation (fromages, boucherie / charcuterie, viande), dont l'intérieur a la
  * fromagerie, la viande, la charcuterie et le stock. Chaque bouton fait sortir ses actions en bulles. En bas, l'année, l'espèce, le didacticiel
  * et les réglages. Une fenêtre annonce une fois par jour ce qui attend.
  */
@@ -172,7 +172,7 @@ export default function AccueilFerme() {
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
   const interneExploitation: EntreeDeColonne[] = [
     { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
-    { cle: 'alimentation', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ORANGE },
+    { cle: 'grange', titre: C.grange, icone: iconeMCI('corn'), couleur: ORANGE },
     { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
     { cle: 'nouveau', titre: C.nouveau, icone: iconeIon('add-circle'), couleur: ORANGE },
     { cle: 'lots', titre: C.lots, icone: iconeIon('layers'), couleur: ORANGE },

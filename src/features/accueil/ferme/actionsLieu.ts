@@ -19,7 +19,7 @@ export type CibleDesBulles =
   | 'enclos'
   | 'nouveau'
   | 'sante'
-  | 'alimentation'
+  | 'grange'
   | 'aliments'
   | 'laiterie'
   | 'abattoir'
@@ -90,7 +90,7 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE),
         },
       ];
-    case 'alimentation':
+    case 'grange':
       return [
         { cle: 'alimentation', titre: B.alimentation, icone: 'nutrition', route: ROUTES.SANTE_ALIMENTATION },
         {
@@ -99,7 +99,7 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           icone: 'cart',
           route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ALIMENTATION}`,
         },
-        { cle: 'grange', titre: B.grange, icone: 'cube', route: ROUTES.lieu('grange') },
+        { cle: 'stock', titre: B.stockNourriture, icone: 'cube', route: ROUTES.lieu('grange') },
       ];
     case 'organismes':
       return [

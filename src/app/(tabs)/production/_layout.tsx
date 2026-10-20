@@ -62,6 +62,8 @@ export default function ProductionLayout() {
                 ? TEXTES.production.lieux.entrepot.grange
                 : TEXTES.production.titre,
             headerLeft: enteteDuBatiment(),
+            // La grange a le bandeau habituel de la ferme à la place de l'en-tête.
+            headerShown: lieu !== 'grange',
           };
         }}
       />
