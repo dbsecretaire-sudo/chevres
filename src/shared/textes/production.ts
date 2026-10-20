@@ -158,7 +158,7 @@ export const TEXTES_PRODUCTION = {
     },
     entrepot: {
       titre: 'Entrepôt',
-      onglets: { vente: 'À vendre', aliments: 'Aliments', consommables: 'Consommables', materiel: 'Matériel' },
+      oeufs: 'Œufs',
       vide: 'Rien dans ce rayon pour le moment.',
       lait: 'Lait',
       fermer: 'Fermer l’entrepôt',

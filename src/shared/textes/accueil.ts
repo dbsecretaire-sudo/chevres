@@ -23,7 +23,7 @@ export const TEXTES_ACCUEIL = {
     },
     chevrerie: {
       sortir: 'Sortir',
-      titre: (femelles: string) => `Intérieur : les ${femelles}`,
+      titre: 'Intérieur de l’exploitation',
       foin: 'Foin et maïs',
       lait: 'Lait',
       fromage: 'Fromage',
@@ -72,7 +72,7 @@ export const TEXTES_ACCUEIL = {
       nouveauContact: 'Nouveau contact',
     },
     zones: {
-      enclos: (femelles: string) => `Enclos des ${femelles}`,
+      enclos: 'Exploitation',
       estive: (zone?: string) => (zone?.trim() ? `À l’estive : ${zone.trim()}` : 'À l’estive'),
       descenteLe: (date: string) => `Descente le ${date}`,
       aucunAnimal: 'Aucun animal',

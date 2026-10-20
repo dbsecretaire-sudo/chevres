@@ -54,6 +54,7 @@ import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { effectifsVivants, type EffectifVivant } from '@/features/cheptel/repository/chevres';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { articlesDeLaSection, listesAffichees, sectionsAffichees } from '@/features/stock/utils/structureStock';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ajouterArticle,
@@ -133,7 +134,6 @@ export default function StockFromagerie() {
   const router = useRouter();
   const { especes, especeActive, filtreCourant, setFiltre, choisirFiltre, concernees, fromagerie, poules } =
     useFiltreEspeceStock();
-  const sectionsVisibles = SECTIONS.filter((x) => (fromagerie || !x.fromagerie) && (poules || !x.poules));
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
   const { onglet: ongletDemande, espece: especeDemandee } = useLocalSearchParams<{
@@ -331,13 +331,7 @@ export default function StockFromagerie() {
   /** La liste glissable des articles d'un genre (filtrée par activité). */
   /** Les articles d'une liste : un genre (filtré par activité), dont les lignes de viande se partagent entre deux catégories. */
   const articlesDeLaListe = (genre: GenreArticle, section?: Section, listeId?: string) =>
-    articlesDuGenre(genre, archive, filtreCourant, listeId).filter((a) =>
-      genre !== GENRE_ARTICLE.VIANDE
-        ? true
-        : section === SECTION_STOCK.ANIMAUX
-          ? roleDeLaViande(a.cle) !== undefined
-          : roleDeLaViande(a.cle) === undefined,
-    );
+    articlesDeLaSection(genre, section, archive, filtreCourant, listeId);
 
   /** La liste glissable des articles d'une section (les lignes des animaux suivent le cheptel : elles ne se déplacent pas). */
   const liste = (genre: GenreArticle, section?: Section, listeId?: string) => {
@@ -449,17 +443,13 @@ export default function StockFromagerie() {
     setOuvertes((actuelles) => (actuelles.includes(categorie) ? [] : [categorie]));
 
   // Les listes de ventes ne valent que pour les espèces qui les vendent (pas de lait ni de fromage pour des cochons).
-  const listesVisibles = (archive.listes ?? []).filter(
-    (l) => listeValablePour(l.compte, concernees) && !retireePourToutes(l.masquePour, concernees),
-  );
+  const listesVisibles = listesAffichees(archive, concernees);
   /** Les listes d'office dont le compte n'a pas été retiré pour l'espèce. */
-  const sectionsAffichees = sectionsVisibles.filter(
-    (x) => !retireePourToutes(archive.sectionsMasquees?.[x.section], concernees),
-  );
+  const lesSectionsAffichees = sectionsAffichees(archive, fromagerie, poules, concernees);
 
   /** Les ajouts d'une catégorie : un pour chacune de ses listes d'office (l'ajout d'un article, du lait) et pour chaque liste ajoutée. */
   const ajoutsDeLaCategorie = (categorie: string): Option[] => [
-    ...sectionsAffichees
+    ...lesSectionsAffichees
       .filter((x) => x.categorie === categorie)
       .map(({ section, genre }): Option | null =>
         genre === GENRE_ARTICLE.BOUCLE
@@ -515,7 +505,7 @@ export default function StockFromagerie() {
 
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
-            const listes = sectionsAffichees.filter((x) => x.categorie === categorie);
+            const listes = lesSectionsAffichees.filter((x) => x.categorie === categorie);
             const listesPerso = listesVisibles.filter((l) => l.categorie === categorie);
             // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
             if (listes.length === 0 && listesPerso.length === 0 && !perso) return null;

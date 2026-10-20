@@ -4,7 +4,7 @@ import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
 import type { Chevre } from '@/features/cheptel/types';
 import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
-import { especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { formatDateFR } from '@/shared/utils/dates';
@@ -60,14 +60,13 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
  * porte entre dans la chèvrerie.
  */
 export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onAppui, onEntrer }: Props) {
-  const femelles = vocabulaire().femelle.pluriel;
   return (
     <View style={styles.conteneur}>
     <Pressable
       style={[styles.enclos, estive ? styles.montagne : null]}
       onPress={onAppui}
       accessibilityRole="button"
-      accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos(femelles)}
+      accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos}
     >
       {estive ? (
         <Text style={styles.sommets} accessibilityElementsHidden importantForAccessibility="no">
@@ -75,7 +74,7 @@ export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onApp
         </Text>
       ) : null}
       <Text style={styles.titre} numberOfLines={2}>
-        {estive ? T.estive(estive.zone) : T.enclos(femelles)}
+        {estive ? T.estive(estive.zone) : T.enclos}
       </Text>
       {vedettes.length > 0 ? (
         <View style={styles.troupeau}>
