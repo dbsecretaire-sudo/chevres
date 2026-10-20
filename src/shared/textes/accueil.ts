@@ -21,6 +21,14 @@ export const TEXTES_ACCUEIL = {
       aliments: 'Aliment en stock',
       reglages: 'Réglages',
     },
+    /** La carte « Transformation » : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
+    transformation: {
+      titre: 'Transformation',
+      fromages: (n: number) => `${n} ${n === 1 ? 'fromage' : 'fromages'}`,
+      charcuterie: (n: number) => `${n} boucherie/charcuterie`,
+      viande: (n: number) => `${n} viande`,
+      entrer: 'Entrer dans la transformation',
+    },
     chevrerie: {
       sortir: 'Sortir',
       titre: 'Intérieur de l’exploitation',

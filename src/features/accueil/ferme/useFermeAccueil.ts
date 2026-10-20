@@ -12,6 +12,7 @@ import {
   type DeclarationAFaire,
 } from '@/features/accueil/services/fermeAccueil';
 import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
+import { compterTransformation } from '@/features/accueil/services/transformationFerme';
 import { listChevresVivantes, listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
@@ -25,7 +26,9 @@ import { useRappels } from '@/features/rappels/hooks/useRappels';
 import { destinationRappel } from '@/features/rappels/services/destination';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { useLotsARappeler } from '@/features/stock/hooks/useLotsARappeler';
-import { articlesDuGenre } from '@/features/stock/services/stock';
+import { articlesDuGenre, roleDeLaViande } from '@/features/stock/services/stock';
+import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
+import type { ArchiveStock } from '@/features/stock/types';
 import { CATEGORIE_ANIMAL, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { numerosTiptag } from '@/features/stock/services/boucles';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
@@ -81,11 +84,15 @@ export function useFermeAccueil() {
   // Les boucles posées sur les animaux vivants : les boucles, et les tiptag (le petit badge).
   const [boucles, setBoucles] = useState<{ boucles: number; tiptag: number } | undefined>();
   const [morts, setMorts] = useState(0);
+  // Le stock et le niveau de chaque article : de quoi compter ce que la Transformation fabrique et garde.
+  const [archiveStock, setArchiveStock] = useState<ArchiveStock | null>(null);
+  const niveaux = useNiveauxStock();
   const [vedettes, setVedettes] = useState<Chevre[]>([]);
   useFocusEffect(
     useCallback(() => {
       lireArchiveStock()
         .then((archive) => {
+          setArchiveStock(archive);
           const articles = new Set(articlesDuGenre(GENRE_ARTICLE.ALIMENT, archive, especeCourante()).map((a) => a.cle));
           setAliments(autonomieAliments(archive.mouvements, articles, todayISO()));
         })
@@ -100,6 +107,19 @@ export function useFermeAccueil() {
         })
         .catch(() => undefined);
     }, [espece]),
+  );
+
+  const transformation = useMemo(
+    () =>
+      archiveStock
+        ? compterTransformation({
+            fromages: articlesDuGenre(GENRE_ARTICLE.FROMAGE, archiveStock, espece),
+            viande: articlesDuGenre(GENRE_ARTICLE.VIANDE, archiveStock, espece),
+            niveau: (cle) => niveaux.get(cle) ?? 0,
+            role: roleDeLaViande,
+          })
+        : { fromages: 0, charcuterie: 0, viande: 0 },
+    [archiveStock, espece, niveaux],
   );
 
   const declarations: DeclarationAFaire[] = useMemo(
@@ -148,6 +168,8 @@ export function useFermeAccueil() {
     boucles,
     /** Les animaux morts dans l'année (la stèle près de l'enclos, l'équarrissage). */
     morts,
+    /** Ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. */
+    transformation,
     vedettes,
     /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
     estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,

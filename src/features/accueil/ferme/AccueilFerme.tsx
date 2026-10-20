@@ -17,6 +17,8 @@ import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features
 import { EnclosFerme } from '@/features/accueil/ferme/EnclosFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
+import { TransformationFerme } from '@/features/accueil/ferme/TransformationFerme';
+import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
   decalageVertical,
@@ -39,8 +41,11 @@ const VENTE = colors.primary;
 const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
 
-/** Où est le bouton : parmi les lieux du haut, ou parmi les boutons de l'exploitation sous l'enclos. */
+/** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
 type Zone = 'lieux' | 'exploitation' | 'interieur';
+
+/** Ce qu'on a ouvert en entrant par la porte d'une carte : la chèvrerie (l'exploitation) ou la transformation. */
+type Interieur = 'exploitation' | 'transformation';
 
 /**
  * La direction de l'arc des bulles d'après la place du bouton (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
@@ -75,7 +80,8 @@ const iconeIon = (nom: keyof typeof Ionicons.glyphMap) => (
 /**
  * L'accueil « ferme » de l'élevage : un bandeau comme celui d'un jeu (la balance, les boucles, l'aliment), le nom de l'établissement, puis
  * les intervenants extérieurs en haut (ceux à qui l'on vend ou achète), puis l'enclos du troupeau et ses chèvres qui se promènent ; dans la
- * chèvrerie, ce qui se passe chez soi (fromagerie, viande, charcuterie, stock, estive, rappels). Chaque bouton fait sortir ses actions en bulles. En bas, l'année, l'espèce, le didacticiel
+ * chèvrerie, le stock, l'estive et les rappels ; sous elle la carte Transformation (fromages, boucherie / charcuterie, viande), dont l'intérieur a la
+ * fromagerie, la viande, la charcuterie et le stock. Chaque bouton fait sortir ses actions en bulles. En bas, l'année, l'espèce, le didacticiel
  * et les réglages. Une fenêtre annonce une fois par jour ce qui attend.
  */
 export default function AccueilFerme() {
@@ -88,7 +94,7 @@ export default function AccueilFerme() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
   const [estiveOuverte, setEstiveOuverte] = useState(false);
-  const [interieur, setInterieur] = useState(false);
+  const [interieur, setInterieur] = useState<Interieur | null>(null);
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
   // Les intervenants extérieurs, en haut : ceux à qui l'on vend (le récolteur du lait, des organismes qui versent des aides), ceux à qui l'on achète
@@ -116,8 +122,20 @@ export default function AccueilFerme() {
   const droite: EntreeDeColonne[] = [
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
   ];
-  // Ce qui se passe chez soi, dans la chèvrerie : la fromagerie, la viande, la charcuterie, le stock, l'estive et les rappels.
-  const interne: EntreeDeColonne[] = [
+  // Dans la chèvrerie : le stock, l'estive et les rappels.
+  const interneExploitation: EntreeDeColonne[] = [
+    { cle: 'stock', titre: C.stock, icone: iconeIon('cube'), couleur: NEUTRE },
+    { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
+    {
+      cle: 'rappels',
+      titre: C.rappels,
+      icone: iconeIon('notifications'),
+      pastille: f.nombreDeRappels,
+      couleur: ORANGE,
+    },
+  ];
+  // Dans la transformation : la fromagerie, la viande, la charcuterie, et le stock.
+  const interneTransformation: EntreeDeColonne[] = [
     {
       cle: 'fromagerie',
       titre: C.fromagerie,
@@ -128,14 +146,6 @@ export default function AccueilFerme() {
     { cle: 'viande', titre: C.viande, icone: iconeMCI('food-steak'), couleur: VENTE },
     { cle: 'charcuterie', titre: C.charcuterie, icone: iconeMCI('food-drumstick'), couleur: VENTE },
     { cle: 'stock', titre: C.stock, icone: iconeIon('cube'), couleur: NEUTRE },
-    { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
-    {
-      cle: 'rappels',
-      titre: C.rappels,
-      icone: iconeIon('notifications'),
-      pastille: f.nombreDeRappels,
-      couleur: ORANGE,
-    },
   ];
 
   /** Ouvre le menu d'un bouton à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
@@ -195,41 +205,56 @@ export default function AccueilFerme() {
         contentContainerStyle={[styles.corpsContenu, interieur ? styles.corpsInterieur : null]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Les intervenants extérieurs, en haut : pas dans la chèvrerie, où l'on est chez soi. */}
+        {/* Les intervenants extérieurs, sur une seule ligne : pas dans un intérieur, où l'on est chez soi. */}
         {interieur ? null : (
           <View style={styles.lieux}>
             <View style={styles.lieuxGauche}>
-              <ColonneFerme entrees={gauche} onAppui={surLieu} grille />
+              <ColonneFerme entrees={gauche} onAppui={surLieu} rangee />
             </View>
             <View style={styles.lieuxDroite}>
-              <ColonneFerme entrees={droite} onAppui={surLieu} grille />
+              <ColonneFerme entrees={droite} onAppui={surLieu} rangee />
             </View>
           </View>
         )}
         <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
-          {interieur ? (
+          {interieur === 'exploitation' ? (
             <View style={styles.interieur}>
               <ChevrerieInterieure
                 vedettes={f.vedettes}
                 aliments={f.aliments}
-                onSortir={() => setInterieur(false)}
-                boutons={interne}
+                onSortir={() => setInterieur(null)}
+                boutons={interneExploitation}
+                onAppuiBouton={surInterne}
+              />
+            </View>
+          ) : interieur === 'transformation' ? (
+            <View style={styles.interieur}>
+              <TransformationInterieure
+                compte={f.transformation}
+                onSortir={() => setInterieur(null)}
+                boutons={interneTransformation}
                 onAppuiBouton={surInterne}
               />
             </View>
           ) : (
-            <View style={[styles.panneau, f.estive ? styles.panneauEstive : null]}>
-              <View ref={enclos} collapsable={false} style={styles.enclos}>
-                <EnclosFerme
-                  vedettes={f.vedettes}
-                  nombreAnimaux={f.stats?.totalVivantes}
-                  naissances={f.stats?.cabritsAnnee}
-                  estive={f.estive}
-                  onAppui={surEnclos}
-                  onEntrer={() => setInterieur(true)}
-                />
+            <>
+              <View style={[styles.panneau, f.estive ? styles.panneauEstive : null]}>
+                <View ref={enclos} collapsable={false} style={styles.enclos}>
+                  <EnclosFerme
+                    vedettes={f.vedettes}
+                    nombreAnimaux={f.stats?.totalVivantes}
+                    naissances={f.stats?.cabritsAnnee}
+                    estive={f.estive}
+                    onAppui={surEnclos}
+                    onEntrer={() => setInterieur('exploitation')}
+                  />
+                </View>
               </View>
-            </View>
+              <TransformationFerme
+                compte={f.transformation}
+                onEntrer={() => setInterieur('transformation')}
+              />
+            </>
           )}
         </View>
       </ScrollView>
@@ -276,10 +301,10 @@ const styles = StyleSheet.create({
   colonneHaut: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 8 },
   corps: { flex: 1 },
   corpsContenu: { paddingHorizontal: 10, paddingBottom: 12, gap: 10 },
-  lieux: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  // 3 boutons étroits (74) et leurs écarts (6) : la grille de la production tient sur trois colonnes, deux rangées.
-  lieuxGauche: { width: 3 * 74 + 2 * 6 },
-  lieuxDroite: { width: 74 },
+  // Les six premiers intervenants se partagent la largeur ; les contacts, seuls au bout, ont la part d'un bouton.
+  lieux: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 16 },
+  lieuxGauche: { flex: 6 },
+  lieuxDroite: { flex: 1 },
   centre: { gap: 10 },
   panneau: {
     backgroundColor: '#E1ECCB',
@@ -290,7 +315,7 @@ const styles = StyleSheet.create({
     borderColor: '#B8CC94',
   },
   panneauEstive: { backgroundColor: '#DCE8F2', borderColor: '#B4C9DC' },
-  enclos: { minHeight: 300 },
+  enclos: { minHeight: 290 },
   // Dans la chèvrerie, l'intérieur remplit toute la place, jusqu'à la barre du bas.
   interieur: { minHeight: 520, flexGrow: 1, borderRadius: 16, overflow: 'hidden' },
   corpsInterieur: { flexGrow: 1 },

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   autonomieAliments,
   compterBouclesPosees,
+
   compterMortsDeLAnnee,
   construireMinuteurs,
   dureeCourte,
@@ -11,6 +12,7 @@ import {
   prochaineEcheance,
   type EntreeMinuteurs,
 } from '@/features/accueil/services/fermeAccueil';
+import { compterTransformation } from '@/features/accueil/services/transformationFerme';
 import type { MouvementStock } from '@/features/stock/types';
 
 const base: EntreeMinuteurs = { aujourdhui: '2026-10-19', declarations: [], documentsAEnvoyer: 0, lotsAFacturer: 0, lotsARappeler: 0 };
@@ -126,5 +128,30 @@ describe('animaux morts dans l’année', () => {
       { statut: 'morte', dateStatut: '2026-09-10' },
     ];
     expect(compterMortsDeLAnnee(animaux, '2026-10-19', 'morte')).toBe(2);
+  });
+});
+
+describe('comptes de la transformation', () => {
+  const niveaux: Record<string, number> = {
+    'fromage:frais': 4,
+    'fromage:tomme': 3,
+    'fromage:vieux': -2,
+    'viande:chevres_jeune': 18,
+    'viande:chevres_pied': 2,
+    'viande:chevres_vivant': 236,
+    'viande:saucisson': 5,
+  };
+  const role = (cle: string) => ({ 'viande:chevres_jeune': 'jeune', 'viande:chevres_pied': 'pied', 'viande:chevres_vivant': 'vivant' })[cle];
+  it('compte les fromages, la charcuterie et la viande (cabris, sur pied), sans les niveaux négatifs ni les animaux vivants', () => {
+    const c = compterTransformation({
+      fromages: [{ cle: 'fromage:frais' }, { cle: 'fromage:tomme' }, { cle: 'fromage:vieux' }],
+      viande: Object.keys(niveaux).filter((k) => k.startsWith('viande:')).map((cle) => ({ cle })),
+      niveau: (cle) => niveaux[cle] ?? 0,
+      role,
+    });
+    expect(c).toEqual({ fromages: 7, charcuterie: 5, viande: 20 });
+  });
+  it('tout est à zéro sans rien en stock', () => {
+    expect(compterTransformation({ fromages: [], viande: [], niveau: () => 0, role: () => undefined })).toEqual({ fromages: 0, charcuterie: 0, viande: 0 });
   });
 });
