@@ -30,11 +30,14 @@ export function LigneChevre({
   chevre,
   onPress,
   titre,
+  emoji,
 }: {
   chevre: Chevre;
   onPress: () => void;
   /** Un titre à la place du libellé de l'animal (la liste des animaux réservés : « Réservation Momo »), sans la mention « Réservé pour… ». */
   titre?: string;
+  /** Un dessin (un emoji) à gauche de la ligne : la tête de l'animal, dans la chèvrerie de l'accueil. */
+  emoji?: string;
 }) {
   const dateSortie =
     chevre.statut !== STATUT_CHEVRE.VIVANTE && chevre.dateStatut ? formatDateFR(chevre.dateStatut) : '';
@@ -54,6 +57,7 @@ export function LigneChevre({
           : `${LABEL_SEXE[chevre.sexe]} · ${formatDateFR(chevre.dateNaissance)} - ${dateSortie}${mere}${reserve}`
       }
       trailing={<BadgeChevre chevre={chevre} />}
+      emoji={emoji}
       onPress={onPress}
     />
   );

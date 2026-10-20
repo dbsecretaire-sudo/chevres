@@ -28,6 +28,7 @@ export const TEXTES_ACCUEIL = {
       lait: 'Lait',
       fromage: 'Fromage',
       jours: (n: number) => `${n} j`,
+      voirPlus: (n: number) => (n === 1 ? 'Voir 1 animal de plus' : `Voir ${n} animaux de plus`),
       donner: 'Donner à manger',
       entrer: 'Entrer dans la chèvrerie',
     },

@@ -34,6 +34,9 @@ interface Props {
   onEntrer: () => void;
 }
 
+/** Le dessin de l'espèce de l'établissement (la tête de chaque animal de la liste de la chèvrerie). */
+export const dessinDeLEspece = (): string => DESSIN_PAR_ESPECE[especeCourante()] ?? '🐐';
+
 /** Un animal de l'enclos : son dessin (plus petit pour un petit), sa boucle en étiquette, et il se balade. */
 function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
   const petit = categorieAccueil(animal) === CATEGORIE_ANIMAL.CABRIT;
