@@ -14,12 +14,14 @@ function Bulle({
   dx,
   dy,
   rang,
+  couleur,
   onChoisir,
 }: {
   action: ActionDeLieu;
   dx: number;
   dy: number;
   rang: number;
+  couleur: string;
   onChoisir: (a: ActionDeLieu) => void;
 }) {
   const reduit = useMouvementReduit();
@@ -64,7 +66,7 @@ function Bulle({
       ]}
     >
       <Pressable
-        style={styles.rond}
+        style={[styles.rond, { backgroundColor: couleur }]}
         onPress={() => onChoisir(action)}
         accessibilityRole="button"
         accessibilityLabel={action.titre}
@@ -87,12 +89,15 @@ export function BullesLieu({
   y,
   actions,
   centreDeg,
+  couleur = colors.primary,
   onChoisir,
 }: {
   x: number;
   y: number;
   actions: readonly ActionDeLieu[];
   centreDeg: number;
+  /** La couleur des bulles : celle du bouton d'où elles sortent (le vert de la ferme, d'office). */
+  couleur?: string;
   onChoisir: (a: ActionDeLieu) => void;
 }) {
   const positions = positionsEnArc(
@@ -110,6 +115,7 @@ export function BullesLieu({
           dx={positions[i].x}
           dy={positions[i].y}
           rang={i}
+          couleur={couleur}
           onChoisir={onChoisir}
         />
       ))}
@@ -124,7 +130,6 @@ const styles = StyleSheet.create({
     width: TAILLE,
     height: TAILLE,
     borderRadius: TAILLE / 2,
-    backgroundColor: colors.primary,
     borderWidth: 3,
     borderColor: colors.blanc,
     alignItems: 'center',

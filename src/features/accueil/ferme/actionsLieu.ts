@@ -68,18 +68,11 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
     case 'enclos':
       return [
-        { cle: 'animaux', titre: B.animaux, icone: 'paw', route: ROUTES.CHEPTEL_LISTE },
-        { cle: 'naissances', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
-        { cle: 'traitement', titre: B.traitement, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU },
-        { cle: 'lots', titre: B.lots, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
-        {
-          cle: 'vendre',
-          titre: B.vendre,
-          icone: 'cash',
-          route: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
-        },
-        { cle: 'ecriture', titre: B.ecriture, icone: 'receipt', route: NOUVELLE },
-        { cle: 'cheptel', titre: B.menuCheptel, icone: 'list', route: ROUTES.CHEPTEL },
+        { cle: 'naissance', titre: B.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
+        { cle: 'ajouter', titre: B.ajouterAnimal, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
+        { cle: 'abattoir', titre: B.abattoir, icone: 'cut', route: ROUTES.PRODUCTION_VIANDE },
+        { cle: 'reserver', titre: B.reserver, icone: 'bookmark', route: ROUTES.COMMERCIAL_COMMANDE },
+        { cle: 'perte', titre: B.perte, icone: 'skull', route: ROUTES.CHEPTEL_LISTE },
       ];
     case 'laiterie':
       return [

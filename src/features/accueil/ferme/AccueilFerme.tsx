@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -36,6 +36,8 @@ const ACHAT = '#8E1F33';
 const VENTE = colors.primary;
 const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
+/** Le bleu de l'estive : la carte de l'exploitation et ses bulles, quand le troupeau est à la montagne. */
+const ESTIVE = '#3E7CB1';
 
 /**
  * Les boutons de la chèvrerie qui ouvrent directement leur écran, sans bulles. Le suivi des mouvements, le bordereau de perte et le recensement
@@ -72,6 +74,11 @@ export function directionDesBulles(zone: Zone, x: number, largeur: number): numb
   return 270;
 }
 
+/** Ce qui reste éclairé quand le reste s'assombrit : la carte touchée (la zone telle quelle), ou le bouton touché (refait par-dessus l'ombre). */
+type Lumiere =
+  | { forme: 'carte'; gauche: number; haut: number; largeur: number; hauteur: number }
+  | { forme: 'bouton'; gauche: number; haut: number; diametre: number; icone: ReactNode };
+
 interface Menu {
   cible: CibleDesBulles;
   /** La direction de l'arc des bulles. */
@@ -80,6 +87,26 @@ interface Menu {
   x: number;
   y: number;
   hauteur: number;
+  largeur: number;
+  /** La couleur des bulles : celle du bouton touché. */
+  couleur: string;
+  lumiere: Lumiere;
+}
+
+/** Les quatre plaques d'ombre autour d'une zone éclairée (en haut, en bas, à gauche, à droite) : la zone elle-même reste à découvert. */
+function plaques(
+  zone: { gauche: number; haut: number; largeur: number; hauteur: number },
+  largeur: number,
+  hauteur: number,
+) {
+  const bas = zone.haut + zone.hauteur;
+  const droite = zone.gauche + zone.largeur;
+  return [
+    { left: 0, right: 0, top: 0, bottom: hauteur - zone.haut },
+    { left: 0, right: 0, top: bas, bottom: 0 },
+    { left: 0, width: zone.gauche, top: zone.haut, height: zone.hauteur },
+    { left: droite, right: 0, top: zone.haut, height: zone.hauteur },
+  ] satisfies object[];
 }
 
 const iconeMCI = (nom: keyof typeof MaterialCommunityIcons.glyphMap) => (
@@ -110,8 +137,8 @@ export default function AccueilFerme() {
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
   // Les intervenants extérieurs, en haut : ceux à qui l'on vend (le récolteur du lait, des organismes qui versent des aides), ceux à qui l'on achète
-  // (l'abattoir, les fournisseurs, le vétérinaire, l'équarrisseur) et les contacts.
-  const gauche: EntreeDeColonne[] = [
+  // (l'abattoir, les fournisseurs, le vétérinaire, l'équarrisseur) et les contacts. Six par ligne au plus, puis on passe à la ligne.
+  const intervenants: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
     { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: VENTE },
     {
@@ -130,8 +157,6 @@ export default function AccueilFerme() {
       pastille: f.morts,
       couleur: ACHAT,
     },
-  ];
-  const droite: EntreeDeColonne[] = [
     { cle: 'contacts', titre: C.contacts, icone: iconeIon('people'), couleur: NEUTRE },
   ];
   // Dans la chèvrerie : ce qu'on fait avec les animaux, puis leurs documents (tous avec la même icône).
@@ -162,15 +187,23 @@ export default function AccueilFerme() {
   ];
 
   /** Ouvre le menu d'un bouton à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
-  const ouvrirMenu = (cible: CibleDesBulles, zone: Zone, ancre: AncreBouton) => {
+  const ouvrirMenu = (cible: CibleDesBulles, zone: Zone, ancre: AncreBouton, entree?: EntreeDeColonne) => {
     racine.current?.measureInWindow((rx, ry, largeur, hauteur) => {
-      const x = ancre.x + ancre.largeur / 2 - rx;
+      const gauche = ancre.x - rx;
+      const haut = ancre.y - ry;
+      const x = gauche + ancre.largeur / 2;
       setMenu({
         cible,
         direction: directionDesBulles(zone, x, largeur),
         x,
-        y: ancre.y + ancre.hauteur / 2 - ry,
+        y: haut + ancre.hauteur / 2,
         hauteur,
+        largeur,
+        // Les bulles ont la couleur du bouton d'où elles sortent ; l'exploitation, la sienne (le bleu quand le troupeau est à l'estive).
+        couleur: entree?.couleur ?? (f.estive ? ESTIVE : colors.primary),
+        lumiere: entree
+          ? { forme: 'bouton', gauche, haut, diametre: ancre.largeur, icone: entree.icone }
+          : { forme: 'carte', gauche, haut, largeur: ancre.largeur, hauteur: ancre.hauteur },
       });
     });
   };
@@ -178,7 +211,12 @@ export default function AccueilFerme() {
     if (cle === 'estive') setEstiveOuverte(true);
     else if (cle === 'stock') router.push(ROUTES.lieu('entrepot') as never);
     else if (ROUTE_DIRECTE[cle]) router.push(ROUTE_DIRECTE[cle] as never);
-    else ouvrirMenu(cle as CibleDesBulles, zone, ancre);
+    else {
+      const entree = [...intervenants, ...interneExploitation, ...interneTransformation].find(
+        (e) => e.cle === cle,
+      );
+      ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
+    }
   };
   const surLieu = (cle: string, ancre: AncreBouton) => surBouton('lieux', cle, ancre);
   const surInterne = (cle: string, ancre: AncreBouton) => surBouton('interieur', cle, ancre);
@@ -222,15 +260,10 @@ export default function AccueilFerme() {
         contentContainerStyle={[styles.corpsContenu, interieur ? styles.corpsInterieur : null]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Les intervenants extérieurs, sur une seule ligne : pas dans un intérieur, où l'on est chez soi. */}
+        {/* Les intervenants extérieurs, six par ligne au plus : pas dans un intérieur, où l'on est chez soi. */}
         {interieur ? null : (
           <View style={styles.lieux}>
-            <View style={styles.lieuxGauche}>
-              <ColonneFerme entrees={gauche} onAppui={surLieu} rangee />
-            </View>
-            <View style={styles.lieuxDroite}>
-              <ColonneFerme entrees={droite} onAppui={surLieu} rangee />
-            </View>
+            <ColonneFerme entrees={intervenants} onAppui={surLieu} rangee />
           </View>
         )}
         <View style={[styles.centre, interieur ? styles.centreInterieur : null]}>
@@ -254,8 +287,13 @@ export default function AccueilFerme() {
             </View>
           ) : (
             <>
-              <View style={[styles.panneau, f.estive ? styles.panneauEstive : null]}>
-                <View ref={enclos} collapsable={false} style={styles.enclos}>
+              {/* Toute la carte : c'est elle qui reste éclairée quand ses bulles s'ouvrent. */}
+              <View
+                ref={enclos}
+                collapsable={false}
+                style={[styles.panneau, f.estive ? styles.panneauEstive : null]}
+              >
+                <View style={styles.enclos}>
                   <EnclosFerme
                     vedettes={f.vedettes}
                     nombreAnimaux={f.stats?.totalVivantes}
@@ -279,17 +317,52 @@ export default function AccueilFerme() {
       {/* Les bulles du bouton touché : par-dessus tout ; un appui à côté les referme. */}
       {menu ? (
         <View style={styles.couche}>
-          <Pressable
-            style={styles.fond}
-            onPress={() => setMenu(null)}
-            accessibilityRole="button"
-            accessibilityLabel={TEXTES.commun.general.fermer}
-          />
+          {menu.lumiere.forme === 'carte' ? (
+            // La carte touchée reste éclairée : l'ombre l'entoure de quatre côtés.
+            <>
+              {plaques(menu.lumiere, menu.largeur, menu.hauteur).map((style, i) => (
+                <Pressable
+                  key={i}
+                  style={[styles.fond, style]}
+                  onPress={() => setMenu(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={TEXTES.commun.general.fermer}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              <Pressable
+                style={styles.fond}
+                onPress={() => setMenu(null)}
+                accessibilityRole="button"
+                accessibilityLabel={TEXTES.commun.general.fermer}
+              />
+              {/* Le bouton touché, refait par-dessus l'ombre : il reste en pleine couleur. */}
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.boutonEclaire,
+                  {
+                    left: menu.lumiere.gauche,
+                    top: menu.lumiere.haut,
+                    width: menu.lumiere.diametre,
+                    height: menu.lumiere.diametre,
+                    borderRadius: menu.lumiere.diametre / 2,
+                    backgroundColor: menu.couleur,
+                  },
+                ]}
+              >
+                {menu.lumiere.icone}
+              </View>
+            </>
+          )}
           <BullesLieu
             x={menu.x}
             y={yBulles}
             actions={actions}
             centreDeg={menu.direction}
+            couleur={menu.couleur}
             onChoisir={choisir}
           />
         </View>
@@ -319,9 +392,7 @@ const styles = StyleSheet.create({
   // Le corps remplit la hauteur : les deux cartes (exploitation et transformation) se la partagent à parts égales, sans dépasser l'écran.
   corpsContenu: { flexGrow: 1, paddingHorizontal: 10, paddingBottom: 12, gap: 10 },
   // Les six premiers intervenants se partagent la largeur ; les contacts, seuls au bout, ont la part d'un bouton.
-  lieux: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 16 },
-  lieuxGauche: { flex: 6 },
-  lieuxDroite: { flex: 1 },
+  lieux: { marginBottom: 16 },
   centre: { flex: 1, gap: 10 },
   panneau: {
     flex: 1,
@@ -340,4 +411,11 @@ const styles = StyleSheet.create({
   centreInterieur: { flexGrow: 1 },
   couche: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50 },
   fond: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.28)' },
+  boutonEclaire: {
+    position: 'absolute',
+    borderWidth: 3,
+    borderColor: colors.blanc,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

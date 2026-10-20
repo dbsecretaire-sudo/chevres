@@ -31,7 +31,7 @@ interface Props {
   grille?: boolean;
   /** Avec la grille : des boutons plus petits (six par ligne sur un téléphone), quand il y en a beaucoup. */
   compacte?: boolean;
-  /** En rangée : tous les boutons sur une seule ligne, chacun prenant une part égale de la largeur. */
+  /** En rangée : les boutons côte à côte, six par ligne au plus, chacun prenant une part égale de la largeur. */
   rangee?: boolean;
   /** Un appui sur un bouton, avec sa place à l'écran (mesurée dans la fenêtre). */
   onAppui: (cle: string, ancre: AncreBouton) => void;
@@ -142,8 +142,9 @@ const styles = StyleSheet.create({
   colonne: { width: 92, flexGrow: 0 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },
   grilleCompacte: { gap: 4 },
-  rangee: { flexDirection: 'row', alignItems: 'flex-start' },
-  celluleRangee: { flex: 1, minWidth: 0 },
+  // Six boutons au plus par ligne, chacun sur une part égale de la largeur ; le suivant passe à la ligne.
+  rangee: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', rowGap: 8 },
+  celluleRangee: { width: '16.6667%', minWidth: 0 },
   pile: { gap: 10, paddingVertical: 4, alignItems: 'center' },
   bouton: { width: 92, alignItems: 'center', gap: 3 },
   boutonEtroit: { width: 74 },
