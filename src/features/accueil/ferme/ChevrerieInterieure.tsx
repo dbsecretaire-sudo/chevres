@@ -106,7 +106,8 @@ export function ChevrerieInterieure({ vedettes, onSortir, boutons, onAppuiBouton
 }
 
 const styles = StyleSheet.create({
-  fond: { flex: 1, backgroundColor: '#E9D8A6' },
+  // Pas de flex: 1 : dans un conteneur à hauteur libre (le défilement), il s'écraserait à zéro sur mobile ; flexGrow suit le contenu et remplit le reste.
+  fond: { flexGrow: 1, backgroundColor: '#E9D8A6' },
   mur: {
     backgroundColor: '#B98A5B',
     paddingTop: 10,

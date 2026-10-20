@@ -440,7 +440,8 @@ const styles = StyleSheet.create({
   panneauEstive: { backgroundColor: '#DCE8F2', borderColor: '#B4C9DC' },
   enclos: { flex: 1, minHeight: 130 },
   // Dans la chèvrerie, l'intérieur remplit toute la place, jusqu'à la barre du bas.
-  interieur: { minHeight: 520, flexGrow: 1, borderRadius: 16, overflow: 'hidden' },
+  // Pas d'overflow: hidden ici : sur Android, le rognage reste figé à la hauteur du premier calcul et cache tout l'intérieur.
+  interieur: { minHeight: 520, flexGrow: 1 },
   corpsInterieur: { flexGrow: 1 },
   centreInterieur: { flexGrow: 1 },
   couche: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50 },

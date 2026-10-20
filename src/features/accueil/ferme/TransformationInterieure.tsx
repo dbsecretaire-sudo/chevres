@@ -67,7 +67,7 @@ export function TransformationInterieure({ onSortir, boutons, onAppuiBouton }: P
 }
 
 const styles = StyleSheet.create({
-  fond: { flex: 1, backgroundColor: '#EBE8E1' },
+  fond: { flexGrow: 1, backgroundColor: '#EBE8E1' },
   contenu: { padding: 8, gap: 10 },
   tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sortir: {
