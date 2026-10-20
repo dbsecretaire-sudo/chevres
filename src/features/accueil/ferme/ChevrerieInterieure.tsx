@@ -109,7 +109,8 @@ const styles = StyleSheet.create({
   // Pas de flex: 1 : dans un conteneur à hauteur libre (le défilement), il s'écraserait à zéro sur mobile ; flexGrow suit le contenu et remplit le reste.
   fond: { flexGrow: 1, backgroundColor: '#E9D8A6' },
   mur: {
-    backgroundColor: '#B98A5B',
+    // Un fond clair (un pré) : les chèvres brunes du rebord s'y voient bien, y compris sur un petit écran.
+    backgroundColor: '#D6E8C6',
     paddingTop: 10,
     paddingHorizontal: 8,
     gap: 10,
@@ -133,9 +134,7 @@ const styles = StyleSheet.create({
   titre: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.blanc,
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowRadius: 3,
+    color: '#2F4A1E',
     textAlign: 'right',
     flexShrink: 1,
   },

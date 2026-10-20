@@ -72,7 +72,7 @@ export function BandeauFerme({ balance, rappels, onRappels }: Props) {
     <View style={styles.bandeau}>
       <Pressable
         style={styles.portrait}
-        onPress={() => router.push(ROUTES.INFORMATIONS_EXPLOITATION as never)}
+        onPress={() => router.navigate(ROUTES.accueilFerme() as never)}
         accessibilityRole="button"
         accessibilityLabel={T.portrait}
       >
@@ -93,14 +93,6 @@ export function BandeauFerme({ balance, rappels, onRappels }: Props) {
         libelle={T.rappels}
         onAppui={onRappels}
       />
-      <Pressable
-        style={styles.reglages}
-        onPress={() => router.push(ROUTES.REGLAGES as never)}
-        accessibilityRole="button"
-        accessibilityLabel={T.reglages}
-      >
-        <Ionicons name="settings-outline" size={22} color={colors.blanc} />
-      </Pressable>
     </View>
   );
 }
@@ -148,12 +140,4 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   badgeTexte: { color: colors.blanc, fontSize: 11, fontWeight: '700' },
-  reglages: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

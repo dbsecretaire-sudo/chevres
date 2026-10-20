@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FlecheRetourBureau } from '@/bureau/FlecheRetourBureau';
+import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -14,7 +15,7 @@ function BoutonAccueil() {
   return (
     <Pressable
       style={styles.accueil}
-      onPress={() => router.replace('/')}
+      onPress={() => router.replace(ROUTES.accueilFerme() as never)}
       accessibilityRole="button"
       accessibilityLabel={TEXTES.navigation.layout.accueil}
       hitSlop={6}
@@ -54,5 +55,12 @@ export const enteteDuBatiment = (): (() => ReactElement) => EnteteBatiment;
 
 const styles = StyleSheet.create({
   rangee: { flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: 4 },
-  accueil: { width: 46, height: 38, borderRadius: 10, backgroundColor: colors.blanc, alignItems: 'center', justifyContent: 'center' },
+  accueil: {
+    width: 46,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: colors.blanc,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

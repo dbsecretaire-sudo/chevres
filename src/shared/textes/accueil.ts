@@ -14,12 +14,11 @@ export const TEXTES_ACCUEIL = {
   /** L'accueil « ferme » : le bandeau, l'enclos, les boutons des lieux de la ferme, leurs bulles d'actions et la barre du bas. */
   ferme: {
     bandeau: {
-      portrait: 'Informations de l’exploitation',
+      portrait: 'Retour à l’accueil',
       balance: 'Balance de l’année : recettes moins dépenses',
       animaux: (n: number) => `${n} animaux vivants`,
       aliments: 'Aliment en stock',
       rappels: 'Rappels à valider',
-      reglages: 'Réglages',
     },
     /** La carte « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
     transformation: {

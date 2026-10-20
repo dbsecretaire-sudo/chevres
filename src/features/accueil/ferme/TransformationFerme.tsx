@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Balade } from '@/features/accueil/ferme/animations';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
-import { ROUTES } from '@/shared/constants/routes';
-import { SECTION_STOCK } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -41,23 +38,19 @@ export function Carrelage({ lignes = LIGNES_DU_CARRELAGE }: { lignes?: number })
   );
 }
 
-/** Les trois lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. Un appui ouvre la rubrique du stock. */
+/** Les trois lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. */
 export function LignesDeTransformation({ compte }: { compte: CompteTransformation }) {
-  const router = useRouter();
-  const vers = (section: string) => router.push(`${ROUTES.COMPTABILITE_STOCKS}?onglet=${section}` as never);
-  const lignes: { cle: string; texte: string; section: string }[] = [
-    { cle: 'fromages', texte: T.fromages(compte.fromages), section: SECTION_STOCK.FROMAGES },
-    { cle: 'charcuterie', texte: T.charcuterie(compte.charcuterie), section: SECTION_STOCK.VIANDE },
-    { cle: 'viande', texte: T.viande(compte.viande), section: SECTION_STOCK.ANIMAUX },
+  const lignes = [
+    { cle: 'fromages', texte: T.fromages(compte.fromages) },
+    { cle: 'charcuterie', texte: T.charcuterie(compte.charcuterie) },
+    { cle: 'viande', texte: T.viande(compte.viande) },
   ];
   return (
     <View style={styles.lignes}>
       {lignes.map((l) => (
-        <Pressable key={l.cle} onPress={() => vers(l.section)} accessibilityRole="button" hitSlop={4}>
-          <Text style={styles.ligne} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
-            {l.texte}
-          </Text>
-        </Pressable>
+        <Text key={l.cle} style={styles.ligne} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+          {l.texte}
+        </Text>
       ))}
     </View>
   );
@@ -80,7 +73,12 @@ export function TransformationFerme({
   return (
     <View style={styles.carte}>
       <View style={styles.zone}>
-        <View style={styles.cadre}>
+        <Pressable
+          style={styles.cadre}
+          onPress={onEntrer}
+          accessibilityRole="button"
+          accessibilityLabel={T.entrer}
+        >
           <Carrelage />
           {/* Le texte sur une bulle blanche translucide : il ressort du carrelage. */}
           <View style={styles.bulle}>
@@ -98,7 +96,7 @@ export function TransformationFerme({
             </View>
             <LignesDeTransformation compte={compte} />
           </View>
-        </View>
+        </Pressable>
         <Pressable
           style={styles.porte}
           onPress={onEntrer}

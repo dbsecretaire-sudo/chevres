@@ -16,7 +16,6 @@ export interface ActionDeLieu {
 
 /** Les boutons de l'accueil qui ouvrent des bulles : l'enclos, et les lieux des deux colonnes. */
 export type CibleDesBulles =
-  | 'enclos'
   | 'nouveau'
   | 'sante'
   | 'grange'
@@ -66,7 +65,6 @@ function bullesDuLieuATiers(cle: CleLieuTiers): ActionDeLieu[] {
 /** Les actions qui sortent en bulles quand on touche un bouton de l'accueil : les écrans qu'on y ouvre le plus. */
 export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
-    case 'enclos':
     case 'nouveau':
       // Ce qu'on ajoute au troupeau : une naissance, une chèvre, un bouc, et une perte (une morte).
       return [

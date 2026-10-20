@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { actionsDuLieu, type ActionDeLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
@@ -37,8 +37,6 @@ const ACHAT = '#8E1F33';
 const VENTE = colors.primary;
 const NEUTRE = '#5F6B73';
 const ORANGE = '#D2793B';
-/** Le bleu de l'estive : la carte de l'exploitation et ses bulles, quand le troupeau est à la montagne. */
-const ESTIVE = '#3E7CB1';
 
 /**
  * Les boutons de la chèvrerie qui ouvrent directement leur écran, sans bulles. Le suivi des mouvements, le bordereau de perte et le recensement
@@ -61,7 +59,7 @@ const ROUTE_DIRECTE: Record<string, string> = {
 };
 
 /** Où est le bouton : parmi les intervenants du haut, sur une carte (l'exploitation), ou dans l'un des deux intérieurs. */
-type Zone = 'exploitation' | 'interieur' | 'cote';
+type Zone = 'interieur' | 'cote';
 
 /** Ce qu'on a ouvert en entrant par la porte d'une carte : la chèvrerie (l'exploitation) ou la transformation. */
 type Interieur = 'exploitation' | 'transformation';
@@ -71,17 +69,19 @@ type Interieur = 'exploitation' | 'transformation';
  * la carte de l'exploitation ouvre vers le haut, les boutons sur le côté d'une carte vers la gauche, ceux d'un intérieur vers le bas.
  */
 export function directionDesBulles(zone: Zone, x: number, largeur: number): number {
-  if (zone === 'exploitation') return 90;
   // Un bouton sur le côté d'une carte : les bulles s'ouvrent vers la gauche, sur la carte.
   if (zone === 'cote') return 180;
   // Dans un intérieur, les boutons sont en haut : les bulles s'ouvrent vers le bas, de biais vers le côté libre près d'un bord.
   return x < largeur / 3 ? 315 : x > (2 * largeur) / 3 ? 225 : 270;
 }
 
-/** Ce qui reste éclairé quand le reste s'assombrit : la carte touchée (la zone telle quelle), ou le bouton touché (refait par-dessus l'ombre). */
-type Lumiere =
-  | { forme: 'carte'; gauche: number; haut: number; largeur: number; hauteur: number }
-  | { forme: 'bouton'; gauche: number; haut: number; diametre: number; icone: ReactNode };
+/** Ce qui reste éclairé quand le reste s'assombrit : le bouton touché, refait par-dessus l'ombre (sa place, sa taille, son dessin). */
+interface Lumiere {
+  gauche: number;
+  haut: number;
+  diametre: number;
+  icone: ReactNode;
+}
 
 interface Menu {
   cible: CibleDesBulles;
@@ -97,22 +97,6 @@ interface Menu {
   lumiere: Lumiere;
   /** Le nom du bouton touché : on l'écrit sous lui, puisque les boutons n'ont pas de texte. */
   titre?: string;
-}
-
-/** Les quatre plaques d'ombre autour d'une zone éclairée (en haut, en bas, à gauche, à droite) : la zone elle-même reste à découvert. */
-function plaques(
-  zone: { gauche: number; haut: number; largeur: number; hauteur: number },
-  largeur: number,
-  hauteur: number,
-) {
-  const bas = zone.haut + zone.hauteur;
-  const droite = zone.gauche + zone.largeur;
-  return [
-    { left: 0, right: 0, top: 0, bottom: hauteur - zone.haut },
-    { left: 0, right: 0, top: bas, bottom: 0 },
-    { left: 0, width: zone.gauche, top: zone.haut, height: zone.hauteur },
-    { left: droite, right: 0, top: zone.haut, height: zone.hauteur },
-  ] satisfies object[];
 }
 
 const iconeMCI = (nom: keyof typeof MaterialCommunityIcons.glyphMap) => (
@@ -135,11 +119,18 @@ export default function AccueilFerme() {
   // Sans en-tête, le contenu commence sous l'encoche et la barre d'état.
   const { top: haut } = useSafeAreaInsets();
   const racine = useRef<View>(null);
-  const enclos = useRef<View>(null);
   const [menu, setMenu] = useState<Menu | null>(null);
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
   const [estiveOuverte, setEstiveOuverte] = useState(false);
   const [interieur, setInterieur] = useState<Interieur | null>(null);
+  // Le bouton maison revient à l'accueil d'où qu'on vienne : son paramètre change à chaque appui, et l'accueil quitte alors l'intérieur où il était.
+  const { accueil } = useLocalSearchParams<{ accueil?: string }>();
+  const [accueilVu, setAccueilVu] = useState(accueil);
+  if (accueil !== accueilVu) {
+    setAccueilVu(accueil);
+    setInterieur(null);
+    setMenu(null);
+  }
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
   // Les intervenants extérieurs, en colonnes sans texte sur les cartes (le nom s'affiche quand on touche le bouton) : ceux qui interviennent
@@ -204,7 +195,7 @@ export default function AccueilFerme() {
   ];
 
   /** Ouvre le menu d'un bouton à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
-  const ouvrirMenu = (cible: CibleDesBulles, zone: Zone, ancre: AncreBouton, entree?: EntreeDeColonne) => {
+  const ouvrirMenu = (cible: CibleDesBulles, zone: Zone, ancre: AncreBouton, entree: EntreeDeColonne) => {
     racine.current?.measureInWindow((rx, ry, largeur, hauteur) => {
       const gauche = ancre.x - rx;
       const haut = ancre.y - ry;
@@ -216,12 +207,10 @@ export default function AccueilFerme() {
         y: haut + ancre.hauteur / 2,
         hauteur,
         largeur,
-        // Les bulles ont la couleur du bouton d'où elles sortent ; l'exploitation, la sienne (le bleu quand le troupeau est à l'estive).
-        titre: entree?.titre,
-        couleur: entree?.couleur ?? (f.estive ? ESTIVE : colors.primary),
-        lumiere: entree
-          ? { forme: 'bouton', gauche, haut, diametre: ancre.largeur, icone: entree.icone }
-          : { forme: 'carte', gauche, haut, largeur: ancre.largeur, hauteur: ancre.hauteur },
+        // Les bulles ont la couleur du bouton d'où elles sortent.
+        titre: entree.titre,
+        couleur: entree.couleur ?? colors.primary,
+        lumiere: { gauche, haut, diametre: ancre.largeur, icone: entree.icone },
       });
     });
   };
@@ -236,16 +225,11 @@ export default function AccueilFerme() {
         ...interneExploitation.flat(),
         ...interneTransformation,
       ].find((e) => e.cle === cle);
-      ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
+      if (entree) ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
     }
   };
   const surCote = (cle: string, ancre: AncreBouton) => surBouton('cote', cle, ancre);
   const surInterne = (cle: string, ancre: AncreBouton) => surBouton('interieur', cle, ancre);
-  const surEnclos = () => {
-    enclos.current?.measureInWindow((x, y, largeur, hauteur) =>
-      ouvrirMenu('enclos', 'exploitation', { x, y, largeur, hauteur }),
-    );
-  };
   const choisir = (action: ActionDeLieu) => {
     setMenu(null);
     router.push(action.route as never);
@@ -301,19 +285,14 @@ export default function AccueilFerme() {
             </View>
           ) : (
             <>
-              {/* Toute la carte : c'est elle qui reste éclairée quand ses bulles s'ouvrent. */}
-              <View
-                ref={enclos}
-                collapsable={false}
-                style={[styles.panneau, f.estive ? styles.panneauEstive : null]}
-              >
+              <View style={[styles.panneau, f.estive ? styles.panneauEstive : null]}>
                 <View style={styles.enclos}>
                   <EnclosFerme
                     vedettes={f.vedettes}
                     nombreAnimaux={f.stats?.totalVivantes}
                     naissances={f.stats?.cabritsAnnee}
                     estive={f.estive}
-                    onAppui={surEnclos}
+                    onAppui={() => setInterieur('exploitation')}
                     onEntrer={() => setInterieur('exploitation')}
                   />
                 </View>
@@ -333,63 +312,49 @@ export default function AccueilFerme() {
       {/* Les bulles du bouton touché : par-dessus tout ; un appui à côté les referme. */}
       {menu ? (
         <View style={styles.couche}>
-          {menu.lumiere.forme === 'carte' ? (
-            // La carte touchée reste éclairée : l'ombre l'entoure de quatre côtés.
-            <>
-              {plaques(menu.lumiere, menu.largeur, menu.hauteur).map((style, i) => (
-                <Pressable
-                  key={i}
-                  style={[styles.fond, style]}
-                  onPress={() => setMenu(null)}
-                  accessibilityRole="button"
-                  accessibilityLabel={TEXTES.commun.general.fermer}
-                />
-              ))}
-            </>
-          ) : (
-            <>
-              <Pressable
-                style={styles.fond}
-                onPress={() => setMenu(null)}
-                accessibilityRole="button"
-                accessibilityLabel={TEXTES.commun.general.fermer}
-              />
-              {/* Le bouton touché, refait par-dessus l'ombre : il reste en pleine couleur. */}
+          {/* Le reste s'assombrit ; un appui sur l'ombre referme les bulles. */}
+          <>
+            <Pressable
+              style={styles.fond}
+              onPress={() => setMenu(null)}
+              accessibilityRole="button"
+              accessibilityLabel={TEXTES.commun.general.fermer}
+            />
+            {/* Le bouton touché, refait par-dessus l'ombre : il reste en pleine couleur. */}
+            <View
+              pointerEvents="none"
+              style={[
+                styles.boutonEclaire,
+                {
+                  left: menu.lumiere.gauche,
+                  top: menu.lumiere.haut,
+                  width: menu.lumiere.diametre,
+                  height: menu.lumiere.diametre,
+                  borderRadius: menu.lumiere.diametre / 2,
+                  backgroundColor: menu.couleur,
+                },
+              ]}
+            >
+              {menu.lumiere.icone}
+            </View>
+            {menu.titre ? (
               <View
                 pointerEvents="none"
                 style={[
-                  styles.boutonEclaire,
+                  styles.etiquette,
                   {
-                    left: menu.lumiere.gauche,
-                    top: menu.lumiere.haut,
-                    width: menu.lumiere.diametre,
-                    height: menu.lumiere.diametre,
-                    borderRadius: menu.lumiere.diametre / 2,
-                    backgroundColor: menu.couleur,
+                    left: Math.min(
+                      Math.max(4, menu.lumiere.gauche + menu.lumiere.diametre / 2 - 70),
+                      menu.largeur - 144,
+                    ),
+                    top: menu.lumiere.haut + menu.lumiere.diametre + 4,
                   },
                 ]}
               >
-                {menu.lumiere.icone}
+                <Text style={styles.etiquetteTexte}>{menu.titre}</Text>
               </View>
-              {menu.titre ? (
-                <View
-                  pointerEvents="none"
-                  style={[
-                    styles.etiquette,
-                    {
-                      left: Math.min(
-                        Math.max(4, menu.lumiere.gauche + menu.lumiere.diametre / 2 - 70),
-                        menu.largeur - 144,
-                      ),
-                      top: menu.lumiere.haut + menu.lumiere.diametre + 4,
-                    },
-                  ]}
-                >
-                  <Text style={styles.etiquetteTexte}>{menu.titre}</Text>
-                </View>
-              ) : null}
-            </>
-          )}
+            ) : null}
+          </>
           <BullesLieu
             x={menu.x}
             y={yBulles}
