@@ -45,40 +45,44 @@ export function PucesDefilantes<T extends string>({ puces, valeur, onChoisir }: 
 
   return (
     <>
-    <DefilementFleches scrollRef={defilement} contentContainerStyle={styles.ligneDefilante}>
-      {puces.map((p) => {
-        const active = p.valeur === valeur;
-        return (
-          <Pressable
-            key={p.valeur}
-            onLayout={(e) => {
-              positions.current[p.valeur] = e.nativeEvent.layout.x;
-              if (active) amenerDansLaVue(e.nativeEvent.layout.x, false);
-            }}
-            style={[
-              styles.puce,
-              { backgroundColor: accentClair, borderColor: accentClair },
-              active && { backgroundColor: accent, borderColor: accent },
-              p.aide ? { flexDirection: 'row', alignItems: 'center', gap: 6 } : null,
-            ]}
-            onPress={() => !active && onChoisir(p.valeur)}
-          >
-            <Text style={[styles.texte, active && { color: colors.blanc }]}>{p.label}</Text>
-            {p.aide ? (
-              <Pressable onPress={() => setAideOuverte(p)} hitSlop={8} accessibilityLabel={p.label}>
-                <Ionicons name="help-circle-outline" size={18} color={active ? colors.blanc : colors.textMuted} />
-              </Pressable>
-            ) : null}
-          </Pressable>
-        );
-      })}
-    </DefilementFleches>
-    <InfoModal
-      visible={!!aideOuverte}
-      title={(aideOuverte?.label ?? '').replace(/\s*\(\d+\)$/, '')}
-      message={aideOuverte?.aide}
-      onClose={() => setAideOuverte(null)}
-    />
+      <DefilementFleches scrollRef={defilement} contentContainerStyle={styles.ligneDefilante}>
+        {puces.map((p) => {
+          const active = p.valeur === valeur;
+          return (
+            <Pressable
+              key={p.valeur}
+              onLayout={(e) => {
+                positions.current[p.valeur] = e.nativeEvent.layout.x;
+                if (active) amenerDansLaVue(e.nativeEvent.layout.x, false);
+              }}
+              style={[
+                styles.puce,
+                { backgroundColor: accentClair, borderColor: accentClair },
+                active && { backgroundColor: accent, borderColor: accent },
+                p.aide ? { flexDirection: 'row', alignItems: 'center', gap: 6 } : null,
+              ]}
+              onPress={() => !active && onChoisir(p.valeur)}
+            >
+              <Text style={[styles.texte, active && { color: colors.blanc }]}>{p.label}</Text>
+              {p.aide ? (
+                <Pressable onPress={() => setAideOuverte(p)} hitSlop={8} accessibilityLabel={p.label}>
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={18}
+                    color={active ? colors.blanc : colors.textMuted}
+                  />
+                </Pressable>
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </DefilementFleches>
+      <InfoModal
+        visible={!!aideOuverte}
+        title={(aideOuverte?.label ?? '').replace(/\s*\(\d+\)$/, '')}
+        message={aideOuverte?.aide}
+        onClose={() => setAideOuverte(null)}
+      />
     </>
   );
 }

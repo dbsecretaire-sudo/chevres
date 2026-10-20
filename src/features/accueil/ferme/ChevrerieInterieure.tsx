@@ -13,6 +13,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
+import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -94,7 +95,10 @@ export function ChevrerieInterieure({ vedettes, onSortir, boutons, onAppuiBouton
                   emoji={dessin}
                   image={tetes ? TETE_DE_CHEVRE : undefined}
                   fond={fondDeLAnimal(categorieAccueil(chevre))}
-                  onPress={() => router.push(ROUTES.ficheChevre(chevre.id) as never)}
+                  onPress={() => {
+                    noterOrigine(ROUTES.retourAccueil('exploitation'), ROUTES.ficheChevre(chevre.id));
+                    router.push(ROUTES.ficheChevre(chevre.id) as never);
+                  }}
                 />
               </LigneDeBloc>
             ))}

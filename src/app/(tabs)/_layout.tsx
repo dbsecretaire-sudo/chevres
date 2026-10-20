@@ -1,6 +1,7 @@
 import { enteteApplication } from '@/shared/navigation/enteteApplication';
 import { Tabs, useSegments } from 'expo-router';
 import { EcranErreur } from '@/shared/components/EcranErreur';
+import { effacerOrigine } from '@/shared/navigation/origineRetour';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { useBarreAjoutBleue } from '@/shared/navigation/barreAjout';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -58,7 +59,12 @@ function Onglets() {
     <Tabs
       // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
       backBehavior="history"
-      screenListeners={{ tabPress: () => quitterRetour() }}
+      screenListeners={{
+        tabPress: () => {
+          quitterRetour();
+          effacerOrigine();
+        },
+      }}
       screenLayout={ecranParEspeceSauf(
         'cheptel',
         'sante',
@@ -86,6 +92,8 @@ function Onglets() {
           title: TEXTES.navigation.layout.accueil,
           // L'accueil n'a plus d'onglet : la maison du bandeau, présent sur chaque page, y ramène.
           href: null,
+          // Sous Windows, l'accueil garde son en-tête (le bandeau est déjà dans la page).
+          ...(estBureau() ? { header: undefined } : {}),
           headerRight: () => <EtablissementHeaderButton />,
           // L'accueil « ferme » (hors Windows) n'a pas d'en-tête : le nom de l'établissement y est une carte, pour gagner de la hauteur.
           headerShown: !(accueilFerme && !estBureau()),

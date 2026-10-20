@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { actionsDuLieu, type ActionDeLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { BarreBasseFerme } from '@/features/accueil/ferme/BarreBasseFerme';
@@ -131,14 +132,26 @@ export default function AccueilFerme() {
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
   const [estiveOuverte, setEstiveOuverte] = useState(false);
   const [interieur, setInterieur] = useState<Interieur | null>(null);
-  // Le bouton maison revient à l'accueil d'où qu'on vienne : son paramètre change à chaque appui, et l'accueil quitte alors l'intérieur où il était.
-  const { accueil } = useLocalSearchParams<{ accueil?: string }>();
-  const [accueilVu, setAccueilVu] = useState(accueil);
-  if (accueil !== accueilVu) {
-    setAccueilVu(accueil);
-    setInterieur(null);
+  // L'accueil est rouvert par son adresse : la maison (le paramètre change à chaque appui) le montre sur la carte ; la flèche de retour d'une page ouverte
+  // depuis un bouton le montre dans l'intérieur où l'on était (« interieur »).
+  const { accueil, interieur: interieurDemande } = useLocalSearchParams<{
+    accueil?: string;
+    interieur?: string;
+  }>();
+  const cleAccueil = `${accueil ?? ''}|${interieurDemande ?? ''}`;
+  const [cleVue, setCleVue] = useState(cleAccueil);
+  if (cleAccueil !== cleVue) {
+    setCleVue(cleAccueil);
+    setInterieur(
+      interieurDemande === 'exploitation' || interieurDemande === 'transformation' ? interieurDemande : null,
+    );
     setMenu(null);
   }
+  /** Ouvre une page depuis un bouton : la flèche de retour y ramènera, dans l'intérieur où l'on était. */
+  const ouvrir = (route: string) => {
+    noterOrigine(ROUTES.retourAccueil(interieur ?? undefined), route);
+    router.push(route as never);
+  };
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
   // Les intervenants extérieurs, en colonnes sans texte sur les cartes (le nom s'affiche quand on touche le bouton) : ceux qui interviennent
@@ -231,8 +244,8 @@ export default function AccueilFerme() {
   };
   const surBouton = (zone: Zone, cle: string, ancre: AncreBouton) => {
     if (cle === 'estive') setEstiveOuverte(true);
-    else if (cle === 'stock') router.push(ROUTES.lieu('entrepot') as never);
-    else if (ROUTE_DIRECTE[cle]) router.push(ROUTE_DIRECTE[cle] as never);
+    else if (cle === 'stock') ouvrir(ROUTES.lieu('entrepot'));
+    else if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
     else {
       const entree = [
         ...surLesBetes,
@@ -249,7 +262,7 @@ export default function AccueilFerme() {
   const surInterne = (cle: string, ancre: AncreBouton) => surBouton('interieur', cle, ancre);
   const choisir = (action: ActionDeLieu) => {
     setMenu(null);
-    router.push(action.route as never);
+    ouvrir(action.route);
   };
 
   // Les bulles du menu ouvert : le bouton est décalé si elles sortaient de l'écran.
@@ -268,11 +281,7 @@ export default function AccueilFerme() {
     <View ref={racine} collapsable={false} style={styles.racine}>
       <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + haut }]}>
         <View style={styles.colonneHaut}>
-          <BandeauFerme
-            balance={f.stats?.soldeFactures}
-            rappels={f.nombreDeRappels}
-            onRappels={() => setRappelsOuverts(true)}
-          />
+          <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
           {estBureau() ? null : <NomFerme />}
           <RappelSauvegarde />
         </View>

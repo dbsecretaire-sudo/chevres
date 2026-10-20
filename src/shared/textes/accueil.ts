@@ -18,6 +18,7 @@ export const TEXTES_ACCUEIL = {
       balance: 'Balance de l’année : recettes moins dépenses',
       animaux: (n: number) => `${n} animaux vivants`,
       aliments: 'Aliment en stock',
+      boucles: 'Boucles posées sur les animaux vivants (le badge : les tiptag)',
       rappels: 'Rappels à valider',
     },
     /** Le titre du panneau des personnes et entreprises (les intervenants) sur le côté des cartes. */

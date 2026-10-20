@@ -61,13 +61,10 @@ export function SelectModalMultiple<T extends string>({
 
   const q = recherche.trim().toLowerCase();
   const plage = numeroDe ? lirePlage(recherche) : null;
-  const optionsFiltrees = useMemo(
-    () => {
-      const dansLaPuce = filtres ? options.filter((o) => filtres.appartient(o.value, puce)) : options;
-      return !q || plage ? dansLaPuce : dansLaPuce.filter((o) => o.label.toLowerCase().includes(q));
-    },
-    [options, q, plage, filtres, puce],
-  );
+  const optionsFiltrees = useMemo(() => {
+    const dansLaPuce = filtres ? options.filter((o) => filtres.appartient(o.value, puce)) : options;
+    return !q || plage ? dansLaPuce : dansLaPuce.filter((o) => o.label.toLowerCase().includes(q));
+  }, [options, q, plage, filtres, puce]);
   /** Les lignes d'une plage tapée : celles dont le numéro est entre les deux nombres (dans un sens ou dans l'autre). */
   const dansLaPlageTapee = useMemo(
     () => (plage && numeroDe ? dansLaPlage(options, plage, (o) => numeroDe(o.value)) : []),

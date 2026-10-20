@@ -6,6 +6,7 @@ import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { emojiDeLaCategorie, nombreEnStock } from '@/features/stock/services/entrepotJeu';
 import { ROUTES } from '@/shared/constants/routes';
+import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -22,6 +23,8 @@ export default function EntrepotJeu({ seulement, titre }: { seulement?: string; 
   const router = useRouter();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
   // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
+  // La page où l'on est : la grange ou l'entrepôt ; la flèche de retour des pages qu'elle ouvre y ramène.
+  const origine = ROUTES.lieu(seulement ? 'grange' : 'entrepot');
   const categories = seulement ? toutes.filter((c) => c.categorie === seulement) : toutes;
   const [onglet, setOnglet] = useState<string | null>(null);
   const defilement = useRef<ScrollView>(null);
@@ -99,7 +102,7 @@ export default function EntrepotJeu({ seulement, titre }: { seulement?: string; 
               }}
               scrollEventThrottle={64}
             >
-              <RubriquesDeCartes groupes={groupes} />
+              <RubriquesDeCartes groupes={groupes} origine={origine} />
             </ScrollView>
             <View style={styles.fleches}>
               <Pressable
@@ -127,7 +130,10 @@ export default function EntrepotJeu({ seulement, titre }: { seulement?: string; 
       </View>
       <Pressable
         style={styles.complet}
-        onPress={() => router.push(ROUTES.COMPTABILITE_STOCKS as never)}
+        onPress={() => {
+          noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
+          router.push(ROUTES.COMPTABILITE_STOCKS as never);
+        }}
         accessibilityRole="button"
       >
         <Ionicons name="list" size={18} color={colors.blanc} />

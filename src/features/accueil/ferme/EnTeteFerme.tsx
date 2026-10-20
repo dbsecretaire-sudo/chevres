@@ -3,7 +3,6 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
-import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import { estBureau } from '@/shared/utils/plateforme';
 
 /**
@@ -11,7 +10,6 @@ import { estBureau } from '@/shared/utils/plateforme';
  * (la grange) : il lit lui-même la balance et le nombre de rappels, et ouvre la liste des rappels.
  */
 export function EnTeteFerme() {
-  const f = useFermeAccueil();
   // Sans en-tête, le contenu commence sous l'encoche et la barre d'état.
   const { top } = useSafeAreaInsets();
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
@@ -19,11 +17,7 @@ export function EnTeteFerme() {
     <>
       <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + top }]}>
         <View style={styles.colonne}>
-          <BandeauFerme
-            balance={f.stats?.soldeFactures}
-            rappels={f.nombreDeRappels}
-            onRappels={() => setRappelsOuverts(true)}
-          />
+          <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
         </View>
       </View>
       <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />

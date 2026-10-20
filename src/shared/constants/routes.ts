@@ -20,6 +20,8 @@ export const ROUTES = {
   INFORMATIONS_EXPLOITATION: '/informations-exploitation',
   /** L'accueil de la ferme (l'exploitation et le travail du produit), d'où qu'on vienne : le paramètre change à chaque appel, pour que l'accueil quitte l'intérieur où il était. */
   accueilFerme: () => `/?accueil=${Date.now()}` as const,
+  /** L'accueil tel qu'on l'a quitté (dans l'intérieur donné, ou sur la carte) : là où la flèche de retour ramène après un bouton. */
+  retourAccueil: (interieur?: string) => `/?accueil=retour&interieur=${interieur ?? ''}` as const,
   RAPPELS_HISTORIQUE: '/rappels-historique',
   /** Le didacticiel : toutes les options de l'application, expliquées (activable sur l'accueil). */
   DIDACTICIEL: '/didacticiel',

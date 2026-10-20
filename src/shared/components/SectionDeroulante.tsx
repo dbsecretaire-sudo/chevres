@@ -21,7 +21,15 @@ interface Props {
 }
 
 /** Une section qui se déroule d'un appui sur son titre : plusieurs peuvent être ouvertes en même temps. */
-export function SectionDeroulante({ titre, nombre, ouverte, onBasculer, alerte, accordeon = false, children }: Props) {
+export function SectionDeroulante({
+  titre,
+  nombre,
+  ouverte,
+  onBasculer,
+  alerte,
+  accordeon = false,
+  children,
+}: Props) {
   // Sur ordinateur, toutes les sections sont déroulées (il y a la place), sauf en accordéon : une seule se lit à la fois.
   const toujoursDeplie = estBureau() && !accordeon;
   const deplie = toujoursDeplie || ouverte;

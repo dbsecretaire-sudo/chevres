@@ -68,13 +68,17 @@ export function SelectModal<T extends string>({
       setGroupeChoisi(options.find((o) => o.value === value)?.groupe ?? puceParDefaut);
     }
     // Par catégories : on rouvre sur celle de la valeur déjà choisie, sinon sur la liste des catégories.
-    if (visible && parCategories) setGroupeChoisi((value && options.find((o) => o.value === value)?.groupe) || null);
+    if (visible && parCategories)
+      setGroupeChoisi((value && options.find((o) => o.value === value)?.groupe) || null);
   }
   const groupes = puces ?? [];
   const avecPuces = groupes.length > 0;
   /** Les catégories (groupes) des options, dans l'ordre de la liste. */
   const categories = useMemo(
-    () => (parCategories ? [...new Set(options.flatMap((o) => (o.groupe ? [o.groupe] : [])))].sort(comparerAlphabetique) : []),
+    () =>
+      parCategories
+        ? [...new Set(options.flatMap((o) => (o.groupe ? [o.groupe] : [])))].sort(comparerAlphabetique)
+        : [],
     [options, parCategories],
   );
   /** Les options sans catégorie (« Aucun »…) : elles restent proposées à côté des catégories. */
@@ -84,14 +88,35 @@ export function SelectModal<T extends string>({
     const q = recherche.trim().toLowerCase();
     return !q || o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q);
   };
-  const lignesDesCategories: { nom: string; categorie: boolean; option?: SelectOption<T>; trouves: SelectOption<T>[] }[] = [...categories.map((nom) => ({ nom, categorie: true, trouves: options.filter((o) => o.groupe === nom && correspond(o)) })).filter((c) => c.trouves.length > 0), ...sansCategorie.filter(correspond).map((o) => ({ nom: o.label, categorie: false, option: o, trouves: [] as SelectOption<T>[] }))];
+  const lignesDesCategories: {
+    nom: string;
+    categorie: boolean;
+    option?: SelectOption<T>;
+    trouves: SelectOption<T>[];
+  }[] = [
+    ...categories
+      .map((nom) => ({
+        nom,
+        categorie: true,
+        trouves: options.filter((o) => o.groupe === nom && correspond(o)),
+      }))
+      .filter((c) => c.trouves.length > 0),
+    ...sansCategorie
+      .filter(correspond)
+      .map((o) => ({ nom: o.label, categorie: false, option: o, trouves: [] as SelectOption<T>[] })),
+  ];
   /** Un seul groupe : directement ses options, sans liste de catégories. */
-  const categorieActive = parCategories ? (groupeChoisi ?? (categories.length === 1 ? categories[0] : null)) : null;
+  const categorieActive = parCategories
+    ? (groupeChoisi ?? (categories.length === 1 ? categories[0] : null))
+    : null;
   const enListeDeCategories = parCategories && categories.length > 1 && !groupeChoisi;
 
   const optionsFiltrees = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    const duGroupe = (groupeChoisi ?? categorieActive) ? options.filter((o) => o.groupe === (groupeChoisi ?? categorieActive)) : options;
+    const duGroupe =
+      (groupeChoisi ?? categorieActive)
+        ? options.filter((o) => o.groupe === (groupeChoisi ?? categorieActive))
+        : options;
     if (!q) return duGroupe;
     return duGroupe.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
   }, [options, recherche, groupeChoisi, categorieActive]);
@@ -174,7 +199,10 @@ export function SelectModal<T extends string>({
                   {/* Une recherche : les contacts trouvés dans cette catégorie. */}
                   {item.categorie && recherche.trim() ? (
                     <Text style={commonStyles.note} numberOfLines={2}>
-                      {item.trouves.slice(0, 4).map((o) => o.label).join(' · ')}
+                      {item.trouves
+                        .slice(0, 4)
+                        .map((o) => o.label)
+                        .join(' · ')}
                       {item.trouves.length > 4 ? ' …' : ''}
                     </Text>
                   ) : null}
@@ -182,43 +210,46 @@ export function SelectModal<T extends string>({
               )}
             />
           ) : (
-          <FlatList
-            style={styles.liste}
-            data={optionsFiltrees}
-            keyExtractor={(item, index) => `${item.value}|${index}`}
-            renderItem={({ item, index }) => (
-              <>
-                {!avecPuces && !parCategories && item.groupe && item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
-                  <Text style={[commonStyles.lineBold, styles.groupe]}>{item.groupe}</Text>
-                ) : null}
-                <Pressable
-                  style={[
-                    styles.option,
-                    item.groupe && !avecPuces && !parCategories && styles.optionGroupee,
-                    item.value === value && styles.optionSelected,
-                  ]}
-                  onPress={() => {
-                    onSelect(item.value);
-                    fermer();
-                  }}
-                >
-                  <Text
+            <FlatList
+              style={styles.liste}
+              data={optionsFiltrees}
+              keyExtractor={(item, index) => `${item.value}|${index}`}
+              renderItem={({ item, index }) => (
+                <>
+                  {!avecPuces &&
+                  !parCategories &&
+                  item.groupe &&
+                  item.groupe !== optionsFiltrees[index - 1]?.groupe ? (
+                    <Text style={[commonStyles.lineBold, styles.groupe]}>{item.groupe}</Text>
+                  ) : null}
+                  <Pressable
                     style={[
-                      commonStyles.valueText,
-                      item.value === value && { color: accent, fontWeight: '700' },
+                      styles.option,
+                      item.groupe && !avecPuces && !parCategories && styles.optionGroupee,
+                      item.value === value && styles.optionSelected,
                     ]}
+                    onPress={() => {
+                      onSelect(item.value);
+                      fermer();
+                    }}
                   >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              </>
-            )}
-            ListEmptyComponent={
-              propositionLibre ? null : (
-                <Text style={styles.aucunResultat}>{TEXTES.commun.selectField.aucunResultat}</Text>
-              )
-            }
-          />
+                    <Text
+                      style={[
+                        commonStyles.valueText,
+                        item.value === value && { color: accent, fontWeight: '700' },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+              ListEmptyComponent={
+                propositionLibre ? null : (
+                  <Text style={styles.aucunResultat}>{TEXTES.commun.selectField.aucunResultat}</Text>
+                )
+              }
+            />
           )}
         </Pressable>
       </Pressable>

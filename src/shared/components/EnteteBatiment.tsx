@@ -1,37 +1,21 @@
 import type { ReactElement } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRetour } from '@/shared/navigation/origineRetour';
 import { FlecheRetourBureau } from '@/bureau/FlecheRetourBureau';
-import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { estBureau } from '@/shared/utils/plateforme';
 
-/** Le bouton blanc de la maison, en haut à gauche d'un bâtiment de la ferme : il ramène à l'accueil (la carte). */
-function BoutonAccueil() {
-  const router = useRouter();
-  return (
-    <Pressable
-      style={styles.accueil}
-      onPress={() => router.replace(ROUTES.accueilFerme() as never)}
-      accessibilityRole="button"
-      accessibilityLabel={TEXTES.navigation.layout.accueil}
-      hitSlop={6}
-    >
-      <Ionicons name="home" size={24} color={colors.primary} />
-    </Pressable>
-  );
-}
-
 /** La flèche de retour du téléphone, quand l'en-tête de l'écran est refait à la main : elle revient à l'écran d'avant, ou à l'accueil. */
 function FlecheRetour() {
-  const router = useRouter();
+  // Depuis un bouton de l'accueil, d'un intérieur ou de la grange, elle ramène à cet endroit ; sinon à l'écran d'avant, ou à l'accueil.
+  const retour = useRetour();
   return (
     <Pressable
       style={commonStyles.boutonCompact}
-      onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+      onPress={retour}
       accessibilityRole="button"
       accessibilityLabel={TEXTES.commun.general.retour}
     >
@@ -40,31 +24,10 @@ function FlecheRetour() {
   );
 }
 
-/**
- * La gauche de l'en-tête d'un bâtiment de la ferme (laiterie, abattoir, vétérinaire…). Sur le téléphone, le bandeau de la ferme porte déjà la
- * maison : il ne reste que la flèche de retour. Sous Windows, qui n'a pas de bandeau, le retour à l'accueil puis la flèche de retour.
- */
+/** La gauche de l'en-tête d'un bâtiment de la ferme (laiterie, abattoir, vétérinaire…) : la flèche de retour ; la maison est dans le bandeau. */
 export function EnteteBatiment(): ReactElement {
-  if (!estBureau()) return <FlecheRetour />;
-  return (
-    <View style={styles.rangee}>
-      <BoutonAccueil />
-      <FlecheRetourBureau />
-    </View>
-  );
+  return estBureau() ? <FlecheRetourBureau /> : <FlecheRetour />;
 }
 
 /** À donner à `headerLeft` des écrans des bâtiments de la ferme. */
 export const enteteDuBatiment = (): (() => ReactElement) => EnteteBatiment;
-
-const styles = StyleSheet.create({
-  rangee: { flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: 4 },
-  accueil: {
-    width: 46,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: colors.blanc,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

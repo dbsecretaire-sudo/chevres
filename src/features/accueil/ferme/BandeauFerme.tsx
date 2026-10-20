@@ -1,18 +1,17 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useBandeauFerme } from '@/features/accueil/ferme/useBandeauFerme';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
+import { effacerOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.bandeau;
 
 interface Props {
-  /** La balance de l'année : les recettes moins les dépenses. */
-  balance?: number;
-  /** Combien de rappels attendent d'être validés. */
-  rappels?: number;
   /** Un appui sur la cloche : ouvre la liste des rappels. */
   onRappels: () => void;
 }
@@ -63,16 +62,21 @@ function Pastille({
 const montant = (valeur: number) => `${Math.round(valeur).toLocaleString(LOCALE)} €`;
 
 /**
- * Le bandeau du haut de l'accueil, comme le tableau de bord d'un jeu : le portrait de l'exploitation, la balance de l'année (les pièces),
- * les rappels à valider et les réglages.
+/**
+ * Le bandeau du haut de la ferme, présent sur toutes les pages : la maison (l'accueil), la balance de l'année (deux places), les boucles posées et les
+ * tiptag (une place) et les rappels (une place). Il lit lui-même ses chiffres.
  */
-export function BandeauFerme({ balance, rappels, onRappels }: Props) {
+export function BandeauFerme({ onRappels }: Props) {
   const router = useRouter();
+  const { balance, boucles, rappels } = useBandeauFerme();
   return (
     <View style={styles.bandeau}>
       <Pressable
         style={styles.portrait}
-        onPress={() => router.navigate(ROUTES.accueilFerme() as never)}
+        onPress={() => {
+          effacerOrigine();
+          router.navigate(ROUTES.accueilFerme() as never);
+        }}
         accessibilityRole="button"
         accessibilityLabel={T.portrait}
       >
@@ -85,6 +89,14 @@ export function BandeauFerme({ balance, rappels, onRappels }: Props) {
         libelle={T.balance}
         route={ROUTES.COMPTABILITE_LISTE}
         poids={2}
+      />
+      <Pastille
+        icone="pricetag"
+        valeur={boucles === undefined ? '…' : String(boucles.boucles)}
+        badge={boucles?.tiptag ? `+${boucles.tiptag}` : undefined}
+        couleur={colors.accent}
+        libelle={T.boucles}
+        route={ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)}
       />
       <Pastille
         icone="notifications"

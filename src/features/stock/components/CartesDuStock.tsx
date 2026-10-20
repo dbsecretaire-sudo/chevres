@@ -8,6 +8,7 @@ import {
   type GroupeDeCartes,
 } from '@/features/stock/services/entrepotJeu';
 import { ROUTES } from '@/shared/constants/routes';
+import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -18,14 +19,18 @@ const quantiteDeLaCarte = (carte: CarteStock): string =>
   `${formaterQuantite(carte.niveau)}${carte.unite ? ` ${carte.unite}` : ''}`;
 
 /** Une carte du stock, comme une carte d'objet d'un jeu : son dessin, son nom, et en dessous une pastille avec ce qu'il en reste. */
-function Carte({ carte, rang }: { carte: CarteStock; rang: number }) {
+function Carte({ carte, rang, origine }: { carte: CarteStock; rang: number; origine?: string }) {
   const router = useRouter();
   const manque = carte.niveau < 0;
   return (
     <Apparition delai={rang * 30} style={styles.cellule}>
       <Pressable
         style={styles.carte}
-        onPress={() => router.push(`${ROUTES.COMPTABILITE_STOCKS}?onglet=${carte.section}` as never)}
+        onPress={() => {
+          const destination = `${ROUTES.COMPTABILITE_STOCKS}?onglet=${carte.section}`;
+          if (origine) noterOrigine(origine, destination);
+          router.push(destination as never);
+        }}
         accessibilityRole="button"
         accessibilityLabel={`${carte.titre} : ${quantiteDeLaCarte(carte)}`}
       >
@@ -61,9 +66,12 @@ function Carte({ carte, rang }: { carte: CarteStock; rang: number }) {
 export function RubriquesDeCartes({
   groupes,
   clair = false,
+  origine,
 }: {
   groupes: readonly GroupeDeCartes[];
   clair?: boolean;
+  /** La page où l'on est (l'adresse) : la flèche de retour de la page ouverte par une carte y ramène. */
+  origine?: string;
 }) {
   return (
     <>
@@ -72,7 +80,7 @@ export function RubriquesDeCartes({
           <Text style={[styles.rubriqueTitre, clair ? styles.rubriqueTitreSurClair : null]}>{g.titre}</Text>
           <View style={styles.grille}>
             {g.cartes.map((c, i) => (
-              <Carte key={c.cle} carte={c} rang={i} />
+              <Carte key={c.cle} carte={c} rang={i} origine={origine} />
             ))}
             {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
           </View>

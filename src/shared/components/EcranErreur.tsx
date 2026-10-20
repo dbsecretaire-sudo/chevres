@@ -24,7 +24,10 @@ export function EcranErreur({ error, retry }: { error: Error; retry: () => void 
       <Text style={commonStyles.cardTitle}>{T.titre}</Text>
       <Text style={commonStyles.note}>{T.aide}</Text>
       <View style={commonStyles.gap8}>
-        <Text selectable style={[commonStyles.note, { fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }]}>
+        <Text
+          selectable
+          style={[commonStyles.note, { fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }]}
+        >
           {texte}
         </Text>
       </View>
@@ -32,11 +35,22 @@ export function EcranErreur({ error, retry }: { error: Error; retry: () => void 
         variant="secondary"
         label={copie ? T.copie : T.copier}
         onPress={() => {
-          if (typeof navigator !== 'undefined' && navigator.clipboard) navigator.clipboard.writeText(texte).then(() => setCopie(true)).catch(() => undefined);
+          if (typeof navigator !== 'undefined' && navigator.clipboard)
+            navigator.clipboard
+              .writeText(texte)
+              .then(() => setCopie(true))
+              .catch(() => undefined);
         }}
       />
       <Button label={T.reessayer} onPress={retry} />
-      <Button variant="secondary" label={T.accueil} onPress={() => { retry(); router.replace('/'); }} />
+      <Button
+        variant="secondary"
+        label={T.accueil}
+        onPress={() => {
+          retry();
+          router.replace('/');
+        }}
+      />
     </ScrollView>
   );
 }

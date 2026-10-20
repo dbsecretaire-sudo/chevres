@@ -3,6 +3,7 @@ import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features
 import { Carrelage } from '@/features/accueil/ferme/TransformationFerme';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
+import { ROUTES } from '@/shared/constants/routes';
 import { CATEGORIE_INVENTAIRE, SECTION_STOCK } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -53,7 +54,11 @@ export function TransformationInterieure({ onSortir, boutons, onAppuiBouton }: P
         {categoriesMontrees.map((c) => (
           <View key={c.categorie} style={styles.garde}>
             <Text style={styles.categorie}>{TEXTES.stock.enteteCategorie(c.classe, c.nom)}</Text>
-            <RubriquesDeCartes groupes={groupesParCategorie.get(c.categorie) ?? []} clair />
+            <RubriquesDeCartes
+              groupes={groupesParCategorie.get(c.categorie) ?? []}
+              clair
+              origine={ROUTES.retourAccueil('transformation')}
+            />
           </View>
         ))}
         {emballages.length > 0 ? (
