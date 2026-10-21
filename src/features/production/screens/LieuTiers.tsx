@@ -5,6 +5,7 @@ import { LigneTransaction } from '@/features/comptabilite/components/LigneTransa
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import { listContacts } from '@/features/contacts/repository';
+import { routeAvecContact } from '@/features/accueil/services/routeAvecContact';
 import type { Contact } from '@/features/contacts/services/contacts';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
 import {
@@ -84,13 +85,12 @@ export default function LieuTiers() {
       ),
     [config, transactions, tiers],
   );
-  // La nouvelle écriture du lieu : avec le premier contact du lieu déjà choisi quand le lieu le demande (le groupement sanitaire : le GDS).
-  const premier = tiers[0];
-  const parDefaut = (param: 'fournisseur' | 'client', id?: string) =>
-    config.contactParDefaut && id ? `&${param}=${id}` : '';
-  const routeNouvelle = `${config.nouvelle}${parDefaut('fournisseur', premier?.fournisseur?.id)}`;
+  // La nouvelle écriture du lieu : avec son intervenant déjà choisi dans « Contact » (recette ou dépense). Un lieu qui n'a qu'un intervenant le donne
+  // tel quel ; avec plusieurs, le choix reste à faire (la fiche de chacun a ses propres « Nouvelle dépense / recette »), sauf pour le groupement sanitaire.
+  const intervenant = config.contactParDefaut ? tiers[0] : tiers.length === 1 ? tiers[0] : undefined;
+  const routeNouvelle = routeAvecContact(config.nouvelle, intervenant);
   const routeVersement = config.recetteDuLieu
-    ? `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${config.recetteDuLieu}${parDefaut('client', premier?.client?.id)}`
+    ? routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${config.recetteDuLieu}`, intervenant)
     : undefined;
   const liens = config.liens.map((l) => ({
     ...l,

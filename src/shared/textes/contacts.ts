@@ -46,6 +46,8 @@ export const TEXTES_CONTACTS = {
     balance: 'Balance du contact',
     aideBalance: 'Ce qu’il vous a payé, moins ce que vous lui avez payé.',
     aucuneEcriture: 'Aucune écriture liée à ce contact pour l’instant.',
+    nouvelleDepense: 'Nouvelle dépense',
+    nouvelleRecette: 'Nouvelle recette',
     ongletEcritures: (n: number) => `Écritures liées${n > 0 ? ` (${n})` : ''}`,
     ongletDocuments: (n: number) => `Documents liés${n > 0 ? ` (${n})` : ''}`,
     ongletAutres: (n: number) => `Autres éléments liés${n > 0 ? ` (${n})` : ''}`,

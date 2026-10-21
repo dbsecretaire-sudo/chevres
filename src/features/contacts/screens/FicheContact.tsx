@@ -41,6 +41,8 @@ import {
   type FormulaireContact,
 } from '@/features/contacts/services/fiche';
 import { ROUTES } from '@/shared/constants/routes';
+import { useOuvrir } from '@/shared/navigation/useOuvrir';
+import { routeAvecContact } from '@/features/accueil/services/routeAvecContact';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -62,6 +64,7 @@ const couleurDuMontant = (montant: number) => (montant < 0 ? colors.danger : col
  */
 export default function FicheContact() {
   const router = useRouter();
+  const ouvrir = useOuvrir();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { categories, idsConnus, assurerCategorie } = useCategoriesContact();
 
@@ -195,6 +198,30 @@ export default function FicheContact() {
           onClose={() => setMenuOuvert(false)}
           title={contact.nom}
           options={[
+            ...(contact.fournisseur
+              ? [
+                  {
+                    label: T.nouvelleDepense,
+                    icon: 'remove-circle' as const,
+                    onPress: () => {
+                      setMenuOuvert(false);
+                      ouvrir(routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=recue`, { fournisseur: contact.fournisseur }));
+                    },
+                  },
+                ]
+              : []),
+            ...(contact.client
+              ? [
+                  {
+                    label: T.nouvelleRecette,
+                    icon: 'add-circle' as const,
+                    onPress: () => {
+                      setMenuOuvert(false);
+                      ouvrir(routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=emise`, { client: contact.client }));
+                    },
+                  },
+                ]
+              : []),
             {
               label: TEXTES.commun.general.modifierLaFiche,
               icon: 'create',
