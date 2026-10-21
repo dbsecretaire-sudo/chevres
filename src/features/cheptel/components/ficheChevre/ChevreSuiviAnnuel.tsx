@@ -1,15 +1,19 @@
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Badge } from '@/shared/components/Badge';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { useLots } from '@/features/exploitation/hooks/useLots';
 import { useTiptags } from '@/features/stock/hooks/useTiptags';
 import { bouclesDuLot } from '@/features/exploitation/services/lots';
 import {
+  anneeDuLot,
   lotsAnnuels,
   lotsAnnuelsDeLAnimal,
+  nombreDAvortements,
   peutRejoindreLeLot,
   type CategorieAnnuelle,
 } from '@/features/exploitation/services/lotsAnnuels';
@@ -22,7 +26,9 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/cheptel/SuiviAnnuel.styles';
 import { TEXTES } from '@/shared/textes';
-import { currentYear, todayISO } from '@/shared/utils/dates';
+import { CATEGORIE_ANIMAL, SEXE } from '@/shared/constants/cheptel';
+import { categorieAnimal } from '@/features/cheptel/utils/chevreLabel';
+import { currentYear, todayISO, yearOf } from '@/shared/utils/dates';
 
 const T = TEXTES.cheptel.lots.suiviAnnuel;
 
@@ -48,7 +54,9 @@ interface Props {
  */
 export function ChevreSuiviAnnuel({ chevre, onAjouterUnCabri }: Props) {
   const router = useRouter();
-  const { lots, ajouterAuLotAnnuel } = useLots();
+  const { lots, ajouterAuLotAnnuel, signalerUnAvortement } = useLots();
+  /** Le choix de l'année d'un avortement à signaler : fermé, ou ouvert avec l'année proposée (l'année courante). */
+  const [anneeAvortement, setAnneeAvortement] = useState<string | null>(null);
   const tiptags = useTiptags();
   const boucle = chevre.numeroBoucle?.trim();
   const dedans = lotsAnnuelsDeLAnimal(lots, boucle);
@@ -67,7 +75,13 @@ export function ChevreSuiviAnnuel({ chevre, onAjouterUnCabri }: Props) {
     { categorie: CATEGORIE_LOT.RENOUVELLEMENT, label: T.renouvellement },
     { categorie: CATEGORIE_LOT.REPRODUCTION, label: T.reproduction },
   ].filter((b) => peutAjouter(b.categorie));
-  const avortement = peutAjouter(CATEGORIE_LOT.AVORTEMENT);
+  // « Signaler un avortement » (comme « Ajouter un cabri ») n'est proposé qu'à une femelle qui a atteint sa majorité sexuelle (6 mois pour les chèvres) et a
+  // une boucle ; elle y est toujours, même déjà dans le lot de l'année : on choisit l'année, et un avortement de plus la même année s'ajoute au compte.
+  const avortement = chevre.sexe === SEXE.FEMELLE && categorieAnimal(chevre) === CATEGORIE_ANIMAL.CHEVRE && !!boucle;
+  /** Les années proposées : de l'année courante à quatre ans en arrière, sans remonter avant la naissance de la femelle. */
+  const anneesPossibles = Array.from({ length: 5 }, (_, i) => annee - i)
+    .filter((a) => a >= yearOf(chevre.dateNaissance))
+    .map(String);
 
   const aDesLots = dedans.length > 0 || boutons.length > 0;
   if (!aDesLots && !avortement && !onAjouterUnCabri) return null;
@@ -79,7 +93,14 @@ export function ChevreSuiviAnnuel({ chevre, onAjouterUnCabri }: Props) {
           <View style={styles.lots}>
             {dedans.map((lot) => (
               <Pressable key={lot.id} onPress={() => router.push(`${ROUTES.lot(lot.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never)} hitSlop={6} accessibilityLabel={lot.nom}>
-                <Badge label={lot.nom} color={COULEURS[lot.categorie as CategorieAnnuelle] ?? colors.primary} />
+                <Badge
+                  label={
+                    lot.categorie === CATEGORIE_LOT.AVORTEMENT && boucle
+                      ? T.avortements(nombreDAvortements(lot, boucle), anneeDuLot(lot) ?? lot.nom)
+                      : lot.nom
+                  }
+                  color={COULEURS[lot.categorie as CategorieAnnuelle] ?? colors.primary}
+                />
               </Pressable>
             ))}
           </View>
@@ -101,7 +122,7 @@ export function ChevreSuiviAnnuel({ chevre, onAjouterUnCabri }: Props) {
           {avortement ? (
             <Pressable
               style={styles.avortement}
-              onPress={() => boucle && ajouterAuLotAnnuel(CATEGORIE_LOT.AVORTEMENT, boucle)}
+              onPress={() => setAnneeAvortement(anneeAvortement === null ? String(annee) : null)}
               accessibilityRole="button"
               accessibilityLabel={T.avorte(femelle)}
             >
@@ -110,6 +131,28 @@ export function ChevreSuiviAnnuel({ chevre, onAjouterUnCabri }: Props) {
             </Pressable>
           ) : null}
         </View>
+      ) : null}
+      {/* Le choix de l'année de l'avortement : un signalement de plus la même année compte un avortement de plus. */}
+      {avortement && anneeAvortement !== null ? (
+        <Card style={commonStyles.gap8}>
+          <Text style={commonStyles.cardTitle}>{T.anneeDeLAvortement}</Text>
+          <FiltresExclusifs
+            choix={anneesPossibles}
+            valeur={anneeAvortement}
+            onChoisir={(a) => a && setAnneeAvortement(a)}
+          />
+          <View style={styles.actions}>
+            <Button variant="secondary" label={T.annuler} style={{ flex: 1 }} onPress={() => setAnneeAvortement(null)} />
+            <Button
+              label={T.signaler}
+              style={{ flex: 1 }}
+              onPress={async () => {
+                if (boucle) await signalerUnAvortement(boucle, Number(anneeAvortement));
+                setAnneeAvortement(null);
+              }}
+            />
+          </View>
+        </Card>
       ) : null}
     </>
   );

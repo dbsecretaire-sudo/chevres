@@ -136,6 +136,8 @@ export interface LotAnimaux {
   id: string;
   nom: string;
   boucles: string;
+  /** Un lot d'avortements : le nombre d'avortements de l'année de chaque femelle, par boucle (absent pour une boucle du lot : un seul). */
+  avortements?: Record<string, number>;
   /** Un lot d'abattoir : le jour d'abattage de ses animaux (AAAA-MM-JJ). Il se crée et se tient à jour tout seul d'après le cheptel. */
   abattoir?: string;
   /** La catégorie du lot (voir CATEGORIE_LOT, ou une catégorie ajoutée) ; absente : « Autres lots ». */

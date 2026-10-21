@@ -94,6 +94,11 @@ export const lotsTextes = {
     reproduction: 'Mettre à la reproduction',
     avorte: (femelle: string) => `Cette ${femelle} a avorté`,
     signalerAvortement: 'Signaler un avortement',
+    /** L'étiquette d'un lot d'avortements sur la fiche : « 1 Avortement 2025 », « 2 Avortements 2026 ». */
+    avortements: (nombre: number, annee: number | string) => `${nombre} ${nombre > 1 ? 'Avortements' : 'Avortement'} ${annee}`,
+    anneeDeLAvortement: 'Année de l’avortement',
+    signaler: 'Signaler',
+    annuler: 'Annuler',
     aide: (annee: number) => `Les boutons ajoutent l’animal au lot de ${annee} (créé s’il manque) ; l’année se change ensuite dans le lot.`,
   },
   anneeDuLot: 'Année du lot',
