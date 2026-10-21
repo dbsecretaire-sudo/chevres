@@ -38,7 +38,6 @@ const G = T.groupes;
  * vendue), l'analyse et le contrôle du lait, les produits dangereux (rappels de lots). Le stock y est branché : les lots sont ceux de l'inventaire.
  */
 export default function ProductionAccueil() {
-  const router = useRouter();
   const ouvrir = useOuvrir();
   const { espece } = useEtablissement();
   // Un stock en négatif (plus vendu que fabriqué) : la ligne du produit porte la pastille rouge.

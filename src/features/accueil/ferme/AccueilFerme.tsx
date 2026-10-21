@@ -5,8 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { actionsDuLieu, type ActionDeLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
-import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
-import { BarreBasseFerme } from '@/features/accueil/ferme/BarreBasseFerme';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { BasculeFerme, type CoteDeLaFerme } from '@/features/accueil/ferme/BasculeFerme';
 import { BullesLieu } from '@/features/accueil/ferme/BullesLieu';
@@ -32,7 +30,6 @@ import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 import { formatMontant } from '@/shared/utils/dates';
-import { estBureau } from '@/shared/utils/plateforme';
 
 const C = TEXTES.accueil.ferme.colonnes;
 const TAILLE_ICONE = 30;
@@ -344,14 +341,10 @@ export default function AccueilFerme() {
 
   return (
     <View ref={racine} collapsable={false} style={styles.racine}>
-      <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + haut }]}>
+      <View style={[styles.haut, { paddingTop: 12 + haut }]}>
         <View style={styles.colonneHaut}>
-          {estBureau() ? (
-            <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
-          ) : (
-            // Sur le téléphone : les menus qu'on touche rarement sont en haut, loin du pouce ; le bandeau qu'on utilise sans cesse est tout en bas.
-            <BarreHauteFerme />
-          )}
+          {/* Les menus qu'on touche rarement sont en haut (téléphone comme Windows) ; le bandeau qu'on utilise sans cesse est tout en bas. */}
+          <BarreHauteFerme />
           {/* Le nom de l'exploitation : il ouvre le choix de l'établissement. */}
           <NomFerme />
           <RappelSauvegarde />
@@ -414,10 +407,6 @@ export default function AccueilFerme() {
         actif={cote}
         onChoisir={choisirCote}
       />
-      {/* Sous Windows, les menus sont en bas comme avant ; sur le téléphone, ils sont dans la barre du haut. */}
-      {estBureau() ? (
-        <BarreBasseFerme annees={f.annees} annee={f.annee} onChoisirAnnee={f.setAnneeActive} />
-      ) : null}
 
       {/* Les bulles du bouton touché : par-dessus tout ; un appui à côté les referme. */}
       {menu ? (

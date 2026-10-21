@@ -1,17 +1,14 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
-import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
 
 interface ParametresBouton {
   tintColor?: string;
@@ -59,9 +56,6 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const retour = useRetour(back ? navigation.goBack : undefined);
   // L'en-tête n'a plus de barre d'état sous lui : il commence sous l'encoche.
   const { top } = useSafeAreaInsets();
-  // Sur le téléphone, le bandeau est en bas de l'écran (sous le pouce) ; sous Windows, il reste ici, en haut.
-  const bandeauEnHaut = estBureau();
-  const [rappelsOuverts, setRappelsOuverts] = useState(false);
   // La page d'accueil d'un onglet (Cheptel, Production… ou l'Organisation) n'a pas de flèche : la barre du bas est sa navigation.
   const pageDOnglet = route?.name === 'index' || route?.name === 'reglages';
   const parametres: ParametresBouton = { tintColor: colors.blanc, canGoBack: !!back };
@@ -77,39 +71,22 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
     colors.primary) as string;
   return (
     <View style={styles.fond}>
-      {bandeauEnHaut ? (
-        <View style={[styles.haut, { paddingTop: 12 + top }]}>
-          <View style={colonneCentree}>
-            <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
-          </View>
-        </View>
-      ) : (
-        <View style={[styles.haut, { paddingTop: 12 + top }]}>
+      <View style={[styles.haut, { paddingTop: 12 + top }]}>
+        <View style={colonneCentree}>
           <BarreHauteFerme />
         </View>
-      )}
+      </View>
       {gauche || droite || titre ? (
-        bandeauEnHaut ? (
-          <View style={[styles.barre, { backgroundColor: couleur }]}>
-            {gauche}
-            <Text style={styles.titre} numberOfLines={1}>
-              {titre}
-            </Text>
-            {droite}
-          </View>
-        ) : (
-          // Sur le téléphone, le titre n'est pas une seconde bulle sous la capsule : le texte est posé sur la page, avec la flèche et les
-          // boutons de l'écran dans de petites pastilles de sa couleur.
-          <View style={styles.titreLibre}>
-            {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
-            <Text style={[styles.titre, { color: couleur }]} numberOfLines={1}>
-              {titre}
-            </Text>
-            {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
-          </View>
-        )
+        // Le titre n'est pas une seconde bulle sous la capsule : le texte est posé sur la page, avec la flèche et les boutons de l'écran dans de
+        // petites pastilles de sa couleur (téléphone comme Windows).
+        <View style={[styles.titreLibre, colonneCentree]}>
+          {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
+          <Text style={[styles.titre, { color: couleur }]} numberOfLines={1}>
+            {titre}
+          </Text>
+          {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
+        </View>
       ) : null}
-      <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
     </View>
   );
 }

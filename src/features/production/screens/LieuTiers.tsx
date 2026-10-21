@@ -47,7 +47,6 @@ const ECRITURES_MONTREES = 5;
  * rattachent. Le lieu se donne en paramètre (`?lieu=carburant`).
  */
 export default function LieuTiers() {
-  const router = useRouter();
   const { lieu } = useLocalSearchParams<{ lieu?: string }>();
   const cle: CleLieuTiers = estLieuTiers(lieu) ? lieu : 'aliments';
   const config = LIEUX_TIERS[cle];

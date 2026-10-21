@@ -4,14 +4,20 @@ import { DOCUMENT_GDS } from '@/shared/constants/gds';
 export const TEXTES_GDS = {
   documents: {
     titre: 'Documents du GDS',
-    aide: 'Déposez votre propre document (scan ou photo) : il reste ici, avec la date de dépôt. Une ligne vide attend simplement son document.',
+    aide: 'Déposez vos propres documents (scan ou photo), autant que vous voulez : un appui ouvre le fichier, le crayon le remplace, la poubelle le retire.',
     depose: (date: string, heure: string) => `Déposé le ${date} à ${heure}`,
     manque: 'Pas encore déposé',
-    deposer: 'Déposer le document',
-    remplacer: 'Remplacer le document',
-    ouvrir: 'Ouvrir',
-    retirer: 'Retirer',
+    ajouter: 'Ajouter un document',
+    ajouterUnAutre: 'Ajouter un autre document',
+    remplacer: 'Remplacer ce document',
+    retirer: 'Retirer ce document',
+    confirmerRetrait: 'Retirer ce document ?',
+    messageRetrait: 'Le fichier sera effacé de l’appareil.',
     rubriques: {
+      [DOCUMENT_GDS.RAPPORTS_ESSAIS]: {
+        titre: 'Rapports d’essais du laboratoire',
+        aide: 'Les résultats d’analyses de la prophylaxie (brucellose, paratuberculose, Capra’Sana…) : un document par rapport.',
+      },
       [DOCUMENT_GDS.ATTESTATION_PSE]: {
         titre: 'Attestation d’adhésion au Plan Sanitaire d’Élevage',
         aide: 'La preuve de votre adhésion au PSE.',

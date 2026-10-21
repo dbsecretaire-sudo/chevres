@@ -1,10 +1,6 @@
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
-import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
-import { estBureau } from '@/shared/utils/plateforme';
 
 /**
  * Le bandeau habituel de l'accueil (la maison, la balance, les rappels, les réglages), pour un écran qui n'a pas d'en-tête de navigation
@@ -13,17 +9,13 @@ import { estBureau } from '@/shared/utils/plateforme';
 export function EnTeteFerme() {
   // Sans en-tête, le contenu commence sous l'encoche et la barre d'état.
   const { top } = useSafeAreaInsets();
-  const [rappelsOuverts, setRappelsOuverts] = useState(false);
   return (
-    <>
-      <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + top }]}>
-        <View style={styles.colonne}>
-          {/* Sur le téléphone, la capsule du haut (comme sur toutes les pages) ; sous Windows, le bandeau. */}
-          {estBureau() ? <BandeauFerme onRappels={() => setRappelsOuverts(true)} /> : <BarreHauteFerme />}
-        </View>
+    <View style={[styles.haut, { paddingTop: 12 + top }]}>
+      <View style={styles.colonne}>
+        {/* La capsule du haut, comme sur toutes les pages (téléphone et Windows). */}
+        <BarreHauteFerme />
       </View>
-      <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
-    </>
+    </View>
   );
 }
 

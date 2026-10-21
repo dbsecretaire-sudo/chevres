@@ -2,6 +2,8 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 
 /** Les documents du groupement sanitaire (GDS) que l'éleveur dépose : un fichier par document (le sien, scanné ou photographié). */
 export const DOCUMENT_GDS = {
+  /** Les rapports d'essais du laboratoire (prophylaxie : brucellose, paratuberculose, Capra'Sana…) : plusieurs documents. */
+  RAPPORTS_ESSAIS: 'rapports_essais',
   ATTESTATION_PSE: 'attestation_pse',
   BONS_DELIVRANCE: 'bons_delivrance',
   BIOSECURITE: 'biosecurite',
@@ -12,6 +14,7 @@ export type DocumentGds = ValeurDe<typeof DOCUMENT_GDS>;
 
 /** L'ordre dans lequel les documents se listent. */
 export const DOCUMENTS_GDS: readonly DocumentGds[] = [
+  DOCUMENT_GDS.RAPPORTS_ESSAIS,
   DOCUMENT_GDS.ATTESTATION_PSE,
   DOCUMENT_GDS.BONS_DELIVRANCE,
   DOCUMENT_GDS.BIOSECURITE,

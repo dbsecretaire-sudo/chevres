@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import { BottomTabBar, type BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { BandeauBas } from '@/features/accueil/ferme/BandeauBas';
 import { publierMenus, type EntreeMenu } from '@/shared/navigation/menusSections';
-import { estBureau } from '@/shared/utils/plateforme';
 
 /**
  * La barre du bas de toutes les pages (à passer en `tabBar` des onglets). Sur le téléphone, il n'y a plus de barre d'onglets : les rubriques sont
  * dans le menu « Menus » de la capsule du haut (elle les reçoit d'ici), et le bandeau de la ferme est seul tout en bas, là où le pouce arrive
- * le mieux. Sous Windows, la barre des onglets reste telle quelle (masquée : les menus du haut la remplacent) et le bandeau reste en haut.
+ * le mieux. Sous Windows, c'est la même disposition : la capsule du haut (année, animal, didacticiel, « Menus »), le bandeau de la ferme en bas.
  */
 export function BarreDuBas(props: BottomTabBarProps) {
   const { state, descriptors, navigation } = props;
@@ -33,6 +32,5 @@ export function BarreDuBas(props: BottomTabBarProps) {
     publierMenus(entrees);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- les entrées sont recréées à chaque rendu : la signature dit quand elles changent
   }, [signature]);
-  if (estBureau()) return <BottomTabBar {...props} />;
   return <BandeauBas />;
 }

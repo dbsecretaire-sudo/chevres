@@ -237,9 +237,9 @@ export interface DocumentGdsDepose {
   deposeLe: string;
 }
 
-/** Ce que l'éleveur garde du groupement sanitaire : ses documents (un par rubrique). */
+/** Ce que l'éleveur garde du groupement sanitaire : ses documents, plusieurs par rubrique (un seul document, ancien format, reste lisible). */
 export interface ReglagesGds {
-  documents?: Record<string, DocumentGdsDepose>;
+  documents?: Record<string, DocumentGdsDepose[] | DocumentGdsDepose>;
 }
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
