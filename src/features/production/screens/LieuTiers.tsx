@@ -20,6 +20,7 @@ import { AntenneGds, estLAntenneGds } from '@/features/production/components/Ant
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
+import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
@@ -50,6 +51,8 @@ export default function LieuTiers() {
   const { lieu } = useLocalSearchParams<{ lieu?: string }>();
   const cle: CleLieuTiers = estLieuTiers(lieu) ? lieu : 'aliments';
   const config = LIEUX_TIERS[cle];
+  /** Ouvre une page depuis cette page : sa flèche de retour (et « Annuler », et l'enregistrement d'une écriture) ramène ici, pas à l'onglet d'avant. */
+  const ouvrir = useOuvrir();
   const textes: TextesLieu = T[cle];
   const { settings } = useAppSettings();
   const { idsConnus } = useCategoriesContact();
@@ -106,7 +109,7 @@ export default function LieuTiers() {
                 title={l.titre}
                 subtitle={l.aide}
                 icone={l.icone}
-                onPress={() => router.push(l.route as never)}
+                onPress={() => ouvrir(l.route)}
               />
             ))}
           </BlocLignes>
@@ -132,7 +135,7 @@ export default function LieuTiers() {
                       .join(' · ') || undefined
                   }
                   emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
-                  onPress={() => router.push(ROUTES.ficheContact(c.cle) as never)}
+                  onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
                 />
               ))}
               {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
@@ -140,10 +143,10 @@ export default function LieuTiers() {
                 title={textes.ajouterTiers ?? ''}
                 icone="add-circle"
                 onPress={() =>
-                  router.push(
-                    (config.categoriesContact[0]
+                  ouvrir(
+                    config.categoriesContact[0]
                       ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`
-                      : ROUTES.CONTACT_NOUVEAU) as never,
+                      : ROUTES.CONTACT_NOUVEAU,
                   )
                 }
               />
@@ -163,11 +166,11 @@ export default function LieuTiers() {
                   title={T.plusDEcritures(ecritures.length - ECRITURES_MONTREES)}
                   icone="list"
                   onPress={() =>
-                    router.push(
+                    ouvrir(
                       ROUTES.comptabiliteDuLieu(
                         ecritures.map((t) => t.id),
                         textes.titre,
-                      ) as never,
+                      ),
                     )
                   }
                 />
@@ -175,10 +178,10 @@ export default function LieuTiers() {
               <ListRow
                 title={textes.nouvelle ?? ''}
                 icone="add-circle"
-                onPress={() => router.push(routeNouvelle as never)}
+                onPress={() => ouvrir(routeNouvelle)}
               />
               {routeVersement && textes.versement ? (
-                <ListRow title={textes.versement} icone="add-circle" onPress={() => router.push(routeVersement as never)} />
+                <ListRow title={textes.versement} icone="add-circle" onPress={() => ouvrir(routeVersement)} />
               ) : null}
             </BlocLignes>
           </GroupeAccueil>

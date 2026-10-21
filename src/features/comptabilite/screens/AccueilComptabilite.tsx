@@ -6,6 +6,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
+import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
@@ -22,6 +23,7 @@ const G = T.groupes;
  */
 export default function AccueilComptabilite() {
   const router = useRouter();
+  const ouvrir = useOuvrir();
   const estActive = useLigneActive();
   // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre les écritures.
   const redirection = useAccueilEnDeuxColonnes(ROUTES.COMPTABILITE_LISTE);
@@ -117,7 +119,7 @@ export default function AccueilComptabilite() {
                   subtitle={l.aide}
                   icone={l.icone}
                   actif={estActive(l.route)}
-                  onPress={() => router.push(l.route as never)}
+                  onPress={() => ouvrir(l.route)}
                 />
               </AncreVisite>
             ))}

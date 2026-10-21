@@ -25,6 +25,7 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { laiterieActive, oeufsActifs } from '@/features/comptabilite/utils/recettes';
 import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/controles';
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
+import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { TEXTES } from '@/shared/textes';
@@ -38,6 +39,7 @@ const G = T.groupes;
  */
 export default function ProductionAccueil() {
   const router = useRouter();
+  const ouvrir = useOuvrir();
   const { espece } = useEtablissement();
   // Un stock en négatif (plus vendu que fabriqué) : la ligne du produit porte la pastille rouge.
   const [negatifs, setNegatifs] = useState<Record<string, boolean>>({});
@@ -164,7 +166,7 @@ export default function ProductionAccueil() {
                       </View>
                     ) : undefined
                   }
-                  onPress={() => router.push(l.route as never)}
+                  onPress={() => ouvrir(l.route)}
                 />
               </AncreVisite>
             ))}

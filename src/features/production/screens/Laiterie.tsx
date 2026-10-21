@@ -16,6 +16,7 @@ import { Screen } from '@/shared/components/Screen';
 import { CATEGORIE_VENTE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
+import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -34,6 +35,7 @@ const FACTURES_MONTREES = 5;
  */
 export default function Laiterie() {
   const router = useRouter();
+  const ouvrir = useOuvrir();
   const { espece } = useEtablissement();
   const { settings } = useAppSettings();
   const { idsConnus } = useCategoriesContact();
@@ -75,7 +77,7 @@ export default function Laiterie() {
         <GroupeAccueil titre={T.groupeLait}>
           <BlocLignes>
             {lait.map((l) => (
-              <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => router.push(l.route as never)} />
+              <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => ouvrir(l.route)} />
             ))}
           </BlocLignes>
         </GroupeAccueil>

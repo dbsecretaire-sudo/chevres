@@ -16,6 +16,7 @@ import { clientsARelancer } from '@/features/commercial/services/statistiques';
 import { listClients } from '@/features/clients/repository';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { JOURS_CLIENT_A_RELANCER } from '@/shared/constants/commercial';
+import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
@@ -37,6 +38,7 @@ interface Resume {
  */
 export default function CommercialAccueil() {
   const router = useRouter();
+  const ouvrir = useOuvrir();
   const estActive = useLigneActive();
   // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre le chiffre d'affaires.
   const redirection = useAccueilEnDeuxColonnes(ROUTES.COMMERCIAL_VENTES);
@@ -164,7 +166,7 @@ export default function CommercialAccueil() {
                       </View>
                     ) : undefined
                   }
-                  onPress={() => router.push(l.route as never)}
+                  onPress={() => ouvrir(l.route)}
                 />
               </AncreVisite>
             ))}

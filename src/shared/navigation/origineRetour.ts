@@ -9,6 +9,8 @@ import { usePathname, useRouter } from 'expo-router';
 interface Origine {
   adresse: string;
   destination: string;
+  /** L'origine qui valait avant celle-ci (la page d'un lieu, ouverte depuis l'accueil, qui ouvre à son tour une écriture) : on la retrouve au retour. */
+  precedente?: Origine;
 }
 
 let origine: Origine | null = null;
@@ -17,7 +19,13 @@ const notifier = () => ecouteurs.forEach((ecouteur) => ecouteur());
 
 /** On part de `adresse` pour ouvrir `destination` : la flèche de retour de cette page y ramènera. */
 export function noterOrigine(adresse: string, destination: string): void {
-  origine = { adresse, destination };
+  origine = { adresse, destination, precedente: origine ?? undefined };
+  notifier();
+}
+
+/** On est revenu à l'endroit d'où l'on était parti : l'origine d'avant (celle qui ramenait à l'accueil, par exemple) vaut de nouveau. */
+function revenirDe(point: Origine): void {
+  origine = point.precedente ?? null;
   notifier();
 }
 
@@ -49,7 +57,7 @@ export function useRetour(retourParDefaut?: () => void): () => void {
   const point = useOrigineRetour();
   return () => {
     if (point && chemin === point.destination.split('?')[0]) {
-      effacerOrigine();
+      revenirDe(point);
       router.navigate(point.adresse as never);
     } else if (retourParDefaut) retourParDefaut();
     else if (router.canGoBack()) router.back();

@@ -3,9 +3,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  useRouter,
-} from 'expo-router';
+import { useRetour } from '@/shared/navigation/origineRetour';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import type { Chevre } from '@/features/cheptel/types';
@@ -133,7 +131,8 @@ export function useNouvelleEcriture(
   /** Le lot d'abattoir à facturer (depuis son assistant, ou le choix d'un lot) : ses animaux sont déjà sortis ; sa facture se lie à lui. */
   lotInitial?: string,
 ) {
-  const router = useRouter();
+  // Revenir d'où l'on vient : la page d'un lieu qui a ouvert l'écriture, sinon l'écran d'avant.
+  const retour = useRetour();
   const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
   const { anneeImposee, dateDuJour } = useAnneeImposee();
   /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
@@ -765,7 +764,7 @@ export function useNouvelleEcriture(
           setEcheance(commande?.echeance ?? '');
         }
         suiteDeLaCommande.current = null;
-      } else router.back();
+      } else retour();
     } finally {
       setEnregistrement(false);
     }
@@ -797,7 +796,7 @@ export function useNouvelleEcriture(
     setErreur,
     enregistrer,
     enchainees,
-    annuler: () => router.back(),
+    annuler: retour,
     // débit
     categorieDepense,
     changerCategorieDepense,
