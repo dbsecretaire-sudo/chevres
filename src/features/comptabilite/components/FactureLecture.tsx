@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { libelleVehicule, vehiculeDe } from '@/features/exploitation/services/flotte';
 import { idsDesAnimauxAchetes } from '@/features/comptabilite/utils/ventes';
 import type { ArchiveStock } from '@/features/stock/types';
 import { libelleArticle } from '@/features/stock/services/stock';
@@ -47,6 +49,9 @@ interface Props {
 /** Fiche d'une facture en lecture seule : informations générales puis détail par aliment/carburant. */
 export function FactureLecture({ facture, compte, onModifier }: Props) {
   const nomsMateriel = useNomsMateriel();
+  /** Le véhicule de la flotte que l'écriture concerne (sa plaque). */
+  const { settings } = useAppSettings();
+  const vehicule = vehiculeDe(settings.exploitation?.flotte, facture.vehiculeId);
   /** L'inventaire, pour nommer les fournitures d'un achat de production. */
   const [archiveLecture, setArchiveLecture] = useState<ArchiveStock | null>(null);
   useEffect(() => {
@@ -112,6 +117,12 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.categorieDeDepenseDeuxPoints}
           {LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
+        </Text>
+      ) : null}
+      {vehicule ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.flotte.champ.lecture}
+          {libelleVehicule(vehicule)}
         </Text>
       ) : null}
       {facture.categorieRecette ? (

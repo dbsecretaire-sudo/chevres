@@ -161,7 +161,9 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter un garage',
       groupeEcritures: 'Les réparations',
       nouvelle: 'Nouvelle facture de réparation',
-      liens: {},
+      liens: {
+        flotte: { titre: 'Flotte', aide: 'Les véhicules : plaque, informations, assurance et réparations.' },
+      },
     },
     assurance: {
       titre: 'Assurance',

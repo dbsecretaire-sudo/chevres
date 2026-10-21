@@ -27,6 +27,7 @@ export const COMPTE_PAR_DEPENSE: Record<ValeurDe<typeof CATEGORIE_DEPENSE>, Comp
   [CATEGORIE_DEPENSE.CARBURANT]: { numero: '606110', libelle: 'Achats non stockés — Carburants' },
   [CATEGORIE_DEPENSE.REPARATION]: { numero: '615400', libelle: 'Entretien et réparations — Matériel' },
   [CATEGORIE_DEPENSE.VETERINAIRE]: { numero: '622600', libelle: 'Honoraires vétérinaires' },
+  [CATEGORIE_DEPENSE.ASSURANCE_VEHICULE]: { numero: '616100', libelle: 'Primes d’assurances — Véhicules' },
   [CATEGORIE_DEPENSE.ANALYSES_LABORATOIRE]: { numero: '622800', libelle: 'Honoraires divers — Analyses de laboratoire' },
   [CATEGORIE_DEPENSE.PRODUCTION]: {
     numero: '602200',
@@ -81,6 +82,7 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   [CATEGORIE_RECETTE.OEUFS]: { numero: '701600', libelle: 'Ventes de produits finis — Œufs' },
   [CATEGORIE_RECETTE.AIDE]: { numero: '740000', libelle: 'Subventions d’exploitation' },
   [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE]: { numero: '758000', libelle: 'Produits divers de gestion courante — Groupement sanitaire (GDS)' },
+  [CATEGORIE_RECETTE.ASSURANCE_VEHICULE]: { numero: '791000', libelle: 'Transferts de charges — Indemnités d’assurance des véhicules' },
   [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES]: { numero: '758000', libelle: 'Produits divers de gestion courante — Remboursement d’analyses' },
   [CATEGORIE_RECETTE.AUTRE]: { numero: '708000', libelle: 'Produits des activités annexes' },
   [CATEGORIE_RECETTE.PRESTATIONS]: { numero: '706000', libelle: 'Prestations de services' },

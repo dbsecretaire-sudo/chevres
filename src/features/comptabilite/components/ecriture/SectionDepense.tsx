@@ -48,6 +48,8 @@ import { formatTotalEuros } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
+import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
+import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
@@ -318,6 +320,8 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
             options={OPTIONS_TAUX_TVA}
           />
         )}
+        {/* Une réparation ou une prime d'assurance : le véhicule de la flotte, par sa plaque. */}
+        {categorieAvecVehicule(e.categorieDepense) ? <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} /> : null}
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (

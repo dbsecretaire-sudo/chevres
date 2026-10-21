@@ -167,6 +167,8 @@ export function useNouvelleEcriture(
   const [circuit, setCircuit] = useState('');
   /** L'atelier d'une charge (vide : commune, répartie entre les ateliers). */
   const [atelier, setAtelier] = useState('');
+  /** Le véhicule de la flotte d'une réparation ou d'une assurance (vide : aucun). */
+  const [vehiculeId, setVehiculeId] = useState('');
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   const [elementAgri, setElementAgri] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
@@ -684,6 +686,7 @@ export function useNouvelleEcriture(
         cadeauMontant: cadeauMontantDepense,
         echeance,
         atelier,
+        vehiculeId,
         elementAgri,
         reajustement,
         offert: offertCoche && estProductionVente,
@@ -944,6 +947,8 @@ export function useNouvelleEcriture(
     setAvecFacture,
     atelier,
     setAtelier,
+    vehiculeId,
+    setVehiculeId,
     elementAgri,
     setElementAgri,
     clientSelectionne,

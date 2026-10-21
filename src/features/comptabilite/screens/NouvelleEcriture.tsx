@@ -75,6 +75,8 @@ export default function NouvelleFacture() {
     lot?: string;
     /** Le contact (fournisseur) choisi d'office : l'abattoir du lot. */
     fournisseur?: string;
+    /** Le véhicule de la flotte choisi d'office (depuis sa fiche : une réparation, une prime d'assurance). */
+    vehicule?: string;
     /** « 1 » : le premier contact de catégorie Abattoir est choisi d'office (amener des animaux à l'abattoir : « Suivant » mène au choix des animaux). */
     abattoirContact?: string;
   }>();
@@ -122,6 +124,12 @@ export default function NouvelleFacture() {
   if (params.fournisseur && !fournisseurChoisi && e.fournisseurs.some((f) => f.id === params.fournisseur)) {
     setFournisseurChoisi(true);
     e.changerFournisseur(params.fournisseur);
+  }
+  // Le véhicule demandé par l'adresse (depuis sa fiche) : il est choisi d'office, une fois.
+  const [vehiculeVu, setVehiculeVu] = useState(false);
+  if (params.vehicule && !vehiculeVu) {
+    setVehiculeVu(true);
+    e.setVehiculeId(params.vehicule);
   }
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);

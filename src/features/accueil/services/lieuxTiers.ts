@@ -115,7 +115,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_DEPENSE.REPARATION],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.REPARATION}`,
-    liens: [],
+    // Les véhicules de l'exploitation : leurs informations, leur assurance et leurs réparations.
+    liens: [{ cle: 'flotte', icone: 'car', route: ROUTES.FLOTTE }],
   },
   assurance: {
     cle: 'assurance',

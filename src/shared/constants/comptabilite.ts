@@ -14,6 +14,8 @@ export const CATEGORIE_DEPENSE = {
   CARBURANT: 'carburant',
   REPARATION: 'reparation',
   VETERINAIRE: 'veterinaire',
+  /** La prime d'assurance d'un véhicule de la flotte : elle se lie à son véhicule. */
+  ASSURANCE_VEHICULE: 'assurance_vehicule',
   /** Les analyses d'un laboratoire (lait, prophylaxie…). */
   ANALYSES_LABORATOIRE: 'analyses_laboratoire',
   PRODUCTION: 'production',
@@ -65,6 +67,8 @@ export const CATEGORIE_RECETTE = {
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   /** Un remboursement d'analyses par un laboratoire (ou ce qu'il reverse) : ni une vente ni une aide. */
   REMBOURSEMENT_ANALYSES: 'remboursement_analyses',
+  /** Ce que l'assurance d'un véhicule verse (une indemnité après un sinistre, un remboursement de prime) : elle se lie à son véhicule. */
+  ASSURANCE_VEHICULE: 'assurance_vehicule',
   // --- Entreprise (hors élevage) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -302,6 +306,7 @@ export const ORDRE_CATEGORIE_DEPENSE = [
   CATEGORIE_DEPENSE.REPARATION,
   CATEGORIE_DEPENSE.VETERINAIRE,
   CATEGORIE_DEPENSE.ANALYSES_LABORATOIRE,
+  CATEGORIE_DEPENSE.ASSURANCE_VEHICULE,
   CATEGORIE_DEPENSE.PRODUCTION,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE,
@@ -323,6 +328,7 @@ export const GROUPE_RECETTE = {
   AUTRE: 'autre',
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   REMBOURSEMENT_ANALYSES: 'remboursement_analyses',
+  ASSURANCE_VEHICULE: 'assurance_vehicule',
   // --- Entreprise : un groupe par recette (pas de seconde liste) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -355,6 +361,8 @@ const AIDE_PRESTATIONS_ET_AUTRE: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.GROUPEMENT_SANITAIRE, categories: [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE] },
   // Un remboursement d'analyses par un laboratoire.
   { groupe: GROUPE_RECETTE.REMBOURSEMENT_ANALYSES, categories: [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES] },
+  // Ce que verse l'assurance d'un véhicule.
+  { groupe: GROUPE_RECETTE.ASSURANCE_VEHICULE, categories: [CATEGORIE_RECETTE.ASSURANCE_VEHICULE] },
   { groupe: GROUPE_RECETTE.PRESTATIONS, categories: [CATEGORIE_RECETTE.PRESTATIONS] },
   AIDE_ET_AUTRE[1],
 ];
@@ -500,6 +508,7 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.AIDE,
   CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
   CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES,
+  CATEGORIE_RECETTE.ASSURANCE_VEHICULE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
 
@@ -533,6 +542,7 @@ export const TAUX_TVA_RECETTE_ENTREPRISE = {
   [CATEGORIE_RECETTE.AIDE]: 0,
   [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE]: 0,
   [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES]: 0,
+  [CATEGORIE_RECETTE.ASSURANCE_VEHICULE]: 0,
   [CATEGORIE_RECETTE.AUTRE]: 20,
 } as const;
 

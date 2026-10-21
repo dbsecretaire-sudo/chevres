@@ -43,6 +43,7 @@ import {
 } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
 import { ATELIER } from '@/shared/constants/ateliers';
+import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { MOTIF_NUMERO_FACTURE_NUMERIQUE } from '@/shared/constants/clients';
 import {
   CATEGORIES_VENTE_ANIMAUX,
@@ -147,6 +148,8 @@ export interface SaisieEcriture {
   numeroFacture: string;
   /** L'atelier d'une facture reçue (vide : une charge commune). */
   atelier?: string;
+  /** Le véhicule de la flotte d'une réparation ou d'une assurance (vide : aucun). */
+  vehiculeId?: string;
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   elementAgri?: string;
   /** Le paiement n'a pas encore eu lieu (faux : payée à la date de l'écriture), et sa date prévue. */
@@ -444,6 +447,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
           : undefined,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       atelier: estRecue && s.atelier ? s.atelier : undefined,
+      vehiculeId: s.vehiculeId && categorieAvecVehicule(estRecue ? s.categorieDepense : undefined, estEmise ? s.categorieRecette : undefined) ? s.vehiculeId : undefined,
       elementAgri:
         estRecue && s.atelier === ATELIER.AGRITOURISME && s.elementAgri ? s.elementAgri : undefined,
       payee: s.enAttente ? false : undefined,

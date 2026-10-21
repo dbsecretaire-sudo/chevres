@@ -21,6 +21,7 @@ import { TEXTES_EXPORT } from '@/shared/textes/export';
 import { TEXTES_FICHIERS } from '@/shared/textes/fichiers';
 import { TEXTES_FOURNISSEURS } from '@/shared/textes/fournisseurs';
 import { TEXTES_GDS } from '@/shared/textes/gds';
+import { TEXTES_FLOTTE } from '@/shared/textes/flotte';
 import { TEXTES_GITE } from '@/shared/textes/gite';
 import { TEXTES_CARNET } from '@/shared/textes/carnet';
 import { TEXTES_IDENTIFICATION } from '@/shared/textes/identification';
@@ -57,6 +58,7 @@ export const TEXTES = {
   fichiers: TEXTES_FICHIERS,
   fournisseurs: TEXTES_FOURNISSEURS,
   gds: TEXTES_GDS,
+  flotte: TEXTES_FLOTTE,
   gite: TEXTES_GITE,
   identification: TEXTES_IDENTIFICATION,
   carnet: TEXTES_CARNET,

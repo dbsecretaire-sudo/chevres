@@ -65,6 +65,11 @@ export const ROUTES = {
   lotAbattoirNouveau: () => '/production/lot-abattoir' as const,
   /** Les documents du groupement sanitaire (GDS) déposés par l'éleveur. */
   DOCUMENTS_GDS: '/production/documents-gds',
+  /** La flotte : la liste des véhicules de l'exploitation (depuis le Garage). */
+  FLOTTE: '/production/flotte',
+  /** Un véhicule de la flotte (sans identifiant : un nouveau), ouvert sur un onglet (informations, assurance, reparations). */
+  vehicule: (id?: string, onglet?: string) =>
+    `/production/vehicule${id || onglet ? '?' : ''}${[id ? `id=${id}` : '', onglet ? `onglet=${onglet}` : ''].filter(Boolean).join('&')}` as const,
   /** Les rapports d'essais du laboratoire (prophylaxie) déposés par l'éleveur. */
   RAPPORTS_ESSAIS_GDS: '/production/rapports-essais',
   /** Un lot ouvert depuis la Production (viande) : le même écran, mais l'onglet du bas reste Production au lieu de passer à Cheptel. */

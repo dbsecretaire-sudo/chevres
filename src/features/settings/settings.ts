@@ -243,7 +243,38 @@ export interface ReglagesGds {
 }
 
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
+/** Un véhicule de la flotte : ce qu'il faut pour le reconnaître et commander des pièces (la carte grise), son verso en image, son statut. */
+export interface Vehicule {
+  id: string;
+  /** La plaque d'immatriculation (champ A de la carte grise), en majuscules. */
+  plaque: string;
+  /** L'année de la première immatriculation (champ B). */
+  anneeImmatriculation?: number;
+  marque?: string;
+  modele?: string;
+  /** Le type, la variante, la version (champ D.2) : les pièces en dépendent. */
+  version?: string;
+  /** Le numéro de série du véhicule, le VIN (champ E) : c'est avec lui que les fournisseurs retrouvent les pièces. */
+  numeroSerie?: string;
+  /** L'énergie (champ P.3) : essence, diesel, électrique… */
+  energie?: string;
+  /** La cylindrée en cm³ (champ P.1) et la puissance en kW (champ P.2). */
+  cylindree?: number;
+  puissanceKw?: number;
+  /** Le code moteur, quand on le connaît (il n'est pas sur la carte grise). */
+  codeMoteur?: string;
+  /** Le kilométrage relevé en dernier. */
+  kilometrage?: number;
+  /** Le verso du certificat d'immatriculation (une image ou un PDF). */
+  certificat?: PieceJointe;
+  /** Faux : le véhicule n'est plus utilisé ; il reste consultable, avec son historique, mais n'est plus proposé dans les écritures. */
+  actif: boolean;
+  notes?: string;
+}
+
 export interface InfosExploitation {
+  /** La flotte : les véhicules de l'exploitation. */
+  flotte?: Vehicule[];
   /** Le groupement sanitaire : les documents déposés. */
   gds?: ReglagesGds;
   /** Mode avancé de Production › Viande : les onglets des animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants). */

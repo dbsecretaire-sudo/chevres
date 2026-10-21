@@ -165,6 +165,8 @@ export interface Facture {
   atelier?: string;
   /** Pour une charge de l'atelier Agritourisme : l'élément qu'elle concerne (le 4x4, le repas…) ; absent : toutes les visites. */
   elementAgri?: string;
+  /** Le véhicule de la flotte qu'une réparation, une prime ou une indemnité d'assurance concerne (son identifiant) ; absent : aucun. */
+  vehiculeId?: string;
   /** Uniquement si categorieDepense === 'alimentation' : une facture peut regrouper plusieurs aliments. */
   lignesAlimentation?: LigneAlimentation[];
   /** Uniquement si categorieDepense === 'achats_marchandises' dans un gîte : le détail des marchandises achetées. */

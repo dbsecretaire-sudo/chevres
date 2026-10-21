@@ -6,6 +6,7 @@ import {
   DEPENSES_PAR_CATEGORIE_FOURNISSEUR,
   DEPENSES_VETERINAIRE,
 } from '@/shared/constants/fournisseurs';
+import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { LABEL_CATEGORIE_FOURNISSEUR } from '@/shared/textes/libelles';
 
 /**
@@ -99,13 +100,19 @@ export const categorieFournisseurDe = (id: string | undefined): CategorieFournis
 /** Les catégories de dépense que peut avoir un fournisseur de cette catégorie ; rien (undefined) : aucune limite. */
 export const depensesDeLaCategorie = (
   categorie: CategorieFournisseurReglage,
-): readonly string[] | undefined =>
-  categorie.depenses ??
-  (categorie.id === CATEGORIE_FOURNISSEUR.VETERINAIRE
-    ? DEPENSES_VETERINAIRE
-    : categorie.id === CATEGORIE_FOURNISSEUR.ETAT
-      ? DEPENSES_ETAT
-      : undefined);
+): readonly string[] | undefined => {
+  const depenses =
+    categorie.depenses ??
+    (categorie.id === CATEGORIE_FOURNISSEUR.VETERINAIRE
+      ? DEPENSES_VETERINAIRE
+      : categorie.id === CATEGORIE_FOURNISSEUR.ETAT
+        ? DEPENSES_ETAT
+        : undefined);
+  // Un assureur peut toujours facturer la prime d'un véhicule, même dans une liste de catégories enregistrée avant que cette dépense n'existe.
+  return categorie.id === CATEGORIE_FOURNISSEUR.ASSUREUR && depenses && !depenses.includes(CATEGORIE_DEPENSE.ASSURANCE_VEHICULE)
+    ? [...depenses, CATEGORIE_DEPENSE.ASSURANCE_VEHICULE]
+    : depenses;
+};
 
 /**
  * Les catégories d'office que la liste n'a pas (ni par leur identifiant, ni par leur nom) : l'écran des catégories de tiers les

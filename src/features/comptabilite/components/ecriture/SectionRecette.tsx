@@ -28,6 +28,7 @@ import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
@@ -211,6 +212,10 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
 
         {/* Une aide se décrit par son type (DPB, ICHN…). */}
         {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampTypeAide e={e} />}
+        {/* Ce que l'assurance d'un véhicule verse : le véhicule de la flotte, par sa plaque. */}
+        {e.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE ? (
+          <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} />
+        ) : null}
 
         {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
           e.categorieRecette === CATEGORIE_RECETTE.PRESTATIONS ||

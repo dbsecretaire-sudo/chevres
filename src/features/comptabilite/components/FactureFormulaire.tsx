@@ -56,6 +56,8 @@ import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/c
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
+import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
+import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
@@ -406,6 +408,10 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           />
         ) : null}
 
+        {/* Une réparation ou une assurance : le véhicule de la flotte. */}
+        {categorieAvecVehicule(form.categorieDepense, form.categorieRecette) ? (
+          <ChampVehicule value={form.vehiculeId ?? ''} onChange={(id) => f.setForm({ ...form, vehiculeId: id || undefined })} />
+        ) : null}
         {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
         {!estEmise && !modeEntreprise() && !depenseImposee(fournisseur) ? (
           <ChampAtelier

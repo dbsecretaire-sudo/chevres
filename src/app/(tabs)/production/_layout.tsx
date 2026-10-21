@@ -106,6 +106,8 @@ export default function ProductionLayout() {
       <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />
       <Stack.Screen name="lot-abattoir" options={{ title: TEXTES.cheptel.lots.depart.titre }} />
       <Stack.Screen name="documents-gds" options={{ title: TEXTES.gds.documents.titre }} />
+      <Stack.Screen name="flotte" options={{ title: TEXTES.flotte.titre }} />
+      <Stack.Screen name="vehicule" options={{ title: TEXTES.flotte.titreFiche }} />
       <Stack.Screen name="rapports-essais" options={{ title: TEXTES.gds.documents.titreRapports }} />
       <Stack.Screen name="oeufs" options={{ title: TEXTES.production.oeufs.titre }} />
       <Stack.Screen name="statistiques" options={{ title: TEXTES.stock.statistiques.titre }} />
