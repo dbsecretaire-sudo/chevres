@@ -122,7 +122,8 @@ const styles = StyleSheet.create({
   },
   titre: { color: colors.blanc, fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
   mur: { borderWidth: 3, borderTopWidth: 0, overflow: 'hidden' },
-  compartiments: { flexDirection: 'row', flexWrap: 'wrap', padding: 5, gap: 5 },
+  // Une dernière rangée incomplète (cinq compartiments) se centre.
+  compartiments: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', padding: 5, gap: 5 },
   compartiment: {
     width: '31.6%',
     alignItems: 'center',

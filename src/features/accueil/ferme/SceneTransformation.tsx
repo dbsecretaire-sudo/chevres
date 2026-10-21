@@ -164,8 +164,8 @@ export function SceneTransformation({
   const disponible = reste - hauteurPlaque - hauteurRue;
   const echelle =
     hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.35 * a, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
-  // Plus la plaque est haute, plus son texte grandit (jusqu'à un cinquième de plus).
-  const textePlaque = a * Math.max(1, Math.min(1.2, hauteurPlaque / plaqueMin));
+  // Plus la plaque est haute, plus son texte grandit (un peu : « 0 boucherie/charcuterie » doit tenir sur une ligne).
+  const textePlaque = a * Math.max(1, Math.min(1.08, hauteurPlaque / plaqueMin));
   return (
     <View style={styles.scene} onLayout={(e) => setHauteur(Math.round(e.nativeEvent.layout.height))}>
       {/* De l'autre côté de la rue : les intervenants, trois par rangée. */}

@@ -28,7 +28,6 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
-import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
@@ -79,10 +78,6 @@ const ROUTE_DIRECTE: Record<string, string> = {
   entreprises: ROUTES.lieu('entreprises'),
   qualiteLait: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
   // La gestion du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit, et le stock de la fromagerie.
-  fabriquerFromage: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
-  fabriquerCharcuterie: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE),
-  lotsFromages: ROUTES.PRODUCTION_FROMAGES,
-  rappelsLots: ROUTES.PRODUCTION_RAPPELS_LOTS,
   reserver: ROUTES.COMMERCIAL_COMMANDE,
   stockFromagerie: ROUTES.lieu('fromagerie'),
   // Le côté Agritourisme : les intervenants (visiteurs, groupes, office de tourisme, repas) et les pages de la gestion (visites, formules, tarifs, ventes, rentabilité).
@@ -108,8 +103,10 @@ type Cote = CoteDeLaFerme['cle'];
  * La direction de l'arc des bulles d'après la place du compartiment (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
  * les compartiments sont en bas de la scène, les bulles s'ouvrent donc vers le haut, de biais vers le côté libre près d'un bord.
  */
-export function directionDesBulles(x: number, largeur: number): number {
-  return x < largeur / 3 ? 45 : x > (2 * largeur) / 3 ? 135 : 90;
+export function directionDesBulles(x: number, largeur: number, nombre = 3): number {
+  // Quatre bulles ou plus (les lots) s'étalent davantage : près d'un bord, l'arc penche plus vers l'intérieur pour rester à l'écran.
+  const penche = nombre >= 4 ? 30 : 45;
+  return x < largeur / 3 ? penche : x > (2 * largeur) / 3 ? 180 - penche : 90;
 }
 
 /** Ce qui reste éclairé quand le reste s'assombrit : le bouton touché, refait par-dessus l'ombre (sa place, sa taille, son dessin). */
@@ -250,20 +247,14 @@ export default function AccueilFerme() {
     { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
     { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
   ];
-  // À droite de la scène du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit et le stock de la fromagerie.
+  // À droite de la scène du travail du produit : le stock, la réservation d'un produit, les lots et fabriquer (en bulles), et la rentabilité de ce qu'on fabrique.
   const gestionTransformation: EntreeDeColonne[] = [
     { cle: 'stockFromagerie', titre: C.stock, icone: iconeIon('cube'), couleur: VENTE },
     { cle: 'reserver', titre: C.reserver, icone: iconeIon('bookmark'), couleur: VENTE },
-    {
-      cle: 'rappelsLots',
-      titre: C.rappelsLots,
-      icone: iconeIon('notifications'),
-      pastille: f.lotsARappeler,
-      couleur: VENTE,
-    },
-    { cle: 'lotsFromages', titre: C.lotsFromages, icone: iconeIon('layers'), couleur: VENTE },
-    { cle: 'fabriquerCharcuterie', titre: C.fabriquerCharcuterie, icone: iconeMCI('knife'), couleur: VENTE },
-    { cle: 'fabriquerFromage', titre: C.fabriquerFromage, icone: iconeMCI('pot-mix'), couleur: VENTE },
+    // Les lots : un seul bouton, dont les bulles ouvrent les lots de fromages, de charcuterie, de viande et leurs rappels (la pastille : les rappels à faire).
+    { cle: 'lots', titre: C.lotsAtelier, icone: iconeIon('layers'), pastille: f.lotsARappeler, couleur: '#6A767E' },
+    // Fabriquer : un seul bouton, dont les bulles ouvrent la fabrication d'un fromage ou de charcuterie.
+    { cle: 'fabriquer', titre: C.fabriquer, icone: iconeMCI('pot-mix'), couleur: '#6A767E' },
     { cle: 'rentabiliteAtelier', titre: C.rentabilite, icone: iconeIon('stats-chart'), couleur: VENTE },
   ];
   // Le côté Agritourisme : ceux qui viennent (les visiteurs, leurs groupes), ceux qui les envoient (l'office de tourisme) et ceux qui fournissent le repas.
@@ -303,7 +294,7 @@ export default function AccueilFerme() {
       const sommet = ancre.y - ry;
       setMenu({
         cible,
-        direction: directionDesBulles(gauche + ancre.largeur / 2, largeur),
+        direction: directionDesBulles(gauche + ancre.largeur / 2, largeur, actionsDuLieu(cible).length),
         x: gauche + ancre.largeur / 2,
         y: sommet + ancre.hauteur / 2,
         hauteur,

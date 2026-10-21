@@ -1,6 +1,7 @@
 import type { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
+import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
 /** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre. */
@@ -14,10 +15,10 @@ export interface ActionDeLieu {
 }
 
 /**
- * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange). Les autres boutons (les intervenants, le
+ * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange) et les lots de l'atelier. Les autres boutons (les intervenants, le
  * cheptel, les documents) ouvrent directement leur page, qui regroupe toutes leurs actions.
  */
-export type CibleDesBulles = 'sante' | 'grange';
+export type CibleDesBulles = 'sante' | 'grange' | 'lots' | 'fabriquer';
 
 const B = TEXTES.accueil.ferme.bulles;
 const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
@@ -35,6 +36,18 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           // Les visites du vétérinaire sont dans sa fiche (depuis qu'elles ne sont plus un onglet des contrôles).
           route: ROUTES.lieu('veterinaire'),
         },
+      ];
+    case 'fabriquer':
+      return [
+        { cle: 'fabriquerFromage', titre: B.fabriquerFromage, icone: 'restaurant', iconeMci: 'cheese', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE) },
+        { cle: 'fabriquerCharcuterie', titre: B.fabriquerCharcuterie, icone: 'restaurant', iconeMci: 'knife', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE) },
+      ];
+    case 'lots':
+      return [
+        { cle: 'lotsFromages', titre: B.lotsFromages, icone: 'layers', route: ROUTES.PRODUCTION_FROMAGES },
+        { cle: 'lotsCharcuterie', titre: B.lotsCharcuterie, icone: 'restaurant', iconeMci: 'sausage', route: ROUTES.PRODUCTION_CHARCUTERIE },
+        { cle: 'lotsViande', titre: B.lotsViande, icone: 'restaurant', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE },
+        { cle: 'rappelsLots', titre: B.rappelsLots, icone: 'notifications', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
       ];
     case 'grange':
       return [
