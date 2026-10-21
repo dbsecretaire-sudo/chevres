@@ -59,6 +59,8 @@ export const CATEGORIE_RECETTE = {
   OEUFS: 'oeufs',
   AIDE: 'aide',
   AUTRE: 'autre',
+  /** Un versement du groupement sanitaire (GDS) à l'éleveur : un remboursement, une indemnité, une ristourne. Ce n'est ni une vente ni une aide. */
+  GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   // --- Entreprise (hors élevage) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -314,6 +316,7 @@ export const GROUPE_RECETTE = {
   BOUCHERIE: 'boucherie',
   AIDE: 'aide',
   AUTRE: 'autre',
+  GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   // --- Entreprise : un groupe par recette (pas de seconde liste) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -342,6 +345,8 @@ const AIDE_ET_AUTRE: GroupeRecetteDefinition[] = [
  */
 const AIDE_PRESTATIONS_ET_AUTRE: GroupeRecetteDefinition[] = [
   AIDE_ET_AUTRE[0],
+  // Un versement du groupement sanitaire (GDS) : remboursement, indemnité, ristourne.
+  { groupe: GROUPE_RECETTE.GROUPEMENT_SANITAIRE, categories: [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE] },
   { groupe: GROUPE_RECETTE.PRESTATIONS, categories: [CATEGORIE_RECETTE.PRESTATIONS] },
   AIDE_ET_AUTRE[1],
 ];
@@ -485,6 +490,7 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.GAINS_TRADING,
   CATEGORIE_RECETTE.DEPOT,
   CATEGORIE_RECETTE.AIDE,
+  CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
 
@@ -516,6 +522,7 @@ export const TAUX_TVA_RECETTE_ENTREPRISE = {
   [CATEGORIE_RECETTE.COTISATIONS]: 0,
   [CATEGORIE_RECETTE.DONS]: 0,
   [CATEGORIE_RECETTE.AIDE]: 0,
+  [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE]: 0,
   [CATEGORIE_RECETTE.AUTRE]: 20,
 } as const;
 

@@ -15,7 +15,6 @@ import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { CATEGORIE_VENTE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { ROUTES } from '@/shared/constants/routes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -65,20 +64,22 @@ export default function Laiterie() {
     [transactions],
   );
 
+  // La qualité du lait n'est plus ici : elle a son logo sur le côté Atelier de l'accueil.
   const lait: { cle: string; titre: string; aide: string; icone: keyof typeof Ionicons.glyphMap; route: string }[] = [
     ...(petitsRuminants ? [{ cle: 'productionLait', ...A.productionLait, icone: 'water' as const, route: ROUTES.PRODUCTION_LAIT }] : []),
-    { cle: 'laitier', ...A.laitier, icone: 'flask' as const, route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
   ];
 
   return (
     <Screen>
-      <GroupeAccueil titre={T.groupeLait}>
-        <BlocLignes>
-          {lait.map((l) => (
-            <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => router.push(l.route as never)} />
-          ))}
-        </BlocLignes>
-      </GroupeAccueil>
+      {lait.length > 0 ? (
+        <GroupeAccueil titre={T.groupeLait}>
+          <BlocLignes>
+            {lait.map((l) => (
+              <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => router.push(l.route as never)} />
+            ))}
+          </BlocLignes>
+        </GroupeAccueil>
+      ) : null}
 
       <GroupeAccueil titre={T.groupeRecolteur}>
         <BlocLignes>

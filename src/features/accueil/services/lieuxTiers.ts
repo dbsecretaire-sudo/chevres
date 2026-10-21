@@ -4,6 +4,7 @@ import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 
@@ -56,6 +57,10 @@ export interface ConfigLieuTiers {
   /** Les écritures du lieu : les factures de ces catégories (dépense ou recette), les ventes de ces catégories, et celles de ses tiers. */
   categoriesFacture: readonly string[];
   categoriesVente: readonly string[];
+  /** Une recette que le lieu propose en plus (un versement reçu du groupement sanitaire) : sa catégorie de recette ; la page ajoute « Nouveau versement ». */
+  recetteDuLieu?: string;
+  /** Vrai : la nouvelle écriture du lieu s'ouvre avec le premier contact du lieu déjà choisi (le groupement sanitaire : le GDS). */
+  contactParDefaut?: boolean;
   /** Où ouvrir « Nouvelle facture » : une facture reçue (achat) ou émise (vente), déjà dans la bonne catégorie. */
   nouvelle: string;
   liens: readonly LienDuLieu[];
@@ -151,7 +156,15 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
+    // Les cotisations (une dépense) et les versements reçus (une recette « Groupement sanitaire (GDS) ») se font avec le GDS déjà choisi.
+    contactParDefaut: true,
+    recetteDuLieu: CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
     liens: [
+      // Le suivi sanitaire et les analyses du lait sont ceux du vétérinaire (les traitements) et de la laiterie (la qualité du lait) : les mêmes écrans.
+      { cle: 'suivi', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+      { cle: 'documents', icone: 'document-text', route: ROUTES.DOCUMENTS_GDS },
+      { cle: 'analyses', icone: 'flask', route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
+      { cle: 'avortements', icone: 'alert-circle', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.AVORTEMENT) },
       {
         cle: 'carnet',
         icone: 'clipboard',

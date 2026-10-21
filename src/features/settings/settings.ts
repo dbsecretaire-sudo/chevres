@@ -228,8 +228,22 @@ export const reglageInvestissement = (
   valeur: ReglageInvestissement | number | undefined,
 ): ReglageInvestissement => (typeof valeur === 'number' ? { cout: valeur } : (valeur ?? {}));
 
+/** Un document du groupement sanitaire déposé par l'éleveur : le fichier (scan, photo) et le moment du dépôt. */
+export interface DocumentGdsDepose {
+  piece: PieceJointe;
+  /** Date et heure du dépôt (ISO). */
+  deposeLe: string;
+}
+
+/** Ce que l'éleveur garde du groupement sanitaire : ses documents (un par rubrique). */
+export interface ReglagesGds {
+  documents?: Record<string, DocumentGdsDepose>;
+}
+
 /** Coordonnées administratives de l'exploitation, affichées sur les rapports PDF. */
 export interface InfosExploitation {
+  /** Le groupement sanitaire : les documents déposés. */
+  gds?: ReglagesGds;
   /** Mode avancé de Production › Viande : les onglets des animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants). */
   ventesSansFacture?: boolean;
   /** Vrai une fois faite la réparation des animaux de lots d'abattoir remis vivants par une ancienne version (elle ne se refait pas). */

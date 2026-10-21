@@ -191,9 +191,22 @@ export const TEXTES_PRODUCTION = {
       titre: 'Groupement sanitaire',
       groupeTiers: 'Groupements sanitaires (GDS)',
       ajouterTiers: 'Ajouter un groupement sanitaire',
-      groupeEcritures: 'Les cotisations et analyses',
-      nouvelle: 'Nouvelle facture du groupement sanitaire',
-      liens: { carnet: { titre: 'Contrôles des animaux', aide: 'Les contrôles et autocontrôles sanitaires du troupeau.' } },
+      groupeEcritures: 'Les cotisations et versements',
+      nouvelle: 'Nouvelle cotisation ou facture du groupement sanitaire',
+      versement: 'Nouveau versement du groupement sanitaire',
+      liens: {
+        suivi: { titre: 'Suivi sanitaire', aide: 'Les soins donnés aux animaux et leurs délais d’attente : le même suivi que chez le vétérinaire.' },
+        documents: {
+          titre: 'Documents du GDS',
+          aide: 'Attestation PSE, bons de délivrance, biosécurité, autodiagnostic, quarantaine.',
+        },
+        analyses: { titre: 'Analyses du lait', aide: 'Les analyses et le contrôle du lait : les mêmes que la qualité du lait de la laiterie.' },
+        avortements: {
+          titre: 'Avortements de l’année',
+          aide: 'Les femelles qui ont avorté, par année : on les signale depuis leur fiche (onglet Reproduction, « Signaler un avortement »).',
+        },
+        carnet: { titre: 'Contrôles des animaux', aide: 'Les contrôles et autocontrôles sanitaires du troupeau.' },
+      },
     },
     emballages: {
       titre: 'Emballages',

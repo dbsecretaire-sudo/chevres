@@ -79,6 +79,7 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   },
   [CATEGORIE_RECETTE.OEUFS]: { numero: '701600', libelle: 'Ventes de produits finis — Œufs' },
   [CATEGORIE_RECETTE.AIDE]: { numero: '740000', libelle: 'Subventions d’exploitation' },
+  [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE]: { numero: '758000', libelle: 'Produits divers de gestion courante — Groupement sanitaire (GDS)' },
   [CATEGORIE_RECETTE.AUTRE]: { numero: '708000', libelle: 'Produits des activités annexes' },
   [CATEGORIE_RECETTE.PRESTATIONS]: { numero: '706000', libelle: 'Prestations de services' },
   [CATEGORIE_RECETTE.VENTE_MARCHANDISES]: { numero: '707000', libelle: 'Ventes de marchandises' },

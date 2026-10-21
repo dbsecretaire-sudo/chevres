@@ -16,6 +16,7 @@ import {
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { AntenneGds } from '@/features/production/components/AntenneGds';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -33,6 +34,7 @@ interface TextesLieu {
   ajouterTiers?: string;
   groupeEcritures?: string;
   nouvelle?: string;
+  versement?: string;
   liens: object;
 }
 /** Combien d'écritures la page en montre : les plus récentes ; les autres sont dans la comptabilité. */
@@ -80,6 +82,14 @@ export default function LieuTiers() {
       ),
     [config, transactions, tiers],
   );
+  // La nouvelle écriture du lieu : avec le premier contact du lieu déjà choisi quand le lieu le demande (le groupement sanitaire : le GDS).
+  const premier = tiers[0];
+  const parDefaut = (param: 'fournisseur' | 'client', id?: string) =>
+    config.contactParDefaut && id ? `&${param}=${id}` : '';
+  const routeNouvelle = `${config.nouvelle}${parDefaut('fournisseur', premier?.fournisseur?.id)}`;
+  const routeVersement = config.recetteDuLieu
+    ? `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${config.recetteDuLieu}${parDefaut('client', premier?.client?.id)}`
+    : undefined;
   const liens = config.liens.map((l) => ({
     ...l,
     ...(textes.liens as Record<string, { titre: string; aide: string }>)[l.cle],
@@ -101,6 +111,10 @@ export default function LieuTiers() {
             ))}
           </BlocLignes>
         </GroupeAccueil>
+      ) : null}
+
+      {cle === 'groupementSanitaire' ? (
+        <AntenneGds onAjoutee={() => listContacts().then(setContacts).catch(() => undefined)} />
       ) : null}
 
       {config.avecTiers ? (
@@ -160,8 +174,11 @@ export default function LieuTiers() {
               <ListRow
                 title={textes.nouvelle ?? ''}
                 icone="add-circle"
-                onPress={() => router.push(config.nouvelle as never)}
+                onPress={() => router.push(routeNouvelle as never)}
               />
+              {routeVersement && textes.versement ? (
+                <ListRow title={textes.versement} icone="add-circle" onPress={() => router.push(routeVersement as never)} />
+              ) : null}
             </BlocLignes>
           </GroupeAccueil>
         </>
