@@ -308,7 +308,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
       id: 'cheptel.circulation',
       route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION,
       titre: 'Les documents de circulation',
-      texte: 'Chaque vente ou achat d’animaux vivants est listé. Touchez l’icône d’une écriture : déposez votre document rempli (scan, photo), ou générez le modèle pré-rempli. Tant qu’il manque, l’accueil vous le rappelle.',
+      texte: 'Un document par lot d’animaux partis vivants (créé avant toute écriture), et par achat ou vente d’animaux vivants. Touchez une ligne : le document et les factures concernées (la prestation de l’abattoir, la vente) s’affichent. L’icône dépose votre document rempli (scan, photo), ou génère le modèle pré-rempli. Tant qu’il manque, l’accueil vous le rappelle.',
     },
     // --- Le cheptel, suite : les lots, les traitements, les réglages et les aides, le bilan -----------------------------------
     revenir('cheptel.suite', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION, 'cheptel', 'Cheptel'),
@@ -412,7 +412,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
       id: 'production.viande.page',
       route: ROUTES.PRODUCTION_VIANDE,
       titre: 'Réserver et facturer la viande',
-      texte: '« À facturer » : un jour d’abattage se facture d’un bloc, avec la facture de l’abattoir. « À vendre » : les animaux sans boucle, qu’on peut réserver pour un contact avant de les facturer ; « Facturée » et « Vendue » gardent l’historique. Les animaux sont ceux de l’inventaire : chaque vente les en sort.',
+      texte: '« À facturer » : un lot d’abattoir (créé au départ des animaux, avec son document de circulation) se facture d’un bloc, avec la facture de l’abattoir qui s’y rattache. « À vendre » : les animaux sans boucle, qu’on peut réserver pour un contact avant de les facturer ; « Facturée » et « Vendue » gardent l’historique. Les animaux sont ceux de l’inventaire : chaque vente les en sort.',
     },
     revenir('production.viande', ROUTES.PRODUCTION_VIANDE, 'production', 'Production'),
     toucher(
@@ -582,7 +582,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
       id: 'organisation.categories.page',
       route: ROUTES.ORGANISATION_CATEGORIES_TIERS,
       titre: 'Personnaliser les types de contact',
-      texte: 'Chaque catégorie (abattoir, vétérinaire, éleveur, fournisseur d’aliments…) se renomme, se retire ou s’ajoute. Elle dit ce que ses contacts peuvent faire, liste de l’inventaire par liste : un achat (et, pour les animaux, la sortie vers l’abattoir) dans les dépenses ; les ventes sont dans les catégories de clients. La nouvelle écriture ne propose alors que ce qui convient au contact choisi.',
+      texte: 'Chaque catégorie (abattoir, vétérinaire, éleveur, fournisseur d’aliments…) se renomme, se retire ou s’ajoute. Elle dit ce que ses contacts peuvent faire, liste de l’inventaire par liste : un achat (et, pour l’abattoir, la facture d’un lot) dans les dépenses ; les ventes sont dans les catégories de clients. La nouvelle écriture ne propose alors que ce qui convient au contact choisi.',
     },
     revenir('organisation.categories', ROUTES.ORGANISATION_CATEGORIES_TIERS, 'organisation', 'Organisation'),
     {
