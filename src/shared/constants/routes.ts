@@ -65,6 +65,8 @@ export const ROUTES = {
   lotAbattoirNouveau: () => '/production/lot-abattoir' as const,
   /** Les documents du groupement sanitaire (GDS) déposés par l'éleveur. */
   DOCUMENTS_GDS: '/production/documents-gds',
+  /** Les rapports d'essais du laboratoire (prophylaxie) déposés par l'éleveur. */
+  RAPPORTS_ESSAIS_GDS: '/production/rapports-essais',
   /** Un lot ouvert depuis la Production (viande) : le même écran, mais l'onglet du bas reste Production au lieu de passer à Cheptel. */
   lotDeProduction: (id: string) => `/production/lot?id=${id}` as const,
   /** Le lot ouvert depuis la Comptabilité (une vente, une dépense) : il reste dans la Comptabilité. */

@@ -160,16 +160,12 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     contactParDefaut: true,
     recetteDuLieu: CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
     liens: [
-      // Le suivi sanitaire et les analyses du lait sont ceux du vétérinaire (les traitements) et de la laiterie (la qualité du lait) : les mêmes écrans.
+      // Les traitements et les analyses du lait sont ceux du vétérinaire (les traitements) et de la laiterie (la qualité du lait) : les mêmes écrans.
       { cle: 'suivi', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+      { cle: 'rapports', icone: 'flask-outline', route: ROUTES.RAPPORTS_ESSAIS_GDS },
       { cle: 'documents', icone: 'document-text', route: ROUTES.DOCUMENTS_GDS },
       { cle: 'analyses', icone: 'flask', route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
       { cle: 'avortements', icone: 'alert-circle', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.AVORTEMENT) },
-      {
-        cle: 'carnet',
-        icone: 'clipboard',
-        route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX),
-      },
     ],
   },
   emballages: {

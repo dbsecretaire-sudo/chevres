@@ -4,6 +4,8 @@ import { DOCUMENT_GDS } from '@/shared/constants/gds';
 export const TEXTES_GDS = {
   documents: {
     titre: 'Documents du GDS',
+    titreRapports: 'Rapports d’essais',
+    aideRapports: 'Les rapports d’essais du laboratoire (prophylaxie : brucellose, paratuberculose, Capra’Sana…) : déposez-les ici, un document par rapport. Un appui ouvre le fichier, le crayon le remplace, la poubelle le retire.',
     aide: 'Déposez vos propres documents (scan ou photo), autant que vous voulez : un appui ouvre le fichier, le crayon le remplace, la poubelle le retire.',
     depose: (date: string, heure: string) => `Déposé le ${date} à ${heure}`,
     manque: 'Pas encore déposé',

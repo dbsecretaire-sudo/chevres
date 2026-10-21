@@ -14,7 +14,6 @@ export type DocumentGds = ValeurDe<typeof DOCUMENT_GDS>;
 
 /** L'ordre dans lequel les documents se listent. */
 export const DOCUMENTS_GDS: readonly DocumentGds[] = [
-  DOCUMENT_GDS.RAPPORTS_ESSAIS,
   DOCUMENT_GDS.ATTESTATION_PSE,
   DOCUMENT_GDS.BONS_DELIVRANCE,
   DOCUMENT_GDS.BIOSECURITE,
@@ -29,3 +28,6 @@ export const ANTENNE_GDS_CORSE = {
   email: 'gdsb2b@reseaugds.com',
   emailGeneral: 'gdscorse@reseaugds.com',
 } as const;
+
+/** Les rapports d'essais ont leur propre page (« Rapports d'essais » du groupement sanitaire) : ils ne sont pas dans « Documents du GDS ». */
+export const RAPPORTS_ESSAIS_GDS: readonly DocumentGds[] = [DOCUMENT_GDS.RAPPORTS_ESSAIS];

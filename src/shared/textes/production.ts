@@ -195,7 +195,8 @@ export const TEXTES_PRODUCTION = {
       nouvelle: 'Nouvelle cotisation ou facture du groupement sanitaire',
       versement: 'Nouveau versement du groupement sanitaire',
       liens: {
-        suivi: { titre: 'Suivi sanitaire', aide: 'Les soins donnés aux animaux et leurs délais d’attente : le même suivi que chez le vétérinaire.' },
+        suivi: { titre: 'Traitements', aide: 'Les soins donnés aux animaux et leurs délais d’attente : le même suivi que chez le vétérinaire.' },
+        rapports: { titre: 'Rapports d’essais', aide: 'Les résultats d’analyses du laboratoire (brucellose, paratuberculose, Capra’Sana…).' },
         documents: {
           titre: 'Documents du GDS',
           aide: 'Attestation PSE, bons de délivrance, biosécurité (grille d’autodiagnostic), quarantaine.',
@@ -205,7 +206,6 @@ export const TEXTES_PRODUCTION = {
           titre: 'Avortements de l’année',
           aide: 'Les femelles qui ont avorté, par année : on les signale depuis leur fiche (onglet Reproduction, « Signaler un avortement »).',
         },
-        carnet: { titre: 'Contrôles des animaux', aide: 'Les contrôles et autocontrôles sanitaires du troupeau.' },
       },
     },
     emballages: {
