@@ -1,19 +1,27 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { colors } from '@/shared/theme/colors';
+import { useEchelle } from '@/shared/theme/miseEnPage';
 
 /**
  * Une pastille de la barre du haut de l'accueil : un mot sur un fond blanc, dans une capsule verte ; les quatre pastilles se partagent la largeur. Ce sont les menus qu'on
  * touche rarement (l'année, l'espèce, le didacticiel, l'organisation) : ils sont en haut, loin du pouce, et l'essentiel est en bas.
  */
 export function PastilleDeMenu({ libelle, onPress }: { libelle: string; onPress: () => void }) {
+  // Le texte et la hauteur suivent la taille de l'écran.
+  const echelle = useEchelle();
   return (
     <Pressable
-      style={({ pressed }) => [styles.pastille, pressed && styles.appuyee]}
+      style={({ pressed }) => [styles.pastille, { paddingVertical: Math.round(10 * echelle) }, pressed && styles.appuyee]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={libelle}
     >
-      <Text style={styles.texte} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+      <Text
+        style={[styles.texte, { fontSize: Math.round(14 * echelle) }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {libelle}
       </Text>
     </Pressable>

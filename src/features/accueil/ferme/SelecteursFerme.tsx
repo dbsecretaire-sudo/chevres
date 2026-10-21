@@ -14,6 +14,10 @@ interface Props {
   annees: number[];
   annee: number;
   onChoisirAnnee: (annee: number) => void;
+  /** Vrai quand « Tout » est choisi (toutes les années regroupées) : la pastille le dit au lieu de l'année. */
+  tout?: boolean;
+  /** Quand elle est donnée, la liste propose « Tout » en plus des années (les listes qui regroupent les années le suivent). */
+  onChoisirTout?: () => void;
   /** En gros boutons de la barre du bas (Windows), ou en pastilles dans la barre du haut (téléphone : on les touche rarement). */
   forme: 'barre' | 'pastille';
 }
@@ -22,7 +26,7 @@ interface Props {
  * Le choix de l'année et celui de l'espèce : un appui ouvre la liste. Le libellé de l'espèce est celui de l'espèce active (il change avec elle) ;
  * quand l'établissement n'a qu'une espèce, l'appui mène à ses informations, où l'on en ajoute.
  */
-export function SelecteursFerme({ annees, annee, onChoisirAnnee, forme }: Props) {
+export function SelecteursFerme({ annees, annee, onChoisirAnnee, tout = false, onChoisirTout, forme }: Props) {
   const router = useRouter();
   const { especes, espece, changerEspece } = useEtablissement();
   const [anneeOuverte, setAnneeOuverte] = useState(false);
@@ -49,7 +53,7 @@ export function SelecteursFerme({ annees, annee, onChoisirAnnee, forme }: Props)
         </>
       ) : (
         <>
-          <PastilleDeMenu libelle={String(annee)} onPress={ouvrirAnnee} />
+          <PastilleDeMenu libelle={tout && onChoisirTout ? TEXTES.commun.choix.toutesAnnees : String(annee)} onPress={ouvrirAnnee} />
           <PastilleDeMenu libelle={libelleEspece} onPress={ouvrirEspece} />
         </>
       )}
@@ -57,14 +61,30 @@ export function SelecteursFerme({ annees, annee, onChoisirAnnee, forme }: Props)
         visible={anneeOuverte}
         onClose={() => setAnneeOuverte(false)}
         title={TEXTES.commun.choix.annee}
-        options={listeAnnees.map((a) => ({
-          label: String(a),
-          icon: a === annee ? 'checkmark-circle' : 'calendar-outline',
-          onPress: () => {
-            setAnneeOuverte(false);
-            onChoisirAnnee(a);
-          },
-        }))}
+        options={[
+          ...(onChoisirTout
+            ? [
+                {
+                  label: TEXTES.commun.choix.toutesAnnees,
+                  icon: (tout ? 'checkmark-circle' : 'calendar-outline') as 'checkmark-circle' | 'calendar-outline',
+                  onPress: () => {
+                    setAnneeOuverte(false);
+                    onChoisirTout();
+                  },
+                },
+              ]
+            : []),
+          ...listeAnnees.map((a) => ({
+            label: String(a),
+            icon: (a === annee && !tout ? 'checkmark-circle' : 'calendar-outline') as
+              | 'checkmark-circle'
+              | 'calendar-outline',
+            onPress: () => {
+              setAnneeOuverte(false);
+              onChoisirAnnee(a);
+            },
+          })),
+        ]}
       />
       <OptionsModal
         visible={especeOuverte}

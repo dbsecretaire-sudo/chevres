@@ -14,7 +14,7 @@ import { colors } from '@/shared/theme/colors';
  * dans la zone du haut, que le pouce atteint le moins bien.
  */
 export function BarreHauteFerme() {
-  const { settings, setAnneeActive } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   // Les années connues, relues à chaque retour sur l'écran.
   useFocusEffect(
@@ -26,7 +26,14 @@ export function BarreHauteFerme() {
   );
   return (
     <View style={styles.barre}>
-      <SelecteursFerme annees={annees} annee={settings.anneeActive} onChoisirAnnee={setAnneeActive} forme="pastille" />
+      <SelecteursFerme
+        annees={annees}
+        annee={settings.anneeActive}
+        onChoisirAnnee={setAnneeActive}
+        tout={!!settings.toutesAnnees}
+        onChoisirTout={choisirToutesAnnees}
+        forme="pastille"
+      />
       <BoutonDidacticiel forme="pastille" />
       <PastilleMenus />
     </View>

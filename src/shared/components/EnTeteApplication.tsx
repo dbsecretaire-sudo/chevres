@@ -9,6 +9,7 @@ import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 import { estBureau } from '@/shared/utils/plateforme';
 
@@ -78,7 +79,9 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
     <View style={styles.fond}>
       {bandeauEnHaut ? (
         <View style={[styles.haut, { paddingTop: 12 + top }]}>
-          <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+          <View style={colonneCentree}>
+            <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+          </View>
         </View>
       ) : (
         <View style={[styles.haut, { paddingTop: 12 + top }]}>

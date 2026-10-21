@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features/accueil/ferme/ColonneFerme';
 import { colors } from '@/shared/theme/colors';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
 
 interface Props {
   /** Les boutons, ligne par ligne, et ce que fait un appui sur l'un d'eux. */
@@ -27,6 +28,8 @@ export function PanneauInterieur({ lignes, onAppui, accent }: Props) {
 
 const styles = StyleSheet.create({
   panneau: {
+    // De la largeur de la colonne de l'application, centré, même dans une grande fenêtre.
+    ...colonneCentree,
     backgroundColor: colors.blanc,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Balade } from '@/features/accueil/ferme/animations';
@@ -23,6 +24,8 @@ const TETE_DE_CHEVRE = require('../../../../assets/images/tete-chevre.png');
 interface Props {
   /** Les animaux qui représentent le troupeau (jusqu'à quatre) : ils se tiennent sur le rebord du mur. */
   vedettes: readonly Chevre[];
+  /** Le nom de l'exploitation (sa carte) : posé sur le mur, entre les chèvres, au lieu d'une carte en plus au-dessus. */
+  nom?: ReactNode;
 }
 
 /**
@@ -30,7 +33,7 @@ interface Props {
  * passe chez soi sont dans le panneau du bas (`PanneauInterieur`), sous le pouce. Sur la paille, la liste des animaux du cheptel, avec sa recherche et ses filtres : chaque ligne ouvre
  * la fiche de l'animal.
  */
-export function ChevrerieInterieure({ vedettes }: Props) {
+export function ChevrerieInterieure({ vedettes, nom }: Props) {
   const router = useRouter();
   const liste = useListeCheptel();
   const dessin = dessinDeLEspece();
@@ -39,9 +42,15 @@ export function ChevrerieInterieure({ vedettes }: Props) {
   return (
     <View style={styles.fond}>
       <View style={styles.mur}>
-        {/* Les chèvres sur le rebord du mur, qui se promènent. */}
-        <View style={styles.rebord}>
-          {vedettes.map((a, i) => (
+        {/* Les chèvres sur le rebord du mur, qui se promènent, et le nom de l'exploitation entre elles. */}
+        <View style={[styles.rebord, nom ? styles.rebordAvecNom : null]}>
+          {nom ? (
+            <View style={styles.nom} pointerEvents="box-none">
+              {nom}
+            </View>
+          ) : null}
+          {/* Avec le nom au milieu, une chèvre de chaque côté. */}
+          {(nom ? vedettes.slice(0, 2) : vedettes).map((a, i) => (
             <Balade key={a.id} amplitude={10} duree={2200 + i * 450}>
               <Text style={styles.chevre} accessibilityElementsHidden importantForAccessibility="no">
                 {dessin}
@@ -119,6 +128,9 @@ const styles = StyleSheet.create({
     minHeight: 56,
     marginBottom: -4,
   },
+  rebordAvecNom: { justifyContent: 'space-between', paddingHorizontal: 4 },
   chevre: { fontSize: 44 },
+  // La carte du nom au centre du mur : les chèvres se promènent de part et d'autre.
+  nom: { position: 'absolute', left: '22%', right: '22%', top: 0, bottom: 4, justifyContent: 'center', zIndex: 1 },
   sol: { padding: 8, gap: 8 },
 });

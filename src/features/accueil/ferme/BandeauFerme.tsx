@@ -7,6 +7,7 @@ import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
 import { effacerOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
+import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.bandeau;
@@ -27,7 +28,10 @@ function Pastille({
   route,
   onAppui,
   poids = 1,
+  echelle,
 }: {
+  /** Le rapport à la taille d'un téléphone (`useEchelle`) : les icônes et le texte suivent la taille de l'écran. */
+  echelle: number;
   icone: keyof typeof Ionicons.glyphMap;
   valeur: string;
   couleur?: string;
@@ -41,13 +45,16 @@ function Pastille({
   const router = useRouter();
   return (
     <Pressable
-      style={[styles.pastille, { flex: poids }]}
+      style={[styles.pastille, { flex: poids, paddingVertical: Math.round(8 * echelle) }]}
       onPress={() => (onAppui ? onAppui() : router.push(route as never))}
       accessibilityRole="button"
       accessibilityLabel={`${libelle} : ${valeur}`}
     >
-      <Ionicons name={icone} size={20} color={couleur ?? colors.primary} />
-      <Text style={[styles.valeur, couleur ? { color: couleur } : null]} numberOfLines={1}>
+      <Ionicons name={icone} size={Math.round(20 * echelle)} color={couleur ?? colors.primary} />
+      <Text
+        style={[styles.valeur, { fontSize: Math.round(14 * echelle) }, couleur ? { color: couleur } : null]}
+        numberOfLines={1}
+      >
         {valeur}
       </Text>
       {badge ? (
@@ -69,10 +76,12 @@ const montant = (valeur: number) => `${Math.round(valeur).toLocaleString(LOCALE)
 export function BandeauFerme({ onRappels }: Props) {
   const router = useRouter();
   const { balance, boucles, rappels } = useBandeauFerme();
+  const echelle = useEchelle();
+  const tailleMaison = Math.round(42 * echelle);
   return (
     <View style={styles.bandeau}>
       <Pressable
-        style={styles.portrait}
+        style={[styles.portrait, { width: tailleMaison, height: tailleMaison, borderRadius: tailleMaison / 2 }]}
         onPress={() => {
           effacerOrigine();
           router.navigate(ROUTES.accueilFerme() as never);
@@ -80,7 +89,7 @@ export function BandeauFerme({ onRappels }: Props) {
         accessibilityRole="button"
         accessibilityLabel={T.portrait}
       >
-        <Ionicons name="home" size={22} color={colors.blanc} />
+        <Ionicons name="home" size={Math.round(22 * echelle)} color={colors.blanc} />
       </Pressable>
       <Pastille
         icone="cash-outline"
@@ -89,6 +98,7 @@ export function BandeauFerme({ onRappels }: Props) {
         libelle={T.balance}
         route={ROUTES.COMPTABILITE_LISTE}
         poids={2}
+        echelle={echelle}
       />
       <Pastille
         icone="pricetag"
@@ -97,13 +107,16 @@ export function BandeauFerme({ onRappels }: Props) {
         couleur={colors.accent}
         libelle={T.boucles}
         route={ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)}
+        echelle={echelle}
       />
       <Pastille
         icone="notifications"
         valeur={rappels === undefined ? '…' : String(rappels)}
-        couleur={rappels ? colors.accent : undefined}
+        // La cloche est rouge quand des rappels attendent.
+        couleur={rappels ? colors.danger : undefined}
         libelle={T.rappels}
         onAppui={onRappels}
+        echelle={echelle}
       />
     </View>
   );

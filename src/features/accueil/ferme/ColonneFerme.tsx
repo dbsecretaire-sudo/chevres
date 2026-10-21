@@ -33,8 +33,11 @@ interface Props {
   compacte?: boolean;
   /** Les boutons les uns sous les autres, sur le côté d'une carte (sans texte, pour ne pas alourdir). */
   cote?: boolean;
-  /** Avec `cote` : deux boutons par ligne au lieu de trois (une carte qui en a peu garde sa largeur pour son dessin). */
-  deuxColonnes?: boolean;
+  /**
+   * Avec `cote` : la hauteur dont dispose la colonne (celle de la carte). Le nombre de boutons par ligne s'y adapte : deux quand ils tiennent
+   * en hauteur (la carte garde sa largeur pour son dessin), trois sinon.
+   */
+  hauteurDisponible?: number;
   /** Avec `cote` : un titre au-dessus des boutons (« Intervenants »). */
   titre?: string;
   /** Sans le nom sous chaque bouton : le nom reste pour les lecteurs d'écran, et s'affiche quand on touche le bouton. */
@@ -43,6 +46,26 @@ interface Props {
   rangee?: boolean;
   /** Un appui sur un bouton, avec sa place à l'écran (mesurée dans la fenêtre). */
   onAppui: (cle: string, ancre: AncreBouton) => void;
+}
+
+const LARGEUR_BOUTON_COTE = 48;
+const HAUTEUR_BOUTON_COTE = 47;
+const ECART_COTE = 8;
+const HAUTEUR_TITRE_COTE = 25;
+
+/**
+ * Le nombre de boutons par ligne d'une colonne sur le côté d'une carte : le moins possible (deux) tant que tous tiennent dans la hauteur
+ * dont dispose la carte, sinon trois. Une carte plus haute (un grand écran) a donc des boutons plus étroits en largeur, et plus de place pour
+ * son dessin ; sans hauteur connue, trois.
+ */
+export function colonnesDuCote(nombre: number, hauteur?: number, avecTitre = true): number {
+  if (hauteur === undefined) return 3;
+  const reserve = avecTitre ? HAUTEUR_TITRE_COTE : 0;
+  for (const colonnes of [2, 3]) {
+    const lignes = Math.ceil(nombre / colonnes);
+    if (reserve + lignes * HAUTEUR_BOUTON_COTE + (lignes - 1) * ECART_COTE <= hauteur) return colonnes;
+  }
+  return 3;
 }
 
 function Bouton({
@@ -127,15 +150,16 @@ export function ColonneFerme({
   rangee = false,
   compacte = false,
   cote = false,
-  deuxColonnes = false,
+  hauteurDisponible,
   titre,
   sansTitre = false,
 }: Props) {
   if (cote) {
+    const colonnes = colonnesDuCote(entrees.length, hauteurDisponible, !!titre);
     return (
       <View style={styles.panneauCote}>
         {titre ? <Text style={styles.titreCote}>{titre}</Text> : null}
-        <View style={[styles.cote, deuxColonnes ? styles.coteEtroit : null]}>
+        <View style={[styles.cote, { width: colonnes * LARGEUR_BOUTON_COTE + (colonnes - 1) * ECART_COTE + 4 }]}>
           {entrees.map((e, i) => (
             <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="cote" sansTitre />
           ))}
@@ -187,9 +211,8 @@ const styles = StyleSheet.create({
   // Sur le côté d'une carte : un titre, puis les boutons sur deux colonnes (sans texte).
   panneauCote: { alignItems: 'center', justifyContent: 'center', gap: 8 },
   titreCote: { fontSize: 14, fontWeight: '800', color: colors.primaryDark },
-  // Trois boutons par ligne : l'exploitation a une dizaine d'intervenants ; deux seulement pour la carte qui en a cinq.
-  cote: { flexDirection: 'row', flexWrap: 'wrap', width: 168, gap: 8, justifyContent: 'center' },
-  coteEtroit: { width: 112 },
+  // Deux ou trois boutons par ligne selon la hauteur de la carte (`colonnesDuCote`) : la largeur est donnée à l'affichage.
+  cote: { flexDirection: 'row', flexWrap: 'wrap', gap: ECART_COTE, justifyContent: 'center' },
   boutonCote: { width: 48 },
   rondCote: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },

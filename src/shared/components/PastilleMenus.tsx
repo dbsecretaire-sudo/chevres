@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMenusSections } from '@/shared/navigation/menusSections';
 import { colors } from '@/shared/theme/colors';
+import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 
 /**
@@ -11,28 +12,33 @@ import { TEXTES } from '@/shared/textes';
  */
 export function PastilleMenus() {
   const entrees = useMenusSections();
+  const echelle = useEchelle();
   const ref = useRef<View>(null);
-  const [liste, setListe] = useState<{ haut: number } | null>(null);
+  const { width: largeurFenetre } = useWindowDimensions();
+  // La liste se pose sous la pastille, alignée sur son bord droit (la colonne est centrée dans une grande fenêtre).
+  const [liste, setListe] = useState<{ haut: number; droite: number } | null>(null);
   const ouvrir = () =>
-    ref.current?.measureInWindow((_x, y, _largeur, hauteur) => setListe({ haut: y + hauteur + 6 }));
+    ref.current?.measureInWindow((x, y, largeur, hauteur) =>
+      setListe({ haut: y + hauteur + 6, droite: Math.max(8, largeurFenetre - (x + largeur)) }),
+    );
   return (
     <>
       <Pressable
         ref={ref}
         collapsable={false}
-        style={({ pressed }) => [styles.pastille, pressed && styles.appuyee]}
+        style={({ pressed }) => [styles.pastille, { paddingVertical: Math.round(10 * echelle) }, pressed && styles.appuyee]}
         onPress={ouvrir}
         accessibilityRole="button"
         accessibilityLabel={TEXTES.navigation.menus}
       >
-        <Text style={styles.texte} numberOfLines={1}>
+        <Text style={[styles.texte, { fontSize: Math.round(14 * echelle) }]} numberOfLines={1}>
           {TEXTES.navigation.menus}
         </Text>
-        <Ionicons name="chevron-down" size={14} color={colors.text} />
+        <Ionicons name="chevron-down" size={Math.round(14 * echelle)} color={colors.text} />
       </Pressable>
       <Modal visible={liste !== null} transparent animationType="fade" onRequestClose={() => setListe(null)}>
         <Pressable style={styles.fond} onPress={() => setListe(null)} accessibilityLabel={TEXTES.commun.general.fermer}>
-          <View style={[styles.liste, { top: liste?.haut ?? 0 }]}>
+          <View style={[styles.liste, { top: liste?.haut ?? 0, right: liste?.droite ?? 12 }]}>
             {entrees.map((e) => (
               <Pressable
                 key={e.cle}
@@ -74,7 +80,6 @@ const styles = StyleSheet.create({
   fond: { flex: 1 },
   liste: {
     position: 'absolute',
-    right: 12,
     minWidth: 190,
     backgroundColor: colors.blanc,
     borderRadius: 18,

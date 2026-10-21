@@ -1,5 +1,6 @@
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { TEXTES } from '@/shared/textes';
+import { estBureau } from '@/shared/utils/plateforme';
 
 /** La valeur de l'option « Tout » du menu des années. */
 const VALEUR_TOUT = 'tout';
@@ -16,6 +17,8 @@ interface Props {
 
 /** L'année active : une puce, et la liste des années (de la plus récente à la plus ancienne) au clic. */
 export function YearPicker({ annees, value, onChange, tout, onChoisirTout }: Props) {
+  // Sur le téléphone, la capsule du haut de chaque page a déjà le choix de l'année (et « Tout ») : il ne se répète pas dans la page.
+  if (!estBureau()) return null;
   const options = [
     ...(onChoisirTout ? [{ value: VALEUR_TOUT, label: TEXTES.commun.choix.toutesAnnees }] : []),
     ...[...new Set([...annees, value])]

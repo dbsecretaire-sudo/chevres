@@ -61,8 +61,14 @@ function menuDeLaRubrique(page: string, adresse: string, depuisOrganisation: boo
  * ouvert est en couleur), à droite l'écran lui-même. Une fenêtre étroite garde l'affichage du téléphone.
  */
 export function EnDeuxColonnes({ children }: PropsWithChildren) {
-  // Sur le téléphone (et dans un navigateur ordinaire), rien ne change : les écrans s'affichent seuls.
-  return estBureau() ? <EnDeuxColonnesBureau>{children}</EnDeuxColonnesBureau> : <>{children}</>;
+  // Sur le téléphone (et dans un navigateur ordinaire), les écrans s'affichent seuls, dans une colonne de largeur limitée et centrée.
+  return estBureau() ? (
+    <EnDeuxColonnesBureau>{children}</EnDeuxColonnesBureau>
+  ) : (
+    <View style={styles.fondUnique}>
+      <View style={styles.colonneUnique}>{children}</View>
+    </View>
+  );
 }
 
 function EnDeuxColonnesBureau({ children }: PropsWithChildren) {
@@ -88,7 +94,9 @@ function EnDeuxColonnesBureau({ children }: PropsWithChildren) {
           <DansColonneGauche.Provider value>{menu}</DansColonneGauche.Provider>
         </View>
       ) : null}
-      <View style={styles.droite}>{children}</View>
+      <View style={styles.droite}>
+        <View style={styles.contenuDroite}>{children}</View>
+      </View>
     </View>
   );
 }

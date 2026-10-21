@@ -99,11 +99,11 @@ function Onglets() {
           title: TEXTES.navigation.layout.accueil,
           // L'accueil n'a plus d'onglet : la maison du bandeau, présent sur chaque page, y ramène.
           href: null,
-          // Sous Windows, l'accueil garde son en-tête (le bandeau est déjà dans la page).
+          // Sous Windows, l'accueil classique (sans la ferme) garde son en-tête avec le nom de l'établissement.
           ...(estBureau() ? { header: undefined } : {}),
           headerRight: () => <EtablissementHeaderButton />,
-          // L'accueil « ferme » (hors Windows) n'a pas d'en-tête : le nom de l'établissement y est une carte, pour gagner de la hauteur.
-          headerShown: !(accueilFerme && !estBureau()),
+          // L'accueil « ferme » (téléphone comme Windows) n'a pas d'en-tête : le nom de l'établissement y est une carte, pour gagner de la hauteur.
+          headerShown: !accueilFerme,
           tabBarStyle: accueilFerme ? { display: 'none' } : estBureau() ? { display: 'none' } : undefined,
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}

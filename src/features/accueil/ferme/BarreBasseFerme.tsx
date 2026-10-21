@@ -7,6 +7,7 @@ import { SelecteursFerme } from '@/features/accueil/ferme/SelecteursFerme';
 import { BoutonDeBarre } from '@/shared/components/BoutonDeBarre';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.barre;
@@ -26,21 +27,23 @@ export function BarreBasseFerme({ annees, annee, onChoisirAnnee }: Props) {
   const { bottom } = useSafeAreaInsets();
   return (
     <View style={[styles.barre, { paddingBottom: 8 + bottom }]}>
-      <SelecteursFerme annees={annees} annee={annee} onChoisirAnnee={onChoisirAnnee} forme="barre" />
-      <BoutonDidacticiel forme="barre" />
-      <BoutonDeBarre
-        icone={<MaterialCommunityIcons name="sitemap-outline" size={26} color={colors.blanc} />}
-        libelle={T.reglages}
-        onPress={() => router.push(ROUTES.REGLAGES as never)}
-      />
+      <View style={styles.boutons}>
+        <SelecteursFerme annees={annees} annee={annee} onChoisirAnnee={onChoisirAnnee} forme="barre" />
+        <BoutonDidacticiel forme="barre" />
+        <BoutonDeBarre
+          icone={<MaterialCommunityIcons name="sitemap-outline" size={26} color={colors.blanc} />}
+          libelle={T.reglages}
+          onPress={() => router.push(ROUTES.REGLAGES as never)}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Les boutons forment une colonne de largeur limitée, centrée, dans une barre qui remplit la fenêtre.
+  boutons: { ...colonneCentree, flexDirection: 'row', gap: 8 },
   barre: {
-    flexDirection: 'row',
-    gap: 8,
     paddingHorizontal: 12,
     paddingTop: 8,
     backgroundColor: colors.background,

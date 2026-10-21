@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { DecorFromagerie, hauteurDuDecor } from '@/features/accueil/ferme/DecorFromagerie';
@@ -14,6 +14,8 @@ const T = TEXTES.accueil.ferme.transformation;
  */
 export const HAUTEUR_MIN_EXPLOITATION = 260;
 export const HAUTEUR_MIN_TRANSFORMATION = 245;
+/** Ce que la carte garde autour de son contenu : sa marge (10) et son bord (2), des deux côtés. */
+export const MARGES_DE_LA_CARTE = 12;
 /** La taille du mur de la fromagerie sur la carte, par rapport à son dessin d'origine. */
 const ECHELLE_DU_DECOR = 0.5;
 
@@ -74,12 +76,17 @@ export function TransformationFerme({
 }: {
   compte: CompteTransformation;
   onEntrer: () => void;
-  /** Les boutons de ceux qui y interviennent (la laiterie, les clients), en colonne à gauche de la carte. */
-  cote?: ReactNode;
+  /** Les boutons de ceux qui y interviennent (la laiterie, les clients), en colonne à gauche de la carte : elle reçoit la hauteur dont elle dispose. */
+  cote?: (hauteurDisponible?: number) => ReactNode;
 }) {
+  // La hauteur de la carte (variable : elle suit l'écran), moins ses marges et ses bords : le nombre de colonnes de boutons s'y adapte.
+  const [hauteur, setHauteur] = useState<number | undefined>();
   return (
-    <View style={styles.carte}>
-      {cote}
+    <View
+      style={styles.carte}
+      onLayout={(e) => setHauteur(Math.round(e.nativeEvent.layout.height) - 2 * MARGES_DE_LA_CARTE)}
+    >
+      {cote?.(hauteur)}
       <View style={styles.zone}>
         <Pressable
           style={styles.cadre}

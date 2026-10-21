@@ -14,7 +14,11 @@ import { ColonneFerme, type AncreBouton, type EntreeDeColonne } from '@/features
 import { EnclosFerme } from '@/features/accueil/ferme/EnclosFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
-import { HAUTEUR_MIN_EXPLOITATION, TransformationFerme } from '@/features/accueil/ferme/TransformationFerme';
+import {
+  HAUTEUR_MIN_EXPLOITATION,
+  MARGES_DE_LA_CARTE,
+  TransformationFerme,
+} from '@/features/accueil/ferme/TransformationFerme';
 import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
@@ -31,6 +35,7 @@ import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 import { estBureau } from '@/shared/utils/plateforme';
 
@@ -142,6 +147,8 @@ export default function AccueilFerme() {
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
   const [estiveOuverte, setEstiveOuverte] = useState(false);
   const [interieur, setInterieur] = useState<Interieur | null>(null);
+  // La hauteur de la carte de l'exploitation : la colonne de ses intervenants y adapte son nombre de boutons par ligne.
+  const [hauteurExploitation, setHauteurExploitation] = useState<number | undefined>();
   // L'accueil est rouvert par son adresse : la maison (le paramètre change à chaque appui) le montre sur la carte ; la flèche de retour d'une page ouverte
   // depuis un bouton le montre dans l'intérieur où l'on était (« interieur »).
   const { accueil, interieur: interieurDemande } = useLocalSearchParams<{
@@ -298,7 +305,8 @@ export default function AccueilFerme() {
             // Sur le téléphone : les menus qu'on touche rarement sont en haut, loin du pouce ; le bandeau qu'on utilise sans cesse est tout en bas.
             <BarreHauteFerme />
           )}
-          {estBureau() ? null : <NomFerme />}
+          {/* Le nom de l'exploitation (il ouvre le choix de l'établissement) : dans l'exploitation, il est posé sur le mur de la chèvrerie. */}
+          {interieur === 'exploitation' ? null : <NomFerme />}
           <RappelSauvegarde />
         </View>
       </View>
@@ -311,7 +319,7 @@ export default function AccueilFerme() {
         <View key={espece} style={[styles.centre, interieur ? styles.centreInterieur : null]}>
           {interieur === 'exploitation' ? (
             <View style={styles.interieur}>
-              <ChevrerieInterieure vedettes={f.vedettes} />
+              <ChevrerieInterieure vedettes={f.vedettes} nom={<NomFerme />} />
             </View>
           ) : interieur === 'transformation' ? (
             <View style={styles.interieur}>
@@ -319,11 +327,15 @@ export default function AccueilFerme() {
             </View>
           ) : (
             <>
-              <View style={[styles.panneau, f.estive ? styles.panneauEstive : null]}>
+              <View
+                style={[styles.panneau, f.estive ? styles.panneauEstive : null]}
+                onLayout={(e) => setHauteurExploitation(Math.round(e.nativeEvent.layout.height) - 2 * MARGES_DE_LA_CARTE)}
+              >
                 <ColonneFerme
                   entrees={[...surLesBetes, ...demarchesExploitation]}
                   onAppui={surCote}
                   cote
+                  hauteurDisponible={hauteurExploitation}
                   titre={TEXTES.accueil.ferme.intervenants}
                 />
                 <View style={styles.enclos}>
@@ -340,15 +352,15 @@ export default function AccueilFerme() {
               <TransformationFerme
                 compte={f.transformation}
                 onEntrer={() => setInterieur('transformation')}
-                cote={
+                cote={(hauteur) => (
                   <ColonneFerme
                     entrees={[...commerce, ...demarchesTransformation]}
                     onAppui={surCote}
                     cote
-                    deuxColonnes
+                    hauteurDisponible={hauteur}
                     titre={TEXTES.accueil.ferme.intervenants}
                   />
-                }
+                )}
               />
             </>
           )}
@@ -441,12 +453,12 @@ export default function AccueilFerme() {
 const styles = StyleSheet.create({
   racine: { flex: 1, backgroundColor: colors.background },
   haut: { paddingHorizontal: 12, paddingBottom: 8 },
-  colonneHaut: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 8 },
+  colonneHaut: { ...colonneCentree, gap: 8 },
   corps: { flex: 1 },
   // Le corps remplit la hauteur : les deux cartes (exploitation et transformation) se la partagent à parts égales, sans dépasser l'écran.
   corpsContenu: { flexGrow: 1, paddingHorizontal: 10, paddingBottom: 12, gap: 10 },
   // Les six premiers intervenants se partagent la largeur ; les contacts, seuls au bout, ont la part d'un bouton.
-  centre: { flex: 1, gap: 10 },
+  centre: { ...colonneCentree, flex: 1, gap: 10 },
   panneau: {
     flex: 3,
     flexDirection: 'row',
