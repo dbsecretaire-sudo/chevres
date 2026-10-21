@@ -37,9 +37,9 @@ import { estBureau } from '@/shared/utils/plateforme';
 
 const C = TEXTES.accueil.ferme.colonnes;
 const TAILLE_ICONE = 30;
-/** Les symboles qui se baladent sur la plaque du côté Agritourisme : le visiteur, le repas, la dégustation. */
+/** Les symboles qui se baladent sur la plaque du côté Agritourisme : le 4x4, le repas, la dégustation. */
 const SYMBOLES_AGRITOURISME = [
-  { cle: 'visiteur', emoji: '🧳' },
+  { cle: 'quatre-quatre', emoji: '🚙' },
   { cle: 'repas', emoji: '🍽️' },
   { cle: 'fromage', emoji: '🧀' },
 ];

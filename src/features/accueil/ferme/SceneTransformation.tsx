@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { Batiment, type PaletteDeBatiment } from '@/features/accueil/ferme/Batiment';
-import { DecorPiqueNique } from '@/features/accueil/ferme/DecorPiqueNique';
+import { DecorPiqueNique, NuagesBlancs } from '@/features/accueil/ferme/DecorPiqueNique';
 import { HAUTEUR_DE_MAISON, Maison } from '@/features/accueil/ferme/Maison';
 import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
@@ -157,6 +157,7 @@ export function SceneTransformation({
     <View style={styles.scene} onLayout={(e) => setHauteur(Math.round(e.nativeEvent.layout.height))}>
       {/* De l'autre côté de la rue : les intervenants, trois par rangée. */}
       <View style={styles.ville}>
+        {campagne ? <NuagesBlancs /> : null}
         {rangees.map((rangee, i) => (
           <View key={i} style={styles.rangee}>
             {rangee.map((e) => (
