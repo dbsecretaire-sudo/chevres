@@ -172,7 +172,7 @@ export const TEXTES_PRODUCTION = {
       liens: {},
     },
     banque: {
-      titre: 'Banque',
+      titre: 'Banque et comptabilité',
       groupeTiers: 'Banques',
       ajouterTiers: 'Ajouter une banque',
       groupeEcritures: 'Les frais bancaires',

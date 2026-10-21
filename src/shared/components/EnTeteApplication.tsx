@@ -79,12 +79,15 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
       {gauche || droite || titre ? (
         // Le titre n'est pas une seconde bulle sous la capsule : le texte est posé sur la page, avec la flèche et les boutons de l'écran dans de
         // petites pastilles de sa couleur (téléphone comme Windows).
-        <View style={[styles.titreLibre, colonneCentree]}>
-          {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
-          <Text style={[styles.titre, { color: couleur }]} numberOfLines={1}>
-            {titre}
-          </Text>
-          {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
+        // La colonne centrée (largeur maximale) est un conteneur à part : avec des marges sur elle-même, la flèche collait au bord de la fenêtre.
+        <View style={colonneCentree}>
+          <View style={styles.titreLibre}>
+            {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
+            <Text style={[styles.titre, { color: couleur }]} numberOfLines={1}>
+              {titre}
+            </Text>
+            {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
+          </View>
         </View>
       ) : null}
     </View>
@@ -112,7 +115,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginHorizontal: 14,
+    // Comme les cartes de la page (16 de chaque côté).
+    paddingHorizontal: 16,
     marginBottom: 2,
     minHeight: 44,
   },

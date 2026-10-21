@@ -81,7 +81,7 @@ export const TEXTES_ACCUEIL = {
       carburant: 'Pompe à essence',
       garage: 'Garage',
       assurance: 'Assurance',
-      banque: 'Banque',
+      banque: 'Banque et comptabilité',
       groupement: 'Groupement',
       groupementSanitaire: 'Groupement sanitaire',
       emballages: 'Emballages',
