@@ -177,7 +177,11 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter une banque',
       groupeEcritures: 'Les frais bancaires',
       nouvelle: 'Nouveaux frais bancaires',
-      liens: {},
+      liens: {
+        tresorerie: { titre: 'Trésorerie', aide: 'Solde mois par mois, échéancier, emprunts, alertes.' },
+        tva: { titre: 'Pilotage de la TVA', aide: 'La TVA collectée et déductible, par période et par taux.' },
+        comptes: { titre: 'Comptes du plan comptable', aide: 'Les comptes qui rangent vos dépenses et vos recettes.' },
+      },
     },
     groupement: {
       titre: 'Groupement',

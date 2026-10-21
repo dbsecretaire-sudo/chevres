@@ -135,7 +135,12 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.FRAIS_BANCAIRES}`,
-    liens: [],
+    // Ce qu'on regarde avec sa banque : la trésorerie, la TVA et le plan comptable (les mêmes écrans que la Comptabilité).
+    liens: [
+      { cle: 'tresorerie', icone: 'wallet', route: ROUTES.COMPTABILITE_TRESORERIE },
+      { cle: 'tva', icone: 'calculator', route: ROUTES.TVA },
+      { cle: 'comptes', icone: 'list', route: ROUTES.COMPTES_PCG },
+    ],
   },
   // Un groupement n'a pas de dépense propre (cotisation, achat groupé…) : ses écritures sont celles qui portent son nom.
   groupement: {
