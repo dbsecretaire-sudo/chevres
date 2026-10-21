@@ -28,12 +28,12 @@ export const TEXTES_ACCUEIL = {
     /** La scène « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
     transformation: {
       titre: 'Travail du produit',
-      /** Le nom de la fromagerie, sur son toit (le bâtiment de la gestion, de notre côté de la rue). */
-      fromagerie: 'Fromagerie',
+      /** Le nom de l'atelier, sur son toit (le bâtiment de la gestion, de notre côté de la rue). */
+      fromagerie: 'Atelier',
       fromages: (n: number) => `${n} ${n === 1 ? 'fromage' : 'fromages'}`,
       charcuterie: (n: number) => `${n} boucherie/charcuterie`,
       viande: (n: number) => `${n} viande`,
-      entrer: 'Ouvrir le stock de la fromagerie',
+      entrer: 'Ouvrir le stock de l’atelier',
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {

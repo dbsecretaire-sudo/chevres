@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { Batiment, type PaletteDeBatiment } from '@/features/accueil/ferme/Batiment';
-import { DecorFromagerie } from '@/features/accueil/ferme/DecorFromagerie';
 import { HAUTEUR_DE_MAISON, Maison } from '@/features/accueil/ferme/Maison';
 import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
@@ -67,8 +66,10 @@ const PALETTE_FROMAGERIE: PaletteDeBatiment = {
 
 /** Le nombre de maisons par rangée, de l'autre côté de la rue. */
 const PAR_RANGEE = 3;
-/** La hauteur de la rue (avec ce qu'on garde chez soi, au milieu), et celle des trottoirs. */
-const HAUTEUR_DE_LA_RUE = 118;
+/** La hauteur de la rue (étroite : la plaque de ce qu'on garde chez soi la remplit d'un bord à l'autre), et celle des trottoirs. */
+const HAUTEUR_DE_LA_RUE = 88;
+/** Ce qui reste de la rue autour de la plaque blanche. */
+const BORD_DE_LA_RUE = 5;
 const TROTTOIR = 8;
 const MARGE = 8;
 
@@ -120,18 +121,21 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
             <View key={i} style={styles.trait} />
           ))}
         </View>
+        {/* La plaque blanche prend toute la largeur de la rue et toute sa hauteur : le titre et les symboles d'un côté, les trois comptes de l'autre. */}
         <View style={styles.plaque}>
-          <Text style={styles.titre} numberOfLines={1}>
-            {T.titre}
-          </Text>
-          <View style={styles.symboles}>
-            {SYMBOLES.map((s, i) => (
-              <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
-                <Text style={styles.symbole} accessibilityElementsHidden importantForAccessibility="no">
-                  {s.emoji}
-                </Text>
-              </Balade>
-            ))}
+          <View style={styles.entete}>
+            <Text style={styles.titre} numberOfLines={1}>
+              {T.titre}
+            </Text>
+            <View style={styles.symboles}>
+              {SYMBOLES.map((s, i) => (
+                <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
+                  <Text style={styles.symbole} accessibilityElementsHidden importantForAccessibility="no">
+                    {s.emoji}
+                  </Text>
+                </Balade>
+              ))}
+            </View>
           </View>
           <LignesDeTransformation compte={compte} />
         </View>
@@ -143,7 +147,6 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
         <View style={styles.fromagerie}>
           <Batiment
             titre={T.fromagerie}
-            decor={<DecorFromagerie echelle={0.4} />}
             entrees={gestion}
             onAppui={onGestion}
             palette={PALETTE_FROMAGERIE}
@@ -162,28 +165,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 3,
     borderColor: '#A9794A',
-    borderStyle: 'dashed',
     overflow: 'hidden',
   },
   ville: { flex: 1, backgroundColor: '#DCE6EE', paddingHorizontal: MARGE, paddingVertical: MARGE, justifyContent: 'space-between' },
   rangee: { flexDirection: 'row', justifyContent: 'space-around' },
   trottoir: { height: TROTTOIR, backgroundColor: '#C9CCCF' },
-  rue: { height: HAUTEUR_DE_LA_RUE, backgroundColor: '#7C858C', alignItems: 'center', justifyContent: 'center' },
+  rue: { height: HAUTEUR_DE_LA_RUE, backgroundColor: '#7C858C', padding: BORD_DE_LA_RUE },
   traits: { position: 'absolute', left: 0, right: 0, top: HAUTEUR_DE_LA_RUE / 2 - 2, flexDirection: 'row', justifyContent: 'space-around' },
   trait: { width: 14, height: 4, backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 2 },
   plaque: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    borderRadius: 14,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+    justifyContent: 'space-around',
+    gap: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
   },
+  entete: { alignItems: 'center', gap: 4 },
   symboles: { flexDirection: 'row', gap: 14 },
   symbole: { fontSize: 24 },
   titre: { fontSize: 13, fontWeight: '800', color: colors.primaryDark, textAlign: 'center' },
-  lignes: { alignItems: 'center', gap: 1 },
-  ligne: { fontSize: 12, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
+  lignes: { alignItems: 'flex-start', gap: 2, flexShrink: 1 },
+  ligne: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
   notreCote: { justifyContent: 'flex-end', padding: MARGE, paddingTop: MARGE },
   fromagerie: { alignSelf: 'stretch' },
   carrelage: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
