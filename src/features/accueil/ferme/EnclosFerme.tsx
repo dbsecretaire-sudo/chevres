@@ -30,10 +30,11 @@ interface Props {
   naissances?: number;
   /** Le troupeau est à l'estive : le décor passe de l'enclos à la montagne (sa zone, sa date de descente). */
   estive?: { zone?: string; descente?: string };
-  /** Un appui sur l'enclos : la carte ouvre ses bulles d'actions (puis le menu du cheptel). */
+  /** Un appui sur l'enclos : la page du cheptel. */
   onAppui: () => void;
-  /** Le petit bouton « porte » de l'enclos : entrer dans la chèvrerie (un autre décor). */
-  onEntrer: () => void;
+  /** De quoi laisser la place des colonnes de boutons posées sur la scène, à gauche et à droite. */
+  margeGauche?: number;
+  margeDroite?: number;
 }
 
 /** Le dessin de l'espèce de l'établissement (la tête de chaque animal de la liste de la chèvrerie). */
@@ -68,11 +69,23 @@ function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
  * troupeau, et l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui fait sortir les bulles du cheptel ; la petite
  * porte entre dans la chèvrerie.
  */
-export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onAppui, onEntrer }: Props) {
+export function EnclosFerme({
+  vedettes,
+  nombreAnimaux,
+  naissances,
+  estive,
+  onAppui,
+  margeGauche = 0,
+  margeDroite = 0,
+}: Props) {
   return (
     <View style={styles.conteneur}>
       <Pressable
-        style={[styles.enclos, estive ? styles.montagne : null]}
+        style={[
+          styles.enclos,
+          estive ? styles.montagne : null,
+          { paddingLeft: 14 + margeGauche, paddingRight: 14 + margeDroite },
+        ]}
         onPress={onAppui}
         accessibilityRole="button"
         accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos}
@@ -99,35 +112,12 @@ export function EnclosFerme({ vedettes, nombreAnimaux, naissances, estive, onApp
           {naissances ? ` · ${T.nes(naissances)}` : ''}
         </Text>
       </Pressable>
-      <Pressable
-        style={styles.porte}
-        onPress={onEntrer}
-        accessibilityRole="button"
-        accessibilityLabel={TEXTES.accueil.ferme.chevrerie.entrer}
-        hitSlop={6}
-      >
-        <Text style={styles.porteEmoji}>🚪</Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   conteneur: { flex: 1 },
-  porte: {
-    position: 'absolute',
-    right: -10,
-    bottom: -10,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.blanc,
-    borderWidth: 2,
-    borderColor: '#A9794A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  porteEmoji: { fontSize: 24 },
   enclos: {
     flex: 1,
     backgroundColor: '#D9E8BE',

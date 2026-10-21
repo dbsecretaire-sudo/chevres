@@ -48,9 +48,9 @@ interface Props {
   onAppui: (cle: string, ancre: AncreBouton) => void;
 }
 
-const LARGEUR_BOUTON_COTE = 48;
+export const LARGEUR_BOUTON_COTE = 48;
 const HAUTEUR_BOUTON_COTE = 47;
-const ECART_COTE = 8;
+export const ECART_COTE = 8;
 const HAUTEUR_TITRE_COTE = 25;
 
 /**
@@ -256,3 +256,7 @@ const styles = StyleSheet.create({
   },
   pastilleTexte: { color: colors.blanc, fontSize: 12, fontWeight: '800' },
 });
+
+/** La largeur d'une colonne de boutons sur le côté d'une scène, selon son nombre de boutons par ligne. */
+export const largeurDeLaColonneCote = (colonnes: number): number =>
+  colonnes * LARGEUR_BOUTON_COTE + (colonnes - 1) * ECART_COTE + 4;

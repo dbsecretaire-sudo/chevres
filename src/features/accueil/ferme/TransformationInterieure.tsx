@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Carrelage } from '@/features/accueil/ferme/TransformationFerme';
+import { Carrelage } from '@/features/accueil/ferme/SceneTransformation';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { ROUTES } from '@/shared/constants/routes';
@@ -31,7 +31,7 @@ export function TransformationInterieure() {
   const materiel = (immobilisations ? (groupesParCategorie.get(immobilisations.categorie) ?? []) : []).filter(
     (g) => g.cle === SECTION_STOCK.EQUIPEMENT,
   );
-  const origine = ROUTES.retourAccueil('transformation');
+  const origine = ROUTES.lieu('fromagerie');
   const ouvrirConditionnement = () => {
     noterOrigine(origine, ROUTES.COMPTABILITE_CONDITIONNEMENT);
     router.push(ROUTES.COMPTABILITE_CONDITIONNEMENT as never);

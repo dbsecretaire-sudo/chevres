@@ -63,9 +63,11 @@ export default function ProductionLayout() {
               ? TEXTES.production.lieux[lieu].titre
               : lieu === 'grange'
                 ? TEXTES.production.lieux.entrepot.grange
-                : TEXTES.production.titre,
+                : lieu === 'fromagerie'
+                  ? TEXTES.production.lieux.fromagerie.titre
+                  : TEXTES.production.titre,
             headerLeft: enteteDuBatiment(),
-            // La grange a le bandeau habituel de la ferme à la place de l'en-tête.
+            // La grange a la capsule de la ferme à la place de l'en-tête.
             headerShown: lieu !== 'grange',
           };
         }}

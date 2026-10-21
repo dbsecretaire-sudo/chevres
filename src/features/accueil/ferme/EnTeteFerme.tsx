@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
+import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
 import { estBureau } from '@/shared/utils/plateforme';
 
@@ -17,7 +18,8 @@ export function EnTeteFerme() {
     <>
       <View style={[styles.haut, estBureau() ? null : { paddingTop: 12 + top }]}>
         <View style={styles.colonne}>
-          <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+          {/* Sur le téléphone, la capsule du haut (comme sur toutes les pages) ; sous Windows, le bandeau. */}
+          {estBureau() ? <BandeauFerme onRappels={() => setRappelsOuverts(true)} /> : <BarreHauteFerme />}
         </View>
       </View>
       <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
@@ -27,5 +29,5 @@ export function EnTeteFerme() {
 
 const styles = StyleSheet.create({
   haut: { paddingHorizontal: 12, paddingBottom: 8 },
-  colonne: { width: '100%', maxWidth: 760, alignSelf: 'center' },
+  colonne: { width: '100%', maxWidth: 600, alignSelf: 'center' },
 });

@@ -203,6 +203,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: NOUVELLE,
     liens: [
+      { cle: 'liste', icone: 'list', route: ROUTES.CHEPTEL_LISTE },
       { cle: 'lots', icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
       { cle: 'male', icone: 'male', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.MALE}` },
       { cle: 'femelle', icone: 'female', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.FEMELLE}` },

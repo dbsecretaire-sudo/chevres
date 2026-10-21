@@ -202,9 +202,12 @@ export const TEXTES_PRODUCTION = {
         },
       },
     },
+    /** La page du stock de la fromagerie (les cartes de ce qu'on y fabrique et garde) : un titre seulement. */
+    fromagerie: { titre: 'Stock de la fromagerie' },
     cheptel: {
       titre: 'Cheptel',
       liens: {
+        liste: { titre: 'Tous les animaux', aide: 'La liste du troupeau, avec sa recherche et ses filtres.' },
         lots: { titre: 'Lots d’animaux', aide: 'Les lots : vétérinaire, abattoir, vente…' },
         get male() {
           return { titre: `Nouveau ${V().male.singulier}`, aide: 'Ajouter un mâle au troupeau.' };

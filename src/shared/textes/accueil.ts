@@ -21,18 +21,17 @@ export const TEXTES_ACCUEIL = {
       boucles: 'Boucles posées sur les animaux vivants (le badge : les tiptag)',
       rappels: 'Rappels à valider',
     },
-    /** Le titre du panneau des personnes et entreprises (les intervenants) sur le côté des cartes. */
+    /** Le titre de la colonne des personnes et entreprises (les intervenants), à gauche de la scène. */
     intervenants: 'Intervenants',
-    /** La carte « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
+    /** Le titre de la colonne des rubriques de l'application, à droite de la scène. */
+    gestion: 'Gestion',
+    /** La scène « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */
     transformation: {
       titre: 'Travail du produit',
       fromages: (n: number) => `${n} ${n === 1 ? 'fromage' : 'fromages'}`,
       charcuterie: (n: number) => `${n} boucherie/charcuterie`,
       viande: (n: number) => `${n} viande`,
-      entrer: 'Entrer dans le travail du produit',
-    },
-    chevrerie: {
-      entrer: 'Entrer dans l’exploitation',
+      entrer: 'Ouvrir le stock de la fromagerie',
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
