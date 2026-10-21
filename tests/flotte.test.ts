@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  categorieAvecVehicule,
   enregistrerVehicule,
   libelleVehicule,
   normaliserPlaque,
@@ -40,5 +41,20 @@ describe('la flotte', () => {
   it('le libellé : la plaque, puis la marque et le modèle', () => {
     expect(libelleVehicule({ ...v('a', 'AA-111-AA'), marque: 'Toyota', modele: 'Hilux' })).toBe('AA-111-AA · Toyota Hilux');
     expect(libelleVehicule(v('a', 'AA-111-AA'))).toBe('AA-111-AA');
+  });
+});
+
+describe('les écritures qui se lient à un véhicule', () => {
+  it('une réparation, une assurance dont l’objet est un véhicule, l’indemnité de l’assurance', () => {
+    expect(categorieAvecVehicule('reparation')).toBe(true);
+    expect(categorieAvecVehicule('assurances', undefined, 'vehicule')).toBe(true);
+    expect(categorieAvecVehicule(undefined, 'assurance_vehicule')).toBe(true);
+  });
+
+  it('une assurance des bâtiments ou des animaux, ou sans objet, ne demande pas de véhicule', () => {
+    expect(categorieAvecVehicule('assurances', undefined, 'batiments')).toBe(false);
+    expect(categorieAvecVehicule('assurances', undefined, 'animaux')).toBe(false);
+    expect(categorieAvecVehicule('assurances')).toBe(false);
+    expect(categorieAvecVehicule('alimentation')).toBe(false);
   });
 });

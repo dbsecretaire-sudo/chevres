@@ -150,6 +150,8 @@ export interface SaisieEcriture {
   atelier?: string;
   /** Le véhicule de la flotte d'une réparation ou d'une assurance (vide : aucun). */
   vehiculeId?: string;
+  /** Ce qu'une assurance couvre (vide : non précisé). */
+  objetAssurance?: string;
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   elementAgri?: string;
   /** Le paiement n'a pas encore eu lieu (faux : payée à la date de l'écriture), et sa date prévue. */
@@ -447,7 +449,16 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
           : undefined,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
       atelier: estRecue && s.atelier ? s.atelier : undefined,
-      vehiculeId: s.vehiculeId && categorieAvecVehicule(estRecue ? s.categorieDepense : undefined, estEmise ? s.categorieRecette : undefined) ? s.vehiculeId : undefined,
+      vehiculeId:
+        s.vehiculeId &&
+        categorieAvecVehicule(
+          estRecue ? s.categorieDepense : undefined,
+          estEmise ? s.categorieRecette : undefined,
+          s.objetAssurance,
+        )
+          ? s.vehiculeId
+          : undefined,
+      objetAssurance: estRecue && s.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES && s.objetAssurance ? s.objetAssurance : undefined,
       elementAgri:
         estRecue && s.atelier === ATELIER.AGRITOURISME && s.elementAgri ? s.elementAgri : undefined,
       payee: s.enAttente ? false : undefined,

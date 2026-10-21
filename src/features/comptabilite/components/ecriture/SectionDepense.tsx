@@ -49,6 +49,8 @@ import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
+import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
+import { OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';
@@ -321,7 +323,18 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
           />
         )}
         {/* Une réparation ou une prime d'assurance : le véhicule de la flotte, par sa plaque. */}
-        {categorieAvecVehicule(e.categorieDepense) ? <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} /> : null}
+        {e.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES ? (
+          <ChampObjetAssurance
+            value={e.objetAssurance}
+            onChange={(objet) => {
+              e.setObjetAssurance(objet);
+              if (objet !== OBJET_ASSURANCE.VEHICULE) e.setVehiculeId('');
+            }}
+          />
+        ) : null}
+        {categorieAvecVehicule(e.categorieDepense, undefined, e.objetAssurance) ? (
+          <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} />
+        ) : null}
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (

@@ -14,6 +14,7 @@ import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/d
 import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_CATEGORIE_DEPENSE,
+  LABEL_OBJET_ASSURANCE,
   LABEL_RUBRIQUE_MARCHANDISE,
   LABEL_NATURE_URSSAF,
   LABEL_TYPE_AIDE,
@@ -117,6 +118,11 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.categorieDeDepenseDeuxPoints}
           {LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
+        </Text>
+      ) : null}
+      {facture.objetAssurance ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.flotte.objetAssurance.label} : {LABEL_OBJET_ASSURANCE[facture.objetAssurance as keyof typeof LABEL_OBJET_ASSURANCE] ?? facture.objetAssurance}
         </Text>
       ) : null}
       {vehicule ? (

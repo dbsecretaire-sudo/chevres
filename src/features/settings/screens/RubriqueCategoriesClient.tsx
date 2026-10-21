@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
+import { contientTexte } from '@/shared/utils/recherche';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -74,7 +76,9 @@ export default function RubriqueCategoriesClient() {
   const groupesProposes = groupesRecetteProposes();
   const [aRetirer, setARetirer] = useState<string | null>(null);
   /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
-  const [parOption, setParOption] = useState(true);
+  const [parOption, setParOption] = useState(false);
+  /** Ce qu'on cherche dans les catégories (leur nom) : la liste ne garde que celles qui le contiennent. */
+  const [recherche, setRecherche] = useState('');
   /** Les rubriques de l'inventaire et leurs listes : les opérations (vente, achat) se règlent liste par liste (élevage ; une entreprise garde sa liste). */
   const [rubriques, setRubriques] = useState<RubriqueOperations[]>([]);
   useEffect(() => {
@@ -113,6 +117,9 @@ export default function RubriqueCategoriesClient() {
     maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops.filter(estUneVente)), ...autres])] });
   };
 
+  /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
+  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
+
   return (
     <Screen>
       <Text style={styles.aide}>{T.aide}</Text>
@@ -122,10 +129,11 @@ export default function RubriqueCategoriesClient() {
         libelleParCategorie={T.parCategorie}
         libelleParOption={T.parOption}
       />
+      <ChampRecherche value={recherche} onChangeText={setRecherche} />
       {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
       {parOption ? (
         <ReglagesParOption
-          categories={parNom(categories)}
+          categories={visibles}
           groupes={[
             {
               titre: T.dansLesVentes,
@@ -191,7 +199,7 @@ export default function RubriqueCategoriesClient() {
           ]}
         />
       ) : null}
-      {(parOption ? [] : parNom(categories)).map((c) => {
+      {(parOption ? [] : visibles).map((c) => {
         const recettes = groupesRecetteDeLaCategorie(c);
         return (
           <SectionDeroulante

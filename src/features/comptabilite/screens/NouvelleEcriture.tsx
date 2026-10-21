@@ -33,7 +33,7 @@ import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { estUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { CategorieDepense, CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
-import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, OBJET_ASSURANCE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
@@ -75,6 +75,8 @@ export default function NouvelleFacture() {
     lot?: string;
     /** Le contact (fournisseur) choisi d'office : l'abattoir du lot. */
     fournisseur?: string;
+    /** Ce qu'une assurance couvre, choisi d'office (« vehicule », depuis la fiche d'un véhicule). */
+    objet?: string;
     /** Le véhicule de la flotte choisi d'office (depuis sa fiche : une réparation, une prime d'assurance). */
     vehicule?: string;
     /** « 1 » : le premier contact de catégorie Abattoir est choisi d'office (amener des animaux à l'abattoir : « Suivant » mène au choix des animaux). */
@@ -130,6 +132,7 @@ export default function NouvelleFacture() {
   if (params.vehicule && !vehiculeVu) {
     setVehiculeVu(true);
     e.setVehiculeId(params.vehicule);
+    if (params.objet && (Object.values(OBJET_ASSURANCE) as string[]).includes(params.objet)) e.setObjetAssurance(params.objet);
   }
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);

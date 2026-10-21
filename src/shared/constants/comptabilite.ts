@@ -8,13 +8,20 @@ export const TYPE_FACTURE = {
   EMISE: 'emise',
 } as const;
 
+/** Ce qu'une facture d'assurance couvre : les bâtiments, les animaux ou un véhicule de la flotte (dont on choisit alors la plaque). */
+export const OBJET_ASSURANCE = {
+  BATIMENTS: 'batiments',
+  ANIMAUX: 'animaux',
+  VEHICULE: 'vehicule',
+} as const;
+
 /** Catégorie de dépense pour une facture reçue (achat). */
 export const CATEGORIE_DEPENSE = {
   ALIMENTATION: 'alimentation',
   CARBURANT: 'carburant',
   REPARATION: 'reparation',
   VETERINAIRE: 'veterinaire',
-  /** La prime d'assurance d'un véhicule de la flotte : elle se lie à son véhicule. */
+  /** Ancienne catégorie : la prime d'un véhicule s'enregistre maintenant en « Assurances », avec l'objet « Véhicule » (voir OBJET_ASSURANCE). Les écritures déjà saisies restent lisibles. */
   ASSURANCE_VEHICULE: 'assurance_vehicule',
   /** Les analyses d'un laboratoire (lait, prophylaxie…). */
   ANALYSES_LABORATOIRE: 'analyses_laboratoire',
@@ -306,7 +313,6 @@ export const ORDRE_CATEGORIE_DEPENSE = [
   CATEGORIE_DEPENSE.REPARATION,
   CATEGORIE_DEPENSE.VETERINAIRE,
   CATEGORIE_DEPENSE.ANALYSES_LABORATOIRE,
-  CATEGORIE_DEPENSE.ASSURANCE_VEHICULE,
   CATEGORIE_DEPENSE.PRODUCTION,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE,

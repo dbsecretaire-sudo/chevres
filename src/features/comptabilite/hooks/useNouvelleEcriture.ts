@@ -169,6 +169,8 @@ export function useNouvelleEcriture(
   const [atelier, setAtelier] = useState('');
   /** Le véhicule de la flotte d'une réparation ou d'une assurance (vide : aucun). */
   const [vehiculeId, setVehiculeId] = useState('');
+  /** Ce qu'une assurance couvre (vide : non précisé). */
+  const [objetAssurance, setObjetAssurance] = useState('');
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   const [elementAgri, setElementAgri] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
@@ -687,6 +689,7 @@ export function useNouvelleEcriture(
         echeance,
         atelier,
         vehiculeId,
+        objetAssurance,
         elementAgri,
         reajustement,
         offert: offertCoche && estProductionVente,
@@ -949,6 +952,8 @@ export function useNouvelleEcriture(
     setAtelier,
     vehiculeId,
     setVehiculeId,
+    objetAssurance,
+    setObjetAssurance,
     elementAgri,
     setElementAgri,
     clientSelectionne,

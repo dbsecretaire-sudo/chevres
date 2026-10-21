@@ -61,7 +61,7 @@ export const TEXTES_FLOTTE = {
   supprimerMessage: 'Ses écritures gardent leur lien. Pour ne plus le proposer, mieux vaut le passer inactif.',
   assurance: {
     aide: 'Les primes d’assurance de ce véhicule et ce que l’assurance a versé, liées par leur écriture comptable.',
-    nouvellePrime: 'Nouvelle prime d’assurance',
+    nouvellePrime: 'Nouvelle assurance du véhicule',
     nouvelleIndemnite: 'Indemnité reçue de l’assurance',
     aucune: 'Aucune écriture d’assurance pour ce véhicule.',
   },
@@ -69,6 +69,11 @@ export const TEXTES_FLOTTE = {
     aide: 'Les réparations de ce véhicule, liées par leur écriture comptable.',
     nouvelle: 'Nouvelle réparation',
     aucune: 'Aucune réparation pour ce véhicule.',
+  },
+  objetAssurance: {
+    label: 'Assurance de',
+    aucun: 'Non précisé',
+    aide: 'Ce que la facture couvre : choisir « Véhicule » permet d’indiquer la plaque.',
   },
   total: (montant: string) => `Total : ${montant}`,
   champ: {

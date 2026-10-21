@@ -2,6 +2,7 @@ import { Text } from 'react-native';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
+import { comparerAlphabetique } from '@/shared/utils/personne';
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import type { FormulaireContact } from '@/features/contacts/services/fiche';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -35,7 +36,10 @@ export function FormulaireContactChamps({ form, onChange, categories }: Props) {
         value={form.categorie}
         placeholder={T.choisirCategorie}
         onChange={(categorie) => maj({ categorie })}
-        options={categories.map((c) => ({ value: c.id, label: c.nom }))}
+        options={[...categories]
+          .sort((a, b) => comparerAlphabetique(a.nom, b.nom))
+          .map((c) => ({ value: c.id, label: c.nom }))}
+        searchable
         aide={T.aideCategorie}
       />
       {/* Un contact qui reçoit des recettes a son circuit de vente privilégié : ses ventes, ses réservations et ses commandes le reprennent. */}
