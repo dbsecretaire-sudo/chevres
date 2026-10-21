@@ -10,7 +10,7 @@ import { BarreBasseFerme } from '@/features/accueil/ferme/BarreBasseFerme';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { BasculeFerme, type CoteDeLaFerme } from '@/features/accueil/ferme/BasculeFerme';
 import { BullesLieu } from '@/features/accueil/ferme/BullesLieu';
-import { lireDernierCote, noterDernierCote } from '@/features/accueil/ferme/dernierCote';
+import { coteVoisin, estUnCote, lireDernierCote, noterDernierCote } from '@/features/accueil/ferme/dernierCote';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
 import { SceneExploitation } from '@/features/accueil/ferme/SceneExploitation';
@@ -32,10 +32,17 @@ import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
+import { formatMontant } from '@/shared/utils/dates';
 import { estBureau } from '@/shared/utils/plateforme';
 
 const C = TEXTES.accueil.ferme.colonnes;
 const TAILLE_ICONE = 30;
+/** Les symboles qui se baladent sur la plaque du côté Agritourisme : le visiteur, le repas, la dégustation. */
+const SYMBOLES_AGRITOURISME = [
+  { cle: 'visiteur', emoji: '🧳' },
+  { cle: 'repas', emoji: '🍽️' },
+  { cle: 'fromage', emoji: '🧀' },
+];
 /** Le diamètre du disque qui reste éclairé quand on touche un compartiment. */
 const DIAMETRE_ECLAIRE = 52;
 /** Les couleurs des lieux : un achat est bordeaux, une vente (une recette) est verte (la couleur de la ferme), une démarche est orange. */
@@ -78,6 +85,17 @@ const ROUTE_DIRECTE: Record<string, string> = {
   rappelsLots: ROUTES.PRODUCTION_RAPPELS_LOTS,
   reserver: ROUTES.COMMERCIAL_COMMANDE,
   stockFromagerie: ROUTES.lieu('fromagerie'),
+  // Le côté Agritourisme : les intervenants (visiteurs, groupes, office de tourisme, repas) et les pages de la gestion (visites, formules, tarifs, ventes, rentabilité).
+  visiteurs: ROUTES.lieu('visiteurs'),
+  groupesVisiteurs: ROUTES.lieu('groupesVisiteurs'),
+  tourisme: ROUTES.lieu('tourisme'),
+  repas: ROUTES.lieu('repas'),
+  nouvelleVisite: ROUTES.COMMERCIAL_VISITE,
+  visites: ROUTES.COMMERCIAL_AGRITOURISME,
+  formules: ROUTES.COMMERCIAL_FORMULES,
+  tarifs: ROUTES.COMMERCIAL_TARIFS,
+  ventesAgritourisme: ROUTES.COMMERCIAL_VENTES,
+  rentabilite: ROUTES.RENTABILITE,
 };
 
 /** Le côté de la ferme montré : l'exploitation (le troupeau) ou le travail du produit (la fromagerie). */
@@ -155,7 +173,7 @@ export default function AccueilFerme() {
   const [cleVue, setCleVue] = useState(cleAccueil);
   if (cleAccueil !== cleVue) {
     setCleVue(cleAccueil);
-    if (coteDemande === 'exploitation' || coteDemande === 'transformation') {
+    if (estUnCote(coteDemande)) {
       noterDernierCote(coteDemande);
       setCote(coteDemande);
     }
@@ -168,21 +186,17 @@ export default function AccueilFerme() {
   };
   const jour = useFenetreDuJour(f.minuteurs, f.stats !== null);
 
-  // Un balayage de la scène change de côté : vers la gauche, le travail du produit ; vers la droite, l'exploitation.
+  // Un balayage de la scène change de côté : vers la gauche, le suivant (exploitation, atelier, agritourisme) ; vers la droite, le précédent.
   const balayage = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponderCapture: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > 2 * Math.abs(g.dy),
         onPanResponderRelease: (_, g) => {
-          if (g.dx < -50) {
-            noterDernierCote('transformation');
-            setCote('transformation');
-            setMenu(null);
-          } else if (g.dx > 50) {
-            noterDernierCote('exploitation');
-            setCote('exploitation');
-            setMenu(null);
-          }
+          if (Math.abs(g.dx) <= 50) return;
+          const voisin = coteVoisin(lireDernierCote(), g.dx < 0 ? 1 : -1);
+          noterDernierCote(voisin);
+          setCote(voisin);
+          setMenu(null);
         },
       }),
     [],
@@ -249,12 +263,35 @@ export default function AccueilFerme() {
     { cle: 'fabriquerCharcuterie', titre: C.fabriquerCharcuterie, icone: iconeMCI('knife'), couleur: VENTE },
     { cle: 'fabriquerFromage', titre: C.fabriquerFromage, icone: iconeMCI('pot-mix'), couleur: VENTE },
   ];
-  // La colonne est tout en bas de la scène, sous le pouce : les plus utilisés (l'abattoir, le vétérinaire ; la laiterie, les particuliers), qui
-  // ouvrent chaque liste, sont donc rangés en dernier.
-  const intervenants = (cote === 'exploitation' ? intervenantsExploitation : intervenantsTransformation)
+  // Le côté Agritourisme : ceux qui viennent (les visiteurs, leurs groupes), ceux qui les envoient (l'office de tourisme) et ceux qui fournissent le repas.
+  const intervenantsAgritourisme: EntreeDeColonne[] = [
+    { cle: 'visiteurs', titre: C.visiteurs, icone: iconeMCI('hiking'), couleur: VENTE },
+    { cle: 'groupesVisiteurs', titre: C.groupesVisiteurs, icone: iconeMCI('bus'), couleur: VENTE },
+    { cle: 'repas', titre: C.repas, icone: iconeMCI('silverware-fork-knife'), couleur: ACHAT },
+    { cle: 'tourisme', titre: C.tourisme, icone: iconeIon('compass'), couleur: ACHAT },
+  ];
+  // En bas de l'agritourisme : l'accueil des visiteurs, dont les compartiments sont les pages qui existent déjà (visites, formules, tarifs, ventes, rentabilité).
+  const gestionAgritourisme: EntreeDeColonne[] = [
+    { cle: 'nouvelleVisite', titre: C.nouvelleVisite, icone: iconeIon('add-circle'), couleur: VENTE },
+    { cle: 'visites', titre: C.visites, icone: iconeIon('trail-sign'), couleur: VENTE },
+    { cle: 'formules', titre: C.formules, icone: iconeIon('list'), couleur: VENTE },
+    { cle: 'tarifs', titre: C.tarifs, icone: iconeIon('pricetag'), couleur: VENTE },
+    { cle: 'ventesAgritourisme', titre: C.ventesAgritourisme, icone: iconeIon('cash'), couleur: VENTE },
+    { cle: 'rentabilite', titre: C.rentabilite, icone: iconeIon('stats-chart'), couleur: VENTE },
+  ];
+  // La colonne est tout en bas de la scène, sous le pouce : les plus utilisés (l'abattoir, le vétérinaire ; la laiterie, les particuliers ; les
+  // visiteurs), qui ouvrent chaque liste, sont donc rangés en dernier.
+  const intervenants = (
+    cote === 'exploitation'
+      ? intervenantsExploitation
+      : cote === 'transformation'
+        ? intervenantsTransformation
+        : intervenantsAgritourisme
+  )
     .slice()
     .reverse();
-  const gestion = cote === 'exploitation' ? gestionExploitation : gestionTransformation;
+  const gestion =
+    cote === 'exploitation' ? gestionExploitation : cote === 'transformation' ? gestionTransformation : gestionAgritourisme;
 
   /** Ouvre le menu d'un compartiment à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
   const ouvrirMenu = (cible: CibleDesBulles, ancre: AncreBouton, entree: EntreeDeColonne) => {
@@ -290,7 +327,7 @@ export default function AccueilFerme() {
     if (cle === 'estive') setEstiveOuverte(true);
     else if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
     else {
-      const entree = [...gestionExploitation, ...gestionTransformation].find((e) => e.cle === cle);
+      const entree = [...gestionExploitation, ...gestionTransformation, ...gestionAgritourisme].find((e) => e.cle === cle);
       if (entree) ouvrirMenu(cle as CibleDesBulles, ancre, entree);
     }
   };
@@ -341,6 +378,26 @@ export default function AccueilFerme() {
               onMaison={surMaison}
               onGestion={surGestion}
             />
+          ) : cote === 'agritourisme' ? (
+            // La même scène que l'atelier (une rue étroite, une plaque blanche, un bâtiment de gestion), avec les comptes de l'agritourisme.
+            <SceneTransformation
+              plaque={{
+                titre: TEXTES.accueil.ferme.agritourisme.titre,
+                symboles: SYMBOLES_AGRITOURISME,
+                lignes: [
+                  { cle: 'aVenir', texte: TEXTES.accueil.ferme.agritourisme.visitesAVenir(f.agritourisme.aVenir) },
+                  { cle: 'visiteurs', texte: TEXTES.accueil.ferme.agritourisme.visiteurs(f.agritourisme.visiteurs) },
+                  { cle: 'recettes', texte: TEXTES.accueil.ferme.agritourisme.recettes(formatMontant(f.agritourisme.recettes)) },
+                ],
+              }}
+              nomBatiment={TEXTES.accueil.ferme.agritourisme.batiment}
+              entrer={TEXTES.accueil.ferme.agritourisme.entrer}
+              onAppui={() => ouvrir(ROUTES.COMMERCIAL_AGRITOURISME)}
+              intervenants={intervenants}
+              gestion={gestion}
+              onMaison={surMaison}
+              onGestion={surGestion}
+            />
           ) : (
             <SceneTransformation
               compte={f.transformation}
@@ -356,7 +413,8 @@ export default function AccueilFerme() {
       <BasculeFerme
         cotes={[
           { cle: 'exploitation', titre: TEXTES.accueil.ferme.zones.enclos },
-          { cle: 'transformation', titre: TEXTES.accueil.ferme.transformation.titre },
+          { cle: 'transformation', titre: TEXTES.accueil.ferme.transformation.pastille },
+          { cle: 'agritourisme', titre: TEXTES.accueil.ferme.agritourisme.titre },
         ]}
         actif={cote}
         onChoisir={choisirCote}

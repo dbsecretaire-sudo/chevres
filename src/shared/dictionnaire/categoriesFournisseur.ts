@@ -53,6 +53,8 @@ export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] 
     CATEGORIE_FOURNISSEUR.ASSUREUR,
     CATEGORIE_FOURNISSEUR.BANQUE,
     CATEGORIE_FOURNISSEUR.EMBALLAGES,
+    CATEGORIE_FOURNISSEUR.TOURISME,
+    CATEGORIE_FOURNISSEUR.REPAS,
   ].map((id) => ({
     id,
     nom: LABEL_CATEGORIE_FOURNISSEUR[id],

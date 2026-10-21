@@ -46,6 +46,11 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
           texte: 'En haut, choisissez l’année et l’espèce : tout l’écran, et la plupart des listes de l’application, suivent ce choix.',
         },
         {
+          id: 'accueil.cotes',
+          titre: 'Les trois côtés de la ferme',
+          texte: 'Trois pastilles en bas : Exploitation (le troupeau et ses intervenants), Atelier (le travail du produit : fromages, charcuterie, viande) et Agritourisme (les visiteurs, leurs visites et leurs formules). Touchez une pastille, ou balayez la scène vers la gauche ou la droite.',
+        },
+        {
           id: 'accueil.rappels',
           titre: 'Rappels',
           texte: 'Les déclarations à valider (RSA, URSSAF), les lots à rappeler, les documents de circulation manquants et ceux à envoyer à la chambre d’agriculture (à valider une fois envoyés). Le crayon règle les rappels, l’horloge montre ceux déjà validés.',
@@ -138,8 +143,8 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
         { id: 'commercial.ventes', titre: commercial.ventes.titre, texte: commercial.ventes.aide, chemin: 'Commercial', route: ROUTES.COMMERCIAL_VENTES },
         { id: 'commercial.tarifs', titre: commercial.tarifs.titre, texte: commercial.tarifs.aide, chemin: 'Commercial', route: ROUTES.COMMERCIAL_TARIFS },
         { id: 'commercial.commandes', titre: commercial.commandes.titre, texte: `${commercial.commandes.aide} Un seul bon de commande reste ouvert par client : les animaux et produits réservés s’y rangent, puis la facturation le passe en terminé.`, chemin: 'Commercial', route: ROUTES.COMMERCIAL_COMMANDES },
-        { id: 'commercial.visites', titre: commercial.visitesAgri.titre, texte: commercial.visitesAgri.aide, chemin: 'Commercial', route: ROUTES.COMMERCIAL_AGRITOURISME },
-        { id: 'commercial.formules', titre: commercial.formulesAgri.titre, texte: commercial.formulesAgri.aide, chemin: 'Commercial', route: ROUTES.COMMERCIAL_FORMULES },
+        { id: 'commercial.visites', titre: commercial.visitesAgri.titre, texte: commercial.visitesAgri.aide, chemin: 'Accueil › Agritourisme › Visites', route: ROUTES.COMMERCIAL_AGRITOURISME },
+        { id: 'commercial.formules', titre: commercial.formulesAgri.titre, texte: commercial.formulesAgri.aide, chemin: 'Accueil › Agritourisme › Formules', route: ROUTES.COMMERCIAL_FORMULES },
         { id: 'commercial.circuits', titre: commercial.circuits.titre, texte: 'Le circuit par lequel un produit est vendu (vente à la ferme, abattoir…) ; il est obligatoire pour une vente de production.', chemin: 'Commercial', route: ROUTES.COMMERCIAL_CIRCUITS },
         { id: 'commercial.reserver', titre: 'Réserver pour un client', texte: 'Un animal, un fromage ou une charcuterie se réserve pour un client depuis son inventaire ; la réservation rejoint le bon de commande du client et se facture d’un appui.', chemin: 'Production › Viande › À vendre' },
       ],

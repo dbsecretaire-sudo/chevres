@@ -74,6 +74,14 @@ export const categoriesClientParDefaut = (): CategorieClientReglage[] => [
     declaree: true,
     prixLibre: false,
   },
+  // L'agritourisme : un visiteur est un particulier (rien à déclarer) ; un groupe, une structure (facturée, déclarée).
+  { id: CATEGORIE_CLIENT.VISITEUR, nom: LABEL_CATEGORIE_CLIENT.visiteur, declaree: false, prixLibre: false },
+  {
+    id: CATEGORIE_CLIENT.GROUPE_VISITEURS,
+    nom: LABEL_CATEGORIE_CLIENT.groupe_visiteurs,
+    declaree: true,
+    prixLibre: false,
+  },
 ];
 
 let liste: CategorieClientReglage[] = categoriesClientParDefaut();

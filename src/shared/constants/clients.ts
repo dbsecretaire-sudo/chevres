@@ -10,6 +10,10 @@ export const CATEGORIE_CLIENT = {
   SURFACE_COMMERCIALE: 'surface_commerciale',
   /** Un groupement (GDS, achat groupé…) : les groupements du volet Production se choisissent parmi les clients de cette catégorie. */
   GROUPEMENT: 'groupement',
+  /** Un visiteur de la ferme (agritourisme) : un particulier qui vient visiter, manger ou déguster. */
+  VISITEUR: 'visiteur',
+  /** Un groupe de visiteurs (scolaires, comité d'entreprise, association) : il réserve une visite pour plusieurs personnes. */
+  GROUPE_VISITEURS: 'groupe_visiteurs',
 } as const;
 
 /** Les groupes de recette qui ne viennent d'aucun client (les opérations du journal de trading) : toujours proposés. */
@@ -33,6 +37,9 @@ export const CATEGORIES_CLIENT_PROTEGEES: readonly string[] = [
   CATEGORIE_CLIENT.GROUPEMENT,
   CATEGORIE_CLIENT.ENTREPRISE,
   CATEGORIE_CLIENT.SURFACE_COMMERCIALE,
+  // Les visiteurs et leurs groupes ont chacun leur logo sur le côté Agritourisme de l'accueil.
+  CATEGORIE_CLIENT.VISITEUR,
+  CATEGORIE_CLIENT.GROUPE_VISITEURS,
 ];
 
 /** Ce que peut contenir le numéro de facture d'un client dont la catégorie n'est pas « libre » : chiffres, tirets, barres et points. */

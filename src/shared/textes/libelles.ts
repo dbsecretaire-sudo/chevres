@@ -67,6 +67,8 @@ export const LABEL_CATEGORIE_CLIENT: Record<ValeurDe<typeof CATEGORIE_CLIENT>, s
   [CATEGORIE_CLIENT.ENTREPRISE]: 'Entreprise',
   [CATEGORIE_CLIENT.SURFACE_COMMERCIALE]: 'Surface commerciale',
   [CATEGORIE_CLIENT.GROUPEMENT]: 'Groupement',
+  [CATEGORIE_CLIENT.VISITEUR]: 'Visiteur',
+  [CATEGORIE_CLIENT.GROUPE_VISITEURS]: 'Groupe de visiteurs',
 };
 
 export const LABEL_ZONE_ICHN: Record<ValeurDe<typeof ZONE_ICHN>, string> = {
@@ -92,6 +94,8 @@ export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURN
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: 'Assureur',
   [CATEGORIE_FOURNISSEUR.BANQUE]: 'Banque',
   [CATEGORIE_FOURNISSEUR.EMBALLAGES]: 'Fournisseur d’emballages',
+  [CATEGORIE_FOURNISSEUR.TOURISME]: 'Office de tourisme / partenaire',
+  [CATEGORIE_FOURNISSEUR.REPAS]: 'Fournisseur du repas',
   [CATEGORIE_FOURNISSEUR.NON_FACTURABLE]: 'Non facturable',
 };
 

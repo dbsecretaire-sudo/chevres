@@ -30,6 +30,10 @@ export const CATEGORIE_FOURNISSEUR = {
   BANQUE: 'banque',
   /** Un fournisseur d'emballages (barquettes, sacs, étiquettes…) : il intervient dans le travail du produit. */
   EMBALLAGES: 'emballages',
+  /** Un office de tourisme ou un partenaire qui envoie des visiteurs (agritourisme). */
+  TOURISME: 'tourisme',
+  /** Un fournisseur du repas servi aux visiteurs (ingrédients, boissons) : il intervient dans l'agritourisme. */
+  REPAS: 'repas',
   /** Un fournisseur qui ne remet pas de facture : ses dépenses sont notées « non facturées » (pas de TVA à déduire). */
   NON_FACTURABLE: 'non_facturable',
 } as const;
@@ -47,6 +51,9 @@ export const CATEGORIES_FOURNISSEUR_PROTEGEES: readonly string[] = [
   CATEGORIE_FOURNISSEUR.ABATTOIR,
   // Le bouton « Emballages » du travail du produit en dépend : la catégorie est toujours dans la liste, même enregistrée avant son arrivée.
   CATEGORIE_FOURNISSEUR.EMBALLAGES,
+  // Les logos du côté Agritourisme de l'accueil en dépendent aussi.
+  CATEGORIE_FOURNISSEUR.TOURISME,
+  CATEGORIE_FOURNISSEUR.REPAS,
 ];
 
 /** Les dépenses d'office d'un vétérinaire. Les autres catégories n'en limitent aucune, sauf réglage contraire. */
@@ -72,4 +79,6 @@ export const DEPENSES_PAR_CATEGORIE_FOURNISSEUR: Record<string, readonly string[
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: [CATEGORIE_DEPENSE.ASSURANCES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.BANQUE]: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.EMBALLAGES]: [CATEGORIE_DEPENSE.PRODUCTION, CATEGORIE_DEPENSE.AUTRE],
+  [CATEGORIE_FOURNISSEUR.TOURISME]: [CATEGORIE_DEPENSE.AUTRE],
+  [CATEGORIE_FOURNISSEUR.REPAS]: [CATEGORIE_DEPENSE.PRODUCTION, CATEGORIE_DEPENSE.AUTRE],
 };

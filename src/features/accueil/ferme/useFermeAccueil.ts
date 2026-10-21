@@ -10,7 +10,10 @@ import {
   type DeclarationAFaire,
 } from '@/features/accueil/services/fermeAccueil';
 import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
+import { compterAgritourisme } from '@/features/accueil/services/agritourismeFerme';
 import { compterTransformation } from '@/features/accueil/services/transformationFerme';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import type { ArchiveCommercial } from '@/features/commercial/types';
 import { listChevresVivantes, listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
@@ -80,12 +83,17 @@ export function useFermeAccueil() {
   const [morts, setMorts] = useState(0);
   // Le stock et le niveau de chaque article : de quoi compter ce que la Transformation fabrique et garde.
   const [archiveStock, setArchiveStock] = useState<ArchiveStock | null>(null);
+  // Les visites de l'agritourisme : de quoi compter ce que le côté Agritourisme montre.
+  const [archiveCommerciale, setArchiveCommerciale] = useState<ArchiveCommercial | null>(null);
   const niveaux = useNiveauxStock();
   const [vedettes, setVedettes] = useState<Chevre[]>([]);
   useFocusEffect(
     useCallback(() => {
       lireArchiveStock()
         .then(setArchiveStock)
+        .catch(() => undefined);
+      lireArchiveCommercial()
+        .then(setArchiveCommerciale)
         .catch(() => undefined);
       listTousLesAnimauxDeLEspece()
         .then((tous) => setMorts(compterMortsDeLAnnee(tous, todayISO(), STATUT_CHEVRE.MORTE)))
@@ -108,6 +116,11 @@ export function useFermeAccueil() {
           })
         : { fromages: 0, charcuterie: 0, viande: 0 },
     [archiveStock, espece, niveaux],
+  );
+
+  const agritourisme = useMemo(
+    () => compterAgritourisme(archiveCommerciale?.visites ?? [], accueil.annee),
+    [archiveCommerciale, accueil.annee],
   );
 
   const declarations: DeclarationAFaire[] = useMemo(
@@ -165,6 +178,8 @@ export function useFermeAccueil() {
     morts,
     /** Ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. */
     transformation,
+    /** Ce que l'Agritourisme compte : les visites à venir, les visiteurs et les recettes de l'année. */
+    agritourisme,
     vedettes,
     /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
     estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,

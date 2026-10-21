@@ -24,6 +24,10 @@ export type CleLieuTiers =
   | 'particuliers'
   | 'surfacesCommerciales'
   | 'entreprises'
+  | 'visiteurs'
+  | 'groupesVisiteurs'
+  | 'tourisme'
+  | 'repas'
   | 'cheptel'
   | 'documents'
   | 'veterinaire'
@@ -65,6 +69,13 @@ const LIENS_DES_CLIENTS: readonly LienDuLieu[] = [
   { cle: 'commandes', icone: 'receipt', route: ROUTES.COMMERCIAL_COMMANDES },
   { cle: 'tarifs', icone: 'pricetag', route: ROUTES.COMMERCIAL_TARIFS },
   { cle: 'circuits', icone: 'navigate', route: ROUTES.COMMERCIAL_CIRCUITS },
+];
+
+/** Les rubriques de l'agritourisme que proposent les fiches de ses visiteurs : les visites, une nouvelle visite, les formules. */
+const LIENS_DE_LAGRITOURISME: readonly LienDuLieu[] = [
+  { cle: 'visites', icone: 'trail-sign', route: ROUTES.COMMERCIAL_AGRITOURISME },
+  { cle: 'nouvelleVisite', icone: 'add-circle', route: ROUTES.COMMERCIAL_VISITE },
+  { cle: 'formules', icone: 'list', route: ROUTES.COMMERCIAL_FORMULES },
 ];
 
 export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
@@ -192,6 +203,47 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise`,
     liens: LIENS_DES_CLIENTS,
+  },
+  // L'agritourisme : les clients qui visitent la ferme (visiteurs, groupes), et ses fournisseurs (l'office de tourisme qui envoie des visiteurs, le repas).
+  visiteurs: {
+    cle: 'visiteurs',
+    avecTiers: true,
+    emoji: '🧳',
+    categoriesContact: [CATEGORIE_CLIENT.VISITEUR],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=emise`,
+    liens: LIENS_DE_LAGRITOURISME,
+  },
+  groupesVisiteurs: {
+    cle: 'groupesVisiteurs',
+    avecTiers: true,
+    emoji: '🚌',
+    categoriesContact: [CATEGORIE_CLIENT.GROUPE_VISITEURS],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=emise`,
+    liens: LIENS_DE_LAGRITOURISME,
+  },
+  tourisme: {
+    cle: 'tourisme',
+    avecTiers: true,
+    emoji: '🧭',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.TOURISME],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
+    liens: [],
+  },
+  repas: {
+    cle: 'repas',
+    avecTiers: true,
+    emoji: '🍽️',
+    categoriesContact: [CATEGORIE_FOURNISSEUR.REPAS],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.PRODUCTION}`,
+    liens: [],
   },
   // Les deux pages de l'intérieur de l'exploitation qui ne sont que des rubriques (sans tiers) : le cheptel (les animaux, les ajouts) et les documents.
   cheptel: {
@@ -341,7 +393,6 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       { cle: 'commandes', icone: 'receipt', route: ROUTES.COMMERCIAL_COMMANDES },
       { cle: 'tarifs', icone: 'pricetag', route: ROUTES.COMMERCIAL_TARIFS },
       { cle: 'circuits', icone: 'navigate', route: ROUTES.COMMERCIAL_CIRCUITS },
-      { cle: 'agritourisme', icone: 'home', route: ROUTES.COMMERCIAL_AGRITOURISME },
     ],
   },
 };

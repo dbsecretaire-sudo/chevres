@@ -25,11 +25,15 @@ const PORTRAITS: Record<string, PortraitTiers> = {
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: { emoji: '🛡️', decor: '📑 ✍️ 📑', fond: '#DCE6F0' },
   [CATEGORIE_FOURNISSEUR.BANQUE]: { emoji: '🏦', decor: '💶 🪙 💶', fond: '#DCE9DC' },
   [CATEGORIE_FOURNISSEUR.EMBALLAGES]: { emoji: '📦', decor: '🏷️ 📦 🏷️', fond: '#EDE3D2' },
+  [CATEGORIE_FOURNISSEUR.TOURISME]: { emoji: '🧭', decor: '🗺️ 🧭 🗺️', fond: '#DCE9EE' },
+  [CATEGORIE_FOURNISSEUR.REPAS]: { emoji: '🍽️', decor: '🥖 🍷 🥖', fond: '#F0E4D4' },
   [CATEGORIE_FOURNISSEUR.ETAT]: { emoji: '🏛️', decor: '🇫🇷 📄 🇫🇷', fond: '#DCE2F0' },
   [CATEGORIE_CLIENT.RECOLTEUR]: { emoji: '🚚', decor: '🥛 🥛 🥛', fond: '#E6EEF5' },
   [CATEGORIE_CLIENT.PARTICULIER]: { emoji: '🧑', decor: '🧀 🥩 🛒', fond: '#F2E6D8' },
   [CATEGORIE_CLIENT.SURFACE_COMMERCIALE]: { emoji: '🏬', decor: '🧀 🛒 🥩', fond: '#E8E3EE' },
   [CATEGORIE_CLIENT.ENTREPRISE]: { emoji: '🏢', decor: '🧀 📦 🥩', fond: '#E3E8EE' },
+  [CATEGORIE_CLIENT.VISITEUR]: { emoji: '🧳', decor: '🐐 🧀 📷', fond: '#EEE6D6' },
+  [CATEGORIE_CLIENT.GROUPE_VISITEURS]: { emoji: '🚌', decor: '🐐 🧀 🚌', fond: '#E6EAD8' },
 };
 
 /** Le portrait d'un tiers d'après l'identifiant de sa catégorie (une catégorie ajoutée par l'utilisateur, ou aucune : un portrait neutre). */

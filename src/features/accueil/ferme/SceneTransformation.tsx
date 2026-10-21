@@ -38,13 +38,22 @@ export function Carrelage({ lignes = LIGNES_DU_CARRELAGE }: { lignes?: number })
   );
 }
 
+/** Ce que la plaque blanche montre : un titre, les symboles qui se baladent, et les lignes de comptes. */
+export interface ContenuDePlaque {
+  titre: string;
+  symboles: readonly { cle: string; emoji: string }[];
+  lignes: readonly { cle: string; texte: string }[];
+}
+
 /** Les trois lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. */
-function LignesDeTransformation({ compte }: { compte: CompteTransformation }) {
-  const lignes = [
-    { cle: 'fromages', texte: T.fromages(compte.fromages) },
-    { cle: 'charcuterie', texte: T.charcuterie(compte.charcuterie) },
-    { cle: 'viande', texte: T.viande(compte.viande) },
-  ];
+const lignesDeTransformation = (compte: CompteTransformation): ContenuDePlaque['lignes'] => [
+  { cle: 'fromages', texte: T.fromages(compte.fromages) },
+  { cle: 'charcuterie', texte: T.charcuterie(compte.charcuterie) },
+  { cle: 'viande', texte: T.viande(compte.viande) },
+];
+
+/** Les lignes de comptes de la plaque, l'une sous l'autre. */
+function LignesDePlaque({ lignes }: { lignes: ContenuDePlaque['lignes'] }) {
   return (
     <View style={styles.lignes}>
       {lignes.map((l) => (
@@ -74,7 +83,12 @@ const MARGE = 8;
 const HAUTEUR_DE_LA_PLAQUE = 78;
 
 interface Props {
-  compte: CompteTransformation;
+  compte?: CompteTransformation;
+  /** Une autre plaque que celle de la Transformation (le côté Agritourisme) : son titre, ses symboles et ses comptes. */
+  plaque?: ContenuDePlaque;
+  /** Le nom du bâtiment de la gestion (d'office : l'atelier), et ce que dit un appui sur la plaque. */
+  nomBatiment?: string;
+  entrer?: string;
   /** Un appui sur la plaque : le stock de l'atelier (fromages, viande, emballages, matériel). */
   onAppui: () => void;
   /** Les intervenants, de l'autre côté de la rue, en rangées de trois : les moins utilisés en haut, les plus utilisés près de la rue. */
@@ -93,10 +107,26 @@ const enRangees = <T,>(liste: readonly T[], taille: number): T[][] =>
  * particuliers, les surfaces commerciales, les entreprises, les emballages, le laboratoire) ; la rue, où se promènent le lait, la viande et le fromage
  * avec ce qu'on garde chez soi ; et de notre côté, la fromagerie, dont les compartiments sont les menus de la gestion.
  */
-export function SceneTransformation({ compte, onAppui, intervenants, gestion, onMaison, onGestion }: Props) {
+export function SceneTransformation({
+  compte,
+  plaque,
+  nomBatiment,
+  entrer,
+  onAppui,
+  intervenants,
+  gestion,
+  onMaison,
+  onGestion,
+}: Props) {
+  const contenu: ContenuDePlaque = plaque ?? {
+    titre: T.titre,
+    symboles: SYMBOLES,
+    lignes: lignesDeTransformation(compte ?? { fromages: 0, charcuterie: 0, viande: 0 }),
+  };
   const [hauteur, setHauteur] = useState(0);
   const [hauteurFromagerie, setHauteurFromagerie] = useState(200);
-  const rangees = enRangees(intervenants, PAR_RANGEE);
+  // Quatre intervenants (l'agritourisme) se rangent par deux ; six (l'exploitation, l'atelier), par trois.
+  const rangees = enRangees(intervenants, intervenants.length <= 4 ? 2 : PAR_RANGEE);
   // Les logos rapetissent quand la scène est basse : toutes les rangées tiennent au-dessus de la rue, de la plaque et de l'atelier.
   const disponible = hauteur - HAUTEUR_DE_LA_RUE - 2 * TROTTOIR - HAUTEUR_DE_LA_PLAQUE - hauteurFromagerie - 4 * MARGE;
   const echelle =
@@ -127,13 +157,13 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
       <View style={styles.notreCote}>
         <Carrelage lignes={4} />
         {/* La plaque blanche, sur toute la largeur : ce qu'on garde chez soi (le titre et les symboles d'un côté, les trois comptes de l'autre). Un appui ouvre le stock. */}
-        <Pressable style={styles.plaque} onPress={onAppui} accessibilityRole="button" accessibilityLabel={T.entrer}>
+        <Pressable style={styles.plaque} onPress={onAppui} accessibilityRole="button" accessibilityLabel={entrer ?? T.entrer}>
           <View style={styles.entete}>
             <Text style={styles.titre} numberOfLines={1}>
-              {T.titre}
+              {contenu.titre}
             </Text>
             <View style={styles.symboles}>
-              {SYMBOLES.map((s, i) => (
+              {contenu.symboles.map((s, i) => (
                 <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
                   <Text style={styles.symbole} accessibilityElementsHidden importantForAccessibility="no">
                     {s.emoji}
@@ -142,11 +172,11 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
               ))}
             </View>
           </View>
-          <LignesDeTransformation compte={compte} />
+          <LignesDePlaque lignes={contenu.lignes} />
         </Pressable>
         <View style={styles.fromagerie}>
           <Batiment
-            titre={T.fromagerie}
+            titre={nomBatiment ?? T.fromagerie}
             entrees={gestion}
             onAppui={onGestion}
             palette={PALETTE_FROMAGERIE}

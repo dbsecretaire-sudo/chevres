@@ -34,6 +34,18 @@ export const TEXTES_ACCUEIL = {
       charcuterie: (n: number) => `${n} boucherie/charcuterie`,
       viande: (n: number) => `${n} viande`,
       entrer: 'Ouvrir le stock de l’atelier',
+      /** Le nom de la pastille de la bascule du bas (le titre de la scène reste « Travail du produit »). */
+      pastille: 'Atelier',
+    },
+    /** Le côté « Agritourisme » : les visiteurs de la ferme (visites, formules, repas). */
+    agritourisme: {
+      titre: 'Agritourisme',
+      /** Le nom du bâtiment de la gestion, de notre côté de la rue. */
+      batiment: 'Accueil',
+      visitesAVenir: (n: number) => `${n} ${n === 1 ? 'visite à venir' : 'visites à venir'}`,
+      visiteurs: (n: number) => `${n} ${n === 1 ? 'visiteur' : 'visiteurs'}`,
+      recettes: (montant: string) => `${montant} de recettes`,
+      entrer: 'Ouvrir les visites de la ferme',
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
@@ -41,6 +53,16 @@ export const TEXTES_ACCUEIL = {
       particuliers: 'Particuliers',
       surfacesCommerciales: 'Surfaces commerciales',
       entreprises: 'Entreprises',
+      visiteurs: 'Visiteurs',
+      groupesVisiteurs: 'Groupes',
+      tourisme: 'Office de tourisme',
+      repas: 'Repas',
+      nouvelleVisite: 'Nouvelle visite',
+      visites: 'Visites',
+      formules: 'Formules',
+      tarifs: 'Tarifs',
+      ventesAgritourisme: 'Ventes',
+      rentabilite: 'Rentabilité',
       sante: 'Santé',
       grange: 'Grange',
       nouveau: 'Nouveau',

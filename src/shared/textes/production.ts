@@ -10,6 +10,13 @@ const LIENS_DES_CLIENTS = {
   circuits: { titre: 'Circuits de vente', aide: 'Ce que rapporte chaque circuit : ferme, marché, restaurateurs…' },
 };
 
+/** Les rubriques que proposent les fiches des visiteurs de l'agritourisme (visiteurs, groupes). */
+const LIENS_DE_LAGRITOURISME = {
+  visites: { titre: 'Visites de la ferme', aide: 'Les visites à venir et réalisées, les visiteurs et ce que ça rapporte.' },
+  nouvelleVisite: { titre: 'Nouvelle visite', aide: 'Une date, un groupe, une formule : la visite se prépare ici.' },
+  formules: { titre: 'Formules et tarifs', aide: 'Ce que comprend chaque formule (visite, 4x4, repas, dégustation) et son prix.' },
+};
+
 /** Textes de l'interface — l'onglet Production (fromages, viande vendue, contrôle laitier). À modifier ici uniquement. */
 export const TEXTES_PRODUCTION = {
   titre: 'Production',
@@ -310,6 +317,38 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les ventes aux entreprises',
       nouvelle: 'Nouvelle vente',
       liens: LIENS_DES_CLIENTS,
+    },
+    visiteurs: {
+      titre: 'Visiteurs',
+      groupeTiers: 'Visiteurs de la ferme',
+      ajouterTiers: 'Ajouter un visiteur',
+      groupeEcritures: 'Les ventes aux visiteurs',
+      nouvelle: 'Nouvelle vente',
+      liens: LIENS_DE_LAGRITOURISME,
+    },
+    groupesVisiteurs: {
+      titre: 'Groupes',
+      groupeTiers: 'Groupes de visiteurs',
+      ajouterTiers: 'Ajouter un groupe',
+      groupeEcritures: 'Les ventes aux groupes',
+      nouvelle: 'Nouvelle vente',
+      liens: LIENS_DE_LAGRITOURISME,
+    },
+    tourisme: {
+      titre: 'Office de tourisme',
+      groupeTiers: 'Offices de tourisme et partenaires',
+      ajouterTiers: 'Ajouter un office de tourisme ou un partenaire',
+      groupeEcritures: 'Les factures de ces partenaires',
+      nouvelle: 'Nouvelle facture',
+      liens: {},
+    },
+    repas: {
+      titre: 'Repas',
+      groupeTiers: 'Fournisseurs du repas',
+      ajouterTiers: 'Ajouter un fournisseur du repas',
+      groupeEcritures: 'Les achats du repas',
+      nouvelle: 'Nouvelle facture du repas',
+      liens: {},
     },
     equarrissage: {
       titre: 'Équarrissage',
