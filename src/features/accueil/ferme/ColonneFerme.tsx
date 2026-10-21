@@ -52,6 +52,8 @@ export const LARGEUR_BOUTON_COTE = 48;
 const HAUTEUR_BOUTON_COTE = 47;
 export const ECART_COTE = 8;
 const HAUTEUR_TITRE_COTE = 25;
+/** L'écart le plus petit entre deux boutons d'une colonne unique, qui court sur toute la hauteur de la scène. */
+const ECART_MIN_UNE_COLONNE = 4;
 
 /**
  * Le nombre de boutons par ligne d'une colonne sur le côté d'une carte : le moins possible (deux) tant que tous tiennent dans la hauteur
@@ -61,9 +63,11 @@ const HAUTEUR_TITRE_COTE = 25;
 export function colonnesDuCote(nombre: number, hauteur?: number, avecTitre = true): number {
   if (hauteur === undefined) return 3;
   const reserve = avecTitre ? HAUTEUR_TITRE_COTE : 0;
-  for (const colonnes of [2, 3]) {
+  for (const colonnes of [1, 2, 3]) {
     const lignes = Math.ceil(nombre / colonnes);
-    if (reserve + lignes * HAUTEUR_BOUTON_COTE + (lignes - 1) * ECART_COTE <= hauteur) return colonnes;
+    // Une seule colonne : les boutons se répartissent sur toute la hauteur, il suffit qu'ils tiennent avec un petit écart.
+    const ecart = colonnes === 1 ? ECART_MIN_UNE_COLONNE : ECART_COTE;
+    if (reserve + lignes * HAUTEUR_BOUTON_COTE + (lignes - 1) * ecart <= hauteur) return colonnes;
   }
   return 3;
 }
@@ -157,9 +161,16 @@ export function ColonneFerme({
   if (cote) {
     const colonnes = colonnesDuCote(entrees.length, hauteurDisponible, !!titre);
     return (
-      <View style={styles.panneauCote}>
+      <View style={[styles.panneauCote, colonnes === 1 ? styles.panneauPleineHauteur : null]}>
         {titre ? <Text style={styles.titreCote}>{titre}</Text> : null}
-        <View style={[styles.cote, { width: colonnes * LARGEUR_BOUTON_COTE + (colonnes - 1) * ECART_COTE + 4 }]}>
+        <View
+          style={[
+            styles.cote,
+            { width: colonnes * LARGEUR_BOUTON_COTE + (colonnes - 1) * ECART_COTE + 4 },
+            // Une colonne : elle court sur toute la hauteur, ses boutons répartis de haut en bas.
+            colonnes === 1 ? styles.uneColonne : null,
+          ]}
+        >
           {entrees.map((e, i) => (
             <Bouton key={e.cle} entree={e} rang={i} onAppui={onAppui} taille="cote" sansTitre />
           ))}
@@ -213,6 +224,8 @@ const styles = StyleSheet.create({
   titreCote: { fontSize: 14, fontWeight: '800', color: colors.primaryDark },
   // Deux ou trois boutons par ligne selon la hauteur de la carte (`colonnesDuCote`) : la largeur est donnée à l'affichage.
   cote: { flexDirection: 'row', flexWrap: 'wrap', gap: ECART_COTE, justifyContent: 'center' },
+  panneauPleineHauteur: { flex: 1, justifyContent: 'flex-start' },
+  uneColonne: { flex: 1, flexDirection: 'column', flexWrap: 'nowrap', justifyContent: 'space-between', alignItems: 'center' },
   boutonCote: { width: 48 },
   rondCote: { width: 44, height: 44, borderRadius: 22, borderWidth: 2 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingVertical: 4 },
