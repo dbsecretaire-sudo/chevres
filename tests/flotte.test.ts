@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assuranceEnCours,
   categorieAvecVehicule,
+  primesDuVehicule,
   enregistrerVehicule,
   libelleVehicule,
   normaliserPlaque,
@@ -8,6 +10,7 @@ import {
   vehiculesProposes,
   vehiculesTries,
 } from '@/features/exploitation/services/flotte';
+import type { Facture } from '@/features/comptabilite/types';
 import type { Vehicule } from '@/features/settings/settings';
 
 const v = (id: string, plaque: string, actif = true): Vehicule => ({ id, plaque, actif });
@@ -56,5 +59,26 @@ describe('les écritures qui se lient à un véhicule', () => {
     expect(categorieAvecVehicule('assurances', undefined, 'animaux')).toBe(false);
     expect(categorieAvecVehicule('assurances')).toBe(false);
     expect(categorieAvecVehicule('alimentation')).toBe(false);
+  });
+});
+
+describe('l’assurance en cours d’un véhicule', () => {
+  const prime = (id: string, date: string, vehiculeId = 'v1', tiers = 'Assureur'): Facture =>
+    ({ id, date, type: 'recue', tiers, description: '', montant: 100, categorieDepense: 'assurances', vehiculeId }) as Facture;
+
+  it('sans prime, le véhicule n’est pas assuré ; avec une prime, il l’est chez son assureur', () => {
+    expect(assuranceEnCours({ id: 'v1' }, [])).toBeUndefined();
+    expect(assuranceEnCours({ id: 'v1' }, [prime('a', '2026-01-10')])?.tiers).toBe('Assureur');
+  });
+
+  it('ne compte que les primes du véhicule, la plus récente d’abord', () => {
+    const factures = [prime('a', '2026-01-10'), prime('b', '2026-06-10'), prime('c', '2026-09-10', 'v2')];
+    expect(primesDuVehicule(factures, 'v1').map((f) => f.id)).toEqual(['b', 'a']);
+  });
+
+  it('résilié, il n’est plus assuré ; une prime payée après la résiliation le rend de nouveau assuré', () => {
+    const resilie = { id: 'v1', assuranceResilieeLe: '2026-07-01' };
+    expect(assuranceEnCours(resilie, [prime('a', '2026-06-10')])).toBeUndefined();
+    expect(assuranceEnCours(resilie, [prime('a', '2026-06-10'), prime('b', '2026-08-01', 'v1', 'Autre')])?.tiers).toBe('Autre');
   });
 });

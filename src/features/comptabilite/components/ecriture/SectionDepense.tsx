@@ -338,6 +338,17 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         {categorieAvecVehicule(e.categorieDepense, undefined, e.objetAssurance) ? (
           <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} />
         ) : null}
+        {/* Le motif d'une réparation : il est exigé quand un véhicule est choisi, et mis en avant dans la liste du véhicule. */}
+        {e.categorieDepense === CATEGORIE_DEPENSE.REPARATION ? (
+          <FormField
+            label={TEXTES.flotte.motif.reparation}
+            required={!!e.vehiculeId}
+            value={e.motif}
+            onChangeText={e.setMotif}
+            placeholder={TEXTES.flotte.motif.exempleReparation}
+            aide={TEXTES.flotte.motif.aide}
+          />
+        ) : null}
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (

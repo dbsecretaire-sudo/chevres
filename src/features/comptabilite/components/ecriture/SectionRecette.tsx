@@ -217,7 +217,17 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
         {e.voletAffiche ? <ChampVoletCooperative value={e.voletCooperative} onChange={e.setVoletCooperative} /> : null}
         {/* Ce que l'assurance d'un véhicule verse : le véhicule de la flotte, par sa plaque. */}
         {e.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE ? (
-          <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} />
+          <>
+            <ChampVehicule value={e.vehiculeId} onChange={e.setVehiculeId} />
+            <FormField
+              label={TEXTES.flotte.motif.indemnite}
+              required
+              value={e.motif}
+              onChangeText={e.setMotif}
+              placeholder={TEXTES.flotte.motif.exempleIndemnite}
+              aide={TEXTES.flotte.motif.aide}
+            />
+          </>
         ) : null}
 
         {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||

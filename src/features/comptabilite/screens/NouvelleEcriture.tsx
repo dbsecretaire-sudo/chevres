@@ -75,6 +75,8 @@ export default function NouvelleFacture() {
     lot?: string;
     /** Le contact (fournisseur) choisi d'office : l'abattoir du lot. */
     fournisseur?: string;
+    /** Le motif d'office (la résiliation d'une assurance : le trop-perçu de prime). */
+    motif?: string;
     /** Le volet d'une association ou d'une coopérative agricole, choisi d'office (depuis la page du groupement). */
     volet?: string;
     /** Ce qu'une assurance couvre, choisi d'office (« vehicule », depuis la fiche d'un véhicule). */
@@ -128,6 +130,12 @@ export default function NouvelleFacture() {
   if (params.fournisseur && !fournisseurChoisi && e.fournisseurs.some((f) => f.id === params.fournisseur)) {
     setFournisseurChoisi(true);
     e.changerFournisseur(params.fournisseur);
+  }
+  // Le motif donné par l'adresse : il pré-remplit le champ, une fois.
+  const [motifVu, setMotifVu] = useState(false);
+  if (params.motif && !motifVu) {
+    setMotifVu(true);
+    e.setMotif(params.motif);
   }
   // Le volet demandé par l'adresse (depuis la page de l'association ou de la coopérative) : il est choisi d'office, une fois.
   const [voletVu, setVoletVu] = useState(false);

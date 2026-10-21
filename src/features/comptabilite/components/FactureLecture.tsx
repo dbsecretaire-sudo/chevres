@@ -121,6 +121,12 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
           {LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
         </Text>
       ) : null}
+      {facture.motif ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.flotte.motif.lecture}
+          {facture.motif}
+        </Text>
+      ) : null}
       {facture.voletCooperative ? (
         <Text style={commonStyles.line}>
           {TEXTES.production.lieux.groupement.champVolet.label} : {LABEL_VOLET_COOPERATIVE[facture.voletCooperative as keyof typeof LABEL_VOLET_COOPERATIVE] ?? facture.voletCooperative}

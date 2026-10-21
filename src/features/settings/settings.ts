@@ -267,6 +267,8 @@ export interface Vehicule {
   kilometrage?: number;
   /** Le verso du certificat d'immatriculation (une image ou un PDF). */
   certificat?: PieceJointe;
+  /** La date où l'assurance du véhicule a été résiliée (AAAA-MM-JJ) : une prime payée après cette date le rend de nouveau assuré. */
+  assuranceResilieeLe?: string;
   /** Faux : le véhicule n'est plus utilisé ; il reste consultable, avec son historique, mais n'est plus proposé dans les écritures. */
   actif: boolean;
   notes?: string;

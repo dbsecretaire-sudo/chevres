@@ -431,6 +431,15 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             }
           />
         ) : null}
+        {form.categorieDepense === CATEGORIE_DEPENSE.REPARATION || form.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE ? (
+          <FormField
+            label={form.categorieRecette ? TEXTES.flotte.motif.indemnite : TEXTES.flotte.motif.reparation}
+            required={!!form.categorieRecette || !!form.vehiculeId}
+            value={form.motif ?? ''}
+            onChangeText={(motif) => f.setForm({ ...form, motif: motif || undefined })}
+            aide={TEXTES.flotte.motif.aide}
+          />
+        ) : null}
         {categorieAvecVehicule(form.categorieDepense, form.categorieRecette, form.objetAssurance) ? (
           <ChampVehicule value={form.vehiculeId ?? ''} onChange={(id) => f.setForm({ ...form, vehiculeId: id || undefined })} />
         ) : null}

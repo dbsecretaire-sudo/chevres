@@ -56,6 +56,9 @@ export interface SaisieAControler {
   /** Une dépense « Animaux vivants (vente) » : le lot d'abattoir facturé, et vrai quand son document de circulation manque. */
   lotId?: string;
   lotSansDocument?: boolean;
+  /** Le motif d'une réparation ou de l'indemnité d'une assurance, et le véhicule choisi (le motif d'une réparation s'exige quand un véhicule est choisi). */
+  motif: string;
+  vehiculeId: string;
 }
 
 /**
@@ -64,6 +67,13 @@ export interface SaisieAControler {
  */
 export async function controlerAvantEnregistrement(s: SaisieAControler): Promise<ErreurSaisie | undefined> {
   const T = TEXTES.comptabilite.nouvelleEcriture;
+  // La réparation d'un véhicule de la flotte et l'indemnité d'une assurance se justifient : le motif est obligatoire.
+  const reparationDUnVehicule =
+    s.type === TYPE_FACTURE.RECUE && s.categorieDepense === CATEGORIE_DEPENSE.REPARATION && !!s.vehiculeId;
+  const indemnite = s.type !== TYPE_FACTURE.RECUE && s.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE;
+  if ((reparationDUnVehicule || indemnite) && !s.motif.trim()) {
+    return { titre: TEXTES.flotte.motif.requis, message: TEXTES.flotte.motif.requisMessage };
+  }
   // Un animal sur pied, vivant ou un petit ne se vend pas sans dire lesquels ni leur poids : les fiches du cheptel et le poids
   // sont obligatoires.
   if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(s.categorieRecette)) {

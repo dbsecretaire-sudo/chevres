@@ -172,6 +172,8 @@ export function useNouvelleEcriture(
   const [vehiculeId, setVehiculeId] = useState('');
   /** Ce qu'une assurance couvre (vide : non précisé). */
   const [objetAssurance, setObjetAssurance] = useState('');
+  /** Le motif d'une réparation ou de l'indemnité d'une assurance. */
+  const [motif, setMotif] = useState('');
   /** Le volet d'une association ou d'une coopérative agricole (vide : non précisé). */
   const [voletCooperative, setVoletCooperative] = useState('');
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
@@ -634,6 +636,8 @@ export function useNouvelleEcriture(
         animauxEnvoyes,
         lotId,
         lotSansDocument,
+        motif,
+        vehiculeId,
       });
       if (erreurDeSaisie) {
         setErreur(erreurDeSaisie);
@@ -699,6 +703,7 @@ export function useNouvelleEcriture(
         atelier,
         vehiculeId,
         objetAssurance,
+        motif,
         voletCooperative,
         elementAgri,
         reajustement,
@@ -964,6 +969,8 @@ export function useNouvelleEcriture(
     setVehiculeId,
     objetAssurance,
     setObjetAssurance,
+    motif,
+    setMotif,
     voletCooperative,
     setVoletCooperative,
     voletAffiche,
