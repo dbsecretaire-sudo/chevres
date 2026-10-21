@@ -23,6 +23,8 @@ interface Props {
   palette: PaletteDeBatiment;
   /** Sa hauteur, une fois dessiné : la scène en laisse la place aux maisons et au troupeau. */
   surHauteur?: (hauteur: number) => void;
+  /** La couleur des disques de tous les compartiments (le gris de l'atelier, le vert de l'agritourisme) ; absente : celle de chaque entrée. */
+  couleurDisque?: string;
 }
 
 /** Un compartiment : une porte du bâtiment, avec son dessin et son nom. */
@@ -30,10 +32,12 @@ function Compartiment({
   entree,
   palette,
   onAppui,
+  couleurDisque,
 }: {
   entree: EntreeDeColonne;
   palette: PaletteDeBatiment;
   onAppui: Props['onAppui'];
+  couleurDisque?: string;
 }) {
   const ref = useRef<View>(null);
   // Sur un grand écran (Windows), le dessin et le nom grandissent avec la largeur de la colonne.
@@ -53,7 +57,7 @@ function Compartiment({
         style={[
           styles.disque,
           {
-            backgroundColor: entree.couleur ?? palette.toit,
+            backgroundColor: couleurDisque ?? entree.couleur ?? palette.toit,
             width: Math.round(30 * e),
             height: Math.round(30 * e),
             borderRadius: Math.round(15 * e),
@@ -78,7 +82,7 @@ function Compartiment({
  * Un grand bâtiment de la scène, dont les compartiments sont les menus de la gestion : la bergerie de l'exploitation, la fromagerie du travail du
  * produit. Un toit arrondi avec son nom, puis le mur et ses six portes, chacune avec son dessin et son nom : on touche directement celle qu'on veut.
  */
-export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur }: Props) {
+export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur, couleurDisque }: Props) {
   const echelle = useEchelle();
   return (
     <View style={styles.batiment} onLayout={(e) => surHauteur?.(Math.round(e.nativeEvent.layout.height))}>
@@ -89,7 +93,7 @@ export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur }
         {decor}
         <View style={styles.compartiments}>
           {entrees.map((e) => (
-            <Compartiment key={e.cle} entree={e} palette={palette} onAppui={onAppui} />
+            <Compartiment key={e.cle} entree={e} palette={palette} onAppui={onAppui} couleurDisque={couleurDisque} />
           ))}
         </View>
       </View>

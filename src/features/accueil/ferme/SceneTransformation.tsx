@@ -86,6 +86,9 @@ const PALETTE_ACCUEIL: PaletteDeBatiment = {
   bord: '#C9A66B',
 };
 
+/** Le gris de l'atelier (inox) : ses logos et les disques de ses boutons. */
+const COULEUR_GRISE = '#6A767E';
+
 /** Le nombre d'intervenants par rangée, de l'autre côté de la rue (trois colonnes). */
 const PAR_RANGEE = 3;
 /** La hauteur de la rue (étroite : juste ses tirets), et celle des trottoirs. */
@@ -147,6 +150,9 @@ export function SceneTransformation({
   const rangees = enRangees(intervenants, intervenants.length <= 4 ? 2 : PAR_RANGEE);
   // Les logos rapetissent quand la scène est basse : toutes les rangées tiennent au-dessus de la rue, de la plaque et de l'atelier.
   const campagne = decor === 'campagne';
+  // L'atelier est tout en gris (inox) ; l'agritourisme, tout en vert.
+  const couleurLogo = campagne ? colors.primary : COULEUR_GRISE;
+  const couleurDisque = campagne ? colors.primary : COULEUR_GRISE;
   // La rue, la plaque et le bâtiment grandissent avec la fenêtre, comme les logos : aucune zone ne reste à sa taille de téléphone dans une grande scène.
   const hauteurRue = Math.round(HAUTEUR_DE_LA_RUE * agrandissement * (campagne ? 1.2 : 1));
   const hauteurPlaque = Math.round(HAUTEUR_DE_LA_PLAQUE * agrandissement);
@@ -161,7 +167,7 @@ export function SceneTransformation({
         {rangees.map((rangee, i) => (
           <View key={i} style={styles.rangee}>
             {rangee.map((e) => (
-              <Maison key={e.cle} entree={e} echelle={echelle} onAppui={onMaison} />
+              <Maison key={e.cle} entree={e} echelle={echelle} onAppui={onMaison} couleurLogo={couleurLogo} />
             ))}
           </View>
         ))}
@@ -210,6 +216,7 @@ export function SceneTransformation({
             entrees={gestion}
             onAppui={onGestion}
             palette={campagne ? PALETTE_ACCUEIL : PALETTE_FROMAGERIE}
+            couleurDisque={couleurDisque}
             surHauteur={setHauteurFromagerie}
           />
         </View>

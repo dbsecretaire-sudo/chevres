@@ -20,19 +20,21 @@ interface Props {
   /** Le rapport à la taille du dessin d'origine : les maisons rapetissent quand la scène est basse. */
   echelle: number;
   onAppui: (cle: string) => void;
+  /** La couleur du logo ; absente : le vert sombre de la ferme. */
+  couleurLogo?: string;
 }
 
 /**
  * Un intervenant de la carte : son logo (le dessin de son bouton, seul, sans rond ni maison derrière) et son nom dessous. Une pastille rouge dit ce
  * qui l'attend (les lots à facturer à l'abattoir, les animaux morts à l'équarrissage). Un appui ouvre sa fiche.
  */
-export function Maison({ entree, echelle, onAppui }: Props) {
+export function Maison({ entree, echelle, onAppui, couleurLogo = COULEUR_DU_LOGO }: Props) {
   const s = (n: number) => Math.round(n * echelle);
   const largeur = s(LARGEUR);
   // Le dessin du bouton est blanc (sur son rond) : ici, il prend la couleur du logo et la taille de la carte.
   const logo = isValidElement(entree.icone)
     ? cloneElement(entree.icone as ReactElement<{ color?: string; size?: number }>, {
-        color: COULEUR_DU_LOGO,
+        color: couleurLogo,
         size: s(LOGO),
       })
     : entree.icone;
