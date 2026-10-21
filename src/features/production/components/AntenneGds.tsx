@@ -1,6 +1,7 @@
 import { Alert, Linking, Pressable, Text } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import type { Contact } from '@/features/contacts/services/contacts';
 import { creerFournisseur, listFournisseurs } from '@/features/fournisseurs/repository';
 import { ANTENNE_GDS_CORSE } from '@/shared/constants/gds';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
@@ -8,6 +9,15 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.gds.antenne;
+
+/** Vrai quand ce contact est l'antenne du GDS (par son courriel ou son nom) : elle est alors déjà dans les contacts. */
+export const estLAntenneGds = (contact: Contact): boolean => {
+  const f = contact.fournisseur;
+  return (
+    !!f &&
+    (f.email?.trim().toLowerCase() === ANTENNE_GDS_CORSE.email || (f.nomEntreprise || f.nom) === ANTENNE_GDS_CORSE.nom)
+  );
+};
 
 /**
  * L'antenne du GDS Corse (Haute-Corse) : ses coordonnées, d'un appui le téléphone ou le courriel s'ouvrent, et un bouton l'ajoute aux contacts

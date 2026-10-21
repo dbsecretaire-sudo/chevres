@@ -21,12 +21,8 @@ export const TEXTES_GDS = {
         aide: 'Les bons de délivrance de la pharmacie (avantages PSE).',
       },
       [DOCUMENT_GDS.BIOSECURITE]: {
-        titre: 'Document de biosécurité',
-        aide: 'Le document de biosécurité de l’élevage.',
-      },
-      [DOCUMENT_GDS.AUTODIAGNOSTIC]: {
-        titre: 'Grille d’autodiagnostic en biosécurité caprine',
-        aide: 'La grille officielle d’autodiagnostic, remplie.',
+        titre: 'Biosécurité : grille d’autodiagnostic',
+        aide: 'Le document de biosécurité de l’élevage : la grille officielle d’autodiagnostic en biosécurité caprine, remplie.',
       },
       [DOCUMENT_GDS.QUARANTAINE]: {
         titre: 'Attestation de quarantaine',
@@ -44,6 +40,6 @@ export const TEXTES_GDS = {
   },
   /** La page du lieu : ses rubriques (voir lieuxTiers). */
   lieu: {
-    documents: { titre: 'Documents du GDS', aide: 'Attestation PSE, bons de délivrance, biosécurité, autodiagnostic, quarantaine.' },
+    documents: { titre: 'Documents du GDS', aide: 'Attestation PSE, bons de délivrance, biosécurité, quarantaine.' },
   },
 } as const;

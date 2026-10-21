@@ -16,7 +16,7 @@ import {
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { AntenneGds } from '@/features/production/components/AntenneGds';
+import { AntenneGds, estLAntenneGds } from '@/features/production/components/AntenneGds';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -113,7 +113,8 @@ export default function LieuTiers() {
         </GroupeAccueil>
       ) : null}
 
-      {cle === 'groupementSanitaire' ? (
+      {/* L'antenne du GDS : sa carte disparaît dès qu'elle est dans les contacts (elle y est alors avec les autres groupements sanitaires). */}
+      {cle === 'groupementSanitaire' && !contacts.some(estLAntenneGds) ? (
         <AntenneGds onAjoutee={() => listContacts().then(setContacts).catch(() => undefined)} />
       ) : null}
 

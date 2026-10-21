@@ -5,7 +5,6 @@ export const DOCUMENT_GDS = {
   ATTESTATION_PSE: 'attestation_pse',
   BONS_DELIVRANCE: 'bons_delivrance',
   BIOSECURITE: 'biosecurite',
-  AUTODIAGNOSTIC: 'autodiagnostic',
   QUARANTAINE: 'quarantaine',
 } as const;
 
@@ -16,7 +15,6 @@ export const DOCUMENTS_GDS: readonly DocumentGds[] = [
   DOCUMENT_GDS.ATTESTATION_PSE,
   DOCUMENT_GDS.BONS_DELIVRANCE,
   DOCUMENT_GDS.BIOSECURITE,
-  DOCUMENT_GDS.AUTODIAGNOSTIC,
   DOCUMENT_GDS.QUARANTAINE,
 ];
 

@@ -198,7 +198,7 @@ export const TEXTES_PRODUCTION = {
         suivi: { titre: 'Suivi sanitaire', aide: 'Les soins donnés aux animaux et leurs délais d’attente : le même suivi que chez le vétérinaire.' },
         documents: {
           titre: 'Documents du GDS',
-          aide: 'Attestation PSE, bons de délivrance, biosécurité, autodiagnostic, quarantaine.',
+          aide: 'Attestation PSE, bons de délivrance, biosécurité (grille d’autodiagnostic), quarantaine.',
         },
         analyses: { titre: 'Analyses du lait', aide: 'Les analyses et le contrôle du lait : les mêmes que la qualité du lait de la laiterie.' },
         avortements: {
