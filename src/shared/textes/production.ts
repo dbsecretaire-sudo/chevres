@@ -186,12 +186,31 @@ export const TEXTES_PRODUCTION = {
       },
     },
     groupement: {
-      titre: 'Groupement',
-      groupeTiers: 'Groupements d’achats et de producteurs',
-      ajouterTiers: 'Ajouter un groupement',
-      groupeEcritures: 'Les cotisations et achats groupés',
-      nouvelle: 'Nouvelle facture de groupement',
-      liens: {},
+      titre: 'Association et coopérative agricole',
+      groupeTiers: 'Associations et coopératives agricoles',
+      ajouterTiers: 'Ajouter une association ou une coopérative',
+      groupeEcritures: 'Les écritures',
+      nouvelle: 'Nouvelle facture',
+      liens: {
+        courriers: {
+          titre: 'Courriers, démarches et aides',
+          aide: 'Ce que vous avez déposé pour chaque association ou coopérative : courriers, démarches, aides.',
+        },
+      },
+      /** Les volets : ce que l'exploitation fait avec l'association ou la coopérative, avec leurs écritures. */
+      volets: {
+        achat_groupe: { titre: 'Achats groupés', nouvelle: 'Nouvel achat groupé' },
+        vente_groupee: { titre: 'Ventes groupées', nouvelle: 'Nouvelle vente groupée' },
+        mutualisation: { titre: 'Mutualisation des services et contrôles techniques', nouvelle: 'Nouvelle dépense de mutualisation' },
+        experts: { titre: 'Accès à des experts', nouvelle: 'Nouvelle intervention d’un expert' },
+        transports: { titre: 'Transports groupés', nouvelle: 'Nouveau transport groupé' },
+      },
+      aucuneEcritureVolet: 'Aucune écriture dans ce volet cette année.',
+      champVolet: {
+        label: 'Volet',
+        aucun: 'Non précisé',
+        aide: 'Ce que l’écriture concerne : achat groupé, vente groupée, mutualisation, experts ou transports.',
+      },
     },
     groupementSanitaire: {
       titre: 'Groupement sanitaire',

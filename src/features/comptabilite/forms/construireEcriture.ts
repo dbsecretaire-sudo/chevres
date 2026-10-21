@@ -152,6 +152,8 @@ export interface SaisieEcriture {
   vehiculeId?: string;
   /** Ce qu'une assurance couvre (vide : non précisé). */
   objetAssurance?: string;
+  /** Le volet d'une association ou d'une coopérative agricole (vide : non précisé). */
+  voletCooperative?: string;
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   elementAgri?: string;
   /** Le paiement n'a pas encore eu lieu (faux : payée à la date de l'écriture), et sa date prévue. */
@@ -459,6 +461,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
           ? s.vehiculeId
           : undefined,
       objetAssurance: estRecue && s.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES && s.objetAssurance ? s.objetAssurance : undefined,
+      voletCooperative: s.voletCooperative || undefined,
       elementAgri:
         estRecue && s.atelier === ATELIER.AGRITOURISME && s.elementAgri ? s.elementAgri : undefined,
       payee: s.enAttente ? false : undefined,

@@ -33,7 +33,7 @@ import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { estUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { CategorieDepense, CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
-import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, OBJET_ASSURANCE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, OBJET_ASSURANCE, TYPE_FACTURE, VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
@@ -75,6 +75,8 @@ export default function NouvelleFacture() {
     lot?: string;
     /** Le contact (fournisseur) choisi d'office : l'abattoir du lot. */
     fournisseur?: string;
+    /** Le volet d'une association ou d'une coopérative agricole, choisi d'office (depuis la page du groupement). */
+    volet?: string;
     /** Ce qu'une assurance couvre, choisi d'office (« vehicule », depuis la fiche d'un véhicule). */
     objet?: string;
     /** Le véhicule de la flotte choisi d'office (depuis sa fiche : une réparation, une prime d'assurance). */
@@ -126,6 +128,12 @@ export default function NouvelleFacture() {
   if (params.fournisseur && !fournisseurChoisi && e.fournisseurs.some((f) => f.id === params.fournisseur)) {
     setFournisseurChoisi(true);
     e.changerFournisseur(params.fournisseur);
+  }
+  // Le volet demandé par l'adresse (depuis la page de l'association ou de la coopérative) : il est choisi d'office, une fois.
+  const [voletVu, setVoletVu] = useState(false);
+  if (params.volet && !voletVu) {
+    setVoletVu(true);
+    if ((Object.values(VOLET_COOPERATIVE) as string[]).includes(params.volet)) e.setVoletCooperative(params.volet);
   }
   // Le véhicule demandé par l'adresse (depuis sa fiche) : il est choisi d'office, une fois.
   const [vehiculeVu, setVehiculeVu] = useState(false);

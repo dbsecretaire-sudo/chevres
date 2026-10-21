@@ -83,7 +83,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         <View style={colonneCentree}>
           <View style={styles.titreLibre}>
             {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
-            <Text style={[styles.titre, { color: couleur }]} numberOfLines={1}>
+            {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
+            <Text style={[styles.titre, { color: couleur }]} numberOfLines={2}>
               {titre}
             </Text>
             {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}

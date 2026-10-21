@@ -59,6 +59,7 @@ import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVi
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
+import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
 import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';
@@ -410,6 +411,13 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           />
         ) : null}
 
+        {/* Le volet d'une écriture d'une association ou d'une coopérative agricole. */}
+        {form.voletCooperative ? (
+          <ChampVoletCooperative
+            value={form.voletCooperative}
+            onChange={(volet) => f.setForm({ ...form, voletCooperative: volet || undefined })}
+          />
+        ) : null}
         {/* Une réparation ou une assurance : le véhicule de la flotte. */}
         {form.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES ? (
           <ChampObjetAssurance

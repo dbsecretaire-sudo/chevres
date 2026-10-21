@@ -15,6 +15,7 @@ import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_CATEGORIE_DEPENSE,
   LABEL_OBJET_ASSURANCE,
+  LABEL_VOLET_COOPERATIVE,
   LABEL_RUBRIQUE_MARCHANDISE,
   LABEL_NATURE_URSSAF,
   LABEL_TYPE_AIDE,
@@ -118,6 +119,11 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.categorieDeDepenseDeuxPoints}
           {LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
+        </Text>
+      ) : null}
+      {facture.voletCooperative ? (
+        <Text style={commonStyles.line}>
+          {TEXTES.production.lieux.groupement.champVolet.label} : {LABEL_VOLET_COOPERATIVE[facture.voletCooperative as keyof typeof LABEL_VOLET_COOPERATIVE] ?? facture.voletCooperative}
         </Text>
       ) : null}
       {facture.objetAssurance ? (

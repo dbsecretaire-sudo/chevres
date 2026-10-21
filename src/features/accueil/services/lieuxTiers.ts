@@ -6,6 +6,7 @@ import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
+import { VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 
 /**
@@ -61,6 +62,8 @@ export interface ConfigLieuTiers {
   recetteDuLieu?: string;
   /** Vrai : la nouvelle écriture du lieu s'ouvre avec le premier contact du lieu déjà choisi (le groupement sanitaire : le GDS). */
   contactParDefaut?: boolean;
+  /** Les volets du lieu (une association ou une coopérative agricole) : chacun liste ses écritures et ouvre sa nouvelle écriture, avec son volet déjà choisi. */
+  volets?: readonly { cle: string; route: string }[];
   /** Où ouvrir « Nouvelle facture » : une facture reçue (achat) ou émise (vente), déjà dans la bonne catégorie. */
   nouvelle: string;
   liens: readonly LienDuLieu[];
@@ -152,7 +155,16 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
-    liens: [],
+    // Les cinq volets : une dépense chacun (c'est la catégorie de la dépense qui dit ce qu'on a acheté), sauf la vente groupée, une recette.
+    volets: [
+      { cle: VOLET_COOPERATIVE.ACHAT_GROUPE, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.ACHAT_GROUPE}` },
+      { cle: VOLET_COOPERATIVE.VENTE_GROUPEE, route: `${NOUVELLE}?type=emise&volet=${VOLET_COOPERATIVE.VENTE_GROUPEE}` },
+      { cle: VOLET_COOPERATIVE.MUTUALISATION, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.MUTUALISATION}` },
+      { cle: VOLET_COOPERATIVE.EXPERTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.EXPERTS}` },
+      { cle: VOLET_COOPERATIVE.TRANSPORTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.TRANSPORTS}` },
+    ],
+    // Les courriers, démarches et aides déposés pour chaque association ou coopérative.
+    liens: [{ cle: 'courriers', icone: 'mail', route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT) }],
   },
   groupementSanitaire: {
     cle: 'groupementSanitaire',

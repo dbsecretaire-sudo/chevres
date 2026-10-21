@@ -169,6 +169,8 @@ export interface Facture {
   vehiculeId?: string;
   /** Une facture d'assurance : ce qu'elle couvre (voir OBJET_ASSURANCE) ; « véhicule » lie l'écriture à un véhicule de la flotte (vehiculeId). */
   objetAssurance?: string;
+  /** Une écriture d'une association ou d'une coopérative agricole : son volet (voir VOLET_COOPERATIVE) ; absent : non précisé. */
+  voletCooperative?: string;
   /** Uniquement si categorieDepense === 'alimentation' : une facture peut regrouper plusieurs aliments. */
   lignesAlimentation?: LigneAlimentation[];
   /** Uniquement si categorieDepense === 'achats_marchandises' dans un gîte : le détail des marchandises achetées. */

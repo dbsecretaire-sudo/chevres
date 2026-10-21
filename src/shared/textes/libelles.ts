@@ -20,6 +20,7 @@ import {
   RUBRIQUE_MARCHANDISE,
   UNITE_MARCHANDISE,
   OBJET_ASSURANCE,
+  VOLET_COOPERATIVE,
 } from '@/shared/constants/comptabilite';
 import {
   ACTIVITE_COMMUNE,
@@ -67,7 +68,7 @@ export const LABEL_CATEGORIE_CLIENT: Record<ValeurDe<typeof CATEGORIE_CLIENT>, s
   [CATEGORIE_CLIENT.ORGANISME]: 'Organisme',
   [CATEGORIE_CLIENT.ENTREPRISE]: 'Entreprise',
   [CATEGORIE_CLIENT.SURFACE_COMMERCIALE]: 'Surface commerciale',
-  [CATEGORIE_CLIENT.GROUPEMENT]: 'Groupement',
+  [CATEGORIE_CLIENT.GROUPEMENT]: 'Association / coopérative agricole',
   [CATEGORIE_CLIENT.VISITEUR]: 'Visiteur',
   [CATEGORIE_CLIENT.GROUPE_VISITEURS]: 'Groupe de visiteurs',
 };
@@ -77,6 +78,14 @@ export const LABEL_ZONE_ICHN: Record<ValeurDe<typeof ZONE_ICHN>, string> = {
   [ZONE_ICHN.MONTAGNE_SECHE]: 'Montagne sèche',
   [ZONE_ICHN.ZSCN]: 'Zone à contraintes naturelles (ZSCN)',
   [ZONE_ICHN.ZSCS]: 'Zone à contraintes spécifiques (ZSCS)',
+};
+
+export const LABEL_VOLET_COOPERATIVE: Record<ValeurDe<typeof VOLET_COOPERATIVE>, string> = {
+  [VOLET_COOPERATIVE.ACHAT_GROUPE]: 'Achats groupés',
+  [VOLET_COOPERATIVE.VENTE_GROUPEE]: 'Ventes groupées',
+  [VOLET_COOPERATIVE.MUTUALISATION]: 'Mutualisation des services et contrôles techniques',
+  [VOLET_COOPERATIVE.EXPERTS]: 'Accès à des experts',
+  [VOLET_COOPERATIVE.TRANSPORTS]: 'Transports groupés',
 };
 
 export const LABEL_OBJET_ASSURANCE: Record<ValeurDe<typeof OBJET_ASSURANCE>, string> = {
@@ -94,7 +103,7 @@ export const LABEL_CATEGORIE_FOURNISSEUR: Record<ValeurDe<typeof CATEGORIE_FOURN
   [CATEGORIE_FOURNISSEUR.GARAGE]: 'Garage / réparateur',
   [CATEGORIE_FOURNISSEUR.ORGANISME]: 'Organisme',
   [CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE]: 'Chambre d’agriculture',
-  [CATEGORIE_FOURNISSEUR.GROUPEMENT]: 'Groupement',
+  [CATEGORIE_FOURNISSEUR.GROUPEMENT]: 'Association / coopérative agricole',
   [CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE]: 'Groupement sanitaire (GDS)',
   [CATEGORIE_FOURNISSEUR.LABORATOIRE]: 'Laboratoire d’analyses',
   [CATEGORIE_FOURNISSEUR.ABATTOIR]: 'Abattoir',

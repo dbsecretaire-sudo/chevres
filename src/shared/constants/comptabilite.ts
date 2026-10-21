@@ -8,6 +8,18 @@ export const TYPE_FACTURE = {
   EMISE: 'emise',
 } as const;
 
+/**
+ * Les volets d'une association ou d'une coopérative agricole (L'Illoc, Casgiu Casanu…) : ce que l'exploitation fait avec elle. Une écriture se range dans un volet ;
+ * la vente groupée est une recette, les autres des dépenses.
+ */
+export const VOLET_COOPERATIVE = {
+  ACHAT_GROUPE: 'achat_groupe',
+  VENTE_GROUPEE: 'vente_groupee',
+  MUTUALISATION: 'mutualisation',
+  EXPERTS: 'experts',
+  TRANSPORTS: 'transports',
+} as const;
+
 /** Ce qu'une facture d'assurance couvre : les bâtiments, les animaux ou un véhicule de la flotte (dont on choisit alors la plaque). */
 export const OBJET_ASSURANCE = {
   BATIMENTS: 'batiments',

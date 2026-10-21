@@ -49,6 +49,8 @@ export interface Transaction {
   sansFacture?: boolean;
   /** Le nom de la catégorie de l'écriture (« Alimentation », « Vente de fromage »…), pour la recherche. */
   libelleCategorie?: string;
+  /** Une écriture d'une association ou d'une coopérative agricole : son volet (achats groupés, ventes groupées…). */
+  volet?: string;
   /** Ce que la facture détaille (ses aliments, son matériel, ses marchandises, ses carburants), pour la recherche. */
   termes?: string[];
 }
@@ -152,6 +154,7 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
           ? LABEL_CATEGORIE_DEPENSE[f.categorieDepense]
           : undefined,
       termes: termesDeFacture(f),
+      volet: f.voletCooperative,
       sansFacture: f.type === TYPE_FACTURE.RECUE && f.sansFacture ? true : undefined,
       rubriques: f.lignesMarchandises?.length
         ? [...new Set(f.lignesMarchandises.map((l) => RUBRIQUE_COMPTABLE_DE_MARCHANDISE[l.rubrique]))]

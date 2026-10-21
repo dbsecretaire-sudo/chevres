@@ -30,6 +30,7 @@ import {
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { categorieDepenseAutorisee, estChambreAgriculture } from '@/features/fournisseurs/services/categorie';
+import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import {
   categorieFournisseurDe,
@@ -171,6 +172,8 @@ export function useNouvelleEcriture(
   const [vehiculeId, setVehiculeId] = useState('');
   /** Ce qu'une assurance couvre (vide : non précisé). */
   const [objetAssurance, setObjetAssurance] = useState('');
+  /** Le volet d'une association ou d'une coopérative agricole (vide : non précisé). */
+  const [voletCooperative, setVoletCooperative] = useState('');
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   const [elementAgri, setElementAgri] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
@@ -408,6 +411,12 @@ export function useNouvelleEcriture(
     estChambreAgriculture(fournisseurSelectionne);
   /** La catégorie du fournisseur choisi : elle dit si la case « Offert par le fournisseur » s'affiche. */
   const categorieDuFournisseur = fournisseurSelectionne ? categorieFournisseurDe(fournisseurSelectionne.categorie) : undefined;
+  /** Le volet se choisit quand le contact est une association ou une coopérative agricole (fournisseur d'une dépense, client d'une recette), ou qu'il est déjà donné. */
+  const contactCooperative =
+    type === TYPE_FACTURE.RECUE
+      ? categorieDuFournisseur?.id === CATEGORIE_FOURNISSEUR.GROUPEMENT
+      : categorieClientDe(clientSelectionne?.categorie)?.id === CATEGORIE_CLIENT.GROUPEMENT;
+  const voletAffiche = contactCooperative || voletCooperative !== '';
   /** Une dépense offerte (la case est cochée, la catégorie la propose, et la dépense a des montants que le fournisseur peut offrir : ni la Chambre, ni le carburant). */
   const offertDepense =
     type === TYPE_FACTURE.RECUE &&
@@ -690,6 +699,7 @@ export function useNouvelleEcriture(
         atelier,
         vehiculeId,
         objetAssurance,
+        voletCooperative,
         elementAgri,
         reajustement,
         offert: offertCoche && estProductionVente,
@@ -954,6 +964,9 @@ export function useNouvelleEcriture(
     setVehiculeId,
     objetAssurance,
     setObjetAssurance,
+    voletCooperative,
+    setVoletCooperative,
+    voletAffiche,
     elementAgri,
     setElementAgri,
     clientSelectionne,

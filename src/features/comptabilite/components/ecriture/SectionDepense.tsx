@@ -50,6 +50,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
+import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
 import { OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
@@ -322,6 +323,8 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
             options={OPTIONS_TAUX_TVA}
           />
         )}
+        {/* Une association ou une coopérative agricole : son volet (achat groupé, mutualisation, experts, transports). */}
+        {e.voletAffiche ? <ChampVoletCooperative value={e.voletCooperative} onChange={e.setVoletCooperative} /> : null}
         {/* Une réparation ou une prime d'assurance : le véhicule de la flotte, par sa plaque. */}
         {e.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES ? (
           <ChampObjetAssurance
