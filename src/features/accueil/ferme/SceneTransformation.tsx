@@ -64,20 +64,20 @@ const PALETTE_FROMAGERIE: PaletteDeBatiment = {
   bord: '#9AA3AA',
 };
 
-/** Le nombre de maisons par rangée, de l'autre côté de la rue. */
+/** Le nombre d'intervenants par rangée, de l'autre côté de la rue (trois colonnes). */
 const PAR_RANGEE = 3;
-/** La hauteur de la rue (étroite : la plaque de ce qu'on garde chez soi la remplit d'un bord à l'autre), et celle des trottoirs. */
-const HAUTEUR_DE_LA_RUE = 88;
-/** Ce qui reste de la rue autour de la plaque blanche. */
-const BORD_DE_LA_RUE = 5;
+/** La hauteur de la rue (étroite : juste ses tirets), et celle des trottoirs. */
+const HAUTEUR_DE_LA_RUE = 84;
 const TROTTOIR = 8;
 const MARGE = 8;
+/** La hauteur de la plaque blanche (le titre, les symboles et les trois comptes). */
+const HAUTEUR_DE_LA_PLAQUE = 78;
 
 interface Props {
   compte: CompteTransformation;
-  /** Un appui sur la rue : le stock de la fromagerie (fromages, viande, emballages, matériel). */
+  /** Un appui sur la plaque : le stock de l'atelier (fromages, viande, emballages, matériel). */
   onAppui: () => void;
-  /** Les intervenants, de l'autre côté de la rue, trois par rangée : les moins utilisés en haut, les plus utilisés près de la rue. */
+  /** Les intervenants, de l'autre côté de la rue, en rangées de trois : les moins utilisés en haut, les plus utilisés près de la rue. */
   intervenants: readonly EntreeDeColonne[];
   /** La gestion : les compartiments de la fromagerie. */
   gestion: readonly EntreeDeColonne[];
@@ -97,13 +97,13 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
   const [hauteur, setHauteur] = useState(0);
   const [hauteurFromagerie, setHauteurFromagerie] = useState(200);
   const rangees = enRangees(intervenants, PAR_RANGEE);
-  // Les maisons rapetissent quand la scène est basse : toutes les rangées tiennent au-dessus de la rue.
-  const disponible = hauteur - HAUTEUR_DE_LA_RUE - 2 * TROTTOIR - hauteurFromagerie - 3 * MARGE;
+  // Les logos rapetissent quand la scène est basse : toutes les rangées tiennent au-dessus de la rue, de la plaque et de l'atelier.
+  const disponible = hauteur - HAUTEUR_DE_LA_RUE - 2 * TROTTOIR - HAUTEUR_DE_LA_PLAQUE - hauteurFromagerie - 4 * MARGE;
   const echelle =
     hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.15, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
   return (
     <View style={styles.scene} onLayout={(e) => setHauteur(Math.round(e.nativeEvent.layout.height))}>
-      {/* De l'autre côté de la rue : la ville. */}
+      {/* De l'autre côté de la rue : les intervenants, trois par rangée. */}
       <View style={styles.ville}>
         {rangees.map((rangee, i) => (
           <View key={i} style={styles.rangee}>
@@ -114,15 +114,20 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
         ))}
       </View>
       <View style={styles.trottoir} />
-      {/* La rue : son trait blanc au milieu, et ce qu'on garde chez soi sur une plaque, avec le lait, la viande et le fromage qui se promènent. */}
-      <Pressable style={styles.rue} onPress={onAppui} accessibilityRole="button" accessibilityLabel={T.entrer}>
+      {/* La rue : seulement ses tirets blancs au milieu. */}
+      <View style={styles.rue}>
         <View style={styles.traits} pointerEvents="none">
           {Array.from({ length: 12 }, (_, i) => (
             <View key={i} style={styles.trait} />
           ))}
         </View>
-        {/* La plaque blanche prend toute la largeur de la rue et toute sa hauteur : le titre et les symboles d'un côté, les trois comptes de l'autre. */}
-        <View style={styles.plaque}>
+      </View>
+      <View style={styles.trottoir} />
+      {/* Notre côté : le carrelage, et la fromagerie (son mur en inox et ses portes). */}
+      <View style={styles.notreCote}>
+        <Carrelage lignes={4} />
+        {/* La plaque blanche, sur toute la largeur : ce qu'on garde chez soi (le titre et les symboles d'un côté, les trois comptes de l'autre). Un appui ouvre le stock. */}
+        <Pressable style={styles.plaque} onPress={onAppui} accessibilityRole="button" accessibilityLabel={T.entrer}>
           <View style={styles.entete}>
             <Text style={styles.titre} numberOfLines={1}>
               {T.titre}
@@ -138,12 +143,7 @@ export function SceneTransformation({ compte, onAppui, intervenants, gestion, on
             </View>
           </View>
           <LignesDeTransformation compte={compte} />
-        </View>
-      </Pressable>
-      <View style={styles.trottoir} />
-      {/* Notre côté : le carrelage, et la fromagerie (son mur en inox et ses portes). */}
-      <View style={styles.notreCote}>
-        <Carrelage lignes={4} />
+        </Pressable>
         <View style={styles.fromagerie}>
           <Batiment
             titre={T.fromagerie}
@@ -170,11 +170,11 @@ const styles = StyleSheet.create({
   ville: { flex: 1, backgroundColor: '#DCE6EE', paddingHorizontal: MARGE, paddingVertical: MARGE, justifyContent: 'space-between' },
   rangee: { flexDirection: 'row', justifyContent: 'space-around' },
   trottoir: { height: TROTTOIR, backgroundColor: '#C9CCCF' },
-  rue: { height: HAUTEUR_DE_LA_RUE, backgroundColor: '#7C858C', padding: BORD_DE_LA_RUE },
+  rue: { height: HAUTEUR_DE_LA_RUE, backgroundColor: '#7C858C', justifyContent: 'center' },
   traits: { position: 'absolute', left: 0, right: 0, top: HAUTEUR_DE_LA_RUE / 2 - 2, flexDirection: 'row', justifyContent: 'space-around' },
   trait: { width: 14, height: 4, backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 2 },
   plaque: {
-    flex: 1,
+    height: HAUTEUR_DE_LA_PLAQUE,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
@@ -182,6 +182,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
+    marginBottom: MARGE,
+    borderWidth: 1,
+    borderColor: '#D8DCDF',
   },
   entete: { alignItems: 'center', gap: 4 },
   symboles: { flexDirection: 'row', gap: 14 },

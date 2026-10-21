@@ -28,6 +28,7 @@ function Pastille({
   route,
   onAppui,
   poids = 1,
+  grand = false,
   echelle,
 }: {
   /** Le rapport à la taille d'un téléphone (`useEchelle`) : les icônes et le texte suivent la taille de l'écran. */
@@ -41,6 +42,8 @@ function Pastille({
   route?: string;
   onAppui?: () => void;
   poids?: number;
+  /** Le nombre en grand (les rappels) ; sinon, la taille habituelle (la balance, les boucles). */
+  grand?: boolean;
 }) {
   const router = useRouter();
   return (
@@ -50,9 +53,9 @@ function Pastille({
       accessibilityRole="button"
       accessibilityLabel={`${libelle} : ${valeur}`}
     >
-      <Ionicons name={icone} size={Math.round(20 * echelle)} color={couleur ?? colors.primary} />
+      <Ionicons name={icone} size={Math.round((grand ? 22 : 20) * echelle)} color={couleur ?? colors.primary} />
       <Text
-        style={[styles.valeur, { fontSize: Math.round(14 * echelle) }, couleur ? { color: couleur } : null]}
+        style={[styles.valeur, { fontSize: Math.round((grand ? 19 : 14) * echelle) }, couleur ? { color: couleur } : null]}
         numberOfLines={1}
       >
         {valeur}
@@ -94,7 +97,8 @@ export function BandeauFerme({ onRappels }: Props) {
       <Pastille
         icone="cash-outline"
         valeur={balance === undefined ? '…' : montant(balance)}
-        couleur={balance !== undefined && balance < 0 ? colors.danger : undefined}
+        // Le solde se lit à sa couleur : vert quand il est positif, rouge quand il est négatif.
+        couleur={balance === undefined || balance === 0 ? undefined : balance < 0 ? colors.danger : colors.success}
         libelle={T.balance}
         route={ROUTES.COMPTABILITE_LISTE}
         poids={2}
@@ -114,6 +118,7 @@ export function BandeauFerme({ onRappels }: Props) {
         valeur={rappels === undefined ? '…' : String(rappels)}
         // La cloche est rouge quand des rappels attendent.
         couleur={rappels ? colors.danger : undefined}
+        grand
         libelle={T.rappels}
         onAppui={onRappels}
         echelle={echelle}
