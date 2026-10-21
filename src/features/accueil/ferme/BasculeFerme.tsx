@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   pastilleChoisie: { backgroundColor: colors.primary },
-  texte: { fontWeight: '400', color: colors.primary },
+  texte: { fontWeight: '700', color: colors.primary },
   texteChoisi: { color: colors.blanc },
 });

@@ -22,7 +22,7 @@ import { TEXTES } from '@/shared/textes';
 
 /** Connexion à Google Drive et synchronisation (envoi / récupération) des données de l'établissement. */
 export function useGoogleDrive() {
-  const { settings, patchSettings } = useAppSettings();
+  const { settings, patchSettings, refreshSettings } = useAppSettings();
   const { actif, recharger } = useEtablissement();
 
   const [connecte, setConnecte] = useState(false);
@@ -126,6 +126,8 @@ export function useGoogleDrive() {
         bilan = await tirerToutesAnnees(accessToken, settings.driveFolderId, onProgress);
         // Les espèces de l'établissement ont pu changer : on les relit pour afficher les bons cheptels.
         await recharger();
+        // Les réglages récupérés (les dates d'estive, les lots…) changent l'accueil : on les relit tout de suite.
+        await refreshSettings();
       }
       await patchSettings({ derniereSynchronisation: new Date().toISOString() });
       // Les données envoyées sur Drive sont sauvegardées (pas celles qu'on en récupère).

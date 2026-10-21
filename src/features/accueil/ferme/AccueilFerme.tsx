@@ -381,6 +381,7 @@ export default function AccueilFerme() {
           ) : cote === 'agritourisme' ? (
             // La même scène que l'atelier (une rue étroite, une plaque blanche, un bâtiment de gestion), avec les comptes de l'agritourisme.
             <SceneTransformation
+              decor="campagne"
               plaque={{
                 titre: TEXTES.accueil.ferme.agritourisme.titre,
                 symboles: SYMBOLES_AGRITOURISME,

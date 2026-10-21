@@ -12,7 +12,7 @@ import { TEXTES } from '@/shared/textes';
 
 /** Export de l'année (PDF / Excel) et sauvegarde locale (export / restauration). */
 export function useExportEtSauvegarde() {
-  const { settings } = useAppSettings();
+  const { settings, refreshSettings } = useAppSettings();
   const { recharger } = useEtablissement();
 
   const [exportEnCours, setExportEnCours] = useState(false);
@@ -57,6 +57,8 @@ export function useExportEtSauvegarde() {
       const resultat = await importerSauvegardeLocale();
       if (resultat.annule) return;
       await recharger();
+      // Les réglages importés (les dates d'estive, les lots…) changent l'accueil : on les relit tout de suite.
+      await refreshSettings();
       setResultatImport({
         titre: TEXTES.settings.reglages.sauvegardeRestauree,
         message: TEXTES.settings.reglages.messageImport(resultat),

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { Batiment, type PaletteDeBatiment } from '@/features/accueil/ferme/Batiment';
+import { DecorPiqueNique } from '@/features/accueil/ferme/DecorPiqueNique';
 import { HAUTEUR_DE_MAISON, Maison } from '@/features/accueil/ferme/Maison';
 import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import type { CompteTransformation } from '@/features/accueil/services/transformationFerme';
 import { colors } from '@/shared/theme/colors';
+import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.accueil.ferme.transformation;
@@ -53,11 +55,11 @@ const lignesDeTransformation = (compte: CompteTransformation): ContenuDePlaque['
 ];
 
 /** Les lignes de comptes de la plaque, l'une sous l'autre. */
-function LignesDePlaque({ lignes }: { lignes: ContenuDePlaque['lignes'] }) {
+function LignesDePlaque({ lignes, echelle }: { lignes: ContenuDePlaque['lignes']; echelle: number }) {
   return (
     <View style={styles.lignes}>
       {lignes.map((l) => (
-        <Text key={l.cle} style={styles.ligne} numberOfLines={1}>
+        <Text key={l.cle} style={[styles.ligne, { fontSize: Math.round(13 * echelle) }]} numberOfLines={1}>
           {l.texte}
         </Text>
       ))}
@@ -73,6 +75,17 @@ const PALETTE_FROMAGERIE: PaletteDeBatiment = {
   bord: '#9AA3AA',
 };
 
+/** La mise en scène : l'atelier (une rue, du carrelage, de l'inox) ou la campagne (un pique-nique, de l'herbe, du bois : l'agritourisme). */
+export type DecorDeLaScene = 'atelier' | 'campagne';
+
+/** L'accueil des visiteurs : du bois clair, un toit brun, des compartiments crème. */
+const PALETTE_ACCUEIL: PaletteDeBatiment = {
+  toit: '#8B5A2B',
+  mur: '#F3E6CC',
+  compartiment: '#FFF8E7',
+  bord: '#C9A66B',
+};
+
 /** Le nombre d'intervenants par rangée, de l'autre côté de la rue (trois colonnes). */
 const PAR_RANGEE = 3;
 /** La hauteur de la rue (étroite : juste ses tirets), et celle des trottoirs. */
@@ -86,6 +99,8 @@ interface Props {
   compte?: CompteTransformation;
   /** Une autre plaque que celle de la Transformation (le côté Agritourisme) : son titre, ses symboles et ses comptes. */
   plaque?: ContenuDePlaque;
+  /** Le décor : l'atelier d'office, ou la campagne (le côté Agritourisme). */
+  decor?: DecorDeLaScene;
   /** Le nom du bâtiment de la gestion (d'office : l'atelier), et ce que dit un appui sur la plaque. */
   nomBatiment?: string;
   entrer?: string;
@@ -109,6 +124,7 @@ const enRangees = <T,>(liste: readonly T[], taille: number): T[][] =>
  */
 export function SceneTransformation({
   compte,
+  decor = 'atelier',
   plaque,
   nomBatiment,
   entrer,
@@ -123,14 +139,20 @@ export function SceneTransformation({
     symboles: SYMBOLES,
     lignes: lignesDeTransformation(compte ?? { fromages: 0, charcuterie: 0, viande: 0 }),
   };
+  // Sur un grand écran, les logos peuvent grandir au-delà de leur taille de téléphone, tant que la scène a la place.
+  const agrandissement = useEchelle();
   const [hauteur, setHauteur] = useState(0);
   const [hauteurFromagerie, setHauteurFromagerie] = useState(200);
   // Quatre intervenants (l'agritourisme) se rangent par deux ; six (l'exploitation, l'atelier), par trois.
   const rangees = enRangees(intervenants, intervenants.length <= 4 ? 2 : PAR_RANGEE);
   // Les logos rapetissent quand la scène est basse : toutes les rangées tiennent au-dessus de la rue, de la plaque et de l'atelier.
-  const disponible = hauteur - HAUTEUR_DE_LA_RUE - 2 * TROTTOIR - HAUTEUR_DE_LA_PLAQUE - hauteurFromagerie - 4 * MARGE;
+  const campagne = decor === 'campagne';
+  // La rue, la plaque et le bâtiment grandissent avec la fenêtre, comme les logos : aucune zone ne reste à sa taille de téléphone dans une grande scène.
+  const hauteurRue = Math.round(HAUTEUR_DE_LA_RUE * agrandissement * (campagne ? 1.2 : 1));
+  const hauteurPlaque = Math.round(HAUTEUR_DE_LA_PLAQUE * agrandissement);
+  const disponible = hauteur - hauteurRue - (campagne ? 0 : 2 * TROTTOIR) - hauteurPlaque - hauteurFromagerie - 4 * MARGE;
   const echelle =
-    hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.15, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
+    hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.35 * agrandissement, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
   return (
     <View style={styles.scene} onLayout={(e) => setHauteur(Math.round(e.nativeEvent.layout.height))}>
       {/* De l'autre côté de la rue : les intervenants, trois par rangée. */}
@@ -143,43 +165,50 @@ export function SceneTransformation({
           </View>
         ))}
       </View>
-      <View style={styles.trottoir} />
-      {/* La rue : seulement ses tirets blancs au milieu. */}
-      <View style={styles.rue}>
-        <View style={styles.traits} pointerEvents="none">
-          {Array.from({ length: 12 }, (_, i) => (
-            <View key={i} style={styles.trait} />
-          ))}
-        </View>
-      </View>
-      <View style={styles.trottoir} />
+      {campagne ? (
+        // La campagne : un pré avec un pique-nique, à la place de la rue.
+        <DecorPiqueNique hauteur={hauteurRue} echelle={agrandissement} />
+      ) : (
+        <>
+          <View style={styles.trottoir} />
+          {/* La rue : seulement ses tirets blancs au milieu. */}
+          <View style={styles.rue}>
+            <View style={styles.traits} pointerEvents="none">
+              {Array.from({ length: 12 }, (_, i) => (
+                <View key={i} style={styles.trait} />
+              ))}
+            </View>
+          </View>
+          <View style={styles.trottoir} />
+        </>
+      )}
       {/* Notre côté : le carrelage, et la fromagerie (son mur en inox et ses portes). */}
-      <View style={styles.notreCote}>
-        <Carrelage lignes={4} />
+      <View style={[styles.notreCote, campagne ? styles.herbe : null]}>
+        {campagne ? null : <Carrelage lignes={4} />}
         {/* La plaque blanche, sur toute la largeur : ce qu'on garde chez soi (le titre et les symboles d'un côté, les trois comptes de l'autre). Un appui ouvre le stock. */}
-        <Pressable style={styles.plaque} onPress={onAppui} accessibilityRole="button" accessibilityLabel={entrer ?? T.entrer}>
+        <Pressable style={[styles.plaque, { height: hauteurPlaque }]} onPress={onAppui} accessibilityRole="button" accessibilityLabel={entrer ?? T.entrer}>
           <View style={styles.entete}>
-            <Text style={styles.titre} numberOfLines={1}>
+            <Text style={[styles.titre, { fontSize: Math.round(13 * agrandissement) }]} numberOfLines={1}>
               {contenu.titre}
             </Text>
             <View style={styles.symboles}>
               {contenu.symboles.map((s, i) => (
                 <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
-                  <Text style={styles.symbole} accessibilityElementsHidden importantForAccessibility="no">
+                  <Text style={[styles.symbole, { fontSize: Math.round(24 * agrandissement) }]} accessibilityElementsHidden importantForAccessibility="no">
                     {s.emoji}
                   </Text>
                 </Balade>
               ))}
             </View>
           </View>
-          <LignesDePlaque lignes={contenu.lignes} />
+          <LignesDePlaque lignes={contenu.lignes} echelle={agrandissement} />
         </Pressable>
         <View style={styles.fromagerie}>
           <Batiment
             titre={nomBatiment ?? T.fromagerie}
             entrees={gestion}
             onAppui={onGestion}
-            palette={PALETTE_FROMAGERIE}
+            palette={campagne ? PALETTE_ACCUEIL : PALETTE_FROMAGERIE}
             surHauteur={setHauteurFromagerie}
           />
         </View>
@@ -197,7 +226,7 @@ const styles = StyleSheet.create({
     borderColor: '#A9794A',
     overflow: 'hidden',
   },
-  ville: { flex: 1, backgroundColor: '#DCE6EE', paddingHorizontal: MARGE, paddingVertical: MARGE, justifyContent: 'space-between' },
+  ville: { flex: 1, backgroundColor: '#DCE6EE', paddingHorizontal: MARGE, paddingVertical: MARGE, justifyContent: 'space-evenly' },
   rangee: { flexDirection: 'row', justifyContent: 'space-around' },
   trottoir: { height: TROTTOIR, backgroundColor: '#C9CCCF' },
   rue: { height: HAUTEUR_DE_LA_RUE, backgroundColor: '#7C858C', justifyContent: 'center' },
@@ -222,6 +251,7 @@ const styles = StyleSheet.create({
   titre: { fontSize: 13, fontWeight: '800', color: colors.primaryDark, textAlign: 'center' },
   lignes: { alignItems: 'flex-start', gap: 2, flexShrink: 1 },
   ligne: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
+  herbe: { backgroundColor: '#DCEBC4' },
   notreCote: { justifyContent: 'flex-end', padding: MARGE, paddingTop: MARGE },
   fromagerie: { alignSelf: 'stretch' },
   carrelage: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },

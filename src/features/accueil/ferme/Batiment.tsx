@@ -2,6 +2,7 @@ import { useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import { colors } from '@/shared/theme/colors';
+import { useEchelle } from '@/shared/theme/miseEnPage';
 
 /** Les couleurs d'un grand bâtiment : son toit (et son enseigne), son mur, le fond de ses compartiments et leur bord. */
 export interface PaletteDeBatiment {
@@ -35,6 +36,8 @@ function Compartiment({
   onAppui: Props['onAppui'];
 }) {
   const ref = useRef<View>(null);
+  // Sur un grand écran (Windows), le dessin et le nom grandissent avec la largeur de la colonne.
+  const e = useEchelle();
   const appuyer = () =>
     ref.current?.measureInWindow((x, y, largeur, hauteur) => onAppui(entree.cle, { x, y, largeur, hauteur }));
   return (
@@ -46,15 +49,25 @@ function Compartiment({
       accessibilityRole="button"
       accessibilityLabel={entree.titre}
     >
-      <View style={[styles.disque, { backgroundColor: entree.couleur ?? palette.toit }]}>
-        <View style={{ transform: [{ scale: 0.7 }] }}>{entree.icone}</View>
+      <View
+        style={[
+          styles.disque,
+          {
+            backgroundColor: entree.couleur ?? palette.toit,
+            width: Math.round(30 * e),
+            height: Math.round(30 * e),
+            borderRadius: Math.round(15 * e),
+          },
+        ]}
+      >
+        <View style={{ transform: [{ scale: 0.7 * e }] }}>{entree.icone}</View>
         {entree.pastille ? (
           <View style={styles.pastille}>
             <Text style={styles.pastilleTexte}>{entree.pastille}</Text>
           </View>
         ) : null}
       </View>
-      <Text style={styles.nom} numberOfLines={2}>
+      <Text style={[styles.nom, { fontSize: Math.round(10 * e), minHeight: Math.round(24 * e) }]} numberOfLines={2}>
         {entree.titre}
       </Text>
     </Pressable>
@@ -66,10 +79,11 @@ function Compartiment({
  * produit. Un toit arrondi avec son nom, puis le mur et ses six portes, chacune avec son dessin et son nom : on touche directement celle qu'on veut.
  */
 export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur }: Props) {
+  const echelle = useEchelle();
   return (
     <View style={styles.batiment} onLayout={(e) => surHauteur?.(Math.round(e.nativeEvent.layout.height))}>
-      <View style={[styles.toit, { backgroundColor: palette.toit }]}>
-        <Text style={styles.titre}>{titre}</Text>
+      <View style={[styles.toit, { backgroundColor: palette.toit, height: Math.round(30 * echelle) }]}>
+        <Text style={[styles.titre, { fontSize: Math.round(14 * echelle) }]}>{titre}</Text>
       </View>
       <View style={[styles.mur, { backgroundColor: palette.mur, borderColor: palette.toit }]}>
         {decor}
