@@ -151,13 +151,6 @@ export default function FicheChevre() {
               onChoisir={setOnglet}
             />
           </View>
-          {/* Une mère vivante : sa nouvelle naissance, à côté des onglets. */}
-          {peutAvoirDesCabris ? (
-            <Pressable style={styles.ajouterUnCabri} onPress={ajouterUnCabri} accessibilityRole="button">
-              <Text style={styles.ajouterUnCabriTexte}>{TEXTES.cheptel.ficheChevre.ajouterUnCabri}</Text>
-              <Ionicons name="paw" size={22} color={colors.ajout} />
-            </Pressable>
-          ) : null}
         </View>
 
         {onglet === 'fiche' ? (
@@ -231,7 +224,8 @@ export default function FicheChevre() {
 
         {onglet === 'suivi' ? (
           <>
-            <ChevreSuiviAnnuel chevre={chevre} />
+            {/* « Ajouter un cabri » n'est que dans cet onglet (Reproduction) : une mère vivante y trouve sa nouvelle naissance. */}
+            <ChevreSuiviAnnuel chevre={chevre} onAjouterUnCabri={peutAvoirDesCabris ? ajouterUnCabri : undefined} />
 
             <ChevreAscendance
               dateNaissance={chevre.dateNaissance}

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
@@ -22,7 +21,6 @@ const G = T.groupes;
  * ramène ici.
  */
 export default function AccueilComptabilite() {
-  const router = useRouter();
   const ouvrir = useOuvrir();
   const estActive = useLigneActive();
   // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre les écritures.

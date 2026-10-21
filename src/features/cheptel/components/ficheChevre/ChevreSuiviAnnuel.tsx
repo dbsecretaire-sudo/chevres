@@ -35,6 +35,8 @@ const COULEURS: Record<CategorieAnnuelle, string> = {
 
 interface Props {
   chevre: Chevre;
+  /** Une mère vivante : « Ajouter un cabri » (sa nouvelle naissance), à côté de « Signaler un avortement ». */
+  onAjouterUnCabri?: () => void;
 }
 
 /**
@@ -44,7 +46,7 @@ interface Props {
  * un seul classement de renouvellement : dès qu'il en a un (quelle que soit l'année), il n'y a plus de bouton « Ajouter au renouvellement ».
  * L'année se change ensuite dans le lot.
  */
-export function ChevreSuiviAnnuel({ chevre }: Props) {
+export function ChevreSuiviAnnuel({ chevre, onAjouterUnCabri }: Props) {
   const router = useRouter();
   const { lots, ajouterAuLotAnnuel } = useLots();
   const tiptags = useTiptags();
@@ -67,34 +69,48 @@ export function ChevreSuiviAnnuel({ chevre }: Props) {
   ].filter((b) => peutAjouter(b.categorie));
   const avortement = peutAjouter(CATEGORIE_LOT.AVORTEMENT);
 
-  if (dedans.length === 0 && boutons.length === 0 && !avortement) return null;
+  const aDesLots = dedans.length > 0 || boutons.length > 0;
+  if (!aDesLots && !avortement && !onAjouterUnCabri) return null;
   return (
-    <Card style={commonStyles.gap8}>
-      <Text style={commonStyles.cardTitle}>{T.titre}</Text>
-      <View style={styles.lotsEtAvortement}>
-        <View style={styles.lots}>
-          {dedans.map((lot) => (
-            <Pressable key={lot.id} onPress={() => router.push(`${ROUTES.lot(lot.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never)} hitSlop={6} accessibilityLabel={lot.nom}>
-              <Badge label={lot.nom} color={COULEURS[lot.categorie as CategorieAnnuelle] ?? colors.primary} />
-            </Pressable>
+    <>
+      {aDesLots ? (
+        <Card style={commonStyles.gap8}>
+          <Text style={commonStyles.cardTitle}>{T.titre}</Text>
+          <View style={styles.lots}>
+            {dedans.map((lot) => (
+              <Pressable key={lot.id} onPress={() => router.push(`${ROUTES.lot(lot.id)}&retour=${encodeURIComponent(ROUTES.ficheChevre(chevre.id))}` as never)} hitSlop={6} accessibilityLabel={lot.nom}>
+                <Badge label={lot.nom} color={COULEURS[lot.categorie as CategorieAnnuelle] ?? colors.primary} />
+              </Pressable>
+            ))}
+          </View>
+          {boutons.map((b) => (
+            <Button key={b.categorie} variant="secondary" label={b.label} onPress={() => boucle && ajouterAuLotAnnuel(b.categorie, boucle)} />
           ))}
+          {boutons.length > 0 ? <Text style={commonStyles.note}>{T.aide(annee)}</Text> : null}
+        </Card>
+      ) : null}
+      {/* Sous le suivi, côte à côte : une naissance (« Ajouter un cabri ») et un avortement de l'année. */}
+      {onAjouterUnCabri || avortement ? (
+        <View style={styles.actions}>
+          {onAjouterUnCabri ? (
+            <Pressable style={styles.cabri} onPress={onAjouterUnCabri} accessibilityRole="button">
+              <Text style={styles.cabriTexte}>{TEXTES.cheptel.ficheChevre.ajouterUnCabri}</Text>
+              <Ionicons name="paw" size={22} color={colors.ajout} />
+            </Pressable>
+          ) : null}
+          {avortement ? (
+            <Pressable
+              style={styles.avortement}
+              onPress={() => boucle && ajouterAuLotAnnuel(CATEGORIE_LOT.AVORTEMENT, boucle)}
+              accessibilityRole="button"
+              accessibilityLabel={T.avorte(femelle)}
+            >
+              <Text style={styles.avortementTexte}>{T.signalerAvortement}</Text>
+              <Ionicons name="ban" size={26} color={colors.danger} />
+            </Pressable>
+          ) : null}
         </View>
-        {avortement ? (
-          <Pressable
-            style={styles.avortement}
-            onPress={() => boucle && ajouterAuLotAnnuel(CATEGORIE_LOT.AVORTEMENT, boucle)}
-            accessibilityRole="button"
-            accessibilityLabel={T.avorte(femelle)}
-          >
-            <Text style={styles.avortementTexte}>{T.signalerAvortement}</Text>
-            <Ionicons name="ban" size={30} color={colors.danger} />
-          </Pressable>
-        ) : null}
-      </View>
-      {boutons.map((b) => (
-        <Button key={b.categorie} variant="secondary" label={b.label} onPress={() => boucle && ajouterAuLotAnnuel(b.categorie, boucle)} />
-      ))}
-      {boutons.length > 0 ? <Text style={commonStyles.note}>{T.aide(annee)}</Text> : null}
-    </Card>
+      ) : null}
+    </>
   );
 }
