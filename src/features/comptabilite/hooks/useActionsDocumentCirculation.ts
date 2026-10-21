@@ -1,6 +1,8 @@
 import { Alert } from 'react-native';
 import { deposerDocumentCirculation, type EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
 import { genererLeModeleDeCirculation } from '@/features/comptabilite/services/modeleCirculation';
+import { useLots } from '@/features/exploitation/hooks/useLots';
+import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
 import {
   choisirFichiers,
   ouvrirPiece,
@@ -16,7 +18,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.cheptel.circulation;
 
-/** L'écriture dont on dépose le document : une vente ou une dépense, avec le document déjà déposé s'il y en a un. */
+/** Ce dont on dépose le document : une vente, une dépense ou un lot de départ, avec le document déjà déposé s'il y en a un. */
 export type EcritureDuDocument = Pick<EcritureACirculation, 'type' | 'id' | 'depose'>;
 
 /** Une ligne du menu d'un document de circulation. */
@@ -28,6 +30,16 @@ export type OptionDuMenu = Option;
  * `recharger` relit les écritures après un dépôt ou un retrait.
  */
 export function useActionsDocumentCirculation(recharger: () => Promise<void> | void) {
+  const { lots, modifier } = useLots();
+  /** Pose (ou retire) le document : celui d'une écriture est dans ses enregistrements, celui d'un lot de départ dans les lots des réglages. */
+  const poser = async (e: EcritureDuDocument, document: DocumentCirculationDepose | undefined) => {
+    if (e.type === 'lot') {
+      const lot = lots.find((l) => l.id === e.id);
+      if (lot) await modifier({ ...lot, documentCirculation: document });
+      return;
+    }
+    await deposerDocumentCirculation(e, document);
+  };
   const deposer = async (e: EcritureDuDocument) => {
     if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
@@ -36,7 +48,7 @@ export function useActionsDocumentCirculation(recharger: () => Promise<void> | v
       const piece = await rangerFichier(choisi);
       // Le fichier remplacé est effacé de l'appareil.
       if (e.depose) await supprimerPiece(e.depose.piece);
-      await deposerDocumentCirculation(e, { piece, deposeLe: new Date().toISOString() });
+      await poser(e, { piece, deposeLe: new Date().toISOString() });
       await recharger();
     } catch (erreur: unknown) {
       Alert.alert(erreur instanceof Error ? erreur.message : TEXTES.fichiers.erreurAjout);
@@ -50,7 +62,7 @@ export function useActionsDocumentCirculation(recharger: () => Promise<void> | v
   const retirer = async (e: EcritureDuDocument) => {
     if (!e.depose) return;
     await supprimerPiece(e.depose.piece);
-    await deposerDocumentCirculation(e, undefined);
+    await poser(e, undefined);
     await recharger();
   };
 

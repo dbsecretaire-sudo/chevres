@@ -4,6 +4,7 @@ import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import type { PieceJointe } from '@/features/fichiers/types';
+import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { definirCategoriesClient, type CategorieClientReglage } from '@/shared/dictionnaire/categoriesClient';
 import { definirTauxParProduit, type TauxParProduit } from '@/shared/dictionnaire/tauxParProduit';
@@ -159,6 +160,15 @@ export interface LotAnimaux {
   poidsKg?: number;
   /** Pour un lot d'abattoir : les fichiers de cet abattage ou de sa vente (poids, bon d'abattage, documents), joints à la fiche du lot. */
   fichiers?: PieceJointe[];
+  /**
+   * Un lot créé par le départ d'animaux vivants (l'assistant « Nouveau lot d'abattoir ») : il existe avant toute écriture, avec son document de
+   * circulation, et ne disparaît pas avec sa facture (qui est émise quelques jours plus tard).
+   */
+  depart?: boolean;
+  /** Un lot de départ d'animaux vendus vivants : le jour du départ (AAAA-MM-JJ). Un lot d'abattoir a le sien dans `abattoir`. */
+  dateDepart?: string;
+  /** Le document de circulation du lot (un seul pour tout le lot) : le scan du document rempli ; absent tant qu'il manque. */
+  documentCirculation?: DocumentCirculationDepose;
 }
 
 /**

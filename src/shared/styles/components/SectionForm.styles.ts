@@ -7,8 +7,8 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    gap: 12,
+    padding: 14,
+    gap: 8,
   },
   titre: {
     fontSize: 13,
@@ -17,6 +17,6 @@ export const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.primaryDark,
   },
-  aide: { fontSize: 13, color: colors.textMuted, marginTop: -6 },
-  champs: { gap: 16 },
+  aide: { fontSize: 13, color: colors.textMuted, marginTop: -4 },
+  champs: { gap: 12 },
 });

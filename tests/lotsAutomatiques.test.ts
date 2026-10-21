@@ -134,15 +134,15 @@ describe('catégories de lots', () => {
 
 describe('gestion des catégories de lots', () => {
   it('sans réglage : celles d’office puis celles ajoutées ; avec une liste : ses noms et son ordre, les catégories d’office toujours là', () => {
-    expect(categoriesDeLots(['Chevrettes']).map((c) => c.id)).toEqual(['abattoir', 'veterinaire', 'reproduction', 'avortement', 'renouvellement', 'Chevrettes']);
+    expect(categoriesDeLots(['Chevrettes']).map((c) => c.id)).toEqual(['abattoir', 'depart', 'veterinaire', 'reproduction', 'avortement', 'renouvellement', 'Chevrettes']);
     const liste = [
       { id: 'renouvellement', nom: 'Futures chèvres' },
       { id: 'abc', nom: 'Chevrettes' },
       { id: 'abattoir', nom: 'Boucherie' },
     ];
     const categories = categoriesDeLots([], liste);
-    // Vétérinaire, Mises à la reproduction et Avortements manquaient de la liste : elles reviennent en tête.
-    expect(categories.map((c) => c.id)).toEqual(['veterinaire', 'reproduction', 'avortement', 'renouvellement', 'abc', 'abattoir']);
+    // Départ, Vétérinaire, Mises à la reproduction et Avortements manquaient de la liste : elles reviennent en tête.
+    expect(categories.map((c) => c.id)).toEqual(['depart', 'veterinaire', 'reproduction', 'avortement', 'renouvellement', 'abc', 'abattoir']);
     expect(categories.find((c) => c.id === 'renouvellement')?.nom).toBe('Futures chèvres');
     expect(estCategorieDeLotsProtegee('abattoir')).toBe(true);
     expect(estCategorieDeLotsProtegee('abc')).toBe(false);

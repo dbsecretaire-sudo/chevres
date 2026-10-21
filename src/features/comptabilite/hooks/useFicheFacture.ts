@@ -14,6 +14,7 @@ import {
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { delierLaFactureDuLot } from '@/features/exploitation/services/departDAnimaux';
 import { retirerLesLotsDAbattoir } from '@/features/exploitation/services/lotsSansFacture';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
@@ -351,13 +352,17 @@ export function useFicheFacture(id: string | undefined) {
       await supprimerFacture(facture.id);
       // Un lot d'abattoir lié à cette facture n'a plus de raison d'être : il disparaît, et ses animaux (hors vente) reviennent vivants.
       const lotsActuels = settings.exploitation?.lots ?? [];
-      const lies = lotsActuels.filter((l) => l.abattoir && l.factureId === facture.id);
-      if (lies.length > 0) {
-        const { lots } = await retirerLesLotsDAbattoir(lotsActuels, lies);
-        await patchSettings({ exploitation: { ...settings.exploitation, lots } });
+      // Un lot créé au départ des animaux (avec son document de circulation) survit à sa facture : il attend simplement d'être refacturé.
+      const lies = lotsActuels.filter((l) => l.abattoir && !l.depart && l.factureId === facture.id);
+      const departs = lotsActuels.some((l) => l.depart && l.factureId === facture.id);
+      if (lies.length > 0 || departs) {
+        const restants = lies.length > 0 ? (await retirerLesLotsDAbattoir(lotsActuels, lies)).lots : lotsActuels;
+        await patchSettings({
+          exploitation: { ...settings.exploitation, lots: delierLaFactureDuLot(restants, facture.id) },
+        });
       }
-      // Les animaux envoyés avec la dépense reviennent vivants dans le cheptel.
-      for (const id of idsDesAnimauxEnvoyes(facture)) {
+      // Les animaux envoyés avec la dépense reviennent vivants dans le cheptel — sauf ceux d'un lot de départ, qui restent à l'abattoir.
+      for (const id of facture.lotId ? [] : idsDesAnimauxEnvoyes(facture)) {
         if ((await getChevre(id))?.statut === STATUT_CHEVRE.ABATTOIR) await reactiverChevre(id);
       }
       await retirerVisiteFacture(facture.id);

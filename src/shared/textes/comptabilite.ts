@@ -812,6 +812,23 @@ export const TEXTES_COMPTABILITE = {
     /** Une dépense « Animaux vivants (vente) » : les animaux qui partent (à l'abattoir), choisis dans le cheptel. */
     /** Le poids d'une vente d'un lot d'abattage entier : celui du lot, qu'on ne change que dans sa fiche. */
     poidsDuLot: 'Poids de tout le lot : il se modifie dans la fiche du lot (Production › Viande).',
+    /** La facture de l'abattoir : elle se rattache à un lot d'abattoir, créé avant (au départ des animaux, avec le document de circulation). */
+    lotAbattoir: {
+      titre: 'Lot d’abattoir',
+      aide: 'Les animaux sont partis à l’abattoir avant la facture : leur lot est créé d’abord, avec le document de circulation. La facture, émise quelques jours après le départ, se rattache à ce lot ; la date des animaux reste celle du départ.',
+      choisir: 'Choisir le lot',
+      modifier: 'Changer de lot',
+      nouveau: 'Nouveau lot d’abattoir',
+      aucunLot: 'Aucun lot d’abattoir n’attend sa facture.',
+      aucun: 'Choisissez le lot d’abattoir à facturer.',
+      aucunMessage: 'Sans lot, pas de facture : créez d’abord le lot avec les animaux partis et le document de circulation.',
+      sansDocument: 'Le document de circulation de ce lot manque.',
+      sansDocumentMessage: 'Il se dépose avant toute écriture : déposez-le depuis le lot ou les documents de circulation, puis revenez à la facture.',
+      avecDocument: 'document de circulation déposé',
+      manqueDocument: 'document de circulation manquant',
+      nAnimaux: (n: number) => `${n} ${n > 1 ? 'animaux' : 'animal'}`,
+      ouvrirLeLot: 'Ouvrir le lot',
+    },
     animauxEnvoyes: {
       titre: 'Animaux envoyés',
       choisir: 'Choisir les animaux',
@@ -821,7 +838,7 @@ export const TEXTES_COMPTABILITE = {
       modifier: 'Modifier le choix',
       valider: (n: number) => (n > 1 ? `Valider (${n} animaux)` : n === 1 ? 'Valider (1 animal)' : 'Valider'),
       aucun: 'Choisissez au moins un animal envoyé.',
-      aide: 'Chaque animal choisi sort du cheptel : sa fiche passe à « abattoir » à la date de la dépense (elle revient vivante si vous supprimez la dépense). Le document de circulation se génère ensuite depuis la dépense.',
+      aide: 'Les animaux qui quittent l’exploitation vivants : choisissez-les par leur tiptag ou leur boucle.',
       nAnimaux: (n: number) => `${n} ${n > 1 ? 'animaux envoyés' : 'animal envoyé'}`,
       sansBoucle: 'sans boucle',
     },

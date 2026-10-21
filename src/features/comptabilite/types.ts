@@ -175,6 +175,11 @@ export interface Facture {
   animauxAchetes?: string;
   /** Une dépense « Animaux vivants (vente) » : les identifiants des fiches du cheptel des animaux envoyés (à l'abattoir), séparés par des points-virgules. */
   animauxEnvoyes?: string;
+  /**
+   * Une dépense « Animaux vivants (vente) » faite après le départ des animaux : le lot d'abattoir qu'elle facture. Ses animaux sont déjà sortis du
+   * cheptel (à la date du départ, pas à celle de la facture) et le lot porte le document de circulation.
+   */
+  lotId?: string;
   /** Une facture de la Chambre d'agriculture détaillée par article (forfait d'identification, équarrissage ATM, conseils et analyses). */
   lignesChambre?: LigneChambre[];
   /** Une dépense vétérinaire : tout ce qui a été fait lors de la visite (voir LigneVeterinaire), repris par le carnet sanitaire. */
@@ -277,6 +282,8 @@ export interface Vente {
   etatAnimaux?: 'vivants' | 'morts';
   /** Le document de circulation déposé (le scan du document rempli) ; absent tant qu'il manque. */
   documentCirculation?: DocumentCirculationDepose;
+  /** Une vente d'animaux vivants faite après leur départ : le lot de départ qu'elle facture (il porte le document de circulation). */
+  lotId?: string;
   /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */
   animaux?: string;
   /** Pour une vente de viande avec des animaux : la date d'abattoir (celle de la sortie du cheptel) ; absente : la date de la vente. */

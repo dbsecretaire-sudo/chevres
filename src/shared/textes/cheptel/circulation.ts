@@ -7,7 +7,7 @@ export const circulationTextes = {
   titreEcran: 'Documents de circulation',
   ligneDossier: 'Documents de circulation',
   aideDossier: 'Obligatoire lors du transport d’animaux vivants : à déposer pour chaque vente ou achat.',
-  aideEcran: 'Les ventes et les dépenses d’animaux vivants : déposez le document de circulation rempli (scan ou photo), ou générez le modèle pré-rempli.',
+  aideEcran: 'Un document par lot d’animaux partis (ou par vente ou dépense d’animaux vivants) : déposez-le rempli (scan ou photo), ou générez le modèle pré-rempli. Touchez une ligne pour voir le document et les factures concernées.',
   rechercher: 'Rechercher un contact, une facture, un montant…',
   ecritures: (n: number) => `Écritures (${n})`,
   aucune: 'Aucune vente ni dépense d’animaux vivants pour ces critères.',
@@ -27,6 +27,17 @@ export const circulationTextes = {
   autresAnnees: (n: number, annees: number[]) =>
     `${n} ${n > 1 ? 'documents manquent' : 'document manque'} en ${annees.join(', ')} (autre${annees.length > 1 ? 's' : ''} année${annees.length > 1 ? 's' : ''} que celle choisie).`,
   voirToutesLesAnnees: 'Voir toutes les années',
+  /** Le détail d'un document de circulation ouvert dans la liste : le document, puis les écritures qu'il couvre. */
+  detail: {
+    document: 'Le document',
+    manque: 'Le document de circulation manque : touchez l’icône pour le déposer ou générer le modèle.',
+    ecrituresLiees: 'Écritures concernées',
+    aucuneEcriture: 'Aucune écriture pour l’instant : la facture de l’abattoir ou la vente se crée à partir du lot, une fois le document déposé.',
+    prestation: 'Prestation de l’abattoir',
+    vente: 'Vente',
+    achat: 'Achat d’animaux',
+    ouvrir: 'Ouvrir',
+  },
   sansFactureLiee: 'Pour déposer votre propre document, liez d’abord la facture de l’abattoir (onglet Écritures) : le document y est rattaché.',
   boutonAbattoir: 'Document de circulation vers l’abattoir',
   aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',

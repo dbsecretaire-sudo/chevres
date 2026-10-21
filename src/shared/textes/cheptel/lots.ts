@@ -16,9 +16,49 @@ export const lotsTextes = {
   enDelai: (nombre: number) => `${nombre} en délai d’attente`,
   /** Les lots d'abattoir : un par jour d'abattage, créés tout seuls d'après le cheptel. */
   abattoirDu: (date: string) => `Abattoir du ${date}`,
+  /** Les lots de départ d'animaux vendus vivants : un par départ, créés par l'assistant avant la vente. */
+  departDu: (date: string) => `Départ du ${date}`,
+  /** L'assistant « Nouveau lot d'abattoir » : le départ d'animaux, avant toute écriture comptable. */
+  depart: {
+    titre: 'Départ d’animaux',
+    aide: 'Des animaux quittent l’exploitation vivants : le lot et son document de circulation se font d’abord, avant toute écriture (facture de l’abattoir, vente).',
+    date: 'Date du départ',
+    animaux: 'Les animaux',
+    document: {
+      titre: 'Document de circulation',
+      aide: 'Un seul document pour tout le lot. Générez le modèle pré-rempli, remplissez-le puis déposez le document signé : il est obligatoire avant toute écriture.',
+      generer: 'Générer le modèle (PDF)',
+      deposer: 'Déposer le document',
+      remplacer: 'Remplacer le document',
+      ouvrir: 'Ouvrir le document',
+      retirer: 'Retirer le document',
+      depose: 'Document déposé',
+      manque: 'Document manquant : il faudra le déposer avant la facture ou la vente.',
+    },
+    destination: {
+      titre: 'Les animaux sont…',
+      morts: 'Morts (à l’abattoir)',
+      vivants: 'Vivants (vendus)',
+      aideMorts: 'Ils partent à l’abattoir, prestataire de service : leur fiche passe à « abattoir » (ils deviennent des produits, en stock et à facturer). La facture de l’abattoir, émise quelques jours après, se rattache à ce lot.',
+      aideVivants: 'Ils sont vendus vivants : leur fiche passera à « vendue » avec la vente, qui se rattache à ce lot.',
+    },
+    abattoir: 'Abattoir',
+    aucunAbattoir: 'Aucun contact de catégorie Abattoir : ajoutez-le dans les contacts.',
+    enregistrer: 'Enregistrer le lot',
+    enregistrerEtFacture: 'Enregistrer et créer la facture de l’abattoir',
+    enregistrerEtVente: 'Enregistrer et créer la vente',
+    documentRequis: 'Déposez d’abord le document de circulation pour créer l’écriture.',
+    erreurs: {
+      date: 'Indiquez la date du départ (AAAA-MM-JJ).',
+      aucunAnimal: 'Choisissez au moins un animal.',
+      sansBoucle: (n: number) =>
+        `${n} animal${n > 1 ? 'aux n’ont' : ' n’a'} pas de boucle : un lot ne peut contenir que des animaux à boucle.`,
+    },
+  },
   /** Les catégories de lots : Abattoir et Vétérinaire d'office, puis celles qu'on ajoute (le bouton réglages du titre). */
   categories: {
     abattoir: 'Abattoir',
+    depart: 'Départs d’animaux vivants',
     veterinaire: 'Vétérinaire',
     reproduction: 'Mises à la reproduction',
     avortement: 'Avortements',
@@ -118,6 +158,8 @@ export const lotsTextes = {
   aideAbattoir: 'Un lot d’abattoir : les animaux (avec boucle) envoyés à l’abattoir ce jour-là. Il se crée et se complète tout seul.',
   lierFacture: 'Lier la facture de l’abattoir',
   factureAbattoir: 'Facture de l’abattoir',
+  creerLaFactureAbattoir: 'Créer la facture de l’abattoir',
+  factureApresDocument: 'Déposez d’abord le document de circulation du lot : il est obligatoire avant toute écriture.',
   aucuneFactureAbattoir: 'Aucune dépense d’un contact de la catégorie Abattoir : rangez votre abattoir dans cette catégorie (Contacts), puis saisissez sa facture.',
   cabrisATiptag: (nombre: number) => `${nombre} cabri${nombre > 1 ? 's' : ''} à tiptag pas encore à l’abattoir`,
   cabrisATiptagAide: 'Tout tiptag de cabri est destiné à l’abattoir. Les ajouter à ce lot (puis Enregistrer) les envoie à l’abattoir au jour du lot.',

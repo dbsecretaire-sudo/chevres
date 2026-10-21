@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginHorizontal: 14,
-    marginBottom: 6,
+    marginBottom: 2,
     minHeight: 44,
   },
   pastilleBouton: {

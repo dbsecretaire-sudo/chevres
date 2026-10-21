@@ -133,11 +133,11 @@ export function parcoursDeCas(): Parcours[] {
     {
       id: 'vente-abattoir',
       titre: 'Je vends un animal passé à l’abattoir',
-      resume: 'De la facture de l’abattoir à la facture du client.',
+      resume: 'Du lot d’abattoir et de son document de circulation à la facture du client.',
       schema: ['animal', 'facture', 'abattoir', 'argent'],
       etapes: [
-        etape('1', 'Je crée la facture de l’abattoir', 'Une dépense au nom de l’abattoir : choisissez le contact en ouvrant sa catégorie « Abattoir ». C’est cette facture qui donne les frais d’abattoir refacturés au client.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue')),
-        etape('1A', 'Je choisis les animaux', 'Catégorie « Animaux vivants (sortie) » : « Choisir les animaux » ouvre la liste (Tiptag ou Boucles). Chaque animal choisi passe à « abattoir » à la date de la dépense.', 'Comptabilité › Écritures › + › Débit › Animaux vivants (sortie)', ECRITURE('recue', undefined, false, true, '&depense=animaux_vivants_vente'), 'ecriture.animauxEnvoyes'),
+        etape('1', 'Je crée le lot d’abattoir', 'Avant toute écriture : la date du départ, puis « Choisir les animaux » ouvre la liste (Tiptag ou Boucles). Déposez ensuite le document de circulation (un seul par lot, obligatoire) et indiquez si les animaux sont morts (à l’abattoir) ou vivants (vendus). Morts, ils passent à « abattoir » à la date du départ.', 'Abattoir › Nouveau lot d’abattoir', ROUTES.lotAbattoirNouveau(), 'ecriture.animauxEnvoyes'),
+        etape('1A', 'Je crée la facture de l’abattoir', 'Émise quelques jours après l’abattage : une dépense au nom de l’abattoir, rattachée au lot (sans lot, pas de facture). C’est elle qui donne les frais d’abattoir refacturés au client.', 'Comptabilité › Écritures › + › Débit › Animaux vivants (sortie)', ECRITURE('recue', undefined, false, true, '&depense=animaux_vivants_vente')),
         etape('2', 'Je récupère le lot', 'Dans l’onglet « À facturer », touchez le lot (le jour d’abattage) pour ouvrir sa fiche. Vérifiez ensuite qu’aucun animal n’est mort ni saisi par l’abattoir.', 'Production › Viande › À facturer', VIANDE('afacturer'), 'viande.premierLot', true),
         etape('3', 'Je vérifie le poids total', 'Dans l’onglet Écritures du lot, contrôlez le poids total noté à l’abattoir : il remplit le poids de la facture au client.', 'Production › Viande › À facturer › lot › Écritures', LOT('facture'), 'lot.poids'),
         etape('3A', 'Animaux morts ou saisis', 'Dans le suivi sanitaire du lot, déclarez les bêtes saisies par l’abattoir ou mortes pendant le transport : elles ne se facturent pas au client et ne comptent pas parmi les animaux abattus.', 'Production › Viande › lot › Suivi sanitaire', LOT('suivi'), 'lot.inconsommables'),

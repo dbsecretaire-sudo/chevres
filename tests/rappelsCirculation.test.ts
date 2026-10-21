@@ -13,6 +13,7 @@ const ecriture = (id: string, date: string, nature: EcritureACirculation['nature
   montant: 100,
   activite: 'chevre',
   nature,
+  liees: [],
 });
 
 describe('rappels d’envoi des documents de circulation', () => {

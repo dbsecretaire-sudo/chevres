@@ -19,6 +19,8 @@ export function useLignesDepense() {
   const [animauxAchetes, setAnimauxAchetes] = useState<AnimalAcheteForm[]>([animalAcheteVide()]);
   /** Une dépense « Animaux vivants (vente) » : les animaux du cheptel qui partent (leur fiche passe à « abattoir »). */
   const [animauxEnvoyes, setAnimauxEnvoyes] = useState<string[]>([]);
+  /** Une dépense « Animaux vivants (vente) » : le lot d'abattoir qu'elle facture (créé avant, avec le document de circulation) ; sans lot, pas de facture. */
+  const [lotId, setLotId] = useState<string | undefined>(undefined);
   /** Achat de production : le détail par fourniture. */
   const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([ligneProductionVide()]);
   /** Les articles d'une facture de la Chambre d'agriculture (forfait d'identification, équarrissage ATM, conseils et analyses). */
@@ -34,6 +36,7 @@ export function useLignesDepense() {
     setLignesProduction([ligneProductionVide()]);
     setAnimauxAchetes([animalAcheteVide()]);
     setAnimauxEnvoyes([]);
+    setLotId(undefined);
   };
 
   return {
@@ -47,6 +50,8 @@ export function useLignesDepense() {
     setAnimauxAchetes,
     animauxEnvoyes,
     setAnimauxEnvoyes,
+    lotId,
+    setLotId,
     lignesProduction,
     setLignesProduction,
     lignesChambre,

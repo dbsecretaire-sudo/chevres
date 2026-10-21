@@ -8,6 +8,7 @@ import {
   type EcritureACirculation,
 } from '@/features/comptabilite/services/documentsCirculation';
 import { nomsDesAbattoirs } from '@/features/fournisseurs/services/abattoirs';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 
@@ -17,19 +18,20 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
  */
 export function useDocumentsCirculationManquants(): EcritureACirculation[] {
   const { espece } = useEtablissement();
+  const lots = useAppSettings().settings.exploitation?.lots;
   const [manquants, setManquants] = useState<EcritureACirculation[]>([]);
   useFocusEffect(
     useCallback(() => {
       Promise.all([listToutesVentes(), listToutesFactures(), nomsDesAbattoirs()])
         .then(([ventes, factures, abattoirs]) =>
           setManquants(
-            documentsManquantsToutesAnnees(ecrituresACirculation(ventes, factures, abattoirs)).filter(
+            documentsManquantsToutesAnnees(ecrituresACirculation(ventes, factures, abattoirs, lots)).filter(
               (e) => e.activite === espece || e.activite === ACTIVITE_COMMUNE,
             ),
           ),
         )
         .catch(() => undefined);
-    }, [espece]),
+    }, [espece, lots]),
   );
   return manquants;
 }

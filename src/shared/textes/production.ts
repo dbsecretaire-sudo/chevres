@@ -330,9 +330,10 @@ export const TEXTES_PRODUCTION = {
       nouvelle: 'Nouvelle vente de viande',
       liens: {
         amener: {
-          titre: 'Amener des animaux',
-          aide: 'Une facture de l’abattoir, déjà choisi : « Suivant » mène au choix des animaux.',
+          titre: 'Nouveau lot d’abattoir',
+          aide: 'Les animaux qui partent, leur document de circulation, vivants ou morts : le lot se crée avant la facture.',
         },
+        facture: { titre: 'Facture de l’abattoir', aide: 'Émise quelques jours après l’abattage : elle se rattache à un lot.' },
         lots: { titre: 'Lots d’abattoir', aide: 'Les animaux déposés à l’abattoir et leur viande, par jour d’abattage.' },
         afacturer: { titre: 'Lots à facturer', aide: 'La viande récoltée, pas encore facturée à un client.' },
         stock: { titre: 'Stock de viande', aide: 'Ce qui est rentré de l’abattoir et reste à vendre.' },
@@ -443,7 +444,7 @@ export const TEXTES_PRODUCTION = {
     },
     vendreSansFacture: 'Vendre sans facture',
     rienAFacturer: 'Aucune viande à facturer.',
-    rienAFacturerNote: 'Les viandes à facturer sont disponibles après passage à l’abattoir, en créant une facture et en choisissant les tiptag/boucles à abattre.',
+    rienAFacturerNote: 'Les viandes à facturer sont disponibles après le départ des animaux à l’abattoir : créez d’abord un lot d’abattoir, avec son document de circulation.',
     rienAVendre: 'Aucune viande à vendre.',
     rienAVendreNote: 'Les viandes à vendre sont disponibles après la déclaration de naissance d’un animal sans boucle.',
     sansFactureAVendre: 'Animaux sans boucle à vendre (sans facture)',

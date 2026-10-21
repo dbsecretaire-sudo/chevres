@@ -55,10 +55,10 @@ describe('contrôles avant l’enregistrement', () => {
     expect(e?.titre).toBe(T.poidsRequis);
   });
 
-  it('des animaux envoyés à l’abattoir : au moins un', async () => {
+  it('une facture d’abattoir : un lot est requis (sans lot, pas de facture)', async () => {
     const e = await controlerAvantEnregistrement(
       saisie({ type: TYPE_FACTURE.RECUE, categorieRecette: CATEGORIE_RECETTE.AUTRE, categorieDepense: CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE, estProductionVente: false }),
     );
-    expect(e?.titre).toBe(T.animauxEnvoyes.aucun);
+    expect(e?.titre).toBe(T.lotAbattoir.aucun);
   });
 });

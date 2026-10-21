@@ -1,7 +1,7 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { AnimauxAchetesEditor } from '@/features/comptabilite/components/AnimauxAchetesEditor';
-import { AnimauxEnvoyesChoix } from '@/features/comptabilite/components/AnimauxEnvoyesChoix';
+import { LotDAbattoirChoix } from '@/features/comptabilite/components/LotDAbattoirChoix';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
@@ -215,7 +215,12 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         )}
         {estAnimauxVivants && <AnimauxAchetesEditor animaux={e.animauxAchetes} onChange={e.setAnimauxAchetes} />}
         {e.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE && (
-          <AnimauxEnvoyesChoix valeur={e.animauxEnvoyes} onChange={e.setAnimauxEnvoyes} />
+          <LotDAbattoirChoix
+            lotId={e.lotId}
+            onChoisir={e.setLotId}
+            animauxEnvoyes={e.animauxEnvoyes}
+            onAnimaux={e.setAnimauxEnvoyes}
+          />
         )}
         {estProduction && (
           <>

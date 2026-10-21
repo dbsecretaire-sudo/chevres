@@ -282,13 +282,13 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [CATEGORIE_VENTE.VIANDE],
     nouvelle: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
     liens: [
-      // Amener des animaux : une facture d'abattoir (le premier abattoir des contacts est choisi d'office) ; « Suivant » mène au choix des animaux.
+      // Amener des animaux : le lot d'abord (animaux, document de circulation, vivants ou morts), la facture de l'abattoir ensuite.
+      { cle: 'amener', icone: 'cut', route: ROUTES.lotAbattoirNouveau() },
       {
-        cle: 'amener',
-        icone: 'cut',
+        cle: 'facture',
+        icone: 'document-text',
         route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&abattoirContact=1`,
       },
-      { cle: 'lots', icone: 'business', route: ROUTES.PRODUCTION_VIANDE },
       { cle: 'afacturer', icone: 'receipt', route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer` },
       { cle: 'stock', icone: 'cube', route: stock(SECTION_STOCK.VIANDE) },
     ],

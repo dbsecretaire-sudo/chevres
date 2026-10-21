@@ -53,6 +53,9 @@ export interface SaisieAControler {
   fromages: string[];
   animauxAchetes: AnimalAcheteForm[];
   animauxEnvoyes: string[];
+  /** Une dépense « Animaux vivants (vente) » : le lot d'abattoir facturé, et vrai quand son document de circulation manque. */
+  lotId?: string;
+  lotSansDocument?: boolean;
 }
 
 /**
@@ -103,9 +106,10 @@ export async function controlerAvantEnregistrement(s: SaisieAControler): Promise
       if (boucle && (await numeroBoucleExiste(boucle))) return { titre: A.boucleExiste(boucle) };
     }
   }
-  // Des animaux vivants qui partent : au moins un, choisi dans le cheptel.
-  if (s.type === TYPE_FACTURE.RECUE && s.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE && s.animauxEnvoyes.length === 0) {
-    return { titre: T.animauxEnvoyes.aucun };
+  // Des animaux vivants qui sont partis : leur lot d'abattoir est créé avant la facture (sans lot, pas de facture), avec son document de circulation.
+  if (s.type === TYPE_FACTURE.RECUE && s.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE) {
+    if (!s.lotId) return { titre: T.lotAbattoir.aucun, message: T.lotAbattoir.aucunMessage };
+    if (s.lotSansDocument) return { titre: T.lotAbattoir.sansDocument, message: T.lotAbattoir.sansDocumentMessage };
   }
   return undefined;
 }
@@ -130,10 +134,12 @@ export interface DepenseAEnregistrer {
   /** Une dépense « Animaux vivants (vente) » : les animaux envoyés quittent le cheptel (leur fiche passe à « abattoir »). */
   envoiAnimaux: boolean;
   animauxEnvoyes: string[];
+  /** Le lot d'abattoir facturé : ses animaux sont déjà sortis du cheptel (à la date du départ), la dépense ne les touche pas. */
+  lotId?: string;
 }
 
 /** Enregistre la dépense avec ce qu'elle entraîne : les fiches des animaux achetés ou envoyés, le stock acheté, la visite du vétérinaire. */
-export async function enregistrerLaDepense(facture: Omit<Facture, 'id'>, d: DepenseAEnregistrer): Promise<void> {
+export async function enregistrerLaDepense(facture: Omit<Facture, 'id'>, d: DepenseAEnregistrer): Promise<Facture> {
   const achat = facture.lignesMarchandises;
   // Les animaux achetés entrent au cheptel : une fiche chacun, à la date de naissance saisie.
   let animauxCrees: string | undefined;
@@ -153,17 +159,20 @@ export async function enregistrerLaDepense(facture: Omit<Facture, 'id'>, d: Depe
     }
     animauxCrees = ids.join(SEPARATEUR_ANIMAUX);
   }
-  // Les animaux envoyés quittent le cheptel : leur fiche passe à « abattoir », à la date de la dépense.
-  if (d.envoiAnimaux) for (const id of d.animauxEnvoyes) await declarerStatutChevre(id, STATUT_CHEVRE.ABATTOIR, d.date);
+  // Sans lot (l'ancienne saisie) : les animaux envoyés quittent le cheptel, leur fiche passe à « abattoir », à la date de la dépense. Avec un lot, ils sont
+  // déjà sortis, à la date du départ : la facture, émise plus tard, n'y change rien.
+  if (d.envoiAnimaux && !d.lotId) for (const id of d.animauxEnvoyes) await declarerStatutChevre(id, STATUT_CHEVRE.ABATTOIR, d.date);
   const enregistree = await enregistrerFacture({
     ...facture,
     stockApplique: achat?.length ? true : undefined,
     animauxAchetes: animauxCrees,
     animauxEnvoyes: d.envoiAnimaux ? d.animauxEnvoyes.join(SEPARATEUR_ANIMAUX) : undefined,
+    lotId: d.envoiAnimaux ? d.lotId : undefined,
   });
   // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
   await synchroniserStockAchat(undefined, achat, enregistree.date);
   await synchroniserStockAlimentation(enregistree);
   // Une dépense vétérinaire peut inscrire sa visite dans les visites vétérinaires.
   await synchroniserVisiteFacture(enregistree);
+  return enregistree;
 }

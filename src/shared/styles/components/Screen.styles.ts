@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40, gap: 14 },
+  content: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 40, gap: 10 },
 });

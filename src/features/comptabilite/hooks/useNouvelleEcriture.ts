@@ -52,6 +52,7 @@ import {
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
+import { lierLaFactureAuLot } from '@/features/exploitation/services/departDAnimaux';
 import { useLignesDepense } from '@/features/comptabilite/hooks/nouvelleEcriture/useLignesDepense';
 import { useDonneesDeReference } from '@/features/comptabilite/hooks/nouvelleEcriture/useDonneesDeReference';
 import {
@@ -129,9 +130,11 @@ export function useNouvelleEcriture(
   departLots?: { fromages: string[]; produit?: string; libelle?: string },
   /** L'état des animaux (depuis leur réservation) : « vivants » ou « morts ». */
   etatInitial?: string,
+  /** Le lot d'abattoir à facturer (depuis son assistant, ou le choix d'un lot) : ses animaux sont déjà sortis ; sa facture se lie à lui. */
+  lotInitial?: string,
 ) {
   const router = useRouter();
-  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
   const { anneeImposee, dateDuJour } = useAnneeImposee();
   /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
   const [avecFacture, setAvecFacture] = useState(!sansFactureInitial);
@@ -215,6 +218,8 @@ export function useNouvelleEcriture(
     setAnimauxAchetes,
     animauxEnvoyes,
     setAnimauxEnvoyes,
+    lotId,
+    setLotId,
     lignesProduction,
     setLignesProduction,
     lignesChambre,
@@ -223,6 +228,15 @@ export function useNouvelleEcriture(
     setLignesVeterinaire,
     reinitialiserLesLignes,
   } = useLignesDepense();
+  // Ouvert avec un lot d'abattoir (depuis son assistant) : il est choisi d'office, une seule fois.
+  const [lotVu, setLotVu] = useState<string | undefined>(undefined);
+  if (lotInitial !== lotVu) {
+    setLotVu(lotInitial);
+    if (lotInitial) setLotId(lotInitial);
+  }
+  /** Le lot d'abattoir choisi, et vrai quand son document de circulation manque (il se dépose avant toute écriture). */
+  const lotChoisi = (settings.exploitation?.lots ?? []).find((l) => l.id === lotId);
+  const lotSansDocument = !!lotChoisi && !lotChoisi.documentCirculation;
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise
       ? tvaEntreprise
@@ -606,6 +620,8 @@ export function useNouvelleEcriture(
         fromages,
         animauxAchetes,
         animauxEnvoyes,
+        lotId,
+        lotSansDocument,
       });
       if (erreurDeSaisie) {
         setErreur(erreurDeSaisie);
@@ -691,7 +707,7 @@ export function useNouvelleEcriture(
         }
       }
       if ('vente' in resultat) {
-        const vente = await enregistrerLaVente(resultat.vente, commande?.id);
+        const vente = await enregistrerLaVente(lotId ? { ...resultat.vente, lotId } : resultat.vente, commande?.id);
         // Une vente de commande : elle s'ajoute au bon, livré quand tout est passé en vente (les lignes, et les animaux réservés).
         let suite: ElementACommande | undefined;
         if (commande && fileDeLaCommande[0]) {
@@ -720,7 +736,24 @@ export function useNouvelleEcriture(
         await sortirLesAnimauxDeLaVente(vente);
       } else {
         // Les fiches des animaux achetés ou envoyés, le stock acheté et la visite du vétérinaire suivent la dépense.
-        await enregistrerLaDepense(resultat.facture, { date, tiers, achatAnimaux, animauxAchetes, envoiAnimaux, animauxEnvoyes });
+        const facture = await enregistrerLaDepense(resultat.facture, {
+          date,
+          tiers,
+          achatAnimaux,
+          animauxAchetes,
+          envoiAnimaux,
+          animauxEnvoyes,
+          lotId: envoiAnimaux ? lotId : undefined,
+        });
+        // La facture de l'abattoir se lie à son lot (créé avant, au départ des animaux) : le lot garde sa date et son document.
+        if (envoiAnimaux && lotId) {
+          await patchSettings({
+            exploitation: {
+              ...settings.exploitation,
+              lots: lierLaFactureAuLot(settings.exploitation?.lots ?? [], lotId, facture.id),
+            },
+          });
+        }
       }
       if (enchainer) {
         repartir();
@@ -801,6 +834,10 @@ export function useNouvelleEcriture(
     setAnimauxAchetes,
     animauxEnvoyes,
     setAnimauxEnvoyes,
+    lotId,
+    setLotId,
+    lotChoisi,
+    lotSansDocument,
     prixPersonnalise,
     setPrixPersonnalise,
     venduAuPoids,

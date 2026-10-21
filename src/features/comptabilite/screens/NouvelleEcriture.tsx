@@ -71,6 +71,10 @@ export default function NouvelleFacture() {
     etape?: string;
     /** La catégorie de dépense d'ouverture (une facture reçue) : le didacticiel y montre ses champs. */
     depense?: string;
+    /** Le lot d'abattoir à facturer (depuis son assistant) : sa dépense se rattache à lui, sans choisir d'animaux. */
+    lot?: string;
+    /** Le contact (fournisseur) choisi d'office : l'abattoir du lot. */
+    fournisseur?: string;
     /** « 1 » : le premier contact de catégorie Abattoir est choisi d'office (amener des animaux à l'abattoir : « Suivant » mène au choix des animaux). */
     abattoirContact?: string;
   }>();
@@ -93,6 +97,7 @@ export default function NouvelleFacture() {
         }
       : undefined,
     params.etat,
+    params.lot,
   );
   // La catégorie de dépense demandée par l'adresse (une catégorie connue) : elle se choisit d'office, et change quand l'adresse en demande une autre.
   const [depenseVue, setDepenseVue] = useState<string | undefined>(undefined);
@@ -111,6 +116,12 @@ export default function NouvelleFacture() {
     setAbattoirChoisi(true);
     const abattoir = e.fournisseurs.find(estUnAbattoir);
     if (abattoir) e.changerFournisseur(abattoir.id);
+  }
+  // Le contact demandé par l'adresse (l'abattoir du lot) : il est choisi d'office, une fois les contacts chargés.
+  const [fournisseurChoisi, setFournisseurChoisi] = useState(false);
+  if (params.fournisseur && !fournisseurChoisi && e.fournisseurs.some((f) => f.id === params.fournisseur)) {
+    setFournisseurChoisi(true);
+    e.changerFournisseur(params.fournisseur);
   }
   /** Les années proposées : celles qui ont des écritures, l'année en cours et la précédente (pour saisir ce qui a été oublié). */
   const [annees, setAnnees] = useState<number[]>([e.anneeActive]);

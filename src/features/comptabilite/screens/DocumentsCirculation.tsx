@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -13,27 +13,20 @@ import { ListRow } from '@/shared/components/ListRow';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { ApercuPiece } from '@/features/fichiers/components/ApercuPiece';
+import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import {
   anneesDesEcritures,
-  deposerDocumentCirculation,
   ecrituresACirculation,
   rechercherEcritures,
   type EcritureACirculation,
+  type EcritureLiee,
 } from '@/features/comptabilite/services/documentsCirculation';
 import { useActionsDocumentCirculation } from '@/features/comptabilite/hooks/useActionsDocumentCirculation';
 import { nomsDesAbattoirs } from '@/features/fournisseurs/services/abattoirs';
-import {
-  choisirFichiers,
-  ouvrirPiece,
-  piecesDisponibles,
-  pieceExiste,
-  rangerFichier,
-  supprimerPiece,
-} from '@/features/fichiers/services/pieces';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -52,6 +45,60 @@ const quand = (iso: string): { date: string; heure: string } => {
   };
 };
 
+/** Les écritures qu'un document couvre : celles de son lot (la prestation de l'abattoir, les ventes), ou l'écriture elle-même hors lot. */
+const lignesDuDocument = (e: EcritureACirculation): EcritureLiee[] =>
+  e.type === 'lot'
+    ? e.liees
+    : [
+        {
+          type: e.type,
+          id: e.id,
+          date: e.date,
+          tiers: e.tiers,
+          reference: e.reference,
+          montant: e.montant,
+          role: e.type === 'vente' ? 'vente' : 'prestation',
+        },
+      ];
+
+/** Le document ouvert : son aperçu, puis les factures concernées (la prestation de l'abattoir et/ou la vente), qui s'ouvrent d'un appui. */
+function DetailDuDocument({
+  item,
+  ouvrir,
+}: {
+  item: EcritureACirculation;
+  ouvrir: (type: 'vente' | 'facture', id: string) => void;
+}) {
+  const D = T.detail;
+  const lignes = lignesDuDocument(item);
+  return (
+    <View style={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}>
+      <Text style={commonStyles.lineSemiBold}>{D.document}</Text>
+      {item.depose ? <ApercuPiece piece={item.depose.piece} /> : <Text style={[commonStyles.note, { color: colors.danger }]}>{D.manque}</Text>}
+      <Text style={commonStyles.lineSemiBold}>{D.ecrituresLiees}</Text>
+      {lignes.length === 0 ? <Text style={commonStyles.mutedItalic}>{D.aucuneEcriture}</Text> : null}
+      {lignes.map((l) => (
+        <Pressable
+          key={`${l.type}:${l.id}`}
+          onPress={() => ouvrir(l.type, l.id)}
+          accessibilityRole="button"
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={commonStyles.line}>
+              {l.role === 'vente' ? D.vente : item.nature === 'achat' ? D.achat : D.prestation} · {l.tiers || '—'}
+            </Text>
+            <Text style={commonStyles.muted}>{[formatDateFR(l.date), l.reference].filter(Boolean).join(' · ')}</Text>
+          </View>
+          <Text style={[commonStyles.lineBold, { color: l.montant < 0 ? colors.danger : colors.primary }]}>
+            {formatMontant(l.montant)}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 /**
  * Dossier PAC › Documents de circulation : les ventes et les dépenses d'animaux vivants (achat, abattoir), de l'année et de l'espèce choisies,
  * avec leur document de circulation. Tant qu'il manque, l'écriture porte un « ! » rouge (et l'accueil le rappelle) ; l'icône à droite dépose
@@ -67,15 +114,20 @@ export default function DocumentsCirculation() {
   const regrouper = !!settings.toutesAnnees;
   const [recherche, setRecherche] = useState('');
   const [menu, setMenu] = useState<EcritureACirculation | null>(null);
+  /** Le document ouvert dans la liste (sa clé) : on y voit le document et les écritures qu'il couvre. */
+  const [ouverte, setOuverte] = useState<string | null>(null);
 
+  const lots = settings.exploitation?.lots;
   const charger = useCallback(async () => {
-    const [ventes, factures, abattoirs] = await Promise.all([
+    const [ventes, factures, abattoirs, chevres] = await Promise.all([
       listToutesVentes(),
       listToutesFactures(),
       nomsDesAbattoirs(),
+      listTousLesAnimauxDeLEspece(),
     ]);
-    setToutes(ecrituresACirculation(ventes, factures, abattoirs));
-  }, []);
+    // Les lots de départ y sont aussi : leur document se dépose avant toute écriture, et couvre la prestation de l'abattoir comme la vente.
+    setToutes(ecrituresACirculation(ventes, factures, abattoirs, lots, chevres));
+  }, [lots]);
   useFocusEffect(
     useCallback(() => {
       charger().catch(() => undefined);
@@ -93,6 +145,8 @@ export default function DocumentsCirculation() {
     : deLEspece.filter((e) => !e.depose && !e.date.startsWith(String(settings.anneeActive)));
   const anneesDesManquants = anneesDesEcritures(manquantsAilleurs);
 
+  const ouvrirEcritureLiee = (type: 'vente' | 'facture', id: string) =>
+    router.push((type === 'vente' ? ROUTES.ficheVente(id) : ROUTES.ficheFacture(id)) as never);
   const { options } = useActionsDocumentCirculation(charger);
   const optionsDuMenu = menu
     ? options(menu, {
@@ -101,7 +155,13 @@ export default function DocumentsCirculation() {
             label: T.ouvrirEcriture,
             icon: 'open' as const,
             onPress: () =>
-              router.push((menu.type === 'vente' ? ROUTES.ficheVente(menu.id) : ROUTES.ficheFacture(menu.id)) as never),
+              router.push(
+                (menu.type === 'vente'
+                  ? ROUTES.ficheVente(menu.id)
+                  : menu.type === 'lot'
+                    ? ROUTES.lot(menu.id)
+                    : ROUTES.ficheFacture(menu.id)) as never,
+              ),
           },
         ],
       })
@@ -136,6 +196,7 @@ export default function DocumentsCirculation() {
         ListEmptyComponent={<EmptyState title={T.aucune} />}
         renderItem={({ item, index }) => {
           const depot = item.depose ? quand(item.depose.deposeLe) : null;
+          const ouvert = ouverte === item.cle || item.cle === aMettreEnEvidence;
           return (
             <LigneDeBloc index={index} total={affichees.length}>
               <ListRow
@@ -146,9 +207,11 @@ export default function DocumentsCirculation() {
                     <Text style={commonStyles.muted}>
                       {[formatDateFR(item.date), item.reference].filter(Boolean).join(' · ')}
                     </Text>
-                    <Text style={[commonStyles.lineBold, { color: item.montant < 0 ? colors.danger : colors.primary }]}>
-                      {formatMontant(item.montant)}
-                    </Text>
+                    {item.type === 'lot' ? null : (
+                      <Text style={[commonStyles.lineBold, { color: item.montant < 0 ? colors.danger : colors.primary }]}>
+                        {formatMontant(item.montant)}
+                      </Text>
+                    )}
                   </View>
                 }
                 trailing={
@@ -189,8 +252,9 @@ export default function DocumentsCirculation() {
                     </Pressable>
                   </View>
                 }
-                onPress={() => setMenu(item)}
+                onPress={() => setOuverte(ouverte === item.cle ? null : item.cle)}
               />
+              {ouvert ? <DetailDuDocument item={item} ouvrir={ouvrirEcritureLiee} /> : null}
             </LigneDeBloc>
           );
         }}
