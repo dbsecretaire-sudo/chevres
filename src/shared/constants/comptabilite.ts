@@ -14,6 +14,8 @@ export const CATEGORIE_DEPENSE = {
   CARBURANT: 'carburant',
   REPARATION: 'reparation',
   VETERINAIRE: 'veterinaire',
+  /** Les analyses d'un laboratoire (lait, prophylaxie…). */
+  ANALYSES_LABORATOIRE: 'analyses_laboratoire',
   PRODUCTION: 'production',
   /** L'achat d'animaux vivants (à un autre éleveur) : chaque animal acheté a sa fiche dans le cheptel, et un document de circulation. */
   ANIMAUX_VIVANTS: 'animaux_vivants',
@@ -61,6 +63,8 @@ export const CATEGORIE_RECETTE = {
   AUTRE: 'autre',
   /** Un versement du groupement sanitaire (GDS) à l'éleveur : un remboursement, une indemnité, une ristourne. Ce n'est ni une vente ni une aide. */
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
+  /** Un remboursement d'analyses par un laboratoire (ou ce qu'il reverse) : ni une vente ni une aide. */
+  REMBOURSEMENT_ANALYSES: 'remboursement_analyses',
   // --- Entreprise (hors élevage) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -297,6 +301,7 @@ export const ORDRE_CATEGORIE_DEPENSE = [
   CATEGORIE_DEPENSE.CARBURANT,
   CATEGORIE_DEPENSE.REPARATION,
   CATEGORIE_DEPENSE.VETERINAIRE,
+  CATEGORIE_DEPENSE.ANALYSES_LABORATOIRE,
   CATEGORIE_DEPENSE.PRODUCTION,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS,
   CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE,
@@ -317,6 +322,7 @@ export const GROUPE_RECETTE = {
   AIDE: 'aide',
   AUTRE: 'autre',
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
+  REMBOURSEMENT_ANALYSES: 'remboursement_analyses',
   // --- Entreprise : un groupe par recette (pas de seconde liste) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -347,6 +353,8 @@ const AIDE_PRESTATIONS_ET_AUTRE: GroupeRecetteDefinition[] = [
   AIDE_ET_AUTRE[0],
   // Un versement du groupement sanitaire (GDS) : remboursement, indemnité, ristourne.
   { groupe: GROUPE_RECETTE.GROUPEMENT_SANITAIRE, categories: [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE] },
+  // Un remboursement d'analyses par un laboratoire.
+  { groupe: GROUPE_RECETTE.REMBOURSEMENT_ANALYSES, categories: [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES] },
   { groupe: GROUPE_RECETTE.PRESTATIONS, categories: [CATEGORIE_RECETTE.PRESTATIONS] },
   AIDE_ET_AUTRE[1],
 ];
@@ -491,6 +499,7 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.DEPOT,
   CATEGORIE_RECETTE.AIDE,
   CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
+  CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
 
@@ -523,6 +532,7 @@ export const TAUX_TVA_RECETTE_ENTREPRISE = {
   [CATEGORIE_RECETTE.DONS]: 0,
   [CATEGORIE_RECETTE.AIDE]: 0,
   [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE]: 0,
+  [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES]: 0,
   [CATEGORIE_RECETTE.AUTRE]: 20,
 } as const;
 

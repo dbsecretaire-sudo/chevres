@@ -22,6 +22,8 @@ export const CATEGORIE_FOURNISSEUR = {
   GROUPEMENT: 'groupement',
   /** Le groupement sanitaire (GDS) : un partenaire d'office ; il figure dans les coordonnées utiles du carnet de mise bas. */
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
+  /** Un laboratoire d'analyses (du lait, de la prophylaxie…) : ses factures sont des analyses de laboratoire ; il se choisit sur chaque analyse. */
+  LABORATOIRE: 'laboratoire',
   /** Un abattoir : ses factures (frais d'abattage) se lient aux lots d'abattoir pour être refacturées au client. */
   ABATTOIR: 'abattoir',
   /** Un équarrisseur (ATM…) : il s'affiche dans Groupements avec ses coordonnées, ses contrats, ses factures et ses promotions. */
@@ -48,6 +50,8 @@ export const CATEGORIES_FOURNISSEUR_PROTEGEES: readonly string[] = [
   CATEGORIE_FOURNISSEUR.ETAT,
   CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
   CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE,
+  // Le choix du laboratoire d'une analyse du lait en dépend.
+  CATEGORIE_FOURNISSEUR.LABORATOIRE,
   CATEGORIE_FOURNISSEUR.ABATTOIR,
   // Le bouton « Emballages » du travail du produit en dépend : la catégorie est toujours dans la liste, même enregistrée avant son arrivée.
   CATEGORIE_FOURNISSEUR.EMBALLAGES,
@@ -77,6 +81,7 @@ export const DEPENSES_PAR_CATEGORIE_FOURNISSEUR: Record<string, readonly string[
   ],
   [CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE]: [CATEGORIE_DEPENSE.AUTRE, CATEGORIE_DEPENSE.PRODUCTION],
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: [CATEGORIE_DEPENSE.ASSURANCES, CATEGORIE_DEPENSE.AUTRE],
+  [CATEGORIE_FOURNISSEUR.LABORATOIRE]: [CATEGORIE_DEPENSE.ANALYSES_LABORATOIRE, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.BANQUE]: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.EMBALLAGES]: [CATEGORIE_DEPENSE.PRODUCTION, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.TOURISME]: [CATEGORIE_DEPENSE.AUTRE],
