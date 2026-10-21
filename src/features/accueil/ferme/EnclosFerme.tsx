@@ -35,6 +35,7 @@ interface Props {
   /** De quoi laisser la place des colonnes de boutons posées sur la scène, à gauche et à droite. */
   margeGauche?: number;
   margeDroite?: number;
+  margeBas?: number;
 }
 
 /** Le dessin de l'espèce de l'établissement (la tête de chaque animal de la liste de la chèvrerie). */
@@ -77,6 +78,7 @@ export function EnclosFerme({
   onAppui,
   margeGauche = 0,
   margeDroite = 0,
+  margeBas = 0,
 }: Props) {
   return (
     <View style={styles.conteneur}>
@@ -84,7 +86,7 @@ export function EnclosFerme({
         style={[
           styles.enclos,
           estive ? styles.montagne : null,
-          { paddingLeft: 14 + margeGauche, paddingRight: 14 + margeDroite },
+          { paddingLeft: 14 + margeGauche, paddingRight: 14 + margeDroite, paddingBottom: 14 + margeBas },
         ]}
         onPress={onAppui}
         accessibilityRole="button"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
@@ -19,6 +19,14 @@ import { formatDateFR, todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.cheptel.suiviMouvements;
 const E = T.estive;
+
+/** La feuille resserrée : de petits écarts et des champs côte à côte, pour que tout tienne sans défiler. */
+const compacte = StyleSheet.create({
+  feuille: { padding: 14, gap: 6, maxHeight: '94%' },
+  contenu: { gap: 8 },
+  ligne: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  moitie: { flex: 1 },
+});
 
 /**
  * La déclaration de montée et descente d'estive (la transhumance) d'une année : les dates, la zone d'estive et le gestionnaire se saisissent
@@ -72,14 +80,25 @@ export function FenetreEstive({
   }, [visible, valeurs.dateMontee]);
 
   const maj = (patch: Partial<ReglagesEstive>) => setValeurs((v) => ({ ...v, ...patch }));
+  // Coché d'office : le plus souvent l'exploitant est lui-même le gestionnaire (les champs du gestionnaire sont alors masqués). Un gestionnaire déjà
+  // nommé garde son état d'avant.
+  const moiGestionnaire = valeurs.gestionnaire?.trim()
+    ? estLeGestionnaire({
+        moiGestionnaire: valeurs.moiGestionnaire,
+        gestionnaire: valeurs.gestionnaire,
+        identite: { numeroPacage: '', siret: '', numeroExploitation: '', nom: nomExploitant },
+      })
+    : (valeurs.moiGestionnaire ?? true);
 
   const generer = async () => {
     setEncours(true);
     try {
+      // Ce qui est montré (la case cochée d'office) est ce qui est enregistré et mis dans le PDF.
+      const saisie = { ...valeurs, moiGestionnaire };
       await patchSettings({
-        exploitation: { ...infos, estives: { ...infos?.estives, [String(annee)]: valeurs } },
+        exploitation: { ...infos, estives: { ...infos?.estives, [String(annee)]: saisie } },
       });
-      await exporterDeclarationEstivePdf(annee, valeurs);
+      await exporterDeclarationEstivePdf(annee, saisie);
       onClose();
       onGeneree?.();
     } finally {
@@ -90,22 +109,29 @@ export function FenetreEstive({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={commonStyles.backdrop} onPress={onClose}>
-        <Pressable style={styles.feuille}>
-          <ScrollView contentContainerStyle={styles.feuilleContenu}>
+        {/* Une feuille compacte : tout y tient sans défiler (les dates côte à côte, le gestionnaire seulement quand ce n'est pas soi-même). */}
+        <Pressable style={[styles.feuille, compacte.feuille]}>
+          <ScrollView contentContainerStyle={[styles.feuilleContenu, compacte.contenu]}>
             <Text style={styles.titreFeuille}>
               {E.fenetreTitre} — {annee}
             </Text>
             <Text style={commonStyles.note}>{E.fenetreAide}</Text>
-            <DateField
-              label={E.dateMontee}
-              value={valeurs.dateMontee ?? ''}
-              onChange={(dateMontee) => maj({ dateMontee })}
-            />
-            <DateField
-              label={E.dateDescente}
-              value={valeurs.dateDescente ?? ''}
-              onChange={(dateDescente) => maj({ dateDescente })}
-            />
+            <View style={compacte.ligne}>
+              <View style={compacte.moitie}>
+                <DateField
+                  label={E.dateMontee}
+                  value={valeurs.dateMontee ?? ''}
+                  onChange={(dateMontee) => maj({ dateMontee })}
+                />
+              </View>
+              <View style={compacte.moitie}>
+                <DateField
+                  label={E.dateDescente}
+                  value={valeurs.dateDescente ?? ''}
+                  onChange={(dateDescente) => maj({ dateDescente })}
+                />
+              </View>
+            </View>
             <Text style={commonStyles.note}>{E.aideDates}</Text>
             {effectif === undefined ? null : (
               <Text style={commonStyles.lineBold}>
@@ -119,30 +145,32 @@ export function FenetreEstive({
               onChangeText={(zone) => maj({ zone })}
               placeholder={E.zoneExemple}
             />
-            <Checkbox
-              label={E.moiGestionnaire}
-              value={
-                estLeGestionnaire({
-                  moiGestionnaire: valeurs.moiGestionnaire,
-                  gestionnaire: valeurs.gestionnaire,
-                  identite: { numeroPacage: '', siret: '', numeroExploitation: '', nom: nomExploitant },
-                })
-              }
-              onChange={(moiGestionnaire) => maj({ moiGestionnaire })}
-            />
+            <Checkbox label={E.moiGestionnaire} value={moiGestionnaire} onChange={(m) => maj({ moiGestionnaire: m })} />
             <Text style={commonStyles.note}>{E.aideMoiGestionnaire}</Text>
-            <FormField
-              label={E.gestionnaire}
-              value={valeurs.gestionnaire ?? ''}
-              onChangeText={(gestionnaire) => maj({ gestionnaire })}
-            />
-            <FormField
-              label={E.communeGestionnaire}
-              value={valeurs.communeGestionnaire ?? ''}
-              onChangeText={(communeGestionnaire) => maj({ communeGestionnaire })}
-            />
-            <Button label={E.generer} onPress={generer} loading={encours} />
-            <Button variant="secondary" label={TEXTES.commun.general.annuler} onPress={onClose} />
+            {/* Le gestionnaire se nomme seulement quand ce n'est pas soi-même : sinon c'est l'exploitation qui remplit le cadre. */}
+            {moiGestionnaire ? null : (
+              <>
+                <FormField
+                  label={E.gestionnaire}
+                  value={valeurs.gestionnaire ?? ''}
+                  onChangeText={(gestionnaire) => maj({ gestionnaire })}
+                />
+                <FormField
+                  label={E.communeGestionnaire}
+                  value={valeurs.communeGestionnaire ?? ''}
+                  onChangeText={(communeGestionnaire) => maj({ communeGestionnaire })}
+                />
+              </>
+            )}
+            <View style={compacte.ligne}>
+              <Button style={compacte.moitie} label={E.generer} onPress={generer} loading={encours} />
+              <Button
+                style={compacte.moitie}
+                variant="secondary"
+                label={TEXTES.commun.general.annuler}
+                onPress={onClose}
+              />
+            </View>
           </ScrollView>
         </Pressable>
       </Pressable>

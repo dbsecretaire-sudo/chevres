@@ -1,6 +1,7 @@
 import { ScrollView, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { EnTeteFerme } from '@/features/accueil/ferme/EnTeteFerme';
+import TousLesAnimaux from '@/features/accueil/ferme/TousLesAnimaux';
 import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import LieuTiers from '@/features/production/screens/LieuTiers';
 import EntrepotJeu from '@/features/stock/screens/EntrepotJeu';
@@ -25,6 +26,8 @@ export default function Lieu() {
         />
       </View>
     );
+  // Tous les animaux : la chèvrerie (son mur et ses chèvres), puis la liste du troupeau sur tout l'écran.
+  if (lieu === 'animaux') return <TousLesAnimaux />;
   // La fromagerie : les cartes de ce qu'on y fabrique et garde, sous l'en-tête habituel des pages.
   if (lieu === 'fromagerie')
     return (

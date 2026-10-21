@@ -10,13 +10,12 @@ import { BarreBasseFerme } from '@/features/accueil/ferme/BarreBasseFerme';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { BasculeFerme, type CoteDeLaFerme } from '@/features/accueil/ferme/BasculeFerme';
 import { BullesLieu } from '@/features/accueil/ferme/BullesLieu';
-import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/ColonneFerme';
-import { ColonnesDeScene, useColonnesDeScene } from '@/features/accueil/ferme/ColonnesDeScene';
 import { lireDernierCote, noterDernierCote } from '@/features/accueil/ferme/dernierCote';
-import { EnclosFerme } from '@/features/accueil/ferme/EnclosFerme';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
+import { SceneExploitation } from '@/features/accueil/ferme/SceneExploitation';
 import { SceneTransformation } from '@/features/accueil/ferme/SceneTransformation';
+import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
   decalageVertical,
@@ -37,6 +36,8 @@ import { estBureau } from '@/shared/utils/plateforme';
 
 const C = TEXTES.accueil.ferme.colonnes;
 const TAILLE_ICONE = 30;
+/** Le diamètre du disque qui reste éclairé quand on touche un compartiment. */
+const DIAMETRE_ECLAIRE = 52;
 /** Les couleurs des lieux : un achat est bordeaux, une vente (une recette) est verte (la couleur de la ferme), une démarche est orange. */
 const ACHAT = '#8E1F33';
 const VENTE = colors.primary;
@@ -79,19 +80,16 @@ const ROUTE_DIRECTE: Record<string, string> = {
   stockFromagerie: ROUTES.lieu('fromagerie'),
 };
 
-/** Où est le bouton : dans la colonne de gauche (les intervenants) ou celle de droite (la gestion) de la scène. */
-type Zone = 'gauche' | 'droite';
-
 /** Le côté de la ferme montré : l'exploitation (le troupeau) ou le travail du produit (la fromagerie). */
 type Cote = CoteDeLaFerme['cle'];
 
 
 /**
- * La direction de l'arc des bulles d'après la place du bouton (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
- * les boutons de la colonne de gauche ouvrent vers la droite, ceux de la colonne de droite vers la gauche, sur la scène.
+ * La direction de l'arc des bulles d'après la place du compartiment (0 : vers la droite, 90 : vers le haut, 180 : vers la gauche, 270 : vers le bas) :
+ * les compartiments sont en bas de la scène, les bulles s'ouvrent donc vers le haut, de biais vers le côté libre près d'un bord.
  */
-export function directionDesBulles(zone: Zone): number {
-  return zone === 'gauche' ? 0 : 180;
+export function directionDesBulles(x: number, largeur: number): number {
+  return x < largeur / 3 ? 45 : x > (2 * largeur) / 3 ? 135 : 90;
 }
 
 /** Ce qui reste éclairé quand le reste s'assombrit : le bouton touché, refait par-dessus l'ombre (sa place, sa taille, son dessin). */
@@ -201,7 +199,6 @@ export default function AccueilFerme() {
       couleur: ACHAT,
     },
     { cle: 'veterinaire', titre: C.veterinaire, icone: iconeMCI('stethoscope'), couleur: ACHAT },
-    { cle: 'aliments', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ACHAT },
     {
       cle: 'equarrissage',
       titre: C.equarrissage,
@@ -209,6 +206,7 @@ export default function AccueilFerme() {
       pastille: f.morts,
       couleur: ACHAT,
     },
+    { cle: 'aliments', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ACHAT },
     { cle: 'carburant', titre: C.carburant, icone: iconeMCI('gas-station'), couleur: ACHAT },
     { cle: 'garage', titre: C.garage, icone: iconeMCI('car-wrench'), couleur: ACHAT },
     { cle: 'assurance', titre: C.assurance, icone: iconeIon('shield-checkmark'), couleur: ACHAT },
@@ -257,16 +255,15 @@ export default function AccueilFerme() {
     .slice()
     .reverse();
   const gestion = cote === 'exploitation' ? gestionExploitation : gestionTransformation;
-  const colonnes = useColonnesDeScene(intervenants.length);
 
-  /** Ouvre le menu d'un bouton à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
-  const ouvrirMenu = (cible: CibleDesBulles, zone: Zone, ancre: AncreBouton, entree: EntreeDeColonne) => {
+  /** Ouvre le menu d'un compartiment à partir de sa place dans la fenêtre : on la ramène à celle de l'accueil. */
+  const ouvrirMenu = (cible: CibleDesBulles, ancre: AncreBouton, entree: EntreeDeColonne) => {
     racine.current?.measureInWindow((rx, ry, largeur, hauteur) => {
       const gauche = ancre.x - rx;
       const sommet = ancre.y - ry;
       setMenu({
         cible,
-        direction: directionDesBulles(zone),
+        direction: directionDesBulles(gauche + ancre.largeur / 2, largeur),
         x: gauche + ancre.largeur / 2,
         y: sommet + ancre.hauteur / 2,
         hauteur,
@@ -274,20 +271,29 @@ export default function AccueilFerme() {
         // Les bulles ont la couleur du bouton d'où elles sortent.
         titre: entree.titre,
         couleur: entree.couleur ?? colors.primary,
-        lumiere: { gauche, haut: sommet, diametre: ancre.largeur, icone: entree.icone },
+        // Le bouton éclairé est un disque (pas tout le compartiment), centré sur lui.
+        lumiere: {
+          gauche: gauche + ancre.largeur / 2 - DIAMETRE_ECLAIRE / 2,
+          haut: sommet + ancre.hauteur / 2 - DIAMETRE_ECLAIRE / 2,
+          diametre: DIAMETRE_ECLAIRE,
+          icone: entree.icone,
+        },
       });
     });
   };
-  const surBouton = (zone: Zone, cle: string, ancre: AncreBouton) => {
+  /** Un appui sur une maison (un intervenant) : sa fiche. */
+  const surMaison = (cle: string) => {
+    if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
+  };
+  /** Un appui sur un compartiment (la gestion) : sa page, la fenêtre de l'estive, ou ses bulles (la santé, la grange). */
+  const surGestion = (cle: string, ancre: AncreBouton) => {
     if (cle === 'estive') setEstiveOuverte(true);
     else if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
     else {
       const entree = [...gestionExploitation, ...gestionTransformation].find((e) => e.cle === cle);
-      if (entree) ouvrirMenu(cle as CibleDesBulles, zone, ancre, entree);
+      if (entree) ouvrirMenu(cle as CibleDesBulles, ancre, entree);
     }
   };
-  const surGauche = (cle: string, ancre: AncreBouton) => surBouton('gauche', cle, ancre);
-  const surDroite = (cle: string, ancre: AncreBouton) => surBouton('droite', cle, ancre);
   const choisir = (action: ActionDeLieu) => {
     setMenu(null);
     ouvrir(action.route);
@@ -324,31 +330,27 @@ export default function AccueilFerme() {
       <View key={espece} style={styles.zoneDeScene} {...balayage.panHandlers}>
         <View style={styles.scene}>
           {cote === 'exploitation' ? (
-            <EnclosFerme
+            <SceneExploitation
               vedettes={f.vedettes}
               nombreAnimaux={f.stats?.totalVivantes}
               naissances={f.stats?.cabritsAnnee}
               estive={f.estive}
-              onAppui={() => ouvrir(ROUTES.lieu('cheptel'))}
-              margeGauche={colonnes.margeGauche}
-              margeDroite={colonnes.margeDroite}
+              onAppui={() => ouvrir(ROUTES.lieu('animaux'))}
+              intervenants={intervenants}
+              gestion={gestion}
+              onMaison={surMaison}
+              onGestion={surGestion}
             />
           ) : (
             <SceneTransformation
               compte={f.transformation}
               onAppui={() => ouvrir(ROUTES.lieu('fromagerie'))}
-              margeGauche={colonnes.margeGauche}
-              margeDroite={colonnes.margeDroite}
+              intervenants={intervenants}
+              gestion={gestion}
+              onMaison={surMaison}
+              onGestion={surGestion}
             />
           )}
-          <ColonnesDeScene
-            intervenants={intervenants}
-            gestion={gestion}
-            onIntervenant={surGauche}
-            onGestion={surDroite}
-            hauteur={colonnes.hauteur}
-            surHauteur={colonnes.surHauteur}
-          />
         </View>
       </View>
       <BasculeFerme
