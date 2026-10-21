@@ -264,7 +264,10 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter un vétérinaire',
       groupeEcritures: 'Les visites et factures du vétérinaire',
       nouvelle: 'Nouvelle visite',
-      liens: { traitements: { titre: 'Traitements', aide: 'Les soins donnés aux animaux, avec leurs délais d’attente.' } },
+      liens: {
+        traitements: { titre: 'Traitements', aide: 'Les soins donnés aux animaux, avec leurs délais d’attente.' },
+        rapports: { titre: 'Rapports d’essais', aide: 'Les résultats d’analyses du laboratoire (brucellose, paratuberculose, Capra’Sana…) : les mêmes que ceux du groupement sanitaire.' },
+      },
     },
     organismes: {
       titre: 'Organismes',

@@ -307,7 +307,11 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_DEPENSE.VETERINAIRE],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.VETERINAIRE}`,
-    liens: [{ cle: 'traitements', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS }],
+    // Les rapports d'essais sont les mêmes que ceux du groupement sanitaire : la même page, les mêmes documents.
+    liens: [
+      { cle: 'traitements', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+      { cle: 'rapports', icone: 'flask-outline', route: ROUTES.RAPPORTS_ESSAIS_GDS },
+    ],
   },
   organismes: {
     cle: 'organismes',
