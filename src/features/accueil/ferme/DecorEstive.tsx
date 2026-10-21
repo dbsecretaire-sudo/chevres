@@ -1,14 +1,14 @@
 import { StyleSheet, View } from 'react-native';
 
 /**
- * Le décor de l'enclos pendant l'estive, dessiné en formes simples et sans animation : des montagnes enneigées au fond, des nuages en haut et des
- * cailloux au sol. Ses couleurs restent douces : le titre, le troupeau et l'effectif passent par-dessus.
+ * Le décor de l'enclos pendant l'estive, dessiné en formes simples et sans animation : de grandes montagnes enneigées au fond (leur pied juste au-dessus du
+ * panneau de la gestion), des nuages en haut et des cailloux au sol. Ses couleurs restent douces : le titre, le troupeau et l'effectif passent par-dessus.
  */
 
 const MONTAGNES = [
-  { gauche: -6, largeur: 130, hauteur: 82, couleur: '#A9BDD2', neige: true },
-  { gauche: 52, largeur: 120, hauteur: 98, couleur: '#B6C7DA', neige: true },
-  { gauche: 26, largeur: 90, hauteur: 58, couleur: '#9DB2C9', neige: false },
+  { gauche: -8, largeur: 190, hauteur: 140, couleur: '#A9BDD2', neige: true },
+  { gauche: 44, largeur: 190, hauteur: 175, couleur: '#B6C7DA', neige: true },
+  { gauche: 22, largeur: 140, hauteur: 100, couleur: '#9DB2C9', neige: false },
 ] as const;
 
 const NUAGES = [
@@ -18,13 +18,12 @@ const NUAGES = [
 ] as const;
 
 const CAILLOUX = [
-  { x: 6, y: 88, l: 16, h: 9 },
-  { x: 14, y: 92, l: 10, h: 6 },
-  { x: 40, y: 94, l: 12, h: 7 },
-  { x: 62, y: 91, l: 18, h: 10 },
-  { x: 74, y: 95, l: 9, h: 5 },
-  { x: 88, y: 82, l: 13, h: 8 },
-  { x: 4, y: 60, l: 11, h: 7 },
+  { x: 6, y: 62, l: 16, h: 9 },
+  { x: 24, y: 64, l: 10, h: 6 },
+  { x: 40, y: 63, l: 12, h: 7 },
+  { x: 62, y: 62, l: 18, h: 10 },
+  { x: 76, y: 64, l: 9, h: 5 },
+  { x: 88, y: 62, l: 13, h: 8 },
 ] as const;
 
 function Montagne({
@@ -97,6 +96,8 @@ export function DecorEstive() {
       {MONTAGNES.map((m, i) => (
         <Montagne key={i} {...m} />
       ))}
+      {/* Le sol, devant le pied des montagnes : ce qu'on en voit au-dessus du panneau de la gestion. */}
+      <View style={styles.sol} />
       {NUAGES.map((n, i) => (
         <Nuage key={i} {...n} />
       ))}
@@ -115,7 +116,9 @@ export function DecorEstive() {
 
 const styles = StyleSheet.create({
   fond: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, overflow: 'hidden', borderRadius: 13 },
-  montagne: { position: 'absolute', bottom: 0 },
+  // Le pied des montagnes est au-dessus du panneau de la gestion (le bas de la scène) : elles se voient en entier.
+  montagne: { position: 'absolute', bottom: '38%' },
+  sol: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '40%', backgroundColor: '#D3DFCB' },
   nuage: { position: 'absolute', width: 52, height: 24 },
   bosse: { position: 'absolute', borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.92)' },
   caillou: {

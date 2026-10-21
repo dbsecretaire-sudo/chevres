@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMouvementReduit } from '@/features/accueil/ferme/animations';
 import type { ActionDeLieu } from '@/features/accueil/ferme/actionsLieu';
 import { ecartDesBulles, positionsEnArc, rayonDesBulles } from '@/features/accueil/services/bullesFerme';
@@ -71,7 +71,11 @@ function Bulle({
         accessibilityRole="button"
         accessibilityLabel={action.titre}
       >
-        <Ionicons name={action.icone} size={32} color={colors.blanc} />
+        {action.iconeMci ? (
+          <MaterialCommunityIcons name={action.iconeMci} size={32} color={colors.blanc} />
+        ) : (
+          <Ionicons name={action.icone} size={32} color={colors.blanc} />
+        )}
       </Pressable>
       <Text style={styles.libelle} numberOfLines={2}>
         {action.titre}

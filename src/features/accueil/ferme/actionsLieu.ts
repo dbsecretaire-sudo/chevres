@@ -1,4 +1,4 @@
-import type { Ionicons } from '@expo/vector-icons';
+import type { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -8,6 +8,8 @@ export interface ActionDeLieu {
   cle: string;
   titre: string;
   icone: keyof typeof Ionicons.glyphMap;
+  /** Quand il est donné, le dessin vient de cette famille (l'épi de maïs n'existe pas dans l'autre) et remplace `icone`. */
+  iconeMci?: keyof typeof MaterialCommunityIcons.glyphMap;
   route: string;
 }
 
@@ -36,7 +38,7 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
       ];
     case 'grange':
       return [
-        { cle: 'alimentation', titre: B.alimentation, icone: 'nutrition', route: ROUTES.SANTE_ALIMENTATION },
+        { cle: 'alimentation', titre: B.alimentation, icone: 'nutrition', iconeMci: 'corn', route: ROUTES.SANTE_ALIMENTATION },
         {
           cle: 'acheter',
           titre: B.acheterNourriture,

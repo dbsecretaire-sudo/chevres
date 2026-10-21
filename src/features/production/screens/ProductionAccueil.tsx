@@ -87,7 +87,7 @@ export default function ProductionAccueil() {
       ? [{ cle: 'oeufs', ...T.oeufs, icone: 'egg' as const, route: ROUTES.PRODUCTION_OEUFS }]
       : []),
     ...(laiterie
-      ? [{ cle: 'fromages', ...T.fromages, icone: 'nutrition' as const, route: ROUTES.PRODUCTION_FROMAGES }]
+      ? [{ cle: 'fromages', ...T.fromages, icone: 'restaurant' as const, route: ROUTES.PRODUCTION_FROMAGES }]
       : []),
     { cle: 'viande', ...T.viande, icone: 'restaurant', route: ROUTES.PRODUCTION_VIANDE },
     { cle: 'charcuterie', ...T.charcuterie, icone: 'cut', route: ROUTES.PRODUCTION_CHARCUTERIE },

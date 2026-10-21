@@ -1,24 +1,18 @@
+import { cloneElement, isValidElement, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import { colors } from '@/shared/theme/colors';
 
-/** Les couleurs d'une maison : son mur et son toit (le toit est aussi celui de son enseigne). */
-export interface PaletteDeMaison {
-  mur: string;
-  toit: string;
-}
+/** La couleur du logo, la même pour tous : un trait vert sombre posé directement sur la carte, sans rond derrière. */
+const COULEUR_DU_LOGO = '#2F4A1E';
 
-/** Les maisons ont toutes les mêmes couleurs (un mur crème, un toit brique) : c'est l'enseigne sur la façade qui dit qui est l'intervenant. */
-const PALETTE: PaletteDeMaison = { mur: '#F6EEDC', toit: '#9C5B3A' };
-
-/** Les mesures du dessin d'origine d'une maison (sa largeur, la hauteur de son toit et de son mur, celle de son nom). */
-const LARGEUR = 68;
-const TOIT = 18;
-const MUR = 46;
+/** Les mesures d'un intervenant à l'échelle 1 : son logo, et la place de son nom dessous. */
+const LOGO = 50;
 const NOM = 26;
-/** La hauteur d'une maison et de son nom, à l'échelle 1 : de quoi les ranger en rangées. */
-export const HAUTEUR_DE_MAISON = TOIT + MUR + 3 + NOM;
-/** La largeur d'une maison avec la place de son nom, à l'échelle 1. */
+const LARGEUR = 68;
+/** La hauteur d'un intervenant et de son nom, à l'échelle 1 : de quoi les ranger en rangées. */
+export const HAUTEUR_DE_MAISON = LOGO + 3 + NOM;
+/** La largeur d'un intervenant avec la place de son nom, à l'échelle 1. */
 export const LARGEUR_DE_MAISON = LARGEUR + 16;
 
 interface Props {
@@ -29,13 +23,19 @@ interface Props {
 }
 
 /**
- * Une maison de la carte : un intervenant. Son toit et son mur se reconnaissent de loin ; sur sa façade, son enseigne (le dessin de son bouton, en grand) ; dessous,
- * son nom. Une pastille rouge dit ce qui l'attend (les lots à facturer à l'abattoir, les animaux morts à l'équarrissage). Un appui ouvre sa fiche.
+ * Un intervenant de la carte : son logo (le dessin de son bouton, seul, sans rond ni maison derrière) et son nom dessous. Une pastille rouge dit ce
+ * qui l'attend (les lots à facturer à l'abattoir, les animaux morts à l'équarrissage). Un appui ouvre sa fiche.
  */
 export function Maison({ entree, echelle, onAppui }: Props) {
-  const palette = PALETTE;
   const s = (n: number) => Math.round(n * echelle);
   const largeur = s(LARGEUR);
+  // Le dessin du bouton est blanc (sur son rond) : ici, il prend la couleur du logo et la taille de la carte.
+  const logo = isValidElement(entree.icone)
+    ? cloneElement(entree.icone as ReactElement<{ color?: string; size?: number }>, {
+        color: COULEUR_DU_LOGO,
+        size: s(LOGO),
+      })
+    : entree.icone;
   return (
     <Pressable
       onPress={() => onAppui(entree.cle)}
@@ -44,38 +44,8 @@ export function Maison({ entree, echelle, onAppui }: Props) {
       accessibilityLabel={entree.titre}
       hitSlop={4}
     >
-      {/* Le toit : un triangle. */}
-      <View
-        style={{
-          width: 0,
-          height: 0,
-          borderLeftWidth: largeur / 2,
-          borderRightWidth: largeur / 2,
-          borderBottomWidth: s(TOIT),
-          borderLeftColor: 'transparent',
-          borderRightColor: 'transparent',
-          borderBottomColor: palette.toit,
-        }}
-      />
-      <View
-        style={[
-          styles.mur,
-          { width: largeur - s(8), height: s(MUR), backgroundColor: palette.mur, borderColor: palette.toit },
-        ]}
-      >
-        {/* L'enseigne : le dessin du bouton, sur un disque de la couleur du toit. */}
-        <View
-          style={{
-            width: s(38),
-            height: s(38),
-            borderRadius: s(19),
-            backgroundColor: palette.toit,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <View style={{ transform: [{ scale: 0.86 * echelle }] }}>{entree.icone}</View>
-        </View>
+      <View style={{ height: s(LOGO), alignItems: 'center', justifyContent: 'center' }}>
+        {logo}
         {entree.pastille ? (
           <View style={styles.pastille}>
             <Text style={styles.pastilleTexte}>{entree.pastille}</Text>
@@ -91,7 +61,6 @@ export function Maison({ entree, echelle, onAppui }: Props) {
 
 const styles = StyleSheet.create({
   maison: { alignItems: 'center' },
-  mur: { borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   nom: {
     marginTop: 3,
     fontWeight: '700',
@@ -105,8 +74,8 @@ const styles = StyleSheet.create({
   },
   pastille: {
     position: 'absolute',
-    top: -8,
-    right: -8,
+    top: -4,
+    right: -10,
     minWidth: 20,
     borderRadius: 10,
     backgroundColor: colors.danger,

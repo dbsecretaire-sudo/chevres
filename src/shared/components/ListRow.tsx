@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Image, Pressable, Text, View, type ImageSourcePropType } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDansBloc } from '@/shared/components/BlocListe';
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/components/ListRow.styles';
@@ -64,7 +64,12 @@ export function ListRow({
           ) : emoji ? (
             <Text style={{ fontSize: 22 }}>{emoji}</Text>
           ) : icone ? (
-            <Ionicons name={icone} size={22} color={colors.primary} />
+            // L'alimentation s'écrit « nutrition » (la pomme d'Ionicons) : partout, elle se dessine en épi de maïs.
+            icone === 'nutrition' ? (
+              <MaterialCommunityIcons name="corn" size={24} color={colors.primary} />
+            ) : (
+              <Ionicons name={icone} size={22} color={colors.primary} />
+            )
           ) : null}
         </View>
       ) : null}

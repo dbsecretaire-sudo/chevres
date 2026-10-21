@@ -206,7 +206,7 @@ export default function AccueilFerme() {
       pastille: f.morts,
       couleur: ACHAT,
     },
-    { cle: 'aliments', titre: C.alimentation, icone: iconeIon('nutrition'), couleur: ACHAT },
+    { cle: 'aliments', titre: C.alimentation, icone: iconeMCI('corn'), couleur: ACHAT },
     { cle: 'carburant', titre: C.carburant, icone: iconeMCI('gas-station'), couleur: ACHAT },
     { cle: 'garage', titre: C.garage, icone: iconeMCI('car-wrench'), couleur: ACHAT },
     { cle: 'assurance', titre: C.assurance, icone: iconeIon('shield-checkmark'), couleur: ACHAT },
@@ -231,7 +231,7 @@ export default function AccueilFerme() {
     { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
     { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
     { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
-    { cle: 'grange', titre: C.grange, icone: iconeMCI('corn'), couleur: ORANGE },
+    { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
     { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
   ];
   // À droite de la scène du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit et le stock de la fromagerie.
