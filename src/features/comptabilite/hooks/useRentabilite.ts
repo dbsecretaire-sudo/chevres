@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useFiltreActivite } from '@/features/comptabilite/hooks/useFiltreActivite';
@@ -11,6 +11,7 @@ import {
 } from '@/features/comptabilite/services/pistesEconomie';
 import { listControles } from '@/features/exploitation/repository/controles';
 import { productionLaitiere } from '@/features/exploitation/services/productionLaitiere';
+import { ATELIER, type Atelier } from '@/shared/constants/ateliers';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import type { FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
@@ -121,8 +122,21 @@ async function construirePlanDeLAnnee(
   });
 }
 
+/** Les limites que la rentabilité peut prendre (l'adresse : `?perimetre=agritourisme`) : les ateliers qu'elle couvre alors. */
+export const PERIMETRES_RENTABILITE = {
+  /** L'agritourisme seul (le côté Agritourisme de l'accueil). */
+  agritourisme: [ATELIER.AGRITOURISME],
+  /** Ce qu'on fabrique : le lait, le fromage, la viande et la charcuterie (le côté Atelier de l'accueil). */
+  atelier: [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.VIANDE],
+} as const satisfies Record<string, readonly Atelier[]>;
+
+export type PerimetreRentabilite = keyof typeof PERIMETRES_RENTABILITE;
+
 /** La rentabilité de l'année active et de l'activité choisie, rechargée à chaque retour sur l'écran. */
 export function useRentabilite() {
+  const { perimetre: demande } = useLocalSearchParams<{ perimetre?: string }>();
+  const perimetre: PerimetreRentabilite | undefined =
+    demande && demande in PERIMETRES_RENTABILITE ? (demande as PerimetreRentabilite) : undefined;
   const { settings, setAnneeActive } = useAppSettings();
   const { espece, especes } = useEtablissement();
   const [filtre, setFiltre] = useFiltreActivite();
@@ -151,12 +165,19 @@ export function useRentabilite() {
     const effectif = autreEspece ? undefined : (await calculerBilan(annee)).chevresVivantesFinAnnee;
     const [toutesAnnees, r] = await Promise.all([
       toutesLesAnneesConnues(),
-      rentabilite(annee, { filtre, horsTaxes, effectif, laitier }),
+      rentabilite(annee, {
+        filtre,
+        horsTaxes,
+        effectif,
+        laitier,
+        perimetre: perimetre ? PERIMETRES_RENTABILITE[perimetre] : undefined,
+      }),
     ]);
     setAnnees(toutesAnnees);
     setResultat(r);
+    // Le plan d'économies porte sur toute l'exploitation : il n'a pas de sens limité à des ateliers.
     setPlan(
-      laitier
+      laitier && !perimetre
         ? await construirePlanDeLAnnee(
             r,
             { annee, filtre, horsTaxes, effectif, laitier },
@@ -165,7 +186,7 @@ export function useRentabilite() {
           )
         : null,
     );
-  }, [annee, filtre, horsTaxes, espece, laitier, investissementsEconomie]);
+  }, [annee, filtre, horsTaxes, espece, laitier, investissementsEconomie, perimetre]);
 
   useFocusEffect(
     useCallback(() => {
@@ -173,5 +194,5 @@ export function useRentabilite() {
     }, [charger]),
   );
 
-  return { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier, plan };
+  return { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier, plan, perimetre };
 }

@@ -32,7 +32,7 @@ const nombre = (valeur: number) =>
  * ateliers, ni coûts de production, ni plan d'économies : elle ne garde que le résultat et le poids de ses charges.
  */
 export default function Rentabilite() {
-  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier, plan } = useRentabilite();
+  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier, plan, perimetre } = useRentabilite();
   if (!resultat) return null;
   const entreprise = modeEntreprise();
 
@@ -42,6 +42,13 @@ export default function Rentabilite() {
         <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
         <PucesActivite valeur={filtre} onChange={setFiltre} />
       </LigneFiltres>
+
+      {perimetre ? (
+        <Card>
+          <Text style={commonStyles.lineBold}>{T.perimetre[perimetre].titre}</Text>
+          <Text style={commonStyles.note}>{T.perimetre[perimetre].aide}</Text>
+        </Card>
+      ) : null}
 
       <Card>
         <Text style={commonStyles.cardTitle}>{T.resultatTitre(annee)}</Text>
@@ -104,7 +111,7 @@ export default function Rentabilite() {
       {entreprise ? null : <Text style={stylesFiscalite.titreSection}>{T.couts.titre}</Text>}
       {entreprise ? null : (
         <Card>
-          {laitier ? (
+          {laitier && perimetre !== 'agritourisme' ? (
             <View style={commonStyles.gap2}>
               <View style={styles.ligne}>
                 <Text style={commonStyles.lineBold}>{T.couts.parLitre}</Text>
@@ -121,6 +128,7 @@ export default function Rentabilite() {
               </Text>
             </View>
           ) : null}
+          {perimetre ? null : (
           <View style={commonStyles.gap2}>
             <View style={styles.ligne}>
               <Text style={commonStyles.lineBold}>{T.couts.parAnimal(vocabulaire().femelle.singulier)}</Text>
@@ -134,7 +142,8 @@ export default function Rentabilite() {
                 : T.couts.parAnimalAide(nombre(resultat.effectif), formatMontant(resultat.charges))}
             </Text>
           </View>
-          <CoutsAgritourismeFormules annee={annee} horsTaxes={resultat.horsTaxes} />
+          )}
+          {perimetre === 'atelier' ? null : <CoutsAgritourismeFormules annee={annee} horsTaxes={resultat.horsTaxes} />}
         </Card>
       )}
 

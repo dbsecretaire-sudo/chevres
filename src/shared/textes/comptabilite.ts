@@ -315,6 +315,17 @@ export const TEXTES_COMPTABILITE = {
   },
   /** La rentabilité : marge par atelier, coûts de production, poids des charges, résultat sans les aides. */
   rentabilite: {
+    /** La rentabilité limitée à certains ateliers (depuis l'accueil : le côté Agritourisme, le côté Atelier). */
+    perimetre: {
+      agritourisme: {
+        titre: 'Agritourisme seulement',
+        aide: 'Les recettes et les charges de l’atelier Agritourisme : ses visites, son repas, son 4x4. Le reste de l’exploitation n’y compte pas.',
+      },
+      atelier: {
+        titre: 'Ce qu’on fabrique seulement',
+        aide: 'Le lait, le fromage, la viande et la charcuterie : leurs recettes, leurs charges directes et leur part des charges communes. Les aides et les autres ateliers n’y comptent pas.',
+      },
+    },
     resultatTitre: (annee: number) => `Résultat — ${annee}`,
     horsTaxes: 'Montants hors taxes (régime de TVA réel).',
     toutesTaxes: 'Montants toutes taxes comprises.',

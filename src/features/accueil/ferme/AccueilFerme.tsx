@@ -95,7 +95,9 @@ const ROUTE_DIRECTE: Record<string, string> = {
   formules: ROUTES.COMMERCIAL_FORMULES,
   tarifs: ROUTES.COMMERCIAL_TARIFS,
   ventesAgritourisme: ROUTES.COMMERCIAL_VENTES,
-  rentabilite: ROUTES.RENTABILITE,
+  // La rentabilité du côté Agritourisme ne porte que sur l'agritourisme ; celle de l'atelier, que sur ce qu'on fabrique (lait, fromage, viande, charcuterie).
+  rentabilite: `${ROUTES.RENTABILITE}?perimetre=agritourisme`,
+  rentabiliteAtelier: `${ROUTES.RENTABILITE}?perimetre=atelier`,
 };
 
 /** Le côté de la ferme montré : l'exploitation (le troupeau) ou le travail du produit (la fromagerie). */
@@ -262,6 +264,7 @@ export default function AccueilFerme() {
     { cle: 'lotsFromages', titre: C.lotsFromages, icone: iconeIon('layers'), couleur: VENTE },
     { cle: 'fabriquerCharcuterie', titre: C.fabriquerCharcuterie, icone: iconeMCI('knife'), couleur: VENTE },
     { cle: 'fabriquerFromage', titre: C.fabriquerFromage, icone: iconeMCI('pot-mix'), couleur: VENTE },
+    { cle: 'rentabiliteAtelier', titre: C.rentabilite, icone: iconeIon('stats-chart'), couleur: VENTE },
   ];
   // Le côté Agritourisme : ceux qui viennent (les visiteurs, leurs groupes), ceux qui les envoient (l'office de tourisme) et ceux qui fournissent le repas.
   const intervenantsAgritourisme: EntreeDeColonne[] = [

@@ -33,11 +33,13 @@ function Compartiment({
   palette,
   onAppui,
   couleurDisque,
+  seul,
 }: {
   entree: EntreeDeColonne;
   palette: PaletteDeBatiment;
   onAppui: Props['onAppui'];
   couleurDisque?: string;
+  seul?: boolean;
 }) {
   const ref = useRef<View>(null);
   // Sur un grand écran (Windows), le dessin et le nom grandissent avec la largeur de la colonne.
@@ -48,7 +50,7 @@ function Compartiment({
     <Pressable
       ref={ref}
       collapsable={false}
-      style={[styles.compartiment, { backgroundColor: palette.compartiment, borderColor: palette.bord }]}
+      style={[styles.compartiment, { backgroundColor: palette.compartiment, borderColor: palette.bord }, seul ? styles.compartimentSeul : null]}
       onPress={appuyer}
       accessibilityRole="button"
       accessibilityLabel={entree.titre}
@@ -92,8 +94,16 @@ export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur, 
       <View style={[styles.mur, { backgroundColor: palette.mur, borderColor: palette.toit }]}>
         {decor}
         <View style={styles.compartiments}>
-          {entrees.map((e) => (
-            <Compartiment key={e.cle} entree={e} palette={palette} onAppui={onAppui} couleurDisque={couleurDisque} />
+          {entrees.map((e, i) => (
+            <Compartiment
+              key={e.cle}
+              entree={e}
+              palette={palette}
+              onAppui={onAppui}
+              couleurDisque={couleurDisque}
+              // Un compartiment seul sur sa rangée (le septième de l'atelier) prend toute la largeur.
+              seul={i === entrees.length - 1 && entrees.length % 3 === 1}
+            />
           ))}
         </View>
       </View>
@@ -122,6 +132,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 2,
   },
+  compartimentSeul: { width: '98%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
   disque: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   nom: { fontSize: 10, fontWeight: '700', color: colors.text, textAlign: 'center', minHeight: 24 },
   pastille: {

@@ -94,6 +94,11 @@ export interface EntreeRentabilite {
    * (« Cabris ») va dans l'atelier des petits, un animal sur pied ou vivant dans celui des reproducteurs et réformes (voir ateliersDesVentesDeViande).
    */
   ateliersDesVentes?: Record<string, Atelier>;
+  /**
+   * Les ateliers auxquels la rentabilité se limite (l'agritourisme seul ; le lait, le fromage et la viande) : leurs recettes, leurs charges directes
+   * et leur part des charges communes. Absent : toute l'exploitation. Les aides, qui ne sont d'aucun atelier, n'y comptent pas.
+   */
+  perimetre?: readonly Atelier[];
 }
 
 /** Ce qui sépare le groupe d'un compte de son détail dans son nom (« Assurance — Multirisques »). */
@@ -103,7 +108,7 @@ const arrondi = (valeur: number) => Math.round(valeur * 100) / 100;
 
 /** La rentabilité d'une année, d'après les ventes et les factures données (calcul pur). */
 export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
-  const { annee, filtre, horsTaxes } = entree;
+  const { annee, filtre, horsTaxes, perimetre } = entree;
   const retenue = (activite: string) => filtre === TOUTES_ACTIVITES || activite === filtre;
   /** Un montant TTC, hors taxes quand le régime le veut et que le taux est connu. */
   const montant = (ttc: number, taux?: number) => (horsTaxes && taux ? ttc - tvaDuTtc(ttc, taux) : ttc);
@@ -140,7 +145,8 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
       // Une recette d'une autre activité que celle choisie n'est pas comptée ; les aides, suivies à part, non plus dans les recettes.
       if (!retenue(activiteFacture(f))) continue;
       if (categorie === CATEGORIE_RECETTE.AIDE) {
-        aides += f.montant;
+        // Une aide n'est d'aucun atelier : elle ne compte pas quand la rentabilité se limite à certains ateliers.
+        if (!perimetre) aides += f.montant;
         continue;
       }
       // Une recette rangée dans un atelier (l'agritourisme) y compte ; les autres sont des « autres recettes ».
@@ -155,16 +161,17 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
       if (!retenue(part.activite)) continue;
       const charge = montant(part.facture.montant, f.tauxTva);
       const categorie = f.categorieDepense ?? CATEGORIE_DEPENSE.AUTRE;
+      // L'atelier de la facture ne vaut que pour les lignes de son activité : l'aliment d'un autre cheptel (porcs…) est une charge commune.
+      const dansSonActivite = part.activite === activiteFacture(f) || activiteFacture(f) === ACTIVITE_COMMUNE;
+      const atelier = dansSonActivite ? (f.atelier as Atelier | undefined) : undefined;
       // Une dépense « Autre » a son compte comptable (celui par défaut, à défaut d'un autre) : chaque compte est un poste à part, et
       // les comptes dont le nom commence pareil avant « — » (« Assurance — Multirisques », « Assurance — Responsabilité civile ») n'en font qu'un.
       const poste =
         categorie === CATEGORIE_DEPENSE.AUTRE
           ? `${categorie}:${groupeDuCompte(f.compteManuel ?? COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero)}`
           : categorie;
-      postes.set(poste, (postes.get(poste) ?? 0) + charge);
-      // L'atelier de la facture ne vaut que pour les lignes de son activité : l'aliment d'un autre cheptel (porcs…) est une charge commune.
-      const dansSonActivite = part.activite === activiteFacture(f) || activiteFacture(f) === ACTIVITE_COMMUNE;
-      const atelier = dansSonActivite ? (f.atelier as Atelier | undefined) : undefined;
+      // Limitée à des ateliers, la rentabilité ne détaille que leurs charges directes (la part des charges communes s'ajoute au total, plus bas).
+      if (!perimetre || (atelier && perimetre.includes(atelier))) postes.set(poste, (postes.get(poste) ?? 0) + charge);
       if (atelier) directes.set(atelier, (directes.get(atelier) ?? 0) + charge);
       else communes += charge;
     }
@@ -189,9 +196,14 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
     };
   });
   lignes.sort((a, b) => b.recettes - a.recettes);
+  // Limitée à des ateliers : leurs lignes seulement, et leurs totaux (la part des charges communes de chacun comprise).
+  const lignesRetenues = perimetre ? lignes.filter((l) => perimetre.includes(l.atelier)) : lignes;
+  const recettesRetenues = perimetre ? lignesRetenues.reduce((t, l) => t + l.recettes, 0) : recettesTotal;
 
   // Sans recettes pour les répartir, les charges communes restent à part : elles comptent dans le total.
-  const chargesTotal = [...postes.values()].reduce((t, x) => t + x, 0);
+  const chargesTotal = perimetre
+    ? lignesRetenues.reduce((t, l) => t + l.charges, 0)
+    : [...postes.values()].reduce((t, x) => t + x, 0);
   const litresProduits = entree.litresProduits ?? 0;
   /** Le nom d'un poste « Autre » : son groupe (« Assurance »), ou le nom de son compte quand il est seul ; rien pour les autres catégories. */
   const libelleDuCompte = (poste: string): string | undefined => {
@@ -203,12 +215,12 @@ export function calculerRentabilite(entree: EntreeRentabilite): Rentabilite {
   return {
     annee,
     horsTaxes,
-    ateliers: lignes,
-    recettes: arrondi(recettesTotal),
+    ateliers: lignesRetenues,
+    recettes: arrondi(recettesRetenues),
     charges: arrondi(chargesTotal),
     aides: arrondi(aides),
-    resultat: arrondi(recettesTotal + aides - chargesTotal),
-    resultatSansAides: arrondi(recettesTotal - chargesTotal),
+    resultat: arrondi(recettesRetenues + aides - chargesTotal),
+    resultatSansAides: arrondi(recettesRetenues - chargesTotal),
     postes: [...postes.entries()]
       .map(([categorie, m]) => ({
         categorie,
@@ -264,7 +276,13 @@ export function ateliersDesVentesDeViande(
 /** La rentabilité d'une année, d'après les ventes et factures enregistrées. */
 export async function rentabilite(
   annee: number,
-  options: { filtre: FiltreActivite; horsTaxes: boolean; effectif?: number; laitier?: boolean },
+  options: {
+    filtre: FiltreActivite;
+    horsTaxes: boolean;
+    effectif?: number;
+    laitier?: boolean;
+    perimetre?: readonly Atelier[];
+  },
 ): Promise<Rentabilite> {
   const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
   // Pas de lait pour une espèce qui n'en produit pas (cochons, poules) : le coût du litre n'a pas de sens.

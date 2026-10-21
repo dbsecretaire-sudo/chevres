@@ -78,11 +78,11 @@ const PALETTE_FROMAGERIE: PaletteDeBatiment = {
 /** La mise en scène : l'atelier (une rue, du carrelage, de l'inox) ou la campagne (un pique-nique, de l'herbe, du bois : l'agritourisme). */
 export type DecorDeLaScene = 'atelier' | 'campagne';
 
-/** L'accueil des visiteurs : du bois clair, un toit brun, des compartiments crème. */
+/** L'accueil des visiteurs : un toit et un contour verts, un mur vert très pâle, des compartiments crème au bord brun clair. */
 const PALETTE_ACCUEIL: PaletteDeBatiment = {
-  toit: '#8B5A2B',
-  mur: '#F3E6CC',
-  compartiment: '#FFF8E7',
+  toit: colors.primary,
+  mur: '#E4EFD6',
+  compartiment: '#FBF6E6',
   bord: '#C9A66B',
 };
 
@@ -91,11 +91,9 @@ const COULEUR_GRISE = '#6A767E';
 
 /** Le nombre d'intervenants par rangée, de l'autre côté de la rue (trois colonnes). */
 const PAR_RANGEE = 3;
-/** La hauteur de la rue (étroite : juste ses tirets), et celle des trottoirs. */
-const HAUTEUR_DE_LA_RUE = 84;
+/** La hauteur des trottoirs, des marges, et celle de base de la plaque blanche (la rue et la plaque se règlent d'après la place, voir plus bas). */
 const TROTTOIR = 8;
 const MARGE = 8;
-/** La hauteur de la plaque blanche (le titre, les symboles et les trois comptes). */
 const HAUTEUR_DE_LA_PLAQUE = 78;
 
 interface Props {
@@ -153,12 +151,21 @@ export function SceneTransformation({
   // L'atelier est tout en gris (inox) ; l'agritourisme, tout en vert.
   const couleurLogo = campagne ? colors.primary : COULEUR_GRISE;
   const couleurDisque = campagne ? colors.primary : COULEUR_GRISE;
-  // La rue, la plaque et le bâtiment grandissent avec la fenêtre, comme les logos : aucune zone ne reste à sa taille de téléphone dans une grande scène.
-  const hauteurRue = Math.round(HAUTEUR_DE_LA_RUE * agrandissement * (campagne ? 1.2 : 1));
-  const hauteurPlaque = Math.round(HAUTEUR_DE_LA_PLAQUE * agrandissement);
-  const disponible = hauteur - hauteurRue - (campagne ? 0 : 2 * TROTTOIR) - hauteurPlaque - hauteurFromagerie - 4 * MARGE;
+  // Ce que la scène partage entre les intervenants (en haut), la rue et la plaque blanche : tout ce qui n'est ni le bâtiment, ni les trottoirs, ni les marges.
+  // La rue reste étroite et la plaque grande ; les intervenants prennent le reste, et leurs logos s'ajustent à cette place.
+  const a = agrandissement;
+  const trottoirs = campagne ? 0 : 2 * TROTTOIR;
+  const reste = hauteur - hauteurFromagerie - trottoirs - 4 * MARGE;
+  const entre = (valeur: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(valeur)));
+  const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a);
+  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.3, plaqueMin, Math.round(150 * a));
+  const rueMin = Math.round((campagne ? 100 : 60) * a);
+  const hauteurRue = hauteur === 0 ? rueMin : entre(reste * (campagne ? 0.24 : 0.18), rueMin, Math.round((campagne ? 150 : 110) * a));
+  const disponible = reste - hauteurPlaque - hauteurRue;
   const echelle =
-    hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.35 * agrandissement, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
+    hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.35 * a, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
+  // Plus la plaque est haute, plus son texte grandit (jusqu'à un cinquième de plus).
+  const textePlaque = a * Math.max(1, Math.min(1.2, hauteurPlaque / plaqueMin));
   return (
     <View style={styles.scene} onLayout={(e) => setHauteur(Math.round(e.nativeEvent.layout.height))}>
       {/* De l'autre côté de la rue : les intervenants, trois par rangée. */}
@@ -174,12 +181,12 @@ export function SceneTransformation({
       </View>
       {campagne ? (
         // La campagne : un pré avec un pique-nique, à la place de la rue.
-        <DecorPiqueNique hauteur={hauteurRue} echelle={agrandissement} />
+        <DecorPiqueNique hauteur={hauteurRue} echelle={Math.min(a, 1.2 * Math.max(1, hauteurRue / rueMin))} />
       ) : (
         <>
           <View style={styles.trottoir} />
           {/* La rue : seulement ses tirets blancs au milieu. */}
-          <View style={styles.rue}>
+          <View style={[styles.rue, { height: hauteurRue }]}>
             <View style={styles.traits} pointerEvents="none">
               {Array.from({ length: 12 }, (_, i) => (
                 <View key={i} style={styles.trait} />
@@ -195,20 +202,20 @@ export function SceneTransformation({
         {/* La plaque blanche, sur toute la largeur : ce qu'on garde chez soi (le titre et les symboles d'un côté, les trois comptes de l'autre). Un appui ouvre le stock. */}
         <Pressable style={[styles.plaque, { height: hauteurPlaque }]} onPress={onAppui} accessibilityRole="button" accessibilityLabel={entrer ?? T.entrer}>
           <View style={styles.entete}>
-            <Text style={[styles.titre, { fontSize: Math.round(13 * agrandissement) }]} numberOfLines={1}>
+            <Text style={[styles.titre, { fontSize: Math.round(13 * textePlaque) }]} numberOfLines={1}>
               {contenu.titre}
             </Text>
             <View style={styles.symboles}>
               {contenu.symboles.map((s, i) => (
                 <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
-                  <Text style={[styles.symbole, { fontSize: Math.round(24 * agrandissement) }]} accessibilityElementsHidden importantForAccessibility="no">
+                  <Text style={[styles.symbole, { fontSize: Math.round(24 * textePlaque) }]} accessibilityElementsHidden importantForAccessibility="no">
                     {s.emoji}
                   </Text>
                 </Balade>
               ))}
             </View>
           </View>
-          <LignesDePlaque lignes={contenu.lignes} echelle={agrandissement} />
+          <LignesDePlaque lignes={contenu.lignes} echelle={textePlaque} />
         </Pressable>
         <View style={styles.fromagerie}>
           <Batiment
@@ -237,8 +244,8 @@ const styles = StyleSheet.create({
   ville: { flex: 1, backgroundColor: '#DCE6EE', paddingHorizontal: MARGE, paddingVertical: MARGE, justifyContent: 'space-evenly' },
   rangee: { flexDirection: 'row', justifyContent: 'space-around' },
   trottoir: { height: TROTTOIR, backgroundColor: '#C9CCCF' },
-  rue: { height: HAUTEUR_DE_LA_RUE, backgroundColor: '#7C858C', justifyContent: 'center' },
-  traits: { position: 'absolute', left: 0, right: 0, top: HAUTEUR_DE_LA_RUE / 2 - 2, flexDirection: 'row', justifyContent: 'space-around' },
+  rue: { backgroundColor: '#7C858C', justifyContent: 'center' },
+  traits: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: -2, flexDirection: 'row', justifyContent: 'space-around' },
   trait: { width: 14, height: 4, backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 2 },
   plaque: {
     height: HAUTEUR_DE_LA_PLAQUE,
