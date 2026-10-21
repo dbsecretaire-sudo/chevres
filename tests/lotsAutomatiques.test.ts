@@ -200,3 +200,10 @@ describe('accueil de rubrique (Windows)', () => {
     expect(estLaRacineDUneRubrique('/')).toBe(false);
   });
 });
+
+describe('documents et rapports d’essais du groupement sanitaire (Windows)', () => {
+  it('la flèche de retour ramène à la page du groupement sanitaire, pas à la Production', () => {
+    expect(pageParente('/production/rapports-essais')).toBe('/production/lieu?lieu=groupementSanitaire');
+    expect(pageParente('/production/documents-gds')).toBe('/production/lieu?lieu=groupementSanitaire');
+  });
+});

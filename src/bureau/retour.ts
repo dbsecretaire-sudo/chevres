@@ -87,6 +87,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/cheptel\/documents-circulation$/, () => ROUTES.CHEPTEL_DOSSIER_PAC],
   // Un lot ouvert depuis la Production revient à la viande ; depuis la Comptabilité, aux écritures.
   [/^\/production\/lot$/, () => ROUTES.PRODUCTION_VIANDE],
+  // Les documents et les rapports d'essais se trouvent sur la page du groupement sanitaire : on y revient, pas à l'accueil de la Production.
+  [/^\/production\/(documents-gds|rapports-essais)$/, () => ROUTES.lieu('groupementSanitaire')],
   [/^\/comptabilite\/lot$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
   [/^\/cheptel\/naissance-nouvelle$/, () => ROUTES.CHEPTEL_NAISSANCES],
