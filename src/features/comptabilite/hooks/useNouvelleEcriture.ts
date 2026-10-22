@@ -34,6 +34,7 @@ import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import {
   categorieFournisseurDe,
+  depensesDeLaCategorie,
   pasPayeeAffichee,
   offertAffiche,
   sansFactureAffichee,
@@ -445,7 +446,12 @@ export function useNouvelleEcriture(
     if (!pasPayeeAffichee(categorieTiers)) setEnAttente(false);
     // La catégorie du fournisseur règle les dépenses possibles : celle qu'elle ne permet pas laisse la place à la première qui l'est.
     if (!categorieDepenseAutorisee(choisi, categorieDepense)) {
-      const permise = categoriesDepenseDuMode().find((c) => categorieDepenseAutorisee(choisi, c));
+      // Dans l'ordre de la catégorie du tiers (un assureur : « Assurances » avant « Autre »), pas dans celui de la liste générale.
+      const dansLOrdreDuTiers = depensesDeLaCategorie(categorieFournisseurDe(choisi?.categorie)) ?? [];
+      const proposees = categoriesDepenseDuMode();
+      const permise =
+        dansLOrdreDuTiers.find((c) => proposees.includes(c as CategorieDepense)) ??
+        proposees.find((c) => categorieDepenseAutorisee(choisi, c));
       if (permise) changerCategorieDepense(permise as CategorieDepense);
     }
   };
