@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { CLE_LAIT, mouvementsDuLait } from '@/features/stock/services/historiqueLait';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { libelleOrigineMouvement } from '@/features/stock/services/stock';
 import type { MouvementStock } from '@/features/stock/types';
-import { Button } from '@/shared/components/Button';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { formatDateFR } from '@/shared/utils/dates';
@@ -59,9 +60,30 @@ export function HistoriqueArticleModal({
     <Modal visible={!!article} transparent animationType="fade" onRequestClose={onFermer}>
       <Pressable style={commonStyles.backdrop} onPress={onFermer}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <Text style={commonStyles.subheading}>
-            {article?.emoji} {article?.titre}
-          </Text>
+          {/* En haut à droite : la quantité (le poids), l'inventaire (dans la grange) et la fermeture, en boutons ronds. */}
+          <View style={styles.entete}>
+            <Text style={[commonStyles.subheading, styles.titre]}>
+              {article?.emoji} {article?.titre}
+            </Text>
+            {onAjuster ? (
+              <Pressable style={[styles.rond, styles.brun]} onPress={onAjuster} accessibilityRole="button" accessibilityLabel={T.ajuster}>
+                <MaterialCommunityIcons name="weight-kilogram" size={20} color={colors.blanc} />
+              </Pressable>
+            ) : null}
+            {onOuvrirLeStock ? (
+              <Pressable style={[styles.rond, styles.brun]} onPress={onOuvrirLeStock} accessibilityRole="button" accessibilityLabel={T.ouvrirLeStock}>
+                <Ionicons name="list" size={18} color={colors.blanc} />
+              </Pressable>
+            ) : null}
+            <Pressable
+              style={[styles.rond, styles.rouge]}
+              onPress={onFermer}
+              accessibilityRole="button"
+              accessibilityLabel={TEXTES.commun.general.fermer}
+            >
+              <Ionicons name="close" size={22} color={colors.blanc} />
+            </Pressable>
+          </View>
           <Text style={commonStyles.note}>{T.titre}</Text>
           <ScrollView style={{ maxHeight: 320 }} contentContainerStyle={commonStyles.gap6}>
             {mouvements && mouvements.length === 0 ? (
@@ -80,17 +102,16 @@ export function HistoriqueArticleModal({
               </View>
             ))}
           </ScrollView>
-          <View style={commonStyles.row}>
-            {onAjuster ? (
-              <Button style={commonStyles.flex1} variant="secondary" label={T.ajuster} onPress={onAjuster} />
-            ) : null}
-            {onOuvrirLeStock ? (
-              <Button style={commonStyles.flex1} variant="secondary" label={T.ouvrirLeStock} onPress={onOuvrirLeStock} />
-            ) : null}
-            <Button style={commonStyles.flex1} label={TEXTES.commun.general.fermer} onPress={onFermer} />
-          </View>
         </Pressable>
       </Pressable>
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  entete: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  titre: { flex: 1 },
+  rond: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderWidth: 3 },
+  brun: { backgroundColor: '#6B3F1B', borderColor: '#3F230E' },
+  rouge: { backgroundColor: '#8B0016', borderColor: '#5C000E' },
+});
