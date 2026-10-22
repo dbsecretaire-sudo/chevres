@@ -107,6 +107,23 @@ export const TEXTES_PRODUCTION = {
     ligne: (enStock: number, total: number) => `${enStock} en stock · ${total} lot${total > 1 ? 's' : ''}`,
   },
   /** Les réglages d'une liste de lots (fromages, boucherie / charcuterie) : ajouter, remettre à zéro, supprimer les lots. */
+  /** La page des lots de l'atelier : une ligne par produit suivi lot par lot. */
+  lots: {
+    titre: 'Lots',
+    fromages: 'Fromages',
+    viande: 'Viande',
+    charcuterie: 'Boucherie / Charcuterie',
+    plats: 'Plats préparés',
+  },
+  /** La liste des plats préparés : un plat par ligne de l'inventaire, avec ses lots. */
+  plats: {
+    titre: 'Plats préparés',
+    aucun: 'Aucun plat suivi : fabriquez-en avec le bouton +.',
+    ajouter: { titre: 'Ajouter un plat préparé', exemple: 'ex : Civet de sanglier' },
+    fabriquer: 'Fabriquer des plats',
+    facturer: 'Facturer des plats',
+    rappeler: 'Rappeler des plats',
+  },
   /** La liste de la boucherie / charcuterie : un produit par ligne de l'inventaire, avec ses lots. */
   charcuterie: {
     titre: 'Boucherie / Charcuterie',

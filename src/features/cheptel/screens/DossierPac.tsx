@@ -132,8 +132,8 @@ export function ContenuDossierPac({
     <>
       {/* L'espèce et l'année, en haut : ce que les documents ci-dessous reprennent. */}
       <LigneFiltres>
-        {/* Les organismes (recensement, estive) portent toujours sur la campagne en cours : pas de choix d'année. */}
-        {rienAFaire || partie === 'declarations' ? null : (
+        {/* Les organismes et les documents portent toujours sur la campagne en cours : pas de choix d'année. */}
+        {rienAFaire || partie !== 'tout' ? null : (
           <ChoixDeroulant<string>
             titre={T.annee}
             valeur={choix}

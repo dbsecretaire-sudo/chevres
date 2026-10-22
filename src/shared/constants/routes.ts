@@ -124,6 +124,10 @@ export const ROUTES = {
   PRODUCTION_LAIT: '/production/lait',
   PRODUCTION_FROMAGES: '/production/fromages',
   PRODUCTION_CHARCUTERIE: '/production/charcuterie',
+  /** Les plats préparés : leur stock et leurs lots. */
+  PRODUCTION_PLATS: '/production/plats',
+  /** Les lots de l'atelier : fromages, viande, boucherie / charcuterie, plats préparés. */
+  PRODUCTION_LOTS: '/production/lots',
   /** Les analyses d'un produit fini (`produit` : fromage ou charcuterie), et une analyse (nouvelle sans identifiant, sinon modifiée). */
   analysesProduit: (produit: string) => `/production/analyses-produit?produit=${produit}` as const,
   analyseProduit: (produit: string, id?: string) =>

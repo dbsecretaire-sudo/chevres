@@ -33,6 +33,7 @@ export default function ProductionLayout() {
         'fromages',
         'lait',
         'charcuterie',
+        'plats',
         'rappels-lots',
         'controles/liste',
       )}
@@ -49,6 +50,14 @@ export default function ProductionLayout() {
       <Stack.Screen
         name="fromages"
         options={{ title: TEXTES.production.fromages.titre, headerLeft: enteteDuBatiment() }}
+      />
+      <Stack.Screen
+        name="plats"
+        options={{ title: TEXTES.production.plats.titre, headerLeft: enteteDuBatiment() }}
+      />
+      <Stack.Screen
+        name="lots"
+        options={{ title: TEXTES.production.lots.titre, headerLeft: enteteDuBatiment() }}
       />
       <Stack.Screen
         name="lait"

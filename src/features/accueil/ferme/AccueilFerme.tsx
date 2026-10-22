@@ -81,6 +81,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   analyses: ROUTES.lieu('analyses'),
   // La gestion du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit, et le stock de la fromagerie.
   reserver: ROUTES.COMMERCIAL_COMMANDE,
+  lots: ROUTES.PRODUCTION_LOTS,
+  rappelsLots: ROUTES.PRODUCTION_RAPPELS_LOTS,
   stockFromagerie: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`,
   // Le côté Agritourisme : les intervenants (visiteurs, groupes, office de tourisme, repas) et les pages de la gestion (visites, formules, tarifs, ventes, rentabilité).
   visiteurs: ROUTES.lieu('visiteurs'),
@@ -255,8 +257,9 @@ export default function AccueilFerme() {
   const gestionTransformation: EntreeDeColonne[] = [
     { cle: 'stockFromagerie', titre: C.stock, icone: iconeIon('cube'), couleur: VENTE },
     { cle: 'reserver', titre: C.reserver, icone: iconeIon('bookmark'), couleur: VENTE },
-    // Les lots : un seul bouton, dont les bulles ouvrent les lots de fromages, de charcuterie, de viande et leurs rappels (la pastille : les rappels à faire).
-    { cle: 'lots', titre: C.lotsAtelier, icone: iconeIon('layers'), pastille: f.lotsARappeler, couleur: '#6A767E' },
+    // Les lots : la page des produits suivis lot par lot (fromages, viande, charcuterie, plats préparés) ; leurs rappels ont leur bouton (la pastille : ceux à faire).
+    { cle: 'lots', titre: C.lotsAtelier, icone: iconeIon('layers'), couleur: '#6A767E' },
+    { cle: 'rappelsLots', titre: C.rappelsLots, icone: iconeIon('notifications'), pastille: f.lotsARappeler, couleur: '#6A767E' },
     // Fabriquer : un seul bouton, dont les bulles ouvrent la fabrication d'un fromage ou de charcuterie.
     { cle: 'fabriquer', titre: C.fabriquer, icone: iconeMCI('pot-mix'), couleur: '#6A767E' },
     { cle: 'ventesAtelier', titre: C.ventesAtelier, icone: iconeIon('cash'), couleur: VENTE },

@@ -38,7 +38,12 @@ import { TEXTES } from '@/shared/textes';
  */
 export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS> }) {
   const fromage = produit === PRODUIT_A_LOTS.FROMAGE;
-  const T = fromage ? TEXTES.production.fromages : TEXTES.production.charcuterie;
+  const plat = produit === PRODUIT_A_LOTS.PLAT;
+  const T = fromage
+    ? TEXTES.production.fromages
+    : plat
+      ? TEXTES.production.plats
+      : TEXTES.production.charcuterie;
   const router = useRouter();
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
@@ -113,7 +118,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
             />
             <SelecteurEspece />
           </LigneFiltres>
-          <SuggestionParcours parcoursId={fromage ? 'vente-fromage' : 'vente-charcuterie'} />
+          {plat ? null : <SuggestionParcours parcoursId={fromage ? 'vente-fromage' : 'vente-charcuterie'} />}
           {articles.length === 0 ? (
             <EmptyState title={T.aucun} />
           ) : (
@@ -181,7 +186,11 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
           titre={T.ajouter.titre}
           placeholder={T.ajouter.exemple}
           onValider={async (nom) => {
-            await ajouterArticle(fromage ? GENRE_ARTICLE.FROMAGE : GENRE_ARTICLE.VIANDE, nom, espece);
+            await ajouterArticle(
+              fromage ? GENRE_ARTICLE.FROMAGE : plat ? GENRE_ARTICLE.PLAT : GENRE_ARTICLE.VIANDE,
+              nom,
+              espece,
+            );
             setAjoutOuvert(false);
             charger();
           }}

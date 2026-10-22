@@ -17,7 +17,7 @@ export interface ActionDeLieu {
  * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (grange) et les lots de l'atelier. Les autres boutons (les intervenants, le
  * cheptel, les documents) ouvrent directement leur page, qui regroupe toutes leurs actions.
  */
-export type CibleDesBulles = 'grange' | 'lots' | 'fabriquer';
+export type CibleDesBulles = 'grange' | 'fabriquer';
 
 const B = TEXTES.accueil.ferme.bulles;
 
@@ -46,30 +46,6 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           icone: 'restaurant',
           iconeMci: 'pot-steam',
           route: ROUTES.productionFabrication(PRODUIT_A_LOTS.PLAT),
-        },
-      ];
-    case 'lots':
-      return [
-        { cle: 'lotsFromages', titre: B.lotsFromages, icone: 'layers', route: ROUTES.PRODUCTION_FROMAGES },
-        {
-          cle: 'lotsCharcuterie',
-          titre: B.lotsCharcuterie,
-          icone: 'restaurant',
-          iconeMci: 'sausage',
-          route: ROUTES.PRODUCTION_CHARCUTERIE,
-        },
-        {
-          cle: 'lotsViande',
-          titre: B.lotsViande,
-          icone: 'restaurant',
-          iconeMci: 'food-steak',
-          route: ROUTES.PRODUCTION_VIANDE,
-        },
-        {
-          cle: 'rappelsLots',
-          titre: B.rappelsLots,
-          icone: 'notifications',
-          route: ROUTES.PRODUCTION_RAPPELS_LOTS,
         },
       ];
     case 'grange':
