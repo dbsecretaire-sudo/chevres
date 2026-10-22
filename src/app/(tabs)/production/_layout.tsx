@@ -66,7 +66,7 @@ export default function ProductionLayout() {
                 : lieu === 'fromagerie'
                   ? TEXTES.production.lieux.fromagerie.titre
                   : lieu === 'animaux'
-                    ? TEXTES.production.lieux.cheptel.liens.liste.titre
+                    ? TEXTES.production.lieux.cheptel.titre
                     : lieu === 'boucles'
                       ? TEXTES.production.lieux.documents.liens.boucles.titre
                       : TEXTES.production.titre,

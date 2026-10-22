@@ -53,7 +53,8 @@ const ORANGE = '#D2793B';
  */
 const ROUTE_DIRECTE: Record<string, string> = {
   // La gestion de l'exploitation : le cheptel (liste, lots, ajouts, boucles, carnet de naissance) et les documents.
-  cheptel: ROUTES.lieu('cheptel'),
+  // Le cheptel : directement la liste des animaux (les lots s'ouvrent depuis l'icône de son en-tête).
+  cheptel: ROUTES.lieu('animaux'),
   documents: ROUTES.lieu('documents'),
   organismes: ROUTES.lieu('organismes'),
   // Les intervenants de l'exploitation.

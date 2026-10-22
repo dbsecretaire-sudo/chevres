@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Stack, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/shared/theme/colors';
+import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChevrerieInterieure } from '@/features/accueil/ferme/ChevrerieInterieure';
 import { animauxVedettes } from '@/features/accueil/ferme/useFermeAccueil';
 import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
@@ -30,6 +33,22 @@ export default function TousLesAnimaux() {
   );
   return (
     <View style={{ flex: 1 }}>
+      {/* Les lots d'animaux : l'icône à droite du titre (vétérinaire, abattoir, vente, équarrissage…). */}
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              style={commonStyles.boutonEnteteDroite}
+              onPress={() => ouvrir(ROUTES.CHEPTEL_LOTS)}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={TEXTES.cheptel.lots.titre}
+            >
+              <Ionicons name="layers" size={24} color={colors.blanc} />
+            </Pressable>
+          ),
+        }}
+      />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
         <ChevrerieInterieure vedettes={vedettes} />
       </ScrollView>
