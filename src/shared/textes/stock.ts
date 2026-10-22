@@ -140,6 +140,8 @@ export const TEXTES_STOCK = {
   boucles: {
     titre: (nom: string) => `Inventaire : ${nom}`,
     titreEtat: 'Boucles',
+    /** La première liste de la page Boucles (Cheptel › Boucles) : le stock de boucles, dont l'appui montre le tableau (n°, dates de pose et d'achat, morte). */
+    stockDeBoucles: 'Stock de boucles',
     sorte: {
       boucles: 'Boucles',
       rouges: 'Boucles rouges',

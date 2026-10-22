@@ -1,5 +1,4 @@
 import type { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
@@ -21,7 +20,6 @@ export interface ActionDeLieu {
 export type CibleDesBulles = 'sante' | 'grange' | 'lots' | 'fabriquer';
 
 const B = TEXTES.accueil.ferme.bulles;
-const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
 
 /** Les actions qui sortent en bulles quand on touche un bouton de l'accueil : les écrans qu'on y ouvre le plus. */
 export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
@@ -52,12 +50,6 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
     case 'grange':
       return [
         { cle: 'alimentation', titre: B.alimentation, icone: 'nutrition', iconeMci: 'corn', route: ROUTES.SANTE_ALIMENTATION },
-        {
-          cle: 'acheter',
-          titre: B.acheterNourriture,
-          icone: 'cart',
-          route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ALIMENTATION}`,
-        },
         { cle: 'stock', titre: B.stockNourriture, icone: 'cube', route: ROUTES.lieu('grange') },
       ];
   }
