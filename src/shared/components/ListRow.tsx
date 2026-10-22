@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Image, Pressable, Text, View, type ImageSourcePropType } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDansBloc } from '@/shared/components/BlocListe';
+import { afficheSobre } from '@/shared/utils/affichage';
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/components/ListRow.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -41,11 +42,15 @@ export function ListRow({
   surlignee,
   actif,
   icone,
-  emoji,
-  image,
+  emoji: emojiDemande,
+  image: imageDemandee,
   fondPastille,
 }: Props) {
   const dansBloc = useDansBloc();
+  // L'affichage sobre n'a pas de dessin : ni image ni emoji dans la pastille (l'icône d'un menu reste).
+  const sobre = afficheSobre();
+  const emoji = sobre ? undefined : emojiDemande;
+  const image = sobre ? undefined : imageDemandee;
   return (
     <Pressable
       onPress={onPress}

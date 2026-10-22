@@ -8,7 +8,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { useDeuxColonnes } from '@/bureau/colonnes';
 import { colors } from '@/shared/theme/colors';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/bureau/FlecheRetourBureau.styles';
 
@@ -68,4 +68,4 @@ export function FlecheRetourBureau() {
 
 /** La flèche d'en-tête de la version Windows, à donner à `headerLeft` (rien sur téléphone : l'en-tête garde son retour d'office). */
 export const enteteBureau = (): (() => ReactElement) | undefined =>
-  estBureau() ? () => <FlecheRetourBureau /> : undefined;
+  afficheBureau() ? () => <FlecheRetourBureau /> : undefined;

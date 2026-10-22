@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { changerAffichage } from '@/bureau/changerAffichage';
 import { useMenusSections } from '@/shared/navigation/menusSections';
+import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
+import { estBureau } from '@/shared/utils/plateforme';
 import { colors } from '@/shared/theme/colors';
 import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
@@ -12,6 +15,10 @@ import { TEXTES } from '@/shared/textes';
  */
 export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const entrees = useMenusSections();
+  // La version Windows propose, au bas de la liste, les deux autres affichages (bureau, mobile, sobre).
+  const autresAffichages: ModeAffichage[] = estBureau()
+    ? Object.values(AFFICHAGE).filter((mode) => mode !== modeAffichage)
+    : [];
   const echelle = useEchelle();
   const ref = useRef<View>(null);
   const { width: largeurFenetre } = useWindowDimensions();
@@ -65,6 +72,19 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
                 <Text style={[styles.entreeTexte, e.actif ? styles.entreeActive : null]}>{e.libelle}</Text>
               </Pressable>
             ))}
+            {autresAffichages.map((mode, i) => (
+              <Pressable
+                key={mode}
+                style={({ pressed }) => [styles.entree, i === 0 && styles.separee, pressed && styles.appuyee]}
+                onPress={() => {
+                  setListe(null);
+                  changerAffichage(mode);
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.entreeAffichage}>{TEXTES.navigation.affichage[mode]}</Text>
+              </Pressable>
+            ))}
           </View>
         </Pressable>
       </Modal>
@@ -108,5 +128,8 @@ const styles = StyleSheet.create({
   },
   entree: { paddingHorizontal: 18, paddingVertical: 12 },
   entreeTexte: { fontSize: 16, fontWeight: '600', color: colors.text },
+  // Le premier choix d'affichage : un trait le sépare des rubriques.
+  separee: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 },
+  entreeAffichage: { fontSize: 14, color: colors.textMuted },
   entreeActive: { color: colors.primary, fontWeight: '800' },
 });

@@ -14,7 +14,7 @@ import { generateId } from '@/shared/utils/id';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 const T = TEXTES.especes;
 
@@ -62,7 +62,7 @@ export function GestionEspeces({ visible, onChange, onFermer }: Props) {
   /** Un menu déroulant : le titre, et le formulaire une fois déroulé. */
   const menu = (id: string, titre: string, sousTitre: string | undefined, contenu: React.ReactNode) => {
     // Sur ordinateur, tous les menus sont déroulés.
-    const deroule = estBureau() || ouvert === id;
+    const deroule = afficheBureau() || ouvert === id;
     return (
       <Card key={`${id}-${version}`} style={commonStyles.gap10}>
         <Pressable
@@ -71,7 +71,7 @@ export function GestionEspeces({ visible, onChange, onFermer }: Props) {
           accessibilityRole="button"
           accessibilityState={{ expanded: deroule }}
         >
-          {estBureau() ? null : (
+          {afficheBureau() ? null : (
             <Ionicons
               name={deroule ? 'chevron-down' : 'chevron-forward'}
               size={20}

@@ -50,7 +50,7 @@ export interface ContenuDePlaque {
 }
 
 /** Les lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande, les plats préparés, les savons. */
-const lignesDeTransformation = (compte: CompteTransformation): ContenuDePlaque['lignes'] => [
+export const lignesDeTransformation = (compte: CompteTransformation): ContenuDePlaque['lignes'] => [
   { cle: 'fromages', texte: T.fromages(compte.fromages) },
   { cle: 'charcuterie', texte: T.charcuterie(compte.charcuterie) },
   { cle: 'viande', texte: T.viande(compte.viande) },

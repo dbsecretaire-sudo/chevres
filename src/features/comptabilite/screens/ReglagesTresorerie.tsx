@@ -24,7 +24,7 @@ import { parseDecimal } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 const T = TEXTES.comptabilite.tresorerie.reglagesEcran;
 
@@ -187,7 +187,7 @@ export default function ReglagesTresorerie() {
       {saisie.emprunts.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunEmprunt}</Text> : null}
       {saisie.emprunts.map((e) => {
         // Sur ordinateur, tous les emprunts sont dépliés.
-        const deplie = estBureau() || ouvert === e.id;
+        const deplie = afficheBureau() || ouvert === e.id;
         return (
           <Card key={e.id}>
             <Pressable
@@ -195,7 +195,7 @@ export default function ReglagesTresorerie() {
               onPress={() => setOuvert((actuel) => (actuel === e.id ? null : e.id))}
             >
               <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{e.nom}</Text>
-              {estBureau() ? null : (
+              {afficheBureau() ? null : (
                 <Ionicons name={deplie ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
               )}
             </Pressable>

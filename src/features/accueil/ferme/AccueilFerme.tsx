@@ -12,7 +12,10 @@ import { coteVoisin, estUnCote, lireDernierCote, noterDernierCote } from '@/feat
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
 import { SceneExploitation } from '@/features/accueil/ferme/SceneExploitation';
-import { SceneTransformation } from '@/features/accueil/ferme/SceneTransformation';
+import { AccueilSobre } from '@/features/accueil/ferme/AccueilSobre';
+import { lignesDeTransformation, SceneTransformation } from '@/features/accueil/ferme/SceneTransformation';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { afficheSobre } from '@/shared/utils/affichage';
 import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
@@ -342,6 +345,40 @@ export default function AccueilFerme() {
     setMenu(null);
     ouvrir(action.route);
   };
+  // L'affichage sobre n'a pas de bulles : un bouton qui en ouvrait (la grange, les lots, fabriquer) ouvre une petite liste.
+  const [listeSobre, setListeSobre] = useState<CibleDesBulles | null>(null);
+  const surGestionSobre = (cle: string) => {
+    if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
+    else setListeSobre(cle as CibleDesBulles);
+  };
+  /** Ce que le côté montré garde ou compte, en lignes (la plaque de l'atelier ou de l'agritourisme, l'effectif de l'exploitation). */
+  const resumeSobre =
+    cote === 'exploitation'
+      ? [
+          {
+            cle: 'animaux',
+            texte: f.estive ? TEXTES.accueil.ferme.zones.estive(f.estive.zone) : TEXTES.accueil.ferme.bandeau.animaux(f.stats?.totalVivantes ?? 0),
+          },
+          ...(f.stats ? [{ cle: 'nes', texte: TEXTES.accueil.ferme.zones.nes(f.stats.cabritsAnnee) }] : []),
+        ]
+      : cote === 'transformation'
+        ? [
+            ...lignesDeTransformation(f.transformation),
+            ...(f.stockNegatif ? [{ cle: 'stock', texte: TEXTES.accueil.ferme.transformation.stockNegatif, alerte: true }] : []),
+          ]
+        : [
+            { cle: 'aVenir', texte: TEXTES.accueil.ferme.agritourisme.visitesAVenir(f.agritourisme.aVenir) },
+            { cle: 'visiteurs', texte: TEXTES.accueil.ferme.agritourisme.visiteurs(f.agritourisme.visiteurs) },
+            { cle: 'recettes', texte: TEXTES.accueil.ferme.agritourisme.recettes(formatMontant(f.agritourisme.recettes)) },
+            { cle: 'depenses', texte: TEXTES.accueil.ferme.agritourisme.depenses(formatMontant(f.agritourisme.depenses ?? 0)) },
+            ...(f.stockManquant ? [{ cle: 'stock', texte: TEXTES.accueil.ferme.agritourisme.stockManquant, alerte: true }] : []),
+          ];
+  const titreSobre =
+    cote === 'exploitation'
+      ? TEXTES.accueil.ferme.zones.enclos
+      : cote === 'transformation'
+        ? TEXTES.accueil.ferme.transformation.titre
+        : TEXTES.accueil.ferme.agritourisme.titre;
 
   // Les bulles du menu ouvert : le bouton est décalé si elles sortaient de l'écran.
   // Les rappels de lots à faire s'affichent aussi en pastille sur leur bulle.
@@ -372,7 +409,18 @@ export default function AccueilFerme() {
       {/* La scène sur tout l'écran ; elle est recréée quand l'espèce change (elle relit ses données et reprend les mots et dessins de l'espèce). */}
       <View key={espece} style={styles.zoneDeScene} {...balayage.panHandlers}>
         <View style={styles.scene}>
-          {cote === 'exploitation' ? (
+          {afficheSobre() ? (
+            // L'affichage sobre : les mêmes informations et la même organisation, en listes, sans scène ni dessin.
+            <AccueilSobre
+              titre={titreSobre}
+              resume={resumeSobre}
+              // Les intervenants dans l'ordre de la liste (la scène les renverse : les plus utilisés sont près du pouce).
+              intervenants={[...intervenants].reverse()}
+              gestion={gestion}
+              onIntervenant={surMaison}
+              onGestion={surGestionSobre}
+            />
+          ) : cote === 'exploitation' ? (
             <SceneExploitation
               vedettes={f.vedettes}
               nombreAnimaux={f.stats?.totalVivantes}
@@ -491,6 +539,15 @@ export default function AccueilFerme() {
         </View>
       ) : null}
 
+      <OptionsModal
+        visible={listeSobre !== null}
+        onClose={() => setListeSobre(null)}
+        options={(listeSobre ? actionsDuLieu(listeSobre) : []).map((a) => ({
+          label: a.titre,
+          icon: a.icone,
+          onPress: () => ouvrir(a.route),
+        }))}
+      />
       <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
       <FenetreDuJour
         minuteurs={f.minuteurs}

@@ -19,7 +19,7 @@ import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { MenuBureau } from '@/bureau/MenuBureau';
 import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 /** Les pages (cachées de la barre) qui font partie de l'Organisation : son onglet y reste en couleur. */
 const PAGES_ORGANISATION = [
@@ -87,7 +87,7 @@ function Onglets() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         // Dans la version Windows, les menus de la barre du haut remplacent la barre d'icônes du bas.
         // Sur le téléphone, la barre a la hauteur de son icône et de son nom (la barre de navigation du système est sous le bandeau, plus bas).
-        tabBarStyle: estBureau() ? { display: 'none' } : { height: 60 },
+        tabBarStyle: afficheBureau() ? { display: 'none' } : { height: 60 },
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
@@ -100,11 +100,11 @@ function Onglets() {
           // L'accueil n'a plus d'onglet : la maison du bandeau, présent sur chaque page, y ramène.
           href: null,
           // Sous Windows, l'accueil classique (sans la ferme) garde son en-tête avec le nom de l'établissement.
-          ...(estBureau() ? { header: undefined } : {}),
+          ...(afficheBureau() ? { header: undefined } : {}),
           headerRight: () => <EtablissementHeaderButton />,
           // L'accueil « ferme » (téléphone comme Windows) n'a pas d'en-tête : le nom de l'établissement y est une carte, pour gagner de la hauteur.
           headerShown: !accueilFerme,
-          tabBarStyle: accueilFerme ? { display: 'none' } : estBureau() ? { display: 'none' } : undefined,
+          tabBarStyle: accueilFerme ? { display: 'none' } : afficheBureau() ? { display: 'none' } : undefined,
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />

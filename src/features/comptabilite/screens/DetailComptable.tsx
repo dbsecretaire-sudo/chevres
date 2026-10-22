@@ -33,7 +33,7 @@ import {
   TYPES_CARBURANT,
 } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 const VIDE: DetailComptable = {
   depenses: [],
@@ -104,13 +104,13 @@ export default function DetailComptabilite() {
         {detail.depenses.map((d) => {
           const sous = sousPostes(d.categorie);
           // Sur ordinateur, les sous-postes sont toujours visibles (pas de « Voir plus »).
-          const ouverte = estBureau() || categorieOuverte === d.categorie;
+          const ouverte = afficheBureau() || categorieOuverte === d.categorie;
           return (
             <View key={d.categorie} style={styles.groupe}>
               <View style={styles.ligneInterne}>
                 <View>
                   <Text style={commonStyles.body}>{LABEL_CATEGORIE_DEPENSE[d.categorie]}</Text>
-                  {sous && !estBureau() && (
+                  {sous && !afficheBureau() && (
                     <Pressable onPress={() => setCategorieOuverte(ouverte ? null : d.categorie)}>
                       <Text style={styles.voirPlus}>
                         {ouverte ? TEXTES.commun.general.voirMoins : TEXTES.commun.general.voirPlus}

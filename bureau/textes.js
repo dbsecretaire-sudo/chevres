@@ -10,6 +10,9 @@ const TEXTES = {
   tailleNormale: 'Taille normale',
   pleinEcran: 'Plein écran',
   quitter: 'Quitter',
+  versionBureau: 'Version bureau (menus de la fenêtre)',
+  versionMobile: 'Version mobile pour PC',
+  versionSobre: 'Version sobre (sans couleur ni dessin)',
   cheminRefuse: 'Accès à ce fichier refusé :',
   google: {
     sansConfiguration:

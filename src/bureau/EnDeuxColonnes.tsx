@@ -9,7 +9,7 @@ import Reglages from '@/features/settings/screens/Reglages';
 import { DansColonneGauche, useDeuxColonnes } from '@/bureau/colonnes';
 import { useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { ROUTES } from '@/shared/constants/routes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 import { LARGEUR_MENU, styles } from '@/shared/styles/bureau/EnDeuxColonnes.styles';
 
 /** Les écrans des tiers (clients, fournisseurs) : des écrans de la comptabilité, mais de l'Organisation. */
@@ -62,7 +62,7 @@ function menuDeLaRubrique(page: string, adresse: string, depuisOrganisation: boo
  */
 export function EnDeuxColonnes({ children }: PropsWithChildren) {
   // Sur le téléphone (et dans un navigateur ordinaire), les écrans s'affichent seuls, dans une colonne de largeur limitée et centrée.
-  return estBureau() ? (
+  return afficheBureau() ? (
     <EnDeuxColonnesBureau>{children}</EnDeuxColonnesBureau>
   ) : (
     <View style={styles.fondUnique}>

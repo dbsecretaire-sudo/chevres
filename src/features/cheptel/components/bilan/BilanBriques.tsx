@@ -7,17 +7,17 @@ import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 /** Lien « Voir plus / Voir moins » qui bascule l'état ouvert du détail d'une carte. */
 export function useDetailsOuverts() {
   // Sur ordinateur, le détail est toujours déroulé : il y a la place, et pas de « Voir plus ».
-  const [ouvert, setOuvert] = useState(estBureau());
+  const [ouvert, setOuvert] = useState(afficheBureau());
   return { ouvert, basculer: () => setOuvert((v) => !v) };
 }
 
 export function VoirPlus({ ouvert, onToggle }: { ouvert: boolean; onToggle: () => void }) {
-  if (estBureau()) return null;
+  if (afficheBureau()) return null;
   return (
     <Pressable onPress={onToggle}>
       <Text style={styles.voirPlus}>
@@ -81,7 +81,7 @@ export function TitreCarte({
   onBasculer?: () => void;
 }) {
   // Sur ordinateur, la carte est toujours déroulée : son titre n'est plus un bouton.
-  if (estBureau()) onBasculer = undefined;
+  if (afficheBureau()) onBasculer = undefined;
   const contenu = (
     <>
       <Text style={[commonStyles.cardTitle, styles.titreTexte]}>{titre}</Text>

@@ -6,7 +6,7 @@ import { FlecheRetourBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 /** La flèche de retour du téléphone, quand l'en-tête de l'écran est refait à la main : elle revient à l'écran d'avant, ou à l'accueil. */
 function FlecheRetour() {
@@ -26,7 +26,7 @@ function FlecheRetour() {
 
 /** La gauche de l'en-tête d'un bâtiment de la ferme (laiterie, abattoir, vétérinaire…) : la flèche de retour ; la maison est dans le bandeau. */
 export function EnteteBatiment(): ReactElement {
-  return estBureau() ? <FlecheRetourBureau /> : <FlecheRetour />;
+  return afficheBureau() ? <FlecheRetourBureau /> : <FlecheRetour />;
 }
 
 /** À donner à `headerLeft` des écrans des bâtiments de la ferme. */

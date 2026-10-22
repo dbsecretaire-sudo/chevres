@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useGlobalSearchParams, useIsFocused, usePathname, useRouter, type Href } from 'expo-router';
 import { estLaRacineDUneRubrique, ligneDuMenuDe } from '@/bureau/retour';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 /** À partir de cette largeur de fenêtre (en pixels), la version Windows montre deux colonnes : le menu de la rubrique et l'écran ouvert. */
 export const LARGEUR_DEUX_COLONNES = 900;
@@ -10,7 +10,7 @@ export const LARGEUR_DEUX_COLONNES = 900;
 /** Vrai quand la fenêtre est assez large pour deux colonnes, dans la version Windows seulement (le téléphone ne change pas). */
 export function useDeuxColonnes(): boolean {
   const { width } = useWindowDimensions();
-  return estBureau() && width >= LARGEUR_DEUX_COLONNES;
+  return afficheBureau() && width >= LARGEUR_DEUX_COLONNES;
 }
 
 /** Combien de temps (ms) l'accueil d'une rubrique attend avant de rediriger : de quoi laisser un écran plus profond, demandé d'ailleurs, arriver. */

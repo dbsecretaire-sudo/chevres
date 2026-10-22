@@ -5,7 +5,7 @@ import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/components/SectionDeroulante.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 interface Props {
   titre: string;
@@ -34,7 +34,7 @@ export function SectionDeroulante({
   children,
 }: Props) {
   // Sur ordinateur, toutes les sections sont déroulées (il y a la place), sauf en accordéon : une seule se lit à la fois.
-  const toujoursDeplie = estBureau() && !accordeon;
+  const toujoursDeplie = afficheBureau() && !accordeon;
   const deplie = toujoursDeplie || ouverte;
   return (
     <View

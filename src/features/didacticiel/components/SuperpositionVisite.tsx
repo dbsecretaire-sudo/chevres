@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { libellesDesMenus } from '@/bureau/MenuBureau';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 const T = TEXTES.didacticiel.visite;
 
@@ -80,7 +80,7 @@ export function SuperpositionVisite() {
         ancreDe(ancre)?.measureInWindow((x, y, w, h) => {
           if (vivant && w > 0 && h > 0) setZone((avant) => (avant?.id === id && memeZone(avant, { x, y, w, h }) ? avant : { id, x, y, w, h }));
         });
-      } else if (retour && estBureau()) {
+      } else if (retour && afficheBureau()) {
         // Windows : la flèche de l'en-tête est un élément de la page (absente d'un écran du menu de gauche : rien n'est alors désigné).
         ancreDe('retour')?.measureInWindow((x, y, w, h) => {
           if (vivant && w > 0 && h > 0) setZone((avant) => (avant?.id === id && memeZone(avant, { x, y, w, h }) ? avant : { id, x, y, w, h }));
@@ -89,7 +89,7 @@ export function SuperpositionVisite() {
         // Téléphone : la flèche est celle de l'en-tête natif, en haut à gauche.
         const flecheRetour = zoneDeLaFlecheRetour(insetHaut);
         setZone((avant) => (avant?.id === id && memeZone(avant, flecheRetour) ? avant : { id, ...flecheRetour }));
-      } else if (onglet && !estBureau()) {
+      } else if (onglet && !afficheBureau()) {
         const suivante = zoneDeLOnglet(onglet, width, height, insetBas);
         setZone((avant) => (avant?.id === id && memeZone(avant, suivante) ? avant : { id, ...suivante }));
       }
@@ -118,7 +118,7 @@ export function SuperpositionVisite() {
   if (!visite.actif || !etape) return null;
 
   // Sur Windows, l'onglet est un menu de la barre du haut, que la page ne peut pas entourer : une flèche le désigne, d'après son nom.
-  const menuDuHaut = estBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet) : null;
+  const menuDuHaut = afficheBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet) : null;
   const centreMenu = menuDuHaut ? centreDuMenu(libellesDesMenus(), menuDuHaut, largeurDansLaBarre) : null;
 
   // Éloigné de la page de l'étape : une pastille propose de reprendre ou de quitter.
@@ -142,7 +142,7 @@ export function SuperpositionVisite() {
   const attendUnClic = !!etape.clic;
   /** Une étape de parcours : l'écran reste utilisable, la bulle se pose en bas. */
   const sansVoile = !!etape.sansVoile;
-  const texte = estBureau() && etape.texteBureau ? etape.texteBureau : etape.texte;
+  const texte = afficheBureau() && etape.texteBureau ? etape.texteBureau : etape.texte;
   const largeurBulle = Math.min(width - 24, LARGEUR_BULLE);
 
   // Le voile : autour de l'élément (qui reste libre d'être touché), ou sur tout l'écran pour une page qu'on présente ; rien quand on attend

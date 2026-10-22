@@ -30,8 +30,8 @@ export interface PontBureau {
     ) => Promise<string>;
   };
   menu: {
-    /** Donne à la fenêtre les menus de la barre du haut. */
-    definir: (menus: MenuBureau[]) => Promise<void>;
+    /** Donne à la fenêtre les menus de la barre du haut (aucun : la barre disparaît) et l'affichage en cours. */
+    definir: (menus: MenuBureau[], affichage: string) => Promise<void>;
     /** L'écran choisi dans un menu ; rend la fonction qui arrête l'écoute. */
     surChoix: (rappel: (route: string) => void) => () => void;
   };

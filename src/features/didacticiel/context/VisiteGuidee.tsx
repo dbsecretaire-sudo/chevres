@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname, useRouter } from 'expo-router';
 import { useDeuxColonnes } from '@/bureau/colonnes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 import { etapeApresUnMenu, etapeDeLaPage, etapePrecedente, etapeSuivante, etapeSurLaPage, etapesDeLaVisite, etapesPourLEcran, type EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
 import { etapesDuParcours, parcoursDe } from '@/features/didacticiel/services/parcours';
 import { adresseReelle } from '@/features/didacticiel/services/adresses';
@@ -52,7 +52,7 @@ export function VisiteGuideeProvider({ children }: { children: ReactNode }) {
   const [etat, setEtat] = useState<EtatVisite>({ actif: false, index: 0 });
   const parcours = etat.parcours;
   const etapes = useMemo(
-    () => etapesPourLEcran(parcours ? etapesDuParcours(parcours) : etapesDeLaVisite(), estBureau(), colonnes),
+    () => etapesPourLEcran(parcours ? etapesDuParcours(parcours) : etapesDeLaVisite(), afficheBureau(), colonnes),
     [colonnes, parcours],
   );
   const charge = useRef(false);

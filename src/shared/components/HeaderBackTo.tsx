@@ -3,7 +3,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { EspaceSansFleche, useFlecheMasquee } from '@/bureau/FlecheRetourBureau';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 /** Flèche de retour d'en-tête qui remplace le "retour" par défaut (une étape en arrière dans la pile)
  *  par une destination fixe (on y navigue : dans une barre d'onglets, c'est l'onglet qui change, sans remplacer l'écran quitté) — utile quand un écran est atteint par plusieurs chemins mais doit toujours
@@ -18,7 +18,7 @@ export function HeaderBackTo({ to, onBack }: { to: Href; onBack?: () => void }) 
       style={commonStyles.boutonCompact}
       onPress={() => {
         onBack?.();
-        if (estBureau()) router.replace(to);
+        if (afficheBureau()) router.replace(to);
         else router.navigate(to);
       }}
     >

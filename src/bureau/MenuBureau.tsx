@@ -12,7 +12,9 @@ import { laiterieActive, oeufsActifs, productionActive } from '@/features/compta
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
+import { afficheBureau, modeAffichage, modeDeLaCommande } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
+import { changerAffichage } from '@/bureau/changerAffichage';
 import { TEXTES } from '@/shared/textes';
 
 const A = TEXTES.production.accueil;
@@ -182,8 +184,11 @@ export function MenuBureau() {
   const { menuChoisi } = useVisiteGuidee();
   useEffect(() => {
     if (!estBureau() || !window.bureau) return;
-    window.bureau.menu.definir(definitionDesMenus());
+    // L'affichage mobile n'a pas les menus de la fenêtre : ils sont dans le menu « Menus » de la capsule du haut.
+    window.bureau.menu.definir(afficheBureau() ? definitionDesMenus() : [], modeAffichage);
     return window.bureau.menu.surChoix((route) => {
+      const mode = modeDeLaCommande(route);
+      if (mode) return void changerAffichage(mode);
       menuChoisi(route);
       router.push(route as never);
     });

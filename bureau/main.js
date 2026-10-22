@@ -247,9 +247,15 @@ ipcMain.handle('pdf:imprimer', async (_e, { html, paysage, sansMarges, pied }) =
 // Google Drive : la seule chose qui demande internet.
 // ---------------------------------------------------------------------------------------------------------------------
 /** Les menus de la barre du haut (en haut à gauche) : ceux que l'application donne, plus l'affichage. Un choix envoie son écran à la page. */
-ipcMain.handle('menu:definir', (e, menus) => {
+ipcMain.handle('menu:definir', (e, { menus, affichage }) => {
   const page = e.sender;
   const aller = (route) => () => page.send('menu:aller', route);
+  // L'affichage : les deux autres que celui d'en ce moment (changer recharge la fenêtre, qui reprend alors les menus qui vont avec).
+  const autresAffichages = [
+    ['bureau', TEXTES.versionBureau],
+    ['mobile', TEXTES.versionMobile],
+    ['sobre', TEXTES.versionSobre],
+  ].filter(([mode]) => mode !== affichage);
   const modele = menus.map((menu) =>
     menu.items
       ? {
@@ -269,10 +275,19 @@ ipcMain.handle('menu:definir', (e, menus) => {
       { type: 'separator' },
       { label: TEXTES.pleinEcran, role: 'togglefullscreen', accelerator: 'F11' },
       { type: 'separator' },
+      ...autresAffichages.map(([mode, label]) => ({ label, click: aller(`#affichage:${mode}`) })),
+      { type: 'separator' },
       { label: TEXTES.quitter, role: 'quit', accelerator: 'CommandOrControl+Q' },
     ],
   });
-  Menu.setApplicationMenu(Menu.buildFromTemplate(modele));
+  // Sans menus de l'application (l'affichage mobile), la barre de menus de la fenêtre disparaît ; ses raccourcis (zoom, plein écran) restent actifs.
+  const sansMenus = menus.length === 0;
+  Menu.setApplicationMenu(Menu.buildFromTemplate(sansMenus ? modele.slice(-1) : modele));
+  const fenetre = BrowserWindow.fromWebContents(page);
+  if (fenetre) {
+    fenetre.setAutoHideMenuBar(false);
+    fenetre.setMenuBarVisibility(!sansMenus);
+  }
 });
 
 ipcMain.handle('google:connexion', () => connexionGoogle(dossierDonnees()));

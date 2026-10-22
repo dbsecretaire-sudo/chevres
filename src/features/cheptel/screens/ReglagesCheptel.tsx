@@ -50,7 +50,7 @@ import { LABEL_ACTIVITE_COMPTABLE, LABEL_ZONE_ICHN } from '@/shared/textes/libel
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { estBureau } from '@/shared/utils/plateforme';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 const T = TEXTES.cheptel.ugbPrimes;
 
@@ -358,7 +358,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
     aideSaisie: SaisieAide,
   ) => {
     // Sur ordinateur, toutes les aides sont dépliées.
-    const ouverte = estBureau() || aideOuverte === cle;
+    const ouverte = afficheBureau() || aideOuverte === cle;
     return (
       <Card key={cle}>
         <View style={commonStyles.rowSpaceBetween}>
@@ -368,7 +368,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
           >
             <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{nom}</Text>
             {aideSaisie.actif ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : null}
-            {estBureau() ? null : (
+            {afficheBureau() ? null : (
               <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
             )}
           </Pressable>
@@ -553,7 +553,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
         const c = saisie.coefficients[especeCoef] ?? { adulte: '', petit: '' };
         const maj = (patch: Partial<{ adulte: string; petit: string }>) =>
           setSaisie((s) => ({ ...s, coefficients: { ...s.coefficients, [especeCoef]: { ...c, ...patch } } }));
-        const ouverte = estBureau() || especeOuverte === especeCoef;
+        const ouverte = afficheBureau() || especeOuverte === especeCoef;
         return (
           <Card key={especeCoef}>
             <Pressable
@@ -563,7 +563,7 @@ function ContenuCheptel({ annee, espece }: { annee: number; espece: string }) {
               <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>
                 {LABEL_ACTIVITE_COMPTABLE[especeCoef]}
               </Text>
-              {estBureau() ? null : (
+              {afficheBureau() ? null : (
                 <Ionicons name={ouverte ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
               )}
             </Pressable>

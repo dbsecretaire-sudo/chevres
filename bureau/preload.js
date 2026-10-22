@@ -3,9 +3,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 const appeler = (canal, argument) => ipcRenderer.invoke(canal, argument);
 
+// Les données enregistrées, lues une seule fois ; l'affichage choisi (bureau, mobile ou sobre : voir src/shared/utils/affichage.ts) en fait partie.
+const donneesAuDemarrage = ipcRenderer.sendSync('stockage:charger');
+const AFFICHAGE = donneesAuDemarrage['bureau:affichage'] ?? 'bureau';
+
 contextBridge.exposeInMainWorld('bureau', {
   /** Toutes les données enregistrées au démarrage (le reste du temps, la page les garde en mémoire et n'envoie que les changements). */
-  donnees: ipcRenderer.sendSync('stockage:charger'),
+  donnees: donneesAuDemarrage,
   dossiers: ipcRenderer.sendSync('fs:dossiers'),
   ecrireStockage: (ecrire, retirer) => appeler('stockage:ecrire', { ecrire, retirer }),
   fichiers: {
@@ -21,7 +25,7 @@ contextBridge.exposeInMainWorld('bureau', {
     imprimerPdf: (html, paysage, sansMarges, pied) => appeler('pdf:imprimer', { html, paysage, sansMarges, pied }),
   },
   menu: {
-    definir: (menus) => appeler('menu:definir', menus),
+    definir: (menus, affichage) => appeler('menu:definir', { menus, affichage }),
     surChoix: (rappel) => {
       const ecoute = (_evenement, route) => rappel(route);
       ipcRenderer.on('menu:aller', ecoute);
@@ -53,6 +57,8 @@ function dansUneZoneQuiDefile(element) {
 }
 
 function etiqueterLesBoutonsDEntete() {
+  // Les noms écrits à côté des icônes sont ceux de l'affichage « bureau » : le mobile garde les icônes seules, comme le téléphone.
+  if (AFFICHAGE !== 'bureau') return;
   for (const bouton of document.querySelectorAll('div[aria-label]')) {
     const nom = bouton.getAttribute('aria-label');
     if (bouton.dataset.etiquette) {
@@ -94,6 +100,13 @@ window.addEventListener('DOMContentLoaded', () => {
     CLASSE_ETIQUETTE +
     ' { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; white-space: nowrap; }';
   document.head.append(style);
+  // L'affichage sobre : tout en nuances de gris (les dessins de l'accueil sont remplacés par des listes dans l'application).
+  if (AFFICHAGE === 'sobre') {
+    const sobre = document.createElement('style');
+    sobre.id = 'affichage-sobre';
+    sobre.textContent = 'html { filter: grayscale(1); }';
+    document.head.append(sobre);
+  }
   // Les modales de l'application (un conteneur fixe plein écran) ne couvrent que la zone de droite : le menu de gauche reste libre.
   // La largeur du menu est donnée par l'application (--bureau-menu-gauche, 0 sans menu).
   const modales = document.createElement('style');

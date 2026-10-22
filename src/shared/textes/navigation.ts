@@ -6,6 +6,13 @@ const V = vocabulaire;
 export const TEXTES_NAVIGATION = {
   /** La pastille de la capsule du haut qui déroule les rubriques : Cheptel, Production, Commercial, Comptabilité, Organisation. */
   menus: 'Menus',
+  /** Les affichages de la version Windows, proposés au bas du menu « Menus » (voir src/shared/utils/affichage.ts). */
+  affichage: {
+    titre: 'Affichage',
+    bureau: 'Version bureau (menus de la fenêtre)',
+    mobile: 'Version mobile pour PC',
+    sobre: 'Version sobre (sans couleur ni dessin)',
+  },
   /** Les menus de la version Windows (barre du haut). */
   menuBureau: {
     historiqueDesStocks: 'Historique des stocks',
