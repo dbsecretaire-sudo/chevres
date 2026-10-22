@@ -337,6 +337,8 @@ export const TEXTES_STOCK = {
   /** Le niveau d'un aliment : il se compte en kilos. */
   kilos: (nombre: number) => `${nombre} kg`,
   negatif: 'Quantité négative',
+  /** Un article pris par un appui long : on touche la carte où le mettre. */
+  deplacer: (nom: string) => `« ${nom} » est pris : touchez la place où le mettre (touchez-le de nouveau pour le reposer).`,
   /** Le prix moyen d'une unité d'une fourniture, d'après ses achats : sous son nom dans l'inventaire. */
   prixAchat: (prix: string, horsTaxes: boolean) =>
     `${prix} l’unité · prix moyen des achats ${horsTaxes ? 'HT' : 'TTC'}`,

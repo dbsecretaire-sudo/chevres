@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   CATEGORIES,
@@ -15,10 +15,7 @@ import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ROUTES } from '@/shared/constants/routes';
 import { Fab } from '@/shared/components/Fab';
 import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
-import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
-import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
-import { ListeReordonnable, type GestesDeLigne } from '@/shared/components/ListeReordonnable';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { SelectField } from '@/shared/components/SelectField';
@@ -77,6 +74,7 @@ import {
   type FiltreStock,
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
+import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
 import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/features/stock/types';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
@@ -92,8 +90,6 @@ import {
 } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
-import { styles } from '@/shared/styles/trading/Trading.styles';
-import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -196,8 +192,8 @@ export default function StockFromagerie() {
   const [prixLaitOuvert, setPrixLaitOuvert] = useState(false);
   const [prixOeufsOuvert, setPrixOeufsOuvert] = useState(false);
   const [laitOuvert, setLaitOuvert] = useState<LaitJour | 'nouveau' | null>(null);
-  /** Vrai pendant qu'on fait glisser une ligne : la page ne défile alors pas. */
-  const [glisse, setGlisse] = useState(false);
+  /** L'article pris par un appui long (sa clé) : on touche la carte où le mettre. */
+  const [prise, setPrise] = useState<string | null>(null);
   /** Le menu en haut à droite (burger) et la feuille des statistiques qu'il ouvre. */
 
   /** Les litres de lait vendus (les ventes de lait en comptabilité), pour le lait restant. */
@@ -242,63 +238,21 @@ export default function StockFromagerie() {
   /** Vrai quand un des articles de la liste a une quantité négative (une production ou un achat n'a pas été noté). */
   const aUnNegatif = (articles: ArticleAffiche[]) => articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
 
-  const ligne = (a: ArticleAffiche, _poignee: ReactNode, gestes?: GestesDeLigne) => {
+  /** Le petit texte sous le nom d'un article : son prix de vente, ou le prix d'une unité d'une fourniture d'après ses achats ; la quantité négative s'y signale. */
+  const sousLeNom = (a: ArticleAffiche): string | undefined => {
     const niveau = niveaux.get(a.cle) ?? 0;
-    return (
-      <ListRow
-        key={a.cle}
-        title={a.libelle}
-        // Le dessin de l'article, le même que sa carte à la grange.
-        emoji={emojiDeLArticle(genreDeLaCle(a.cle), a.libelle)}
-        subtitle={
-          niveau < 0 || (!a.prix && coutsAchats[a.cle]) ? (
-            <>
-              {/* Le prix d'une unité d'une fourniture, d'après ses achats, sous son nom */}
-              {!a.prix && coutsAchats[a.cle] ? (
-                <Text>{T.prixAchat(formatMontant(coutsAchats[a.cle]), horsTaxes)}</Text>
-              ) : null}
-              {niveau < 0 && !a.prix && coutsAchats[a.cle] ? '\n' : null}
-              {niveau < 0 ? <Text style={styles.perte}>{T.negatif}</Text> : null}
-            </>
-          ) : a.prix ? (
-            roleDeLaViande(a.cle) ? (
-              T.parKg(formatMontant(a.prix))
-            ) : (
-              formatMontant(a.prix)
-            )
-          ) : undefined
-        }
-        trailing={
-          <View style={stylesStock.fin}>
-            <Text style={[styles.resultatLigne, niveau < 0 ? styles.perte : undefined]}>
-              {a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau)}
-            </Text>
-            <Pressable onPress={() => setRenomme(a)} hitSlop={8} accessibilityLabel={T.renommer.modifier}>
-              <Ionicons name="pencil" size={18} color={colors.primary} />
-            </Pressable>
-          </View>
-        }
-        // Un appui long prend la ligne : elle frémit, et on la glisse à sa place.
-        onLongPress={gestes?.onLongPress}
-        onPressOut={gestes?.onPressOut}
-        // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
-        onPress={
-          estLigneDuCheptel(a.cle)
-            ? undefined
-            : estArticleAvecLots(a.cle)
-              ? () => {
-                  setFromageOuvert(a);
-                  setFromageVisible(true);
-                }
-              : () => setArticle(a)
-        }
-      />
-    );
+    const prix = a.prix
+      ? roleDeLaViande(a.cle)
+        ? T.parKg(formatMontant(a.prix))
+        : formatMontant(a.prix)
+      : coutsAchats[a.cle]
+        ? T.prixAchat(formatMontant(coutsAchats[a.cle]), horsTaxes)
+        : undefined;
+    return [prix, niveau < 0 ? T.negatif : undefined].filter(Boolean).join(' · ') || undefined;
   };
 
-  /** Une sorte de boucles : le nombre de boucles à poser ; un appui ouvre le détail des numéros (ni renommer, ni déplacer). */
-  const ligneBoucles = (a: ArticleAffiche) => {
-    // Le niveau : les boucles de l'espèce qui ne sont pas posées (celles des chèvres ne sont pas celles des cochons).
+  /** Une sorte de boucles : le nombre de boucles à poser (celles de l'espèce : celles des chèvres ne sont pas celles des cochons) et son résumé. */
+  const resumeDesBoucles = (a: ArticleAffiche) => {
     // Une boucle de remplacement (rouge, rebouclage) n'a pas de numéro à l'achat : son niveau est sa quantité en stock, et les
     // poses (avec leur numéro de remplacement) sont celles du cheptel.
     const remplacement = estBoucleDeRemplacement(a.cle);
@@ -306,78 +260,83 @@ export default function StockFromagerie() {
     const niveau = remplacement
       ? (niveaux.get(a.cle) ?? 0)
       : bouclesEspece.filter((b) => b.article === a.cle && !b.chevreId).length;
-    return (
-      <ListRow
-        key={a.cle}
-        title={a.libelle}
-        emoji={emojiDeLArticle(GENRE_ARTICLE.BOUCLE, a.libelle)}
-        subtitle={
-          remplacement
-            ? T.boucles.resumeRemplacement(niveau, posees)
-            : T.boucles.resume(bouclesEspece.filter((b) => b.article === a.cle).length, posees)
-        }
-        trailing={
-          <View style={stylesStock.fin}>
-            <Text style={[styles.resultatLigne, niveau < 0 ? styles.perte : undefined]}>
-              {T.unites(niveau)}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-          </View>
-        }
-        onPress={() => {
-          setBoucleOuverte(a);
-          setBoucleVisible(true);
-        }}
-      />
-    );
+    const resume = remplacement
+      ? T.boucles.resumeRemplacement(niveau, posees)
+      : T.boucles.resume(bouclesEspece.filter((b) => b.article === a.cle).length, posees);
+    return { niveau, resume };
   };
 
-  /** La liste glissable des articles d'un genre (filtrée par activité). */
-  /** Les articles d'une liste : un genre (filtré par activité), dont les lignes de viande se partagent entre deux catégories. */
+  /** La liste d'articles d'une rubrique : un genre (filtré par activité), dont les lignes de viande se partagent entre deux catégories. */
   const articlesDeLaListe = (genre: GenreArticle, section?: Section, listeId?: string) =>
     articlesDeLaSection(genre, section, archive, filtreCourant, listeId);
 
-  /** La liste glissable des articles d'une section (les lignes des animaux suivent le cheptel : elles ne se déplacent pas). */
+  /**
+   * Les articles d'une rubrique en cartes, comme à la grange. Un appui ouvre l'article (mouvement, lots, détail des boucles), le crayon le renomme, et un appui
+   * long le prend (il frémit) : on touche alors la carte à sa place pour l'y mettre (la même carte une seconde fois le repose). Les boucles et les lignes qui suivent
+   * le cheptel ne se déplacent pas.
+   */
   const liste = (genre: GenreArticle, section?: Section, listeId?: string) => {
     const elements = articlesDeLaListe(genre, section, listeId);
-    if (genre === GENRE_ARTICLE.BOUCLE)
-      return (
-        <BlocListe>
-          {elements.map((a, i) => (
-            <View key={a.cle} style={i > 0 ? separationBloc : undefined}>
-              {ligneBoucles(a)}
-            </View>
-          ))}
-        </BlocListe>
-      );
-    if (section === SECTION_STOCK.ANIMAUX)
-      return (
-        <BlocListe>
-          {elements.map((a, i) => (
-            <View key={a.cle} style={i > 0 ? separationBloc : undefined}>
-              {ligne(a, null)}
-            </View>
-          ))}
-        </BlocListe>
-      );
+    const boucles = genre === GENRE_ARTICLE.BOUCLE;
+    const deplacable = !boucles && section !== SECTION_STOCK.ANIMAUX;
+    const priseIci = prise !== null && elements.some((a) => a.cle === prise);
+    /** La carte prise est mise à la place de celle qu'on touche : la liste affichée est une partie du genre, on la place là où se trouve celle qu'elle remplace. */
+    const placer = async (cle: string, index: number) => {
+      const autres = elements.filter((a) => a.cle !== cle);
+      const complet = articlesDuGenre(genre, archive, filtreCourant)
+        .map((a) => a.cle)
+        .filter((c) => c !== cle);
+      const cible = autres[index];
+      const indexComplet = cible ? complet.indexOf(cible.cle) : complet.length;
+      await positionnerArticle(genre, cle, indexComplet, filtreCourant);
+      charger();
+    };
     return (
-      <ListeReordonnable
-        elements={elements}
-        cle={(a) => a.cle}
-        ligne={ligne}
-        onGlisse={setGlisse}
-        onDeplacer={async (cle, index) => {
-          // La liste affichée est une partie du genre : on place la ligne là où se trouve celle qu'elle remplace.
-          const autres = elements.filter((a) => a.cle !== cle);
-          const complet = articlesDuGenre(genre, archive, filtreCourant)
-            .map((a) => a.cle)
-            .filter((c) => c !== cle);
-          const cible = autres[index];
-          const indexComplet = cible ? complet.indexOf(cible.cle) : complet.length;
-          await positionnerArticle(genre, cle, indexComplet, filtreCourant);
-          charger();
-        }}
-      />
+      <View style={jeu.cartesStock}>
+        {priseIci ? (
+          <Text style={jeu.indiceDeplacement}>
+            {T.deplacer(elements.find((a) => a.cle === prise)?.libelle ?? '')}
+          </Text>
+        ) : null}
+        <View style={grilleDeCartes}>
+          {elements.map((a, i) => {
+            const resume = boucles ? resumeDesBoucles(a) : undefined;
+            const niveau = resume ? resume.niveau : (niveaux.get(a.cle) ?? 0);
+            return (
+              <CarteDeStock
+                key={a.cle}
+                rang={i}
+                emoji={emojiDeLArticle(genreDeLaCle(a.cle), a.libelle)}
+                titre={a.libelle}
+                quantite={a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau)}
+                niveau={niveau}
+                sous={resume ? resume.resume : sousLeNom(a)}
+                selectionnee={prise === a.cle}
+                onRenommer={boucles ? undefined : () => setRenomme(a)}
+                onLongPress={deplacable ? () => setPrise(a.cle) : undefined}
+                onPress={() => {
+                  if (prise) {
+                    if (prise !== a.cle && priseIci) placer(prise, i);
+                    setPrise(null);
+                    return;
+                  }
+                  if (boucles) {
+                    setBoucleOuverte(a);
+                    setBoucleVisible(true);
+                  } else if (estLigneDuCheptel(a.cle)) {
+                    // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
+                  } else if (estArticleAvecLots(a.cle)) {
+                    setFromageOuvert(a);
+                    setFromageVisible(true);
+                  } else {
+                    setArticle(a);
+                  }
+                }}
+              />
+            );
+          })}
+        </View>
+      </View>
     );
   };
 
@@ -507,7 +466,7 @@ export default function StockFromagerie() {
       <View style={jeu.cadre}>
         <View style={jeu.panneau}>
     <Screen scroll={false} transparent>
-      <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
+      <ScrollView contentContainerStyle={commonStyles.listFab}>
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
             const listes = lesSectionsAffichees.filter((x) => x.categorie === categorie);
@@ -846,6 +805,9 @@ const genreDeLaCle = (cle: string): GenreArticle => cle.split(':')[0] as GenreAr
 
 /** Le cadre de jeu de la grange : un fond vert foncé, un cadre de bois et un panneau vert, autour du stock. */
 const jeu = StyleSheet.create({
+  /** Les cartes d'une rubrique et leur indication de déplacement. */
+  cartesStock: { gap: 8, paddingVertical: 4 },
+  indiceDeplacement: { fontSize: 13, fontWeight: '700', color: '#B8641A' },
   fond: { flex: 1, backgroundColor: '#35541F', padding: 12 },
   cadre: { flex: 1, backgroundColor: '#E8892B', borderRadius: 26, borderWidth: 4, borderColor: '#B8641A', padding: 10 },
   panneau: { flex: 1, backgroundColor: '#8DBA3F', borderRadius: 16, overflow: 'hidden' },

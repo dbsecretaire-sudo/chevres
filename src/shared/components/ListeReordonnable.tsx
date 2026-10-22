@@ -53,7 +53,7 @@ export interface GestesDeLigne {
 }
 
 /** La ligne tenue au doigt frémit légèrement : on voit qu'elle est prise. */
-function Frisson({ actif, children }: { actif: boolean; children: ReactNode }) {
+export function Frisson({ actif, children }: { actif: boolean; children: ReactNode }) {
   const [valeur] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (!actif) {

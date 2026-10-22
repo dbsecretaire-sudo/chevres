@@ -7,6 +7,7 @@ import {
   type CarteStock,
   type GroupeDeCartes,
 } from '@/features/stock/services/entrepotJeu';
+import { Frisson } from '@/shared/components/ListeReordonnable';
 import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
@@ -90,6 +91,93 @@ export function RubriquesDeCartes({
   );
 }
 
+/**
+ * Une carte d'article du stock, la même que celles de la grange : son dessin, son nom (et dessous un petit texte : son prix), puis la pastille de ce qu'il en reste.
+ * Un appui l'ouvre ; un appui long la prend (elle frémit) pour la déplacer ; le crayon, en haut à droite, la renomme.
+ */
+export function CarteDeStock({
+  emoji,
+  titre,
+  quantite,
+  niveau,
+  sous,
+  rang,
+  selectionnee,
+  onPress,
+  onLongPress,
+  onRenommer,
+}: {
+  emoji: string;
+  titre: string;
+  quantite: string;
+  niveau: number;
+  sous?: string;
+  rang: number;
+  selectionnee?: boolean;
+  onPress?: () => void;
+  onLongPress?: () => void;
+  onRenommer?: () => void;
+}) {
+  return (
+    <Apparition delai={rang * 30} style={styles.cellule}>
+      <Frisson actif={!!selectionnee}>
+        {/* La carte (le cadre) contient la zone d'appui et, à côté d'elle, le crayon : un bouton ne peut pas en contenir un autre. */}
+        <View style={[styles.carte, selectionnee ? styles.carteSelectionnee : null]}>
+          <Pressable
+            style={styles.zoneDeLaCarte}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            accessibilityRole="button"
+            accessibilityLabel={`${titre} : ${quantite}`}
+          >
+            <Text style={styles.dessin} accessibilityElementsHidden importantForAccessibility="no">
+              {emoji}
+            </Text>
+            <Text style={styles.nom} numberOfLines={2}>
+              {titre}
+            </Text>
+            {sous ? (
+              <Text style={styles.sous} numberOfLines={2}>
+                {sous}
+              </Text>
+            ) : null}
+            <View
+              style={[
+                styles.pastille,
+                niveau < 0 ? styles.pastilleRouge : null,
+                niveau === 0 ? styles.pastilleVide : null,
+              ]}
+            >
+              <View style={styles.piece}>
+                <Ionicons name="cube" size={12} color="#7A5410" />
+              </View>
+              <Text style={styles.quantite} numberOfLines={1}>
+                {quantite}
+              </Text>
+            </View>
+          </Pressable>
+          {onRenommer ? (
+            <Pressable
+              style={styles.crayon}
+              onPress={onRenommer}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={TEXTES.stock.renommer.modifier}
+            >
+              <Ionicons name="pencil" size={14} color={colors.primary} />
+            </Pressable>
+          ) : null}
+        </View>
+      </Frisson>
+    </Apparition>
+  );
+}
+
+/** La grille des cartes d'une rubrique : trois par ligne, comme à la grange. */
+export const grilleDeCartes = StyleSheet.create({
+  grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+}).grille;
+
 const PARCHEMIN = '#F4E7C8';
 
 const styles = StyleSheet.create({
@@ -113,6 +201,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
     overflow: 'hidden',
+  },
+  carteSelectionnee: { borderColor: '#E8892B' },
+  zoneDeLaCarte: { alignSelf: 'stretch', alignItems: 'center', gap: 2 },
+  sous: { fontSize: 10, color: '#7A5A36', textAlign: 'center', paddingHorizontal: 4, marginTop: -4 },
+  crayon: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dessin: { fontSize: 46 },
   nom: {
