@@ -74,6 +74,7 @@ import {
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { definirImageArticle, type ChoixImage } from '@/features/stock/services/imagesArticles';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/features/stock/types';
@@ -120,6 +121,10 @@ const TEXTES_AJOUT: Record<GenreAjoutable, { titre: string; exemple: string }> =
   [GENRE_ARTICLE.VIANDE]: { titre: T.ajouter.viande, exemple: T.ajouter.exempleViande },
   [GENRE_ARTICLE.PERSONNALISE]: { titre: T.ajouter.article, exemple: T.ajouter.exempleArticle },
 };
+
+/** Les catégories où l'inventaire ajoute et supprime des articles : les immobilisations et les autres approvisionnements. */
+const categorieAjoutable = (categorie: string | undefined): boolean =>
+  categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS || categorie === CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS;
 
 /** Un fromage ou une viande se vend : il a un prix de vente. */
 const seVend = (cle: string): boolean =>
@@ -197,6 +202,8 @@ export default function StockFromagerie() {
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
   const [aSupprimer, setASupprimer] = useState<ArticleAffiche | null>(null);
+  /** L'article dont on regarde l'historique (un appui sur sa carte, dans une liste ajoutée). */
+  const [historiqueDe, setHistoriqueDe] = useState<ArticleAffiche | null>(null);
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
   /** Le litrage qu'on modifie (« nouveau » pour en noter un) ; la fenêtre est fermée quand il est absent. */
@@ -342,6 +349,9 @@ export default function StockFromagerie() {
                   if (boucles) {
                     setBoucleOuverte(a);
                     setBoucleVisible(true);
+                  } else if (genreDeLaCle(a.cle) === GENRE_ARTICLE.PERSONNALISE) {
+                    // Un article d'une liste ajoutée depuis la structure (laine, peau…) : son historique ; la quantité s'y ajuste.
+                    setHistoriqueDe(a);
                   } else if (estLigneDuCheptel(a.cle)) {
                     // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
                   } else if (estArticleAvecLots(a.cle)) {
@@ -390,15 +400,18 @@ export default function StockFromagerie() {
   };
 
   /**
-   * Seules les immobilisations (le matériel, les bâtiments et les listes ajoutées à cette catégorie) s'ajoutent et se suppriment dans l'inventaire : les autres
-   * articles viennent des achats et des ventes.
+   * Seuls les articles des immobilisations et des autres approvisionnements (l'entretien et le matériel, pas les emballages) s'ajoutent et se suppriment dans
+   * l'inventaire, comme les listes ajoutées à ces catégories : les autres articles viennent des achats et des ventes.
    */
-  const estImmobilisation = (cle: string): boolean => {
+  const estAjoutable = (cle: string): boolean => {
     const genre = genreDeLaCle(cle);
-    if (genre === GENRE_ARTICLE.MATERIEL || genre === GENRE_ARTICLE.BATIMENT) return true;
+    if (
+      [GENRE_ARTICLE.MATERIEL, GENRE_ARTICLE.BATIMENT, GENRE_ARTICLE.ENTRETIEN, GENRE_ARTICLE.EQUIPEMENT].some((g) => g === genre)
+    )
+      return true;
     if (genre !== GENRE_ARTICLE.PERSONNALISE) return false;
     const listeId = archive.articles.find((a) => a.id === cle.split(':')[1])?.listeId;
-    return (archive.listes ?? []).find((l) => l.id === listeId)?.categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS;
+    return categorieAjoutable((archive.listes ?? []).find((l) => l.id === listeId)?.categorie);
   };
 
   const ouvrirAjout = (genre: GenreAjoutable, liste?: ListeInventaire) => {
@@ -442,20 +455,20 @@ export default function StockFromagerie() {
   /** Les listes d'office dont le compte n'a pas été retiré pour l'espèce. */
   const lesSectionsAffichees = sectionsAffichees(archive, fromagerie, poules, concernees);
 
-  /** Les ajouts d'une catégorie : le lait du jour (une saisie de quantité) ; pour les immobilisations seulement, un article dans chacune de ses listes. */
+  /** Les ajouts d'une catégorie : le lait du jour (une saisie de quantité) ; pour les immobilisations et les autres approvisionnements, un article par liste (sauf les emballages). */
   const ajoutsDeLaCategorie = (categorie: string): Option[] => [
     ...lesSectionsAffichees
       .filter((x) => x.categorie === categorie)
       .map(({ section, genre }): Option | null =>
         section === SECTION_STOCK.LAIT
           ? { label: T.laitJour.ajouter, icon: 'add-circle', onPress: () => setLaitOuvert('nouveau') }
-          : genre && genre !== GENRE_ARTICLE.BOUCLE && categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS
+          : genre && genre !== GENRE_ARTICLE.BOUCLE && genre !== GENRE_ARTICLE.EMBALLAGE && categorieAjoutable(categorie)
             ? { label: TEXTES_AJOUT[genre].titre, icon: 'add-circle', onPress: () => ouvrirAjout(genre) }
             : null,
       )
       .filter((x): x is Option => x !== null),
     ...listesVisibles
-      .filter((l) => l.categorie === categorie && categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS)
+      .filter((l) => l.categorie === categorie && categorieAjoutable(categorie))
       .map((l): Option => ({
         label: T.ajouter.dansLaListe(l.nom),
         icon: 'add-circle',
@@ -746,7 +759,7 @@ export default function StockFromagerie() {
         }
         onValider={valider}
         onSupprimer={
-          article && estImmobilisation(article.cle)
+          article && estAjoutable(article.cle)
             ? () => {
                 setASupprimer(article);
                 setArticle(null);
@@ -754,6 +767,22 @@ export default function StockFromagerie() {
             : undefined
         }
         onFermer={() => setArticle(null)}
+      />
+      <HistoriqueArticleModal
+        article={
+          historiqueDe
+            ? {
+                cle: historiqueDe.cle,
+                titre: historiqueDe.libelle,
+                emoji: emojiDeLArticle(genreDeLaCle(historiqueDe.cle), historiqueDe.libelle),
+              }
+            : null
+        }
+        onAjuster={() => {
+          setArticle(historiqueDe);
+          setHistoriqueDe(null);
+        }}
+        onFermer={() => setHistoriqueDe(null)}
       />
       <ArticleStockModal
         visible={!!renomme}
@@ -780,9 +809,9 @@ export default function StockFromagerie() {
             : undefined
         }
         onValider={renommer}
-        // Seule une immobilisation se supprime.
+        // Seuls les articles ajoutables se suppriment.
         onSupprimer={
-          renomme && estImmobilisation(renomme.cle)
+          renomme && estAjoutable(renomme.cle)
             ? () => {
                 setASupprimer(renomme);
                 setRenomme(null);

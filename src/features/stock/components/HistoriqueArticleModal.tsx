@@ -17,11 +17,14 @@ const nombreFR = (n: number): string => String(Math.round(n * 100) / 100).replac
 export function HistoriqueArticleModal({
   article,
   onOuvrirLeStock,
+  onAjuster,
   onFermer,
 }: {
   article: { cle: string; titre: string; emoji: string; unite?: string } | null;
-  /** Ouvre l'article dans l'inventaire (là où l'on saisit ses quantités). */
-  onOuvrirLeStock: () => void;
+  /** Ouvre l'article dans l'inventaire (là où l'on saisit ses quantités) : absent dans l'inventaire même. */
+  onOuvrirLeStock?: () => void;
+  /** Ouvre la saisie de la quantité de l'article (dans l'inventaire). */
+  onAjuster?: () => void;
   onFermer: () => void;
 }) {
   // Les mouvements sont lus à chaque ouverture, avec la clé de l'article pour lequel ils l'ont été.
@@ -68,7 +71,12 @@ export function HistoriqueArticleModal({
             ))}
           </ScrollView>
           <View style={commonStyles.row}>
-            <Button style={commonStyles.flex1} variant="secondary" label={T.ouvrirLeStock} onPress={onOuvrirLeStock} />
+            {onAjuster ? (
+              <Button style={commonStyles.flex1} variant="secondary" label={T.ajuster} onPress={onAjuster} />
+            ) : null}
+            {onOuvrirLeStock ? (
+              <Button style={commonStyles.flex1} variant="secondary" label={T.ouvrirLeStock} onPress={onOuvrirLeStock} />
+            ) : null}
             <Button style={commonStyles.flex1} label={TEXTES.commun.general.fermer} onPress={onFermer} />
           </View>
         </Pressable>
