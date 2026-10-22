@@ -21,6 +21,7 @@ import {
   supprimerVisite,
 } from '@/features/commercial/services/agritourisme';
 import type { FormuleAgritourisme, StockDeVisite, VisiteAgritourisme } from '@/features/commercial/types';
+import { FraisDeLaVisite } from '@/features/commercial/components/FraisDeLaVisite';
 import { ChoixLotsVisite } from '@/features/commercial/components/ChoixLotsVisite';
 import { besoinsDeLaVisite } from '@/features/commercial/services/stockVisite';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -228,6 +229,7 @@ export default function FicheVisiteAgritourisme() {
         <Text style={commonStyles.lineBold}>{T.total(formatMontant(recette))}</Text>
         <Text style={commonStyles.note}>{T.chargesAide}</Text>
       </SectionForm>
+      {existante && formuleId ? <FraisDeLaVisite formuleId={formuleId} date={date} recette={recette} /> : null}
       <SectionForm>
         <FormField
           label={T.note}

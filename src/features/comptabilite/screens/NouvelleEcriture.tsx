@@ -6,6 +6,9 @@ import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { precocherFraisTouristiques } from '@/features/comptabilite/services/fraisTouristiques';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { ATELIER } from '@/shared/constants/ateliers';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
@@ -79,6 +82,8 @@ export default function NouvelleFacture() {
     objet?: string;
     /** Le véhicule de la flotte choisi d'office (depuis sa fiche : une réparation, une prime d'assurance). */
     vehicule?: string;
+    /** L'atelier choisi d'office (« agritourisme », depuis la page de l'office de tourisme : la facture arrive cochée comme frais touristique). */
+    atelier?: string;
     /** « 1 » : le premier contact de catégorie Abattoir est choisi d'office (amener des animaux à l'abattoir : « Suivant » mène au choix des animaux). */
     abattoirContact?: string;
   }>();
@@ -126,6 +131,25 @@ export default function NouvelleFacture() {
   if (params.fournisseur && !fournisseurChoisi && e.fournisseurs.some((f) => f.id === params.fournisseur)) {
     setFournisseurChoisi(true);
     e.changerFournisseur(params.fournisseur);
+  }
+  // L'atelier donné par l'adresse : il pré-remplit le choix, une fois.
+  const [atelierVu, setAtelierVu] = useState(false);
+  if (params.atelier && !atelierVu) {
+    setAtelierVu(true);
+    e.setAtelier(params.atelier);
+  }
+  // Les frais touristiques se cochent d'office pour un fournisseur de l'office de tourisme, d'un partenaire ou du repas, et pour un véhicule touristique ; on peut décocher.
+  const { settings: reglages } = useAppSettings();
+  const [precoche, setPrecoche] = useState('');
+  const clePrecoche = `${e.fournisseurId}|${e.vehiculeId}`;
+  if (e.type === TYPE_FACTURE.RECUE && clePrecoche !== precoche) {
+    setPrecoche(clePrecoche);
+    const vehicule = (reglages.exploitation?.flotte ?? []).find((v) => v.id === e.vehiculeId);
+    if (
+      !e.atelier &&
+      precocherFraisTouristiques({ categorieFournisseur: e.fournisseurSelectionne?.categorie, vehicule })
+    )
+      e.setAtelier(ATELIER.AGRITOURISME);
   }
   // Le motif donné par l'adresse : il pré-remplit le champ, une fois.
   const [motifVu, setMotifVu] = useState(false);

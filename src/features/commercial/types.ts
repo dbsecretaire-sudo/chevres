@@ -54,6 +54,9 @@ export interface FormuleAgritourisme {
   note?: string;
   /** Le stock que la formule consomme (fromages, charcuterie…) : il se déduit à la réalisation de la visite, avec les lots choisis. */
   besoins?: BesoinFormule[];
+  /** Le véhicule touristique que la formule utilise (son identifiant dans la flotte) et les kilomètres parcourus en charge par visite : le carburant d'une visite s'en déduit. */
+  vehiculeId?: string;
+  km?: number;
 }
 
 /** Ce qu'une formule consomme du stock : un produit de l'inventaire et sa quantité, par visite (le groupe) ou par personne. */

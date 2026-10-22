@@ -56,6 +56,7 @@ import {
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
+import { CaseFraisTouristiques } from '@/features/comptabilite/components/CaseFraisTouristiques';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
@@ -444,6 +445,18 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           <ChampVehicule value={form.vehiculeId ?? ''} onChange={(id) => f.setForm({ ...form, vehiculeId: id || undefined })} />
         ) : null}
         {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
+        {!estEmise && !modeEntreprise() && !depenseImposee(fournisseur) ? (
+          <CaseFraisTouristiques
+            atelier={form.atelier}
+            onChange={(atelier) =>
+              f.setForm({
+                ...form,
+                atelier: atelier || undefined,
+                elementAgri: atelier === ATELIER.AGRITOURISME ? form.elementAgri : undefined,
+              })
+            }
+          />
+        ) : null}
         {!estEmise && !modeEntreprise() && !depenseImposee(fournisseur) ? (
           <ChampAtelier
             activite={form.activite}

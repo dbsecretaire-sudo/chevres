@@ -1,10 +1,15 @@
 import type { ElementFormule, FormuleAgritourisme, VisiteAgritourisme } from '@/features/commercial/types';
+import { coutCarburantDeLaVisite } from '@/features/comptabilite/services/fraisTouristiques';
 import type { Facture } from '@/features/comptabilite/types';
+import type { Vehicule } from '@/features/settings/settings';
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { STATUTS_VISITE_COMPTEES } from '@/shared/constants/agritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
+
+const T = TEXTES.commercial.agritourisme.couts;
 
 const arrondi = (valeur: number): number => Math.round(valeur * 100) / 100;
 
@@ -58,6 +63,8 @@ export function coutsParFormule(entree: {
   elements: ElementFormule[];
   factures: Facture[];
   horsTaxes: boolean;
+  /** La flotte : le carburant d'une formule se calcule avec la consommation et le prix du litre de son véhicule touristique. */
+  vehicules?: readonly Vehicule[];
 }): CoutsAgritourisme {
   const { formules, elements, horsTaxes } = entree;
   const comptees = entree.visites.filter((v) => STATUTS_VISITE_COMPTEES.includes(v.statut));
@@ -100,10 +107,38 @@ export function coutsParFormule(entree: {
     };
   };
 
+  /** Le carburant d'une visite de la formule : ses kilomètres en charge × la consommation du véhicule × le prix du litre (rien sans véhicule touristique renseigné). */
+  const carburantDe = (formule: FormuleAgritourisme): ComposantCout | undefined => {
+    const vehicule = entree.vehicules?.find((v) => v.id === formule.vehiculeId);
+    const parVisite = coutCarburantDeLaVisite({
+      km: formule.km,
+      consommation: vehicule?.consommation,
+      prixLitre: vehicule?.prixCarburant,
+    });
+    if (!vehicule || parVisite === undefined) return undefined;
+    const visites = comptees.filter((v) => v.formuleId === formule.id).length;
+    const total = arrondi(parVisite * visites);
+    return {
+      cle: `carburant:${formule.id}`,
+      libelle: `${T.carburant} ${vehicule.plaque}`,
+      total,
+      visites,
+      parVisite,
+      postes: [
+        {
+          libelle: T.detailCarburant(formule.km ?? 0, vehicule.consommation ?? 0, vehicule.prixCarburant ?? 0),
+          montant: total,
+        },
+      ],
+    };
+  };
+
   const resultat: CoutFormule[] = formules.map((formule) => {
+    const carburant = carburantDe(formule);
     const composants = [...formule.elements, ELEMENT_COMMUN]
       .map(composantDe)
-      .filter((c): c is ComposantCout => !!c);
+      .filter((c): c is ComposantCout => !!c)
+      .concat(carburant ? [carburant] : []);
     return {
       formule,
       visites: comptees.filter((v) => v.formuleId === formule.id).length,
@@ -112,7 +147,8 @@ export function coutsParFormule(entree: {
     };
   });
 
-  const total = [...groupes.keys()].reduce((t, cle) => t + totalDuGroupe(cle), 0);
+  const carburants = formules.reduce((t, formule) => t + (carburantDe(formule)?.total ?? 0), 0);
+  const total = [...groupes.keys()].reduce((t, cle) => t + totalDuGroupe(cle), 0) + carburants;
   const nonReparti = [...groupes.keys()]
     .filter((cle) => visitesAvec(cle) === 0)
     .reduce((t, cle) => t + totalDuGroupe(cle), 0);

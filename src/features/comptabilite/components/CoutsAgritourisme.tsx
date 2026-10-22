@@ -4,6 +4,7 @@ import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { elementsDeFormule } from '@/features/commercial/services/agritourisme';
 import { coutsParFormule, type CoutsAgritourisme } from '@/features/commercial/services/coutsAgritourisme';
 import { listFactures } from '@/features/comptabilite/repository/factures';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/comptabilite/FiscaliteRsa.styles';
 import { TEXTES } from '@/shared/textes';
@@ -17,6 +18,7 @@ const T = TEXTES.commercial.agritourisme.couts;
  */
 export function CoutsAgritourismeFormules({ annee, horsTaxes }: { annee: number; horsTaxes: boolean }) {
   const [couts, setCouts] = useState<CoutsAgritourisme | null>(null);
+  const flotte = useAppSettings().settings.exploitation?.flotte;
   useEffect(() => {
     Promise.all([lireArchiveCommercial(), listFactures(annee)]).then(([archive, factures]) =>
       setCouts(
@@ -26,10 +28,11 @@ export function CoutsAgritourismeFormules({ annee, horsTaxes }: { annee: number;
           elements: elementsDeFormule(archive),
           factures,
           horsTaxes,
+          vehicules: flotte,
         }),
       ),
     );
-  }, [annee, horsTaxes]);
+  }, [annee, horsTaxes, flotte]);
 
   if (!couts || couts.formules.length === 0) return null;
   return (

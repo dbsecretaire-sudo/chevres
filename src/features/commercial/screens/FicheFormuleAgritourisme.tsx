@@ -6,6 +6,9 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { FormField } from '@/shared/components/FormField';
 import { Screen } from '@/shared/components/Screen';
+import { SelectField } from '@/shared/components/SelectField';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { libelleVehicule } from '@/features/exploitation/services/flotte';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { ChampBesoinsFormule, saisiesDesBesoins, type SaisieBesoin } from '@/features/commercial/components/ChampBesoinsFormule';
@@ -45,6 +48,10 @@ export default function FicheFormuleAgritourisme() {
   const [note, setNote] = useState('');
   /** Le stock que la formule consomme, en saisie. */
   const [besoins, setBesoins] = useState<SaisieBesoin[]>([]);
+  /** Le véhicule touristique de la formule et les kilomètres parcourus en charge par visite. */
+  const [vehiculeId, setVehiculeId] = useState('');
+  const [km, setKm] = useState('');
+  const flotte = useAppSettings().settings.exploitation?.flotte;
   const [erreur, setErreur] = useState('');
   const [suppression, setSuppression] = useState(false);
   /** Les éléments qu'une formule peut comprendre, et celui qu'on ajoute (vide : nouveau), renomme ou retire. */
@@ -66,6 +73,8 @@ export default function FicheFormuleAgritourisme() {
         setTauxTva(texte(formule.tauxTva ?? TAUX_TVA_AGRITOURISME));
         setNote(formule.note ?? '');
         setBesoins(saisiesDesBesoins(formule.besoins));
+        setVehiculeId(formule.vehiculeId ?? '');
+        setKm(texte(formule.km));
       });
     }, [id]),
   );
@@ -86,6 +95,8 @@ export default function FicheFormuleAgritourisme() {
       elements,
       tauxTva: tauxTva.trim() ? parseDecimal(tauxTva) : undefined,
       note: note.trim() || undefined,
+      vehiculeId: vehiculeId || undefined,
+      km: parseDecimal(km) > 0 ? parseDecimal(km) : undefined,
       besoins: (() => {
         const valides = besoinsValides(
           besoins.map((b) => ({ article: b.article, quantite: parseDecimal(b.quantite), parPersonne: b.parPersonne })),
@@ -135,6 +146,19 @@ export default function FicheFormuleAgritourisme() {
       {/* Le stock que la formule consomme : il sort de l'inventaire à la réalisation de la visite. */}
       <SectionForm titre={TEXTES.commercial.agritourisme.stock.titre} aide={TEXTES.commercial.agritourisme.stock.aide}>
         <ChampBesoinsFormule valeur={besoins} onChange={setBesoins} />
+      </SectionForm>
+      {/* Le carburant d'une visite : le véhicule touristique et les kilomètres parcourus en charge. */}
+      <SectionForm titre={T.deplacement.titre} aide={T.deplacement.aide}>
+        <SelectField
+          label={T.deplacement.vehicule}
+          value={vehiculeId}
+          onChange={setVehiculeId}
+          options={[
+            { value: '', label: T.deplacement.aucun },
+            ...(flotte ?? []).filter((v) => v.actif && v.usageTouristique).map((v) => ({ value: v.id, label: libelleVehicule(v) })),
+          ]}
+        />
+        <FormField label={T.deplacement.km} value={km} onChangeText={setKm} keyboardType="decimal-pad" />
       </SectionForm>
       <SectionForm>
         <Text style={commonStyles.note}>{T.chargesAide}</Text>

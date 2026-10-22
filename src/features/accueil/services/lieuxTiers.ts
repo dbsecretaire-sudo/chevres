@@ -265,7 +265,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesContact: [CATEGORIE_FOURNISSEUR.TOURISME],
     categoriesFacture: [],
     categoriesVente: [],
-    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
+    // Les factures de l'office de tourisme et des partenaires sont des frais touristiques : la nouvelle facture arrive déjà rangée dans l'atelier Agritourisme.
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}&atelier=agritourisme`,
     liens: [],
   },
   repas: {

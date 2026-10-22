@@ -315,6 +315,11 @@ export interface Vehicule {
   certificat?: PieceJointe;
   /** La date où l'assurance du véhicule a été résiliée (AAAA-MM-JJ) : une prime payée après cette date le rend de nouveau assuré. */
   assuranceResilieeLe?: string;
+  /** Vrai : le véhicule sert au tourisme (le 4x4 des visites) : son assurance et ses réparations se cochent d'office comme frais touristiques, et son carburant se compte par visite. */
+  usageTouristique?: boolean;
+  /** Sa consommation (L pour 100 km) et le prix du litre de carburant (€) : de quoi compter le carburant d'une visite d'après les kilomètres parcourus en charge. */
+  consommation?: number;
+  prixCarburant?: number;
   /** Faux : le véhicule n'est plus utilisé ; il reste consultable, avec son historique, mais n'est plus proposé dans les écritures. */
   actif: boolean;
   notes?: string;
