@@ -248,10 +248,14 @@ export const TEXTES_PRODUCTION = {
         supprimer: 'Supprimer ce dossier',
         supprimerQuestion: 'Supprimer ce dossier ?',
         supprimerMessage: (nom: string) => `« ${nom} » disparaît ; ses contenus et ses dossiers passent dans le dossier au-dessus.`,
-        contenus: (n: number) => (n === 0 ? 'Vide' : `${n} contenu${n > 1 ? 's' : ''}`),
+        /** Ce que contient un dossier, en description : rien quand il est vide. */
+        contenus: (n: number) => (n === 0 ? '' : `${n} contenu${n > 1 ? 's' : ''}`),
         aucun: 'Rien de rangé ici : créez un dossier, un courrier, une démarche ou importez un fichier.',
-        dossierVide: 'Ce dossier est vide.',
         rechercher: 'Rechercher un dossier ou un document',
+        /** Un dossier marqué touristique se retrouve sur la page de l'office de tourisme (Agritourisme). */
+        marquerTouristique: 'Marquer ce dossier Touristique',
+        retirerTouristique: 'Retirer des dossiers touristiques',
+        estTouristique: 'Dossier touristique',
         rechercherDansCeDossier: 'Rechercher dans ce dossier',
         aucunResultat: 'Aucun résultat.',
         dans: (chemin: string) => `Dans ${chemin}`,
@@ -446,6 +450,15 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les factures de ces partenaires',
       nouvelle: 'Nouvelle facture',
       liens: {},
+      /** Les dossiers marqués touristiques (dans les dossiers d'un contact) : la Route des Sens Authentiques… */
+      dossiers: {
+        groupe: 'Les dossiers touristiques',
+        aucun: 'Aucun dossier touristique actuellement.',
+        nouveau: 'Nouveau dossier',
+        nouveauTitre: (tiers: string) => `Nouveau dossier touristique · ${tiers}`,
+        choisirTiers: 'Pour quel tiers ?',
+        aucunTiers: 'Ajoutez d’abord un office de tourisme ou un partenaire : un dossier touristique est lié à un tiers.',
+      },
     },
     repas: {
       titre: 'Repas',

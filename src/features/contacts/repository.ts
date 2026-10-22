@@ -16,6 +16,7 @@ import {
   contactDe,
   coordonneesAPartager,
   liensAEnregistrer,
+  nomDeContactDejaPris,
   type Contact,
 } from '@/features/contacts/services/contacts';
 import { fichesDuFormulaire, type FormulaireContact } from '@/features/contacts/services/fiche';
@@ -29,6 +30,11 @@ import { nomComplet } from '@/shared/utils/personne';
 export async function listContacts(): Promise<Contact[]> {
   const [clients, fournisseurs] = await Promise.all([listClients(), listFournisseurs()]);
   return construireContacts(clients, fournisseurs);
+}
+
+/** Vrai quand un contact porte déjà ce nom : un nouveau contact ne peut pas le reprendre. */
+export async function nomDeContactPris(nom: string, sauf?: string): Promise<boolean> {
+  return nomDeContactDejaPris(await listContacts(), nom, sauf);
 }
 
 /** Le contact d'une fiche (client ou fournisseur) : les deux fiches quand il en a deux. */
@@ -87,6 +93,7 @@ export type ErreurContact =
   | 'categorieRequise'
   | 'circuitRequis'
   | 'rienCoche'
+  | 'nomDejaPris'
   | 'ecrituresRecettes'
   | 'ecrituresDepenses';
 
@@ -116,6 +123,14 @@ export async function enregistrerContact(
   // Un contact qui reçoit des recettes a son circuit de vente privilégié : il est repris d'office dans ses ventes.
   if (form.recettes && !form.circuit) return { erreur: 'circuitRequis' };
   if (!form.recettes && !form.depenses) return { erreur: 'rienCoche' };
+  // Deux contacts n'ont jamais le même nom (un contact existant que l'on n'a pas renommé n'est pas concerné).
+  const nomDuFormulaire = nomComplet({ nom: form.nom.trim(), prenom: form.prenom.trim() || undefined });
+  if (
+    (!existant || nomDuFormulaire !== existant.nom) &&
+    nomDeContactDejaPris(await listContacts(), nomDuFormulaire, existant?.cle)
+  ) {
+    return { erreur: 'nomDejaPris' };
+  }
   if (existant?.client && !form.recettes && (await clientAEcritures(existant.client))) {
     return { erreur: 'ecrituresRecettes' };
   }

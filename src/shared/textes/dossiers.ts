@@ -18,7 +18,8 @@ export const TEXTES_DOSSIERS = {
     resultatsContenus: 'Contenus',
     menuClients: 'Clients',
     nouveauClient: 'Nouveau client',
-    contenus: (nombre: number) => `${nombre} contenu${nombre > 1 ? 's' : ''}`,
+    /** Ce que contient un dossier, en description : rien quand il est vide. */
+    contenus: (nombre: number) => (nombre === 0 ? '' : `${nombre} contenu${nombre > 1 ? 's' : ''}`),
     aucunContenu: 'Aucun contenu',
     aFaire: (nombre: number) => `${nombre} à faire`,
     /** Sur la carte d'un client dont la note n'est pas encore facturée. */

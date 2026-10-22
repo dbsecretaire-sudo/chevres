@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   avecDossier,
   avecDossierRenomme,
+  avecDossierTouristique,
+  dossiersTouristiques,
   cheminDuDossier,
   contenusDuDossier,
   dossiersEnfants,
@@ -11,8 +13,14 @@ import {
 } from '@/features/exploitation/services/dossiersDeContenus';
 import type { ContenuGroupement, Controle } from '@/features/exploitation/types';
 
-const contenu = (id: string, extra: Partial<ContenuGroupement> = {}): ContenuGroupement => ({ id, titre: id, date: '2026-01-01', ...extra });
-const entree = (extra: Partial<Controle> = {}): Controle => ({ id: 'e1', date: '2026-01-01', type: 'Casgiu', ...extra }) as Controle;
+const contenu = (id: string, extra: Partial<ContenuGroupement> = {}): ContenuGroupement => ({
+  id,
+  titre: id,
+  date: '2026-01-01',
+  ...extra,
+});
+const entree = (extra: Partial<Controle> = {}): Controle =>
+  ({ id: 'e1', date: '2026-01-01', type: 'Casgiu', ...extra }) as Controle;
 
 describe('dossiers de contenus d’une association', () => {
   it('crée un dossier à la racine puis dans un autre, et retrouve son chemin', () => {
@@ -94,5 +102,37 @@ describe('recherche dans les dossiers et contenus', () => {
   });
   it('ne trouve rien sans mot', () => {
     expect(rechercherDansLesContenus(entree, '  ')).toEqual({ dossiers: [], contenus: [] });
+  });
+});
+
+describe('dossiers touristiques', () => {
+  const entree = (id: string, dossiers: { id: string; nom: string; touristique?: boolean }[]) =>
+    ({ id, dossiers }) as unknown as Controle;
+  it('un dossier se marque touristique, et se démarque', () => {
+    const e = entree('e', [{ id: 'd1', nom: 'Route des Sens Authentiques' }]);
+    const marque = avecDossierTouristique(e, 'd1', true);
+    expect(marque.dossiers?.[0].touristique).toBe(true);
+    expect(avecDossierTouristique(marque, 'd1', false).dossiers?.[0]).toEqual({
+      id: 'd1',
+      nom: 'Route des Sens Authentiques',
+    });
+  });
+  it('un nouveau dossier peut naître touristique', () => {
+    const e = avecDossier(entree('e', []), ' Route ', undefined, true);
+    expect(e.dossiers?.[0]).toMatchObject({ nom: 'Route', touristique: true });
+    expect(avecDossier(entree('e', []), 'Autre').dossiers?.[0].touristique).toBeUndefined();
+  });
+  it('liste les dossiers touristiques de toutes les entrées, par nom', () => {
+    const liste = dossiersTouristiques([
+      entree('a', [
+        { id: '1', nom: 'Zèbre', touristique: true },
+        { id: '2', nom: 'Non' },
+      ]),
+      entree('b', [{ id: '3', nom: 'Route', touristique: true }]),
+    ]);
+    expect(liste.map((x) => [x.entree.id, x.dossier.nom])).toEqual([
+      ['b', 'Route'],
+      ['a', 'Zèbre'],
+    ]);
   });
 });

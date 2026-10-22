@@ -114,6 +114,7 @@ export const TEXTES_CONTACTS = {
     categorieRequise: 'Choisissez une catégorie.',
     circuitRequis: 'Choisissez le circuit de vente privilégié du contact.',
     rienCoche: 'Cochez « recettes », « dépenses », ou les deux.',
+    nomDejaPris: 'Un autre contact porte déjà ce nom : choisissez un nom différent, ou ouvrez ce contact.',
     ecrituresRecettes:
       'Ce contact a des ventes ou des factures émises : le côté « recettes » ne se retire pas.',
     ecrituresDepenses: 'Ce contact a des factures reçues : le côté « dépenses » ne se retire pas.',

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
+import { BoutonEnregistrer } from '@/features/sauvegarde/components/BoutonEnregistrer';
 import { SelecteursFerme } from '@/features/accueil/ferme/SelecteursFerme';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { PastilleMenus } from '@/shared/components/PastilleMenus';
@@ -35,6 +36,7 @@ export function BarreHauteFerme() {
         forme="pastille"
       />
       <BoutonDidacticiel forme="pastille" />
+      <BoutonEnregistrer />
       <PastilleMenus />
     </View>
   );

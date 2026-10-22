@@ -34,6 +34,10 @@ function definitionDesMenus(): DefinitionMenu[] {
         route: ROUTES.INFORMATIONS_EXPLOITATION,
       },
       { label: TEXTES.rappels.historique.titre, route: ROUTES.RAPPELS_HISTORIQUE },
+      { separateur: true },
+      // Enregistrer : sur Google Drive, ou dans un fichier de l'ordinateur.
+      { label: TEXTES.sauvegarde.enregistrer.menuDrive, route: ROUTES.GOOGLE_DRIVE },
+      { label: TEXTES.sauvegarde.enregistrer.menuAppareil, route: ROUTES.SAUVEGARDE_LOCALE },
     ],
   };
   const clients: DefinitionMenu = {

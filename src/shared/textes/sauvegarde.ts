@@ -14,6 +14,16 @@ export const TEXTES_SAUVEGARDE = {
       `Dernière sauvegarde il y a ${jours} jours. Vos données sont sur cet appareil seulement : sauvegardez-les dans un fichier ou sur Google Drive.`,
     bouton: 'Sauvegarder maintenant',
   },
+  /** La disquette de la capsule du haut : enregistrer les données sur Google Drive ou dans un fichier de l'appareil. */
+  enregistrer: {
+    bouton: 'Enregistrer',
+    titre: 'Enregistrer mes données',
+    surDrive: 'Sur Google Drive',
+    surAppareil: 'Sur cet appareil (fichier)',
+    /** Les entrées du menu du haut (Windows). */
+    menuDrive: 'Enregistrer sur Google Drive',
+    menuAppareil: 'Enregistrer dans un fichier',
+  },
   backup: {
     get sauvegardeTroupeauChevres() {
       return modeEntreprise() ? 'Sauvegarde de l’entreprise' : `Sauvegarde ${V().troupeau}`;

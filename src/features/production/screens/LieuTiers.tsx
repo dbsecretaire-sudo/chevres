@@ -19,6 +19,7 @@ import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { AntenneGds, estLAntenneGds } from '@/features/production/components/AntenneGds';
+import { DossiersTouristiques } from '@/features/production/components/DossiersTouristiques';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -210,6 +211,9 @@ function LieuTiersStandard() {
               />
             </BlocLignes>
           </GroupeAccueil>
+
+          {/* L'office de tourisme : les dossiers marqués touristiques (la Route des Sens Authentiques…), avec « Nouveau dossier » lié à un tiers. */}
+          {cle === 'tourisme' ? <DossiersTouristiques tiers={tiers} contacts={contacts} ouvrir={ouvrir} /> : null}
 
           {/* Le groupement sanitaire accueille les vétérinaires : leurs fiches (traitements, visites, factures) s'ouvrent d'ici. */}
           {cle === 'groupementSanitaire' ? (

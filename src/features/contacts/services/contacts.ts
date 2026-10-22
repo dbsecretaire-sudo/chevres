@@ -16,6 +16,24 @@ export interface Contact {
 
 const normaliser = (texte: string | undefined) => (texte ?? '').trim().toLowerCase();
 
+const sansAccent = (texte: string): string =>
+  texte
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/** Vrai quand un autre contact porte déjà ce nom (sans tenir compte des majuscules, des accents ni des espaces en trop) : deux contacts n'ont jamais le même nom. */
+export const nomDeContactDejaPris = (
+  contacts: readonly Pick<Contact, 'cle' | 'nom'>[],
+  nom: string,
+  sauf?: string,
+): boolean => {
+  const cherche = sansAccent(nom);
+  return !!cherche && contacts.some((c) => c.cle !== sauf && sansAccent(c.nom) === cherche);
+};
+
 /** Le nom sous lequel on retrouve un fournisseur (et ses factures) : celui de son entreprise, à défaut celui de son contact. */
 export const nomDuFournisseur = (f: Pick<Fournisseur, 'nomEntreprise' | 'nom'>): string =>
   f.nomEntreprise || f.nom;

@@ -14,6 +14,7 @@ import {
 } from '@/features/fournisseurs/repository';
 import { ImportEtablissement } from '@/features/etablissements/components/ImportEtablissement';
 import { useImportDepuisEtablissement } from '@/features/etablissements/hooks/useImportDepuisEtablissement';
+import { nomDeContactPris } from '@/features/contacts/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { ChampCategorieFournisseur } from '@/features/fournisseurs/components/ChampCategorieFournisseur';
 import { CATEGORIE_FOURNISSEUR_PAR_DEFAUT } from '@/shared/constants/fournisseurs';
@@ -43,6 +44,8 @@ export default function NouveauFournisseur() {
 
   const enregistrer = async () => {
     if (!nomEntreprise.trim()) return setErreur(TEXTES.commun.general.nomDEntrepriseRequis);
+    // Deux contacts n'ont jamais le même nom.
+    if (await nomDeContactPris(nomEntreprise.trim())) return setErreur(TEXTES.contacts.erreurs.nomDejaPris);
 
     setEnregistrement(true);
     try {

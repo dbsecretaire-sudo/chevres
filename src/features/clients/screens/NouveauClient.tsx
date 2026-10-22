@@ -13,6 +13,7 @@ import { creerClient, importerClient, listClientsDeEtablissement } from '@/featu
 import { ImportEtablissement } from '@/features/etablissements/components/ImportEtablissement';
 import { useImportDepuisEtablissement } from '@/features/etablissements/hooks/useImportDepuisEtablissement';
 import type { Client } from '@/features/clients/types';
+import { nomDeContactPris } from '@/features/contacts/repository';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -36,6 +37,9 @@ export default function NouveauClient() {
 
   const enregistrer = async () => {
     if (!nom.trim()) return setErreur(TEXTES.commun.general.nomRequis);
+    // Deux contacts n'ont jamais le même nom.
+    if (await nomDeContactPris(nomComplet({ nom: nom.trim(), prenom: prenom.trim() || undefined })))
+      return setErreur(TEXTES.contacts.erreurs.nomDejaPris);
 
     setEnregistrement(true);
     try {

@@ -18,6 +18,7 @@ import {
 import {
   avecDossier,
   avecDossierRenomme,
+  avecDossierTouristique,
   cheminDuDossier,
   contenusDuDossier,
   dossiersEnfants,
@@ -99,6 +100,13 @@ export default function DossierDuContact() {
     if (entree && actuel) await modifierEntree(entree.id, (e) => avecDossierRenomme(e, actuel.id, nom));
     await charger();
   };
+  /** Le dossier ouvert se marque touristique (ou ne l'est plus) : il se retrouve sur la page de l'office de tourisme. */
+  const basculerTouristique = async () => {
+    setMenuOuvert(false);
+    if (!entree || !actuel) return;
+    await modifierEntree(entree.id, (e) => avecDossierTouristique(e, actuel.id, !actuel.touristique));
+    await charger();
+  };
   const supprimer = async () => {
     setSuppressionOuverte(false);
     if (!entree || !actuel) return;
@@ -158,6 +166,7 @@ export default function DossierDuContact() {
         }}
       />
       <Text style={commonStyles.lineBold}>{`${chemin.map((d) => d.nom).join(' > ')} >`}</Text>
+      {chemin.some((d) => d.touristique) ? <Text style={commonStyles.note}>{D.estTouristique}</Text> : null}
 
       <View style={commonStyles.row}>
         <Button style={commonStyles.flex1} label={D.nouveauContenu} onPress={() => setTypeOuvert(true)} />
@@ -193,9 +202,6 @@ export default function DossierDuContact() {
         </View>
       )}
 
-      {!cherche && contenus.length === 0 && enfants.length === 0 ? (
-        <Text style={commonStyles.mutedItalic}>{D.dossierVide}</Text>
-      ) : null}
       {!cherche && contenus.length > 0 ? (
         <BlocLignes>
           {contenus.map((c) => (
@@ -230,6 +236,11 @@ export default function DossierDuContact() {
         visible={menuOuvert}
         onClose={() => setMenuOuvert(false)}
         options={[
+          {
+            label: actuel?.touristique ? D.retirerTouristique : D.marquerTouristique,
+            icon: 'trail-sign',
+            onPress: basculerTouristique,
+          },
           {
             label: D.renommer,
             icon: 'pencil',
