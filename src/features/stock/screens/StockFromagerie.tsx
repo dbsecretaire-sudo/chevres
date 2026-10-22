@@ -848,7 +848,7 @@ export default function StockFromagerie() {
 /** Le genre d'un article d'après sa clé (« aliment:maïs » : aliment). */
 const genreDeLaCle = (cle: string): GenreArticle => cle.split(':')[0] as GenreArticle;
 
-/** Le cadre de jeu de la grange : un fond vert foncé, un cadre de bois et un panneau vert, autour du stock. */
+/** Le cadre de jeu de la grange : un cadre de bois et un panneau beige parchemin, autour du stock, sur le fond habituel de l'application. */
 const jeu = StyleSheet.create({
   /** Le bouton sous le cadre, comme « Tout le stock » de la grange. */
   complet: {
@@ -873,7 +873,7 @@ const jeu = StyleSheet.create({
   /** Les cartes d'une rubrique et leur indication de déplacement. */
   cartesStock: { gap: 8, paddingVertical: 4 },
   indiceDeplacement: { fontSize: 13, fontWeight: '700', color: '#B8641A' },
-  fond: { flex: 1, backgroundColor: '#35541F', padding: 8 },
+  fond: { flex: 1, backgroundColor: colors.background, padding: 8 },
   cadre: { flex: 1, backgroundColor: '#E8892B', borderRadius: 26, borderWidth: 4, borderColor: '#B8641A', padding: 6 },
   panneau: { flex: 1, backgroundColor: '#FAF3E1', borderRadius: 16, overflow: 'hidden' },
 });
