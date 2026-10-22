@@ -26,6 +26,7 @@ export default function EntrepotJeu({
   sections,
   lieu,
   avecCompte,
+  sansFermer,
 }: {
   seulement?: string;
   titre?: string;
@@ -37,6 +38,8 @@ export default function EntrepotJeu({
   lieu?: string;
   /** Vrai : chaque rubrique porte en titre son compte du plan comptable (« 601100 Achats stockés — Aliments du bétail »). */
   avecCompte?: boolean;
+  /** Vrai : l'entrepôt est dans une autre page (le stock de la page Boucles) : pas de croix rouge qui ferme tout. */
+  sansFermer?: boolean;
 }) {
   const router = useRouter();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
@@ -82,7 +85,7 @@ export default function EntrepotJeu({
 
   return (
     <CadreDeJeu
-      onFermer={() => router.replace('/')}
+      onFermer={sansFermer ? undefined : () => router.replace('/')}
       onHaut={() => defiler(-PAS_DE_DEFILEMENT)}
       onBas={() => defiler(PAS_DE_DEFILEMENT)}
       onToutLeStock={() => {

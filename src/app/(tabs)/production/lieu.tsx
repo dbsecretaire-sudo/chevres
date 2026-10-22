@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { EnTeteFerme } from '@/features/accueil/ferme/EnTeteFerme';
 import TousLesAnimaux from '@/features/accueil/ferme/TousLesAnimaux';
 import LieuTiers from '@/features/production/screens/LieuTiers';
+import PageBoucles from '@/features/stock/screens/PageBoucles';
 import EntrepotJeu from '@/features/stock/screens/EntrepotJeu';
 import { CATEGORIE_INVENTAIRE, SECTION_STOCK } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
@@ -31,17 +32,6 @@ export default function Lieu() {
   // Tous les animaux : la chèvrerie (son mur et ses chèvres), puis la liste du troupeau sur tout l'écran.
   if (lieu === 'animaux') return <TousLesAnimaux />;
   // Le stock de boucles (Cheptel › Boucles) : le même cadre que la grange, avec ses boucles et leur compte ; une carte ouvre le tableau des boucles.
-  if (lieu === 'boucles')
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <EnTeteFerme />
-        <EntrepotJeu
-          avecCompte
-          lieu="boucles"
-          sections={[SECTION_STOCK.BOUCLES]}
-          titre={TEXTES.stock.boucles.stockDeBoucles}
-        />
-      </View>
-    );
+  if (lieu === 'boucles') return <PageBoucles />;
   return lieu === 'entrepot' ? <EntrepotJeu /> : <LieuTiers />;
 }

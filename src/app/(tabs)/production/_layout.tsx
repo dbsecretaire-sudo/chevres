@@ -67,10 +67,12 @@ export default function ProductionLayout() {
                   ? TEXTES.production.lieux.fromagerie.titre
                   : lieu === 'animaux'
                     ? TEXTES.production.lieux.cheptel.liens.liste.titre
-                    : TEXTES.production.titre,
+                    : lieu === 'boucles'
+                      ? TEXTES.production.lieux.documents.liens.boucles.titre
+                      : TEXTES.production.titre,
             headerLeft: enteteDuBatiment(),
-            // La grange, le stock de boucles et le stock de l'atelier ont la capsule de la ferme à la place de l'en-tête.
-            headerShown: lieu !== 'grange' && lieu !== 'boucles',
+            // La grange et le stock de l'atelier ont la capsule de la ferme à la place de l'en-tête ; la page des boucles a son en-tête.
+            headerShown: lieu !== 'grange',
           };
         }}
       />

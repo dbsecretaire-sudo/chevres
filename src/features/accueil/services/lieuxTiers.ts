@@ -293,11 +293,6 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       { cle: 'male', icone: 'male', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.MALE}` },
       { cle: 'femelle', icone: 'female', route: `${ROUTES.CHEPTEL_NOUVELLE}?sexe=${SEXE.FEMELLE}` },
       { cle: 'petit', icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE },
-      {
-        cle: 'boucles',
-        icone: 'pricetag',
-        route: ROUTES.lieu('boucles'),
-      },
     ],
   },
   documents: {
@@ -314,6 +309,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       { cle: 'carnet', icone: 'book', route: ROUTES.CHEPTEL_NAISSANCES },
       { cle: 'circulation', icone: 'paper-plane', route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION },
       { cle: 'identification', icone: 'card', route: ROUTES.DOCUMENTS_IDENTIFICATION },
+      // Les boucles : la liste à imprimer et le stock de boucles (ils ne sont plus dans le cheptel).
+      { cle: 'boucles', icone: 'pricetag', route: ROUTES.lieu('boucles') },
       { cle: 'historique', icone: 'time', route: ROUTES.CHEPTEL_HISTORIQUE },
     ],
   },

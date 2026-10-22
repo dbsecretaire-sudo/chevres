@@ -299,7 +299,10 @@ export const TEXTES_PRODUCTION = {
     },
     documents: {
       titre: 'Documents',
+      /** La page « Boucles » : la liste à imprimer, puis le stock de boucles. */
+      pageBoucles: { imprimer: 'Imprimer la liste des boucles', groupeStock: 'Stock' },
       liens: {
+        boucles: { titre: 'Boucles', aide: 'La liste à imprimer et le stock de boucles : boucles, boucles rouges, rebouclage, tiptag.' },
         carnet: { titre: 'Carnet de naissance', aide: 'Les naissances de l’année et leurs mères.' },
         dossierPac: { titre: 'Dossier PAC', aide: 'Suivi des mouvements, recensement, déclaration d’estive.' },
         circulation: { titre: 'Documents de circulation', aide: 'Ceux des animaux vivants vendus ou achetés.' },
