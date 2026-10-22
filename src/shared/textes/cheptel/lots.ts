@@ -147,6 +147,9 @@ export const lotsTextes = {
   poidsDuLot: 'Poids de tout le lot (kg)',
   poidsDuLotAide: 'Le poids total de la viande de ce lot (bon d’abattage). Il remplit le poids de la facture au client, qui ne se modifie plus.',
   poidsDesFiches: (kilos: string) => `Poids des fiches des animaux : ${kilos} kg`,
+  /** Le rappel de l'accueil : des lots d'équarrissage n'ont pas leur bon. */
+  bonsManquants: (n: number) => (n > 1 ? `${n} bons d’équarrissage à ajouter` : 'Ajouter le bon d’équarrissage'),
+  bonsManquantsDetail: 'Un lot d’équarrissage n’a pas encore son bon : joignez son scan ou sa photo (onglet Fichiers du lot).',
   dateEnlevement: 'Jour de l’enlèvement',
   numeroBon: 'N° du bon d’équarrissage',
   exempleBon: 'ex : 2026-0412',

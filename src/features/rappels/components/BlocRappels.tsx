@@ -13,6 +13,8 @@ import { anneesDesEcritures } from '@/features/comptabilite/services/documentsCi
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useLotsARappeler, type RappelDeLot } from '@/features/stock/hooks/useLotsARappeler';
 import { destinationRappel } from '@/features/rappels/services/destination';
+import { lotsSansBonEquarrissage } from '@/features/exploitation/services/lots';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -37,6 +39,8 @@ function BlocRappelsDeclarations() {
   const manquantsCirculation = useDocumentsCirculationManquants();
   const circulation = manquantsCirculation.length;
   const { settings } = useAppSettings();
+  /** Les lots d'équarrissage sans bon : rappelés tant que leur bon n'est pas joint, comme les documents de circulation. */
+  const bonsManquants = lotsSansBonEquarrissage(settings.exploitation?.lots).length;
   /** Les années (autres que celle choisie) où des documents manquent : l'accueil le dit. */
   const anneesAilleurs = settings.toutesAnnees
     ? []
@@ -45,7 +49,7 @@ function BlocRappelsDeclarations() {
   /** Le rappel de lot dont on confirme la validation. */
   const [lotAValider, setLotAValider] = useState<RappelDeLot | null>(null);
   // Les activités qui ont des rappels gardent le bloc (et son historique) même quand rien n'est à valider.
-  if (rappels.length === 0 && lots === 0 && aValider.length === 0 && genres.length === 0 && circulation === 0) return null;
+  if (rappels.length === 0 && lots === 0 && aValider.length === 0 && genres.length === 0 && circulation === 0 && bonsManquants === 0) return null;
   return (
     <View style={styles.conteneur}>
       <View style={styles.enTete}>
@@ -67,10 +71,25 @@ function BlocRappelsDeclarations() {
           </Pressable>
         </View>
       </View>
-      {rappels.length === 0 && lots === 0 && aValider.length === 0 && circulation === 0 ? (
+      {rappels.length === 0 && lots === 0 && aValider.length === 0 && circulation === 0 && bonsManquants === 0 ? (
         <Text style={commonStyles.mutedItalic}>{T.aucun}</Text>
       ) : null}
       <BlocLignes>
+        {bonsManquants > 0 ? (
+          <View style={styles.ligne}>
+            <Pressable
+              style={styles.texte}
+              onPress={() => router.push(ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.EQUARRISSAGE) as never)}
+            >
+              <View style={styles.titreLigne}>
+                <Text style={styles.libelle}>{TEXTES.cheptel.lots.bonsManquants(bonsManquants)}</Text>
+                <PastilleAlerte taille={18} />
+              </View>
+              <Text style={[styles.detail, styles.detailRetard]}>{TEXTES.cheptel.lots.bonsManquantsDetail}</Text>
+            </Pressable>
+            <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
+          </View>
+        ) : null}
         {circulation > 0 ? (
           <View style={styles.ligne}>
             <Pressable
