@@ -11,6 +11,7 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';
 import { Card } from '@/shared/components/Card';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ROUTES } from '@/shared/constants/routes';
 import { Fab } from '@/shared/components/Fab';
 import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
@@ -62,6 +63,8 @@ import {
   enregistrerLaitJour,
   positionnerArticle,
   renommerArticle,
+  masquerArticle,
+  supprimerArticle,
   roleDeLaViande,
   estLigneDuCheptel,
   niveauxDeStock,
@@ -192,6 +195,8 @@ export default function StockFromagerie() {
   const coutsAchats = coutsUnitairesAchats(achats, horsTaxes);
   /** Pour un ajout dans une liste personnalisée : cette liste. */
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
+  /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
+  const [aSupprimer, setASupprimer] = useState<ArticleAffiche | null>(null);
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
   /** Le litrage qu'on modifie (« nouveau » pour en noter un) ; la fenêtre est fermée quand il est absent. */
@@ -376,6 +381,26 @@ export default function StockFromagerie() {
     charger();
   };
 
+  /** Supprime l'article confirmé : un article ajouté disparaît, un article d'office est masqué. */
+  const retirer = async () => {
+    if (aSupprimer?.id) await supprimerArticle(aSupprimer.id);
+    else if (aSupprimer) await masquerArticle(aSupprimer.cle);
+    setASupprimer(null);
+    charger();
+  };
+
+  /**
+   * Seules les immobilisations (le matériel, les bâtiments et les listes ajoutées à cette catégorie) s'ajoutent et se suppriment dans l'inventaire : les autres
+   * articles viennent des achats et des ventes.
+   */
+  const estImmobilisation = (cle: string): boolean => {
+    const genre = genreDeLaCle(cle);
+    if (genre === GENRE_ARTICLE.MATERIEL || genre === GENRE_ARTICLE.BATIMENT) return true;
+    if (genre !== GENRE_ARTICLE.PERSONNALISE) return false;
+    const listeId = archive.articles.find((a) => a.id === cle.split(':')[1])?.listeId;
+    return (archive.listes ?? []).find((l) => l.id === listeId)?.categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS;
+  };
+
   const ouvrirAjout = (genre: GenreAjoutable, liste?: ListeInventaire) => {
     setListeAjout(liste ?? null);
     // L'article est proposé pour l'animal actif ; on peut le passer à une autre activité, ou à toutes.
@@ -417,13 +442,20 @@ export default function StockFromagerie() {
   /** Les listes d'office dont le compte n'a pas été retiré pour l'espèce. */
   const lesSectionsAffichees = sectionsAffichees(archive, fromagerie, poules, concernees);
 
-  /** Les ajouts d'une catégorie : le lait du jour (une saisie de quantité) et un article dans chaque liste ajoutée par l'utilisateur ; les articles d'office ne s'ajoutent plus. */
+  /** Les ajouts d'une catégorie : le lait du jour (une saisie de quantité) ; pour les immobilisations seulement, un article dans chacune de ses listes. */
   const ajoutsDeLaCategorie = (categorie: string): Option[] => [
     ...lesSectionsAffichees
-      .filter((x) => x.categorie === categorie && x.section === SECTION_STOCK.LAIT)
-      .map((): Option => ({ label: T.laitJour.ajouter, icon: 'add-circle', onPress: () => setLaitOuvert('nouveau') })),
+      .filter((x) => x.categorie === categorie)
+      .map(({ section, genre }): Option | null =>
+        section === SECTION_STOCK.LAIT
+          ? { label: T.laitJour.ajouter, icon: 'add-circle', onPress: () => setLaitOuvert('nouveau') }
+          : genre && genre !== GENRE_ARTICLE.BOUCLE && categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS
+            ? { label: TEXTES_AJOUT[genre].titre, icon: 'add-circle', onPress: () => ouvrirAjout(genre) }
+            : null,
+      )
+      .filter((x): x is Option => x !== null),
     ...listesVisibles
-      .filter((l) => l.categorie === categorie)
+      .filter((l) => l.categorie === categorie && categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS)
       .map((l): Option => ({
         label: T.ajouter.dansLaListe(l.nom),
         icon: 'add-circle',
@@ -638,7 +670,10 @@ export default function StockFromagerie() {
         prix={archive.prix[CLE_PRIX_LAIT]}
         avecPrix
         libellePrix={T.articleModal.prixLitre}
-        onValider={async (_nom, prix) => {
+        cleImage="lait"
+        emoji="🥛"
+        onValider={async (_nom, prix, _litres, image) => {
+          if (image) await definirImageArticle('lait', image);
           await definirPrixArticle(CLE_PRIX_LAIT, prix);
           setPrixLaitOuvert(false);
           charger();
@@ -710,6 +745,14 @@ export default function StockFromagerie() {
           article?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu') ? T.modal.litresBrocciu : undefined
         }
         onValider={valider}
+        onSupprimer={
+          article && estImmobilisation(article.cle)
+            ? () => {
+                setASupprimer(article);
+                setArticle(null);
+              }
+            : undefined
+        }
         onFermer={() => setArticle(null)}
       />
       <ArticleStockModal
@@ -737,7 +780,24 @@ export default function StockFromagerie() {
             : undefined
         }
         onValider={renommer}
+        // Seule une immobilisation se supprime.
+        onSupprimer={
+          renomme && estImmobilisation(renomme.cle)
+            ? () => {
+                setASupprimer(renomme);
+                setRenomme(null);
+              }
+            : undefined
+        }
         onAnnuler={() => setRenomme(null)}
+      />
+      <ConfirmModal
+        visible={!!aSupprimer}
+        title={T.suppression.titre}
+        message={T.suppression.message(aSupprimer?.libelle ?? '')}
+        confirmLabel={TEXTES.commun.general.supprimer}
+        onCancel={() => setASupprimer(null)}
+        onConfirm={retirer}
       />
       <NomModal
         visible={!!ajout}

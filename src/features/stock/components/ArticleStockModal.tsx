@@ -32,6 +32,8 @@ interface Props {
   libellePrix?: string;
   /** Le dessin d'origine de la carte : quand il est donné (avec `cle`), la fenêtre propose de choisir une image à sa place. */
   emoji?: string;
+  /** L'identifiant sous lequel l'image se range quand il diffère de `cle` (le lait n'a pas de tarifs par catégorie, mais une image). */
+  cleImage?: string;
   onValider: (nom: string, prix?: number, litres?: number, image?: ChoixImage) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
   onSupprimer?: () => void;
@@ -54,6 +56,7 @@ export function ArticleStockModal({
   parKg,
   libellePrix,
   emoji,
+  cleImage,
   onValider,
   onSupprimer,
   onAnnuler,
@@ -139,7 +142,7 @@ export function ArticleStockModal({
               placeholder="0"
             />
           ) : null}
-          {cle && emoji ? <ChampImageArticle cle={cle} emoji={emoji} choix={choixImage} onChoix={setChoixImage} /> : null}
+          {(cleImage ?? cle) && emoji ? <ChampImageArticle cle={(cleImage ?? cle)!} emoji={emoji} choix={choixImage} onChoix={setChoixImage} /> : null}
           {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
           <View style={commonStyles.row}>
             <Button

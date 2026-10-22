@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
+import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { Apparition } from '@/features/accueil/ferme/animations';
 import {
@@ -40,6 +41,13 @@ export function RubriquesDeCartes({
   const router = useRouter();
   /** La carte dont on change l'image (le crayon n'y est que là où l'appareil range des fichiers). */
   const [imageDe, setImageDe] = useState<CarteStock | null>(null);
+  /** La carte dont on regarde l'historique (un appui sur elle). */
+  const [historiqueDe, setHistoriqueDe] = useState<CarteStock | null>(null);
+  const ouvrirLeStock = (c: CarteStock) => {
+    const destination = `${ROUTES.COMPTABILITE_STOCKS}?onglet=${c.section}`;
+    if (origine) noterOrigine(origine, destination);
+    router.push(destination as never);
+  };
   return (
     <>
       {groupes.map((g) => (
@@ -57,17 +65,22 @@ export function RubriquesDeCartes({
                 niveau={c.niveau}
                 libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
                 onRenommer={piecesDisponibles() ? () => setImageDe(c) : undefined}
-                onPress={() => {
-                  const destination = `${ROUTES.COMPTABILITE_STOCKS}?onglet=${c.section}`;
-                  if (origine) noterOrigine(origine, destination);
-                  router.push(destination as never);
-                }}
+                // Un article : son historique ; le lait et les œufs n'ont pas de mouvements d'article, ils ouvrent l'inventaire.
+                onPress={() => (c.cle === 'lait' || c.cle === 'oeufs' ? ouvrirLeStock(c) : setHistoriqueDe(c))}
               />
             ))}
             {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
           </View>
         </View>
       ))}
+      <HistoriqueArticleModal
+        article={historiqueDe}
+        onOuvrirLeStock={() => {
+          if (historiqueDe) ouvrirLeStock(historiqueDe);
+          setHistoriqueDe(null);
+        }}
+        onFermer={() => setHistoriqueDe(null)}
+      />
       <ModaleImageArticle
         article={imageDe ? { cle: imageDe.cle, titre: imageDe.titre, emoji: imageDe.emoji } : null}
         onFermer={() => setImageDe(null)}

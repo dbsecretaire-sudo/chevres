@@ -123,6 +123,12 @@ export const TEXTES_STOCK = {
     },
   },
   /** La confirmation avant de supprimer un article de l'inventaire. */
+  /** L'historique d'un article, ouvert d'un appui sur sa carte dans la grange. */
+  historiqueArticle: {
+    titre: 'Historique',
+    aucun: 'Aucun mouvement pour cet article.',
+    ouvrirLeStock: 'Ouvrir dans l’inventaire',
+  },
   suppression: {
     titre: 'Supprimer cet article ?',
     message: (nom: string) => `« ${nom} » disparaît de la liste, avec ses mouvements.`,

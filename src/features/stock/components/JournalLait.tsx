@@ -37,6 +37,7 @@ export function JournalLait({
   const carteBilan = (
     <View style={grilleDeCartes}>
       <CarteDeStock
+        cle="lait"
         rang={0}
         large
         emoji="🥛"
