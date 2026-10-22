@@ -191,6 +191,8 @@ export function useFermeAccueil() {
     lotsARappeler: aRappeler + aValider.length,
     /** Les animaux en délai d'attente (lait et viande confondus). */
     delais: sante.nombreLait + sante.nombreViande,
+    /** Le stock d'une visite ou d'une commande des jours qui viennent manque (voir rappelsStockATourisme). */
+    stockManquant: analyses.some((r) => r.genre === GENRE_RAPPEL.STOCK_A_PREVOIR && r.enRetard),
     nombreDeRappels: rappels.length + envois.length + analyses.length + (aRappeler > 0 ? 1 : 0) + aValider.length,
   };
 }

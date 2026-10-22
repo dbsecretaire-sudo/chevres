@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { Batiment, type PaletteDeBatiment } from '@/features/accueil/ferme/Batiment';
 import { DecorPiqueNique, NuagesBlancs } from '@/features/accueil/ferme/DecorPiqueNique';
@@ -44,7 +45,8 @@ export function Carrelage({ lignes = LIGNES_DU_CARRELAGE }: { lignes?: number })
 export interface ContenuDePlaque {
   titre: string;
   symboles: readonly { cle: string; emoji: string }[];
-  lignes: readonly { cle: string; texte: string }[];
+  /** `alerte` : une ligne en rouge, avec son point d'exclamation (le stock manquant d'une visite). */
+  lignes: readonly { cle: string; texte: string; alerte?: boolean }[];
 }
 
 /** Les lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande, les plats préparés, les savons. */
@@ -60,11 +62,20 @@ const lignesDeTransformation = (compte: CompteTransformation): ContenuDePlaque['
 function LignesDePlaque({ lignes, echelle }: { lignes: ContenuDePlaque['lignes']; echelle: number }) {
   return (
     <View style={styles.lignes}>
-      {lignes.map((l) => (
-        <Text key={l.cle} style={[styles.ligne, { fontSize: Math.round(12 * echelle) }]} numberOfLines={1}>
-          {l.texte}
-        </Text>
-      ))}
+      {lignes.map((l) =>
+        l.alerte ? (
+          <View key={l.cle} style={styles.ligneAlerte}>
+            <Ionicons name="alert-circle" size={Math.round(18 * echelle)} color={colors.danger} />
+            <Text style={[styles.texteAlerte, { fontSize: Math.round(12 * echelle) }]} numberOfLines={1}>
+              {l.texte}
+            </Text>
+          </View>
+        ) : (
+          <Text key={l.cle} style={[styles.ligne, { fontSize: Math.round(12 * echelle) }]} numberOfLines={1}>
+            {l.texte}
+          </Text>
+        ),
+      )}
     </View>
   );
 }
@@ -304,6 +315,8 @@ const styles = StyleSheet.create({
   titre: { fontSize: 13, fontWeight: '800', color: colors.primaryDark, textAlign: 'center' },
   lignes: { alignItems: 'flex-start', gap: 2, flexShrink: 1 },
   ligne: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
+  ligneAlerte: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  texteAlerte: { color: colors.danger, fontStyle: 'italic', fontWeight: '600', flexShrink: 1 },
   herbe: { backgroundColor: '#DCEBC4' },
   // La fromagerie se colle au cadre (côtés et bas) : seule la plaque garde ses marges.
   notreCote: { justifyContent: 'flex-end', paddingTop: MARGE },

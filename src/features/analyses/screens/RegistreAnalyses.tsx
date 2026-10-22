@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { verdictDeLAnalyse, type Verdict } from '@/features/analyses/services/analysesProduits';
@@ -14,7 +14,10 @@ import type { ProduitAnalyse } from '@/features/settings/settings';
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
+import { exporterRegistreAnalysesPdf } from '@/features/export/registreAnalysesPdf';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { Button } from '@/shared/components/Button';
+import { OptionsModal } from '@/shared/components/OptionsModal';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -44,6 +47,11 @@ export default function RegistreAnalyses() {
   const router = useRouter();
   const { settings } = useAppSettings();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
+  const [impression, setImpression] = useState(false);
+  const imprimer = (liste: readonly ProduitAnalyse[]) => {
+    setImpression(false);
+    exporterRegistreAnalysesPdf(liste).catch((e: unknown) => Alert.alert(R.erreurImpression, e instanceof Error ? e.message : ''));
+  };
   useFocusEffect(
     useCallback(() => {
       lireArchiveStock()
@@ -58,6 +66,8 @@ export default function RegistreAnalyses() {
   return (
     <Screen>
       <Text style={commonStyles.note}>{R.intro}</Text>
+      {/* Une page à garder : une ligne par analyse (rien à signaler, ou à signaler), pour un produit ou pour tous. */}
+      <Button variant="secondary" label={R.imprimer} onPress={() => setImpression(true)} />
       {produits.map((produit: ProduitAnalyse) => {
         const fabrications = archive ? fabricationsDuRegistre(archive, analyses, produit) : [];
         const horsLots = analysesSansFabrication(analyses, produit, fabrications);
@@ -118,6 +128,19 @@ export default function RegistreAnalyses() {
           </GroupeAccueil>
         );
       })}
+      <OptionsModal
+        visible={impression}
+        onClose={() => setImpression(false)}
+        title={R.imprimerQuoi}
+        options={[
+          ...produits.map((p) => ({
+            label: T.produits[p].titre,
+            icon: 'print-outline' as const,
+            onPress: () => imprimer([p]),
+          })),
+          { label: R.imprimerTout, icon: 'documents-outline' as const, onPress: () => imprimer(produits) },
+        ]}
+      />
       <GroupeAccueil titre={R.laitTitre}>
         <BlocLignes>
           <ListRow

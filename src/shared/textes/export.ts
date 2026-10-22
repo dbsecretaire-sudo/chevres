@@ -74,6 +74,31 @@ export const TEXTES_EXPORT = {
   /** Les PDF : bandeau, chiffres clés, tableaux de synthèse (le détail ligne à ligne est dans les exports Excel). */
   pdf: {
     edite: (date: string) => `Édité le ${date}`,
+    /** Le registre des analyses : une ligne par analyse, sans le détail des résultats. */
+    registreAnalyses: {
+      titre: 'Registre des analyses',
+      titreProduit: (produit: string) => `Registre des analyses : ${produit}`,
+      edite: (date: string) => `Édité le ${date}`,
+      analyseDu: (date: string) => `Analyse du ${date}`,
+      fabriqueLe: (date: string) => `Fabriqué le ${date}`,
+      aucuneAnalyse: 'Aucune analyse enregistrée.',
+      sansAnalyse: 'Fabrications sans analyse :',
+      colonnes: {
+        analyse: 'Analyse',
+        fabrication: 'Fabrication',
+        produit: 'Produit',
+        lots: 'Lots',
+        laboratoire: 'Laboratoire',
+        rapport: 'N° du rapport',
+        resultat: 'Résultat',
+      },
+      resultat: {
+        rien: 'Rien à signaler',
+        asignaler: 'À signaler',
+        nonJuge: 'Non jugé',
+        aAnalyser: 'À analyser',
+      },
+    },
     annee: {
       sousTitre: (annee: number) => `Année ${annee}`,
       cartes: {

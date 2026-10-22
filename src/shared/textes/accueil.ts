@@ -47,6 +47,7 @@ export const TEXTES_ACCUEIL = {
       visitesAVenir: (n: number) => `${n} ${n === 1 ? 'visite à venir' : 'visites à venir'}`,
       visiteurs: (n: number) => `${n} ${n === 1 ? 'visiteur' : 'visiteurs'}`,
       recettes: (montant: string) => `${montant} de recettes`,
+      stockManquant: 'Stock manquant !',
       entrer: 'Ouvrir les visites de la ferme',
     },
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */

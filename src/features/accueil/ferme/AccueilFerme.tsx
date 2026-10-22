@@ -392,6 +392,10 @@ export default function AccueilFerme() {
                   { cle: 'aVenir', texte: TEXTES.accueil.ferme.agritourisme.visitesAVenir(f.agritourisme.aVenir) },
                   { cle: 'visiteurs', texte: TEXTES.accueil.ferme.agritourisme.visiteurs(f.agritourisme.visiteurs) },
                   { cle: 'recettes', texte: TEXTES.accueil.ferme.agritourisme.recettes(formatMontant(f.agritourisme.recettes)) },
+                  // Le stock d'une visite ou d'une commande des jours qui viennent manque : le rappel (« Stock à prévoir ») le détaille.
+                  ...(f.stockManquant
+                    ? [{ cle: 'stock', texte: TEXTES.accueil.ferme.agritourisme.stockManquant, alerte: true }]
+                    : []),
                 ],
               }}
               nomBatiment={TEXTES.accueil.ferme.agritourisme.batiment}

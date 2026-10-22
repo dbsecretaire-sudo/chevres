@@ -262,3 +262,13 @@ describe('le travail du produit compte aussi les plats et les savons', () => {
     expect(c).toMatchObject({ plats: 4, savons: 6 });
   });
 });
+
+describe('registre des analyses imprimé', () => {
+  it('dit en un mot si l’analyse a quelque chose à signaler', async () => {
+    const { motDeLAnalyse } = await import('@/features/export/registreAnalysesPdf');
+    expect(motDeLAnalyse({ produit: 'savon', resultats: { flore_totale: 100, candida: 'absence' } })).toBe('Rien à signaler');
+    expect(motDeLAnalyse({ produit: 'savon', resultats: { candida: 'presence' } })).toBe('À signaler');
+    expect(motDeLAnalyse({ produit: 'fromage', resultats: { staphylocoques: 50_000 } })).toBe('À signaler');
+    expect(motDeLAnalyse({ produit: 'charcuterie', resultats: { ecoli: 12 } })).toBe('Non jugé');
+  });
+});
