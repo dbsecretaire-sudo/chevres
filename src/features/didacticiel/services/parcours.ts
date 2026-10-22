@@ -233,7 +233,7 @@ export function parcoursDeCas(): Parcours[] {
       schema: ['boucle', 'animal', 'pac', 'envoi'],
       etapes: [
         etape('1', 'J’achète des boucles', 'La facture d’achat des boucles (ou des tiptag) les ajoute à l’inventaire.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue')),
-        etape('2', 'L’inventaire des boucles', 'Les boucles, boucles rouges et tiptag, à poser ou posés. Un tiptag est destiné à l’abattoir : c’est toujours un cabri.', 'Cheptel › Boucles', ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)),
+        etape('2', 'L’inventaire des boucles', 'Les boucles, boucles rouges et tiptag, à poser ou posés. Un tiptag est destiné à l’abattoir : c’est toujours un cabri.', 'Cheptel › Boucles', ROUTES.lieu('boucles')),
         etape('3', 'Je pose une boucle', 'La boucle se pose à la naissance du petit, ou depuis la fiche de l’animal (bouclage) : elle est alors marquée posée.', 'Cheptel › Naissances › + ou Cheptel › Animaux › un animal', ROUTES.CHEPTEL_NAISSANCE_NOUVELLE),
         etape('4', 'Les contrôles des animaux', 'Les contrôles de l’ASP : identification, registre.', 'Cheptel › Contrôles des animaux', ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX)),
         etape('5', 'Le dossier PAC', 'Le suivi des mouvements, les bordereaux de perte, le recensement annuel et la déclaration d’estive, prêts à imprimer ou à envoyer.', 'Cheptel › Dossier PAC', ROUTES.CHEPTEL_DOSSIER_PAC),

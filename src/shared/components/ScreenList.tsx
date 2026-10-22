@@ -12,15 +12,18 @@ export function Screen({
   children,
   scroll = true,
   avecBordBas = false,
-}: PropsWithChildren<{ scroll?: boolean; avecBordBas?: boolean }>) {
+  transparent = false,
+}: PropsWithChildren<{ scroll?: boolean; avecBordBas?: boolean; transparent?: boolean }>) {
+  // Transparent : l'écran laisse voir le fond de ce qui l'entoure (le panneau vert du cadre de jeu du stock).
+  const fond = transparent ? { backgroundColor: 'transparent' } : commonStyles.screenBg;
   return (
-    <SafeAreaView style={commonStyles.screenBg} edges={avecBordBas ? ['bottom'] : []}>
+    <SafeAreaView style={fond} edges={avecBordBas ? ['bottom'] : []}>
       {scroll ? (
-        <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.content}>
+        <ScrollView style={fond} contentContainerStyle={styles.content}>
           {children}
         </ScrollView>
       ) : (
-        <View style={[commonStyles.screenBg, styles.content]}>{children}</View>
+        <View style={[fond, styles.content]}>{children}</View>
       )}
     </SafeAreaView>
   );

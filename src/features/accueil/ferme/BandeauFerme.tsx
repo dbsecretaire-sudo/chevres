@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useBandeauFerme } from '@/features/accueil/ferme/useBandeauFerme';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
 import { effacerOrigine } from '@/shared/navigation/origineRetour';
@@ -110,7 +109,7 @@ export function BandeauFerme({ onRappels }: Props) {
         badge={boucles?.tiptag ? `+${boucles.tiptag}` : undefined}
         couleur={colors.accent}
         libelle={T.boucles}
-        route={ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES)}
+        route={ROUTES.lieu('boucles')}
         echelle={echelle}
       />
       <Pastille

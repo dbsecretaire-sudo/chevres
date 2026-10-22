@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { emojiDeLaCategorie, nombreEnStock } from '@/features/stock/services/entrepotJeu';
+import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
 import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
@@ -23,29 +24,53 @@ export default function EntrepotJeu({
   seulement,
   titre,
   sauf,
+  sections,
+  lieu,
+  avecCompte,
 }: {
   seulement?: string;
   titre?: string;
   /** Les rubriques du stock (leur section) qu'on ne montre pas : la grange n'a pas le stock de boucles. */
   sauf?: readonly string[];
+  /** Seulement ces rubriques du stock (leur section), de toutes les catégories, dans cet ordre : le stock de boucles, le stock de l'atelier. Sans onglets. */
+  sections?: readonly string[];
+  /** La page où l'on est (le lieu) : la flèche de retour des pages qu'elle ouvre y ramène. */
+  lieu?: string;
+  /** Vrai : chaque rubrique porte en titre son compte du plan comptable (« 601100 Achats stockés — Aliments du bétail »). */
+  avecCompte?: boolean;
 }) {
   const router = useRouter();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
   // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
   // La page où l'on est : la grange ou l'entrepôt ; la flèche de retour des pages qu'elle ouvre y ramène.
-  const origine = ROUTES.lieu(seulement ? 'grange' : 'entrepot');
+  const origine = ROUTES.lieu(lieu ?? (seulement ? 'grange' : 'entrepot'));
+  /** Une page sans onglets : une seule catégorie (la grange) ou des rubriques choisies. */
+  const sansOnglets = !!seulement || !!sections;
   const categories = seulement ? toutes.filter((c) => c.categorie === seulement) : toutes;
   const [onglet, setOnglet] = useState<string | null>(null);
   const defilement = useRef<ScrollView>(null);
   const position = useRef(0);
 
   const actuelle = categories.find((c) => c.categorie === onglet) ?? categories[0];
-  const groupesDeLaCategorie = actuelle ? (groupesParCategorie.get(actuelle.categorie) ?? []) : [];
-  const groupes = sauf
+  const groupesDeLaCategorie = sections
+    ? sections.flatMap((s) =>
+        toutes.flatMap((c) => groupesParCategorie.get(c.categorie) ?? []).filter((g) => g.cle === s),
+      )
+    : actuelle
+      ? (groupesParCategorie.get(actuelle.categorie) ?? [])
+      : [];
+  const sansExclues = sauf
     ? groupesDeLaCategorie
         .map((g) => ({ ...g, cartes: g.cartes.filter((c) => !sauf.includes(c.section)) }))
         .filter((g) => g.cartes.length > 0)
     : groupesDeLaCategorie;
+  // Le compte du plan comptable de la rubrique, en titre : « 601500 Boucles d'identification ».
+  const groupes = avecCompte
+    ? sansExclues.map((g) => {
+        const compte = COMPTE_PAR_SECTION_INVENTAIRE[g.cle as keyof typeof COMPTE_PAR_SECTION_INVENTAIRE];
+        return compte ? { ...g, titre: `${compte.numero} ${compte.libelle}` } : g;
+      })
+    : sansExclues;
   const defiler = (pas: number) => {
     position.current = Math.max(0, position.current + pas);
     defilement.current?.scrollTo({ y: position.current, animated: true });
@@ -68,7 +93,7 @@ export default function EntrepotJeu({
           <Ionicons name="close" size={30} color={colors.blanc} />
         </Pressable>
         <View style={styles.panneau}>
-          {seulement ? null : (
+          {sansOnglets ? null : (
             <View style={styles.tetes}>
               <ScrollView
                 horizontal
@@ -100,9 +125,9 @@ export default function EntrepotJeu({
               </ScrollView>
             </View>
           )}
-          {actuelle ? (
-            <Text style={[styles.titre, seulement ? { paddingRight: 44 } : null]} numberOfLines={1}>
-              {titre ?? TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom)}
+          {actuelle || sections ? (
+            <Text style={[styles.titre, sansOnglets ? { paddingRight: 44 } : null]} numberOfLines={1}>
+              {titre ?? (actuelle ? TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom) : '')}
             </Text>
           ) : null}
           <View style={styles.corps}>

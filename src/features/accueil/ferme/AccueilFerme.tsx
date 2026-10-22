@@ -76,7 +76,7 @@ const ROUTE_DIRECTE: Record<string, string> = {
   qualiteLait: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
   // La gestion du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit, et le stock de la fromagerie.
   reserver: ROUTES.COMMERCIAL_COMMANDE,
-  stockFromagerie: ROUTES.lieu('fromagerie'),
+  stockFromagerie: ROUTES.COMPTABILITE_STOCKS,
   // Le côté Agritourisme : les intervenants (visiteurs, groupes, office de tourisme, repas) et les pages de la gestion (visites, formules, tarifs, ventes, rentabilité).
   visiteurs: ROUTES.lieu('visiteurs'),
   groupesVisiteurs: ROUTES.lieu('groupesVisiteurs'),
@@ -389,7 +389,7 @@ export default function AccueilFerme() {
           ) : (
             <SceneTransformation
               compte={f.transformation}
-              onAppui={() => ouvrir(ROUTES.lieu('fromagerie'))}
+              onAppui={() => ouvrir(ROUTES.COMPTABILITE_STOCKS)}
               intervenants={intervenants}
               gestion={gestion}
               onMaison={surMaison}

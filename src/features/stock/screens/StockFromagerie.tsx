@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   CATEGORIES,
   SECTIONS,
@@ -18,9 +18,8 @@ import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
-import { ListeReordonnable } from '@/shared/components/ListeReordonnable';
+import { ListeReordonnable, type GestesDeLigne } from '@/shared/components/ListeReordonnable';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
-import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
@@ -77,6 +76,7 @@ import {
   type ArticleAffiche,
   type FiltreStock,
 } from '@/features/stock/services/stock';
+import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/features/stock/types';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
@@ -131,7 +131,7 @@ export default function StockFromagerie() {
   // La fromagerie n'existe que pour des chèvres ou des brebis ; les aliments et l'entretien sont là pour toute exploitation.
   // Un lien peut ouvrir directement un onglet.
   const router = useRouter();
-  const { especes, especeActive, filtreCourant, setFiltre, choisirFiltre, concernees, fromagerie, poules } =
+  const { especes, especeActive, filtreCourant, setFiltre, concernees, fromagerie, poules } =
     useFiltreEspeceStock();
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
@@ -242,12 +242,14 @@ export default function StockFromagerie() {
   /** Vrai quand un des articles de la liste a une quantité négative (une production ou un achat n'a pas été noté). */
   const aUnNegatif = (articles: ArticleAffiche[]) => articles.some((a) => (niveaux.get(a.cle) ?? 0) < 0);
 
-  const ligne = (a: ArticleAffiche, poignee: ReactNode) => {
+  const ligne = (a: ArticleAffiche, _poignee: ReactNode, gestes?: GestesDeLigne) => {
     const niveau = niveaux.get(a.cle) ?? 0;
     return (
       <ListRow
         key={a.cle}
         title={a.libelle}
+        // Le dessin de l'article, le même que sa carte à la grange.
+        emoji={emojiDeLArticle(genreDeLaCle(a.cle), a.libelle)}
         subtitle={
           niveau < 0 || (!a.prix && coutsAchats[a.cle]) ? (
             <>
@@ -274,9 +276,11 @@ export default function StockFromagerie() {
             <Pressable onPress={() => setRenomme(a)} hitSlop={8} accessibilityLabel={T.renommer.modifier}>
               <Ionicons name="pencil" size={18} color={colors.primary} />
             </Pressable>
-            {poignee}
           </View>
         }
+        // Un appui long prend la ligne : elle frémit, et on la glisse à sa place.
+        onLongPress={gestes?.onLongPress}
+        onPressOut={gestes?.onPressOut}
         // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
         onPress={
           estLigneDuCheptel(a.cle)
@@ -306,6 +310,7 @@ export default function StockFromagerie() {
       <ListRow
         key={a.cle}
         title={a.libelle}
+        emoji={emojiDeLArticle(GENRE_ARTICLE.BOUCLE, a.libelle)}
         subtitle={
           remplacement
             ? T.boucles.resumeRemplacement(niveau, posees)
@@ -498,10 +503,11 @@ export default function StockFromagerie() {
         }));
 
   return (
-    <Screen scroll={false}>
+    <View style={jeu.fond}>
+      <View style={jeu.cadre}>
+        <View style={jeu.panneau}>
+    <Screen scroll={false} transparent>
       <ScrollView contentContainerStyle={commonStyles.listFab} scrollEnabled={!glisse}>
-        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={choisirFiltre} />
-
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
             const listes = lesSectionsAffichees.filter((x) => x.categorie === categorie);
@@ -829,5 +835,18 @@ export default function StockFromagerie() {
         }
       />
     </Screen>
+        </View>
+      </View>
+    </View>
   );
 }
+
+/** Le genre d'un article d'après sa clé (« aliment:maïs » : aliment). */
+const genreDeLaCle = (cle: string): GenreArticle => cle.split(':')[0] as GenreArticle;
+
+/** Le cadre de jeu de la grange : un fond vert foncé, un cadre de bois et un panneau vert, autour du stock. */
+const jeu = StyleSheet.create({
+  fond: { flex: 1, backgroundColor: '#35541F', padding: 12 },
+  cadre: { flex: 1, backgroundColor: '#E8892B', borderRadius: 26, borderWidth: 4, borderColor: '#B8641A', padding: 10 },
+  panneau: { flex: 1, backgroundColor: '#8DBA3F', borderRadius: 16, overflow: 'hidden' },
+});

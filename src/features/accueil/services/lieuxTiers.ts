@@ -290,7 +290,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       {
         cle: 'boucles',
         icone: 'pricetag',
-        route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
+        route: ROUTES.lieu('boucles'),
       },
       { cle: 'carnet', icone: 'book', route: ROUTES.CHEPTEL_NAISSANCES },
     ],

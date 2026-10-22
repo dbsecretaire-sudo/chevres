@@ -69,8 +69,8 @@ export default function ProductionLayout() {
                     ? TEXTES.production.lieux.cheptel.liens.liste.titre
                     : TEXTES.production.titre,
             headerLeft: enteteDuBatiment(),
-            // La grange a la capsule de la ferme à la place de l'en-tête.
-            headerShown: lieu !== 'grange',
+            // La grange, le stock de boucles et le stock de l'atelier ont la capsule de la ferme à la place de l'en-tête.
+            headerShown: lieu !== 'grange' && lieu !== 'boucles',
           };
         }}
       />

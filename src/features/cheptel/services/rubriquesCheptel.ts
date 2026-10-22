@@ -63,7 +63,7 @@ export function groupesCheptel(avecDossierPac: boolean): GroupeRubrique[] {
           titre: L.boucles.titre,
           aide: L.boucles.aide,
           icone: 'pricetag',
-          route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
+          route: ROUTES.lieu('boucles'),
         },
         {
           cle: 'controles',

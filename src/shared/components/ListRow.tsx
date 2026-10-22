@@ -11,6 +11,9 @@ interface Props {
   subtitle?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
+  /** Un appui long (la ligne d'une liste qu'on réordonne) : il n'ouvre pas la ligne. */
+  onLongPress?: () => void;
+  onPressOut?: () => void;
   /** Texte du titre en gris (une ligne inactive). */
   grise?: boolean;
   /** Met la ligne en évidence (la réservation qu'on est venu voir). */
@@ -32,6 +35,8 @@ export function ListRow({
   subtitle,
   trailing,
   onPress,
+  onLongPress,
+  onPressOut,
   grise,
   surlignee,
   actif,
@@ -44,6 +49,8 @@ export function ListRow({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      onPressOut={onPressOut}
       style={({ pressed }) => [
         styles.rowCard,
         dansBloc && styles.rowDansBloc,

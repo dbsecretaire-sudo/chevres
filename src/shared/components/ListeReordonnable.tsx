@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { PanResponder, View } from 'react-native';
+import { Animated, PanResponder, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
@@ -46,12 +46,43 @@ function Poignee({ onDebut, onDeplacement, onFin, children }: PoigneeProps) {
   );
 }
 
+/** Ce qu'une ligne branche sur son appui pour qu'un appui long la sélectionne : `onLongPress` la prend en main, `onPressOut` la repose si l'on ne la glisse pas. */
+export interface GestesDeLigne {
+  onLongPress: () => void;
+  onPressOut: () => void;
+}
+
+/** La ligne tenue au doigt frémit légèrement : on voit qu'elle est prise. */
+function Frisson({ actif, children }: { actif: boolean; children: ReactNode }) {
+  const [valeur] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!actif) {
+      valeur.setValue(0);
+      return;
+    }
+    const boucle = Animated.loop(
+      Animated.sequence([
+        Animated.timing(valeur, { toValue: 1, duration: 90, useNativeDriver: false }),
+        Animated.timing(valeur, { toValue: -1, duration: 180, useNativeDriver: false }),
+        Animated.timing(valeur, { toValue: 0, duration: 90, useNativeDriver: false }),
+      ]),
+    );
+    boucle.start();
+    return () => boucle.stop();
+  }, [actif, valeur]);
+  const rotation = valeur.interpolate({ inputRange: [-1, 1], outputRange: ['-0.5deg', '0.5deg'] });
+  return <Animated.View style={{ transform: [{ rotate: rotation }] }}>{children}</Animated.View>;
+}
+
 interface Props<T> {
   elements: T[];
   /** L'identifiant stable d'un élément. */
   cle: (element: T) => string;
-  /** La ligne d'un élément ; `poignee` est à placer où l'on veut sur la ligne (au bout, par exemple). */
-  ligne: (element: T, poignee: ReactNode) => ReactNode;
+  /**
+   * La ligne d'un élément. `poignee` est à placer où l'on veut sur la ligne (au bout, par exemple) : on la garde appuyée et on glisse. Ou bien la ligne branche
+   * `gestes` sur son appui : un appui long la sélectionne (elle frémit), puis on la glisse ; plus de poignée à dessiner.
+   */
+  ligne: (element: T, poignee: ReactNode, gestes: GestesDeLigne) => ReactNode;
   /** Appelé quand une ligne a été lâchée à une autre place (index de destination dans la liste). */
   onDeplacer: (cle: string, nouvelIndex: number) => void;
   /** Dit si un glissement est en cours : la page qui contient la liste doit alors cesser de défiler. */
@@ -65,6 +96,9 @@ interface Props<T> {
 export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGlisse }: Props<T>) {
   const [hauteurs, setHauteurs] = useState<Record<string, number>>({});
   const [actif, setActif] = useState<{ cle: string; dy: number } | null>(null);
+  /** La ligne prise par un appui long, et vrai quand le glissement a pris le geste (alors la fin de l'appui ne la repose pas). */
+  const prise = useRef<string | null>(null);
+  const glissement = useRef(false);
 
   const cles = elements.map(cle);
 
@@ -88,6 +122,8 @@ export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGliss
 
   const terminer = (c: string, dy: number) => {
     const depart = cles.indexOf(c);
+    prise.current = null;
+    glissement.current = false;
     setActif(null);
     onGlisse?.(false);
     if (Math.abs(dy) < SEUIL_GLISSEMENT) {
@@ -97,12 +133,56 @@ export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGliss
     if (cible !== depart) onDeplacer(c, cible);
   };
 
+  /** Un appui long : la ligne est prise, la page cesse de défiler. */
+  const prendre = (c: string) => {
+    prise.current = c;
+    glissement.current = false;
+    setActif({ cle: c, dy: 0 });
+    onGlisse?.(true);
+  };
+  /** La fin d'un appui : la ligne prise qu'on n'a pas glissée est reposée. */
+  const poser = (c: string) => {
+    if (prise.current !== c || glissement.current) return;
+    prise.current = null;
+    setActif(null);
+    onGlisse?.(false);
+  };
+  // Une fois la ligne prise, le glissement du doigt (sur la ligne ou ailleurs dans la liste) la déplace : la liste prend le geste à la ligne.
+  const rappels = useRef({ deplacer: (_dy: number) => {}, finir: (_dy: number) => {} });
+  useEffect(() => {
+    rappels.current = {
+      deplacer: (dy) => {
+        if (prise.current) setActif({ cle: prise.current, dy });
+      },
+      finir: (dy) => {
+        if (prise.current) terminer(prise.current, dy);
+      },
+    };
+  });
+  // eslint-disable-next-line react-hooks/refs -- les gestes lisent les rappels quand ils arrivent, jamais pendant l'affichage
+  const [pan] = useState(() =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponderCapture: () => prise.current !== null,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: () => {
+        glissement.current = true;
+      },
+      onPanResponderMove: (_, geste) => rappels.current.deplacer(geste.dy),
+      onPanResponderRelease: (_, geste) => rappels.current.finir(geste.dy),
+      onPanResponderTerminate: () => rappels.current.finir(0),
+    }),
+  );
+
   const indexActif = actif ? cles.indexOf(actif.cle) : -1;
   const cibleActive = actif ? indexCible(indexActif, actif.dy) : -1;
   const hauteurActive = actif ? (hauteurs[actif.cle] ?? 0) + ECART_LIGNES : 0;
 
   return (
+    <View {...pan.panHandlers}>
     <BlocListe>
+      {/* Les gestes de chaque ligne ne lisent leurs refs que lorsqu'ils arrivent (appui long, fin d'appui), jamais pendant l'affichage. */}
+      {/* eslint-disable-next-line react-hooks/refs */}
       {elements.map((element, i) => {
         const c = cles[i];
         const enDeplacement = actif?.cle === c;
@@ -127,22 +207,26 @@ export function ListeReordonnable<T>({ elements, cle, ligne, onDeplacer, onGliss
               enDeplacement && styles.enDeplacement,
             ]}
           >
-            {ligne(
-              element,
-              <Poignee
-                onDebut={() => {
-                  setActif({ cle: c, dy: 0 });
-                  onGlisse?.(true);
-                }}
-                onDeplacement={(dy) => setActif({ cle: c, dy })}
-                onFin={(dy) => terminer(c, dy)}
-              >
-                <Ionicons name="swap-vertical" size={22} color={colors.textMuted} />
-              </Poignee>,
-            )}
+            <Frisson actif={enDeplacement}>
+              {ligne(
+                element,
+                <Poignee
+                  onDebut={() => {
+                    setActif({ cle: c, dy: 0 });
+                    onGlisse?.(true);
+                  }}
+                  onDeplacement={(dy) => setActif({ cle: c, dy })}
+                  onFin={(dy) => terminer(c, dy)}
+                >
+                  <Ionicons name="swap-vertical" size={22} color={colors.textMuted} />
+                </Poignee>,
+                { onLongPress: () => prendre(c), onPressOut: () => poser(c) },
+              )}
+            </Frisson>
           </View>
         );
       })}
     </BlocListe>
+    </View>
   );
 }

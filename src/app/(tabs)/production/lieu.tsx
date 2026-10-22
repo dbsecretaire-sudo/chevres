@@ -1,8 +1,7 @@
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { EnTeteFerme } from '@/features/accueil/ferme/EnTeteFerme';
 import TousLesAnimaux from '@/features/accueil/ferme/TousLesAnimaux';
-import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import LieuTiers from '@/features/production/screens/LieuTiers';
 import EntrepotJeu from '@/features/stock/screens/EntrepotJeu';
 import { CATEGORIE_INVENTAIRE, SECTION_STOCK } from '@/shared/constants/stock';
@@ -21,6 +20,7 @@ export default function Lieu() {
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <EnTeteFerme />
         <EntrepotJeu
+          avecCompte
           seulement={CATEGORIE_INVENTAIRE.MATIERES_PREMIERES}
           // Le stock de boucles n'est pas à la grange : il est avec les boucles (Cheptel › Boucles).
           sauf={[SECTION_STOCK.BOUCLES]}
@@ -30,12 +30,18 @@ export default function Lieu() {
     );
   // Tous les animaux : la chèvrerie (son mur et ses chèvres), puis la liste du troupeau sur tout l'écran.
   if (lieu === 'animaux') return <TousLesAnimaux />;
-  // La fromagerie : les cartes de ce qu'on y fabrique et garde, sous l'en-tête habituel des pages.
-  if (lieu === 'fromagerie')
+  // Le stock de boucles (Cheptel › Boucles) : le même cadre que la grange, avec ses boucles et leur compte ; une carte ouvre le tableau des boucles.
+  if (lieu === 'boucles')
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
-        <TransformationInterieure />
-      </ScrollView>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <EnTeteFerme />
+        <EntrepotJeu
+          avecCompte
+          lieu="boucles"
+          sections={[SECTION_STOCK.BOUCLES]}
+          titre={TEXTES.stock.boucles.stockDeBoucles}
+        />
+      </View>
     );
   return lieu === 'entrepot' ? <EntrepotJeu /> : <LieuTiers />;
 }
