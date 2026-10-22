@@ -87,8 +87,9 @@ export function totalAPreparer(
   return [...parArticle.values()].sort((a, b) => a.libelle.localeCompare(b.libelle));
 }
 
-/** Vrai pour une ligne de viande ou de charcuterie (une ligne de l'inventaire « viande »), sinon c'est un fromage. */
-export const estLigneDeViande = (article: string): boolean => article.startsWith(`${GENRE_ARTICLE.VIANDE}:`);
+/** Vrai pour une ligne de viande, de charcuterie ou de plat préparé (une ligne de l'inventaire « viande » ou « plat »), sinon c'est un fromage. */
+export const estLigneDeViande = (article: string): boolean =>
+  article.startsWith(`${GENRE_ARTICLE.VIANDE}:`) || article.startsWith(`${GENRE_ARTICLE.PLAT}:`);
 
 /** La vente que la livraison d'une ligne de commande enregistre : des fromages, de la viande ou de la charcuterie à la pièce, au prix de la commande. */
 export function venteDeLaLigne(

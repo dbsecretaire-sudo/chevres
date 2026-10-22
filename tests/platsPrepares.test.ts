@@ -8,9 +8,16 @@ import {
   lotsARappeler,
   lotsDePlatsUtilisant,
   numeroDeLot,
+  articleDeLaVente,
+  fromagesRequis,
+  synchroniserLotsVente,
   rappelerLots,
 } from '@/features/stock/services/lots';
-import { ajouterArticle, niveauxDeStock } from '@/features/stock/services/stock';
+import type { Vente } from '@/features/comptabilite/types';
+import { detailDuLotDePlat } from '@/features/stock/services/detailDuPlat';
+import { estLigneDeViande } from '@/features/commercial/services/commandes';
+import { ajouterArticle, consommationDeLaVente, niveauxDeStock } from '@/features/stock/services/stock';
+import { CATEGORIE_VENTE, UNITE_VENTE } from '@/shared/constants/comptabilite';
 import { FILTRE_STOCK_TOUT, GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 
 describe('plats préparés', () => {
@@ -117,5 +124,69 @@ describe('rappel d’un plat dont un ingrédient n’est pas conforme', () => {
     for (const p of (apres.lots ?? []).filter((l) => l.article === plat))
       expect(p.dateRappel).toBe('2026-10-23');
     expect(niveauxDeStock(apres.mouvements).get(plat)).toBe(0);
+  });
+});
+
+describe('vente d’un plat préparé', () => {
+  it('se vend comme la charcuterie : détail de la vente, sortie du stock, choix des lots', async () => {
+    const plat = await ajouterArticle(GENRE_ARTICLE.PLAT, 'Daube de sanglier');
+    await fabriquerPlats({
+      article: plat,
+      date: '2026-10-22',
+      quantite: 3,
+      debut: 'PD26295-1',
+      ingredients: [],
+    });
+    const archive = await lireArchiveStock();
+    const vente = {
+      id: 'v-plat',
+      date: '2026-10-25',
+      categorie: CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+      precision: 'Daube de sanglier',
+      quantite: 2,
+      unite: UNITE_VENTE.PIECE,
+      prix: 24,
+    } as Vente;
+    expect(articleDeLaVente(vente, archive)).toBe(plat);
+    expect(consommationDeLaVente(vente, archive)[0]).toEqual({ article: plat, quantite: 2 });
+    // Il a des lots en stock : la vente doit désigner les siens.
+    expect(fromagesRequis(archive, vente)).toBe(true);
+    const [un, deux] = (archive.lots ?? []).filter((l) => l.article === plat);
+    expect(fromagesRequis(archive, { ...vente, fromages: `${un.id};${deux.id}` })).toBe(false);
+    await synchroniserLotsVente({ id: vente.id, date: vente.date, fromages: `${un.id};${deux.id}` });
+    const apres = await lireArchiveStock();
+    expect((apres.lots ?? []).filter((l) => l.venteId === 'v-plat')).toHaveLength(2);
+    expect(estLigneDeViande(plat)).toBe(true);
+  });
+});
+
+describe('détail d’un lot de plat', () => {
+  it('dit la stérilisation, la durabilité et les ingrédients avec leurs lots', async () => {
+    const plat = await ajouterArticle(GENRE_ARTICLE.PLAT, 'Tourte');
+    await fabriquerFromages({
+      article: 'fromage:crottin',
+      date: '2026-09-03',
+      quantite: 2,
+      debut: 'FC2612-1',
+    });
+    const [crottin] = ((await lireArchiveStock()).lots ?? []).filter((l) => l.article === 'fromage:crottin');
+    await fabriquerPlats({
+      article: plat,
+      date: '2026-10-22',
+      quantite: 2,
+      debut: 'PT26295-1',
+      dateSterilisation: '2026-10-22',
+      ddm: '2028-10-22',
+      ingredients: [{ article: 'fromage:crottin', quantite: 1.5, lotIds: [crottin.id] }],
+    });
+    const archive = await lireArchiveStock();
+    const lotDePlat = (archive.lots ?? []).find((l) => l.article === plat)!;
+    const lignes = detailDuLotDePlat(lotDePlat, archive);
+    expect(lignes[0]).toContain('Stérilisé le');
+    expect(lignes[0]).toContain('DDM');
+    expect(lignes[1]).toContain('1,5 × Crottin');
+    expect(lignes[1]).toContain(crottin.numero);
+    // Un lot qui n'est pas un plat n'a pas de détail.
+    expect(detailDuLotDePlat(crottin, archive)).toEqual([]);
   });
 });

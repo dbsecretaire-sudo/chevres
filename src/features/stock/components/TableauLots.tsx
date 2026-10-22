@@ -12,7 +12,8 @@ import {
   lotsDeLaFabrication,
   modifierDateFabrication,
 } from '@/features/stock/services/lots';
-import type { LotFromage } from '@/features/stock/types';
+import { detailDuLotDePlat } from '@/features/stock/services/detailDuPlat';
+import type { ArchiveStock, LotFromage } from '@/features/stock/types';
 import { ETAT_LOT, TRI_LOT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { colors } from '@/shared/theme/colors';
@@ -48,9 +49,12 @@ export function TableauLots({
   onChange,
   selection,
   onBasculer,
+  archive,
 }: {
   liste: ListeLots;
   onChange: () => void;
+  /** Le stock, pour dire sous un lot de plat préparé sa stérilisation, sa durabilité et ses ingrédients. */
+  archive?: ArchiveStock | null;
   /** Le mode « réserver / facturer » : les lots choisis, et leur bascule d'un appui sur la ligne. */
   selection?: ReadonlySet<string>;
   onBasculer?: (lot: LotFromage) => void;
@@ -141,52 +145,61 @@ export function TableauLots({
         <Text style={[commonStyles.mutedItalic, styles.vide]}>{T.aucun}</Text>
       ) : (
         <ScrollView style={styles.liste} nestedScrollEnabled>
-          {lignes.map((lot, i) => (
-            <Pressable
-              key={lot.id}
-              disabled={!onBasculer}
-              onPress={() => onBasculer?.(lot)}
-              style={[
-                styles.ligne,
-                i > 0 ? styles.ligneSeparee : undefined,
-                selection?.has(lot.id) ? { backgroundColor: colors.badgeBg } : undefined,
-              ]}
-            >
-              <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>
-              <Pressable style={styles.colonneDate} hitSlop={6} onPress={() => setLotADater(lot)}>
-                <Text style={[styles.texteLigne, styles.dateModifiable]}>
-                  {formatDateShortFR(lot.dateFabrication)}
-                </Text>
-              </Pressable>
-              {etatDuLot(lot) === ETAT_LOT.RAPPELE ? (
-                <Text style={[styles.datePose, styles.colonneDate]}>{T.rappele}</Text>
-              ) : (
-                <Text style={[styles.texteLigne, styles.colonneDate]}>
-                  {lot.dateVente
-                    ? formatDateShortFR(lot.dateVente)
-                    : lot.reservation
-                      ? T.reserve
-                      : ''}
-                </Text>
-              )}
-              <Pressable
-                style={[styles.colonneMorte, rappele(lot) ? { opacity: 0.35 } : null]}
-                hitSlop={6}
-                disabled={rappele(lot)}
-                onPress={async () => {
-                  await basculerControleLot(lot.id);
-                  onChange();
-                }}
-                accessibilityLabel={T.controle}
-              >
-                <Ionicons
-                  name={lot.controleOk && !rappele(lot) ? 'checkbox' : 'square-outline'}
-                  size={22}
-                  color={colors.text}
-                />
-              </Pressable>
-            </Pressable>
-          ))}
+          {lignes.map((lot, i) => {
+            const detail = archive ? detailDuLotDePlat(lot, archive) : [];
+            return (
+              <View key={lot.id}>
+                <Pressable
+                  disabled={!onBasculer}
+                  onPress={() => onBasculer?.(lot)}
+                  style={[
+                    styles.ligne,
+                    i > 0 ? styles.ligneSeparee : undefined,
+                    selection?.has(lot.id) ? { backgroundColor: colors.badgeBg } : undefined,
+                  ]}
+                >
+                  <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>
+                  <Pressable style={styles.colonneDate} hitSlop={6} onPress={() => setLotADater(lot)}>
+                    <Text style={[styles.texteLigne, styles.dateModifiable]}>
+                      {formatDateShortFR(lot.dateFabrication)}
+                    </Text>
+                  </Pressable>
+                  {etatDuLot(lot) === ETAT_LOT.RAPPELE ? (
+                    <Text style={[styles.datePose, styles.colonneDate]}>{T.rappele}</Text>
+                  ) : (
+                    <Text style={[styles.texteLigne, styles.colonneDate]}>
+                      {lot.dateVente ? formatDateShortFR(lot.dateVente) : lot.reservation ? T.reserve : ''}
+                    </Text>
+                  )}
+                  <Pressable
+                    style={[styles.colonneMorte, rappele(lot) ? { opacity: 0.35 } : null]}
+                    hitSlop={6}
+                    disabled={rappele(lot)}
+                    onPress={async () => {
+                      await basculerControleLot(lot.id);
+                      onChange();
+                    }}
+                    accessibilityLabel={T.controle}
+                  >
+                    <Ionicons
+                      name={lot.controleOk && !rappele(lot) ? 'checkbox' : 'square-outline'}
+                      size={22}
+                      color={colors.text}
+                    />
+                  </Pressable>
+                </Pressable>
+                {/* Un plat préparé : sa stérilisation, sa durabilité minimale et ses ingrédients, sous son numéro. */}
+                {detail.map((ligneDetail) => (
+                  <Text
+                    key={ligneDetail}
+                    style={[commonStyles.note, { paddingHorizontal: 12, paddingBottom: 4 }]}
+                  >
+                    {ligneDetail}
+                  </Text>
+                ))}
+              </View>
+            );
+          })}
         </ScrollView>
       )}
       <DateFabricationModal

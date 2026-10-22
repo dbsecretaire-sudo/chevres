@@ -8,6 +8,7 @@ import {
   codeFromageDeLaVente,
   estLigneDuCheptel,
   libelleArticle,
+  lignesDeVenteDeProduits,
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock, FabricationDePlats, LotFromage, MouvementStock } from '@/features/stock/types';
@@ -161,7 +162,7 @@ export function articleDeLaVente(
   if (vente.categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE && vente.precision) {
     const espece =
       vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
-    const ligne = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).find(
+    const ligne = lignesDeVenteDeProduits(archive, espece).find(
       (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
     );
     return ligne && estArticleAvecLots(ligne.cle) ? ligne.cle : undefined;

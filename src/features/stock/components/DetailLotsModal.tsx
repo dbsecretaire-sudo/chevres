@@ -17,7 +17,7 @@ import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { commandeOuverte } from '@/features/commercial/services/commandes';
 import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
-import type { LotFromage } from '@/features/stock/types';
+import type { ArchiveStock, LotFromage } from '@/features/stock/types';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ETAT_LOT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -43,6 +43,8 @@ interface Props {
   onFermer: () => void;
   /** L'état des lots montré à l'ouverture (« Tout » par défaut ; Production ouvre sur « En stock »). */
   etatInitial?: ValeurDe<typeof ETAT_LOT>;
+  /** Le stock : un plat préparé y a ses ingrédients, sa stérilisation et sa durabilité, montrés sous chaque lot. */
+  archive?: ArchiveStock | null;
 }
 
 type Action = 'reserver' | 'facturer';
@@ -53,7 +55,7 @@ type Action = 'reserver' | 'facturer';
  * gris tant que rien n'est choisi, devient « Réserver / Facturer » : une fenêtre propose de réserver les lots, de les facturer, ou de
  * libérer leur réservation, puis demande le client.
  */
-export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onFermer, etatInitial }: Props) {
+export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onFermer, etatInitial, archive }: Props) {
   const router = useRouter();
   const liste = useListeLots(lots, article?.cle, etatInitial);
   const [choisis, setChoisis] = useState<Set<string>>(new Set());
@@ -163,7 +165,7 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
             <View style={commonStyles.gap10}>
               <FiltresLots liste={liste} />
               {choisis.size > 0 ? <Text style={commonStyles.note}>{T.nChoisis(choisis.size)}</Text> : null}
-              <TableauLots liste={liste} onChange={onChange} selection={choisis} onBasculer={basculer} />
+              <TableauLots liste={liste} onChange={onChange} selection={choisis} onBasculer={basculer} archive={archive} />
               {sansLot > 0 ? <Text style={commonStyles.mutedItalic}>{T.sansLot(sansLot)}</Text> : null}
             </View>
           ) : null}

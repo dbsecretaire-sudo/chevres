@@ -257,6 +257,12 @@ export const TEXTES_STOCK = {
     titre: (nom: string) => `Inventaire : ${nom}`,
     titreFromage: (nom: string) => `Inventaire : Fromage ${nom}`,
     etat: { tout: 'Tout', en_stock: 'En stock', vendu: 'Vendu', rappele: 'Rappelé' },
+    /** Sous le numéro d'un lot de plat préparé : sa stérilisation, sa date de durabilité minimale et ses ingrédients. */
+    plat: {
+      sterilise: (date: string) => `Stérilisé le ${date}`,
+      ddm: (date: string) => `DDM ${date}`,
+      ingredients: (liste: string) => `Ingrédients : ${liste}`,
+    },
     colonnes: { numero: 'N° lot', fabrication: 'Date de\nfabrication', vente: 'Date de\nvente' },
     /** Les deux valeurs de la colonne du contrôle dans son filtre. */
     controleOui: 'ok',

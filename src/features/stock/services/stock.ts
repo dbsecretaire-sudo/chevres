@@ -300,6 +300,15 @@ export function fromagesVendus(vente: Vente): number {
 }
 
 /**
+ * Les lignes de l'inventaire qu'une vente de boucherie / charcuterie peut choisir comme détail : les types de viande et de charcuterie, puis les plats préparés
+ * (un plat se vend comme la charcuterie : à la pièce, lot par lot).
+ */
+export const lignesDeVenteDeProduits = (archive: ArchiveStock, espece?: EspeceAnimale): ArticleAffiche[] => [
+  ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece),
+  ...articlesDuGenre(GENRE_ARTICLE.PLAT, archive, espece),
+];
+
+/**
  * Ce que la vente d'un fromage consomme : le fromage lui-même et les emballages de son conditionnement. Rien pour une
  * autre vente.
  */
@@ -311,7 +320,7 @@ export function consommationDeLaVente(
   if ((CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) && vente.precision) {
     const espece =
       vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
-    const article = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).find(
+    const article = lignesDeVenteDeProduits(archive, espece).find(
       (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
     );
     if (!article || !(vente.quantite > 0)) return [];
@@ -858,7 +867,7 @@ function ligneDeViandeDeLaVente(vente: Vente, archive: ArchiveStock): ArticleAff
     return undefined;
   const espece =
     vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
-  return articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).find(
+  return lignesDeVenteDeProduits(archive, espece).find(
     (a) => a.libelle.trim().toLowerCase() === vente.precision!.trim().toLowerCase(),
   );
 }

@@ -204,6 +204,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
           onChange={charger}
           // Dans Production, les lots s'ouvrent sur ceux qui sont en stock (l'inventaire, lui, montre tout).
           etatInitial={ETAT_LOT.EN_STOCK}
+          archive={archive}
           onFermer={() => setVisible(false)}
         />
       </Screen>

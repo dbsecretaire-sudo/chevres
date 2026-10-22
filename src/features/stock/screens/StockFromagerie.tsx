@@ -732,6 +732,7 @@ export default function StockFromagerie() {
             : 0
         }
         onChange={charger}
+        archive={archive}
         onFermer={() => setFromageVisible(false)}
       />
 
