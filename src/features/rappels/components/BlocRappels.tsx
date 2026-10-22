@@ -7,7 +7,9 @@ import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
+import { useRappelsAnalysesPlats } from '@/features/rappels/hooks/useRappelsAnalysesPlats';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
+import { GENRE_RAPPEL } from '@/shared/constants/rappels';
 import { useDocumentsCirculationManquants } from '@/features/comptabilite/hooks/useDocumentsCirculationManquants';
 import { anneesDesEcritures } from '@/features/comptabilite/services/documentsCirculation';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -33,7 +35,9 @@ function BlocRappelsDeclarations() {
   const { rappels: declarations, genres, valider, valides } = useRappels();
   /** Les documents de circulation à envoyer à la chambre d'agriculture : à valider une fois envoyés, comme une déclaration. */
   const envois = useRappelsCirculation(valides);
-  const rappels = [...declarations, ...envois].sort((a, b) => a.echeance.localeCompare(b.echeance));
+  /** Les échantillons de plats préparés à envoyer à un laboratoire : validés une fois partis, ils ne passent pas par les réglages. */
+  const analyses = useRappelsAnalysesPlats();
+  const rappels = [...declarations, ...envois, ...analyses.rappels].sort((a, b) => a.echeance.localeCompare(b.echeance));
   const { aRappeler: lots, aValider, valider: validerLot } = useLotsARappeler();
   /** Les ventes et dépenses d'animaux vivants dont le document de circulation n'est pas déposé : rappelés tant qu'il manque. */
   const manquantsCirculation = useDocumentsCirculationManquants();
@@ -159,7 +163,13 @@ function BlocRappelsDeclarations() {
                 {r.detail ?? (r.enRetard ? T.enRetard : T.avant)(formatDateShortFR(r.echeance))}
               </Text>
             </Pressable>
-            <Pressable onPress={() => valider(r)} hitSlop={10} accessibilityLabel={T.validerLeRappel}>
+            <Pressable
+              onPress={() =>
+                r.genre === GENRE_RAPPEL.ANALYSE_PLAT && r.fabricationId ? analyses.valider(r.fabricationId) : valider(r)
+              }
+              hitSlop={10}
+              accessibilityLabel={r.genre === GENRE_RAPPEL.ANALYSE_PLAT ? T.analysesPlats.valider : T.validerLeRappel}
+            >
               <Ionicons name="checkmark-circle-outline" size={30} color={colors.primary} />
             </Pressable>
           </View>

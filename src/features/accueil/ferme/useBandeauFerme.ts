@@ -5,6 +5,7 @@ import { compterBouclesPosees } from '@/features/accueil/services/fermeAccueil';
 import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
+import { useRappelsAnalysesPlats } from '@/features/rappels/hooks/useRappelsAnalysesPlats';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { useLotsARappeler } from '@/features/stock/hooks/useLotsARappeler';
@@ -23,6 +24,7 @@ export function useBandeauFerme(): {
   const { espece } = useEtablissement();
   const { rappels, valides } = useRappels();
   const envois = useRappelsCirculation(valides);
+  const { rappels: analyses } = useRappelsAnalysesPlats();
   const { aRappeler, aValider } = useLotsARappeler();
   const [boucles, setBoucles] = useState<{ boucles: number; tiptag: number } | undefined>();
   useFocusEffect(
@@ -39,6 +41,6 @@ export function useBandeauFerme(): {
   return {
     balance: accueil.stats?.soldeFactures,
     boucles,
-    rappels: rappels.length + envois.length + (aRappeler > 0 ? 1 : 0) + aValider.length,
+    rappels: rappels.length + envois.length + analyses.length + (aRappeler > 0 ? 1 : 0) + aValider.length,
   };
 }

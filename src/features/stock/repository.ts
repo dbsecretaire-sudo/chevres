@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
 import { avecNomsHarmonises, sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
+import { avecListeDenrees } from '@/features/stock/services/denrees';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
@@ -133,18 +134,19 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     platsFabriques: platsValides(archive?.platsFabriques),
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
     sectionsMasquees: sectionsMasqueesValides(archive?.sectionsMasquees),
+    denreesAjoutees: archive?.denreesAjoutees === true ? true : undefined,
   };
 }
 
 /** Le stock de l'établissement actif (vide s'il n'y a encore rien), avec la remise à zéro des aliments à chaque nouvel achat. */
 export async function lireArchiveStock(): Promise<ArchiveStock> {
   const raw = await AsyncStorage.getItem(cle());
-  if (!raw) return { ...VIDE };
+  if (!raw) return avecNomsHarmonises(avecListeDenrees({ ...VIDE }));
   try {
-    const archive = avecNomsHarmonises(sansDoublonsDOffice(normaliserArchiveStock(JSON.parse(raw))));
+    const archive = avecNomsHarmonises(sansDoublonsDOffice(avecListeDenrees(normaliserArchiveStock(JSON.parse(raw)))));
     return { ...archive, mouvements: avecRemisesAZero(archive.mouvements) };
   } catch {
-    return { ...VIDE };
+    return avecNomsHarmonises(avecListeDenrees({ ...VIDE }));
   }
 }
 

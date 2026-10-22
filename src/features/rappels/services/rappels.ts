@@ -16,14 +16,18 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 /** Les déclarations qu'on peut activer ou non (RSA, URSSAF) ; une échéance de groupement s'y ajoute dans les rappels (voir Rappel.genre). */
 export type GenreRappel = Exclude<
   ValeurDe<typeof GENRE_RAPPEL>,
-  typeof GENRE_RAPPEL.GROUPEMENT | typeof GENRE_RAPPEL.CIRCULATION
+  typeof GENRE_RAPPEL.GROUPEMENT | typeof GENRE_RAPPEL.CIRCULATION | typeof GENRE_RAPPEL.ANALYSE_PLAT
 >;
 
 /** Une déclaration à faire (ou à valider) pour une période terminée. */
 export interface Rappel {
   /** Identifiant de la période (« rsa:2026-T3 »), enregistré quand le rappel est validé. */
   id: string;
-  genre: GenreRappel | typeof GENRE_RAPPEL.GROUPEMENT | typeof GENRE_RAPPEL.CIRCULATION;
+  genre:
+    | GenreRappel
+    | typeof GENRE_RAPPEL.GROUPEMENT
+    | typeof GENRE_RAPPEL.CIRCULATION
+    | typeof GENRE_RAPPEL.ANALYSE_PLAT;
   /** « Déclaration RSA · 3e trimestre 2026 ». */
   libelle: string;
   /** Le dernier jour pour la faire : la fin du mois qui suit la période (AAAA-MM-JJ). */
@@ -35,6 +39,8 @@ export interface Rappel {
   cible?: string;
   groupementId?: string;
   contenuId?: string;
+  /** Pour l'analyse d'un plat préparé : la fabrication dont l'échantillon part (voir enregistrerAnalyseDePlats). */
+  fabricationId?: string;
 }
 
 /** « Déclaration RSA · 3e trimestre 2026 » (ou le mois de l'URSSAF) d'après l'identifiant d'un rappel ; rien si l'identifiant est inconnu. */

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
@@ -55,7 +55,10 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
 
   /** L'année des lots (leur fabrication) et du stock (à la fin de l'année), ou toutes les années regroupées. */
-  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
+  const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
+  /** Les plats : la fenêtre de l'intervalle entre deux analyses (un échantillon part à un laboratoire, voir rappelsAnalysesPlats). */
+  const [analyseOuverte, setAnalyseOuverte] = useState(false);
+  const jourAnalyse = settings.exploitation?.joursEntreAnalysesPlats;
   const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([]);
 
@@ -93,6 +96,16 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                     accessibilityLabel={TEXTES.production.fromages.statistiques}
                   >
                     <Ionicons name="stats-chart" size={24} color={colors.blanc} />
+                  </Pressable>
+                ) : null}
+                {plat ? (
+                  <Pressable
+                    style={commonStyles.boutonEnteteDroite}
+                    onPress={() => setAnalyseOuverte(true)}
+                    hitSlop={10}
+                    accessibilityLabel={TEXTES.rappels.analysesPlats.regler}
+                  >
+                    <Ionicons name="flask-outline" size={24} color={colors.blanc} />
                   </Pressable>
                 ) : null}
                 <Pressable
@@ -195,6 +208,21 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
             charger();
           }}
           onAnnuler={() => setAjoutOuvert(false)}
+        />
+        <NomModal
+          visible={analyseOuverte}
+          titre={TEXTES.rappels.analysesPlats.regler}
+          valeurInitiale={jourAnalyse ? String(jourAnalyse) : ''}
+          placeholder={TEXTES.rappels.analysesPlats.placeholder}
+          enfants={<Text style={commonStyles.note}>{TEXTES.rappels.analysesPlats.reglerAide}</Text>}
+          onValider={async (texte) => {
+            const jours = Number(texte.trim());
+            // Vide : plus de rappel d'analyse ; sinon un nombre de jours entier.
+            if (texte.trim() && !(Number.isInteger(jours) && jours > 0)) return Alert.alert(TEXTES.rappels.analysesPlats.invalide);
+            await patchSettings({ exploitation: { ...settings.exploitation, joursEntreAnalysesPlats: jours > 0 ? jours : undefined } });
+            setAnalyseOuverte(false);
+          }}
+          onAnnuler={() => setAnalyseOuverte(false)}
         />
         <DetailLotsModal
           visible={visible}

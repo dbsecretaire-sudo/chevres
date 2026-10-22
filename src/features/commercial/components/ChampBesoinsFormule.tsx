@@ -47,7 +47,12 @@ export function ChampBesoinsFormule({
   useEffect(() => {
     lireArchiveStock()
       .then((archive) =>
-        setArticles(articlesDeBesoin(archive, { fromages: T.groupeFromages, charcuterie: T.groupeCharcuterie })),
+        setArticles(articlesDeBesoin(archive, {
+            fromages: T.groupeFromages,
+            charcuterie: T.groupeCharcuterie,
+            plats: T.groupePlats,
+            autres: T.groupeAutres,
+          })),
       )
       .catch(() => undefined);
   }, []);

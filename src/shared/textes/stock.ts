@@ -337,6 +337,15 @@ export const TEXTES_STOCK = {
    * Les titres des listes d'office de l'inventaire : « Ventes — … » pour ce qui se vend (produits finis et produits animaux), « Achat — … »
    * pour ce qui s'achète. Une liste ajoutée à partir d'un compte reçoit le même préfixe.
    */
+  /** La liste des matières alimentaires consommables, ajoutée d'office à l'inventaire, et ses articles de départ. */
+  denrees: {
+    liste: 'Matières alimentaires consommables',
+    farine: 'Farine',
+    oeufs: 'Œufs',
+    huileOlive: 'Huile d’olive',
+    sucre: 'Sucre',
+    laitAlimentaire: 'Lait (cuisine)',
+  },
   titresListes: {
     prefixeVentes: 'Ventes — ',
     prefixeAchat: 'Achat — ',

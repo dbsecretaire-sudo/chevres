@@ -239,6 +239,8 @@ export const TEXTES_COMMERCIAL = {
       retirer: 'Retirer ce produit',
       groupeFromages: 'Fromages',
       groupeCharcuterie: 'Charcuterie et viande',
+      groupePlats: 'Plats préparés',
+      groupeAutres: 'Autres articles du stock',
       ligne: (quantite: number, nom: string) => `${quantite} × ${nom}`,
       lots: (numeros: string) => `lots : ${numeros}`,
       sansNumero: 'sans numéro de lot',

@@ -37,6 +37,17 @@ export const TEXTES_RAPPELS = {
       vente: 'Vente d’animaux vivants',
     },
   },
+  /** L'échantillon d'un plat préparé à envoyer à un laboratoire : l'intervalle se règle dans la liste des plats. */
+  analysesPlats: {
+    libelle: (plat: string) => `Analyse à envoyer · ${plat}`,
+    avant: (date: string, lots: string) => `Échantillon (lots ${lots}) à envoyer avant le ${date}`,
+    enRetard: (date: string, lots: string) => `En retard : échantillon (lots ${lots}) à envoyer avant le ${date}`,
+    valider: 'Échantillon envoyé',
+    regler: 'Intervalle entre les analyses',
+    reglerAide: 'Tous les combien de jours un échantillon des plats en stock doit partir à un laboratoire. Demandez l’intervalle à la DDPP : sans lui, aucun rappel.',
+    placeholder: 'ex : 90',
+    invalide: 'Indiquez un nombre de jours entier.',
+  },
   validerLeRappel: 'Marquer comme fait',
   reglages: {
     titre: 'Rappels de déclarations',

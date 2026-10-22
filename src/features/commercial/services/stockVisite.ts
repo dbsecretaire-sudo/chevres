@@ -24,18 +24,31 @@ export function besoinsDeLaVisite(formule: Pick<FormuleAgritourisme, 'besoins'> 
   return [...parArticle].map(([article, quantite]) => ({ article, quantite }));
 }
 
-/** Un produit de l'inventaire qu'une formule peut consommer, rangé par catégorie (fromages, charcuterie et viande). */
+/** Un produit de l'inventaire qu'une formule peut consommer, rangé par catégorie (fromages, charcuterie et viande, plats, matières alimentaires…). */
 export interface ArticleDeBesoin extends ArticleAffiche {
   groupe: string;
 }
 
-/** Les produits du stock qu'une formule peut demander : les fromages, puis la charcuterie et la viande de l'inventaire (hors les lignes qui suivent le cheptel). */
-export function articlesDeBesoin(archive: ArchiveStock, groupes: { fromages: string; charcuterie: string }): ArticleDeBesoin[] {
+/**
+ * Les produits du stock qu'une formule peut demander : les fromages, la charcuterie et la viande de l'inventaire (hors les lignes qui suivent le cheptel),
+ * les plats préparés, puis les articles des listes ajoutées à l'inventaire (matières alimentaires : farine, œufs, huile d'olive…), chacun rangé sous le nom de
+ * sa liste.
+ */
+export function articlesDeBesoin(
+  archive: ArchiveStock,
+  groupes: { fromages: string; charcuterie: string; plats: string; autres: string },
+): ArticleDeBesoin[] {
+  const nomsDesListes = new Map((archive.listes ?? []).map((l) => [l.id, l.nom]));
   return [
     ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive).map((a) => ({ ...a, groupe: groupes.fromages })),
     ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive)
       .filter((a) => !estLigneDuCheptel(a.cle))
       .map((a) => ({ ...a, groupe: groupes.charcuterie })),
+    ...articlesDuGenre(GENRE_ARTICLE.PLAT, archive).map((a) => ({ ...a, groupe: groupes.plats })),
+    ...articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive).map((a) => ({
+      ...a,
+      groupe: (a.id ? nomsDesListes.get(archive.articles.find((x) => x.id === a.id)?.listeId ?? '') : undefined) ?? groupes.autres,
+    })),
   ];
 }
 

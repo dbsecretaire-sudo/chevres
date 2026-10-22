@@ -412,6 +412,8 @@ export interface InfosExploitation {
   categoriesClient?: CategorieClientReglage[];
   /** Les catégories de fournisseur (de tiers) de l'établissement (celles d'office à défaut) : voir dictionnaire/categoriesFournisseur. */
   categoriesFournisseur?: CategorieFournisseurReglage[];
+  /** Les jours entre deux analyses des plats préparés en stock (l'intervalle que demande la DDPP) : sans lui, aucun rappel d'analyse. */
+  joursEntreAnalysesPlats?: number;
   /** Les rappels déjà validés (« rsa:2026-T3 », « urssaf:2026-09 »). */
   rappelsValides?: string[];
   /**

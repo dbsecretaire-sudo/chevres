@@ -16,12 +16,17 @@ export function ingredientsProposables(
   archive: ArchiveStock,
   groupes: { fromages: string; charcuterie: string; autres: string },
 ): IngredientProposable[] {
+  const nomsDesListes = new Map((archive.listes ?? []).map((l) => [l.id, l.nom]));
   return [
     ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive).map((a) => ({ ...a, groupe: groupes.fromages })),
     ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive)
       .filter((a) => !estLigneDuCheptel(a.cle))
       .map((a) => ({ ...a, groupe: groupes.charcuterie })),
-    ...articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive).map((a) => ({ ...a, groupe: groupes.autres })),
+    // Chaque article d'une liste ajoutée se range sous le nom de sa liste (« Matières alimentaires consommables »).
+    ...articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive).map((a) => ({
+      ...a,
+      groupe: nomsDesListes.get(archive.articles.find((x) => x.id === a.id)?.listeId ?? '') ?? groupes.autres,
+    })),
   ];
 }
 

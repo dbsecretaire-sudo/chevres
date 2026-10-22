@@ -140,6 +140,8 @@ export interface FabricationDePlats {
   dateSterilisation?: string;
   /** La date de durabilité minimale (AAAA-MM-JJ) : « à consommer de préférence avant ». */
   ddm?: string;
+  /** Les jours où un échantillon de cette fabrication est parti à un laboratoire d'analyses (AAAA-MM-JJ) : l'analyse suivante se compte à partir du dernier. */
+  analyses?: string[];
   ingredients: IngredientDePlat[];
 }
 
@@ -193,4 +195,6 @@ export interface ArchiveStock {
   masques?: string[];
   /** Les listes d'office retirées pour des espèces (section → espèces) : le compte de la liste a été retiré pour elles. */
   sectionsMasquees?: Record<string, string[]>;
+  /** Vrai une fois la liste des matières alimentaires ajoutée à l'inventaire (voir avecListeDenrees) : supprimée ensuite, elle ne revient pas. */
+  denreesAjoutees?: boolean;
 }

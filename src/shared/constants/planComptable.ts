@@ -99,6 +99,12 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   [CATEGORIE_RECETTE.DEPOT]: { numero: '108000', libelle: 'Compte de l’exploitant — Apports' },
 };
 
+/** Le compte des matières alimentaires consommables (farine, œufs, huile d'olive…) : des matières premières, achats stockés (601). */
+export const COMPTE_DENREES: CompteComptable = {
+  numero: '601400',
+  libelle: 'Matières alimentaires consommables (farine, œufs, huile…)',
+};
+
 /** Le compte des boucles d'identification (la section des boucles de l'inventaire). */
 export const COMPTE_BOUCLES: CompteComptable = {
   numero: '601500',
@@ -114,6 +120,7 @@ export const COMPTES_PCG_DEPENSE: CompteComptable[] = [
   { numero: '601100', libelle: 'Aliments du bétail' },
   { numero: '601200', libelle: 'Engrais et amendements' },
   { numero: '601300', libelle: 'Semences et plants' },
+  { numero: COMPTE_DENREES.numero, libelle: COMPTE_DENREES.libelle },
   { numero: COMPTE_BOUCLES.numero, libelle: COMPTE_BOUCLES.libelle },
   { numero: '602200', libelle: 'Fournitures consommables — Production (sel, présure...)' },
   { numero: '602600', libelle: 'Emballages' },

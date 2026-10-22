@@ -580,3 +580,19 @@ export const rendreStockDeVisite = (visiteId: string): Promise<void> =>
 /** Une vente supprimée rend ses fromages au stock. */
 export const libererLotsVente = (venteId: string): Promise<void> =>
   synchroniserLotsVente({ id: venteId, date: '', fromages: undefined });
+
+/** Note qu'un échantillon de cette fabrication de plats est parti à un laboratoire ce jour-là : l'analyse suivante se compte à partir d'elle. */
+export function enregistrerAnalyseDePlats(mouvementId: string, date: string): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const fabrication: FabricationDePlats = archive.platsFabriques?.[mouvementId] ?? { ingredients: [] };
+    if (fabrication.analyses?.includes(date)) return;
+    await remplacerArchiveStock({
+      ...archive,
+      platsFabriques: {
+        ...archive.platsFabriques,
+        [mouvementId]: { ...fabrication, analyses: [...(fabrication.analyses ?? []), date].sort() },
+      },
+    });
+  });
+}

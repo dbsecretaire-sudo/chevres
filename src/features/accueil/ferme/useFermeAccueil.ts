@@ -22,6 +22,7 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
 import { useSanteDuTroupeau } from '@/features/exploitation/hooks/useSanteDuTroupeau';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { useRappelsAnalysesPlats } from '@/features/rappels/hooks/useRappelsAnalysesPlats';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
 import { destinationRappel } from '@/features/rappels/services/destination';
@@ -71,6 +72,7 @@ export function useFermeAccueil() {
   const sante = useSanteDuTroupeau();
   const { rappels, valides } = useRappels();
   const envois = useRappelsCirculation(valides);
+  const { rappels: analyses } = useRappelsAnalysesPlats();
   const { aRappeler, aValider } = useLotsARappeler();
   const lotsAFacturer = useLotsAFacturer();
   const { espece } = useEtablissement();
@@ -187,6 +189,6 @@ export function useFermeAccueil() {
     lotsARappeler: aRappeler + aValider.length,
     /** Les animaux en délai d'attente (lait et viande confondus). */
     delais: sante.nombreLait + sante.nombreViande,
-    nombreDeRappels: rappels.length + envois.length + (aRappeler > 0 ? 1 : 0) + aValider.length,
+    nombreDeRappels: rappels.length + envois.length + analyses.length + (aRappeler > 0 ? 1 : 0) + aValider.length,
   };
 }
