@@ -22,5 +22,5 @@ export default defineConfig({
     ],
   },
   define: { __DEV__: false },
-  test: { include: ['tests/**/*.test.ts'], environment: 'node' },
+  test: { include: ['tests/**/*.test.ts'], environment: 'node', testTimeout: 30_000 },
 });

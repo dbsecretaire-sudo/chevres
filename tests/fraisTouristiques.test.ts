@@ -7,8 +7,10 @@ import {
 } from '@/features/comptabilite/services/fraisTouristiques';
 import type { Facture } from '@/features/comptabilite/types';
 import type { Vehicule } from '@/features/settings/settings';
-import { ATELIER } from '@/shared/constants/ateliers';
-import { CATEGORIE_DEPENSE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import { depensesAgritourisme } from '@/features/accueil/services/agritourismeFerme';
+import { ateliersDesVentesDeViande } from '@/features/comptabilite/services/rentabilite';
+import { ATELIER, ATELIER_PAR_CATEGORIE_VENTE } from '@/shared/constants/ateliers';
+import { CATEGORIE_DEPENSE, CATEGORIE_VENTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 
 describe('les frais touristiques se rangent d’office', () => {
@@ -112,8 +114,7 @@ describe('coût par visite avec les frais touristiques', () => {
 });
 
 describe('dépenses de l’agritourisme et ateliers de ce qu’on fabrique', () => {
-  it('les dépenses de la plaque sont les factures reçues rangées dans l’atelier Agritourisme', async () => {
-    const { depensesAgritourisme } = await import('@/features/accueil/services/agritourismeFerme');
+  it('les dépenses de la plaque sont les factures reçues rangées dans l’atelier Agritourisme', () => {
     const f = (type: string, atelier: string | undefined, montant: number) =>
       ({ type, atelier, montant }) as never;
     expect(
@@ -126,10 +127,7 @@ describe('dépenses de l’agritourisme et ateliers de ce qu’on fabrique', () 
     ).toBe(25.5);
   });
 
-  it('un plat préparé vendu forme son atelier, un savon aussi ', async () => {
-    const { ateliersDesVentesDeViande } = await import('@/features/comptabilite/services/rentabilite');
-    const { ATELIER_PAR_CATEGORIE_VENTE } = await import('@/shared/constants/ateliers');
-    const { CATEGORIE_VENTE } = await import('@/shared/constants/comptabilite');
+  it('un plat préparé vendu forme son atelier, un savon aussi ', () => {
     const ventes = [{ id: 'v1' }, { id: 'v2' }] as never[];
     const ateliers = ateliersDesVentesDeViande(
       ventes,
