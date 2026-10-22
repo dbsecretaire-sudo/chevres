@@ -230,7 +230,7 @@ export const TEXTES_PRODUCTION = {
         supprimerQuestion: 'Supprimer ce dossier ?',
         supprimerMessage: (nom: string) => `« ${nom} » disparaît ; ses contenus et ses dossiers passent dans le dossier au-dessus.`,
         contenus: (n: number) => (n === 0 ? 'Vide' : `${n} contenu${n > 1 ? 's' : ''}`),
-        aucun: 'Rien de rangé pour cette association : créez un dossier, un courrier, une démarche ou importez un fichier.',
+        aucun: 'Rien de rangé ici : créez un dossier, un courrier, une démarche ou importez un fichier.',
         dossierVide: 'Ce dossier est vide.',
       },
       autresEcritures: 'Cotisations et autres écritures',

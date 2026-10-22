@@ -44,11 +44,11 @@ export const entreeDuContact = (controles: readonly Controle[], contact: Pick<Co
   );
 
 /**
- * Les dossiers d'une association ou d'une coopérative, rangés comme dans le secrétariat : des dossiers dans des dossiers, et des contenus (courriers, démarches, aides,
- * documents) dans chacun. Le type d'un contenu se choisit avant de le créer ; un fichier de l'appareil devient un contenu terminé. Seuls les contenus de cette
+ * Les dossiers d'un contact (une association, un organisme comme l'ODARC et sa Route des Sens Authentiques…), rangés comme dans le secrétariat : des dossiers dans des dossiers, et des contenus (courriers, démarches, aides,
+ * documents) dans chacun. Le type d'un contenu se choisit avant de le créer ; un fichier de l'appareil devient un contenu terminé. Seuls les contenus de ce
  * association y sont montrés.
  */
-export function DossiersAssociation({
+export function DossiersDuContact({
   contact,
   entree,
   autres,

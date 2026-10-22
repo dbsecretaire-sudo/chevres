@@ -13,16 +13,17 @@ import { OptionsModal } from '@/shared/components/OptionsModal';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { lireArchiveDossiers } from '@/features/dossiers/repository';
 import { listTousControles } from '@/features/exploitation/repository/controles';
+import type { Controle } from '@/features/exploitation/types';
 import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { estVente } from '@/features/clients/components/ClientResume';
 import type { EcritureClient } from '@/features/clients/services/resumeClient';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import { DossiersDuContact, entreeDuContact } from '@/features/contacts/components/DossiersDuContact';
 import { PortraitTiers } from '@/features/contacts/components/PortraitTiers';
 import { FormulaireContactChamps } from '@/features/contacts/components/FormulaireContactChamps';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import {
-  assurerEntreeDuContact,
   convertirGroupementsEnContacts,
   enregistrerContact,
   getContact,
@@ -72,6 +73,8 @@ export default function FicheContact() {
   const [introuvable, setIntrouvable] = useState(false);
   const [ecritures, setEcritures] = useState<EcritureClient[]>([]);
   const [elements, setElements] = useState<ElementLie[]>([]);
+  /** Les contenus rangés des partenaires : ceux du contact, en dossiers, viennent de là. */
+  const [controles, setControles] = useState<Controle[]>([]);
   const [onglet, setOnglet] = useState<Onglet>('ecritures');
   const [form, setForm] = useState<FormulaireContact | null>(null);
   const [menuOuvert, setMenuOuvert] = useState(false);
@@ -98,6 +101,7 @@ export default function FicheContact() {
       lireArchiveDossiers(),
     ]);
     setEcritures(ecrituresDuContact(c, ventes, factures));
+    setControles(controles);
     setElements(elementsDuContact(c, controles, archive));
   }, [id]);
 
@@ -145,12 +149,6 @@ export default function FicheContact() {
     signature: JSON.stringify(form),
     enregistrer: () => (form ? enregistrer(form, false, true) : Promise.resolve(false)),
   });
-
-  const ajouterDocument = async () => {
-    if (!contact) return;
-    const entreeId = await assurerEntreeDuContact(contact);
-    router.push(ROUTES.contactContenu(entreeId) as never);
-  };
 
   const supprimer = async () => {
     if (!contact) return;
@@ -399,15 +397,21 @@ export default function FicheContact() {
               </View>
             ) : (
               <View style={commonStyles.gap10}>
+                {/* Les documents : des dossiers dans des dossiers (comme au secrétariat), avec courriers, démarches, aides et fichiers. */}
                 {onglet === 'documents' ? (
-                  <Button variant="secondary" label={T.ajouterDocument} onPress={ajouterDocument} />
-                ) : null}
-                {(onglet === 'documents' ? documents : autres).length === 0 ? (
-                  <Text style={commonStyles.mutedItalic}>
-                    {onglet === 'documents' ? T.aucunDocument : T.aucunAutre}
-                  </Text>
+                  <DossiersDuContact
+                    contact={contact}
+                    entree={entreeDuContact(controles, contact)}
+                    autres={[]}
+                    ouvrir={ouvrir}
+                    onChange={() => {
+                      charger().catch(() => undefined);
+                    }}
+                  />
+                ) : autres.length === 0 ? (
+                  <Text style={commonStyles.mutedItalic}>{T.aucunAutre}</Text>
                 ) : (
-                  (onglet === 'documents' ? documents : autres).map((x) => (
+                  autres.map((x) => (
                     <ListRow
                       key={x.cle}
                       title={x.titre}

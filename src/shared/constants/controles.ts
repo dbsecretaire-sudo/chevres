@@ -59,7 +59,7 @@ export const NATURE_CONTENU_GROUPEMENT = [
 export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion', NATURE_COURRIEL] as const;
 
 /** La nature d'un contenu d'organisme (MSA, DDTM, DRAAF, ODARC…) : des courriers, des démarches, des documents. */
-export const NATURE_CONTENU_ORGANISME = [NATURE_COURRIEL, NATURE_AIDE, 'demarche', 'document'] as const;
+export const NATURE_CONTENU_ORGANISME = [NATURE_COURRIEL, NATURE_AIDE, 'demarche', 'cahier_des_charges', 'document'] as const;
 
 /** L'envoi en recommandé d'un courrier : simple, ou avec accusé de réception (jamais les deux). */
 export const RECOMMANDE = { SIMPLE: 'simple', AR: 'ar' } as const;

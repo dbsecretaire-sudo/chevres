@@ -11,7 +11,7 @@ import { routeAvecContact } from '@/features/accueil/services/routeAvecContact';
 import { LIEUX_TIERS } from '@/features/accueil/services/lieuxTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { DossiersAssociation, entreeDuContact } from '@/features/production/components/DossiersAssociation';
+import { DossiersDuContact, entreeDuContact } from '@/features/contacts/components/DossiersDuContact';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { lireArchiveDossiers } from '@/features/dossiers/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
@@ -188,7 +188,7 @@ export default function LieuAssociations() {
           onChoisir={setOnglet}
         />
         {onglet === 'dossiers' ? (
-          <DossiersAssociation
+          <DossiersDuContact
             contact={choisie}
             entree={entreeDuContact(controles, choisie)}
             autres={siens.filter((x) => x.origine === 'dossier')}
