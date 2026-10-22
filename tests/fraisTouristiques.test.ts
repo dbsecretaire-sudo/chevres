@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { coutsParFormule } from '@/features/commercial/services/coutsAgritourisme';
 import type { FormuleAgritourisme, VisiteAgritourisme } from '@/features/commercial/types';
 import {
-  atelierDeLaCase,
   coutCarburantDeLaVisite,
-  estFraisTouristique,
   precocherFraisTouristiques,
 } from '@/features/comptabilite/services/fraisTouristiques';
 import type { Facture } from '@/features/comptabilite/types';
@@ -13,16 +11,8 @@ import { ATELIER } from '@/shared/constants/ateliers';
 import { CATEGORIE_DEPENSE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 
-describe('la case « frais touristiques »', () => {
-  it('range la charge dans l’atelier Agritourisme, ou la laisse commune', () => {
-    expect(atelierDeLaCase(true)).toBe(ATELIER.AGRITOURISME);
-    expect(atelierDeLaCase(false)).toBe('');
-    expect(estFraisTouristique(ATELIER.AGRITOURISME)).toBe(true);
-    expect(estFraisTouristique(ATELIER.FROMAGE)).toBe(false);
-    expect(estFraisTouristique(undefined)).toBe(false);
-  });
-
-  it('se coche d’office pour l’office de tourisme, un partenaire, le repas et un véhicule touristique', () => {
+describe('les frais touristiques se rangent d’office', () => {
+  it('pour l’office de tourisme, un partenaire, le repas et un véhicule touristique', () => {
     expect(precocherFraisTouristiques({ categorieFournisseur: CATEGORIE_FOURNISSEUR.TOURISME })).toBe(true);
     expect(precocherFraisTouristiques({ categorieFournisseur: CATEGORIE_FOURNISSEUR.REPAS })).toBe(true);
     expect(precocherFraisTouristiques({ vehicule: { usageTouristique: true } })).toBe(true);
@@ -118,5 +108,35 @@ describe('coût par visite avec les frais touristiques', () => {
     });
     expect(couts.formules[0].composants).toEqual([]);
     expect(couts.total).toBe(0);
+  });
+});
+
+describe('dépenses de l’agritourisme et ateliers de ce qu’on fabrique', () => {
+  it('les dépenses de la plaque sont les factures reçues rangées dans l’atelier Agritourisme', async () => {
+    const { depensesAgritourisme } = await import('@/features/accueil/services/agritourismeFerme');
+    const f = (type: string, atelier: string | undefined, montant: number) =>
+      ({ type, atelier, montant }) as never;
+    expect(
+      depensesAgritourisme([
+        f(TYPE_FACTURE.RECUE, ATELIER.AGRITOURISME, 20),
+        f(TYPE_FACTURE.RECUE, ATELIER.AGRITOURISME, 5.5),
+        f(TYPE_FACTURE.RECUE, undefined, 100),
+        f(TYPE_FACTURE.EMISE, ATELIER.AGRITOURISME, 300),
+      ]),
+    ).toBe(25.5);
+  });
+
+  it('un plat préparé vendu forme son atelier, un savon aussi ', async () => {
+    const { ateliersDesVentesDeViande } = await import('@/features/comptabilite/services/rentabilite');
+    const { ATELIER_PAR_CATEGORIE_VENTE } = await import('@/shared/constants/ateliers');
+    const { CATEGORIE_VENTE } = await import('@/shared/constants/comptabilite');
+    const ventes = [{ id: 'v1' }, { id: 'v2' }] as never[];
+    const ateliers = ateliersDesVentesDeViande(
+      ventes,
+      () => undefined,
+      (v) => ((v as { id: string }).id === 'v1' ? 'plat:civet' : 'viande:saucisson'),
+    );
+    expect(ateliers).toEqual({ v1: ATELIER.PLATS });
+    expect(ATELIER_PAR_CATEGORIE_VENTE[CATEGORIE_VENTE.SAVONS]).toBe(ATELIER.SAVONS);
   });
 });

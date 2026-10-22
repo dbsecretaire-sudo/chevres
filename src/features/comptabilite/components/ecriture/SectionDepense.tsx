@@ -47,7 +47,6 @@ import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { CaseFraisTouristiques } from '@/features/comptabilite/components/CaseFraisTouristiques';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
@@ -354,9 +353,6 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         ) : null}
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
-        {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
-          <CaseFraisTouristiques atelier={e.atelier} onChange={e.setAtelier} />
-        )}
         {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
           <AncreVisite id="ecriture.atelier">
             <ChampAtelier value={e.atelier} onChange={e.setAtelier} activite={e.activite} />

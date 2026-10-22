@@ -404,6 +404,8 @@ export const LABEL_ATELIER: Record<ValeurDe<typeof ATELIER>, string> = {
   [ATELIER.PETITS]: 'Viande',
   [ATELIER.ANIMAUX]: 'Reproducteurs et réformes',
   [ATELIER.VIANDE]: 'Boucherie et charcuterie',
+  [ATELIER.PLATS]: 'Plats préparés',
+  [ATELIER.SAVONS]: 'Savons',
   [ATELIER.OEUFS]: 'Œufs',
   [ATELIER.AGRITOURISME]: 'Agritourisme',
   [ATELIER.AUTRES]: 'Autres recettes',

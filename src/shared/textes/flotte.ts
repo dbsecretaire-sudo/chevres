@@ -35,7 +35,7 @@ export const TEXTES_FLOTTE = {
     kilometrage: 'Kilométrage',
     kilometrageAide: 'Le dernier relevé.',
     usageTouristique: 'Véhicule utilisé pour le tourisme',
-    usageTouristiqueAide: 'Son assurance et ses réparations se cochent d’office comme frais touristiques, et son carburant se compte par visite (les kilomètres se saisissent dans la formule).',
+    usageTouristiqueAide: 'Son assurance et ses réparations sont rangées d’office dans l’atelier Agritourisme (on peut changer l’atelier concerné), et son carburant se compte par visite (les kilomètres se saisissent dans la formule).',
     consommation: 'Consommation (L pour 100 km)',
     consommationAide: 'Celle de la fiche du constructeur pour ce modèle, ou celle que vous relevez, en charge.',
     prixCarburant: 'Prix du carburant (€ le litre)',

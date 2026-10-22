@@ -875,6 +875,10 @@ export function roleDeLaLigneDeLaVente(
   return ligne ? roleDeLaViande(ligne.cle) : undefined;
 }
 
+/** L'article de l'inventaire (« plat:… », « viande:… ») qu'une vente de viande, de charcuterie ou de plat a choisi comme détail ; rien pour une autre vente. */
+export const articleDeLaLigneDeLaVente = (vente: Pick<Vente, 'categorie' | 'precision' | 'activite'>, archive: ArchiveStock): string | undefined =>
+  ligneDeViandeDeLaVente(vente as Vente, archive)?.cle;
+
 /** La ligne de viande de l'inventaire qu'une vente a choisie comme détail (un animal, un morceau, un produit). */
 function ligneDeViandeDeLaVente(vente: Vente, archive: ArchiveStock): ArticleAffiche | undefined {
   if (!(CATEGORIES_VENTE_VIANDE as readonly string[]).includes(vente.categorie) || !vente.precision)

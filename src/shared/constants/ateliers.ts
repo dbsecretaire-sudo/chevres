@@ -12,6 +12,10 @@ export const ATELIER = {
   PETITS: 'petits',
   ANIMAUX: 'animaux',
   VIANDE: 'viande',
+  /** Les plats préparés (conserves, bocaux) fabriqués à l'atelier. */
+  PLATS: 'plats',
+  /** Les savons au lait de chèvre (cosmétique). */
+  SAVONS: 'savons',
   OEUFS: 'oeufs',
   /** Les visites de la ferme, le 4x4, les repas et la dégustation : une recette « autre » rangée dans cet atelier. */
   AGRITOURISME: 'agritourisme',
@@ -27,13 +31,22 @@ export type Atelier = ValeurDe<typeof ATELIER>;
 export function ateliersDeLEspece(espece?: string): Atelier[] {
   switch (espece) {
     case TYPE_ANIMAL_ETABLISSEMENT.POULES:
-      return [ATELIER.OEUFS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.AGRITOURISME];
+      return [ATELIER.OEUFS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.PLATS, ATELIER.AGRITOURISME];
     case TYPE_ANIMAL_ETABLISSEMENT.COCHONS:
-      return [ATELIER.PETITS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.AGRITOURISME];
+      return [ATELIER.PETITS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.PLATS, ATELIER.AGRITOURISME];
     case TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES:
       return [ATELIER.AGRITOURISME];
     default:
-      return [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.PETITS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.AGRITOURISME];
+      return [
+        ATELIER.LAIT,
+        ATELIER.FROMAGE,
+        ATELIER.PETITS,
+        ATELIER.ANIMAUX,
+        ATELIER.VIANDE,
+        ATELIER.PLATS,
+        ATELIER.SAVONS,
+        ATELIER.AGRITOURISME,
+      ];
   }
 }
 
@@ -44,8 +57,7 @@ export const ATELIER_PAR_CATEGORIE_VENTE: Record<ValeurDe<typeof CATEGORIE_VENTE
   [CATEGORIE_VENTE.CABRIS]: ATELIER.PETITS,
   [CATEGORIE_VENTE.VIANDE]: ATELIER.VIANDE,
   [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: ATELIER.VIANDE,
-  // Les savons ont leur recette et leur compte, mais pas (encore) leur atelier de marge : ils vont avec les autres.
-  [CATEGORIE_VENTE.SAVONS]: ATELIER.AUTRES,
+  [CATEGORIE_VENTE.SAVONS]: ATELIER.SAVONS,
   [CATEGORIE_VENTE.ANIMAL_MORT]: ATELIER.VIANDE,
   [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: ATELIER.ANIMAUX,
   [CATEGORIE_VENTE.ANIMAL_VIVANT]: ATELIER.ANIMAUX,

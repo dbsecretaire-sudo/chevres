@@ -1,19 +1,12 @@
 import type { Vehicule } from '@/features/settings/settings';
-import { ATELIER } from '@/shared/constants/ateliers';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
-
-/** Vrai quand l'atelier d'une charge est l'agritourisme : la case « Inclure dans les frais touristiques » est cochée. */
-export const estFraisTouristique = (atelier: string | undefined): boolean => atelier === ATELIER.AGRITOURISME;
-
-/** L'atelier que la case donne : l'agritourisme quand elle est cochée, aucun (charge commune) sinon. */
-export const atelierDeLaCase = (cochee: boolean): string => (cochee ? ATELIER.AGRITOURISME : '');
 
 /** Les catégories de contact dont les factures sont d'office des frais touristiques : l'office de tourisme (et ses partenaires) et le fournisseur du repas. */
 const CATEGORIES_TOURISTIQUES: readonly string[] = [CATEGORIE_FOURNISSEUR.TOURISME, CATEGORIE_FOURNISSEUR.REPAS];
 
 /**
- * Vrai quand une dépense se coche d'office comme frais touristique : son fournisseur est un contact de l'office de tourisme, d'un partenaire ou du repas, ou elle
- * concerne un véhicule marqué « utilisé pour le tourisme » (son assurance, ses réparations). L'utilisateur peut la décocher.
+ * Vrai quand une dépense se range d'office dans l'atelier Agritourisme : son fournisseur est un contact de l'office de tourisme, d'un partenaire ou du repas, ou elle
+ * concerne un véhicule marqué « utilisé pour le tourisme » (son assurance, ses réparations). L'utilisateur change l'atelier concerné quand il veut.
  */
 export function precocherFraisTouristiques(entree: {
   categorieFournisseur?: string;

@@ -126,8 +126,8 @@ async function construirePlanDeLAnnee(
 export const PERIMETRES_RENTABILITE = {
   /** L'agritourisme seul (le côté Agritourisme de l'accueil). */
   agritourisme: [ATELIER.AGRITOURISME],
-  /** Ce qu'on fabrique : le lait, le fromage, la viande et la charcuterie (le côté Atelier de l'accueil). */
-  atelier: [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.VIANDE],
+  /** Ce qu'on fabrique : le lait, le fromage, la viande et la charcuterie, les plats préparés et les savons (le côté Atelier de l'accueil). */
+  atelier: [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.VIANDE, ATELIER.PLATS, ATELIER.SAVONS],
 } as const satisfies Record<string, readonly Atelier[]>;
 
 export type PerimetreRentabilite = keyof typeof PERIMETRES_RENTABILITE;

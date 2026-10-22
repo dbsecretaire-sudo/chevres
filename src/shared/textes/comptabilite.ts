@@ -348,7 +348,7 @@ export const TEXTES_COMPTABILITE = {
       },
       atelier: {
         titre: 'Ce qu’on fabrique seulement',
-        aide: 'Le lait, le fromage, la viande et la charcuterie : leurs recettes, leurs charges directes et leur part des charges communes. Les aides et les autres ateliers n’y comptent pas.',
+        aide: 'Le lait, le fromage, la viande et la charcuterie, les plats préparés et les savons : leurs recettes, leurs charges directes et leur part des charges communes. Les aides et les autres ateliers n’y comptent pas.',
       },
     },
     resultatTitre: (annee: number) => `Résultat — ${annee}`,
@@ -670,11 +670,6 @@ export const TEXTES_COMPTABILITE = {
   },
   nouvelleEcriture: {
     /** L'atelier d'une charge, pour la marge par atelier. */
-    /** La case des dépenses qui sont des frais d'une visite de la ferme : assurance du 4x4 ou d'accueil du public, office de tourisme, flyers… */
-    fraisTouristiques: {
-      label: 'Inclure dans les frais touristiques',
-      aide: 'Assurance du véhicule touristique ou de l’accueil du public, facture de l’office de tourisme ou d’un partenaire, flyers… : la charge entre dans le coût de chaque visite (atelier Agritourisme).',
-    },
     atelier: {
       label: 'Atelier concerné',
       commun: 'Charge commune (répartie entre les ateliers)',

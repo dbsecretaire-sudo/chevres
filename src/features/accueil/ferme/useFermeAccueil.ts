@@ -10,7 +10,8 @@ import {
   type DeclarationAFaire,
 } from '@/features/accueil/services/fermeAccueil';
 import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
-import { compterAgritourisme } from '@/features/accueil/services/agritourismeFerme';
+import { compterAgritourisme, depensesAgritourisme } from '@/features/accueil/services/agritourismeFerme';
+import { listFactures } from '@/features/comptabilite/repository/factures';
 import { compterTransformation } from '@/features/accueil/services/transformationFerme';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import type { ArchiveCommercial } from '@/features/commercial/types';
@@ -122,9 +123,17 @@ export function useFermeAccueil() {
     [archiveStock, espece, niveaux],
   );
 
+  const [depensesTourisme, setDepensesTourisme] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      listFactures(accueil.annee)
+        .then((factures) => setDepensesTourisme(depensesAgritourisme(factures)))
+        .catch(() => undefined);
+    }, [accueil.annee]),
+  );
   const agritourisme = useMemo(
-    () => compterAgritourisme(archiveCommerciale?.visites ?? [], accueil.annee),
-    [archiveCommerciale, accueil.annee],
+    () => ({ ...compterAgritourisme(archiveCommerciale?.visites ?? [], accueil.annee), depenses: depensesTourisme }),
+    [archiveCommerciale, accueil.annee, depensesTourisme],
   );
 
   const declarations: DeclarationAFaire[] = useMemo(

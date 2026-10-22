@@ -300,7 +300,7 @@ export const TEXTES_COMMERCIAL = {
       fraisDeLaVisite: 'Frais de la visite',
       composantCourt: (libelle: string, parVisite: string) => `${libelle} : ${parVisite}`,
       apresFrais: (montant: string) => `Reste après les frais : ${montant}`,
-      fraisAide: 'Une estimation d’après l’année de la visite : les charges de l’atelier Agritourisme (cochées « frais touristiques ») réparties sur les visites, et le carburant selon les kilomètres de la formule.',
+      fraisAide: 'Une estimation d’après l’année de la visite : les charges de l’atelier Agritourisme (choisi dans « Atelier concerné » de chaque dépense) réparties sur les visites, et le carburant selon les kilomètres de la formule.',
       titre: 'Agritourisme : coût par visite et par formule',
       parVisite: (montant: string) => `${montant} par visite`,
       commun: 'Charges communes',
@@ -358,7 +358,7 @@ export const TEXTES_COMMERCIAL = {
     formule: {
       deplacement: {
         titre: 'Déplacement en charge',
-        aide: 'Le carburant d’une visite se compte d’après le véhicule touristique et les kilomètres parcourus avec les visiteurs. Ne cochez pas en plus « frais touristiques » sur les factures de carburant de ce véhicule.',
+        aide: 'Le carburant d’une visite se compte d’après le véhicule touristique et les kilomètres parcourus avec les visiteurs. Ne rangez pas en plus dans l’atelier Agritourisme les factures de carburant de ce véhicule.',
         vehicule: 'Véhicule touristique',
         aucun: 'Aucun',
         km: 'Kilomètres par visite (en charge)',

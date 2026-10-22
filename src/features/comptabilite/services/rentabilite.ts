@@ -7,7 +7,7 @@ import { activiteFacture, activiteVente, partsDeFacture } from '@/features/compt
 import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { bilanLait, roleDeLaLigneDeLaVente } from '@/features/stock/services/stock';
+import { articleDeLaLigneDeLaVente, bilanLait, roleDeLaLigneDeLaVente } from '@/features/stock/services/stock';
 import { ATELIER, ATELIER_PAR_CATEGORIE_VENTE, type Atelier } from '@/shared/constants/ateliers';
 import {
   CATEGORIE_DEPENSE,
@@ -16,7 +16,7 @@ import {
   TYPE_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { COMPTE_PAR_DEPENSE } from '@/shared/constants/planComptable';
-import { ROLE_VIANDE } from '@/shared/constants/stock';
+import { GENRE_ARTICLE, ROLE_VIANDE } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { yearOf } from '@/shared/utils/dates';
 
@@ -263,9 +263,15 @@ export async function litresProduitsDeLAnnee(annee: number, ventes: Vente[]): Pr
 export function ateliersDesVentesDeViande(
   ventes: readonly Vente[],
   roleDe: (vente: Vente) => string | undefined,
+  /** L'article de l'inventaire choisi comme détail de la vente : un plat préparé forme son propre atelier. */
+  articleDe?: (vente: Vente) => string | undefined,
 ): Record<string, Atelier> {
   const ateliers: Record<string, Atelier> = {};
   for (const v of ventes) {
+    if (articleDe?.(v)?.startsWith(`${GENRE_ARTICLE.PLAT}:`)) {
+      ateliers[v.id] = ATELIER.PLATS;
+      continue;
+    }
     const role = roleDe(v);
     if (role === ROLE_VIANDE.JEUNE) ateliers[v.id] = ATELIER.PETITS;
     else if (role === ROLE_VIANDE.SUR_PIED || role === ROLE_VIANDE.VIVANT) ateliers[v.id] = ATELIER.ANIMAUX;
@@ -289,6 +295,10 @@ export async function rentabilite(
   const litresProduits = options.laitier === false ? 0 : await litresProduitsDeLAnnee(annee, ventes);
   const comptes = Object.fromEntries((await listComptesPcg()).map((c) => [c.numero, c.libelle]));
   const archive = await lireArchiveStock();
-  const ateliersDesVentes = ateliersDesVentesDeViande(ventes, (v) => roleDeLaLigneDeLaVente(v, archive));
+  const ateliersDesVentes = ateliersDesVentesDeViande(
+    ventes,
+    (v) => roleDeLaLigneDeLaVente(v, archive),
+    (v) => articleDeLaLigneDeLaVente(v, archive),
+  );
   return calculerRentabilite({ annee, ventes, factures, litresProduits, comptes, ateliersDesVentes, ...options });
 }
