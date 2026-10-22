@@ -82,6 +82,7 @@ export const TEXTES_ACCUEIL = {
       qualiteLait: 'Qualité du lait',
       analyses: 'Analyses',
       registreAnalyses: 'Registre des analyses',
+      recettes: 'Recettes',
       reserver: 'Réserver',
       laiterie: 'Laiterie',
       abattoir: 'Abattoir',

@@ -9,7 +9,6 @@ import { Fab } from '@/shared/components/Fab';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { BandeauRestriction } from '@/features/comptabilite/components/BandeauRestriction';
 import { FiltreTransactionsModal } from '@/features/comptabilite/components/FiltreTransactionsModal';
-import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
 import { PucesRubrique } from '@/features/comptabilite/components/PucesRubrique';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { BarreRecherche, CarteSolde } from '@/features/comptabilite/components/SoldeTransactions';
@@ -48,7 +47,6 @@ export default function ComptabiliteIndex() {
                 onChoisirTout={e.choisirToutesAnnees}
               />
               <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
-              <PucesActivite valeur={e.filtreActivite} onChange={e.setFiltreActivite} />
             </LigneFiltres>
             <CarteSolde
               soldes={e.soldes}

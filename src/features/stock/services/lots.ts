@@ -322,6 +322,9 @@ export function fabriquerFromages(saisie: {
   quantite: number;
   debut: string;
   litres?: number;
+  /** Ce qui sort du stock pour cette fabrication (la présure, le sel, les ferments…), et les notes de la recette. */
+  ingredients?: readonly { article: string; quantite: number; lotIds: string[] }[];
+  notes?: string;
 }): Promise<void> {
   return enFile(async () => {
     const archive = await lireArchiveStock();
@@ -344,10 +347,32 @@ export function fabriquerFromages(saisie: {
       origine: ORIGINE_MOUVEMENT.MANUEL,
       litres: saisie.litres && saisie.litres > 0 ? saisie.litres : undefined,
     };
+    const utilises = (saisie.ingredients ?? []).filter((i) => i.article && i.quantite > 0);
+    const sorties: MouvementStock[] = utilises.map((i) => ({
+      id: generateId(),
+      article: i.article,
+      date: saisie.date,
+      delta: -i.quantite,
+      origine: ORIGINE_MOUVEMENT.CONSOMMATION,
+      venteId: mouvementId,
+    }));
+    const notes = saisie.notes?.trim() || undefined;
+    // Les ingrédients et les notes sont gardés une seule fois pour tous les lots, comme pour un plat préparé.
+    const platsFabriques =
+      utilises.length > 0 || notes
+        ? {
+            ...(archive.platsFabriques ?? {}),
+            [mouvementId]: {
+              notes,
+              ingredients: utilises.map((i) => ({ article: i.article, quantite: i.quantite, lotIds: i.lotIds })),
+            },
+          }
+        : archive.platsFabriques;
     await remplacerArchiveStock({
       ...archive,
       lots: [...(archive.lots ?? []), ...lots],
-      mouvements: [...archive.mouvements, mouvement],
+      mouvements: [...archive.mouvements, mouvement, ...sorties],
+      platsFabriques,
     });
   });
 }
@@ -428,11 +453,13 @@ export function fabriquerPlats(saisie: {
   debut: string;
   dateSterilisation?: string;
   ddm?: string;
+  notes?: string;
   ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
 }): Promise<void> {
   return fabriquerTransforme(saisie, ORIGINE_MOUVEMENT.PLAT, {
     dateSterilisation: saisie.dateSterilisation || undefined,
     ddm: saisie.ddm || undefined,
+    notes: saisie.notes?.trim() || undefined,
   });
 }
 
@@ -450,6 +477,7 @@ export function fabriquerSavons(saisie: {
   dateSaponification?: string;
   finCure?: string;
   ddm?: string;
+  notes?: string;
   ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
 }): Promise<void> {
   const litres = saisie.litresLait && saisie.litresLait > 0 ? saisie.litresLait : undefined;
@@ -461,6 +489,7 @@ export function fabriquerSavons(saisie: {
       finCure: saisie.finCure || undefined,
       ddm: saisie.ddm || undefined,
       litresLait: litres,
+      notes: saisie.notes?.trim() || undefined,
     },
     litres,
   );
@@ -706,9 +735,15 @@ export function enregistrerInciSavon(article: string, inci: string): Promise<voi
   });
 }
 
-/** Les recettes de la bibliothèque d'un produit (« plat » ou « savon »), par ordre alphabétique. */
-export const recettesDuProduit = (archive: Pick<ArchiveStock, 'recettes'>, produit: string): RecetteDeFabrication[] =>
-  (archive.recettes ?? []).filter((r) => r.produit === produit).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+/** Les recettes de la bibliothèque d'un produit, par ordre alphabétique : avec un article, celles qui lui sont propres et celles du produit entier. */
+export const recettesDuProduit = (
+  archive: Pick<ArchiveStock, 'recettes'>,
+  produit: string,
+  article?: string,
+): RecetteDeFabrication[] =>
+  (archive.recettes ?? [])
+    .filter((r) => r.produit === produit && (!article || !r.article || r.article === article))
+    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
 /** Garde une recette (nouvelle, ou celle qui porte déjà son identifiant : elle est remplacée). */
 export function enregistrerRecette(recette: RecetteDeFabrication): Promise<void> {

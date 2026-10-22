@@ -145,6 +145,10 @@ export default function ProductionLayout() {
         })}
       />
       <Stack.Screen
+        name="recettes"
+        options={{ title: TEXTES.production.recettes.page.titre, headerLeft: enteteDuBatiment() }}
+      />
+      <Stack.Screen
         name="registre-analyses"
         options={{ title: TEXTES.analysesProduits.registre.titre, headerLeft: enteteDuBatiment() }}
       />

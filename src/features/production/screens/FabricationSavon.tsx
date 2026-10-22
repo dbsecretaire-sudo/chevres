@@ -61,6 +61,8 @@ export default function FabricationSavon() {
   const [finCureSaisie, setFinCureSaisie] = useState<string | null>(null);
   const [ddm, setDdm] = useState('');
   const [ingredients, setIngredients] = useState<SaisieIngredient[]>([]);
+  /** L'explicatif de la fabrication : celui d'une recette reprise, ou ce qu'on y note. */
+  const [notes, setNotes] = useState('');
   const [nouveauOuvert, setNouveauOuvert] = useState(false);
   const [enregistrement, setEnregistrement] = useState(false);
 
@@ -137,6 +139,7 @@ export default function FabricationSavon() {
         dateSaponification: saponification,
         finCure,
         ddm: ddm || undefined,
+        notes: notes || undefined,
         ingredients: utilises,
       });
       // Le savon est fabriqué ; on prévient s'il ne pourra pas se vendre tant que son dossier n'est pas en règle.
@@ -207,6 +210,8 @@ export default function FabricationSavon() {
         <SectionForm titre={TEXTES.production.recettes.sectionTitre} aide={TEXTES.production.recettes.sectionAide}>
           <ChampRecette
             produit={PRODUIT_A_LOTS.SAVON}
+            article={article}
+            notes={notes}
             archive={archive}
             ingredients={ingredients}
             quantite={quantite}
@@ -214,6 +219,7 @@ export default function FabricationSavon() {
             joursCure={Math.round((Date.parse(finCure) - Date.parse(saponification)) / 86_400_000)}
             onChange={() => charger()}
             onAppliquer={(r) => {
+              if (r.notes) setNotes(r.notes);
               setIngredients(
                 r.ingredients.map((i, rang) => ({
                   cle: `r${rang}-${i.article}`,
@@ -235,6 +241,7 @@ export default function FabricationSavon() {
             proposables={proposables}
           />
         </SectionForm>
+        <FormField label={TEXTES.production.recettes.notes} value={notes} onChangeText={setNotes} multiline style={commonStyles.textarea} />
         <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
       </Screen>
       <NomModal

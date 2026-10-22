@@ -4,6 +4,7 @@ import { useRouter, usePathname, useGlobalSearchParams, type Href } from 'expo-r
 import { Ionicons } from '@expo/vector-icons';
 import { useAncre } from '@/features/didacticiel/components/AncreVisite';
 import { dansLeMenuDeGauche, pageParente } from '@/bureau/retour';
+import { ROUTES } from '@/shared/constants/routes';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { useDeuxColonnes } from '@/bureau/colonnes';
 import { colors } from '@/shared/theme/colors';
@@ -50,7 +51,16 @@ export function FlecheRetourBureau() {
   if (masquee || (!parent && !depuisUnBouton)) return <EspaceSansFleche />;
   // Sans nom : la flèche est un dessin seul (les autres boutons d'en-tête, eux, écrivent leur nom à côté).
   return (
-    <Pressable ref={ancre} style={commonStyles.boutonCompact} onPress={() => (depuisUnBouton ? retourOrigine() : router.replace(parent as Href))}>
+    <Pressable
+      ref={ancre}
+      style={commonStyles.boutonCompact}
+      onPress={() => {
+        if (depuisUnBouton) return retourOrigine();
+        // Une nouvelle écriture revient à la page d'où on l'a ouverte (les lots d'un produit, une fiche…), pas aux écritures.
+        if (adresse === ROUTES.COMPTABILITE_NOUVELLE && router.canGoBack()) return router.back();
+        router.replace(parent as Href);
+      }}
+    >
       <Ionicons name="arrow-back" size={24} color={colors.blanc} />
     </Pressable>
   );

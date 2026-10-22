@@ -6,7 +6,6 @@ import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
@@ -34,10 +33,7 @@ import { estUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { useNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { CategorieDepense, CategorieRecette, TypeFacture } from '@/features/comptabilite/types';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, OBJET_ASSURANCE, TYPE_FACTURE, VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
-import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { currentYear, formatMontant } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -225,8 +221,7 @@ export default function NouvelleFacture() {
     el.type === 'ligne'
       ? `${el.ligne.quantite} × ${el.ligne.libelle}`
       : TEXTES.comptabilite.nouvelleEcriture.animauxReserves(el.ids.length);
-  // L'activité se choisit par une puce (comme dans la liste) ; elle n'apparaît que pour un établissement à plusieurs espèces.
-  const activites = [...especesActives(), ...(e.avecCommunActivite ? [ACTIVITE_COMMUNE] : [])];
+  // L'activité de l'écriture est l'animal de la capsule du haut : la page n'a plus son propre choix.
 
   /** La date de l'écriture : en tête de la première section (l'identification), pour un débit comme pour un crédit. */
   const champDate = (
@@ -257,16 +252,6 @@ export default function NouvelleFacture() {
             options={OPTIONS_TYPE}
             onChoisir={e.setType}
           />
-          {plusieursEspeces() ? (
-            <AncreVisite id="ecriture.activite">
-              <ChoixDeroulant
-                titre={TEXTES.comptabilite.activite.activite}
-                valeur={e.activite}
-                options={activites.map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
-                onChoisir={e.changerActivite}
-              />
-            </AncreVisite>
-          ) : null}
         </LigneFiltres>
 
         {e.type === TYPE_FACTURE.RECUE ? (

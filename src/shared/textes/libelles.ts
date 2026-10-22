@@ -496,6 +496,7 @@ export const LABEL_MATERIEL: Record<ValeurDe<typeof ARTICLE_MATERIEL>, string> =
   [ARTICLE_MATERIEL.GANTS]: 'Gants',
   [ARTICLE_MATERIEL.PRESURE]: 'Présure',
   [ARTICLE_MATERIEL.SEL]: 'Sel',
+  [ARTICLE_MATERIEL.FERMENTS_LACTIQUES]: 'Ferments lactiques',
 };
 
 export const LABEL_SERVICE_REPAS: Record<ValeurDe<typeof SERVICE_REPAS>, string> = {

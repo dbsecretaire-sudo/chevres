@@ -148,7 +148,16 @@ export const ARTICLE_MATERIEL = {
   GANTS: 'gants',
   PRESURE: 'presure',
   SEL: 'sel',
+  /** Les ferments lactiques (le crottin) : un ingrédient de fabrication, comme la présure et le sel. */
+  FERMENTS_LACTIQUES: 'ferments_lactiques',
 } as const;
+
+/** Ce qui entre dans la fabrication d'un fromage (la présure, le sel, les ferments) : proposé comme ingrédient d'une fabrication, avec les articles des listes ajoutées. */
+export const INGREDIENTS_DE_FROMAGERIE: readonly string[] = [
+  ARTICLE_MATERIEL.PRESURE,
+  ARTICLE_MATERIEL.SEL,
+  ARTICLE_MATERIEL.FERMENTS_LACTIQUES,
+];
 
 type Emballage = ValeurDe<typeof ARTICLE_EMBALLAGE>;
 

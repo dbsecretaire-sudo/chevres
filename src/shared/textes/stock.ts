@@ -265,6 +265,7 @@ export const TEXTES_STOCK = {
       ddm: (date: string) => `À utiliser avant ${date}`,
       lait: (litres: string) => `Lait de chèvre : ${litres} L`,
       dossierIncomplet: 'Non vendable : dossier réglementaire incomplet',
+      notes: (texte: string) => `Notes : ${texte}`,
     },
     plat: {
       sterilise: (date: string) => `Stérilisé le ${date}`,

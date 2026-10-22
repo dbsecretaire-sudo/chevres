@@ -120,6 +120,11 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
         p.famille === FAMILLE_CONTROLE.GROUPEMENT ? FAMILLE_CONTROLE.GROUPEMENT : FAMILLE_CONTROLE.LAITIER,
       ),
   ],
+  // Les listes de lots (fromages, viande, charcuterie, plats préparés, savons) reviennent à la page des lots de l'atelier, le dossier d'un savon à la liste des savons.
+  [/^\/production\/(fromages|viande|charcuterie|plats|savons)$/, () => ROUTES.PRODUCTION_LOTS],
+  [/^\/production\/savon-dossier$/, () => ROUTES.PRODUCTION_SAVONS],
+  [/^\/production\/(lots|registre-analyses|recettes)$/, () => '/'],
+  [/^\/production\/(analyses-produit|analyse-produit)$/, () => ROUTES.PRODUCTION_REGISTRE_ANALYSES],
   [/^\/production\/(fabrication|statistiques)$/, () => ROUTES.PRODUCTION_FROMAGES],
   [/^\/production\/rappel$/, () => ROUTES.PRODUCTION_RAPPELS_LOTS],
   [/^\/commercial\/commande$/, () => ROUTES.COMMERCIAL_COMMANDES],

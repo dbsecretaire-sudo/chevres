@@ -16,8 +16,12 @@ const T = TEXTES.production.recettes;
 const AUCUNE = '';
 
 interface Props {
-  /** « plat » ou « savon » : la bibliothèque de ce produit. */
+  /** « fromage », « charcuterie », « plat » ou « savon » : la bibliothèque de ce produit. */
   produit: string;
+  /** L'article fabriqué : les recettes qui lui sont propres, et celles du produit entier, sont proposées ; une nouvelle recette lui est rattachée. */
+  article?: string;
+  /** Les notes saisies dans la fabrication : elles font l'explicatif de la recette. */
+  notes?: string;
   archive: ArchiveStock | null;
   /** Ce qui est saisi dans la fabrication : de quoi faire une recette. */
   ingredients: SaisieIngredient[];
@@ -34,8 +38,19 @@ interface Props {
  * La bibliothèque de recettes d'une fabrication (plats préparés, savons) : on en choisit une pour reprendre d'un appui ses ingrédients et leurs quantités, on garde
  * ce qu'on vient de saisir comme recette, on la met à jour ou on la retire. Les lots d'ingrédients ne sont pas gardés : ils changent à chaque fabrication.
  */
-export function ChampRecette({ produit, archive, ingredients, quantite, litres, joursCure, onAppliquer, onChange }: Props) {
-  const recettes = archive ? recettesDuProduit(archive, produit) : [];
+export function ChampRecette({
+  produit,
+  article,
+  notes,
+  archive,
+  ingredients,
+  quantite,
+  litres,
+  joursCure,
+  onAppliquer,
+  onChange,
+}: Props) {
+  const recettes = archive ? recettesDuProduit(archive, produit, article) : [];
   const [choisie, setChoisie] = useState(AUCUNE);
   const [nomOuvert, setNomOuvert] = useState(false);
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
@@ -45,7 +60,9 @@ export function ChampRecette({ produit, archive, ingredients, quantite, litres, 
   const depuisLaSaisie = (id: string, nom: string): RecetteDeFabrication => ({
     id,
     produit,
+    article: article || undefined,
     nom,
+    notes: notes?.trim() || undefined,
     quantite: Math.round(Number(quantite) || 0) || undefined,
     litresLait: parseDecimal(litres ?? '') || undefined,
     joursCure,

@@ -29,6 +29,7 @@ export function detailDuLotDePlat(
   if (dates.length > 0) lignes.push(dates.join(' · '));
   // Un savon n'est pas vendable tant que son dossier réglementaire n'est pas en règle.
   if (estArticleSavon(lotArticle(lot, archive)) && !dossierEnRegle(archive, lotArticle(lot, archive) as string)) lignes.push(TS.dossierIncomplet);
+  if (fabrication.notes) lignes.push(TS.notes(fabrication.notes));
   if (fabrication.litresLait) lignes.push(TS.lait(String(fabrication.litresLait).replace('.', ',')));
   if (fabrication.ingredients.length > 0) {
     const ingredients = fabrication.ingredients.map((i) => {

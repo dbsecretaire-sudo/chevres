@@ -147,6 +147,8 @@ export interface FabricationDePlats {
   finCure?: string;
   /** Un savon : les litres de lait de chèvre pris dans le stock de lait de l'exploitation (notés sur le mouvement d'entrée des lots). */
   litresLait?: number;
+  /** Des notes sur la fabrication : l'explicatif de la recette (le cahier des charges d'une AOP, un tour de main…). */
+  notes?: string;
   ingredients: IngredientDePlat[];
 }
 
@@ -166,9 +168,13 @@ export interface EtapeReglementaire {
  */
 export interface RecetteDeFabrication {
   id: string;
-  /** Le produit : « plat » ou « savon ». */
+  /** Le produit : « fromage », « charcuterie », « plat » ou « savon ». */
   produit: string;
+  /** L'article de l'inventaire pour lequel elle est faite (le fromage frais, le crottin…) ; absent : elle vaut pour tout le produit. */
+  article?: string;
   nom: string;
+  /** L'explicatif de la recette : il remplit les notes de la fabrication. */
+  notes?: string;
   /** Le nombre de pièces (bocaux, pains) d'une fabrication. */
   quantite?: number;
   /** Un savon : les litres de lait de chèvre, et les jours de cure après la saponification. */

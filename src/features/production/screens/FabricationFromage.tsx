@@ -1,7 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import { SectionForm } from '@/shared/components/SectionForm';
+import { ChampIngredientsPlat } from '@/features/production/components/ChampIngredientsPlat';
+import { ChampRecette } from '@/features/production/components/ChampRecette';
+import {
+  ingredientsProposables,
+  lotsPrisPourIngredient,
+  type SaisieIngredient,
+} from '@/features/production/services/ingredientsPlat';
 import FabricationPlat from '@/features/production/screens/FabricationPlat';
 import FabricationSavon from '@/features/production/screens/FabricationSavon';
 import { Button } from '@/shared/components/Button';
@@ -58,6 +66,9 @@ function FabricationDeLots() {
   const [premierSaisi, setPremierSaisi] = useState<string | null>(null);
   /** Les litres de lait par fromage, demandés une seule fois quand l'inventaire ne les a pas encore. */
   const [litresSaisis, setLitresSaisis] = useState('');
+  /** Ce qui sort du stock pour cette fabrication (présure, sel, ferments…) et l'explicatif de la recette. */
+  const [ingredients, setIngredients] = useState<SaisieIngredient[]>([]);
+  const [notes, setNotes] = useState('');
   const [enregistrement, setEnregistrement] = useState(false);
 
   useEffect(() => {
@@ -68,6 +79,24 @@ function FabricationDeLots() {
       if (proposes[0]) setArticle(proposes[0].cle);
     });
   }, [espece, produit]);
+
+  // Les ingrédients d'une fromagerie : la présure, le sel et les ferments, puis les articles des listes de l'inventaire.
+  const proposables = useMemo(
+    () =>
+      archive
+        ? ingredientsProposables(
+            archive,
+            {
+              fromages: '',
+              charcuterie: '',
+              autres: TEXTES.production.fabricationPlat.ingredients.groupeAutres,
+              fromagerie: TEXTES.production.recettes.groupeFromagerie,
+            },
+            { fromagerie: true },
+          )
+        : [],
+    [archive],
+  );
 
   // Le numéro du premier lot se propose d'après le produit et la date (on peut le modifier ensuite).
   const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive, article, date) : '');
@@ -99,12 +128,18 @@ function FabricationDeLots() {
       // Les litres par fromage indiqués ici sont gardés dans l'inventaire : on ne les redemande plus.
       if (fromage && litresDeLInventaire === undefined)
         await definirLitresParFromage(article, litresParFromage);
+      const utilises = ingredients
+        .map((i) => ({ i, q: parseDecimal(i.quantite) }))
+        .filter(({ i, q }) => i.article && q > 0)
+        .map(({ i, q }) => ({ article: i.article, quantite: q, lotIds: lotsPrisPourIngredient(archive, i, q) }));
       await fabriquerFromages({
         article,
         date,
         quantite: nombre,
         debut: premier,
         litres: fromage ? laitUtilise : undefined,
+        ingredients: utilises,
+        notes: notes || undefined,
       });
       router.back();
     } finally {
@@ -168,6 +203,32 @@ function FabricationDeLots() {
             </>
           )
         ) : null}
+        <SectionForm titre={TEXTES.production.recettes.sectionTitre} aide={TEXTES.production.recettes.sectionAideFromagerie}>
+          <ChampRecette
+            produit={produit}
+            article={article}
+            notes={notes}
+            archive={archive}
+            ingredients={ingredients}
+            quantite={quantite}
+            onChange={() => lireArchiveStock().then(setArchive)}
+            onAppliquer={(r) => {
+              setIngredients(
+                r.ingredients.map((i, rang) => ({
+                  cle: `r${rang}-${i.article}`,
+                  article: i.article,
+                  quantite: String(i.quantite).replace('.', ','),
+                })),
+              );
+              if (r.notes) setNotes(r.notes);
+              if (r.quantite) setQuantite(String(r.quantite));
+            }}
+          />
+        </SectionForm>
+        <SectionForm titre={TEXTES.production.fabricationPlat.ingredients.titre} aide={TEXTES.production.recettes.ingredientsFromagerieAide}>
+          <ChampIngredientsPlat valeur={ingredients} onChange={setIngredients} archive={archive} proposables={proposables} />
+        </SectionForm>
+        <FormField label={TEXTES.production.recettes.notes} value={notes} onChangeText={setNotes} multiline style={commonStyles.textarea} />
         <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
       </Screen>
     </AccentColorProvider>

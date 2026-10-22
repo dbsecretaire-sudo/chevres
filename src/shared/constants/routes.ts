@@ -136,6 +136,8 @@ export const ROUTES = {
   analysesProduit: (produit: string) => `/production/analyses-produit?produit=${produit}` as const,
   analyseProduit: (produit: string, id?: string, fabrication?: string) =>
     `/production/analyse-produit?produit=${produit}${id ? `&id=${id}` : ''}${fabrication ? `&fabrication=${encodeURIComponent(fabrication)}` : ''}` as const,
+  /** La bibliothèque de recettes de l'atelier (fromages, charcuterie, plats préparés, savons). */
+  PRODUCTION_RECETTES: '/production/recettes',
   /** Le registre des analyses de l'atelier : les fabrications (fromages, charcuterie, plats, savons) et leurs analyses. */
   PRODUCTION_REGISTRE_ANALYSES: '/production/registre-analyses',
   /** La fabrication et le rappel d'un produit suivi par lot (`produit` : fromage ou charcuterie). */

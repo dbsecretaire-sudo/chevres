@@ -56,6 +56,8 @@ export default function FabricationPlat() {
   const [sterilisationSaisie, setSterilisationSaisie] = useState<string | null>(null);
   const [ddm, setDdm] = useState('');
   const [ingredients, setIngredients] = useState<SaisieIngredient[]>([]);
+  /** L'explicatif de la fabrication : celui d'une recette reprise, ou ce qu'on y note. */
+  const [notes, setNotes] = useState('');
   const [nouveauOuvert, setNouveauOuvert] = useState(false);
   const [enregistrement, setEnregistrement] = useState(false);
 
@@ -125,6 +127,7 @@ export default function FabricationPlat() {
         debut: premier,
         dateSterilisation: sterilisation,
         ddm: ddm || undefined,
+        notes: notes || undefined,
         ingredients: utilises,
       });
       router.back();
@@ -184,11 +187,14 @@ export default function FabricationPlat() {
         <SectionForm titre={TEXTES.production.recettes.sectionTitre} aide={TEXTES.production.recettes.sectionAide}>
           <ChampRecette
             produit={PRODUIT_A_LOTS.PLAT}
+            article={article}
+            notes={notes}
             archive={archive}
             ingredients={ingredients}
             quantite={quantite}
             onChange={() => charger()}
             onAppliquer={(r) => {
+              if (r.notes) setNotes(r.notes);
               setIngredients(
                 r.ingredients.map((i, rang) => ({
                   cle: `r${rang}-${i.article}`,
@@ -208,6 +214,7 @@ export default function FabricationPlat() {
             proposables={proposables}
           />
         </SectionForm>
+        <FormField label={TEXTES.production.recettes.notes} value={notes} onChangeText={setNotes} multiline style={commonStyles.textarea} />
         <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
       </Screen>
       <NomModal

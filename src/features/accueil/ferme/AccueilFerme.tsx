@@ -81,6 +81,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   analyses: ROUTES.lieu('analyses'),
   // Le registre des analyses de l'atelier : les fabrications et leurs analyses.
   registreAnalyses: ROUTES.PRODUCTION_REGISTRE_ANALYSES,
+  // La bibliothèque de recettes de l'atelier.
+  recettes: ROUTES.PRODUCTION_RECETTES,
   // La gestion du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit, et le stock de la fromagerie.
   reserver: ROUTES.COMMERCIAL_COMMANDE,
   stockFromagerie: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`,
@@ -264,6 +266,7 @@ export default function AccueilFerme() {
     { cle: 'ventesAtelier', titre: C.ventesAtelier, icone: iconeIon('cash'), couleur: VENTE },
     { cle: 'rentabiliteAtelier', titre: C.rentabilite, icone: iconeIon('stats-chart'), couleur: VENTE },
     { cle: 'registreAnalyses', titre: C.registreAnalyses, icone: iconeIon('flask'), couleur: '#6A767E' },
+    { cle: 'recettes', titre: C.recettes, icone: iconeIon('book'), couleur: '#6A767E' },
   ];
   // Le côté Agritourisme : ceux qui viennent (les visiteurs, leurs groupes), ceux qui les envoient (l'office de tourisme) et ceux qui fournissent le repas.
   const intervenantsAgritourisme: EntreeDeColonne[] = [
