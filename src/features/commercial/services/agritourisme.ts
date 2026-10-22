@@ -6,8 +6,10 @@ import type {
   ArchiveCommercial,
   ElementFormule,
   FormuleAgritourisme,
+  StockDeVisite,
   VisiteAgritourisme,
 } from '@/features/commercial/types';
+import { rendreStockDeVisite, utiliserStockPourVisite } from '@/features/stock/services/lots';
 import {
   COMPTE_AGRITOURISME,
   ELEMENT_AGRITOURISME,
@@ -140,6 +142,8 @@ export async function supprimerVisite(id: string): Promise<void> {
   const archive = await lireArchiveCommercial();
   const visite = archive.visites.find((v) => v.id === id);
   if (visite?.factureId) await supprimerFacture(visite.factureId);
+  // Le stock qu'elle avait utilisé revient.
+  if (visite?.stock?.length) await rendreStockDeVisite(id);
   await remplacerArchiveCommercial({ ...archive, visites: archive.visites.filter((v) => v.id !== id) });
 }
 
@@ -150,6 +154,8 @@ export async function supprimerVisite(id: string): Promise<void> {
 export async function realiserVisite(
   visite: VisiteAgritourisme,
   formule: FormuleAgritourisme | undefined,
+  /** Le stock utilisé (produits, quantités, lots choisis) : il sort de l'inventaire à la date de la visite. */
+  stock?: StockDeVisite[],
 ): Promise<VisiteAgritourisme> {
   const T = TEXTES.commercial.agritourisme;
   const facture = await enregistrerFacture({
@@ -166,7 +172,14 @@ export async function realiserVisite(
     payee: visite.enAttente ? false : undefined,
     echeance: visite.enAttente && visite.echeance ? visite.echeance : undefined,
   });
-  const realisee: VisiteAgritourisme = { ...visite, statut: STATUT_VISITE.REALISEE, factureId: facture.id };
+  const utilise = (stock ?? []).filter((s) => s.quantite > 0);
+  if (utilise.length > 0) await utiliserStockPourVisite(visite.id, visite.date, utilise);
+  const realisee: VisiteAgritourisme = {
+    ...visite,
+    statut: STATUT_VISITE.REALISEE,
+    factureId: facture.id,
+    stock: utilise.length > 0 ? utilise : undefined,
+  };
   await enregistrerVisite(realisee);
   return realisee;
 }
@@ -174,7 +187,8 @@ export async function realiserVisite(
 /** Défait la réalisation d'une visite : sa recette est supprimée et la visite redevient « à venir ». */
 export async function defaireVisite(visite: VisiteAgritourisme): Promise<VisiteAgritourisme> {
   if (visite.factureId) await supprimerFacture(visite.factureId);
-  const prevue: VisiteAgritourisme = { ...visite, statut: STATUT_VISITE.PREVUE, factureId: undefined };
+  if (visite.stock?.length) await rendreStockDeVisite(visite.id);
+  const prevue: VisiteAgritourisme = { ...visite, statut: STATUT_VISITE.PREVUE, factureId: undefined, stock: undefined };
   await enregistrerVisite(prevue);
   return prevue;
 }

@@ -423,6 +423,43 @@ export function synchroniserLotsVente(vente: Pick<Vente, 'id' | 'date' | 'fromag
   });
 }
 
+/**
+ * Sort du stock ce qu'une visite de la ferme utilise : un mouvement par produit, et les lots choisis passent « vendus » à la date de la visite
+ * (la visite est la clé : elle les rend au stock si elle est défaite, voir rendreStockDeVisite). Les produits sans lot choisi sortent sans numéro.
+ */
+export function utiliserStockPourVisite(
+  visiteId: string,
+  date: string,
+  utilise: readonly { article: string; quantite: number; lotIds: string[] }[],
+): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const ids = new Set(utilise.flatMap((u) => u.lotIds));
+    const mouvements: MouvementStock[] = [
+      ...archive.mouvements.filter((m) => m.venteId !== visiteId),
+      ...utilise
+        .filter((u) => u.quantite > 0)
+        .map((u) => ({
+          id: generateId(),
+          article: u.article,
+          date,
+          delta: -u.quantite,
+          origine: ORIGINE_MOUVEMENT.VISITE,
+          venteId: visiteId,
+        })),
+    ];
+    const lots = (archive.lots ?? []).map((l) => {
+      if (ids.has(l.id) && !l.dateRappel) return { ...l, venteId: visiteId, dateVente: date };
+      return l.venteId === visiteId ? { ...l, venteId: undefined, dateVente: undefined } : l;
+    });
+    await remplacerArchiveStock({ ...archive, mouvements, lots });
+  });
+}
+
+/** Rend au stock ce qu'une visite défaite (ou supprimée) avait utilisé : ses mouvements disparaissent, ses lots redeviennent en stock. */
+export const rendreStockDeVisite = (visiteId: string): Promise<void> =>
+  utiliserStockPourVisite(visiteId, '', []);
+
 /** Une vente supprimée rend ses fromages au stock. */
 export const libererLotsVente = (venteId: string): Promise<void> =>
   synchroniserLotsVente({ id: venteId, date: '', fromages: undefined });

@@ -210,6 +210,29 @@ export const TEXTES_COMMERCIAL = {
   },
   /** L'agritourisme : visites de la ferme, parcours en 4x4, repas (migliaccioles cuites devant les visiteurs), dégustation de fromages. */
   agritourisme: {
+    /** Le stock nécessaire d'une formule (fromages, charcuterie…) : saisi sur la formule, sorti du stock à la réalisation de la visite. */
+    stock: {
+      titre: 'Stock nécessaire',
+      aide: 'Les produits du stock que la formule consomme, par visite (le groupe) ou par personne. Ils sortent de l’inventaire quand la visite est réalisée, avec les lots que vous choisissez. Ce qui n’est pas dans le stock (boissons, pain…) se note en dépense.',
+      aucun: 'Aucun produit : la formule ne sort rien du stock.',
+      ajouter: '+ Ajouter un produit',
+      produit: 'Produit',
+      choisirProduit: 'Choisir un produit',
+      quantite: 'Quantité',
+      parPersonne: 'Par personne (sinon : pour toute la visite)',
+      retirer: 'Retirer ce produit',
+      groupeFromages: 'Fromages',
+      groupeCharcuterie: 'Charcuterie et viande',
+      ligne: (quantite: number, nom: string) => `${quantite} × ${nom}`,
+      lots: (numeros: string) => `lots : ${numeros}`,
+      sansNumero: 'sans numéro de lot',
+      choixTitre: 'Choisir les lots',
+      choixAide: 'Les lots les plus anciens sont cochés. Ce qui n’est pas coché sort du stock sans numéro de lot.',
+      compteur: (pris: number, total: number) => `${pris} lot${pris > 1 ? 's' : ''} choisi${pris > 1 ? 's' : ''} sur ${total}.`,
+      resteSansLot: (n: number) => `${n} sans numéro de lot.`,
+      sansLot: (n: number) => `Aucun lot en stock : ${n} sortent du stock sans numéro de lot.`,
+      realiser: 'Réaliser la visite',
+    },
     titre: 'Agritourisme',
     descriptionRecette: (formule: string, personnes: number) =>
       `Agritourisme — ${formule} (${personnes} personne${personnes > 1 ? 's' : ''})`,

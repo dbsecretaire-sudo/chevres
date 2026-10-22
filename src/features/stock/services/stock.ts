@@ -223,6 +223,8 @@ export function libelleOrigineMouvement(
       return TEXTES.stock.fabrication;
     case ORIGINE_MOUVEMENT.BALANCE:
       return TEXTES.stock.balanceLait;
+    case ORIGINE_MOUVEMENT.VISITE:
+      return TEXTES.stock.visite;
     default:
       // Des fromages entrés avec les litres de lait utilisés : une fabrication.
       return m.delta > 0 && (m.litres ?? 0) > 0 ? TEXTES.stock.fabrication : TEXTES.stock.manuel;

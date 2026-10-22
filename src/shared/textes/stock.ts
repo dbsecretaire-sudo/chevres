@@ -428,6 +428,7 @@ export const TEXTES_STOCK = {
     revenir: 'Revenir au conditionnement d’avant',
   },
   vente: 'vente',
+  visite: 'visite de la ferme',
   manuel: 'saisie',
   naissance: 'naissance',
   achat: 'achat',

@@ -52,6 +52,24 @@ export interface FormuleAgritourisme {
   /** Le taux de TVA de la recette (%) ; absent : le taux d'office de l'agritourisme. */
   tauxTva?: number;
   note?: string;
+  /** Le stock que la formule consomme (fromages, charcuterie…) : il se déduit à la réalisation de la visite, avec les lots choisis. */
+  besoins?: BesoinFormule[];
+}
+
+/** Ce qu'une formule consomme du stock : un produit de l'inventaire et sa quantité, par visite (le groupe) ou par personne. */
+export interface BesoinFormule {
+  /** L'article de l'inventaire (« fromage:frais », une ligne de charcuterie…). */
+  article: string;
+  quantite: number;
+  /** Vrai : la quantité est pour chaque personne ; faux ou absent : pour toute la visite (le cas d'ordinaire). */
+  parPersonne?: boolean;
+}
+
+/** Le stock qu'une visite réalisée a utilisé : la quantité d'un article, et les lots choisis pour cette quantité (le reste est sorti sans lot). */
+export interface StockDeVisite {
+  article: string;
+  quantite: number;
+  lotIds: string[];
 }
 
 /** Un élément qu'une formule peut comprendre (visite, 4x4, repas, dégustation… ou un élément ajouté) : son nom, et un nom court pour les listes. */
@@ -81,6 +99,8 @@ export interface VisiteAgritourisme {
   echeance?: string;
   /** Une fois réalisée : la recette inscrite en comptabilité. */
   factureId?: string;
+  /** Une fois réalisée : le stock utilisé (produits, quantités et lots), pour le retrouver et le rendre si la visite est défaite. */
+  stock?: StockDeVisite[];
 }
 
 /** Tout le volet commercial d'un établissement. */

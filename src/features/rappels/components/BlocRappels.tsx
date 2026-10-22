@@ -40,7 +40,13 @@ function BlocRappelsDeclarations() {
   const circulation = manquantsCirculation.length;
   const { settings } = useAppSettings();
   /** Les lots d'équarrissage sans bon : rappelés tant que leur bon n'est pas joint, comme les documents de circulation. */
-  const bonsManquants = lotsSansBonEquarrissage(settings.exploitation?.lots).length;
+  const lotsSansBon = lotsSansBonEquarrissage(settings.exploitation?.lots);
+  const bonsManquants = lotsSansBon.length;
+  /** Un seul lot sans bon : le rappel ouvre ce lot sur son onglet Fichiers, là où le bon se joint ; plusieurs : la liste des lots d'équarrissage. */
+  const routeDuBon =
+    lotsSansBon.length === 1
+      ? `${ROUTES.lot(lotsSansBon[0].id)}&onglet=fichiers`
+      : ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.EQUARRISSAGE);
   /** Les années (autres que celle choisie) où des documents manquent : l'accueil le dit. */
   const anneesAilleurs = settings.toutesAnnees
     ? []
@@ -79,7 +85,7 @@ function BlocRappelsDeclarations() {
           <View style={styles.ligne}>
             <Pressable
               style={styles.texte}
-              onPress={() => router.push(ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.EQUARRISSAGE) as never)}
+              onPress={() => router.push(routeDuBon as never)}
             >
               <View style={styles.titreLigne}>
                 <Text style={styles.libelle}>{TEXTES.cheptel.lots.bonsManquants(bonsManquants)}</Text>

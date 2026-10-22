@@ -275,6 +275,8 @@ export const ORIGINE_MOUVEMENT = {
   FABRICATION: 'fabrication',
   /** Le lait produit que la balance automatique ajoute pour une sortie (vente, fabrication) que le journal de lait ne couvre pas. */
   BALANCE: 'balance',
+  /** Des produits utilisés pour une visite de la ferme (le pique-nique d'une formule d'agritourisme) : une sortie, rendue si la visite est défaite. */
+  VISITE: 'visite',
 } as const;
 
 /** Les lignes de viande tenues d'office pour chaque espèce : ses petits, puis l'animal sur pied et l'animal vivant. */

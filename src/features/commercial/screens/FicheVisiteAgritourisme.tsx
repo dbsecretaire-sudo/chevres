@@ -20,7 +20,12 @@ import {
   realiserVisite,
   supprimerVisite,
 } from '@/features/commercial/services/agritourisme';
-import type { FormuleAgritourisme, VisiteAgritourisme } from '@/features/commercial/types';
+import type { FormuleAgritourisme, StockDeVisite, VisiteAgritourisme } from '@/features/commercial/types';
+import { ChoixLotsVisite } from '@/features/commercial/components/ChoixLotsVisite';
+import { besoinsDeLaVisite } from '@/features/commercial/services/stockVisite';
+import { lireArchiveStock } from '@/features/stock/repository';
+import { libelleArticle } from '@/features/stock/services/stock';
+import type { ArchiveStock } from '@/features/stock/types';
 import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
@@ -61,9 +66,15 @@ export default function FicheVisiteAgritourisme() {
   const [statut, setStatut] = useState<StatutVisite>(STATUT_VISITE.PREVUE);
   const [erreur, setErreur] = useState('');
   const [confirmation, setConfirmation] = useState<'realiser' | 'defaire' | 'supprimer' | null>(null);
+  const [choixLotsOuvert, setChoixLotsOuvert] = useState(false);
+  /** Le stock en archive : les noms des produits à prévoir et utilisés, et les numéros de lots. */
+  const [archiveStock, setArchiveStock] = useState<ArchiveStock | null>(null);
 
   useFocusEffect(
     useCallback(() => {
+      lireArchiveStock()
+        .then(setArchiveStock)
+        .catch(() => undefined);
       Promise.all([listClients(), lireArchiveCommercial()]).then(([listeClients, archive]) => {
         setClients(listeClients);
         setFormules(archive.formules);
@@ -141,13 +152,17 @@ export default function FicheVisiteAgritourisme() {
     router.back();
   };
 
-  const realiser = async () => {
+  const realiser = async (stock?: StockDeVisite[]) => {
     setConfirmation(null);
+    setChoixLotsOuvert(false);
     const visite = construire();
     if (!visite) return;
-    await realiserVisite(visite, formule);
+    await realiserVisite(visite, formule, stock);
     router.back();
   };
+  /** Le stock que la formule demande pour ce groupe : la réalisation passe alors par le choix des lots. */
+  const besoins = besoinsDeLaVisite(formule, nombre > 0 ? nombre : 0);
+  const demanderRealisation = () => (besoins.length > 0 ? setChoixLotsOuvert(true) : setConfirmation('realiser'));
 
   const defaire = async () => {
     setConfirmation(null);
@@ -238,12 +253,35 @@ export default function FicheVisiteAgritourisme() {
         ) : null}
       </SectionForm>
 
+      {/* Le stock de la formule : ce qu'il faut prévoir pour ce groupe, puis ce qui a été utilisé une fois la visite réalisée. */}
+      {archiveStock && (existante?.stock?.length || besoins.length > 0) ? (
+        <SectionForm titre={TEXTES.commercial.agritourisme.stock.titre}>
+          {existante?.stock?.length
+            ? existante.stock.map((s) => {
+                const numeros = (archiveStock.lots ?? []).filter((l) => s.lotIds.includes(l.id)).map((l) => l.numero);
+                return (
+                  <Text key={s.article} style={commonStyles.note}>
+                    {TEXTES.commercial.agritourisme.stock.ligne(s.quantite, libelleArticle(s.article, archiveStock))} —{' '}
+                    {numeros.length > 0
+                      ? TEXTES.commercial.agritourisme.stock.lots(numeros.join(', '))
+                      : TEXTES.commercial.agritourisme.stock.sansNumero}
+                  </Text>
+                );
+              })
+            : besoins.map((b) => (
+                <Text key={b.article} style={commonStyles.note}>
+                  {TEXTES.commercial.agritourisme.stock.ligne(b.quantite, libelleArticle(b.article, archiveStock))}
+                </Text>
+              ))}
+        </SectionForm>
+      ) : null}
+
       {erreur ? <Text style={styles.alerte}>{erreur}</Text> : null}
 
       <View style={styles.actions}>
         {modifiable ? <Button label={T.enregistrer} onPress={enregistrer} /> : null}
         {existante && modifiable ? (
-          <Button label={T.actions.realiser} onPress={() => setConfirmation('realiser')} />
+          <Button label={T.actions.realiser} onPress={demanderRealisation} />
         ) : null}
         {existante && statut === STATUT_VISITE.REALISEE ? (
           <Button variant="secondary" label={T.actions.defaire} onPress={() => setConfirmation('defaire')} />
@@ -273,7 +311,15 @@ export default function FicheVisiteAgritourisme() {
         message={T.realiser.message(formatMontant(recette))}
         confirmLabel={T.realiser.confirmer}
         onCancel={() => setConfirmation(null)}
-        onConfirm={realiser}
+        onConfirm={() => realiser()}
+      />
+      <ChoixLotsVisite
+        visible={choixLotsOuvert}
+        visiteId={existante?.id}
+        formule={formule}
+        participants={nombre > 0 ? nombre : 0}
+        onValider={(stock) => realiser(stock)}
+        onAnnuler={() => setChoixLotsOuvert(false)}
       />
       <ConfirmModal
         visible={confirmation === 'defaire'}
