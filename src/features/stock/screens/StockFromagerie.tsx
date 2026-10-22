@@ -119,6 +119,7 @@ const TEXTES_AJOUT: Record<GenreAjoutable, { titre: string; exemple: string }> =
     exemple: T.ajouter.exempleEquipementConsommable,
   },
   [GENRE_ARTICLE.VIANDE]: { titre: T.ajouter.viande, exemple: T.ajouter.exempleViande },
+  [GENRE_ARTICLE.PLAT]: { titre: T.ajouter.plat, exemple: T.ajouter.exemplePlat },
   [GENRE_ARTICLE.PERSONNALISE]: { titre: T.ajouter.article, exemple: T.ajouter.exempleArticle },
 };
 
@@ -128,7 +129,7 @@ const categorieAjoutable = (categorie: string | undefined): boolean =>
 
 /** Un fromage ou une viande se vend : il a un prix de vente. */
 const seVend = (cle: string): boolean =>
-  cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) || cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`);
+  cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) || cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`) || cle.startsWith(`${GENRE_ARTICLE.PLAT}:`);
 
 /**
  * Le stock d'une exploitation agricole, en trois onglets rangés par nature : ce qui se vend (fromages, lait, viande), ce qui se
@@ -442,7 +443,7 @@ export default function StockFromagerie() {
 
   /** Vrai quand le crayon modifie un fromage ou une viande (produit fini ou animal) : on n'y change que le prix. */
   const produitFiniModifie =
-    !!renomme && [GENRE_ARTICLE.FROMAGE, GENRE_ARTICLE.VIANDE].some((g) => renomme.cle.startsWith(`${g}:`));
+    !!renomme && [GENRE_ARTICLE.FROMAGE, GENRE_ARTICLE.VIANDE, GENRE_ARTICLE.PLAT].some((g) => renomme.cle.startsWith(`${g}:`));
 
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
   const basculerCategorie = (categorie: string) =>

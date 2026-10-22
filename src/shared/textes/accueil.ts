@@ -102,6 +102,7 @@ export const TEXTES_ACCUEIL = {
       contactsEtEcritures: 'Contacts et écritures',
       fabriquerFromage: 'Fromage',
       fabriquerCharcuterie: 'Charcuterie',
+      fabriquerPlat: 'Plat préparé',
       lotsFromages: 'Lots de fromages',
       lotsCharcuterie: 'Lots de charcuterie',
       lotsViande: 'Lots de viande',

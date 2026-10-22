@@ -21,7 +21,11 @@ import type { Client } from '@/features/clients/types';
 import { getChevre, saveChevre } from '@/features/cheptel/repository/chevres';
 import { estReserve, liberer, reservesDeLaCommande } from '@/features/cheptel/services/reservations';
 import type { Commande } from '@/features/commercial/types';
-import { bonOuvertDuClient, reserverAnimauxPourClient, retirerLesBonsVides } from '@/features/commercial/services/reservations';
+import {
+  bonOuvertDuClient,
+  reserverAnimauxPourClient,
+  retirerLesBonsVides,
+} from '@/features/commercial/services/reservations';
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
@@ -151,9 +155,15 @@ export default function ViandeVendue() {
 
   /** Trois onglets : la viande à facturer, la viande facturée, et celle vendue sans facture (les animaux sans boucle). */
   // Un lien (le didacticiel, un rappel) peut ouvrir un onglet : il s'ouvre dessus, et change d'onglet quand l'adresse en demande un autre.
-  const { onglet: ongletDemande, sous: sousDemande, menu: menuDemande } = useLocalSearchParams<{ onglet?: string; sous?: string; menu?: string }>();
+  const {
+    onglet: ongletDemande,
+    sous: sousDemande,
+    menu: menuDemande,
+  } = useLocalSearchParams<{ onglet?: string; sous?: string; menu?: string }>();
   const ongletValide = (o?: string): OngletViande | undefined =>
-    (['afacturer', 'facturee', 'avendre', 'vendue'] as string[]).includes(o ?? '') ? (o as OngletViande) : undefined;
+    (['afacturer', 'facturee', 'avendre', 'vendue'] as string[]).includes(o ?? '')
+      ? (o as OngletViande)
+      : undefined;
   const [onglet, setOnglet] = useState<OngletViande>(ongletValide(ongletDemande) ?? 'afacturer');
   const [ongletVu, setOngletVu] = useState(ongletDemande);
   if (ongletDemande !== ongletVu) {
@@ -208,7 +218,8 @@ export default function ViandeVendue() {
     .filter((a) => estReserve(a))
     .sort(
       (a, b) =>
-        a.reservation!.client.localeCompare(b.reservation!.client, 'fr', { sensitivity: 'base' }) || parNaissance(a, b),
+        a.reservation!.client.localeCompare(b.reservation!.client, 'fr', { sensitivity: 'base' }) ||
+        parNaissance(a, b),
     );
   const ongletActif: OngletViande = onglet;
   // Le menu d'actions du premier animal à vendre, ouvert quand l'adresse le demande (le didacticiel le montre), dès que la liste est lue.
@@ -261,7 +272,8 @@ export default function ViandeVendue() {
 
   /** Le bon est validé (« préparée »), puis la vente s'ouvre avec lui. */
   const ouvrirLaVente = async (bon: Commande) => {
-    if (bon.statut === STATUT_COMMANDE.A_PREPARER) await enregistrerCommande({ ...bon, statut: STATUT_COMMANDE.PREPAREE });
+    if (bon.statut === STATUT_COMMANDE.A_PREPARER)
+      await enregistrerCommande({ ...bon, statut: STATUT_COMMANDE.PREPAREE });
     router.push({
       pathname: ROUTES.COMPTABILITE_NOUVELLE,
       params: {
@@ -384,291 +396,321 @@ export default function ViandeVendue() {
 
   return (
     <CadreDeJeu>
-    <Screen scroll={false} transparent>
-      <View style={commonStyles.enteteListe}>
-        <SuggestionParcours parcoursId={ongletActif === 'avendre' || ongletActif === 'vendue' ? 'vente-sans-facture' : 'vente-abattoir'} />
-        <LigneFiltres>
-          <YearPicker
-            annees={annees}
-            value={settings.anneeActive}
-            onChange={setAnneeActive}
-            tout={regrouper}
-            onChoisirTout={choisirToutesAnnees}
+      <Screen scroll={false} transparent>
+        <View style={commonStyles.enteteListe}>
+          <SuggestionParcours
+            parcoursId={
+              ongletActif === 'avendre' || ongletActif === 'vendue' ? 'vente-sans-facture' : 'vente-abattoir'
+            }
           />
-          <SelecteurEspece />
-        </LigneFiltres>
-        <PucesDefilantes<OngletViande>
-          puces={[
-            { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length), aide: T.rienAFacturerNote },
-            { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
-            // Les animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants) ont leurs onglets d'office.
-            { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
-            { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(nbAnimaux(sansFacture)) },
-          ]}
-          valeur={ongletActif}
-          onChoisir={setOnglet}
-        />
-        {ongletActif === 'avendre' ? (
-          <PucesDefilantes<'disponibles' | 'reserves'>
-            puces={[
-              { valeur: 'disponibles', label: T.sousOnglets.disponibles(aVendreLibres.length), aide: T.rienAVendreNote },
-              { valeur: 'reserves', label: T.sousOnglets.reserves(aVendreReserves.length) },
-            ]}
-            valeur={dispo}
-            onChoisir={setDispo}
-          />
-        ) : null}
-        {ongletActif === 'vendue' ? (
-          <>
-            <PucesDefilantes<SorteDeVendus>
-              puces={[
-                { valeur: 'morts', label: T.sousOnglets.morts(nbAnimaux(ventesMortes)) },
-                { valeur: 'vivants', label: T.sousOnglets.vivants(nbAnimaux(ventesVivantes)) },
-              ]}
-              valeur={sousOnglet}
-              onChoisir={setSousOnglet}
+          <LigneFiltres>
+            <YearPicker
+              annees={annees}
+              value={settings.anneeActive}
+              onChange={setAnneeActive}
+              tout={regrouper}
+              onChoisirTout={choisirToutesAnnees}
             />
-          </>
-        ) : null}
-        {venteDeLOnglet.length > 0 ? (
-          <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
-        ) : null}
-      </View>
-      {/* La viande des animaux déjà à l'abattoir qui n'est pas encore vendue : un appui ouvre la facture, sur ce jour d'abattage. */}
-      {ongletActif === 'afacturer' ? (
-        // Un seul bloc blanc : les jours d'abattage se suivent sans espace, séparés par un trait.
-        groupesAFacturer.length === 0 ? (
-          <EmptyState title={T.rienAFacturer} subtitle={T.rienAFacturerNote} />
-        ) : (
-          <BlocLignes>
-            {groupesAFacturer.map((g, i) =>
-              i === 0 ? (
-                <AncreVisite key={`${g.date}-${g.avecBoucle}`} id="viande.premierLot">
-                  {ligneDuJour(g)}
-                </AncreVisite>
+            <SelecteurEspece />
+          </LigneFiltres>
+          <PucesDefilantes<OngletViande>
+            puces={[
+              {
+                valeur: 'afacturer',
+                label: T.onglets.aFacturer(groupesAFacturer.length),
+                aide: T.rienAFacturerNote,
+              },
+              { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
+              // Les animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants) ont leurs onglets d'office.
+              { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
+              { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(nbAnimaux(sansFacture)) },
+            ]}
+            valeur={ongletActif}
+            onChoisir={setOnglet}
+          />
+          {ongletActif === 'avendre' ? (
+            <PucesDefilantes<'disponibles' | 'reserves'>
+              puces={[
+                {
+                  valeur: 'disponibles',
+                  label: T.sousOnglets.disponibles(aVendreLibres.length),
+                  aide: T.rienAVendreNote,
+                },
+                { valeur: 'reserves', label: T.sousOnglets.reserves(aVendreReserves.length) },
+              ]}
+              valeur={dispo}
+              onChoisir={setDispo}
+            />
+          ) : null}
+          {ongletActif === 'vendue' ? (
+            <>
+              <PucesDefilantes<SorteDeVendus>
+                puces={[
+                  { valeur: 'morts', label: T.sousOnglets.morts(nbAnimaux(ventesMortes)) },
+                  { valeur: 'vivants', label: T.sousOnglets.vivants(nbAnimaux(ventesVivantes)) },
+                ]}
+                valeur={sousOnglet}
+                onChoisir={setSousOnglet}
+              />
+            </>
+          ) : null}
+          {venteDeLOnglet.length > 0 ? (
+            <Text style={commonStyles.lineBold}>{T.total(formatMontant(total))}</Text>
+          ) : null}
+        </View>
+        {/* La viande des animaux déjà à l'abattoir qui n'est pas encore vendue : un appui ouvre la facture, sur ce jour d'abattage. */}
+        {ongletActif === 'afacturer' ? (
+          // Un seul bloc blanc : les jours d'abattage se suivent sans espace, séparés par un trait.
+          groupesAFacturer.length === 0 ? (
+            <EmptyState title={T.rienAFacturer} subtitle={T.rienAFacturerNote} />
+          ) : (
+            <BlocLignes>
+              {groupesAFacturer.map((g, i) =>
+                i === 0 ? (
+                  <AncreVisite key={`${g.date}-${g.avecBoucle}`} id="viande.premierLot">
+                    {ligneDuJour(g)}
+                  </AncreVisite>
+                ) : (
+                  ligneDuJour(g)
+                ),
+              )}
+            </BlocLignes>
+          )
+        ) : ongletActif === 'avendre' ? (
+          <FlatList
+            data={dispo === 'disponibles' ? aVendreLibres : aVendreReserves}
+            keyExtractor={(a) => a.id}
+            contentContainerStyle={commonStyles.listeBlocAvecFab}
+            ListEmptyComponent={
+              dispo === 'disponibles' ? (
+                <EmptyState title={T.rienAVendre} subtitle={T.rienAVendreNote} />
               ) : (
-                ligneDuJour(g)
-              ),
-            )}
-          </BlocLignes>
-        )
-      ) : ongletActif === 'avendre' ? (
-        <FlatList
-          data={dispo === 'disponibles' ? aVendreLibres : aVendreReserves}
-          keyExtractor={(a) => a.id}
-          contentContainerStyle={commonStyles.listeBlocAvecFab}
-          ListEmptyComponent={
-            dispo === 'disponibles' ? (
-              <EmptyState title={T.rienAVendre} subtitle={T.rienAVendreNote} />
-            ) : (
-              <EmptyState title={T.rienASansFacture} />
-            )
-          }
-          renderItem={({ item, index }) => (
-            <LigneDeBloc index={index} total={(dispo === 'disponibles' ? aVendreLibres : aVendreReserves).length}>
-              {/* Un animal réservé : « Réservation » et le nom du client en titre. */}
-              {index === 0 ? (
-                <AncreVisite id="viande.premierAnimal">
+                <EmptyState title={T.rienASansFacture} />
+              )
+            }
+            renderItem={({ item, index }) => (
+              <LigneDeBloc
+                index={index}
+                total={(dispo === 'disponibles' ? aVendreLibres : aVendreReserves).length}
+              >
+                {/* Un animal réservé : « Réservation » et le nom du client en titre. */}
+                {index === 0 ? (
+                  <AncreVisite id="viande.premierAnimal">
+                    <LigneChevre
+                      chevre={item}
+                      titre={
+                        estReserve(item)
+                          ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client)
+                          : undefined
+                      }
+                      onPress={() => setMenu(item)}
+                    />
+                  </AncreVisite>
+                ) : (
                   <LigneChevre
                     chevre={item}
-                    titre={estReserve(item) ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client) : undefined}
+                    titre={
+                      estReserve(item)
+                        ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client)
+                        : undefined
+                    }
                     onPress={() => setMenu(item)}
                   />
-                </AncreVisite>
-              ) : (
-                <LigneChevre
-                  chevre={item}
-                  titre={estReserve(item) ? TEXTES.cheptel.reservation.reservationDe(item.reservation!.client) : undefined}
-                  onPress={() => setMenu(item)}
+                )}
+              </LigneDeBloc>
+            )}
+          />
+        ) : (
+          <FlatList
+            data={venteDeLOnglet}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={commonStyles.listeBlocAvecFab}
+            ListEmptyComponent={<EmptyState title={T.aucune} />}
+            renderItem={({ item, index }) => (
+              <LigneDeBloc index={index} total={venteDeLOnglet.length}>
+                <ListRow
+                  title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
+                  subtitle={[
+                    [formatDateFR(item.date), item.client].filter(Boolean).join(' · '),
+                    tracabilite(item),
+                  ]
+                    .filter(Boolean)
+                    .join('\n')}
+                  trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
+                  // La vente : sa fiche porte le jour d'abattage en titre et mène au lot ; sa flèche de retour ramène ici.
+                  onPress={() =>
+                    router.push(ROUTES.ficheVenteDepuis(item.id, ROUTES.PRODUCTION_VIANDE) as never)
+                  }
                 />
-              )}
-            </LigneDeBloc>
-          )}
-        />
-      ) : (
-        <FlatList
-          data={venteDeLOnglet}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={commonStyles.listeBlocAvecFab}
-          ListEmptyComponent={<EmptyState title={T.aucune} />}
-          renderItem={({ item, index }) => (
-            <LigneDeBloc index={index} total={venteDeLOnglet.length}>
-              <ListRow
-                title={item.precision || LABEL_CATEGORIE_VENTE[item.categorie]}
-                subtitle={[
-                  [formatDateFR(item.date), item.client].filter(Boolean).join(' · '),
-                  tracabilite(item),
-                ]
-                  .filter(Boolean)
-                  .join('\n')}
-                trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
-                // La vente : sa fiche porte le jour d'abattage en titre et mène au lot ; sa flèche de retour ramène ici.
-                onPress={() => router.push(ROUTES.ficheVenteDepuis(item.id, ROUTES.PRODUCTION_VIANDE) as never)}
-              />
-            </LigneDeBloc>
-          )}
-        />
-      )}
-      {/* Un animal sans boucle à vendre : le réserver pour un client, ou inscrire sa vente sans facture. */}
-      <OptionsModal
-        visible={!!menu}
-        onClose={() => setMenu(null)}
-        title={menu ? libelleChevre(menu) : undefined}
-        options={
-          menu
-            ? [
-                ...(estReserve(menu)
-                  ? [
-                      {
-                        label: TEXTES.cheptel.reservation.validerEtVendre,
-                        icon: 'receipt' as const,
-                        onPress: () => validerEtVendre(menu),
-                      },
-                      ...(estPetit(menu)
-                        ? (['vivants', 'morts'] as const)
-                            .filter((etat) => menu.reservation?.etat !== etat)
-                            .map((etat) => ({
-                              label: TEXTES.cheptel.reservation.remis[etat],
-                              icon: (etat === 'vivants' ? 'heart' : 'skull') as 'heart' | 'skull',
-                              onPress: async () => {
-                                await saveChevre({ ...menu, reservation: { ...menu.reservation!, etat } });
-                                charger();
-                              },
-                            }))
-                        : []),
-                      {
-                        label: TEXTES.cheptel.reservation.indiquerLePoids,
-                        icon: 'paw' as const,
-                        onPress: () => setPesee(menu),
-                      },
-                      {
-                        label: TEXTES.cheptel.reservation.liberer,
-                        icon: 'lock-open' as const,
-                        onPress: async () => {
-                          await saveChevre(liberer(menu));
-                          // Le bon de commande du client, s'il n'a plus rien, disparaît de l'onglet Commandes.
-                          await retirerLesBonsVides().catch(() => undefined);
-                          charger();
+              </LigneDeBloc>
+            )}
+          />
+        )}
+        {/* Un animal sans boucle à vendre : le réserver pour un client, ou inscrire sa vente sans facture. */}
+        <OptionsModal
+          visible={!!menu}
+          onClose={() => setMenu(null)}
+          title={menu ? libelleChevre(menu) : undefined}
+          options={
+            menu
+              ? [
+                  ...(estReserve(menu)
+                    ? [
+                        {
+                          label: TEXTES.cheptel.reservation.validerEtVendre,
+                          icon: 'receipt' as const,
+                          onPress: () => validerEtVendre(menu),
                         },
-                      },
-                    ]
-                  : [
-                      {
-                        label: TEXTES.cheptel.reservation.reserver,
-                        icon: 'bookmark' as const,
-                        onPress: () => setCible({ animal: menu, action: 'reserver' }),
-                      },
-                      {
-                        label: TEXTES.cheptel.reservation.ecriture,
-                        icon: 'receipt' as const,
-                        onPress: () => setCible({ animal: menu, action: 'ecriture' }),
-                      },
-                    ]),
-                {
-                  label: TEXTES.cheptel.reservation.ouvrirLaFiche,
-                  icon: 'paw' as const,
-                  onPress: () => router.push(ROUTES.ficheChevreDepuis(menu.id, retour)),
-                },
-              ]
-            : []
-        }
-      />
-      <OptionsModal
-        visible={!!choixEtat}
-        onClose={() => setChoixEtat(null)}
-        title={TEXTES.cheptel.reservation.etatTitre}
-        options={[
-          {
-            label: TEXTES.cheptel.reservation.remis.vivants,
-            icon: 'heart',
-            onPress: async () => {
-              if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client, 'vivants');
-              charger();
+                        ...(estPetit(menu)
+                          ? (['vivants', 'morts'] as const)
+                              .filter((etat) => menu.reservation?.etat !== etat)
+                              .map((etat) => ({
+                                label: TEXTES.cheptel.reservation.remis[etat],
+                                icon: (etat === 'vivants' ? 'heart' : 'skull') as 'heart' | 'skull',
+                                onPress: async () => {
+                                  await saveChevre({ ...menu, reservation: { ...menu.reservation!, etat } });
+                                  charger();
+                                },
+                              }))
+                          : []),
+                        {
+                          label: TEXTES.cheptel.reservation.indiquerLePoids,
+                          icon: 'paw' as const,
+                          onPress: () => setPesee(menu),
+                        },
+                        {
+                          label: TEXTES.cheptel.reservation.liberer,
+                          icon: 'lock-open' as const,
+                          onPress: async () => {
+                            await saveChevre(liberer(menu));
+                            // Le bon de commande du client, s'il n'a plus rien, disparaît de l'onglet Commandes.
+                            await retirerLesBonsVides().catch(() => undefined);
+                            charger();
+                          },
+                        },
+                      ]
+                    : [
+                        {
+                          label: TEXTES.cheptel.reservation.reserver,
+                          icon: 'bookmark' as const,
+                          onPress: () => setCible({ animal: menu, action: 'reserver' }),
+                        },
+                        {
+                          label: TEXTES.cheptel.reservation.ecriture,
+                          icon: 'receipt' as const,
+                          onPress: () => setCible({ animal: menu, action: 'ecriture' }),
+                        },
+                      ]),
+                  {
+                    label: TEXTES.cheptel.reservation.ouvrirLaFiche,
+                    icon: 'paw' as const,
+                    onPress: () => router.push(ROUTES.ficheChevreDepuis(menu.id, retour)),
+                  },
+                ]
+              : []
+          }
+        />
+        <OptionsModal
+          visible={!!choixEtat}
+          onClose={() => setChoixEtat(null)}
+          title={TEXTES.cheptel.reservation.etatTitre}
+          options={[
+            {
+              label: TEXTES.cheptel.reservation.remis.vivants,
+              icon: 'heart',
+              onPress: async () => {
+                if (choixEtat)
+                  await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client, 'vivants');
+                charger();
+              },
             },
-          },
-          {
-            label: TEXTES.cheptel.reservation.remis.morts,
-            icon: 'skull',
-            onPress: async () => {
-              if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client, 'morts');
-              charger();
+            {
+              label: TEXTES.cheptel.reservation.remis.morts,
+              icon: 'skull',
+              onPress: async () => {
+                if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client, 'morts');
+                charger();
+              },
             },
-          },
-          {
-            label: TEXTES.cheptel.reservation.etatPlusTard,
-            icon: 'time',
-            onPress: async () => {
-              if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client);
-              charger();
+            {
+              label: TEXTES.cheptel.reservation.etatPlusTard,
+              icon: 'time',
+              onPress: async () => {
+                if (choixEtat) await reserverAnimauxPourClient([choixEtat.animal], choixEtat.client);
+                charger();
+              },
             },
-          },
-        ]}
-      />
-      <PoidsModal
-        visible={!!pesee}
-        valeurInitiale={pesee?.poidsKg}
-        onValider={async (poidsKg) => {
-          const animal = pesee;
-          setPesee(null);
-          if (!animal) return;
-          await saveChevre({ ...animal, poidsKg });
-          charger();
-        }}
-        onFermer={() => setPesee(null)}
-      />
-      <PoidsModal
-        visible={!!poidsAvantVente}
-        titre={poidsAvantVente ? libelleChevre(poidsAvantVente.restants[0]) : undefined}
-        onValider={poidsSuivant}
-        // Fermer la fenêtre (un appui à côté) abandonne la facture : rien n'est enregistré, l'animal reste « à vendre ».
-        onFermer={() => setPoidsAvantVente(null)}
-      />
-      <SelectModal<string>
-        visible={!!cible}
-        titre={clients.length === 0 ? TEXTES.cheptel.reservation.aucunClient : TEXTES.cheptel.reservation.choisirClient}
-        value=""
-        searchable
-        options={clients.map(optionClient)}
-        parCategories
-        onSelect={async (clientId) => {
-          const choisi = cible;
-          const client = clients.find((c) => c.id === clientId);
-          setCible(null);
-          if (!choisi || !client) return;
-          // Facturer sans réservation d'abord : même chemin qu'une réservation validée (le bon du client se crée, le poids se demande si
-          // besoin, puis la vente s'ouvre avec le circuit, le détail selon la date et l'animal déjà choisis).
-          if (choisi.action === 'ecriture') return lancerLaFactureDirecte(choisi.animal, client);
-          // Un cabri : vivant ou mort à la remise. Les autres animaux rejoignent tout de suite le bon de commande ouvert du client.
-          if (estPetit(choisi.animal)) return setChoixEtat({ animal: choisi.animal, client });
-          await reserverAnimauxPourClient([choisi.animal], client);
-          charger();
-        }}
-        onClose={() => setCible(null)}
-      />
-      {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
-      <Fab
-        options={[
-          {
-            label: T.vendreSansFacture,
-            icon: 'add' as const,
-            onPress: () =>
-              router.push({
-                pathname: ROUTES.COMPTABILITE_NOUVELLE,
-                params: {
-                  type: TYPE_FACTURE.EMISE,
-                  categorie: CATEGORIE_RECETTE.VIANDE,
-                  facture: 'non',
-                },
-              }),
-          },
-          {
-            label: T.rappeler,
-            icon: 'alert-circle',
-            onPress: () => router.push(ROUTES.productionRappel(PRODUIT_A_LOTS.CHARCUTERIE)),
-          },
-        ]}
-      />
-    </Screen>
+          ]}
+        />
+        <PoidsModal
+          visible={!!pesee}
+          valeurInitiale={pesee?.poidsKg}
+          onValider={async (poidsKg) => {
+            const animal = pesee;
+            setPesee(null);
+            if (!animal) return;
+            await saveChevre({ ...animal, poidsKg });
+            charger();
+          }}
+          onFermer={() => setPesee(null)}
+        />
+        <PoidsModal
+          visible={!!poidsAvantVente}
+          titre={poidsAvantVente ? libelleChevre(poidsAvantVente.restants[0]) : undefined}
+          onValider={poidsSuivant}
+          // Fermer la fenêtre (un appui à côté) abandonne la facture : rien n'est enregistré, l'animal reste « à vendre ».
+          onFermer={() => setPoidsAvantVente(null)}
+        />
+        <SelectModal<string>
+          visible={!!cible}
+          titre={
+            clients.length === 0
+              ? TEXTES.cheptel.reservation.aucunClient
+              : TEXTES.cheptel.reservation.choisirClient
+          }
+          value=""
+          searchable
+          options={clients.map(optionClient)}
+          parCategories
+          onSelect={async (clientId) => {
+            const choisi = cible;
+            const client = clients.find((c) => c.id === clientId);
+            setCible(null);
+            if (!choisi || !client) return;
+            // Facturer sans réservation d'abord : même chemin qu'une réservation validée (le bon du client se crée, le poids se demande si
+            // besoin, puis la vente s'ouvre avec le circuit, le détail selon la date et l'animal déjà choisis).
+            if (choisi.action === 'ecriture') return lancerLaFactureDirecte(choisi.animal, client);
+            // Un cabri : vivant ou mort à la remise. Les autres animaux rejoignent tout de suite le bon de commande ouvert du client.
+            if (estPetit(choisi.animal)) return setChoixEtat({ animal: choisi.animal, client });
+            await reserverAnimauxPourClient([choisi.animal], client);
+            charger();
+          }}
+          onClose={() => setCible(null)}
+        />
+        {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
+        <Fab
+          options={[
+            {
+              label: T.vendreSansFacture,
+              icon: 'add' as const,
+              onPress: () =>
+                router.push({
+                  pathname: ROUTES.COMPTABILITE_NOUVELLE,
+                  params: {
+                    type: TYPE_FACTURE.EMISE,
+                    categorie: CATEGORIE_RECETTE.VIANDE,
+                    facture: 'non',
+                  },
+                }),
+            },
+            {
+              label: T.rappeler,
+              icon: 'alert-circle',
+              onPress: () => router.push(ROUTES.productionRappel(PRODUIT_A_LOTS.CHARCUTERIE)),
+            },
+          ]}
+        />
+      </Screen>
     </CadreDeJeu>
   );
 }

@@ -38,7 +38,8 @@ const config = LIEUX_TIERS.groupement;
 const ECRITURES_MONTREES = 5;
 
 const voletsDe = (c: Contact): string[] => c.client?.volets ?? c.fournisseur?.volets ?? [];
-const libelleDuVolet = (v: string): string => LABEL_VOLET_COOPERATIVE[v as keyof typeof LABEL_VOLET_COOPERATIVE] ?? v;
+const libelleDuVolet = (v: string): string =>
+  LABEL_VOLET_COOPERATIVE[v as keyof typeof LABEL_VOLET_COOPERATIVE] ?? v;
 
 /** Les noms sous lesquels les écritures d'un contact le portent (son nom, celui de sa fiche client, celui de sa fiche fournisseur). */
 const nomsDe = (c: Contact): Set<string> =>
@@ -126,18 +127,32 @@ export default function LieuAssociations() {
     ...l,
     ...(G.liens as Record<string, { titre: string; aide: string }>)[l.cle],
   }));
-  const rangeeDesLiens = liens.length === 0 ? null : (
-    <GroupeAccueil titre={T.groupeLiens}>
-      <BlocLignes>
-        {liens.map((l) => (
-          <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => ouvrir(l.route)} />
-        ))}
-      </BlocLignes>
-    </GroupeAccueil>
-  );
+  const rangeeDesLiens =
+    liens.length === 0 ? null : (
+      <GroupeAccueil titre={T.groupeLiens}>
+        <BlocLignes>
+          {liens.map((l) => (
+            <ListRow
+              key={l.cle}
+              title={l.titre}
+              subtitle={l.aide}
+              icone={l.icone}
+              onPress={() => ouvrir(l.route)}
+            />
+          ))}
+        </BlocLignes>
+      </GroupeAccueil>
+    );
 
   /** Un groupe d'écritures avec ses plus récentes, le lien vers les autres et le bouton de la nouvelle écriture. */
-  const groupeDEcritures = (cle: string, titre: string, lignes: Transaction[], vide: string, nouvelle: string, route: string) => (
+  const groupeDEcritures = (
+    cle: string,
+    titre: string,
+    lignes: Transaction[],
+    vide: string,
+    nouvelle: string,
+    route: string,
+  ) => (
     <GroupeAccueil key={cle} titre={titre}>
       <BlocLignes>
         {lignes.slice(0, ECRITURES_MONTREES).map((t) => (
@@ -177,7 +192,11 @@ export default function LieuAssociations() {
           <Text style={commonStyles.muted}>{G.soldeAnnee(settings.anneeActive, soldeEcrit(siennes))}</Text>
         </View>
         <BlocLignes>
-          <ListRow title={G.modifierFiche} icone="create" onPress={() => ouvrir(ROUTES.ficheContact(choisie.cle))} />
+          <ListRow
+            title={G.modifierFiche}
+            icone="create"
+            onPress={() => ouvrir(ROUTES.ficheContact(choisie.cle))}
+          />
         </BlocLignes>
         <PucesDefilantes<'dossiers' | 'comptabilite'>
           puces={[
@@ -196,28 +215,30 @@ export default function LieuAssociations() {
           />
         ) : null}
         {/* Un groupe par volet coché sur sa fiche ; sans volet coché, seulement ses écritures simples. */}
-        {onglet === 'comptabilite' ? (<>
-        {(config.volets ?? [])
-          .filter((v) => volets.includes(v.cle))
-          .map((v) =>
-            groupeDEcritures(
-              v.cle,
-              G.volets[v.cle as keyof typeof G.volets].titre,
-              siennes.filter((t) => t.volet === v.cle),
-              G.aucuneEcritureVolet,
-              G.volets[v.cle as keyof typeof G.volets].nouvelle,
-              routeAvecContact(v.route, choisie),
-            ),
-          )}
-        {groupeDEcritures(
-          'simples',
-          volets.length > 0 ? G.autresEcritures : G.groupeEcritures,
-          simples,
-          T.aucuneEcriture,
-          G.nouvelleSimple,
-          routeAvecContact(config.nouvelle, choisie),
-        )}
-        </>) : null}
+        {onglet === 'comptabilite' ? (
+          <>
+            {(config.volets ?? [])
+              .filter((v) => volets.includes(v.cle))
+              .map((v) =>
+                groupeDEcritures(
+                  v.cle,
+                  G.volets[v.cle as keyof typeof G.volets].titre,
+                  siennes.filter((t) => t.volet === v.cle),
+                  G.aucuneEcritureVolet,
+                  G.volets[v.cle as keyof typeof G.volets].nouvelle,
+                  routeAvecContact(v.route, choisie),
+                ),
+              )}
+            {groupeDEcritures(
+              'simples',
+              volets.length > 0 ? G.autresEcritures : G.groupeEcritures,
+              simples,
+              T.aucuneEcriture,
+              G.nouvelleSimple,
+              routeAvecContact(config.nouvelle, choisie),
+            )}
+          </>
+        ) : null}
       </Screen>
     );
   }
@@ -236,7 +257,9 @@ export default function LieuAssociations() {
           >
             <Text style={styles.nom}>🤝 {c.nom}</Text>
             <PastillesDesVolets volets={voletsDe(c)} />
-            <Text style={commonStyles.muted}>{G.soldeAnnee(settings.anneeActive, soldeEcrit(ecrituresDe(c)))}</Text>
+            <Text style={commonStyles.muted}>
+              {G.soldeAnnee(settings.anneeActive, soldeEcrit(ecrituresDe(c)))}
+            </Text>
           </Pressable>
         ))}
         {associations.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}

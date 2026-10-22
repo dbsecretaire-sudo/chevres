@@ -124,6 +124,25 @@ export interface LotFromage {
   reservation?: { client: string; clientId?: string; date: string };
 }
 
+/** Un ingrédient d'une fabrication de plats : l'article du stock, la quantité sortie, et les lots (numéros) choisis quand il en a. */
+export interface IngredientDePlat {
+  article: string;
+  quantite: number;
+  lotIds: string[];
+}
+
+/**
+ * Ce qu'on sait d'une fabrication de plats préparés (conserves, bocaux), gardé une seule fois pour tous ses lots (ils partagent son `mouvementId`) :
+ * la stérilisation, la date de durabilité minimale et les ingrédients sortis du stock.
+ */
+export interface FabricationDePlats {
+  /** Le jour de la stérilisation (AAAA-MM-JJ) ; absent : celui de la fabrication. */
+  dateSterilisation?: string;
+  /** La date de durabilité minimale (AAAA-MM-JJ) : « à consommer de préférence avant ». */
+  ddm?: string;
+  ingredients: IngredientDePlat[];
+}
+
 /** Le lait produit un jour : son litrage (chèvres et brebis). */
 export interface LaitJour {
   id: string;
@@ -168,6 +187,8 @@ export interface ArchiveStock {
   boucles?: BoucleStock[];
   /** Les fromages identifiés (un par numéro de lot), fabriqués puis vendus ou rappelés. */
   lots?: LotFromage[];
+  /** Les fabrications de plats préparés, par identifiant de mouvement (celui de l'entrée au stock de leurs lots). */
+  platsFabriques?: Record<string, FabricationDePlats>;
   /** Les articles d'office supprimés par l'utilisateur (leur identifiant « genre:code ») : ils n'apparaissent plus. */
   masques?: string[];
   /** Les listes d'office retirées pour des espèces (section → espèces) : le compte de la liste a été retiré pour elles. */

@@ -10,7 +10,7 @@ import {
   libelleArticle,
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
-import type { ArchiveStock, LotFromage, MouvementStock } from '@/features/stock/types';
+import type { ArchiveStock, FabricationDePlats, LotFromage, MouvementStock } from '@/features/stock/types';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
@@ -35,12 +35,18 @@ import { TEXTES } from '@/shared/textes';
 export const estArticleFromage = (cle: string | undefined): boolean =>
   !!cle && cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`);
 
+/** Vrai pour un article de l'inventaire qui est un plat préparé (« plat:… »). */
+export const estArticlePlat = (cle: string | undefined): boolean =>
+  !!cle && cle.startsWith(`${GENRE_ARTICLE.PLAT}:`);
+
 /**
- * Vrai pour un article dont les produits sont identifiés un par un (par lot) : les fromages, et la charcuterie (les lignes de viande
+ * Vrai pour un article dont les produits sont identifiés un par un (par lot) : les fromages, les plats préparés, et la charcuterie (les lignes de viande
  * ajoutées à l'inventaire, pas les animaux du cheptel).
  */
 export const estArticleAvecLots = (cle: string | undefined): boolean =>
-  estArticleFromage(cle) || (!!cle && cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`) && !estLigneDuCheptel(cle));
+  estArticleFromage(cle) ||
+  estArticlePlat(cle) ||
+  (!!cle && cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`) && !estLigneDuCheptel(cle));
 
 /** Les articles de l'inventaire d'un produit suivi par lot : les fromages, ou les lignes de charcuterie (hors cheptel). */
 export function articlesDuProduit(
@@ -48,6 +54,7 @@ export function articlesDuProduit(
   archive: ArchiveStock,
   espece: EspeceAnimale,
 ): ArticleAffiche[] {
+  if (produit === PRODUIT_A_LOTS.PLAT) return articlesDuGenre(GENRE_ARTICLE.PLAT, archive, espece);
   return produit === PRODUIT_A_LOTS.FROMAGE
     ? articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, espece)
     : articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter((a) => estArticleAvecLots(a.cle));
@@ -175,7 +182,11 @@ export function lettreDeCategorie(article: string, archive: ArchiveStock): strin
 
 /** Le début du numéro des lots d'un produit fabriqué un jour : « FF261 » (fromage, frais, 2026, 1er jour). */
 export function prefixeDeLot(article: string, date: string, archive: ArchiveStock): string {
-  const produit = estArticleFromage(article) ? PRODUIT_A_LOTS.FROMAGE : PRODUIT_A_LOTS.CHARCUTERIE;
+  const produit = estArticleFromage(article)
+    ? PRODUIT_A_LOTS.FROMAGE
+    : estArticlePlat(article)
+      ? PRODUIT_A_LOTS.PLAT
+      : PRODUIT_A_LOTS.CHARCUTERIE;
   const annee = String(Number(date.slice(0, 4)) % 100).padStart(2, '0');
   return `${LETTRE_PRODUIT_LOT[produit]}${lettreDeCategorie(article, archive)}${annee}${jourDeLAnnee(date)}`;
 }
@@ -270,6 +281,67 @@ export function fabriquerFromages(saisie: {
       ...archive,
       lots: [...(archive.lots ?? []), ...lots],
       mouvements: [...archive.mouvements, mouvement],
+    });
+  });
+}
+
+/**
+ * Fabrique des plats préparés (conserves, bocaux) : un lot par pièce, numérotés à la suite du premier, qui entrent au stock d'un seul mouvement. Les ingrédients
+ * sortent du stock (un mouvement par ingrédient) et leurs lots choisis passent « utilisés » à la date de la fabrication : le lot d'un plat dit ainsi de quoi il
+ * est fait. La stérilisation, la date de durabilité minimale et les ingrédients sont gardés une seule fois pour toute la fabrication.
+ */
+export function fabriquerPlats(saisie: {
+  article: string;
+  date: string;
+  quantite: number;
+  debut: string;
+  dateSterilisation?: string;
+  ddm?: string;
+  ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
+}): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const erreur = erreurFabrication(archive, saisie.article, saisie.debut, saisie.quantite);
+    if (erreur) throw new Error(erreur);
+    const numeros = plageDeBoucles(saisie.debut, saisie.quantite) as string[];
+    const mouvementId = generateId();
+    const utilises = saisie.ingredients.filter((i) => i.article && i.quantite > 0);
+    const pris = new Set(utilises.flatMap((i) => i.lotIds));
+    const plats: LotFromage[] = numeros.map((numero) => ({
+      id: generateId(),
+      article: saisie.article,
+      numero,
+      dateFabrication: saisie.date,
+      mouvementId,
+    }));
+    const entree: MouvementStock = {
+      id: mouvementId,
+      article: saisie.article,
+      date: saisie.date,
+      delta: numeros.length,
+      origine: ORIGINE_MOUVEMENT.MANUEL,
+    };
+    const sorties: MouvementStock[] = utilises.map((i) => ({
+      id: generateId(),
+      article: i.article,
+      date: saisie.date,
+      delta: -i.quantite,
+      origine: ORIGINE_MOUVEMENT.PLAT,
+      venteId: mouvementId,
+    }));
+    const lots = (archive.lots ?? []).map((l) =>
+      pris.has(l.id) && !l.dateRappel ? { ...l, venteId: mouvementId, dateVente: saisie.date } : l,
+    );
+    const fabrication: FabricationDePlats = {
+      dateSterilisation: saisie.dateSterilisation || undefined,
+      ddm: saisie.ddm || undefined,
+      ingredients: utilises.map((i) => ({ article: i.article, quantite: i.quantite, lotIds: i.lotIds })),
+    };
+    await remplacerArchiveStock({
+      ...archive,
+      lots: [...lots, ...plats],
+      mouvements: [...archive.mouvements, entree, ...sorties],
+      platsFabriques: { ...(archive.platsFabriques ?? {}), [mouvementId]: fabrication },
     });
   });
 }

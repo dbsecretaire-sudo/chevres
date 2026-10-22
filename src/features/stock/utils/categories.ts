@@ -66,6 +66,13 @@ export const SECTIONS: {
     genre: GENRE_ARTICLE.VIANDE,
   },
   {
+    section: SECTION_STOCK.PLATS,
+    categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+    titre: T.titresListes.plats,
+    genre: GENRE_ARTICLE.PLAT,
+    fromagerie: true,
+  },
+  {
     section: SECTION_STOCK.ANIMAUX,
     categorie: CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX,
     titre: T.titresListes.animaux,

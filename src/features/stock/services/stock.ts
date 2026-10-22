@@ -119,6 +119,7 @@ export function articlesDuGenre(
     genre === GENRE_ARTICLE.ENTRETIEN ||
     genre === GENRE_ARTICLE.BATIMENT ||
     genre === GENRE_ARTICLE.EQUIPEMENT ||
+    genre === GENRE_ARTICLE.PLAT ||
     genre === GENRE_ARTICLE.PERSONNALISE
       ? []
       : genre === GENRE_ARTICLE.BOUCLE

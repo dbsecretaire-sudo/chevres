@@ -12,6 +12,10 @@ import type { FamilleControle } from '@/features/exploitation/types';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
+/** Vrai quand l'écran s'ouvre pour un plat préparé (paramètre `produit`). */
+const plat = (params: object | undefined): boolean =>
+  (params as { produit?: string } | undefined)?.produit === PRODUIT_A_LOTS.PLAT;
+
 /** Vrai quand l'écran s'ouvre pour la charcuterie (paramètre `produit`) plutôt que pour les fromages. */
 const charcuterie = (params: object | undefined): boolean =>
   (params as { produit?: string } | undefined)?.produit === PRODUIT_A_LOTS.CHARCUTERIE;
@@ -83,9 +87,11 @@ export default function ProductionLayout() {
       <Stack.Screen
         name="fabrication"
         options={({ route }) => ({
-          title: charcuterie(route.params)
-            ? TEXTES.production.fabricationCharcuterie.titre
-            : TEXTES.production.fabrication.titre,
+          title: plat(route.params)
+            ? TEXTES.production.fabricationPlat.titre
+            : charcuterie(route.params)
+              ? TEXTES.production.fabricationCharcuterie.titre
+              : TEXTES.production.fabrication.titre,
           presentation: 'modal',
           headerStyle: { backgroundColor: colors.ajout },
         })}

@@ -23,6 +23,8 @@ export const GENRE_ARTICLE = {
   PERSONNALISE: 'perso',
   /** Un type de viande ou de charcuterie vendu (saucisson, jambon…), toujours ajouté par l'utilisateur. */
   VIANDE: 'viande',
+  /** Un plat préparé (conserve, bocal) fabriqué à l'atelier : toujours ajouté par l'utilisateur, suivi lot par lot (numéro P…, stérilisation, durabilité). */
+  PLAT: 'plat',
   /** Les boucles d'identification (et les boucles rouges) : chacune a son numéro, achetées par plages de numéros. */
   BOUCLE: 'boucle',
 } as const;
@@ -41,6 +43,7 @@ export const NATURE_STOCK = {
 export const NATURE_PAR_GENRE: Record<ValeurDe<typeof GENRE_ARTICLE>, ValeurDe<typeof NATURE_STOCK>> = {
   [GENRE_ARTICLE.FROMAGE]: NATURE_STOCK.VENTE,
   [GENRE_ARTICLE.VIANDE]: NATURE_STOCK.VENTE,
+  [GENRE_ARTICLE.PLAT]: NATURE_STOCK.VENTE,
   [GENRE_ARTICLE.ALIMENT]: NATURE_STOCK.CONSOMMABLE,
   [GENRE_ARTICLE.EMBALLAGE]: NATURE_STOCK.CONSOMMABLE,
   [GENRE_ARTICLE.ENTRETIEN]: NATURE_STOCK.CONSOMMABLE,
@@ -99,6 +102,8 @@ export const ETAT_BOUCLE = {
 export const PRODUIT_A_LOTS = {
   FROMAGE: 'fromage',
   CHARCUTERIE: 'charcuterie',
+  /** Les plats préparés (conserves, bocaux) : un lot par pièce, avec leurs ingrédients, leur stérilisation et leur date de durabilité. */
+  PLAT: 'plat',
 } as const;
 
 /** Le filtre des lots de fromage de l'inventaire : tous, ceux en stock, ceux vendus, ou ceux rappelés. */
@@ -184,6 +189,7 @@ export const CATEGORIE_PAR_GENRE: Record<
 > = {
   [GENRE_ARTICLE.FROMAGE]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
   [GENRE_ARTICLE.VIANDE]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+  [GENRE_ARTICLE.PLAT]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
   [GENRE_ARTICLE.ALIMENT]: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
   [GENRE_ARTICLE.EMBALLAGE]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
   [GENRE_ARTICLE.ENTRETIEN]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
@@ -245,6 +251,8 @@ export const SECTION_STOCK = {
   /** Les œufs des poules : un prix de vente, sans suivi de quantité. */
   OEUFS: 'oeufs',
   VIANDE: 'viande',
+  /** Les plats préparés (conserves, bocaux) fabriqués à l'atelier : suivis lot par lot, avec leurs ingrédients. */
+  PLATS: 'plats',
   /** Les petits, l'animal sur pied et l'animal vivant : ils suivent le cheptel. */
   ANIMAUX: 'animaux',
   ALIMENTS: 'aliments',
@@ -267,6 +275,8 @@ export const ORIGINE_MOUVEMENT = {
   ACHAT: 'achat',
   /** Ce que les animaux ont mangé ou ce qui a servi (retrait d'un consommable : aliment, emballage, entretien). */
   CONSOMMATION: 'consommation',
+  /** Les ingrédients d'une fabrication de plats préparés : ils sortent du stock (leurs lots sont pris). */
+  PLAT: 'plat',
   /** Des fromages rappelés (retirés de la vente) : ils sortent du stock. */
   RAPPEL: 'rappel',
   /** Du lait produit (noté dans le journal, ou déduit de ce qui en est sorti) : une entrée de l'historique du lait. */
@@ -318,6 +328,7 @@ export const SEPARATEUR_NUMERO_LOT = '-';
 export const LETTRE_PRODUIT_LOT: Record<string, string> = {
   [PRODUIT_A_LOTS.FROMAGE]: 'F',
   [PRODUIT_A_LOTS.CHARCUTERIE]: 'B',
+  [PRODUIT_A_LOTS.PLAT]: 'P',
 };
 
 /**

@@ -26,19 +26,61 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
     case 'fabriquer':
       return [
-        { cle: 'fabriquerFromage', titre: B.fabriquerFromage, icone: 'restaurant', iconeMci: 'cheese', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE) },
-        { cle: 'fabriquerCharcuterie', titre: B.fabriquerCharcuterie, icone: 'restaurant', iconeMci: 'knife', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE) },
+        {
+          cle: 'fabriquerFromage',
+          titre: B.fabriquerFromage,
+          icone: 'restaurant',
+          iconeMci: 'cheese',
+          route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE),
+        },
+        {
+          cle: 'fabriquerCharcuterie',
+          titre: B.fabriquerCharcuterie,
+          icone: 'restaurant',
+          iconeMci: 'knife',
+          route: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE),
+        },
+        {
+          cle: 'fabriquerPlat',
+          titre: B.fabriquerPlat,
+          icone: 'restaurant',
+          iconeMci: 'pot-steam',
+          route: ROUTES.productionFabrication(PRODUIT_A_LOTS.PLAT),
+        },
       ];
     case 'lots':
       return [
         { cle: 'lotsFromages', titre: B.lotsFromages, icone: 'layers', route: ROUTES.PRODUCTION_FROMAGES },
-        { cle: 'lotsCharcuterie', titre: B.lotsCharcuterie, icone: 'restaurant', iconeMci: 'sausage', route: ROUTES.PRODUCTION_CHARCUTERIE },
-        { cle: 'lotsViande', titre: B.lotsViande, icone: 'restaurant', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE },
-        { cle: 'rappelsLots', titre: B.rappelsLots, icone: 'notifications', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
+        {
+          cle: 'lotsCharcuterie',
+          titre: B.lotsCharcuterie,
+          icone: 'restaurant',
+          iconeMci: 'sausage',
+          route: ROUTES.PRODUCTION_CHARCUTERIE,
+        },
+        {
+          cle: 'lotsViande',
+          titre: B.lotsViande,
+          icone: 'restaurant',
+          iconeMci: 'food-steak',
+          route: ROUTES.PRODUCTION_VIANDE,
+        },
+        {
+          cle: 'rappelsLots',
+          titre: B.rappelsLots,
+          icone: 'notifications',
+          route: ROUTES.PRODUCTION_RAPPELS_LOTS,
+        },
       ];
     case 'grange':
       return [
-        { cle: 'alimentation', titre: B.alimentation, icone: 'nutrition', iconeMci: 'corn', route: ROUTES.SANTE_ALIMENTATION },
+        {
+          cle: 'alimentation',
+          titre: B.alimentation,
+          icone: 'nutrition',
+          iconeMci: 'corn',
+          route: ROUTES.SANTE_ALIMENTATION,
+        },
         { cle: 'stock', titre: B.stockNourriture, icone: 'cube', route: ROUTES.lieu('grange') },
       ];
   }

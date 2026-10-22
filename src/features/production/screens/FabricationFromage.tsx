@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import FabricationPlat from '@/features/production/screens/FabricationPlat';
 import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
@@ -33,6 +34,12 @@ import { TEXTES } from '@/shared/textes';
  * entrent au stock (avec les litres de lait pour un fromage).
  */
 export default function FabricationFromage() {
+  const { produit } = useLocalSearchParams<{ produit?: string }>();
+  // Les plats préparés ont leur propre écran (leurs ingrédients, leur stérilisation) : l'adresse est la même, avec `produit=plat`.
+  return produit === PRODUIT_A_LOTS.PLAT ? <FabricationPlat /> : <FabricationDeLots />;
+}
+
+function FabricationDeLots() {
   useAjoutTabBarBleu();
   const router = useRouter();
   const { produit: param } = useLocalSearchParams<{ produit?: string }>();

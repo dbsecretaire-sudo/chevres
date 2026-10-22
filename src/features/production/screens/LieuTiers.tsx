@@ -108,7 +108,10 @@ function LieuTiersStandard() {
   const intervenant = config.contactParDefaut ? tiers[0] : tiers.length === 1 ? tiers[0] : undefined;
   const routeNouvelle = routeAvecContact(config.nouvelle, intervenant);
   const routeVersement = config.recetteDuLieu
-    ? routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${config.recetteDuLieu}`, intervenant)
+    ? routeAvecContact(
+        `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${config.recetteDuLieu}`,
+        intervenant,
+      )
     : undefined;
   const liens = config.liens.map((l) => ({
     ...l,
@@ -128,7 +131,9 @@ function LieuTiersStandard() {
             partie="declarations"
             apres={
               <ListRow
-                title={(textes.liens as Record<string, { titre: string; aide: string }>).terrains?.titre ?? ''}
+                title={
+                  (textes.liens as Record<string, { titre: string; aide: string }>).terrains?.titre ?? ''
+                }
                 subtitle={(textes.liens as Record<string, { titre: string; aide: string }>).terrains?.aide}
                 icone="map"
                 onPress={() => ouvrir(ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE))}
@@ -165,7 +170,13 @@ function LieuTiersStandard() {
 
       {/* L'antenne du GDS : sa carte disparaît dès qu'elle est dans les contacts (elle y est alors avec les autres groupements sanitaires). */}
       {cle === 'groupementSanitaire' && !contacts.some(estLAntenneGds) ? (
-        <AntenneGds onAjoutee={() => listContacts().then(setContacts).catch(() => undefined)} />
+        <AntenneGds
+          onAjoutee={() =>
+            listContacts()
+              .then(setContacts)
+              .catch(() => undefined)
+          }
+        />
       ) : null}
 
       {config.avecTiers ? (
@@ -220,7 +231,9 @@ function LieuTiersStandard() {
                 <ListRow
                   title={textes.ajouterVeterinaire ?? ''}
                   icone="add-circle"
-                  onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`)}
+                  onPress={() =>
+                    ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`)
+                  }
                 />
               </BlocLignes>
             </GroupeAccueil>

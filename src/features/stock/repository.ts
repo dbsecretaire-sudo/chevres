@@ -48,6 +48,15 @@ function reglagesValides(brut: ArchiveStock['reglagesCategories']): Record<strin
 }
 
 /** Remet une archive lue (ou reçue d'une sauvegarde) dans sa forme : rien ne manque, un conditionnement est une liste. */
+/** Les fabrications de plats lues : celles dont les ingrédients forment bien une liste. */
+function platsValides(plats: ArchiveStock['platsFabriques']): ArchiveStock['platsFabriques'] {
+  const valides: NonNullable<ArchiveStock['platsFabriques']> = {};
+  for (const [id, p] of Object.entries(plats ?? {})) {
+    if (p && Array.isArray(p.ingredients)) valides[id] = p;
+  }
+  return valides;
+}
+
 export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefined): ArchiveStock {
   const conditionnements: ArchiveStock['conditionnements'] = {};
   for (const [code, emballages] of Object.entries(archive?.conditionnements ?? {})) {
@@ -121,6 +130,7 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
             l && typeof l.id === 'string' && typeof l.numero === 'string' && typeof l.article === 'string',
         )
       : [],
+    platsFabriques: platsValides(archive?.platsFabriques),
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
     sectionsMasquees: sectionsMasqueesValides(archive?.sectionsMasquees),
   };

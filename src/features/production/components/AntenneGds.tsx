@@ -15,7 +15,8 @@ export const estLAntenneGds = (contact: Contact): boolean => {
   const f = contact.fournisseur;
   return (
     !!f &&
-    (f.email?.trim().toLowerCase() === ANTENNE_GDS_CORSE.email || (f.nomEntreprise || f.nom) === ANTENNE_GDS_CORSE.nom)
+    (f.email?.trim().toLowerCase() === ANTENNE_GDS_CORSE.email ||
+      (f.nomEntreprise || f.nom) === ANTENNE_GDS_CORSE.nom)
   );
 };
 
@@ -27,7 +28,9 @@ export function AntenneGds({ onAjoutee }: { onAjoutee?: () => void }) {
   const ajouter = async () => {
     const existants = await listFournisseurs();
     const dejaLa = existants.some(
-      (f) => f.email?.trim().toLowerCase() === ANTENNE_GDS_CORSE.email || f.nomEntreprise === ANTENNE_GDS_CORSE.nom,
+      (f) =>
+        f.email?.trim().toLowerCase() === ANTENNE_GDS_CORSE.email ||
+        f.nomEntreprise === ANTENNE_GDS_CORSE.nom,
     );
     if (dejaLa) return Alert.alert(T.dejaAjoute);
     await creerFournisseur({
@@ -47,12 +50,18 @@ export function AntenneGds({ onAjoutee }: { onAjoutee?: () => void }) {
       <Text style={commonStyles.cardTitle}>{T.titre}</Text>
       <Text style={commonStyles.lineSemiBold}>{ANTENNE_GDS_CORSE.nom}</Text>
       <Text style={commonStyles.line}>{ANTENNE_GDS_CORSE.adressePostale}</Text>
-      <Pressable onPress={() => Linking.openURL(`tel:${ANTENNE_GDS_CORSE.telephone.replace(/\s/g, '')}`)} accessibilityRole="link">
+      <Pressable
+        onPress={() => Linking.openURL(`tel:${ANTENNE_GDS_CORSE.telephone.replace(/\s/g, '')}`)}
+        accessibilityRole="link"
+      >
         <Text style={commonStyles.lien}>
           {T.appeler} · {ANTENNE_GDS_CORSE.telephone}
         </Text>
       </Pressable>
-      <Pressable onPress={() => Linking.openURL(`mailto:${ANTENNE_GDS_CORSE.email}`)} accessibilityRole="link">
+      <Pressable
+        onPress={() => Linking.openURL(`mailto:${ANTENNE_GDS_CORSE.email}`)}
+        accessibilityRole="link"
+      >
         <Text style={commonStyles.lien}>
           {T.ecrire} · {ANTENNE_GDS_CORSE.email}
         </Text>
