@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, usePathname, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { BlocSante } from '@/features/exploitation/components/BlocSante';
@@ -13,8 +13,18 @@ import { todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.accueil.ferme.jour;
 
-/** La liste complète des rappels : la santé du troupeau, les déclarations à valider (la coche), les lots et les documents de circulation. */
+/**
+ * La liste complète des rappels : la santé du troupeau, les déclarations à valider (la coche), les lots et les documents de circulation. Elle recouvre
+ * l'écran : une ligne qui ouvre une autre page se ferait cacher par la feuille, qui se ferme donc dès que la page change.
+ */
 export function FeuilleRappels({ visible, onFermer }: { visible: boolean; onFermer: () => void }) {
+  const chemin = usePathname();
+  /** La page sur laquelle la feuille s'est ouverte. */
+  const pageDOuverture = useRef(chemin);
+  useEffect(() => {
+    if (!visible) pageDOuverture.current = chemin;
+    else if (chemin !== pageDOuverture.current) onFermer();
+  }, [visible, chemin, onFermer]);
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onFermer}>
       <View style={styles.feuille}>
