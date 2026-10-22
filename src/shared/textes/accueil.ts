@@ -71,6 +71,7 @@ export const TEXTES_ACCUEIL = {
       lots: 'Lots d’animaux',
       boucles: 'Boucles',
       bilanAnnuel: 'Bilan annuel',
+      venteVivant: 'Vente d’un animal vivant',
       carnetNaissance: 'Carnet de naissance',
       fabriquer: 'Fabriquer',
       cheptel: 'Cheptel',

@@ -151,6 +151,14 @@ export const lotsTextes = {
   bonsManquants: (n: number) => (n > 1 ? `${n} bons d’équarrissage à ajouter` : 'Ajouter le bon d’équarrissage'),
   bonsManquantsDetail: 'Un lot d’équarrissage n’a pas encore son bon : joignez son scan ou sa photo (onglet Fichiers du lot).',
   dateEnlevement: 'Jour de l’enlèvement',
+  /** Le contact d'un lot (l'équarrisseur, l'abattoir) : le lot se range dans ses documents. */
+  contactDuLot: {
+    equarrisseur: 'Équarrisseur',
+    abattoir: 'Abattoir',
+    nonPrecise: 'Non précisé',
+    contactIntrouvable: 'Contact supprimé',
+    aide: 'Le bon d’équarrissage ou le document de circulation se range dans les documents de ce contact.',
+  },
   numeroBon: 'N° du bon d’équarrissage',
   exempleBon: 'ex : 2026-0412',
   aideBonEquarrissage: 'Choisissez les animaux morts de cet enlèvement (onglet Animaux) et joignez le bon remis par l’équarrisseur (onglet Fichiers, une fois le lot créé).',

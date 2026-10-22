@@ -21,36 +21,41 @@ const circulation = (extra: Partial<EcritureACirculation>): EcritureACirculation
 });
 
 describe('les pièces qui se rangent toutes seules dans les documents d’un contact', () => {
-  it('range les bons d’équarrissage chez l’équarrisseur, et signale le bon qui manque', () => {
+  const equarrisseur = { nom: 'Équarrisseur Nord', cle: 'e1', ids: ['f-e1'] };
+  const bon = (extra: Partial<LotAnimaux>) => lot({ categorie: CATEGORIE_LOT.EQUARRISSAGE, ...extra });
+
+  it('range chez chaque équarrisseur les bons des lots qu’il a enlevés, et signale le bon qui manque', () => {
     const lots = [
-      lot({
+      bon({
         id: 'a',
         nom: 'Enlèvement mars',
-        categorie: CATEGORIE_LOT.EQUARRISSAGE,
         numeroBon: '4521',
         dateEnlevement: '2026-03-10',
+        contactCle: 'f-e1',
       }),
-      lot({
-        id: 'b',
-        nom: 'Enlèvement juin',
-        categorie: CATEGORIE_LOT.EQUARRISSAGE,
-        dateEnlevement: '2026-06-02',
-      }),
-      lot({ id: 'c', nom: 'Autre lot', categorie: CATEGORIE_LOT.ABATTOIR }),
+      bon({ id: 'b', nom: 'Enlèvement juin', dateEnlevement: '2026-06-02', contactCle: 'e1' }),
+      bon({ id: 'c', nom: 'Chez l’autre', dateEnlevement: '2026-07-02', contactCle: 'autre' }),
+      lot({ id: 'd', nom: 'Autre lot', categorie: CATEGORIE_LOT.ABATTOIR }),
     ];
-    const pieces = piecesDuContact(
-      { nom: 'Équarrisseur', cle: 'e1' },
-      CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
-      lots,
-      [],
-    );
+    const pieces = piecesDuContact(equarrisseur, CATEGORIE_FOURNISSEUR.EQUARRISSAGE, lots, []);
     expect(pieces.map((p) => p.cle)).toEqual(['bon-b', 'bon-a']);
     expect(pieces[0].manque).toBe(true);
     expect(pieces[1].titre).toContain('4521');
     expect(pieces[1].route).toContain('onglet=fichiers');
   });
 
-  it('range chez un abattoir les documents de circulation qui le concernent, avec ou sans document', () => {
+  it('montre à chaque équarrisseur un lot sans équarrisseur choisi, en le disant', () => {
+    const pieces = piecesDuContact(
+      equarrisseur,
+      CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
+      [bon({ id: 'x', dateEnlevement: '2026-01-01' })],
+      [],
+    );
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0].detail).toContain('Équarrisseur à choisir');
+  });
+
+  it('range chez un contact les documents de circulation faits avec lui, abattoir, particulier ou éleveur', () => {
     const ecritures = [
       circulation({}),
       circulation({
@@ -62,16 +67,42 @@ describe('les pièces qui se rangent toutes seules dans les documents d’un con
       }),
       circulation({ cle: 'vente:3', id: '3', tiers: 'Autre client' }),
       circulation({
-        cle: 'lot:4',
+        cle: 'vente:5',
+        id: '5',
+        tiers: 'Marie Particulier',
+        nature: 'vente',
+        date: '2026-08-01',
+      }),
+    ];
+    const abattoir = piecesDuContact(
+      { nom: 'Abattoir de Corte', cle: 'a1' },
+      CATEGORIE_FOURNISSEUR.ABATTOIR,
+      [],
+      ecritures,
+    );
+    expect(abattoir.map((p) => p.cle)).toEqual(['circulation-facture:2', 'circulation-vente:1']);
+    expect(abattoir.map((p) => p.manque)).toEqual([false, true]);
+    const particulier = piecesDuContact({ nom: 'marie particulier', cle: 'p1' }, undefined, [], ecritures);
+    expect(particulier.map((p) => p.cle)).toEqual(['circulation-vente:5']);
+  });
+
+  it('range un lot de départ chez l’abattoir choisi dans le lot, ou dont une écriture porte son nom', () => {
+    const lots = [
+      lot({ id: '4', nom: 'Départ d’octobre', depart: true, abattoir: '2026-10-05', contactCle: 'a1' }),
+    ];
+    const ecritures = [
+      circulation({ cle: 'lot:4', type: 'lot', id: '4', tiers: 'Départ d’octobre', date: '2026-10-05' }),
+      circulation({
+        cle: 'lot:9',
         type: 'lot',
-        id: '4',
-        tiers: 'Départ d’octobre',
-        date: '2026-10-05',
+        id: '9',
+        tiers: 'Départ de novembre',
+        date: '2026-11-05',
         liees: [
           {
             type: 'facture',
             id: 'f',
-            date: '2026-10-06',
+            date: '2026-11-06',
             tiers: 'abattoir de corte ',
             reference: '',
             montant: -80,
@@ -83,23 +114,21 @@ describe('les pièces qui se rangent toutes seules dans les documents d’un con
     const pieces = piecesDuContact(
       { nom: 'Abattoir de Corte', cle: 'a1' },
       CATEGORIE_FOURNISSEUR.ABATTOIR,
-      [],
+      lots,
       ecritures,
     );
-    expect(pieces.map((p) => p.cle)).toEqual([
-      'circulation-lot:4',
-      'circulation-facture:2',
-      'circulation-vente:1',
-    ]);
-    expect(pieces.map((p) => p.manque)).toEqual([true, false, true]);
+    expect(pieces.map((p) => p.cle)).toEqual(['circulation-lot:9', 'circulation-lot:4']);
+    expect(
+      piecesDuContact({ nom: 'Abattoir B', cle: 'a2' }, CATEGORIE_FOURNISSEUR.ABATTOIR, lots, ecritures),
+    ).toEqual([]);
   });
 
-  it('ne range rien chez les autres contacts', () => {
+  it('ne range rien chez un contact sans équarrissage ni écriture', () => {
     expect(
       piecesDuContact(
         { nom: 'Garage', cle: 'g' },
         CATEGORIE_FOURNISSEUR.GARAGE,
-        [lot({ categorie: CATEGORIE_LOT.EQUARRISSAGE })],
+        [bon({})],
         [circulation({})],
       ),
     ).toEqual([]);

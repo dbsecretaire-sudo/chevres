@@ -208,6 +208,8 @@ export interface LotAnimaux {
   depart?: boolean;
   /** Un lot de départ d'animaux vendus vivants : le jour du départ (AAAA-MM-JJ). Un lot d'abattoir a le sien dans `abattoir`. */
   dateDepart?: string;
+  /** Le contact du lot : l'équarrisseur d'un lot d'équarrissage, l'abattoir d'un lot d'abattoir (l'identifiant de sa fiche) ; le lot se range dans ses documents. */
+  contactCle?: string;
   /** Un lot d'équarrissage : le numéro du bon d'équarrissage remis par l'équarrisseur (le scan du bon est dans `fichiers`) et le jour de l'enlèvement (AAAA-MM-JJ). */
   numeroBon?: string;
   dateEnlevement?: string;

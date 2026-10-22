@@ -66,6 +66,7 @@ export const TEXTES_CONTACTS = {
       circulation: (de: string) => `Document de circulation · ${de}`,
       documentAjoute: 'Document ajouté',
       documentManque: 'Document à ajouter',
+      equarrisseurAChoisir: 'Équarrisseur à choisir dans le lot',
     },
     supprimerQuestion: 'Supprimer ce contact ?',
     supprimerMessage: (nom: string) =>

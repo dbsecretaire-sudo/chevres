@@ -63,7 +63,8 @@ export const ROUTES = {
   lotNouveau: (categorie: string) => `/cheptel/lot?categorie=${encodeURIComponent(categorie)}` as const,
   lot: (id: string) => `/cheptel/lot?id=${id}` as const,
   /** L'assistant « Nouveau lot d'abattoir » : le départ d'animaux (le choix des animaux, le document de circulation, vivants ou morts), avant toute écriture. */
-  lotAbattoirNouveau: () => '/production/lot-abattoir' as const,
+  lotAbattoirNouveau: (destination?: 'vivants') =>
+    `/production/lot-abattoir${destination ? `?destination=${destination}` : ''}` as const,
   /** Les documents du groupement sanitaire (GDS) déposés par l'éleveur. */
   DOCUMENTS_GDS: '/production/documents-gds',
   /** La flotte : la liste des véhicules de l'exploitation (depuis le Garage). */

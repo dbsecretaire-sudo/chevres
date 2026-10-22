@@ -194,7 +194,16 @@ export default function FicheContact() {
   // Les documents : ce qui est rangé dans la fiche du contact (courriers, contrats, aides, notes…).
   const documents = elements.filter((x) => x.origine === 'partenaire');
   /** Les bons d'équarrissage (équarrisseur) et les documents de circulation (abattoir) qui s'y rangent tout seuls. */
-  const pieces = piecesDuContact(contact, categorie.id, lots ?? [], circulations);
+  const pieces = piecesDuContact(
+    {
+      nom: contact.nom,
+      cle: contact.cle,
+      ids: [contact.fournisseur?.id, contact.client?.id].filter((x): x is string => !!x),
+    },
+    categorie.id,
+    lots ?? [],
+    circulations,
+  );
 
   return (
     <Screen scroll={false}>

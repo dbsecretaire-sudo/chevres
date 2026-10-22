@@ -62,6 +62,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   // Les partenaires (organismes, assureurs, équarrisseurs, contacts) : l'écran où ils sont tous rangés ; le vétérinaire est dans le groupement sanitaire.
   partenaires: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
   bilanAnnuel: ROUTES.CHEPTEL_BILAN,
+  // Un animal qui part vivant (vendu à un particulier, à un autre éleveur…) : l'assistant du départ, avec son document de circulation.
+  venteVivant: ROUTES.lotAbattoirNouveau('vivants'),
   aliments: ROUTES.lieu('aliments'),
   equarrissage: ROUTES.lieu('equarrissage'),
   carburant: ROUTES.lieu('carburant'),
@@ -249,6 +251,7 @@ export default function AccueilFerme() {
     { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
     { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
     { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
+    { cle: 'venteVivant', titre: C.venteVivant, icone: iconeMCI('truck-delivery'), couleur: ORANGE },
   ];
   // À droite de la scène du travail du produit : le stock, la réservation d'un produit, les lots et fabriquer (en bulles), les ventes et la rentabilité de ce qu'on fabrique.
   const gestionTransformation: EntreeDeColonne[] = [

@@ -80,3 +80,16 @@ describe('facture de l’abattoir émise après le départ', () => {
     expect(poserLeDocumentDuLot(poserLeDocumentDuLot(lots, 'a', document), 'a', undefined)[0].documentCirculation).toBeUndefined();
   });
 });
+
+describe('plusieurs abattoirs', () => {
+  it('deux départs le même jour vers deux abattoirs font deux lots, chacun avec son abattoir', () => {
+    let lots: LotAnimaux[] = [];
+    lots = lotDuDepart(lots, { date: '2026-10-20', destination: 'abattoir', boucles: ['1'], contactCle: 'a1', nouvelId: () => 'x' }).lots;
+    const r = lotDuDepart(lots, { date: '2026-10-20', destination: 'abattoir', boucles: ['2'], contactCle: 'a2', nouvelId: () => 'y' });
+    expect(r.lots.map((l) => [l.id, l.contactCle])).toEqual([['x', 'a1'], ['y', 'a2']]);
+    // Le même abattoir le même jour complète le lot existant.
+    const suite = lotDuDepart(r.lots, { date: '2026-10-20', destination: 'abattoir', boucles: ['3'], contactCle: 'a1' });
+    expect(suite.lots).toHaveLength(2);
+    expect(suite.lot.boucles).toBe('1, 3');
+  });
+});
