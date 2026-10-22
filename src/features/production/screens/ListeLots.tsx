@@ -4,7 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { Screen } from '@/shared/components/ScreenList';
-import { BlocLignes } from '@/shared/components/BlocListe';
+import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
+import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { NomModal } from '@/features/dossiers/components/NomModal';
@@ -12,15 +14,13 @@ import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import { ListRow } from '@/shared/components/ListRow';
-import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuProduit, lotsDeLInventaire } from '@/features/stock/services/lots';
 import { ajouterArticle, niveauxDeStock, type ArticleAffiche } from '@/features/stock/services/stock';
-import type { ArchiveStock } from '@/features/stock/types';
+import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { ETAT_LOT, GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ROUTES } from '@/shared/constants/routes';
@@ -69,7 +69,8 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
   const enStock = (cle: string) => lotsDeLInventaire({ lots }, ETAT_LOT.EN_STOCK, cle).length;
 
   return (
-    <Screen scroll={false}>
+    <CadreDeJeu>
+    <Screen scroll={false} transparent>
       <Stack.Screen
         options={{
           // Ajouter une variété (un produit), à côté des statistiques de lait pour les fromages.
@@ -112,22 +113,20 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
         {articles.length === 0 ? (
           <EmptyState title={T.aucun} />
         ) : (
-          <BlocLignes>
-            {articles.map((a) => {
+          // Les cartes du stock, comme à la grange : le dessin, le nom, ses lots en petit et la pastille de ce qu'il en reste ; un appui ouvre le détail des lots.
+          <View style={grilleDeCartes}>
+            {articles.map((a, i) => {
               const total = lotsDeLInventaire({ lots }, ETAT_LOT.TOUT, a.cle).length;
+              const niveau = niveaux.get(a.cle) ?? 0;
               return (
-                <ListRow
+                <CarteDeStock
                   key={a.cle}
-                  title={a.libelle}
-                  subtitle={TEXTES.production.fromages.ligne(enStock(a.cle), total)}
-                  trailing={
-                    <View style={commonStyles.row}>
-                      {/* Un stock en négatif (plus vendu que fabriqué) : toujours la pastille rouge. */}
-                      {(niveaux.get(a.cle) ?? 0) < 0 ? <PastilleAlerte /> : null}
-                      <Text style={commonStyles.lineBold}>{niveaux.get(a.cle) ?? 0}</Text>
-                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                    </View>
-                  }
+                  rang={i}
+                  emoji={emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle)}
+                  titre={a.libelle}
+                  sous={TEXTES.production.fromages.ligne(enStock(a.cle), total)}
+                  quantite={String(niveau)}
+                  niveau={niveau}
                   onPress={() => {
                     setOuvert(a);
                     setVisible(true);
@@ -135,7 +134,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                 />
               );
             })}
-          </BlocLignes>
+          </View>
         )}
       </ScrollView>
       <Fab
@@ -182,5 +181,6 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
         onFermer={() => setVisible(false)}
       />
     </Screen>
+    </CadreDeJeu>
   );
 }

@@ -30,8 +30,9 @@ export function CadreDeJeu({
 }: {
   haut?: ReactNode;
   children: ReactNode;
-  onHaut: () => void;
-  onBas: () => void;
+  /** Les flèches de la barre de navigation : sans elles, la barre n'y est pas (une page qui défile d'elle-même). */
+  onHaut?: () => void;
+  onBas?: () => void;
   /** Un bouton « fermer » en haut à droite du cadre (la grange). */
   onFermer?: () => void;
   /** Quand elle est donnée : le bouton « Tout le stock » sous le cadre. */
@@ -54,7 +55,7 @@ export function CadreDeJeu({
           {haut}
           <View style={styles.corps}>
             <View style={styles.defile}>{children}</View>
-            <BarreDeNavigation onHaut={onHaut} onBas={onBas} />
+            {onHaut && onBas ? <BarreDeNavigation onHaut={onHaut} onBas={onBas} /> : null}
           </View>
         </View>
       </View>

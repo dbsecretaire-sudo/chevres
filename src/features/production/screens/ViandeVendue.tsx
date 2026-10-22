@@ -5,6 +5,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { Screen } from '@/shared/components/Screen';
+import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
@@ -382,7 +383,8 @@ export default function ViandeVendue() {
   };
 
   return (
-    <Screen scroll={false}>
+    <CadreDeJeu>
+    <Screen scroll={false} transparent>
       <View style={commonStyles.enteteListe}>
         <SuggestionParcours parcoursId={ongletActif === 'avendre' || ongletActif === 'vendue' ? 'vente-sans-facture' : 'vente-abattoir'} />
         <LigneFiltres>
@@ -667,5 +669,6 @@ export default function ViandeVendue() {
         ]}
       />
     </Screen>
+    </CadreDeJeu>
   );
 }
