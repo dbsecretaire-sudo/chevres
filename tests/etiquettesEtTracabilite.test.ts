@@ -3,7 +3,7 @@ import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
 import { etiquettesHtml } from '@/features/export/etiquettesLotPdf';
 import { tracabiliteHtml } from '@/features/export/tracabiliteLotPdf';
-import { ingredientsEnManque } from '@/features/production/services/ingredientsPlat';
+import { ingredientsEnManque, ingredientsProposables } from '@/features/production/services/ingredientsPlat';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { ajouterArticle } from '@/features/stock/services/stock';
 import { etiquetteDuLot } from '@/features/stock/services/etiquetteLot';
@@ -186,5 +186,17 @@ describe('documents imprimés', () => {
     expect(savon).toContain('Martin Marie');
     expect(savon).toContain('0612345678');
     expect(savon).toContain('Aucun produit n’a été fait avec ces lots.');
+  });
+});
+
+describe('ingrédients d’une fabrication', () => {
+  it('le lait ne déclenche jamais l’alerte de stock', () => {
+    expect(ingredientsEnManque(archive, [{ article: 'lait', quantite: 50 }])).toEqual([]);
+  });
+
+  it('une fabrication de fromagerie propose aussi les produits animaux', () => {
+    const groupes = { fromages: 'F', charcuterie: 'C', autres: 'A', fromagerie: 'Présure', animaux: 'Produits animaux' };
+    const propositions = ingredientsProposables(archive, groupes, { fromagerie: true });
+    expect(propositions.filter((p) => p.groupe === 'Produits animaux').map((p) => p.libelle)).toContain('Frais');
   });
 });

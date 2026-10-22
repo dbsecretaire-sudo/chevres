@@ -92,6 +92,7 @@ function FabricationDeLots() {
               charcuterie: '',
               autres: TEXTES.production.fabricationPlat.ingredients.groupeAutres,
               fromagerie: TEXTES.production.recettes.groupeFromagerie,
+              animaux: TEXTES.production.recettes.groupeAnimaux,
             },
             { fromagerie: true },
           )

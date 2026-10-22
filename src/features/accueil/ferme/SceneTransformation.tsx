@@ -111,6 +111,8 @@ const HAUTEUR_DE_LA_PLAQUE = 104;
 
 interface Props {
   compte?: CompteTransformation;
+  /** Un article de l'atelier est en négatif : la plaque l'écrit en rouge, sous ses comptes. */
+  alerteStock?: boolean;
   /** Une autre plaque que celle de la Transformation (le côté Agritourisme) : son titre, ses symboles et ses comptes. */
   plaque?: ContenuDePlaque;
   /** Le décor : l'atelier d'office, ou la campagne (le côté Agritourisme). */
@@ -140,6 +142,7 @@ const enRangees = <T,>(liste: readonly T[], taille: number): T[][] =>
  */
 export function SceneTransformation({
   compte,
+  alerteStock,
   decor = 'atelier',
   plaque,
   nomBatiment,
@@ -153,7 +156,10 @@ export function SceneTransformation({
   const contenu: ContenuDePlaque = plaque ?? {
     titre: T.titre,
     symboles: SYMBOLES,
-    lignes: lignesDeTransformation(compte ?? { fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 }),
+    lignes: [
+      ...lignesDeTransformation(compte ?? { fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 }),
+      ...(alerteStock ? [{ cle: 'stock', texte: T.stockNegatif, alerte: true }] : []),
+    ],
   };
   // Sur un grand écran, les logos peuvent grandir au-delà de leur taille de téléphone, tant que la scène a la place.
   const agrandissement = useEchelle();
@@ -175,8 +181,10 @@ export function SceneTransformation({
   const reste = hauteur - hauteurFromagerie - trottoirs - 4 * MARGE;
   const entre = (valeur: number, min: number, max: number) =>
     Math.max(min, Math.min(max, Math.round(valeur)));
-  const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a);
-  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.34, plaqueMin, Math.round(170 * a));
+  // La plaque est dessinée pour cinq lignes : une de plus (l'alerte) lui donne la place.
+  const lignesEnPlus = Math.max(1, contenu.lignes.length / 5);
+  const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a * lignesEnPlus);
+  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.34, plaqueMin, Math.round(170 * a * lignesEnPlus));
   // La plaque compte cinq lignes : la rue de l'atelier se rétrécit pour lui laisser la place.
   const rueMin = Math.round((campagne ? 100 : 34) * a);
   const hauteurRue =

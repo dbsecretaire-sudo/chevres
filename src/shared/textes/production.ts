@@ -212,6 +212,7 @@ export const TEXTES_PRODUCTION = {
     supprimerMessage: 'Les fabrications déjà faites ne changent pas.',
     notes: 'Notes de la fabrication',
     groupeFromagerie: 'Présure, sel et ferments',
+    groupeAnimaux: 'Produits animaux',
     sectionAideFromagerie: 'Une recette par préparation (fromage frais, vieux, crottin, brocciu…) : ses ingrédients et son explicatif (le cahier des charges d’une AOP, par exemple) se reprennent d’un appui.',
     ingredientsFromagerieAide: 'La présure, le sel, les ferments lactiques et les articles de vos listes : ce qui sort du stock pour cette fabrication.',
     page: {

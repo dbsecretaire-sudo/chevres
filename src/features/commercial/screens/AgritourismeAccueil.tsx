@@ -135,11 +135,6 @@ export default function AgritourismeAccueil() {
               icone="pricetags"
               onPress={() => router.push(ROUTES.COMMERCIAL_FORMULES as never)}
             />
-            <ListRow
-              title={T.accueilPublic.lien}
-              icone="shield-checkmark"
-              onPress={() => router.push(ROUTES.COMMERCIAL_ACCUEIL_PUBLIC as never)}
-            />
             <PucesDefilantes
               puces={[
                 { valeur: VUE_AGRITOURISME.A_VENIR, label: T.vues.aVenir },

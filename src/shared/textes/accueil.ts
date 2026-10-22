@@ -35,6 +35,8 @@ export const TEXTES_ACCUEIL = {
       viande: (n: number) => `${n} viande`,
       plats: (n: number) => `${n} ${n === 1 ? 'plat préparé' : 'plats préparés'}`,
       savons: (n: number) => `${n} ${n === 1 ? 'savon' : 'savons'}`,
+      /** Un article de l'atelier est passé en négatif (fabriqué sans assez d'ingrédients en stock). */
+      stockNegatif: 'Stock insuffisant !',
       entrer: 'Ouvrir le stock de l’atelier',
       /** Le nom de la pastille de la bascule du bas (le titre de la scène reste « Travail du produit »). */
       pastille: 'Atelier',
@@ -61,6 +63,7 @@ export const TEXTES_ACCUEIL = {
       groupesVisiteurs: 'Groupes',
       tourisme: 'Office de tourisme',
       repas: 'Repas',
+      cadreReglementaire: 'Cadre réglementaire',
       nouvelleVisite: 'Nouvelle visite',
       visites: 'Visites',
       formules: 'Formules',

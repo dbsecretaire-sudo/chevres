@@ -12,8 +12,6 @@ import { DateFabricationModal } from '@/features/stock/components/DateFabricatio
 import {
   basculerControleLot,
   controlerLots,
-  estArticlePlat,
-  estArticleSavon,
   etatDuLot,
   lotsDeLaFabrication,
   modifierDateFabrication,
@@ -232,7 +230,8 @@ export function TableauLots({
         onClose={() => setLotAImprimer(undefined)}
         title={lotAImprimer?.numero}
         options={[
-          ...(lotAImprimer && (estArticlePlat(lotAImprimer.article) || estArticleSavon(lotAImprimer.article))
+          // Les étiquettes : tous les produits à lots (fromages, charcuterie, plats préparés, savons).
+          ...(lotAImprimer
             ? [
                 {
                   label: T.etiquettes,

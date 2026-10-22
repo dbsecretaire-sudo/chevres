@@ -33,7 +33,7 @@ import { articlesDuGenre, roleDeLaViande } from '@/features/stock/services/stock
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import type { ArchiveStock } from '@/features/stock/types';
 import { CATEGORIE_ANIMAL, STATUT_CHEVRE } from '@/shared/constants/cheptel';
-import { GENRE_ARTICLE } from '@/shared/constants/stock';
+import { CLE_PRIX_LAIT, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
 import { todayISO } from '@/shared/utils/dates';
 
@@ -200,6 +200,8 @@ export function useFermeAccueil() {
     lotsARappeler: aRappeler + aValider.length,
     /** Les animaux en délai d'attente (lait et viande confondus). */
     delais: sante.nombreLait + sante.nombreViande,
+    /** Un article du stock est en négatif (fabriqué sans assez d'ingrédients) : le lait, qui n'a pas de stock tenu ainsi, n'est pas compté. */
+    stockNegatif: [...niveaux].some(([cle, niveau]) => niveau < 0 && cle !== CLE_PRIX_LAIT),
     /** Le stock d'une visite ou d'une commande des jours qui viennent manque (voir rappelsStockATourisme). */
     stockManquant: analyses.some((r) => r.genre === GENRE_RAPPEL.STOCK_A_PREVOIR && r.enRetard),
     nombreDeRappels: rappels.length + envois.length + analyses.length + (aRappeler > 0 ? 1 : 0) + aValider.length,

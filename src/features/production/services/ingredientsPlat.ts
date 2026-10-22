@@ -7,7 +7,7 @@ import {
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock, LotFromage } from '@/features/stock/types';
-import { GENRE_ARTICLE, INGREDIENTS_DE_FROMAGERIE } from '@/shared/constants/stock';
+import { CLE_PRIX_LAIT, GENRE_ARTICLE, INGREDIENTS_DE_FROMAGERIE } from '@/shared/constants/stock';
 
 /** Un article du stock qu'un plat peut utiliser, rangé par groupe (fromages, charcuterie et viande, autres articles). */
 export interface IngredientProposable extends ArticleAffiche {
@@ -20,7 +20,7 @@ export interface IngredientProposable extends ArticleAffiche {
  */
 export function ingredientsProposables(
   archive: ArchiveStock,
-  groupes: { fromages: string; charcuterie: string; autres: string; fromagerie?: string },
+  groupes: { fromages: string; charcuterie: string; autres: string; fromagerie?: string; animaux?: string },
   /**
    * Un savon n'a pour ingrédients que les articles des listes de l'inventaire (huiles, soude, beurres…), ni fromage ni viande ; un fromage ou une charcuterie, la
    * présure, le sel et les ferments (`fromagerie`) avec ces listes.
@@ -29,9 +29,16 @@ export function ingredientsProposables(
 ): IngredientProposable[] {
   const nomsDesListes = new Map((archive.listes ?? []).map((l) => [l.id, l.nom]));
   const produits = options.fromagerie
-    ? articlesDuGenre(GENRE_ARTICLE.MATERIEL, archive)
-        .filter((a) => INGREDIENTS_DE_FROMAGERIE.includes(a.cle.split(':')[1]))
-        .map((a) => ({ ...a, groupe: groupes.fromagerie ?? groupes.autres }))
+    ? [
+        ...articlesDuGenre(GENRE_ARTICLE.MATERIEL, archive)
+          .filter((a) => INGREDIENTS_DE_FROMAGERIE.includes(a.cle.split(':')[1]))
+          .map((a) => ({ ...a, groupe: groupes.fromagerie ?? groupes.autres })),
+        // Les produits animaux : un fromage ou une viande déjà faits entrent aussi dans une fabrication (une charcuterie, un fromage aromatisé).
+        ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive).map((a) => ({ ...a, groupe: groupes.animaux ?? groupes.fromages })),
+        ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive)
+          .filter((a) => !estLigneDuCheptel(a.cle))
+          .map((a) => ({ ...a, groupe: groupes.animaux ?? groupes.charcuterie })),
+      ]
     : options.listesSeulement
       ? []
       : [
@@ -75,7 +82,8 @@ export function ingredientsEnManque(
 ): IngredientEnManque[] {
   const niveaux = niveauxDeStock(archive.mouvements);
   const demandes = new Map<string, number>();
-  for (const u of utilises) demandes.set(u.article, (demandes.get(u.article) ?? 0) + u.quantite);
+  // Le lait n'a pas de stock tenu article par article (son bilan est à part) : il ne déclenche jamais l'alerte.
+  for (const u of utilises.filter((x) => x.article !== CLE_PRIX_LAIT && !x.article.startsWith(`${CLE_PRIX_LAIT}:`))) demandes.set(u.article, (demandes.get(u.article) ?? 0) + u.quantite);
   const arrondi = (n: number) => Math.round(n * 1000) / 1000;
   return [...demandes]
     .map(([article, demande]) => ({

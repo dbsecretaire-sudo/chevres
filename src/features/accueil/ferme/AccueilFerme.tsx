@@ -91,6 +91,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   groupesVisiteurs: ROUTES.lieu('groupesVisiteurs'),
   tourisme: ROUTES.lieu('tourisme'),
   repas: ROUTES.lieu('repas'),
+  // Les démarches pour accueillir du public (ERP, sécurité incendie, accessibilité, assurance, DDPP).
+  cadreReglementaire: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC,
   nouvelleVisite: ROUTES.COMMERCIAL_VISITE,
   visites: ROUTES.COMMERCIAL_AGRITOURISME,
   formules: ROUTES.COMMERCIAL_FORMULES,
@@ -274,6 +276,7 @@ export default function AccueilFerme() {
     { cle: 'groupesVisiteurs', titre: C.groupesVisiteurs, icone: iconeMCI('bus'), couleur: VENTE },
     { cle: 'repas', titre: C.repas, icone: iconeMCI('silverware-fork-knife'), couleur: ACHAT },
     { cle: 'tourisme', titre: C.tourisme, icone: iconeIon('compass'), couleur: ACHAT },
+    { cle: 'cadreReglementaire', titre: C.cadreReglementaire, icone: iconeIon('shield-checkmark'), couleur: VENTE },
   ];
   // En bas de l'agritourisme : l'accueil des visiteurs, dont les compartiments sont les pages qui existent déjà (visites, formules, tarifs, ventes, rentabilité).
   const gestionAgritourisme: EntreeDeColonne[] = [
@@ -411,6 +414,7 @@ export default function AccueilFerme() {
           ) : (
             <SceneTransformation
               compte={f.transformation}
+              alerteStock={f.stockNegatif}
               onAppui={() => ouvrir(`${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`)}
               intervenants={intervenants}
               gestion={gestion}

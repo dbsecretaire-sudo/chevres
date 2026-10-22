@@ -288,8 +288,7 @@ export const TEXTES_COMMERCIAL = {
     formules: 'Formules et tarifs',
     /** Les démarches pour accueillir du public à la ferme, suivies comme le dossier réglementaire des savons. */
     accueilPublic: {
-      titre: 'Accueil du public',
-      lien: 'Démarches d’accueil du public',
+      titre: 'Cadre réglementaire',
       intro:
         'Une ferme qui reçoit des visiteurs est un établissement recevant du public (ERP). Cette liste est une aide de rappel : les règles dépendent de la capacité d’accueil et de la commune, elle ne remplace ni la mairie, ni le SDIS, ni la DDPP.',
       enRegle: 'Toutes les démarches obligatoires sont faites.',
