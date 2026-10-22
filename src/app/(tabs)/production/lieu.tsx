@@ -1,7 +1,8 @@
 import { View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { EnTeteFerme } from '@/features/accueil/ferme/EnTeteFerme';
 import TousLesAnimaux from '@/features/accueil/ferme/TousLesAnimaux';
+import { ID_LISTE_DENREES, ID_LISTE_MATIERES_SAVON } from '@/features/stock/services/denrees';
 import LieuTiers from '@/features/production/screens/LieuTiers';
 import PageBoucles from '@/features/stock/screens/PageBoucles';
 import EntrepotJeu from '@/features/stock/screens/EntrepotJeu';
@@ -24,7 +25,8 @@ export default function Lieu() {
           avecCompte
           seulement={CATEGORIE_INVENTAIRE.MATIERES_PREMIERES}
           // Le stock de boucles n'est pas à la grange : il est avec les boucles (Cheptel › Boucles).
-          sauf={[SECTION_STOCK.BOUCLES]}
+          // Les matières alimentaires consommables et celles des savons sont celles de l'atelier : elles sont dans son stock, pas à la grange.
+          sauf={[SECTION_STOCK.BOUCLES, `liste:${ID_LISTE_DENREES}`, `liste:${ID_LISTE_MATIERES_SAVON}`]}
           titre={TEXTES.production.lieux.entrepot.grange}
         />
       </View>
@@ -33,5 +35,11 @@ export default function Lieu() {
   if (lieu === 'animaux') return <TousLesAnimaux />;
   // Le stock de boucles (Cheptel › Boucles) : le même cadre que la grange, avec ses boucles et leur compte ; une carte ouvre le tableau des boucles.
   if (lieu === 'boucles') return <PageBoucles />;
-  return lieu === 'entrepot' ? <EntrepotJeu /> : <LieuTiers />;
+  return (
+    <>
+      {/* Le bouton « Lots d'animaux » de la page des animaux ne reste pas dans l'en-tête des autres pages. */}
+      <Stack.Screen options={{ headerRight: () => null }} />
+      {lieu === 'entrepot' ? <EntrepotJeu /> : <LieuTiers />}
+    </>
+  );
 }

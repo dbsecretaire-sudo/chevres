@@ -30,7 +30,7 @@ export default function EntrepotJeu({
 }: {
   seulement?: string;
   titre?: string;
-  /** Les rubriques du stock (leur section) qu'on ne montre pas : la grange n'a pas le stock de boucles. */
+  /** Les rubriques du stock (leur section, ou « liste:identifiant » pour une liste ajoutée) qu'on ne montre pas : la grange n'a pas le stock de boucles. */
   sauf?: readonly string[];
   /** Seulement ces rubriques du stock (leur section), de toutes les catégories, dans cet ordre : le stock de boucles, le stock de l'atelier. Sans onglets. */
   sections?: readonly string[];
@@ -63,6 +63,7 @@ export default function EntrepotJeu({
       : [];
   const sansExclues = sauf
     ? groupesDeLaCategorie
+        .filter((g) => !sauf.includes(g.cle))
         .map((g) => ({ ...g, cartes: g.cartes.filter((c) => !sauf.includes(c.section)) }))
         .filter((g) => g.cartes.length > 0)
     : groupesDeLaCategorie;

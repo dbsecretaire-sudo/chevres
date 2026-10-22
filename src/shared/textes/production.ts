@@ -183,6 +183,23 @@ export const TEXTES_PRODUCTION = {
       },
     },
   },
+  /** La bibliothèque de recettes (plats préparés, savons) : reprendre d'un appui les ingrédients d'une fabrication. */
+  recettes: {
+    titre: 'Recette',
+    aucune: 'Sans recette',
+    bibliothequeVide: 'Aucune recette gardée : saisissez les ingrédients, puis « Enregistrer comme recette ».',
+    enregistrer: 'Enregistrer comme recette',
+    mettreAJour: 'Mettre à jour cette recette',
+    supprimer: 'Supprimer cette recette',
+    nomTitre: 'Nom de la recette',
+    nomExemple: 'ex : Savon miel, base olive et coco',
+    rienASauver: 'Ajoutez d’abord au moins un ingrédient.',
+    misAJour: (nom: string) => `Recette « ${nom} » mise à jour.`,
+    supprimerQuestion: (nom: string) => `Supprimer la recette « ${nom} » ?`,
+    supprimerMessage: 'Les fabrications déjà faites ne changent pas.',
+    sectionTitre: 'Bibliothèque de recettes',
+    sectionAide: 'Reprenez les ingrédients d’une fabrication d’un appui, sans tout retaper. Les lots d’ingrédients se choisissent à chaque fois.',
+  },
   /** La fabrication de savons : le savon, la date, le nombre de pains, le lait de chèvre pris dans le stock, la saponification, la cure et les ingrédients. */
   fabricationSavon: {
     titre: 'Fabriquer un savon',
@@ -460,6 +477,9 @@ export const TEXTES_PRODUCTION = {
         lait: { titre: 'Analyses du lait', aide: 'La qualité du lait : flore, cellules, antibiotiques… par laboratoire, avec leurs courbes.' },
         fromage: { titre: 'Analyses du fromage', aide: 'Les autocontrôles microbiologiques du fromage : Listeria, Salmonella, staphylocoques, E. coli.' },
         charcuterie: { titre: 'Analyses de la charcuterie', aide: 'Les autocontrôles microbiologiques de la charcuterie : Listeria, Salmonella, E. coli.' },
+        plat: { titre: 'Analyses des plats préparés', aide: 'Les autocontrôles des conserves : stabilité à l’étuve, Listeria, Salmonella, clostridies, Bacillus cereus.' },
+        savon: { titre: 'Analyses des savons', aide: 'Les analyses des cosmétiques : flore totale, levures et moisissures, Pseudomonas, Staphylococcus aureus, Candida.' },
+        registre: { titre: 'Registre des analyses', aide: 'Chaque fabrication avec ses analyses : ce qui a été analysé, et ce qui reste à analyser.' },
       },
     },
     veterinaire: {
@@ -474,8 +494,8 @@ export const TEXTES_PRODUCTION = {
       },
     },
     organismes: {
-      titre: 'Organismes',
-      groupeTiers: 'Organismes et chambre d’agriculture',
+      titre: 'Organismes et État',
+      groupeTiers: 'Organismes, chambre d’agriculture et État',
       ajouterTiers: 'Ajouter un organisme',
       groupeEcritures: 'Les aides et subventions',
       nouvelle: 'Nouvelle aide ou subvention',

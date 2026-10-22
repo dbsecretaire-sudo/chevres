@@ -327,6 +327,9 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       { cle: 'lait', icone: 'flask', route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
       { cle: 'fromage', icone: 'flask-outline', route: ROUTES.analysesProduit('fromage') },
       { cle: 'charcuterie', icone: 'flask-outline', route: ROUTES.analysesProduit('charcuterie') },
+      { cle: 'plat', icone: 'flask-outline', route: ROUTES.analysesProduit('plat') },
+      { cle: 'savon', icone: 'flask-outline', route: ROUTES.analysesProduit('savon') },
+      { cle: 'registre', icone: 'journal', route: ROUTES.PRODUCTION_REGISTRE_ANALYSES },
     ],
   },
   veterinaire: {
@@ -350,6 +353,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesContact: [
       CATEGORIE_FOURNISSEUR.ORGANISME,
       CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE,
+      // L'État (DDPP, DGCCRF, impôts…) est rangé avec les organismes.
+      CATEGORIE_FOURNISSEUR.ETAT,
       CATEGORIE_CLIENT.ORGANISME,
     ],
     categoriesFacture: [CATEGORIE_RECETTE.AIDE],

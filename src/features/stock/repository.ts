@@ -145,6 +145,11 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     denreesAjoutees: archive?.denreesAjoutees === true ? true : undefined,
     matieresSavonAjoutees: archive?.matieresSavonAjoutees === true ? true : undefined,
     dossiersSavons: dossiersSavonsValides(archive?.dossiersSavons),
+    recettes: Array.isArray(archive?.recettes)
+      ? archive.recettes.filter(
+          (r) => r && typeof r.id === 'string' && typeof r.nom === 'string' && Array.isArray(r.ingredients),
+        )
+      : [],
   };
 }
 

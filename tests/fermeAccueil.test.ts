@@ -149,9 +149,9 @@ describe('comptes de la transformation', () => {
       niveau: (cle) => niveaux[cle] ?? 0,
       role,
     });
-    expect(c).toEqual({ fromages: 7, charcuterie: 5, viande: 256 });
+    expect(c).toEqual({ fromages: 7, charcuterie: 5, viande: 256, plats: 0, savons: 0 });
   });
   it('tout est à zéro sans rien en stock', () => {
-    expect(compterTransformation({ fromages: [], viande: [], niveau: () => 0, role: () => undefined })).toEqual({ fromages: 0, charcuterie: 0, viande: 0 });
+    expect(compterTransformation({ fromages: [], viande: [], niveau: () => 0, role: () => undefined })).toEqual({ fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 });
   });
 });

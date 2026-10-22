@@ -1,11 +1,13 @@
 /**
- * Ce que la carte « Transformation » de l'accueil compte : les fromages en stock, la boucherie et la charcuterie (les produits de viande ajoutés
+ * Ce que la carte « Transformation » de l'accueil compte : les fromages en stock, les plats préparés et les savons, la boucherie et la charcuterie (les produits de viande ajoutés
  * au stock), et la viande (tous les animaux du stock : les cabris, les animaux vivants et ceux sur pied, additionnés). Les niveaux négatifs (plus vendu que fabriqué) ne comptent pas.
  */
 export interface CompteTransformation {
   fromages: number;
   charcuterie: number;
   viande: number;
+  plats: number;
+  savons: number;
 }
 
 interface Article {
@@ -16,6 +18,8 @@ interface Article {
 export function compterTransformation(entree: {
   fromages: readonly Article[];
   viande: readonly Article[];
+  plats?: readonly Article[];
+  savons?: readonly Article[];
   niveau: (cle: string) => number;
   role: (cle: string) => string | undefined;
 }): CompteTransformation {
@@ -26,5 +30,7 @@ export function compterTransformation(entree: {
     charcuterie: somme(entree.viande.filter((a) => entree.role(a.cle) === undefined)),
     // Toute ligne qui suit le cheptel (jeunes, sur pied, vivant) : la viande de la carte additionne tous les animaux.
     viande: somme(entree.viande.filter((a) => entree.role(a.cle) !== undefined)),
+    plats: somme(entree.plats ?? []),
+    savons: somme(entree.savons ?? []),
   };
 }

@@ -33,6 +33,8 @@ export const TEXTES_ACCUEIL = {
       fromages: (n: number) => `${n} ${n === 1 ? 'fromage' : 'fromages'}`,
       charcuterie: (n: number) => `${n} boucherie/charcuterie`,
       viande: (n: number) => `${n} viande`,
+      plats: (n: number) => `${n} ${n === 1 ? 'plat préparé' : 'plats préparés'}`,
+      savons: (n: number) => `${n} ${n === 1 ? 'savon' : 'savons'}`,
       entrer: 'Ouvrir le stock de l’atelier',
       /** Le nom de la pastille de la bascule du bas (le titre de la scène reste « Travail du produit »). */
       pastille: 'Atelier',
@@ -79,6 +81,7 @@ export const TEXTES_ACCUEIL = {
       lotsAtelier: 'Lots',
       qualiteLait: 'Qualité du lait',
       analyses: 'Analyses',
+      registreAnalyses: 'Registre des analyses',
       reserver: 'Réserver',
       laiterie: 'Laiterie',
       abattoir: 'Abattoir',

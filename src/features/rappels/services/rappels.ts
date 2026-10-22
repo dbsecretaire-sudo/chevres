@@ -18,7 +18,8 @@ export type GenreRappelDeLot =
   | typeof GENRE_RAPPEL.GROUPEMENT
   | typeof GENRE_RAPPEL.CIRCULATION
   | typeof GENRE_RAPPEL.ANALYSE_PLAT
-  | typeof GENRE_RAPPEL.DOSSIER_SAVON;
+  | typeof GENRE_RAPPEL.DOSSIER_SAVON
+  | typeof GENRE_RAPPEL.STOCK_A_PREVOIR;
 
 /** Les déclarations qu'on peut activer ou non (RSA, URSSAF) ; une échéance de groupement s'y ajoute dans les rappels (voir Rappel.genre). */
 export type GenreRappel = Exclude<

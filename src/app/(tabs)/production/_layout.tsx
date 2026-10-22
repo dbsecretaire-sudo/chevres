@@ -9,6 +9,7 @@ import { enteteDuBatiment } from '@/shared/components/EnteteBatiment';
 import { colors } from '@/shared/theme/colors';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import type { FamilleControle } from '@/features/exploitation/types';
+import { produitAnalyse } from '@/features/analyses/services/analysesProduits';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
@@ -140,8 +141,12 @@ export default function ProductionLayout() {
       <Stack.Screen
         name="analyses-produit"
         options={({ route }) => ({
-          title: charcuterie(route.params) ? TEXTES.analysesProduits.produits.charcuterie.titre : TEXTES.analysesProduits.produits.fromage.titre,
+          title: TEXTES.analysesProduits.produits[produitAnalyse((route.params as { produit?: string } | undefined)?.produit)].titre,
         })}
+      />
+      <Stack.Screen
+        name="registre-analyses"
+        options={{ title: TEXTES.analysesProduits.registre.titre, headerLeft: enteteDuBatiment() }}
       />
       <Stack.Screen name="analyse-produit" options={{ title: TEXTES.analysesProduits.modifier }} />
       <Stack.Screen name="lot-abattoir" options={{ title: TEXTES.cheptel.lots.depart.titre }} />

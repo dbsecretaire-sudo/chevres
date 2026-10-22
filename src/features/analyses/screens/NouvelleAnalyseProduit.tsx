@@ -19,6 +19,7 @@ import {
   PARAMETRES,
   evaluer,
   nombreSaisi,
+  produitAnalyse,
   type ParametreAnalyse,
   type Verdict,
 } from '@/features/analyses/services/analysesProduits';
@@ -31,7 +32,10 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
-import { estDateISO, todayISO } from '@/shared/utils/dates';
+import { fabricationsDuRegistre } from '@/features/analyses/services/registreAnalyses';
+import { lireArchiveStock } from '@/features/stock/repository';
+import type { ArchiveStock } from '@/features/stock/types';
+import { estDateISO, formatDateShortFR, todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.analysesProduits;
 
@@ -58,17 +62,24 @@ function resultatDe(parametre: ParametreAnalyse, texte: string | undefined): Res
 export default function NouvelleAnalyseProduit() {
   const router = useRouter();
   const retour = useAdresseCourante();
-  const { produit: demande, id } = useLocalSearchParams<{ produit?: string; id?: string }>();
+  const { produit: demande, id, fabrication: fabricationDemandee } = useLocalSearchParams<{
+    produit?: string;
+    id?: string;
+    fabrication?: string;
+  }>();
   const { settings, patchSettings } = useAppSettings();
   const infos = settings.exploitation;
   const existante = id ? infos?.analysesProduits?.find((a) => a.id === id) : undefined;
-  const produit: ProduitAnalyse = existante?.produit ?? (demande === 'charcuterie' ? 'charcuterie' : 'fromage');
+  const produit: ProduitAnalyse = existante?.produit ?? produitAnalyse(demande);
 
   const [date, setDate] = useState(todayISO());
   const [laboratoireId, setLaboratoireId] = useState('');
   const [numeroRapport, setNumeroRapport] = useState('');
   const [echantillon, setEchantillon] = useState('');
   const [lot, setLot] = useState('');
+  /** La fabrication analysée (le registre en rassemble les analyses) et celles qu'on peut choisir. */
+  const [fabricationId, setFabricationId] = useState('');
+  const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [saisie, setSaisie] = useState<Saisie>({});
   const [notes, setNotes] = useState('');
   const [fichiers, setFichiers] = useState<PieceJointe[]>([]);
@@ -81,6 +92,9 @@ export default function NouvelleAnalyseProduit() {
   useFocusEffect(
     useCallback(() => {
       listFournisseurs().then((f) => setLaboratoires(laboratoiresDeLaListe(f)));
+      lireArchiveStock()
+        .then(setArchive)
+        .catch(() => undefined);
     }, []),
   );
 
@@ -93,6 +107,7 @@ export default function NouvelleAnalyseProduit() {
       setNumeroRapport(existante.numeroRapport ?? '');
       setEchantillon(existante.echantillon ?? '');
       setLot(existante.lot ?? '');
+      setFabricationId(existante.fabricationId ?? '');
       setNotes(existante.notes ?? '');
       setFichiers(existante.fichiers ?? []);
       setSaisie(Object.fromEntries(Object.entries(existante.resultats).map(([cle, v]) => [cle, String(v).replace('.', ',')])));
@@ -101,6 +116,24 @@ export default function NouvelleAnalyseProduit() {
   }, [existante, charge]);
 
   const majSaisie = (cle: string, valeur: string) => setSaisie((s) => ({ ...s, [cle]: valeur }));
+
+  const fabrications = archive ? fabricationsDuRegistre(archive, infos?.analysesProduits, produit) : [];
+  /** Choisir une fabrication reprend son produit et ses numéros de lot, tant qu'on ne les a pas saisis. */
+  const choisirFabrication = (cle: string) => {
+    setFabricationId(cle);
+    const f = fabrications.find((x) => x.id === cle);
+    if (!f) return;
+    setEchantillon((actuel) => actuel || f.libelle);
+    setLot((actuel) => actuel || f.numeros);
+  };
+  // Le registre ouvre une nouvelle analyse déjà rattachée à sa fabrication.
+  useEffect(() => {
+    if (!existante && fabricationDemandee && fabrications.some((f) => f.id === fabricationDemandee) && !fabricationId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      choisirFabrication(fabricationDemandee);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [archive, fabricationDemandee]);
 
   const ajouterFichiers = async () => {
     if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
@@ -132,6 +165,7 @@ export default function NouvelleAnalyseProduit() {
       numeroRapport: numeroRapport.trim() || undefined,
       echantillon: echantillon.trim() || undefined,
       lot: lot.trim() || undefined,
+      fabricationId: fabricationId || undefined,
       resultats,
       fichiers: fichiers.length > 0 ? fichiers : undefined,
       notes: notes.trim() || undefined,
@@ -163,6 +197,17 @@ export default function NouvelleAnalyseProduit() {
         options={[{ value: '', label: T.champs.laboratoireAucun }, ...laboratoires.map((f) => ({ value: f.id, label: f.nomEntreprise }))]}
         onEdit={() => router.push(ROUTES.fournisseursDepuis(retour) as never)}
       />
+      {fabrications.length > 0 ? (
+        <SelectField<string>
+          label={T.champs.fabrication}
+          value={fabricationId}
+          onChange={choisirFabrication}
+          options={[
+            { value: '', label: T.champs.fabricationAucune },
+            ...fabrications.map((f) => ({ value: f.id, label: `${f.libelle} · ${formatDateShortFR(f.date)} · ${f.numeros}` })),
+          ]}
+        />
+      ) : null}
       <FormField
         label={T.champs.echantillon}
         value={echantillon}
@@ -173,7 +218,7 @@ export default function NouvelleAnalyseProduit() {
       <FormField label={T.champs.rapport} value={numeroRapport} onChangeText={setNumeroRapport} />
 
       <Text style={commonStyles.lineBold}>{T.champs.resultats}</Text>
-      <Text style={commonStyles.note}>{T.repere}</Text>
+      <Text style={commonStyles.note}>{T.reperes[produit]}</Text>
       {PARAMETRES[produit].map((p) => {
         const texte = T.parametres[p.id];
         const verdict = evaluer(p, resultatDe(p, saisie[p.id]));

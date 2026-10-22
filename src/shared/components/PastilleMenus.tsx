@@ -10,7 +10,7 @@ import { TEXTES } from '@/shared/textes';
  * La pastille « Menus » de la capsule du haut : un appui déroule, juste dessous, les rubriques de l'application (Cheptel, Production,
  * Commercial, Comptabilité, Organisation), à la place de l'ancienne barre d'onglets du bas. La rubrique ouverte est en évidence.
  */
-export function PastilleMenus() {
+export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const entrees = useMenusSections();
   const echelle = useEchelle();
   const ref = useRef<View>(null);
@@ -26,15 +26,27 @@ export function PastilleMenus() {
       <Pressable
         ref={ref}
         collapsable={false}
-        style={({ pressed }) => [styles.pastille, { paddingVertical: Math.round(10 * echelle) }, pressed && styles.appuyee]}
+        style={({ pressed }) => [
+          styles.pastille,
+          { paddingVertical: Math.round(10 * echelle) },
+          compact && styles.burger,
+          pressed && styles.appuyee,
+        ]}
         onPress={ouvrir}
         accessibilityRole="button"
         accessibilityLabel={TEXTES.navigation.menus}
       >
-        <Text style={[styles.texte, { fontSize: Math.round(14 * echelle) }]} numberOfLines={1}>
-          {TEXTES.navigation.menus}
-        </Text>
-        <Ionicons name="chevron-down" size={Math.round(14 * echelle)} color={colors.text} />
+        {compact ? (
+          // Capsule trop large pour l'écran : « Menus » devient un menu burger, sans flèche.
+          <Ionicons name="menu" size={Math.round(22 * echelle)} color={colors.text} />
+        ) : (
+          <>
+            <Text style={[styles.texte, { fontSize: Math.round(14 * echelle) }]} numberOfLines={1}>
+              {TEXTES.navigation.menus}
+            </Text>
+            <Ionicons name="chevron-down" size={Math.round(14 * echelle)} color={colors.text} />
+          </>
+        )}
       </Pressable>
       <Modal visible={liste !== null} transparent animationType="fade" onRequestClose={() => setListe(null)}>
         <Pressable style={styles.fond} onPress={() => setListe(null)} accessibilityLabel={TEXTES.commun.general.fermer}>
@@ -75,6 +87,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 10,
   },
+  // Le burger : une pastille ronde, de la largeur de son icône.
+  burger: { flexGrow: 0, paddingHorizontal: 12 },
   appuyee: { opacity: 0.8 },
   texte: { color: colors.text, fontSize: 14, fontWeight: '700' },
   fond: { flex: 1 },

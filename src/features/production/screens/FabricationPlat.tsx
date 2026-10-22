@@ -9,6 +9,7 @@ import { SectionForm } from '@/shared/components/SectionForm';
 import { SelectField } from '@/shared/components/SelectField';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { ChampRecette } from '@/features/production/components/ChampRecette';
 import { ChampIngredientsPlat } from '@/features/production/components/ChampIngredientsPlat';
 import {
   ingredientsProposables,
@@ -180,6 +181,25 @@ export default function FabricationPlat() {
         <Text style={commonStyles.note}>{T.sterilisationAide}</Text>
         <DateField label={T.ddm} value={ddm} onChange={setDdm} />
         <Text style={commonStyles.note}>{T.ddmAide}</Text>
+        <SectionForm titre={TEXTES.production.recettes.sectionTitre} aide={TEXTES.production.recettes.sectionAide}>
+          <ChampRecette
+            produit={PRODUIT_A_LOTS.PLAT}
+            archive={archive}
+            ingredients={ingredients}
+            quantite={quantite}
+            onChange={() => charger()}
+            onAppliquer={(r) => {
+              setIngredients(
+                r.ingredients.map((i, rang) => ({
+                  cle: `r${rang}-${i.article}`,
+                  article: i.article,
+                  quantite: String(i.quantite).replace('.', ','),
+                })),
+              );
+              if (r.quantite) setQuantite(String(r.quantite));
+            }}
+          />
+        </SectionForm>
         <SectionForm titre={T.ingredients.titre} aide={T.ingredients.aide}>
           <ChampIngredientsPlat
             valeur={ingredients}

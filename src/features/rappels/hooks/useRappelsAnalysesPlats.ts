@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { rappelsStockATourisme } from '@/features/commercial/services/stockATourisme';
+import type { ArchiveCommercial } from '@/features/commercial/types';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { rappelsAnalysesPlats } from '@/features/stock/services/analysesPlats';
 import { rappelsDossiersSavons } from '@/features/stock/services/dossiersSavons';
@@ -15,11 +18,16 @@ import { todayISO } from '@/shared/utils/dates';
 export function useRappelsAnalysesPlats() {
   const plat = useAppSettings().settings.exploitation?.joursEntreAnalysesPlats;
   const savon = useAppSettings().settings.exploitation?.joursEntreAnalysesSavons;
+  const valides = useAppSettings().settings.exploitation?.rappelsValides;
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
+  const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
   const charger = useCallback(
     () =>
-      lireArchiveStock()
-        .then(setArchive)
+      Promise.all([lireArchiveStock(), lireArchiveCommercial()])
+        .then(([stock, vente]) => {
+          setArchive(stock);
+          setCommercial(vente);
+        })
         .catch(() => undefined),
     [],
   );
@@ -31,9 +39,14 @@ export function useRappelsAnalysesPlats() {
   const rappels = useMemo(
     () =>
       archive
-        ? [...rappelsAnalysesPlats(archive, { plat, savon }, todayISO()), ...rappelsDossiersSavons(archive, todayISO())]
+        ? [
+            ...rappelsAnalysesPlats(archive, { plat, savon }, todayISO()),
+            ...rappelsDossiersSavons(archive, todayISO()),
+            // Le stock à préparer pour les visites et les commandes des jours qui viennent.
+            ...(commercial ? rappelsStockATourisme(commercial, archive, valides ?? [], todayISO()) : []),
+          ]
         : [],
-    [archive, plat, savon],
+    [archive, commercial, plat, savon, valides],
   );
   const valider = async (fabricationId: string) => {
     await enregistrerAnalyseDePlats(fabricationId, todayISO());

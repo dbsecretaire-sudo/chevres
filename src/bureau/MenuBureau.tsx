@@ -75,6 +75,11 @@ function definitionDesMenus(): DefinitionMenu[] {
         ? [{ label: TEXTES.analysesProduits.produits.fromage.titre, route: ROUTES.analysesProduit('fromage') }]
         : []),
       { label: TEXTES.analysesProduits.produits.charcuterie.titre, route: ROUTES.analysesProduit('charcuterie') },
+      { label: TEXTES.analysesProduits.produits.plat.titre, route: ROUTES.analysesProduit('plat') },
+      ...(laiterieActive(especeCourante())
+        ? [{ label: TEXTES.analysesProduits.produits.savon.titre, route: ROUTES.analysesProduit('savon') }]
+        : []),
+      { label: TEXTES.analysesProduits.registre.titre, route: ROUTES.PRODUCTION_REGISTRE_ANALYSES },
       // Le lait par chèvre (ou brebis) et par traite : les petits ruminants seulement.
       ...(ESPECES_PETITS_RUMINANTS.includes(especeCourante())
         ? [{ label: A.productionLait.titre, route: ROUTES.PRODUCTION_LAIT }]

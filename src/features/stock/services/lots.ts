@@ -19,6 +19,7 @@ import type {
   FabricationDePlats,
   LotFromage,
   MouvementStock,
+  RecetteDeFabrication,
 } from '@/features/stock/types';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
@@ -702,5 +703,26 @@ export function enregistrerInciSavon(article: string, inci: string): Promise<voi
       ...archive,
       dossiersSavons: { ...archive.dossiersSavons, [article]: { ...dossier, inci: inci.trim() || undefined } },
     });
+  });
+}
+
+/** Les recettes de la bibliothèque d'un produit (« plat » ou « savon »), par ordre alphabétique. */
+export const recettesDuProduit = (archive: Pick<ArchiveStock, 'recettes'>, produit: string): RecetteDeFabrication[] =>
+  (archive.recettes ?? []).filter((r) => r.produit === produit).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+
+/** Garde une recette (nouvelle, ou celle qui porte déjà son identifiant : elle est remplacée). */
+export function enregistrerRecette(recette: RecetteDeFabrication): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const autres = (archive.recettes ?? []).filter((r) => r.id !== recette.id);
+    await remplacerArchiveStock({ ...archive, recettes: [...autres, recette] });
+  });
+}
+
+/** Retire une recette de la bibliothèque. */
+export function supprimerRecette(id: string): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    await remplacerArchiveStock({ ...archive, recettes: (archive.recettes ?? []).filter((r) => r.id !== id) });
   });
 }

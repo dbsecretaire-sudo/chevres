@@ -60,8 +60,8 @@ export interface ContratAssurance {
   prochaineEcheance: string;
 }
 
-/** Le produit fini d'une analyse : le fromage ou la charcuterie. */
-export type ProduitAnalyse = 'fromage' | 'charcuterie';
+/** Le produit fini d'une analyse : le fromage, la charcuterie, un plat préparé ou un savon. */
+export type ProduitAnalyse = 'fromage' | 'charcuterie' | 'plat' | 'savon';
 
 /** Le résultat d'un paramètre d'une analyse : « absence » ou « presence » (recherche dans 25 g), ou un nombre d'UFC par gramme. */
 export type ResultatParametre = 'absence' | 'presence' | number;
@@ -78,6 +78,8 @@ export interface AnalyseProduit {
   /** Le produit analysé (« Tomme au lait cru ») et son numéro de lot, facultatifs. */
   echantillon?: string;
   lot?: string;
+  /** La fabrication analysée (l'identifiant du mouvement de stock de ses lots) : l'analyse se retrouve dans le registre, avec elle. */
+  fabricationId?: string;
   /** Les résultats, par paramètre (voir PARAMETRES) ; un paramètre non analysé est absent. */
   resultats: Record<string, ResultatParametre>;
   /** Le rapport du laboratoire (PDF, photo, scan), rangé dans l'appareil. */

@@ -37,6 +37,14 @@ export const TEXTES_RAPPELS = {
       vente: 'Vente d’animaux vivants',
     },
   },
+  /** Le stock à prévoir pour une visite de la ferme ou une commande : ce qu'il faut préparer, et ce qui manque. */
+  stockAPrevoir: {
+    visite: (client: string, date: string, personnes: number) => `Stock à prévoir · visite du ${date} (${client}, ${personnes} pers.)`,
+    commande: (client: string, date: string) => `Stock à prévoir · commande de ${client} à livrer le ${date}`,
+    aPreparer: (liste: string) => `À préparer : ${liste}`,
+    ilManque: (liste: string) => `il manque ${liste}`,
+    valider: 'Préparation faite',
+  },
   /** L'échantillon d'un plat préparé à envoyer à un laboratoire : l'intervalle se règle dans la liste des plats. */
   analysesPlats: {
     libelle: (plat: string) => `Analyse à envoyer · ${plat}`,

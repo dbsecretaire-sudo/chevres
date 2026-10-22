@@ -163,15 +163,26 @@ function BlocRappelsDeclarations() {
                 {r.detail ?? (r.enRetard ? T.enRetard : T.avant)(formatDateShortFR(r.echeance))}
               </Text>
             </Pressable>
-            <Pressable
-              onPress={() =>
-                r.genre === GENRE_RAPPEL.ANALYSE_PLAT && r.fabricationId ? analyses.valider(r.fabricationId) : valider(r)
-              }
-              hitSlop={10}
-              accessibilityLabel={r.genre === GENRE_RAPPEL.ANALYSE_PLAT ? T.analysesPlats.valider : T.validerLeRappel}
-            >
-              <Ionicons name="checkmark-circle-outline" size={30} color={colors.primary} />
-            </Pressable>
+            {/* Un dossier de savon incomplet n'a rien à cocher : on le complète. */}
+            {r.genre === GENRE_RAPPEL.DOSSIER_SAVON ? (
+              <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
+            ) : (
+              <Pressable
+                onPress={() =>
+                  r.genre === GENRE_RAPPEL.ANALYSE_PLAT && r.fabricationId ? analyses.valider(r.fabricationId) : valider(r)
+                }
+                hitSlop={10}
+                accessibilityLabel={
+                  r.genre === GENRE_RAPPEL.ANALYSE_PLAT
+                    ? T.analysesPlats.valider
+                    : r.genre === GENRE_RAPPEL.STOCK_A_PREVOIR
+                      ? T.stockAPrevoir.valider
+                      : T.validerLeRappel
+                }
+              >
+                <Ionicons name="checkmark-circle-outline" size={30} color={colors.primary} />
+              </Pressable>
+            )}
           </View>
         ))}
       </BlocLignes>

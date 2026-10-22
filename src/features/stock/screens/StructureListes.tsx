@@ -11,7 +11,6 @@ import { Screen } from '@/shared/components/Screen';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { CategorieModal } from '@/features/stock/components/CategorieModal';
-import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { listeValablePour, retireePourToutes } from '@/features/stock/utils/listesEspece';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -58,7 +57,7 @@ export default function StructureListes() {
   const router = useRouter();
   const navigation = useNavigation();
   // Les listes se voient pour une espèce, comme l'inventaire : pas de lait ni de fromage pour des cochons.
-  const { especes, filtreCourant, choisirFiltre, concernees, fromagerie, poules } = useFiltreEspeceStock();
+  const { especes, filtreCourant, concernees, fromagerie, poules } = useFiltreEspeceStock();
   /** Au retour des comptes du plan comptable : la catégorie dont on créait une liste (la fenêtre d'ajout se rouvre). */
   const { ajout: ajoutDemande } = useLocalSearchParams<{ ajout?: string }>();
   const [listes, setListes] = useState<ListeInventaire[]>([]);
@@ -181,7 +180,6 @@ export default function StructureListes() {
   return (
     <Screen scroll={false}>
       <ScrollView contentContainerStyle={commonStyles.listeAvecFab}>
-        <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={choisirFiltre} />
         <Text style={commonStyles.muted}>{T.structure.aide}</Text>
 
         {categories.map((infos) => {

@@ -12,7 +12,12 @@ export const GENRE_RAPPEL = {
   ANALYSE_PLAT: 'analyse_plat',
   /** Une étape obligatoire du dossier réglementaire d'un savon qui manque : elle se valide en la faisant, dans le dossier du savon. */
   DOSSIER_SAVON: 'dossier_savon',
+  /** Le stock à préparer pour une visite de la ferme ou une commande qui approche : il se valide une fois la préparation faite. */
+  STOCK_A_PREVOIR: 'stock_a_prevoir',
 } as const;
+
+/** Le stock d'une visite ou d'une commande est rappelé à partir de ce nombre de jours avant elle. */
+export const JOURS_STOCK_A_PREVOIR = 7;
 
 /** Une analyse de plats est rappelée sur l'accueil à partir de ce nombre de jours avant son échéance. */
 export const JOURS_AVANT_ANALYSE = 7;

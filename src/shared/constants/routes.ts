@@ -132,10 +132,12 @@ export const ROUTES = {
   productionSavonDossier: (article: string) => `/production/savon-dossier?article=${encodeURIComponent(article)}` as const,
   /** Les lots de l'atelier : fromages, viande, boucherie / charcuterie, plats préparés. */
   PRODUCTION_LOTS: '/production/lots',
-  /** Les analyses d'un produit fini (`produit` : fromage ou charcuterie), et une analyse (nouvelle sans identifiant, sinon modifiée). */
+  /** Les analyses d'un produit fini (`produit` : fromage, charcuterie, plat ou savon), et une analyse (nouvelle sans identifiant, sinon modifiée). */
   analysesProduit: (produit: string) => `/production/analyses-produit?produit=${produit}` as const,
-  analyseProduit: (produit: string, id?: string) =>
-    `/production/analyse-produit?produit=${produit}${id ? `&id=${id}` : ''}` as const,
+  analyseProduit: (produit: string, id?: string, fabrication?: string) =>
+    `/production/analyse-produit?produit=${produit}${id ? `&id=${id}` : ''}${fabrication ? `&fabrication=${encodeURIComponent(fabrication)}` : ''}` as const,
+  /** Le registre des analyses de l'atelier : les fabrications (fromages, charcuterie, plats, savons) et leurs analyses. */
+  PRODUCTION_REGISTRE_ANALYSES: '/production/registre-analyses',
   /** La fabrication et le rappel d'un produit suivi par lot (`produit` : fromage ou charcuterie). */
   productionFabrication: (produit: string) => `/production/fabrication?produit=${produit}` as const,
   productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,

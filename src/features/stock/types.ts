@@ -160,6 +160,24 @@ export interface EtapeReglementaire {
   fichiers?: PieceJointe[];
 }
 
+/**
+ * Une recette de la bibliothèque (plats préparés, savons) : ce qu'on retape à chaque fabrication, gardé pour la reprendre d'un appui. Les lots d'ingrédients ne s'y
+ * trouvent pas : ils changent d'une fabrication à l'autre (les plus anciens sont cochés d'office).
+ */
+export interface RecetteDeFabrication {
+  id: string;
+  /** Le produit : « plat » ou « savon ». */
+  produit: string;
+  nom: string;
+  /** Le nombre de pièces (bocaux, pains) d'une fabrication. */
+  quantite?: number;
+  /** Un savon : les litres de lait de chèvre, et les jours de cure après la saponification. */
+  litresLait?: number;
+  joursCure?: number;
+  /** Les ingrédients du stock et leur quantité. */
+  ingredients: { article: string; quantite: number }[];
+}
+
 /** Le dossier réglementaire d'un savon (un produit cosmétique, règlement CE 1223/2009) : sa liste INCI et ses étapes. */
 export interface DossierSavon {
   /** La liste des ingrédients dans l'ordre décroissant, en nomenclature INCI (celle de l'étiquette). */
@@ -223,4 +241,6 @@ export interface ArchiveStock {
   matieresSavonAjoutees?: boolean;
   /** Le dossier réglementaire de chaque savon, par article (« savon:… »). */
   dossiersSavons?: Record<string, DossierSavon>;
+  /** La bibliothèque de recettes des plats préparés et des savons. */
+  recettes?: RecetteDeFabrication[];
 }

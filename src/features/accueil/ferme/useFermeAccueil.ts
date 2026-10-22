@@ -113,10 +113,12 @@ export function useFermeAccueil() {
         ? compterTransformation({
             fromages: articlesDuGenre(GENRE_ARTICLE.FROMAGE, archiveStock, espece),
             viande: articlesDuGenre(GENRE_ARTICLE.VIANDE, archiveStock, espece),
+            plats: articlesDuGenre(GENRE_ARTICLE.PLAT, archiveStock, espece),
+            savons: articlesDuGenre(GENRE_ARTICLE.SAVON, archiveStock, espece),
             niveau: (cle) => niveaux.get(cle) ?? 0,
             role: roleDeLaViande,
           })
-        : { fromages: 0, charcuterie: 0, viande: 0 },
+        : { fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 },
     [archiveStock, espece, niveaux],
   );
 

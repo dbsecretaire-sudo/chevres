@@ -32,7 +32,29 @@ export const PARAMETRES: Record<ProduitAnalyse, readonly ParametreAnalyse[]> = {
     { id: 'ecoli', type: 'ufc' },
     { id: 'staphylocoques', type: 'ufc' },
   ],
+  // Un plat préparé (conserve, bocal) : les germes d'un produit prêt à consommer, et le test de stabilité à l'étuve d'une conserve appertisée.
+  plat: [
+    { id: 'stabilite', type: 'absence' },
+    { id: 'listeria', type: 'absence' },
+    { id: 'salmonelle', type: 'absence' },
+    { id: 'clostridies', type: 'ufc' },
+    { id: 'bacillus', type: 'ufc' },
+    { id: 'ecoli', type: 'ufc' },
+    { id: 'staphylocoques', type: 'ufc' },
+  ],
+  // Un savon (cosmétique) : les repères de la norme ISO 17516 (catégorie 2, produits hors contour des yeux et enfants de moins de trois ans).
+  savon: [
+    { id: 'flore_totale', type: 'ufc', m: 1000, M: 1000 },
+    { id: 'levures_moisissures', type: 'ufc', m: 100, M: 100 },
+    { id: 'pseudomonas', type: 'absence' },
+    { id: 'staphylocoque_dore', type: 'absence' },
+    { id: 'candida', type: 'absence' },
+  ],
 };
+
+/** Le produit d'analyse d'un paramètre d'adresse (`?produit=`) : le fromage quand il est absent ou inconnu. */
+export const produitAnalyse = (valeur: string | undefined): ProduitAnalyse =>
+  valeur === 'charcuterie' || valeur === 'plat' || valeur === 'savon' ? valeur : 'fromage';
 
 /** Le jugement d'un résultat : conforme, à surveiller (entre les deux seuils), ou non conforme. */
 export type Verdict = 'conforme' | 'surveiller' | 'non_conforme';

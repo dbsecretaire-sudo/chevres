@@ -47,11 +47,13 @@ export interface ContenuDePlaque {
   lignes: readonly { cle: string; texte: string }[];
 }
 
-/** Les trois lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande. */
+/** Les lignes de ce que la Transformation garde : les fromages, la boucherie et la charcuterie, la viande, les plats préparés, les savons. */
 const lignesDeTransformation = (compte: CompteTransformation): ContenuDePlaque['lignes'] => [
   { cle: 'fromages', texte: T.fromages(compte.fromages) },
   { cle: 'charcuterie', texte: T.charcuterie(compte.charcuterie) },
   { cle: 'viande', texte: T.viande(compte.viande) },
+  { cle: 'plats', texte: T.plats(compte.plats) },
+  { cle: 'savons', texte: T.savons(compte.savons) },
 ];
 
 /** Les lignes de comptes de la plaque, l'une sous l'autre. */
@@ -59,7 +61,7 @@ function LignesDePlaque({ lignes, echelle }: { lignes: ContenuDePlaque['lignes']
   return (
     <View style={styles.lignes}>
       {lignes.map((l) => (
-        <Text key={l.cle} style={[styles.ligne, { fontSize: Math.round(13 * echelle) }]} numberOfLines={1}>
+        <Text key={l.cle} style={[styles.ligne, { fontSize: Math.round(12 * echelle) }]} numberOfLines={1}>
           {l.texte}
         </Text>
       ))}
@@ -94,7 +96,7 @@ const PAR_RANGEE = 3;
 /** La hauteur des trottoirs, des marges, et celle de base de la plaque blanche (la rue et la plaque se règlent d'après la place, voir plus bas). */
 const TROTTOIR = 8;
 const MARGE = 8;
-const HAUTEUR_DE_LA_PLAQUE = 78;
+const HAUTEUR_DE_LA_PLAQUE = 104;
 
 interface Props {
   compte?: CompteTransformation;
@@ -140,7 +142,7 @@ export function SceneTransformation({
   const contenu: ContenuDePlaque = plaque ?? {
     titre: T.titre,
     symboles: SYMBOLES,
-    lignes: lignesDeTransformation(compte ?? { fromages: 0, charcuterie: 0, viande: 0 }),
+    lignes: lignesDeTransformation(compte ?? { fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 }),
   };
   // Sur un grand écran, les logos peuvent grandir au-delà de leur taille de téléphone, tant que la scène a la place.
   const agrandissement = useEchelle();
@@ -163,12 +165,13 @@ export function SceneTransformation({
   const entre = (valeur: number, min: number, max: number) =>
     Math.max(min, Math.min(max, Math.round(valeur)));
   const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a);
-  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.3, plaqueMin, Math.round(150 * a));
-  const rueMin = Math.round((campagne ? 100 : 60) * a);
+  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.34, plaqueMin, Math.round(170 * a));
+  // La plaque compte cinq lignes : la rue de l'atelier se rétrécit pour lui laisser la place.
+  const rueMin = Math.round((campagne ? 100 : 34) * a);
   const hauteurRue =
     hauteur === 0
       ? rueMin
-      : entre(reste * (campagne ? 0.24 : 0.18), rueMin, Math.round((campagne ? 150 : 110) * a));
+      : entre(reste * (campagne ? 0.24 : 0.1), rueMin, Math.round((campagne ? 150 : 70) * a));
   const disponible = reste - hauteurPlaque - hauteurRue;
   const echelle =
     hauteur === 0
@@ -286,7 +289,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    gap: 10,
+    gap: 6,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -296,7 +299,7 @@ const styles = StyleSheet.create({
     borderColor: '#D8DCDF',
   },
   entete: { alignItems: 'center', gap: 4 },
-  symboles: { flexDirection: 'row', gap: 14 },
+  symboles: { flexDirection: 'row', gap: 8 },
   symbole: { fontSize: 24 },
   titre: { fontSize: 13, fontWeight: '800', color: colors.primaryDark, textAlign: 'center' },
   lignes: { alignItems: 'flex-start', gap: 2, flexShrink: 1 },

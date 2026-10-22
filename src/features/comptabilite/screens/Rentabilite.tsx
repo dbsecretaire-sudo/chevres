@@ -5,7 +5,6 @@ import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { CoutsAgritourismeFormules } from '@/features/comptabilite/components/CoutsAgritourisme';
 import { PlanEconomies } from '@/features/comptabilite/components/PlanEconomies';
-import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
 import { useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
 import { vocabulaire } from '@/shared/dictionnaire/animaux';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
@@ -32,7 +31,7 @@ const nombre = (valeur: number) =>
  * ateliers, ni coûts de production, ni plan d'économies : elle ne garde que le résultat et le poids de ses charges.
  */
 export default function Rentabilite() {
-  const { annee, annees, setAnneeActive, filtre, setFiltre, resultat, laitier, plan, perimetre } = useRentabilite();
+  const { annee, annees, setAnneeActive, resultat, laitier, plan, perimetre } = useRentabilite();
   if (!resultat) return null;
   const entreprise = modeEntreprise();
 
@@ -40,7 +39,6 @@ export default function Rentabilite() {
     <Screen>
       <LigneFiltres>
         <YearPicker annees={annees} value={annee} onChange={setAnneeActive} />
-        <PucesActivite valeur={filtre} onChange={setFiltre} />
       </LigneFiltres>
 
       {perimetre ? (

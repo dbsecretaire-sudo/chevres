@@ -3,7 +3,6 @@ import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { TitreCarte } from '@/features/cheptel/components/bilan/BilanBriques';
 import {
@@ -25,7 +24,7 @@ import {
 } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
-import { LABEL_ACTIVITE_COMPTABLE, LABEL_CATEGORIE_VENTE, NOMS_MOIS } from '@/shared/textes/libelles';
+import { LABEL_CATEGORIE_VENTE, NOMS_MOIS } from '@/shared/textes/libelles';
 import { currentYear, formatDateShortFR } from '@/shared/utils/dates';
 import { styles as stylesBilan } from '@/shared/styles/cheptel/BilanAnnuel.styles';
 import { styles as stylesStock } from '@/shared/styles/stock/Stock.styles';
@@ -151,7 +150,8 @@ interface Props {
  * précédente entre parenthèses. « Détails » déroule les mouvements du mois (date, article, quantité, origine).
  */
 export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, ventesAnimaux }: Props) {
-  const [filtre, setFiltre] = useState<FiltreStock>(filtreInitial);
+  // L'animal est celui de la capsule du haut : la page n'a plus son propre choix.
+  const [filtre] = useState<FiltreStock>(filtreInitial);
   const [annee, setAnnee] = useState(currentYear());
 
   const annees = [
@@ -226,17 +226,6 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
     <View style={commonStyles.gap10}>
       <LigneFiltres>
         <YearPicker annees={annees} value={annee} onChange={setAnnee} />
-        {especes.length > 1 ? (
-          <ChoixDeroulant<FiltreStock>
-            titre={TEXTES.commun.choix.animal}
-            valeur={filtre}
-            options={[
-              { value: FILTRE_STOCK_TOUT, label: TEXTES.comptabilite.parActivite.toutes },
-              ...especes.map((e) => ({ value: e as FiltreStock, label: LABEL_ACTIVITE_COMPTABLE[e] })),
-            ]}
-            onChoisir={setFiltre}
-          />
-        ) : null}
       </LigneFiltres>
       <Text style={commonStyles.note}>{T.historique.comparaison(annee, annee - 1)}</Text>
 

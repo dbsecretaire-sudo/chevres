@@ -5,7 +5,13 @@ import { Fab } from '@/shared/components/Fab';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
-import { analysesDuProduit, joursDepuis, verdictDeLAnalyse, type Verdict } from '@/features/analyses/services/analysesProduits';
+import {
+  analysesDuProduit,
+  joursDepuis,
+  produitAnalyse,
+  verdictDeLAnalyse,
+  type Verdict,
+} from '@/features/analyses/services/analysesProduits';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { ProduitAnalyse } from '@/features/settings/settings';
 import { ROUTES } from '@/shared/constants/routes';
@@ -30,14 +36,14 @@ const APPARENCE: Record<Verdict, { icone: keyof typeof Ionicons.glyphMap; couleu
 export default function ListeAnalysesProduit() {
   const router = useRouter();
   const { produit: demande } = useLocalSearchParams<{ produit?: string }>();
-  const produit: ProduitAnalyse = demande === 'charcuterie' ? 'charcuterie' : 'fromage';
+  const produit: ProduitAnalyse = produitAnalyse(demande);
   const { settings } = useAppSettings();
   const analyses = analysesDuProduit(settings.exploitation?.analysesProduits, produit);
   const derniere = analyses[0];
 
   return (
     <Screen>
-      <Text style={commonStyles.note}>{T.repere}</Text>
+      <Text style={commonStyles.note}>{T.reperes[produit]}</Text>
       <Text style={commonStyles.note}>{T.frequenceAide}</Text>
       {derniere ? (
         <Text style={commonStyles.lineBold}>
