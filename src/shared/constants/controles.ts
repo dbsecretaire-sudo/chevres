@@ -46,7 +46,14 @@ export const NATURE_COURRIEL = 'courrier_courriel';
 /** La nature « Aide » d'un contenu d'organisme : le dossier d'une aide (ses pièces jointes) et ses paiements, des recettes de la comptabilité. */
 export const NATURE_AIDE = 'aide';
 
-export const NATURE_CONTENU_GROUPEMENT = ['achat_groupe', 'action_specifique', NATURE_COURRIEL] as const;
+export const NATURE_CONTENU_GROUPEMENT = [
+  NATURE_COURRIEL,
+  NATURE_AIDE,
+  'demarche',
+  'document',
+  'achat_groupe',
+  'action_specifique',
+] as const;
 
 /** La nature d'un contenu d'équarrisseur : des contrats, des factures, des promotions (pas d'achat groupé). */
 export const NATURE_CONTENU_EQUARRISSAGE = ['contrat', 'facture', 'promotion', NATURE_COURRIEL] as const;

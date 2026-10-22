@@ -421,7 +421,7 @@ export const articlesAchetables = (archive: ArchiveStock): ArticleAffiche[] =>
  * entretien, équipement consommable) et « immobilisations » (classe 21 : matériel, bâtiment) de l'inventaire, avec les listes ajoutées
  * rangées dans l'une de ces sections. Ni les produits finis (35), ni les matières premières (31 : aliments, boucles).
  */
-export function articlesDeFournitures(archive: ArchiveStock): ArticleAffiche[] {
+export function rubriquesDeFournitures(archive: ArchiveStock): { genre: GenreArticle; listeId?: string }[] {
   const classeDe = (categorie: string) =>
     infosCategorie(categorie, archive.categories, archive.reglagesCategories).classe;
   const classes = [CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS, CATEGORIE_INVENTAIRE.IMMOBILISATIONS].map(
@@ -436,11 +436,20 @@ export function articlesDeFournitures(archive: ArchiveStock): ArticleAffiche[] {
     GENRE_ARTICLE.BATIMENT,
   ].filter((g) => fourniture(CATEGORIE_PAR_GENRE[g]));
   return [
-    ...genres.flatMap((genre) => articlesDuGenre(genre, archive)),
+    ...genres.map((genre) => ({ genre })),
     ...(archive.listes ?? [])
       .filter((l) => fourniture(l.categorie))
-      .flatMap((l) => articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive, FILTRE_STOCK_TOUT, l.id)),
+      .map((l) => ({ genre: GENRE_ARTICLE.PERSONNALISE as GenreArticle, listeId: l.id })),
   ];
+}
+
+/** Les articles qu'une facture d'achat de production peut fournir : ceux des rubriques de fournitures (emballages, entretien, matériel, listes ajoutées). */
+export function articlesDeFournitures(archive: ArchiveStock): ArticleAffiche[] {
+  return rubriquesDeFournitures(archive).flatMap((r) =>
+    r.listeId
+      ? articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive, FILTRE_STOCK_TOUT, r.listeId)
+      : articlesDuGenre(r.genre, archive),
+  );
 }
 
 /** Les comptes qui ont une liste dans l'inventaire : ceux des listes d'office et des listes ajoutées, et celui des boucles d'identification. */
@@ -499,12 +508,14 @@ export async function ajouterArticle(
   activite?: string,
   /** Pour un article personnalisé : la liste qui le contient. */
   listeId?: string,
-): Promise<void> {
+): Promise<string> {
   const archive = await lireArchiveStock();
+  const id = generateId();
   await remplacerArchiveStock({
     ...archive,
-    articles: [...archive.articles, { id: generateId(), genre, nom: nom.trim(), activite, listeId }],
+    articles: [...archive.articles, { id, genre, nom: nom.trim(), activite, listeId }],
   });
+  return cleArticle(genre, id);
 }
 
 /** Supprime un article ajouté par l'utilisateur, ses mouvements, et son nom dans les conditionnements. */

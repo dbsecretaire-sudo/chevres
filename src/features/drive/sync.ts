@@ -48,6 +48,7 @@ import {
   downloadFileText,
 } from '@/features/drive/driveApi';
 import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
+import { rafraichirImages } from '@/features/stock/hooks/useImageDeLArticle';
 import {
   ecrirePieceBase64,
   lirePieceBase64,
@@ -569,6 +570,8 @@ export async function tirerToutesAnnees(
   await tirerStock(accessToken, folderId);
   await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);
+  // Les images des cartes du stock viennent d'arriver : les cartes affichées les relisent.
+  await rafraichirImages();
   await tirerComptesPcg(accessToken, folderId);
   // Les animaux ont pu changer : les poses de l'inventaire des boucles (dates comprises) se refont d'après eux.
   await synchroniserPoseBoucles();

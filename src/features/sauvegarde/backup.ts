@@ -46,6 +46,7 @@ import type { ArchiveStock } from '@/features/stock/types';
 import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
 import type { ArchiveEspeces } from '@/features/especes/types';
 import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
+import { rafraichirImages } from '@/features/stock/hooks/useImageDeLArticle';
 import {
   ecrirePieceBase64,
   lirePieceBase64,
@@ -391,6 +392,7 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
       await ecrirePieceBase64(piece, base64);
       misAJour += 1;
     }
+    await rafraichirImages();
   }
 
   if (Array.isArray(sauvegarde.comptesPcg)) {

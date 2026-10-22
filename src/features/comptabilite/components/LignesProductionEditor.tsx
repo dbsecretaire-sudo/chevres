@@ -8,9 +8,16 @@ import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle, estArticleBoucle, estBoucleNumerotee } from '@/features/stock/services/boucles';
-import { articlesDeFournitures, articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
+import {
+  ajouterArticle,
+  articlesDeFournitures,
+  articlesDuGenre,
+  rubriquesDeFournitures,
+  type ArticleAffiche,
+} from '@/features/stock/services/stock';
+import { NomModal } from '@/features/dossiers/components/NomModal';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
-import type { ArchiveStock } from '@/features/stock/types';
+import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { SECTIONS } from '@/features/stock/utils/categories';
 import {
   ligneProductionVide,
@@ -36,6 +43,13 @@ interface Props {
 
 const T = TEXTES.comptabilite.lignesProductionEditor;
 
+/** Le début de la valeur de l'option « Nouvel article » d'une rubrique : la suite est le rang de la rubrique. */
+const PREFIXE_AJOUT = 'ajout:';
+
+/** Le titre de la catégorie d'un genre d'article (Emballages, Entretien…), sans le « Achat — » du titre de la liste. */
+const groupeDuGenre = (genre: string): string | undefined =>
+  SECTIONS.find((s) => s.genre === genre)?.titre.replace(/^(Achat|Ventes) — /, '');
+
 /** La catégorie du stock d'une fourniture : le titre de sa liste (Emballages, Entretien…), ou le nom de la liste ajoutée qui la contient. */
 function groupeDeLArticle(cle: string, archive: ArchiveStock): string | undefined {
   const [genre, id] = cle.split(':');
@@ -43,8 +57,7 @@ function groupeDeLArticle(cle: string, archive: ArchiveStock): string | undefine
     const listeId = archive.articles.find((a) => a.id === id)?.listeId;
     return (archive.listes ?? []).find((l) => l.id === listeId)?.nom;
   }
-  // Sans le « Achat — » du titre de la liste : seul le nom de la catégorie compte ici.
-  return SECTIONS.find((s) => s.genre === genre)?.titre.replace(/^(Achat|Ventes) — /, '');
+  return groupeDuGenre(genre);
 }
 
 /**
@@ -56,19 +69,46 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
   const router = useRouter();
   const retour = useAdresseCourante();
   const [articles, setArticles] = useState<(ArticleAffiche & { groupe?: string })[]>([]);
+  /** Les rubriques de fournitures (même vides) : chacune propose « Nouvel article » pour y ajouter un article sans quitter la facture. */
+  const [rubriques, setRubriques] = useState<{ genre: GenreArticle; listeId?: string; groupe: string }[]>([]);
+  /** La rubrique où l'on ajoute un article, et la ligne de la facture qui le recevra. */
+  const [ajout, setAjout] = useState<{ rubrique: number; ligne: string } | null>(null);
 
   // La liste est relue à chaque retour sur l'écran : ce qu'on vient d'ajouter à l'inventaire y apparaît.
+  const charger = useCallback(async () => {
+    const archive = await lireArchiveStock();
+    setArticles(
+      (seulementBoucles ? articlesDuGenre(GENRE_ARTICLE.BOUCLE, archive) : articlesDeFournitures(archive)).map((a) => ({
+        ...a,
+        groupe: groupeDeLArticle(a.cle, archive),
+      })),
+    );
+    setRubriques(
+      seulementBoucles
+        ? []
+        : rubriquesDeFournitures(archive).flatMap((r) => {
+            const groupe = r.listeId
+              ? (archive.listes ?? []).find((l) => l.id === r.listeId)?.nom
+              : groupeDuGenre(r.genre);
+            return groupe ? [{ ...r, groupe }] : [];
+          }),
+    );
+  }, [seulementBoucles]);
   useFocusEffect(
     useCallback(() => {
-      lireArchiveStock().then((archive) =>
-        setArticles(
-          (seulementBoucles ? articlesDuGenre(GENRE_ARTICLE.BOUCLE, archive) : articlesDeFournitures(archive)).map(
-            (a) => ({ ...a, groupe: groupeDeLArticle(a.cle, archive) }),
-          ),
-        ),
-      );
-    }, [seulementBoucles]),
+      charger();
+    }, [charger]),
   );
+
+  const ajouter = async (nom: string) => {
+    const rubrique = ajout ? rubriques[ajout.rubrique] : undefined;
+    const ligne = ajout?.ligne;
+    setAjout(null);
+    if (!rubrique || !ligne) return;
+    const cle = await ajouterArticle(rubrique.genre, nom, undefined, rubrique.listeId);
+    await charger();
+    onChange(lignes.map((l) => (l.key === ligne ? { ...l, article: cle } : l)));
+  };
 
   const maj = (key: string, patch: Partial<LigneProductionForm>) =>
     onChange(lignes.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -76,6 +116,7 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
     onChange(lignes.length > 1 ? lignes.filter((l) => l.key !== key) : lignes);
 
   return (
+    <>
     <Card style={commonStyles.gap10}>
       <View style={commonStyles.rowSpaceBetween}>
         <Text style={commonStyles.lineBold}>{titre ?? T.detailParFourniture}</Text>
@@ -116,16 +157,22 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
                   parCategories
                   placeholder={T.choixFourniture}
                   value={ligne.article}
-                  onChange={(valeur) =>
+                  onChange={(valeur) => {
+                    // « Nouvel article » d'une rubrique : on demande son nom, puis il est choisi pour cette ligne.
+                    if (valeur.startsWith(PREFIXE_AJOUT)) {
+                      setAjout({ rubrique: Number(valeur.slice(PREFIXE_AJOUT.length)), ligne: ligne.key });
+                      return;
+                    }
                     maj(ligne.key, {
                       article: valeur,
                       ...(valeur ? {} : { quantite: '' }),
                       ...(estBoucleNumerotee(valeur) ? {} : { bouclesDebut: '' }),
-                    })
-                  }
+                    });
+                  }}
                   options={[
                     { value: '', label: T.horsStock },
                     ...articles.map((a) => ({ value: a.cle, label: a.libelle, groupe: a.groupe })),
+                    ...rubriques.map((r, i) => ({ value: `${PREFIXE_AJOUT}${i}`, label: T.nouvelArticle, groupe: r.groupe })),
                   ]}
                   onEdit={() => router.push(ROUTES.stockDepuis(retour))}
                 />
@@ -179,5 +226,13 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
         );
       })}
     </Card>
+    <NomModal
+      visible={!!ajout}
+      titre={ajout && rubriques[ajout.rubrique] ? T.nouvelArticleDans(rubriques[ajout.rubrique].groupe) : ''}
+      placeholder={T.nomDuNouvelArticle}
+      onValider={ajouter}
+      onAnnuler={() => setAjout(null)}
+    />
+    </>
   );
 }
