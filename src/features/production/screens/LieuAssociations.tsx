@@ -191,7 +191,6 @@ export default function LieuAssociations() {
           <DossiersDuContact
             contact={choisie}
             entree={entreeDuContact(controles, choisie)}
-            autres={siens.filter((x) => x.origine === 'dossier')}
             ouvrir={ouvrir}
             onChange={chargerLesDossiers}
           />

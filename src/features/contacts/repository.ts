@@ -1,9 +1,4 @@
-import {
-  creerClient,
-  enregistrerClient,
-  listClients,
-  supprimerClient,
-} from '@/features/clients/repository';
+import { creerClient, enregistrerClient, listClients, supprimerClient } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import {
   creerFournisseur,
@@ -49,8 +44,10 @@ export async function getContact(id: string): Promise<Contact | undefined> {
 export async function lierLesFichesDeMemeNom(): Promise<void> {
   const [clients, fournisseurs] = await Promise.all([listClients(), listFournisseurs()]);
   for (const { client, fournisseur } of liensAEnregistrer(clients, fournisseurs)) {
-    if (client.fournisseurId !== fournisseur.id) await enregistrerClient({ ...client, fournisseurId: fournisseur.id });
-    if (fournisseur.clientId !== client.id) await enregistrerFournisseur({ ...fournisseur, clientId: client.id });
+    if (client.fournisseurId !== fournisseur.id)
+      await enregistrerClient({ ...client, fournisseurId: fournisseur.id });
+    if (fournisseur.clientId !== client.id)
+      await enregistrerFournisseur({ ...fournisseur, clientId: client.id });
   }
 }
 
@@ -85,7 +82,13 @@ export async function partagerCoordonneesDuFournisseur(fournisseur: Fournisseur)
 }
 
 /** Pourquoi un contact ne s'enregistre pas. */
-export type ErreurContact = 'nomRequis' | 'categorieRequise' | 'circuitRequis' | 'rienCoche' | 'ecrituresRecettes' | 'ecrituresDepenses';
+export type ErreurContact =
+  | 'nomRequis'
+  | 'categorieRequise'
+  | 'circuitRequis'
+  | 'rienCoche'
+  | 'ecrituresRecettes'
+  | 'ecrituresDepenses';
 
 /** Vrai si le client a des ventes ou des factures : on ne retire pas son côté « recettes ». */
 async function clientAEcritures(client: Client): Promise<boolean> {
@@ -139,7 +142,14 @@ export async function enregistrerContact(
   if (existant?.client && !client) await supprimerClient(existant.client.id);
   if (existant?.fournisseur && !fournisseur) await supprimerFournisseur(existant.fournisseur.id);
 
-  return { contact: { cle: (client ?? fournisseur)!.id, nom: nomComplet(client ?? { nom: fournisseur!.nomEntreprise }), client, fournisseur } };
+  return {
+    contact: {
+      cle: (client ?? fournisseur)!.id,
+      nom: nomComplet(client ?? { nom: fournisseur!.nomEntreprise }),
+      client,
+      fournisseur,
+    },
+  };
 }
 
 /** Supprime le contact : ses deux fiches (ses ventes et ses factures déjà enregistrées ne sont pas modifiées). */
@@ -161,8 +171,7 @@ export async function assurerEntreeDuContact(contact: Contact): Promise<string> 
   const lie = entrees.find(
     (c) => (!!fournisseurId && c.fournisseurId === fournisseurId) || (!!clientId && c.clientId === clientId),
   );
-  const adoptee =
-    lie ?? entrees.find((c) => !c.fournisseurId && !c.clientId && memeNom(c.type, contact.nom));
+  const adoptee = lie ?? entrees.find((c) => !c.fournisseurId && !c.clientId && memeNom(c.type, contact.nom));
   if (adoptee) {
     if (adoptee.fournisseurId !== fournisseurId || adoptee.clientId !== clientId) {
       await enregistrerControle({ ...adoptee, fournisseurId, clientId });

@@ -1,7 +1,11 @@
 import type { Client } from '@/features/clients/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import type { Facture, Vente } from '@/features/comptabilite/types';
-import { ecrituresDuClient, filtrerParClient, type EcritureClient } from '@/features/clients/services/resumeClient';
+import {
+  ecrituresDuClient,
+  filtrerParClient,
+  type EcritureClient,
+} from '@/features/clients/services/resumeClient';
 import { facturesDuFournisseur } from '@/features/fournisseurs/services/resumeFournisseur';
 import type { Contact } from '@/features/contacts/services/contacts';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
@@ -58,7 +62,10 @@ export function categorieDuContact(
   const deClient = contact.client?.categorie;
   const deFournisseur = contact.fournisseur?.categorie;
   const c = deClient && (!idsConnus || idsConnus.client.includes(deClient)) ? deClient : undefined;
-  const f = deFournisseur && (!idsConnus || idsConnus.fournisseur.includes(deFournisseur)) ? deFournisseur : undefined;
+  const f =
+    deFournisseur && (!idsConnus || idsConnus.fournisseur.includes(deFournisseur))
+      ? deFournisseur
+      : undefined;
   if (c && f && c !== f) return { conflit: { client: c, fournisseur: f } };
   return { id: c ?? f };
 }
@@ -86,8 +93,12 @@ export function listesAvecCategorie(
   const manqueClient = !clients.some((c) => c.id === categorie.id);
   const manqueFournisseur = !fournisseurs.some((c) => c.id === categorie.id);
   return {
-    clients: manqueClient ? [...clients, { id: categorie.id, nom: categorie.nom, declaree: true, prixLibre: false }] : clients,
-    fournisseurs: manqueFournisseur ? [...fournisseurs, { id: categorie.id, nom: categorie.nom }] : fournisseurs,
+    clients: manqueClient
+      ? [...clients, { id: categorie.id, nom: categorie.nom, declaree: true, prixLibre: false }]
+      : clients,
+    fournisseurs: manqueFournisseur
+      ? [...fournisseurs, { id: categorie.id, nom: categorie.nom }]
+      : fournisseurs,
     modifiees: manqueClient || manqueFournisseur,
   };
 }
@@ -170,15 +181,20 @@ export function fichesDuFormulaire(
   form: FormulaireContact,
   existant?: Contact,
   idsConnus?: { client: readonly string[]; fournisseur: readonly string[] },
-): { client?: Omit<Client, 'id'> & { id?: string }; fournisseur?: Omit<Fournisseur, 'id'> & { id?: string } } {
+): {
+  client?: Omit<Client, 'id'> & { id?: string };
+  fournisseur?: Omit<Fournisseur, 'id'> & { id?: string };
+} {
   const depart = existant ? formulaireDuContact(existant, idsConnus) : undefined;
-  const nomModifie = !depart || form.nom.trim() !== depart.nom.trim() || form.prenom.trim() !== depart.prenom.trim();
+  const nomModifie =
+    !depart || form.nom.trim() !== depart.nom.trim() || form.prenom.trim() !== depart.prenom.trim();
   const personneModifiee = !depart || form.personne.trim() !== depart.personne.trim();
   const nom = form.nom.trim();
   const prenom = ouRien(form.prenom);
   const resultat: ReturnType<typeof fichesDuFormulaire> = {};
   // Les volets ne valent que pour une association ou une coopérative agricole.
-  const volets = form.categorie === CATEGORIE_FOURNISSEUR.GROUPEMENT && form.volets.length > 0 ? form.volets : undefined;
+  const volets =
+    form.categorie === CATEGORIE_FOURNISSEUR.GROUPEMENT && form.volets.length > 0 ? form.volets : undefined;
 
   if (form.recettes) {
     const base = existant?.client;

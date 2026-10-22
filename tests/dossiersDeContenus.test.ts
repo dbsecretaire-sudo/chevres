@@ -6,6 +6,7 @@ import {
   contenusDuDossier,
   dossiersEnfants,
   nombreDeContenus,
+  rechercherDansLesContenus,
   sansDossier,
 } from '@/features/exploitation/services/dossiersDeContenus';
 import type { ContenuGroupement, Controle } from '@/features/exploitation/types';
@@ -66,5 +67,32 @@ describe('dossiers de contenus d’une association', () => {
     expect(e.dossiers).toEqual([{ id: 'd2', nom: 'B', parentId: undefined }]);
     expect(e.contenus!.find((c) => c.id === 'a')!.dossierId).toBeUndefined();
     expect(e.contenus!.find((c) => c.id === 'b')!.dossierId).toBe('d2');
+  });
+});
+
+describe('recherche dans les dossiers et contenus', () => {
+  const entree = {
+    dossiers: [
+      { id: 'd1', nom: 'Route des Sens Authentiques' },
+      { id: 'd2', nom: 'Clôtures', parentId: 'd1' },
+      { id: 'd3', nom: 'Tank à lait' },
+    ],
+    contenus: [
+      { id: 'c1', titre: 'Cahier des charges', date: '2026-02-01', dossierId: 'd1' },
+      { id: 'c2', titre: 'Devis clôture électrique', date: '2026-03-01', dossierId: 'd2' },
+      { id: 'c3', titre: 'Devis tank', date: '2026-04-01', dossierId: 'd3' },
+    ],
+  };
+  it('trouve sans tenir compte des accents ni des majuscules, à tous les niveaux', () => {
+    const r = rechercherDansLesContenus(entree, 'CLOTURE');
+    expect(r.dossiers.map((d) => d.id)).toEqual(['d2']);
+    expect(r.contenus.map((c) => c.id)).toEqual(['c2']);
+  });
+  it('se limite au dossier ouvert et à ce qu’il contient', () => {
+    expect(rechercherDansLesContenus(entree, 'devis', 'd1').contenus.map((c) => c.id)).toEqual(['c2']);
+    expect(rechercherDansLesContenus(entree, 'devis').contenus.map((c) => c.id)).toEqual(['c3', 'c2']);
+  });
+  it('ne trouve rien sans mot', () => {
+    expect(rechercherDansLesContenus(entree, '  ')).toEqual({ dossiers: [], contenus: [] });
   });
 });

@@ -63,6 +63,8 @@ export const dansLeMenuDeGauche = (adresse: string): boolean => ECRANS_DU_MENU.h
 export interface ParametresDePage {
   famille?: string;
   groupementId?: string;
+  /** La fiche du contact d'où vient une page de dossier. */
+  contact?: string;
 }
 
 /**
@@ -73,6 +75,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/(facture|vente)\/[^/]+$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/comptabilite\/nouvelle$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/comptabilite\/fournisseurs$/, () => ROUTES.CONTACTS],
+  // Un dossier d'un contact revient à sa fiche.
+  [/^\/comptabilite\/contacts\/dossier$/, (_, p) => (p.contact ? ROUTES.ficheContact(p.contact) : ROUTES.CONTACTS)],
   [/^\/comptabilite\/(clients|fournisseurs|contacts|comptes-pcg)\/(?!index$)[^/]+$/, (m) => `/comptabilite/${m[1]}`],
   [/^\/comptabilite\/(stocks|conditionnement)$/, () => ROUTES.COMPTABILITE_INVENTAIRE],
   [/^\/comptabilite\/stock-(historique|statistiques|structure)$/, () => ROUTES.COMPTABILITE_STOCKS],

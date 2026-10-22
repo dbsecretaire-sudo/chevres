@@ -17,7 +17,8 @@ export interface Contact {
 const normaliser = (texte: string | undefined) => (texte ?? '').trim().toLowerCase();
 
 /** Le nom sous lequel on retrouve un fournisseur (et ses factures) : celui de son entreprise, à défaut celui de son contact. */
-export const nomDuFournisseur = (f: Pick<Fournisseur, 'nomEntreprise' | 'nom'>): string => f.nomEntreprise || f.nom;
+export const nomDuFournisseur = (f: Pick<Fournisseur, 'nomEntreprise' | 'nom'>): string =>
+  f.nomEntreprise || f.nom;
 
 /**
  * Les contacts, par ordre alphabétique : chaque fiche client et chaque fiche fournisseur, les deux réunies quand elles sont liées
@@ -32,7 +33,9 @@ export function construireContacts(clients: Client[], fournisseurs: Fournisseur[
   };
   // Les liens explicites d'abord : un nom différent n'empêche pas deux fiches liées d'être le même contact.
   for (const client of clients) {
-    const fournisseur = client.fournisseurId ? fournisseurs.find((f) => f.id === client.fournisseurId) : undefined;
+    const fournisseur = client.fournisseurId
+      ? fournisseurs.find((f) => f.id === client.fournisseurId)
+      : undefined;
     if (fournisseur && !fournisseursPris.has(fournisseur.id)) relier(client, fournisseur);
   }
   for (const fournisseur of fournisseurs) {
@@ -44,7 +47,9 @@ export function construireContacts(clients: Client[], fournisseurs: Fournisseur[
   for (const client of clients) {
     if (duClient.has(client.id)) continue;
     const nom = normaliser(nomComplet(client));
-    const fournisseur = fournisseurs.find((f) => !fournisseursPris.has(f.id) && normaliser(nomDuFournisseur(f)) === nom);
+    const fournisseur = fournisseurs.find(
+      (f) => !fournisseursPris.has(f.id) && normaliser(nomDuFournisseur(f)) === nom,
+    );
     if (fournisseur) relier(client, fournisseur);
   }
   const contacts: Contact[] = clients.map((client) => ({
@@ -66,11 +71,16 @@ export const contactDe = (id: string, clients: Client[], fournisseurs: Fournisse
   construireContacts(clients, fournisseurs).find((c) => c.client?.id === id || c.fournisseur?.id === id);
 
 /** Les liens à enregistrer pour que les fiches de même nom, encore non liées, le soient : (client, fournisseur). */
-export function liensAEnregistrer(clients: Client[], fournisseurs: Fournisseur[]): { client: Client; fournisseur: Fournisseur }[] {
+export function liensAEnregistrer(
+  clients: Client[],
+  fournisseurs: Fournisseur[],
+): { client: Client; fournisseur: Fournisseur }[] {
   return construireContacts(clients, fournisseurs)
     .filter(
       (c): c is Contact & { client: Client; fournisseur: Fournisseur } =>
-        !!c.client && !!c.fournisseur && (c.client.fournisseurId !== c.fournisseur.id || c.fournisseur.clientId !== c.client.id),
+        !!c.client &&
+        !!c.fournisseur &&
+        (c.client.fournisseurId !== c.fournisseur.id || c.fournisseur.clientId !== c.client.id),
     )
     .map((c) => ({ client: c.client, fournisseur: c.fournisseur }));
 }

@@ -38,4 +38,5 @@ const PORTRAITS: Record<string, PortraitTiers> = {
 };
 
 /** Le portrait d'un tiers d'après l'identifiant de sa catégorie (une catégorie ajoutée par l'utilisateur, ou aucune : un portrait neutre). */
-export const portraitDeTiers = (categorieId: string | undefined): PortraitTiers => (categorieId && PORTRAITS[categorieId]) || PAR_DEFAUT;
+export const portraitDeTiers = (categorieId: string | undefined): PortraitTiers =>
+  (categorieId && PORTRAITS[categorieId]) || PAR_DEFAUT;

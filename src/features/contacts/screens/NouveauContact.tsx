@@ -52,8 +52,18 @@ export default function NouveauContact() {
       <Screen>
         <FormulaireContactChamps form={form} onChange={setForm} categories={categories} />
         <View style={commonStyles.row}>
-          <Button style={commonStyles.flex1} variant="secondary" label={F.annuler} onPress={() => router.back()} />
-          <Button style={commonStyles.flex1} label={F.enregistrer} loading={enregistrement} onPress={enregistrer} />
+          <Button
+            style={commonStyles.flex1}
+            variant="secondary"
+            label={F.annuler}
+            onPress={() => router.back()}
+          />
+          <Button
+            style={commonStyles.flex1}
+            label={F.enregistrer}
+            loading={enregistrement}
+            onPress={enregistrer}
+          />
         </View>
         <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
       </Screen>

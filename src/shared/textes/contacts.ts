@@ -12,13 +12,16 @@ export const TEXTES_CONTACTS = {
     tousLesAchats: 'Tous les achats',
     autresDepenses: 'Autres dépenses (sans stock)',
     autresRecettes: 'Autres recettes',
-    aideAchats: 'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre. Seule exception, « Animaux » propose aussi « Sortie » : des animaux vivants qui partent à l’abattoir (de vivant à abattu) se facturent en dépense.',
-    aideVentes: 'Une recette est une vente : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous acheter.',
+    aideAchats:
+      'Une dépense est un achat : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous vendre. Seule exception, « Animaux » propose aussi « Sortie » : des animaux vivants qui partent à l’abattoir (de vivant à abattu) se facturent en dépense.',
+    aideVentes:
+      'Une recette est une vente : cochez, pour chaque liste de l’inventaire, ce que les contacts de cette catégorie peuvent vous acheter.',
   },
   titreFiche: 'Contact',
   titreDocument: 'Document du contact',
   aide: 'Un contact reçoit des recettes, fait des dépenses, ou les deux. Une seule fiche, une seule catégorie.',
-  aideRubrique: 'Clients et fournisseurs réunis : chaque contact une fois, avec ses recettes et ses dépenses.',
+  aideRubrique:
+    'Clients et fournisseurs réunis : chaque contact une fois, avec ses recettes et ses dépenses.',
   recherche: 'Nom, téléphone, e-mail…',
   toutesLesCategories: (n: number) => `Toutes (${n})`,
   categorieAChoisirPuce: (n: number) => `À choisir (${n})`,
@@ -29,7 +32,9 @@ export const TEXTES_CONTACTS = {
   nouveau: 'Nouveau contact',
   categorieAChoisir: 'Catégorie à choisir',
   aClasser: (nombre: number) =>
-    nombre === 1 ? '1 contact a deux catégories différentes : à choisir' : `${nombre} contacts ont deux catégories différentes : à choisir`,
+    nombre === 1
+      ? '1 contact a deux catégories différentes : à choisir'
+      : `${nombre} contacts ont deux catégories différentes : à choisir`,
   fiche: {
     introuvable: 'Contact introuvable.',
     categorieDeuxPoints: 'Catégorie : ',
@@ -50,11 +55,18 @@ export const TEXTES_CONTACTS = {
     nouvelleRecette: 'Nouvelle recette',
     ongletEcritures: (n: number) => `Écritures liées${n > 0 ? ` (${n})` : ''}`,
     ongletDocuments: (n: number) => `Documents liés${n > 0 ? ` (${n})` : ''}`,
-    ongletAutres: (n: number) => `Autres éléments liés${n > 0 ? ` (${n})` : ''}`,
     ajouterDocument: '+ Ajouter un document, un courrier, une aide…',
     aucunDocument: 'Aucun document lié à ce contact pour l’instant.',
-    aucunAutre: 'Aucun autre élément lié à ce contact pour l’instant.',
     origine: { partenaire: 'Document', dossier: 'Dossier' },
+    /** Les pièces qui se rangent toutes seules dans les documents d'un contact : les bons d'équarrissage (équarrisseur), les documents de circulation (abattoir). */
+    pieces: {
+      bonNumero: (numero: string) => `Bon d’équarrissage n° ${numero}`,
+      bonDuLot: (lot: string) => `Bon d’équarrissage · ${lot}`,
+      bonManque: 'Bon à ajouter',
+      circulation: (de: string) => `Document de circulation · ${de}`,
+      documentAjoute: 'Document ajouté',
+      documentManque: 'Document à ajouter',
+    },
     supprimerQuestion: 'Supprimer ce contact ?',
     supprimerMessage: (nom: string) =>
       `Cette action supprimera définitivement la fiche de ${nom}. Les ventes et les factures déjà enregistrées ne sont pas modifiées.`,
@@ -68,10 +80,13 @@ export const TEXTES_CONTACTS = {
     categorie: 'Catégorie',
     choisirCategorie: 'Choisir une catégorie',
     volets: 'Volets',
-    aideVolets: 'Cochez ce que cette association ou cette coopérative fait pour vous : ses écritures proposent alors ces volets. Rien de coché : des écritures simples (cotisation, facture).',
+    aideVolets:
+      'Cochez ce que cette association ou cette coopérative fait pour vous : ses écritures proposent alors ces volets. Rien de coché : des écritures simples (cotisation, facture).',
     circuitPrivilegie: 'Circuit de vente privilégié',
-    aideCircuit: 'Par où ce contact achète d’ordinaire : il est repris d’office dans ses ventes, ses réservations et ses commandes.',
-    aideCategorie: 'Une seule catégorie pour le contact, qu’il reçoive des recettes, fasse des dépenses, ou les deux.',
+    aideCircuit:
+      'Par où ce contact achète d’ordinaire : il est repris d’office dans ses ventes, ses réservations et ses commandes.',
+    aideCategorie:
+      'Une seule catégorie pour le contact, qu’il reçoive des recettes, fasse des dépenses, ou les deux.',
     nom: 'Nom ou entreprise',
     prenom: 'Prénom',
     personne: 'Personne à contacter',
@@ -87,8 +102,10 @@ export const TEXTES_CONTACTS = {
     email: 'Email',
     enregistrer: 'Enregistrer',
     annuler: 'Annuler',
-    retirerClient: 'Retirer le côté « recettes » supprime la fiche client de ce contact (et son dossier). Continuer ?',
-    retirerFournisseur: 'Retirer le côté « dépenses » supprime la fiche fournisseur de ce contact. Continuer ?',
+    retirerClient:
+      'Retirer le côté « recettes » supprime la fiche client de ce contact (et son dossier). Continuer ?',
+    retirerFournisseur:
+      'Retirer le côté « dépenses » supprime la fiche fournisseur de ce contact. Continuer ?',
     confirmer: 'Continuer',
   },
   erreurs: {
@@ -96,7 +113,8 @@ export const TEXTES_CONTACTS = {
     categorieRequise: 'Choisissez une catégorie.',
     circuitRequis: 'Choisissez le circuit de vente privilégié du contact.',
     rienCoche: 'Cochez « recettes », « dépenses », ou les deux.',
-    ecrituresRecettes: 'Ce contact a des ventes ou des factures émises : le côté « recettes » ne se retire pas.',
+    ecrituresRecettes:
+      'Ce contact a des ventes ou des factures émises : le côté « recettes » ne se retire pas.',
     ecrituresDepenses: 'Ce contact a des factures reçues : le côté « dépenses » ne se retire pas.',
   },
   lien: {

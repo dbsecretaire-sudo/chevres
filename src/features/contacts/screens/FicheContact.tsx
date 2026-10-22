@@ -19,6 +19,13 @@ import { estVente } from '@/features/clients/components/ClientResume';
 import type { EcritureClient } from '@/features/clients/services/resumeClient';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
+import {
+  ecrituresACirculation,
+  type EcritureACirculation,
+} from '@/features/comptabilite/services/documentsCirculation';
+import { piecesDuContact } from '@/features/contacts/services/piecesDuContact';
+import { nomsDesAbattoirs } from '@/features/fournisseurs/services/abattoirs';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { DossiersDuContact, entreeDuContact } from '@/features/contacts/components/DossiersDuContact';
 import { PortraitTiers } from '@/features/contacts/components/PortraitTiers';
 import { FormulaireContactChamps } from '@/features/contacts/components/FormulaireContactChamps';
@@ -51,8 +58,8 @@ import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 
 const T = TEXTES.contacts.fiche;
 
-/** Les trois onglets de la fiche : les écritures, les documents (éléments avec fichiers) et les autres éléments liés. */
-type Onglet = 'ecritures' | 'documents' | 'autres';
+/** Les deux onglets de la fiche : les écritures, et les documents (rangés en dossiers). */
+type Onglet = 'ecritures' | 'documents';
 const F = TEXTES.contacts.formulaire;
 
 /** Un montant signé : une recette « + », une dépense « − », en vert ou en rouge. */
@@ -68,6 +75,7 @@ export default function FicheContact() {
   const ouvrir = useOuvrir();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { categories, idsConnus, assurerCategorie } = useCategoriesContact();
+  const lots = useAppSettings().settings.exploitation?.lots;
 
   const [contact, setContact] = useState<Contact | undefined>();
   const [introuvable, setIntrouvable] = useState(false);
@@ -75,6 +83,8 @@ export default function FicheContact() {
   const [elements, setElements] = useState<ElementLie[]>([]);
   /** Les contenus rangés des partenaires : ceux du contact, en dossiers, viennent de là. */
   const [controles, setControles] = useState<Controle[]>([]);
+  /** Les écritures et lots de départ qui demandent un document de circulation : ceux d'un abattoir se rangent dans ses documents. */
+  const [circulations, setCirculations] = useState<EcritureACirculation[]>([]);
   const [onglet, setOnglet] = useState<Onglet>('ecritures');
   const [form, setForm] = useState<FormulaireContact | null>(null);
   const [menuOuvert, setMenuOuvert] = useState(false);
@@ -94,16 +104,18 @@ export default function FicheContact() {
       setElements([]);
       return;
     }
-    const [ventes, factures, controles, archive] = await Promise.all([
+    const [ventes, factures, controles, archive, abattoirs] = await Promise.all([
       listToutesVentes(),
       listToutesFactures(),
       listTousControles(),
       lireArchiveDossiers(),
+      nomsDesAbattoirs(),
     ]);
+    setCirculations(ecrituresACirculation(ventes, factures, abattoirs, lots));
     setEcritures(ecrituresDuContact(c, ventes, factures));
     setControles(controles);
     setElements(elementsDuContact(c, controles, archive));
-  }, [id]);
+  }, [id, lots]);
 
   useFocusEffect(
     useCallback(() => {
@@ -111,11 +123,18 @@ export default function FicheContact() {
     }, [charger]),
   );
 
-  const categorie = useMemo(() => (contact ? categorieDuContact(contact, idsConnus) : {}), [contact, idsConnus]);
+  const categorie = useMemo(
+    () => (contact ? categorieDuContact(contact, idsConnus) : {}),
+    [contact, idsConnus],
+  );
   const nomDeLaCategorie = (cle: string | undefined) => categories.find((c) => c.id === cle)?.nom;
 
   /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
-  const enregistrer = async (aEnregistrer: FormulaireContact, confirme = false, auto = false): Promise<boolean> => {
+  const enregistrer = async (
+    aEnregistrer: FormulaireContact,
+    confirme = false,
+    auto = false,
+  ): Promise<boolean> => {
     if (!contact) return false;
     // Retirer un côté supprime sa fiche : on demande avant (une seule fenêtre, même si la saisie continue).
     if (!confirme) {
@@ -172,9 +191,10 @@ export default function FicheContact() {
   const telephone = c?.telephone || f?.telephone;
   const email = c?.email || f?.email;
   const balance = balanceDuContact(ecritures);
-  // Les documents : ce qui est rangé dans la fiche du contact (courriers, contrats, aides, notes…) ; les autres : le reste de son dossier.
+  // Les documents : ce qui est rangé dans la fiche du contact (courriers, contrats, aides, notes…).
   const documents = elements.filter((x) => x.origine === 'partenaire');
-  const autres = elements.filter((x) => x.origine === 'dossier');
+  /** Les bons d'équarrissage (équarrisseur) et les documents de circulation (abattoir) qui s'y rangent tout seuls. */
+  const pieces = piecesDuContact(contact, categorie.id, lots ?? [], circulations);
 
   return (
     <Screen scroll={false}>
@@ -203,7 +223,11 @@ export default function FicheContact() {
                     icon: 'remove-circle' as const,
                     onPress: () => {
                       setMenuOuvert(false);
-                      ouvrir(routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=recue`, { fournisseur: contact.fournisseur }));
+                      ouvrir(
+                        routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=recue`, {
+                          fournisseur: contact.fournisseur,
+                        }),
+                      );
                     },
                   },
                 ]
@@ -215,7 +239,11 @@ export default function FicheContact() {
                     icon: 'add-circle' as const,
                     onPress: () => {
                       setMenuOuvert(false);
-                      ouvrir(routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=emise`, { client: contact.client }));
+                      ouvrir(
+                        routeAvecContact(`${ROUTES.COMPTABILITE_NOUVELLE}?type=emise`, {
+                          client: contact.client,
+                        }),
+                      );
                     },
                   },
                 ]
@@ -264,7 +292,9 @@ export default function FicheContact() {
                 key={cle}
                 variant="secondary"
                 label={T.garder(nomDeLaCategorie(cle) ?? cle)}
-                onPress={() => enregistrer({ ...formulaireDuContact(contact, idsConnus), categorie: cle }, true)}
+                onPress={() =>
+                  enregistrer({ ...formulaireDuContact(contact, idsConnus), categorie: cle }, true)
+                }
               />
             ))}
             <Button
@@ -365,8 +395,7 @@ export default function FicheContact() {
             <PucesDefilantes<Onglet>
               puces={[
                 { valeur: 'ecritures', label: T.ongletEcritures(ecritures.length) },
-                { valeur: 'documents', label: T.ongletDocuments(documents.length) },
-                { valeur: 'autres', label: T.ongletAutres(autres.length) },
+                { valeur: 'documents', label: T.ongletDocuments(documents.length + pieces.length) },
               ]}
               valeur={onglet}
               onChoisir={setOnglet}
@@ -389,7 +418,9 @@ export default function FicheContact() {
                         </Text>
                       }
                       onPress={() =>
-                        router.push((estVente(e) ? ROUTES.ficheVente(e.id) : ROUTES.ficheFacture(e.id)) as never)
+                        router.push(
+                          (estVente(e) ? ROUTES.ficheVente(e.id) : ROUTES.ficheFacture(e.id)) as never,
+                        )
                       }
                     />
                   ))
@@ -398,44 +429,15 @@ export default function FicheContact() {
             ) : (
               <View style={commonStyles.gap10}>
                 {/* Les documents : des dossiers dans des dossiers (comme au secrétariat), avec courriers, démarches, aides et fichiers. */}
-                {onglet === 'documents' ? (
-                  <DossiersDuContact
-                    contact={contact}
-                    entree={entreeDuContact(controles, contact)}
-                    autres={[]}
-                    ouvrir={ouvrir}
-                    onChange={() => {
-                      charger().catch(() => undefined);
-                    }}
-                  />
-                ) : autres.length === 0 ? (
-                  <Text style={commonStyles.mutedItalic}>{T.aucunAutre}</Text>
-                ) : (
-                  autres.map((x) => (
-                    <ListRow
-                      key={x.cle}
-                      title={x.titre}
-                      subtitle={[
-                        formatDateFR(x.date),
-                        x.nature
-                          ? (TEXTES.exploitation.controles.natureGroupement[
-                              x.nature as keyof typeof TEXTES.exploitation.controles.natureGroupement
-                            ] ?? T.origine[x.origine])
-                          : T.origine[x.origine],
-                        x.fichiers > 0 ? TEXTES.fichiers.nombre(x.fichiers) : undefined,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                      onPress={() =>
-                        router.push(
-                          (x.origine === 'partenaire'
-                            ? ROUTES.contactContenu(x.groupementId!, x.contenuId)
-                            : ROUTES.element(x.elementId!)) as never,
-                        )
-                      }
-                    />
-                  ))
-                )}
+                <DossiersDuContact
+                  contact={contact}
+                  entree={entreeDuContact(controles, contact)}
+                  pieces={pieces}
+                  ouvrir={ouvrir}
+                  onChange={() => {
+                    charger().catch(() => undefined);
+                  }}
+                />
               </View>
             )}
           </>

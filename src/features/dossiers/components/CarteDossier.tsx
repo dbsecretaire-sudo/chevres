@@ -15,19 +15,21 @@ interface Props {
   aFacturer?: boolean;
   /** Deux cartes par ligne au lieu de trois : pour des noms plus longs. */
   large?: boolean;
+  /** Un autre dessin que le dossier (la carte « + » d'un nouveau dossier). */
+  icone?: keyof typeof Ionicons.glyphMap;
   /** La carte d'un client (une personne) plutôt que celle d'un dossier. */
   client?: boolean;
   onPress: () => void;
 }
 
 /** Une carte de la grille : l'icône d'un dossier ou d'une personne (client), son nom et ce qu'il contient. */
-export function CarteDossier({ titre, detail, alerte, aFacturer, large, client, onPress }: Props) {
+export function CarteDossier({ titre, detail, alerte, aFacturer, large, client, icone, onPress }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [styles.carte, large && styles.carteLarge, pressed && commonStyles.pressed]}
       onPress={onPress}
     >
-      <Ionicons name={client ? 'person' : 'folder'} size={26} color={colors.primary} />
+      <Ionicons name={icone ?? (client ? 'person' : 'folder')} size={26} color={colors.primary} />
       <Text style={styles.carteTitre} numberOfLines={3}>
         {titre}
       </Text>

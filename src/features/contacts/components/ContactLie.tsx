@@ -15,7 +15,11 @@ export function ContactLie({ id }: { id: string }) {
     <Card style={commonStyles.gap8}>
       <Text style={commonStyles.cardTitle}>{T.titre}</Text>
       <Text style={commonStyles.note}>{T.aide}</Text>
-      <Button variant="secondary" label={T.ouvrir} onPress={() => router.push(ROUTES.ficheContact(id) as never)} />
+      <Button
+        variant="secondary"
+        label={T.ouvrir}
+        onPress={() => router.push(ROUTES.ficheContact(id) as never)}
+      />
     </Card>
   );
 }

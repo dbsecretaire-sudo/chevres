@@ -33,15 +33,16 @@ export function FlecheRetourBureau() {
   const router = useRouter();
   const ancre = useAncre('retour');
   const adresse = usePathname();
-  const { famille, groupementId, retour } = useGlobalSearchParams<{
+  const { famille, groupementId, contact, retour } = useGlobalSearchParams<{
     famille?: string;
     groupementId?: string;
+    contact?: string;
     retour?: string;
   }>();
   const masquee = useFlecheMasquee();
   // Une page ouverte depuis un écran en cours (une fiche à compléter pendant un courrier) revient à cet écran.
   const depuis = typeof retour === 'string' && retour.startsWith('/') ? retour : undefined;
-  const parent = depuis ?? pageParente(adresse, { famille, groupementId });
+  const parent = depuis ?? pageParente(adresse, { famille, groupementId, contact });
   // Une page ouverte depuis un bouton (le groupement sanitaire, depuis l'accueil) revient à l'endroit du clic, pas à l'accueil de sa rubrique.
   const point = useOrigineRetour();
   const retourOrigine = useRetour();

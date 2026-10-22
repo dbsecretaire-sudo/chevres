@@ -29,7 +29,8 @@ interface Props {
  * que des achats, les recettes que des ventes.
  */
 export function ChoixOperations({ rubriques, valeur, sens, sensPermis, onChange }: Props) {
-  const permis = (categorie: string, liste: string): SensOperation[] => sensPermis?.(categorie, liste) ?? [sens];
+  const permis = (categorie: string, liste: string): SensOperation[] =>
+    sensPermis?.(categorie, liste) ?? [sens];
   const choisies = new Set(valeur);
   const poser = (ids: string[], cocher: boolean) => {
     const suivantes = new Set(choisies);
@@ -45,16 +46,26 @@ export function ChoixOperations({ rubriques, valeur, sens, sensPermis, onChange 
     <View style={commonStyles.gap10}>
       {rubriques.map((rubrique) => {
         const ids = operationsDeLaRubrique(rubrique, sens);
-        const idsPermis = rubrique.listes.flatMap((l) => permis(rubrique.categorie, l.cle).map((s) => idOperation(rubrique.categorie, l.cle, s)));
-        const colonnes = (['achat', 'vente'] as const).filter((s) => rubrique.listes.some((l) => permis(rubrique.categorie, l.cle).includes(s)));
+        const idsPermis = rubrique.listes.flatMap((l) =>
+          permis(rubrique.categorie, l.cle).map((s) => idOperation(rubrique.categorie, l.cle, s)),
+        );
+        const colonnes = (['achat', 'vente'] as const).filter((s) =>
+          rubrique.listes.some((l) => permis(rubrique.categorie, l.cle).includes(s)),
+        );
         return (
           <View key={rubrique.categorie} style={styles.cadre}>
             <View style={styles.entete}>
-              <Checkbox label={rubrique.titre} value={toutes(idsPermis)} onChange={(cochee) => poser(idsPermis, cochee)} />
+              <Checkbox
+                label={rubrique.titre}
+                value={toutes(idsPermis)}
+                onChange={(cochee) => poser(idsPermis, cochee)}
+              />
             </View>
             <View style={styles.raccourcis}>
               <Pressable onPress={() => poser(ids, !toutes(ids))} hitSlop={6} accessibilityRole="button">
-                <Text style={commonStyles.lien}>{sens === 'vente' ? T.toutesLesVentes : T.tousLesAchats}</Text>
+                <Text style={commonStyles.lien}>
+                  {sens === 'vente' ? T.toutesLesVentes : T.tousLesAchats}
+                </Text>
               </Pressable>
             </View>
             <View style={styles.ligneTitres}>

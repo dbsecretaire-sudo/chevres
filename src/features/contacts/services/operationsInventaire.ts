@@ -20,7 +20,8 @@ export interface ListeOperation {
 }
 
 /** Le nom d'une liste sans son préfixe : « Achat — Aliment » devient « Aliment », « Ventes — Fromages » devient « Fromages » (le sens est dans la case). */
-export const nomDeLaListe = (titre: string): string => titre.replace(/^\s*(?:ventes?|achats?)\s*[—–-]\s*/i, '').trim() || titre;
+export const nomDeLaListe = (titre: string): string =>
+  titre.replace(/^\s*(?:ventes?|achats?)\s*[—–-]\s*/i, '').trim() || titre;
 
 /** Une catégorie de l'inventaire (Produits finis, Produits animaux…) et ses listes. */
 export interface RubriqueOperations {
@@ -43,7 +44,9 @@ export const operationsDeLaRubrique = (rubrique: RubriqueOperations, sens?: Sens
  * Les rubriques de l'inventaire avec leurs listes : celles d'office de l'espèce (pas de fromages pour des cochons, pas d'œufs sans poules),
  * puis celles que l'utilisateur a ajoutées. Une rubrique sans liste n'est pas proposée.
  */
-export function rubriquesDOperations(archive: Pick<ArchiveStock, 'listes' | 'categories' | 'reglagesCategories'>): RubriqueOperations[] {
+export function rubriquesDOperations(
+  archive: Pick<ArchiveStock, 'listes' | 'categories' | 'reglagesCategories'>,
+): RubriqueOperations[] {
   const espece = especeCourante();
   const fromagerie = laiterieActive(espece);
   const poules = oeufsActifs(espece);
@@ -52,9 +55,9 @@ export function rubriquesDOperations(archive: Pick<ArchiveStock, 'listes' | 'cat
       categorie: c.categorie,
       titre: c.nom,
       listes: [
-        ...SECTIONS.filter((s) => s.categorie === c.categorie && (fromagerie || !s.fromagerie) && (poules || !s.poules)).map(
-          (s) => ({ cle: s.section, titre: nomDeLaListe(s.titre) }),
-        ),
+        ...SECTIONS.filter(
+          (s) => s.categorie === c.categorie && (fromagerie || !s.fromagerie) && (poules || !s.poules),
+        ).map((s) => ({ cle: s.section, titre: nomDeLaListe(s.titre) })),
         ...(archive.listes ?? [])
           .filter((l) => l.categorie === c.categorie && !l.masquePour?.includes(espece))
           .map((l) => ({ cle: `perso:${l.id}`, titre: nomDeLaListe(l.nom) })),
@@ -78,7 +81,8 @@ export const libelleOperation = (sens: SensOperation, liste: string): string =>
 export function depenseDeLaListe(categorie: string, liste: string, sens: SensOperation = 'achat'): string {
   if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX)
     return sens === 'vente' ? CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE : CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
-  if (categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES && liste === SECTION_STOCK.ALIMENTS) return CATEGORIE_DEPENSE.ALIMENTATION;
+  if (categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES && liste === SECTION_STOCK.ALIMENTS)
+    return CATEGORIE_DEPENSE.ALIMENTATION;
   if (
     categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES ||
     categorie === CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS ||
@@ -90,7 +94,8 @@ export function depenseDeLaListe(categorie: string, liste: string, sens: SensOpe
 
 /** Le groupe de recette qu'ouvre une liste de l'inventaire (vente, ou achat dans les recettes). */
 export function groupeRecetteDeLaListe(categorie: string, liste: string): string {
-  if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX) return GROUPE_RECETTE.VIANDE;
+  if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX)
+    return GROUPE_RECETTE.VIANDE;
   if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_FINIS) {
     if (liste === SECTION_STOCK.FROMAGES) return GROUPE_RECETTE.FROMAGES;
     if (liste === SECTION_STOCK.LAIT) return GROUPE_RECETTE.LAIT;
@@ -115,7 +120,9 @@ const decouper = (id: string): { categorie: string; liste: string; sens: SensOpe
  * sortent de l'inventaire (une vente) mais se facturent en dépense. C'est la seule vente qu'une dépense compte.
  */
 export function sensDansLesDepenses(categorie: string, liste: string): SensOperation[] {
-  return categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX ? ['achat', 'vente'] : ['achat'];
+  return categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX
+    ? ['achat', 'vente']
+    : ['achat'];
 }
 
 /** Une opération que les dépenses comptent : un achat, ou la vente d'animaux (vers l'abattoir). */
@@ -126,29 +133,40 @@ export const estPermiseEnDepense = (id: string): boolean => {
 
 /** Les catégories de dépense que des opérations ouvrent (chacune une fois). */
 export const depensesDesOperations = (operations: readonly string[]): string[] => [
-  ...new Set(operations.flatMap((id) => {
-    const o = decouper(id);
-    return o ? [depenseDeLaListe(o.categorie, o.liste, o.sens)] : [];
-  })),
+  ...new Set(
+    operations.flatMap((id) => {
+      const o = decouper(id);
+      return o ? [depenseDeLaListe(o.categorie, o.liste, o.sens)] : [];
+    }),
+  ),
 ];
 
 /** Les groupes de recette que des opérations ouvrent (chacun une fois). */
 export const groupesRecetteDesOperations = (operations: readonly string[]): string[] => [
-  ...new Set(operations.flatMap((id) => {
-    const o = decouper(id);
-    return o ? [groupeRecetteDeLaListe(o.categorie, o.liste)] : [];
-  })),
+  ...new Set(
+    operations.flatMap((id) => {
+      const o = decouper(id);
+      return o ? [groupeRecetteDeLaListe(o.categorie, o.liste)] : [];
+    }),
+  ),
 ];
 
 /**
  * Les opérations que des dépenses déjà réglées (avant cette organisation) ouvraient : une catégorie de dépense coche les achats des listes
  * qu'elle ouvre. Les dépenses sans liste (carburant, réparation, impôts…) n'en ont pas : elles restent à part.
  */
-export function operationsDesDepenses(depenses: readonly string[], rubriques: RubriqueOperations[]): string[] {
+export function operationsDesDepenses(
+  depenses: readonly string[],
+  rubriques: RubriqueOperations[],
+): string[] {
   return rubriques.flatMap((r) =>
     r.listes.flatMap((l) =>
       sensDansLesDepenses(r.categorie, l.cle)
-        .filter((s) => depenses.includes(depenseDeLaListe(r.categorie, l.cle, s)) && depenseDeLaListe(r.categorie, l.cle, s) !== CATEGORIE_DEPENSE.AUTRE)
+        .filter(
+          (s) =>
+            depenses.includes(depenseDeLaListe(r.categorie, l.cle, s)) &&
+            depenseDeLaListe(r.categorie, l.cle, s) !== CATEGORIE_DEPENSE.AUTRE,
+        )
         .map((s) => idOperation(r.categorie, l.cle, s)),
     ),
   );
@@ -158,7 +176,11 @@ export function operationsDesDepenses(depenses: readonly string[], rubriques: Ru
 export function operationsDesRecettes(groupes: readonly string[], rubriques: RubriqueOperations[]): string[] {
   return rubriques.flatMap((r) =>
     r.listes
-      .filter((l) => groupes.includes(groupeRecetteDeLaListe(r.categorie, l.cle)) && groupeRecetteDeLaListe(r.categorie, l.cle) !== GROUPE_RECETTE.AUTRE)
+      .filter(
+        (l) =>
+          groupes.includes(groupeRecetteDeLaListe(r.categorie, l.cle)) &&
+          groupeRecetteDeLaListe(r.categorie, l.cle) !== GROUPE_RECETTE.AUTRE,
+      )
       .map((l) => idOperation(r.categorie, l.cle, 'vente')),
   );
 }

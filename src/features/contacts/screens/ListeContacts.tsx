@@ -9,7 +9,11 @@ import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Fab } from '@/shared/components/Fab';
 import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
-import { convertirGroupementsEnContacts, lierLesFichesDeMemeNom, listContacts } from '@/features/contacts/repository';
+import {
+  convertirGroupementsEnContacts,
+  lierLesFichesDeMemeNom,
+  listContacts,
+} from '@/features/contacts/repository';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
 import type { Contact } from '@/features/contacts/services/contacts';
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
@@ -60,7 +64,11 @@ export default function ListeContacts() {
   const puces = [
     { valeur: TOUTES, label: T.toutesLesCategories(contacts.length) },
     ...categories
-      .map((x) => ({ valeur: x.id, label: `${x.nom} (${contacts.filter((c) => cleCategorieDe(c) === x.id).length})`, n: contacts.filter((c) => cleCategorieDe(c) === x.id).length }))
+      .map((x) => ({
+        valeur: x.id,
+        label: `${x.nom} (${contacts.filter((c) => cleCategorieDe(c) === x.id).length})`,
+        n: contacts.filter((c) => cleCategorieDe(c) === x.id).length,
+      }))
       .filter((p) => p.n > 0)
       .map(({ valeur, label }) => ({ valeur, label })),
     ...(aClasser > 0 ? [{ valeur: A_CHOISIR, label: T.categorieAChoisirPuce(aClasser) }] : []),
@@ -80,12 +88,18 @@ export default function ListeContacts() {
 
   const filtres = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    const deLaCategorie = categorieChoisie === TOUTES ? contacts : contacts.filter((c) => cleCategorieDe(c) === categorieChoisie);
+    const deLaCategorie =
+      categorieChoisie === TOUTES ? contacts : contacts.filter((c) => cleCategorieDe(c) === categorieChoisie);
     if (!q) return deLaCategorie;
     return deLaCategorie.filter((c) =>
-      [c.nom, c.client?.telephone, c.client?.email, c.fournisseur?.telephone, c.fournisseur?.email, c.fournisseur?.nom].some((v) =>
-        v?.toLowerCase().includes(q),
-      ),
+      [
+        c.nom,
+        c.client?.telephone,
+        c.client?.email,
+        c.fournisseur?.telephone,
+        c.fournisseur?.email,
+        c.fournisseur?.nom,
+      ].some((v) => v?.toLowerCase().includes(q)),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contacts, recherche, categorieChoisie, idsConnus]);
@@ -97,7 +111,9 @@ export default function ListeContacts() {
         <Text style={commonStyles.note}>{T.aide}</Text>
         {aClasser > 0 ? <Text style={commonStyles.lineBold}>{T.aClasser(aClasser)}</Text> : null}
         <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.recherche} />
-        {puces.length > 2 ? <PucesDefilantes puces={puces} valeur={categorieChoisie} onChoisir={setCategorieChoisie} /> : null}
+        {puces.length > 2 ? (
+          <PucesDefilantes puces={puces} valeur={categorieChoisie} onChoisir={setCategorieChoisie} />
+        ) : null}
       </View>
 
       <FlatList
@@ -118,7 +134,9 @@ export default function ListeContacts() {
       />
 
       <Fab
-        options={[{ label: T.nouveau, icon: 'add', onPress: () => router.push(ROUTES.CONTACT_NOUVEAU as never) }]}
+        options={[
+          { label: T.nouveau, icon: 'add', onPress: () => router.push(ROUTES.CONTACT_NOUVEAU as never) },
+        ]}
       />
     </Screen>
   );
