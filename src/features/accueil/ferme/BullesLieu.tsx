@@ -76,6 +76,11 @@ function Bulle({
         ) : (
           <Ionicons name={action.icone} size={32} color={colors.blanc} />
         )}
+        {action.pastille ? (
+          <View style={styles.pastille}>
+            <Text style={styles.pastilleTexte}>{action.pastille}</Text>
+          </View>
+        ) : null}
       </Pressable>
       <Text style={styles.libelle} numberOfLines={2}>
         {action.titre}
@@ -140,6 +145,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 4,
   },
+  pastille: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    minWidth: 22,
+    borderRadius: 11,
+    backgroundColor: colors.danger,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.blanc,
+  },
+  pastilleTexte: { color: colors.blanc, fontSize: 12, fontWeight: '800' },
   libelle: {
     fontSize: 12,
     fontWeight: '700',

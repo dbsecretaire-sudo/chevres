@@ -11,13 +11,15 @@ export interface ActionDeLieu {
   /** Quand il est donné, le dessin vient de cette famille (l'épi de maïs n'existe pas dans l'autre) et remplace `icone`. */
   iconeMci?: keyof typeof MaterialCommunityIcons.glyphMap;
   route: string;
+  /** Un nombre en pastille rouge sur la bulle (les rappels de lots à faire) : rien quand il n'y a rien à signaler. */
+  pastille?: number;
 }
 
 /**
  * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (grange) et les lots de l'atelier. Les autres boutons (les intervenants, le
  * cheptel, les documents) ouvrent directement leur page, qui regroupe toutes leurs actions.
  */
-export type CibleDesBulles = 'grange' | 'fabriquer';
+export type CibleDesBulles = 'grange' | 'lots' | 'fabriquer';
 
 const B = TEXTES.accueil.ferme.bulles;
 
@@ -47,6 +49,12 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           iconeMci: 'pot-steam',
           route: ROUTES.productionFabrication(PRODUIT_A_LOTS.PLAT),
         },
+      ];
+    case 'lots':
+      // Un seul bouton : on choisit les lots (la page des produits suivis lot par lot) ou leurs rappels.
+      return [
+        { cle: 'lotsDeLAtelier', titre: B.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS },
+        { cle: 'rappelsLots', titre: B.rappelsLots, icone: 'notifications', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
       ];
     case 'grange':
       return [

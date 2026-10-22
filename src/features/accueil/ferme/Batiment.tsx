@@ -29,9 +29,6 @@ interface Props {
   couleurDisque?: string;
 }
 
-/** Au plus cette échelle, l'écran est celui d'un téléphone (voir useEchelle). */
-const PETIT_ECRAN = 1.05;
-
 /** Un compartiment : une porte du bâtiment, avec son dessin et son nom. */
 function Compartiment({
   entree,
@@ -49,8 +46,6 @@ function Compartiment({
   const ref = useRef<View>(null);
   // Sur un grand écran (Windows), le dessin et le nom grandissent avec la largeur de la colonne.
   const e = useEchelle();
-  /** Sur téléphone, les compartiments se touchent et n'ont que la hauteur de leur contenu. */
-  const compact = e <= PETIT_ECRAN;
   const appuyer = () =>
     ref.current?.measureInWindow((x, y, largeur, hauteur) => onAppui(entree.cle, { x, y, largeur, hauteur }));
   return (
@@ -60,9 +55,9 @@ function Compartiment({
       style={[
         styles.compartiment,
         { backgroundColor: palette.compartiment, borderColor: palette.bord },
-        compact ? styles.compartimentCompact : null,
+        styles.compartimentCompact,
         seul ? styles.compartimentSeul : null,
-        seul && compact ? styles.compartimentSeulCompact : null,
+        seul ? styles.compartimentSeulCompact : null,
       ]}
       onPress={appuyer}
       accessibilityRole="button"
@@ -89,7 +84,7 @@ function Compartiment({
       <Text
         style={[
           styles.nom,
-          { fontSize: Math.round(10 * e), minHeight: compact ? undefined : Math.round(24 * e) },
+          { fontSize: Math.round(10 * e) },
         ]}
         numberOfLines={2}
       >
@@ -127,7 +122,7 @@ export function Batiment({
         ]}
       >
         {decor}
-        <View style={[styles.compartiments, echelle <= PETIT_ECRAN ? styles.compartimentsCompacts : null]}>
+        <View style={[styles.compartiments, styles.compartimentsCompacts]}>
           {entrees.map((e, i) => (
             <Compartiment
               key={e.cle}
@@ -168,7 +163,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 2,
   },
-  // Sur téléphone : pas d'espace entre les compartiments, et la hauteur de leur contenu (le nom se lit sur autant de lignes qu'il en faut).
+  // Sur tous les écrans : pas d'espace entre les compartiments, et la hauteur de leur contenu (le nom se lit sur autant de lignes qu'il en faut) ; le pré garde ainsi la place de ses textes.
   compartimentsCompacts: { padding: 0, gap: 0 },
   compartimentCompact: { width: '33.3333%', paddingVertical: 2, gap: 0 },
   compartimentSeulCompact: { width: '100%' },
@@ -180,7 +175,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   disque: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  nom: { fontSize: 10, fontWeight: '700', color: colors.text, textAlign: 'center', minHeight: 24 },
+  nom: { fontSize: 10, fontWeight: '700', color: colors.text, textAlign: 'center' },
   pastille: {
     position: 'absolute',
     top: -6,

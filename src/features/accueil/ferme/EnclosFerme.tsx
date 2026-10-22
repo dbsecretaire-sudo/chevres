@@ -131,8 +131,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#A9794A',
     borderStyle: 'dashed',
-    padding: 14,
-    gap: 8,
+    padding: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -146,7 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     gap: 22,
-    paddingVertical: 14,
+    paddingVertical: 6,
   },
   animal: { alignItems: 'center', gap: 2 },
   etiquette: {
