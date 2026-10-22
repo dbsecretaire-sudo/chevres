@@ -107,6 +107,15 @@ export const TEXTES_STOCK = {
     nomRequis: 'Nom requis',
     prixInvalide: 'Le prix doit être supérieur à zéro.',
     supprimer: 'Supprimer cet article',
+    /** L'image de la carte : une image de l'appareil à la place du dessin d'origine. */
+    image: {
+      titre: 'Image',
+      choisir: 'Choisir une image',
+      changer: 'Changer l’image',
+      retirer: 'Revenir au dessin d’origine',
+      aide: 'Une photo ou un dessin de votre appareil remplace le dessin de la carte.',
+      modifier: 'Modifier l’image',
+    },
   },
   /** La confirmation avant de supprimer un article de l'inventaire. */
   suppression: {

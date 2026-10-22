@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
 import { avecNomsHarmonises, sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
+import type { PieceJointe } from '@/features/fichiers/types';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 
@@ -69,6 +70,10 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
   for (const [cle, nom] of Object.entries(archive?.noms ?? {})) {
     if (typeof nom === 'string' && nom.trim()) noms[cle] = nom;
   }
+  const images: Record<string, PieceJointe> = {};
+  for (const [cle, piece] of Object.entries(archive?.images ?? {})) {
+    if (piece && typeof piece.id === 'string' && typeof piece.extension === 'string') images[cle] = piece;
+  }
   const prix: ArchiveStock['prix'] = {};
   for (const [cle, montant] of Object.entries(archive?.prix ?? {})) {
     if (typeof montant === 'number' && montant > 0) prix[cle] = montant;
@@ -84,6 +89,7 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     conditionnementsParAnnee,
     ordres,
     noms,
+    images,
     lait: Array.isArray(archive?.lait) ? archive.lait : [],
     prix,
     litresParFromage,

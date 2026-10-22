@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { piecesDisponibles } from '@/features/fichiers/services/pieces';
+import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
+import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { Apparition } from '@/features/accueil/ferme/animations';
 import {
   formaterQuantite,
@@ -19,47 +23,6 @@ const T = TEXTES.production.lieux.entrepot;
 const quantiteDeLaCarte = (carte: CarteStock): string =>
   `${formaterQuantite(carte.niveau)}${carte.unite ? ` ${carte.unite}` : ''}`;
 
-/** Une carte du stock, comme une carte d'objet d'un jeu : son dessin, son nom, et en dessous une pastille avec ce qu'il en reste. */
-function Carte({ carte, rang, origine }: { carte: CarteStock; rang: number; origine?: string }) {
-  const router = useRouter();
-  const manque = carte.niveau < 0;
-  return (
-    <Apparition delai={rang * 30} style={styles.cellule}>
-      <Pressable
-        style={styles.carte}
-        onPress={() => {
-          const destination = `${ROUTES.COMPTABILITE_STOCKS}?onglet=${carte.section}`;
-          if (origine) noterOrigine(origine, destination);
-          router.push(destination as never);
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`${carte.titre} : ${quantiteDeLaCarte(carte)}`}
-      >
-        <Text style={styles.dessin} accessibilityElementsHidden importantForAccessibility="no">
-          {carte.emoji}
-        </Text>
-        <Text style={styles.nom} numberOfLines={2}>
-          {carte.titre}
-        </Text>
-        <View
-          style={[
-            styles.pastille,
-            manque ? styles.pastilleRouge : null,
-            carte.niveau === 0 ? styles.pastilleVide : null,
-          ]}
-        >
-          <View style={styles.piece}>
-            <Ionicons name="cube" size={12} color="#7A5410" />
-          </View>
-          <Text style={styles.quantite} numberOfLines={1}>
-            {quantiteDeLaCarte(carte)}
-          </Text>
-        </View>
-      </Pressable>
-    </Apparition>
-  );
-}
-
 /**
  * Les rubriques d'une catégorie du stock (« Ventes — Fromages »…), chacune avec ses cartes : elles montrent le même stock que l'écran du
  * stock. Sur un fond clair (la transformation), les titres sont en vert foncé.
@@ -74,6 +37,9 @@ export function RubriquesDeCartes({
   /** La page où l'on est (l'adresse) : la flèche de retour de la page ouverte par une carte y ramène. */
   origine?: string;
 }) {
+  const router = useRouter();
+  /** La carte dont on change l'image (le crayon n'y est que là où l'appareil range des fichiers). */
+  const [imageDe, setImageDe] = useState<CarteStock | null>(null);
   return (
     <>
       {groupes.map((g) => (
@@ -81,12 +47,31 @@ export function RubriquesDeCartes({
           <Text style={[styles.rubriqueTitre, clair ? styles.rubriqueTitreSurClair : null]}>{g.titre}</Text>
           <View style={styles.grille}>
             {g.cartes.map((c, i) => (
-              <Carte key={c.cle} carte={c} rang={i} origine={origine} />
+              <CarteDeStock
+                key={c.cle}
+                cle={c.cle}
+                rang={i}
+                emoji={c.emoji}
+                titre={c.titre}
+                quantite={quantiteDeLaCarte(c)}
+                niveau={c.niveau}
+                libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
+                onRenommer={piecesDisponibles() ? () => setImageDe(c) : undefined}
+                onPress={() => {
+                  const destination = `${ROUTES.COMPTABILITE_STOCKS}?onglet=${c.section}`;
+                  if (origine) noterOrigine(origine, destination);
+                  router.push(destination as never);
+                }}
+              />
             ))}
             {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
           </View>
         </View>
       ))}
+      <ModaleImageArticle
+        article={imageDe ? { cle: imageDe.cle, titre: imageDe.titre, emoji: imageDe.emoji } : null}
+        onFermer={() => setImageDe(null)}
+      />
     </>
   );
 }
@@ -96,6 +81,8 @@ export function RubriquesDeCartes({
  * Un appui l'ouvre ; un appui long la prend (elle frémit) pour la déplacer ; le crayon, en haut à droite, la renomme.
  */
 export function CarteDeStock({
+  cle,
+  libelleDuCrayon,
   emoji,
   titre,
   quantite,
@@ -111,6 +98,10 @@ export function CarteDeStock({
 }: {
   /** La carte prend la largeur de trois cartes (le lait) : ses pastilles se rangent sur deux colonnes. */
   large?: boolean;
+  /** L'identifiant de l'article : l'image que l'utilisateur lui a choisie remplace le dessin d'origine. */
+  cle?: string;
+  /** Ce que dit le crayon (changer le nom, ou seulement l'image). */
+  libelleDuCrayon?: string;
   /** Plusieurs pastilles l'une sous l'autre (le lait) à la place de la pastille unique : une icône (« piece » : la pièce du stock, ou un dessin), sa quantité et son niveau. */
   pastilles?: readonly { icone: string; quantite: string; niveau: number; couleur?: 'vert' | 'rouge' }[];
   emoji: string;
@@ -136,9 +127,7 @@ export function CarteDeStock({
             accessibilityRole="button"
             accessibilityLabel={`${titre} : ${quantite}`}
           >
-            <Text style={styles.dessin} accessibilityElementsHidden importantForAccessibility="no">
-              {emoji}
-            </Text>
+            <DessinDeCarte emoji={emoji} cle={cle} />
             <Text style={styles.nom} numberOfLines={2}>
               {titre}
             </Text>
@@ -183,7 +172,7 @@ export function CarteDeStock({
               onPress={onRenommer}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={TEXTES.stock.renommer.modifier}
+              accessibilityLabel={libelleDuCrayon ?? TEXTES.stock.renommer.modifier}
             >
               <Ionicons name="pencil" size={14} color={colors.primary} />
             </Pressable>
@@ -241,7 +230,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dessin: { fontSize: 46 },
   nom: {
     fontSize: 12,
     fontWeight: '700',

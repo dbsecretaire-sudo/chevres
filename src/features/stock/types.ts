@@ -1,5 +1,6 @@
 import type { GENRE_ARTICLE, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import type { PieceJointe } from '@/features/fichiers/types';
 
 export type GenreArticle = ValeurDe<typeof GENRE_ARTICLE>;
 
@@ -149,6 +150,8 @@ export interface ArchiveStock {
   ordres: Partial<Record<GenreArticle, string[]>>;
   /** Le nom choisi pour un article d'office (fromage, emballage ou matériel de départ), par identifiant d'article. */
   noms: Record<string, string>;
+  /** L'image choisie par l'utilisateur pour une carte (par identifiant d'article) : elle remplace le dessin d'origine ; le fichier est rangé dans l'appareil. */
+  images?: Record<string, PieceJointe>;
   /** Le lait produit, jour par jour. */
   lait: LaitJour[];
   /** Le prix de vente d'un fromage ou d'une viande (€, par identifiant d'article) : il préremplit le prix d'une vente. */

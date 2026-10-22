@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
+import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
+import type { ChoixImage } from '@/features/stock/services/imagesArticles';
 import { ChampsTarifsParCategorie } from '@/features/commercial/components/ChampsTarifsParCategorie';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
@@ -28,7 +30,9 @@ interface Props {
   parKg?: boolean;
   /** Un libellé de prix particulier (le litre de lait, l'œuf) : il n'y a alors que le prix à modifier, sans nom à changer. */
   libellePrix?: string;
-  onValider: (nom: string, prix?: number, litres?: number) => void;
+  /** Le dessin d'origine de la carte : quand il est donné (avec `cle`), la fenêtre propose de choisir une image à sa place. */
+  emoji?: string;
+  onValider: (nom: string, prix?: number, litres?: number, image?: ChoixImage) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
   onSupprimer?: () => void;
   onAnnuler: () => void;
@@ -49,6 +53,7 @@ export function ArticleStockModal({
   libelleLitres,
   parKg,
   libellePrix,
+  emoji,
   onValider,
   onSupprimer,
   onAnnuler,
@@ -57,6 +62,7 @@ export function ArticleStockModal({
   const [prixSaisi, setPrixSaisi] = useState('');
   const [litresSaisis, setLitresSaisis] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
+  const [choixImage, setChoixImage] = useState<ChoixImage | null>(null);
   /** Les prix de l'article selon la catégorie de contact (particulier, professionnel…). */
   const [tarifsLus, setTarifsLus] = useState<{ cle: string; prix: Record<string, number> } | null>(null);
   const tarifs = cle && tarifsLus?.cle === cle ? tarifsLus.prix : null;
@@ -75,6 +81,7 @@ export function ArticleStockModal({
       setPrixSaisi(prix ? formatMontant(prix) : '');
       setLitresSaisis(litresParFromage ? String(litresParFromage).replace('.', ',') : '');
       setErreur(null);
+      setChoixImage(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
@@ -85,7 +92,12 @@ export function ArticleStockModal({
     if (prixSaisi.trim() && !(montant > 0)) return setErreur(T.prixInvalide);
     const litres = parseDecimal(litresSaisis);
     if (avecLitres && litresSaisis.trim() && !(litres > 0)) return setErreur(T.litresInvalide);
-    onValider(nomSaisi.trim(), montant > 0 ? montant : undefined, litres > 0 ? litres : undefined);
+    onValider(
+      nomSaisi.trim(),
+      montant > 0 ? montant : undefined,
+      litres > 0 ? litres : undefined,
+      choixImage ?? undefined,
+    );
   };
 
   return (
@@ -131,6 +143,7 @@ export function ArticleStockModal({
               placeholder="0"
             />
           ) : null}
+          {cle && emoji ? <ChampImageArticle cle={cle} emoji={emoji} choix={choixImage} onChoix={setChoixImage} /> : null}
           {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
           <View style={commonStyles.row}>
             <Button

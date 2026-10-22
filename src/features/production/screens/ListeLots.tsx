@@ -6,6 +6,8 @@ import { SuggestionParcours } from '@/features/didacticiel/components/Suggestion
 import { Screen } from '@/shared/components/ScreenList';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
+import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
@@ -42,6 +44,8 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [ouvert, setOuvert] = useState<ArticleAffiche | null>(null);
   const [visible, setVisible] = useState(false);
+  /** L'article dont on change l'image (le crayon de sa carte). */
+  const [imageDe, setImageDe] = useState<{ cle: string; titre: string; emoji: string } | null>(null);
   /** La fenêtre qui demande le nom d'un nouveau produit (il entre à l'inventaire, sans stock : la fabrication le remplit). */
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
 
@@ -121,6 +125,18 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
               return (
                 <CarteDeStock
                   key={a.cle}
+                  cle={a.cle}
+                  libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
+                  onRenommer={
+                    piecesDisponibles()
+                      ? () =>
+                          setImageDe({
+                            cle: a.cle,
+                            titre: a.libelle,
+                            emoji: emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle),
+                          })
+                      : undefined
+                  }
                   rang={i}
                   emoji={emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle)}
                   titre={a.libelle}
@@ -137,6 +153,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
           </View>
         )}
       </ScrollView>
+      <ModaleImageArticle article={imageDe} onFermer={() => setImageDe(null)} />
       <Fab
         options={[
           {

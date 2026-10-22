@@ -75,6 +75,7 @@ import {
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { definirImageArticle, type ChoixImage } from '@/features/stock/services/imagesArticles';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/features/stock/types';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
@@ -324,6 +325,7 @@ export default function StockFromagerie() {
               <CarteDeStock
                 key={a.cle}
                 rang={i}
+                cle={a.cle}
                 emoji={emojiDeLArticle(genreDeLaCle(a.cle), a.libelle)}
                 titre={a.libelle}
                 quantite={a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau)}
@@ -402,8 +404,9 @@ export default function StockFromagerie() {
     charger();
   };
 
-  const renommer = async (nom: string, prix?: number, litres?: number) => {
+  const renommer = async (nom: string, prix?: number, litres?: number, image?: ChoixImage) => {
     if (renomme) {
+      if (image) await definirImageArticle(renomme.cle, image);
       if (nom) await renommerArticle(renomme.cle, nom);
       // Seuls les fromages et les viandes se vendent : eux seuls ont un prix.
       if (seVend(renomme.cle)) await definirPrixArticle(renomme.cle, prix);
@@ -754,6 +757,7 @@ export default function StockFromagerie() {
         titre={produitFiniModifie ? (renomme?.libelle ?? '') : T.renommer.titre}
         nom={renomme?.libelle}
         cle={renomme?.cle}
+        emoji={renomme ? emojiDeLArticle(genreDeLaCle(renomme.cle), renomme.libelle) : undefined}
         prix={renomme?.prix}
         avecPrix={!!renomme && seVend(renomme.cle)}
         avecLitres={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
