@@ -4,13 +4,19 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
-import { listContacts } from '@/features/contacts/repository';
+import { assurerEntreeDuContact, listContacts } from '@/features/contacts/repository';
 import { nomDuFournisseur, type Contact } from '@/features/contacts/services/contacts';
-import { categorieDuContact } from '@/features/contacts/services/fiche';
+import { categorieDuContact, elementsDuContact } from '@/features/contacts/services/fiche';
 import { routeAvecContact } from '@/features/accueil/services/routeAvecContact';
 import { LIEUX_TIERS } from '@/features/accueil/services/lieuxTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { Button } from '@/shared/components/Button';
+import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
+import { lireArchiveDossiers } from '@/features/dossiers/repository';
+import type { ArchiveDossiers } from '@/features/dossiers/types';
+import { listTousControles } from '@/features/exploitation/repository/controles';
+import type { Controle } from '@/features/exploitation/types';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -22,7 +28,7 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { LABEL_VOLET_COOPERATIVE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
-import { formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { nomComplet } from '@/shared/utils/personne';
 
 const T = TEXTES.production.lieux;
@@ -77,9 +83,18 @@ export default function LieuAssociations() {
   const { idsConnus } = useCategoriesContact();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [controles, setControles] = useState<Controle[]>([]);
+  const [dossiers, setDossiers] = useState<ArchiveDossiers>({ sousDossiers: [], elements: [] });
+  const [onglet, setOnglet] = useState<'dossiers' | 'comptabilite'>('dossiers');
 
   useFocusEffect(
     useCallback(() => {
+      listTousControles()
+        .then(setControles)
+        .catch(() => undefined);
+      lireArchiveDossiers()
+        .then(setDossiers)
+        .catch(() => undefined);
       listContacts()
         .then(setContacts)
         .catch(() => undefined);
@@ -147,6 +162,8 @@ export default function LieuAssociations() {
     const siennes = ecrituresDe(choisie);
     const volets = voletsDe(choisie);
     const simples = siennes.filter((t) => !t.volet);
+    // Les dossiers de cette association seulement : ses courriers, démarches, aides et notes (rangés sous sa fiche) et les éléments de son dossier.
+    const siens = elementsDuContact(choisie, controles, dossiers);
     return (
       <Screen>
         <View style={styles.entete}>
@@ -157,7 +174,52 @@ export default function LieuAssociations() {
         <BlocLignes>
           <ListRow title={G.modifierFiche} icone="create" onPress={() => ouvrir(ROUTES.ficheContact(choisie.cle))} />
         </BlocLignes>
+        <PucesDefilantes<'dossiers' | 'comptabilite'>
+          puces={[
+            { valeur: 'dossiers', label: G.ongletDossiers(siens.length) },
+            { valeur: 'comptabilite', label: G.ongletComptabilite },
+          ]}
+          valeur={onglet}
+          onChoisir={setOnglet}
+        />
+        {onglet === 'dossiers' ? (
+          <View style={commonStyles.gap10}>
+            <Button
+              variant="secondary"
+              label={TEXTES.contacts.fiche.ajouterDocument}
+              onPress={async () => ouvrir(ROUTES.contactContenu(await assurerEntreeDuContact(choisie)))}
+            />
+            {siens.length === 0 ? <Text style={commonStyles.mutedItalic}>{G.aucunDossier}</Text> : null}
+            <BlocLignes>
+              {siens.map((x) => (
+                <ListRow
+                  key={x.cle}
+                  title={x.titre}
+                  subtitle={[
+                    formatDateFR(x.date),
+                    x.nature
+                      ? (TEXTES.exploitation.controles.natureGroupement[
+                          x.nature as keyof typeof TEXTES.exploitation.controles.natureGroupement
+                        ] ?? TEXTES.contacts.fiche.origine[x.origine])
+                      : TEXTES.contacts.fiche.origine[x.origine],
+                    x.fichiers > 0 ? TEXTES.fichiers.nombre(x.fichiers) : undefined,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  onPress={() =>
+                    ouvrir(
+                      x.origine === 'partenaire'
+                        ? ROUTES.contactContenu(x.groupementId!, x.contenuId)
+                        : ROUTES.element(x.elementId!),
+                    )
+                  }
+                />
+              ))}
+            </BlocLignes>
+          </View>
+        ) : null}
         {/* Un groupe par volet coché sur sa fiche ; sans volet coché, seulement ses écritures simples. */}
+        {onglet === 'comptabilite' ? (<>
         {(config.volets ?? [])
           .filter((v) => volets.includes(v.cle))
           .map((v) =>
@@ -178,7 +240,7 @@ export default function LieuAssociations() {
           G.nouvelleSimple,
           routeAvecContact(config.nouvelle, choisie),
         )}
-        {rangeeDesLiens}
+        </>) : null}
       </Screen>
     );
   }

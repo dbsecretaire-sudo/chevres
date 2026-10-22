@@ -209,6 +209,9 @@ export const TEXTES_PRODUCTION = {
       aucunVolet: 'Aucun volet coché : des écritures simples (cotisation, facture).',
       soldeAnnee: (annee: number, solde: string) => `Solde ${annee} : ${solde}`,
       modifierFiche: 'Modifier la fiche et ses volets',
+      ongletDossiers: (n: number) => `Dossiers (${n})`,
+      ongletComptabilite: 'Comptabilité',
+      aucunDossier: 'Rien de rangé pour cette association : courriers, démarches, aides.',
       autresEcritures: 'Cotisations et autres écritures',
       nouvelleSimple: 'Nouvelle cotisation ou facture',
       champVolet: {
