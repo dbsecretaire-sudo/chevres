@@ -61,6 +61,8 @@ export const TEXTES_PRODUCTION = {
     titre: 'Rappels de lots',
     aucun: 'Aucun lot à rappeler ni rappelé.',
     aRappeler: (date: string) => `À rappeler · vendu le ${date}`,
+    /** Un plat préparé dont un ingrédient n'est pas conforme : il est rappelé avec lui, vendu ou non. */
+    aRappelerIngredient: 'À rappeler · un ingrédient n’est pas conforme',
     rappele: (date: string) => `Rappelé le ${date}`,
     rappeleValide: (date: string, validation: string) => `Rappelé le ${date} · validé le ${validation}`,
     valide: 'Rappel validé',
@@ -584,6 +586,16 @@ export const TEXTES_PRODUCTION = {
     aide: 'Seuls les fromages vendus dont le contrôle n’est pas ok sont proposés. Un fromage rappelé est marqué « Rappelé » dans l’inventaire.',
   },
   /** Le rappel de charcuterie. */
+  /** Le rappel de plats préparés : ceux dont un ingrédient n'est pas conforme sont proposés avec lui. */
+  rappelPlat: {
+    titre: 'Rappeler des plats',
+    type: 'Plat',
+    date: 'Date du rappel',
+    aucun: 'Aucun plat à rappeler : seuls les plats vendus dont le contrôle n’est pas ok, ou faits avec un lot non conforme, peuvent l’être.',
+    choisir: 'Choisissez les lots à rappeler.',
+    enregistrer: (nombre: number) => `Rappeler ${nombre} lot${nombre > 1 ? 's' : ''}`,
+    aide: 'Un plat fait avec un lot rappelé ou non conforme est rappelé avec lui. Un plat rappelé est marqué « Rappelé » dans l’inventaire.',
+  },
   rappelCharcuterie: {
     titre: 'Rappeler des produits',
     type: 'Produit',

@@ -25,9 +25,18 @@ export default function RappelFromages() {
   useAjoutTabBarBleu();
   const router = useRouter();
   const { produit: param } = useLocalSearchParams<{ produit?: string }>();
-  const produit = param === PRODUIT_A_LOTS.CHARCUTERIE ? PRODUIT_A_LOTS.CHARCUTERIE : PRODUIT_A_LOTS.FROMAGE;
+  const produit =
+    param === PRODUIT_A_LOTS.CHARCUTERIE
+      ? PRODUIT_A_LOTS.CHARCUTERIE
+      : param === PRODUIT_A_LOTS.PLAT
+        ? PRODUIT_A_LOTS.PLAT
+        : PRODUIT_A_LOTS.FROMAGE;
   const T =
-    produit === PRODUIT_A_LOTS.FROMAGE ? TEXTES.production.rappel : TEXTES.production.rappelCharcuterie;
+    produit === PRODUIT_A_LOTS.FROMAGE
+      ? TEXTES.production.rappel
+      : produit === PRODUIT_A_LOTS.PLAT
+        ? TEXTES.production.rappelPlat
+        : TEXTES.production.rappelCharcuterie;
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
@@ -46,7 +55,7 @@ export default function RappelFromages() {
   }, [espece, produit]);
 
   // Les lots qu'on peut rappeler : ceux du fromage qui ont été vendus et dont le contrôle n'est pas bon (pas déjà rappelés).
-  const lots = trierLots(lotsARappeler({ lots: archive?.lots }, article), TRI_LOT.NUMERO, false);
+  const lots = trierLots(lotsARappeler({ lots: archive?.lots, platsFabriques: archive?.platsFabriques }, article), TRI_LOT.NUMERO, false);
 
   const basculer = (id: string) =>
     setChoisis((actuels) => (actuels.includes(id) ? actuels.filter((x) => x !== id) : [...actuels, id]));

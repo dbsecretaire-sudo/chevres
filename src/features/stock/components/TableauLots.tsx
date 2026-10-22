@@ -58,8 +58,11 @@ export function TableauLots({
   const { lignes, tri, trierPar, filtres, tousLesLots } = liste;
   /** Le lot dont on modifie la date de fabrication. */
   const [lotADater, setLotADater] = useState<LotFromage | undefined>();
-  /** Tous les lots montrés sont contrôlés : « Tout cocher » devient « Tout décocher ». */
-  const toutControle = lignes.length > 0 && lignes.every((l) => l.controleOk);
+  /** Un lot rappelé n'est plus à contrôler : sa case ne se coche plus, et « Tout cocher » ne le compte pas. */
+  const rappele = (l: LotFromage) => etatDuLot(l) === ETAT_LOT.RAPPELE;
+  const aControler = lignes.filter((l) => !rappele(l));
+  /** Tous les lots à contrôler montrés le sont : « Tout cocher » devient « Tout décocher ». */
+  const toutControle = aControler.length > 0 && aControler.every((l) => l.controleOk);
   /** La colonne dont le menu de filtre est ouvert. */
   const [menu, setMenu] = useState<'numero' | 'fabrication' | 'vente' | 'controle' | null>(null);
   const nomsColonnes = {
@@ -116,20 +119,20 @@ export function TableauLots({
           {boutonFiltre('controle')}
         </View>
       </View>
-      {lignes.length > 0 ? (
+      {aControler.length > 0 ? (
         <View style={styles.barreActions}>
           <Pressable
             hitSlop={8}
             onPress={async () => {
               await controlerLots(
-                lignes.map((l) => l.id),
+                aControler.map((l) => l.id),
                 !toutControle,
               );
               onChange();
             }}
           >
             <Text style={commonStyles.lien}>
-              {toutControle ? T.toutDecontroler : T.toutControler(lignes.length)}
+              {toutControle ? T.toutDecontroler : T.toutControler(aControler.length)}
             </Text>
           </Pressable>
         </View>
@@ -167,8 +170,9 @@ export function TableauLots({
                 </Text>
               )}
               <Pressable
-                style={styles.colonneMorte}
+                style={[styles.colonneMorte, rappele(lot) ? { opacity: 0.35 } : null]}
                 hitSlop={6}
+                disabled={rappele(lot)}
                 onPress={async () => {
                   await basculerControleLot(lot.id);
                   onChange();
@@ -176,7 +180,7 @@ export function TableauLots({
                 accessibilityLabel={T.controle}
               >
                 <Ionicons
-                  name={lot.controleOk ? 'checkbox' : 'square-outline'}
+                  name={lot.controleOk && !rappele(lot) ? 'checkbox' : 'square-outline'}
                   size={22}
                   color={colors.text}
                 />

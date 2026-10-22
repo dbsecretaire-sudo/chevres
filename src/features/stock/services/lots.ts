@@ -76,9 +76,46 @@ export const lotsDeLInventaire = (
     (l) => (!article || l.article === article) && (etat === ETAT_LOT.TOUT || etatDuLot(l) === etat),
   );
 
-/** Les lots à rappeler : vendus (pas encore rappelés) dont le contrôle n'est pas ok. */
-export const lotsARappeler = (archive: Pick<ArchiveStock, 'lots'>, article?: string): LotFromage[] =>
-  lotsDeLInventaire(archive, ETAT_LOT.VENDU, article).filter((l) => !l.controleOk);
+/**
+ * Les lots de plats préparés faits avec l'un de ces lots (ingrédients), et ceux faits avec ces plats à leur tour : de quoi rappeler un plat dont un
+ * ingrédient n'est pas conforme. Rien pour un lot qui n'a servi à aucun plat.
+ */
+export function lotsDePlatsUtilisant(
+  archive: Pick<ArchiveStock, 'lots' | 'platsFabriques'>,
+  ids: Iterable<string>,
+): LotFromage[] {
+  const sources = new Set(ids);
+  const plats = new Map<string, LotFromage>();
+  let grandit = true;
+  while (grandit) {
+    grandit = false;
+    for (const [mouvementId, fabrication] of Object.entries(archive.platsFabriques ?? {})) {
+      if (!fabrication.ingredients.some((i) => i.lotIds.some((id) => sources.has(id)))) continue;
+      for (const lot of archive.lots ?? []) {
+        if (lot.mouvementId !== mouvementId || plats.has(lot.id)) continue;
+        plats.set(lot.id, lot);
+        sources.add(lot.id);
+        grandit = true;
+      }
+    }
+  }
+  return [...plats.values()];
+}
+
+/**
+ * Les lots à rappeler : vendus (pas encore rappelés) dont le contrôle n'est pas ok, et les plats préparés faits avec l'un d'eux (ou avec un lot déjà rappelé) : un
+ * ingrédient non conforme rappelle le plat, quel que soit le contrôle du plat lui-même.
+ */
+export function lotsARappeler(
+  archive: Pick<ArchiveStock, 'lots' | 'platsFabriques'>,
+  article?: string,
+): LotFromage[] {
+  const nonConformes = lotsDeLInventaire(archive, ETAT_LOT.VENDU).filter((l) => !l.controleOk);
+  const rappeles = (archive.lots ?? []).filter((l) => !!l.dateRappel);
+  const plats = lotsDePlatsUtilisant(archive, [...nonConformes, ...rappeles].map((l) => l.id)).filter((l) => !l.dateRappel);
+  const tous = new Map([...nonConformes, ...plats].map((l) => [l.id, l]));
+  return [...tous.values()].filter((l) => !article || l.article === article);
+}
 
 /** Les lots rappelés dont le rappel n'est pas encore validé (fait). */
 export const lotsRappelesAValider = (archive: Pick<ArchiveStock, 'lots'>): LotFromage[] =>
@@ -404,7 +441,7 @@ export function reserverLots(ids: string[], reservation?: LotFromage['reservatio
   });
 }
 
-/** Coche ou décoche le contrôle de plusieurs fromages d'un coup (« tout sélectionner »). */
+/** Coche ou décoche le contrôle de plusieurs fromages d'un coup (« tout sélectionner ») : un lot rappelé n'est plus à contrôler, il n'est pas touché. */
 export function controlerLots(ids: string[], controleOk: boolean): Promise<void> {
   return enFile(async () => {
     const archive = await lireArchiveStock();
@@ -412,7 +449,7 @@ export function controlerLots(ids: string[], controleOk: boolean): Promise<void>
     await remplacerArchiveStock({
       ...archive,
       lots: (archive.lots ?? []).map((l) =>
-        choisis.has(l.id) ? { ...l, controleOk: controleOk || undefined } : l,
+        choisis.has(l.id) && !l.dateRappel ? { ...l, controleOk: controleOk || undefined } : l,
       ),
     });
   });
@@ -422,7 +459,14 @@ export function controlerLots(ids: string[], controleOk: boolean): Promise<void>
 export function rappelerLots(ids: string[], date: string): Promise<void> {
   return enFile(async () => {
     const archive = await lireArchiveStock();
-    const aRappeler = (archive.lots ?? []).filter((l) => ids.includes(l.id) && !l.dateRappel);
+    const demandes = (archive.lots ?? []).filter((l) => ids.includes(l.id) && !l.dateRappel);
+    // Les plats préparés faits avec ces lots sont rappelés avec eux.
+    const aRappeler = [
+      ...demandes,
+      ...lotsDePlatsUtilisant(archive, demandes.map((l) => l.id)).filter(
+        (p) => !p.dateRappel && !demandes.some((d) => d.id === p.id),
+      ),
+    ];
     if (aRappeler.length === 0) return;
     // Un fromage vendu puis rappelé n'était déjà plus au stock : seuls ceux qui y étaient en sortent.
     const enStock = aRappeler.filter((l) => etatDuLot(l) === ETAT_LOT.EN_STOCK);
@@ -458,13 +502,13 @@ export function validerRappelLot(id: string, date: string): Promise<void> {
   });
 }
 
-/** Coche ou décoche le contrôle d'un fromage. */
+/** Coche ou décoche le contrôle d'un fromage (un lot rappelé ne se coche plus). */
 export function basculerControleLot(id: string): Promise<void> {
   return enFile(async () => {
     const archive = await lireArchiveStock();
     await remplacerArchiveStock({
       ...archive,
-      lots: (archive.lots ?? []).map((l) => (l.id === id ? { ...l, controleOk: !l.controleOk } : l)),
+      lots: (archive.lots ?? []).map((l) => (l.id === id && !l.dateRappel ? { ...l, controleOk: !l.controleOk } : l)),
     });
   });
 }

@@ -5,7 +5,10 @@ import {
   estArticleAvecLots,
   fabriquerFromages,
   fabriquerPlats,
+  lotsARappeler,
+  lotsDePlatsUtilisant,
   numeroDeLot,
+  rappelerLots,
 } from '@/features/stock/services/lots';
 import { ajouterArticle, niveauxDeStock } from '@/features/stock/services/stock';
 import { FILTRE_STOCK_TOUT, GENRE_ARTICLE, PRODUIT_A_LOTS } from '@/shared/constants/stock';
@@ -73,5 +76,46 @@ describe('plats préparés', () => {
     await expect(
       fabriquerPlats({ article: plat, date: '2026-10-22', quantite: 2, debut: 'PP26295-2', ingredients: [] }),
     ).rejects.toThrow();
+  });
+});
+
+describe('rappel d’un plat dont un ingrédient n’est pas conforme', () => {
+  it('propose le plat à rappeler avec son ingrédient non conforme, et le rappelle en même temps', async () => {
+    const plat = await ajouterArticle(GENRE_ARTICLE.PLAT, 'Quiche');
+    await fabriquerFromages({
+      article: 'fromage:affine',
+      date: '2026-09-02',
+      quantite: 2,
+      debut: 'FV2612-1',
+    });
+    const avant = await lireArchiveStock();
+    const [lotA, lotB] = (avant.lots ?? []).filter((l) => l.article === 'fromage:affine');
+    await fabriquerPlats({
+      article: plat,
+      date: '2026-10-22',
+      quantite: 2,
+      debut: 'PQ26295-1',
+      ingredients: [{ article: 'fromage:affine', quantite: 1, lotIds: [lotA.id] }],
+    });
+    const archive = await lireArchiveStock();
+    const platsFaits = (archive.lots ?? []).filter((l) => l.article === plat);
+    // Les lots de plats sont ceux qui ont servi : seuls ceux faits avec le lot A le sont.
+    expect(
+      lotsDePlatsUtilisant(archive, [lotA.id])
+        .map((l) => l.id)
+        .sort(),
+    ).toEqual(platsFaits.map((l) => l.id).sort());
+    expect(lotsDePlatsUtilisant(archive, [lotB.id])).toEqual([]);
+    // Le lot A (utilisé = vendu, contrôle non ok) est à rappeler, et les plats avec lui, même contrôlés.
+    const aRappeler = lotsARappeler(archive).map((l) => l.id);
+    expect(aRappeler).toContain(lotA.id);
+    for (const p of platsFaits) expect(aRappeler).toContain(p.id);
+    expect(lotsARappeler(archive, plat)).toHaveLength(2);
+    // Rappeler l'ingrédient rappelle les plats.
+    await rappelerLots([lotA.id], '2026-10-23');
+    const apres = await lireArchiveStock();
+    for (const p of (apres.lots ?? []).filter((l) => l.article === plat))
+      expect(p.dateRappel).toBe('2026-10-23');
+    expect(niveauxDeStock(apres.mouvements).get(plat)).toBe(0);
   });
 });

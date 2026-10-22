@@ -108,9 +108,11 @@ export default function ProductionLayout() {
       <Stack.Screen
         name="rappel"
         options={({ route }) => ({
-          title: charcuterie(route.params)
-            ? TEXTES.production.rappelCharcuterie.titre
-            : TEXTES.production.rappel.titre,
+          title: plat(route.params)
+            ? TEXTES.production.rappelPlat.titre
+            : charcuterie(route.params)
+              ? TEXTES.production.rappelCharcuterie.titre
+              : TEXTES.production.rappel.titre,
           presentation: 'modal',
           headerStyle: { backgroundColor: colors.ajout },
         })}
