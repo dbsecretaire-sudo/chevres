@@ -65,15 +65,15 @@ describe('analyses des plats préparés en stock', () => {
   });
 
   it('sans intervalle réglé, aucun rappel', () => {
-    expect(rappelsAnalysesPlats(archive, undefined, '2026-12-01')).toEqual([]);
+    expect(rappelsAnalysesPlats(archive, {}, '2026-12-01')).toEqual([]);
   });
 
   it("rappelle une fabrication dont il reste des lots en stock, à l'échéance (sept jours avant, en retard après)", () => {
-    expect(rappelsAnalysesPlats(archive, 90, '2026-04-01')).toEqual([]);
-    const proche = rappelsAnalysesPlats(archive, 90, '2026-04-05');
+    expect(rappelsAnalysesPlats(archive, { plat: 90 }, '2026-04-01')).toEqual([]);
+    const proche = rappelsAnalysesPlats(archive, { plat: 90 }, '2026-04-05');
     expect(proche).toHaveLength(1);
     expect(proche[0]).toMatchObject({ echeance: '2026-04-12', enRetard: false, fabricationId: 'm1' });
-    const retard = rappelsAnalysesPlats(archive, 90, '2026-05-01');
+    const retard = rappelsAnalysesPlats(archive, { plat: 90 }, '2026-05-01');
     expect(retard[0].enRetard).toBe(true);
     // Le lot vendu et le lot rappelé ne comptent pas : m2 n'a plus rien en stock.
     expect(retard.map((r) => r.fabricationId)).toEqual(['m1']);
@@ -85,7 +85,7 @@ describe('analyses des plats préparés en stock', () => {
     expect(relue.platsFabriques?.m1.analyses).toEqual(['2026-04-20']);
     const apres = rappelsAnalysesPlats(
       { ...archive, platsFabriques: relue.platsFabriques },
-      90,
+      { plat: 90 },
       '2026-05-01',
     );
     expect(apres).toEqual([]);

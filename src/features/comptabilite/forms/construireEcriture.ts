@@ -215,7 +215,9 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
 
   // La quantité est toujours obligatoire ; celle d'une vente de viande est le nombre d'animaux choisis.
   const lotsDeFromages =
-    categorie === CATEGORIE_VENTE.FROMAGE || categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE
+    categorie === CATEGORIE_VENTE.FROMAGE ||
+    categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE ||
+    categorie === CATEGORIE_VENTE.SAVONS
       ? s.fromages.length
       : 0;
   const quantiteNum =

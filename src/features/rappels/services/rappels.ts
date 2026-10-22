@@ -13,21 +13,24 @@ import { NOMS_MOIS } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 
+/** Les rappels qui ne sont pas des déclarations : une échéance de groupement, un document de circulation, une analyse de plat ou de savon, un dossier de savon. */
+export type GenreRappelDeLot =
+  | typeof GENRE_RAPPEL.GROUPEMENT
+  | typeof GENRE_RAPPEL.CIRCULATION
+  | typeof GENRE_RAPPEL.ANALYSE_PLAT
+  | typeof GENRE_RAPPEL.DOSSIER_SAVON;
+
 /** Les déclarations qu'on peut activer ou non (RSA, URSSAF) ; une échéance de groupement s'y ajoute dans les rappels (voir Rappel.genre). */
 export type GenreRappel = Exclude<
   ValeurDe<typeof GENRE_RAPPEL>,
-  typeof GENRE_RAPPEL.GROUPEMENT | typeof GENRE_RAPPEL.CIRCULATION | typeof GENRE_RAPPEL.ANALYSE_PLAT
+  GenreRappelDeLot
 >;
 
 /** Une déclaration à faire (ou à valider) pour une période terminée. */
 export interface Rappel {
   /** Identifiant de la période (« rsa:2026-T3 »), enregistré quand le rappel est validé. */
   id: string;
-  genre:
-    | GenreRappel
-    | typeof GENRE_RAPPEL.GROUPEMENT
-    | typeof GENRE_RAPPEL.CIRCULATION
-    | typeof GENRE_RAPPEL.ANALYSE_PLAT;
+  genre: GenreRappel | GenreRappelDeLot;
   /** « Déclaration RSA · 3e trimestre 2026 ». */
   libelle: string;
   /** Le dernier jour pour la faire : la fin du mois qui suit la période (AAAA-MM-JJ). */

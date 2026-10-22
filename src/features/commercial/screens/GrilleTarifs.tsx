@@ -35,7 +35,11 @@ export default function GrilleTarifs() {
     useCallback(() => {
       Promise.all([lireArchiveStock(), lireArchiveCommercial()]).then(([stock, archive]) => {
         setFromages(articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock));
-        setViandes([...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock), ...articlesDuGenre(GENRE_ARTICLE.PLAT, stock)]);
+        setViandes([
+          ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock),
+          ...articlesDuGenre(GENRE_ARTICLE.PLAT, stock),
+          ...articlesDuGenre(GENRE_ARTICLE.SAVON, stock),
+        ]);
         setPrix(stock.prix);
         setCommercial(archive);
       });

@@ -142,7 +142,29 @@ export interface FabricationDePlats {
   ddm?: string;
   /** Les jours où un échantillon de cette fabrication est parti à un laboratoire d'analyses (AAAA-MM-JJ) : l'analyse suivante se compte à partir du dernier. */
   analyses?: string[];
+  /** Un savon : le jour de la saponification (AAAA-MM-JJ), et la fin de sa cure (AAAA-MM-JJ) : avant elle, le lot n'est pas vendable. */
+  dateSaponification?: string;
+  finCure?: string;
+  /** Un savon : les litres de lait de chèvre pris dans le stock de lait de l'exploitation (notés sur le mouvement d'entrée des lots). */
+  litresLait?: number;
   ingredients: IngredientDePlat[];
+}
+
+/** Une étape du dossier réglementaire d'un savon (DIP, rapport de sécurité, notification CPNP…) : faite ou non, sa date, sa référence et ses pièces. */
+export interface EtapeReglementaire {
+  fait?: boolean;
+  /** AAAA-MM-JJ : la date de l'étape (de la notification, du rapport…). */
+  date?: string;
+  /** Un numéro ou un nom : celui de la notification CPNP, de l'évaluateur de la sécurité… */
+  reference?: string;
+  fichiers?: PieceJointe[];
+}
+
+/** Le dossier réglementaire d'un savon (un produit cosmétique, règlement CE 1223/2009) : sa liste INCI et ses étapes. */
+export interface DossierSavon {
+  /** La liste des ingrédients dans l'ordre décroissant, en nomenclature INCI (celle de l'étiquette). */
+  inci?: string;
+  etapes: Record<string, EtapeReglementaire>;
 }
 
 /** Le lait produit un jour : son litrage (chèvres et brebis). */
@@ -197,4 +219,8 @@ export interface ArchiveStock {
   sectionsMasquees?: Record<string, string[]>;
   /** Vrai une fois la liste des matières alimentaires ajoutée à l'inventaire (voir avecListeDenrees) : supprimée ensuite, elle ne revient pas. */
   denreesAjoutees?: boolean;
+  /** Vrai une fois la liste des matières premières des savons ajoutée à l'inventaire (voir avecListesDOffice). */
+  matieresSavonAjoutees?: boolean;
+  /** Le dossier réglementaire de chaque savon, par article (« savon:… »). */
+  dossiersSavons?: Record<string, DossierSavon>;
 }

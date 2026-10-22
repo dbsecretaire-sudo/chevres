@@ -265,7 +265,8 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           e.categorieRecette === CATEGORIE_RECETTE.ANIMAL_MORT) && <ChampsVenteAnimal e={e} />}
         {e.categorieRecette === CATEGORIE_RECETTE.OEUFS && <ChampsVenteOeufs e={e} />}
         {(e.categorieRecette === CATEGORIE_RECETTE.VIANDE ||
-          e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) && <ChampsVenteViande e={e} />}
+          e.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE ||
+          e.categorieRecette === CATEGORIE_RECETTE.SAVONS) && <ChampsVenteViande e={e} />}
 
         {/* Le paiement : offert au client, ou encaissé à sa date (d'office), ou pas encore. */}
         <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.nouvelleEcriture.paiement}</Text>

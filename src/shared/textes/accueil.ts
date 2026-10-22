@@ -103,6 +103,7 @@ export const TEXTES_ACCUEIL = {
       fabriquerFromage: 'Fromage',
       fabriquerCharcuterie: 'Charcuterie',
       fabriquerPlat: 'Plat préparé',
+      fabriquerSavon: 'Savon',
       lotsAtelier: 'Lots',
       rappelsLots: 'Rappels de lots',
       naissance: 'Ajouter une naissance',

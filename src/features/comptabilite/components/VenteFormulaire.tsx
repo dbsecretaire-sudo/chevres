@@ -14,7 +14,7 @@ import { useFromagesDuStock } from '@/features/stock/hooks/useFromagesDuStock';
 import { useViandesDuStock } from '@/features/stock/hooks/useViandesDuStock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
-import { roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
+import { ligneDeLaCategorie, roleDeLaViande, totalDeLaVente, type FiltreStock } from '@/features/stock/services/stock';
 import { ROUTES } from '@/shared/constants/routes';
 import { ROLE_VIANDE, SECTION_STOCK } from '@/shared/constants/stock';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
@@ -128,7 +128,7 @@ export function VenteFormulaire({
   const detailChoisi = viandes.find((v) => v.libelle === form.precision);
   const roleDuDetail = detailChoisi ? roleDeLaViande(detailChoisi.cle) : undefined;
   const detailsVente = viandes
-    .filter((v) => (roleDeLaViande(v.cle) !== undefined) === (form.categorie === CATEGORIE_VENTE.VIANDE))
+    .filter((v) => ligneDeLaCategorie(v.cle, form.categorie))
     .map((v) => ({ value: v.libelle, label: v.libelle }));
   if (form.precision && !detailsVente.some((d) => d.value === form.precision))
     detailsVente.unshift({ value: form.precision, label: form.precision });

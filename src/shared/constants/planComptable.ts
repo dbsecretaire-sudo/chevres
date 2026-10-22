@@ -73,6 +73,7 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
     numero: '701500',
     libelle: 'Ventes de produits finis — Boucherie et charcuterie',
   },
+  [CATEGORIE_RECETTE.SAVONS]: { numero: '701700', libelle: 'Ventes de produits finis — Savons (cosmétiques)' },
   [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: { numero: '701300', libelle: 'Ventes de produits finis — Animaux' },
   [CATEGORIE_RECETTE.ANIMAL_MORT]: {
@@ -105,6 +106,12 @@ export const COMPTE_DENREES: CompteComptable = {
   libelle: 'Matières alimentaires consommables (farine, œufs, huile…)',
 };
 
+/** Le compte des matières premières des savons (huiles, soude, beurres, huiles essentielles) : des achats stockés de matières premières (601). */
+export const COMPTE_MATIERES_SAVON: CompteComptable = {
+  numero: '601410',
+  libelle: 'Matières premières des savons (huiles, soude, beurres…)',
+};
+
 /** Le compte des boucles d'identification (la section des boucles de l'inventaire). */
 export const COMPTE_BOUCLES: CompteComptable = {
   numero: '601500',
@@ -121,6 +128,7 @@ export const COMPTES_PCG_DEPENSE: CompteComptable[] = [
   { numero: '601200', libelle: 'Engrais et amendements' },
   { numero: '601300', libelle: 'Semences et plants' },
   { numero: COMPTE_DENREES.numero, libelle: COMPTE_DENREES.libelle },
+  { numero: COMPTE_MATIERES_SAVON.numero, libelle: COMPTE_MATIERES_SAVON.libelle },
   { numero: COMPTE_BOUCLES.numero, libelle: COMPTE_BOUCLES.libelle },
   { numero: '602200', libelle: 'Fournitures consommables — Production (sel, présure...)' },
   { numero: '602600', libelle: 'Emballages' },
@@ -246,6 +254,7 @@ export const COMPTE_PAR_SECTION_INVENTAIRE: Record<ValeurDe<typeof SECTION_STOCK
   [SECTION_STOCK.VIANDE]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],
   // Un plat préparé se vend comme la charcuterie : même compte.
   [SECTION_STOCK.PLATS]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],
+  [SECTION_STOCK.SAVONS]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.SAVONS],
   [SECTION_STOCK.ANIMAUX]: COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.ANIMAL_SUR_PIED],
   [SECTION_STOCK.ALIMENTS]: COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.ALIMENTATION],
   [SECTION_STOCK.EMBALLAGES]: COMPTE_EMBALLAGES,

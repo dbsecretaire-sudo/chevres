@@ -11,7 +11,15 @@ import {
   lignesDeVenteDeProduits,
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
-import type { ArchiveStock, FabricationDePlats, LotFromage, MouvementStock } from '@/features/stock/types';
+import { lotVendable } from '@/features/stock/services/dossiersSavons';
+import type {
+  ArchiveStock,
+  DossierSavon,
+  EtapeReglementaire,
+  FabricationDePlats,
+  LotFromage,
+  MouvementStock,
+} from '@/features/stock/types';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
@@ -29,12 +37,17 @@ import {
 } from '@/shared/constants/stock';
 import { MS_PAR_JOUR } from '@/shared/constants/temps';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
 import { TEXTES } from '@/shared/textes';
 
 /** Vrai pour un article de l'inventaire qui est un fromage (« fromage:frais »). */
 export const estArticleFromage = (cle: string | undefined): boolean =>
   !!cle && cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`);
+
+/** Vrai pour un article de l'inventaire qui est un savon (« savon:… »). */
+export const estArticleSavon = (cle: string | undefined): boolean =>
+  !!cle && cle.startsWith(`${GENRE_ARTICLE.SAVON}:`);
 
 /** Vrai pour un article de l'inventaire qui est un plat préparé (« plat:… »). */
 export const estArticlePlat = (cle: string | undefined): boolean =>
@@ -47,6 +60,7 @@ export const estArticlePlat = (cle: string | undefined): boolean =>
 export const estArticleAvecLots = (cle: string | undefined): boolean =>
   estArticleFromage(cle) ||
   estArticlePlat(cle) ||
+  estArticleSavon(cle) ||
   (!!cle && cle.startsWith(`${GENRE_ARTICLE.VIANDE}:`) && !estLigneDuCheptel(cle));
 
 /** Les articles de l'inventaire d'un produit suivi par lot : les fromages, ou les lignes de charcuterie (hors cheptel). */
@@ -56,6 +70,7 @@ export function articlesDuProduit(
   espece: EspeceAnimale,
 ): ArticleAffiche[] {
   if (produit === PRODUIT_A_LOTS.PLAT) return articlesDuGenre(GENRE_ARTICLE.PLAT, archive, espece);
+  if (produit === PRODUIT_A_LOTS.SAVON) return articlesDuGenre(GENRE_ARTICLE.SAVON, archive, espece);
   return produit === PRODUIT_A_LOTS.FROMAGE
     ? articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, espece)
     : articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece).filter((a) => estArticleAvecLots(a.cle));
@@ -159,7 +174,10 @@ export function articleDeLaVente(
     const code = codeFromageDeLaVente(vente as Vente, archive);
     return code ? cleArticle(GENRE_ARTICLE.FROMAGE, code) : undefined;
   }
-  if (vente.categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE && vente.precision) {
+  if (
+    (vente.categorie === CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE || vente.categorie === CATEGORIE_VENTE.SAVONS) &&
+    vente.precision
+  ) {
     const espece =
       vente.activite && vente.activite !== ACTIVITE_COMMUNE ? (vente.activite as EspeceAnimale) : undefined;
     const ligne = lignesDeVenteDeProduits(archive, espece).find(
@@ -170,16 +188,24 @@ export function articleDeLaVente(
   return undefined;
 }
 
-/** Les lots qu'une vente de ce fromage peut choisir : ceux en stock, et ceux de la vente elle-même quand on la modifie. */
+/**
+ * Les lots qu'une vente de ce produit peut choisir : ceux en stock, et ceux de la vente elle-même quand on la modifie. Un savon encore en cure, ou dont le dossier
+ * réglementaire n'est pas en règle, n'est pas proposé (sauf à la vente qui l'a déjà).
+ */
 export const lotsAChoisir = (
-  archive: Pick<ArchiveStock, 'lots'>,
+  archive: Pick<ArchiveStock, 'lots' | 'platsFabriques' | 'dossiersSavons'>,
   article: string,
   venteId?: string,
+  date: string = todayISO(),
 ): LotFromage[] =>
   // Les numéros les plus grands d'abord.
   trierLots(
     (archive.lots ?? []).filter(
-      (l) => l.article === article && !l.dateRappel && (!l.venteId || l.venteId === venteId),
+      (l) =>
+        l.article === article &&
+        !l.dateRappel &&
+        (!l.venteId || l.venteId === venteId) &&
+        ((!!venteId && l.venteId === venteId) || lotVendable(l, archive, date)),
     ),
     TRI_LOT.NUMERO,
     false,
@@ -224,7 +250,9 @@ export function prefixeDeLot(article: string, date: string, archive: ArchiveStoc
     ? PRODUIT_A_LOTS.FROMAGE
     : estArticlePlat(article)
       ? PRODUIT_A_LOTS.PLAT
-      : PRODUIT_A_LOTS.CHARCUTERIE;
+      : estArticleSavon(article)
+        ? PRODUIT_A_LOTS.SAVON
+        : PRODUIT_A_LOTS.CHARCUTERIE;
   const annee = String(Number(date.slice(0, 4)) % 100).padStart(2, '0');
   return `${LETTRE_PRODUIT_LOT[produit]}${lettreDeCategorie(article, archive)}${annee}${jourDeLAnnee(date)}`;
 }
@@ -324,19 +352,23 @@ export function fabriquerFromages(saisie: {
 }
 
 /**
- * Fabrique des plats préparés (conserves, bocaux) : un lot par pièce, numérotés à la suite du premier, qui entrent au stock d'un seul mouvement. Les ingrédients
- * sortent du stock (un mouvement par ingrédient) et leurs lots choisis passent « utilisés » à la date de la fabrication : le lot d'un plat dit ainsi de quoi il
- * est fait. La stérilisation, la date de durabilité minimale et les ingrédients sont gardés une seule fois pour toute la fabrication.
+ * Fabrique un produit transformé (un plat préparé, un savon) : un lot par pièce, numérotés à la suite du premier, qui entrent au stock d'un seul mouvement
+ * (avec les litres de lait pris dans le stock de lait, pour un savon). Les ingrédients sortent du stock (un mouvement par ingrédient) et leurs lots choisis passent
+ * « utilisés » à la date de la fabrication : le lot dit ainsi de quoi il est fait. Ce qu'on sait de la fabrication (stérilisation, saponification, cure, durabilité,
+ * ingrédients) est gardé une seule fois pour tous ses lots.
  */
-export function fabriquerPlats(saisie: {
-  article: string;
-  date: string;
-  quantite: number;
-  debut: string;
-  dateSterilisation?: string;
-  ddm?: string;
-  ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
-}): Promise<void> {
+function fabriquerTransforme(
+  saisie: {
+    article: string;
+    date: string;
+    quantite: number;
+    debut: string;
+    ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
+  },
+  origine: ValeurDe<typeof ORIGINE_MOUVEMENT>,
+  details: Omit<FabricationDePlats, 'ingredients'>,
+  litres?: number,
+): Promise<void> {
   return enFile(async () => {
     const archive = await lireArchiveStock();
     const erreur = erreurFabrication(archive, saisie.article, saisie.debut, saisie.quantite);
@@ -345,7 +377,7 @@ export function fabriquerPlats(saisie: {
     const mouvementId = generateId();
     const utilises = saisie.ingredients.filter((i) => i.article && i.quantite > 0);
     const pris = new Set(utilises.flatMap((i) => i.lotIds));
-    const plats: LotFromage[] = numeros.map((numero) => ({
+    const nouveaux: LotFromage[] = numeros.map((numero) => ({
       id: generateId(),
       article: saisie.article,
       numero,
@@ -358,30 +390,79 @@ export function fabriquerPlats(saisie: {
       date: saisie.date,
       delta: numeros.length,
       origine: ORIGINE_MOUVEMENT.MANUEL,
+      litres: litres && litres > 0 ? litres : undefined,
     };
     const sorties: MouvementStock[] = utilises.map((i) => ({
       id: generateId(),
       article: i.article,
       date: saisie.date,
       delta: -i.quantite,
-      origine: ORIGINE_MOUVEMENT.PLAT,
+      origine,
       venteId: mouvementId,
     }));
     const lots = (archive.lots ?? []).map((l) =>
       pris.has(l.id) && !l.dateRappel ? { ...l, venteId: mouvementId, dateVente: saisie.date } : l,
     );
     const fabrication: FabricationDePlats = {
-      dateSterilisation: saisie.dateSterilisation || undefined,
-      ddm: saisie.ddm || undefined,
+      ...details,
       ingredients: utilises.map((i) => ({ article: i.article, quantite: i.quantite, lotIds: i.lotIds })),
     };
     await remplacerArchiveStock({
       ...archive,
-      lots: [...lots, ...plats],
+      lots: [...lots, ...nouveaux],
       mouvements: [...archive.mouvements, entree, ...sorties],
       platsFabriques: { ...(archive.platsFabriques ?? {}), [mouvementId]: fabrication },
     });
   });
+}
+
+/**
+ * Fabrique des plats préparés (conserves, bocaux) : un lot par pièce, qui entrent au stock d'un seul mouvement ; les ingrédients sortent du stock. La stérilisation, la
+ * date de durabilité minimale et les ingrédients sont gardés une seule fois pour toute la fabrication.
+ */
+export function fabriquerPlats(saisie: {
+  article: string;
+  date: string;
+  quantite: number;
+  debut: string;
+  dateSterilisation?: string;
+  ddm?: string;
+  ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
+}): Promise<void> {
+  return fabriquerTransforme(saisie, ORIGINE_MOUVEMENT.PLAT, {
+    dateSterilisation: saisie.dateSterilisation || undefined,
+    ddm: saisie.ddm || undefined,
+  });
+}
+
+/**
+ * Fabrique des savons : un lot par pain, qui entrent au stock d'un seul mouvement avec les litres de lait de chèvre pris dans le stock de lait de l'exploitation ;
+ * les autres ingrédients (huiles, soude…) sortent du stock. Le jour de la saponification, la fin de la cure (avant elle, les lots ne se vendent pas), la date de
+ * durabilité et les ingrédients sont gardés une seule fois pour toute la fabrication.
+ */
+export function fabriquerSavons(saisie: {
+  article: string;
+  date: string;
+  quantite: number;
+  debut: string;
+  litresLait?: number;
+  dateSaponification?: string;
+  finCure?: string;
+  ddm?: string;
+  ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
+}): Promise<void> {
+  const litres = saisie.litresLait && saisie.litresLait > 0 ? saisie.litresLait : undefined;
+  return fabriquerTransforme(
+    saisie,
+    ORIGINE_MOUVEMENT.SAVON,
+    {
+      dateSaponification: saisie.dateSaponification || saisie.date,
+      finCure: saisie.finCure || undefined,
+      ddm: saisie.ddm || undefined,
+      litresLait: litres,
+    },
+    litres,
+  );
 }
 
 /**
@@ -593,6 +674,33 @@ export function enregistrerAnalyseDePlats(mouvementId: string, date: string): Pr
         ...archive.platsFabriques,
         [mouvementId]: { ...fabrication, analyses: [...(fabrication.analyses ?? []), date].sort() },
       },
+    });
+  });
+}
+
+/** Note ou corrige une étape du dossier réglementaire d'un savon (faite ou non, sa date, sa référence, ses pièces) : le reste du dossier ne bouge pas. */
+export function enregistrerEtapeSavon(article: string, etape: string, modification: Partial<EtapeReglementaire>): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const dossier: DossierSavon = archive.dossiersSavons?.[article] ?? { etapes: {} };
+    await remplacerArchiveStock({
+      ...archive,
+      dossiersSavons: {
+        ...archive.dossiersSavons,
+        [article]: { ...dossier, etapes: { ...dossier.etapes, [etape]: { ...dossier.etapes[etape], ...modification } } },
+      },
+    });
+  });
+}
+
+/** Note la liste INCI d'un savon (celle de son étiquette) ; vide, elle est retirée. */
+export function enregistrerInciSavon(article: string, inci: string): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    const dossier: DossierSavon = archive.dossiersSavons?.[article] ?? { etapes: {} };
+    await remplacerArchiveStock({
+      ...archive,
+      dossiersSavons: { ...archive.dossiersSavons, [article]: { ...dossier, inci: inci.trim() || undefined } },
     });
   });
 }

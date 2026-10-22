@@ -23,7 +23,13 @@ import { SuggestionParcours } from '@/features/didacticiel/components/Suggestion
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
 import { usePoidsDuLot } from '@/features/exploitation/hooks/usePoidsDuLot';
-import { cleJeunes, roleDeLaViande, type ArticleAffiche, type FiltreStock } from '@/features/stock/services/stock';
+import {
+  cleJeunes,
+  ligneDeLaCategorie,
+  roleDeLaViande,
+  type ArticleAffiche,
+  type FiltreStock,
+} from '@/features/stock/services/stock';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
@@ -73,7 +79,7 @@ export function ChampsVenteViande({ e }: Props) {
   );
   // « Vente viande » : les animaux entiers (liste « Animaux ») ; « Vente boucherie / charcuterie » : les produits et morceaux.
   const animalEntier = e.categorieRecette === CATEGORIE_RECETTE.VIANDE;
-  const viandes = toutesViandes.filter((v) => (roleDeLaViande(v.cle) !== undefined) === animalEntier);
+  const viandes = toutesViandes.filter((v) => ligneDeLaCategorie(v.cle, e.categorieRecette));
   const niveaux = useNiveauxStock();
   const choisie = viandes.find((x) => x.libelle === e.precision);
   const prixSelonLeContact = usePrixSelonLeContact(e);
@@ -354,7 +360,10 @@ export function ChampsVenteViande({ e }: Props) {
   );
   return (
     <>
-      <SuggestionParcours parcoursId={animalEntier ? (e.avecFacture ? 'vente-abattoir' : 'vente-sans-facture') : 'vente-charcuterie'} />
+      {/* Le parcours guidé existe pour la viande et la charcuterie, pas pour les savons. */}
+      {e.categorieRecette === CATEGORIE_RECETTE.SAVONS ? null : (
+        <SuggestionParcours parcoursId={animalEntier ? (e.avecFacture ? 'vente-abattoir' : 'vente-sans-facture') : 'vente-charcuterie'} />
+      )}
       <SelectFieldEditable<string>
         label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
         required
@@ -627,7 +636,10 @@ export function ChampsVenteViande({ e }: Props) {
           {/* La charcuterie est identifiée lot par lot : le nombre de produits est celui des lots choisis. */}
           <LotsVendusEdition
             vente={{
-              categorie: CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+              categorie:
+                e.categorieRecette === CATEGORIE_RECETTE.SAVONS
+                  ? CATEGORIE_VENTE.SAVONS
+                  : CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
               precision: e.precision,
               activite: e.activite,
             }}

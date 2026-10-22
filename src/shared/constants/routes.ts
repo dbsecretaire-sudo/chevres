@@ -126,6 +126,10 @@ export const ROUTES = {
   PRODUCTION_CHARCUTERIE: '/production/charcuterie',
   /** Les plats préparés : leur stock et leurs lots. */
   PRODUCTION_PLATS: '/production/plats',
+  /** Les savons au lait de chèvre : leur stock et leurs lots. */
+  PRODUCTION_SAVONS: '/production/savons',
+  /** Le dossier réglementaire d'un savon (DIP, rapport de sécurité, notification CPNP…). */
+  productionSavonDossier: (article: string) => `/production/savon-dossier?article=${encodeURIComponent(article)}` as const,
   /** Les lots de l'atelier : fromages, viande, boucherie / charcuterie, plats préparés. */
   PRODUCTION_LOTS: '/production/lots',
   /** Les analyses d'un produit fini (`produit` : fromage ou charcuterie), et une analyse (nouvelle sans identifiant, sinon modifiée). */

@@ -120,6 +120,7 @@ export function articlesDuGenre(
     genre === GENRE_ARTICLE.BATIMENT ||
     genre === GENRE_ARTICLE.EQUIPEMENT ||
     genre === GENRE_ARTICLE.PLAT ||
+    genre === GENRE_ARTICLE.SAVON ||
     genre === GENRE_ARTICLE.PERSONNALISE
       ? []
       : genre === GENRE_ARTICLE.BOUCLE
@@ -306,7 +307,20 @@ export function fromagesVendus(vente: Vente): number {
 export const lignesDeVenteDeProduits = (archive: ArchiveStock, espece?: EspeceAnimale): ArticleAffiche[] => [
   ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, espece),
   ...articlesDuGenre(GENRE_ARTICLE.PLAT, archive, espece),
+  // Les savons ont leur propre catégorie de vente, mais leur détail se retrouve par la même liste.
+  ...articlesDuGenre(GENRE_ARTICLE.SAVON, archive, espece),
 ];
+
+/**
+ * Vrai quand une ligne de l'inventaire est un détail possible pour cette catégorie de vente : les savons pour « Savons », les animaux du cheptel pour « Viande »,
+ * les autres produits (morceaux, charcuterie, plats) pour « Boucherie / charcuterie ».
+ */
+export function ligneDeLaCategorie(cle: string, categorie: string): boolean {
+  const savon = cle.startsWith(`${GENRE_ARTICLE.SAVON}:`);
+  if (categorie === CATEGORIE_VENTE.SAVONS) return savon;
+  if (savon) return false;
+  return estLigneDuCheptel(cle) === (categorie === CATEGORIE_VENTE.VIANDE);
+}
 
 /**
  * Ce que la vente d'un fromage consomme : le fromage lui-même et les emballages de son conditionnement. Rien pour une

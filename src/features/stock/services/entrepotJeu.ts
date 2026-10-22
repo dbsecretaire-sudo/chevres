@@ -56,6 +56,8 @@ export function emojiDeLArticle(genre: Genre, libelle: string): string {
       if (/ma[iï]s/.test(nom)) return '🌽';
       if (/foin|paille|herbe|luzerne|fourrage/.test(nom)) return '🌿';
       return '🌾';
+    case GENRE_ARTICLE.SAVON:
+      return '🧼';
     case GENRE_ARTICLE.EMBALLAGE:
       return '📦';
     case GENRE_ARTICLE.ENTRETIEN:

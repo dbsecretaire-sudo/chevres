@@ -90,11 +90,17 @@ export async function controlerAvantEnregistrement(s: SaisieAControler): Promise
   // Un fromage ou une charcuterie qui a des lots en stock se vend lot par lot : on les désigne.
   if (
     s.estProductionVente &&
-    (s.categorieRecette === CATEGORIE_RECETTE.FROMAGE || s.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE) &&
+    (s.categorieRecette === CATEGORIE_RECETTE.FROMAGE ||
+      s.categorieRecette === CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE ||
+      s.categorieRecette === CATEGORIE_RECETTE.SAVONS) &&
     fromagesRequis(await lireArchiveStock(), {
       id: '',
       categorie:
-        s.categorieRecette === CATEGORIE_RECETTE.FROMAGE ? CATEGORIE_VENTE.FROMAGE : CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+        s.categorieRecette === CATEGORIE_RECETTE.FROMAGE
+          ? CATEGORIE_VENTE.FROMAGE
+          : s.categorieRecette === CATEGORIE_RECETTE.SAVONS
+            ? CATEGORIE_VENTE.SAVONS
+            : CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
       typeFromage: s.typeFromage,
       typeFromageLibre: s.typeFromageLibre,
       precision: s.precision,

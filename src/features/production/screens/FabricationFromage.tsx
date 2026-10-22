@@ -3,6 +3,7 @@ import { Alert, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import FabricationPlat from '@/features/production/screens/FabricationPlat';
+import FabricationSavon from '@/features/production/screens/FabricationSavon';
 import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
@@ -36,6 +37,7 @@ import { TEXTES } from '@/shared/textes';
 export default function FabricationFromage() {
   const { produit } = useLocalSearchParams<{ produit?: string }>();
   // Les plats préparés ont leur propre écran (leurs ingrédients, leur stérilisation) : l'adresse est la même, avec `produit=plat`.
+  if (produit === PRODUIT_A_LOTS.SAVON) return <FabricationSavon />;
   return produit === PRODUIT_A_LOTS.PLAT ? <FabricationPlat /> : <FabricationDeLots />;
 }
 

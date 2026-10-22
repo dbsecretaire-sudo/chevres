@@ -109,6 +109,7 @@ import {
   UNITE_VENTE,
   VOLET_COOPERATIVE,
 } from '@/shared/constants/comptabilite';
+import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 
 /** Taux de TVA proposé pour une recette (celui de la vente de production, 0 pour une aide ou autre). */
@@ -558,7 +559,11 @@ export function useNouvelleEcriture(
   /** Reprend une ligne de commande : sa catégorie (fromage, ou viande / charcuterie), son produit et sa quantité. */
   const appliquerLigne = (ligne: LigneCommande) => {
     if (estLigneDeViande(ligne.article)) {
-      changerCategorieRecette(CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE);
+      changerCategorieRecette(
+        ligne.article.startsWith(`${GENRE_ARTICLE.SAVON}:`)
+          ? CATEGORIE_RECETTE.SAVONS
+          : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+      );
       setPrecision(ligne.libelle);
     } else {
       changerCategorieRecette(CATEGORIE_RECETTE.FROMAGE);

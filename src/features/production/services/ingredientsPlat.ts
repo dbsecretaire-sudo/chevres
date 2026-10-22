@@ -15,13 +15,20 @@ export interface IngredientProposable extends ArticleAffiche {
 export function ingredientsProposables(
   archive: ArchiveStock,
   groupes: { fromages: string; charcuterie: string; autres: string },
+  /** Un savon n'a pour ingrédients que les articles des listes de l'inventaire (huiles, soude, beurres…), ni fromage ni viande. */
+  options: { listesSeulement?: boolean } = {},
 ): IngredientProposable[] {
   const nomsDesListes = new Map((archive.listes ?? []).map((l) => [l.id, l.nom]));
+  const produits = options.listesSeulement
+    ? []
+    : [
+        ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive).map((a) => ({ ...a, groupe: groupes.fromages })),
+        ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive)
+          .filter((a) => !estLigneDuCheptel(a.cle))
+          .map((a) => ({ ...a, groupe: groupes.charcuterie })),
+      ];
   return [
-    ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive).map((a) => ({ ...a, groupe: groupes.fromages })),
-    ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive)
-      .filter((a) => !estLigneDuCheptel(a.cle))
-      .map((a) => ({ ...a, groupe: groupes.charcuterie })),
+    ...produits,
     // Chaque article d'une liste ajoutée se range sous le nom de sa liste (« Matières alimentaires consommables »).
     ...articlesDuGenre(GENRE_ARTICLE.PERSONNALISE, archive).map((a) => ({
       ...a,

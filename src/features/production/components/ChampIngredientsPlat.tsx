@@ -79,7 +79,7 @@ export function ChampIngredientsPlat({
             archive &&
             lots.length === 0 &&
             quantite > 0 &&
-            /^(fromage|viande|plat):/.test(i.article) ? (
+            /^(fromage|viande|plat|savon):/.test(i.article) ? (
               <Text style={commonStyles.note}>{T.sansLot}</Text>
             ) : null}
             {lots.length > 0 ? (

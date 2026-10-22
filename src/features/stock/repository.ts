@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
 import { avecNomsHarmonises, sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
-import { avecListeDenrees } from '@/features/stock/services/denrees';
+import { avecListesDOffice } from '@/features/stock/services/denrees';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
@@ -50,6 +50,14 @@ function reglagesValides(brut: ArchiveStock['reglagesCategories']): Record<strin
 
 /** Remet une archive lue (ou reçue d'une sauvegarde) dans sa forme : rien ne manque, un conditionnement est une liste. */
 /** Les fabrications de plats lues : celles dont les ingrédients forment bien une liste. */
+function dossiersSavonsValides(dossiers: ArchiveStock['dossiersSavons']): ArchiveStock['dossiersSavons'] {
+  const valides: NonNullable<ArchiveStock['dossiersSavons']> = {};
+  for (const [article, d] of Object.entries(dossiers ?? {})) {
+    if (d && typeof d === 'object' && d.etapes && typeof d.etapes === 'object') valides[article] = d;
+  }
+  return valides;
+}
+
 function platsValides(plats: ArchiveStock['platsFabriques']): ArchiveStock['platsFabriques'] {
   const valides: NonNullable<ArchiveStock['platsFabriques']> = {};
   for (const [id, p] of Object.entries(plats ?? {})) {
@@ -135,18 +143,20 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
     sectionsMasquees: sectionsMasqueesValides(archive?.sectionsMasquees),
     denreesAjoutees: archive?.denreesAjoutees === true ? true : undefined,
+    matieresSavonAjoutees: archive?.matieresSavonAjoutees === true ? true : undefined,
+    dossiersSavons: dossiersSavonsValides(archive?.dossiersSavons),
   };
 }
 
 /** Le stock de l'établissement actif (vide s'il n'y a encore rien), avec la remise à zéro des aliments à chaque nouvel achat. */
 export async function lireArchiveStock(): Promise<ArchiveStock> {
   const raw = await AsyncStorage.getItem(cle());
-  if (!raw) return avecNomsHarmonises(avecListeDenrees({ ...VIDE }));
+  if (!raw) return avecNomsHarmonises(avecListesDOffice({ ...VIDE }));
   try {
-    const archive = avecNomsHarmonises(sansDoublonsDOffice(avecListeDenrees(normaliserArchiveStock(JSON.parse(raw)))));
+    const archive = avecNomsHarmonises(sansDoublonsDOffice(avecListesDOffice(normaliserArchiveStock(JSON.parse(raw)))));
     return { ...archive, mouvements: avecRemisesAZero(archive.mouvements) };
   } catch {
-    return avecNomsHarmonises(avecListeDenrees({ ...VIDE }));
+    return avecNomsHarmonises(avecListesDOffice({ ...VIDE }));
   }
 }
 

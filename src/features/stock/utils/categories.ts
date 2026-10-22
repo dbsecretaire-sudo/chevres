@@ -73,6 +73,13 @@ export const SECTIONS: {
     fromagerie: true,
   },
   {
+    section: SECTION_STOCK.SAVONS,
+    categorie: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+    titre: T.titresListes.savons,
+    genre: GENRE_ARTICLE.SAVON,
+    fromagerie: true,
+  },
+  {
     section: SECTION_STOCK.ANIMAUX,
     categorie: CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX,
     titre: T.titresListes.animaux,

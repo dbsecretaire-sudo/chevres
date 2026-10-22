@@ -87,9 +87,11 @@ export function totalAPreparer(
   return [...parArticle.values()].sort((a, b) => a.libelle.localeCompare(b.libelle));
 }
 
-/** Vrai pour une ligne de viande, de charcuterie ou de plat préparé (une ligne de l'inventaire « viande » ou « plat »), sinon c'est un fromage. */
+/** Vrai pour une ligne de viande, de charcuterie, de plat préparé ou de savon (une ligne de l'inventaire « viande », « plat » ou « savon »), sinon c'est un fromage. */
 export const estLigneDeViande = (article: string): boolean =>
-  article.startsWith(`${GENRE_ARTICLE.VIANDE}:`) || article.startsWith(`${GENRE_ARTICLE.PLAT}:`);
+  article.startsWith(`${GENRE_ARTICLE.VIANDE}:`) ||
+  article.startsWith(`${GENRE_ARTICLE.PLAT}:`) ||
+  article.startsWith(`${GENRE_ARTICLE.SAVON}:`);
 
 /** La vente que la livraison d'une ligne de commande enregistre : des fromages, de la viande ou de la charcuterie à la pièce, au prix de la commande. */
 export function venteDeLaLigne(
@@ -101,16 +103,20 @@ export function venteDeLaLigne(
   numeroFacture?: string,
 ): Omit<Vente, 'id'> {
   if (estLigneDeViande(ligne.article)) {
+    // Un savon se vend dans sa propre catégorie (cosmétique, TVA à 20 %) ; le reste, comme de la charcuterie.
+    const categorie = ligne.article.startsWith(`${GENRE_ARTICLE.SAVON}:`)
+      ? CATEGORIE_VENTE.SAVONS
+      : CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE;
     return {
       activite,
       date: dateLivraison,
-      categorie: CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+      categorie,
       // Le détail de la vente est la ligne de l'inventaire : c'est elle qui baisse au stock.
       precision: ligne.libelle,
       quantite: ligne.quantite,
       unite: UNITE_VENTE.PIECE,
       prix: totalLigne(ligne),
-      tauxTva: tauxTvaDeLaVente(CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE),
+      tauxTva: tauxTvaDeLaVente(categorie),
       client: commande.client,
       choixFacture: avecFacture ? TYPE_CHOIX_FACTURE.AVEC_FACTURE : TYPE_CHOIX_FACTURE.SANS_FACTURE,
       numeroFacture: avecFacture ? numeroFacture?.trim() || undefined : undefined,

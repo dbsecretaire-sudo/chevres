@@ -49,6 +49,13 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
           iconeMci: 'pot-steam',
           route: ROUTES.productionFabrication(PRODUIT_A_LOTS.PLAT),
         },
+        {
+          cle: 'fabriquerSavon',
+          titre: B.fabriquerSavon,
+          icone: 'restaurant',
+          iconeMci: 'hand-wash',
+          route: ROUTES.productionFabrication(PRODUIT_A_LOTS.SAVON),
+        },
       ];
     case 'lots':
       // Un seul bouton : on choisit les lots (la page des produits suivis lot par lot) ou leurs rappels.

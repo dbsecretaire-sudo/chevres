@@ -25,6 +25,8 @@ export const GENRE_ARTICLE = {
   VIANDE: 'viande',
   /** Un plat préparé (conserve, bocal) fabriqué à l'atelier : toujours ajouté par l'utilisateur, suivi lot par lot (numéro P…, stérilisation, durabilité). */
   PLAT: 'plat',
+  /** Un savon (cosmétique au lait de chèvre) fabriqué à l'atelier : toujours ajouté par l'utilisateur, suivi lot par lot (numéro S…, saponification, fin de cure, dossier réglementaire). */
+  SAVON: 'savon',
   /** Les boucles d'identification (et les boucles rouges) : chacune a son numéro, achetées par plages de numéros. */
   BOUCLE: 'boucle',
 } as const;
@@ -44,6 +46,7 @@ export const NATURE_PAR_GENRE: Record<ValeurDe<typeof GENRE_ARTICLE>, ValeurDe<t
   [GENRE_ARTICLE.FROMAGE]: NATURE_STOCK.VENTE,
   [GENRE_ARTICLE.VIANDE]: NATURE_STOCK.VENTE,
   [GENRE_ARTICLE.PLAT]: NATURE_STOCK.VENTE,
+  [GENRE_ARTICLE.SAVON]: NATURE_STOCK.VENTE,
   [GENRE_ARTICLE.ALIMENT]: NATURE_STOCK.CONSOMMABLE,
   [GENRE_ARTICLE.EMBALLAGE]: NATURE_STOCK.CONSOMMABLE,
   [GENRE_ARTICLE.ENTRETIEN]: NATURE_STOCK.CONSOMMABLE,
@@ -104,6 +107,8 @@ export const PRODUIT_A_LOTS = {
   CHARCUTERIE: 'charcuterie',
   /** Les plats préparés (conserves, bocaux) : un lot par pièce, avec leurs ingrédients, leur stérilisation et leur date de durabilité. */
   PLAT: 'plat',
+  /** Les savons au lait de chèvre : un lot par pain, avec ses ingrédients, sa saponification, sa fin de cure et son dossier réglementaire. */
+  SAVON: 'savon',
 } as const;
 
 /** Le filtre des lots de fromage de l'inventaire : tous, ceux en stock, ceux vendus, ou ceux rappelés. */
@@ -190,6 +195,7 @@ export const CATEGORIE_PAR_GENRE: Record<
   [GENRE_ARTICLE.FROMAGE]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
   [GENRE_ARTICLE.VIANDE]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
   [GENRE_ARTICLE.PLAT]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
+  [GENRE_ARTICLE.SAVON]: CATEGORIE_INVENTAIRE.PRODUITS_FINIS,
   [GENRE_ARTICLE.ALIMENT]: CATEGORIE_INVENTAIRE.MATIERES_PREMIERES,
   [GENRE_ARTICLE.EMBALLAGE]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
   [GENRE_ARTICLE.ENTRETIEN]: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
@@ -253,6 +259,8 @@ export const SECTION_STOCK = {
   VIANDE: 'viande',
   /** Les plats préparés (conserves, bocaux) fabriqués à l'atelier : suivis lot par lot, avec leurs ingrédients. */
   PLATS: 'plats',
+  /** Les savons au lait de chèvre fabriqués à l'atelier : suivis lot par lot, avec leur dossier réglementaire. */
+  SAVONS: 'savons',
   /** Les petits, l'animal sur pied et l'animal vivant : ils suivent le cheptel. */
   ANIMAUX: 'animaux',
   ALIMENTS: 'aliments',
@@ -277,6 +285,8 @@ export const ORIGINE_MOUVEMENT = {
   CONSOMMATION: 'consommation',
   /** Les ingrédients d'une fabrication de plats préparés : ils sortent du stock (leurs lots sont pris). */
   PLAT: 'plat',
+  /** Les ingrédients d'une fabrication de savons (huiles, soude…) : ils sortent du stock, leurs lots sont pris. */
+  SAVON: 'savon',
   /** Des fromages rappelés (retirés de la vente) : ils sortent du stock. */
   RAPPEL: 'rappel',
   /** Du lait produit (noté dans le journal, ou déduit de ce qui en est sorti) : une entrée de l'historique du lait. */
@@ -315,11 +325,42 @@ export const SECTION_STOCK_PAR_CATEGORIE_RECETTE: Record<string, string> = {
   [CATEGORIE_RECETTE.OEUFS]: SECTION_STOCK.OEUFS,
   [CATEGORIE_RECETTE.VIANDE]: SECTION_STOCK.VIANDE,
   [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE]: SECTION_STOCK.VIANDE,
+  [CATEGORIE_RECETTE.SAVONS]: SECTION_STOCK.SAVONS,
   [CATEGORIE_RECETTE.CABRIS]: SECTION_STOCK.ANIMAUX,
   [CATEGORIE_RECETTE.ANIMAL_SUR_PIED]: SECTION_STOCK.ANIMAUX,
   [CATEGORIE_RECETTE.ANIMAL_VIVANT]: SECTION_STOCK.ANIMAUX,
   [CATEGORIE_RECETTE.ANIMAL_MORT]: SECTION_STOCK.ANIMAUX,
 };
+
+/** Les étapes du dossier réglementaire d'un savon (produit cosmétique, règlement (CE) n° 1223/2009). */
+export const ETAPE_SAVON = {
+  /** Le dossier d'information produit (DIP) : formule, procédé, contrôles, étiquetage, sécurité ; à garder 10 ans. */
+  DIP: 'dip',
+  /** Le rapport sur la sécurité du produit, signé par un évaluateur qualifié. */
+  RAPPORT_SECURITE: 'rapport_securite',
+  /** La notification du produit sur le portail européen CPNP, avant sa mise sur le marché. */
+  NOTIFICATION_CPNP: 'notification_cpnp',
+  /** Les bonnes pratiques de fabrication (norme ISO 22716). */
+  BPF: 'bpf',
+  /** L'étiquetage : liste INCI, numéro de lot, durée de conservation, adresse du responsable. */
+  ETIQUETAGE: 'etiquetage',
+  /** Les analyses du produit fini (qualité microbiologique, stabilité) demandées par l'évaluateur de la sécurité. */
+  ANALYSES: 'analyses',
+  /** La déclaration d'établissement du fabricant auprès de l'ANSM : à vérifier selon votre situation. */
+  DECLARATION_ETABLISSEMENT: 'declaration_etablissement',
+} as const;
+
+/** Les étapes sans lesquelles un savon ne se vend pas : tant que l'une manque, ses lots ne sont pas proposés à la vente. */
+export const ETAPES_SAVON_OBLIGATOIRES: readonly string[] = [
+  ETAPE_SAVON.DIP,
+  ETAPE_SAVON.RAPPORT_SECURITE,
+  ETAPE_SAVON.NOTIFICATION_CPNP,
+  ETAPE_SAVON.BPF,
+  ETAPE_SAVON.ETIQUETAGE,
+];
+
+/** Les jours de cure proposés d'office après la saponification (4 à 6 semaines : 6 pour un savon au lait). */
+export const JOURS_DE_CURE_SAVON = 42;
 
 /** Le numéro d'un lot se lit « FF261-1 » : le produit, la catégorie, l'année (2 chiffres), le jour de l'année, « - » et le n° du produit. */
 export const SEPARATEUR_NUMERO_LOT = '-';
@@ -329,6 +370,7 @@ export const LETTRE_PRODUIT_LOT: Record<string, string> = {
   [PRODUIT_A_LOTS.FROMAGE]: 'F',
   [PRODUIT_A_LOTS.CHARCUTERIE]: 'B',
   [PRODUIT_A_LOTS.PLAT]: 'P',
+  [PRODUIT_A_LOTS.SAVON]: 'S',
 };
 
 /**

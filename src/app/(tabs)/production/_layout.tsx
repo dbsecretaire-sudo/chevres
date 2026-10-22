@@ -16,6 +16,10 @@ import { TEXTES } from '@/shared/textes';
 const plat = (params: object | undefined): boolean =>
   (params as { produit?: string } | undefined)?.produit === PRODUIT_A_LOTS.PLAT;
 
+/** Vrai quand l'écran s'ouvre pour un savon (paramètre `produit`). */
+const savon = (params: object | undefined): boolean =>
+  (params as { produit?: string } | undefined)?.produit === PRODUIT_A_LOTS.SAVON;
+
 /** Vrai quand l'écran s'ouvre pour la charcuterie (paramètre `produit`) plutôt que pour les fromages. */
 const charcuterie = (params: object | undefined): boolean =>
   (params as { produit?: string } | undefined)?.produit === PRODUIT_A_LOTS.CHARCUTERIE;
@@ -34,6 +38,7 @@ export default function ProductionLayout() {
         'lait',
         'charcuterie',
         'plats',
+        'savons',
         'rappels-lots',
         'controles/liste',
       )}
@@ -55,6 +60,11 @@ export default function ProductionLayout() {
         name="plats"
         options={{ title: TEXTES.production.plats.titre, headerLeft: enteteDuBatiment() }}
       />
+      <Stack.Screen
+        name="savons"
+        options={{ title: TEXTES.production.savons.titre, headerLeft: enteteDuBatiment() }}
+      />
+      <Stack.Screen name="savon-dossier" options={{ title: TEXTES.production.savons.dossier.titre }} />
       <Stack.Screen
         name="lots"
         options={{ title: TEXTES.production.lots.titre, headerLeft: enteteDuBatiment() }}
@@ -98,7 +108,9 @@ export default function ProductionLayout() {
         options={({ route }) => ({
           title: plat(route.params)
             ? TEXTES.production.fabricationPlat.titre
-            : charcuterie(route.params)
+            : savon(route.params)
+              ? TEXTES.production.fabricationSavon.titre
+              : charcuterie(route.params)
               ? TEXTES.production.fabricationCharcuterie.titre
               : TEXTES.production.fabrication.titre,
           presentation: 'modal',
@@ -110,7 +122,9 @@ export default function ProductionLayout() {
         options={({ route }) => ({
           title: plat(route.params)
             ? TEXTES.production.rappelPlat.titre
-            : charcuterie(route.params)
+            : savon(route.params)
+              ? TEXTES.production.rappelSavon.titre
+              : charcuterie(route.params)
               ? TEXTES.production.rappelCharcuterie.titre
               : TEXTES.production.rappel.titre,
           presentation: 'modal',

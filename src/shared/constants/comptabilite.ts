@@ -77,6 +77,8 @@ export const CATEGORIE_RECETTE = {
   VIANDE: 'viande',
   /** Boucherie / charcuterie : un morceau ou un produit (côte, foie, saucisson…), choisi dans la liste « Boucherie et charcuterie ». */
   BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
+  /** Savons au lait de chèvre (cosmétique) : un savon fabriqué à l'atelier, choisi dans la liste « Savons » ; TVA à 20 %. */
+  SAVONS: 'savons',
   ANIMAL_SUR_PIED: 'animal_sur_pied',
   ANIMAL_VIVANT: 'animal_vivant',
   ANIMAL_MORT: 'animal_mort',
@@ -158,6 +160,7 @@ export const CATEGORIE_VENTE = {
   CABRIS: 'cabris',
   VIANDE: 'viande',
   BOUCHERIE_CHARCUTERIE: 'boucherie_charcuterie',
+  SAVONS: 'savons',
   ANIMAL_SUR_PIED: 'animal_sur_pied',
   ANIMAL_VIVANT: 'animal_vivant',
   ANIMAL_MORT: 'animal_mort',
@@ -179,6 +182,7 @@ export const CATEGORIES_VENTE_ANIMAUX = [
 export const CATEGORIES_VENTE_VIANDE = [
   CATEGORIE_VENTE.VIANDE,
   CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_VENTE.SAVONS,
 ] as const;
 
 /** Ventes dont le prix total est toujours calculé : le prix défini à l'inventaire × la quantité (jamais saisi). */
@@ -188,18 +192,21 @@ export const CATEGORIES_VENTE_PRIX_INVENTAIRE: readonly string[] = [
   CATEGORIE_VENTE.OEUFS,
   CATEGORIE_VENTE.VIANDE,
   CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_VENTE.SAVONS,
 ];
 
 /** Ventes dont le détail (la ligne de l'inventaire vendue) est obligatoire. */
 export const CATEGORIES_VENTE_AVEC_DETAIL: readonly string[] = [
   CATEGORIE_VENTE.VIANDE,
   CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_VENTE.SAVONS,
 ];
 
 /** Ventes qui acceptent un commentaire facultatif pour préciser de quoi il s'agissait. */
 export const CATEGORIES_VENTE_AVEC_PRECISION = [
   CATEGORIE_VENTE.VIANDE,
   CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_VENTE.SAVONS,
   CATEGORIE_VENTE.ANIMAL_SUR_PIED,
   CATEGORIE_VENTE.ANIMAL_VIVANT,
   CATEGORIE_VENTE.ANIMAL_MORT,
@@ -344,6 +351,7 @@ export const GROUPE_RECETTE = {
   OEUFS: 'oeufs',
   VIANDE: 'viande',
   BOUCHERIE: 'boucherie',
+  SAVONS: 'savons',
   AIDE: 'aide',
   AUTRE: 'autre',
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
@@ -399,12 +407,19 @@ const GROUPE_BOUCHERIE: GroupeRecetteDefinition = {
   categories: [CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE],
 };
 
+/** Les savons au lait de chèvre (cosmétique) : un savon fabriqué à l'atelier, choisi dans la liste « Savons ». */
+const GROUPE_SAVONS: GroupeRecetteDefinition = {
+  groupe: GROUPE_RECETTE.SAVONS,
+  categories: [CATEGORIE_RECETTE.SAVONS],
+};
+
 /** Chèvres, brebis et vaches : les fromages et le lait, puis la viande. */
 const GROUPES_RECETTE_LAITIERS: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.FROMAGES, categories: [CATEGORIE_RECETTE.FROMAGE] },
   { groupe: GROUPE_RECETTE.LAIT, categories: [CATEGORIE_RECETTE.LAIT] },
   GROUPE_VIANDE,
   GROUPE_BOUCHERIE,
+  GROUPE_SAVONS,
   ...AIDE_PRESTATIONS_ET_AUTRE,
 ];
 
@@ -512,6 +527,7 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.CABRIS,
   CATEGORIE_RECETTE.VIANDE,
   CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+  CATEGORIE_RECETTE.SAVONS,
   CATEGORIE_RECETTE.ANIMAL_SUR_PIED,
   CATEGORIE_RECETTE.ANIMAL_VIVANT,
   CATEGORIE_RECETTE.ANIMAL_MORT,
@@ -573,6 +589,8 @@ export const TAUX_TVA_VENTE_PAR_CATEGORIE = {
   [CATEGORIE_VENTE.CABRIS]: 10,
   [CATEGORIE_VENTE.VIANDE]: 10,
   [CATEGORIE_VENTE.BOUCHERIE_CHARCUTERIE]: 5.5,
+  // Un savon est un cosmétique, pas une denrée : TVA à taux normal.
+  [CATEGORIE_VENTE.SAVONS]: 20,
   [CATEGORIE_VENTE.ANIMAL_SUR_PIED]: 10,
   [CATEGORIE_VENTE.ANIMAL_VIVANT]: 10,
   [CATEGORIE_VENTE.ANIMAL_MORT]: 5.5,

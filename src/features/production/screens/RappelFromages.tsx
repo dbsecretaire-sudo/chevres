@@ -30,13 +30,17 @@ export default function RappelFromages() {
       ? PRODUIT_A_LOTS.CHARCUTERIE
       : param === PRODUIT_A_LOTS.PLAT
         ? PRODUIT_A_LOTS.PLAT
-        : PRODUIT_A_LOTS.FROMAGE;
+        : param === PRODUIT_A_LOTS.SAVON
+          ? PRODUIT_A_LOTS.SAVON
+          : PRODUIT_A_LOTS.FROMAGE;
   const T =
     produit === PRODUIT_A_LOTS.FROMAGE
       ? TEXTES.production.rappel
       : produit === PRODUIT_A_LOTS.PLAT
         ? TEXTES.production.rappelPlat
-        : TEXTES.production.rappelCharcuterie;
+        : produit === PRODUIT_A_LOTS.SAVON
+          ? TEXTES.production.rappelSavon
+          : TEXTES.production.rappelCharcuterie;
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);

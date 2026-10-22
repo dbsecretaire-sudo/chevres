@@ -43,6 +43,8 @@ export const TEXTES_RAPPELS = {
     avant: (date: string, lots: string) => `Échantillon (lots ${lots}) à envoyer avant le ${date}`,
     enRetard: (date: string, lots: string) => `En retard : échantillon (lots ${lots}) à envoyer avant le ${date}`,
     valider: 'Échantillon envoyé',
+    reglerSavons: 'Intervalle entre les analyses des savons',
+    reglerSavonsAide: 'Tous les combien de jours un échantillon des savons en stock doit partir à un laboratoire. L’évaluateur de la sécurité fixe l’intervalle : sans lui, aucun rappel.',
     regler: 'Intervalle entre les analyses',
     reglerAide: 'Tous les combien de jours un échantillon des plats en stock doit partir à un laboratoire. Demandez l’intervalle à la DDPP : sans lui, aucun rappel.',
     placeholder: 'ex : 90',

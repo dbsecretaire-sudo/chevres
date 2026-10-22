@@ -414,6 +414,8 @@ export interface InfosExploitation {
   categoriesFournisseur?: CategorieFournisseurReglage[];
   /** Les jours entre deux analyses des plats préparés en stock (l'intervalle que demande la DDPP) : sans lui, aucun rappel d'analyse. */
   joursEntreAnalysesPlats?: number;
+  /** Les jours entre deux analyses des savons en stock (l'intervalle que fixe l'évaluateur de la sécurité) : sans lui, aucun rappel d'analyse. */
+  joursEntreAnalysesSavons?: number;
   /** Les rappels déjà validés (« rsa:2026-T3 », « urssaf:2026-09 »). */
   rappelsValides?: string[];
   /**

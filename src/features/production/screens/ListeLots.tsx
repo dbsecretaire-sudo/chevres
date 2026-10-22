@@ -39,11 +39,14 @@ import { TEXTES } from '@/shared/textes';
 export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS> }) {
   const fromage = produit === PRODUIT_A_LOTS.FROMAGE;
   const plat = produit === PRODUIT_A_LOTS.PLAT;
+  const savon = produit === PRODUIT_A_LOTS.SAVON;
   const T = fromage
     ? TEXTES.production.fromages
     : plat
       ? TEXTES.production.plats
-      : TEXTES.production.charcuterie;
+      : savon
+        ? TEXTES.production.savons
+        : TEXTES.production.charcuterie;
   const router = useRouter();
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
@@ -56,9 +59,11 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
 
   /** L'année des lots (leur fabrication) et du stock (à la fin de l'année), ou toutes les années regroupées. */
   const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
-  /** Les plats : la fenêtre de l'intervalle entre deux analyses (un échantillon part à un laboratoire, voir rappelsAnalysesPlats). */
+  /** Les plats et les savons : la fenêtre de l'intervalle entre deux analyses (un échantillon part à un laboratoire, voir rappelsAnalysesPlats). */
   const [analyseOuverte, setAnalyseOuverte] = useState(false);
-  const jourAnalyse = settings.exploitation?.joursEntreAnalysesPlats;
+  const jourAnalyse = savon
+    ? settings.exploitation?.joursEntreAnalysesSavons
+    : settings.exploitation?.joursEntreAnalysesPlats;
   const regrouper = !!settings.toutesAnnees;
   const [annees, setAnnees] = useState<number[]>([]);
 
@@ -98,12 +103,22 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                     <Ionicons name="stats-chart" size={24} color={colors.blanc} />
                   </Pressable>
                 ) : null}
-                {plat ? (
+                {savon ? (
+                  <Pressable
+                    style={commonStyles.boutonEnteteDroite}
+                    onPress={() => router.push(ROUTES.productionSavonDossier('') as never)}
+                    hitSlop={10}
+                    accessibilityLabel={TEXTES.production.savons.dossierBouton}
+                  >
+                    <Ionicons name="clipboard-outline" size={24} color={colors.blanc} />
+                  </Pressable>
+                ) : null}
+                {plat || savon ? (
                   <Pressable
                     style={commonStyles.boutonEnteteDroite}
                     onPress={() => setAnalyseOuverte(true)}
                     hitSlop={10}
-                    accessibilityLabel={TEXTES.rappels.analysesPlats.regler}
+                    accessibilityLabel={savon ? TEXTES.rappels.analysesPlats.reglerSavons : TEXTES.rappels.analysesPlats.regler}
                   >
                     <Ionicons name="flask-outline" size={24} color={colors.blanc} />
                   </Pressable>
@@ -131,7 +146,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
             />
             <SelecteurEspece />
           </LigneFiltres>
-          {plat ? null : <SuggestionParcours parcoursId={fromage ? 'vente-fromage' : 'vente-charcuterie'} />}
+          {plat || savon ? null : <SuggestionParcours parcoursId={fromage ? 'vente-fromage' : 'vente-charcuterie'} />}
           {articles.length === 0 ? (
             <EmptyState title={T.aucun} />
           ) : (
@@ -188,7 +203,11 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                   pathname: ROUTES.COMPTABILITE_NOUVELLE,
                   params: {
                     type: TYPE_FACTURE.EMISE,
-                    categorie: fromage ? CATEGORIE_RECETTE.FROMAGE : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+                    categorie: fromage
+                      ? CATEGORIE_RECETTE.FROMAGE
+                      : savon
+                        ? CATEGORIE_RECETTE.SAVONS
+                        : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
                   },
                 }),
             },
@@ -200,7 +219,13 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
           placeholder={T.ajouter.exemple}
           onValider={async (nom) => {
             await ajouterArticle(
-              fromage ? GENRE_ARTICLE.FROMAGE : plat ? GENRE_ARTICLE.PLAT : GENRE_ARTICLE.VIANDE,
+              fromage
+                ? GENRE_ARTICLE.FROMAGE
+                : plat
+                  ? GENRE_ARTICLE.PLAT
+                  : savon
+                    ? GENRE_ARTICLE.SAVON
+                    : GENRE_ARTICLE.VIANDE,
               nom,
               espece,
             );
@@ -211,15 +236,26 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
         />
         <NomModal
           visible={analyseOuverte}
-          titre={TEXTES.rappels.analysesPlats.regler}
+          titre={savon ? TEXTES.rappels.analysesPlats.reglerSavons : TEXTES.rappels.analysesPlats.regler}
           valeurInitiale={jourAnalyse ? String(jourAnalyse) : ''}
           placeholder={TEXTES.rappels.analysesPlats.placeholder}
-          enfants={<Text style={commonStyles.note}>{TEXTES.rappels.analysesPlats.reglerAide}</Text>}
+          enfants={
+            <Text style={commonStyles.note}>
+              {savon ? TEXTES.rappels.analysesPlats.reglerSavonsAide : TEXTES.rappels.analysesPlats.reglerAide}
+            </Text>
+          }
           onValider={async (texte) => {
             const jours = Number(texte.trim());
             // Vide : plus de rappel d'analyse ; sinon un nombre de jours entier.
             if (texte.trim() && !(Number.isInteger(jours) && jours > 0)) return Alert.alert(TEXTES.rappels.analysesPlats.invalide);
-            await patchSettings({ exploitation: { ...settings.exploitation, joursEntreAnalysesPlats: jours > 0 ? jours : undefined } });
+            await patchSettings({
+              exploitation: {
+                ...settings.exploitation,
+                ...(savon
+                  ? { joursEntreAnalysesSavons: jours > 0 ? jours : undefined }
+                  : { joursEntreAnalysesPlats: jours > 0 ? jours : undefined }),
+              },
+            });
             setAnalyseOuverte(false);
           }}
           onAnnuler={() => setAnalyseOuverte(false)}

@@ -138,6 +138,11 @@ export default function RappelsLots() {
             icon: 'alert-circle',
             onPress: () => router.push(ROUTES.productionRappel(PRODUIT_A_LOTS.PLAT)),
           },
+          {
+            label: TEXTES.production.savons.rappeler,
+            icon: 'alert-circle',
+            onPress: () => router.push(ROUTES.productionRappel(PRODUIT_A_LOTS.SAVON)),
+          },
         ]}
       />
       <DetailRappelLot

@@ -141,6 +141,7 @@ export default function FicheCommande() {
           ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock),
           ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock).filter((a) => !estLigneDuCheptel(a.cle)),
           ...articlesDuGenre(GENRE_ARTICLE.PLAT, stock),
+          ...articlesDuGenre(GENRE_ARTICLE.SAVON, stock),
         ]);
         setPrixInventaire(stock.prix);
         setLotsDuStock(stock.lots ?? []);

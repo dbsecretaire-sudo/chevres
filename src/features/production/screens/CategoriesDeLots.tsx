@@ -7,7 +7,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.lots;
 
-/** Les lots de l'atelier : une ligne par produit suivi lot par lot (fromages, viande, boucherie / charcuterie, plats préparés). Un appui ouvre sa liste de lots. */
+/** Les lots de l'atelier : une ligne par produit suivi lot par lot (fromages, viande, boucherie / charcuterie, plats préparés, savons). Un appui ouvre sa liste de lots. */
 export default function CategoriesDeLots() {
   const router = useRouter();
   const lignes = [
@@ -15,6 +15,7 @@ export default function CategoriesDeLots() {
     { cle: 'viande', titre: T.viande, route: ROUTES.PRODUCTION_VIANDE },
     { cle: 'charcuterie', titre: T.charcuterie, route: ROUTES.PRODUCTION_CHARCUTERIE },
     { cle: 'plats', titre: T.plats, route: ROUTES.PRODUCTION_PLATS },
+    { cle: 'savons', titre: T.savons, route: ROUTES.PRODUCTION_SAVONS },
   ];
   return (
     <Screen>

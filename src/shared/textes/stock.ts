@@ -258,6 +258,14 @@ export const TEXTES_STOCK = {
     titreFromage: (nom: string) => `Inventaire : Fromage ${nom}`,
     etat: { tout: 'Tout', en_stock: 'En stock', vendu: 'Vendu', rappele: 'Rappelé' },
     /** Sous le numéro d'un lot de plat préparé : sa stérilisation, sa date de durabilité minimale et ses ingrédients. */
+    /** Sous le numéro d'un lot de savon : sa saponification, sa fin de cure, sa durabilité, le lait de chèvre pris et ses ingrédients. */
+    savon: {
+      saponifie: (date: string) => `Saponifié le ${date}`,
+      cure: (date: string) => `Cure jusqu’au ${date}`,
+      ddm: (date: string) => `À utiliser avant ${date}`,
+      lait: (litres: string) => `Lait de chèvre : ${litres} L`,
+      dossierIncomplet: 'Non vendable : dossier réglementaire incomplet',
+    },
     plat: {
       sterilise: (date: string) => `Stérilisé le ${date}`,
       ddm: (date: string) => `DDM ${date}`,
@@ -346,6 +354,15 @@ export const TEXTES_STOCK = {
     sucre: 'Sucre',
     laitAlimentaire: 'Lait (cuisine)',
   },
+  /** La liste des matières premières des savons, ajoutée d'office à l'inventaire, et ses articles de départ. */
+  matieresSavon: {
+    liste: 'Matières premières des savons',
+    huileOlive: 'Huile d’olive (savon)',
+    huileCoco: 'Huile de coco',
+    beurreKarite: 'Beurre de karité',
+    soude: 'Soude (hydroxyde de sodium)',
+    huileEssentielle: 'Huile essentielle',
+  },
   titresListes: {
     prefixeVentes: 'Ventes — ',
     prefixeAchat: 'Achat — ',
@@ -354,6 +371,7 @@ export const TEXTES_STOCK = {
     oeufs: 'Ventes — Œufs',
     viande: 'Ventes — Boucherie et charcuterie',
     plats: 'Ventes — Plats préparés',
+    savons: 'Ventes — Savons',
     animaux: 'Ventes — Animaux',
     aliments: 'Achat — Aliment',
     boucles: 'Achat — Boucles',
@@ -415,6 +433,8 @@ export const TEXTES_STOCK = {
     exempleAliment: 'ex : Granulés, orge',
     viande: 'Ajouter un type de viande',
     exempleViande: 'ex : Saucisson, jambon, côtes',
+    savon: 'Ajouter un savon',
+    exempleSavon: 'ex : Savon au lait de chèvre et miel',
     plat: 'Ajouter un plat préparé',
     exemplePlat: 'ex : Civet de sanglier, soupe de châtaignes',
     entretien: 'Ajouter un produit d’entretien',

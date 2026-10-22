@@ -6,7 +6,7 @@ import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { FiltresLots, TableauLots } from '@/features/stock/components/TableauLots';
 import { useListeLots } from '@/features/stock/hooks/useListeLots';
-import { estArticleFromage, etatDuLot } from '@/features/stock/services/lots';
+import { estArticleFromage, estArticleSavon, etatDuLot } from '@/features/stock/services/lots';
 import {
   libererLotsReserves,
   prixDuProduitPourClient,
@@ -131,7 +131,11 @@ export function DetailLotsModal({ visible, article, lots, sansLot, onChange, onF
         ? { type: TYPE_FACTURE.EMISE, commande: bon.id, lignes: lignes.join(';') }
         : {
             type: TYPE_FACTURE.EMISE,
-            categorie: fromage ? CATEGORIE_RECETTE.FROMAGE : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
+            categorie: fromage
+              ? CATEGORIE_RECETTE.FROMAGE
+              : estArticleSavon(article.cle)
+                ? CATEGORIE_RECETTE.SAVONS
+                : CATEGORIE_RECETTE.BOUCHERIE_CHARCUTERIE,
             client: clientId,
             fromages: ids.join(';'),
             produit: article.cle,

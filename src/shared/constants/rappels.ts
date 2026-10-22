@@ -10,6 +10,8 @@ export const GENRE_RAPPEL = {
   CIRCULATION: 'circulation',
   /** L'échantillon d'un plat préparé à envoyer à un laboratoire d'analyses : il se valide une fois envoyé. */
   ANALYSE_PLAT: 'analyse_plat',
+  /** Une étape obligatoire du dossier réglementaire d'un savon qui manque : elle se valide en la faisant, dans le dossier du savon. */
+  DOSSIER_SAVON: 'dossier_savon',
 } as const;
 
 /** Une analyse de plats est rappelée sur l'accueil à partir de ce nombre de jours avant son échéance. */
