@@ -29,7 +29,7 @@ export default function StockScreen() {
   // La flèche ne vaut que pour cette visite : en quittant le stock, l'adresse de retour est oubliée.
   useFocusEffect(
     useCallback(
-      () => () => navigation.setParams({ retour: undefined, espece: undefined, onglet: undefined } as never),
+      () => () => navigation.setParams({ retour: undefined, espece: undefined, onglet: undefined, vue: undefined } as never),
       [navigation],
     ),
   );

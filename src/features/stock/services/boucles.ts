@@ -573,6 +573,8 @@ export interface BouclePossible {
   numero: string;
   /** Vrai quand l'inventaire le tient déjà pour un tiptag (d'une synchronisation précédente). */
   tiptag: boolean;
+  /** Vrai quand l'inventaire l'a déjà repris du cheptel : il n'y a plus rien à synchroniser pour lui. */
+  reprise: boolean;
 }
 
 /**
@@ -591,12 +593,13 @@ export async function bouclesPossiblesDuCheptel(): Promise<BouclePossible[]> {
   const tiptags = new Set(
     inventaire.filter((b) => b.depuisCheptel && b.article === ARTICLE_TIPTAG).map((b) => b.numero),
   );
+  const reprises = new Set(inventaire.filter((b) => b.depuisCheptel).map((b) => b.numero));
   const numeros = new Set<string>();
   for (const animal of animaux.filter(porteDesBoucles)) {
     const numero = animal.numeroBoucle?.trim();
     if (numero && !achetees.has(numero)) numeros.add(numero);
   }
-  return [...numeros].sort(comparerNumeros).map((numero) => ({ numero, tiptag: tiptags.has(numero) }));
+  return [...numeros].sort(comparerNumeros).map((numero) => ({ numero, tiptag: tiptags.has(numero), reprise: reprises.has(numero) }));
 }
 
 /**

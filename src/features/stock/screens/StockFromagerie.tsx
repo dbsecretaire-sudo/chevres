@@ -88,6 +88,7 @@ import {
   NATURE_STOCK,
   ORIGINE_MOUVEMENT,
   SECTION_STOCK,
+  CATEGORIE_INVENTAIRE,
 } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
@@ -96,8 +97,8 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
 
-/** La couleur des catégories déroulées du stock en cadre de jeu : un vert plus vif que le vert pâle d'office, avec son cercle. */
-const PANNEAU_DE_JEU = { panneau: '#B5D86E', bord: '#6B8F2F' };
+/** La couleur des catégories déroulées du stock en cadre de jeu : un beige parchemin un peu plus soutenu que le fond, avec son cercle. */
+const PANNEAU_DE_JEU = { panneau: '#EFE3C4', bord: '#C2A76B' };
 
 /** De combien de points les flèches de la barre de navigation font défiler la liste. */
 const PAS_DE_DEFILEMENT = 190;
@@ -138,10 +139,13 @@ export default function StockFromagerie() {
     useFiltreEspeceStock();
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
-  const { onglet: ongletDemande, espece: especeDemandee } = useLocalSearchParams<{
+  const { onglet: ongletDemande, espece: especeDemandee, vue } = useLocalSearchParams<{
     onglet?: string;
     espece?: string;
+    vue?: string;
   }>();
+  /** Le stock de l'atelier : sans les matières premières (aliments, boucles), qui sont à la grange ; « Tout le stock » les montre. */
+  const vueAtelier = vue === 'atelier';
   /** La catégorie qui est déroulée (une seule à la fois) : aucune au départ, tout est réduit. */
   const [ouvertes, setOuvertes] = useState<string[]>([]);
   /** Le menu des ajouts d'une catégorie, ouvert depuis le bouton « + » quand plusieurs catégories sont en vue. */
@@ -456,6 +460,7 @@ export default function StockFromagerie() {
   ];
   /** Les catégories qui ont de quoi ajouter, avec leurs ajouts (celles déroulées seulement, toutes si aucune ne l'est). */
   const groupesAjout = categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories)
+    .filter((c) => !(vueAtelier && c.categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES))
     .filter((c) => ouvertes.length === 0 || ouvertes.includes(c.categorie))
     // Classées par numéro de catégorie (21, 31, 32, 33…).
     .sort((x, y) => x.classe.localeCompare(y.classe, undefined, { numeric: true }))
@@ -483,8 +488,9 @@ export default function StockFromagerie() {
           <View style={jeu.defile}>
     <Screen scroll={false} transparent>
       <ScrollView ref={defilement} onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={64} showsVerticalScrollIndicator={false} contentContainerStyle={[commonStyles.listFab, jeu.listeLarge]}>
-        {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
-          ({ categorie, nom, classe, perso }) => {
+        {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories)
+          .filter((c) => !(vueAtelier && c.categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES))
+          .map(({ categorie, nom, classe, perso }) => {
             const listes = lesSectionsAffichees.filter((x) => x.categorie === categorie);
             const listesPerso = listesVisibles.filter((l) => l.categorie === categorie);
             // Une catégorie ajoutée se montre même sans liste ; une catégorie d'office sans rien à montrer, non.
@@ -530,18 +536,25 @@ export default function StockFromagerie() {
                       </View>
                       {genre ? (
                         <>
+                          {/* Le message ne reste que pour les numéros que l'inventaire n'a pas encore repris du cheptel ; une fois tout repris, un simple lien permet de revoir les tiptag. */}
                           {genre === GENRE_ARTICLE.BOUCLE && synchro && possibles.length > 0 ? (
-                            <Card>
-                              <Text style={commonStyles.lineBold}>{T.boucles.synchro.titre}</Text>
-                              <Text style={commonStyles.muted}>
-                                {T.boucles.synchro.message(possibles.length)}
-                              </Text>
-                              <Button
-                                variant="secondary"
-                                label={T.boucles.synchro.bouton}
-                                onPress={() => setSynchroOuverte(true)}
-                              />
-                            </Card>
+                            possibles.some((p) => !p.reprise) ? (
+                              <Card>
+                                <Text style={commonStyles.lineBold}>{T.boucles.synchro.titre}</Text>
+                                <Text style={commonStyles.muted}>
+                                  {T.boucles.synchro.message(possibles.filter((p) => !p.reprise).length)}
+                                </Text>
+                                <Button
+                                  variant="secondary"
+                                  label={T.boucles.synchro.bouton}
+                                  onPress={() => setSynchroOuverte(true)}
+                                />
+                              </Card>
+                            ) : (
+                              <Pressable onPress={() => setSynchroOuverte(true)} hitSlop={8}>
+                                <Text style={commonStyles.lien}>{T.boucles.synchro.revoir}</Text>
+                              </Pressable>
+                            )
                           ) : null}
                           {liste(genre, section)}
                         </>
@@ -817,6 +830,17 @@ export default function StockFromagerie() {
           </View>
         </View>
       </View>
+      {/* Le stock de l'atelier : sous le cadre, comme à la grange, « Tout le stock » montre toutes les catégories. */}
+      {vueAtelier ? (
+        <Pressable
+          style={jeu.complet}
+          onPress={() => router.setParams({ vue: '' })}
+          accessibilityRole="button"
+        >
+          <Ionicons name="list" size={18} color={colors.blanc} />
+          <Text style={jeu.completTexte}>{TEXTES.production.lieux.entrepot.stockComplet}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -826,6 +850,21 @@ const genreDeLaCle = (cle: string): GenreArticle => cle.split(':')[0] as GenreAr
 
 /** Le cadre de jeu de la grange : un fond vert foncé, un cadre de bois et un panneau vert, autour du stock. */
 const jeu = StyleSheet.create({
+  /** Le bouton sous le cadre, comme « Tout le stock » de la grange. */
+  complet: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    backgroundColor: '#6B3F1B',
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: '#3F230E',
+  },
+  completTexte: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   /** Les marges de la liste réduites : le conteneur est plus large, pour trois cartes l'une à côté de l'autre. */
   listeLarge: { paddingHorizontal: 4 },
   /** La liste et, à droite, la barre de navigation. */
@@ -836,5 +875,5 @@ const jeu = StyleSheet.create({
   indiceDeplacement: { fontSize: 13, fontWeight: '700', color: '#B8641A' },
   fond: { flex: 1, backgroundColor: '#35541F', padding: 8 },
   cadre: { flex: 1, backgroundColor: '#E8892B', borderRadius: 26, borderWidth: 4, borderColor: '#B8641A', padding: 6 },
-  panneau: { flex: 1, backgroundColor: '#8DBA3F', borderRadius: 16, overflow: 'hidden' },
+  panneau: { flex: 1, backgroundColor: '#FAF3E1', borderRadius: 16, overflow: 'hidden' },
 });

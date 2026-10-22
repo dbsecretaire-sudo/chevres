@@ -221,6 +221,7 @@ export const TEXTES_STOCK = {
       message: (nombre: number) =>
         `${nombre} numéro${nombre > 1 ? 's' : ''} de boucle porté${nombre > 1 ? 's' : ''} par vos animaux. Vous choisissez lesquels sont des tiptag : les autres entrent dans les boucles.`,
       bouton: 'Synchroniser les boucles',
+      revoir: 'Revoir les tiptag du cheptel',
       titreModal: 'Boucles du cheptel',
       consigne:
         'Voici les numéros de boucle portés par vos animaux. Cochez les tiptag : les boucles non cochées sont intégrées dans les boucles.',
