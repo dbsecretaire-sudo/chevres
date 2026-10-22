@@ -62,7 +62,9 @@ export const TEXTES_FLOTTE = {
   assurance: {
     aide: 'Les primes d’assurance de ce véhicule et ce que l’assurance a versé, liées par leur écriture comptable.',
     nouvellePrime: 'Nouvelle assurance du véhicule',
-    payerPrime: 'Payer une prime d’assurance',
+    payer: 'Payer',
+    percevoir: 'Percevoir',
+    souscription: 'Souscription',
     nouvelleIndemnite: 'Indemnité reçue de l’assurance',
     aucune: 'Aucune écriture d’assurance pour ce véhicule.',
   },
@@ -83,6 +85,7 @@ export const TEXTES_FLOTTE = {
   },
   resiliation: {
     bouton: 'Résilier l’assurance',
+    court: 'Résilier',
     titre: 'Résilier l’assurance',
     date: 'Date de la résiliation',
     tropPercu: 'L’assureur vous reverse un trop-perçu de la prime versée',

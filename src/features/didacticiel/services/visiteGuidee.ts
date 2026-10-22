@@ -96,7 +96,8 @@ export function etapeSurLaPage(etape: EtapeVisite | undefined, adresse: string, 
 export function pageDeLEtape(route: string | RegExp | undefined, adresse: string): boolean {
   if (!route) return true;
   const propre = adresse.replace(/\/+$/, '') || '/';
-  return typeof route === 'string' ? propre === route : route.test(propre);
+  // L'adresse courante est un chemin sans requête : la requête de l'étape (« ?lieu=animaux ») ne compte pas pour la reconnaître.
+  return typeof route === 'string' ? propre === (route.split('?')[0].replace(/\/+$/, '') || '/') : route.test(propre);
 }
 
 /**

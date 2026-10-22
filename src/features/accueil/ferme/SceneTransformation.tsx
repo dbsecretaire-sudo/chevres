@@ -154,6 +154,8 @@ export function SceneTransformation({
   // Ce que la scène partage entre les intervenants (en haut), la rue et la plaque blanche : tout ce qui n'est ni le bâtiment, ni les trottoirs, ni les marges.
   // La rue reste étroite et la plaque grande ; les intervenants prennent le reste, et leurs logos s'ajustent à cette place.
   const a = agrandissement;
+  // Les logos des intervenants ne grandissent que très peu sur un grand écran (ils paraissaient énormes) : le reste de la place va à la rue et à la plaque.
+  const PLAFOND_DES_LOGOS = 1.1;
   const trottoirs = campagne ? 0 : 2 * TROTTOIR;
   const reste = hauteur - hauteurFromagerie - trottoirs - 4 * MARGE;
   const entre = (valeur: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(valeur)));
@@ -163,7 +165,7 @@ export function SceneTransformation({
   const hauteurRue = hauteur === 0 ? rueMin : entre(reste * (campagne ? 0.24 : 0.18), rueMin, Math.round((campagne ? 150 : 110) * a));
   const disponible = reste - hauteurPlaque - hauteurRue;
   const echelle =
-    hauteur === 0 ? 1 : Math.max(0.62, Math.min(1.35 * a, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
+    hauteur === 0 ? 1 : Math.max(0.62, Math.min(PLAFOND_DES_LOGOS, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
   // Plus la plaque est haute, plus son texte grandit (un peu : « 0 boucherie/charcuterie » doit tenir sur une ligne).
   const textePlaque = a * Math.max(1, Math.min(1.08, hauteurPlaque / plaqueMin));
   return (

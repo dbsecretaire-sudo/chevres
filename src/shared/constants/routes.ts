@@ -30,7 +30,8 @@ export const ROUTES = {
   /** L'onglet Cheptel : le cheptel (la liste des animaux) et ce qui s'y rapporte. */
   CHEPTEL: '/cheptel',
   /** La liste des animaux vivants. */
-  CHEPTEL_LISTE: '/cheptel/liste',
+  /** La liste des animaux : la page « Tous les animaux » (l'ancienne liste « Cheptel actif » n'existe plus). */
+  CHEPTEL_LISTE: '/production/lieu?lieu=animaux',
   CHEPTEL_BILAN: '/cheptel/bilan',
   /** Le tableau de bord du cheptel : la pyramide des âges et les mouvements de l'année. */
   CHEPTEL_TABLEAU_DE_BORD: '/cheptel/tableau-de-bord',

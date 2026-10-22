@@ -19,7 +19,16 @@ const PAS_DE_DEFILEMENT = 190;
  * 33. Produits animaux, 31. Matières premières…), puis les rubriques de la catégorie comme dans le stock, chacune avec ses cartes et leur
  * quantité en dessous. Il lit le stock lui-même : tout changement du stock s'y retrouve, et chaque carte ouvre sa rubrique du stock.
  */
-export default function EntrepotJeu({ seulement, titre }: { seulement?: string; titre?: string }) {
+export default function EntrepotJeu({
+  seulement,
+  titre,
+  sauf,
+}: {
+  seulement?: string;
+  titre?: string;
+  /** Les rubriques du stock (leur section) qu'on ne montre pas : la grange n'a pas le stock de boucles. */
+  sauf?: readonly string[];
+}) {
   const router = useRouter();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
   // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
@@ -31,7 +40,12 @@ export default function EntrepotJeu({ seulement, titre }: { seulement?: string; 
   const position = useRef(0);
 
   const actuelle = categories.find((c) => c.categorie === onglet) ?? categories[0];
-  const groupes = actuelle ? (groupesParCategorie.get(actuelle.categorie) ?? []) : [];
+  const groupesDeLaCategorie = actuelle ? (groupesParCategorie.get(actuelle.categorie) ?? []) : [];
+  const groupes = sauf
+    ? groupesDeLaCategorie
+        .map((g) => ({ ...g, cartes: g.cartes.filter((c) => !sauf.includes(c.section)) }))
+        .filter((g) => g.cartes.length > 0)
+    : groupesDeLaCategorie;
   const defiler = (pas: number) => {
     position.current = Math.max(0, position.current + pas);
     defilement.current?.scrollTo({ y: position.current, animated: true });

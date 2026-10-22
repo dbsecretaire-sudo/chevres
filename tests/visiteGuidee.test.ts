@@ -6,14 +6,14 @@ describe('visite guidée', () => {
   it('une étape s’affiche sur sa page (adresse exacte ou motif), et partout sans page', () => {
     expect(pageDeLEtape('/cheptel', '/cheptel')).toBe(true);
     expect(pageDeLEtape('/cheptel', '/cheptel/')).toBe(true);
-    expect(pageDeLEtape('/cheptel', '/cheptel/liste')).toBe(false);
+    expect(pageDeLEtape('/cheptel', '/production/lieu')).toBe(false);
     expect(pageDeLEtape(undefined, '/n-importe-quoi')).toBe(true);
     expect(pageDeLEtape('/', '/')).toBe(true);
   });
 
   it('la fiche d’un animal se distingue des autres pages du cheptel', () => {
     expect(FICHE_ANIMAL.test('/cheptel/a1b2c3')).toBe(true);
-    expect(FICHE_ANIMAL.test('/cheptel/liste')).toBe(false);
+    expect(FICHE_ANIMAL.test('/production/lieu')).toBe(false);
     expect(FICHE_ANIMAL.test('/cheptel/naissances')).toBe(false);
     expect(FICHE_ANIMAL.test('/cheptel/documents-circulation')).toBe(false);
     expect(FICHE_ANIMAL.test('/cheptel')).toBe(false);
@@ -48,7 +48,7 @@ describe('avancer dans la visite', () => {
   });
 
   it('les étapes de la fiche d’un animal sont passées quand on n’en a pas ouvert une', () => {
-    const suite = etapeSuivante(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/liste');
+    const suite = etapeSuivante(etapes, position('cheptel.fiche.ouvrir'), '/production/lieu');
     expect(suite?.index).toBe(position('cheptel.retour.menu'));
     expect(etapeSuivante(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/abc')?.index).toBe(position('cheptel.fiche'));
   });
@@ -60,7 +60,7 @@ describe('avancer dans la visite', () => {
   it('en ouvrant une page, la visite reprend à l’étape de cette page, en avant avant tout', () => {
     expect(etapeDeLaPage(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/abc')).toBe(position('cheptel.fiche'));
     // De retour à la liste depuis la fiche : l'étape qui invite à revenir au menu.
-    expect(etapeDeLaPage(etapes, position('cheptel.retour'), '/cheptel/liste')).toBe(position('cheptel.retour.menu'));
+    expect(etapeDeLaPage(etapes, position('cheptel.retour'), '/production/lieu')).toBe(position('cheptel.retour.menu'));
   });
 });
 
@@ -69,13 +69,13 @@ describe('choisir un menu de la barre du haut (Windows)', () => {
   const position = (id: string) => etapes.findIndex((e) => e.id === id);
 
   it('l’entrée choisie ouvre la page d’une étape suivante : la visite y passe', () => {
-    expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/cheptel/liste')).toBe(position('cheptel.liste'));
+    expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/production/lieu')).toBe(position('cheptel.liste'));
     expect(etapeApresUnMenu(etapes, position('cheptel.retour.menu'), '/cheptel/naissances')).toBe(position('cheptel.naissances.page'));
   });
 
   it('une entrée que la visite ne connaît pas, ou la page où l’on est déjà, valide quand même l’étape', () => {
     expect(etapeApresUnMenu(etapes, position('accueil.cheptel'), '/cheptel/historique')).toBe(position('accueil.cheptel') + 1);
-    expect(etapeApresUnMenu(etapes, position('cheptel.retour.menu'), '/cheptel/liste')).toBe(position('cheptel.retour.menu') + 1);
+    expect(etapeApresUnMenu(etapes, position('cheptel.retour.menu'), '/production/lieu')).toBe(position('cheptel.retour.menu') + 1);
   });
 
   it('une étape qui ne demande pas de menu n’est pas touchée', () => {
@@ -99,13 +99,14 @@ describe('sur Windows, avec deux colonnes', () => {
 
   it('une étape de menu vaut pour toutes les pages de sa rubrique, pas pour celles des autres', () => {
     const menu = etapes[position('cheptel.naissances')];
-    expect(etapeSurLaPage(menu, '/cheptel/liste', true)).toBe(true);
-    expect(etapeSurLaPage(menu, '/cheptel/liste', false)).toBe(false);
+    // La liste des animaux est la page « Tous les animaux » (dans la Production) : une page du cheptel, ici, est l'historique.
+    expect(etapeSurLaPage(menu, '/cheptel/historique', true)).toBe(true);
+    expect(etapeSurLaPage(menu, '/cheptel/historique', false)).toBe(false);
     expect(etapeSurLaPage(menu, '/production/fromages', true)).toBe(false);
   });
 
-  it('« Passer » sur la liste des animaux ne rouvre pas le menu qui est déjà à gauche', () => {
-    const suite = etapeSuivante(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/liste', true);
+  it('« Passer » depuis une page du cheptel ne rouvre pas le menu qui est déjà à gauche', () => {
+    const suite = etapeSuivante(etapes, position('cheptel.fiche.ouvrir'), '/cheptel/historique', true);
     // La fiche d'un animal n'est pas ouverte : ses étapes sont passées, on arrive au menu du cheptel (déjà affiché).
     expect(suite?.index).toBe(position('cheptel.naissances'));
     expect(suite?.ouvrir).toBeUndefined();

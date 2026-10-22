@@ -5,7 +5,7 @@ import TousLesAnimaux from '@/features/accueil/ferme/TousLesAnimaux';
 import { TransformationInterieure } from '@/features/accueil/ferme/TransformationInterieure';
 import LieuTiers from '@/features/production/screens/LieuTiers';
 import EntrepotJeu from '@/features/stock/screens/EntrepotJeu';
-import { CATEGORIE_INVENTAIRE } from '@/shared/constants/stock';
+import { CATEGORIE_INVENTAIRE, SECTION_STOCK } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -22,6 +22,8 @@ export default function Lieu() {
         <EnTeteFerme />
         <EntrepotJeu
           seulement={CATEGORIE_INVENTAIRE.MATIERES_PREMIERES}
+          // Le stock de boucles n'est pas à la grange : il est avec les boucles (Cheptel › Boucles).
+          sauf={[SECTION_STOCK.BOUCLES]}
           titre={TEXTES.production.lieux.entrepot.grange}
         />
       </View>

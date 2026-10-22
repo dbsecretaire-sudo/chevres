@@ -4,6 +4,7 @@ import { useRouter, usePathname, useGlobalSearchParams, type Href } from 'expo-r
 import { Ionicons } from '@expo/vector-icons';
 import { useAncre } from '@/features/didacticiel/components/AncreVisite';
 import { dansLeMenuDeGauche, pageParente } from '@/bureau/retour';
+import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
 import { useDeuxColonnes } from '@/bureau/colonnes';
 import { colors } from '@/shared/theme/colors';
 import { estBureau } from '@/shared/utils/plateforme';
@@ -41,10 +42,14 @@ export function FlecheRetourBureau() {
   // Une page ouverte depuis un écran en cours (une fiche à compléter pendant un courrier) revient à cet écran.
   const depuis = typeof retour === 'string' && retour.startsWith('/') ? retour : undefined;
   const parent = depuis ?? pageParente(adresse, { famille, groupementId });
-  if (masquee || !parent) return <EspaceSansFleche />;
+  // Une page ouverte depuis un bouton (le groupement sanitaire, depuis l'accueil) revient à l'endroit du clic, pas à l'accueil de sa rubrique.
+  const point = useOrigineRetour();
+  const retourOrigine = useRetour();
+  const depuisUnBouton = !!point && adresse === point.destination.split('?')[0];
+  if (masquee || (!parent && !depuisUnBouton)) return <EspaceSansFleche />;
   // Sans nom : la flèche est un dessin seul (les autres boutons d'en-tête, eux, écrivent leur nom à côté).
   return (
-    <Pressable ref={ancre} style={commonStyles.boutonCompact} onPress={() => router.replace(parent as Href)}>
+    <Pressable ref={ancre} style={commonStyles.boutonCompact} onPress={() => (depuisUnBouton ? retourOrigine() : router.replace(parent as Href))}>
       <Ionicons name="arrow-back" size={24} color={colors.blanc} />
     </Pressable>
   );

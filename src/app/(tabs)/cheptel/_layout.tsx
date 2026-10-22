@@ -17,7 +17,7 @@ export default function CheptelLayout() {
   return (
     <Stack
       // Les écrans à sélecteur d'espèce suivent l'espèce active en se rechargeant : ils ne sont pas recréés.
-      screenLayout={ecranParEspeceSauf('index', 'liste', 'bilan', 'historique', 'naissances', 'reglages', 'bibliotheque')}
+      screenLayout={ecranParEspeceSauf('index', 'bilan', 'historique', 'naissances', 'reglages', 'bibliotheque')}
       screenOptions={{
         // Sur le téléphone : le bandeau de la ferme à la place de l'en-tête de navigation.
         ...enteteApplication(),
@@ -28,7 +28,6 @@ export default function CheptelLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.cheptel }} />
-      <Stack.Screen name="liste" options={{ title: TEXTES.cheptel.listeCheptel.titre }} />
       <Stack.Screen name="bibliotheque" options={{ title: TEXTES.export.bibliotheque.titre }} />
       <Stack.Screen name="documents-circulation" options={{ title: TEXTES.cheptel.circulation.titreEcran }} />
       <Stack.Screen name="dossier-pac" options={{ title: TEXTES.cheptel.accueil.lignes.dossierPac.titre }} />

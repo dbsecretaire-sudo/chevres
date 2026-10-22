@@ -11,7 +11,6 @@ const sansRequete = (adresse: string): string => adresse.split('?')[0].replace(/
  */
 const ECRANS_DU_MENU = new Set(
   [
-    ROUTES.CHEPTEL_LISTE,
     ROUTES.CHEPTEL_TRAITEMENTS,
     ROUTES.CHEPTEL_LOTS,
     ROUTES.CHEPTEL_NAISSANCES,
@@ -91,6 +90,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/production\/(documents-gds|rapports-essais)$/, () => ROUTES.lieu('groupementSanitaire')],
   // La flotte revient au garage, un véhicule à la flotte.
   [/^\/production\/flotte$/, () => ROUTES.lieu('garage')],
+  // La page d'un lieu de la ferme (un intervenant, la grange, tous les animaux) revient à l'accueil de la ferme.
+  [/^\/production\/lieu$/, () => '/'],
   [/^\/production\/vehicule$/, () => ROUTES.FLOTTE],
   [/^\/comptabilite\/lot$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],

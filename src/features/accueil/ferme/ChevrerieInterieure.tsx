@@ -8,6 +8,7 @@ import { FiltresCheptel } from '@/features/cheptel/components/FiltresCheptel';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { useListeCheptel } from '@/features/cheptel/hooks/useListeCheptel';
 import type { Chevre } from '@/features/cheptel/types';
+import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
@@ -61,16 +62,21 @@ export function ChevrerieInterieure({ vedettes }: Props) {
           <View>
             {visibles.map((chevre, index) => (
               <LigneDeBloc key={chevre.id} index={index} total={visibles.length}>
-                <LigneChevre
-                  chevre={chevre}
-                  emoji={dessin}
-                  image={tetes ? TETE_DE_CHEVRE : undefined}
-                  fond={fondDeLAnimal(categorieAccueil(chevre))}
-                  onPress={() => {
-                    noterOrigine(ROUTES.lieu('animaux'), ROUTES.ficheChevre(chevre.id));
-                    router.push(ROUTES.ficheChevre(chevre.id) as never);
-                  }}
-                />
+                {(() => {
+                  const ligne = (
+                    <LigneChevre
+                      chevre={chevre}
+                      emoji={dessin}
+                      image={tetes ? TETE_DE_CHEVRE : undefined}
+                      fond={fondDeLAnimal(categorieAccueil(chevre))}
+                      onPress={() => {
+                        noterOrigine(ROUTES.lieu('animaux'), ROUTES.ficheChevre(chevre.id));
+                        router.push(ROUTES.ficheChevre(chevre.id) as never);
+                      }}
+                    />
+                  );
+                  return index === 0 ? <AncreVisite id="cheptel.premiereLigne">{ligne}</AncreVisite> : ligne;
+                })()}
               </LigneDeBloc>
             ))}
           </View>

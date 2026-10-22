@@ -207,3 +207,9 @@ describe('documents et rapports d’essais du groupement sanitaire (Windows)', (
     expect(pageParente('/production/documents-gds')).toBe('/production/lieu?lieu=groupementSanitaire');
   });
 });
+
+describe('page d’un lieu de la ferme (Windows)', () => {
+  it('sans clic noté, la flèche de retour ramène à l’accueil, pas à la Production', () => {
+    expect(pageParente('/production/lieu')).toBe('/');
+  });
+});
