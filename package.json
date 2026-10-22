@@ -1,6 +1,6 @@
 {
   "name": "troupeau-chevres",
-  "version": "1.0.368",
+  "version": "1.0.369",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

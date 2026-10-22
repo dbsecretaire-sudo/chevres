@@ -202,7 +202,7 @@ export default function StockFromagerie() {
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
   const [aSupprimer, setASupprimer] = useState<ArticleAffiche | null>(null);
-  /** L'article dont on regarde l'historique (un appui sur sa carte, dans une liste ajoutée). */
+  /** L'article dont on regarde l'historique (un appui sur sa carte). */
   const [historiqueDe, setHistoriqueDe] = useState<ArticleAffiche | null>(null);
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
@@ -349,16 +349,14 @@ export default function StockFromagerie() {
                   if (boucles) {
                     setBoucleOuverte(a);
                     setBoucleVisible(true);
-                  } else if (genreDeLaCle(a.cle) === GENRE_ARTICLE.PERSONNALISE) {
-                    // Un article d'une liste ajoutée depuis la structure (laine, peau…) : son historique ; la quantité s'y ajuste.
-                    setHistoriqueDe(a);
                   } else if (estLigneDuCheptel(a.cle)) {
                     // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
                   } else if (estArticleAvecLots(a.cle)) {
                     setFromageOuvert(a);
                     setFromageVisible(true);
                   } else {
-                    setArticle(a);
+                    // Les autres articles (aliments, emballages, entretien, matériel, listes ajoutées…) : leur historique ; la quantité se saisit depuis lui.
+                    setHistoriqueDe(a);
                   }
                 }}
               />
@@ -775,6 +773,7 @@ export default function StockFromagerie() {
                 cle: historiqueDe.cle,
                 titre: historiqueDe.libelle,
                 emoji: emojiDeLArticle(genreDeLaCle(historiqueDe.cle), historiqueDe.libelle),
+                unite: historiqueDe.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? TEXTES.commun.general.kg : undefined,
               }
             : null
         }

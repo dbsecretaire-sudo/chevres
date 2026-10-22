@@ -128,7 +128,7 @@ export const TEXTES_STOCK = {
     titre: 'Historique',
     aucun: 'Aucun mouvement pour cet article.',
     ouvrirLeStock: 'Ouvrir dans l’inventaire',
-    ajuster: 'Ajuster la quantité',
+    ajuster: 'Quantité',
   },
   suppression: {
     titre: 'Supprimer cet article ?',

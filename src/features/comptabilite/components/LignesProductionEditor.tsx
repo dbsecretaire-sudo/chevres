@@ -10,6 +10,8 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle, estArticleBoucle, estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { articlesDeFournitures, articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
+import type { ArchiveStock } from '@/features/stock/types';
+import { SECTIONS } from '@/features/stock/utils/categories';
 import {
   ligneProductionVide,
   type LigneProductionForm,
@@ -34,6 +36,17 @@ interface Props {
 
 const T = TEXTES.comptabilite.lignesProductionEditor;
 
+/** La catégorie du stock d'une fourniture : le titre de sa liste (Emballages, Entretien…), ou le nom de la liste ajoutée qui la contient. */
+function groupeDeLArticle(cle: string, archive: ArchiveStock): string | undefined {
+  const [genre, id] = cle.split(':');
+  if (genre === GENRE_ARTICLE.PERSONNALISE) {
+    const listeId = archive.articles.find((a) => a.id === id)?.listeId;
+    return (archive.listes ?? []).find((l) => l.id === listeId)?.nom;
+  }
+  // Sans le « Achat — » du titre de la liste : seul le nom de la catégorie compte ici.
+  return SECTIONS.find((s) => s.genre === genre)?.titre.replace(/^(Achat|Ventes) — /, '');
+}
+
 /**
  * Carte « Détail par fourniture » (achat de production) : une facture peut regrouper plusieurs fournitures. Chacune se choisit
  * (avec recherche) dans la liste de l'inventaire — emballages, matériel, boucles… ; le crayon mène à l'inventaire et la liste s'y met
@@ -42,14 +55,16 @@ const T = TEXTES.comptabilite.lignesProductionEditor;
 export function LignesProductionEditor({ lignes, onChange, seulementBoucles, titre, offerte }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
-  const [articles, setArticles] = useState<ArticleAffiche[]>([]);
+  const [articles, setArticles] = useState<(ArticleAffiche & { groupe?: string })[]>([]);
 
   // La liste est relue à chaque retour sur l'écran : ce qu'on vient d'ajouter à l'inventaire y apparaît.
   useFocusEffect(
     useCallback(() => {
       lireArchiveStock().then((archive) =>
         setArticles(
-          seulementBoucles ? articlesDuGenre(GENRE_ARTICLE.BOUCLE, archive) : articlesDeFournitures(archive),
+          (seulementBoucles ? articlesDuGenre(GENRE_ARTICLE.BOUCLE, archive) : articlesDeFournitures(archive)).map(
+            (a) => ({ ...a, groupe: groupeDeLArticle(a.cle, archive) }),
+          ),
         ),
       );
     }, [seulementBoucles]),
@@ -97,6 +112,8 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
                   label={T.fournitureValeur(index + 1)}
                   libelleCache
                   searchable
+                  // D'abord les catégories du stock (emballages, entretien, équipement, matériel…), puis les articles de celle qu'on ouvre.
+                  parCategories
                   placeholder={T.choixFourniture}
                   value={ligne.article}
                   onChange={(valeur) =>
@@ -108,7 +125,7 @@ export function LignesProductionEditor({ lignes, onChange, seulementBoucles, tit
                   }
                   options={[
                     { value: '', label: T.horsStock },
-                    ...articles.map((a) => ({ value: a.cle, label: a.libelle })),
+                    ...articles.map((a) => ({ value: a.cle, label: a.libelle, groupe: a.groupe })),
                   ]}
                   onEdit={() => router.push(ROUTES.stockDepuis(retour))}
                 />
