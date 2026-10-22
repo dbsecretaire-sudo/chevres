@@ -23,7 +23,7 @@ describe('parcours de cas du didacticiel', () => {
       'sauvegarde',
     ]);
     expect(parcoursDe('vente-lait')?.etapes.map((e) => e.numero)).toEqual(['1', '2', '3', '4', '5', '5A', '6', '7', '8', '9', '10', '11']);
-    expect(parcoursDe('vente-sans-facture')?.etapes.map((e) => e.numero).slice(0, 7)).toEqual(['1', '2', '3', '4', '5', '5A', '6']);
+    expect(parcoursDe('vente-sans-facture')?.etapes.map((e) => e.numero).slice(0, 7)).toEqual(['1', '2', '3', '4', '4A', '5', '6']);
   });
 
   it('chaque parcours a son schéma en pictogrammes', () => {

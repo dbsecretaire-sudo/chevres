@@ -75,7 +75,7 @@ import {
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
-import { BarreDeNavigation } from '@/features/stock/components/BarreDeNavigation';
+import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/features/stock/types';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
@@ -481,11 +481,11 @@ export default function StockFromagerie() {
         }));
 
   return (
-    <View style={jeu.fond}>
-      <View style={jeu.cadre}>
-        <View style={jeu.panneau}>
-          <View style={jeu.corps}>
-          <View style={jeu.defile}>
+    <CadreDeJeu
+      onHaut={() => defiler(-PAS_DE_DEFILEMENT)}
+      onBas={() => defiler(PAS_DE_DEFILEMENT)}
+      onToutLeStock={vueAtelier ? () => router.setParams({ vue: '' }) : undefined}
+    >
     <Screen scroll={false} transparent>
       <ScrollView ref={defilement} onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={64} showsVerticalScrollIndicator={false} contentContainerStyle={[commonStyles.listFab, jeu.listeLarge]}>
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories)
@@ -824,24 +824,7 @@ export default function StockFromagerie() {
         }
       />
     </Screen>
-          </View>
-          {/* La barre de navigation du cadre de jeu, comme à la grange. */}
-          <BarreDeNavigation onHaut={() => defiler(-PAS_DE_DEFILEMENT)} onBas={() => defiler(PAS_DE_DEFILEMENT)} />
-          </View>
-        </View>
-      </View>
-      {/* Le stock de l'atelier : sous le cadre, comme à la grange, « Tout le stock » montre toutes les catégories. */}
-      {vueAtelier ? (
-        <Pressable
-          style={jeu.complet}
-          onPress={() => router.setParams({ vue: '' })}
-          accessibilityRole="button"
-        >
-          <Ionicons name="list" size={18} color={colors.blanc} />
-          <Text style={jeu.completTexte}>{TEXTES.production.lieux.entrepot.stockComplet}</Text>
-        </Pressable>
-      ) : null}
-    </View>
+    </CadreDeJeu>
   );
 }
 

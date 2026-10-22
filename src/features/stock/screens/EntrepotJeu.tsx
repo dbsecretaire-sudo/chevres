@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
+import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { emojiDeLaCategorie, nombreEnStock } from '@/features/stock/services/entrepotJeu';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
@@ -11,7 +11,6 @@ import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
-const T = TEXTES.production.lieux.entrepot;
 /** De combien de points les flèches font défiler la grille. */
 const PAS_DE_DEFILEMENT = 190;
 
@@ -82,17 +81,16 @@ export default function EntrepotJeu({
   };
 
   return (
-    <View style={styles.fond}>
-      <View style={styles.cadre}>
-        <Pressable
-          style={styles.fermer}
-          onPress={() => router.replace('/')}
-          accessibilityRole="button"
-          accessibilityLabel={T.fermer}
-        >
-          <Ionicons name="close" size={30} color={colors.blanc} />
-        </Pressable>
-        <View style={styles.panneau}>
+    <CadreDeJeu
+      onFermer={() => router.replace('/')}
+      onHaut={() => defiler(-PAS_DE_DEFILEMENT)}
+      onBas={() => defiler(PAS_DE_DEFILEMENT)}
+      onToutLeStock={() => {
+        noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
+        router.push(ROUTES.COMPTABILITE_STOCKS as never);
+      }}
+      haut={
+        <>
           {sansOnglets ? null : (
             <View style={styles.tetes}>
               <ScrollView
@@ -130,95 +128,26 @@ export default function EntrepotJeu({
               {titre ?? (actuelle ? TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom) : '')}
             </Text>
           ) : null}
-          <View style={styles.corps}>
-            <ScrollView
-              ref={defilement}
-              style={styles.defile}
-              contentContainerStyle={styles.rubriques}
-              showsVerticalScrollIndicator={false}
-              onScroll={(e) => {
-                position.current = e.nativeEvent.contentOffset.y;
-              }}
-              scrollEventThrottle={64}
-            >
-              <RubriquesDeCartes groupes={groupes} origine={origine} />
-            </ScrollView>
-            <View style={styles.fleches}>
-              <Pressable
-                style={styles.fleche}
-                onPress={() => defiler(-PAS_DE_DEFILEMENT)}
-                accessibilityRole="button"
-                accessibilityLabel="↑"
-              >
-                <Ionicons name="chevron-up" size={22} color={colors.blanc} />
-              </Pressable>
-              <View style={styles.piste}>
-                <View style={styles.curseur} />
-              </View>
-              <Pressable
-                style={styles.fleche}
-                onPress={() => defiler(PAS_DE_DEFILEMENT)}
-                accessibilityRole="button"
-                accessibilityLabel="↓"
-              >
-                <Ionicons name="chevron-down" size={22} color={colors.blanc} />
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </View>
-      <Pressable
-        style={styles.complet}
-        onPress={() => {
-          noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
-          router.push(ROUTES.COMPTABILITE_STOCKS as never);
+        </>
+      }
+    >
+      <ScrollView
+        ref={defilement}
+        style={styles.defile}
+        contentContainerStyle={styles.rubriques}
+        showsVerticalScrollIndicator={false}
+        onScroll={(e) => {
+          position.current = e.nativeEvent.contentOffset.y;
         }}
-        accessibilityRole="button"
+        scrollEventThrottle={64}
       >
-        <Ionicons name="list" size={18} color={colors.blanc} />
-        <Text style={styles.completTexte}>{T.stockComplet}</Text>
-      </Pressable>
-    </View>
+        <RubriquesDeCartes groupes={groupes} origine={origine} />
+      </ScrollView>
+    </CadreDeJeu>
   );
 }
 
-const BOIS = '#E8892B';
-const BOIS_FONCE = '#B8641A';
-const VERT = '#8DBA3F';
-
 const styles = StyleSheet.create({
-  fond: { flex: 1, backgroundColor: '#35541F', padding: 12, gap: 10 },
-  cadre: {
-    flex: 1,
-    backgroundColor: BOIS,
-    borderRadius: 26,
-    borderWidth: 4,
-    borderColor: BOIS_FONCE,
-    padding: 10,
-  },
-  fermer: {
-    position: 'absolute',
-    top: -10,
-    right: -6,
-    zIndex: 5,
-    width: 50,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: '#E8602B',
-    borderWidth: 3,
-    borderColor: '#8E3A12',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  panneau: {
-    flex: 1,
-    backgroundColor: VERT,
-    borderRadius: 18,
-    borderWidth: 3,
-    borderColor: BOIS_FONCE,
-    padding: 10,
-    gap: 8,
-  },
   tetes: { flexDirection: 'row', alignItems: 'center', paddingRight: 44 },
   ongletsDefile: { flexGrow: 0 },
   onglets: { gap: 8, paddingTop: 8, paddingRight: 8 },
@@ -248,42 +177,6 @@ const styles = StyleSheet.create({
   },
   badgeTexte: { color: colors.blanc, fontSize: 11, fontWeight: '800' },
   titre: { fontSize: 15, fontWeight: '900', color: '#4B2D0E', letterSpacing: 0.5 },
-  corps: { flex: 1, flexDirection: 'row', gap: 8 },
   defile: { flex: 1 },
   rubriques: { gap: 14, paddingBottom: 10 },
-  fleches: { width: 34, alignItems: 'center', justifyContent: 'space-between' },
-  fleche: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#3F6B1E',
-    borderWidth: 2,
-    borderColor: '#2B4C13',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  piste: {
-    flex: 1,
-    width: 14,
-    marginVertical: 6,
-    borderRadius: 7,
-    backgroundColor: '#3F6B1E',
-    borderWidth: 2,
-    borderColor: '#E8B13B',
-    overflow: 'hidden',
-  },
-  curseur: { flex: 1, margin: 2, borderRadius: 4, backgroundColor: '#6FB52E' },
-  complet: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#6B3F1B',
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: '#3F230E',
-  },
-  completTexte: { color: colors.blanc, fontSize: 14, fontWeight: '700' },
 });

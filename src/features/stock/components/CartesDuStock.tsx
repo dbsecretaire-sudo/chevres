@@ -112,7 +112,7 @@ export function CarteDeStock({
   /** La carte prend la largeur de trois cartes (le lait) : ses pastilles se rangent sur deux colonnes. */
   large?: boolean;
   /** Plusieurs pastilles l'une sous l'autre (le lait) à la place de la pastille unique : une icône (« piece » : la pièce du stock, ou un dessin), sa quantité et son niveau. */
-  pastilles?: readonly { icone: string; quantite: string; niveau: number; coloree?: boolean }[];
+  pastilles?: readonly { icone: string; quantite: string; niveau: number; couleur?: 'vert' | 'rouge' }[];
   emoji: string;
   titre: string;
   quantite: string;
@@ -155,8 +155,10 @@ export function CarteDeStock({
                   styles.pastille,
                   large ? styles.pastilleMoitie : null,
                   i > 0 && !large ? styles.pastilleSuivante : null,
-                  p.niveau < 0 ? styles.pastilleRouge : null,
-                  p.niveau === 0 && !p.coloree ? styles.pastilleVide : null,
+                  // Une couleur imposée (le lait : produit toujours vert, utilisé en fromagerie toujours rouge sombre), sinon vert, gris à 0, rouge si négatif.
+                  !p.couleur && p.niveau < 0 ? styles.pastilleRouge : null,
+                  !p.couleur && p.niveau === 0 ? styles.pastilleVide : null,
+                  p.couleur === 'rouge' ? styles.pastilleRougeSombre : null,
                 ]}
               >
                 {p.icone === 'piece' ? (
@@ -204,11 +206,11 @@ const styles = StyleSheet.create({
   rubriqueTitre: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#2F4A1E',
+    color: '#4B2D0E',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
-  rubriqueTitreSurClair: { color: '#2F6B14' },
+  rubriqueTitreSurClair: { color: '#4B2D0E' },
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   cellule: { width: '31%' },
   celluleLarge: { width: '100%' },
@@ -260,6 +262,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   pastilleSuivante: { borderTopWidth: 1 },
+  pastilleRougeSombre: { backgroundColor: '#8B0016', borderTopColor: '#5C000E' },
   dessinDePastille: { width: 20, fontSize: 15, textAlign: 'center' },
   pastilleRouge: { backgroundColor: '#B8402A', borderTopColor: '#7E2616' },
   pastilleVide: { backgroundColor: '#8E9A7C', borderTopColor: '#6B7660' },
@@ -274,5 +277,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quantite: { flex: 1, textAlign: 'right', color: colors.blanc, fontSize: 14, fontWeight: '900' },
-  vide: { width: '100%', color: '#2F4A1E', fontSize: 13, fontWeight: '700', paddingVertical: 6 },
+  vide: { width: '100%', color: '#4B2D0E', fontSize: 13, fontWeight: '700', paddingVertical: 6 },
 });

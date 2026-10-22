@@ -8,7 +8,6 @@ import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
-import { Checkbox } from '@/shared/components/Checkbox';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { PoidsModal } from '@/features/cheptel/components/PoidsModal';
@@ -187,8 +186,6 @@ export default function ViandeVendue() {
   /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
   const ouvrirLot = (id: string) =>
     `${ROUTES.lotDeProduction(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
-  /** Le mode avancé : les animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants) ont leurs onglets. */
-  const avance = !!settings.exploitation?.ventesSansFacture;
   const parNaissance = (a: Chevre, b: Chevre) => b.dateNaissance.localeCompare(a.dateNaissance);
   const sansBoucle = [...animaux.values()].filter((a) => especeDe(a) === espece && !a.numeroBoucle?.trim());
   /** À vendre : les animaux sans boucle vivants, ou déjà à l'abattoir, qu'aucune vente ne désigne. */
@@ -212,8 +209,7 @@ export default function ViandeVendue() {
       (a, b) =>
         a.reservation!.client.localeCompare(b.reservation!.client, 'fr', { sensitivity: 'base' }) || parNaissance(a, b),
     );
-  const ongletActif: OngletViande =
-    !avance && (onglet === 'avendre' || onglet === 'vendue') ? 'afacturer' : onglet;
+  const ongletActif: OngletViande = onglet;
   // Le menu d'actions du premier animal à vendre, ouvert quand l'adresse le demande (le didacticiel le montre), dès que la liste est lue.
   const [menuOuvert, setMenuOuvert] = useState(false);
   if (menuDemande === 'premier' && !menuOuvert && ongletActif === 'avendre' && aVendreLibres.length > 0) {
@@ -403,26 +399,13 @@ export default function ViandeVendue() {
           puces={[
             { valeur: 'afacturer', label: T.onglets.aFacturer(groupesAFacturer.length), aide: T.rienAFacturerNote },
             { valeur: 'facturee', label: T.onglets.facturee(facturees.length) },
-            ...(avance
-              ? [
-                  { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
-                  { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(nbAnimaux(sansFacture)) },
-                ]
-              : []),
+            // Les animaux sans boucle vendus sans facture (à vendre, vendus morts ou vivants) ont leurs onglets d'office.
+            { valeur: 'avendre' as const, label: T.onglets.sansFactureAVendre(aVendre.length) },
+            { valeur: 'vendue' as const, label: T.onglets.sansFactureVendue(nbAnimaux(sansFacture)) },
           ]}
           valeur={ongletActif}
           onChoisir={setOnglet}
         />
-        {/* Avancé : activer ou désactiver les onglets des animaux sans boucle vendus sans facture. */}
-        <AncreVisite id="viande.avance">
-          <Checkbox
-            label={T.avance}
-            value={avance}
-            onChange={(v) =>
-              patchSettings({ exploitation: { ...settings.exploitation, ventesSansFacture: v } })
-            }
-          />
-        </AncreVisite>
         {ongletActif === 'avendre' ? (
           <PucesDefilantes<'disponibles' | 'reserves'>
             puces={[
@@ -663,23 +646,19 @@ export default function ViandeVendue() {
       {/* Le rappel de lots de la boucherie / charcuterie vendue. */}
       <Fab
         options={[
-          ...(avance
-            ? [
-                {
-                  label: T.vendreSansFacture,
-                  icon: 'add' as const,
-                  onPress: () =>
-                    router.push({
-                      pathname: ROUTES.COMPTABILITE_NOUVELLE,
-                      params: {
-                        type: TYPE_FACTURE.EMISE,
-                        categorie: CATEGORIE_RECETTE.VIANDE,
-                        facture: 'non',
-                      },
-                    }),
+          {
+            label: T.vendreSansFacture,
+            icon: 'add' as const,
+            onPress: () =>
+              router.push({
+                pathname: ROUTES.COMPTABILITE_NOUVELLE,
+                params: {
+                  type: TYPE_FACTURE.EMISE,
+                  categorie: CATEGORIE_RECETTE.VIANDE,
+                  facture: 'non',
                 },
-              ]
-            : []),
+              }),
+          },
           {
             label: T.rappeler,
             icon: 'alert-circle',
