@@ -58,7 +58,9 @@ const ROUTE_DIRECTE: Record<string, string> = {
   organismes: ROUTES.lieu('organismes'),
   // Les intervenants de l'exploitation.
   abattoir: ROUTES.lieu('abattoir'),
-  veterinaire: ROUTES.lieu('veterinaire'),
+  // Les partenaires (organismes, assureurs, équarrisseurs, contacts) : l'écran où ils sont tous rangés ; le vétérinaire est dans le groupement sanitaire.
+  partenaires: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
+  bilanAnnuel: ROUTES.CHEPTEL_BILAN,
   aliments: ROUTES.lieu('aliments'),
   equarrissage: ROUTES.lieu('equarrissage'),
   carburant: ROUTES.lieu('carburant'),
@@ -208,7 +210,7 @@ export default function AccueilFerme() {
       pastille: f.lotsAFacturer,
       couleur: ACHAT,
     },
-    { cle: 'veterinaire', titre: C.veterinaire, icone: iconeMCI('stethoscope'), couleur: ACHAT },
+    { cle: 'partenaires', titre: C.partenaires, icone: iconeIon('people'), couleur: ACHAT },
     {
       cle: 'equarrissage',
       titre: C.equarrissage,
@@ -242,7 +244,7 @@ export default function AccueilFerme() {
     { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
     { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
     { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
-    { cle: 'sante', titre: C.sante, icone: iconeIon('medkit'), couleur: ORANGE },
+    { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
   ];
   // À droite de la scène du travail du produit : le stock, la réservation d'un produit, les lots et fabriquer (en bulles), et la rentabilité de ce qu'on fabrique.
   const gestionTransformation: EntreeDeColonne[] = [

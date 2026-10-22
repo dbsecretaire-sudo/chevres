@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { BadgeDejaGenere } from '@/features/bibliotheque/components/BadgeDejaGenere';
 import { useBibliotheque } from '@/features/bibliotheque/hooks/useBibliotheque';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
@@ -40,11 +40,28 @@ const TOUTES = 'toutes';
 /** Les documents qui se génèrent d'un appui : un document par ligne. */
 type Document = 'suivi' | 'bordereaux' | 'recensement';
 
+/** L'écran du dossier PAC. */
+export default function DossierPac() {
+  return (
+    <Screen>
+      <ContenuDossierPac />
+    </Screen>
+  );
+}
+
 /**
  * Le dossier PAC : tous les documents de la campagne, remplis d'après le cheptel, au même endroit. En haut, l'année (et l'espèce) ; dessous,
  * une ligne par document — un appui le génère —, puis l'historique des documents déjà générés. Le détail du calcul du recensement se déplie.
  */
-export default function DossierPac() {
+export function ContenuDossierPac({
+  pourOrganismes = false,
+  apres,
+}: {
+  /** Dans la page des organismes : sans les bordereaux de perte ni les documents de circulation (ils sont dans les documents des animaux). */
+  pourOrganismes?: boolean;
+  /** Des lignes de plus à la suite de celles des documents (les terrains). */
+  apres?: ReactNode;
+}) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const { espece } = useEtablissement();
@@ -103,7 +120,7 @@ export default function DossierPac() {
     );
 
   return (
-    <Screen>
+    <>
       {/* L'espèce et l'année, en haut : ce que les documents ci-dessous reprennent. */}
       <LigneFiltres>
         {rienAFaire ? null : (
@@ -119,7 +136,7 @@ export default function DossierPac() {
         )}
         <SelecteurEspece />
       </LigneFiltres>
-      <Text style={commonStyles.note}>{T.fenetreAide}</Text>
+      {pourOrganismes ? null : <Text style={commonStyles.note}>{T.fenetreAide}</Text>}
       {!especeDuSuivi(espece) ? <Text style={commonStyles.mutedItalic}>{T.pasPourCetteEspece}</Text> : null}
       {rienAFaire ? <Text style={commonStyles.mutedItalic}>{T.aucunAnimal}</Text> : null}
 
@@ -131,18 +148,21 @@ export default function DossierPac() {
           trailing={droite('suivi', ['suivi_mouvements'])}
           onPress={appui('suivi', exporterSuiviMouvementsPdf)}
         />
-        <ListRow
-          title={T.lignes.bordereaux.titre}
-          subtitle={T.lignes.bordereaux.aide}
-          trailing={droite('bordereaux', ['bordereaux_perte'])}
-          onPress={appui('bordereaux', exporterBordereauxPertePdf)}
-        />
+        {pourOrganismes ? null : (
+          <ListRow
+            title={T.lignes.bordereaux.titre}
+            subtitle={T.lignes.bordereaux.aide}
+            trailing={droite('bordereaux', ['bordereaux_perte'])}
+            onPress={appui('bordereaux', exporterBordereauxPertePdf)}
+          />
+        )}
         <ListRow
           title={`${T.recensement.bouton.replace(' (PDF)', '')} ${annee + 1}`}
           subtitle={T.lignes.recensement.aide(annee)}
           trailing={droite('recensement', ['recensement'])}
           onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
         />
+        {pourOrganismes ? null : (
         <AncreVisite id="dossier.circulation">
         <ListRow
           title={TEXTES.cheptel.circulation.ligneDossier}
@@ -156,12 +176,14 @@ export default function DossierPac() {
           onPress={() => router.push(ROUTES.documentsCirculationDepuis(retour) as never)}
         />
         </AncreVisite>
+        )}
         <ListRow
           title={T.estive.bouton.replace('…', '')}
           subtitle={T.lignes.estive.aide}
           trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
           onPress={() => setEstiveOuverte(true)}
         />
+        {apres}
       </BlocLignes>
       {sansPerte ? <Text style={commonStyles.mutedItalic}>{T.aucunePerte}</Text> : null}
 
@@ -199,6 +221,6 @@ export default function DossierPac() {
         />
       </BlocLignes>
       <FenetreEstive visible={estiveOuverte} annee={annee} onClose={() => setEstiveOuverte(false)} />
-    </Screen>
+    </>
   );
 }

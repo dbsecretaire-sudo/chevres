@@ -46,6 +46,18 @@ export interface Emprunt {
   nombreEcheances: number;
 }
 
+/** La périodicité de la prime d'un contrat d'assurance. */
+export type PeriodiciteAssurance = 'mensuelle' | 'trimestrielle' | 'semestrielle' | 'annuelle';
+
+/** Un contrat d'assurance de l'échéancier : sa prime (€), sa périodicité et sa prochaine échéance (AAAA-MM-JJ). */
+export interface ContratAssurance {
+  id: string;
+  nom: string;
+  prime: number;
+  periodicite: PeriodiciteAssurance;
+  prochaineEcheance: string;
+}
+
 /** Les réglages de TVA du pilotage : le régime, la périodicité du découpage et, au remboursement forfaitaire agricole, son taux (%). */
 export interface ReglagesTva {
   regime?: string;
@@ -169,6 +181,9 @@ export interface LotAnimaux {
   depart?: boolean;
   /** Un lot de départ d'animaux vendus vivants : le jour du départ (AAAA-MM-JJ). Un lot d'abattoir a le sien dans `abattoir`. */
   dateDepart?: string;
+  /** Un lot d'équarrissage : le numéro du bon d'équarrissage remis par l'équarrisseur (le scan du bon est dans `fichiers`) et le jour de l'enlèvement (AAAA-MM-JJ). */
+  numeroBon?: string;
+  dateEnlevement?: string;
   /** Le document de circulation du lot (un seul pour tout le lot) : le scan du document rempli ; absent tant qu'il manque. */
   documentCirculation?: DocumentCirculationDepose;
 }
@@ -351,6 +366,9 @@ export interface InfosExploitation {
   /** La trésorerie : le solde du compte à une date (le départ des courbes), le seuil sous lequel alerter, et les emprunts en cours. */
   tresorerie?: ReglagesTresorerie;
   emprunts?: Emprunt[];
+  /** Vrai : les primes des contrats d'assurance à venir entrent dans l'échéancier et la prévision de la trésorerie (case « Activer l'échéancier »). */
+  echeancierAssurance?: boolean;
+  contratsAssurance?: ContratAssurance[];
   /** Le régime de TVA et sa périodicité (voir shared/constants/tva) : à défaut, le réel simplifié, mois par mois. */
   tva?: ReglagesTva;
   /** Faux : l'inventaire des boucles ne se synchronise plus avec le cheptel (poses et numéros). Absent : synchronisé. */

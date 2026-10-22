@@ -59,6 +59,7 @@ export const lotsTextes = {
   categories: {
     abattoir: 'Abattoir',
     depart: 'Départs d’animaux vivants',
+    equarrissage: 'Équarrissage',
     veterinaire: 'Vétérinaire',
     reproduction: 'Mises à la reproduction',
     avortement: 'Avortements',
@@ -146,6 +147,11 @@ export const lotsTextes = {
   poidsDuLot: 'Poids de tout le lot (kg)',
   poidsDuLotAide: 'Le poids total de la viande de ce lot (bon d’abattage). Il remplit le poids de la facture au client, qui ne se modifie plus.',
   poidsDesFiches: (kilos: string) => `Poids des fiches des animaux : ${kilos} kg`,
+  dateEnlevement: 'Jour de l’enlèvement',
+  numeroBon: 'N° du bon d’équarrissage',
+  exempleBon: 'ex : 2026-0412',
+  aideBonEquarrissage: 'Choisissez les animaux morts de cet enlèvement (onglet Animaux) et joignez le bon remis par l’équarrisseur (onglet Fichiers, une fois le lot créé).',
+  aideFichiersEquarrissage: 'Le bon d’équarrissage remis par l’équarrisseur (scan, photo, PDF).',
   aideFichiersAbattage: 'Les poids, le bon d’abattage et les autres documents de cet abattage ou de sa vente (scan, photo, PDF).',
   aideFactureAbattoir: 'La facture de l’abattoir fait le montant des frais d’abattoir refacturés au client quand vous facturez la viande de ce lot. Il n’y a pas de montant sans facture : la facture se modifie dans la comptabilité.',
   /** Les onglets de la fiche d'un lot vétérinaire (une visite). */

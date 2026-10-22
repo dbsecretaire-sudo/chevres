@@ -66,6 +66,8 @@ export interface ConfigLieuTiers {
   volets?: readonly { cle: string; route: string }[];
   /** Où ouvrir « Nouvelle facture » : une facture reçue (achat) ou émise (vente), déjà dans la bonne catégorie. */
   nouvelle: string;
+  /** Vrai : la page montre le dossier PAC et les terrains en toutes lettres, à la place des liens. */
+  dossierPac?: boolean;
   liens: readonly LienDuLieu[];
 }
 
@@ -129,7 +131,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_DEPENSE.ASSURANCES],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ASSURANCES}`,
-    liens: [],
+    // L'échéancier facultatif des primes (case « Activer l'échéancier » et contrats), dans les réglages de la trésorerie.
+    liens: [{ cle: 'echeancier', icone: 'calendar', route: ROUTES.COMPTABILITE_TRESORERIE_REGLAGES }],
   },
   banque: {
     cle: 'banque',
@@ -163,8 +166,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
       { cle: VOLET_COOPERATIVE.EXPERTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.EXPERTS}&depense=${CATEGORIE_DEPENSE.AUTRE}` },
       { cle: VOLET_COOPERATIVE.TRANSPORTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.TRANSPORTS}&depense=${CATEGORIE_DEPENSE.AUTRE}` },
     ],
-    // Les courriers, démarches et aides déposés pour chaque association ou coopérative.
-    liens: [{ cle: 'courriers', icone: 'mail', route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT) }],
+    // Les courriers, démarches et aides se rangent dans les dossiers de la fiche de chaque association ou coopérative.
+    liens: [],
   },
   groupementSanitaire: {
     cle: 'groupementSanitaire',
@@ -304,8 +307,6 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: NOUVELLE,
     liens: [
-      { cle: 'bilan', icone: 'stats-chart', route: ROUTES.CHEPTEL_BILAN },
-      { cle: 'dossierPac', icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
       { cle: 'circulation', icone: 'paper-plane', route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION },
       { cle: 'identification', icone: 'card', route: ROUTES.DOCUMENTS_IDENTIFICATION },
       { cle: 'historique', icone: 'time', route: ROUTES.CHEPTEL_HISTORIQUE },
@@ -337,11 +338,9 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_RECETTE.AIDE],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
-    liens: [
-      { cle: 'dossierPac', icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
-      { cle: 'terrains', icone: 'map', route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE) },
-      { cle: 'bilan', icone: 'stats-chart', route: ROUTES.CHEPTEL_BILAN },
-    ],
+    // Le dossier PAC (suivi des mouvements, recensement, estive, documents générés) et les terrains s'affichent dans la page même.
+    dossierPac: true,
+    liens: [],
   },
   equarrissage: {
     cle: 'equarrissage',
@@ -351,10 +350,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
-    liens: [
-      { cle: 'bordereaux', icone: 'document-text', route: ROUTES.CHEPTEL_DOSSIER_PAC },
-      { cle: 'historique', icone: 'time', route: ROUTES.CHEPTEL_HISTORIQUE },
-    ],
+    // Le bon d'équarrissage est rangé dans le lot d'équarrissage (Lots d'animaux), avec ses animaux.
+    liens: [{ cle: 'bons', icone: 'document-text', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.EQUARRISSAGE) }],
   },
   abattoir: {
     cle: 'abattoir',

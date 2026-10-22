@@ -23,6 +23,9 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { ContenuDossierPac } from '@/features/cheptel/screens/DossierPac';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
@@ -38,6 +41,9 @@ interface TextesLieu {
   groupeEcritures?: string;
   nouvelle?: string;
   versement?: string;
+  /** Pour le groupement sanitaire : le groupe des vétérinaires, rangés avec lui. */
+  groupeVeterinaires?: string;
+  ajouterVeterinaire?: string;
   liens: object;
 }
 /** Combien d'écritures la page en montre : les plus récentes ; les autres sont dans la comptabilité. */
@@ -82,6 +88,11 @@ function LieuTiersStandard() {
       contacts.filter((c) => config.categoriesContact.includes(categorieDuContact(c, idsConnus).id ?? '')),
     [contacts, idsConnus, config],
   );
+  /** Les vétérinaires (la page du groupement sanitaire les range avec lui). */
+  const veterinaires = useMemo(
+    () => contacts.filter((c) => categorieDuContact(c, idsConnus).id === CATEGORIE_FOURNISSEUR.VETERINAIRE),
+    [contacts, idsConnus],
+  );
   const ecritures = useMemo(
     () =>
       ecrituresDuLieu(
@@ -106,6 +117,22 @@ function LieuTiersStandard() {
 
   return (
     <Screen>
+      {/* Les organismes : le dossier PAC (suivi des mouvements, recensement, estive, documents générés) et les terrains, directement dans la page. */}
+      {config.dossierPac ? (
+        <GroupeAccueil titre={T.groupeLiens}>
+          <ContenuDossierPac
+            pourOrganismes
+            apres={
+              <ListRow
+                title={(textes.liens as Record<string, { titre: string; aide: string }>).terrains?.titre ?? ''}
+                subtitle={(textes.liens as Record<string, { titre: string; aide: string }>).terrains?.aide}
+                icone="map"
+                onPress={() => ouvrir(ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE))}
+              />
+            }
+          />
+        </GroupeAccueil>
+      ) : null}
       {liens.length > 0 ? (
         <GroupeAccueil titre={T.groupeLiens}>
           <BlocLignes>
@@ -158,6 +185,32 @@ function LieuTiersStandard() {
               />
             </BlocLignes>
           </GroupeAccueil>
+
+          {/* Le groupement sanitaire accueille les vétérinaires : leurs fiches (traitements, visites, factures) s'ouvrent d'ici. */}
+          {cle === 'groupementSanitaire' ? (
+            <GroupeAccueil titre={textes.groupeVeterinaires ?? ''}>
+              <BlocLignes>
+                {veterinaires.map((c) => (
+                  <ListRow
+                    key={c.cle}
+                    title={c.nom}
+                    subtitle={
+                      [(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email]
+                        .filter(Boolean)
+                        .join(' · ') || undefined
+                    }
+                    emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
+                    onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
+                  />
+                ))}
+                <ListRow
+                  title={textes.ajouterVeterinaire ?? ''}
+                  icone="add-circle"
+                  onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`)}
+                />
+              </BlocLignes>
+            </GroupeAccueil>
+          ) : null}
 
           <GroupeAccueil titre={textes.groupeEcritures ?? ''}>
             <BlocLignes>

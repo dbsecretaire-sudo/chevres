@@ -14,27 +14,16 @@ export interface ActionDeLieu {
 }
 
 /**
- * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (santé, grange) et les lots de l'atelier. Les autres boutons (les intervenants, le
+ * Les boutons de l'accueil qui ouvrent des bulles : ceux de l'intérieur de l'exploitation (grange) et les lots de l'atelier. Les autres boutons (les intervenants, le
  * cheptel, les documents) ouvrent directement leur page, qui regroupe toutes leurs actions.
  */
-export type CibleDesBulles = 'sante' | 'grange' | 'lots' | 'fabriquer';
+export type CibleDesBulles = 'grange' | 'lots' | 'fabriquer';
 
 const B = TEXTES.accueil.ferme.bulles;
 
 /** Les actions qui sortent en bulles quand on touche un bouton de l'accueil : les écrans qu'on y ouvre le plus. */
 export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
   switch (cible) {
-    case 'sante':
-      return [
-        { cle: 'traitements', titre: B.traitements, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
-        {
-          cle: 'carnetSanitaire',
-          titre: B.carnetSanitaire,
-          icone: 'clipboard',
-          // Les visites du vétérinaire sont dans sa fiche (depuis qu'elles ne sont plus un onglet des contrôles).
-          route: ROUTES.lieu('veterinaire'),
-        },
-      ];
     case 'fabriquer':
       return [
         { cle: 'fabriquerFromage', titre: B.fabriquerFromage, icone: 'restaurant', iconeMci: 'cheese', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE) },

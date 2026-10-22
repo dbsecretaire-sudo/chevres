@@ -1,8 +1,8 @@
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Facture, Vente } from '@/features/comptabilite/types';
-import type { Emprunt, ReglagesTresorerie } from '@/features/settings/settings';
-import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
+import type { ContratAssurance, Emprunt, PeriodiciteAssurance, ReglagesTresorerie } from '@/features/settings/settings';
+import { CATEGORIE_DEPENSE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import {
   CATEGORIES_DEPENSE_HORS_TRESORERIE,
   CATEGORIES_RECETTE_HORS_TRESORERIE,
@@ -23,7 +23,7 @@ export interface EvenementTresorerie {
   /** Positif : une entrée ; négatif : une sortie. */
   montant: number;
   type: TypeEcheance;
-  source: 'vente' | 'facture' | 'emprunt';
+  source: 'vente' | 'facture' | 'emprunt' | 'assurance';
   id: string;
   /** Le client, le fournisseur ou l'emprunt, de quoi reconnaître l'échéance. */
   libelle: string;
@@ -68,6 +68,8 @@ export interface EntreeTresorerie {
   factures: Facture[];
   reglages?: ReglagesTresorerie;
   emprunts?: Emprunt[];
+  /** Les contrats d'assurance de l'échéancier (à donner seulement quand il est activé). */
+  contratsAssurance?: ContratAssurance[];
   /** La date d'aujourd'hui (AAAA-MM-JJ) : avant, les paiements sont faits ; après, ils sont à venir. */
   aujourdhui?: string;
 }
@@ -95,6 +97,33 @@ export function echeancesDEmprunt(emprunt: Emprunt): { date: string; montant: nu
     montant: emprunt.mensualite,
   }));
 }
+
+/** Le nombre de mois entre deux primes de chaque périodicité. */
+const MOIS_PAR_PERIODICITE: Record<PeriodiciteAssurance, number> = {
+  mensuelle: 1,
+  trimestrielle: 3,
+  semestrielle: 6,
+  annuelle: 12,
+};
+
+/** Les échéances d'un contrat d'assurance entre deux dates (comprises) : une prime à chaque période, à partir de la prochaine échéance. */
+export function echeancesDeContrat(contrat: ContratAssurance, depuis: string, jusqua: string): { date: string; montant: number }[] {
+  const pas = MOIS_PAR_PERIODICITE[contrat.periodicite] ?? 12;
+  const echeances: { date: string; montant: number }[] = [];
+  for (let i = 0; i < 600; i += 1) {
+    const date = ajouterMois(contrat.prochaineEcheance, i * pas);
+    if (date > jusqua) break;
+    if (date >= depuis) echeances.push({ date, montant: contrat.prime });
+  }
+  return echeances;
+}
+
+/** Les jours d'écart entre deux dates ISO. */
+const joursEntre = (a: string, b: string): number =>
+  Math.abs(Math.round((new Date(`${a}T00:00:00Z`).getTime() - new Date(`${b}T00:00:00Z`).getTime()) / 86_400_000));
+
+/** Une prime déjà notée comme dépense d'assurance à moins d'un mois de l'échéance : elle ne se compte pas deux fois. */
+const PRIME_DEJA_NOTEE_JOURS = 30;
 
 /** Les paiements faits (avec leur date) et les sommes à venir, d'après les ventes, les factures et les emprunts. */
 function mouvements(entree: EntreeTresorerie, aujourdhui: string) {
@@ -153,6 +182,25 @@ function mouvements(entree: EntreeTresorerie, aujourdhui: string) {
         source: 'emprunt',
         id: e.id,
         libelle: e.nom,
+        enRetard: false,
+      });
+    }
+  }
+  // Les primes des contrats d'assurance, quand l'échéancier est activé : celles à venir, sauf celles déjà notées comme dépense.
+  const horizon = ajouterMois(aujourdhui, MOIS_ECHEANCIER);
+  const primesNotees = entree.factures
+    .filter((f) => f.type === TYPE_FACTURE.RECUE && (f.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES || f.categorieDepense === CATEGORIE_DEPENSE.ASSURANCE_VEHICULE))
+    .map((f) => f.date);
+  for (const contrat of entree.contratsAssurance ?? []) {
+    for (const echeance of echeancesDeContrat(contrat, aujourdhui, horizon)) {
+      if (primesNotees.some((d) => joursEntre(d, echeance.date) <= PRIME_DEJA_NOTEE_JOURS)) continue;
+      aVenir.push({
+        date: echeance.date,
+        montant: -echeance.montant,
+        type: TYPE_ECHEANCE.A_PAYER,
+        source: 'assurance',
+        id: contrat.id,
+        libelle: contrat.nom,
         enRetard: false,
       });
     }
@@ -234,7 +282,7 @@ export function calculerTresorerie(entree: EntreeTresorerie): Tresorerie {
 /** La trésorerie d'une année, d'après les ventes, factures et emprunts enregistrés. */
 export async function tresorerie(
   annee: number,
-  options: { reglages?: ReglagesTresorerie; emprunts?: Emprunt[] },
+  options: { reglages?: ReglagesTresorerie; emprunts?: Emprunt[]; contratsAssurance?: ContratAssurance[] },
 ): Promise<Tresorerie> {
   const [ventes, factures] = await Promise.all([listToutesVentes(), listToutesFactures()]);
   return calculerTresorerie({ annee, ventes, factures, ...options });

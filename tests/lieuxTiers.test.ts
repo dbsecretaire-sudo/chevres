@@ -71,9 +71,15 @@ describe('rangement des rubriques', () => {
     expect(LIEUX_TIERS.entrepot.avecTiers).toBe(false);
     expect(LIEUX_TIERS.entrepot.liens.length).toBeGreaterThan(5);
   });
-  it('les organismes rassemblent le dossier PAC, les terrains et le bilan annuel', () => {
-    const cles = LIEUX_TIERS.organismes.liens.map((l) => l.cle);
-    expect(cles).toEqual(expect.arrayContaining(['dossierPac', 'terrains', 'bilan']));
+  it('les organismes rassemblent le dossier PAC et les terrains ; les documents des animaux sont à part', () => {
+    // Le dossier PAC et les terrains s'affichent dans la page même (pas de liens).
+    expect(LIEUX_TIERS.organismes.dossierPac).toBe(true);
+    expect(LIEUX_TIERS.organismes.liens).toEqual([]);
+    // Un seul endroit pour chaque chose : le dossier PAC n'est pas dans les documents, et le bilan annuel est sur l'accueil.
+    expect(LIEUX_TIERS.documents.liens.map((l) => l.cle)).toEqual(['circulation', 'identification', 'historique']);
+  });
+  it('l’équarrissage range son bon dans la fiche de l’équarrisseur', () => {
+    expect(LIEUX_TIERS.equarrissage.liens.map((l) => l.cle)).toEqual(['bons']);
   });
   it('le commerce a ses rubriques de vente et des clients pour tiers', () => {
     expect(LIEUX_TIERS.commercial.liens.map((l) => l.cle)).toEqual(expect.arrayContaining(['ventes', 'commandes', 'tarifs']));

@@ -7,6 +7,9 @@ import { Card } from '@/shared/components/Card';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
+import { Checkbox } from '@/shared/components/Checkbox';
+import { SelectField } from '@/shared/components/SelectField';
+import type { PeriodiciteAssurance } from '@/features/settings/settings';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -30,11 +33,23 @@ interface SaisieEmprunt {
   nombreEcheances: string;
 }
 
+/** Ce qu'on saisit d'un contrat d'assurance : tout en texte. */
+interface SaisieContrat {
+  id: string;
+  nom: string;
+  prime: string;
+  periodicite: PeriodiciteAssurance;
+  prochaineEcheance: string;
+}
+
 interface Saisie {
   soldeDepart: string;
   dateSolde: string;
   seuilAlerte: string;
   emprunts: SaisieEmprunt[];
+  /** La case « Activer l'échéancier » des assurances, et leurs contrats. */
+  echeancierAssurance: boolean;
+  contrats: SaisieContrat[];
 }
 
 /** Un nombre saisi en texte (rien quand le champ est vide), le signe moins permis (un solde peut être négatif). */
@@ -55,6 +70,14 @@ export default function ReglagesTresorerie() {
     soldeDepart: enTexte(infos?.tresorerie?.soldeDepart),
     dateSolde: infos?.tresorerie?.dateSolde ?? todayISO(),
     seuilAlerte: enTexte(infos?.tresorerie?.seuilAlerte),
+    echeancierAssurance: !!infos?.echeancierAssurance,
+    contrats: (infos?.contratsAssurance ?? []).map((c) => ({
+      id: c.id,
+      nom: c.nom,
+      prime: enTexte(c.prime),
+      periodicite: c.periodicite,
+      prochaineEcheance: c.prochaineEcheance,
+    })),
     emprunts: (infos?.emprunts ?? []).map((e) => ({
       id: e.id,
       nom: e.nom,
@@ -65,6 +88,8 @@ export default function ReglagesTresorerie() {
   });
   const [saisie, setSaisie] = useState<Saisie>(depart);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  const [contratAjoutOuvert, setContratAjoutOuvert] = useState(false);
+  const [contratASupprimer, setContratASupprimer] = useState<string | null>(null);
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
   /** L'emprunt déplié : tous sont enroulés au départ, un seul est visible à la fois. */
   const [ouvert, setOuvert] = useState<string | null>(null);
@@ -85,6 +110,17 @@ export default function ReglagesTresorerie() {
           dateSolde: saisie.dateSolde || undefined,
           seuilAlerte: nombreOuRien(saisie.seuilAlerte),
         },
+        echeancierAssurance: saisie.echeancierAssurance || undefined,
+        contratsAssurance:
+          saisie.contrats.length > 0
+            ? saisie.contrats.map((c) => ({
+                id: c.id,
+                nom: c.nom,
+                prime: nombreOuRien(c.prime) ?? 0,
+                periodicite: c.periodicite,
+                prochaineEcheance: c.prochaineEcheance,
+              }))
+            : undefined,
         emprunts: saisie.emprunts.map((e) => ({
           id: e.id,
           nom: e.nom,
@@ -98,6 +134,8 @@ export default function ReglagesTresorerie() {
   };
   useEnregistrementAuto({ actif: loaded, signature: JSON.stringify(saisie), enregistrer });
 
+  const majContrat = (id: string, patch: Partial<SaisieContrat>) =>
+    setSaisie((s) => ({ ...s, contrats: s.contrats.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
   const majEmprunt = (id: string, patch: Partial<SaisieEmprunt>) =>
     setSaisie((s) => ({ ...s, emprunts: s.emprunts.map((e) => (e.id === id ? { ...e, ...patch } : e)) }));
 
@@ -174,6 +212,77 @@ export default function ReglagesTresorerie() {
       })}
       <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />
 
+      {/* Les assurances : la case « Activer l'échéancier » et les contrats dont la prime entre dans l'échéancier et la prévision. */}
+      <Text style={styles.titreSection}>{T.assurancesTitre}</Text>
+      <Text style={styles.aide}>{T.assurancesAide}</Text>
+      <Checkbox
+        label={T.activerEcheancier}
+        value={saisie.echeancierAssurance}
+        onChange={(echeancierAssurance) => setSaisie((s) => ({ ...s, echeancierAssurance }))}
+      />
+      {saisie.echeancierAssurance ? (
+        <>
+          {saisie.contrats.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunContrat}</Text> : null}
+          {saisie.contrats.map((c) => (
+            <Card key={c.id}>
+              <Text style={commonStyles.cardTitle}>{c.nom}</Text>
+              <View style={commonStyles.gap10}>
+                <FormField
+                  label={T.prime}
+                  value={c.prime}
+                  onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && majContrat(c.id, { prime: v })}
+                  keyboardType="decimal-pad"
+                  placeholder="0"
+                />
+                <SelectField<PeriodiciteAssurance>
+                  label={T.periodicite}
+                  value={c.periodicite}
+                  onChange={(periodicite) => majContrat(c.id, { periodicite })}
+                  options={(Object.keys(T.periodicites) as PeriodiciteAssurance[]).map((p) => ({
+                    value: p,
+                    label: T.periodicites[p],
+                  }))}
+                />
+                <DateField
+                  label={T.prochaineEcheance}
+                  value={c.prochaineEcheance}
+                  onChange={(prochaineEcheance) => majContrat(c.id, { prochaineEcheance })}
+                />
+                <Button variant="danger" label={T.supprimerContrat} onPress={() => setContratASupprimer(c.id)} />
+              </View>
+            </Card>
+          ))}
+          <Button variant="secondary" label={T.ajouterContrat} onPress={() => setContratAjoutOuvert(true)} />
+        </>
+      ) : null}
+
+      <NomModal
+        visible={contratAjoutOuvert}
+        titre={T.nomContrat}
+        placeholder={T.exempleContrat}
+        onValider={(nom) => {
+          setSaisie((s) => ({
+            ...s,
+            contrats: [
+              ...s.contrats,
+              { id: generateId(), nom, prime: '', periodicite: 'annuelle', prochaineEcheance: todayISO() },
+            ],
+          }));
+          setContratAjoutOuvert(false);
+        }}
+        onAnnuler={() => setContratAjoutOuvert(false)}
+      />
+      <ConfirmModal
+        visible={!!contratASupprimer}
+        title={T.supprimerContratQuestion}
+        message={T.supprimerContratMessage}
+        confirmLabel={TEXTES.commun.general.supprimer}
+        onCancel={() => setContratASupprimer(null)}
+        onConfirm={() => {
+          setSaisie((s) => ({ ...s, contrats: s.contrats.filter((c) => c.id !== contratASupprimer) }));
+          setContratASupprimer(null);
+        }}
+      />
       <NomModal
         visible={ajoutOuvert}
         titre={T.nomEmprunt}

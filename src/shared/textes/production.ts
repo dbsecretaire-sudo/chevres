@@ -171,7 +171,12 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter un assureur',
       groupeEcritures: 'Les primes et factures d’assurance',
       nouvelle: 'Nouvelle facture d’assurance',
-      liens: {},
+      liens: {
+        echeancier: {
+          titre: 'Échéancier des assurances',
+          aide: 'Facultatif : la case « Activer l’échéancier » et vos contrats, pour voir les primes à venir dans la trésorerie.',
+        },
+      },
     },
     banque: {
       titre: 'Banque et comptabilité',
@@ -240,6 +245,8 @@ export const TEXTES_PRODUCTION = {
       titre: 'Groupement sanitaire',
       groupeTiers: 'Groupements sanitaires (GDS)',
       ajouterTiers: 'Ajouter un groupement sanitaire',
+      groupeVeterinaires: 'Vétérinaires',
+      ajouterVeterinaire: 'Ajouter un vétérinaire',
       groupeEcritures: 'Les cotisations et versements',
       nouvelle: 'Nouvelle cotisation ou facture du groupement sanitaire',
       versement: 'Nouveau versement du groupement sanitaire',
@@ -294,11 +301,10 @@ export const TEXTES_PRODUCTION = {
     documents: {
       titre: 'Documents',
       liens: {
-        bilan: { titre: 'Bilan annuel', aide: 'Le bilan du cheptel de l’année : entrées, sorties, effectifs.' },
         dossierPac: { titre: 'Dossier PAC', aide: 'Suivi des mouvements, recensement, déclaration d’estive.' },
         circulation: { titre: 'Documents de circulation', aide: 'Ceux des animaux vivants vendus ou achetés.' },
         identification: { titre: 'Documents d’identification', aide: 'Les pièces d’identification de l’exploitation.' },
-        historique: { titre: 'Historique du cheptel', aide: 'Les sorties : morts, ventes, abattages.' },
+        historique: { titre: 'Bordereau de perte', aide: 'Les sorties : morts, ventes, abattages.' },
       },
     },
     veterinaire: {
@@ -422,8 +428,7 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les factures d’équarrissage',
       nouvelle: 'Nouvelle facture d’équarrissage',
       liens: {
-        bordereaux: { titre: 'Bordereaux de perte', aide: 'Les animaux morts à déclarer, dans le dossier PAC.' },
-        historique: { titre: 'Historique du cheptel', aide: 'Les sorties : morts, ventes, abattages.' },
+        bons: { titre: 'Bon d’équarrissage', aide: 'Un lot par enlèvement (Lots d’animaux › Équarrissage) : les animaux morts, le n° du bon et son scan.' },
       },
     },
     abattoir: {

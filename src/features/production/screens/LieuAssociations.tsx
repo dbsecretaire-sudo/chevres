@@ -126,7 +126,7 @@ export default function LieuAssociations() {
     ...l,
     ...(G.liens as Record<string, { titre: string; aide: string }>)[l.cle],
   }));
-  const rangeeDesLiens = (
+  const rangeeDesLiens = liens.length === 0 ? null : (
     <GroupeAccueil titre={T.groupeLiens}>
       <BlocLignes>
         {liens.map((l) => (

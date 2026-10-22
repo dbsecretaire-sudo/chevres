@@ -64,6 +64,7 @@ export const TEXTES_ACCUEIL = {
       ventesAgritourisme: 'Ventes',
       rentabilite: 'Rentabilité',
       sante: 'Santé',
+      partenaires: 'Partenaires',
       grange: 'Grange',
       nouveau: 'Nouveau',
       lots: 'Lots d’animaux',

@@ -12,15 +12,17 @@ export function useTresorerie() {
   const annee = settings.anneeActive;
   const reglages = settings.exploitation?.tresorerie;
   const emprunts = settings.exploitation?.emprunts;
+  // Les contrats d'assurance n'entrent dans l'échéancier que lorsqu'il est activé.
+  const contratsAssurance = settings.exploitation?.echeancierAssurance ? settings.exploitation?.contratsAssurance : undefined;
 
   const charger = useCallback(async () => {
     const [toutesAnnees, t] = await Promise.all([
       toutesLesAnneesConnues(),
-      tresorerie(annee, { reglages, emprunts }),
+      tresorerie(annee, { reglages, emprunts, contratsAssurance }),
     ]);
     setAnnees(toutesAnnees);
     setResultat(t);
-  }, [annee, reglages, emprunts]);
+  }, [annee, reglages, emprunts, contratsAssurance]);
 
   useFocusEffect(
     useCallback(() => {

@@ -10,4 +10,6 @@ export const CATEGORIE_LOT = {
   AVORTEMENT: 'avortement',
   /** Les animaux qui partent vivants de l'exploitation (vendus vivants) : un lot par départ, avec son document de circulation, créé avant la vente. */
   DEPART: 'depart',
+  /** Les animaux morts enlevés par l'équarrisseur : un lot par enlèvement, créé à la main, avec son bon d'équarrissage. */
+  EQUARRISSAGE: 'equarrissage',
 } as const;
