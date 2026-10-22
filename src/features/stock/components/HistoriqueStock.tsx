@@ -1,7 +1,7 @@
 import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
 import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -156,7 +156,6 @@ interface Props {
 export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, ventesAnimaux }: Props) {
   const [filtre, setFiltre] = useState<FiltreStock>(filtreInitial);
   const [annee, setAnnee] = useState(currentYear());
-  const [ouverts, setOuverts] = useState<string[]>([]);
 
   const annees = [
     ...new Set([currentYear(), ...archive.mouvements.map((m) => Number(m.date.slice(0, 4)))]),
@@ -182,9 +181,6 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
       listeId: l.id,
     })),
   ].sort((a, b) => ordreCategories.indexOf(a.categorie) - ordreCategories.indexOf(b.categorie));
-
-  const basculer = (cle: string) =>
-    setOuverts((actuels) => (actuels.includes(cle) ? actuels.filter((c) => c !== cle) : [...actuels, cle]));
 
   /**
    * Le lait de l'historique : ce qui a été produit (le journal de lait), utilisé pour les fromages et vendu. Tout ce qui est sorti a
@@ -360,33 +356,15 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
                 <TitreCarte titre={titre} valeur={dansLAn(annee)} comparaison={dansLAn(annee - 1)} />
                 <Text style={commonStyles.note}>{bilan}</Text>
                 {lait ? <Text style={commonStyles.note}>{T.historique.noteLait}</Text> : null}
-                {mois.length === 0 ? (
-                  <Text style={commonStyles.mutedItalic}>{T.historique.aucun}</Text>
-                ) : (
-                  <Pressable onPress={() => basculer(idCarte)}>
-                    <Text style={stylesBilan.voirPlus}>
-                      {ouverts.includes(idCarte) ? T.historique.masquer : T.historique.details}
-                    </Text>
-                  </Pressable>
-                )}
-                {(ouverts.includes(idCarte) ? mois : []).map((m) => {
+                {mois.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.historique.aucun}</Text> : null}
+                {/* Les mois et leurs mouvements sont toujours affichés d'office : plus de « Détails » ni de « Masquer ». */}
+                {mois.map((m) => {
                   const cle = `${idCarte}:${annee}:${m}`;
-                  const ouvert = ouverts.includes(cle);
                   const detail = duMois(annee, m).sort((a, b) => b.date.localeCompare(a.date));
                   return (
                     <View key={cle} style={[commonStyles.gap6, stylesStock.moisHistorique]}>
-                      {/* Le mois est lui-même le lien : il déroule ses mouvements. */}
                       <View style={stylesBilan.ligne}>
-                        {detail.length > 0 ? (
-                          <Pressable
-                            onPress={() => basculer(cle)}
-                            accessibilityLabel={ouvert ? T.historique.masquer : T.historique.details}
-                          >
-                            <Text style={stylesBilan.voirPlus}>{NOMS_MOIS[m - 1]}</Text>
-                          </Pressable>
-                        ) : (
-                          <Text style={stylesBilan.ligneLabel}>{NOMS_MOIS[m - 1]}</Text>
-                        )}
+                        <Text style={stylesBilan.ligneLabel}>{NOMS_MOIS[m - 1]}</Text>
                         <View style={stylesBilan.ligneValeurs}>
                           <Text style={commonStyles.cardTitle}>
                             {totalDuMois(annee, m)}
@@ -395,20 +373,18 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
                           <Text style={commonStyles.muted}>({totalDuMois(annee - 1, m)})</Text>
                         </View>
                       </View>
-                      {ouvert
-                        ? detail.map((x) => (
-                            <Text key={x.id} style={commonStyles.muted}>
-                              {T.ligneMouvement(
-                                formatDateShortFR(x.date),
-                                nomArticle(x.article, archive),
-                                ventesSeules
-                                  ? `${-x.delta}${lait ? ' L' : ''}`
-                                  : `${x.delta > 0 ? '+' : ''}${nombreFR(x.delta)}${lait ? ' L' : ''}`,
-                                libelleOrigineMouvement(x),
-                              )}
-                            </Text>
-                          ))
-                        : null}
+                      {detail.map((x) => (
+                        <Text key={x.id} style={commonStyles.muted}>
+                          {T.ligneMouvement(
+                            formatDateShortFR(x.date),
+                            nomArticle(x.article, archive),
+                            ventesSeules
+                              ? `${-x.delta}${lait ? ' L' : ''}`
+                              : `${x.delta > 0 ? '+' : ''}${nombreFR(x.delta)}${lait ? ' L' : ''}`,
+                            libelleOrigineMouvement(x),
+                          )}
+                        </Text>
+                      ))}
                     </View>
                   );
                 })}

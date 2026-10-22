@@ -411,7 +411,7 @@ export const TEXTES_STOCK = {
   pose: 'pose',
   rappel: 'rappel',
   productionLait: 'lait produit',
-  balanceLait: 'lait produit (balance automatique)',
+  balanceLait: 'lait produit',
   fabrication: 'fabrication',
   entreeBoucle: 'ajout depuis le cheptel',
   ligneMouvement: (date: string, article: string, delta: string, origine: string) =>
