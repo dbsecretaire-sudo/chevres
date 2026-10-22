@@ -164,7 +164,7 @@ function BlocRappelsDeclarations() {
               </Text>
             </Pressable>
             {/* Un dossier de savon incomplet n'a rien à cocher : on le complète. */}
-            {r.genre === GENRE_RAPPEL.DOSSIER_SAVON ? (
+            {r.genre === GENRE_RAPPEL.DOSSIER_SAVON || r.genre === GENRE_RAPPEL.ACCUEIL_PUBLIC ? (
               <Ionicons name="chevron-forward" size={22} color={colors.textMuted} />
             ) : (
               <Pressable

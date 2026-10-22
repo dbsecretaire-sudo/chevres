@@ -5,6 +5,7 @@ import { Screen } from '@/shared/components/Screen';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { ChampIngredientsPlat } from '@/features/production/components/ChampIngredientsPlat';
 import { ChampRecette } from '@/features/production/components/ChampRecette';
+import { alerterSiStockInsuffisant } from '@/features/production/services/alerteStock';
 import {
   ingredientsProposables,
   lotsPrisPourIngredient,
@@ -117,21 +118,22 @@ function FabricationDeLots() {
   const laitUtilise = Math.round(nombre * litresParFromage * 100) / 100;
   const dernier = nombre > 0 && premier ? derniereBoucle(premier, nombre) : undefined;
 
-  const fabriquer = async () => {
+  const fabriquer = async (confirme = false) => {
     if (!archive) return;
     const erreur = erreurFabrication(archive, article, premier, nombre);
     if (erreur) return Alert.alert(erreur);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
     if (fromage && !(litresParFromage > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
+    const utilises = ingredients
+      .map((i) => ({ i, q: parseDecimal(i.quantite) }))
+      .filter(({ i, q }) => i.article && q > 0)
+      .map(({ i, q }) => ({ article: i.article, quantite: q, lotIds: lotsPrisPourIngredient(archive, i, q) }));
+    if (!confirme && alerterSiStockInsuffisant(archive, utilises, () => fabriquer(true))) return;
     setEnregistrement(true);
     try {
       // Les litres par fromage indiqués ici sont gardés dans l'inventaire : on ne les redemande plus.
       if (fromage && litresDeLInventaire === undefined)
         await definirLitresParFromage(article, litresParFromage);
-      const utilises = ingredients
-        .map((i) => ({ i, q: parseDecimal(i.quantite) }))
-        .filter(({ i, q }) => i.article && q > 0)
-        .map(({ i, q }) => ({ article: i.article, quantite: q, lotIds: lotsPrisPourIngredient(archive, i, q) }));
       await fabriquerFromages({
         article,
         date,
@@ -229,7 +231,7 @@ function FabricationDeLots() {
           <ChampIngredientsPlat valeur={ingredients} onChange={setIngredients} archive={archive} proposables={proposables} />
         </SectionForm>
         <FormField label={TEXTES.production.recettes.notes} value={notes} onChangeText={setNotes} multiline style={commonStyles.textarea} />
-        <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
+        <Button label={T.enregistrer} onPress={() => fabriquer()} loading={enregistrement} />
       </Screen>
     </AccentColorProvider>
   );

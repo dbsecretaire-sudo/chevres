@@ -1,5 +1,11 @@
 import { choixParDefaut, lotsPourVisite } from '@/features/commercial/services/stockVisite';
-import { articlesDuGenre, estLigneDuCheptel, type ArticleAffiche } from '@/features/stock/services/stock';
+import {
+  articlesDuGenre,
+  estLigneDuCheptel,
+  libelleArticle,
+  niveauxDeStock,
+  type ArticleAffiche,
+} from '@/features/stock/services/stock';
 import type { ArchiveStock, LotFromage } from '@/features/stock/types';
 import { GENRE_ARTICLE, INGREDIENTS_DE_FROMAGERIE } from '@/shared/constants/stock';
 
@@ -50,6 +56,34 @@ export interface SaisieIngredient {
   article: string;
   quantite: string;
   lotIds?: string[];
+}
+
+/** Un ingrédient dont le stock ne suffit pas : ce qu'il y a, ce qui est demandé. */
+export interface IngredientEnManque {
+  libelle: string;
+  enStock: number;
+  demande: number;
+}
+
+/**
+ * Les ingrédients d'une fabrication dont le stock ne suffit pas (huile, soude, présure, sel…) : sans cela le stock passerait en négatif sans prévenir. Un même
+ * article cité deux fois compte pour la somme de ses quantités.
+ */
+export function ingredientsEnManque(
+  archive: ArchiveStock,
+  utilises: { article: string; quantite: number }[],
+): IngredientEnManque[] {
+  const niveaux = niveauxDeStock(archive.mouvements);
+  const demandes = new Map<string, number>();
+  for (const u of utilises) demandes.set(u.article, (demandes.get(u.article) ?? 0) + u.quantite);
+  const arrondi = (n: number) => Math.round(n * 1000) / 1000;
+  return [...demandes]
+    .map(([article, demande]) => ({
+      libelle: libelleArticle(article, archive),
+      enStock: arrondi(niveaux.get(article) ?? 0),
+      demande: arrondi(demande),
+    }))
+    .filter((i) => i.demande > i.enStock);
 }
 
 /** Les lots qu'un ingrédient peut prendre (ceux en stock, les plus anciens d'abord) : rien pour un article sans suivi par lot. */

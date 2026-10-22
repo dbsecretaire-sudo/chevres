@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { NomModal } from '@/features/dossiers/components/NomModal';
+import { exporterEtiquettesLotPdf } from '@/features/export/etiquettesLotPdf';
+import { exporterTracabiliteLotPdf } from '@/features/export/tracabiliteLotPdf';
 import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeLots } from '@/features/stock/hooks/useListeLots';
 import { DateFabricationModal } from '@/features/stock/components/DateFabricationModal';
 import {
   basculerControleLot,
   controlerLots,
+  estArticlePlat,
+  estArticleSavon,
   etatDuLot,
   lotsDeLaFabrication,
   modifierDateFabrication,
@@ -23,6 +29,10 @@ import { styles } from '@/shared/styles/stock/TableauBoucles.styles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock.lots;
+
+/** Une impression qui échoue le dit, au lieu de ne rien faire. */
+const imprimer = (impression: Promise<void>) =>
+  impression.catch((e: unknown) => Alert.alert(T.erreurImpression, e instanceof Error ? e.message : ''));
 
 /** Le choix de l'état des lots (tous, en stock, vendus, rappelés), avec le nombre de lots montrés. */
 export function FiltresLots({ liste }: { liste: ListeLots }) {
@@ -62,6 +72,9 @@ export function TableauLots({
   const { lignes, tri, trierPar, filtres, tousLesLots } = liste;
   /** Le lot dont on modifie la date de fabrication. */
   const [lotADater, setLotADater] = useState<LotFromage | undefined>();
+  /** Le lot dont on imprime l'étiquette ou la fiche de traçabilité, et l'étiquette en attente du contenu net. */
+  const [lotAImprimer, setLotAImprimer] = useState<LotFromage | undefined>();
+  const [etiquetteDe, setEtiquetteDe] = useState<LotFromage | undefined>();
   /** Un lot rappelé n'est plus à contrôler : sa case ne se coche plus, et « Tout cocher » ne le compte pas. */
   const rappele = (l: LotFromage) => etatDuLot(l) === ETAT_LOT.RAPPELE;
   const aControler = lignes.filter((l) => !rappele(l));
@@ -158,7 +171,19 @@ export function TableauLots({
                     selection?.has(lot.id) ? { backgroundColor: colors.badgeBg } : undefined,
                   ]}
                 >
-                  <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>
+                  {archive ? (
+                    <Pressable
+                      style={[styles.colonneNumero, styles.celluleNumero]}
+                      hitSlop={6}
+                      onPress={() => setLotAImprimer(lot)}
+                      accessibilityLabel={T.imprimer}
+                    >
+                      <Text style={styles.texteLigne}>{lot.numero}</Text>
+                      <Ionicons name="print-outline" size={14} color={colors.textMuted} />
+                    </Pressable>
+                  ) : (
+                    <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>
+                  )}
                   <Pressable style={styles.colonneDate} hitSlop={6} onPress={() => setLotADater(lot)}>
                     <Text style={[styles.texteLigne, styles.dateModifiable]}>
                       {formatDateShortFR(lot.dateFabrication)}
@@ -202,6 +227,45 @@ export function TableauLots({
           })}
         </ScrollView>
       )}
+      <OptionsModal
+        visible={!!lotAImprimer}
+        onClose={() => setLotAImprimer(undefined)}
+        title={lotAImprimer?.numero}
+        options={[
+          ...(lotAImprimer && (estArticlePlat(lotAImprimer.article) || estArticleSavon(lotAImprimer.article))
+            ? [
+                {
+                  label: T.etiquettes,
+                  icon: 'pricetag-outline' as const,
+                  onPress: () => imprimer(exporterEtiquettesLotPdf(lotAImprimer.id)),
+                },
+                {
+                  label: T.etiquettesAvecContenu,
+                  icon: 'pricetags-outline' as const,
+                  onPress: () => setEtiquetteDe(lotAImprimer),
+                },
+              ]
+            : []),
+          {
+            label: T.tracabilite,
+            icon: 'git-network-outline' as const,
+            onPress: () => {
+              if (lotAImprimer) imprimer(exporterTracabiliteLotPdf(lotAImprimer.id));
+            },
+          },
+        ]}
+      />
+      <NomModal
+        visible={!!etiquetteDe}
+        titre={T.contenuNetTitre}
+        placeholder={T.contenuNetExemple}
+        onValider={(texte) => {
+          const lotEtiquete = etiquetteDe;
+          setEtiquetteDe(undefined);
+          if (lotEtiquete) imprimer(exporterEtiquettesLotPdf(lotEtiquete.id, texte));
+        }}
+        onAnnuler={() => setEtiquetteDe(undefined)}
+      />
       <DateFabricationModal
         visible={!!lotADater}
         lot={lotADater}

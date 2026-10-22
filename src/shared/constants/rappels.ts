@@ -14,6 +14,8 @@ export const GENRE_RAPPEL = {
   DOSSIER_SAVON: 'dossier_savon',
   /** Le stock à préparer pour une visite de la ferme ou une commande qui approche : il se valide une fois la préparation faite. */
   STOCK_A_PREVOIR: 'stock_a_prevoir',
+  /** Une démarche obligatoire pour accueillir du public qui n'est pas faite : elle se valide en la faisant, dans Agritourisme › Accueil du public. */
+  ACCUEIL_PUBLIC: 'accueil_public',
 } as const;
 
 /** Le stock d'une visite ou d'une commande est rappelé à partir de ce nombre de jours avant elle. */

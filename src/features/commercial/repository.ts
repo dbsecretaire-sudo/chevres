@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
 import type { ArchiveCommercial, Commande } from '@/features/commercial/types';
+import type { EtapeReglementaire } from '@/features/stock/types';
 import { PREFIXE_NUMERO_COMMANDE } from '@/shared/constants/commercial';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import { generateId } from '@/shared/utils/id';
@@ -23,7 +24,25 @@ export function normaliserArchiveCommercial(
       ? archive.elementsFormule.filter((e) => e && typeof e.id === 'string' && typeof e.nom === 'string')
       : undefined,
     tarifs,
+    accueilPublic: etapesAccueil(archive?.accueilPublic),
   };
+}
+
+/** Les démarches d'accueil du public lues : seules les étapes bien formées sont gardées. */
+function etapesAccueil(brut: unknown): ArchiveCommercial['accueilPublic'] {
+  if (!brut || typeof brut !== 'object') return undefined;
+  const etapes: NonNullable<ArchiveCommercial['accueilPublic']> = {};
+  for (const [nom, etape] of Object.entries(brut)) {
+    if (!etape || typeof etape !== 'object') continue;
+    const e = etape as EtapeReglementaire;
+    etapes[nom] = {
+      fait: e.fait === true ? true : undefined,
+      date: typeof e.date === 'string' ? e.date : undefined,
+      reference: typeof e.reference === 'string' ? e.reference : undefined,
+      fichiers: Array.isArray(e.fichiers) ? e.fichiers : undefined,
+    };
+  }
+  return Object.keys(etapes).length > 0 ? etapes : undefined;
 }
 
 /** Les commandes et les tarifs de l'établissement actif (rien s'il n'y en a pas encore). */
@@ -40,6 +59,15 @@ export async function lireArchiveCommercial(): Promise<ArchiveCommercial> {
 /** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
 export async function remplacerArchiveCommercial(archive: ArchiveCommercial): Promise<void> {
   await AsyncStorage.setItem(cle(), JSON.stringify(archive));
+}
+
+/** Note ou corrige une démarche d'accueil du public (faite ou non, sa date, sa référence, ses pièces) : les autres ne bougent pas. */
+export async function enregistrerEtapeAccueil(etape: string, modification: Partial<EtapeReglementaire>): Promise<void> {
+  const archive = await lireArchiveCommercial();
+  await remplacerArchiveCommercial({
+    ...archive,
+    accueilPublic: { ...archive.accueilPublic, [etape]: { ...archive.accueilPublic?.[etape], ...modification } },
+  });
 }
 
 export async function getCommande(id: string): Promise<Commande | undefined> {

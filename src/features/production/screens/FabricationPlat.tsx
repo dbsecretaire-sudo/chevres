@@ -11,6 +11,7 @@ import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { ChampRecette } from '@/features/production/components/ChampRecette';
 import { ChampIngredientsPlat } from '@/features/production/components/ChampIngredientsPlat';
+import { alerterSiStockInsuffisant } from '@/features/production/services/alerteStock';
 import {
   ingredientsProposables,
   lotsPrisPourIngredient,
@@ -102,7 +103,7 @@ export default function FabricationPlat() {
     await charger(cle);
   };
 
-  const fabriquer = async () => {
+  const fabriquer = async (confirme = false) => {
     if (!archive) return;
     if (!article) return Alert.alert(T.erreurPlat);
     const erreur = erreurFabrication(archive, article, premier, nombre);
@@ -118,6 +119,7 @@ export default function FabricationPlat() {
     // Jamais plus de lots que de quantité entière.
     const trop = utilises.find((u) => u.lotIds.length > Math.max(0, Math.floor(u.quantite)));
     if (trop) return Alert.alert(T.ingredients.tropDeLots(Math.max(0, Math.floor(trop.quantite))));
+    if (!confirme && alerterSiStockInsuffisant(archive, utilises, () => fabriquer(true))) return;
     setEnregistrement(true);
     try {
       await fabriquerPlats({
@@ -215,7 +217,7 @@ export default function FabricationPlat() {
           />
         </SectionForm>
         <FormField label={TEXTES.production.recettes.notes} value={notes} onChangeText={setNotes} multiline style={commonStyles.textarea} />
-        <Button label={T.enregistrer} onPress={fabriquer} loading={enregistrement} />
+        <Button label={T.enregistrer} onPress={() => fabriquer()} loading={enregistrement} />
       </Screen>
       <NomModal
         visible={nouveauOuvert}

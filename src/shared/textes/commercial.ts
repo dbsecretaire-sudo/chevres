@@ -286,6 +286,65 @@ export const TEXTES_COMMERCIAL = {
     },
     nouvelle: 'Nouvelle visite',
     formules: 'Formules et tarifs',
+    /** Les démarches pour accueillir du public à la ferme, suivies comme le dossier réglementaire des savons. */
+    accueilPublic: {
+      titre: 'Accueil du public',
+      lien: 'Démarches d’accueil du public',
+      intro:
+        'Une ferme qui reçoit des visiteurs est un établissement recevant du public (ERP). Cette liste est une aide de rappel : les règles dépendent de la capacité d’accueil et de la commune, elle ne remplace ni la mairie, ni le SDIS, ni la DDPP.',
+      enRegle: 'Toutes les démarches obligatoires sont faites.',
+      incomplet: (manque: string) => `Il manque : ${manque}`,
+      rappel: 'Accueil du public : démarches à faire',
+      manque: (liste: string) => `Il manque : ${liste}`,
+      obligatoire: 'Obligatoire',
+      facultatif: 'À vérifier',
+      fait: 'Fait',
+      date: 'Date',
+      fichiers: 'Pièces jointes',
+      ajouterFichier: 'Ajouter un fichier',
+      etapes: {
+        erp: {
+          titre: 'Déclaration en mairie (ERP)',
+          aide: 'La ferme est un établissement recevant du public, en général de 5e catégorie (moins de 200 personnes). Le maire doit être informé ; une autorisation de travaux peut être nécessaire si vous aménagez des locaux.',
+          reference: 'N° de récépissé',
+        },
+        securite_incendie: {
+          titre: 'Sécurité incendie (SDIS)',
+          aide: 'Extincteurs vérifiés, issues de secours dégagées, consignes affichées. La mairie et le SDIS disent si une commission de sécurité doit passer.',
+          reference: 'Dernière vérification',
+        },
+        accessibilite: {
+          titre: 'Accessibilité',
+          aide: 'Un ERP doit être accessible aux personnes handicapées, ou avoir une dérogation ou un agenda d’accessibilité. Le registre public d’accessibilité se tient à disposition des visiteurs.',
+          reference: 'Référence',
+        },
+        assurance: {
+          titre: 'Assurance responsabilité civile',
+          aide: 'Votre contrat doit couvrir l’accueil de visiteurs et leur contact avec les animaux : vérifiez-le auprès de votre assureur.',
+          reference: 'N° de contrat',
+        },
+        ddpp: {
+          titre: 'Hygiène et santé animale (DDPP)',
+          aide: 'Contact avec les animaux : lavage des mains, risques de zoonoses. Une dégustation ou un repas se déclare auprès de la direction départementale de la protection des populations.',
+          reference: 'N° de déclaration',
+        },
+        consignes: {
+          titre: 'Consignes aux visiteurs',
+          aide: 'Affichage à l’entrée (lavage des mains, pas de nourriture aux animaux, enfants accompagnés), trousse de premiers secours et numéros d’urgence.',
+          reference: 'Référence',
+        },
+        registre_securite: {
+          titre: 'Registre de sécurité',
+          aide: 'Le registre où se notent les contrôles de sécurité (extincteurs, installation électrique), à présenter lors d’une visite de contrôle.',
+          reference: 'Référence',
+        },
+        convention_groupes: {
+          titre: 'Conventions avec les écoles et les groupes',
+          aide: 'Pour une sortie de classe ou un groupe : une convention avec l’établissement, et l’assurance des enfants.',
+          reference: 'Référence',
+        },
+      },
+    },
     /** Le champ « Élément de l'agritourisme » d'une facture reçue rangée dans l'atelier Agritourisme. */
     elementFacture: {
       label: 'Élément de l’agritourisme',

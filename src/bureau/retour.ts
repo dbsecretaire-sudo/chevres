@@ -128,7 +128,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/production\/(fabrication|statistiques)$/, () => ROUTES.PRODUCTION_FROMAGES],
   [/^\/production\/rappel$/, () => ROUTES.PRODUCTION_RAPPELS_LOTS],
   [/^\/commercial\/commande$/, () => ROUTES.COMMERCIAL_COMMANDES],
-  [/^\/commercial\/visite$/, () => ROUTES.COMMERCIAL_AGRITOURISME],
+  [/^\/commercial\/(visite|accueil-public)$/, () => ROUTES.COMMERCIAL_AGRITOURISME],
   [/^\/commercial\/formule$/, () => ROUTES.COMMERCIAL_FORMULES],
   // Un contrôle revient à sa liste (celle des contrôles des animaux ou de surface, ou celle des terrains), une visite à la liste des visites.
   [

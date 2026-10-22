@@ -18,7 +18,20 @@ const LIENS_DE_LAGRITOURISME = {
 };
 
 /** Textes de l'interface — l'onglet Production (fromages, viande vendue, contrôle laitier). À modifier ici uniquement. */
+/** Avant de fabriquer avec des ingrédients que le stock ne couvre pas : on prévient, on laisse continuer. */
+const STOCK_INSUFFISANT = {
+  titre: 'Stock insuffisant',
+  message: (lignes: string) =>
+    `Le stock ne suffit pas :
+${lignes}
+
+Fabriquer quand même ? Le stock de ces articles passera en négatif.`,
+  ligne: (libelle: string, enStock: string, demande: string) => `${libelle} : ${enStock} en stock, ${demande} demandé`,
+  continuer: 'Fabriquer quand même',
+};
+
 export const TEXTES_PRODUCTION = {
+  stockInsuffisant: STOCK_INSUFFISANT,
   titre: 'Production',
   /** Les lignes de l'écran d'accueil de l'onglet. */
   accueil: {

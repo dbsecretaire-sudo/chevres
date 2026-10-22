@@ -39,6 +39,7 @@ export default function CommercialLayout() {
             : TEXTES.commercial.agritourisme.visite.titreNouvelle,
         })}
       />
+      <Stack.Screen name="accueil-public" options={{ title: TEXTES.commercial.agritourisme.accueilPublic.titre }} />
       <Stack.Screen name="formules" options={{ title: TEXTES.commercial.agritourisme.listeFormules.titre }} />
       <Stack.Screen
         name="formule"

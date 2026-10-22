@@ -162,6 +162,8 @@ export const ROUTES = {
   COMMERCIAL_VISITE: '/commercial/visite',
   visiteAgritourisme: (id: string) => `/commercial/visite?id=${id}` as const,
   COMMERCIAL_FORMULES: '/commercial/formules',
+  /** Les démarches pour accueillir du public à la ferme. */
+  COMMERCIAL_ACCUEIL_PUBLIC: '/commercial/accueil-public',
   COMMERCIAL_FORMULE: '/commercial/formule',
   formuleAgritourisme: (id: string) => `/commercial/formule?id=${id}` as const,
   /** Une nouvelle commande, ou celle dont on donne l'identifiant. */

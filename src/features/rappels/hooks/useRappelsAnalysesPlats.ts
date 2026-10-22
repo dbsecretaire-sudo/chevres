@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { rappelsAccueilPublic } from '@/features/commercial/services/accueilPublic';
 import { rappelsStockATourisme } from '@/features/commercial/services/stockATourisme';
 import type { ArchiveCommercial } from '@/features/commercial/types';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -44,6 +45,8 @@ export function useRappelsAnalysesPlats() {
             ...rappelsDossiersSavons(archive, todayISO()),
             // Le stock à préparer pour les visites et les commandes des jours qui viennent.
             ...(commercial ? rappelsStockATourisme(commercial, archive, valides ?? [], todayISO()) : []),
+            // Les démarches pour accueillir du public, tant qu'une démarche obligatoire manque.
+            ...(commercial ? rappelsAccueilPublic(commercial, todayISO()) : []),
           ]
         : [],
     [archive, commercial, plat, savon, valides],

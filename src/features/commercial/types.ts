@@ -1,3 +1,4 @@
+import type { EtapeReglementaire } from '@/features/stock/types';
 import type { StatutVisite } from '@/shared/constants/agritourisme';
 import type { StatutCommande } from '@/shared/constants/commercial';
 
@@ -116,4 +117,6 @@ export interface ArchiveCommercial {
   elementsFormule?: ElementFormule[];
   /** Les prix par catégorie de client : article → catégorie du client → prix à la pièce (€). Absent : le prix de l'inventaire. */
   tarifs: Record<string, Record<string, number>>;
+  /** Les démarches pour accueillir du public (ERP, sécurité incendie, accessibilité, assurance, DDPP…) : l'état de chacune, par étape (voir ETAPE_ACCUEIL). */
+  accueilPublic?: Record<string, EtapeReglementaire>;
 }

@@ -36,6 +36,10 @@ export const NOM_FICHIER_EXPORT_SIMULATION_LAIT = 'simulation_lait';
 export const NOM_FICHIER_EXPORT_GUIDE_LOTS = 'guide_numeros_lots';
 /** Le registre des analyses de l'atelier (une ligne par analyse : rien à signaler, ou à signaler). */
 export const NOM_FICHIER_EXPORT_REGISTRE_ANALYSES = 'registre_analyses';
+/** Les étiquettes imprimables d'un lot (plats préparés, savons). */
+export const NOM_FICHIER_EXPORT_ETIQUETTES_LOTS = 'etiquettes_lots';
+/** La fiche de traçabilité d'un lot (ingrédients, destination des lots). */
+export const NOM_FICHIER_EXPORT_TRACABILITE_LOT = 'tracabilite_lot';
 /** Export de l'année d'une entreprise (prestations de service, association…). */
 export const NOM_FICHIER_EXPORT_ENTREPRISE = 'entreprise';
 

@@ -99,6 +99,57 @@ export const TEXTES_EXPORT = {
         aAnalyser: 'À analyser',
       },
     },
+    /** Les étiquettes d'un lot de plats préparés ou de savons. */
+    etiquettesLot: {
+      titre: (produit: string) => `Étiquettes : ${produit}`,
+      lot: 'Lot',
+      fabriqueLe: (date: string) => `Fabriqué le ${date}`,
+      avantPlat: 'À consommer de préférence avant',
+      avantSavon: 'À utiliser de préférence avant',
+      finCure: (date: string) => `Cure jusqu’au ${date}`,
+      ingredients: 'Ingrédients',
+      inci: 'Ingrédients (INCI)',
+      sansComposition: 'Ingrédients : à renseigner',
+      contenuNet: (contenu: string) => `Contenu net : ${contenu}`,
+      responsable: 'Personne responsable',
+      responsableAbsent: 'Nom et adresse du responsable : à renseigner dans les informations de l’exploitation',
+      noteSavon:
+        'Un savon est un cosmétique : l’étiquette porte le nom et l’adresse du responsable, le contenu net, la date de durabilité, le numéro de lot et la liste INCI. Ajoutez à la main les précautions d’emploi.',
+      notePlat:
+        'Les allergènes (gluten, œufs, lait, fruits à coque…) se mettent en évidence dans la liste des ingrédients : vérifiez-la avant d’imprimer.',
+    },
+    /** La fiche de traçabilité d'un lot, pour un rappel. */
+    tracabiliteLot: {
+      titre: (produit: string, numero: string) => `Traçabilité : ${produit} ${numero}`,
+      cartes: {
+        lot: 'Lot',
+        fabrication: 'Fabrication',
+        durabilite: 'Durabilité',
+        etat: 'État',
+      },
+      sections: {
+        ingredients: 'Ingrédients utilisés',
+        lots: 'Lots de cette fabrication et leur destination',
+        derives: 'Produits faits avec ces lots (à rappeler avec eux)',
+      },
+      colonnes: {
+        ingredient: 'Ingrédient',
+        quantite: 'Quantité',
+        lotsPris: 'Lots pris',
+        lot: 'Lot',
+        etat: 'État',
+        vente: 'Vente',
+        facture: 'Facture',
+        client: 'Client',
+        contact: 'Contact',
+        produit: 'Produit',
+      },
+      aucunIngredient: 'Aucun ingrédient enregistré pour cette fabrication.',
+      aucunDerive: 'Aucun produit n’a été fait avec ces lots.',
+      reservePour: (client: string) => `Réservé pour ${client}`,
+      rappeleLe: (date: string) => `Rappelé le ${date}`,
+      note: 'Fiche à garder avec le dossier du lot : en cas de rappel, elle dit d’où viennent les ingrédients et chez qui sont partis les lots.',
+    },
     annee: {
       sousTitre: (annee: number) => `Année ${annee}`,
       cartes: {
