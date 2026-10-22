@@ -23,6 +23,8 @@ interface Props {
   palette: PaletteDeBatiment;
   /** Sa hauteur, une fois dessiné : la scène en laisse la place aux maisons et au troupeau. */
   surHauteur?: (hauteur: number) => void;
+  /** Collé aux limites de son parent (le cadre de la scène) : pas de bord sur les côtés ni en bas, le cadre aux coins arrondis le découpe. */
+  colle?: boolean;
   /** La couleur des disques de tous les compartiments (le gris de l'atelier, le vert de l'agritourisme) ; absente : celle de chaque entrée. */
   couleurDisque?: string;
 }
@@ -84,7 +86,13 @@ function Compartiment({
           </View>
         ) : null}
       </View>
-      <Text style={[styles.nom, { fontSize: Math.round(10 * e), minHeight: compact ? undefined : Math.round(24 * e) }]} numberOfLines={2}>
+      <Text
+        style={[
+          styles.nom,
+          { fontSize: Math.round(10 * e), minHeight: compact ? undefined : Math.round(24 * e) },
+        ]}
+        numberOfLines={2}
+      >
         {entree.titre}
       </Text>
     </Pressable>
@@ -95,14 +103,29 @@ function Compartiment({
  * Un grand bâtiment de la scène, dont les compartiments sont les menus de la gestion : la bergerie de l'exploitation, la fromagerie du travail du
  * produit. Un toit arrondi avec son nom, puis le mur et ses six portes, chacune avec son dessin et son nom : on touche directement celle qu'on veut.
  */
-export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur, couleurDisque }: Props) {
+export function Batiment({
+  titre,
+  decor,
+  entrees,
+  onAppui,
+  palette,
+  surHauteur,
+  couleurDisque,
+  colle,
+}: Props) {
   const echelle = useEchelle();
   return (
     <View style={styles.batiment} onLayout={(e) => surHauteur?.(Math.round(e.nativeEvent.layout.height))}>
       <View style={[styles.toit, { backgroundColor: palette.toit, height: Math.round(30 * echelle) }]}>
         <Text style={[styles.titre, { fontSize: Math.round(14 * echelle) }]}>{titre}</Text>
       </View>
-      <View style={[styles.mur, { backgroundColor: palette.mur, borderColor: palette.toit }]}>
+      <View
+        style={[
+          styles.mur,
+          { backgroundColor: palette.mur, borderColor: palette.toit },
+          colle ? styles.murColle : null,
+        ]}
+      >
         {decor}
         <View style={[styles.compartiments, echelle <= PETIT_ECRAN ? styles.compartimentsCompacts : null]}>
           {entrees.map((e, i) => (
@@ -133,6 +156,7 @@ const styles = StyleSheet.create({
   },
   titre: { color: colors.blanc, fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
   mur: { borderWidth: 3, borderTopWidth: 0, overflow: 'hidden' },
+  murColle: { borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 0 },
   // Une dernière rangée incomplète (cinq compartiments) se centre.
   compartiments: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', padding: 5, gap: 5 },
   compartiment: {
@@ -148,7 +172,13 @@ const styles = StyleSheet.create({
   compartimentsCompacts: { padding: 0, gap: 0 },
   compartimentCompact: { width: '33.3333%', paddingVertical: 2, gap: 0 },
   compartimentSeulCompact: { width: '100%' },
-  compartimentSeul: { width: '98%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
+  compartimentSeul: {
+    width: '98%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
   disque: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   nom: { fontSize: 10, fontWeight: '700', color: colors.text, textAlign: 'center', minHeight: 24 },
   pastille: {

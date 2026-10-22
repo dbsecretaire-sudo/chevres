@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { DecorEnclos } from '@/features/accueil/ferme/DecorEnclos';
@@ -37,8 +36,8 @@ interface Props {
   margeGauche?: number;
   margeDroite?: number;
   margeBas?: number;
-  /** Ce que la scène dessine dans l'enclos, sous le troupeau et sous le cadre (les chemins de terre le long des intervenants). */
-  fond?: ReactNode;
+  /** Sans son cadre (bord et coins arrondis) : la scène l'entoure elle-même, avec les maisons et la route. */
+  sansCadre?: boolean;
 }
 
 /** Le dessin de l'espèce de l'établissement (la tête de chaque animal de la liste de la chèvrerie). */
@@ -82,7 +81,7 @@ export function EnclosFerme({
   margeGauche = 0,
   margeDroite = 0,
   margeBas = 0,
-  fond,
+  sansCadre,
 }: Props) {
   return (
     <View style={styles.conteneur}>
@@ -90,6 +89,7 @@ export function EnclosFerme({
         style={[
           styles.enclos,
           estive ? styles.montagne : null,
+          sansCadre ? styles.sansCadre : null,
           { paddingLeft: 14 + margeGauche, paddingRight: 14 + margeDroite, paddingBottom: 14 + margeBas },
         ]}
         onPress={onAppui}
@@ -98,8 +98,6 @@ export function EnclosFerme({
       >
         {/* Le décor, fixe et en fond : sentier, arbres, maquis et fleurs ; en estive, montagnes, nuages et cailloux. */}
         {estive ? <DecorEstive /> : <DecorEnclos />}
-        {/* Ce que la scène dessine dans l'enclos, sous le troupeau et sous le cadre (les chemins de terre des intervenants). */}
-        {fond}
         <Text style={styles.titre} numberOfLines={2}>
           {estive ? T.estive(estive.zone) : T.enclos}
         </Text>
@@ -138,6 +136,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sansCadre: { borderWidth: 0, borderRadius: 0 },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
   descente: { fontSize: 12, color: colors.primaryDark },
   titre: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },

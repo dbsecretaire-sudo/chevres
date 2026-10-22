@@ -116,7 +116,9 @@ interface Props {
 }
 
 const enRangees = <T,>(liste: readonly T[], taille: number): T[][] =>
-  Array.from({ length: Math.ceil(liste.length / taille) }, (_, i) => liste.slice(i * taille, (i + 1) * taille));
+  Array.from({ length: Math.ceil(liste.length / taille) }, (_, i) =>
+    liste.slice(i * taille, (i + 1) * taille),
+  );
 
 /**
  * La scène « Travail du produit », sur tout l'écran, vue de la rue : de l'autre côté, les maisons des clients et des fournisseurs (la laiterie, les
@@ -158,14 +160,20 @@ export function SceneTransformation({
   const PLAFOND_DES_LOGOS = 1.1;
   const trottoirs = campagne ? 0 : 2 * TROTTOIR;
   const reste = hauteur - hauteurFromagerie - trottoirs - 4 * MARGE;
-  const entre = (valeur: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(valeur)));
+  const entre = (valeur: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, Math.round(valeur)));
   const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a);
   const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.3, plaqueMin, Math.round(150 * a));
   const rueMin = Math.round((campagne ? 100 : 60) * a);
-  const hauteurRue = hauteur === 0 ? rueMin : entre(reste * (campagne ? 0.24 : 0.18), rueMin, Math.round((campagne ? 150 : 110) * a));
+  const hauteurRue =
+    hauteur === 0
+      ? rueMin
+      : entre(reste * (campagne ? 0.24 : 0.18), rueMin, Math.round((campagne ? 150 : 110) * a));
   const disponible = reste - hauteurPlaque - hauteurRue;
   const echelle =
-    hauteur === 0 ? 1 : Math.max(0.62, Math.min(PLAFOND_DES_LOGOS, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
+    hauteur === 0
+      ? 1
+      : Math.max(0.62, Math.min(PLAFOND_DES_LOGOS, disponible / (rangees.length * (HAUTEUR_DE_MAISON + 8))));
   // Plus la plaque est haute, plus son texte grandit (un peu : « 0 boucherie/charcuterie » doit tenir sur une ligne).
   const textePlaque = a * Math.max(1, Math.min(1.08, hauteurPlaque / plaqueMin));
   return (
@@ -202,7 +210,12 @@ export function SceneTransformation({
       <View style={[styles.notreCote, campagne ? styles.herbe : null]}>
         {campagne ? null : <Carrelage lignes={4} />}
         {/* La plaque blanche, sur toute la largeur : ce qu'on garde chez soi (le titre et les symboles d'un côté, les trois comptes de l'autre). Un appui ouvre le stock. */}
-        <Pressable style={[styles.plaque, { height: hauteurPlaque }]} onPress={onAppui} accessibilityRole="button" accessibilityLabel={entrer ?? T.entrer}>
+        <Pressable
+          style={[styles.plaque, { height: hauteurPlaque }]}
+          onPress={onAppui}
+          accessibilityRole="button"
+          accessibilityLabel={entrer ?? T.entrer}
+        >
           <View style={styles.entete}>
             <Text style={[styles.titre, { fontSize: Math.round(13 * textePlaque) }]} numberOfLines={1}>
               {contenu.titre}
@@ -210,7 +223,11 @@ export function SceneTransformation({
             <View style={styles.symboles}>
               {contenu.symboles.map((s, i) => (
                 <Balade key={s.cle} amplitude={6} amplitudeY={5} duree={2400 + i * 500}>
-                  <Text style={[styles.symbole, { fontSize: Math.round(24 * textePlaque) }]} accessibilityElementsHidden importantForAccessibility="no">
+                  <Text
+                    style={[styles.symbole, { fontSize: Math.round(24 * textePlaque) }]}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
+                  >
                     {s.emoji}
                   </Text>
                 </Balade>
@@ -221,6 +238,7 @@ export function SceneTransformation({
         </Pressable>
         <View style={styles.fromagerie}>
           <Batiment
+            colle
             titre={nomBatiment ?? T.fromagerie}
             entrees={gestion}
             onAppui={onGestion}
@@ -243,11 +261,25 @@ const styles = StyleSheet.create({
     borderColor: '#A9794A',
     overflow: 'hidden',
   },
-  ville: { flex: 1, backgroundColor: '#DCE6EE', paddingHorizontal: MARGE, paddingVertical: MARGE, justifyContent: 'space-evenly' },
+  ville: {
+    flex: 1,
+    backgroundColor: '#DCE6EE',
+    paddingHorizontal: MARGE,
+    paddingVertical: MARGE,
+    justifyContent: 'space-evenly',
+  },
   rangee: { flexDirection: 'row', justifyContent: 'space-around' },
   trottoir: { height: TROTTOIR, backgroundColor: '#C9CCCF' },
   rue: { backgroundColor: '#7C858C', justifyContent: 'center' },
-  traits: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: -2, flexDirection: 'row', justifyContent: 'space-around' },
+  traits: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '50%',
+    marginTop: -2,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
   trait: { width: 14, height: 4, backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 2 },
   plaque: {
     height: HAUTEUR_DE_LA_PLAQUE,
@@ -258,6 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
+    marginHorizontal: MARGE,
     marginBottom: MARGE,
     borderWidth: 1,
     borderColor: '#D8DCDF',
@@ -269,7 +302,8 @@ const styles = StyleSheet.create({
   lignes: { alignItems: 'flex-start', gap: 2, flexShrink: 1 },
   ligne: { fontSize: 13, fontWeight: '700', color: colors.primaryDark },
   herbe: { backgroundColor: '#DCEBC4' },
-  notreCote: { justifyContent: 'flex-end', padding: MARGE, paddingTop: MARGE },
+  // La fromagerie se colle au cadre (côtés et bas) : seule la plaque garde ses marges.
+  notreCote: { justifyContent: 'flex-end', paddingTop: MARGE },
   fromagerie: { alignSelf: 'stretch' },
   carrelage: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   ligneDeCarreaux: { flex: 1, flexDirection: 'row' },
