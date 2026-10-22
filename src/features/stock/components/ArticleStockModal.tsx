@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
 import type { ChoixImage } from '@/features/stock/services/imagesArticles';
-import { ChampsTarifsParCategorie } from '@/features/commercial/components/ChampsTarifsParCategorie';
+import { ChampPrixParCategorie } from '@/features/stock/components/ChampPrixParCategorie';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
 import { formatMontant } from '@/shared/utils/dates';
@@ -108,7 +108,17 @@ export function ArticleStockModal({
           {libellePrix ? null : (
             <FormField label={T.nom} required value={nomSaisi} onChangeText={setNomSaisi} />
           )}
-          {avecPrix ? (
+          {/* Un fromage ou une viande : le prix de vente et ceux des catégories de contact, en une seule ligne (catégorie, prix). */}
+          {avecPrix && cle && tarifs ? (
+            <ChampPrixParCategorie
+              article={cle}
+              categories={categoriesClient()}
+              tarifs={tarifs}
+              prixDeVente={prixSaisi}
+              onPrixDeVente={setPrixSaisi}
+              parKg={parKg}
+            />
+          ) : avecPrix ? (
             <FormField
               label={libellePrix ?? (parKg ? T.prixKg : T.prix)}
               value={prixSaisi}
@@ -119,20 +129,6 @@ export function ArticleStockModal({
               keyboardType="decimal-pad"
               placeholder="0,00"
             />
-          ) : null}
-          {/* Les prix selon la catégorie de contact : un particulier et un professionnel ne paient pas le même prix. */}
-          {avecPrix && cle && tarifs ? (
-            <View style={commonStyles.gap6}>
-              <Text style={commonStyles.lineBold}>{T.tarifsParCategorie}</Text>
-              <Text style={commonStyles.note}>{T.tarifsAide}</Text>
-              <ChampsTarifsParCategorie
-                article={cle}
-                categories={categoriesClient()}
-                valeurs={tarifs}
-                prixInventaire={prix}
-                parKg={parKg}
-              />
-            </View>
           ) : null}
           {avecLitres ? (
             <FormField

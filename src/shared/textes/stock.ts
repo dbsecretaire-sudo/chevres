@@ -107,6 +107,11 @@ export const TEXTES_STOCK = {
     nomRequis: 'Nom requis',
     prixInvalide: 'Le prix doit être supérieur à zéro.',
     supprimer: 'Supprimer cet article',
+    /** Le prix en une ligne : la catégorie (le prix de vente, ou une catégorie de contact) et son prix. */
+    categorie: 'Catégorie',
+    prixDeVente: 'Prix de vente',
+    prixCourt: 'Prix',
+    prixParKg: 'Prix (€/kg)',
     /** L'image de la carte : une image de l'appareil à la place du dessin d'origine. */
     image: {
       titre: 'Image',

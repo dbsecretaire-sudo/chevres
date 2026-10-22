@@ -91,6 +91,7 @@ export const LABEL_VOLET_COOPERATIVE: Record<ValeurDe<typeof VOLET_COOPERATIVE>,
 export const LABEL_OBJET_ASSURANCE: Record<ValeurDe<typeof OBJET_ASSURANCE>, string> = {
   [OBJET_ASSURANCE.BATIMENTS]: 'Bâtiments',
   [OBJET_ASSURANCE.ANIMAUX]: 'Animaux',
+  [OBJET_ASSURANCE.VISITEURS]: 'Visiteurs (RC exploitation)',
   [OBJET_ASSURANCE.VEHICULE]: 'Véhicule',
 };
 

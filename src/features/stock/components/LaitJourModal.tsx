@@ -14,7 +14,7 @@ interface Props {
   /** Le litrage qu'on modifie ; absent pour en noter un nouveau. */
   entree?: LaitJour;
   onValider: (valeurs: { id?: string; date: string; litres: number }) => void;
-  onSupprimer: () => void;
+  onSupprimer?: () => void;
   onFermer: () => void;
 }
 
@@ -69,7 +69,7 @@ export function LaitJourModal({ visible, entree, onValider, onSupprimer, onFerme
             />
             <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={valider} />
           </View>
-          {entree ? <Button variant="danger" label={T.supprimer} onPress={onSupprimer} /> : null}
+          {entree && onSupprimer ? <Button variant="danger" label={T.supprimer} onPress={onSupprimer} /> : null}
         </Pressable>
       </Pressable>
     </Modal>

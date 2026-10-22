@@ -20,10 +20,11 @@ export const VOLET_COOPERATIVE = {
   TRANSPORTS: 'transports',
 } as const;
 
-/** Ce qu'une facture d'assurance couvre : les bâtiments, les animaux ou un véhicule de la flotte (dont on choisit alors la plaque). */
+/** Ce qu'une facture d'assurance couvre : les bâtiments, les animaux, les visiteurs (responsabilité civile) ou un véhicule de la flotte (dont on choisit alors la plaque). */
 export const OBJET_ASSURANCE = {
   BATIMENTS: 'batiments',
   ANIMAUX: 'animaux',
+  VISITEURS: 'visiteurs',
   VEHICULE: 'vehicule',
 } as const;
 
