@@ -62,6 +62,7 @@ export const TEXTES_FLOTTE = {
   assurance: {
     aide: 'Les primes d’assurance de ce véhicule et ce que l’assurance a versé, liées par leur écriture comptable.',
     nouvellePrime: 'Nouvelle assurance du véhicule',
+    payerPrime: 'Payer une prime d’assurance',
     nouvelleIndemnite: 'Indemnité reçue de l’assurance',
     aucune: 'Aucune écriture d’assurance pour ce véhicule.',
   },

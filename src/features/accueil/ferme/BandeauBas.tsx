@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
 import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
 import { colors } from '@/shared/theme/colors';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
 
 /**
  * Le bandeau de la ferme (la maison, la balance, les boucles, les rappels) tout en bas de l'écran, sur toutes les pages du téléphone : c'est ce qu'on
@@ -14,7 +15,10 @@ export function BandeauBas() {
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
   return (
     <View style={[styles.fond, { paddingBottom: 8 + bottom }]}>
-      <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+      {/* La même largeur maximale que la capsule du haut : sur un grand écran, le bandeau ne s'étire pas d'un bord à l'autre. */}
+      <View style={colonneCentree}>
+        <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
+      </View>
       <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
     </View>
   );
