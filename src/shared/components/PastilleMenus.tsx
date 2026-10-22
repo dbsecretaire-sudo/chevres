@@ -1,8 +1,12 @@
 import { useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { changerAffichage } from '@/bureau/changerAffichage';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useMenusSections } from '@/shared/navigation/menusSections';
+import { menusDeLaFerme } from '@/shared/navigation/structureMenus';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 import { colors } from '@/shared/theme/colors';
@@ -10,24 +14,37 @@ import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 
 /**
- * La pastille « Menus » de la capsule du haut : un appui déroule, juste dessous, les rubriques de l'application (Cheptel, Production,
- * Commercial, Comptabilité, Organisation), à la place de l'ancienne barre d'onglets du bas. La rubrique ouverte est en évidence.
+ * La pastille « Menus » de la capsule du haut : un appui déroule, juste dessous, les menus de l'application. Pour un élevage avec l'accueil « ferme », ce sont ceux
+ * de l'accueil (Accueil, Exploitation, Atelier, Agritourisme) puis la Comptabilité, les Contacts et l'Organisation : un appui sur un menu en déroule les écrans.
+ * Sinon (une entreprise, l'accueil classique), ce sont les rubriques des onglets, la rubrique ouverte en évidence.
  */
 export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const entrees = useMenusSections();
+  const router = useRouter();
+  const { settings } = useAppSettings();
+  const avecPlanDeLaFerme = !modeEntreprise() && !settings.exploitation?.accueilClassique;
+  /** Le menu déroulé (son libellé) : un seul à la fois. */
+  const [deroule, setDeroule] = useState<string | null>(null);
   // La version Windows propose, au bas de la liste, les deux autres affichages (bureau, mobile, sobre).
   const autresAffichages: ModeAffichage[] = estBureau()
     ? Object.values(AFFICHAGE).filter((mode) => mode !== modeAffichage)
     : [];
   const echelle = useEchelle();
   const ref = useRef<View>(null);
-  const { width: largeurFenetre } = useWindowDimensions();
+  const { width: largeurFenetre, height: hauteurFenetre } = useWindowDimensions();
   // La liste se pose sous la pastille, alignée sur son bord droit (la colonne est centrée dans une grande fenêtre).
   const [liste, setListe] = useState<{ haut: number; droite: number } | null>(null);
   const ouvrir = () =>
-    ref.current?.measureInWindow((x, y, largeur, hauteur) =>
-      setListe({ haut: y + hauteur + 6, droite: Math.max(8, largeurFenetre - (x + largeur)) }),
-    );
+    ref.current?.measureInWindow((x, y, largeur, hauteur) => {
+      setDeroule(null);
+      setListe({ haut: y + hauteur + 6, droite: Math.max(8, largeurFenetre - (x + largeur)) });
+    });
+  const aller = (route: string) => {
+    setListe(null);
+    router.push(route as never);
+  };
+  // Les menus du plan de la ferme, relus à l'ouverture (ils changent avec l'espèce et les réglages).
+  const plan = liste && avecPlanDeLaFerme ? menusDeLaFerme() : null;
   return (
     <>
       <Pressable
@@ -58,7 +75,44 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
       <Modal visible={liste !== null} transparent animationType="fade" onRequestClose={() => setListe(null)}>
         <Pressable style={styles.fond} onPress={() => setListe(null)} accessibilityLabel={TEXTES.commun.general.fermer}>
           <View style={[styles.liste, { top: liste?.haut ?? 0, right: liste?.droite ?? 12 }]}>
-            {entrees.map((e) => (
+            <ScrollView style={{ maxHeight: hauteurFenetre - (liste?.haut ?? 0) - 24 }} showsVerticalScrollIndicator={false}>
+            {plan
+              ? plan.map((menu) => {
+                  const ouvert = deroule === menu.label;
+                  return (
+                    <View key={menu.label}>
+                      <Pressable
+                        style={({ pressed }) => [styles.entree, styles.entreeMenu, pressed && styles.appuyee]}
+                        onPress={() => (menu.items ? setDeroule(ouvert ? null : menu.label) : aller(menu.route ?? '/'))}
+                        accessibilityRole="button"
+                        accessibilityState={{ expanded: menu.items ? ouvert : undefined }}
+                      >
+                        <Text style={[styles.entreeTexte, ouvert ? styles.entreeActive : null]}>{menu.label}</Text>
+                        {menu.items ? (
+                          <Ionicons name={ouvert ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+                        ) : null}
+                      </Pressable>
+                      {ouvert
+                        ? menu.items?.map((item, i) =>
+                            'separateur' in item ? (
+                              <View key={`s${i}`} style={styles.trait} />
+                            ) : (
+                              <Pressable
+                                key={`${item.route}-${i}`}
+                                style={({ pressed }) => [styles.sousEntree, pressed && styles.appuyee]}
+                                onPress={() => aller(item.route)}
+                                accessibilityRole="button"
+                              >
+                                <Text style={styles.sousEntreeTexte}>{item.label}</Text>
+                              </Pressable>
+                            ),
+                          )
+                        : null}
+                    </View>
+                  );
+                })
+              : null}
+            {(plan ? [] : entrees).map((e) => (
               <Pressable
                 key={e.cle}
                 style={({ pressed }) => [styles.entree, pressed && styles.appuyee]}
@@ -85,6 +139,7 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
                 <Text style={styles.entreeAffichage}>{TEXTES.navigation.affichage[mode]}</Text>
               </Pressable>
             ))}
+            </ScrollView>
           </View>
         </Pressable>
       </Modal>
@@ -131,5 +186,9 @@ const styles = StyleSheet.create({
   // Le premier choix d'affichage : un trait le sépare des rubriques.
   separee: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 },
   entreeAffichage: { fontSize: 14, color: colors.textMuted },
+  entreeMenu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  sousEntree: { paddingHorizontal: 18, paddingLeft: 30, paddingVertical: 8 },
+  sousEntreeTexte: { fontSize: 14, color: colors.text },
+  trait: { height: 1, backgroundColor: colors.border, marginVertical: 4, marginHorizontal: 18 },
   entreeActive: { color: colors.primary, fontWeight: '800' },
 });

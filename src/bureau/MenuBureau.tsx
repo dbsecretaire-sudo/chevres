@@ -21,8 +21,8 @@ const A = TEXTES.production.accueil;
 const C = TEXTES.comptabilite.accueil;
 const K = TEXTES.commercial.accueil;
 
-/** Les menus de la barre du haut : ce que les onglets du bas donnent sur le téléphone, avec leurs écrans en dessous. */
-function definitionDesMenus(): DefinitionMenu[] {
+/** Les menus de la barre du haut, chacun par son nom : la version bureau les range en barre, le menu « Menus » du mobile en reprend les écrans. */
+export function menusParNom() {
   const entreprise = modeEntreprise();
   const accueil: DefinitionMenu = {
     label: TEXTES.navigation.layout.accueil,
@@ -154,6 +154,12 @@ function definitionDesMenus(): DefinitionMenu[] {
       { label: TEXTES.settings.reglages.sectionRegles, route: ROUTES.ORGANISATION_REGLES },
     ],
   };
+  return { entreprise, accueil, clients, contacts, cheptel, production, commercial, comptabilite, organisation };
+}
+
+/** Les menus de la barre du haut : ce que les onglets du bas donnent sur le téléphone, avec leurs écrans en dessous. */
+function definitionDesMenus(): DefinitionMenu[] {
+  const { entreprise, accueil, clients, contacts, cheptel, production, commercial, comptabilite, organisation } = menusParNom();
   // Une entreprise a ses clients à la place du cheptel et de la production.
   return entreprise
     ? [accueil, clients, comptabilite, organisation]

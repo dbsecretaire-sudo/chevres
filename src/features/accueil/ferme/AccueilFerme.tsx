@@ -8,6 +8,7 @@ import { actionsDuLieu, type ActionDeLieu, type CibleDesBulles } from '@/feature
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { BasculeFerme, type CoteDeLaFerme } from '@/features/accueil/ferme/BasculeFerme';
 import { BullesLieu } from '@/features/accueil/ferme/BullesLieu';
+import { ROUTE_DIRECTE } from '@/features/accueil/ferme/routesFerme';
 import { coteVoisin, estUnCote, lireDernierCote, noterDernierCote } from '@/features/accueil/ferme/dernierCote';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
@@ -26,7 +27,6 @@ import {
 } from '@/features/accueil/services/bullesFerme';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
@@ -48,66 +48,6 @@ const ACHAT = '#8E1F33';
 const VENTE = colors.primary;
 const ORANGE = '#D2793B';
 
-/**
- * Les boutons qui ouvrent directement leur page, sans bulles : les fiches des intervenants (leurs contacts, leurs factures et toutes leurs actions),
- * et les pages de la gestion. Le suivi des mouvements, le bordereau de perte et le recensement se génèrent depuis le dossier PAC, qui garde leur
- * année et leur état.
- */
-const ROUTE_DIRECTE: Record<string, string> = {
-  // La gestion de l'exploitation : le cheptel (liste, lots, ajouts, boucles, carnet de naissance) et les documents.
-  // Le cheptel : directement la liste des animaux (les lots s'ouvrent depuis l'icône de son en-tête).
-  cheptel: ROUTES.lieu('animaux'),
-  documents: ROUTES.lieu('documents'),
-  organismes: ROUTES.lieu('organismes'),
-  // Les intervenants de l'exploitation.
-  abattoir: ROUTES.lieu('abattoir'),
-  // Les partenaires (organismes, assureurs, équarrisseurs, contacts) : l'écran où ils sont tous rangés ; le vétérinaire est dans le groupement sanitaire.
-  partenaires: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
-  bilanAnnuel: ROUTES.CHEPTEL_BILAN,
-  // Un animal qui part vivant (vendu à un particulier, à un autre éleveur…) : l'assistant du départ, avec son document de circulation.
-  venteVivant: ROUTES.lotAbattoirNouveau('vivants'),
-  aliments: ROUTES.lieu('aliments'),
-  equarrissage: ROUTES.lieu('equarrissage'),
-  carburant: ROUTES.lieu('carburant'),
-  garage: ROUTES.lieu('garage'),
-  assurance: ROUTES.lieu('assurance'),
-  banque: ROUTES.lieu('banque'),
-  groupement: ROUTES.lieu('groupement'),
-  groupementSanitaire: ROUTES.lieu('groupementSanitaire'),
-  // Les intervenants du travail du produit : la laiterie, les clients par catégorie, les emballages.
-  emballages: ROUTES.lieu('emballages'),
-  laiterie: ROUTES.PRODUCTION_LAITERIE,
-  particuliers: ROUTES.lieu('particuliers'),
-  surfacesCommerciales: ROUTES.lieu('surfacesCommerciales'),
-  entreprises: ROUTES.lieu('entreprises'),
-  // Les analyses : celles du lait, du fromage et de la charcuterie.
-  analyses: ROUTES.lieu('analyses'),
-  // Le registre des analyses de l'atelier : les fabrications et leurs analyses.
-  registreAnalyses: ROUTES.PRODUCTION_REGISTRE_ANALYSES,
-  // La bibliothèque de recettes de l'atelier.
-  recettes: ROUTES.PRODUCTION_RECETTES,
-  // La gestion du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit, et le stock de la fromagerie.
-  reserver: ROUTES.COMMERCIAL_COMMANDE,
-  stockFromagerie: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`,
-  // Le côté Agritourisme : les intervenants (visiteurs, groupes, office de tourisme, repas) et les pages de la gestion (visites, formules, tarifs, ventes, rentabilité).
-  visiteurs: ROUTES.lieu('visiteurs'),
-  groupesVisiteurs: ROUTES.lieu('groupesVisiteurs'),
-  tourisme: ROUTES.lieu('tourisme'),
-  repas: ROUTES.lieu('repas'),
-  // Les démarches pour accueillir du public (ERP, sécurité incendie, accessibilité, assurance, DDPP).
-  cadreReglementaire: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC,
-  nouvelleVisite: ROUTES.COMMERCIAL_VISITE,
-  visites: ROUTES.COMMERCIAL_AGRITOURISME,
-  formules: ROUTES.COMMERCIAL_FORMULES,
-  tarifs: ROUTES.COMMERCIAL_TARIFS,
-  // Les ventes de l'agritourisme : les visites réalisées, pas les produits de l'atelier.
-  ventesAgritourisme: `${ROUTES.COMMERCIAL_VENTES}?perimetre=agritourisme`,
-  // Les ventes de l'atelier : ce qu'on fabrique et vend (fromage, charcuterie, viande), sans les animaux ni le lait.
-  ventesAtelier: `${ROUTES.COMMERCIAL_VENTES}?perimetre=atelier`,
-  // La rentabilité du côté Agritourisme ne porte que sur l'agritourisme ; celle de l'atelier, que sur ce qu'on fabrique (lait, fromage, viande, charcuterie).
-  rentabilite: `${ROUTES.RENTABILITE}?perimetre=agritourisme`,
-  rentabiliteAtelier: `${ROUTES.RENTABILITE}?perimetre=atelier`,
-};
 
 /** Le côté de la ferme montré : l'exploitation (le troupeau) ou le travail du produit (la fromagerie). */
 type Cote = CoteDeLaFerme['cle'];
