@@ -56,6 +56,22 @@ export const TEXTES_COMMERCIAL = {
   },
   ventes: {
     titre: 'Chiffre d’affaires',
+    /** Le lien de l'atelier : ce qu'on fabrique et vend. */
+    atelier: {
+      titre: 'Ventes de l’atelier',
+      aide: 'Les produits de l’atelier vendus : fromages, charcuterie et viande. Les animaux, le lait et l’agritourisme n’y sont pas.',
+    },
+    /** Le lien de l'agritourisme : les visites réalisées, avec leurs mots (formules, groupes, personnes). */
+    agritourisme: {
+      titre: 'Ventes de l’agritourisme',
+      aide: 'Les visites réalisées : ce qu’elles ont rapporté par formule, par groupe et par mois. Les visites à venir et annulées n’y sont pas.',
+      cartes: { nombre: 'Visites', panier: 'Par visite' },
+      vues: { produits: 'Par formule', clients: 'Par groupe' },
+      produit: { nombreDeVentes: (n: number) => `${n} visite${n > 1 ? 's' : ''}` },
+      client: {
+        detail: (nombre: number, derniere: string) => `${nombre} visite${nombre > 1 ? 's' : ''} · dernière le ${derniere}`,
+      },
+    },
     cartes: {
       total: 'Chiffre d’affaires',
       nombre: 'Ventes',

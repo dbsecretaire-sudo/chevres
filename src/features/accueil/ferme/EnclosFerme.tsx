@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { DecorEnclos } from '@/features/accueil/ferme/DecorEnclos';
@@ -36,6 +37,8 @@ interface Props {
   margeGauche?: number;
   margeDroite?: number;
   margeBas?: number;
+  /** Ce que la scène dessine dans l'enclos, sous le troupeau et sous le cadre (les chemins de terre le long des intervenants). */
+  fond?: ReactNode;
 }
 
 /** Le dessin de l'espèce de l'établissement (la tête de chaque animal de la liste de la chèvrerie). */
@@ -79,6 +82,7 @@ export function EnclosFerme({
   margeGauche = 0,
   margeDroite = 0,
   margeBas = 0,
+  fond,
 }: Props) {
   return (
     <View style={styles.conteneur}>
@@ -94,6 +98,8 @@ export function EnclosFerme({
       >
         {/* Le décor, fixe et en fond : sentier, arbres, maquis et fleurs ; en estive, montagnes, nuages et cailloux. */}
         {estive ? <DecorEstive /> : <DecorEnclos />}
+        {/* Ce que la scène dessine dans l'enclos, sous le troupeau et sous le cadre (les chemins de terre des intervenants). */}
+        {fond}
         <Text style={styles.titre} numberOfLines={2}>
           {estive ? T.estive(estive.zone) : T.enclos}
         </Text>

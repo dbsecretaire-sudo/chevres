@@ -192,7 +192,8 @@ export function ContenuDossierPac({
         />
         </AncreVisite>
         )}
-        {declarations ? (
+        {/* La déclaration d'estive se range dans les documents. */}
+        {registre ? (
           <ListRow
             title={T.estive.bouton.replace('…', '')}
             subtitle={T.lignes.estive.aide}

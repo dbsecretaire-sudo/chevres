@@ -87,6 +87,8 @@ export function statistiquesVentes(
   ventes: Vente[],
   aujourdhui: string,
   sansClient: string,
+  /** Ce qui regroupe les ventes en « produits » : d'ordinaire le produit de la vente ; pour l'agritourisme, la formule de la visite. */
+  produitDe: (v: Vente) => { cle: string; libelle: string } = produitDeLaVente,
 ): StatistiquesVentes {
   const total = arrondi(ventes.reduce((t, v) => t + montantDe(v), 0));
   const parMois = Array.from({ length: 12 }, () => 0);
@@ -97,7 +99,7 @@ export function statistiquesVentes(
     const mois = Number(v.date.slice(5, 7)) - 1;
     if (mois >= 0 && mois < 12) parMois[mois] += montantDe(v);
 
-    const { cle, libelle } = produitDeLaVente(v);
+    const { cle, libelle } = produitDe(v);
     const unite = LABEL_UNITE_VENTE_COURT[v.unite] ?? v.unite;
     const cleProduit = `${cle}|${v.unite}`;
     const produit = produits.get(cleProduit) ?? {

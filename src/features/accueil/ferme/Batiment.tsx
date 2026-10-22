@@ -27,6 +27,9 @@ interface Props {
   couleurDisque?: string;
 }
 
+/** Au plus cette échelle, l'écran est celui d'un téléphone (voir useEchelle). */
+const PETIT_ECRAN = 1.05;
+
 /** Un compartiment : une porte du bâtiment, avec son dessin et son nom. */
 function Compartiment({
   entree,
@@ -44,13 +47,21 @@ function Compartiment({
   const ref = useRef<View>(null);
   // Sur un grand écran (Windows), le dessin et le nom grandissent avec la largeur de la colonne.
   const e = useEchelle();
+  /** Sur téléphone, les compartiments se touchent et n'ont que la hauteur de leur contenu. */
+  const compact = e <= PETIT_ECRAN;
   const appuyer = () =>
     ref.current?.measureInWindow((x, y, largeur, hauteur) => onAppui(entree.cle, { x, y, largeur, hauteur }));
   return (
     <Pressable
       ref={ref}
       collapsable={false}
-      style={[styles.compartiment, { backgroundColor: palette.compartiment, borderColor: palette.bord }, seul ? styles.compartimentSeul : null]}
+      style={[
+        styles.compartiment,
+        { backgroundColor: palette.compartiment, borderColor: palette.bord },
+        compact ? styles.compartimentCompact : null,
+        seul ? styles.compartimentSeul : null,
+        seul && compact ? styles.compartimentSeulCompact : null,
+      ]}
       onPress={appuyer}
       accessibilityRole="button"
       accessibilityLabel={entree.titre}
@@ -73,7 +84,7 @@ function Compartiment({
           </View>
         ) : null}
       </View>
-      <Text style={[styles.nom, { fontSize: Math.round(10 * e), minHeight: Math.round(24 * e) }]} numberOfLines={2}>
+      <Text style={[styles.nom, { fontSize: Math.round(10 * e), minHeight: compact ? undefined : Math.round(24 * e) }]} numberOfLines={2}>
         {entree.titre}
       </Text>
     </Pressable>
@@ -93,7 +104,7 @@ export function Batiment({ titre, decor, entrees, onAppui, palette, surHauteur, 
       </View>
       <View style={[styles.mur, { backgroundColor: palette.mur, borderColor: palette.toit }]}>
         {decor}
-        <View style={styles.compartiments}>
+        <View style={[styles.compartiments, echelle <= PETIT_ECRAN ? styles.compartimentsCompacts : null]}>
           {entrees.map((e, i) => (
             <Compartiment
               key={e.cle}
@@ -133,6 +144,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 2,
   },
+  // Sur téléphone : pas d'espace entre les compartiments, et la hauteur de leur contenu (le nom se lit sur autant de lignes qu'il en faut).
+  compartimentsCompacts: { padding: 0, gap: 0 },
+  compartimentCompact: { width: '33.3333%', paddingVertical: 2, gap: 0 },
+  compartimentSeulCompact: { width: '100%' },
   compartimentSeul: { width: '98%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
   disque: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   nom: { fontSize: 10, fontWeight: '700', color: colors.text, textAlign: 'center', minHeight: 24 },

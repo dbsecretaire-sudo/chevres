@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -7,7 +7,9 @@ import { calculerBilanAlimentation } from '@/features/exploitation/services/bila
 import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import { listFactures } from '@/features/comptabilite/repository/factures';
 import { listVentes } from '@/features/comptabilite/repository/ventes';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
+import { surChangement } from '@/shared/storage/localStore';
 
 /** Statistiques de l'écran d'accueil pour l'année active, rechargées à chaque retour sur l'écran. */
 export function useAccueil() {
@@ -36,6 +38,24 @@ export function useAccueil() {
       charger();
     }, [charger]),
   );
+
+  // Une écriture (vente ou facture), même indirecte (une visite réalisée, un lot, une synchronisation), met les chiffres à jour tout de suite : le bandeau
+  // du bas reste en place d'une page à l'autre, il ne se relit pas à chaque retour sur un écran.
+  useEffect(() => {
+    let minuteur: ReturnType<typeof setTimeout> | undefined;
+    const arreter = surChangement((categorie) => {
+      if (categorie !== CATEGORIE_STOCKAGE.FACTURES && categorie !== CATEGORIE_STOCKAGE.VENTES) return;
+      // Plusieurs écritures d'affilée ne relancent qu'un seul calcul.
+      clearTimeout(minuteur);
+      minuteur = setTimeout(() => {
+        charger().catch(() => undefined);
+      }, 150);
+    });
+    return () => {
+      clearTimeout(minuteur);
+      arreter();
+    };
+  }, [charger]);
 
   return { annee: settings.anneeActive, annees, setAnneeActive, stats };
 }

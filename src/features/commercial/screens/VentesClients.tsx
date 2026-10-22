@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Linking, Text, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ColonnesVerticales } from '@/shared/components/ColonnesVerticales';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -11,10 +11,18 @@ import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { TuilesChiffres } from '@/features/commercial/components/TuilesChiffres';
 import { useDonneesCommerciales } from '@/features/commercial/hooks/useDonneesCommerciales';
-import { clientsARelancer, statistiquesVentes } from '@/features/commercial/services/statistiques';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
+import {
+  clientsARelancer,
+  produitDeLaVente,
+  statistiquesVentes,
+} from '@/features/commercial/services/statistiques';
+import { produitDeLaVisite, ventesDesVisites } from '@/features/commercial/services/ventesAgritourisme';
+import type { VisiteAgritourisme } from '@/features/commercial/types';
 import {
   CATEGORIES_VENTE_ATELIER,
   JOURS_CLIENT_A_RELANCER,
+  PERIMETRE_VENTES_AGRITOURISME,
   PERIMETRE_VENTES_ATELIER,
   VUE_VENTES,
   type VueVentes,
@@ -42,28 +50,61 @@ export default function VentesClients() {
   const { vue: vueDuLien, perimetre } = useLocalSearchParams<{ vue?: string; perimetre?: string }>();
   /** Le lien de l'atelier ne montre que les produits finis : fromage, charcuterie, viande. */
   const atelier = perimetre === PERIMETRE_VENTES_ATELIER;
+  /** Le lien de l'agritourisme ne montre que les visites réalisées : leurs formules, leurs groupes, leurs personnes. */
+  const agritourisme = perimetre === PERIMETRE_VENTES_AGRITOURISME;
+  const [visites, setVisites] = useState<VisiteAgritourisme[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!agritourisme) return;
+      lireArchiveCommercial()
+        .then((archive) => setVisites(archive.visites))
+        .catch(() => undefined);
+    }, [agritourisme]),
+  );
   const ventes = useMemo(
-    () => (atelier ? donnees.ventes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie)) : donnees.ventes),
-    [atelier, donnees.ventes],
+    () =>
+      agritourisme
+        ? ventesDesVisites(visites, donnees.regrouper ? undefined : donnees.annee)
+        : atelier
+          ? donnees.ventes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie))
+          : donnees.ventes,
+    [agritourisme, atelier, visites, donnees.regrouper, donnees.annee, donnees.ventes],
   );
   const toutesVentes = useMemo(
     () =>
-      atelier ? donnees.toutesVentes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie)) : donnees.toutesVentes,
-    [atelier, donnees.toutesVentes],
+      agritourisme
+        ? ventesDesVisites(visites)
+        : atelier
+          ? donnees.toutesVentes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie))
+          : donnees.toutesVentes,
+    [agritourisme, atelier, visites, donnees.toutesVentes],
   );
+  /** Les mots de l'écran : ceux des visites (formules, groupes) pour l'agritourisme, ceux des ventes sinon. */
+  const A = TEXTES.commercial.ventes.agritourisme;
+  const mots = agritourisme ? A : T;
+  const titre = agritourisme ? A.titre : atelier ? TEXTES.commercial.ventes.atelier.titre : T.titre;
+  const aide = agritourisme ? A.aide : atelier ? TEXTES.commercial.ventes.atelier.aide : undefined;
   /** La vue que le lien ouvre (les paiements à encaisser, les clients à relancer), sinon les produits. */
   const vueOuverte: VueVentes | 'encaisser' | 'relancer' =
     vueDuLien === 'encaisser' || vueDuLien === 'relancer' ? vueDuLien : VUE_VENTES.PRODUITS;
   // Un choix fait sur l'écran vaut pour le lien qui l'a ouvert ; un autre lien ouvre sa propre vue.
-  const [choix, setChoix] = useState<{ lien?: string; vue: VueVentes | 'encaisser' | 'relancer' } | null>(null);
+  const [choix, setChoix] = useState<{ lien?: string; vue: VueVentes | 'encaisser' | 'relancer' } | null>(
+    null,
+  );
   const vue = choix && choix.lien === vueDuLien ? choix.vue : vueOuverte;
   const setVue = (v: VueVentes | 'encaisser' | 'relancer') => setChoix({ lien: vueDuLien, vue: v });
   const [moisChoisi, setMoisChoisi] = useState<string | null>(null);
   const aujourdhui = todayISO();
 
   const stats = useMemo(
-    () => statistiquesVentes(ventes, aujourdhui, T.client.sansNom),
-    [ventes, aujourdhui],
+    () =>
+      statistiquesVentes(
+        ventes,
+        aujourdhui,
+        T.client.sansNom,
+        agritourisme ? produitDeLaVisite : produitDeLaVente,
+      ),
+    [ventes, aujourdhui, agritourisme],
   );
   const aRelancer = useMemo(
     () => clientsARelancer(donnees.clients, toutesVentes, aujourdhui, JOURS_CLIENT_A_RELANCER),
@@ -77,6 +118,8 @@ export default function VentesClients() {
 
   return (
     <Screen>
+      <Stack.Screen options={{ title: titre }} />
+      {aide ? <Text style={commonStyles.note}>{aide}</Text> : null}
       <LigneFiltres>
         <YearPicker
           annees={donnees.annees}
@@ -89,8 +132,8 @@ export default function VentesClients() {
       <TuilesChiffres
         tuiles={[
           { cle: 'total', libelle: T.cartes.total, valeur: formatMontant(stats.total) },
-          { cle: 'nombre', libelle: T.cartes.nombre, valeur: String(stats.nombre) },
-          { cle: 'panier', libelle: T.cartes.panier, valeur: formatMontant(stats.panierMoyen) },
+          { cle: 'nombre', libelle: mots.cartes.nombre, valeur: String(stats.nombre) },
+          { cle: 'panier', libelle: mots.cartes.panier, valeur: formatMontant(stats.panierMoyen) },
           ...(stats.totalImpaye > 0
             ? [
                 {
@@ -105,8 +148,8 @@ export default function VentesClients() {
       />
       <PucesDefilantes
         puces={[
-          { valeur: VUE_VENTES.PRODUITS, label: T.vues.produits },
-          { valeur: VUE_VENTES.CLIENTS, label: T.vues.clients },
+          { valeur: VUE_VENTES.PRODUITS, label: mots.vues.produits },
+          { valeur: VUE_VENTES.CLIENTS, label: mots.vues.clients },
           { valeur: VUE_VENTES.MOIS, label: T.vues.mois },
           { valeur: 'encaisser', label: T.vues.aEncaisser },
           { valeur: 'relancer', label: T.vues.aRelancer },
@@ -128,7 +171,7 @@ export default function VentesClients() {
                   nombre(p.quantite),
                   p.unite,
                   p.prixMoyen !== undefined ? formatMontant(p.prixMoyen) : undefined,
-                )} · ${T.produit.nombreDeVentes(p.nombre)}`}
+                )} · ${mots.produit.nombreDeVentes(p.nombre)}`}
                 trailing={<Text style={commonStyles.lineBold}>{formatMontant(p.montant)}</Text>}
               />
             ))}
@@ -145,7 +188,7 @@ export default function VentesClients() {
               <ListRow
                 key={c.client}
                 title={c.client}
-                subtitle={T.client.detail(c.nombre, formatDateFR(c.derniere))}
+                subtitle={mots.client.detail(c.nombre, formatDateFR(c.derniere))}
                 trailing={<Text style={commonStyles.lineBold}>{formatMontant(c.montant)}</Text>}
                 onPress={() => ouvrirClient(c.client)}
               />
@@ -205,7 +248,13 @@ export default function VentesClients() {
                     </Text>
                   }
                   trailing={<Text style={commonStyles.lineBold}>{formatMontant(vente.prix ?? 0)}</Text>}
-                  onPress={() => router.push(ROUTES.ficheVente(vente.id) as never)}
+                  onPress={() =>
+                    router.push(
+                      (agritourisme
+                        ? ROUTES.visiteAgritourisme(vente.id)
+                        : ROUTES.ficheVente(vente.id)) as never,
+                    )
+                  }
                 />
               ))}
             </BlocLignes>

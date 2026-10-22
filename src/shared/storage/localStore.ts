@@ -21,6 +21,20 @@ function withLock<T>(categorie: Categorie, fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
+type EcouteurDeChangement = (categorie: Categorie) => void;
+const ecouteurs = new Set<EcouteurDeChangement>();
+
+/**
+ * Prévient après chaque écriture d'une catégorie (une écriture comptable, qu'elle vienne d'une saisie, d'une visite réalisée, d'un lot, d'une synchronisation…) :
+ * de quoi tenir à jour ce qui en dépend sans attendre un retour sur l'écran, comme la balance du bandeau du bas. Rend la fonction qui se désabonne.
+ */
+export function surChangement(ecouteur: EcouteurDeChangement): () => void {
+  ecouteurs.add(ecouteur);
+  return () => {
+    ecouteurs.delete(ecouteur);
+  };
+}
+
 function dataKey(categorie: Categorie, annee: number): string {
   return cleStockage([CLE_STOCKAGE.DONNEES, categorie, annee].join(SEPARATEUR_CLE));
 }
@@ -65,6 +79,13 @@ export async function saveYear<C extends Categorie>(
 ): Promise<void> {
   await AsyncStorage.setItem(dataKey(categorie, annee), JSON.stringify(items));
   await ensureYearRegistered(categorie, annee);
+  for (const ecouteur of [...ecouteurs]) {
+    try {
+      ecouteur(categorie);
+    } catch {
+      // Un écouteur en défaut ne doit pas faire échouer l'enregistrement.
+    }
+  }
 }
 
 /** Charge et fusionne toutes les années connues d'une catégorie. */

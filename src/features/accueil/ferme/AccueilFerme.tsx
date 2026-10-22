@@ -21,7 +21,6 @@ import {
   positionsEnArc,
   rayonDesBulles,
 } from '@/features/accueil/services/bullesFerme';
-import { FenetreEstive } from '@/features/cheptel/components/FenetreEstive';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { RappelSauvegarde } from '@/features/sauvegarde/components/RappelSauvegarde';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
@@ -92,7 +91,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   visites: ROUTES.COMMERCIAL_AGRITOURISME,
   formules: ROUTES.COMMERCIAL_FORMULES,
   tarifs: ROUTES.COMMERCIAL_TARIFS,
-  ventesAgritourisme: ROUTES.COMMERCIAL_VENTES,
+  // Les ventes de l'agritourisme : les visites réalisées, pas les produits de l'atelier.
+  ventesAgritourisme: `${ROUTES.COMMERCIAL_VENTES}?perimetre=agritourisme`,
   // Les ventes de l'atelier : ce qu'on fabrique et vend (fromage, charcuterie, viande), sans les animaux ni le lait.
   ventesAtelier: `${ROUTES.COMMERCIAL_VENTES}?perimetre=atelier`,
   // La rentabilité du côté Agritourisme ne porte que sur l'agritourisme ; celle de l'atelier, que sur ce qu'on fabrique (lait, fromage, viande, charcuterie).
@@ -160,7 +160,6 @@ export default function AccueilFerme() {
   const racine = useRef<View>(null);
   const [menu, setMenu] = useState<Menu | null>(null);
   const [rappelsOuverts, setRappelsOuverts] = useState(false);
-  const [estiveOuverte, setEstiveOuverte] = useState(false);
   const [cote, setCote] = useState<Cote>(lireDernierCote());
   const choisirCote = (nouveau: Cote) => {
     noterDernierCote(nouveau);
@@ -243,11 +242,10 @@ export default function AccueilFerme() {
     { cle: 'analyses', titre: C.analyses, icone: iconeIon('flask'), couleur: ORANGE },
   ];
   // À droite de la scène de l'exploitation : la santé et la grange (en bulles), le cheptel (les animaux : liste, lots, ajouts, boucles, carnet de
-  // naissance), l'estive, les organismes, et les documents (bilan, dossier PAC, circulation, identification, historique).
+  // naissance), les organismes, et les documents (l'estive) (bilan, dossier PAC, circulation, identification, historique).
   const gestionExploitation: EntreeDeColonne[] = [
     { cle: 'documents', titre: C.documents, icone: iconeIon('document-text'), couleur: ORANGE },
     { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
-    { cle: 'estive', titre: C.estive, icone: iconeIon('trail-sign'), couleur: ORANGE },
     { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
     { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
     { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
@@ -323,10 +321,9 @@ export default function AccueilFerme() {
   const surMaison = (cle: string) => {
     if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
   };
-  /** Un appui sur un compartiment (la gestion) : sa page, la fenêtre de l'estive, ou ses bulles (la santé, la grange). */
+  /** Un appui sur un compartiment (la gestion) : sa page, ou ses bulles (la santé, la grange). */
   const surGestion = (cle: string, ancre: AncreBouton) => {
-    if (cle === 'estive') setEstiveOuverte(true);
-    else if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
+    if (ROUTE_DIRECTE[cle]) ouvrir(ROUTE_DIRECTE[cle]);
     else {
       const entree = [...gestionExploitation, ...gestionTransformation, ...gestionAgritourisme].find((e) => e.cle === cle);
       if (entree) ouvrirMenu(cle as CibleDesBulles, ancre, entree);
@@ -475,7 +472,6 @@ export default function AccueilFerme() {
         </View>
       ) : null}
 
-      <FenetreEstive visible={estiveOuverte} annee={f.annee} onClose={() => setEstiveOuverte(false)} />
       <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
       <FenetreDuJour
         minuteurs={f.minuteurs}
