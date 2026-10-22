@@ -53,6 +53,10 @@ export const VUE_VENTES = {
 
 export type VueVentes = ValeurDe<typeof VUE_VENTES>;
 
+/** Ce que l'atelier vend (le lien `?perimetre=atelier` de l'écran des ventes) : les produits finis, sans le lait, les animaux ni les œufs. */
+export const PERIMETRE_VENTES_ATELIER = 'atelier';
+export const CATEGORIES_VENTE_ATELIER: readonly string[] = ['fromage', 'viande', 'boucherie_charcuterie'];
+
 /** Le nom du fichier du bon de livraison (PDF) ; le numéro de la commande s'y ajoute. */
 export const NOM_FICHIER_BON_LIVRAISON = 'bon_livraison';
 

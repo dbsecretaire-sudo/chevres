@@ -12,7 +12,13 @@ import { YearPicker } from '@/shared/components/YearPicker';
 import { TuilesChiffres } from '@/features/commercial/components/TuilesChiffres';
 import { useDonneesCommerciales } from '@/features/commercial/hooks/useDonneesCommerciales';
 import { clientsARelancer, statistiquesVentes } from '@/features/commercial/services/statistiques';
-import { JOURS_CLIENT_A_RELANCER, VUE_VENTES, type VueVentes } from '@/shared/constants/commercial';
+import {
+  CATEGORIES_VENTE_ATELIER,
+  JOURS_CLIENT_A_RELANCER,
+  PERIMETRE_VENTES_ATELIER,
+  VUE_VENTES,
+  type VueVentes,
+} from '@/shared/constants/commercial';
 import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -33,7 +39,18 @@ const nombre = (valeur: number): string => valeur.toLocaleString(LOCALE, { maxim
 export default function VentesClients() {
   const router = useRouter();
   const donnees = useDonneesCommerciales();
-  const { vue: vueDuLien } = useLocalSearchParams<{ vue?: string }>();
+  const { vue: vueDuLien, perimetre } = useLocalSearchParams<{ vue?: string; perimetre?: string }>();
+  /** Le lien de l'atelier ne montre que les produits finis : fromage, charcuterie, viande. */
+  const atelier = perimetre === PERIMETRE_VENTES_ATELIER;
+  const ventes = useMemo(
+    () => (atelier ? donnees.ventes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie)) : donnees.ventes),
+    [atelier, donnees.ventes],
+  );
+  const toutesVentes = useMemo(
+    () =>
+      atelier ? donnees.toutesVentes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie)) : donnees.toutesVentes,
+    [atelier, donnees.toutesVentes],
+  );
   /** La vue que le lien ouvre (les paiements à encaisser, les clients à relancer), sinon les produits. */
   const vueOuverte: VueVentes | 'encaisser' | 'relancer' =
     vueDuLien === 'encaisser' || vueDuLien === 'relancer' ? vueDuLien : VUE_VENTES.PRODUITS;
@@ -45,12 +62,12 @@ export default function VentesClients() {
   const aujourdhui = todayISO();
 
   const stats = useMemo(
-    () => statistiquesVentes(donnees.ventes, aujourdhui, T.client.sansNom),
-    [donnees.ventes, aujourdhui],
+    () => statistiquesVentes(ventes, aujourdhui, T.client.sansNom),
+    [ventes, aujourdhui],
   );
   const aRelancer = useMemo(
-    () => clientsARelancer(donnees.clients, donnees.toutesVentes, aujourdhui, JOURS_CLIENT_A_RELANCER),
-    [donnees.clients, donnees.toutesVentes, aujourdhui],
+    () => clientsARelancer(donnees.clients, toutesVentes, aujourdhui, JOURS_CLIENT_A_RELANCER),
+    [donnees.clients, toutesVentes, aujourdhui],
   );
 
   const ouvrirClient = (nomAffiche: string) => {

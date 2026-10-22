@@ -88,7 +88,8 @@ export function propositionsDeContrats(
   // Un véhicule de la flotte sans assurance notée.
   for (const v of vehicules.filter((x) => x.actif !== false)) {
     const cle = `|${OBJET_ASSURANCE.VEHICULE}|${v.id}`;
-    if ([...groupes.keys()].some((k) => k.endsWith(`|${OBJET_ASSURANCE.VEHICULE}|${v.id}`))) continue;
+    // Un véhicule dont l'assurance a été résiliée puis souscrite à nouveau (un autre contrat, pas encore de prime) est proposé comme un véhicule sans prime.
+    if (propositions.some((p) => p.cle.endsWith(`|${OBJET_ASSURANCE.VEHICULE}|${v.id}`))) continue;
     propositions.push({ cle, nom: `Véhicule ${v.plaque}`, periodicite: 'annuelle' });
   }
   const prises = new Set(contrats.map((c) => c.source).filter(Boolean));

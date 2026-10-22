@@ -62,6 +62,7 @@ export const TEXTES_ACCUEIL = {
       formules: 'Formules',
       tarifs: 'Tarifs',
       ventesAgritourisme: 'Ventes',
+      ventesAtelier: 'Ventes',
       rentabilite: 'Rentabilité',
       sante: 'Santé',
       partenaires: 'Partenaires',

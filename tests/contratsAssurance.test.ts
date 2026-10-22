@@ -47,12 +47,17 @@ describe('contrats proposés pour l’échéancier des assurances', () => {
     expect(propositions.map((p) => p.nom)).toEqual(['Véhicule AB-123-CD — Groupama']);
   });
 
-  it('propose un véhicule actif sans assurance notée, et pas un véhicule dont l’assurance est résiliée', () => {
+  it('propose un véhicule actif sans assurance notée, mais plus l’ancien contrat d’une assurance résiliée', () => {
     expect(propositionsDeContrats([], [voiture, ancienne], [], '2026-10-22').map((p) => p.nom)).toEqual(['Véhicule AB-123-CD']);
     const resilie = { ...voiture, assuranceResilieeLe: '2026-06-01' };
-    expect(
-      propositionsDeContrats([prime({ objetAssurance: OBJET_ASSURANCE.VEHICULE, vehiculeId: 'v1', date: '2026-03-01' })], [resilie], [], '2026-10-22'),
-    ).toEqual([]);
+    const resiliee = propositionsDeContrats(
+      [prime({ objetAssurance: OBJET_ASSURANCE.VEHICULE, vehiculeId: 'v1', date: '2026-03-01' })],
+      [resilie],
+      [],
+      '2026-10-22',
+    );
+    expect(resiliee.map((p) => p.nom)).toEqual(['Véhicule AB-123-CD']);
+    expect(resiliee[0].prime).toBeUndefined();
   });
 
   it('compte comme actif un véhicule enregistré avant que le statut existe', () => {
