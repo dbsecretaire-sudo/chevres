@@ -453,11 +453,7 @@ export const TEXTES_PRODUCTION = {
       /** Les dossiers marqués touristiques (dans les dossiers d'un contact) : la Route des Sens Authentiques… */
       dossiers: {
         groupe: 'Les dossiers touristiques',
-        aucun: 'Aucun dossier touristique actuellement.',
-        nouveau: 'Nouveau dossier',
-        nouveauTitre: (tiers: string) => `Nouveau dossier touristique · ${tiers}`,
-        choisirTiers: 'Pour quel tiers ?',
-        aucunTiers: 'Ajoutez d’abord un office de tourisme ou un partenaire : un dossier touristique est lié à un tiers.',
+        aucun: 'Aucun dossier touristique hors Office du Tourisme ou Partenaires.',
       },
     },
     repas: {

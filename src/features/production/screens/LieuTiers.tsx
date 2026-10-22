@@ -213,7 +213,7 @@ function LieuTiersStandard() {
           </GroupeAccueil>
 
           {/* L'office de tourisme : les dossiers marqués touristiques (la Route des Sens Authentiques…), avec « Nouveau dossier » lié à un tiers. */}
-          {cle === 'tourisme' ? <DossiersTouristiques tiers={tiers} contacts={contacts} ouvrir={ouvrir} /> : null}
+          {cle === 'tourisme' ? <DossiersTouristiques contacts={contacts} ouvrir={ouvrir} /> : null}
 
           {/* Le groupement sanitaire accueille les vétérinaires : leurs fiches (traitements, visites, factures) s'ouvrent d'ici. */}
           {cle === 'groupementSanitaire' ? (
