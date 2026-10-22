@@ -159,9 +159,9 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     volets: [
       { cle: VOLET_COOPERATIVE.ACHAT_GROUPE, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.ACHAT_GROUPE}` },
       { cle: VOLET_COOPERATIVE.VENTE_GROUPEE, route: `${NOUVELLE}?type=emise&volet=${VOLET_COOPERATIVE.VENTE_GROUPEE}` },
-      { cle: VOLET_COOPERATIVE.MUTUALISATION, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.MUTUALISATION}` },
-      { cle: VOLET_COOPERATIVE.EXPERTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.EXPERTS}` },
-      { cle: VOLET_COOPERATIVE.TRANSPORTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.TRANSPORTS}` },
+      { cle: VOLET_COOPERATIVE.MUTUALISATION, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.MUTUALISATION}&depense=${CATEGORIE_DEPENSE.AUTRE}` },
+      { cle: VOLET_COOPERATIVE.EXPERTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.EXPERTS}&depense=${CATEGORIE_DEPENSE.AUTRE}` },
+      { cle: VOLET_COOPERATIVE.TRANSPORTS, route: `${NOUVELLE}?type=recue&volet=${VOLET_COOPERATIVE.TRANSPORTS}&depense=${CATEGORIE_DEPENSE.AUTRE}` },
     ],
     // Les courriers, démarches et aides déposés pour chaque association ou coopérative.
     liens: [{ cle: 'courriers', icone: 'mail', route: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT) }],

@@ -214,7 +214,9 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
         {/* Une aide se décrit par son type (DPB, ICHN…). */}
         {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampTypeAide e={e} />}
         {/* Une association ou une coopérative agricole : son volet (vente groupée…). */}
-        {e.voletAffiche ? <ChampVoletCooperative value={e.voletCooperative} onChange={e.setVoletCooperative} /> : null}
+        {e.voletAffiche ? (
+          <ChampVoletCooperative value={e.voletCooperative} volets={e.voletsProposes} onChange={e.setVoletCooperative} />
+        ) : null}
         {/* Ce que l'assurance d'un véhicule verse : le véhicule de la flotte, par sa plaque. */}
         {e.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE ? (
           <>

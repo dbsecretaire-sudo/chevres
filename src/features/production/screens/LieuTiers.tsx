@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Text } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import LieuAssociations from '@/features/production/screens/LieuAssociations';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
@@ -38,9 +39,6 @@ interface TextesLieu {
   nouvelle?: string;
   versement?: string;
   liens: object;
-  /** Pour une association ou une coopérative agricole : le titre et la nouvelle écriture de chaque volet. */
-  volets?: Record<string, { titre: string; nouvelle: string }>;
-  aucuneEcritureVolet?: string;
 }
 /** Combien d'écritures la page en montre : les plus récentes ; les autres sont dans la comptabilité. */
 const ECRITURES_MONTREES = 5;
@@ -51,6 +49,12 @@ const ECRITURES_MONTREES = 5;
  * rattachent. Le lieu se donne en paramètre (`?lieu=carburant`).
  */
 export default function LieuTiers() {
+  const { lieu } = useLocalSearchParams<{ lieu?: string }>();
+  // Une association ou une coopérative agricole a sa propre page : ses cartes, puis la fiche de chacune avec ses volets.
+  return lieu === 'groupement' ? <LieuAssociations /> : <LieuTiersStandard />;
+}
+
+function LieuTiersStandard() {
   const { lieu } = useLocalSearchParams<{ lieu?: string }>();
   const cle: CleLieuTiers = estLieuTiers(lieu) ? lieu : 'aliments';
   const config = LIEUX_TIERS[cle];
@@ -155,43 +159,6 @@ export default function LieuTiers() {
             </BlocLignes>
           </GroupeAccueil>
 
-          {/* Une association ou une coopérative agricole : un groupe par volet, avec ses écritures de l'année et sa nouvelle écriture. */}
-          {(config.volets ?? []).map((v) => {
-            const lignes = transactions.filter((t) => t.volet === v.cle);
-            return (
-              <GroupeAccueil key={v.cle} titre={textes.volets?.[v.cle]?.titre ?? ''}>
-                <BlocLignes>
-                  {lignes.slice(0, ECRITURES_MONTREES).map((t) => (
-                    <LigneTransaction key={`${t.id}:${t.activite}`} item={t} />
-                  ))}
-                  {lignes.length === 0 ? (
-                    <Text style={commonStyles.mutedItalic}>{textes.aucuneEcritureVolet}</Text>
-                  ) : null}
-                  {lignes.length > ECRITURES_MONTREES ? (
-                    <ListRow
-                      title={T.plusDEcritures(lignes.length - ECRITURES_MONTREES)}
-                      icone="list"
-                      onPress={() =>
-                        ouvrir(
-                          ROUTES.comptabiliteDuLieu(
-                            lignes.map((t) => t.id),
-                            textes.volets?.[v.cle]?.titre ?? textes.titre,
-                          ),
-                        )
-                      }
-                    />
-                  ) : null}
-                  <ListRow
-                    title={textes.volets?.[v.cle]?.nouvelle ?? ''}
-                    icone="add-circle"
-                    onPress={() => ouvrir(routeAvecContact(v.route, intervenant))}
-                  />
-                </BlocLignes>
-              </GroupeAccueil>
-            );
-          })}
-
-          {config.volets ? null : (
           <GroupeAccueil titre={textes.groupeEcritures ?? ''}>
             <BlocLignes>
               {ecritures.slice(0, ECRITURES_MONTREES).map((t) => (
@@ -224,7 +191,6 @@ export default function LieuTiers() {
               ) : null}
             </BlocLignes>
           </GroupeAccueil>
-          )}
         </>
       ) : null}
     </Screen>

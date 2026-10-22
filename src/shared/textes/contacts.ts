@@ -67,6 +67,8 @@ export const TEXTES_CONTACTS = {
     titreModifier: 'Modifier la fiche',
     categorie: 'Catégorie',
     choisirCategorie: 'Choisir une catégorie',
+    volets: 'Volets',
+    aideVolets: 'Cochez ce que cette association ou cette coopérative fait pour vous : ses écritures proposent alors ces volets. Rien de coché : des écritures simples (cotisation, facture).',
     circuitPrivilegie: 'Circuit de vente privilégié',
     aideCircuit: 'Par où ce contact achète d’ordinaire : il est repris d’office dans ses ventes, ses réservations et ses commandes.',
     aideCategorie: 'Une seule catégorie pour le contact, qu’il reçoive des recettes, fasse des dépenses, ou les deux.',

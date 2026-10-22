@@ -7,6 +7,7 @@ import type { Contact } from '@/features/contacts/services/contacts';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
 import type { Controle } from '@/features/exploitation/types';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { SOURCE_TRANSACTION } from '@/shared/constants/comptabilite';
 import type { CategorieClientReglage } from '@/shared/dictionnaire/categoriesClient';
 import type { CategorieFournisseurReglage } from '@/shared/dictionnaire/categoriesFournisseur';
@@ -101,6 +102,8 @@ export interface FormulaireContact {
   categorie: string;
   /** Le circuit de vente privilégié d'un contact qui reçoit des recettes (obligatoire pour lui). */
   circuit: string;
+  /** Pour une association ou une coopérative agricole : ses volets (voir VOLET_COOPERATIVE). */
+  volets: string[];
   recettes: boolean;
   depenses: boolean;
   siret: string;
@@ -117,6 +120,7 @@ export const FORMULAIRE_CONTACT_VIDE: FormulaireContact = {
   personne: '',
   categorie: '',
   circuit: '',
+  volets: [],
   recettes: true,
   depenses: false,
   siret: '',
@@ -143,6 +147,7 @@ export function formulaireDuContact(
       : (client?.contact ?? ''),
     categorie: categorieDuContact(contact, idsConnus).id ?? '',
     circuit: client?.circuit ?? '',
+    volets: client?.volets ?? fournisseur?.volets ?? [],
     recettes: !!client,
     depenses: !!fournisseur,
     siret: fournisseur?.siret ?? '',
@@ -172,6 +177,8 @@ export function fichesDuFormulaire(
   const nom = form.nom.trim();
   const prenom = ouRien(form.prenom);
   const resultat: ReturnType<typeof fichesDuFormulaire> = {};
+  // Les volets ne valent que pour une association ou une coopérative agricole.
+  const volets = form.categorie === CATEGORIE_FOURNISSEUR.GROUPEMENT && form.volets.length > 0 ? form.volets : undefined;
 
   if (form.recettes) {
     const base = existant?.client;
@@ -184,6 +191,7 @@ export function fichesDuFormulaire(
       adressePostale: ouRien(form.adressePostale),
       categorie: form.categorie || base?.categorie,
       circuit: form.circuit || base?.circuit,
+      volets,
       contact: personneModifiee || !base ? ouRien(form.personne) : base.contact,
     };
   }
@@ -201,6 +209,7 @@ export function fichesDuFormulaire(
       telephone: ouRien(form.telephone),
       email: ouRien(form.email),
       categorie: form.categorie || base?.categorie,
+      volets,
     };
   }
   return resultat;

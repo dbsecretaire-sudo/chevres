@@ -206,6 +206,11 @@ export const TEXTES_PRODUCTION = {
         transports: { titre: 'Transports groupés', nouvelle: 'Nouveau transport groupé' },
       },
       aucuneEcritureVolet: 'Aucune écriture dans ce volet cette année.',
+      aucunVolet: 'Aucun volet coché : des écritures simples (cotisation, facture).',
+      soldeAnnee: (annee: number, solde: string) => `Solde ${annee} : ${solde}`,
+      modifierFiche: 'Modifier la fiche et ses volets',
+      autresEcritures: 'Cotisations et autres écritures',
+      nouvelleSimple: 'Nouvelle cotisation ou facture',
       champVolet: {
         label: 'Volet',
         aucun: 'Non précisé',

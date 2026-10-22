@@ -324,7 +324,9 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
           />
         )}
         {/* Une association ou une coopérative agricole : son volet (achat groupé, mutualisation, experts, transports). */}
-        {e.voletAffiche ? <ChampVoletCooperative value={e.voletCooperative} onChange={e.setVoletCooperative} /> : null}
+        {e.voletAffiche ? (
+          <ChampVoletCooperative value={e.voletCooperative} volets={e.voletsProposes} onChange={e.setVoletCooperative} />
+        ) : null}
         {/* Une réparation ou une prime d'assurance : le véhicule de la flotte, par sa plaque. */}
         {e.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES ? (
           <ChampObjetAssurance

@@ -30,7 +30,6 @@ import {
 import { LABEL_GROUPE_RECETTE } from '@/shared/textes/libelles';
 import { tauxImpositionDeLAide, tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { categorieDepenseAutorisee, estChambreAgriculture } from '@/features/fournisseurs/services/categorie';
-import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import {
   categorieFournisseurDe,
@@ -108,10 +107,14 @@ import {
   TYPE_FACTURE,
   TYPE_FROMAGE,
   UNITE_VENTE,
+  VOLET_COOPERATIVE,
 } from '@/shared/constants/comptabilite';
 import { COMPTE_PAR_DEPENSE, COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 
 /** Taux de TVA proposé pour une recette (celui de la vente de production, 0 pour une aide ou autre). */
+/** Le volet « aucun » : l'utilisateur a choisi de ne pas préciser de volet, même quand le contact n'en a qu'un. */
+const VOLET_AUCUN = 'aucun';
+
 const tauxTvaParDefaut = (categorie: CategorieRecette): number =>
   estCategorieVente(categorie) ? tauxTvaDeLaVente(categorie) : 0;
 
@@ -176,7 +179,7 @@ export function useNouvelleEcriture(
   /** Le motif d'une réparation ou de l'indemnité d'une assurance. */
   const [motif, setMotif] = useState('');
   /** Le volet d'une association ou d'une coopérative agricole (vide : non précisé). */
-  const [voletCooperative, setVoletCooperative] = useState('');
+  const [voletChoisi, setVoletChoisi] = useState('');
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   const [elementAgri, setElementAgri] = useState('');
   // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
@@ -414,12 +417,18 @@ export function useNouvelleEcriture(
     estChambreAgriculture(fournisseurSelectionne);
   /** La catégorie du fournisseur choisi : elle dit si la case « Offert par le fournisseur » s'affiche. */
   const categorieDuFournisseur = fournisseurSelectionne ? categorieFournisseurDe(fournisseurSelectionne.categorie) : undefined;
-  /** Le volet se choisit quand le contact est une association ou une coopérative agricole (fournisseur d'une dépense, client d'une recette), ou qu'il est déjà donné. */
-  const contactCooperative =
-    type === TYPE_FACTURE.RECUE
-      ? categorieDuFournisseur?.id === CATEGORIE_FOURNISSEUR.GROUPEMENT
-      : categorieClientDe(clientSelectionne?.categorie)?.id === CATEGORIE_CLIENT.GROUPEMENT;
-  const voletAffiche = contactCooperative || voletCooperative !== '';
+  /**
+   * Les volets que propose le contact choisi : ceux cochés sur sa fiche, selon le sens de l'écriture (la vente groupée est une recette, les autres des dépenses).
+   * Sans volet coché : une écriture simple (cotisation, facture), sans champ.
+   */
+  const voletsProposes = (type === TYPE_FACTURE.RECUE ? fournisseurSelectionne?.volets : clientSelectionne?.volets)?.filter(
+    (v) => (v === VOLET_COOPERATIVE.VENTE_GROUPEE) === (type === TYPE_FACTURE.EMISE),
+  );
+  /** Le volet de l'écriture : celui choisi, ou l'unique volet du contact ; « aucun » : l'utilisateur a choisi de ne pas en mettre. */
+  const voletCooperative =
+    voletChoisi === VOLET_AUCUN ? '' : voletChoisi || (voletsProposes?.length === 1 ? voletsProposes[0] : '');
+  const setVoletCooperative = (v: string) => setVoletChoisi(v === '' ? VOLET_AUCUN : v);
+  const voletAffiche = (voletsProposes?.length ?? 0) > 0 || voletCooperative !== '';
   /** Une dépense offerte (la case est cochée, la catégorie la propose, et la dépense a des montants que le fournisseur peut offrir : ni la Chambre, ni le carburant). */
   const offertDepense =
     type === TYPE_FACTURE.RECUE &&
@@ -979,6 +988,7 @@ export function useNouvelleEcriture(
     setMotif,
     voletCooperative,
     setVoletCooperative,
+    voletsProposes,
     voletAffiche,
     elementAgri,
     setElementAgri,

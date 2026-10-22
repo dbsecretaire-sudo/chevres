@@ -5,6 +5,9 @@ import { SelectField } from '@/shared/components/SelectField';
 import { comparerAlphabetique } from '@/shared/utils/personne';
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import type { FormulaireContact } from '@/features/contacts/services/fiche';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
+import { LABEL_VOLET_COOPERATIVE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -42,6 +45,23 @@ export function FormulaireContactChamps({ form, onChange, categories }: Props) {
         searchable
         aide={T.aideCategorie}
       />
+      {/* Une association ou une coopérative agricole : ce qu'elle fait pour l'exploitation ; ses écritures ne proposent que ces volets. */}
+      {form.categorie === CATEGORIE_FOURNISSEUR.GROUPEMENT ? (
+        <>
+          <Text style={commonStyles.lineSemiBold}>{T.volets}</Text>
+          <Text style={commonStyles.note}>{T.aideVolets}</Text>
+          {Object.values(VOLET_COOPERATIVE).map((v) => (
+            <Checkbox
+              key={v}
+              label={LABEL_VOLET_COOPERATIVE[v]}
+              value={form.volets.includes(v)}
+              onChange={(coche) =>
+                maj({ volets: coche ? [...form.volets, v] : form.volets.filter((x) => x !== v) })
+              }
+            />
+          ))}
+        </>
+      ) : null}
       {/* Un contact qui reçoit des recettes a son circuit de vente privilégié : ses ventes, ses réservations et ses commandes le reprennent. */}
       {form.recettes ? (
         <ChampCircuit
