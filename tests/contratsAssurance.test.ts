@@ -55,6 +55,11 @@ describe('contrats proposés pour l’échéancier des assurances', () => {
     ).toEqual([]);
   });
 
+  it('compte comme actif un véhicule enregistré avant que le statut existe', () => {
+    const ancien = { id: 'v3', plaque: 'EE-111-EE' } as unknown as typeof voiture;
+    expect(propositionsDeContrats([], [ancien], [], '2026-10-22').map((p) => p.nom)).toEqual(['Véhicule EE-111-EE']);
+  });
+
   it('devine la périodicité de l’écart entre les deux dernières primes', () => {
     expect(periodiciteDeLEcart(30)).toBe('mensuelle');
     expect(periodiciteDeLEcart(91)).toBe('trimestrielle');

@@ -271,7 +271,7 @@ export default function ReglagesTresorerie() {
           <Button
             variant="secondary"
             label={T.ajouterContrat}
-            onPress={() => (propositions.length > 0 ? setChoixContratOuvert(true) : setContratAjoutOuvert(true))}
+            onPress={() => setChoixContratOuvert(true)}
           />
         </>
       ) : null}

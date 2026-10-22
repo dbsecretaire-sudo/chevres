@@ -69,7 +69,7 @@ export function propositionsDeContrats(
     if (vehiculeId) {
       const vehicule = vehicules.find((v) => v.id === vehiculeId);
       // Un véhicule qui n'est plus actif, ou dont l'assurance est résiliée depuis la dernière prime, n'a plus de contrat à suivre.
-      if (!vehicule?.actif || (vehicule.assuranceResilieeLe && triees[0].date <= vehicule.assuranceResilieeLe)) continue;
+      if (!vehicule || vehicule.actif === false || (vehicule.assuranceResilieeLe && triees[0].date <= vehicule.assuranceResilieeLe)) continue;
     }
     const periodicite = triees[1] ? periodiciteDeLEcart(joursEntre(triees[0].date, triees[1].date)) : 'annuelle';
     const couvre = vehiculeId
@@ -86,7 +86,7 @@ export function propositionsDeContrats(
     });
   }
   // Un véhicule de la flotte sans assurance notée.
-  for (const v of vehicules.filter((x) => x.actif)) {
+  for (const v of vehicules.filter((x) => x.actif !== false)) {
     const cle = `|${OBJET_ASSURANCE.VEHICULE}|${v.id}`;
     if ([...groupes.keys()].some((k) => k.endsWith(`|${OBJET_ASSURANCE.VEHICULE}|${v.id}`))) continue;
     propositions.push({ cle, nom: `Véhicule ${v.plaque}`, periodicite: 'annuelle' });
