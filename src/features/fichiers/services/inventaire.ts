@@ -29,6 +29,8 @@ export async function toutesLesPieces(): Promise<PieceJointe[]> {
     // Les images choisies pour les cartes du stock, et le verso du certificat d'immatriculation de chaque véhicule de la flotte.
     ...Object.values(stock.images ?? {}),
     ...(settings.exploitation?.flotte ?? []).flatMap((v) => (v.certificat ? [v.certificat] : [])),
+    // Les rapports d'analyse du fromage et de la charcuterie.
+    ...(settings.exploitation?.analysesProduits ?? []).flatMap((a) => a.fichiers ?? []),
     // Les documents de circulation déposés avec les ventes et les dépenses d'animaux vivants.
     ...[...ventes, ...factures].flatMap((e) => (e.documentCirculation ? [e.documentCirculation.piece] : [])),
     ...identification.flatMap((d) => d.fichiers ?? []),

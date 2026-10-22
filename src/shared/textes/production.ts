@@ -295,16 +295,24 @@ export const TEXTES_PRODUCTION = {
           return { titre: `Nouveau ${V().petit.singulier}`, aide: 'Déclarer une naissance.' };
         },
         boucles: { titre: 'Boucles', aide: 'L’inventaire des boucles, les repères et les boucles rouges.' },
-        carnet: { titre: 'Carnet de naissance', aide: 'Les naissances de l’année et leurs mères.' },
       },
     },
     documents: {
       titre: 'Documents',
       liens: {
+        carnet: { titre: 'Carnet de naissance', aide: 'Les naissances de l’année et leurs mères.' },
         dossierPac: { titre: 'Dossier PAC', aide: 'Suivi des mouvements, recensement, déclaration d’estive.' },
         circulation: { titre: 'Documents de circulation', aide: 'Ceux des animaux vivants vendus ou achetés.' },
         identification: { titre: 'Documents d’identification', aide: 'Les pièces d’identification de l’exploitation.' },
         historique: { titre: 'Bordereau de perte', aide: 'Les sorties : morts, ventes, abattages.' },
+      },
+    },
+    analyses: {
+      titre: 'Analyses',
+      liens: {
+        lait: { titre: 'Analyses du lait', aide: 'La qualité du lait : flore, cellules, antibiotiques… par laboratoire, avec leurs courbes.' },
+        fromage: { titre: 'Analyses du fromage', aide: 'Les autocontrôles microbiologiques du fromage : Listeria, Salmonella, staphylocoques, E. coli.' },
+        charcuterie: { titre: 'Analyses de la charcuterie', aide: 'Les autocontrôles microbiologiques de la charcuterie : Listeria, Salmonella, E. coli.' },
       },
     },
     veterinaire: {

@@ -58,6 +58,31 @@ export interface ContratAssurance {
   prochaineEcheance: string;
 }
 
+/** Le produit fini d'une analyse : le fromage ou la charcuterie. */
+export type ProduitAnalyse = 'fromage' | 'charcuterie';
+
+/** Le résultat d'un paramètre d'une analyse : « absence » ou « presence » (recherche dans 25 g), ou un nombre d'UFC par gramme. */
+export type ResultatParametre = 'absence' | 'presence' | number;
+
+/** Une analyse d'un produit fini (autocontrôle microbiologique) : sa date, son laboratoire, ce qui a été analysé et les résultats, avec le rapport joint. */
+export interface AnalyseProduit {
+  id: string;
+  produit: ProduitAnalyse;
+  /** La date du prélèvement (AAAA-MM-JJ). */
+  date: string;
+  /** Le laboratoire : un contact de catégorie « Laboratoire » (absent : non précisé). */
+  laboratoireId?: string;
+  numeroRapport?: string;
+  /** Le produit analysé (« Tomme au lait cru ») et son numéro de lot, facultatifs. */
+  echantillon?: string;
+  lot?: string;
+  /** Les résultats, par paramètre (voir PARAMETRES) ; un paramètre non analysé est absent. */
+  resultats: Record<string, ResultatParametre>;
+  /** Le rapport du laboratoire (PDF, photo, scan), rangé dans l'appareil. */
+  fichiers?: PieceJointe[];
+  notes?: string;
+}
+
 /** Les réglages de TVA du pilotage : le régime, la périodicité du découpage et, au remboursement forfaitaire agricole, son taux (%). */
 export interface ReglagesTva {
   regime?: string;
@@ -368,6 +393,8 @@ export interface InfosExploitation {
   emprunts?: Emprunt[];
   /** Vrai : les primes des contrats d'assurance à venir entrent dans l'échéancier et la prévision de la trésorerie (case « Activer l'échéancier »). */
   echeancierAssurance?: boolean;
+  /** Les analyses des produits finis (fromage, charcuterie) : leurs résultats et leurs rapports. */
+  analysesProduits?: AnalyseProduit[];
   contratsAssurance?: ContratAssurance[];
   /** Le régime de TVA et sa périodicité (voir shared/constants/tva) : à défaut, le réel simplifié, mois par mois. */
   tva?: ReglagesTva;

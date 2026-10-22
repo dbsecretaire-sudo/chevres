@@ -1,5 +1,6 @@
 import { TEXTES_A_TRAITER } from '@/shared/textes/aTraiter';
 import { TEXTES_ACCUEIL } from '@/shared/textes/accueil';
+import { TEXTES_ANALYSES_PRODUITS } from '@/shared/textes/analysesProduits';
 import { TEXTES_ANNEXES } from '@/shared/textes/annexes';
 import { TEXTES_BAR } from '@/shared/textes/bar';
 import { TEXTES_CHEPTEL } from '@/shared/textes/cheptel';
@@ -37,6 +38,7 @@ import { TEXTES_TRADING } from '@/shared/textes/trading';
 export const TEXTES = {
   accueil: TEXTES_ACCUEIL,
   aTraiter: TEXTES_A_TRAITER,
+  analysesProduits: TEXTES_ANALYSES_PRODUITS,
   annexes: TEXTES_ANNEXES,
   bar: TEXTES_BAR,
   cheptel: TEXTES_CHEPTEL,

@@ -32,6 +32,7 @@ export type CleLieuTiers =
   | 'repas'
   | 'cheptel'
   | 'documents'
+  | 'analyses'
   | 'veterinaire'
   | 'organismes'
   | 'equarrissage'
@@ -66,8 +67,10 @@ export interface ConfigLieuTiers {
   volets?: readonly { cle: string; route: string }[];
   /** Où ouvrir « Nouvelle facture » : une facture reçue (achat) ou émise (vente), déjà dans la bonne catégorie. */
   nouvelle: string;
-  /** Vrai : la page montre le dossier PAC et les terrains en toutes lettres, à la place des liens. */
+  /** Vrai : la page montre les déclarations (recensement, estive) et les terrains en toutes lettres, à la place des liens. */
   dossierPac?: boolean;
+  /** Vrai : la page montre le suivi des mouvements (à générer) et les documents déjà générés, avec ses liens (le registre de l'élevage). */
+  registre?: boolean;
   liens: readonly LienDuLieu[];
 }
 
@@ -295,7 +298,6 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
         icone: 'pricetag',
         route: ROUTES.lieu('boucles'),
       },
-      { cle: 'carnet', icone: 'book', route: ROUTES.CHEPTEL_NAISSANCES },
     ],
   },
   documents: {
@@ -306,10 +308,28 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: NOUVELLE,
+    // Le registre de l'élevage : le carnet de naissance, le suivi des mouvements (le PDF), le bordereau de perte, les documents de circulation et d'identification.
+    registre: true,
     liens: [
+      { cle: 'carnet', icone: 'book', route: ROUTES.CHEPTEL_NAISSANCES },
       { cle: 'circulation', icone: 'paper-plane', route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION },
       { cle: 'identification', icone: 'card', route: ROUTES.DOCUMENTS_IDENTIFICATION },
       { cle: 'historique', icone: 'time', route: ROUTES.CHEPTEL_HISTORIQUE },
+    ],
+  },
+  // Les analyses : celles du lait (la qualité du lait), du fromage et de la charcuterie (les autocontrôles de la ferme).
+  analyses: {
+    cle: 'analyses',
+    avecTiers: false,
+    emoji: '🔬',
+    categoriesContact: [],
+    categoriesFacture: [],
+    categoriesVente: [],
+    nouvelle: NOUVELLE,
+    liens: [
+      { cle: 'lait', icone: 'flask', route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
+      { cle: 'fromage', icone: 'flask-outline', route: ROUTES.analysesProduit('fromage') },
+      { cle: 'charcuterie', icone: 'flask-outline', route: ROUTES.analysesProduit('charcuterie') },
     ],
   },
   veterinaire: {
@@ -338,7 +358,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_RECETTE.AIDE],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.AIDE}`,
-    // Le dossier PAC (suivi des mouvements, recensement, estive, documents générés) et les terrains s'affichent dans la page même.
+    // Les déclarations (recensement annuel, déclaration d'estive) et les terrains s'affichent dans la page même.
     dossierPac: true,
     liens: [],
   },

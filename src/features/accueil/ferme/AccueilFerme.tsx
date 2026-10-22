@@ -75,7 +75,8 @@ const ROUTE_DIRECTE: Record<string, string> = {
   particuliers: ROUTES.lieu('particuliers'),
   surfacesCommerciales: ROUTES.lieu('surfacesCommerciales'),
   entreprises: ROUTES.lieu('entreprises'),
-  qualiteLait: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
+  // Les analyses : celles du lait, du fromage et de la charcuterie.
+  analyses: ROUTES.lieu('analyses'),
   // La gestion du travail du produit : fabriquer, les lots, leurs rappels, la réservation d'un produit, et le stock de la fromagerie.
   reserver: ROUTES.COMMERCIAL_COMMANDE,
   stockFromagerie: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`,
@@ -234,7 +235,7 @@ export default function AccueilFerme() {
     { cle: 'surfacesCommerciales', titre: C.surfacesCommerciales, icone: iconeIon('storefront'), couleur: VENTE },
     { cle: 'entreprises', titre: C.entreprises, icone: iconeIon('business'), couleur: VENTE },
     { cle: 'emballages', titre: C.emballages, icone: iconeMCI('package-variant-closed'), couleur: ACHAT },
-    { cle: 'qualiteLait', titre: C.qualiteLait, icone: iconeIon('flask'), couleur: ORANGE },
+    { cle: 'analyses', titre: C.analyses, icone: iconeIon('flask'), couleur: ORANGE },
   ];
   // À droite de la scène de l'exploitation : la santé et la grange (en bulles), le cheptel (les animaux : liste, lots, ajouts, boucles, carnet de
   // naissance), l'estive, les organismes, et les documents (bilan, dossier PAC, circulation, identification, historique).

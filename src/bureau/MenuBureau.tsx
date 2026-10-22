@@ -66,6 +66,11 @@ function definitionDesMenus(): DefinitionMenu[] {
       ...(laiterieActive(especeCourante())
         ? [{ label: A.laitier.titre, route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) }]
         : []),
+      // Les autocontrôles du fromage et de la charcuterie (Listeria, Salmonella, staphylocoques, E. coli).
+      ...(laiterieActive(especeCourante())
+        ? [{ label: TEXTES.analysesProduits.produits.fromage.titre, route: ROUTES.analysesProduit('fromage') }]
+        : []),
+      { label: TEXTES.analysesProduits.produits.charcuterie.titre, route: ROUTES.analysesProduit('charcuterie') },
       // Le lait par chèvre (ou brebis) et par traite : les petits ruminants seulement.
       ...(ESPECES_PETITS_RUMINANTS.includes(especeCourante())
         ? [{ label: A.productionLait.titre, route: ROUTES.PRODUCTION_LAIT }]

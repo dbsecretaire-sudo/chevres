@@ -104,6 +104,13 @@ export default function ProductionLayout() {
         options={{ title: TEXTES.production.viande.titre, headerLeft: enteteDuBatiment() }}
       />
       <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />
+      <Stack.Screen
+        name="analyses-produit"
+        options={({ route }) => ({
+          title: charcuterie(route.params) ? TEXTES.analysesProduits.produits.charcuterie.titre : TEXTES.analysesProduits.produits.fromage.titre,
+        })}
+      />
+      <Stack.Screen name="analyse-produit" options={{ title: TEXTES.analysesProduits.modifier }} />
       <Stack.Screen name="lot-abattoir" options={{ title: TEXTES.cheptel.lots.depart.titre }} />
       <Stack.Screen name="documents-gds" options={{ title: TEXTES.gds.documents.titre }} />
       <Stack.Screen name="flotte" options={{ title: TEXTES.flotte.titre }} />

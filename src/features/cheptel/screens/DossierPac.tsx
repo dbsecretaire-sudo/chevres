@@ -54,14 +54,23 @@ export default function DossierPac() {
  * une ligne par document — un appui le génère —, puis l'historique des documents déjà générés. Le détail du calcul du recensement se déplie.
  */
 export function ContenuDossierPac({
-  pourOrganismes = false,
+  partie = 'tout',
+  avant,
   apres,
 }: {
-  /** Dans la page des organismes : sans les bordereaux de perte ni les documents de circulation (ils sont dans les documents des animaux). */
-  pourOrganismes?: boolean;
-  /** Des lignes de plus à la suite de celles des documents (les terrains). */
+  /**
+   * Ce que la page montre : « registre » (les documents : le suivi des mouvements et les documents déjà générés), « declarations » (les organismes : le
+   * recensement annuel et la déclaration d'estive), ou « tout » (l'écran du dossier PAC).
+   */
+  partie?: 'tout' | 'registre' | 'declarations';
+  /** Des lignes de plus avant celles des documents (le carnet de naissance). */
+  avant?: ReactNode;
+  /** Des lignes de plus à la suite de celles des documents (les terrains, ou les autres documents des animaux). */
   apres?: ReactNode;
 }) {
+  const registre = partie !== 'declarations';
+  const declarations = partie !== 'registre';
+  const pourOrganismes = partie !== 'tout';
   const router = useRouter();
   const retour = useAdresseCourante();
   const { espece } = useEtablissement();
@@ -142,12 +151,15 @@ export function ContenuDossierPac({
 
       {/* Les documents : une ligne chacun, un appui le génère. */}
       <BlocLignes>
-        <ListRow
-          title={T.lignes.suivi.titre}
-          subtitle={T.lignes.suivi.aide}
-          trailing={droite('suivi', ['suivi_mouvements'])}
-          onPress={appui('suivi', exporterSuiviMouvementsPdf)}
-        />
+        {avant}
+        {registre ? (
+          <ListRow
+            title={T.lignes.suivi.titre}
+            subtitle={T.lignes.suivi.aide}
+            trailing={droite('suivi', ['suivi_mouvements'])}
+            onPress={appui('suivi', exporterSuiviMouvementsPdf)}
+          />
+        ) : null}
         {pourOrganismes ? null : (
           <ListRow
             title={T.lignes.bordereaux.titre}
@@ -156,12 +168,14 @@ export function ContenuDossierPac({
             onPress={appui('bordereaux', exporterBordereauxPertePdf)}
           />
         )}
-        <ListRow
-          title={`${T.recensement.bouton.replace(' (PDF)', '')} ${annee + 1}`}
-          subtitle={T.lignes.recensement.aide(annee)}
-          trailing={droite('recensement', ['recensement'])}
-          onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
-        />
+        {declarations ? (
+          <ListRow
+            title={`${T.recensement.bouton.replace(' (PDF)', '')} ${annee + 1}`}
+            subtitle={T.lignes.recensement.aide(annee)}
+            trailing={droite('recensement', ['recensement'])}
+            onPress={appui('recensement', async () => exporterRecensementPdf(annee))}
+          />
+        ) : null}
         {pourOrganismes ? null : (
         <AncreVisite id="dossier.circulation">
         <ListRow
@@ -177,23 +191,27 @@ export function ContenuDossierPac({
         />
         </AncreVisite>
         )}
-        <ListRow
-          title={T.estive.bouton.replace('…', '')}
-          subtitle={T.lignes.estive.aide}
-          trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
-          onPress={() => setEstiveOuverte(true)}
-        />
+        {declarations ? (
+          <ListRow
+            title={T.estive.bouton.replace('…', '')}
+            subtitle={T.lignes.estive.aide}
+            trailing={<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />}
+            onPress={() => setEstiveOuverte(true)}
+          />
+        ) : null}
         {apres}
       </BlocLignes>
       {sansPerte ? <Text style={commonStyles.mutedItalic}>{T.aucunePerte}</Text> : null}
 
       {/* Le calcul du recensement : replié, pour ne pas allonger la page. */}
-      <Pressable onPress={() => setDetailOuvert(!detailOuvert)} hitSlop={8}>
-        <Text style={commonStyles.lien}>
-          {detailOuvert ? T.lignes.masquerDetail : T.lignes.voirDetail(annee + 1)}
-        </Text>
-      </Pressable>
-      {detailOuvert ? (
+      {declarations ? (
+        <Pressable onPress={() => setDetailOuvert(!detailOuvert)} hitSlop={8}>
+          <Text style={commonStyles.lien}>
+            {detailOuvert ? T.lignes.masquerDetail : T.lignes.voirDetail(annee + 1)}
+          </Text>
+        </Pressable>
+      ) : null}
+      {declarations && detailOuvert ? (
         <>
           <Text style={commonStyles.note}>{T.recensement.aide(annee)}</Text>
           {recensement && recensement.nesTotal > 0 ? (
@@ -212,14 +230,16 @@ export function ContenuDossierPac({
       ) : null}
 
       {/* Tous les PDF déjà générés, pour garder un historique. */}
-      <BlocLignes>
-        <ListRow
-          title={TEXTES.export.bibliotheque.bouton}
-          subtitle={TEXTES.export.bibliotheque.aide}
-          trailing={<Ionicons name="time-outline" size={22} color={colors.primary} />}
-          onPress={() => router.push(ROUTES.bibliothequeDepuis(retour) as never)}
-        />
-      </BlocLignes>
+      {registre ? (
+        <BlocLignes>
+          <ListRow
+            title={TEXTES.export.bibliotheque.bouton}
+            subtitle={TEXTES.export.bibliotheque.aide}
+            trailing={<Ionicons name="time-outline" size={22} color={colors.primary} />}
+            onPress={() => router.push(ROUTES.bibliothequeDepuis(retour) as never)}
+          />
+        </BlocLignes>
+      ) : null}
       <FenetreEstive visible={estiveOuverte} annee={annee} onClose={() => setEstiveOuverte(false)} />
     </>
   );

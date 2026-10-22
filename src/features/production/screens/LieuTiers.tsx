@@ -115,13 +115,17 @@ function LieuTiersStandard() {
     ...(textes.liens as Record<string, { titre: string; aide: string }>)[l.cle],
   }));
 
+  const ligneDeLien = (l: (typeof liens)[number]) => (
+    <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => ouvrir(l.route)} />
+  );
+
   return (
     <Screen>
       {/* Les organismes : le dossier PAC (suivi des mouvements, recensement, estive, documents générés) et les terrains, directement dans la page. */}
       {config.dossierPac ? (
         <GroupeAccueil titre={T.groupeLiens}>
           <ContenuDossierPac
-            pourOrganismes
+            partie="declarations"
             apres={
               <ListRow
                 title={(textes.liens as Record<string, { titre: string; aide: string }>).terrains?.titre ?? ''}
@@ -133,7 +137,17 @@ function LieuTiersStandard() {
           />
         </GroupeAccueil>
       ) : null}
-      {liens.length > 0 ? (
+      {/* Les documents : le registre de l'élevage. Le carnet de naissance d'abord, le suivi des mouvements (à générer), puis les documents des animaux et ceux déjà générés. */}
+      {config.registre ? (
+        <GroupeAccueil titre={T.groupeLiens}>
+          <ContenuDossierPac
+            partie="registre"
+            avant={liens.filter((l) => l.cle === 'carnet').map(ligneDeLien)}
+            apres={liens.filter((l) => l.cle !== 'carnet').map(ligneDeLien)}
+          />
+        </GroupeAccueil>
+      ) : null}
+      {liens.length > 0 && !config.registre ? (
         <GroupeAccueil titre={T.groupeLiens}>
           <BlocLignes>
             {liens.map((l) => (

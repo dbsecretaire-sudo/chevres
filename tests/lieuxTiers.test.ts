@@ -76,7 +76,10 @@ describe('rangement des rubriques', () => {
     expect(LIEUX_TIERS.organismes.dossierPac).toBe(true);
     expect(LIEUX_TIERS.organismes.liens).toEqual([]);
     // Un seul endroit pour chaque chose : le dossier PAC n'est pas dans les documents, et le bilan annuel est sur l'accueil.
-    expect(LIEUX_TIERS.documents.liens.map((l) => l.cle)).toEqual(['circulation', 'identification', 'historique']);
+    expect(LIEUX_TIERS.documents.registre).toBe(true);
+    expect(LIEUX_TIERS.documents.liens.map((l) => l.cle)).toEqual(['carnet', 'circulation', 'identification', 'historique']);
+    // Le carnet de naissance est un registre : il n'est plus dans le cheptel.
+    expect(LIEUX_TIERS.cheptel.liens.map((l) => l.cle)).not.toContain('carnet');
   });
   it('l’équarrissage range son bon dans la fiche de l’équarrisseur', () => {
     expect(LIEUX_TIERS.equarrissage.liens.map((l) => l.cle)).toEqual(['bons']);

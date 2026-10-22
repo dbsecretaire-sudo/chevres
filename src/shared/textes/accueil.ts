@@ -76,6 +76,7 @@ export const TEXTES_ACCUEIL = {
       documents: 'Documents',
       lotsAtelier: 'Lots',
       qualiteLait: 'Qualité du lait',
+      analyses: 'Analyses',
       reserver: 'Réserver',
       laiterie: 'Laiterie',
       abattoir: 'Abattoir',
