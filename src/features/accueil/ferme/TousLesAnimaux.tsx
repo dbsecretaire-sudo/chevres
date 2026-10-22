@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
@@ -49,9 +49,7 @@ export default function TousLesAnimaux() {
           ),
         }}
       />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-        <ChevrerieInterieure vedettes={vedettes} />
-      </ScrollView>
+      <ChevrerieInterieure vedettes={vedettes} />
       {/* Ajouter un animal au cheptel : sa flèche de retour ramène ici. */}
       <Fab
         options={[
