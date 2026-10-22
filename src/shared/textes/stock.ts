@@ -127,6 +127,8 @@ export const TEXTES_STOCK = {
     totalDuMois: (mois: string, litres: string) => `${mois} : ${litres} L`,
     ligne: (litres: string) => `${litres} L`,
     supprimer: 'Supprimer ce litrage',
+    /** Le nom de la carte du lait. */
+    carte: 'Lait',
     prixDuLitre: 'Prix de vente du lait',
     prixLitre: (prix: string) => `${prix} € le litre`,
     prixAFixer: 'À définir',

@@ -1,14 +1,11 @@
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/shared/theme/colors';
+import { Text, View } from 'react-native';
 import { ListRow } from '@/shared/components/ListRow';
-import { Card } from '@/shared/components/Card';
+import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
 import type { BilanLait } from '@/features/stock/services/stock';
 import type { LaitJour } from '@/features/stock/types';
 import { NOMS_MOIS } from '@/shared/textes/libelles';
 import { formatDateFR } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { styles } from '@/shared/styles/stock/Stock.styles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock.laitJour;
@@ -35,38 +32,26 @@ export function JournalLait({
   onModifierPrix: () => void;
   onOuvrir: (entree: LaitJour) => void;
 }) {
+  // La carte du lait, comme celles des autres articles : son dessin, son nom (et le prix en petit), le crayon qui change le prix, et quatre pastilles :
+  // ce qu'il en reste, ce qui a été produit, utilisé en fromagerie et vendu.
   const carteBilan = (
-    <Card>
-      {/* Le libellé garde sa place, le prix passe à la ligne plutôt que de déborder de la carte. */}
-      <View style={styles.ligneDuPrix}>
-        <Text style={[commonStyles.muted, styles.libelleDuPrix]}>{T.prixDuLitre}</Text>
-        <Pressable
-          style={styles.prixDuLitre}
-          onPress={onModifierPrix}
-          hitSlop={8}
-          accessibilityLabel={T.modifierLePrix}
-        >
-          <Text style={[commonStyles.lineBold, styles.texteDuPrix]}>
-            {prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}
-          </Text>
-          <Ionicons name="pencil" size={18} color={colors.ajout} />
-        </Pressable>
-      </View>
-      <View style={commonStyles.rowSpaceBetween}>
-        <Text style={commonStyles.cardTitle}>{T.restant}</Text>
-        <Text style={commonStyles.cardTitle}>{T.ligne(enLitres(bilan.restant))}</Text>
-      </View>
-      {[
-        [T.produit, bilan.produit],
-        [T.utilise, -bilan.utilise],
-        [T.vendu, -bilan.vendu],
-      ].map(([libelle, litres]) => (
-        <View key={libelle as string} style={commonStyles.rowSpaceBetween}>
-          <Text style={commonStyles.muted}>{libelle}</Text>
-          <Text style={commonStyles.muted}>{T.ligne(enLitres(litres as number))}</Text>
-        </View>
-      ))}
-    </Card>
+    <View style={grilleDeCartes}>
+      <CarteDeStock
+        rang={0}
+        emoji="🥛"
+        titre={T.carte}
+        sous={prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}
+        quantite={T.ligne(enLitres(bilan.restant))}
+        niveau={bilan.restant}
+        onRenommer={onModifierPrix}
+        pastilles={[
+          { icone: 'piece', quantite: T.ligne(enLitres(bilan.restant)), niveau: bilan.restant },
+          { icone: '🥛', quantite: T.ligne(enLitres(bilan.produit)), niveau: bilan.produit },
+          { icone: '🧀', quantite: T.ligne(enLitres(-bilan.utilise)), niveau: -bilan.utilise },
+          { icone: '💶', quantite: T.ligne(enLitres(-bilan.vendu)), niveau: -bilan.vendu },
+        ]}
+      />
+    </View>
   );
   if (lait.length === 0)
     return (

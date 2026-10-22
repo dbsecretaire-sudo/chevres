@@ -106,7 +106,10 @@ export function CarteDeStock({
   onPress,
   onLongPress,
   onRenommer,
+  pastilles,
 }: {
+  /** Plusieurs pastilles l'une sous l'autre (le lait) à la place de la pastille unique : une icône (« piece » : la pièce du stock, ou un dessin), sa quantité et son niveau. */
+  pastilles?: readonly { icone: string; quantite: string; niveau: number }[];
   emoji: string;
   titre: string;
   quantite: string;
@@ -141,20 +144,30 @@ export function CarteDeStock({
                 {sous}
               </Text>
             ) : null}
-            <View
-              style={[
-                styles.pastille,
-                niveau < 0 ? styles.pastilleRouge : null,
-                niveau === 0 ? styles.pastilleVide : null,
-              ]}
-            >
-              <View style={styles.piece}>
-                <Ionicons name="cube" size={12} color="#7A5410" />
+            {(pastilles ?? [{ icone: 'piece', quantite, niveau }]).map((p, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.pastille,
+                  i > 0 ? styles.pastilleSuivante : null,
+                  p.niveau < 0 ? styles.pastilleRouge : null,
+                  p.niveau === 0 ? styles.pastilleVide : null,
+                ]}
+              >
+                {p.icone === 'piece' ? (
+                  <View style={styles.piece}>
+                    <Ionicons name="cube" size={12} color="#7A5410" />
+                  </View>
+                ) : (
+                  <Text style={styles.dessinDePastille} accessibilityElementsHidden importantForAccessibility="no">
+                    {p.icone}
+                  </Text>
+                )}
+                <Text style={styles.quantite} numberOfLines={1}>
+                  {p.quantite}
+                </Text>
               </View>
-              <Text style={styles.quantite} numberOfLines={1}>
-                {quantite}
-              </Text>
-            </View>
+            ))}
           </Pressable>
           {onRenommer ? (
             <Pressable
@@ -236,6 +249,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
+  pastilleSuivante: { borderTopWidth: 1 },
+  dessinDePastille: { width: 20, fontSize: 15, textAlign: 'center' },
   pastilleRouge: { backgroundColor: '#B8402A', borderTopColor: '#7E2616' },
   pastilleVide: { backgroundColor: '#8E9A7C', borderTopColor: '#6B7660' },
   piece: {

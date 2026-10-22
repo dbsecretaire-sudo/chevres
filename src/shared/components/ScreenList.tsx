@@ -15,7 +15,7 @@ export function Screen({
   transparent = false,
 }: PropsWithChildren<{ scroll?: boolean; avecBordBas?: boolean; transparent?: boolean }>) {
   // Transparent : l'écran laisse voir le fond de ce qui l'entoure (le panneau vert du cadre de jeu du stock).
-  const fond = transparent ? { backgroundColor: 'transparent' } : commonStyles.screenBg;
+  const fond = transparent ? { flex: 1, backgroundColor: 'transparent' } : commonStyles.screenBg;
   return (
     <SafeAreaView style={fond} edges={avecBordBas ? ['bottom'] : []}>
       {scroll ? (

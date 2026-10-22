@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   CATEGORIES,
@@ -75,6 +75,7 @@ import {
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { BarreDeNavigation } from '@/features/stock/components/BarreDeNavigation';
 import type { ArchiveStock, GenreArticle, LaitJour, ListeInventaire } from '@/features/stock/types';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
@@ -94,6 +95,9 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
+
+/** De combien de points les flèches de la barre de navigation font défiler la liste. */
+const PAS_DE_DEFILEMENT = 190;
 
 /** Les boucles d'identification ne s'ajoutent pas à la main : elles entrent par un achat en comptabilité. */
 type GenreAjoutable = Exclude<GenreArticle, typeof GENRE_ARTICLE.BOUCLE>;
@@ -194,6 +198,13 @@ export default function StockFromagerie() {
   const [laitOuvert, setLaitOuvert] = useState<LaitJour | 'nouveau' | null>(null);
   /** L'article pris par un appui long (sa clé) : on touche la carte où le mettre. */
   const [prise, setPrise] = useState<string | null>(null);
+  /** La liste qui défile, et où elle en est : les flèches de la barre de navigation la font avancer d'un cran. */
+  const defilement = useRef<ScrollView>(null);
+  const position = useRef(0);
+  const defiler = (pas: number) => {
+    position.current = Math.max(0, position.current + pas);
+    defilement.current?.scrollTo({ y: position.current, animated: true });
+  };
   /** Le menu en haut à droite (burger) et la feuille des statistiques qu'il ouvre. */
 
   /** Les litres de lait vendus (les ventes de lait en comptabilité), pour le lait restant. */
@@ -465,8 +476,10 @@ export default function StockFromagerie() {
     <View style={jeu.fond}>
       <View style={jeu.cadre}>
         <View style={jeu.panneau}>
+          <View style={jeu.corps}>
+          <View style={jeu.defile}>
     <Screen scroll={false} transparent>
-      <ScrollView contentContainerStyle={commonStyles.listFab}>
+      <ScrollView ref={defilement} onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={64} contentContainerStyle={commonStyles.listFab}>
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
             const listes = lesSectionsAffichees.filter((x) => x.categorie === categorie);
@@ -794,6 +807,10 @@ export default function StockFromagerie() {
         }
       />
     </Screen>
+          </View>
+          {/* La barre de navigation du cadre de jeu, comme à la grange. */}
+          <BarreDeNavigation onHaut={() => defiler(-PAS_DE_DEFILEMENT)} onBas={() => defiler(PAS_DE_DEFILEMENT)} />
+          </View>
         </View>
       </View>
     </View>
@@ -805,6 +822,9 @@ const genreDeLaCle = (cle: string): GenreArticle => cle.split(':')[0] as GenreAr
 
 /** Le cadre de jeu de la grange : un fond vert foncé, un cadre de bois et un panneau vert, autour du stock. */
 const jeu = StyleSheet.create({
+  /** La liste et, à droite, la barre de navigation. */
+  corps: { flex: 1, flexDirection: 'row' },
+  defile: { flex: 1 },
   /** Les cartes d'une rubrique et leur indication de déplacement. */
   cartesStock: { gap: 8, paddingVertical: 4 },
   indiceDeplacement: { fontSize: 13, fontWeight: '700', color: '#B8641A' },
