@@ -17,6 +17,8 @@ interface Props {
   alerte?: boolean;
   /** Vrai : même sur ordinateur, la section reste enroulée tant qu'on ne l'ouvre pas (une longue liste de catégories, dont une seule se lit à la fois). */
   accordeon?: boolean;
+  /** La couleur du panneau déroulé et de son cercle (le stock en cadre de jeu : un vert plus vif que le vert clair d'office). */
+  fond?: { panneau: string; bord: string };
   children: ReactNode;
 }
 
@@ -28,13 +30,20 @@ export function SectionDeroulante({
   onBasculer,
   alerte,
   accordeon = false,
+  fond,
   children,
 }: Props) {
   // Sur ordinateur, toutes les sections sont déroulées (il y a la place), sauf en accordéon : une seule se lit à la fois.
   const toujoursDeplie = estBureau() && !accordeon;
   const deplie = toujoursDeplie || ouverte;
   return (
-    <View style={[commonStyles.gap10, deplie && styles.panneau]}>
+    <View
+      style={[
+        commonStyles.gap10,
+        deplie && styles.panneau,
+        deplie && fond ? { backgroundColor: fond.panneau, borderColor: fond.bord } : null,
+      ]}
+    >
       <Pressable style={[styles.entete, deplie && styles.enteteOuverte]} onPress={onBasculer}>
         <Text style={styles.titre}>
           {titre}

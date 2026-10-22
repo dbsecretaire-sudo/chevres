@@ -38,6 +38,7 @@ export function JournalLait({
     <View style={grilleDeCartes}>
       <CarteDeStock
         rang={0}
+        large
         emoji="🥛"
         titre={T.carte}
         sous={prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}

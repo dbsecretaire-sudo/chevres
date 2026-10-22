@@ -107,7 +107,10 @@ export function CarteDeStock({
   onLongPress,
   onRenommer,
   pastilles,
+  large,
 }: {
+  /** La carte prend la largeur de trois cartes (le lait) : ses pastilles se rangent sur deux colonnes. */
+  large?: boolean;
   /** Plusieurs pastilles l'une sous l'autre (le lait) à la place de la pastille unique : une icône (« piece » : la pièce du stock, ou un dessin), sa quantité et son niveau. */
   pastilles?: readonly { icone: string; quantite: string; niveau: number }[];
   emoji: string;
@@ -122,7 +125,7 @@ export function CarteDeStock({
   onRenommer?: () => void;
 }) {
   return (
-    <Apparition delai={rang * 30} style={styles.cellule}>
+    <Apparition delai={rang * 30} style={large ? styles.celluleLarge : styles.cellule}>
       <Frisson actif={!!selectionnee}>
         {/* La carte (le cadre) contient la zone d'appui et, à côté d'elle, le crayon : un bouton ne peut pas en contenir un autre. */}
         <View style={[styles.carte, selectionnee ? styles.carteSelectionnee : null]}>
@@ -144,12 +147,14 @@ export function CarteDeStock({
                 {sous}
               </Text>
             ) : null}
+            <View style={large ? styles.pastillesEnColonnes : styles.pastillesEmpilees}>
             {(pastilles ?? [{ icone: 'piece', quantite, niveau }]).map((p, i) => (
               <View
                 key={i}
                 style={[
                   styles.pastille,
-                  i > 0 ? styles.pastilleSuivante : null,
+                  large ? styles.pastilleMoitie : null,
+                  i > 0 && !large ? styles.pastilleSuivante : null,
                   p.niveau < 0 ? styles.pastilleRouge : null,
                   p.niveau === 0 ? styles.pastilleVide : null,
                 ]}
@@ -168,6 +173,7 @@ export function CarteDeStock({
                 </Text>
               </View>
             ))}
+            </View>
           </Pressable>
           {onRenommer ? (
             <Pressable
@@ -188,7 +194,7 @@ export function CarteDeStock({
 
 /** La grille des cartes d'une rubrique : trois par ligne, comme à la grange. */
 export const grilleDeCartes = StyleSheet.create({
-  grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  grille: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 10 },
 }).grille;
 
 const PARCHEMIN = '#F4E7C8';
@@ -205,6 +211,10 @@ const styles = StyleSheet.create({
   rubriqueTitreSurClair: { color: '#2F6B14' },
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   cellule: { width: '31%' },
+  celluleLarge: { width: '100%' },
+  pastillesEmpilees: { alignSelf: 'stretch' },
+  pastillesEnColonnes: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap' },
+  pastilleMoitie: { width: '50%' },
   carte: {
     backgroundColor: PARCHEMIN,
     borderRadius: 8,

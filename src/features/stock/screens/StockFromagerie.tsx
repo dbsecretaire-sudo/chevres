@@ -96,6 +96,9 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.stock;
 
+/** La couleur des catégories déroulées du stock en cadre de jeu : un vert plus vif que le vert pâle d'office, avec son cercle. */
+const PANNEAU_DE_JEU = { panneau: '#B5D86E', bord: '#6B8F2F' };
+
 /** De combien de points les flèches de la barre de navigation font défiler la liste. */
 const PAS_DE_DEFILEMENT = 190;
 
@@ -479,7 +482,7 @@ export default function StockFromagerie() {
           <View style={jeu.corps}>
           <View style={jeu.defile}>
     <Screen scroll={false} transparent>
-      <ScrollView ref={defilement} onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={64} contentContainerStyle={commonStyles.listFab}>
+      <ScrollView ref={defilement} onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={64} showsVerticalScrollIndicator={false} contentContainerStyle={[commonStyles.listFab, jeu.listeLarge]}>
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories).map(
           ({ categorie, nom, classe, perso }) => {
             const listes = lesSectionsAffichees.filter((x) => x.categorie === categorie);
@@ -489,6 +492,7 @@ export default function StockFromagerie() {
             return (
               <SectionDeroulante
                 key={categorie}
+                fond={PANNEAU_DE_JEU}
                 titre={T.enteteCategorie(classe, nom)}
                 ouverte={ouvertes.includes(categorie)}
                 onBasculer={() => basculerCategorie(categorie)}
@@ -822,13 +826,15 @@ const genreDeLaCle = (cle: string): GenreArticle => cle.split(':')[0] as GenreAr
 
 /** Le cadre de jeu de la grange : un fond vert foncé, un cadre de bois et un panneau vert, autour du stock. */
 const jeu = StyleSheet.create({
+  /** Les marges de la liste réduites : le conteneur est plus large, pour trois cartes l'une à côté de l'autre. */
+  listeLarge: { paddingHorizontal: 4 },
   /** La liste et, à droite, la barre de navigation. */
   corps: { flex: 1, flexDirection: 'row' },
   defile: { flex: 1 },
   /** Les cartes d'une rubrique et leur indication de déplacement. */
   cartesStock: { gap: 8, paddingVertical: 4 },
   indiceDeplacement: { fontSize: 13, fontWeight: '700', color: '#B8641A' },
-  fond: { flex: 1, backgroundColor: '#35541F', padding: 12 },
-  cadre: { flex: 1, backgroundColor: '#E8892B', borderRadius: 26, borderWidth: 4, borderColor: '#B8641A', padding: 10 },
+  fond: { flex: 1, backgroundColor: '#35541F', padding: 8 },
+  cadre: { flex: 1, backgroundColor: '#E8892B', borderRadius: 26, borderWidth: 4, borderColor: '#B8641A', padding: 6 },
   panneau: { flex: 1, backgroundColor: '#8DBA3F', borderRadius: 16, overflow: 'hidden' },
 });
