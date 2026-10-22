@@ -46,10 +46,11 @@ export function JournalLait({
         niveau={bilan.restant}
         onRenommer={onModifierPrix}
         pastilles={[
-          { icone: 'piece', quantite: T.ligne(enLitres(bilan.restant)), niveau: bilan.restant },
-          { icone: '🥛', quantite: T.ligne(enLitres(bilan.produit)), niveau: bilan.produit },
-          { icone: '🧀', quantite: T.ligne(enLitres(-bilan.utilise)), niveau: -bilan.utilise },
-          { icone: '💶', quantite: T.ligne(enLitres(-bilan.vendu)), niveau: -bilan.vendu },
+          // Les quatre pastilles sont toujours en couleur, même à 0 L (le vert du stock ; le rouge seulement pour un restant négatif).
+          { icone: 'piece', quantite: T.ligne(enLitres(bilan.restant)), niveau: bilan.restant, coloree: true },
+          { icone: '🥛', quantite: T.ligne(enLitres(bilan.produit)), niveau: bilan.produit, coloree: true },
+          { icone: '🧀', quantite: T.ligne(enLitres(-bilan.utilise)), niveau: bilan.utilise, coloree: true },
+          { icone: '💶', quantite: T.ligne(enLitres(-bilan.vendu)), niveau: bilan.vendu, coloree: true },
         ]}
       />
     </View>

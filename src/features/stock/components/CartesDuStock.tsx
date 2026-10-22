@@ -112,7 +112,7 @@ export function CarteDeStock({
   /** La carte prend la largeur de trois cartes (le lait) : ses pastilles se rangent sur deux colonnes. */
   large?: boolean;
   /** Plusieurs pastilles l'une sous l'autre (le lait) à la place de la pastille unique : une icône (« piece » : la pièce du stock, ou un dessin), sa quantité et son niveau. */
-  pastilles?: readonly { icone: string; quantite: string; niveau: number }[];
+  pastilles?: readonly { icone: string; quantite: string; niveau: number; coloree?: boolean }[];
   emoji: string;
   titre: string;
   quantite: string;
@@ -156,7 +156,7 @@ export function CarteDeStock({
                   large ? styles.pastilleMoitie : null,
                   i > 0 && !large ? styles.pastilleSuivante : null,
                   p.niveau < 0 ? styles.pastilleRouge : null,
-                  p.niveau === 0 ? styles.pastilleVide : null,
+                  p.niveau === 0 && !p.coloree ? styles.pastilleVide : null,
                 ]}
               >
                 {p.icone === 'piece' ? (
