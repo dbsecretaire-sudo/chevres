@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { CLE_LAIT, mouvementsDuLait } from '@/features/stock/services/historiqueLait';
+import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { libelleOrigineMouvement } from '@/features/stock/services/stock';
 import type { MouvementStock } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
@@ -32,13 +35,20 @@ export function HistoriqueArticleModal({
   const cle = article?.cle;
   useEffect(() => {
     if (!cle) return;
-    lireArchiveStock()
-      .then((archive) =>
+    Promise.all([lireArchiveStock(), cle === CLE_LAIT ? listToutesVentes() : Promise.resolve([])])
+      .then(([archive, ventes]) =>
         setLus({
           cle,
-          mouvements: archive.mouvements
-            .filter((m) => m.article === cle)
-            .sort((a, b) => b.date.localeCompare(a.date)),
+          // Le lait n'est pas un article du stock : son historique vient du journal de lait, des fabrications et des ventes.
+          mouvements: (cle === CLE_LAIT
+            ? mouvementsDuLait(
+                archive,
+                ventes
+                  .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
+                  .map((v) => ({ id: v.id, date: v.date, litres: v.quantite ?? 0 })),
+              )
+            : archive.mouvements.filter((m) => m.article === cle)
+          ).sort((a, b) => b.date.localeCompare(a.date)),
         }),
       )
       .catch(() => undefined);

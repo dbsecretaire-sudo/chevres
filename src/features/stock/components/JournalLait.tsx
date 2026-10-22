@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Text, View } from 'react-native';
+import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { ListRow } from '@/shared/components/ListRow';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
 import type { BilanLait } from '@/features/stock/services/stock';
@@ -32,12 +34,15 @@ export function JournalLait({
   onModifierPrix: () => void;
   onOuvrir: (entree: LaitJour) => void;
 }) {
+  /** L'historique du lait (un appui sur sa carte) : le journal, les fabrications et les ventes. */
+  const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
   // La carte du lait, comme celles des autres articles : son dessin, son nom (et le prix en petit), le crayon qui change le prix, et quatre pastilles :
   // ce qu'il en reste, ce qui a été produit, utilisé en fromagerie et vendu.
   const carteBilan = (
     <View style={grilleDeCartes}>
       <CarteDeStock
         cle="lait"
+        onPress={() => setHistoriqueOuvert(true)}
         rang={0}
         large
         emoji="🥛"
@@ -56,10 +61,17 @@ export function JournalLait({
       />
     </View>
   );
+  const fenetreHistorique = (
+    <HistoriqueArticleModal
+      article={historiqueOuvert ? { cle: 'lait', titre: T.carte, emoji: '🥛', unite: 'L' } : null}
+      onFermer={() => setHistoriqueOuvert(false)}
+    />
+  );
   if (lait.length === 0)
     return (
       <View style={commonStyles.gap10}>
         {carteBilan}
+        {fenetreHistorique}
         <Text style={commonStyles.mutedItalic}>{T.aucun}</Text>
       </View>
     );
@@ -70,6 +82,7 @@ export function JournalLait({
   return (
     <View style={commonStyles.gap10}>
       {carteBilan}
+      {fenetreHistorique}
       {mois.map((m) => {
         const duMois = tries.filter((l) => l.date.startsWith(m));
         const total = duMois.reduce((somme, l) => somme + l.litres, 0);

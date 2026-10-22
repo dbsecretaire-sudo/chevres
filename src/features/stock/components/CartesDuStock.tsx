@@ -65,8 +65,8 @@ export function RubriquesDeCartes({
                 niveau={c.niveau}
                 libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
                 onRenommer={piecesDisponibles() ? () => setImageDe(c) : undefined}
-                // Un article : son historique ; le lait et les œufs n'ont pas de mouvements d'article, ils ouvrent l'inventaire.
-                onPress={() => (c.cle === 'lait' || c.cle === 'oeufs' ? ouvrirLeStock(c) : setHistoriqueDe(c))}
+                // Un article (et le lait) : son historique ; les œufs n'en ont pas, ils ouvrent l'inventaire.
+                onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : setHistoriqueDe(c))}
               />
             ))}
             {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
