@@ -35,6 +35,8 @@ export const TEXTES_FLOTTE = {
     kilometrage: 'Kilométrage',
     kilometrageAide: 'Le dernier relevé.',
     actif: 'Véhicule actif',
+    badgeActif: 'Actif',
+    badgeInactif: 'Inactif',
     actifAide: 'Un véhicule inactif reste consultable avec son historique, mais n’est plus proposé dans les écritures.',
     notes: 'Notes',
     pourLesPieces: 'Pour commander des pièces, notez surtout le numéro de série, la marque, le modèle, la version, l’énergie et la puissance.',

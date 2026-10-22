@@ -11,6 +11,10 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { SelectField } from '@/shared/components/SelectField';
 import type { PeriodiciteAssurance } from '@/features/settings/settings';
 import { NomModal } from '@/features/dossiers/components/NomModal';
+import { OptionsModal } from '@/shared/components/OptionsModal';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { propositionsDeContrats } from '@/features/comptabilite/services/contratsAssurance';
+import type { Facture } from '@/features/comptabilite/types';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
@@ -36,6 +40,7 @@ interface SaisieEmprunt {
 /** Ce qu'on saisit d'un contrat d'assurance : tout en texte. */
 interface SaisieContrat {
   id: string;
+  source?: string;
   nom: string;
   prime: string;
   periodicite: PeriodiciteAssurance;
@@ -73,6 +78,7 @@ export default function ReglagesTresorerie() {
     echeancierAssurance: !!infos?.echeancierAssurance,
     contrats: (infos?.contratsAssurance ?? []).map((c) => ({
       id: c.id,
+      source: c.source,
       nom: c.nom,
       prime: enTexte(c.prime),
       periodicite: c.periodicite,
@@ -89,6 +95,15 @@ export default function ReglagesTresorerie() {
   const [saisie, setSaisie] = useState<Saisie>(depart);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [contratAjoutOuvert, setContratAjoutOuvert] = useState(false);
+  /** Le choix d'un contrat à ajouter : les assurances déjà notées (véhicules actifs par leur plaque, bâtiments, animaux, visiteurs), ou un nom libre. */
+  const [choixContratOuvert, setChoixContratOuvert] = useState(false);
+  const [factures, setFactures] = useState<Facture[]>([]);
+  useEffect(() => {
+    listToutesFactures()
+      .then(setFactures)
+      .catch(() => undefined);
+  }, []);
+  const propositions = propositionsDeContrats(factures, infos?.flotte ?? [], saisie.contrats, todayISO());
   const [contratASupprimer, setContratASupprimer] = useState<string | null>(null);
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
   /** L'emprunt déplié : tous sont enroulés au départ, un seul est visible à la fois. */
@@ -115,6 +130,7 @@ export default function ReglagesTresorerie() {
           saisie.contrats.length > 0
             ? saisie.contrats.map((c) => ({
                 id: c.id,
+                source: c.source,
                 nom: c.nom,
                 prime: nombreOuRien(c.prime) ?? 0,
                 periodicite: c.periodicite,
@@ -252,10 +268,50 @@ export default function ReglagesTresorerie() {
               </View>
             </Card>
           ))}
-          <Button variant="secondary" label={T.ajouterContrat} onPress={() => setContratAjoutOuvert(true)} />
+          <Button
+            variant="secondary"
+            label={T.ajouterContrat}
+            onPress={() => (propositions.length > 0 ? setChoixContratOuvert(true) : setContratAjoutOuvert(true))}
+          />
         </>
       ) : null}
 
+      <OptionsModal
+        visible={choixContratOuvert}
+        onClose={() => setChoixContratOuvert(false)}
+        title={T.choisirContrat}
+        options={[
+          ...propositions.map((p) => ({
+            label: p.nom,
+            icon: 'shield-checkmark' as const,
+            onPress: () => {
+              setChoixContratOuvert(false);
+              setSaisie((s) => ({
+                ...s,
+                contrats: [
+                  ...s.contrats,
+                  {
+                    id: generateId(),
+                    source: p.cle,
+                    nom: p.nom,
+                    prime: enTexte(p.prime),
+                    periodicite: p.periodicite,
+                    prochaineEcheance: p.prochaineEcheance ?? todayISO(),
+                  },
+                ],
+              }));
+            },
+          })),
+          {
+            label: T.autreContrat,
+            icon: 'create' as const,
+            onPress: () => {
+              setChoixContratOuvert(false);
+              setContratAjoutOuvert(true);
+            },
+          },
+        ]}
+      />
       <NomModal
         visible={contratAjoutOuvert}
         titre={T.nomContrat}

@@ -52,6 +52,8 @@ export type PeriodiciteAssurance = 'mensuelle' | 'trimestrielle' | 'semestrielle
 /** Un contrat d'assurance de l'échéancier : sa prime (€), sa périodicité et sa prochaine échéance (AAAA-MM-JJ). */
 export interface ContratAssurance {
   id: string;
+  /** Ce que le contrat couvre, avec son assureur, quand il vient d'une proposition (voir propositionsDeContrats) : il n'est pas reproposé. */
+  source?: string;
   nom: string;
   prime: number;
   periodicite: PeriodiciteAssurance;

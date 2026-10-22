@@ -320,6 +320,8 @@ export const TEXTES_COMPTABILITE = {
       activerEcheancier: 'Activer l’échéancier des assurances',
       aucunContrat: 'Aucun contrat.',
       ajouterContrat: '+ Ajouter un contrat',
+      choisirContrat: 'Quel contrat ?',
+      autreContrat: 'Un autre contrat (nom libre)',
       nomContrat: 'Nom du contrat',
       exempleContrat: 'ex : RC exploitation',
       prime: 'Prime (€)',
