@@ -28,6 +28,8 @@ import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisse
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
+import { TableauAssurance } from '@/features/production/components/TableauAssurance';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { contratsDe } from '@/features/fournisseurs/services/contratsAssureur';
@@ -75,6 +77,8 @@ function LieuTiersStandard() {
   const config = LIEUX_TIERS[cle];
   /** Ouvre une page depuis cette page : sa flèche de retour (et « Annuler », et l'enregistrement d'une écriture) ramène ici, pas à l'onglet d'avant. */
   const ouvrir = useOuvrir();
+  // Le poste de comptabilité (Windows, affichage sobre) montre les assureurs et leurs contrats en tableau.
+  const comptable = useDispositionComptable();
   const textes: TextesLieu = T[cle];
   const { settings, patchSettings } = useAppSettings();
   /** Partenariats : la fenêtre qui coche les catégories de tiers. */
@@ -207,9 +211,26 @@ function LieuTiersStandard() {
 
       {config.avecTiers ? (
         <>
+          {cle === 'assurance' && comptable ? (
+            <>
+              <TableauAssurance assureurs={tiers} ouvrir={ouvrir} />
+              <BlocLignes>
+                <ListRow
+                  title={textes.ajouterTiers ?? ''}
+                  icone="add-circle"
+                  onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`)}
+                />
+                <ListRow
+                  title={TEXTES.contacts.contrat.nouveauContrat}
+                  icone="add-circle"
+                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined }))}
+                />
+              </BlocLignes>
+            </>
+          ) : (
           <GroupeAccueil titre={textes.groupeTiers ?? ''}>
             <BlocLignes>
-              {/* Une liste à plat (le bloc sépare chaque ligne d'un trait) : le tiers, puis — pour l'assurance — ses contrats juste en dessous de lui. */}
+              {/* Une liste à plat (le bloc sépare chaque ligne d'un trait) : le tiers, puis — pour l'assurance — ses contrats en retrait juste en dessous de lui, et « Nouveau contrat » pour lui. */}
               {tiers.flatMap((c) => [
                 <ListRow
                   key={c.cle}
@@ -219,19 +240,30 @@ function LieuTiersStandard() {
                       .filter(Boolean)
                       .join(' · ') || undefined
                   }
-                  emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
+                  // Un assureur est une ligne qui s'ouvre (icône et flèche), pas un titre : ses contrats sont rangés dessous.
+                  {...(cle === 'assurance' ? { icone: 'business' as const } : { emoji: portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji })}
                   onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
                 />,
                 ...(cle === 'assurance'
-                  ? contratsDe(c.fournisseur).map((contrat) => (
+                  ? [
+                      ...contratsDe(c.fournisseur).map((contrat) => (
+                        <ListRow
+                          key={`${c.cle}:${contrat.id}`}
+                          retrait
+                          title={contrat.denomination}
+                          subtitle={TEXTES.contacts.contrat.ligneSousAssureur(contrat.numero)}
+                          icone="shield-checkmark"
+                          onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
+                        />
+                      )),
                       <ListRow
-                        key={`${c.cle}:${contrat.id}`}
-                        title={contrat.denomination}
-                        subtitle={TEXTES.contacts.contrat.ligneSousAssureur(contrat.numero)}
-                        icone="shield-checkmark"
-                        onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
-                      />
-                    ))
+                        key={`${c.cle}:nouveau`}
+                        retrait
+                        title={TEXTES.contacts.contrat.nouveauContrat}
+                        icone="add-circle"
+                        onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: c.fournisseur?.id }))}
+                      />,
+                    ]
                   : []),
               ])}
               {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
@@ -246,13 +278,6 @@ function LieuTiersStandard() {
                   )
                 }
               />
-              {cle === 'assurance' ? (
-                <ListRow
-                  title={TEXTES.contacts.contrat.nouveauContrat}
-                  icone="add-circle"
-                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined }))}
-                />
-              ) : null}
               {/* Banque et comptabilité : le comptable s'ajoute aussi d'ici (sa catégorie est liée à la page). */}
               {cle === 'tourisme' ? (
                 <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
@@ -266,6 +291,7 @@ function LieuTiersStandard() {
               ) : null}
             </BlocLignes>
           </GroupeAccueil>
+          )}
 
           {/* L'office de tourisme : les dossiers marqués touristiques (la Route des Sens Authentiques…), avec « Nouveau dossier » lié à un tiers. */}
           {cle === 'tourisme' ? <DossiersTouristiques contacts={contacts} ouvrir={ouvrir} /> : null}

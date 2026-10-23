@@ -46,10 +46,16 @@ export const TEXTES_CONTACTS = {
     sansContrat: 'Autre (sans contrat de la liste)',
     nouveau: '+ Nouveau contrat…',
     aucunContrat: 'Aucun contrat pour cet assureur : créez-le (son numéro s’inscrira dans la facture).',
-    /** Sur la page de l'assurance : les contrats de tous les assureurs. */
-    groupe: 'Contrats d’assurance',
     nouveauContrat: 'Nouveau contrat d’assurance',
-    aucunContratListe: 'Aucun contrat d’assurance.',
+    /** Sur la page de l’assurance (poste de comptabilité) : les assureurs et leurs contrats en tableau. */
+    tableau: {
+      assureur: 'Assureur',
+      contrat: 'Contrat',
+      numero: 'N° de contrat',
+      telephone: 'Téléphone',
+      email: 'E-mail',
+      aucun: 'Aucun assureur : ajoutez-en un.',
+    },
     ligne: (assureur: string, numero: string) => [assureur, numero && `n° ${numero}`].filter(Boolean).join(' · '),
     /** Un contrat rangé sous son assureur : le nom de l’assureur est déjà au-dessus. */
     ligneSousAssureur: (numero: string) => (numero ? `n° ${numero}` : undefined),

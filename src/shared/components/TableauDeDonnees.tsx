@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
 /** Une colonne d'un tableau : son titre, sa largeur relative, et comment lire (tri) et écrire (affichage) sa valeur dans chaque ligne. */
@@ -41,17 +41,19 @@ const CURSEUR_REDIMENSION =
 /** La largeur d'une colonne ne descend pas sous celle-ci quand on l'étire à la souris. */
 const LARGEUR_MINI = 50;
 
-/** La poignée au bord droit d'un titre : on la tire pour élargir ou rétrécir la colonne. */
-function PoigneeDeColonne({ depart, onLargeur }: { depart: () => number; onLargeur: (largeur: number) => void }) {
+/** La poignée au bord droit d'un titre : on la tire pour élargir ou rétrécir la colonne. `onPrise` : au moment où on la saisit (le tableau fige alors les largeurs). */
+function PoigneeDeColonne({ depart, onPrise, onLargeur, dernier }: { depart: () => number; onPrise: () => void; onLargeur: (largeur: number) => void; dernier: boolean }) {
   /** La largeur de la colonne et la position de la souris au moment où l'on a pris la poignée. */
   const prise = useRef({ largeur: 0, x: 0 });
   return (
     <View
-      style={styles.poignee}
+      // La dernière poignée reste dans le tableau : elle ne le ferait pas défiler pour rien.
+      style={[styles.poignee, dernier && styles.derniereDePoignee]}
       onStartShouldSetResponder={() => true}
       onResponderTerminationRequest={() => false}
       onResponderGrant={(e) => {
         prise.current = { largeur: depart(), x: e.nativeEvent.pageX };
+        onPrise();
       }}
       onResponderMove={(e) =>
         onLargeur(Math.max(LARGEUR_MINI, Math.round(prise.current.largeur + e.nativeEvent.pageX - prise.current.x)))
@@ -77,9 +79,17 @@ const comparer = (a: string | number | undefined, b: string | number | undefined
  */
 export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, vide, pied, tri: triDeDepart, integre = false }: Props<T>) {
   const [tri, setTri] = useState(triDeDepart);
-  /** Les largeurs choisies à la souris (en points) : une colonne étirée garde sa largeur, les autres se partagent le reste. */
+  /**
+   * Les largeurs choisies à la souris (en points). Tant qu'on n'a rien tiré, les colonnes se partagent la largeur du tableau ; dès la première poignée saisie, toutes
+   * gardent leur largeur du moment, et seule la colonne qu'on tire change (le tableau défile en travers quand il dépasse la fenêtre).
+   */
   const [largeurs, setLargeurs] = useState<Record<string, number>>({});
   const mesures = useRef<Record<string, number>>({});
+  const figer = () =>
+    setLargeurs((l) => (Object.keys(l).length > 0 ? l : Object.fromEntries(colonnes.map((c) => [c.cle, Math.round(mesures.current[c.cle] ?? 100)]))));
+  const figees = Object.keys(largeurs).length > 0;
+  /** La largeur du tableau quand les colonnes sont figées : celle de toutes ses colonnes (il est au moins aussi large que la fenêtre). */
+  const sommeDesLargeurs = colonnes.reduce((somme, c) => somme + (largeurs[c.cle] ?? 100), 0);
   const tailleDe = (c: ColonneDuTableau<T>) =>
     largeurs[c.cle] ? { width: largeurs[c.cle], flexGrow: 0, flexShrink: 0 } : { flex: c.poids ?? 1 };
   const triees = useMemo(() => {
@@ -118,6 +128,8 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
 
   return (
     <View style={[styles.cadre, integre && styles.cadreIntegre]}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={figees} style={integre ? undefined : styles.defilement} contentContainerStyle={styles.largeurDuTableau}>
+      <View style={[integre ? styles.tableauIntegre : styles.tableau, { width: figees ? sommeDesLargeurs : '100%' }]}>
       <View style={styles.entete}>
         {colonnes.map((c) => (
           <View
@@ -141,6 +153,8 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
             </Pressable>
             <PoigneeDeColonne
               depart={() => mesures.current[c.cle] ?? 100}
+              onPrise={figer}
+              dernier={c.cle === colonnes[colonnes.length - 1]?.cle}
               onLargeur={(largeur) => setLargeurs((l) => ({ ...l, [c.cle]: largeur }))}
             />
           </View>
@@ -160,6 +174,8 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
           renderItem={({ item, index }) => ligneDe(item, index)}
         />
       )}
+      </View>
+      </ScrollView>
       {pied ? <View style={styles.pied}>{pied}</View> : null}
     </View>
   );
@@ -168,9 +184,15 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
 const styles = StyleSheet.create({
   cadre: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 6, backgroundColor: colors.surface, overflow: 'hidden' },
   cadreIntegre: { flex: undefined },
+  // Le défilement en travers : le tableau a au moins la largeur de la fenêtre, et celle de ses colonnes quand elles la dépassent.
+  defilement: { flex: 1 },
+  largeurDuTableau: { minWidth: '100%' },
+  tableau: { flexShrink: 0 },
+  tableauIntegre: { flexShrink: 0 },
   entete: { flexDirection: 'row', backgroundColor: colors.badgeBg, borderBottomWidth: 2, borderBottomColor: colors.primary },
   // Le curseur est dessiné en noir (celui du système est blanc à contour noir : il disparaît sur le gris clair).
   poignee: { position: 'absolute', right: -5, top: 0, bottom: 0, width: 11, alignItems: 'center', justifyContent: 'center', cursor: CURSEUR_REDIMENSION as never, zIndex: 2 },
+  derniereDePoignee: { right: 0 },
   trait: { width: 1.5, height: '55%', backgroundColor: colors.textMuted },
   celluleEntete: { paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center' },
   titre: { fontSize: 12, fontWeight: '800', color: colors.primaryDark, textTransform: 'uppercase', letterSpacing: 0.3 },

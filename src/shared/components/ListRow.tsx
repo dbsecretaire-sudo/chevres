@@ -29,6 +29,8 @@ interface Props {
   image?: ImageSourcePropType;
   /** La couleur de fond de la pastille du dessin (le sexe et l'âge de l'animal). */
   fondPastille?: string;
+  /** Vrai : la ligne est rangée sous celle du dessus (un contrat sous son assureur) ; elle est décalée vers la droite. */
+  retrait?: boolean;
 }
 
 export function ListRow({
@@ -45,6 +47,7 @@ export function ListRow({
   emoji: emojiDemande,
   image: imageDemandee,
   fondPastille,
+  retrait,
 }: Props) {
   const dansBloc = useDansBloc();
   // L'affichage sobre n'a pas de dessin : ni image ni emoji dans la pastille (l'icône d'un menu reste).
@@ -59,6 +62,7 @@ export function ListRow({
       style={({ pressed }) => [
         styles.rowCard,
         dansBloc && styles.rowDansBloc,
+        retrait && styles.rowRetrait,
         surlignee && styles.rowSurlignee,
         actif && styles.rowActive,
         pressed && onPress ? commonStyles.pressed : null,

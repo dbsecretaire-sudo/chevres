@@ -16,6 +16,8 @@ export const styles = StyleSheet.create({
   },
   /** Une ligne d'un bloc de liste : le cadre et le fond sont ceux du bloc. */
   rowDansBloc: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
+  /** Une ligne rangée sous celle du dessus (un contrat sous son assureur) : décalée vers la droite. */
+  rowRetrait: { paddingLeft: 14 + 30 },
   /** La pastille teintée qui porte l'icône d'une ligne de menu. */
   pastille: {
     width: 40,
