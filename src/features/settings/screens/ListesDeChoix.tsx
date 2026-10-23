@@ -24,6 +24,7 @@ import {
 } from '@/features/settings/services/listesPerso';
 import { Button } from '@/shared/components/Button';
 import { Fab } from '@/shared/components/Fab';
+import { FenetreCategorieDepense } from '@/features/settings/components/FenetreCategorieDepense';
 import { FormField } from '@/shared/components/FormField';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
@@ -74,6 +75,8 @@ export default function ListesDeChoix() {
   const comptable = useDispositionComptable();
   /** La liste à laquelle on ajoute un choix (le poste de comptabilité : une fenêtre demande son nom). */
   const [ajoutDans, setAjoutDans] = useState<CleListePerso | null>(null);
+  /** La fenêtre d'une catégorie de dépense : une nouvelle (`{}`) ou le compte d'une catégorie ajoutée (`{ choix }`). */
+  const [edition, setEdition] = useState<{ choix?: Choix } | null>(null);
   const [nouvelObjet, setNouvelObjet] = useState('');
   const [nouveauCircuit, setNouveauCircuit] = useState('');
   const [nouvelleCategorie, setNouvelleCategorie] = useState('');
@@ -147,7 +150,17 @@ export default function ListesDeChoix() {
         titre: T.choix,
         poids: 4,
         valeur: (c) => c.nom,
-        rendu: (c) => <Text style={[commonStyles.valueText, !c.visible && styles.masque]}>{c.nom}</Text>,
+        // Le nom, puis le crayon qui le renomme (comme pour les catégories de contact) ; pas de crayon pour un choix d'office qui ne se renomme pas.
+        rendu: (c) => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={[commonStyles.valueText, !c.visible && styles.masque, { flexShrink: 1 }]}>{c.nom}</Text>
+            {renommable || c.perso ? (
+              <Pressable onPress={() => setARenommer({ liste, choix: c })} hitSlop={8} accessibilityRole="button" accessibilityLabel={T.renommer}>
+                <Ionicons name="create-outline" size={16} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+          </View>
+        ),
       },
       // Le compte du plan comptable de chaque catégorie : celui que l'application donne aux catégories d'office, celui qu'on a choisi pour une catégorie ajoutée.
       ...(liste === 'categoriesDepense'
@@ -157,35 +170,38 @@ export default function ListesDeChoix() {
               titre: T.compte,
               poids: 3.5,
               valeur: (c: Choix & { visible: boolean }) => compteDe(c),
-              rendu: (c: Choix & { visible: boolean }) => <Text style={[styles.texteCompte, !c.visible && styles.masque]}>{compteDe(c)}</Text>,
+              // Le compte, et pour une catégorie ajoutée le crayon qui le change (comme le crayon du nom).
+              rendu: (c: Choix & { visible: boolean }) => (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={[styles.texteCompte, !c.visible && styles.masque, { flexShrink: 1 }]}>{compteDe(c)}</Text>
+                  {c.perso ? (
+                    <Pressable onPress={() => setEdition({ choix: c })} hitSlop={8} accessibilityRole="button" accessibilityLabel={T.compte}>
+                      <Ionicons name="create-outline" size={16} color={colors.textMuted} />
+                    </Pressable>
+                  ) : null}
+                </View>
+              ),
             } satisfies ColonneDuTableau<Choix & { visible: boolean }>,
           ]
         : []),
       // La colonne des actions : « Renommer » et « Retirer » (vide pour un choix d'office qui ne se renomme pas).
-      actionsDeLaListe(liste, renommable),
+      actionsDeLaListe(liste),
     ];
     return <TableauDeDonnees integre colonnes={colonnes} lignes={choix} cleDeLaLigne={(c) => c.id} vide="" />;
   };
-  const actionsDeLaListe = (liste: CleListePerso, renommable: boolean): ColonneDuTableau<Choix & { visible: boolean }> => ({
+  const actionsDeLaListe = (liste: CleListePerso): ColonneDuTableau<Choix & { visible: boolean }> => ({
         cle: 'actions',
         titre: '',
-        poids: 2,
+        poids: 1.3,
         triable: false,
         valeur: () => '',
-        rendu: (c) => (
-          <View style={{ flexDirection: 'row', gap: 14 }}>
-            {renommable || c.perso ? (
-              <Pressable onPress={() => setARenommer({ liste, choix: c })} hitSlop={6} accessibilityRole="button">
-                <Text style={[styles.lien, { color: accent }]}>{T.renommer}</Text>
-              </Pressable>
-            ) : null}
-            {c.perso ? (
-              <Pressable onPress={() => changer(liste, (p) => sansChoixAjoute(p, c.id))} hitSlop={6} accessibilityRole="button">
-                <Text style={[styles.lien, { color: colors.danger }]}>{T.retirer}</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ),
+        // « Supprimer », pour un choix qu'on a ajouté (celui d'office se masque seulement, par sa case).
+        rendu: (c) =>
+          c.perso ? (
+            <Pressable onPress={() => changer(liste, (p) => sansChoixAjoute(p, c.id))} hitSlop={6} accessibilityRole="button">
+              <Text style={[styles.lien, { color: colors.danger }]}>{TEXTES.commun.general.supprimer}</Text>
+            </Pressable>
+          ) : null,
   });
 
   if (comptable) {
@@ -205,34 +221,23 @@ export default function ListesDeChoix() {
         <GroupeAccueil titre={T.categorieDepense}>
           <Text style={commonStyles.note}>{T.categorieAide}</Text>
           {tableau('categoriesDepense', categories, false)}
-          {/* Une catégorie ajoutée a son compte du plan comptable, qu'on change ici. */}
-          {categories
-            .filter((c) => c.perso)
-            .map((c) => (
-              <View key={c.id} style={styles.compte}>
-                <SelectField<string>
-                  label={`${T.compte} : ${c.nom}`}
-                  searchable
-                  value={c.compte ?? ''}
-                  onChange={(compte) => changer('categoriesDepense', (p) => avecCompteDuChoix(p, c.id, compte))}
-                  options={optionsCompte}
-                />
-              </View>
-            ))}
-          <View style={styles.ajout}>
-            <FormField label={T.nouvelleCategorie} value={nouvelleCategorie} onChangeText={setNouvelleCategorie} placeholder={T.exempleCategorie} />
-            <SelectField<string> label={T.compte} searchable value={compteChoisi} onChange={setCompteChoisi} options={optionsCompte} aide={T.compteAide} />
-            <Button
-              label={T.ajouter}
-              disabled={!nouvelleCategorie.trim() || !compteChoisi}
-              onPress={() => {
-                changer('categoriesDepense', (p) => avecChoixAjoute(p, nouvelleCategorie, compteChoisi));
-                setNouvelleCategorie('');
-                setCompteChoisi('');
-              }}
-            />
-          </View>
+          <Fab options={[{ label: T.nouvelleCategorie, icon: 'add', onPress: () => setEdition({}) }]} />
         </GroupeAccueil>
+        <FenetreCategorieDepense
+          key={edition ? (edition.choix?.id ?? 'nouvelle') : 'fermee'}
+          visible={!!edition}
+          avecNom={!edition?.choix}
+          titre={edition?.choix ? `${T.compte} : ${edition.choix.nom}` : T.nouvelleCategorie}
+          compteInitial={edition?.choix?.compte ?? ''}
+          options={optionsCompte}
+          onValider={(nom, compte) => {
+            const choix = edition?.choix;
+            setEdition(null);
+            if (choix) changer('categoriesDepense', (p) => avecCompteDuChoix(p, choix.id, compte));
+            else changer('categoriesDepense', (p) => avecChoixAjoute(p, nom, compte));
+          }}
+          onAnnuler={() => setEdition(null)}
+        />
         <NomModal
           visible={!!aRenommer}
           titre={T.renommerTitre}

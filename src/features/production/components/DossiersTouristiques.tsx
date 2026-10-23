@@ -8,6 +8,8 @@ import type { Controle } from '@/features/exploitation/types';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -27,6 +29,7 @@ export function DossiersTouristiques({
   ouvrir: (route: string) => void;
 }) {
   const [controles, setControles] = useState<Controle[]>([]);
+  const comptable = useDispositionComptable();
 
   useFocusEffect(
     useCallback(() => {
@@ -45,6 +48,34 @@ export function DossiersTouristiques({
         (!!c.client && entree.clientId === c.client.id),
     ),
   }));
+
+  // Le poste de comptabilité : un tableau (dossier, contact qui le range, nombre de contenus) ; un clic ouvre le dossier du contact.
+  if (comptable) {
+    const colonnes: readonly ColonneDuTableau<(typeof dossiers)[number]>[] = [
+      { cle: 'dossier', titre: 'Dossier', poids: 2.5, valeur: (d) => d.dossier.nom },
+      { cle: 'contact', titre: 'Contact', poids: 2.5, valeur: (d) => d.contact?.nom ?? '' },
+      {
+        cle: 'contenus',
+        titre: 'Contenus',
+        poids: 1.2,
+        aligne: 'centre',
+        valeur: (d) => nombreDeContenus(d.entree as Controle, d.dossier.id),
+      },
+    ];
+    return (
+      <GroupeAccueil titre={T.groupe}>
+        <TableauDeDonnees
+          integre
+          colonnes={colonnes}
+          lignes={dossiers}
+          cleDeLaLigne={(d) => `${d.entree.id}-${d.dossier.id}`}
+          tri={{ cle: 'dossier' }}
+          vide={T.aucun}
+          onLigne={(d) => d.contact && ouvrir(ROUTES.contactDossier(d.contact.cle, d.dossier.id))}
+        />
+      </GroupeAccueil>
+    );
+  }
 
   return (
     <GroupeAccueil titre={T.groupe}>

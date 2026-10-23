@@ -28,6 +28,8 @@ import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisse
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
+import { listTousControles } from '@/features/exploitation/repository/controles';
+import type { Controle } from '@/features/exploitation/types';
 import { TableauAssurance } from '@/features/production/components/TableauAssurance';
 import { TableauEcrituresDuLieu, TableauTiersDuLieu } from '@/features/production/components/TableauxDuLieu';
 import { Fab } from '@/shared/components/Fab';
@@ -90,6 +92,8 @@ function LieuTiersStandard() {
   const nomDeLaCategorie = (c: Contact) => categories.find((x) => x.id === categorieDuContact(c, idsConnus).id)?.nom ?? '';
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  /** Les contenus rangés des partenaires : les dossiers de chaque intervenant s'y trouvent. */
+  const [controles, setControles] = useState<Controle[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -98,6 +102,9 @@ function LieuTiersStandard() {
         .catch(() => undefined);
       listTransactions(settings.anneeActive)
         .then(setTransactions)
+        .catch(() => undefined);
+      listTousControles()
+        .then(setControles)
         .catch(() => undefined);
     }, [settings.anneeActive]),
   );
@@ -220,7 +227,7 @@ function LieuTiersStandard() {
               {cle === 'assurance' ? (
                 <TableauAssurance assureurs={tiers} ouvrir={ouvrir} />
               ) : (
-                <TableauTiersDuLieu tiers={tiers} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
+                <TableauTiersDuLieu controles={controles} tiers={tiers} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
               )}
               {/* Les ajouts sous le tableau, comme « Ajouter au cheptel » sous celui du cheptel. */}
               <Fab
@@ -329,7 +336,7 @@ function LieuTiersStandard() {
           {/* Le groupement sanitaire accueille les vétérinaires : leurs fiches (traitements, visites, factures) s'ouvrent d'ici. */}
           {cle === 'groupementSanitaire' && comptable ? (
             <GroupeAccueil titre={textes.groupeVeterinaires ?? ''}>
-              <TableauTiersDuLieu tiers={veterinaires} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
+              <TableauTiersDuLieu controles={controles} tiers={veterinaires} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
               <Fab options={[{ label: textes.ajouterVeterinaire ?? '', icon: 'add', onPress: () => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`) }]} />
             </GroupeAccueil>
           ) : cle === 'groupementSanitaire' ? (

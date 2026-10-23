@@ -15,6 +15,8 @@ import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { Fab } from '@/shared/components/Fab';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -92,6 +94,20 @@ export default function ComptesPcgIndex() {
     return duSuivi.filter((c) => [c.numero, c.libelle].some((v) => v?.toLowerCase().includes(q)));
   }, [comptes, comptesInventaire, recherche, suivi, regles, archive, concernees]);
 
+  const comptable = useDispositionComptable();
+  /** Les colonnes du tableau : le numéro, le libellé, et si le compte a une liste dans l'inventaire ou sert aux écritures seules (« Service »). */
+  const colonnesDuTableau: readonly ColonneDuTableau<CompteComptableEnregistre>[] = [
+    { cle: 'numero', titre: 'N°', poids: 1, valeur: (c) => c.numero },
+    { cle: 'libelle', titre: 'Libellé', poids: 5, valeur: (c) => c.libelle ?? '' },
+    {
+      cle: 'suivi',
+      titre: 'Suivi',
+      poids: 1.2,
+      valeur: (c) =>
+        comptesInventaire.includes(c.numero) ? TEXTES.comptesPcg.nouveauComptePcg.suivi.inventaire : TEXTES.comptesPcg.nouveauComptePcg.suivi.service,
+    },
+  ];
+
   return (
     <Screen scroll={false}>
       {/* Ouvert depuis un autre écran (la structure de l'inventaire…) : la flèche y ramène. */}
@@ -152,6 +168,19 @@ export default function ComptesPcgIndex() {
           <Text style={commonStyles.lien}>{TEXTES.comptesPcg.planGeneral.lien}</Text>
         </Pressable>
       )}
+      {comptable ? (
+        // Le poste de comptabilité : un tableau (numéro, libellé, suivi), un clic ouvre le compte ; « Nouveau compte » est dessous.
+        <TableauDeDonnees
+          colonnes={colonnesDuTableau}
+          lignes={filtres}
+          cleDeLaLigne={(c) => c.id}
+          tri={{ cle: 'numero' }}
+          vide={TEXTES.comptesPcg.listeComptesPcg.aucunCompte}
+          onLigne={(c) =>
+            router.push(ROUTES.ficheComptePcg(c.id, especes.length > 1 && filtreCourant !== FILTRE_STOCK_TOUT ? filtreCourant : undefined))
+          }
+        />
+      ) : (
       <FlatList
         data={filtres}
         keyExtractor={(item) => item.id}
@@ -177,6 +206,7 @@ export default function ComptesPcgIndex() {
           />
         )}
       />
+      )}
 
       <Fab
         options={[
