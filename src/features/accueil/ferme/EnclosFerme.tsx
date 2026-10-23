@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
     padding: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 10,
   },
   sansCadre: { borderWidth: 0, borderRadius: 0 },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     gap: 22,
-    paddingVertical: 6,
+    paddingVertical: 14,
   },
   animal: { alignItems: 'center', gap: 2 },
   etiquette: {
@@ -157,6 +158,6 @@ const styles = StyleSheet.create({
     borderColor: '#B58B1A',
   },
   etiquetteTexte: { fontSize: 11, fontWeight: '700', color: '#4A3A07' },
-  vide: { fontSize: 13, color: colors.textMuted, paddingVertical: 16 },
-  effectif: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
+  vide: { fontSize: 13, color: colors.textMuted, paddingVertical: 20 },
+  effectif: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center', marginTop: 6 },
 });

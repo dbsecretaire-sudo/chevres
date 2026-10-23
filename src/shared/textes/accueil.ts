@@ -79,6 +79,7 @@ export const TEXTES_ACCUEIL = {
       boucles: 'Boucles',
       bilanAnnuel: 'Bilan annuel',
       venteVivant: 'Vente (vivant)',
+      nouvelleFacture: 'Nouvelle facture',
       carnetNaissance: 'Carnet de naissance',
       fabriquer: 'Fabriquer',
       cheptel: 'Cheptel',

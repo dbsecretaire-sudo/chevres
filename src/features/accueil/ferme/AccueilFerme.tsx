@@ -159,6 +159,8 @@ export default function AccueilFerme() {
   // À gauche de la scène de l'exploitation : ceux qui interviennent sur les bêtes (l'abattoir, le vétérinaire, l'aliment, l'équarrisseur) et ses
   // fournisseurs et partenaires (la pompe, le garage, l'assurance, la banque, les groupements). Les achats sont en bordeaux.
   const intervenantsExploitation: EntreeDeColonne[] = [
+    // Une dépense (facture reçue) à saisir d'un appui : l'aliment, le carburant ou tout autre achat se rangent par leur catégorie.
+    { cle: 'nouvelleFacture', titre: C.nouvelleFacture, icone: iconeIon('add-circle'), couleur: ACHAT },
     {
       cle: 'abattoir',
       titre: C.abattoir,
@@ -166,7 +168,6 @@ export default function AccueilFerme() {
       pastille: f.lotsAFacturer,
       couleur: ACHAT,
     },
-    { cle: 'partenaires', titre: C.partenaires, icone: iconeIon('people'), couleur: ACHAT },
     {
       cle: 'equarrissage',
       titre: C.equarrissage,
@@ -174,8 +175,6 @@ export default function AccueilFerme() {
       pastille: f.morts,
       couleur: ACHAT,
     },
-    { cle: 'aliments', titre: C.alimentation, icone: iconeMCI('corn'), couleur: ACHAT },
-    { cle: 'carburant', titre: C.carburant, icone: iconeMCI('gas-station'), couleur: ACHAT },
     { cle: 'garage', titre: C.garage, icone: iconeMCI('car-wrench'), couleur: ACHAT },
     { cle: 'assurance', titre: C.assurance, icone: iconeIon('shield-checkmark'), couleur: ACHAT },
     { cle: 'banque', titre: C.banque, icone: iconeIon('card'), couleur: ACHAT },

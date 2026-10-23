@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { positionDeLaListe } from '@/shared/utils/listeDeroulante';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 /**
@@ -39,21 +40,19 @@ const memoriserLeDeclencheur = (evenement: Event) => {
 function attacherLaListe(feuille: HTMLElement, mesure: DOMRect): void {
   // Un zoom de la page (CSS, dans un navigateur) change l'échelle des mesures ; le zoom de la fenêtre Windows, lui, est déjà pris en compte.
   const zoom = Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-  const champ = { left: mesure.left / zoom, top: mesure.top / zoom, bottom: mesure.bottom / zoom, width: mesure.width / zoom };
-  const hauteurFenetre = window.innerHeight / zoom;
-  const largeurFenetre = window.innerWidth / zoom;
-  const largeur = Math.max(champ.width, 260);
-  const dessous = hauteurFenetre - champ.bottom - 8;
-  const auDessus = dessous < 220 && champ.top > dessous;
-  const place = Math.max(160, Math.min(420, auDessus ? champ.top - 8 : dessous));
+  const p = positionDeLaListe({
+    champ: { left: mesure.left, top: mesure.top, bottom: mesure.bottom, width: mesure.width },
+    fenetre: { largeur: window.innerWidth, hauteur: window.innerHeight },
+    zoom,
+  });
   const s = feuille.style;
   s.setProperty('position', 'fixed', 'important');
-  s.setProperty('left', `${Math.max(8, Math.min(champ.left, largeurFenetre - largeur - 8))}px`, 'important');
-  s.setProperty('width', `${largeur}px`, 'important');
+  s.setProperty('left', `${p.left}px`, 'important');
+  s.setProperty('width', `${p.largeur}px`, 'important');
   s.setProperty('max-width', 'none', 'important');
-  s.setProperty('max-height', `${place}px`, 'important');
-  if (auDessus) s.setProperty('bottom', `${hauteurFenetre - champ.top + 2}px`, 'important');
-  else s.setProperty('top', `${champ.bottom + 2}px`, 'important');
+  s.setProperty('max-height', `${p.maxHeight}px`, 'important');
+  if (p.bottom !== undefined) s.setProperty('bottom', `${p.bottom}px`, 'important');
+  else s.setProperty('top', `${p.top}px`, 'important');
   s.setProperty('margin', '0', 'important');
   feuille.classList.add('liste-attachee');
   feuille.parentElement?.classList.add('fond-liste');

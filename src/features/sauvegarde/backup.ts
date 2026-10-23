@@ -56,9 +56,20 @@ import {
 import type { PieceJointe } from '@/features/fichiers/types';
 import {
   appliquerProfilEtablissementActif,
+  choisirEtablissementActif,
+  creerEtablissement,
+  getIdEtablissementActif,
+  listEtablissements,
   profilEtablissementActif,
   type ProfilEtablissement,
 } from '@/features/etablissements/repository';
+import {
+  estSauvegardeComplete,
+  etablissementDeLEntree,
+  sommeDesCompteurs,
+  type EntreeDeSauvegardeComplete,
+  type SauvegardeComplete,
+} from '@/features/sauvegarde/formatSauvegarde';
 import {
   listComptesPcg,
   remplacerTousComptesPcg,
@@ -124,7 +135,8 @@ interface FichierSauvegarde {
  * d'exploitation) en un seul fichier JSON, à conserver hors de l'appareil (mail, stockage,
  * autre appli) — sert à tout restaurer après une réinstallation, indépendamment de Google Drive.
  */
-export async function exporterSauvegardeLocale(): Promise<void> {
+/** Le jeu de données de l'établissement actif, tel que le fichier de sauvegarde le range. */
+async function construireSauvegarde(): Promise<FichierSauvegarde> {
   const donnees: Partial<Record<Categorie, Record<string, unknown[]>>> = {};
   for (const categorie of CATEGORIES_STOCKAGE) {
     const annees = await getYears(categorie);
@@ -197,6 +209,31 @@ export async function exporterSauvegardeLocale(): Promise<void> {
     annexes,
   };
 
+  return sauvegarde;
+}
+
+/**
+ * Ce que le fichier contient : le jeu de données de l'établissement actif quand il n'y en a qu'un (l'ancien format), sinon celui de chacun, dans une sauvegarde
+ * complète. L'établissement ouvert au départ est rétabli à la fin.
+ */
+async function sauvegardeDeTousLesEtablissements(): Promise<FichierSauvegarde | SauvegardeComplete<FichierSauvegarde>> {
+  const etablissements = await listEtablissements();
+  if (etablissements.length <= 1) return construireSauvegarde();
+  const depart = getIdEtablissementActif();
+  const entrees: EntreeDeSauvegardeComplete<FichierSauvegarde>[] = [];
+  try {
+    for (const e of etablissements) {
+      await choisirEtablissementActif(e.id);
+      entrees.push({ id: e.id, nom: e.nom, animaux: e.animaux, activites: e.activites, sauvegarde: await construireSauvegarde() });
+    }
+  } finally {
+    await choisirEtablissementActif(depart);
+  }
+  return { version: VERSION_SAUVEGARDE, exporteLe: new Date().toISOString(), etablissements: entrees };
+}
+
+export async function exporterSauvegardeLocale(): Promise<void> {
+  const sauvegarde = await sauvegardeDeTousLesEtablissements();
   const debutNom = modeEntreprise() ? NOM_FICHIER_SAUVEGARDE_ENTREPRISE : NOM_FICHIER_SAUVEGARDE;
   const nomFichier = `${debutNom}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
@@ -280,10 +317,37 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   } catch {
     throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPas);
   }
+  const lu: unknown = sauvegarde;
+  if (estSauvegardeComplete(lu)) return importerSauvegardeComplete(lu as SauvegardeComplete<FichierSauvegarde>);
   if (!sauvegarde || typeof sauvegarde !== 'object' || !sauvegarde.donnees) {
     throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
   }
+  return appliquerSauvegarde(sauvegarde);
+}
 
+/** Restaure une sauvegarde complète : chaque établissement reçoit son jeu de données (un établissement absent est recréé). */
+async function importerSauvegardeComplete(complete: SauvegardeComplete<FichierSauvegarde>): Promise<ResultatImport> {
+  const depart = getIdEtablissementActif();
+  const resultats: ResultatImport[] = [];
+  try {
+    for (const entree of complete.etablissements) {
+      if (!entree.sauvegarde?.donnees) throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
+      const locaux = await listEtablissements();
+      const cible =
+        etablissementDeLEntree(locaux, entree) ??
+        (await creerEtablissement({ nom: entree.nom, animaux: entree.animaux, activites: entree.activites as never }));
+      await choisirEtablissementActif(cible.id);
+      resultats.push(await appliquerSauvegarde(entree.sauvegarde));
+    }
+  } finally {
+    await choisirEtablissementActif(depart);
+  }
+  const vide: ResultatImport = { annule: false, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0, contenus: 0, sejours: 0, trades: 0, misAJour: 0, inchanges: 0 };
+  return sommeDesCompteurs(resultats, vide);
+}
+
+/** Applique le jeu de données d'un établissement : tout ce qui diffère de ce que l'appareil contient est remplacé. */
+async function appliquerSauvegarde(sauvegarde: FichierSauvegarde): Promise<ResultatImport> {
   let misAJour = 0;
   let inchanges = 0;
   /** N'écrit que ce qui diffère de ce que l'appareil contient déjà : le reste est laissé tel quel. */

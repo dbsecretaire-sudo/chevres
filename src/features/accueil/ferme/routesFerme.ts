@@ -22,6 +22,8 @@ export const ROUTE_DIRECTE: Record<string, string> = {
   bilanAnnuel: ROUTES.CHEPTEL_BILAN,
   // Un animal qui part vivant (vendu à un particulier, à un autre éleveur…) : l'assistant du départ, avec son document de circulation.
   venteVivant: ROUTES.lotAbattoirNouveau('vivants'),
+  // Une nouvelle dépense : la facture reçue (la catégorie — aliments, carburant, réparation… — se choisit dans l'écriture).
+  nouvelleFacture: `${ROUTES.COMPTABILITE_NOUVELLE}?type=recue`,
   aliments: ROUTES.lieu('aliments'),
   equarrissage: ROUTES.lieu('equarrissage'),
   carburant: ROUTES.lieu('carburant'),
@@ -80,11 +82,9 @@ export const BOUTONS_DE_LA_FERME = {
       ['venteVivant', C.venteVivant],
     ],
     intervenants: [
+      ['nouvelleFacture', C.nouvelleFacture],
       ['abattoir', C.abattoir],
-      ['partenaires', C.partenaires],
       ['equarrissage', C.equarrissage],
-      ['aliments', C.alimentation],
-      ['carburant', C.carburant],
       ['garage', C.garage],
       ['assurance', C.assurance],
       ['banque', C.banque],

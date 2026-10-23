@@ -59,3 +59,47 @@ describe('fusion des données de deux appareils', () => {
     expect(fusionner([{ id: 'a' }], undefined)).toEqual([{ id: 'a' }]);
   });
 });
+
+describe('deux appareils qui ont travaillé chacun de leur côté', () => {
+  const idsTries = (v: unknown) => (v as { id: string }[]).map((x) => x.id).sort();
+  const appareilA = [
+    { id: 'e1', tiers: 'Garage', montant: 100 },
+    { id: 'e2', tiers: 'Coop', montant: 50 },
+    { id: 'a1', tiers: 'Vétérinaire', montant: 80 },
+  ];
+  const appareilB = [
+    { id: 'e1', tiers: 'Garage', montant: 100 },
+    { id: 'e2', tiers: 'Coop', montant: 50 },
+    { id: 'b1', tiers: 'Boucher', montant: 30 },
+  ];
+
+  it('fusionner dans un sens ou dans l’autre donne les mêmes écritures', () => {
+    expect(idsTries(fusionner(appareilA, appareilB))).toEqual(['a1', 'b1', 'e1', 'e2']);
+    expect(idsTries(fusionner(appareilB, appareilA))).toEqual(['a1', 'b1', 'e1', 'e2']);
+  });
+
+  it('une seconde fusion ne change plus rien (aucun doublon, aucun ajout)', () => {
+    const premiere = fusionner(appareilA, appareilB);
+    const r = rapport();
+    const seconde = fusionner(premiere, appareilB, r);
+    expect(seconde).toEqual(premiere);
+    expect(r.ajoutes).toBe(0);
+  });
+
+  it('une écriture supprimée sur un seul appareil revient à la fusion (une suppression ne se propage pas)', () => {
+    const apresSuppression = appareilA.filter((x) => x.id !== 'e2');
+    expect(idsTries(fusionner(apresSuppression, appareilB))).toContain('e2');
+  });
+
+  it('une écriture modifiée des deux côtés garde la valeur de l’appareil qui fusionne, et le dit', () => {
+    const r = rapport();
+    const a = [{ id: 'e1', montant: 120 }];
+    const b = [{ id: 'e1', montant: 90 }];
+    expect(fusionner(a, b, r)).toEqual([{ id: 'e1', montant: 120 }]);
+    expect(r.conflits).toBe(1);
+  });
+
+  it('un établissement entier absent d’un côté arrive tel quel', () => {
+    expect(fusionner(undefined, { nom: 'Gîte', animaux: ['chevres'] })).toEqual({ nom: 'Gîte', animaux: ['chevres'] });
+  });
+});
