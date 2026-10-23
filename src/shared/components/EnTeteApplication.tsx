@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
+import { publierTitre } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
@@ -40,7 +41,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const comptable = useDispositionComptable();
   const router = useRouter();
   // Le fil d'Ariane (« Atelier > Gestion > Réserver > Nouvelle commande ») : chaque étape ramène à sa page.
-  const { menus, courante } = usePositionDansLesMenus();
+  const { menus, courante, adresse } = usePositionDansLesMenus();
   useEffect(() => retenirPageDuMenu(courante), [courante]);
   // L'en-tête n'a plus de barre d'état sous lui : il commence sous l'encoche.
   const { top } = useSafeAreaInsets();
@@ -49,6 +50,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const droite = options.headerRight ? options.headerRight(parametres) : null;
   const titre = typeof options.title === 'string' ? options.title : '';
   const fil = comptable ? filDeLaPage(menus, courante, pageDuMenuRetenue(), titre) : [];
+  // Le fil d'Ariane du bas (téléphone) ne voit pas l'écran : l'en-tête de la page affichée lui donne son titre.
+  useFocusEffect(useCallback(() => publierTitre(titre, adresse), [titre, adresse]));
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   return (
