@@ -142,6 +142,16 @@ export default function ComptesPcgIndex() {
         )}
       </View>
 
+      {/* Un doute sur le compte à utiliser : le plan comptable général complet, à consulter. */}
+      {regles ? null : (
+        <Pressable
+          style={commonStyles.topPadded}
+          onPress={() => router.push(ROUTES.PLAN_COMPTABLE as never)}
+          accessibilityRole="link"
+        >
+          <Text style={commonStyles.lien}>{TEXTES.comptesPcg.planGeneral.lien}</Text>
+        </Pressable>
+      )}
       <FlatList
         data={filtres}
         keyExtractor={(item) => item.id}

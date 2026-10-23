@@ -223,6 +223,8 @@ export interface ArchiveStock {
   lait: LaitJour[];
   /** Le prix de vente d'un fromage ou d'une viande (€, par identifiant d'article) : il préremplit le prix d'une vente. */
   prix: Record<string, number>;
+  /** Le prix au kilo vif (€, par identifiant d'article) d'un animal vivant de réforme : le prix du poids vif d'une vente, quand on coche « vendu au poids vif » (le prix ci-dessus est celui de l'animal entier). */
+  prixVif?: Record<string, number>;
   /** Les litres de lait qu'il faut pour un fromage (par identifiant d'article) : la fabrication en déduit le lait utilisé, et la rentabilité compare le fromage à la vente du lait. */
   litresParFromage?: Record<string, number>;
   /** Les listes que l'utilisateur a ajoutées aux catégories de l'inventaire. */

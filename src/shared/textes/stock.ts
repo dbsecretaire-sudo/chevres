@@ -97,6 +97,20 @@ export const TEXTES_STOCK = {
     nom: 'Nom',
     prix: 'Prix de vente (€)',
     prixKg: 'Prix de vente (€ le kg)',
+    /** Un article qui ne se vend pas (une fourniture, du matériel) : son prix d'une unité. */
+    prixUnitaire: 'Prix unitaire (€)',
+    /** Sous le nom d'une carte : le prix de l'animal vivant, et son prix au kilo vif. */
+    parAnimal: (prix: string) => `${prix} € l’animal`,
+    parKgVif: (prix: string) => `${prix} € le kg vif`,
+    /** L'animal vivant : le prix de l'animal entier, et le prix au kilo vif d'un animal de réforme. */
+    prixAnimal: 'Prix de l’animal (€)',
+    prixVif: 'Prix au kilo vif (€ le kg)',
+    prixVifAide:
+      'Un animal vivant se vend à la tête (le prix de l’animal). Pour un animal de réforme vendu au poids vif, cochez « vendu au poids vif » dans la vente : ce prix au kilo est alors proposé.',
+    /** Changer l'article de compte : la liste (et sa catégorie) où il est rangé. */
+    compte: 'Compte (liste de l’inventaire)',
+    compteAide:
+      'Changer de compte range l’article dans une autre liste de l’inventaire (de l’immobilisation à la matière première, par exemple), avec son stock, son prix et ses achats.',
     prixLitre: 'Prix de vente (€ le litre)',
     tarifsParCategorie: 'Prix selon la catégorie de contact',
     tarifsAide: 'Un particulier et un professionnel ne paient pas le même prix. Laissé vide : le prix de vente ci-dessus.',
@@ -454,7 +468,7 @@ export const TEXTES_STOCK = {
     exempleEmballage: 'ex : Étiquette 8 cm',
     exempleMateriel: 'ex : Casserole 20 L',
   },
-  renommer: { titre: 'Modifier le nom', modifier: 'Modifier le nom de l’article' },
+  renommer: { titre: 'Modifier l’article', modifier: 'Modifier l’article' },
   conditionnement: {
     titre: 'Conditionnement',
     aide: 'À chaque vente d’un fromage ou d’un produit, le produit et ses emballages baissent tout seul.',

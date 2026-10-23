@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
+import { SelectField } from '@/shared/components/SelectField';
 import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
 import type { ChoixImage } from '@/features/stock/services/imagesArticles';
 import { ChampPrixParCategorie } from '@/features/stock/components/ChampPrixParCategorie';
@@ -28,13 +29,28 @@ interface Props {
   libelleLitres?: string;
   /** Le prix se compte au kilo (les lignes d'animaux de la viande). */
   parKg?: boolean;
+  /** Un article qui ne se vend pas (fourniture, matériel) : le champ est « Prix unitaire », sans tarifs par catégorie de contact. */
+  prixUnitaire?: boolean;
+  /** Un animal vivant : le prix de l'animal (`prix`) et, en plus, son prix au kilo vif (`prixVif`) pour un animal de réforme. */
+  avecPrixVif?: boolean;
+  prixVif?: number;
+  /** Les comptes (listes de l'inventaire) où l'article peut être rangé, et celui où il est : le choix le déplace. */
+  comptes?: { value: string; label: string }[];
+  compte?: string;
   /** Un libellé de prix particulier (le litre de lait, l'œuf) : il n'y a alors que le prix à modifier, sans nom à changer. */
   libellePrix?: string;
   /** Le dessin d'origine de la carte : quand il est donné (avec `cle`), la fenêtre propose de choisir une image à sa place. */
   emoji?: string;
   /** L'identifiant sous lequel l'image se range quand il diffère de `cle` (le lait n'a pas de tarifs par catégorie, mais une image). */
   cleImage?: string;
-  onValider: (nom: string, prix?: number, litres?: number, image?: ChoixImage) => void;
+  onValider: (
+    nom: string,
+    prix?: number,
+    litres?: number,
+    image?: ChoixImage,
+    /** Le prix au kilo vif, et le compte choisi quand il diffère de celui d'origine. */
+    plus?: { prixVif?: number; compte?: string },
+  ) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
   onSupprimer?: () => void;
   onAnnuler: () => void;
@@ -54,6 +70,11 @@ export function ArticleStockModal({
   avecLitres,
   libelleLitres,
   parKg,
+  prixUnitaire,
+  avecPrixVif,
+  prixVif,
+  comptes,
+  compte,
   libellePrix,
   emoji,
   cleImage,
@@ -64,6 +85,8 @@ export function ArticleStockModal({
   const [nomSaisi, setNomSaisi] = useState('');
   const [prixSaisi, setPrixSaisi] = useState('');
   const [litresSaisis, setLitresSaisis] = useState('');
+  const [prixVifSaisi, setPrixVifSaisi] = useState('');
+  const [compteSaisi, setCompteSaisi] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
   const [choixImage, setChoixImage] = useState<ChoixImage | null>(null);
   /** Les prix de l'article selon la catégorie de contact (particulier, professionnel…). */
@@ -83,6 +106,8 @@ export function ArticleStockModal({
       setNomSaisi(nom ?? '');
       setPrixSaisi(prix ? formatMontant(prix) : '');
       setLitresSaisis(litresParFromage ? String(litresParFromage).replace('.', ',') : '');
+      setPrixVifSaisi(prixVif ? formatMontant(prixVif) : '');
+      setCompteSaisi(compte ?? '');
       setErreur(null);
       setChoixImage(null);
     }
@@ -95,43 +120,78 @@ export function ArticleStockModal({
     if (prixSaisi.trim() && !(montant > 0)) return setErreur(T.prixInvalide);
     const litres = parseDecimal(litresSaisis);
     if (avecLitres && litresSaisis.trim() && !(litres > 0)) return setErreur(T.litresInvalide);
+    const montantVif = parseMontant(prixVifSaisi);
+    if (avecPrixVif && prixVifSaisi.trim() && !(montantVif > 0)) return setErreur(T.prixInvalide);
     onValider(
       nomSaisi.trim(),
       montant > 0 ? montant : undefined,
       litres > 0 ? litres : undefined,
       choixImage ?? undefined,
+      {
+        prixVif: avecPrixVif && montantVif > 0 ? montantVif : undefined,
+        compte: compteSaisi && compteSaisi !== compte ? compteSaisi : undefined,
+      },
     );
   };
+
+  const champNom = <FormField label={T.nom} required value={nomSaisi} onChangeText={setNomSaisi} />;
+  /** Le prix en un seul champ (pas de tarifs par catégorie de contact) : il se range à côté du nom, pour tenir en moins de place. */
+  const prixSimple = avecPrix && (prixUnitaire || !(cle && tarifs));
+  const champPrix = (
+    <FormField
+      label={libellePrix ?? (prixUnitaire ? T.prixUnitaire : parKg ? T.prixKg : avecPrixVif ? T.prixAnimal : T.prix)}
+      value={prixSaisi}
+      onChangeText={setPrixSaisi}
+      onBlur={() => parseMontant(prixSaisi) > 0 && setPrixSaisi(formatMontant(parseMontant(prixSaisi)))}
+      keyboardType="decimal-pad"
+      placeholder="0,00"
+    />
+  );
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onAnnuler}>
       <Pressable style={commonStyles.backdrop} onPress={onAnnuler}>
-        <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        {/* Dans une fenêtre peu haute, les champs défilent (sinon ils s'écrasent et seuls les boutons restent) ; le titre et les boutons ne bougent pas. */}
+        <Pressable style={[commonStyles.modalSheet, { maxHeight: '92%' }]} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{titre}</Text>
-          {libellePrix ? null : (
-            <FormField label={T.nom} required value={nomSaisi} onChangeText={setNomSaisi} />
+          <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={commonStyles.gap10} keyboardShouldPersistTaps="handled">
+          {!libellePrix && prixSimple ? (
+            <View style={commonStyles.row}>
+              <View style={commonStyles.flex2}>{champNom}</View>
+              <View style={commonStyles.flex1}>{champPrix}</View>
+            </View>
+          ) : (
+            <>
+              {libellePrix ? null : champNom}
+              {/* Un fromage ou une viande : le prix de vente et ceux des catégories de contact, en une seule ligne (catégorie, prix). */}
+              {avecPrix && !prixSimple && cle && tarifs ? (
+                <ChampPrixParCategorie
+                  article={cle}
+                  categories={categoriesClient()}
+                  tarifs={tarifs}
+                  prixDeVente={prixSaisi}
+                  onPrixDeVente={setPrixSaisi}
+                  parKg={parKg}
+                />
+              ) : avecPrix ? (
+                champPrix
+              ) : null}
+            </>
           )}
-          {/* Un fromage ou une viande : le prix de vente et ceux des catégories de contact, en une seule ligne (catégorie, prix). */}
-          {avecPrix && cle && tarifs ? (
-            <ChampPrixParCategorie
-              article={cle}
-              categories={categoriesClient()}
-              tarifs={tarifs}
-              prixDeVente={prixSaisi}
-              onPrixDeVente={setPrixSaisi}
-              parKg={parKg}
-            />
-          ) : avecPrix ? (
-            <FormField
-              label={libellePrix ?? (parKg ? T.prixKg : T.prix)}
-              value={prixSaisi}
-              onChangeText={setPrixSaisi}
-              onBlur={() =>
-                parseMontant(prixSaisi) > 0 && setPrixSaisi(formatMontant(parseMontant(prixSaisi)))
-              }
-              keyboardType="decimal-pad"
-              placeholder="0,00"
-            />
+          {avecPrixVif ? (
+            <>
+              <FormField
+                label={T.prixVif}
+                value={prixVifSaisi}
+                onChangeText={setPrixVifSaisi}
+                onBlur={() =>
+                  parseMontant(prixVifSaisi) > 0 && setPrixVifSaisi(formatMontant(parseMontant(prixVifSaisi)))
+                }
+                keyboardType="decimal-pad"
+                placeholder="0,00"
+              />
+              <Text style={commonStyles.note}>{T.prixVifAide}</Text>
+            </>
           ) : null}
           {avecLitres ? (
             <FormField
@@ -142,8 +202,15 @@ export function ArticleStockModal({
               placeholder="0"
             />
           ) : null}
+          {comptes && comptes.length > 0 ? (
+            <>
+              <SelectField label={T.compte} value={compteSaisi} onChange={setCompteSaisi} options={comptes} />
+              <Text style={commonStyles.note}>{T.compteAide}</Text>
+            </>
+          ) : null}
           {(cleImage ?? cle) && emoji ? <ChampImageArticle cle={(cleImage ?? cle)!} emoji={emoji} choix={choixImage} onChoix={setChoixImage} /> : null}
           {erreur ? <Text style={commonStyles.required}>{erreur}</Text> : null}
+          </ScrollView>
           <View style={commonStyles.row}>
             <Button
               style={commonStyles.flex1}

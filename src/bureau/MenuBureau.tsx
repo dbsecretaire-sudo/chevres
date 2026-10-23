@@ -118,6 +118,7 @@ export function menusParNom() {
       { label: C.tva.titre, route: ROUTES.TVA },
       { label: TEXTES.comptabilite.fiscalite.titre, route: ROUTES.FISCALITE },
       { label: TEXTES.settings.reglages.comptesPcg, route: ROUTES.COMPTES_PCG },
+      { label: TEXTES.comptesPcg.planGeneral.titre, route: ROUTES.PLAN_COMPTABLE },
       { label: C.reglages.titre, route: ROUTES.COMPTABILITE_REGLAGES },
       // Les écrans de l'inventaire : les icônes de l'en-tête des stocks.
       ...(inventaireAccessible()

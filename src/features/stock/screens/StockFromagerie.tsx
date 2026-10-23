@@ -50,6 +50,7 @@ import { effectifsVivants, type EffectifVivant } from '@/features/cheptel/reposi
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDeLaSection, listesAffichees, sectionsAffichees } from '@/features/stock/utils/structureStock';
+import { deplacerArticle, GENRES_DEPLACABLES, peutChangerDeCompte } from '@/features/stock/services/deplacement';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import {
   ajouterArticle,
@@ -59,6 +60,7 @@ import {
   cleArticle,
   definirLitresParFromage,
   definirPrixArticle,
+  definirPrixVifArticle,
   prixDesOeufs,
   enregistrerLaitJour,
   positionnerArticle,
@@ -74,6 +76,8 @@ import {
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
+import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { definirImageArticle, type ChoixImage } from '@/features/stock/services/imagesArticles';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
@@ -85,6 +89,7 @@ import {
   CLE_PRIX_OEUFS,
   FILTRE_STOCK_TOUT,
   GENRE_ARTICLE,
+  ROLE_VIANDE,
   NATURE_PAR_GENRE,
   NATURE_STOCK,
   ORIGINE_MOUVEMENT,
@@ -124,9 +129,16 @@ const TEXTES_AJOUT: Record<GenreAjoutable, { titre: string; exemple: string }> =
   [GENRE_ARTICLE.PERSONNALISE]: { titre: T.ajouter.article, exemple: T.ajouter.exempleArticle },
 };
 
-/** Les catégories où l'inventaire ajoute et supprime des articles : les immobilisations et les autres approvisionnements. */
+/**
+ * Les catégories où l'inventaire ajoute des articles : toutes, sauf les marchandises du bar (celles-ci ont leur propre écran). Dans les produits finis, on ajoute un
+ * fromage, une viande ou charcuterie, un plat préparé ou un savon ; dans les produits animaux, seulement dans les listes ajoutées (les lignes des animaux suivent le cheptel).
+ */
 const categorieAjoutable = (categorie: string | undefined): boolean =>
-  categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS || categorie === CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS;
+  categorie === CATEGORIE_INVENTAIRE.IMMOBILISATIONS ||
+  categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES ||
+  categorie === CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS ||
+  categorie === CATEGORIE_INVENTAIRE.PRODUITS_FINIS ||
+  categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX;
 
 /** Un fromage ou une viande se vend : il a un prix de vente. */
 const seVend = (cle: string): boolean =>
@@ -208,6 +220,8 @@ export default function StockFromagerie() {
   const [historiqueDe, setHistoriqueDe] = useState<ArticleAffiche | null>(null);
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
   const [renomme, setRenomme] = useState<ArticleAffiche | null>(null);
+  /** La boucle dont on change l'image (le crayon d'une carte de boucles : seulement l'image, ni nom ni prix). */
+  const [imageDe, setImageDe] = useState<{ cle: string; titre: string; emoji: string } | null>(null);
   /** Le litrage qu'on modifie (« nouveau » pour en noter un) ; la fenêtre est fermée quand il est absent. */
   const [prixLaitOuvert, setPrixLaitOuvert] = useState(false);
   const [prixOeufsOuvert, setPrixOeufsOuvert] = useState(false);
@@ -268,7 +282,12 @@ export default function StockFromagerie() {
   /** Le petit texte sous le nom d'un article : son prix de vente, ou le prix d'une unité d'une fourniture d'après ses achats ; la quantité négative s'y signale. */
   const sousLeNom = (a: ArticleAffiche): string | undefined => {
     const niveau = niveaux.get(a.cle) ?? 0;
-    const prix = a.prix
+    const vivant = roleDeLaViande(a.cle) === ROLE_VIANDE.VIVANT;
+    const prix = vivant
+      ? [a.prix ? T.articleModal.parAnimal(formatMontant(a.prix)) : undefined, a.prixVif ? T.articleModal.parKgVif(formatMontant(a.prixVif)) : undefined]
+          .filter(Boolean)
+          .join(' · ') || undefined
+      : a.prix
       ? roleDeLaViande(a.cle)
         ? T.parKg(formatMontant(a.prix))
         : formatMontant(a.prix)
@@ -340,7 +359,14 @@ export default function StockFromagerie() {
                 niveau={niveau}
                 sous={resume ? resume.resume : sousLeNom(a)}
                 selectionnee={prise === a.cle}
-                onRenommer={boucles ? undefined : () => setRenomme(a)}
+                libelleDuCrayon={boucles ? T.articleModal.image.modifier : undefined}
+                onRenommer={
+                  boucles
+                    ? piecesDisponibles()
+                      ? () => setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
+                      : undefined
+                    : () => setRenomme(a)
+                }
                 onLongPress={deplacable ? () => setPrise(a.cle) : undefined}
                 onPress={() => {
                   if (prise) {
@@ -399,19 +425,45 @@ export default function StockFromagerie() {
     charger();
   };
 
-  /**
-   * Seuls les articles des immobilisations et des autres approvisionnements (l'entretien et le matériel, pas les emballages) s'ajoutent et se suppriment dans
-   * l'inventaire, comme les listes ajoutées à ces catégories : les autres articles viennent des achats et des ventes.
-   */
-  const estAjoutable = (cle: string): boolean => {
-    const genre = genreDeLaCle(cle);
-    if (
-      [GENRE_ARTICLE.MATERIEL, GENRE_ARTICLE.BATIMENT, GENRE_ARTICLE.ENTRETIEN, GENRE_ARTICLE.EQUIPEMENT].some((g) => g === genre)
-    )
-      return true;
-    if (genre !== GENRE_ARTICLE.PERSONNALISE) return false;
-    const listeId = archive.articles.find((a) => a.id === cle.split(':')[1])?.listeId;
-    return categorieAjoutable((archive.listes ?? []).find((l) => l.id === listeId)?.categorie);
+  /** Tout article se supprime depuis son crayon (un article d'office est masqué), sauf les boucles, qui entrent par un achat. */
+  const estSupprimable = (cle: string): boolean => genreDeLaCle(cle) !== GENRE_ARTICLE.BOUCLE;
+
+  /** Les comptes où un article peut être rangé : les listes d'office des fournitures et des immobilisations, puis les listes ajoutées (une valeur « genre|liste »). */
+  const comptesPossibles = () => {
+    const deLaCle = (genre: GenreArticle, listeId?: string) => `${genre}|${listeId ?? ''}`;
+    // La catégorie de l'inventaire dit où l'article ira (immobilisation, matière première…) : elle suit le nom de chaque liste.
+    const categories = categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories);
+    const dansLaCategorie = (categorie: string) => {
+      const c = categories.find((x) => x.categorie === categorie);
+      return c ? ` · ${c.classe}. ${c.nom}` : '';
+    };
+    const officielles = lesSectionsAffichees
+      .filter(({ genre }) => !!genre && GENRES_DEPLACABLES.includes(genre) && genre !== GENRE_ARTICLE.PERSONNALISE)
+      .map(({ genre, titre, section, categorie }) => ({
+        value: deLaCle(genre as GenreArticle),
+        label: `${titre} (${COMPTE_PAR_SECTION_INVENTAIRE[section].numero})${dansLaCategorie(categorie)}`,
+      }));
+    const uniques = officielles.filter((o, i) => officielles.findIndex((x) => x.value === o.value) === i);
+    // Le compte actuel d'un produit ajouté (fromage, plat, emballage…) n'est pas parmi ceux des fournitures : il s'y ajoute, pour qu'on le reconnaisse.
+    const actuel = renomme ? compteDe(renomme) : undefined;
+    const genreActuel = renomme ? genreDeLaCle(renomme.cle) : undefined;
+    const section = lesSectionsAffichees.find((x) => x.genre === genreActuel);
+    const sansLeCompteActuel =
+      actuel && genreActuel !== GENRE_ARTICLE.PERSONNALISE && !uniques.some((u) => u.value === actuel)
+        ? [{ value: actuel, label: `${section?.titre ?? genreActuel} (${section ? COMPTE_PAR_SECTION_INVENTAIRE[section.section].numero : ''})${section ? dansLaCategorie(section.categorie) : ''}` }]
+        : [];
+    return [
+      ...sansLeCompteActuel,
+      ...uniques,
+      ...listesVisibles.map((l) => ({ value: deLaCle(GENRE_ARTICLE.PERSONNALISE, l.id), label: `${l.nom} (${l.compte})${dansLaCategorie(l.categorie)}` })),
+    ];
+  };
+  /** Le compte où est rangé l'article qu'on modifie (la même valeur « genre|liste »). */
+  const compteDe = (a: ArticleAffiche): string | undefined => {
+    const genre = genreDeLaCle(a.cle);
+    if (!peutChangerDeCompte(archive, a.cle)) return undefined;
+    const listeId = genre === GENRE_ARTICLE.PERSONNALISE ? archive.articles.find((x) => x.id === a.cle.split(':')[1])?.listeId : undefined;
+    return `${genre}|${listeId ?? ''}`;
   };
 
   const ouvrirAjout = (genre: GenreAjoutable, liste?: ListeInventaire) => {
@@ -428,15 +480,28 @@ export default function StockFromagerie() {
     charger();
   };
 
-  const renommer = async (nom: string, prix?: number, litres?: number, image?: ChoixImage) => {
+  const renommer = async (
+    nom: string,
+    prix?: number,
+    litres?: number,
+    image?: ChoixImage,
+    plus?: { prixVif?: number; compte?: string },
+  ) => {
     if (renomme) {
       if (image) await definirImageArticle(renomme.cle, image);
       if (nom) await renommerArticle(renomme.cle, nom);
-      // Seuls les fromages et les viandes se vendent : eux seuls ont un prix.
-      if (seVend(renomme.cle)) await definirPrixArticle(renomme.cle, prix);
+      // Un produit vendu a son prix de vente ; une fourniture ou du matériel, son prix unitaire.
+      await definirPrixArticle(renomme.cle, prix);
+      // Un animal vivant a aussi son prix au kilo vif (un animal de réforme vendu au poids).
+      if (roleDeLaViande(renomme.cle) === ROLE_VIANDE.VIVANT) await definirPrixVifArticle(renomme.cle, plus?.prixVif);
       // Un fromage garde aussi les litres de lait qu'il faut pour le faire.
       if (renomme.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`))
         await definirLitresParFromage(renomme.cle, litres);
+      // Changer de compte : en dernier, l'identifiant de l'article change avec son genre.
+      if (plus?.compte) {
+        const [genreCible, listeId] = plus.compte.split('|');
+        await deplacerArticle(renomme.cle, { genre: genreCible as GenreArticle, listeId: listeId || undefined });
+      }
     }
     setRenomme(null);
     charger();
@@ -462,7 +527,11 @@ export default function StockFromagerie() {
       .map(({ section, genre }): Option | null =>
         section === SECTION_STOCK.LAIT
           ? { label: T.laitJour.ajouter, icon: 'add-circle', onPress: () => setLaitOuvert('nouveau') }
-          : genre && genre !== GENRE_ARTICLE.BOUCLE && genre !== GENRE_ARTICLE.EMBALLAGE && categorieAjoutable(categorie)
+          : genre &&
+              genre !== GENRE_ARTICLE.BOUCLE &&
+              genre !== GENRE_ARTICLE.EMBALLAGE &&
+              section !== SECTION_STOCK.ANIMAUX &&
+              categorieAjoutable(categorie)
             ? { label: TEXTES_AJOUT[genre].titre, icon: 'add-circle', onPress: () => ouvrirAjout(genre) }
             : null,
       )
@@ -760,7 +829,7 @@ export default function StockFromagerie() {
         }
         onValider={valider}
         onSupprimer={
-          article && estAjoutable(article.cle)
+          article && estSupprimable(article.cle)
             ? () => {
                 setASupprimer(article);
                 setArticle(null);
@@ -793,7 +862,12 @@ export default function StockFromagerie() {
         cle={renomme?.cle}
         emoji={renomme ? emojiDeLArticle(genreDeLaCle(renomme.cle), renomme.libelle) : undefined}
         prix={renomme?.prix}
-        avecPrix={!!renomme && seVend(renomme.cle)}
+        avecPrix={!!renomme && genreDeLaCle(renomme.cle) !== GENRE_ARTICLE.BOUCLE}
+        prixUnitaire={!!renomme && !seVend(renomme.cle)}
+        avecPrixVif={!!renomme && roleDeLaViande(renomme.cle) === ROLE_VIANDE.VIVANT}
+        prixVif={renomme?.prixVif}
+        comptes={renomme && compteDe(renomme) ? comptesPossibles() : undefined}
+        compte={renomme ? compteDe(renomme) : undefined}
         avecLitres={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
         litresParFromage={renomme?.litresParFromage}
         libelleLitres={
@@ -801,19 +875,22 @@ export default function StockFromagerie() {
             ? T.articleModal.litresBrocciu
             : undefined
         }
-        parKg={!!renomme && roleDeLaViande(renomme.cle) !== undefined}
+        // Un animal vivant se vend à la tête (le prix de l'animal) ; un petit et un animal sur pied, au kilo.
+        parKg={!!renomme && roleDeLaViande(renomme.cle) !== undefined && roleDeLaViande(renomme.cle) !== ROLE_VIANDE.VIVANT}
         // Un produit fini ou animal : seul son prix de vente se modifie (ni nom, ni suppression).
         libellePrix={
           produitFiniModifie
-            ? renomme && roleDeLaViande(renomme.cle)
-              ? T.articleModal.prixKg
-              : T.articleModal.prix
+            ? renomme && roleDeLaViande(renomme.cle) === ROLE_VIANDE.VIVANT
+              ? T.articleModal.prixAnimal
+              : renomme && roleDeLaViande(renomme.cle)
+                ? T.articleModal.prixKg
+                : T.articleModal.prix
             : undefined
         }
         onValider={renommer}
         // Seuls les articles ajoutables se suppriment.
         onSupprimer={
-          renomme && estAjoutable(renomme.cle)
+          renomme && estSupprimable(renomme.cle)
             ? () => {
                 setASupprimer(renomme);
                 setRenomme(null);
@@ -822,6 +899,7 @@ export default function StockFromagerie() {
         }
         onAnnuler={() => setRenomme(null)}
       />
+      <ModaleImageArticle article={imageDe} onFermer={() => setImageDe(null)} />
       <ConfirmModal
         visible={!!aSupprimer}
         title={T.suppression.titre}

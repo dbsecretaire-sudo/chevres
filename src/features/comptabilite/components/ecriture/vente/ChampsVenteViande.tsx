@@ -568,6 +568,8 @@ export function ChampsVenteViande({ e }: Props) {
                 onChange={(v) => {
                   e.setVenduAuPoids(v);
                   e.setPrixPersonnalise(v);
+                  // Au poids vif, le prix au kilo vif de l'inventaire est proposé (à la tête, celui de l'animal) ; on peut le changer pour cette vente.
+                  e.setPrixUnitaireSaisi(v && choisie?.prixVif ? String(choisie.prixVif).replace('.', ',') : '');
                 }}
               />
               {e.venduAuPoids ? (

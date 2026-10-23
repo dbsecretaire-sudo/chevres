@@ -1,6 +1,7 @@
 import { lireBibliotheque } from '@/features/bibliotheque/repository';
 import { lireArchiveDossiers } from '@/features/dossiers/repository';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { lireArchiveCommercial } from '@/features/commercial/repository';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { Controle } from '@/features/exploitation/types';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
@@ -11,7 +12,7 @@ import { listDocumentsIdentification } from '@/features/identification/repositor
 
 /** Tous les fichiers joints de l'établissement : ceux des contenus des dossiers, les images des cartes du stock, les certificats des véhicules et les captures des trades, les analyses du contrôle laitier, les visites vétérinaires, les documents d'identification et les déclarations jointes au bilan annuel. */
 export async function toutesLesPieces(): Promise<PieceJointe[]> {
-  const [dossiers, trading, controles, visites, traitements, settings, identification, bibliotheque, ventes, factures, stock] = await Promise.all([
+  const [dossiers, trading, controles, visites, traitements, settings, identification, bibliotheque, ventes, factures, stock, commercial] = await Promise.all([
     lireArchiveDossiers(),
     lireArchiveTrading(),
     loadAllYears(CATEGORIE_STOCKAGE.CONTROLES) as Promise<Controle[]>,
@@ -23,11 +24,15 @@ export async function toutesLesPieces(): Promise<PieceJointe[]> {
     loadAllYears(CATEGORIE_STOCKAGE.VENTES),
     loadAllYears(CATEGORIE_STOCKAGE.FACTURES),
     lireArchiveStock(),
+    lireArchiveCommercial(),
   ]);
   return [
     ...bibliotheque.map((d) => d.piece),
     // Les images choisies pour les cartes du stock, et le verso du certificat d'immatriculation de chaque véhicule de la flotte.
     ...Object.values(stock.images ?? {}),
+    // Les pièces du dossier réglementaire de chaque savon et celles des démarches d'accueil du public (le cadre réglementaire).
+    ...Object.values(stock.dossiersSavons ?? {}).flatMap((d) => Object.values(d.etapes ?? {}).flatMap((e) => e.fichiers ?? [])),
+    ...Object.values(commercial.accueilPublic ?? {}).flatMap((e) => e.fichiers ?? []),
     ...(settings.exploitation?.flotte ?? []).flatMap((v) => (v.certificat ? [v.certificat] : [])),
     // Les rapports d'analyse du fromage et de la charcuterie.
     ...(settings.exploitation?.analysesProduits ?? []).flatMap((a) => a.fichiers ?? []),

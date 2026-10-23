@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
 import { definirImageArticle, type ChoixImage } from '@/features/stock/services/imagesArticles';
 import { Button } from '@/shared/components/Button';
@@ -22,11 +22,13 @@ export function ModaleImageArticle({
   return (
     <Modal visible={!!article} transparent animationType="fade" onRequestClose={fermer}>
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
-        <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[commonStyles.modalSheet, { maxHeight: '92%' }]} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{article?.titre}</Text>
-          {article ? (
-            <ChampImageArticle cle={article.cle} emoji={article.emoji} choix={choix} onChoix={setChoix} />
-          ) : null}
+          <ScrollView style={{ flexShrink: 1 }}>
+            {article ? (
+              <ChampImageArticle cle={article.cle} emoji={article.emoji} choix={choix} onChoix={setChoix} />
+            ) : null}
+          </ScrollView>
           <View style={commonStyles.row}>
             <Button
               style={commonStyles.flex1}

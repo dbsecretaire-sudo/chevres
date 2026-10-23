@@ -10,7 +10,7 @@ const TAILLE = 52;
 export function DessinDeCarte({ emoji, cle }: { emoji: string; cle?: string }) {
   const image = useImageDeLArticle(cle);
   const [perdue, setPerdue] = useState<string | null>(null);
-  // L'affichage sobre n'a pas de dessin.
+  // L'affichage sobre n'a ni dessin ni image (les images choisies sont celles des versions complètes, mobile et PC).
   if (afficheSobre()) return null;
   if (image && piecesDisponibles() && perdue !== image.id) {
     return (

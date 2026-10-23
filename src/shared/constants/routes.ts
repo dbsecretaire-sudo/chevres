@@ -211,6 +211,8 @@ export const ROUTES = {
     return modeEntreprise() ? ('/clients/nouveau' as const) : ('/comptabilite/clients/nouveau' as const);
   },
   COMPTES_PCG: '/comptabilite/comptes-pcg',
+  /** Le plan comptable général en consultation : tous les comptes et de quoi choisir en cas de doute. */
+  PLAN_COMPTABLE: '/comptabilite/plan-comptable',
   /** Les comptes du plan comptable, ouverts depuis un écran en cours : `retour` est l'adresse où la flèche de retour ramène ; `categorie` (une catégorie de l'inventaire) limite la liste aux comptes qu'elle autorise. */
   comptesPcgDepuis: (retour: string, categorie?: string) =>
     `/comptabilite/comptes-pcg?retour=${encodeURIComponent(retour)}${categorie ? `&categorie=${encodeURIComponent(categorie)}` : ''}` as const,

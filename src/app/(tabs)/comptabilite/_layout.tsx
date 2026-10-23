@@ -118,6 +118,7 @@ export default function ComptabiliteLayout() {
       />
       <Stack.Screen name="fournisseurs/[id]" options={{ title: TEXTES.commun.general.fournisseur }} />
       <Stack.Screen name="comptes-pcg/index" options={{ title: TEXTES.commun.general.comptesPcg }} />
+      <Stack.Screen name="plan-comptable" options={{ title: TEXTES.comptesPcg.planGeneral.titre }} />
       <Stack.Screen
         name="comptes-pcg/nouveau"
         options={{

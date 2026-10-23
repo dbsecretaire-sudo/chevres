@@ -26,6 +26,16 @@ export const TEXTES_COMPTES_PCG = {
     ajoutezDesComptesPcgPour:
       'Ajoutez des comptes PCG pour les retrouver rapidement dans une nouvelle écriture.',
   },
+  /** Le plan comptable général en consultation. */
+  planGeneral: {
+    titre: 'Plan comptable général',
+    lien: 'Plan comptable général (consulter)',
+    lienAide: 'Tous les comptes, avec de quoi choisir en cas de doute.',
+    rechercher: 'N° ou mot (ex : 616, assurance, carburant)',
+    intro: 'Pour consultation : choisissez le compte avec votre comptable en cas de doute. Les comptes de l’application sont dans « Comptes PCG ».',
+    classe: (numero: string, titre: string) => `Classe ${numero} · ${titre}`,
+    aucun: 'Aucun compte ne correspond.',
+  },
   numeroDejaEnregistre: 'Ce numéro de compte est déjà enregistré.',
   nouveauComptePcg: {
     suivi: { inventaire: 'Inventaire', service: 'Service' },
