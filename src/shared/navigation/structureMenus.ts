@@ -1,5 +1,5 @@
 import { actionsDuLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
-import { BOUTONS_DE_LA_FERME, ROUTE_DIRECTE } from '@/features/accueil/ferme/routesFerme';
+import { BOUTONS_DE_LA_FERME, ENTREES_RETIREES_DES_MENUS, ROUTE_DIRECTE } from '@/features/accueil/ferme/routesFerme';
 import { definitionDesMenus, menusParNom } from '@/bureau/MenuBureau';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
@@ -35,7 +35,9 @@ export function menusDeLaFerme(): DefinitionMenu[] {
   const deja = (entrees: Entree[]) => new Set(entrees.flatMap((e) => ('route' in e ? [e.route] : [])));
   /** Les entrées d'un ancien menu que la ferme ne montre pas déjà (un même écran ne se répète pas). */
   const autres = (menu: DefinitionMenu, dejaMontrees: Set<string>): Entree[] => {
-    const restes = (menu.items ?? []).filter((e) => 'route' in e && !dejaMontrees.has(e.route));
+    const restes = (menu.items ?? []).filter(
+      (e) => 'route' in e && !dejaMontrees.has(e.route) && !ENTREES_RETIREES_DES_MENUS.includes(e.route),
+    );
     return restes.length > 0 ? [{ separateur: true }, ...restes] : [];
   };
   const B = BOUTONS_DE_LA_FERME;

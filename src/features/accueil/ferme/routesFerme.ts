@@ -68,6 +68,26 @@ export const ROUTE_DIRECTE: Record<string, string> = {
 };
 
 /**
+ * Les pages que les anciens menus (Production, Commercial) proposaient encore à côté de celles de l'accueil, et qu'on n'y ajoute plus : chacune s'ouvre déjà d'un bouton
+ * ou d'un lien de l'accueil — les lots (fromages, viande, charcuterie), la laiterie (la production de lait), les analyses (le lait, le fromage, la charcuterie, les plats,
+ * les savons) et les fiches des clients (le chiffre d'affaires, les commandes, les circuits). Un test vérifie que le lien existe encore.
+ */
+export const ENTREES_RETIREES_DES_MENUS: readonly string[] = [
+  ROUTES.PRODUCTION_FROMAGES,
+  ROUTES.PRODUCTION_VIANDE,
+  ROUTES.PRODUCTION_CHARCUTERIE,
+  ROUTES.PRODUCTION_LAIT,
+  ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER),
+  ROUTES.analysesProduit('fromage'),
+  ROUTES.analysesProduit('charcuterie'),
+  ROUTES.analysesProduit('plat'),
+  ROUTES.analysesProduit('savon'),
+  ROUTES.COMMERCIAL_VENTES,
+  ROUTES.COMMERCIAL_COMMANDES,
+  ROUTES.COMMERCIAL_CIRCUITS,
+];
+
+/**
  * Les boutons de l'accueil « ferme » de chaque côté, dans l'ordre où l'accueil les montre : le nom de leur libellé, leur clé dans `ROUTE_DIRECTE`, ou leurs bulles
  * (la grange, les lots, fabriquer). Les menus du haut du téléphone et du mobile pour PC reprennent cette organisation : un seul plan pour l'accueil et pour les menus.
  */

@@ -19,6 +19,8 @@ const STYLE_COMPTABLE = `
   /* Une liste déroulante : posée sous son champ, sans voile sombre. */
   .fond-liste { background-color: transparent !important; justify-content: flex-start !important; align-items: flex-start !important; }
   .liste-attachee { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); border: 1px solid #777; margin: 0 !important; }
+  /* Le titre répète le libellé du champ : il disparaît de la liste attachée. */
+  .liste-attachee [data-liste="titre"] { display: none !important; }
   .carte-etroite { max-width: 720px !important; align-self: center !important; margin-left: auto !important; margin-right: auto !important; }
 `;
 const ID_STYLE_COMPTABLE = 'disposition-comptable';

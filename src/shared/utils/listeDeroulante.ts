@@ -5,6 +5,9 @@
  */
 export const LISTE_DEROULANTE = { dataSet: { liste: 'deroulante' } } as object;
 
+/** Le repère du titre d'une liste déroulante : attachée à son champ (qui porte déjà ce libellé au-dessus), la liste n'a pas à le répéter. */
+export const TITRE_LISTE_DEROULANTE = { dataSet: { liste: 'titre' } } as object;
+
 /** Le champ qui ouvre la liste, et la fenêtre où elle s'ouvre (en pixels de l'écran, avant zoom). */
 export interface MesuresListe {
   champ: { left: number; top: number; bottom: number; width: number };
