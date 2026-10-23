@@ -28,6 +28,8 @@ import { TRI_HISTORIQUE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { TableauSorties } from '@/features/cheptel/components/TableauSorties';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 type Tri = ValeurDe<typeof TRI_HISTORIQUE>;
 
@@ -49,6 +51,8 @@ function compareBoucle(a?: string, b?: string): number {
 
 export default function Historique() {
   const router = useRouter();
+  // Le poste de comptabilité : les sorties en tableau, classées d'un clic sur un titre.
+  const comptable = useDispositionComptable();
   /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
   const retour = useAdresseCourante();
   // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
@@ -102,6 +106,7 @@ export default function Historique() {
           disabled={annees.length === 0}
         />
       </View>
+      {comptable ? null : (
       <View style={styles.filtre}>
         <SelectField
           label={TEXTES.cheptel.historique.trierPar}
@@ -110,6 +115,7 @@ export default function Historique() {
           options={OPTIONS_TRI}
         />
       </View>
+      )}
       <SelectModal<string>
         visible={choixAnnee}
         titre={TEXTES.cheptel.suiviMouvements.annee}
@@ -121,6 +127,9 @@ export default function Historique() {
         onSelect={imprimerBordereaux}
         onClose={() => setChoixAnnee(false)}
       />
+      {comptable ? (
+        <TableauSorties animaux={chevres} ouvrirFiche={(id) => router.push(ROUTES.ficheChevreDepuis(id, retour))} vide={TEXTES.cheptel.historique.aucunHistorique} />
+      ) : (
       <FlatList
         data={triees}
         keyExtractor={(item) => item.id}
@@ -151,6 +160,7 @@ export default function Historique() {
           </LigneDeBloc>
         )}
       />
+      )}
     </Screen>
   );
 }

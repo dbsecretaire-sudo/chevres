@@ -458,7 +458,6 @@ export const TEXTES_PRODUCTION = {
       nouvelle: 'Nouvelle cotisation ou facture du groupement sanitaire',
       versement: 'Nouveau versement du groupement sanitaire',
       liens: {
-        suivi: { titre: 'Traitements', aide: 'Les soins donnés aux animaux et leurs délais d’attente : le même suivi que chez le vétérinaire.' },
         visites: {
           titre: 'Visites vétérinaires',
           aide: 'Les visites du vétérinaire (celles de ses factures), avec les rapports d’essais qu’il fait faire après son intervention (brucellose, paratuberculose, Capra’Sana…).',

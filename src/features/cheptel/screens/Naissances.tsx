@@ -24,9 +24,13 @@ import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { TableauNaissances } from '@/features/cheptel/components/TableauNaissances';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 export default function Naissances() {
   const router = useRouter();
+  // Le poste de comptabilité (Windows, affichage sobre) : les naissances en tableau.
+  const comptable = useDispositionComptable();
   /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
   const retour = useAdresseCourante();
   // L'espèce active : l'écran se recharge quand elle change, sans être recréé.
@@ -91,6 +95,13 @@ export default function Naissances() {
           <Text style={commonStyles.note}>{TEXTES.cheptel.naissances.repartition(repartition)}</Text>
         </View>
       ) : null}
+      {comptable ? (
+        <TableauNaissances
+          portees={affichees}
+          ouvrirFiche={(id) => router.push(ROUTES.ficheChevreDepuis(id, retour))}
+          vide={TEXTES.cheptel.naissances.aucuneNaissanceEnregistree}
+        />
+      ) : (
       <FlatList
         data={affichees}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}
@@ -134,6 +145,7 @@ export default function Naissances() {
           </LigneDeBloc>
         )}
       />
+      )}
       {/* Déclarer une naissance : le bouton + en bas à droite, sous le pouce. */}
       <Fab
         options={[

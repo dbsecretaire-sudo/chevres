@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { rapportsDeLaVisite, traitementsDeLaVisite } from '@/features/exploitation/services/visitesEtTraitements';
+import { facturesDuVeterinaire, rapportsDeLaVisite, traitementsDeLaVisite } from '@/features/exploitation/services/visitesEtTraitements';
+import type { Facture } from '@/features/comptabilite/types';
 import type { Traitement } from '@/features/exploitation/types';
 import type { DocumentGdsDepose } from '@/features/settings/settings';
 
@@ -29,6 +30,15 @@ describe('traitements d’une visite du vétérinaire', () => {
 
   it('aucun traitement lié : une liste vide (la page dit « Pas de traitement prescrit »)', () => {
     expect(traitementsDeLaVisite({ id: 'v1', lotId: 'lotX', date: '2026-01-01' }, traitements)).toEqual([]);
+  });
+});
+
+describe('visites du vétérinaire : ses factures', () => {
+  const facture = (id: string, date: string, extra: Partial<Facture> = {}): Facture => ({ id, date, type: 'recue', tiers: 'Cabinet', description: 'visite', montant: 80, categorieDepense: 'veterinaire', ...extra }) as Facture;
+
+  it('seules les dépenses du vétérinaire, de la plus récente à la plus ancienne', () => {
+    const factures = [facture('a', '2026-01-10'), facture('b', '2026-03-05'), facture('c', '2026-02-01', { categorieDepense: 'alimentation' }), facture('d', '2026-02-02', { type: 'emise' })];
+    expect(facturesDuVeterinaire(factures).map((f) => f.id)).toEqual(['b', 'a']);
   });
 });
 

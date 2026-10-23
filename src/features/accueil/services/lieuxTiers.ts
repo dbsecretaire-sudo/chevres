@@ -188,7 +188,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     recetteDuLieu: CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
     liens: [
       // Les traitements et les analyses du lait sont ceux du vétérinaire (les traitements) et de la laiterie (la qualité du lait) : les mêmes écrans.
-      { cle: 'suivi', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+      // Les traitements et les rapports d'essais sont avec les visites du vétérinaire (ses factures) : une seule entrée.
       // Les visites du vétérinaire sont celles de ses factures : la même liste que l'onglet Santé des contrôles, qui existe ainsi aussi ici.
       { cle: 'visites', icone: 'medical', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE) },
       { cle: 'documents', icone: 'document-text', route: ROUTES.DOCUMENTS_GDS },
