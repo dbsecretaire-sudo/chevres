@@ -7,6 +7,7 @@ import type { SelectOption } from '@/shared/components/SelectModal';
 import { colors } from '@/shared/theme/colors';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
 import { dansLaPlage, lirePlage } from '@/shared/utils/plage';
+import { LISTE_DEROULANTE } from '@/shared/utils/listeDeroulante';
 import { styles } from '@/shared/styles/components/SelectField.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -114,7 +115,7 @@ export function SelectModalMultiple<T extends string>({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={fermer}>
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()} {...LISTE_DEROULANTE}>
           <Text style={styles.sheetTitle}>{titre}</Text>
           {filtres ? <PucesDefilantes puces={filtres.puces} valeur={puce} onChoisir={setPuce} /> : null}
           <TextInput

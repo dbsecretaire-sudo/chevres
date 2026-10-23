@@ -129,7 +129,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       ? LABEL_CATEGORIE_RECETTE[form.categorieRecette]
       : ''
     : form.categorieDepense
-      ? LABEL_CATEGORIE_DEPENSE[form.categorieDepense]
+      ? (form.categoriePerso ?? LABEL_CATEGORIE_DEPENSE[form.categorieDepense])
       : '';
 
   /** Le montant : un seul champ, ou le total des lignes (alimentation, carburant, marchandises) qui le font. */

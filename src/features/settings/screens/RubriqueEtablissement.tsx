@@ -5,9 +5,8 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.settings.reglages;
@@ -15,8 +14,6 @@ const T = TEXTES.settings.reglages;
 /** Organisation › Mon établissement : ses informations et, pour un secrétariat, la structure de ses dossiers. */
 export default function RubriqueEtablissement() {
   const { settings, patchSettings } = useAppSettings();
-  // La structure type des dossiers ne sert qu'au secrétariat (dossiers clients).
-  const avecDossiersClients = activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE);
   return (
     <Screen>
       <BlocLignes>
@@ -36,14 +33,6 @@ export default function RubriqueEtablissement() {
           icone="document-attach"
           route={ROUTES.DOCUMENTS_IDENTIFICATION}
         />
-        {avecDossiersClients ? (
-          <LigneRubrique
-            titre={TEXTES.dossiers.structure.titre}
-            aide={T.aideStructure}
-            icone="folder-open"
-            route={ROUTES.STRUCTURE_DOSSIERS}
-          />
-        ) : null}
       </BlocLignes>
       {/* L'accueil de l'élevage : la ferme en images, ou la liste classique. */}
       {modeEntreprise() ? null : (

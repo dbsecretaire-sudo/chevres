@@ -1,6 +1,6 @@
 import { SelectField } from '@/shared/components/SelectField';
-import { OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
-import { LABEL_OBJET_ASSURANCE } from '@/shared/textes/libelles';
+import { useListesPerso } from '@/features/settings/hooks/useListesPerso';
+import { choixObjetsAssurance } from '@/features/settings/services/listesDeChoix';
 import { TEXTES } from '@/shared/textes';
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
 /** Ce qu'une facture d'assurance couvre : les bâtiments, les animaux ou un véhicule (dont la plaque se choisit alors). */
 export function ChampObjetAssurance({ value, onChange }: Props) {
   const T = TEXTES.flotte.objetAssurance;
+  const { listes } = useListesPerso();
   return (
     <SelectField
       label={T.label}
@@ -18,7 +19,8 @@ export function ChampObjetAssurance({ value, onChange }: Props) {
       onChange={onChange}
       options={[
         { value: '', label: T.aucun },
-        ...Object.values(OBJET_ASSURANCE).map((o) => ({ value: o, label: LABEL_OBJET_ASSURANCE[o] })),
+        // Les choix d'office (renommés ou masqués) et ceux de l'utilisateur ; le choix déjà fait reste proposé.
+        ...choixObjetsAssurance(listes.objetsAssurance, value).map((o) => ({ value: o.id, label: o.nom })),
       ]}
       aide={T.aide}
     />

@@ -237,6 +237,8 @@ export interface Facture {
    * choisi manuellement (les autres catégories ont un compte fixe, voir planComptable.ts).
    */
   compteManuel?: string;
+  /** Une dépense rangée dans une catégorie ajoutée par l'utilisateur (Organisation › Listes de choix) : son nom ; la catégorie est « autre » et le compte celui de la catégorie. */
+  categoriePerso?: string;
   /**
    * Pour une recette d'entreprise : sa nature pour la déclaration URSSAF (vente de marchandises, prestations commerciales ou
    * libérales) ; absente, elle se déduit de la catégorie.

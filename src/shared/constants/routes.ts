@@ -253,6 +253,7 @@ export const ROUTES = {
   ORGANISATION_DONNEES: '/organisation-donnees',
   ORGANISATION_REGLES: '/organisation-regles',
   ORGANISATION_TIERS: '/organisation-tiers',
+  ORGANISATION_LISTES: '/organisation-listes',
   ORGANISATION_CATEGORIES_CLIENT: '/organisation-categories-client',
   ORGANISATION_CATEGORIES_TIERS: '/organisation-categories-tiers',
   EXPORT_DONNEES: '/export-donnees',

@@ -63,16 +63,25 @@ import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 import { optionFournisseur } from '@/features/contacts/services/optionsContacts';
+import { useListesPerso } from '@/features/settings/hooks/useListesPerso';
+import type { ListePerso } from '@/features/settings/services/listesPerso';
 
-/** Les catégories proposées : celles d'une entreprise, ou celles d'un élevage. */
-const optionsCategorieDepense = (fournisseur: Fournisseur | undefined) => {
+/**
+ * Les catégories proposées : celles d'une entreprise, ou celles d'un élevage (sauf celles que l'utilisateur a masquées), puis les siennes (Organisation › Listes de choix).
+ * La catégorie déjà choisie reste proposée même masquée.
+ */
+const optionsCategorieDepense = (fournisseur: Fournisseur | undefined, perso: ListePerso | undefined, choisie: string) => {
   const toutes = categoriesDepenseDuMode();
   const permises = toutes.filter((value) => categorieDepenseAutorisee(fournisseur, value));
+  const masques = perso?.masques ?? [];
   // Aucune des dépenses permises n'existe dans ce mode (une activité financière, par exemple) : le choix reste entier.
-  return (permises.length > 0 ? permises : toutes).map((value) => ({
-    value: value as CategorieDepense,
-    label: LABEL_CATEGORIE_DEPENSE[value],
-  }));
+  const deLApplication = (permises.length > 0 ? permises : toutes)
+    .filter((value) => !masques.includes(value) || value === choisie)
+    .map((value) => ({ value: value as string, label: LABEL_CATEGORIE_DEPENSE[value] }));
+  const deLUtilisateur = (perso?.ajoutes ?? [])
+    .filter((a) => !masques.includes(a.id) || a.id === choisie)
+    .map((a) => ({ value: a.id, label: a.nom }));
+  return [...deLApplication, ...deLUtilisateur];
 };
 
 /** Champs d'un débit (facture reçue) : catégorie, fournisseur, TVA et détail des montants. */
@@ -179,6 +188,19 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
 /** La seconde étape d'une dépense : la catégorie, ce qui est acheté (le détail), la TVA et le montant. */
 export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
   const router = useRouter();
+  const { listes } = useListesPerso();
+  const personnalisees = listes.categoriesDepense;
+  /** La catégorie de l'utilisateur déjà choisie (son identifiant), retrouvée par son nom ; sinon la catégorie d'office. */
+  const categoriePersoChoisie = e.categoriePerso ? (personnalisees?.ajoutes?.find((a) => a.nom === e.categoriePerso)?.id ?? '') : '';
+  const categorieChoisie: string = categoriePersoChoisie || e.categorieDepense;
+  const choisirCategorie = (valeur: string) => {
+    const perso = personnalisees?.ajoutes?.find((a) => a.id === valeur);
+    if (!perso) return e.changerCategorieDepense(valeur as CategorieDepense);
+    // Une catégorie de l'utilisateur : une dépense « autre » sur le compte qu'il lui a donné.
+    e.changerCategorieDepense(CATEGORIE_DEPENSE.AUTRE);
+    if (perso.compte) e.setCompteDepenseAutre(perso.compte);
+    e.setCategoriePerso(perso.nom);
+  };
   const estAlimentation = e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   const estProduction = e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
   const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
@@ -190,10 +212,10 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
       <SectionForm>
         <ChampCategorieCompte
           label={TEXTES.comptabilite.nouvelleEcriture.categorieDeDepense}
-          value={e.categorieDepense}
-          onChange={e.changerCategorieDepense}
-          options={optionsCategorieDepense(e.fournisseurSelectionne)}
-          demanderCompte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE}
+          value={categorieChoisie}
+          onChange={choisirCategorie}
+          options={optionsCategorieDepense(e.fournisseurSelectionne, personnalisees, categorieChoisie)}
+          demanderCompte={e.categorieDepense === CATEGORIE_DEPENSE.AUTRE && !e.categoriePerso}
           compte={e.compteDepenseAutre}
           onCompteChange={(numero) => {
             e.setCompteDepenseAutre(numero);

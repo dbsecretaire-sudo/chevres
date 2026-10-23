@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ListePerso } from '@/features/settings/services/listesPerso';
 import type { INVESTISSEMENT } from '@/shared/constants/economies';
 import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
@@ -355,6 +356,8 @@ export interface InfosExploitation {
   accueilClassique?: boolean;
   /** Partenariats (agritourisme) : les catégories de tiers cochées, dont les contacts rejoignent la page (en plus de l'office de tourisme). */
   categoriesPartenariats?: string[];
+  /** Les listes de choix que l'utilisateur personnalise (voir listesPerso) : ce que couvre une assurance, les catégories de dépense. */
+  listesPerso?: { objetsAssurance?: ListePerso; categoriesDepense?: ListePerso };
   /**
    * Le paramétrage du cheptel : les coefficients UGB choisis par espèce (à défaut ceux d'UGB_PAR_DEFAUT) et, pour chaque prime
    * (PRIMES), si elle compte dans la prime prévisionnelle, son taux en euros et ce sur quoi il s'applique (par UGB, par animal ou par hectare ; à défaut, la base d'office de la prime) ; `nom` renomme une aide d'office.

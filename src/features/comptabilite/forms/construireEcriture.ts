@@ -113,6 +113,8 @@ export interface SaisieEcriture {
   typeAideLibre: string;
   tauxImpositionLibre: string;
   compteDepenseAutre: string;
+  /** Le nom de la catégorie de dépense ajoutée par l'utilisateur, quand c'est elle qui est choisie (sinon vide). */
+  categoriePerso: string;
   compteRecetteAutre: string;
   tauxTvaVente: string;
   tauxTvaAchat: string;
@@ -501,6 +503,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
         : undefined,
       lignesCarburant,
       natureUrssaf: estEmise && s.natureUrssaf ? (s.natureUrssaf as NatureUrssaf) : undefined,
+      categoriePerso: estRecue && s.categorieDepense === CATEGORIE_DEPENSE.AUTRE ? s.categoriePerso || undefined : undefined,
       compteManuel:
         estRecue && s.categorieDepense === CATEGORIE_DEPENSE.AUTRE
           ? s.compteDepenseAutre

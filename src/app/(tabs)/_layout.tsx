@@ -239,6 +239,7 @@ function Onglets() {
       {[
         ['organisation-etablissement', TEXTES.settings.reglages.sectionEtablissement, ROUTES.REGLAGES],
         ['organisation-tiers', TEXTES.settings.reglages.sectionTiers, ROUTES.REGLAGES],
+        ['organisation-listes', TEXTES.settings.listesChoix.titre, ROUTES.REGLAGES],
         [
           'organisation-categories-client',
           TEXTES.settings.reglages.sectionCategoriesClient,

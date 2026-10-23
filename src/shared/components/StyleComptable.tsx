@@ -15,6 +15,9 @@ const STYLE_COMPTABLE = `
   .modale-fenetre { background-color: rgba(0, 0, 0, 0.35) !important; align-items: center !important; justify-content: center !important; }
   .modale-fenetre > div { flex: none !important; width: min(760px, 94vw) !important; height: min(640px, 88vh) !important; border: 1px solid #777; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35); overflow: hidden; }
   /* Un panneau d'une modale transparente (historique d'un article…) : pas plus large qu'une fenêtre. */
+  /* Une liste déroulante : posée sous son champ, sans voile sombre. */
+  .fond-liste { background-color: transparent !important; justify-content: flex-start !important; align-items: flex-start !important; }
+  .liste-attachee { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); border: 1px solid #777; margin: 0 !important; }
   .carte-etroite { max-width: 720px !important; align-self: center !important; margin-left: auto !important; margin-right: auto !important; }
 `;
 const ID_STYLE_COMPTABLE = 'disposition-comptable';
@@ -22,9 +25,50 @@ const ID_STYLE_COMPTABLE = 'disposition-comptable';
 /** Le gris-blanc des fonds de page : un fond qui ne l'est pas n'est pas un panneau. */
 const estBlanc = (couleur: string) => couleur === 'rgb(255, 255, 255)';
 
+/** Le champ (ou le bouton) touché en dernier : une liste déroulante s'ouvre juste dessous. */
+let declencheur: DOMRect | null = null;
+
+const memoriserLeDeclencheur = (evenement: Event) => {
+  const cible = (evenement.target as Element | null)?.closest?.('[tabindex="0"], [role="button"]');
+  // Un appui dans une liste déroulante (le choix d'une option) ne change pas le champ d'où elle s'est ouverte.
+  if (!cible || cible.closest('[data-liste]')) return;
+  declencheur = cible.getBoundingClientRect();
+};
+
+/** Pose la liste juste sous le champ qui l'a ouverte, de sa largeur (au moins 260), ou au-dessus s'il n'y a pas la place dessous. */
+function attacherLaListe(feuille: HTMLElement, mesure: DOMRect): void {
+  // Un zoom de la page (CSS, dans un navigateur) change l'échelle des mesures ; le zoom de la fenêtre Windows, lui, est déjà pris en compte.
+  const zoom = Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+  const champ = { left: mesure.left / zoom, top: mesure.top / zoom, bottom: mesure.bottom / zoom, width: mesure.width / zoom };
+  const hauteurFenetre = window.innerHeight / zoom;
+  const largeurFenetre = window.innerWidth / zoom;
+  const largeur = Math.max(champ.width, 260);
+  const dessous = hauteurFenetre - champ.bottom - 8;
+  const auDessus = dessous < 220 && champ.top > dessous;
+  const place = Math.max(160, Math.min(420, auDessus ? champ.top - 8 : dessous));
+  const s = feuille.style;
+  s.setProperty('position', 'fixed', 'important');
+  s.setProperty('left', `${Math.max(8, Math.min(champ.left, largeurFenetre - largeur - 8))}px`, 'important');
+  s.setProperty('width', `${largeur}px`, 'important');
+  s.setProperty('max-width', 'none', 'important');
+  s.setProperty('max-height', `${place}px`, 'important');
+  if (auDessus) s.setProperty('bottom', `${hauteurFenetre - champ.top + 2}px`, 'important');
+  else s.setProperty('top', `${champ.bottom + 2}px`, 'important');
+  s.setProperty('margin', '0', 'important');
+  feuille.classList.add('liste-attachee');
+  feuille.parentElement?.classList.add('fond-liste');
+  feuille.dataset.attachee = '1';
+}
+
 /** Marque les modales : une page entière (fond opaque) devient une fenêtre ; dans une modale transparente, le premier grand panneau blanc est rétréci. */
 function marquerLesModales(): void {
   document.querySelectorAll<HTMLElement>('[aria-modal="true"]').forEach((racine) => {
+    // Une liste déroulante : attachée à son champ (sans le fond sombre ni le centrage des fenêtres).
+    const liste = racine.querySelector<HTMLElement>('[data-liste="deroulante"]');
+    if (liste) {
+      if (declencheur && !liste.dataset.attachee) attacherLaListe(liste, declencheur);
+      return;
+    }
     if (racine.classList.contains('modale-fenetre')) return;
     if (estBlanc(getComputedStyle(racine).backgroundColor)) {
       racine.classList.add('modale-fenetre');
@@ -62,7 +106,9 @@ export function StyleComptable() {
       });
     });
     observateur.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('pointerdown', memoriserLeDeclencheur, true);
     return () => {
+      document.removeEventListener('pointerdown', memoriserLeDeclencheur, true);
       observateur.disconnect();
       style.remove();
     };

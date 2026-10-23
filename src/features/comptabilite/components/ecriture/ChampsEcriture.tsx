@@ -82,6 +82,7 @@ export function ChampCategorieCompte<T extends string>({
     <SelectField
       label={label}
       required
+      searchable
       value={value}
       onChange={onChange}
       options={options}

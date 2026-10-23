@@ -260,6 +260,8 @@ export function useNouvelleEcriture(
   const [compteDepenseAutre, setCompteDepenseAutre] = useState(
     COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero,
   );
+  /** Le nom de la catégorie de dépense ajoutée par l'utilisateur, quand c'est elle qui est choisie. */
+  const [categoriePerso, setCategoriePerso] = useState('');
   // Ce qui se lit à chaque ouverture : fournisseurs, clients, comptes, listes de l'inventaire.
   const { fournisseurs, clients, comptes, comptesInventaire, versionGroupes } = useDonneesDeReference();
   const [fournisseurId, setFournisseurId] = useState('');
@@ -489,6 +491,7 @@ export function useNouvelleEcriture(
 
   const changerCategorieDepense = (v: CategorieDepense) => {
     setCategorieDepense(v);
+    setCategoriePerso('');
     setStockArticle('');
     setStockQuantite(undefined);
     setBouclesDebut('');
@@ -698,6 +701,7 @@ export function useNouvelleEcriture(
         typeAideLibre,
         tauxImpositionLibre,
         compteDepenseAutre,
+        categoriePerso,
         compteRecetteAutre,
         tauxTvaVente,
         tauxTvaAchat,
@@ -888,6 +892,8 @@ export function useNouvelleEcriture(
     setTauxTvaAchat,
     compteDepenseAutre,
     setCompteDepenseAutre,
+    categoriePerso,
+    setCategoriePerso,
     optionsCompteDepense,
     fournisseurs,
     fournisseurId,

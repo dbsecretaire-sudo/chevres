@@ -151,7 +151,7 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
       libelleCategorie: f.categorieRecette
         ? LABEL_CATEGORIE_RECETTE[f.categorieRecette]
         : f.categorieDepense
-          ? LABEL_CATEGORIE_DEPENSE[f.categorieDepense]
+          ? (f.categoriePerso ?? LABEL_CATEGORIE_DEPENSE[f.categorieDepense])
           : undefined,
       termes: termesDeFacture(f),
       volet: f.voletCooperative,

@@ -4,6 +4,7 @@ import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native'
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { colors } from '@/shared/theme/colors';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
+import { LISTE_DEROULANTE } from '@/shared/utils/listeDeroulante';
 import { styles } from '@/shared/styles/components/SelectField.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -134,7 +135,7 @@ export function SelectModal<T extends string>({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={fermer}>
       <Pressable style={commonStyles.backdrop} onPress={fermer}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()} {...LISTE_DEROULANTE}>
           {/* Une liste en groupes porte déjà ses titres : celui de la fenêtre ferait doublon. */}
           {options.some((o) => o.groupe) && !avecPuces && !parCategories ? null : (
             <Text style={styles.sheetTitle}>{titre}</Text>

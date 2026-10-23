@@ -13,6 +13,7 @@ import type { PeriodiciteAssurance } from '@/features/settings/settings';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { nomObjetAssurance } from '@/features/settings/services/listesDeChoix';
 import { propositionsDeContrats } from '@/features/comptabilite/services/contratsAssurance';
 import type { Facture } from '@/features/comptabilite/types';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -103,7 +104,9 @@ export default function ReglagesTresorerie() {
       .then(setFactures)
       .catch(() => undefined);
   }, []);
-  const propositions = propositionsDeContrats(factures, infos?.flotte ?? [], saisie.contrats, todayISO());
+  const propositions = propositionsDeContrats(factures, infos?.flotte ?? [], saisie.contrats, todayISO(), (objet) =>
+    nomObjetAssurance(objet, infos?.listesPerso?.objetsAssurance),
+  );
   const [contratASupprimer, setContratASupprimer] = useState<string | null>(null);
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
   /** L'emprunt déplié : tous sont enroulés au départ, un seul est visible à la fois. */

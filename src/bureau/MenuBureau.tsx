@@ -2,7 +2,8 @@ import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ROUTES } from '@/shared/constants/routes';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
 import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
@@ -130,7 +131,7 @@ export function menusParNom() {
     label: TEXTES.navigation.layout.reglages,
     items: [
       { label: TEXTES.settings.reglages.sectionEtablissement, route: ROUTES.ORGANISATION_ETABLISSEMENT },
-      { label: TEXTES.dossiers.structure.titre, route: ROUTES.STRUCTURE_DOSSIERS },
+      { label: TEXTES.settings.listesChoix.titre, route: ROUTES.ORGANISATION_LISTES },
       { separateur: true },
       { label: TEXTES.settings.reglages.sectionTiers, route: ROUTES.ORGANISATION_TIERS },
       {
@@ -138,6 +139,10 @@ export function menusParNom() {
         route: ROUTES.ORGANISATION_CATEGORIES_CLIENT,
       },
       { label: TEXTES.settings.reglages.sectionCategoriesTiers, route: ROUTES.ORGANISATION_CATEGORIES_TIERS },
+      // La structure des dossiers ne sert qu'au secrétariat (les dossiers de ses clients) : pas pour une exploitation agricole.
+      ...(activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE)
+        ? [{ label: TEXTES.dossiers.structure.titre, route: ROUTES.STRUCTURE_DOSSIERS }]
+        : []),
       { separateur: true },
       { label: TEXTES.settings.reglages.sectionDonnees, route: ROUTES.ORGANISATION_DONNEES },
       { label: TEXTES.settings.reglages.export, route: ROUTES.EXPORT_DONNEES },

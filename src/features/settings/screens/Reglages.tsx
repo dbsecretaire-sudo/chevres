@@ -28,6 +28,12 @@ export default function Reglages() {
           route={ROUTES.ORGANISATION_ETABLISSEMENT}
         />
         <LigneRubrique
+          titre={TEXTES.settings.listesChoix.titre}
+          aide={T.aideListesChoix}
+          icone="list"
+          route={ROUTES.ORGANISATION_LISTES}
+        />
+        <LigneRubrique
           titre={T.sectionTiers}
           aide={T.aideRubriqueTiers}
           icone="person"

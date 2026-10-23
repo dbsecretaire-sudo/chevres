@@ -1,3 +1,4 @@
+import { nomObjetAssurance } from '@/features/settings/services/listesDeChoix';
 import { useEffect, useState } from 'react';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { libelleVehicule, vehiculeDe } from '@/features/exploitation/services/flotte';
@@ -14,7 +15,6 @@ import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/d
 import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_CATEGORIE_DEPENSE,
-  LABEL_OBJET_ASSURANCE,
   LABEL_VOLET_COOPERATIVE,
   LABEL_RUBRIQUE_MARCHANDISE,
   LABEL_NATURE_URSSAF,
@@ -118,7 +118,7 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
       {facture.categorieDepense ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.factureLecture.categorieDeDepenseDeuxPoints}
-          {LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
+          {facture.categoriePerso ?? LABEL_CATEGORIE_DEPENSE[facture.categorieDepense] ?? facture.categorieDepense}
         </Text>
       ) : null}
       {facture.motif ? (
@@ -134,7 +134,7 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
       ) : null}
       {facture.objetAssurance ? (
         <Text style={commonStyles.line}>
-          {TEXTES.flotte.objetAssurance.label} : {LABEL_OBJET_ASSURANCE[facture.objetAssurance as keyof typeof LABEL_OBJET_ASSURANCE] ?? facture.objetAssurance}
+          {TEXTES.flotte.objetAssurance.label} : {nomObjetAssurance(facture.objetAssurance, settings.exploitation?.listesPerso?.objetsAssurance)}
         </Text>
       ) : null}
       {vehicule ? (

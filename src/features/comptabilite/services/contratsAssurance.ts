@@ -51,6 +51,8 @@ export function propositionsDeContrats(
   vehicules: readonly Pick<Vehicule, 'id' | 'plaque' | 'actif' | 'assuranceResilieeLe'>[],
   contrats: readonly Pick<ContratAssurance, 'source'>[],
   aujourdhui: string,
+  /** Le nom de ce qu'une assurance couvre (les choix personnalisés de l'utilisateur) ; à défaut, les noms d'office. */
+  nomDeLObjet: (objet: string) => string = (objet) => LABEL_OBJET_ASSURANCE[objet as keyof typeof LABEL_OBJET_ASSURANCE] ?? objet,
 ): PropositionContrat[] {
   const plaque = (id: string | undefined): string | undefined => vehicules.find((v) => v.id === id)?.plaque;
   const groupes = new Map<string, Facture[]>();
@@ -75,7 +77,7 @@ export function propositionsDeContrats(
     const couvre = vehiculeId
       ? `Véhicule ${plaque(vehiculeId) ?? ''}`.trim()
       : objet
-        ? (LABEL_OBJET_ASSURANCE[objet as keyof typeof LABEL_OBJET_ASSURANCE] ?? objet)
+        ? nomDeLObjet(objet)
         : 'Assurance';
     propositions.push({
       cle,
