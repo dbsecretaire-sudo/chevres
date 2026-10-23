@@ -5,30 +5,28 @@ import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 import { changerAffichage } from '@/bureau/changerAffichage';
 import { definitionDesMenus } from '@/bureau/MenuBureau';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
-import { BandeauFerme } from '@/features/accueil/ferme/BandeauFerme';
-import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
-import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
+import { BarreOutilsComptable } from '@/shared/components/BarreOutilsComptable';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { estLaPageOuverte, type ParametresDePage } from '@/shared/navigation/pageOuverte';
+import { routeLaPlusPrecise, type ParametresDePage } from '@/shared/navigation/pageOuverte';
 import { menusDeLaFerme } from '@/shared/navigation/structureMenus';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
+import { changerTailleTexte, lireTailleTexte, tailleVoisine } from '@/shared/utils/tailleTexte';
 
 /** La largeur du menu en arbre, à gauche. */
 const LARGEUR_ARBRE = 250;
 /** La largeur de la zone des écrans : au-delà, un écran reste centré (un tableau n'a pas besoin de s'étirer sur un écran géant). */
 const LARGEUR_MAX_ZONE = 1500;
-/** La largeur du bandeau de la ferme (la maison, le solde, les boucles, les rappels) dans la barre d'outils : il rétrécit jusqu'au minimum, puis passe à la ligne. */
-const LARGEUR_BANDEAU_MIN = 320;
-const LARGEUR_BANDEAU_MAX = 420;
 
-/** Le menu contient-il la page ouverte ? */
-const contient = (menu: DefinitionMenu, adresse: string, parametres: ParametresDePage): boolean =>
-  (menu.route ? estLaPageOuverte(menu.route, adresse, parametres) : false) ||
-  (menu.items ?? []).some((e) => 'route' in e && estLaPageOuverte(e.route, adresse, parametres));
+/** Les routes d'un menu : la sienne, ou celles de ses écrans. */
+const routesDuMenu = (menu: DefinitionMenu): string[] => [
+  ...(menu.route ? [menu.route] : []),
+  ...(menu.items ?? []).flatMap((e) => ('route' in e ? [e.route] : [])),
+];
 
 /**
  * Le menu en arbre de la disposition « comptable » : les menus de l'application (l'accueil de la ferme, la comptabilité, les contacts, l'organisation…) comme des dossiers
@@ -42,18 +40,27 @@ function ArbreDesMenus() {
   const avecPlanDeLaFerme = !modeEntreprise() && !settings.exploitation?.accueilClassique;
   const menus = avecPlanDeLaFerme ? menusDeLaFerme() : definitionDesMenus();
   // Le menu de la page ouverte est déplié d'office (on y arrive par un bouton de l'accueil, un rappel…) ; un appui sur un dossier le plie ou en déplie un autre, pour cette page.
-  const dossierOuvert = menus.find((m) => contient(m, adresse, parametres))?.label ?? null;
+  // Une seule entrée est la page ouverte : la plus précise (l'accueil de l'atelier, pas l'accueil tout court).
+  const courante = routeLaPlusPrecise(menus.flatMap(routesDuMenu), adresse, parametres);
+  const dossierOuvert = courante ? (menus.find((m) => routesDuMenu(m).includes(courante))?.label ?? null) : null;
   const [choix, setChoix] = useState<{ adresse: string; menu: string | null } | null>(null);
   const ouvert = choix?.adresse === adresse ? choix.menu : dossierOuvert;
   const setOuvert = (menu: string | null) => setChoix({ adresse, menu });
+  const [taille, setTaille] = useState(lireTailleTexte);
+  const choisirTaille = (sens: 1 | -1) => {
+    const suivante = tailleVoisine(taille, sens);
+    setTaille(suivante);
+    changerTailleTexte(suivante).catch(() => undefined);
+  };
   const autresAffichages: ModeAffichage[] = estBureau()
     ? Object.values(AFFICHAGE).filter((mode) => mode !== modeAffichage)
     : [];
   return (
+    <View style={styles.arbreColonne}>
     <ScrollView style={styles.arbre} contentContainerStyle={styles.arbreContenu}>
       {menus.map((menu) => {
         const deplie = ouvert === menu.label;
-        const actif = !menu.items && menu.route ? estLaPageOuverte(menu.route, adresse, parametres) : false;
+        const actif = !menu.items && !!menu.route && menu.route === courante;
         return (
           <View key={menu.label}>
             <Pressable
@@ -79,12 +86,12 @@ function ArbreDesMenus() {
                   ) : (
                     <Pressable
                       key={`${item.route}-${i}`}
-                      style={({ pressed }) => [styles.page, estLaPageOuverte(item.route, adresse, parametres) && styles.actif, pressed && styles.appuye]}
+                      style={({ pressed }) => [styles.page, item.route === courante && styles.actif, pressed && styles.appuye]}
                       onPress={() => router.push(item.route as never)}
                       accessibilityRole="button"
-                      accessibilityState={{ selected: estLaPageOuverte(item.route, adresse, parametres) }}
+                      accessibilityState={{ selected: item.route === courante }}
                     >
-                      <Text style={[styles.pageTexte, estLaPageOuverte(item.route, adresse, parametres) && styles.pageCourante]} numberOfLines={2}>
+                      <Text style={[styles.pageTexte, item.route === courante && styles.pageCourante]} numberOfLines={2}>
                         {item.label}
                       </Text>
                     </Pressable>
@@ -94,6 +101,16 @@ function ArbreDesMenus() {
           </View>
         );
       })}
+    </ScrollView>
+      <View style={styles.pied}>
+      {/* La taille du texte : tout grandit ou rapetisse ensemble, partout. */}
+      <View style={styles.taille}>
+        <Text style={styles.affichageTexte}>Taille du texte : {Math.round(taille * 100)} %</Text>
+        <View style={styles.tailleBoutons}>
+          <BoutonPlat libelle="A −" accessibilityLabel="Réduire le texte" onPress={() => choisirTaille(-1)} />
+          <BoutonPlat libelle="A +" accessibilityLabel="Agrandir le texte" onPress={() => choisirTaille(1)} />
+        </View>
+      </View>
       {autresAffichages.map((mode, i) => (
         <Pressable
           key={mode}
@@ -104,23 +121,7 @@ function ArbreDesMenus() {
           <Text style={styles.affichageTexte}>{TEXTES.navigation.affichage[mode]}</Text>
         </Pressable>
       ))}
-    </ScrollView>
-  );
-}
-
-/**
- * La barre d'outils de la disposition « comptable », au-dessus de tous les écrans : l'année, l'espèce, le didacticiel, l'enregistrement, puis le bandeau de la ferme (la
- * maison, le solde, les boucles, les rappels).
- */
-function BarreDOutils() {
-  const [rappelsOuverts, setRappelsOuverts] = useState(false);
-  return (
-    <View style={styles.outils}>
-      <BarreHauteFerme sansMenus />
-      <View style={styles.bandeau}>
-        <BandeauFerme onRappels={() => setRappelsOuverts(true)} />
       </View>
-      <FeuilleRappels visible={rappelsOuverts} onFermer={() => setRappelsOuverts(false)} />
     </View>
   );
 }
@@ -136,7 +137,7 @@ export function DispositionComptable({ children }: PropsWithChildren) {
         <ArbreDesMenus />
       </View>
       <View style={styles.droite}>
-        <BarreDOutils />
+        <BarreOutilsComptable />
         <View style={styles.zone}>
           <View style={styles.ecran}>{children}</View>
         </View>
@@ -151,19 +152,9 @@ const styles = StyleSheet.create({
   droite: { flex: 1 },
   zone: { flex: 1, alignItems: 'center' },
   ecran: { flex: 1, width: '100%', maxWidth: LARGEUR_MAX_ZONE },
-  outils: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  bandeau: { flexGrow: 1, flexShrink: 1, minWidth: LARGEUR_BANDEAU_MIN, maxWidth: LARGEUR_BANDEAU_MAX },
+  arbreColonne: { flex: 1 },
+  // Le bas du menu (la taille du texte, les autres affichages) reste en vue, quelle que soit la longueur du menu.
+  pied: { borderTopWidth: 1, borderTopColor: colors.border },
   arbre: { flex: 1 },
   arbreContenu: { paddingVertical: 8 },
   dossier: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 12, gap: 6 },
@@ -176,6 +167,8 @@ const styles = StyleSheet.create({
   actif: { backgroundColor: colors.badgeBg },
   appuye: { opacity: 0.7 },
   trait: { height: 1, backgroundColor: colors.border, marginVertical: 4, marginLeft: 34, marginRight: 10 },
+  taille: { gap: 6, paddingVertical: 10, paddingHorizontal: 14 },
+  tailleBoutons: { flexDirection: 'row', gap: 6 },
   affichage: { paddingVertical: 8, paddingHorizontal: 14 },
   separe: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 10, paddingTop: 12 },
   affichageTexte: { fontSize: 13, color: colors.textMuted },

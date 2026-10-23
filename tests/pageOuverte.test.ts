@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estLaPageOuverte } from '@/shared/navigation/pageOuverte';
+import { estLaPageOuverte, routeLaPlusPrecise } from '@/shared/navigation/pageOuverte';
 
 describe('la page ouverte dans le menu en arbre', () => {
   it('une route sans paramètre correspond à son adresse', () => {
@@ -17,5 +17,15 @@ describe('la page ouverte dans le menu en arbre', () => {
   it('une route à plusieurs paramètres les demande tous', () => {
     expect(estLaPageOuverte('/a?x=1&y=2', '/a', { x: '1', y: '2', z: '3' })).toBe(true);
     expect(estLaPageOuverte('/a?x=1&y=2', '/a', { x: '1' })).toBe(false);
+  });
+});
+
+describe('la route la plus précise', () => {
+  it('l’accueil d’un côté l’emporte sur l’accueil simple', () => {
+    const routes = ['/', '/?accueil=retour&interieur=exploitation', '/?accueil=retour&interieur=transformation'];
+    const parametres = { accueil: 'retour', interieur: 'transformation' };
+    expect(routeLaPlusPrecise(routes, '/', parametres)).toBe('/?accueil=retour&interieur=transformation');
+    expect(routeLaPlusPrecise(routes, '/', {})).toBe('/');
+    expect(routeLaPlusPrecise(routes, '/autre', {})).toBeUndefined();
   });
 });

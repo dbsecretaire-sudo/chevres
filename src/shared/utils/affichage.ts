@@ -13,7 +13,7 @@ export const CLE_AFFICHAGE = 'bureau:affichage';
 const MODES: readonly string[] = Object.values(AFFICHAGE);
 
 /**
- * Le mode choisi, lu au démarrage dans les données de l'ordinateur (le pont les donne tout de suite) ; « bureau » par défaut. Dans un navigateur ordinaire
+ * Le mode choisi, lu au démarrage dans les données de l'ordinateur (le pont les donne tout de suite) ; « sobre » par défaut sur l'ordinateur (le poste de comptabilité), « bureau » ailleurs. Dans un navigateur ordinaire
  * (qui n'a jamais ce choix), la même clé du stockage du navigateur permet d'essayer l'affichage sobre.
  */
 function lireMode(): ModeAffichage {
@@ -23,7 +23,7 @@ function lireMode(): ModeAffichage {
   } catch {
     brut = undefined;
   }
-  return brut && MODES.includes(brut) ? (brut as ModeAffichage) : AFFICHAGE.BUREAU;
+  return brut && MODES.includes(brut) ? (brut as ModeAffichage) : estBureau() ? AFFICHAGE.SOBRE : AFFICHAGE.BUREAU;
 }
 
 /** Le mode de cette session : changer d'affichage recharge la fenêtre, il ne change donc pas en cours de route. */

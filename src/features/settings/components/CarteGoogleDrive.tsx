@@ -82,15 +82,6 @@ export function CarteGoogleDrive({ drive }: { drive: ReturnType<typeof useGoogle
               disabled={!!drive.syncEnCours}
             />
           </View>
-          {/* Deux appareils branchés sur ce Drive qui ont travaillé chacun de leur côté : tout est gardé, des deux côtés. */}
-          <Button
-            variant="secondary"
-            label={TEXTES.settings.reglages.fusionnerAvecDrive}
-            onPress={() => drive.synchroniser('merge')}
-            loading={drive.syncEnCours === 'merge'}
-            disabled={!!drive.syncEnCours}
-          />
-          <Text style={commonStyles.note}>{TEXTES.settings.reglages.fusionAide}</Text>
           <Button
             label={TEXTES.settings.reglages.seDeconnecter}
             variant="danger"

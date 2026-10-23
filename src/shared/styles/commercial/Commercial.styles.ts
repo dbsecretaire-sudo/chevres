@@ -19,6 +19,7 @@ export const styles = StyleSheet.create({
   /** Une ligne « libellé à gauche, montant à droite ». */
   ligneMontant: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   /** Une carte de la grille de tarifs ou une ligne de commande : un fond teinté, des champs en colonne. */
+  enteteCarte: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   carte: { backgroundColor: colors.badgeBg, borderRadius: 10, padding: 10, gap: 8 },
   /** Les champs d'une ligne de commande : le fromage, puis la quantité et le prix côte à côte. */
   champsLigne: { flexDirection: 'row', gap: 8 },

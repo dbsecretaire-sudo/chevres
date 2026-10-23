@@ -117,9 +117,10 @@ export const TEXTES_SETTINGS = {
     enCoursPoints: 'En cours… ',
     envoyerVersDrive: 'Envoyer vers Drive',
     recupererDepuisDrive: 'Récupérer depuis Drive',
-    fusionnerAvecDrive: 'Fusionner avec Drive',
-    fusionAide:
-      'À utiliser quand deux appareils ont travaillé chacun de leur côté sur le même Drive : tout ce que chacun a saisi est gardé (écritures, animaux, stock, contacts, réglages), puis renvoyé sur Drive. Sur une valeur différente des deux côtés, celle de cet appareil reste ; ce qui a été supprimé d’un seul côté revient. Faites-le aussi sur l’autre appareil pour que les deux soient identiques.',
+    fusionDemandeTitre: 'Fusionner les données ?',
+    fusionOui: 'Oui',
+    fusionDemande:
+      'Des données enregistrées sur Drive sont manquantes dans votre sauvegarde en cours. Voulez-vous fusionner les données ? Tout ce que chacun a saisi est gardé ; sur une valeur différente des deux côtés, celle de cet appareil reste.',
     fusionTerminee: (ajoutes: number, conflits: number) =>
       `Fusion terminée : ${ajoutes} élément${ajoutes > 1 ? 's' : ''} de l’autre appareil ajouté${ajoutes > 1 ? 's' : ''}${
         conflits > 0 ? `, ${conflits} valeur${conflits > 1 ? 's' : ''} différente${conflits > 1 ? 's' : ''} (celle de cet appareil gardée)` : ''

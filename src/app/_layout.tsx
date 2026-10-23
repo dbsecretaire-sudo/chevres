@@ -1,10 +1,12 @@
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
+import { StyleComptable } from '@/shared/components/StyleComptable';
 import { EcranErreur } from '@/shared/components/EcranErreur';
 import { SuperpositionVisite } from '@/features/didacticiel/components/SuperpositionVisite';
 import { VisiteGuideeProvider } from '@/features/didacticiel/context/VisiteGuidee';
 import { installerAlerteWeb } from '@/shared/utils/alerteWeb';
 import { afficheSobre, ID_STYLE_SOBRE } from '@/shared/utils/affichage';
+import { appliquerTailleTexte, lireTailleTexte } from '@/shared/utils/tailleTexte';
 import { AppSettingsProvider } from '@/features/settings/context/AppSettingsContext';
 import { EtablissementProvider } from '@/features/etablissements/context/EtablissementContext';
 
@@ -17,6 +19,9 @@ if (afficheSobre() && typeof document !== 'undefined' && !document.getElementByI
   style.textContent = 'html { filter: grayscale(1); }';
   document.head.append(style);
 }
+
+// La taille du texte choisie (la version Windows l'applique déjà à l'ouverture ; un navigateur la reprend ici).
+if (afficheSobre() && typeof window !== 'undefined' && !window.bureau) appliquerTailleTexte(lireTailleTexte());
 
 /** Un écran qui plante montre son erreur (à recopier) au lieu d'une page blanche. */
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
@@ -32,6 +37,8 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }} />
             {/* La visite guidée : par-dessus toutes les pages. */}
             <SuperpositionVisite />
+            {/* L'affichage sobre en grande fenêtre : le style d'un poste de comptabilité. */}
+            <StyleComptable />
           </View>
         </VisiteGuideeProvider>
       </AppSettingsProvider>

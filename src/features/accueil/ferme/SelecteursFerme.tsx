@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { BoutonDeBarre } from '@/shared/components/BoutonDeBarre';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { PastilleDeMenu } from '@/shared/components/PastilleDeMenu';
 import { ROUTES } from '@/shared/constants/routes';
@@ -19,7 +20,7 @@ interface Props {
   /** Quand elle est donnée, la liste propose « Tout » en plus des années (les listes qui regroupent les années le suivent). */
   onChoisirTout?: () => void;
   /** En gros boutons de la barre du bas (Windows), ou en pastilles dans la barre du haut (téléphone : on les touche rarement). */
-  forme: 'barre' | 'pastille';
+  forme: 'barre' | 'pastille' | 'plat';
 }
 
 /**
@@ -38,7 +39,12 @@ export function SelecteursFerme({ annees, annee, onChoisirAnnee, tout = false, o
   const ouvrirEspece = () => setEspeceOuverte(true);
   return (
     <>
-      {forme === 'barre' ? (
+      {forme === 'plat' ? (
+        <>
+          <BoutonPlat icone="calendar-outline" libelle={tout && onChoisirTout ? TEXTES.commun.choix.toutesAnnees : String(annee)} liste onPress={ouvrirAnnee} />
+          <BoutonPlat icone="paw-outline" libelle={libelleEspece} liste onPress={ouvrirEspece} />
+        </>
+      ) : forme === 'barre' ? (
         <>
           <BoutonDeBarre
             icone={<Ionicons name="calendar" size={26} color={colors.blanc} />}

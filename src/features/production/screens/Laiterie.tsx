@@ -10,6 +10,7 @@ import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -132,7 +133,7 @@ export default function Laiterie() {
         </BlocLignes>
       </GroupeAccueil>
 
-      <GroupeAccueil titre={T.groupeFactures}>
+      <GroupeAccueil titre={T.groupeFactures} balance={factures.length > 0 ? balanceDesEcritures(factures) : undefined}>
         <BlocLignes>
           {factures.slice(0, FACTURES_MONTREES).map((t) => (
             <LigneTransaction key={`${t.id}:${t.activite}`} item={t} />

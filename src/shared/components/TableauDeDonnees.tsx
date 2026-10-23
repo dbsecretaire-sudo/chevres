@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
@@ -34,6 +34,36 @@ interface Props<T> {
   integre?: boolean;
 }
 
+/** Le curseur de redimensionnement : une double flèche noire (en SVG), à défaut le curseur du système. */
+const CURSEUR_REDIMENSION =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M1 12l6-6v4h10V6l6 6-6 6v-4H7v4z' fill='black' stroke='white' stroke-width='1' /></svg>\") 12 12, col-resize";
+
+/** La largeur d'une colonne ne descend pas sous celle-ci quand on l'étire à la souris. */
+const LARGEUR_MINI = 50;
+
+/** La poignée au bord droit d'un titre : on la tire pour élargir ou rétrécir la colonne. */
+function PoigneeDeColonne({ depart, onLargeur }: { depart: () => number; onLargeur: (largeur: number) => void }) {
+  /** La largeur de la colonne et la position de la souris au moment où l'on a pris la poignée. */
+  const prise = useRef({ largeur: 0, x: 0 });
+  return (
+    <View
+      style={styles.poignee}
+      onStartShouldSetResponder={() => true}
+      onResponderTerminationRequest={() => false}
+      onResponderGrant={(e) => {
+        prise.current = { largeur: depart(), x: e.nativeEvent.pageX };
+      }}
+      onResponderMove={(e) =>
+        onLargeur(Math.max(LARGEUR_MINI, Math.round(prise.current.largeur + e.nativeEvent.pageX - prise.current.x)))
+      }
+      accessibilityLabel="Élargir la colonne"
+    >
+      {/* Le séparateur « | » : il marque l'endroit où l'on peut tirer. */}
+      <View style={styles.trait} pointerEvents="none" />
+    </View>
+  );
+}
+
 const comparer = (a: string | number | undefined, b: string | number | undefined): number => {
   if (a === undefined || a === '') return b === undefined || b === '' ? 0 : 1;
   if (b === undefined || b === '') return -1;
@@ -47,6 +77,11 @@ const comparer = (a: string | number | undefined, b: string | number | undefined
  */
 export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, vide, pied, tri: triDeDepart, integre = false }: Props<T>) {
   const [tri, setTri] = useState(triDeDepart);
+  /** Les largeurs choisies à la souris (en points) : une colonne étirée garde sa largeur, les autres se partagent le reste. */
+  const [largeurs, setLargeurs] = useState<Record<string, number>>({});
+  const mesures = useRef<Record<string, number>>({});
+  const tailleDe = (c: ColonneDuTableau<T>) =>
+    largeurs[c.cle] ? { width: largeurs[c.cle], flexGrow: 0, flexShrink: 0 } : { flex: c.poids ?? 1 };
   const triees = useMemo(() => {
     const colonne = colonnes.find((c) => c.cle === tri?.cle);
     if (!colonne) return lignes;
@@ -68,7 +103,7 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
       onPress={() => onLigne?.(item)}
     >
       {colonnes.map((c) => (
-        <View key={c.cle} style={[styles.cellule, { flex: c.poids ?? 1, alignItems: alignement(c) }]}>
+        <View key={c.cle} style={[styles.cellule, tailleDe(c), { alignItems: alignement(c) }]}>
           {c.rendu ? (
             c.rendu(item)
           ) : (
@@ -85,19 +120,30 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
     <View style={[styles.cadre, integre && styles.cadreIntegre]}>
       <View style={styles.entete}>
         {colonnes.map((c) => (
-          <Pressable
+          <View
             key={c.cle}
-            style={[styles.celluleEntete, { flex: c.poids ?? 1, justifyContent: alignement(c) }]}
-            disabled={c.triable === false}
-            onPress={() => basculer(c.cle)}
-            accessibilityRole="button"
-            accessibilityLabel={c.titre}
+            style={tailleDe(c)}
+            onLayout={(e) => {
+              mesures.current[c.cle] = e.nativeEvent.layout.width;
+            }}
           >
-            <Text style={styles.titre} numberOfLines={1}>
-              {c.titre}
-              {tri?.cle === c.cle ? (tri.decroissant ? ' ▼' : ' ▲') : ''}
-            </Text>
-          </Pressable>
+            <Pressable
+              style={[styles.celluleEntete, { justifyContent: alignement(c) }]}
+              disabled={c.triable === false}
+              onPress={() => basculer(c.cle)}
+              accessibilityRole="button"
+              accessibilityLabel={c.titre}
+            >
+              <Text style={styles.titre} numberOfLines={1}>
+                {c.titre}
+                {tri?.cle === c.cle ? (tri.decroissant ? ' ▼' : ' ▲') : ''}
+              </Text>
+            </Pressable>
+            <PoigneeDeColonne
+              depart={() => mesures.current[c.cle] ?? 100}
+              onLargeur={(largeur) => setLargeurs((l) => ({ ...l, [c.cle]: largeur }))}
+            />
+          </View>
         ))}
       </View>
       {integre ? (
@@ -123,6 +169,9 @@ const styles = StyleSheet.create({
   cadre: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 6, backgroundColor: colors.surface, overflow: 'hidden' },
   cadreIntegre: { flex: undefined },
   entete: { flexDirection: 'row', backgroundColor: colors.badgeBg, borderBottomWidth: 2, borderBottomColor: colors.primary },
+  // Le curseur est dessiné en noir (celui du système est blanc à contour noir : il disparaît sur le gris clair).
+  poignee: { position: 'absolute', right: -5, top: 0, bottom: 0, width: 11, alignItems: 'center', justifyContent: 'center', cursor: CURSEUR_REDIMENSION as never, zIndex: 2 },
+  trait: { width: 1.5, height: '55%', backgroundColor: colors.textMuted },
   celluleEntete: { paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center' },
   titre: { fontSize: 12, fontWeight: '800', color: colors.primaryDark, textTransform: 'uppercase', letterSpacing: 0.3 },
   corps: { flex: 1 },

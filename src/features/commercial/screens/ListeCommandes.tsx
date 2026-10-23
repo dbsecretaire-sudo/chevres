@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Badge } from '@/shared/components/Badge';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
@@ -10,6 +10,8 @@ import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { listClients } from '@/features/clients/repository';
+import type { Client } from '@/features/clients/types';
+import { categoriesDuLien, deCesCategories, PARAMETRE_CATEGORIES } from '@/features/commercial/services/categoriesDuLien';
 import {
   annulerLesCommandesSansVente,
   completerLesPrixManquants,
@@ -46,6 +48,9 @@ const couleurStatut = (statut: Commande['statut']): string =>
 /** Les commandes des clients : celles à traiter d'abord, avec le total à sortir du stock ; un appui ouvre la commande. */
 export default function ListeCommandes() {
   const router = useRouter();
+  // Ouverte depuis une catégorie de clients (entreprises, particuliers…) : seulement les commandes de ses contacts.
+  const categories = categoriesDuLien(useLocalSearchParams<Record<string, string>>()[PARAMETRE_CATEGORIES]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [filtre, setFiltre] = useState<Filtre>('ouvertes');
   /** Les animaux réservés par bon de commande (ils font partie du bon, même sans ligne). */
@@ -67,6 +72,7 @@ export default function ListeCommandes() {
         })
         .catch(() => undefined)
         .then(() => {
+          listClients().then(setClients);
           lireArchiveCommercial().then((archive) => setCommandes(archive.commandes));
           listTousLesAnimauxDeLEspece().then(setAnimaux);
           listToutesVentes().then(setVentes);
@@ -76,7 +82,7 @@ export default function ListeCommandes() {
 
   const affichees = useMemo(
     () =>
-      commandes
+      deCesCategories(commandes, clients, categories)
         .filter((c) =>
           filtre === 'ouvertes'
             ? commandeOuverte(c)
@@ -85,7 +91,7 @@ export default function ListeCommandes() {
               : true,
         )
         .sort((a, b) => (a.livraisonPrevue ?? a.date).localeCompare(b.livraisonPrevue ?? b.date)),
-    [commandes, filtre],
+    [commandes, filtre, clients, categories],
   );
   const reservesDuBon = (c: Commande) => reservesDeLaCommande(animaux, c.id);
   const prixDesVentes = useMemo(() => new Map(ventes.map((v) => [v.id, v.prix ?? 0])), [ventes]);

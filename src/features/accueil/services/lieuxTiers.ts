@@ -8,6 +8,7 @@ import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
 import { VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { SECTION_STOCK } from '@/shared/constants/stock';
+import { lienPourCategories } from '@/features/commercial/services/categoriesDuLien';
 
 /**
  * Les lieux de la carte de la ferme qui ont un tiers (un fournisseur, un client ou un organisme) : chacun a sa page — les contacts du
@@ -77,12 +78,14 @@ export interface ConfigLieuTiers {
 const NOUVELLE = ROUTES.COMPTABILITE_NOUVELLE;
 const stock = (section: string) => `${ROUTES.COMPTABILITE_STOCKS}?onglet=${section}`;
 
-const LIENS_DES_CLIENTS: readonly LienDuLieu[] = [
-  { cle: 'ventes', icone: 'cash', route: ROUTES.COMMERCIAL_VENTES },
-  { cle: 'commandes', icone: 'receipt', route: ROUTES.COMMERCIAL_COMMANDES },
-  { cle: 'tarifs', icone: 'pricetag', route: ROUTES.COMMERCIAL_TARIFS },
+/** Les rubriques du commerce d'une catégorie de clients : le chiffre d'affaires, les commandes et la grille de tarifs ne montrent que les contacts de ces catégories. */
+const liensDesClients = (categories: readonly string[] = []): readonly LienDuLieu[] => [
+  { cle: 'ventes', icone: 'cash', route: lienPourCategories(ROUTES.COMMERCIAL_VENTES, categories) },
+  { cle: 'commandes', icone: 'receipt', route: lienPourCategories(ROUTES.COMMERCIAL_COMMANDES, categories) },
+  { cle: 'tarifs', icone: 'pricetag', route: lienPourCategories(ROUTES.COMMERCIAL_TARIFS, categories) },
   { cle: 'circuits', icone: 'navigate', route: ROUTES.COMMERCIAL_CIRCUITS },
 ];
+const LIENS_DES_CLIENTS = liensDesClients();
 
 /** Les rubriques de l'agritourisme que proposent les fiches de ses visiteurs : les visites, une nouvelle visite, les formules. */
 const LIENS_DE_LAGRITOURISME: readonly LienDuLieu[] = [
@@ -215,7 +218,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise`,
-    liens: LIENS_DES_CLIENTS,
+    liens: liensDesClients([CATEGORIE_CLIENT.PARTICULIER]),
   },
   surfacesCommerciales: {
     cle: 'surfacesCommerciales',
@@ -225,17 +228,18 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise`,
-    liens: LIENS_DES_CLIENTS,
+    liens: liensDesClients([CATEGORIE_CLIENT.SURFACE_COMMERCIALE]),
   },
   entreprises: {
     cle: 'entreprises',
     avecTiers: true,
     emoji: '🏢',
-    categoriesContact: [CATEGORIE_CLIENT.ENTREPRISE],
+    // Les entreprises et les surfaces commerciales ne font qu'une page sur l'accueil de l'atelier.
+    categoriesContact: [CATEGORIE_CLIENT.ENTREPRISE, CATEGORIE_CLIENT.SURFACE_COMMERCIALE],
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise`,
-    liens: LIENS_DES_CLIENTS,
+    liens: liensDesClients([CATEGORIE_CLIENT.ENTREPRISE, CATEGORIE_CLIENT.SURFACE_COMMERCIALE]),
   },
   // L'agritourisme : les clients qui visitent la ferme (visiteurs, groupes), et ses fournisseurs (l'office de tourisme qui envoie des visiteurs, le repas).
   visiteurs: {

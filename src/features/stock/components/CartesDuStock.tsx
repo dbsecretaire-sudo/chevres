@@ -13,6 +13,8 @@ import {
   type GroupeDeCartes,
 } from '@/features/stock/services/entrepotJeu';
 import { Frisson } from '@/shared/components/ListeReordonnable';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
@@ -23,6 +25,12 @@ const T = TEXTES.production.lieux.entrepot;
 /** La quantité d'une carte, avec son unité : « 4 250 kg », « 42 L », « 0,4 € », ou un nombre d'articles. */
 const quantiteDeLaCarte = (carte: CarteStock): string =>
   `${formaterQuantite(carte.niveau)}${carte.unite ? ` ${carte.unite}` : ''}`;
+
+/** Les colonnes du tableau d'une rubrique du stock. */
+const COLONNES_STOCK: readonly ColonneDuTableau<CarteStock>[] = [
+  { cle: 'article', titre: 'Article', poids: 4, valeur: (c) => c.titre },
+  { cle: 'quantite', titre: 'En stock', poids: 2, aligne: 'droite', valeur: (c) => c.niveau, texte: quantiteDeLaCarte },
+];
 
 /**
  * Les rubriques d'une catégorie du stock (« Ventes — Fromages »…), chacune avec ses cartes : elles montrent le même stock que l'écran du
@@ -39,6 +47,8 @@ export function RubriquesDeCartes({
   origine?: string;
 }) {
   const router = useRouter();
+  // Le poste de comptabilité : chaque rubrique est un tableau (article, quantité), pas une grille de cartes.
+  const comptable = useDispositionComptable();
   /** La carte dont on change l'image (le crayon n'y est que là où l'appareil range des fichiers). */
   const [imageDe, setImageDe] = useState<CarteStock | null>(null);
   /** La carte dont on regarde l'historique (un appui sur elle). */
@@ -50,7 +60,20 @@ export function RubriquesDeCartes({
   };
   return (
     <>
-      {groupes.map((g) => (
+      {groupes.map((g) =>
+        comptable ? (
+          <View key={g.cle} style={styles.rubrique}>
+            <Text style={[styles.rubriqueTitre, clair ? styles.rubriqueTitreSurClair : null]}>{g.titre}</Text>
+            <TableauDeDonnees
+              integre
+              colonnes={COLONNES_STOCK}
+              lignes={g.cartes}
+              cleDeLaLigne={(c) => c.cle}
+              vide={T.vide}
+              onLigne={(c) => (c.cle === 'oeufs' ? ouvrirLeStock(c) : setHistoriqueDe(c))}
+            />
+          </View>
+        ) : (
         <View key={g.cle} style={styles.rubrique}>
           <Text style={[styles.rubriqueTitre, clair ? styles.rubriqueTitreSurClair : null]}>{g.titre}</Text>
           <View style={styles.grille}>
@@ -72,7 +95,8 @@ export function RubriquesDeCartes({
             {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
           </View>
         </View>
-      ))}
+        ),
+      )}
       <HistoriqueArticleModal
         article={historiqueDe}
         onOuvrirLeStock={() => {

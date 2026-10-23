@@ -5,6 +5,8 @@ import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { emojiDeLaCategorie, nombreEnStock } from '@/features/stock/services/entrepotJeu';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
 import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
@@ -42,6 +44,7 @@ export default function EntrepotJeu({
   sansFermer?: boolean;
 }) {
   const router = useRouter();
+  const comptable = useDispositionComptable();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
   // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
   // La page où l'on est : la grange ou l'entrepôt ; la flèche de retour des pages qu'elle ouvre y ramène.
@@ -84,6 +87,38 @@ export default function EntrepotJeu({
     defilement.current?.scrollTo({ y: 0, animated: false });
   };
 
+  const intitule = titre ?? (actuelle ? TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom) : '');
+  // Le poste de comptabilité : pas de cadre de jeu ; la catégorie en titre (avec ses onglets en boutons), puis les rubriques en tableaux.
+  if (comptable) {
+    return (
+      <ScrollView contentContainerStyle={styles.fiche}>
+        <Text style={styles.titreFiche}>{intitule}</Text>
+        {sansOnglets ? null : (
+          <View style={styles.boutons}>
+            {categories.map((c) => (
+              <BoutonPlat
+                key={c.categorie}
+                libelle={TEXTES.stock.enteteCategorie(c.classe, c.nom)}
+                couleur={c.categorie === actuelle?.categorie ? colors.primaryDark : colors.text}
+                onPress={() => choisir(c.categorie)}
+              />
+            ))}
+          </View>
+        )}
+        <RubriquesDeCartes groupes={groupes} origine={origine} />
+        <View style={styles.boutons}>
+          <BoutonPlat
+            icone="list"
+            libelle={TEXTES.production.lieux.entrepot.stockComplet}
+            onPress={() => {
+              noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
+              router.push(ROUTES.COMPTABILITE_STOCKS as never);
+            }}
+          />
+        </View>
+      </ScrollView>
+    );
+  }
   return (
     <CadreDeJeu
       onFermer={sansFermer ? undefined : () => router.replace('/')}
@@ -152,6 +187,9 @@ export default function EntrepotJeu({
 }
 
 const styles = StyleSheet.create({
+  fiche: { gap: 12, padding: 12 },
+  titreFiche: { fontSize: 16, fontWeight: '800', color: colors.text },
+  boutons: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tetes: { flexDirection: 'row', alignItems: 'center', paddingRight: 44 },
   ongletsDefile: { flexGrow: 0 },
   onglets: { gap: 8, paddingTop: 8, paddingRight: 8 },

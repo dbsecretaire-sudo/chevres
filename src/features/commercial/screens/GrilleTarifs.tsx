@@ -1,6 +1,9 @@
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { categoriesDuLien, PARAMETRE_CATEGORIES } from '@/features/commercial/services/categoriesDuLien';
+import { colors } from '@/shared/theme/colors';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
@@ -29,7 +32,22 @@ export default function GrilleTarifs() {
   const [prix, setPrix] = useState<Record<string, number>>({});
   const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
   const { plan } = useRentabilite();
-  const categories = categoriesClient();
+  // Ouverte depuis une catégorie de clients (entreprises, particuliers…) : seulement les prix de ces catégories.
+  const dutLien = categoriesDuLien(useLocalSearchParams<Record<string, string>>()[PARAMETRE_CATEGORIES]);
+  const categories = categoriesClient().filter((c) => !dutLien || dutLien.includes(c.id));
+  /** La carte dépliée : une seule à la fois, les autres restent enroulées. */
+  const [ouverte, setOuverte] = useState<string | null>(null);
+  const basculer = (cle: string) => setOuverte((courante) => (courante === cle ? null : cle));
+  /** L'en-tête d'une carte : son nom et le prix de l'inventaire, un appui la déplie ou l'enroule. */
+  const entete = (cle: string, titre: string, sous: string) => (
+    <Pressable style={styles.enteteCarte} onPress={() => basculer(cle)} accessibilityRole="button" accessibilityState={{ expanded: ouverte === cle }}>
+      <View style={commonStyles.flex1}>
+        <Text style={commonStyles.subheading}>{titre}</Text>
+        <Text style={commonStyles.muted}>{sous}</Text>
+      </View>
+      <Ionicons name={ouverte === cle ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+    </Pressable>
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -64,10 +82,9 @@ export default function GrilleTarifs() {
               : undefined;
           return (
             <View key={f.cle} style={styles.carte}>
-              <Text style={commonStyles.subheading}>{f.libelle}</Text>
-              <Text style={commonStyles.muted}>
-                {base !== undefined ? T.inventaire(formatMontant(base)) : T.sansPrixInventaire}
-              </Text>
+              {entete(f.cle, f.libelle, base !== undefined ? T.inventaire(formatMontant(base)) : T.sansPrixInventaire)}
+              {ouverte === f.cle ? (
+              <>
               <ChampsTarifsParCategorie
                 article={f.cle}
                 categories={categories}
@@ -101,6 +118,8 @@ export default function GrilleTarifs() {
                   )}
                 </View>
               ) : null}
+              </>
+              ) : null}
             </View>
           );
         })
@@ -113,17 +132,16 @@ export default function GrilleTarifs() {
       ) : (
         viandes.map((v) => (
           <View key={v.cle} style={styles.carte}>
-            <Text style={commonStyles.subheading}>{v.libelle}</Text>
-            <Text style={commonStyles.muted}>
-              {prix[v.cle] !== undefined ? T.inventaire(formatMontant(prix[v.cle])) : T.sansPrixInventaire}
-            </Text>
-            <ChampsTarifsParCategorie
-              article={v.cle}
-              categories={categories}
-              valeurs={commercial.tarifs[v.cle] ?? {}}
-              prixInventaire={prix[v.cle]}
-              parKg
-            />
+            {entete(v.cle, v.libelle, prix[v.cle] !== undefined ? T.inventaire(formatMontant(prix[v.cle])) : T.sansPrixInventaire)}
+            {ouverte === v.cle ? (
+              <ChampsTarifsParCategorie
+                article={v.cle}
+                categories={categories}
+                valeurs={commercial.tarifs[v.cle] ?? {}}
+                prixInventaire={prix[v.cle]}
+                parKg
+              />
+            ) : null}
           </View>
         ))
       )}

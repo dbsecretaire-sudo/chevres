@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, Text, type ViewStyle } from 'react-native
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
 import { styles } from '@/shared/styles/components/Button.styles';
 import { colors } from '@/shared/theme/colors';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 interface Props {
   label: string;
@@ -17,6 +18,8 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
   const accent = useAccentColor();
   const accentSoft = useAccentSoftColor();
   const isDisabled = disabled || loading;
+  // Le poste de comptabilité : des boutons compacts, de la taille de leur texte, pas de grandes barres.
+  const comptable = useDispositionComptable();
   return (
     <Pressable
       onPress={onPress}
@@ -26,6 +29,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
         variant === 'primary' && { backgroundColor: accent },
         variant === 'secondary' && [styles.secondaire, { backgroundColor: accentSoft, borderColor: accent }],
         variant === 'danger' && styles.danger,
+        comptable && styles.compact,
         style,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressedLight,
@@ -39,6 +43,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
         <Text
           style={[
             styles.text,
+            comptable && styles.texteCompact,
             variant === 'secondary' && { color: accent },
             variant === 'danger' && styles.texteDanger,
           ]}

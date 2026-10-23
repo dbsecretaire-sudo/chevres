@@ -40,9 +40,15 @@ import {
 } from '@/features/exploitation/repository/partenaires';
 import {
   appliquerProfilEtablissementActif,
+  choisirEtablissementActif,
+  creerEtablissement,
+  getIdEtablissementActif,
+  listEtablissements,
   profilEstVide,
   profilEtablissementActif,
+  type Etablissement,
 } from '@/features/etablissements/repository';
+import { ID_ETABLISSEMENT_DEFAUT } from '@/shared/constants/stockage';
 import { listComptesPcg, remplacerTousComptesPcg } from '@/features/comptes-pcg/repository';
 import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
 import {
@@ -53,6 +59,7 @@ import {
   findFile,
   findFolder,
   listFiles,
+  listerDossiersRacine,
   upsertFileText,
   downloadFileText,
 } from '@/features/drive/driveApi';
@@ -117,6 +124,57 @@ async function identique(fichier: DriveFile, contenuLocal: string): Promise<bool
 export function nomDossierDrive(nomEtablissement: string, estDefaut: boolean): string {
   return estDefaut ? DOSSIER_RACINE_DRIVE : `${DOSSIER_RACINE_DRIVE} — ${nomEtablissement}`;
 }
+
+/**
+ * Fait une même opération pour chaque établissement : chacun a son dossier sur Drive (créé au besoin) et ses données. Avec `decouvrir`, les établissements dont le
+ * dossier est sur Drive (créés depuis un autre appareil) mais pas ici sont d'abord créés. L'établissement ouvert au départ est rétabli à la fin.
+ */
+export async function pourChaqueEtablissement<T>(
+  accessToken: string,
+  action: (folderId: string, etablissement: Etablissement) => Promise<T>,
+  decouvrir = false,
+): Promise<T[]> {
+  const depart = getIdEtablissementActif();
+  const resultats: T[] = [];
+  try {
+    if (decouvrir) {
+      const debut = `${DOSSIER_RACINE_DRIVE} — `;
+      const connus = new Set((await listEtablissements()).map((e) => e.nom.trim().toLowerCase()));
+      for (const dossier of await listerDossiersRacine(accessToken, debut)) {
+        const nom = dossier.name.slice(debut.length).trim();
+        if (nom && !connus.has(nom.toLowerCase())) {
+          await creerEtablissement({ nom });
+          connus.add(nom.toLowerCase());
+        }
+      }
+    }
+    for (const etablissement of await listEtablissements()) {
+      await choisirEtablissementActif(etablissement.id);
+      const nomDossier = nomDossierDrive(etablissement.nom, etablissement.id === ID_ETABLISSEMENT_DEFAUT);
+      const folderId = await ensureRootFolder(accessToken, nomDossier);
+      await updateSettings({ driveFolderId: folderId, driveFolderName: nomDossier });
+      resultats.push(await action(folderId, etablissement));
+    }
+  } finally {
+    await choisirEtablissementActif(depart);
+  }
+  return resultats;
+}
+
+/** Drive a-t-il, pour un établissement ou plus, des données (ou des établissements entiers) que cet appareil n'a pas ? */
+export async function driveADesDonneesEnPlusPartout(accessToken: string): Promise<boolean> {
+  const debut = `${DOSSIER_RACINE_DRIVE} — `;
+  const connus = new Set((await listEtablissements()).map((e) => e.nom.trim().toLowerCase()));
+  const dossiers = await listerDossiersRacine(accessToken, debut);
+  if (dossiers.some((d) => !connus.has(d.name.slice(debut.length).trim().toLowerCase()))) return true;
+  return (await pourChaqueEtablissement(accessToken, (folderId) => driveADesDonneesEnPlus(accessToken, folderId))).some(Boolean);
+}
+
+/** Additionne les bilans de plusieurs établissements. */
+export const sommeDesBilans = <B extends BilanSynchro>(bilans: readonly B[]): BilanSynchro => ({
+  misAJour: bilans.reduce((t, b) => t + b.misAJour, 0),
+  inchanges: bilans.reduce((t, b) => t + b.inchanges, 0),
+});
 
 export async function ensureRootFolder(
   accessToken: string,
@@ -722,6 +780,34 @@ async function fusionnerCategorie(accessToken: string, folderId: string, categor
     }
   }
   await pousserCategorie(accessToken, folderId, categorie);
+}
+
+/**
+ * Drive a-t-il des données que cet appareil n'a pas (un autre appareil a travaillé de son côté) ? Un essai à blanc de la fusion, sans rien écrire : l'envoi sur Drive
+ * propose alors de fusionner d'abord, pour ne rien écraser.
+ */
+export async function driveADesDonneesEnPlus(accessToken: string, folderId: string): Promise<boolean> {
+  const rapport: RapportFusion = { ajoutes: 0, conflits: 0 };
+  for (const categorie of CATEGORIES_STOCKAGE) {
+    const file = await findFile(accessToken, fileNameForCategorie(categorie), folderId);
+    if (!file) continue;
+    const parAnnee = fromCSVParAnnees(categorie, await downloadFileText(accessToken, file.id));
+    for (const [annee, distants] of parAnnee) {
+      fusionner(await loadYear(categorie, annee), distants, rapport);
+      if (rapport.ajoutes > 0) return true;
+    }
+  }
+  for (const f of FICHIERS_FUSIONNABLES) {
+    const file = await findFile(accessToken, f.fichier, folderId);
+    if (!file) continue;
+    try {
+      fusionner(await f.lire(), JSON.parse(await downloadFileText(accessToken, file.id)), rapport);
+    } catch {
+      // Fichier distant vide ou corrompu : rien à fusionner.
+    }
+    if (rapport.ajoutes > 0) return true;
+  }
+  return false;
 }
 
 /**

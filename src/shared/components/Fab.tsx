@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
 import { styles } from '@/shared/styles/components/Fab.styles';
 import { useAncre } from '@/features/didacticiel/components/AncreVisite';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 interface Props {
   options: Option[];
@@ -16,6 +18,10 @@ interface Props {
   cote?: 'droite' | 'gauche';
 }
 
+const plat = StyleSheet.create({
+  barre: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingVertical: 8 },
+});
+
 /**
  * Bouton flottant en bas à droite (vert "+" par défaut, pour l'ajout). Avec une seule
  * option, l'appui déclenche directement l'action ; avec plusieurs, il ouvre un petit
@@ -26,6 +32,18 @@ export function Fab({ options, color = colors.primary, icon = 'add', cote = 'dro
   const [ouvert, setOuvert] = useState(false);
   // Repéré par la visite guidée : c'est le bouton « + » qu'elle invite à toucher.
   const repere = useAncre('fab');
+  const comptable = useDispositionComptable();
+
+  // Le poste de comptabilité : pas de bouton qui flotte, mais une barre de boutons à leur place, sous la liste.
+  if (comptable) {
+    return (
+      <View style={plat.barre}>
+        {options.map((o) => (
+          <BoutonPlat key={o.label} icone={o.icon ?? icon} libelle={o.label} couleur={o.color ?? color} onPress={o.onPress} />
+        ))}
+      </View>
+    );
+  }
 
   return (
     <>

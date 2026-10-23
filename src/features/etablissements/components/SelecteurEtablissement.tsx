@@ -11,6 +11,8 @@ import type { ATraiter } from '@/features/a-traiter/types';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
 import { FormulaireEtablissement } from '@/features/etablissements/components/FormulaireEtablissement';
 import type { DonneesEtablissement, Etablissement } from '@/features/etablissements/repository';
+import { TableauEtablissements } from '@/features/etablissements/components/TableauEtablissements';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { styles } from '@/shared/styles/etablissements/SelecteurEtablissement.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -42,6 +44,8 @@ export function SelecteurEtablissement({
   onFermer,
 }: Props) {
   const [mode, setMode] = useState<Mode>({ type: 'liste' });
+  // Le poste de comptabilité (affichage sobre, grande fenêtre) : les établissements en tableau.
+  const comptable = useDispositionComptable();
   const [aSupprimer, setASupprimer] = useState<Etablissement | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [creationEnCours, setCreationEnCours] = useState(false);
@@ -124,6 +128,15 @@ export function SelecteurEtablissement({
         )}
 
         {mode.type === 'liste' && (
+          comptable ? (
+            <TableauEtablissements
+              etablissements={etablissements}
+              actifId={actifId}
+              aTraiterDe={duEtablissement}
+              onChoisir={onChoisir}
+              onModifier={(id) => setMode({ type: 'edition', id })}
+            />
+          ) : (
           <>
             <BlocLignes>
               {etablissements.map((e) => (
@@ -141,6 +154,7 @@ export function SelecteurEtablissement({
               ))}
             </BlocLignes>
           </>
+          )
         )}
       </ScrollView>
 

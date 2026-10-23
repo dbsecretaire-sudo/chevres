@@ -10,3 +10,14 @@ export function estLaPageOuverte(route: string, adresse: string, parametres: Par
   if (chemin !== adresse) return false;
   return [...new URLSearchParams(requete)].every(([cle, valeur]) => String(parametres[cle] ?? '') === valeur);
 }
+
+/**
+ * Parmi les routes d'un menu, celle qui est la page ouverte : si plusieurs lui correspondent (« / » et « /?interieur=transformation » pour l'accueil de l'atelier), la plus
+ * précise l'emporte — celle qui demande le plus de paramètres. Rien quand aucune ne correspond.
+ */
+export function routeLaPlusPrecise(routes: readonly string[], adresse: string, parametres: ParametresDePage): string | undefined {
+  const nombreDeParametres = (route: string) => [...new URLSearchParams(route.split('?')[1] ?? '')].length;
+  return routes
+    .filter((r) => estLaPageOuverte(r, adresse, parametres))
+    .sort((a, b) => nombreDeParametres(b) - nombreDeParametres(a))[0];
+}

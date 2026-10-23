@@ -106,7 +106,6 @@ export const BOUTONS_DE_LA_FERME = {
     intervenants: [
       ['laiterie', C.laiterie],
       ['particuliers', C.particuliers],
-      ['surfacesCommerciales', C.surfacesCommerciales],
       ['entreprises', C.entreprises],
       ['emballages', C.emballages],
       ['analyses', C.analyses],

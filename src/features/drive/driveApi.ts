@@ -49,6 +49,16 @@ export async function findFolder(
   return json.files?.[0];
 }
 
+/** Les dossiers de la racine de Drive dont le nom commence par ce texte (un dossier par établissement : « Troupeau Chèvres — Nom »). */
+export async function listerDossiersRacine(accessToken: string, debutDuNom: string): Promise<DriveFile[]> {
+  const q = encodeURIComponent(
+    `name contains '${debutDuNom.replace(/'/g, "\'")}' and mimeType='${MIME_DOSSIER_DRIVE}' and trashed=false and 'root' in parents`,
+  );
+  const res = await driveFetch(`${DRIVE_API_URL}/files?q=${q}&fields=files(id,name)&pageSize=${DRIVE_TAILLE_PAGE}`, accessToken);
+  const json = await res.json();
+  return (json.files ?? []).filter((f: DriveFile) => f.name.startsWith(debutDuNom));
+}
+
 export async function createFolder(accessToken: string, name: string, parentId?: string): Promise<DriveFile> {
   const res = await driveFetch(`${DRIVE_API_URL}/files?fields=id,name`, accessToken, {
     method: 'POST',

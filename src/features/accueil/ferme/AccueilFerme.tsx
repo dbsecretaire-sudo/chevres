@@ -187,7 +187,6 @@ export default function AccueilFerme() {
   const intervenantsTransformation: EntreeDeColonne[] = [
     { cle: 'laiterie', titre: C.laiterie, icone: iconeIon('water'), couleur: VENTE },
     { cle: 'particuliers', titre: C.particuliers, icone: iconeIon('person'), couleur: VENTE },
-    { cle: 'surfacesCommerciales', titre: C.surfacesCommerciales, icone: iconeIon('storefront'), couleur: VENTE },
     { cle: 'entreprises', titre: C.entreprises, icone: iconeIon('business'), couleur: VENTE },
     { cle: 'emballages', titre: C.emballages, icone: iconeMCI('package-variant-closed'), couleur: ACHAT },
     { cle: 'analyses', titre: C.analyses, icone: iconeIon('flask'), couleur: ORANGE },
@@ -311,8 +310,6 @@ export default function AccueilFerme() {
         : [
             { cle: 'aVenir', texte: TEXTES.accueil.ferme.agritourisme.visitesAVenir(f.agritourisme.aVenir) },
             { cle: 'visiteurs', texte: TEXTES.accueil.ferme.agritourisme.visiteurs(f.agritourisme.visiteurs) },
-            { cle: 'recettes', texte: TEXTES.accueil.ferme.agritourisme.recettes(formatMontant(f.agritourisme.recettes)) },
-            { cle: 'depenses', texte: TEXTES.accueil.ferme.agritourisme.depenses(formatMontant(f.agritourisme.depenses ?? 0)) },
             ...(f.stockManquant ? [{ cle: 'stock', texte: TEXTES.accueil.ferme.agritourisme.stockManquant, alerte: true }] : []),
           ];
   const titreSobre =
@@ -340,20 +337,21 @@ export default function AccueilFerme() {
   return (
     <View ref={racine} collapsable={false} style={styles.racine}>
       <View style={[styles.haut, { paddingTop: 12 + haut }]}>
-        <View style={styles.colonneHaut}>
+        <View style={[styles.colonneHaut, comptable && styles.largeComptable]}>
           {/* Les menus qu'on touche rarement sont en haut (téléphone comme Windows) ; le bandeau qu'on utilise sans cesse est tout en bas. */}
           {comptable ? null : <BarreHauteFerme />}
           {/* Le nom de l'exploitation : il ouvre le choix de l'établissement. */}
-          <NomFerme />
+          {comptable ? null : <NomFerme />}
           <RappelSauvegarde />
         </View>
       </View>
       {/* La scène sur tout l'écran ; elle est recréée quand l'espèce change (elle relit ses données et reprend les mots et dessins de l'espèce). */}
       <View key={espece} style={styles.zoneDeScene} {...balayage.panHandlers}>
-        <View style={styles.scene}>
+        <View style={[styles.scene, comptable && styles.largeComptable]}>
           {afficheSobre() ? (
             // L'affichage sobre : les mêmes informations et la même organisation, en listes, sans scène ni dessin.
             <AccueilSobre
+              large={comptable}
               titre={titreSobre}
               resume={resumeSobre}
               // Les intervenants dans l'ordre de la liste (la scène les renverse : les plus utilisés sont près du pouce).
@@ -384,9 +382,6 @@ export default function AccueilFerme() {
                 lignes: [
                   { cle: 'aVenir', texte: TEXTES.accueil.ferme.agritourisme.visitesAVenir(f.agritourisme.aVenir) },
                   { cle: 'visiteurs', texte: TEXTES.accueil.ferme.agritourisme.visiteurs(f.agritourisme.visiteurs) },
-                  { cle: 'recettes', texte: TEXTES.accueil.ferme.agritourisme.recettes(formatMontant(f.agritourisme.recettes)) },
-                  // Les dépenses de l'atelier Agritourisme : les factures rangées dans cet atelier.
-                  { cle: 'depenses', texte: TEXTES.accueil.ferme.agritourisme.depenses(formatMontant(f.agritourisme.depenses ?? 0)) },
                   // Le stock d'une visite ou d'une commande des jours qui viennent manque : le rappel (« Stock à prévoir ») le détaille.
                   ...(f.stockManquant
                     ? [{ cle: 'stock', texte: TEXTES.accueil.ferme.agritourisme.stockManquant, alerte: true }]
@@ -514,6 +509,8 @@ const styles = StyleSheet.create({
   // La scène remplit toute la place entre le haut et la bascule, dans une colonne de largeur limitée.
   zoneDeScene: { flex: 1, paddingHorizontal: 10 },
   scene: { ...colonneCentree, flex: 1 },
+  // Le poste de comptabilité : l'accueil prend toute la largeur de la fenêtre, pas celle d'un téléphone.
+  largeComptable: { maxWidth: 1400 },
   couche: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50 },
   fond: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.28)' },
   etiquette: { position: 'absolute', width: 140, alignItems: 'center' },

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { exporterSauvegardeLocale } from '@/features/sauvegarde/backup';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useGoogleDrive } from '@/features/settings/hooks/useGoogleDrive';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
@@ -17,7 +18,7 @@ const T = TEXTES.sauvegarde.enregistrer;
  * La disquette de la capsule du haut : « Enregistrer » propose Google Drive (les données y partent d'un appui quand le compte est connecté ; sinon l'écran de
  * connexion s'ouvre) ou un fichier sur l'appareil (la sauvegarde complète, à garder hors de l'appareil).
  */
-export function BoutonEnregistrer() {
+export function BoutonEnregistrer({ plat = false }: { plat?: boolean }) {
   const router = useRouter();
   const echelle = useEchelle();
   const drive = useGoogleDrive();
@@ -44,6 +45,9 @@ export function BoutonEnregistrer() {
 
   return (
     <>
+      {plat ? (
+        <BoutonPlat icone="save-outline" libelle={T.bouton} onPress={() => setMenu(true)} disabled={occupe} />
+      ) : (
       <Pressable
         style={({ pressed }) => [
           styles.pastille,
@@ -61,6 +65,7 @@ export function BoutonEnregistrer() {
           <Ionicons name="save" size={Math.round(20 * echelle)} color={colors.primary} />
         )}
       </Pressable>
+      )}
       <OptionsModal
         visible={menu}
         onClose={() => setMenu(false)}

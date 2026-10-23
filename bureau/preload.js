@@ -1,11 +1,15 @@
 // Le pont entre l'application (la page) et l'ordinateur : seules ces fonctions sont offertes à la page, rien d'autre.
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webFrame } = require('electron');
 
 const appeler = (canal, argument) => ipcRenderer.invoke(canal, argument);
 
 // Les données enregistrées, lues une seule fois ; l'affichage choisi (bureau, mobile ou sobre : voir src/shared/utils/affichage.ts) en fait partie.
 const donneesAuDemarrage = ipcRenderer.sendSync('stockage:charger');
-const AFFICHAGE = donneesAuDemarrage['bureau:affichage'] ?? 'bureau';
+const AFFICHAGE = donneesAuDemarrage['bureau:affichage'] ?? 'sobre';
+
+// La taille du texte choisie la dernière fois : appliquée dès l'ouverture.
+const TAILLE = Number(donneesAuDemarrage['bureau:zoom']);
+if (TAILLE > 0.5 && TAILLE < 2) webFrame.setZoomFactor(TAILLE);
 
 contextBridge.exposeInMainWorld('bureau', {
   /** Toutes les données enregistrées au démarrage (le reste du temps, la page les garde en mémoire et n'envoie que les changements). */
@@ -24,6 +28,8 @@ contextBridge.exposeInMainWorld('bureau', {
     ouvrir: (chemin) => appeler('fichier:ouvrir', chemin),
     imprimerPdf: (html, paysage, sansMarges, pied) => appeler('pdf:imprimer', { html, paysage, sansMarges, pied }),
   },
+  /** Le zoom de la fenêtre (la taille du texte réglée dans l'application). */
+  zoom: (facteur) => webFrame.setZoomFactor(Number(facteur) || 1),
   menu: {
     definir: (menus, affichage) => appeler('menu:definir', { menus, affichage }),
     surChoix: (rappel) => {

@@ -333,7 +333,7 @@ const LARGEUR_SOBRE = 1280;
 function creerFenetre() {
   // Haute comme l'écran (sa zone utile, sans la barre des tâches), étroite, et posée au milieu : l'accueil « ferme » est pensé en hauteur.
   const zone = screen.getPrimaryDisplay().workArea;
-  const sobre = donnees['bureau:affichage'] === 'sobre';
+  const sobre = (donnees['bureau:affichage'] ?? 'sobre') === 'sobre';
   const largeur = Math.min(sobre ? LARGEUR_SOBRE : LARGEUR_PAR_DEFAUT, zone.width);
   const fenetre = new BrowserWindow({
     width: largeur,

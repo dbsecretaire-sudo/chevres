@@ -29,6 +29,8 @@ export interface PontBureau {
       pied?: { gauche: string; droite: string },
     ) => Promise<string>;
   };
+  /** Fixe le zoom de la fenêtre (1 = normal) : le texte et tout le reste grandissent ensemble. */
+  zoom?: (facteur: number) => void;
   menu: {
     /** Donne à la fenêtre les menus de la barre du haut (aucun : la barre disparaît) et l'affichage en cours. */
     definir: (menus: MenuBureau[], affichage: string) => Promise<void>;

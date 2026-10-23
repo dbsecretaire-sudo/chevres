@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
@@ -20,6 +20,8 @@ interface Props {
   gestion: readonly EntreeDeColonne[];
   onIntervenant: (cle: string) => void;
   onGestion: (cle: string) => void;
+  /** Le poste de comptabilité : deux colonnes (le résumé et la gestion à gauche, les intervenants à droite) sur toute la largeur. */
+  large?: boolean;
 }
 
 /** Un nombre à droite d'une ligne : les lots à facturer, les rappels à valider. */
@@ -30,7 +32,52 @@ const Nombre = ({ valeur }: { valeur?: number }) =>
  * L'accueil de l'affichage sobre : sans scène ni dessin, en nuances de gris. Les mêmes informations et la même organisation que l'accueil dessiné : ce que garde le
  * côté (l'exploitation, l'atelier ou l'agritourisme), la gestion, puis les intervenants, en listes.
  */
-export function AccueilSobre({ titre, resume, intervenants, gestion, onIntervenant, onGestion }: Props) {
+export function AccueilSobre({ titre, resume, intervenants, gestion, onIntervenant, onGestion, large = false }: Props) {
+  const blocResume = (
+    <>
+      <Text style={commonStyles.subheading}>{titre}</Text>
+      <BlocLignes>
+        {resume.map((l) => (
+          <Text key={l.cle} style={[styles.resume, l.alerte && styles.alerte]}>
+            {l.alerte ? `⚠ ${l.texte}` : l.texte}
+          </Text>
+        ))}
+      </BlocLignes>
+    </>
+  );
+  const blocGestion = (
+    <>
+      <Text style={styles.section}>{TEXTES.accueil.ferme.gestion}</Text>
+      <BlocLignes>
+        {gestion.map((e) => (
+          <ListRow key={e.cle} title={e.titre} trailing={<Nombre valeur={e.pastille} />} onPress={() => onGestion(e.cle)} />
+        ))}
+      </BlocLignes>
+    </>
+  );
+  const blocIntervenants = (
+    <>
+      <Text style={styles.section}>{TEXTES.accueil.ferme.intervenants}</Text>
+      <BlocLignes>
+        {intervenants.map((e) => (
+          <ListRow key={e.cle} title={e.titre} trailing={<Nombre valeur={e.pastille} />} onPress={() => onIntervenant(e.cle)} />
+        ))}
+      </BlocLignes>
+    </>
+  );
+  if (large) {
+    return (
+      <ScrollView contentContainerStyle={styles.contenu}>
+        <View style={styles.colonnes}>
+          <View style={styles.colonne}>
+            {blocResume}
+            {blocGestion}
+          </View>
+          <View style={styles.colonne}>{blocIntervenants}</View>
+        </View>
+      </ScrollView>
+    );
+  }
   return (
     <ScrollView contentContainerStyle={styles.contenu}>
       <Text style={commonStyles.subheading}>{titre}</Text>
@@ -59,6 +106,8 @@ export function AccueilSobre({ titre, resume, intervenants, gestion, onIntervena
 
 const styles = StyleSheet.create({
   contenu: { gap: 10, paddingBottom: 16 },
+  colonnes: { flexDirection: 'row', alignItems: 'flex-start', gap: 24 },
+  colonne: { flex: 1, gap: 10 },
   section: { fontSize: 13, fontWeight: '800', color: colors.textMuted, textTransform: 'uppercase', marginTop: 8 },
   resume: { fontSize: 15, color: colors.text },
   alerte: { fontWeight: '800', color: colors.danger },

@@ -20,6 +20,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { AntenneGds, estLAntenneGds } from '@/features/production/components/AntenneGds';
 import { DossiersTouristiques } from '@/features/production/components/DossiersTouristiques';
+import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -281,7 +282,7 @@ function LieuTiersStandard() {
             </GroupeAccueil>
           ) : null}
 
-          <GroupeAccueil titre={textes.groupeEcritures ?? ''}>
+          <GroupeAccueil titre={textes.groupeEcritures ?? ''} balance={ecritures.length > 0 ? balanceDesEcritures(ecritures) : undefined}>
             <BlocLignes>
               {ecritures.slice(0, ECRITURES_MONTREES).map((t) => (
                 <LigneTransaction key={`${t.id}:${t.activite}`} item={t} />

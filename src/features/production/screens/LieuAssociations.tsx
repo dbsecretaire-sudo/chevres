@@ -17,6 +17,7 @@ import { lireArchiveDossiers } from '@/features/dossiers/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
 import { listTousControles } from '@/features/exploitation/repository/controles';
 import type { Controle } from '@/features/exploitation/types';
+import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -153,7 +154,7 @@ export default function LieuAssociations() {
     nouvelle: string,
     route: string,
   ) => (
-    <GroupeAccueil key={cle} titre={titre}>
+    <GroupeAccueil key={cle} titre={titre} balance={lignes.length > 0 ? balanceDesEcritures(lignes) : undefined}>
       <BlocLignes>
         {lignes.slice(0, ECRITURES_MONTREES).map((t) => (
           <LigneTransaction key={`${t.id}:${t.activite}`} item={t} />

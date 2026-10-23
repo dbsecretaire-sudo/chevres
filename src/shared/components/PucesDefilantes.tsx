@@ -5,6 +5,7 @@ import { DefilementFleches } from '@/shared/components/DefilementFleches';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { styles } from '@/shared/styles/etablissements/SelecteurEspece.styles';
 
 /** Espace laissé à gauche de la puce active quand on fait défiler jusqu'à elle. */
@@ -30,6 +31,7 @@ interface Props<T extends string> {
  */
 export function PucesDefilantes<T extends string>({ puces, valeur, onChoisir }: Props<T>) {
   const accent = useAccentColor();
+  const comptable = useDispositionComptable();
   const accentClair = useAccentSoftColor();
   const defilement = useRef<ScrollView>(null);
   const positions = useRef<Record<string, number>>({});
@@ -59,11 +61,12 @@ export function PucesDefilantes<T extends string>({ puces, valeur, onChoisir }: 
                 styles.puce,
                 { backgroundColor: accentClair, borderColor: accentClair },
                 active && { backgroundColor: accent, borderColor: accent },
+                comptable && { paddingVertical: 4, paddingHorizontal: 10, minHeight: 0 },
                 p.aide ? { flexDirection: 'row', alignItems: 'center', gap: 6 } : null,
               ]}
               onPress={() => !active && onChoisir(p.valeur)}
             >
-              <Text style={[styles.texte, active && { color: colors.blanc }]}>{p.label}</Text>
+              <Text style={[styles.texte, comptable && { fontSize: 13 }, active && { color: colors.blanc }]}>{p.label}</Text>
               {p.aide ? (
                 <Pressable onPress={() => setAideOuverte(p)} hitSlop={8} accessibilityLabel={p.label}>
                   <Ionicons

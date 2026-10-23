@@ -12,7 +12,10 @@ import {
 } from '@/features/drive/googleAuth';
 import {
   ensureRootFolder,
+  driveADesDonneesEnPlusPartout,
   fusionnerAvecDrive,
+  pourChaqueEtablissement,
+  sommeDesBilans,
   nomDossierDrive,
   pousserToutesAnnees,
   tirerToutesAnnees,
@@ -119,11 +122,38 @@ export function useGoogleDrive() {
         setConnecte(false);
         return;
       }
+      // Envoyer sur Drive : si Drive a des données que cet appareil n'a pas, on propose de les fusionner d'abord (sinon elles seraient écrasées).
+      if (sens === 'push' && (await driveADesDonneesEnPlusPartout(accessToken))) {
+        const fusionner = await new Promise<boolean>((resolve) =>
+          Alert.alert(
+            TEXTES.settings.reglages.fusionDemandeTitre,
+            TEXTES.settings.reglages.fusionDemande,
+            [
+              { text: TEXTES.commun.general.annuler, style: 'cancel', onPress: () => resolve(false) },
+              { text: TEXTES.settings.reglages.fusionOui, onPress: () => resolve(true) },
+            ],
+            { onDismiss: () => resolve(false) },
+          ),
+        );
+        if (!fusionner) return;
+        sens = 'merge';
+        setSyncEnCours('merge');
+      }
       const onProgress = (annee: number, categorie: string) => setSyncEtape(`${categorie} ${annee}`);
       let bilan;
       if (sens === 'merge') {
         // Deux appareils ont travaillé chacun de leur côté : tout est réuni, puis renvoyé sur Drive.
-        const fusion = await fusionnerAvecDrive(accessToken, settings.driveFolderId, setSyncEtape);
+        // Chaque établissement a son dossier sur Drive : ils sont tous fusionnés (ceux qui ne sont que sur Drive sont créés ici).
+        const fusions = await pourChaqueEtablissement(
+          accessToken,
+          (folderId, etablissement) =>
+            fusionnerAvecDrive(accessToken, folderId, (etape) => setSyncEtape(`${etablissement.nom} · ${etape}`)),
+          true,
+        );
+        const fusion = {
+          ajoutes: fusions.reduce((t, f) => t + f.ajoutes, 0),
+          conflits: fusions.reduce((t, f) => t + f.conflits, 0),
+        };
         await recharger();
         await refreshSettings();
         await patchSettings({ derniereSynchronisation: new Date().toISOString() });
@@ -133,9 +163,14 @@ export function useGoogleDrive() {
         return;
       }
       if (sens === 'push') {
-        bilan = await pousserToutesAnnees(accessToken, settings.driveFolderId, onProgress);
+        bilan = sommeDesBilans(
+          await pourChaqueEtablissement(accessToken, (folderId) => pousserToutesAnnees(accessToken, folderId, onProgress)),
+        );
       } else {
-        bilan = await tirerToutesAnnees(accessToken, settings.driveFolderId, onProgress);
+        // Les établissements créés depuis un autre appareil (leur dossier est sur Drive) sont créés ici, puis chacun est récupéré.
+        bilan = sommeDesBilans(
+          await pourChaqueEtablissement(accessToken, (folderId) => tirerToutesAnnees(accessToken, folderId, onProgress), true),
+        );
         // Les espèces de l'établissement ont pu changer : on les relit pour afficher les bons cheptels.
         await recharger();
         // Les réglages récupérés (les dates d'estive, les lots…) changent l'accueil : on les relit tout de suite.

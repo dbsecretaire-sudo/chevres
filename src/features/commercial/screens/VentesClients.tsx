@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Linking, Text, View } from 'react-native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { categoriesDuLien, deCesCategories, PARAMETRE_CATEGORIES } from '@/features/commercial/services/categoriesDuLien';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ColonnesVerticales } from '@/shared/components/ColonnesVerticales';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -47,7 +48,9 @@ const nombre = (valeur: number): string => valeur.toLocaleString(LOCALE, { maxim
 export default function VentesClients() {
   const router = useRouter();
   const donnees = useDonneesCommerciales();
-  const { vue: vueDuLien, perimetre } = useLocalSearchParams<{ vue?: string; perimetre?: string }>();
+  const { vue: vueDuLien, perimetre, [PARAMETRE_CATEGORIES]: parametreCategories } = useLocalSearchParams<{ vue?: string; perimetre?: string; categorie?: string }>();
+  // Ouvert depuis une catégorie de clients (entreprises, particuliers…) : seulement les ventes de ses contacts.
+  const categories = useMemo(() => categoriesDuLien(parametreCategories), [parametreCategories]);
   /** Le lien de l'atelier ne montre que les produits finis : fromage, charcuterie, viande. */
   const atelier = perimetre === PERIMETRE_VENTES_ATELIER;
   /** Le lien de l'agritourisme ne montre que les visites réalisées : leurs formules, leurs groupes, leurs personnes. */
@@ -65,19 +68,23 @@ export default function VentesClients() {
     () =>
       agritourisme
         ? ventesDesVisites(visites, donnees.regrouper ? undefined : donnees.annee)
-        : atelier
-          ? donnees.ventes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie))
-          : donnees.ventes,
-    [agritourisme, atelier, visites, donnees.regrouper, donnees.annee, donnees.ventes],
+        : deCesCategories(
+            atelier ? donnees.ventes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie)) : donnees.ventes,
+            donnees.clients,
+            categories,
+          ),
+    [agritourisme, atelier, visites, donnees.regrouper, donnees.annee, donnees.ventes, donnees.clients, categories],
   );
   const toutesVentes = useMemo(
     () =>
       agritourisme
         ? ventesDesVisites(visites)
-        : atelier
-          ? donnees.toutesVentes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie))
-          : donnees.toutesVentes,
-    [agritourisme, atelier, visites, donnees.toutesVentes],
+        : deCesCategories(
+            atelier ? donnees.toutesVentes.filter((v) => CATEGORIES_VENTE_ATELIER.includes(v.categorie)) : donnees.toutesVentes,
+            donnees.clients,
+            categories,
+          ),
+    [agritourisme, atelier, visites, donnees.toutesVentes, donnees.clients, categories],
   );
   /** Les mots de l'écran : ceux des visites (formules, groupes) pour l'agritourisme, ceux des ventes sinon. */
   const A = TEXTES.commercial.ventes.agritourisme;
