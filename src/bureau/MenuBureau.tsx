@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
 import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/controles';
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
@@ -9,12 +7,7 @@ import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
 import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { laiterieActive, oeufsActifs, productionActive } from '@/features/comptabilite/utils/recettes';
-import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
-import { afficheBureau, modeAffichage, modeDeLaCommande } from '@/shared/utils/affichage';
-import { estBureau } from '@/shared/utils/plateforme';
-import { changerAffichage } from '@/bureau/changerAffichage';
 import { TEXTES } from '@/shared/textes';
 
 const A = TEXTES.production.accueil;
@@ -174,31 +167,4 @@ export function definitionDesMenus(): DefinitionMenu[] {
         contacts,
         organisation,
       ];
-}
-
-/** Les noms des menus de la barre du haut, de gauche à droite (sans « Affichage », que Windows ajoute en dernier). */
-export const libellesDesMenus = (): string[] => definitionDesMenus().map((m) => m.label);
-
-/**
- * Dans la version Windows, la barre d'onglets du bas laisse la place aux menus de la fenêtre, en haut à gauche (comme dans les
- * programmes de bureau). Ce composant les donne à la fenêtre et suit les choix qu'on y fait ; il ne montre rien.
- */
-export function MenuBureau() {
-  const router = useRouter();
-  // Les menus changent avec l'établissement (une entreprise n'a ni cheptel ni production) : on les redonne quand il change.
-  const etablissement = useEtablissement();
-  // Un choix de menu valide l'étape de la visite guidée qui demandait de l'ouvrir (même quand il mène à la page où l'on est déjà).
-  const { menuChoisi } = useVisiteGuidee();
-  useEffect(() => {
-    if (!estBureau() || !window.bureau) return;
-    // L'affichage mobile n'a pas les menus de la fenêtre : ils sont dans le menu « Menus » de la capsule du haut.
-    window.bureau.menu.definir(afficheBureau() ? definitionDesMenus() : [], modeAffichage);
-    return window.bureau.menu.surChoix((route) => {
-      const mode = modeDeLaCommande(route);
-      if (mode) return void changerAffichage(mode);
-      menuChoisi(route);
-      router.push(route as never);
-    });
-  }, [router, etablissement, menuChoisi]);
-  return null;
 }

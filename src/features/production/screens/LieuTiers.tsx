@@ -21,6 +21,10 @@ import { BlocLignes } from '@/shared/components/BlocListe';
 import { AntenneGds, estLAntenneGds } from '@/features/production/components/AntenneGds';
 import { DossiersTouristiques } from '@/features/production/components/DossiersTouristiques';
 import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
+import { ChoixCategoriesTiers } from '@/shared/components/ChoixCategoriesTiers';
+import { categoriesDeLOrganisation } from '@/features/exploitation/services/partenaires';
+import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
+import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisseur';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -72,7 +76,9 @@ function LieuTiersStandard() {
   /** Ouvre une page depuis cette page : sa flèche de retour (et « Annuler », et l'enregistrement d'une écriture) ramène ici, pas à l'onglet d'avant. */
   const ouvrir = useOuvrir();
   const textes: TextesLieu = T[cle];
-  const { settings } = useAppSettings();
+  const { settings, patchSettings } = useAppSettings();
+  /** Partenariats : la fenêtre qui coche les catégories de tiers. */
+  const [choixOuvert, setChoixOuvert] = useState(false);
   const { idsConnus } = useCategoriesContact();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -88,11 +94,26 @@ function LieuTiersStandard() {
     }, [settings.anneeActive]),
   );
 
+  /** Les catégories cochées pour les partenariats (en plus de celles d'office du lieu). */
+  const cochees = useMemo(
+    () => (cle === 'tourisme' ? (settings.exploitation?.categoriesPartenariats ?? []) : []),
+    [cle, settings.exploitation?.categoriesPartenariats],
+  );
   const tiers = useMemo(
     () =>
-      contacts.filter((c) => config.categoriesContact.includes(categorieDuContact(c, idsConnus).id ?? '')),
-    [contacts, idsConnus, config],
+      contacts.filter((c) =>
+        [...config.categoriesContact, ...cochees].includes(categorieDuContact(c, idsConnus).id ?? ''),
+      ),
+    [contacts, idsConnus, config, cochees],
   );
+  const nombreParCategorie = useMemo(() => {
+    const nombre: Record<string, number> = {};
+    for (const c of contacts) {
+      const id = categorieDuContact(c, idsConnus).id;
+      if (id) nombre[id] = (nombre[id] ?? 0) + 1;
+    }
+    return nombre;
+  }, [contacts, idsConnus]);
   /** Les vétérinaires (la page du groupement sanitaire les range avec lui). */
   const veterinaires = useMemo(
     () => contacts.filter((c) => categorieDuContact(c, idsConnus).id === CATEGORIE_FOURNISSEUR.VETERINAIRE),
@@ -214,6 +235,9 @@ function LieuTiersStandard() {
                 }
               />
               {/* Banque et comptabilité : le comptable s'ajoute aussi d'ici (sa catégorie est liée à la page). */}
+              {cle === 'tourisme' ? (
+                <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
+              ) : null}
               {textes.ajouterComptable ? (
                 <ListRow
                   title={textes.ajouterComptable}
@@ -315,6 +339,22 @@ function LieuTiersStandard() {
             </BlocLignes>
           </GroupeAccueil>
         </>
+      ) : null}
+      {cle === 'tourisme' ? (
+        <ChoixCategoriesTiers
+          visible={choixOuvert}
+          titre={T.tourisme.choixTitre}
+          aide={T.tourisme.choixAide}
+          fermer={T.tourisme.choixFermer}
+          aucune={T.tourisme.choixAucune}
+          categories={categoriesDeLOrganisation(categoriesFournisseur(), categoriesClient())}
+          cochees={cochees}
+          imposees={config.categoriesContact}
+          nombreParCategorie={nombreParCategorie}
+          nombreDeTiers={T.tourisme.choixNombre}
+          onChange={(ids) => patchSettings({ exploitation: { ...settings.exploitation, categoriesPartenariats: ids } })}
+          onClose={() => setChoixOuvert(false)}
+        />
       ) : null}
     </Screen>
   );

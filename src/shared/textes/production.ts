@@ -616,6 +616,13 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les factures de ces partenaires',
       nouvelle: 'Nouvelle facture',
       liens: {},
+      /** Le choix des tiers du partenariat : les catégories de contacts à cocher (écoles, associations, fermes…). */
+      choisirTiers: 'Choisir les catégories de tiers',
+      choixTitre: 'Tiers des partenariats',
+      choixAide: 'Cochez les catégories de contacts (écoles, associations, fermes pédagogiques, guides…) à ranger dans les partenariats. L’office de tourisme y est d’office.',
+      choixAucune: 'Aucune catégorie de tiers.',
+      choixFermer: 'Terminé',
+      choixNombre: (n: number) => (n === 0 ? 'Aucun tiers' : `${n} tiers`),
       /** Les dossiers marqués touristiques (dans les dossiers d'un contact) : la Route des Sens Authentiques… */
       dossiers: {
         groupe: 'Les dossiers touristiques',

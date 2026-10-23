@@ -327,19 +327,21 @@ function servirApplication() {
 /** La largeur de la fenêtre à l'ouverture : celle d'un grand téléphone, que l'accueil « ferme » remplit bien. */
 const LARGEUR_PAR_DEFAUT = 800;
 
-/** L'affichage sobre est un poste de comptabilité (menu à gauche, tableaux) : sa fenêtre s'ouvre large. */
-const LARGEUR_SOBRE = 1280;
+/** L'affichage sobre est un poste de comptabilité (menu à gauche, tableaux) : sa fenêtre s'ouvre large, avec ces proportions (environ 5 sur 4), posée au milieu de l'écran. */
+const LARGEUR_SOBRE = 1265;
+const HAUTEUR_SOBRE = 1025;
 
 function creerFenetre() {
   // Haute comme l'écran (sa zone utile, sans la barre des tâches), étroite, et posée au milieu : l'accueil « ferme » est pensé en hauteur.
   const zone = screen.getPrimaryDisplay().workArea;
   const sobre = (donnees['bureau:affichage'] ?? 'sobre') === 'sobre';
   const largeur = Math.min(sobre ? LARGEUR_SOBRE : LARGEUR_PAR_DEFAUT, zone.width);
+  const hauteur = sobre ? Math.min(HAUTEUR_SOBRE, zone.height) : zone.height;
   const fenetre = new BrowserWindow({
     width: largeur,
-    height: zone.height,
+    height: hauteur,
     x: zone.x + Math.round((zone.width - largeur) / 2),
-    y: zone.y,
+    y: zone.y + Math.round((zone.height - hauteur) / 2),
     // Le poste de comptabilité a besoin de place pour son menu et ses tableaux.
     minWidth: sobre ? 820 : 420,
     minHeight: 600,

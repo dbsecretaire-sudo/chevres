@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { ListRow } from '@/shared/components/ListRow';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
+import { TableauDeDonnees } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
 import type { BilanLait } from '@/features/stock/services/stock';
 import type { LaitJour } from '@/features/stock/types';
@@ -36,9 +39,34 @@ export function JournalLait({
 }) {
   /** L'historique du lait (un appui sur sa carte) : le journal, les fabrications et les ventes. */
   const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
+  // Le poste de comptabilité : le bilan du lait est un petit tableau, pas une carte de jeu.
+  const comptable = useDispositionComptable();
   // La carte du lait, comme celles des autres articles : son dessin, son nom (et le prix en petit), le crayon qui change le prix, et quatre pastilles :
   // ce qu'il en reste, ce qui a été produit, utilisé en fromagerie et vendu.
-  const carteBilan = (
+  const carteBilan = comptable ? (
+    <View style={commonStyles.gap6}>
+      <TableauDeDonnees
+        integre
+        colonnes={[
+          { cle: 'poste', titre: 'Lait', poids: 3, valeur: (l) => l.poste },
+          { cle: 'litres', titre: 'Litres', poids: 1, aligne: 'droite', valeur: (l) => l.litres, texte: (l) => T.ligne(enLitres(l.litres)) },
+        ]}
+        lignes={[
+          { poste: 'Restant', litres: bilan.restant },
+          { poste: 'Produit', litres: bilan.produit },
+          { poste: 'Utilisé en fromagerie', litres: -bilan.utilise },
+          { poste: 'Vendu', litres: -bilan.vendu },
+        ]}
+        cleDeLaLigne={(l) => l.poste}
+        vide=""
+        onLigne={() => setHistoriqueOuvert(true)}
+      />
+      <View style={commonStyles.row}>
+        <Text style={commonStyles.muted}>{prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}</Text>
+        <BoutonPlat libelle="Modifier le prix" onPress={onModifierPrix} />
+      </View>
+    </View>
+  ) : (
     <View style={grilleDeCartes}>
       <CarteDeStock
         cle="lait"

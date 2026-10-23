@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';
 import { YearPicker } from '@/shared/components/YearPicker';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { TitreCarte } from '@/features/cheptel/components/bilan/BilanBriques';
 import {
   articlesDuGenre,
@@ -149,9 +151,28 @@ interface Props {
  * stock (aliments, fromagerie, viande, entretien) qui donne, mois par mois, le nombre de mouvements — celui de l'année
  * précédente entre parenthèses. « Détails » déroule les mouvements du mois (date, article, quantité, origine).
  */
+/** Les colonnes du tableau des mouvements d'une carte : date, article, quantité (positive à la vente), origine. */
+function colonnesDeLHistorique(archive: ArchiveStock, ventesSeules: boolean, lait: boolean | undefined): ColonneDuTableau<MouvementStock>[] {
+  return [
+    { cle: 'date', titre: 'Date', poids: 1, valeur: (m) => m.date, texte: (m) => formatDateShortFR(m.date) },
+    { cle: 'article', titre: 'Article', poids: 3, valeur: (m) => nomArticle(m.article, archive) },
+    {
+      cle: 'quantite',
+      titre: 'Quantité',
+      poids: 1,
+      aligne: 'droite',
+      valeur: (m) => (ventesSeules ? -m.delta : m.delta),
+      texte: (m) => (ventesSeules ? `${-m.delta}${lait ? ' L' : ''}` : `${m.delta > 0 ? '+' : ''}${nombreFR(m.delta)}${lait ? ' L' : ''}`),
+    },
+    { cle: 'origine', titre: 'Origine', poids: 2, valeur: (m) => libelleOrigineMouvement(m) },
+  ];
+}
+
 export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, ventesAnimaux }: Props) {
   // L'animal est celui de la capsule du haut : la page n'a plus son propre choix.
   const [filtre] = useState<FiltreStock>(filtreInitial);
+  // Le poste de comptabilité : les mouvements de l'année en tableau (date, article, quantité, origine), au lieu des mois dépliés.
+  const comptable = useDispositionComptable();
   const [annee, setAnnee] = useState(currentYear());
 
   const annees = [
@@ -282,6 +303,8 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
                   .filter((x) => x.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`))
                   .reduce((somme, x) => somme + x.delta, 0),
             );
+          const totalDeLAnnee = (an: number): string =>
+            nombreFR((ventesSeules ? -1 : 1) * mouvements.filter((x) => x.date.startsWith(String(an))).reduce((somme, x) => somme + x.delta, 0));
           const duMois = (an: number, mois: number) =>
             mouvements.filter((m) => m.date.startsWith(`${an}-${String(mois).padStart(2, '0')}`));
           const dansLAn = (an: number) => mouvements.filter((m) => m.date.startsWith(String(an))).length;
@@ -304,8 +327,24 @@ export function HistoriqueStock({ archive, especes, filtreInitial, ventesLait, v
                 <Text style={commonStyles.note}>{bilan}</Text>
                 {lait ? <Text style={commonStyles.note}>{T.historique.noteLait}</Text> : null}
                 {mois.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.historique.aucun}</Text> : null}
+                {comptable && mois.length > 0 ? (
+                  <TableauDeDonnees
+                    integre
+                    colonnes={colonnesDeLHistorique(archive, ventesSeules, lait)}
+                    lignes={mouvements.filter((m) => m.date.startsWith(String(annee)))}
+                    cleDeLaLigne={(m) => m.id}
+                    vide={T.historique.aucun}
+                    tri={{ cle: 'date', decroissant: true }}
+                    pied={
+                      <Text style={commonStyles.cardTitle}>
+                        {totalDeLAnnee(annee)}
+                        {unite}
+                      </Text>
+                    }
+                  />
+                ) : null}
                 {/* Les mois et leurs mouvements sont toujours affichés d'office : plus de « Détails » ni de « Masquer ». */}
-                {mois.map((m) => {
+                {(comptable ? [] : mois).map((m) => {
                   const cle = `${idCarte}:${annee}:${m}`;
                   const detail = duMois(annee, m).sort((a, b) => b.date.localeCompare(a.date));
                   return (

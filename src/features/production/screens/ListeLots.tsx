@@ -6,6 +6,9 @@ import { SuggestionParcours } from '@/features/didacticiel/components/Suggestion
 import { Screen } from '@/shared/components/ScreenList';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
+import { TableauDeDonnees } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
@@ -79,6 +82,8 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
 
   const articles = archive ? articlesDuProduit(produit, archive, espece) : [];
   const annee = String(settings.anneeActive);
+  // Le poste de comptabilité : les variétés en tableau.
+  const comptable = useDispositionComptable();
   // Une année : ses lots fabriqués, et le stock tel qu'il est à la fin de cette année.
   const mouvements = (archive?.mouvements ?? []).filter((m) => regrouper || m.date.slice(0, 4) <= annee);
   const niveaux = archive ? niveauxDeStock(mouvements) : new Map<string, number>();
@@ -150,6 +155,47 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
           {articles.length === 0 ? (
             <EmptyState title={T.aucun} />
           ) : (
+            comptable ? (
+              // Le poste de comptabilité : un tableau (variété, en stock, lots) ; un clic ouvre le détail des lots.
+              <TableauDeDonnees
+                integre
+                colonnes={[
+                  { cle: 'variete', titre: 'Variété', poids: 3, valeur: (a) => a.libelle },
+                  { cle: 'stock', titre: 'En stock', poids: 1, aligne: 'droite', valeur: (a) => niveaux.get(a.cle) ?? 0 },
+                  {
+                    cle: 'lots',
+                    titre: 'Lots',
+                    poids: 2,
+                    valeur: (a) => enStock(a.cle),
+                    texte: (a) => TEXTES.production.fromages.ligne(enStock(a.cle), lotsDeLInventaire({ lots }, ETAT_LOT.TOUT, a.cle).length),
+                  },
+                  {
+                    cle: 'modifier',
+                    titre: '',
+                    poids: 1,
+                    aligne: 'droite',
+                    triable: false,
+                    valeur: () => '',
+                    rendu: (a) =>
+                      piecesDisponibles() ? (
+                        <BoutonPlat
+                          libelle={TEXTES.stock.articleModal.image.modifier}
+                          onPress={() =>
+                            setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle) })
+                          }
+                        />
+                      ) : null,
+                  },
+                ]}
+                lignes={articles}
+                cleDeLaLigne={(a) => a.cle}
+                vide={T.aucun}
+                onLigne={(a) => {
+                  setOuvert(a);
+                  setVisible(true);
+                }}
+              />
+            ) : (
             // Les cartes du stock, comme à la grange : le dessin, le nom, ses lots en petit et la pastille de ce qu'il en reste ; un appui ouvre le détail des lots.
             <View style={grilleDeCartes}>
               {articles.map((a, i) => {
@@ -184,6 +230,7 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                 );
               })}
             </View>
+            )
           )}
         </ScrollView>
         <ModaleImageArticle article={imageDe} onFermer={() => setImageDe(null)} />

@@ -2,12 +2,13 @@ import type { OngletDuBas } from '@/features/didacticiel/services/visiteGuidee';
 import { TEXTES } from '@/shared/textes';
 
 /** Le nom, dans la barre de menus de la fenêtre Windows, de ce que l'onglet du bas est sur téléphone. */
-export function libelleDuMenu(onglet: OngletDuBas): string {
+export function libelleDuMenu(onglet: OngletDuBas, planDeLaFerme = false): string {
   return {
     accueil: TEXTES.navigation.layout.accueil,
-    cheptel: TEXTES.commun.general.cheptel,
-    production: TEXTES.production.titre,
-    commercial: TEXTES.commercial.titre,
+    // Avec le plan de la ferme, le cheptel est dans le menu Exploitation, la production dans l'Atelier, le commercial dans l'Agritourisme.
+    cheptel: planDeLaFerme ? TEXTES.accueil.ferme.zones.enclos : TEXTES.commun.general.cheptel,
+    production: planDeLaFerme ? TEXTES.accueil.ferme.transformation.pastille : TEXTES.production.titre,
+    commercial: planDeLaFerme ? TEXTES.accueil.ferme.agritourisme.titre : TEXTES.commercial.titre,
     comptabilite: TEXTES.commun.general.comptabilite,
     organisation: TEXTES.navigation.layout.reglages,
   }[onglet];

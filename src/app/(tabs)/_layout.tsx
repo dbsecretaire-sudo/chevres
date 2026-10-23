@@ -17,7 +17,7 @@ import { EtablissementHeaderButton } from '@/features/etablissements/components/
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
-import { MenuBureau } from '@/bureau/MenuBureau';
+import { MenuDeLaFenetre } from '@/bureau/MenuDeLaFenetre';
 import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
 import { afficheBureau } from '@/shared/utils/affichage';
 
@@ -317,7 +317,7 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 export default function TabsLayout() {
   return (
     <>
-      <MenuBureau />
+      <MenuDeLaFenetre />
       <EnDeuxColonnes>
         <Onglets />
       </EnDeuxColonnes>

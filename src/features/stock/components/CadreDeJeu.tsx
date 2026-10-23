@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BarreDeNavigation } from '@/features/stock/components/BarreDeNavigation';
+import { BoutonPlat } from '@/shared/components/BoutonPlat';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -38,6 +40,21 @@ export function CadreDeJeu({
   /** Quand elle est donnée : le bouton « Tout le stock » sous le cadre. */
   onToutLeStock?: () => void;
 }) {
+  // Le poste de comptabilité : pas de cadre de jeu (ni bois, ni rail de flèches) — le contenu se pose à plat, et « Tout le stock » est un bouton comme les autres.
+  const comptable = useDispositionComptable();
+  if (comptable) {
+    return (
+      <View style={styles.plat}>
+        {haut}
+        <View style={styles.defile}>{children}</View>
+        {onToutLeStock ? (
+          <View style={styles.barrePlate}>
+            <BoutonPlat icone="list" libelle={TEXTES.production.lieux.entrepot.stockComplet} onPress={onToutLeStock} />
+          </View>
+        ) : null}
+      </View>
+    );
+  }
   return (
     <View style={styles.fond}>
       <View style={styles.cadre}>
@@ -70,6 +87,8 @@ export function CadreDeJeu({
 }
 
 const styles = StyleSheet.create({
+  plat: { flex: 1 },
+  barrePlate: { flexDirection: 'row', paddingVertical: 8 },
   fond: { flex: 1, backgroundColor: colors.background, padding: 8, gap: 8 },
   cadre: {
     flex: 1,

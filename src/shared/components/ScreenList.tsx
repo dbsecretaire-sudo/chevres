@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { styles } from '@/shared/styles/components/ScreenList.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
@@ -15,11 +16,13 @@ export function Screen({
   transparent = false,
 }: PropsWithChildren<{ scroll?: boolean; avecBordBas?: boolean; transparent?: boolean }>) {
   // Transparent : l'écran laisse voir le fond de ce qui l'entoure (le panneau vert du cadre de jeu du stock).
+  // Le poste de comptabilité : un formulaire garde la largeur d'une fiche (pas de champs étirés sur toute la fenêtre) ; les tableaux, eux, prennent toute la largeur.
+  const comptable = useDispositionComptable();
   const fond = transparent ? { flex: 1, backgroundColor: 'transparent' } : commonStyles.screenBg;
   return (
     <SafeAreaView style={fond} edges={avecBordBas ? ['bottom'] : []}>
       {scroll ? (
-        <ScrollView style={fond} contentContainerStyle={styles.content}>
+        <ScrollView style={fond} contentContainerStyle={comptable ? [styles.content, { maxWidth: 820, width: '100%' }] : styles.content}>
           {children}
         </ScrollView>
       ) : (

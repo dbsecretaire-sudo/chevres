@@ -5,7 +5,9 @@ import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { centreDuMenu, libelleDuMenu } from '@/features/didacticiel/services/menuHaut';
 import { HAUTEUR_BARRE_ONGLETS, zoneDeLaFlecheRetour, zoneDeLOnglet } from '@/features/didacticiel/services/visiteGuidee';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { libellesDesMenus } from '@/bureau/MenuBureau';
+import { libellesDesMenus } from '@/shared/navigation/structureMenus';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { afficheBureau } from '@/shared/utils/affichage';
@@ -47,6 +49,7 @@ const memeZone = (a: Zone | null, b: Zone): boolean =>
  */
 export function SuperpositionVisite() {
   const visite = useVisiteGuidee();
+  const { settings } = useAppSettings();
   const { width, height } = useWindowDimensions();
   // Sur téléphone l'écran s'étend sous la barre d'état et la barre de navigation : les repères de l'en-tête et des onglets en tiennent compte.
   const { top: insetHaut, bottom: insetBas } = useSafeAreaInsets();
@@ -118,8 +121,8 @@ export function SuperpositionVisite() {
   if (!visite.actif || !etape) return null;
 
   // Sur Windows, l'onglet est un menu de la barre du haut, que la page ne peut pas entourer : une flèche le désigne, d'après son nom.
-  const menuDuHaut = afficheBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet) : null;
-  const centreMenu = menuDuHaut ? centreDuMenu(libellesDesMenus(), menuDuHaut, largeurDansLaBarre) : null;
+  const menuDuHaut = afficheBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet, !modeEntreprise() && !settings.exploitation?.accueilClassique) : null;
+  const centreMenu = menuDuHaut ? centreDuMenu(libellesDesMenus(!!settings.exploitation?.accueilClassique), menuDuHaut, largeurDansLaBarre) : null;
 
   // Éloigné de la page de l'étape : une pastille propose de reprendre ou de quitter.
   if (!visite.surLaPage) {
