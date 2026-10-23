@@ -23,15 +23,22 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { MouvementCompteModal } from '@/features/comptabilite/components/MouvementCompteModal';
 import { activiteFinanciereSeule } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
+import { TableauEcritures } from '@/features/comptabilite/components/TableauEcritures';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 export default function ComptabiliteIndex() {
   const router = useRouter();
   const e = useListeTransactions();
+  // Affichage sobre sur un grand écran : les écritures en tableau.
+  const comptable = useDispositionComptable();
   // Activité financière : dépôt et retrait se saisissent dans une petite fenêtre flottante.
   const [mouvement, setMouvement] = useState<ValeurDe<typeof SENS_MOUVEMENT> | null>(null);
 
   return (
     <Screen scroll={false}>
+      {comptable ? (
+        <TableauEcritures e={e} />
+      ) : (
       <FlatList
         data={e.filtrees}
         // Années, activités, solde et recherche défilent avec la liste : plus de place pour les écritures.
@@ -78,6 +85,7 @@ export default function ComptabiliteIndex() {
           </LigneDeBloc>
         )}
       />
+      )}
 
       <FiltreTransactionsModal
         visible={e.filtreOuvert}

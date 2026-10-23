@@ -21,6 +21,8 @@ import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
+import { TableauContacts } from '@/features/contacts/components/TableauContacts';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 const T = TEXTES.contacts;
 /** Les puces de catégorie : toutes les catégories, ou celles dont le choix reste à faire. */
@@ -33,6 +35,8 @@ const A_CHOISIR = 'a-choisir';
  */
 export default function ListeContacts() {
   const router = useRouter();
+  // Affichage sobre sur un grand écran : les contacts en tableau.
+  const comptable = useDispositionComptable();
   /** Ouverte depuis un écran en cours : la flèche y ramène. */
   const { retour } = useLocalSearchParams<{ retour?: string }>();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -116,6 +120,15 @@ export default function ListeContacts() {
         ) : null}
       </View>
 
+      {comptable ? (
+        <TableauContacts
+          contacts={filtres}
+          categorieDe={(c) => {
+            const categorie = categorieDuContact(c, idsConnus);
+            return categorie.conflit ? T.categorieAChoisir : (categories.find((x) => x.id === categorie.id)?.nom ?? '');
+          }}
+        />
+      ) : (
       <FlatList
         data={filtres}
         keyExtractor={(item) => item.cle}
@@ -132,6 +145,7 @@ export default function ListeContacts() {
           </LigneDeBloc>
         )}
       />
+      )}
 
       <Fab
         options={[

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
@@ -51,6 +52,8 @@ function FlecheRetour({ onPress }: { onPress: () => void }) {
  */
 export function EnTeteApplication({ options, back, navigation, route }: PropsEnTeteApplication) {
   const router = useRouter();
+  // La disposition « comptable » a sa barre d'outils au-dessus de tout : l'en-tête ne garde que la flèche, le titre et les boutons de l'écran, sur toute la largeur.
+  const comptable = useDispositionComptable();
   const origine = useOrigineRetour();
   // Depuis un bouton, la flèche ramène à l'endroit du clic ; sinon à l'écran d'avant de la pile.
   const retour = useRetour(back ? navigation.goBack : undefined);
@@ -71,17 +74,19 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
     colors.primary) as string;
   return (
     <View style={styles.fond}>
-      <View style={[styles.haut, { paddingTop: 12 + top }]}>
-        <View style={colonneCentree}>
-          <BarreHauteFerme />
+      {comptable ? null : (
+        <View style={[styles.haut, { paddingTop: 12 + top }]}>
+          <View style={colonneCentree}>
+            <BarreHauteFerme />
+          </View>
         </View>
-      </View>
+      )}
       {gauche || droite || titre ? (
         // Le titre n'est pas une seconde bulle sous la capsule : le texte est posé sur la page, avec la flèche et les boutons de l'écran dans de
         // petites pastilles de sa couleur (téléphone comme Windows).
         // La colonne centrée (largeur maximale) est un conteneur à part : avec des marges sur elle-même, la flèche collait au bord de la fenêtre.
-        <View style={colonneCentree}>
-          <View style={styles.titreLibre}>
+        <View style={comptable ? undefined : colonneCentree}>
+          <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {gauche ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{gauche}</View> : null}
             {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
             <Text style={[styles.titre, { color: couleur }]} numberOfLines={2}>
@@ -121,6 +126,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     minHeight: 44,
   },
+  titreComptable: { paddingHorizontal: 20, paddingTop: 8 },
   pastilleBouton: {
     flexDirection: 'row',
     alignItems: 'center',

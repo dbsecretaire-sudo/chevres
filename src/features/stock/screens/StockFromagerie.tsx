@@ -76,6 +76,8 @@ import {
 } from '@/features/stock/services/stock';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
+import { TableauArticles, type LigneArticle } from '@/features/stock/components/TableauArticles';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
@@ -228,6 +230,8 @@ export default function StockFromagerie() {
   const [laitOuvert, setLaitOuvert] = useState<LaitJour | 'nouveau' | null>(null);
   /** L'article pris par un appui long (sa clé) : on touche la carte où le mettre. */
   const [prise, setPrise] = useState<string | null>(null);
+  // Affichage sobre sur un grand écran : les articles en tableau.
+  const comptable = useDispositionComptable();
   /** La liste qui défile, et où elle en est : les flèches de la barre de navigation la font avancer d'un cran. */
   const defilement = useRef<ScrollView>(null);
   const position = useRef(0);
@@ -337,6 +341,54 @@ export default function StockFromagerie() {
       await positionnerArticle(genre, cle, indexComplet, filtreCourant);
       charger();
     };
+    /** Un appui sur un article : s'il est pris, on le dépose ici ; sinon l'article s'ouvre. */
+    const ouvrirArticle = (a: ArticleAffiche, i: number) => {
+      if (prise) {
+        if (prise !== a.cle && priseIci) placer(prise, i);
+        setPrise(null);
+        return;
+      }
+      if (boucles) {
+        setBoucleOuverte(a);
+        setBoucleVisible(true);
+      } else if (estLigneDuCheptel(a.cle)) {
+        // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
+      } else if (estArticleAvecLots(a.cle)) {
+        setFromageOuvert(a);
+        setFromageVisible(true);
+      } else {
+        // Les autres articles (aliments, emballages, entretien, matériel, listes ajoutées…) : leur historique ; la quantité se saisit depuis lui.
+        setHistoriqueDe(a);
+      }
+    };
+    /** Le crayon d'un article : l'image d'une boucle, ou son nom, son compte et sa suppression. */
+    const modifierArticle = (a: ArticleAffiche) =>
+      boucles
+        ? piecesDisponibles()
+          ? setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
+          : undefined
+        : setRenomme(a);
+    if (comptable) {
+      // Affichage sobre sur un grand écran : l'inventaire en tableau (le déplacement par appui long reste aux cartes).
+      const lignes: LigneArticle[] = elements.map((a) => {
+        const resume = boucles ? resumeDesBoucles(a) : undefined;
+        const niveau = resume ? resume.niveau : (niveaux.get(a.cle) ?? 0);
+        return {
+          article: a,
+          niveau,
+          quantite: a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau),
+          note: resume ? resume.resume : sousLeNom(a),
+        };
+      });
+      return (
+        <TableauArticles
+          lignes={lignes}
+          libelleModifier={boucles ? T.articleModal.image.modifier : TEXTES.commun.general.modifier}
+          onOuvrir={(l, i) => ouvrirArticle(l.article, i)}
+          onModifier={boucles && !piecesDisponibles() ? undefined : (l) => modifierArticle(l.article)}
+        />
+      );
+    }
     return (
       <View style={jeu.cartesStock}>
         {priseIci ? (
@@ -368,25 +420,7 @@ export default function StockFromagerie() {
                     : () => setRenomme(a)
                 }
                 onLongPress={deplacable ? () => setPrise(a.cle) : undefined}
-                onPress={() => {
-                  if (prise) {
-                    if (prise !== a.cle && priseIci) placer(prise, i);
-                    setPrise(null);
-                    return;
-                  }
-                  if (boucles) {
-                    setBoucleOuverte(a);
-                    setBoucleVisible(true);
-                  } else if (estLigneDuCheptel(a.cle)) {
-                    // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
-                  } else if (estArticleAvecLots(a.cle)) {
-                    setFromageOuvert(a);
-                    setFromageVisible(true);
-                  } else {
-                    // Les autres articles (aliments, emballages, entretien, matériel, listes ajoutées…) : leur historique ; la quantité se saisit depuis lui.
-                    setHistoriqueDe(a);
-                  }
-                }}
+                onPress={() => ouvrirArticle(a, i)}
               />
             );
           })}

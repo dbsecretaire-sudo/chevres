@@ -16,6 +16,8 @@ import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
+import { TableauCheptel } from '@/features/cheptel/components/TableauCheptel';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 /** La tête dessinée d'une chèvre (le trait fin) : elle remplace l'emoji devant chaque chèvre de la liste. */
 const TETE_DE_CHEVRE = require('../../../../assets/images/tete-chevre.png');
@@ -34,6 +36,8 @@ interface Props {
 export function ChevrerieInterieure({ vedettes }: Props) {
   const router = useRouter();
   const liste = useListeCheptel();
+  // Affichage sobre sur un grand écran : le cheptel en tableau, sans le mur ni les chèvres qui se promènent.
+  const comptable = useDispositionComptable();
   const dessin = dessinDeLEspece();
   const tetes = especeCourante() === TYPE_ANIMAL_ETABLISSEMENT.CHEVRES;
   const visibles = liste.filtrees;
@@ -56,6 +60,16 @@ export function ChevrerieInterieure({ vedettes }: Props) {
       </View>
     </View>
   );
+  if (comptable) {
+    return (
+      <View style={styles.tableau}>
+        <View style={styles.enteteSol}>
+          <FiltresCheptel e={liste} />
+        </View>
+        <TableauCheptel animaux={visibles} />
+      </View>
+    );
+  }
   return (
     <FlatList
       style={styles.fond}
@@ -106,6 +120,7 @@ export function ChevrerieInterieure({ vedettes }: Props) {
 const styles = StyleSheet.create({
   fond: { flex: 1, backgroundColor: '#E9D8A6' },
   contenu: { flexGrow: 1 },
+  tableau: { flex: 1 },
   mur: {
     // Un fond clair (un pré) : les chèvres brunes du rebord s'y voient bien, y compris sur un petit écran.
     backgroundColor: '#D6E8C6',

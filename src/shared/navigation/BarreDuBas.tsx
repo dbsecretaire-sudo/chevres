@@ -4,6 +4,7 @@ import type { BottomTabBarProps } from 'expo-router/build/react-navigation/botto
 import { BandeauBas } from '@/features/accueil/ferme/BandeauBas';
 import { publierMenus, type EntreeMenu } from '@/shared/navigation/menusSections';
 import { memoriserNavigationDesOnglets } from '@/shared/navigation/pileDesOnglets';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
 /**
  * La barre du bas de toutes les pages (à passer en `tabBar` des onglets). Sur le téléphone, il n'y a plus de barre d'onglets : les rubriques sont
@@ -12,6 +13,8 @@ import { memoriserNavigationDesOnglets } from '@/shared/navigation/pileDesOnglet
  */
 export function BarreDuBas(props: BottomTabBarProps) {
   const { state, descriptors, navigation } = props;
+  // La disposition « comptable » a sa barre d'outils en haut : pas de bandeau en bas.
+  const comptable = useDispositionComptable();
   const courant = state.routes[state.index]?.name;
   // La maison du bandeau vide la pile des pages avec cette navigation.
   memoriserNavigationDesOnglets(navigation);
@@ -35,5 +38,5 @@ export function BarreDuBas(props: BottomTabBarProps) {
     publierMenus(entrees);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- les entrées sont recréées à chaque rendu : la signature dit quand elles changent
   }, [signature]);
-  return <BandeauBas />;
+  return comptable ? null : <BandeauBas />;
 }

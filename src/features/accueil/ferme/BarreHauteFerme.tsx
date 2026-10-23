@@ -22,7 +22,7 @@ const MARGES_DE_LA_CAPSULE = 135;
  * Production, Commercial, Comptabilité, Organisation). On les touche moins que le bandeau du bas (la maison, la balance, les rappels) : ils sont
  * dans la zone du haut, que le pouce atteint le moins bien.
  */
-export function BarreHauteFerme() {
+export function BarreHauteFerme({ sansMenus = false }: { sansMenus?: boolean }) {
   const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
   const { espece } = useEtablissement();
   const { width } = useWindowDimensions();
@@ -58,7 +58,8 @@ export function BarreHauteFerme() {
       />
       <BoutonDidacticiel forme="pastille" />
       <BoutonEnregistrer />
-      <PastilleMenus compact={compact} />
+      {/* La disposition « comptable » a son menu en arbre à gauche : pas de pastille « Menus ». */}
+      {sansMenus ? null : <PastilleMenus compact={compact} />}
     </View>
   );
 }

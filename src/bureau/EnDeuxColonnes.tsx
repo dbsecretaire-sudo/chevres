@@ -9,6 +9,8 @@ import Reglages from '@/features/settings/screens/Reglages';
 import { DansColonneGauche, useDeuxColonnes } from '@/bureau/colonnes';
 import { useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { ROUTES } from '@/shared/constants/routes';
+import { DispositionComptable } from '@/shared/components/DispositionComptable';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { afficheBureau } from '@/shared/utils/affichage';
 import { LARGEUR_MENU, styles } from '@/shared/styles/bureau/EnDeuxColonnes.styles';
 
@@ -61,6 +63,9 @@ function menuDeLaRubrique(page: string, adresse: string, depuisOrganisation: boo
  * ouvert est en couleur), à droite l'écran lui-même. Une fenêtre étroite garde l'affichage du téléphone.
  */
 export function EnDeuxColonnes({ children }: PropsWithChildren) {
+  const comptable = useDispositionComptable();
+  // L'affichage sobre dans une fenêtre large : un poste de comptabilité (menu en arbre à gauche, barre d'outils, tableaux).
+  if (comptable) return <DispositionComptable>{children}</DispositionComptable>;
   // Sur le téléphone (et dans un navigateur ordinaire), les écrans s'affichent seuls, dans une colonne de largeur limitée et centrée.
   return afficheBureau() ? (
     <EnDeuxColonnesBureau>{children}</EnDeuxColonnesBureau>

@@ -16,6 +16,7 @@ import { SceneExploitation } from '@/features/accueil/ferme/SceneExploitation';
 import { AccueilSobre } from '@/features/accueil/ferme/AccueilSobre';
 import { lignesDeTransformation, SceneTransformation } from '@/features/accueil/ferme/SceneTransformation';
 import { OptionsModal } from '@/shared/components/OptionsModal';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { afficheSobre } from '@/shared/utils/affichage';
 import type { AncreBouton, EntreeDeColonne } from '@/features/accueil/ferme/typesFerme';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
@@ -103,6 +104,7 @@ const iconeIon = (nom: keyof typeof Ionicons.glyphMap) => (
 export default function AccueilFerme() {
   const router = useRouter();
   const f = useFermeAccueil();
+  const comptable = useDispositionComptable();
   const { espece } = useEtablissement();
   // Sans en-tête, le contenu commence sous l'encoche et la barre d'état.
   const { top: haut } = useSafeAreaInsets();
@@ -340,7 +342,7 @@ export default function AccueilFerme() {
       <View style={[styles.haut, { paddingTop: 12 + haut }]}>
         <View style={styles.colonneHaut}>
           {/* Les menus qu'on touche rarement sont en haut (téléphone comme Windows) ; le bandeau qu'on utilise sans cesse est tout en bas. */}
-          <BarreHauteFerme />
+          {comptable ? null : <BarreHauteFerme />}
           {/* Le nom de l'exploitation : il ouvre le choix de l'établissement. */}
           <NomFerme />
           <RappelSauvegarde />
@@ -412,6 +414,7 @@ export default function AccueilFerme() {
           )}
         </View>
       </View>
+      {comptable ? null : (
       <BasculeFerme
         cotes={[
           { cle: 'exploitation', titre: TEXTES.accueil.ferme.zones.enclos },
@@ -421,6 +424,7 @@ export default function AccueilFerme() {
         actif={cote}
         onChoisir={choisirCote}
       />
+      )}
 
       {/* Les bulles du bouton touché : par-dessus tout ; un appui à côté les referme. */}
       {menu ? (
