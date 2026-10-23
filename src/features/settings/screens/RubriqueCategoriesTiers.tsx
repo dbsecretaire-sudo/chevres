@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
+import { Fab } from '@/shared/components/Fab';
+import { TableauCategories } from '@/features/settings/components/TableauCategories';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { contientTexte } from '@/shared/utils/recherche';
 import { Button } from '@/shared/components/Button';
@@ -66,6 +69,7 @@ const DEPENSES_A_LISTE: readonly string[] = [
 export default function RubriqueCategoriesTiers() {
   const { settings, loaded, patchSettings } = useAppSettings();
   const infos = settings.exploitation;
+  const comptable = useDispositionComptable();
 
   const [categories, setCategories] = useState<CategorieFournisseurReglage[]>(
     () => infos?.categoriesFournisseur ?? categoriesFournisseurParDefaut(),
@@ -122,82 +126,11 @@ export default function RubriqueCategoriesTiers() {
     maj(c.id, { operations: ops, autresDepenses: autres, depenses: [...new Set([...depensesDesOperations(ops.filter(estPermiseEnDepense)), ...autres])] });
   };
 
-  /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
-  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
-
-  return (
-    <Screen>
-      <Text style={styles.aide}>{T.aide}</Text>
-      <ChoixVueCategories
-        parOption={parOption}
-        onChange={setParOption}
-        libelleParCategorie={T.parCategorie}
-        libelleParOption={T.parOption}
-      />
-      <ChampRecherche value={recherche} onChangeText={setRecherche} />
-      {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
-      {parOption ? (
-        <ReglagesParOption
-          categories={visibles}
-          groupes={[
-            {
-              titre: T.affichage,
-              options: [
-                {
-                  cle: 'pasPayee',
-                  titre: TEXTES.comptabilite.tresorerie.paiement.pasPayee,
-                  coche: (id) => pasPayeeAffichee(categories.find((c) => c.id === id)),
-                  definir: (id, pasPayee) => maj(id, { pasPayee }),
-                },
-                {
-                  cle: 'sansFacture',
-                  titre: TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee,
-                  coche: (id) => sansFactureAffichee(categories.find((c) => c.id === id)),
-                  definir: (id, sansFacture) => maj(id, { sansFacture }),
-                },
-                {
-                  cle: 'offert',
-                  titre: TEXTES.comptabilite.nouvelleEcriture.offertFournisseur,
-                  coche: (id) => offertAffiche(categories.find((c) => c.id === id)),
-                  definir: (id, offert) => maj(id, { offert }),
-                },
-              ],
-            },
-            {
-              titre: T.depenses,
-              options: depensesProposees.map((d) => ({
-                cle: d,
-                titre: LABEL_CATEGORIE_DEPENSE[d],
-                coche: (id) => {
-                  const c = categories.find((x) => x.id === id);
-                  return !!c && (depensesDeLaCategorie(c) ?? depensesProposees).includes(d);
-                },
-                definir: (id, cochee) => {
-                  const c = categories.find((x) => x.id === id);
-                  if (!c) return;
-                  const permises = depensesDeLaCategorie(c) ?? depensesProposees;
-                  maj(id, {
-                    depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d),
-                    operations: undefined,
-                    autresDepenses: undefined,
-                  });
-                },
-              })),
-            },
-          ]}
-        />
-      ) : null}
-      {(parOption ? [] : visibles).map((c) => {
-        // Sans réglage, un vétérinaire n'a que la dépense vétérinaire et les autres catégories les ont toutes.
-        const permises = depensesDeLaCategorie(c) ?? depensesProposees;
-        return (
-          <SectionDeroulante
-            key={c.id}
-            titre={c.nom}
-            accordeon
-            ouverte={ouverte === c.id}
-            onBasculer={() => setOuverte((actuelle) => (actuelle === c.id ? null : c.id))}
-          >
+  /** Le détail d'une catégorie (ses réglages) : sous son titre dans la liste, sous le tableau au poste de comptabilité. */
+  const detailDe = (c: CategorieFournisseurReglage) => {
+    // Sans réglage, un vétérinaire n'a que la dépense vétérinaire et les autres catégories les ont toutes.
+    const permises = depensesDeLaCategorie(c) ?? depensesProposees;
+    return (
             <Card>
               <View style={commonStyles.rowSpaceBetween}>
                 <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{c.nom}</Text>
@@ -272,10 +205,111 @@ export default function RubriqueCategoriesTiers() {
                 <Button variant="danger" label={T.supprimer} onPress={() => setARetirer(c.id)} />
               )}
             </Card>
-          </SectionDeroulante>
-        );
-      })}
-      {parOption ? null : <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />}
+    );
+  };
+
+  /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
+  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
+
+  return (
+    <Screen>
+      <Text style={styles.aide}>{T.aide}</Text>
+      <ChoixVueCategories
+        parOption={parOption}
+        onChange={setParOption}
+        libelleParCategorie={T.parCategorie}
+        libelleParOption={T.parOption}
+      />
+      <ChampRecherche value={recherche} onChangeText={setRecherche} />
+      {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
+      {parOption ? (
+        <ReglagesParOption
+          categories={visibles}
+          groupes={[
+            {
+              titre: T.affichage,
+              options: [
+                {
+                  cle: 'pasPayee',
+                  titre: TEXTES.comptabilite.tresorerie.paiement.pasPayee,
+                  coche: (id) => pasPayeeAffichee(categories.find((c) => c.id === id)),
+                  definir: (id, pasPayee) => maj(id, { pasPayee }),
+                },
+                {
+                  cle: 'sansFacture',
+                  titre: TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee,
+                  coche: (id) => sansFactureAffichee(categories.find((c) => c.id === id)),
+                  definir: (id, sansFacture) => maj(id, { sansFacture }),
+                },
+                {
+                  cle: 'offert',
+                  titre: TEXTES.comptabilite.nouvelleEcriture.offertFournisseur,
+                  coche: (id) => offertAffiche(categories.find((c) => c.id === id)),
+                  definir: (id, offert) => maj(id, { offert }),
+                },
+              ],
+            },
+            {
+              titre: T.depenses,
+              options: depensesProposees.map((d) => ({
+                cle: d,
+                titre: LABEL_CATEGORIE_DEPENSE[d],
+                coche: (id) => {
+                  const c = categories.find((x) => x.id === id);
+                  return !!c && (depensesDeLaCategorie(c) ?? depensesProposees).includes(d);
+                },
+                definir: (id, cochee) => {
+                  const c = categories.find((x) => x.id === id);
+                  if (!c) return;
+                  const permises = depensesDeLaCategorie(c) ?? depensesProposees;
+                  maj(id, {
+                    depenses: cochee ? [...permises, d] : permises.filter((x) => x !== d),
+                    operations: undefined,
+                    autresDepenses: undefined,
+                  });
+                },
+              })),
+            },
+          ]}
+        />
+      ) : null}
+      {comptable && !parOption ? (
+        <>
+          <TableauCategories
+            categories={visibles}
+            cases={[
+              { cle: 'pasPayee', titre: TEXTES.comptabilite.tresorerie.paiement.pasPayee, coche: (id) => pasPayeeAffichee(categories.find((c) => c.id === id)) },
+              { cle: 'sansFacture', titre: TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee, coche: (id) => sansFactureAffichee(categories.find((c) => c.id === id)) },
+              { cle: 'offert', titre: TEXTES.comptabilite.nouvelleEcriture.offertFournisseur, coche: (id) => offertAffiche(categories.find((c) => c.id === id)) },
+            ]}
+            resume={{ titre: T.depenses, texte: (id) => { const c = categories.find((x) => x.id === id); return c ? `${(depensesDeLaCategorie(c) ?? depensesProposees).filter((d) => (depensesProposees as readonly string[]).includes(d)).length} sur ${depensesProposees.length}` : ''; } }}
+            renommer={{ libelle: T.renommer, onRenommer: setRenommage }}
+            choisie={ouverte}
+            onChoisir={(id) => setOuverte((actuelle) => (actuelle === id ? null : id))}
+            vide={T.ajouter}
+          />
+          {(() => {
+            const choisie = visibles.find((c) => c.id === ouverte);
+            return choisie ? detailDe(choisie) : null;
+          })()}
+          <Fab options={[{ label: T.ajouter.replace(/^\+\s*/, ''), icon: 'add', onPress: () => setAjoutOuvert(true) }]} />
+        </>
+      ) : (
+        <>
+          {(parOption ? [] : visibles).map((c) => (
+            <SectionDeroulante
+              key={c.id}
+              titre={c.nom}
+              accordeon
+              ouverte={ouverte === c.id}
+              onBasculer={() => setOuverte((actuelle) => (actuelle === c.id ? null : c.id))}
+            >
+              {detailDe(c)}
+            </SectionDeroulante>
+          ))}
+          {parOption ? null : <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />}
+        </>
+      )}
       {/* Une liste enregistrée avant l'arrivée de nouvelles catégories d'office : un bouton les ajoute, sans toucher aux vôtres. */}
       {manquantes.length > 0 ? (
         <Button

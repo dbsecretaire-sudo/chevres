@@ -3,7 +3,6 @@ import { Pressable, Text } from 'react-native';
 import { contratsDe } from '@/features/fournisseurs/services/contratsAssureur';
 import type { Contact } from '@/features/contacts/services/contacts';
 import type { ContratAssureur } from '@/features/fournisseurs/types';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
@@ -56,16 +55,14 @@ export function TableauAssurance({ assureurs, ouvrir }: { assureurs: Contact[]; 
     { cle: 'email', titre: T.email, poids: 2, valeur: (l) => coordonnee(l.assureur, 'email') },
   ];
   return (
-    <GroupeAccueil titre={TEXTES.production.lieux.assurance.groupeTiers}>
-      <TableauDeDonnees
-        integre
-        colonnes={colonnes}
-        lignes={lignes}
-        cleDeLaLigne={(l) => l.id}
-        vide={T.aucun}
-        tri={{ cle: 'assureur' }}
-        onLigne={(l) => ouvrir(l.contrat ? ROUTES.contratAssureur({ id: l.contrat.id }) : ROUTES.ficheContact(l.assureur.cle))}
-      />
-    </GroupeAccueil>
+    <TableauDeDonnees
+      integre
+      colonnes={colonnes}
+      lignes={lignes}
+      cleDeLaLigne={(l) => l.id}
+      vide={T.aucun}
+      tri={{ cle: 'assureur' }}
+      onLigne={(l) => ouvrir(l.contrat ? ROUTES.contratAssureur({ id: l.contrat.id }) : ROUTES.ficheContact(l.assureur.cle))}
+    />
   );
 }

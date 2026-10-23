@@ -19,7 +19,8 @@ const T = TEXTES.comptabilite.listeTransactions;
 const montantDe = (t: Transaction, sens: Transaction['sens']): number | undefined =>
   t.sens === sens ? (t.montantComptabilise ?? 0) : undefined;
 
-const COLONNES: readonly ColonneDuTableau<Transaction>[] = [
+/** Les colonnes du tableau des écritures (les pages de lieu en reprennent une partie). */
+export const COLONNES_ECRITURES: readonly ColonneDuTableau<Transaction>[] = [
   { cle: 'date', titre: 'Date', poids: 1.3, valeur: (t) => t.date, texte: (t) => formatDateFR(t.date) },
   { cle: 'libelle', titre: 'Libellé', poids: 2.4, valeur: (t) => t.titre },
   { cle: 'detail', titre: 'Détail', poids: 2.4, valeur: (t) => t.sousTitre },
@@ -71,7 +72,7 @@ export function TableauEcritures({ e }: { e: ReturnType<typeof useListeTransacti
         </View>
       </View>
       <TableauDeDonnees
-        colonnes={COLONNES}
+        colonnes={COLONNES_ECRITURES}
         lignes={e.filtrees}
         cleDeLaLigne={(t) => `${t.id}:${t.activite}`}
         tri={{ cle: 'date', decroissant: true }}

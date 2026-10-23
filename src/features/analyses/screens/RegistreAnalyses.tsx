@@ -17,6 +17,9 @@ import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { exporterRegistreAnalysesPdf } from '@/features/export/registreAnalysesPdf';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { Button } from '@/shared/components/Button';
+import { Fab } from '@/shared/components/Fab';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
@@ -30,6 +33,33 @@ import { formatDateFR, formatDateShortFR } from '@/shared/utils/dates';
 
 const T = TEXTES.analysesProduits;
 const R = T.registre;
+
+/** Une fabrication du registre, telle que la rend `fabricationsDuRegistre`. */
+type Fabrication = ReturnType<typeof fabricationsDuRegistre>[number];
+
+/** Les colonnes du tableau d'un produit (poste de comptabilité) : la fabrication, ses lots, ses analyses et le jugement de la dernière. */
+const COLONNES: readonly ColonneDuTableau<Fabrication>[] = [
+  { cle: 'date', titre: 'Date', poids: 1.1, valeur: (f) => f.date, texte: (f) => formatDateShortFR(f.date) },
+  { cle: 'fabrication', titre: 'Fabrication', poids: 2.2, valeur: (f) => f.libelle },
+  { cle: 'lots', titre: 'Lots', poids: 2, valeur: (f) => R.lots(f.numeros) },
+  { cle: 'analyses', titre: 'Analyses', poids: 1.2, valeur: (f) => f.analyses.length, texte: (f) => (f.analyses.length > 0 ? R.analyses(f.analyses.length) : R.aAnalyser) },
+  { cle: 'derniere', titre: 'Dernière analyse', poids: 1.4, valeur: (f) => f.analyses[0]?.date ?? '', texte: (f) => (f.analyses[0] ? formatDateFR(f.analyses[0].date) : '') },
+  {
+    cle: 'jugement',
+    titre: 'Jugement',
+    poids: 1.4,
+    valeur: (f) => (f.verdict ? T.verdicts[f.verdict] : ''),
+    rendu: (f) =>
+      f.verdict ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Ionicons name={APPARENCE[f.verdict].icone} size={16} color={APPARENCE[f.verdict].couleur} />
+          <Text style={{ fontSize: 13, color: colors.text }}>{T.verdicts[f.verdict]}</Text>
+        </View>
+      ) : (
+        <Ionicons name="flask-outline" size={16} color={colors.textMuted} />
+      ),
+  },
+];
 
 /** La couleur et l'icône de chaque jugement. */
 const APPARENCE: Record<Verdict, { icone: keyof typeof Ionicons.glyphMap; couleur: string }> = {
@@ -45,6 +75,7 @@ const APPARENCE: Record<Verdict, { icone: keyof typeof Ionicons.glyphMap; couleu
  */
 export default function RegistreAnalyses() {
   const router = useRouter();
+  const comptable = useDispositionComptable();
   const { settings } = useAppSettings();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [impression, setImpression] = useState(false);
@@ -63,6 +94,12 @@ export default function RegistreAnalyses() {
   // Le fromage et le savon se font avec du lait : seulement pour une espèce laitière.
   const produits = PRODUITS_DU_REGISTRE.filter((p) => (p === 'fromage' || p === 'savon' ? laiterieActive(especeCourante()) : true));
 
+  /** Un appui sur une fabrication : sa dernière analyse, ou une nouvelle déjà rattachée à elle. */
+  const ouvrirFabrication = (produit: ProduitAnalyse, f: Fabrication) => {
+    const derniere = f.analyses[0];
+    router.push((derniere ? ROUTES.analyseProduit(produit, derniere.id) : ROUTES.analyseProduit(produit, undefined, f.id)) as never);
+  };
+
   return (
     <Screen>
       <Text style={commonStyles.note}>{R.intro}</Text>
@@ -71,6 +108,31 @@ export default function RegistreAnalyses() {
       {produits.map((produit: ProduitAnalyse) => {
         const fabrications = archive ? fabricationsDuRegistre(archive, analyses, produit) : [];
         const horsLots = analysesSansFabrication(analyses, produit, fabrications);
+        // Le poste de comptabilité : un tableau par produit, et les ajouts dessous (comme « Ajouter au cheptel »).
+        if (comptable) {
+          return (
+            <GroupeAccueil key={produit} titre={T.produits[produit].titre}>
+              <TableauDeDonnees
+                integre
+                colonnes={COLONNES}
+                lignes={fabrications}
+                cleDeLaLigne={(fab) => fab.id}
+                tri={{ cle: 'date', decroissant: true }}
+                vide={R.aucuneFabrication}
+                onLigne={(fab) => ouvrirFabrication(produit, fab)}
+              />
+              <Fab
+                options={[
+                  { label: T.nouvelle, icon: 'add', onPress: () => router.push(ROUTES.analyseProduit(produit) as never) },
+                  { label: R.toutes(T.produits[produit].nom), icon: 'list', color: colors.text, onPress: () => router.push(ROUTES.analysesProduit(produit) as never) },
+                  ...(horsLots.length > 0
+                    ? [{ label: R.horsLots(horsLots.length), icon: 'flask-outline' as const, color: colors.text, onPress: () => router.push(ROUTES.analysesProduit(produit) as never) }]
+                    : []),
+                ]}
+              />
+            </GroupeAccueil>
+          );
+        }
         return (
           <GroupeAccueil key={produit} titre={T.produits[produit].titre}>
             <BlocLignes>

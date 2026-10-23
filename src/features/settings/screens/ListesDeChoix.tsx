@@ -23,11 +23,15 @@ import {
   type ListePerso,
 } from '@/features/settings/services/listesPerso';
 import { Button } from '@/shared/components/Button';
+import { Fab } from '@/shared/components/Fab';
 import { FormField } from '@/shared/components/FormField';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { Screen } from '@/shared/components/Screen';
 import { SelectField } from '@/shared/components/SelectField';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
+import { COMPTE_PAR_DEPENSE } from '@/shared/constants/planComptable';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
@@ -67,6 +71,9 @@ export default function ListesDeChoix() {
   );
   const optionsCompte = useMemo(() => optionsDesComptes(comptes, ACTIVITE_COMMUNE, []).optionsCompteDepense, [comptes]);
   const [aRenommer, setARenommer] = useState<ARenommer | null>(null);
+  const comptable = useDispositionComptable();
+  /** La liste à laquelle on ajoute un choix (le poste de comptabilité : une fenêtre demande son nom). */
+  const [ajoutDans, setAjoutDans] = useState<CleListePerso | null>(null);
   const [nouvelObjet, setNouvelObjet] = useState('');
   const [nouveauCircuit, setNouveauCircuit] = useState('');
   const [nouvelleCategorie, setNouvelleCategorie] = useState('');
@@ -103,6 +110,154 @@ export default function ListesDeChoix() {
       ) : null}
     </View>
   );
+
+  /** Le compte d'une catégorie de dépense, avec son libellé : celui d'office de l'application, ou celui choisi pour une catégorie ajoutée. */
+  const compteDe = (c: Choix): string => {
+    if (c.perso) {
+      const trouve = comptes.find((x) => x.numero === c.compte || x.id === c.compte);
+      return trouve ? `${trouve.numero} — ${trouve.libelle}` : (c.compte ?? '');
+    }
+    const d = COMPTE_PAR_DEPENSE[c.id as keyof typeof COMPTE_PAR_DEPENSE];
+    return d ? `${d.numero} — ${d.libelle}` : '';
+  };
+
+  /** Le poste de comptabilité : chaque liste est un tableau (case « proposé », nom, actions), avec le bouton d'ajout dessous. */
+  const tableau = (liste: CleListePerso, choix: (Choix & { visible: boolean })[], renommable: boolean) => {
+    const colonnes: ColonneDuTableau<Choix & { visible: boolean }>[] = [
+      {
+        cle: 'visible',
+        titre: T.propose,
+        poids: 1.4,
+        aligne: 'centre',
+        valeur: (c) => (c.visible ? 1 : 0),
+        rendu: (c) => (
+          <Pressable
+            onPress={() => changer(liste, (p) => avecChoixMasque(p, c.id, c.visible))}
+            hitSlop={8}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: c.visible }}
+            accessibilityLabel={c.nom}
+          >
+            <Ionicons name={c.visible ? 'checkbox' : 'square-outline'} size={20} color={c.visible ? accent : colors.textMuted} />
+          </Pressable>
+        ),
+      },
+      {
+        cle: 'nom',
+        titre: T.choix,
+        poids: 4,
+        valeur: (c) => c.nom,
+        rendu: (c) => <Text style={[commonStyles.valueText, !c.visible && styles.masque]}>{c.nom}</Text>,
+      },
+      // Le compte du plan comptable de chaque catégorie : celui que l'application donne aux catégories d'office, celui qu'on a choisi pour une catégorie ajoutée.
+      ...(liste === 'categoriesDepense'
+        ? [
+            {
+              cle: 'compte',
+              titre: T.compte,
+              poids: 3.5,
+              valeur: (c: Choix & { visible: boolean }) => compteDe(c),
+              rendu: (c: Choix & { visible: boolean }) => <Text style={[styles.texteCompte, !c.visible && styles.masque]}>{compteDe(c)}</Text>,
+            } satisfies ColonneDuTableau<Choix & { visible: boolean }>,
+          ]
+        : []),
+      // La colonne des actions : « Renommer » et « Retirer » (vide pour un choix d'office qui ne se renomme pas).
+      actionsDeLaListe(liste, renommable),
+    ];
+    return <TableauDeDonnees integre colonnes={colonnes} lignes={choix} cleDeLaLigne={(c) => c.id} vide="" />;
+  };
+  const actionsDeLaListe = (liste: CleListePerso, renommable: boolean): ColonneDuTableau<Choix & { visible: boolean }> => ({
+        cle: 'actions',
+        titre: '',
+        poids: 2,
+        triable: false,
+        valeur: () => '',
+        rendu: (c) => (
+          <View style={{ flexDirection: 'row', gap: 14 }}>
+            {renommable || c.perso ? (
+              <Pressable onPress={() => setARenommer({ liste, choix: c })} hitSlop={6} accessibilityRole="button">
+                <Text style={[styles.lien, { color: accent }]}>{T.renommer}</Text>
+              </Pressable>
+            ) : null}
+            {c.perso ? (
+              <Pressable onPress={() => changer(liste, (p) => sansChoixAjoute(p, c.id))} hitSlop={6} accessibilityRole="button">
+                <Text style={[styles.lien, { color: colors.danger }]}>{T.retirer}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ),
+  });
+
+  if (comptable) {
+    return (
+      <Screen>
+        <Text style={commonStyles.note}>{T.intro}</Text>
+        <GroupeAccueil titre={T.assuranceDe}>
+          <Text style={commonStyles.note}>{T.assuranceAide}</Text>
+          {tableau('objetsAssurance', objets, true)}
+          <Fab options={[{ label: T.nouveauChoix, icon: 'add', onPress: () => setAjoutDans('objetsAssurance') }]} />
+        </GroupeAccueil>
+        <GroupeAccueil titre={T.circuitDeVente}>
+          <Text style={commonStyles.note}>{T.circuitAide}</Text>
+          {tableau('circuitsVente', circuits, true)}
+          <Fab options={[{ label: T.nouveauChoix, icon: 'add', onPress: () => setAjoutDans('circuitsVente') }]} />
+        </GroupeAccueil>
+        <GroupeAccueil titre={T.categorieDepense}>
+          <Text style={commonStyles.note}>{T.categorieAide}</Text>
+          {tableau('categoriesDepense', categories, false)}
+          {/* Une catégorie ajoutée a son compte du plan comptable, qu'on change ici. */}
+          {categories
+            .filter((c) => c.perso)
+            .map((c) => (
+              <View key={c.id} style={styles.compte}>
+                <SelectField<string>
+                  label={`${T.compte} : ${c.nom}`}
+                  searchable
+                  value={c.compte ?? ''}
+                  onChange={(compte) => changer('categoriesDepense', (p) => avecCompteDuChoix(p, c.id, compte))}
+                  options={optionsCompte}
+                />
+              </View>
+            ))}
+          <View style={styles.ajout}>
+            <FormField label={T.nouvelleCategorie} value={nouvelleCategorie} onChangeText={setNouvelleCategorie} placeholder={T.exempleCategorie} />
+            <SelectField<string> label={T.compte} searchable value={compteChoisi} onChange={setCompteChoisi} options={optionsCompte} aide={T.compteAide} />
+            <Button
+              label={T.ajouter}
+              disabled={!nouvelleCategorie.trim() || !compteChoisi}
+              onPress={() => {
+                changer('categoriesDepense', (p) => avecChoixAjoute(p, nouvelleCategorie, compteChoisi));
+                setNouvelleCategorie('');
+                setCompteChoisi('');
+              }}
+            />
+          </View>
+        </GroupeAccueil>
+        <NomModal
+          visible={!!aRenommer}
+          titre={T.renommerTitre}
+          valeurInitiale={aRenommer?.choix.nom}
+          onValider={(nom) => {
+            const r = aRenommer;
+            setARenommer(null);
+            if (r) changer(r.liste, (p) => avecChoixRenomme(p, r.choix.id, nom));
+          }}
+          onAnnuler={() => setARenommer(null)}
+        />
+        <NomModal
+          visible={!!ajoutDans}
+          titre={T.nouveauChoix}
+          placeholder={ajoutDans === 'circuitsVente' ? T.exempleCircuit : T.exempleAssurance}
+          onValider={(nom) => {
+            const liste = ajoutDans;
+            setAjoutDans(null);
+            if (liste) changer(liste, (p) => avecChoixAjoute(p, nom));
+          }}
+          onAnnuler={() => setAjoutDans(null)}
+        />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -203,6 +358,7 @@ const styles = StyleSheet.create({
   ligne: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.border },
   case: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   masque: { color: colors.textMuted },
+  texteCompte: { fontSize: 13, color: colors.text },
   lien: { fontSize: 14, fontWeight: '700' },
   compte: { paddingHorizontal: 12, paddingBottom: 10 },
   ajout: { gap: 8, marginTop: 6 },

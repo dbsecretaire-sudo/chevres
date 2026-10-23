@@ -128,7 +128,7 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
 
   return (
     <View style={[styles.cadre, integre && styles.cadreIntegre]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={figees} style={integre ? undefined : styles.defilement} contentContainerStyle={styles.largeurDuTableau}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={figees} style={integre ? undefined : styles.defilement} contentContainerStyle={figees ? styles.largeurDuTableau : styles.largeurDeLaFenetre}>
       <View style={[integre ? styles.tableauIntegre : styles.tableau, { width: figees ? sommeDesLargeurs : '100%' }]}>
       <View style={styles.entete}>
         {colonnes.map((c) => (
@@ -146,7 +146,7 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
               accessibilityRole="button"
               accessibilityLabel={c.titre}
             >
-              <Text style={styles.titre} numberOfLines={1}>
+              <Text style={styles.titre} numberOfLines={2}>
                 {c.titre}
                 {tri?.cle === c.cle ? (tri.decroissant ? ' ▼' : ' ▲') : ''}
               </Text>
@@ -187,6 +187,8 @@ const styles = StyleSheet.create({
   // Le défilement en travers : le tableau a au moins la largeur de la fenêtre, et celle de ses colonnes quand elles la dépassent.
   defilement: { flex: 1 },
   largeurDuTableau: { minWidth: '100%' },
+  // Tant qu'aucune colonne n'a été tirée : exactement la largeur de la fenêtre (un texte long ne doit pas élargir le tableau).
+  largeurDeLaFenetre: { width: '100%' },
   tableau: { flexShrink: 0 },
   tableauIntegre: { flexShrink: 0 },
   entete: { flexDirection: 'row', backgroundColor: colors.badgeBg, borderBottomWidth: 2, borderBottomColor: colors.primary },

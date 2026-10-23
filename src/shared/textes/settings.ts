@@ -33,6 +33,9 @@ export const TEXTES_SETTINGS = {
     categorieDepense: 'Catégorie de dépense',
     categorieAide: 'Les catégories d’office se masquent ; une catégorie ajoutée reçoit ses écritures sur le compte du plan comptable que vous choisissez.',
     nouveauChoix: 'Nouveau choix',
+    /** Les en-têtes du tableau d’une liste (poste de comptabilité) : la case « proposé » et le nom du choix. */
+    propose: 'Proposé',
+    choix: 'Choix',
     exempleAssurance: 'ex : Matériel agricole',
     nouvelleCategorie: 'Nouvelle catégorie',
     exempleCategorie: 'ex : Cotisations syndicales',

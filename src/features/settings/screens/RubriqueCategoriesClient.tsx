@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
+import { Fab } from '@/shared/components/Fab';
+import { TableauCategories } from '@/features/settings/components/TableauCategories';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { contientTexte } from '@/shared/utils/recherche';
 import { Button } from '@/shared/components/Button';
@@ -64,6 +67,7 @@ const GROUPES_A_LISTE: readonly string[] = [
 export default function RubriqueCategoriesClient() {
   const { settings, loaded, patchSettings } = useAppSettings();
   const infos = settings.exploitation;
+  const comptable = useDispositionComptable();
 
   const [categories, setCategories] = useState<CategorieClientReglage[]>(
     () => infos?.categoriesClient ?? categoriesClientParDefaut(),
@@ -117,98 +121,10 @@ export default function RubriqueCategoriesClient() {
     maj(c.id, { operations: ops, autresRecettes: autres, recettes: [...new Set([...groupesRecetteDesOperations(ops.filter(estUneVente)), ...autres])] });
   };
 
-  /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
-  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
-
-  return (
-    <Screen>
-      <Text style={styles.aide}>{T.aide}</Text>
-      <ChoixVueCategories
-        parOption={parOption}
-        onChange={setParOption}
-        libelleParCategorie={T.parCategorie}
-        libelleParOption={T.parOption}
-      />
-      <ChampRecherche value={recherche} onChangeText={setRecherche} />
-      {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
-      {parOption ? (
-        <ReglagesParOption
-          categories={visibles}
-          groupes={[
-            {
-              titre: T.dansLesVentes,
-              options: [
-                {
-                  cle: 'declaree',
-                  titre: T.declaree,
-                  coche: (id) => !!categories.find((c) => c.id === id)?.declaree,
-                  definir: (id, declaree) => maj(id, { declaree }),
-                },
-                {
-                  cle: 'prixLibre',
-                  titre: T.prixLibre,
-                  coche: (id) => !!categories.find((c) => c.id === id)?.prixLibre,
-                  definir: (id, prixLibre) => maj(id, { prixLibre }),
-                },
-                {
-                  cle: 'fraisAbattoir',
-                  titre: T.fraisAbattoir,
-                  coche: (id) => fraisAbattoirFactures(categories.find((c) => c.id === id)),
-                  definir: (id, fraisAbattoir) => maj(id, { fraisAbattoir }),
-                },
-                {
-                  cle: 'prixPersonnalise',
-                  titre: T.prixPersonnalise,
-                  coche: (id) => prixPersonnalisePropose(categories.find((c) => c.id === id)),
-                  definir: (id, prixPersonnalise) => maj(id, { prixPersonnalise }),
-                },
-              ],
-            },
-            {
-              titre: T.affichage,
-              options: [
-                {
-                  cle: 'pasEncaissee',
-                  titre: TEXTES.comptabilite.tresorerie.paiement.pasEncaissee,
-                  coche: (id) => pasEncaisseeAffichee(categories.find((c) => c.id === id)),
-                  definir: (id, pasEncaissee) => maj(id, { pasEncaissee }),
-                },
-              ],
-            },
-            {
-              titre: T.recettes,
-              options: groupesProposes.map((g) => ({
-                cle: g,
-                titre: LABEL_GROUPE_RECETTE[g],
-                coche: (id) => {
-                  const c = categories.find((x) => x.id === id);
-                  return !!c && groupesRecetteDeLaCategorie(c).includes(g);
-                },
-                definir: (id, cochee) => {
-                  const c = categories.find((x) => x.id === id);
-                  if (!c) return;
-                  const recettes = groupesRecetteDeLaCategorie(c);
-                  maj(id, {
-                    recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g),
-                    operations: undefined,
-                    autresRecettes: undefined,
-                  });
-                },
-              })),
-            },
-          ]}
-        />
-      ) : null}
-      {(parOption ? [] : visibles).map((c) => {
-        const recettes = groupesRecetteDeLaCategorie(c);
-        return (
-          <SectionDeroulante
-            key={c.id}
-            titre={c.nom}
-            accordeon
-            ouverte={ouverte === c.id}
-            onBasculer={() => setOuverte((actuelle) => (actuelle === c.id ? null : c.id))}
-          >
+  /** Le détail d'une catégorie (ses réglages) : sous son titre dans la liste, sous le tableau au poste de comptabilité. */
+  const detailDe = (c: CategorieClientReglage) => {
+    const recettes = groupesRecetteDeLaCategorie(c);
+    return (
             <Card>
               <View style={commonStyles.rowSpaceBetween}>
                 <Text style={[commonStyles.cardTitle, commonStyles.flex1]}>{c.nom}</Text>
@@ -295,10 +211,130 @@ export default function RubriqueCategoriesClient() {
                 <Button variant="danger" label={T.supprimer} onPress={() => setARetirer(c.id)} />
               )}
             </Card>
-          </SectionDeroulante>
-        );
-      })}
-      {parOption ? null : <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />}
+    );
+  };
+
+  /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
+  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
+
+  return (
+    <Screen>
+      <Text style={styles.aide}>{T.aide}</Text>
+      <ChoixVueCategories
+        parOption={parOption}
+        onChange={setParOption}
+        libelleParCategorie={T.parCategorie}
+        libelleParOption={T.parOption}
+      />
+      <ChampRecherche value={recherche} onChangeText={setRecherche} />
+      {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
+      {parOption ? (
+        <ReglagesParOption
+          categories={visibles}
+          groupes={[
+            {
+              titre: T.dansLesVentes,
+              options: [
+                {
+                  cle: 'declaree',
+                  titre: T.declaree,
+                  coche: (id) => !!categories.find((c) => c.id === id)?.declaree,
+                  definir: (id, declaree) => maj(id, { declaree }),
+                },
+                {
+                  cle: 'prixLibre',
+                  titre: T.prixLibre,
+                  coche: (id) => !!categories.find((c) => c.id === id)?.prixLibre,
+                  definir: (id, prixLibre) => maj(id, { prixLibre }),
+                },
+                {
+                  cle: 'fraisAbattoir',
+                  titre: T.fraisAbattoir,
+                  coche: (id) => fraisAbattoirFactures(categories.find((c) => c.id === id)),
+                  definir: (id, fraisAbattoir) => maj(id, { fraisAbattoir }),
+                },
+                {
+                  cle: 'prixPersonnalise',
+                  titre: T.prixPersonnalise,
+                  coche: (id) => prixPersonnalisePropose(categories.find((c) => c.id === id)),
+                  definir: (id, prixPersonnalise) => maj(id, { prixPersonnalise }),
+                },
+              ],
+            },
+            {
+              titre: T.affichage,
+              options: [
+                {
+                  cle: 'pasEncaissee',
+                  titre: TEXTES.comptabilite.tresorerie.paiement.pasEncaissee,
+                  coche: (id) => pasEncaisseeAffichee(categories.find((c) => c.id === id)),
+                  definir: (id, pasEncaissee) => maj(id, { pasEncaissee }),
+                },
+              ],
+            },
+            {
+              titre: T.recettes,
+              options: groupesProposes.map((g) => ({
+                cle: g,
+                titre: LABEL_GROUPE_RECETTE[g],
+                coche: (id) => {
+                  const c = categories.find((x) => x.id === id);
+                  return !!c && groupesRecetteDeLaCategorie(c).includes(g);
+                },
+                definir: (id, cochee) => {
+                  const c = categories.find((x) => x.id === id);
+                  if (!c) return;
+                  const recettes = groupesRecetteDeLaCategorie(c);
+                  maj(id, {
+                    recettes: cochee ? [...recettes, g] : recettes.filter((x) => x !== g),
+                    operations: undefined,
+                    autresRecettes: undefined,
+                  });
+                },
+              })),
+            },
+          ]}
+        />
+      ) : null}
+      {comptable && !parOption ? (
+        <>
+          <TableauCategories
+            categories={visibles}
+            cases={[
+              { cle: 'declaree', titre: T.declaree, coche: (id) => !!categories.find((c) => c.id === id)?.declaree },
+              { cle: 'prixLibre', titre: T.prixLibre, coche: (id) => !!categories.find((c) => c.id === id)?.prixLibre },
+              { cle: 'fraisAbattoir', titre: T.fraisAbattoir, coche: (id) => fraisAbattoirFactures(categories.find((c) => c.id === id)) },
+              { cle: 'prixPersonnalise', titre: T.prixPersonnalise, coche: (id) => prixPersonnalisePropose(categories.find((c) => c.id === id)) },
+              { cle: 'pasEncaissee', titre: TEXTES.comptabilite.tresorerie.paiement.pasEncaissee, coche: (id) => pasEncaisseeAffichee(categories.find((c) => c.id === id)) },
+            ]}
+            resume={{ titre: T.recettes, texte: (id) => { const c = categories.find((x) => x.id === id); return c ? `${groupesRecetteDeLaCategorie(c).filter((g) => (groupesProposes as readonly string[]).includes(g)).length} sur ${groupesProposes.length}` : ''; } }}
+            renommer={{ libelle: T.renommer, onRenommer: setRenommage }}
+            choisie={ouverte}
+            onChoisir={(id) => setOuverte((actuelle) => (actuelle === id ? null : id))}
+            vide={T.ajouter}
+          />
+          {(() => {
+            const choisie = visibles.find((c) => c.id === ouverte);
+            return choisie ? detailDe(choisie) : null;
+          })()}
+          <Fab options={[{ label: T.ajouter.replace(/^\+\s*/, ''), icon: 'add', onPress: () => setAjoutOuvert(true) }]} />
+        </>
+      ) : (
+        <>
+          {(parOption ? [] : visibles).map((c) => (
+            <SectionDeroulante
+              key={c.id}
+              titre={c.nom}
+              accordeon
+              ouverte={ouverte === c.id}
+              onBasculer={() => setOuverte((actuelle) => (actuelle === c.id ? null : c.id))}
+            >
+              {detailDe(c)}
+            </SectionDeroulante>
+          ))}
+          {parOption ? null : <Button variant="secondary" label={T.ajouter} onPress={() => setAjoutOuvert(true)} />}
+        </>
+      )}
 
       <NomModal
         visible={!!renommage}

@@ -29,6 +29,8 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { TableauAssurance } from '@/features/production/components/TableauAssurance';
+import { TableauEcrituresDuLieu, TableauTiersDuLieu } from '@/features/production/components/TableauxDuLieu';
+import { Fab } from '@/shared/components/Fab';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
@@ -83,7 +85,9 @@ function LieuTiersStandard() {
   const { settings, patchSettings } = useAppSettings();
   /** Partenariats : la fenêtre qui coche les catégories de tiers. */
   const [choixOuvert, setChoixOuvert] = useState(false);
-  const { idsConnus } = useCategoriesContact();
+  const { idsConnus, categories } = useCategoriesContact();
+  /** Le nom de la catégorie d'un contact (pour les tableaux). */
+  const nomDeLaCategorie = (c: Contact) => categories.find((x) => x.id === categorieDuContact(c, idsConnus).id)?.nom ?? '';
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -211,22 +215,48 @@ function LieuTiersStandard() {
 
       {config.avecTiers ? (
         <>
-          {cle === 'assurance' && comptable ? (
-            <>
-              <TableauAssurance assureurs={tiers} ouvrir={ouvrir} />
-              <BlocLignes>
-                <ListRow
-                  title={textes.ajouterTiers ?? ''}
-                  icone="add-circle"
-                  onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`)}
-                />
-                <ListRow
-                  title={TEXTES.contacts.contrat.nouveauContrat}
-                  icone="add-circle"
-                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined }))}
-                />
-              </BlocLignes>
-            </>
+          {comptable ? (
+            <GroupeAccueil titre={textes.groupeTiers ?? ''}>
+              {cle === 'assurance' ? (
+                <TableauAssurance assureurs={tiers} ouvrir={ouvrir} />
+              ) : (
+                <TableauTiersDuLieu tiers={tiers} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
+              )}
+              {/* Les ajouts sous le tableau, comme « Ajouter au cheptel » sous celui du cheptel. */}
+              <Fab
+                options={[
+                  {
+                    label: textes.ajouterTiers ?? '',
+                    icon: 'add',
+                    onPress: () =>
+                      ouvrir(
+                        config.categoriesContact[0]
+                          ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`
+                          : ROUTES.CONTACT_NOUVEAU,
+                      ),
+                  },
+                  ...(cle === 'assurance'
+                    ? [
+                        {
+                          label: TEXTES.contacts.contrat.nouveauContrat,
+                          icon: 'add' as const,
+                          onPress: () => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined })),
+                        },
+                      ]
+                    : []),
+                  ...(cle === 'tourisme' ? [{ label: T.tourisme.choisirTiers, icon: 'checkbox-outline' as const, onPress: () => setChoixOuvert(true) }] : []),
+                  ...(textes.ajouterComptable
+                    ? [
+                        {
+                          label: textes.ajouterComptable,
+                          icon: 'add' as const,
+                          onPress: () => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.COMPTABLE}`),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            </GroupeAccueil>
           ) : (
           <GroupeAccueil titre={textes.groupeTiers ?? ''}>
             <BlocLignes>
@@ -297,7 +327,12 @@ function LieuTiersStandard() {
           {cle === 'tourisme' ? <DossiersTouristiques contacts={contacts} ouvrir={ouvrir} /> : null}
 
           {/* Le groupement sanitaire accueille les vétérinaires : leurs fiches (traitements, visites, factures) s'ouvrent d'ici. */}
-          {cle === 'groupementSanitaire' ? (
+          {cle === 'groupementSanitaire' && comptable ? (
+            <GroupeAccueil titre={textes.groupeVeterinaires ?? ''}>
+              <TableauTiersDuLieu tiers={veterinaires} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
+              <Fab options={[{ label: textes.ajouterVeterinaire ?? '', icon: 'add', onPress: () => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`) }]} />
+            </GroupeAccueil>
+          ) : cle === 'groupementSanitaire' ? (
             <GroupeAccueil titre={textes.groupeVeterinaires ?? ''}>
               <BlocLignes>
                 {veterinaires.map((c) => (
@@ -324,6 +359,17 @@ function LieuTiersStandard() {
             </GroupeAccueil>
           ) : null}
 
+          {comptable ? (
+            <GroupeAccueil titre={textes.groupeEcritures ?? ''} balance={ecritures.length > 0 ? balanceDesEcritures(ecritures) : undefined}>
+              <TableauEcrituresDuLieu ecritures={ecritures} ouvrir={ouvrir} vide={T.aucuneEcriture} />
+              <Fab
+                options={[
+                  { label: textes.nouvelle ?? '', icon: 'add', onPress: () => ouvrir(routeNouvelle) },
+                  ...(routeVersement && textes.versement ? [{ label: textes.versement, icon: 'add' as const, onPress: () => ouvrir(routeVersement) }] : []),
+                ]}
+              />
+            </GroupeAccueil>
+          ) : (
           <GroupeAccueil titre={textes.groupeEcritures ?? ''} balance={ecritures.length > 0 ? balanceDesEcritures(ecritures) : undefined}>
             <BlocLignes>
               {ecritures.slice(0, ECRITURES_MONTREES).map((t) => (
@@ -356,6 +402,7 @@ function LieuTiersStandard() {
               ) : null}
             </BlocLignes>
           </GroupeAccueil>
+          )}
         </>
       ) : null}
       {cle === 'tourisme' ? (
