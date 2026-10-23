@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Balade } from '@/features/accueil/ferme/animations';
 import { DecorEnclos } from '@/features/accueil/ferme/DecorEnclos';
@@ -44,14 +45,14 @@ interface Props {
 export const dessinDeLEspece = (): string => DESSIN_PAR_ESPECE[especeCourante()] ?? '🐐';
 
 /** Un animal de l'enclos : son dessin (plus petit pour un petit), sa boucle en étiquette, et il se balade. */
-function AnimalDeLEnclos({ animal, rang }: { animal: Chevre; rang: number }) {
+function AnimalDeLEnclos({ animal, rang, taille }: { animal: Chevre; rang: number; taille: number }) {
   const petit = categorieAccueil(animal) === CATEGORIE_ANIMAL.CABRIT;
   const boucle = animal.numeroBoucle?.trim();
   return (
     <Balade amplitude={14 + (rang % 2) * 8} amplitudeY={10 + (rang % 3) * 4} duree={2600 + rang * 700}>
       <View style={styles.animal}>
         <Text
-          style={{ fontSize: petit ? 28 : 44 }}
+          style={{ fontSize: petit ? Math.round(taille * 0.64) : taille }}
           accessibilityElementsHidden
           importantForAccessibility="no"
         >
@@ -83,6 +84,9 @@ export function EnclosFerme({
   margeBas = 0,
   sansCadre,
 }: Props) {
+  /** La hauteur que l'enclos laisse au troupeau (entre le titre et l'effectif) : les animaux rapetissent quand elle manque, le texte reste entier. */
+  const [hauteurTroupeau, setHauteurTroupeau] = useState(0);
+  const taille = hauteurTroupeau > 0 ? Math.max(22, Math.min(44, hauteurTroupeau - 40)) : 44;
   return (
     <View style={styles.conteneur}>
       <Pressable
@@ -101,22 +105,25 @@ export function EnclosFerme({
         <Text style={styles.titre} numberOfLines={2}>
           {estive ? T.estive(estive.zone) : T.enclos}
         </Text>
-        {vedettes.length > 0 ? (
-          <View style={styles.troupeau}>
-            {vedettes.map((a, i) => (
-              <AnimalDeLEnclos key={a.id} animal={a} rang={i} />
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.vide}>{T.aucunAnimal}</Text>
-        )}
-        {estive?.descente ? (
-          <Text style={styles.descente}>{T.descenteLe(formatDateFR(estive.descente))}</Text>
-        ) : null}
-        <Text style={styles.effectif} numberOfLines={2}>
-          {nombreAnimaux === undefined ? '…' : TEXTES.accueil.ferme.bandeau.animaux(nombreAnimaux)}
-          {naissances ? ` · ${T.nes(naissances)}` : ''}
-        </Text>
+        {/* Le troupeau prend la place qui reste entre le titre (en haut) et le texte (en bas) : ni l'un ni l'autre ne sont rognés. */}
+        <View style={styles.zoneTroupeau} onLayout={(e) => setHauteurTroupeau(e.nativeEvent.layout.height)}>
+          {vedettes.length > 0 ? (
+            <View style={styles.troupeau}>
+              {vedettes.map((a, i) => (
+                <AnimalDeLEnclos key={a.id} animal={a} rang={i} taille={taille} />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.vide}>{T.aucunAnimal}</Text>
+          )}
+        </View>
+        <View style={styles.bas}>
+          {estive?.descente ? <Text style={styles.descente}>{T.descenteLe(formatDateFR(estive.descente))}</Text> : null}
+          <Text style={styles.effectif} numberOfLines={2}>
+            {nombreAnimaux === undefined ? '…' : TEXTES.accueil.ferme.bandeau.animaux(nombreAnimaux)}
+            {naissances ? ` · ${T.nes(naissances)}` : ''}
+          </Text>
+        </View>
       </Pressable>
     </View>
   );
@@ -133,9 +140,11 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     padding: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
+    gap: 4,
   },
+  zoneTroupeau: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', minHeight: 0, overflow: 'hidden' },
+  bas: { alignItems: 'center', gap: 4 },
   sansCadre: { borderWidth: 0, borderRadius: 0 },
   montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
   descente: { fontSize: 12, color: colors.primaryDark },
@@ -146,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     gap: 22,
-    paddingVertical: 14,
+    paddingVertical: 4,
   },
   animal: { alignItems: 'center', gap: 2 },
   etiquette: {
@@ -158,6 +167,6 @@ const styles = StyleSheet.create({
     borderColor: '#B58B1A',
   },
   etiquetteTexte: { fontSize: 11, fontWeight: '700', color: '#4A3A07' },
-  vide: { fontSize: 13, color: colors.textMuted, paddingVertical: 20 },
-  effectif: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center', marginTop: 6 },
+  vide: { fontSize: 13, color: colors.textMuted },
+  effectif: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
 });
