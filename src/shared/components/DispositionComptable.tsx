@@ -1,15 +1,12 @@
 import { useState, type PropsWithChildren } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { changerAffichage } from '@/bureau/changerAffichage';
-import { definitionDesMenus } from '@/bureau/MenuBureau';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { BarreOutilsComptable } from '@/shared/components/BarreOutilsComptable';
-import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { routeLaPlusPrecise, type ParametresDePage } from '@/shared/navigation/pageOuverte';
-import { menusDeLaFerme } from '@/shared/navigation/structureMenus';
+import { routesDuMenu } from '@/shared/navigation/filAriane';
+import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
@@ -21,12 +18,6 @@ import { changerTailleTexte, lireTailleTexte, tailleVoisine } from '@/shared/uti
 const LARGEUR_ARBRE = 250;
 /** La largeur de la zone des écrans : au-delà, un écran reste centré (un tableau n'a pas besoin de s'étirer sur un écran géant). */
 const LARGEUR_MAX_ZONE = 1500;
-
-/** Les routes d'un menu : la sienne, ou celles de ses écrans. */
-const routesDuMenu = (menu: DefinitionMenu): string[] => [
-  ...(menu.route ? [menu.route] : []),
-  ...(menu.items ?? []).flatMap((e) => ('route' in e ? [e.route] : [])),
-];
 
 type EntreeDeMenu = NonNullable<DefinitionMenu['items']>[number];
 /** Une partie d'un menu long : son titre (absent pour les premières entrées) et ses entrées. */
@@ -50,14 +41,9 @@ function partiesDuMenu(items: EntreeDeMenu[]): PartieDeMenu[] {
  */
 function ArbreDesMenus() {
   const router = useRouter();
-  const adresse = usePathname();
-  const parametres = useGlobalSearchParams() as ParametresDePage;
-  const { settings } = useAppSettings();
-  const avecPlanDeLaFerme = !modeEntreprise() && !settings.exploitation?.accueilClassique;
-  const menus = avecPlanDeLaFerme ? menusDeLaFerme() : definitionDesMenus();
+  const { menus, courante, adresse } = usePositionDansLesMenus();
   // Le menu de la page ouverte est déplié d'office (on y arrive par un bouton de l'accueil, un rappel…) ; un appui sur un dossier le plie ou en déplie un autre, pour cette page.
   // Une seule entrée est la page ouverte : la plus précise (l'accueil de l'atelier, pas l'accueil tout court).
-  const courante = routeLaPlusPrecise(menus.flatMap(routesDuMenu), adresse, parametres);
   const dossierOuvert = courante ? (menus.find((m) => routesDuMenu(m).includes(courante))?.label ?? null) : null;
   const [choix, setChoix] = useState<{ adresse: string; menu: string | null } | null>(null);
   const ouvert = choix?.adresse === adresse ? choix.menu : dossierOuvert;

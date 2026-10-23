@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
+import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 
@@ -34,12 +38,17 @@ export interface PropsEnTeteApplication {
 export function EnTeteApplication({ options, back, navigation, route }: PropsEnTeteApplication) {
   // La disposition « comptable » a sa barre d'outils au-dessus de tout : l'en-tête ne garde que la flèche, le titre et les boutons de l'écran, sur toute la largeur.
   const comptable = useDispositionComptable();
+  const router = useRouter();
+  // Le fil d'Ariane (« Atelier > Gestion > Réserver > Nouvelle commande ») : chaque étape ramène à sa page.
+  const { menus, courante } = usePositionDansLesMenus();
+  useEffect(() => retenirPageDuMenu(courante), [courante]);
   // L'en-tête n'a plus de barre d'état sous lui : il commence sous l'encoche.
   const { top } = useSafeAreaInsets();
   const parametres: ParametresBouton = { tintColor: colors.blanc, canGoBack: !!back };
   // Pas de flèche de retour ici : sur téléphone elle est dans la barre du bas (BandeauFerme), et le poste de comptabilité (affichage sobre) n'en a pas.
   const droite = options.headerRight ? options.headerRight(parametres) : null;
   const titre = typeof options.title === 'string' ? options.title : '';
+  const fil = comptable ? filDeLaPage(menus, courante, pageDuMenuRetenue(), titre) : [];
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   return (
@@ -59,7 +68,20 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
             <Text style={[styles.titre, { color: couleur }]} numberOfLines={2}>
-              {titre}
+              {fil.length > 1
+                ? fil.map((maillon, i) => (
+                    <Text key={`${i}-${maillon.libelle}`}>
+                      {i > 0 ? <Text style={styles.separateur}>{' > '}</Text> : null}
+                      {maillon.route ? (
+                        <Text style={styles.etape} onPress={() => router.push(maillon.route as never)} accessibilityRole="link">
+                          {maillon.libelle}
+                        </Text>
+                      ) : (
+                        maillon.libelle
+                      )}
+                    </Text>
+                  ))
+                : titre}
             </Text>
             {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
           </View>
@@ -95,6 +117,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     minHeight: 44,
   },
+  // Une étape du fil d'Ariane : grise, on la reconnaît à la main qui apparaît au survol ; la page ouverte, elle, garde la couleur de l'écran.
+  etape: { color: colors.textMuted, cursor: 'pointer' } as never,
+  separateur: { color: colors.textMuted, fontWeight: '400' },
   titreComptable: { paddingHorizontal: 20, paddingTop: 8 },
   pastilleBouton: {
     flexDirection: 'row',
