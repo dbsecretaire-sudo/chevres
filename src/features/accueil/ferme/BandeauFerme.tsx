@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   badgeTexte: { color: colors.blanc, fontSize: 11, fontWeight: '700' },
   // La cloche seule : une pastille qui ne s'étire pas ; son nombre est en rouge, dans son coin.
-  pastilleSeule: { flex: 0, flexGrow: 0 },
+  pastilleSeule: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
   badgeRouge: {
     position: 'absolute',
     top: -6,
