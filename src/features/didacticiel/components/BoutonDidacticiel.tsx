@@ -11,6 +11,7 @@ import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
 import { ROUTES } from '@/shared/constants/routes';
+import { afficheSobre } from '@/shared/utils/affichage';
 import { styles } from '@/shared/styles/didacticiel/BoutonDidacticiel.styles';
 import { TEXTES } from '@/shared/textes';
 
@@ -39,6 +40,8 @@ export function BoutonDidacticiel({ forme = 'puce' }: { forme?: 'puce' | 'barre'
     }
   };
 
+  // Le poste de comptabilité (affichage sobre) n'a pas de didacticiel.
+  if (afficheSobre()) return null;
   return (
     <>
       {forme === 'plat' ? (

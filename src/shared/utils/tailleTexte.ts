@@ -1,11 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { afficheSobre } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 
 /** La clé, dans les données de l'ordinateur, de la taille du texte choisie (elle n'est pas dans les sauvegardes : chaque ordinateur a la sienne). */
-export const CLE_TAILLE_TEXTE = 'bureau:zoom';
+export const CLE_TAILLE_TEXTE = 'bureau:taille';
 
-/** Les tailles proposées (1 = normale) : tout grandit ou rapetisse ensemble — texte, boutons, tableaux. Au-delà de 1,4 la fenêtre n'aurait plus la place de son menu. */
-export const TAILLES_DU_TEXTE = [0.85, 1, 1.15, 1.3, 1.45] as const;
+/** Le poste de comptabilité (affichage sobre) est agrandi de 15 % d'office : « 100 % » dans le réglage est ce zoom, pas la taille brute. bureau/preload.js applique le même. */
+export const BASE_SOBRE = 1.15;
+
+/** Les tailles proposées (1 = normale) : tout grandit ou rapetisse ensemble — texte, boutons, tableaux. Au-delà la fenêtre n'aurait plus la place de son menu. */
+export const TAILLES_DU_TEXTE = [0.85, 1, 1.1, 1.2, 1.3] as const;
 
 /** La taille proposée la plus proche d'une valeur lue (une valeur absente ou fausse : la taille normale). */
 export function tailleValide(valeur: unknown): number {
@@ -34,8 +38,9 @@ export function lireTailleTexte(): number {
 /** Pose la taille sur la page : le zoom de la fenêtre sous Windows, le zoom de la page dans un navigateur. */
 export function appliquerTailleTexte(taille: number): void {
   if (typeof document === 'undefined') return;
-  if (estBureau() && window.bureau?.zoom) window.bureau.zoom(taille);
-  else document.documentElement.style.setProperty('zoom', String(taille));
+  const zoom = taille * (afficheSobre() ? BASE_SOBRE : 1);
+  if (estBureau() && window.bureau?.zoom) window.bureau.zoom(zoom);
+  else document.documentElement.style.setProperty('zoom', String(zoom));
 }
 
 /** Change la taille du texte (partout à la fois) et la garde pour la prochaine ouverture. */

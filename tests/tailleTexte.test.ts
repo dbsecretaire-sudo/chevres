@@ -6,13 +6,13 @@ describe('taille du texte', () => {
     expect(tailleValide(undefined)).toBe(1);
     expect(tailleValide('abc')).toBe(1);
     expect(tailleValide('1.3')).toBe(1.3);
-    expect(tailleValide(1.2)).toBe(1.15);
+    expect(tailleValide(1.15)).toBe(1.1);
   });
 
   it('agrandir ou réduire passe à la taille voisine, sans sortir de la liste', () => {
-    expect(tailleVoisine(1, 1)).toBe(1.15);
+    expect(tailleVoisine(1, 1)).toBe(1.1);
     expect(tailleVoisine(1, -1)).toBe(0.85);
     expect(tailleVoisine(0.85, -1)).toBe(0.85);
-    expect(tailleVoisine(1.45, 1)).toBe(1.45);
+    expect(tailleVoisine(1.3, 1)).toBe(1.3);
   });
 });

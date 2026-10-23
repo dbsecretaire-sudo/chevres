@@ -4,7 +4,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useBandeauFerme } from '@/features/accueil/ferme/useBandeauFerme';
 import { FeuilleRappels } from '@/features/accueil/ferme/FenetresFerme';
 import { SelecteursFerme } from '@/features/accueil/ferme/SelecteursFerme';
-import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
 import { BoutonEnregistrer } from '@/features/sauvegarde/components/BoutonEnregistrer';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -58,8 +57,6 @@ export function BarreOutilsComptable() {
         onChoisirTout={choisirToutesAnnees}
         forme="plat"
       />
-      <SeparateurDeBarre />
-      <BoutonDidacticiel forme="plat" />
       <BoutonEnregistrer plat />
       <SeparateurDeBarre />
       {/* Le nom de l'établissement : un appui ouvre le choix de l'établissement. */}

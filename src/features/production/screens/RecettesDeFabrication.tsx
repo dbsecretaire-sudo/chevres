@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Fab } from '@/shared/components/Fab';
+import { ROUTES } from '@/shared/constants/routes';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { enregistrerRecette, supprimerRecette } from '@/features/stock/services/lots';
@@ -27,6 +29,7 @@ const PRODUITS = ['fromage', 'charcuterie', 'plat', 'savon'] as const;
  * une fabrication (« Enregistrer comme recette »), avec les ingrédients qui y sont saisis.
  */
 export default function RecettesDeFabrication() {
+  const router = useRouter();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [aRenommer, setARenommer] = useState<RecetteDeFabrication | null>(null);
   const [aSupprimer, setASupprimer] = useState<RecetteDeFabrication | null>(null);
@@ -50,7 +53,9 @@ export default function RecettesDeFabrication() {
   const toutes = archive?.recettes ?? [];
 
   return (
-    <Screen>
+    // Le « + » reste en bas de l'écran, comme partout : il est hors de la liste qui défile.
+    <Screen scroll={false}>
+      <ScrollView contentContainerStyle={commonStyles.listFab}>
       <Text style={commonStyles.note}>{P.intro}</Text>
       {toutes.length === 0 ? <Text style={commonStyles.mutedItalic}>{P.aucune}</Text> : null}
       {PRODUITS.map((produit) => {
@@ -83,6 +88,7 @@ export default function RecettesDeFabrication() {
                     style={commonStyles.textarea}
                   />
                   <View style={commonStyles.gap10}>
+                    <Button variant="secondary" label={T.edition.modifier} onPress={() => router.push(ROUTES.productionRecette(r.id) as never)} />
                     <Button variant="secondary" label={P.renommer} onPress={() => setARenommer(r)} />
                     <Button variant="danger" label={T.supprimer} onPress={() => setASupprimer(r)} />
                   </View>
@@ -92,6 +98,7 @@ export default function RecettesDeFabrication() {
           </GroupeAccueil>
         );
       })}
+      </ScrollView>
       <NomModal
         visible={!!aRenommer}
         titre={P.renommerTitre}
@@ -117,6 +124,13 @@ export default function RecettesDeFabrication() {
             await charger();
           }
         }}
+      />
+      <Fab
+        options={PRODUITS.map((p) => ({
+          label: `${T.edition.ajouter} · ${P.produit[p]}`,
+          icon: 'add-circle' as const,
+          onPress: () => router.push(ROUTES.productionRecette(undefined, p) as never),
+        }))}
       />
     </Screen>
   );

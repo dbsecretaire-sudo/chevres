@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { parcoursDe } from '@/features/didacticiel/services/parcours';
+import { afficheSobre } from '@/shared/utils/affichage';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
 import { TEXTES } from '@/shared/textes';
@@ -19,7 +20,8 @@ export function SuggestionParcours({ parcoursId }: { parcoursId: string }) {
   const accent = useAccentColor();
   const accentClair = useAccentSoftColor();
   const parcours = parcoursDe(parcoursId);
-  if (!parcours || settings.exploitation?.didacticielMasque || visite.actif) return null;
+  // Le poste de comptabilité (affichage sobre) n'a pas de didacticiel : pas de « Besoin d'aide ? ».
+  if (!parcours || settings.exploitation?.didacticielMasque || visite.actif || afficheSobre()) return null;
   return (
     <Pressable
       style={[styles.carte, { backgroundColor: accentClair, borderColor: accent }]}

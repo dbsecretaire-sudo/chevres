@@ -8,8 +8,9 @@ const donneesAuDemarrage = ipcRenderer.sendSync('stockage:charger');
 const AFFICHAGE = donneesAuDemarrage['bureau:affichage'] ?? 'sobre';
 
 // La taille du texte choisie la dernière fois : appliquée dès l'ouverture.
-const TAILLE = Number(donneesAuDemarrage['bureau:zoom']);
-if (TAILLE > 0.5 && TAILLE < 2) webFrame.setZoomFactor(TAILLE);
+// En affichage sobre, « 100 % » est déjà agrandi de 15 % (voir BASE_SOBRE dans src/shared/utils/tailleTexte.ts).
+const TAILLE = Number(donneesAuDemarrage['bureau:taille'] ?? 1);
+if (AFFICHAGE === 'sobre' && TAILLE > 0.5 && TAILLE < 2) webFrame.setZoomFactor(TAILLE * 1.15);
 
 contextBridge.exposeInMainWorld('bureau', {
   /** Toutes les données enregistrées au démarrage (le reste du temps, la page les garde en mémoire et n'envoie que les changements). */

@@ -36,7 +36,7 @@ export default function RootLayout() {
           <View style={{ flex: 1 }}>
             <Stack screenOptions={{ headerShown: false }} />
             {/* La visite guidée : par-dessus toutes les pages. */}
-            <SuperpositionVisite />
+            {afficheSobre() ? null : <SuperpositionVisite />}
             {/* L'affichage sobre en grande fenêtre : le style d'un poste de comptabilité. */}
             <StyleComptable />
           </View>
