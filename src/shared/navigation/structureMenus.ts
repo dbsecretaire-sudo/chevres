@@ -100,3 +100,189 @@ export const menusDeLApplication = (accueilClassique: boolean): DefinitionMenu[]
 
 /** Les noms des menus, de gauche à droite (sans « Affichage », que Windows ajoute en dernier). */
 export const libellesDesMenus = (accueilClassique: boolean): string[] => menusDeLApplication(accueilClassique).map((m) => m.label);
+
+/** Une entrée du plan du poste de comptabilité : une route (son libellé est celui du menu de la ferme), une route avec son libellé, ou le titre d'une partie. */
+type EntreeDuPoste = string | readonly [route: string, libelle: string] | { partie: string; alphabetique?: boolean };
+
+/**
+ * Les menus du poste de comptabilité (Windows, affichage sobre) : huit thèmes qui ne se mélangent pas — Accueil, Cheptel, Stock, Production, Commercial, Comptabilité, Contacts, Données.
+ * Chaque thème garde ses propres pages, intervenants compris (l'abattoir est dans le Cheptel, la banque dans la Comptabilité) ; l'agritourisme est dans le Commercial.
+ * Les pages et leurs libellés sont ceux des menus de la ferme : rien n'est inventé, et un test vérifie qu'aucune page n'est perdue.
+ */
+const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: EntreeDuPoste[] }[] = [
+  { label: 'Accueil', entrees: ['/', '/informations-exploitation', '/rappels-historique'] },
+  {
+    label: 'Cheptel',
+    entrees: [
+      ['/?accueil=retour&interieur=exploitation', 'Plan de l’exploitation'],
+      { partie: 'Animaux' },
+      '/production/lieu?lieu=animaux',
+      '/cheptel/naissances',
+      '/cheptel/historique',
+      '/cheptel/lots',
+      '/cheptel/traitements',
+      '/production/lieu?lieu=boucles',
+      '/sante/controles/liste?famille=animaux&onglet=animaux',
+      { partie: 'Suivi' },
+      '/cheptel/tableau-de-bord',
+      '/cheptel/bilan',
+      ['/sante/alimentation', 'Alimentation · Statistiques'],
+      '/sante/controles/liste?famille=surface',
+      '/cheptel/dossier-pac',
+      '/production/lieu?lieu=documents',
+      '/production/lot-abattoir?destination=vivants',
+      '/cheptel/reglages',
+    ],
+  },
+  {
+    label: 'Stock',
+    entrees: [
+      '/comptabilite/stocks',
+      '/comptabilite/inventaire',
+      '/comptabilite/conditionnement',
+      '/comptabilite/stock-structure',
+      '/comptabilite/stock-historique',
+      '/comptabilite/stock-statistiques',
+    ],
+  },
+  {
+    label: 'Production',
+    entrees: [
+      ['/?accueil=retour&interieur=transformation', 'Production'],
+      { partie: 'Fabrication' },
+      '/production/fabrication?produit=fromage',
+      '/production/fabrication?produit=charcuterie',
+      '/production/fabrication?produit=plat',
+      '/production/fabrication?produit=savon',
+      '/production/lots',
+      '/production/rappels-lots',
+      '/production/recettes',
+      '/production/registre-analyses',
+      ['/comptabilite/stocks?vue=atelier', 'Stock de l’atelier'],
+      { partie: 'Suivi' },
+      '/comptabilite/rentabilite?perimetre=atelier',
+    ],
+  },
+  {
+    label: 'Commercial',
+    entrees: [
+      { partie: 'Ventes' },
+      '/commercial/commande',
+      ['/commercial/ventes?perimetre=atelier', 'Ventes de l’atelier'],
+      ['/commercial/ventes?perimetre=agritourisme', 'Ventes de l’agritourisme'],
+      { partie: 'Agritourisme' },
+      '/?accueil=retour&interieur=agritourisme',
+      '/commercial/visite',
+      '/commercial/agritourisme',
+      '/commercial/formules',
+      '/commercial/tarifs',
+      '/commercial/accueil-public',
+      { partie: 'Suivi' },
+      '/comptabilite/rentabilite?perimetre=agritourisme',
+    ],
+  },
+  {
+    label: 'Comptabilité',
+    entrees: [
+      { partie: 'Écritures' },
+      '/comptabilite/nouvelle?type=recue',
+      '/comptabilite/liste',
+      { partie: 'Analyse' },
+      '/comptabilite/tresorerie',
+      '/comptabilite/rentabilite',
+      '/comptabilite/tva',
+      '/comptabilite/fiscalite',
+      { partie: 'Plan comptable' },
+      '/comptabilite/comptes-pcg',
+      '/comptabilite/plan-comptable',
+      '/comptabilite/reglages',
+    ],
+  },
+  {
+    label: 'Contacts',
+    entrees: [
+      '/comptabilite/contacts',
+      '/organisation-categories-client',
+      '/organisation-categories-tiers',
+      { partie: 'Intervenants', alphabetique: true },
+      '/production/lieu?lieu=abattoir',
+      '/production/lieu?lieu=equarrissage',
+      '/production/lieu?lieu=groupementSanitaire',
+      '/production/lieu?lieu=groupement',
+      '/production/lieu?lieu=organismes',
+      '/production/laiterie',
+      '/production/lieu?lieu=emballages',
+      '/production/lieu?lieu=analyses',
+      '/production/lieu?lieu=particuliers',
+      '/production/lieu?lieu=entreprises',
+      '/production/lieu?lieu=visiteurs',
+      '/production/lieu?lieu=groupesVisiteurs',
+      '/production/lieu?lieu=repas',
+      '/production/lieu?lieu=tourisme',
+      '/production/lieu?lieu=garage',
+      '/production/lieu?lieu=assurance',
+      '/production/lieu?lieu=banque',
+    ],
+  },
+  {
+    label: 'Données',
+    entrees: [
+      { partie: 'Établissement' },
+      '/organisation-etablissement',
+      '/organisation-listes',
+      '/organisation-regles',
+      { partie: 'Sauvegardes et exports' },
+      '/organisation-donnees',
+      '/export-donnees',
+      '/pdf-donnees',
+      '/sauvegarde-locale',
+      '/google-drive',
+    ],
+  },
+];
+
+/** Les parties qui le demandent (« Intervenants ») ont leurs pages classées par ordre alphabétique de libellé ; les autres gardent l'ordre du plan. */
+function enAlphabetique(plan: readonly EntreeDuPoste[], entrees: Entree[]): Entree[] {
+  const resultat: Entree[] = [];
+  let alphabetique = false;
+  let groupe: Entree[] = [];
+  const vider = () => {
+    resultat.push(...(alphabetique ? [...groupe].sort((a, b) => ('label' in a && 'label' in b ? a.label.localeCompare(b.label, 'fr') : 0)) : groupe));
+    groupe = [];
+  };
+  for (const entree of entrees) {
+    if ('separateur' in entree) {
+      vider();
+      resultat.push(entree);
+      alphabetique = plan.some((e) => typeof e === 'object' && 'partie' in e && e.partie === entree.titre && e.alphabetique);
+    } else groupe.push(entree);
+  }
+  vider();
+  return resultat;
+}
+
+/** Les menus du poste de comptabilité : les huit thèmes, avec les pages et les libellés de ceux de la ferme. */
+export function menusDuPoste(): DefinitionMenu[] {
+  // Le libellé de chaque page, d'après les menus de la ferme (le premier trouvé pour une route).
+  const libelles = new Map<string, string>();
+  for (const menu of menusDeLaFerme()) {
+    if (menu.route && !libelles.has(menu.route)) libelles.set(menu.route, menu.label);
+    for (const e of menu.items ?? []) if ('route' in e && !libelles.has(e.route)) libelles.set(e.route, e.label);
+  }
+  return THEMES_DU_POSTE.map((theme) => ({
+    label: theme.label,
+    ...(theme.route ? { route: theme.route } : {}),
+    ...(theme.entrees
+      ? {
+          items: enAlphabetique(
+            theme.entrees,
+            theme.entrees.flatMap((e): Entree[] => {
+              if (typeof e === 'string') return libelles.has(e) ? [{ label: libelles.get(e) as string, route: e }] : [];
+              if ('partie' in e) return [{ separateur: true, titre: e.partie }];
+              return libelles.has(e[0]) ? [{ label: e[1], route: e[0] }] : [];
+            }),
+          ),
+        }
+      : {}),
+  }));
+}

@@ -41,7 +41,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const comptable = useDispositionComptable();
   const router = useRouter();
   // Le fil d'Ariane (« Atelier > Gestion > Réserver > Nouvelle commande ») : chaque étape ramène à sa page.
-  const { menus, courante, adresse } = usePositionDansLesMenus();
+  const { menus, courante, adresse } = usePositionDansLesMenus(comptable);
   useEffect(() => retenirPageDuMenu(courante), [courante]);
   // L'en-tête n'a plus de barre d'état sous lui : il commence sous l'encoche.
   const { top } = useSafeAreaInsets();

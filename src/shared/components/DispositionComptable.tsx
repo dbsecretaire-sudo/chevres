@@ -41,7 +41,7 @@ function partiesDuMenu(items: EntreeDeMenu[]): PartieDeMenu[] {
  */
 function ArbreDesMenus() {
   const router = useRouter();
-  const { menus, courante, adresse } = usePositionDansLesMenus();
+  const { menus, courante, adresse } = usePositionDansLesMenus(true);
   // Le menu de la page ouverte est déplié d'office (on y arrive par un bouton de l'accueil, un rappel…) ; un appui sur un dossier le plie ou en déplie un autre, pour cette page.
   // Une seule entrée est la page ouverte : la plus précise (l'accueil de l'atelier, pas l'accueil tout court).
   const dossierOuvert = courante ? (menus.find((m) => routesDuMenu(m).includes(courante))?.label ?? null) : null;
