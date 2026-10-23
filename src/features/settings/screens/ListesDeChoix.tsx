@@ -8,6 +8,7 @@ import { NomModal } from '@/features/dossiers/components/NomModal';
 import { useListesPerso } from '@/features/settings/hooks/useListesPerso';
 import {
   categoriesDepenseDOffice,
+  circuitsDOffice,
   objetsAssuranceDOffice,
   type CleListePerso,
 } from '@/features/settings/services/listesDeChoix';
@@ -67,11 +68,13 @@ export default function ListesDeChoix() {
   const optionsCompte = useMemo(() => optionsDesComptes(comptes, ACTIVITE_COMMUNE, []).optionsCompteDepense, [comptes]);
   const [aRenommer, setARenommer] = useState<ARenommer | null>(null);
   const [nouvelObjet, setNouvelObjet] = useState('');
+  const [nouveauCircuit, setNouveauCircuit] = useState('');
   const [nouvelleCategorie, setNouvelleCategorie] = useState('');
   const [compteChoisi, setCompteChoisi] = useState('');
 
   const objets = tousLesChoix(objetsAssuranceDOffice(), listes.objetsAssurance, true);
   const categories = tousLesChoix(categoriesDepenseDOffice(), listes.categoriesDepense, false);
+  const circuits = tousLesChoix(circuitsDOffice(), listes.circuitsVente, true);
 
   /** Une ligne : la case (cochée : proposé), le nom, puis à droite « Renommer » et, pour un choix ajouté, « Retirer ». */
   const ligne = (liste: CleListePerso, c: Choix & { visible: boolean }, renommable: boolean) => (
@@ -116,6 +119,22 @@ export default function ListesDeChoix() {
             onPress={() => {
               changer('objetsAssurance', (p) => avecChoixAjoute(p, nouvelObjet));
               setNouvelObjet('');
+            }}
+          />
+        </View>
+      </GroupeAccueil>
+
+      <GroupeAccueil titre={T.circuitDeVente}>
+        <Text style={commonStyles.note}>{T.circuitAide}</Text>
+        <View style={styles.bloc}>{circuits.map((c) => ligne('circuitsVente', c, true))}</View>
+        <View style={styles.ajout}>
+          <FormField label={T.nouveauChoix} value={nouveauCircuit} onChangeText={setNouveauCircuit} placeholder={T.exempleCircuit} />
+          <Button
+            label={T.ajouter}
+            disabled={!nouveauCircuit.trim()}
+            onPress={() => {
+              changer('circuitsVente', (p) => avecChoixAjoute(p, nouveauCircuit));
+              setNouveauCircuit('');
             }}
           />
         </View>

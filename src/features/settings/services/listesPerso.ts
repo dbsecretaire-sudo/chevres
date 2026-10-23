@@ -56,7 +56,10 @@ export function nomDuChoix(id: string, base: readonly { id: string; nom: string 
   const ajoute = perso?.ajoutes?.find((a) => a.id === id);
   if (ajoute) return ajoute.nom;
   const nom = perso?.renommes?.[id]?.trim() || base.find((b) => b.id === id)?.nom;
-  return nom ?? (id.startsWith(PREFIXE_CHOIX_AJOUTE) ? id.slice(PREFIXE_CHOIX_AJOUTE.length) : id);
+  if (nom) return nom;
+  if (!id.startsWith(PREFIXE_CHOIX_AJOUTE)) return id;
+  const lisible = id.slice(PREFIXE_CHOIX_AJOUTE.length).replace(/_/g, ' ');
+  return lisible.charAt(0).toUpperCase() + lisible.slice(1);
 }
 
 /** L'identifiant d'un nouveau choix : son nom, sans accent ni espace superflu, avec le repère ; un nom déjà pris reçoit un numéro. */

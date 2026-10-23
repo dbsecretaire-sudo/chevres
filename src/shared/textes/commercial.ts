@@ -214,6 +214,7 @@ export const TEXTES_COMMERCIAL = {
     },
   },
   circuits: {
+    personnaliser: 'Personnaliser les circuits (ajouter, renommer, masquer)',
     titre: 'Circuits de vente',
     aide: 'Choisissez le circuit dans chaque vente (champ « Circuit de vente ») pour voir ce que chacun rapporte.',
     cartes: { meilleur: 'Meilleur circuit', ventes: 'Ventes' },

@@ -12,7 +12,9 @@ import {
 import { COMPTE_PAR_RECETTE } from '@/shared/constants/planComptable';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { LABEL_ACTIVITE_COMPTABLE, LABEL_CIRCUIT_VENTE, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
+import { LABEL_ACTIVITE_COMPTABLE, LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { nomCircuit } from '@/features/settings/services/listesDeChoix';
 import { libelleCategorieVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
@@ -38,6 +40,7 @@ export function VenteLecture({
   /** Une vente de viande d'un jour d'abattage : le bouton qui ouvre le lot (la vente se modifie alors depuis le menu de la fiche). */
   surLeLot?: () => void;
 }) {
+  const { settings } = useAppSettings();
   const compte = COMPTE_PAR_RECETTE[vente.categorie];
   return (
     <Card>
@@ -104,7 +107,7 @@ export function VenteLecture({
       {vente.circuit ? (
         <Text style={commonStyles.line}>
           {TEXTES.commercial.circuit.deLaVente(
-            LABEL_CIRCUIT_VENTE[vente.circuit as keyof typeof LABEL_CIRCUIT_VENTE] ?? vente.circuit,
+            nomCircuit(vente.circuit, settings.exploitation?.listesPerso?.circuitsVente),
           )}
         </Text>
       ) : null}

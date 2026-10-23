@@ -347,8 +347,8 @@ export const TEXTES_COMPTABILITE = {
         aide: 'Les recettes et les charges de l’atelier Agritourisme : ses visites, son repas, son 4x4. Le reste de l’exploitation n’y compte pas.',
       },
       atelier: {
-        titre: 'Ce qu’on fabrique seulement',
-        aide: 'Le lait, le fromage, la viande et la charcuterie, les plats préparés et les savons : leurs recettes, leurs charges directes et leur part des charges communes. Les aides et les autres ateliers n’y comptent pas.',
+        titre: 'Tous les ateliers de production',
+        aide: 'Le lait, le fromage, les petits, les animaux vendus, la viande et la charcuterie, les plats préparés, les savons et les œufs : leurs recettes, leurs charges directes et leur part des charges communes. Les aides et l’agritourisme (qui a sa propre rentabilité) n’y comptent pas.',
       },
     },
     resultatTitre: (annee: number) => `Résultat — ${annee}`,

@@ -1,6 +1,6 @@
 import { SelectField } from '@/shared/components/SelectField';
-import { CIRCUIT_VENTE } from '@/shared/constants/commercial';
-import { LABEL_CIRCUIT_VENTE } from '@/shared/textes/libelles';
+import { useListesPerso } from '@/features/settings/hooks/useListesPerso';
+import { choixCircuits } from '@/features/settings/services/listesDeChoix';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.commercial.circuit;
@@ -19,6 +19,7 @@ interface Props {
 
 /** Le circuit de vente d'une vente ou d'une commande : un choix facultatif parmi les circuits de l'exploitation. */
 export function ChampCircuit({ value, onChange, required = false, label, aide }: Props) {
+  const { listes } = useListesPerso();
   return (
     <SelectField
       label={label ?? T.champ}
@@ -28,7 +29,8 @@ export function ChampCircuit({ value, onChange, required = false, label, aide }:
       placeholder={required ? T.choisir : undefined}
       options={[
         ...(required ? [] : [{ value: '', label: T.aucun }]),
-        ...Object.values(CIRCUIT_VENTE).map((c) => ({ value: c as string, label: LABEL_CIRCUIT_VENTE[c] })),
+        // Les circuits de l'exploitation (Organisation › Listes de choix) : ceux d'office, renommés ou masqués, et les siens.
+        ...choixCircuits(listes.circuitsVente, value).map((c) => ({ value: c.id, label: c.nom })),
       ]}
       aide={aide ?? T.aide}
     />

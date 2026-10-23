@@ -126,8 +126,8 @@ async function construirePlanDeLAnnee(
 export const PERIMETRES_RENTABILITE = {
   /** L'agritourisme seul (le côté Agritourisme de l'accueil). */
   agritourisme: [ATELIER.AGRITOURISME],
-  /** Ce qu'on fabrique : le lait, le fromage, la viande et la charcuterie, les plats préparés et les savons (le côté Atelier de l'accueil). */
-  atelier: [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.VIANDE, ATELIER.PLATS, ATELIER.SAVONS],
+  /** Tous les ateliers de production : le lait, le fromage, les petits, les animaux vendus, la viande et la charcuterie, les plats préparés, les savons et les œufs (le côté Atelier de l'accueil). L'agritourisme a sa propre rentabilité. */
+  atelier: [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.PETITS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.PLATS, ATELIER.SAVONS, ATELIER.OEUFS],
 } as const satisfies Record<string, readonly Atelier[]>;
 
 export type PerimetreRentabilite = keyof typeof PERIMETRES_RENTABILITE;

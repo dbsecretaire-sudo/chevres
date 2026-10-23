@@ -59,7 +59,8 @@ describe('listes de choix personnalisables', () => {
   it('retire un choix ajouté ; le nom d’un choix inconnu se lit dans son identifiant', () => {
     const ajoute = avecChoixAjoute(undefined, 'Cave');
     expect(sansChoixAjoute(ajoute, ajoute.ajoutes![0].id).ajoutes).toEqual([]);
-    expect(nomDuChoix('perso:cave', BASE, undefined)).toBe('cave');
+    expect(nomDuChoix('perso:cave', BASE, undefined)).toBe('Cave');
+    expect(nomDuChoix('perso:vente_en_gare', BASE, undefined)).toBe('Vente en gare');
     expect(nomDuChoix('autre', BASE, undefined)).toBe('autre');
   });
 });

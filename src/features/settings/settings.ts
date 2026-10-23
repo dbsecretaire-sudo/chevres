@@ -357,7 +357,7 @@ export interface InfosExploitation {
   /** Partenariats (agritourisme) : les catégories de tiers cochées, dont les contacts rejoignent la page (en plus de l'office de tourisme). */
   categoriesPartenariats?: string[];
   /** Les listes de choix que l'utilisateur personnalise (voir listesPerso) : ce que couvre une assurance, les catégories de dépense. */
-  listesPerso?: { objetsAssurance?: ListePerso; categoriesDepense?: ListePerso };
+  listesPerso?: { objetsAssurance?: ListePerso; categoriesDepense?: ListePerso; circuitsVente?: ListePerso };
   /**
    * Le paramétrage du cheptel : les coefficients UGB choisis par espèce (à défaut ceux d'UGB_PAR_DEFAUT) et, pour chaque prime
    * (PRIMES), si elle compte dans la prime prévisionnelle, son taux en euros et ce sur quoi il s'applique (par UGB, par animal ou par hectare ; à défaut, la base d'office de la prime) ; `nom` renomme une aide d'office.

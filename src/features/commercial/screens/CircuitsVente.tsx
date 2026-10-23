@@ -16,19 +16,26 @@ import { LOCALE } from '@/shared/constants/format';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
 import { LABEL_CIRCUIT_VENTE } from '@/shared/textes/libelles';
+import { useListesPerso } from '@/features/settings/hooks/useListesPerso';
+import { nomCircuit } from '@/features/settings/services/listesDeChoix';
+import { useRouter } from 'expo-router';
+import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 import { formatMontant, todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.commercial.circuits;
 
-const libelleCircuit = (circuit: string): string =>
-  LABEL_CIRCUIT_VENTE[circuit as keyof typeof LABEL_CIRCUIT_VENTE] ?? circuit;
 const pourcent = (part: number): string =>
   `${(part * 100).toLocaleString(LOCALE, { maximumFractionDigits: 1 })} %`;
 
 /** Ce que rapporte chaque circuit de vente (ferme, marché, restaurateurs…) : le chiffre d'affaires, sa part et le panier moyen. */
 export default function CircuitsVente() {
   const donnees = useDonneesCommerciales();
+  const router = useRouter();
+  const { listes } = useListesPerso();
+  /** Le nom d'un circuit : le sien (ajouté ou renommé dans Listes de choix), « Non renseigné » pour les ventes d'avant ce champ. */
+  const libelleCircuit = (circuit: string): string =>
+    circuit === CIRCUIT_NON_RENSEIGNE ? LABEL_CIRCUIT_VENTE[CIRCUIT_NON_RENSEIGNE] : nomCircuit(circuit, listes.circuitsVente);
   const [choisi, setChoisi] = useState<string | null>(null);
   const stats = useMemo(() => statistiquesVentes(donnees.ventes, todayISO(), ''), [donnees.ventes]);
   const meilleur = stats.circuits.find((c) => c.circuit !== CIRCUIT_NON_RENSEIGNE);
@@ -47,6 +54,8 @@ export default function CircuitsVente() {
         />
       </LigneFiltres>
       <Text style={commonStyles.muted}>{T.aide}</Text>
+      {/* Les circuits se personnalisent (ajouter, renommer, masquer) : la même liste sert au champ « Circuit de vente » des ventes et des commandes. */}
+      <ListRow title={T.personnaliser} icone="options" onPress={() => router.push(ROUTES.ORGANISATION_LISTES as never)} />
       {stats.circuits.length === 0 ? (
         <EmptyState title={T.aucune} />
       ) : (
