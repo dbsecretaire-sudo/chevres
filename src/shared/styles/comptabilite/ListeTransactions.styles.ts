@@ -26,6 +26,6 @@ export const styles = StyleSheet.create({
   statValeur: { fontSize: 15, fontWeight: '700' },
   list: { paddingHorizontal: 16, paddingBottom: 160 },
   /** En-tête de la liste : pas de retrait propre, annule le retrait horizontal de la liste, déjà compris dans le padding du bloc. */
-  entete: { marginHorizontal: -16 },
+  entete: { marginHorizontal: -16, paddingTop: 4 },
   montant: { fontSize: 15, fontWeight: '700' },
 });

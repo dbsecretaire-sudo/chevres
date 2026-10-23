@@ -9,6 +9,7 @@ import { Screen } from '@/shared/components/Screen';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { ChampsTarifsParCategorie } from '@/features/commercial/components/ChampsTarifsParCategorie';
 import type { ArchiveCommercial } from '@/features/commercial/types';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
@@ -32,6 +33,8 @@ export default function GrilleTarifs() {
   const [prix, setPrix] = useState<Record<string, number>>({});
   const [commercial, setCommercial] = useState<ArchiveCommercial | null>(null);
   const { plan } = useRentabilite();
+  // Seuls les articles de l'animal actif (chèvres : pas de cochons ni de brebis) ont un tarif à régler ici.
+  const { espece } = useEtablissement();
   // Ouverte depuis une catégorie de clients (entreprises, particuliers…) : seulement les prix de ces catégories.
   const dutLien = categoriesDuLien(useLocalSearchParams<Record<string, string>>()[PARAMETRE_CATEGORIES]);
   const categories = categoriesClient().filter((c) => !dutLien || dutLien.includes(c.id));
@@ -52,16 +55,16 @@ export default function GrilleTarifs() {
   useFocusEffect(
     useCallback(() => {
       Promise.all([lireArchiveStock(), lireArchiveCommercial()]).then(([stock, archive]) => {
-        setFromages(articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock));
+        setFromages(articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock, espece));
         setViandes([
-          ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock),
-          ...articlesDuGenre(GENRE_ARTICLE.PLAT, stock),
-          ...articlesDuGenre(GENRE_ARTICLE.SAVON, stock),
+          ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock, espece),
+          ...articlesDuGenre(GENRE_ARTICLE.PLAT, stock, espece),
+          ...articlesDuGenre(GENRE_ARTICLE.SAVON, stock, espece),
         ]);
         setPrix(stock.prix);
         setCommercial(archive);
       });
-    }, []),
+    }, [espece]),
   );
 
   const prixLait = plan?.valorisation?.prixLait;

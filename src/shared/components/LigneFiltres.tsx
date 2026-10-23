@@ -1,4 +1,4 @@
-import { Children, isValidElement, type PropsWithChildren } from 'react';
+import { Children, isValidElement, useState, type PropsWithChildren } from 'react';
 import { View } from 'react-native';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { YearPicker } from '@/shared/components/YearPicker';
@@ -12,6 +12,16 @@ export function LigneFiltres({ children }: PropsWithChildren) {
   const autres = Children.toArray(children).filter(
     (c) => !(isValidElement(c) && (c.type === YearPicker || c.type === SelecteurEspece)),
   );
+  // Des choix qui ne montrent rien (l'année, les rubriques d'un gîte quand il n'y en a pas) ne laissent pas de vide sous le titre : tant que la ligne n'a pas de hauteur,
+  // elle est hors de la page (posée à part, invisible) et ne prend aucune place.
+  const [affichee, setAffichee] = useState(false);
   if (autres.length === 0) return null;
-  return <View style={styles.ligne}>{children}</View>;
+  return (
+    <View
+      style={affichee ? styles.ligne : { position: 'absolute', opacity: 0 }}
+      onLayout={(e) => setAffichee(e.nativeEvent.layout.height > 0)}
+    >
+      {children}
+    </View>
+  );
 }

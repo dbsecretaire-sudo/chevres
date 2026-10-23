@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
   carnet: { paddingHorizontal: 16, gap: 10 },
   /** Une mise bas : ses lignes se touchent (titre, nombre de petits, petits), sans blanc entre elles. */
   carte: { gap: 2, paddingVertical: 10 },
-  liste: { paddingBottom: 24 },
+  liste: { paddingBottom: 140 },
   cabritsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
   cabritChip: {
     flexDirection: 'row',

@@ -141,5 +141,6 @@ const styles = StyleSheet.create({
   enteteSol: { padding: 8, paddingBottom: 8, gap: 8 },
   rang: { paddingHorizontal: 8 },
   vide: { padding: 8 },
-  pied: { height: 8 },
+  // Sous la dernière ligne : de quoi la voir en entier, au-dessus du bouton « + ».
+  pied: { height: 120 },
 });
