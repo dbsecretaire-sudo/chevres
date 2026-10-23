@@ -31,6 +31,7 @@ function Pastille({
   onAppui,
   poids = 1,
   grand = false,
+  iconeSeule = false,
   echelle,
 }: {
   /** Le rapport à la taille d'un téléphone (`useEchelle`) : les icônes et le texte suivent la taille de l'écran. */
@@ -46,8 +47,29 @@ function Pastille({
   poids?: number;
   /** Le nombre en grand (les rappels) ; sinon, la taille habituelle (la balance, les boucles). */
   grand?: boolean;
+  /** Seulement l'icône, avec la valeur en pastille rouge dans son coin (les rappels : la place rendue va à la balance). */
+  iconeSeule?: boolean;
 }) {
   const router = useRouter();
+  if (iconeSeule) {
+    // La cloche seule : un nombre rouge dans son coin quand des rappels attendent, rien sinon.
+    const nombre = valeur !== '0' && valeur !== '…' ? valeur : null;
+    return (
+      <Pressable
+        style={[styles.pastille, styles.pastilleSeule, { paddingVertical: Math.round(8 * echelle), width: Math.round(40 * echelle), paddingHorizontal: 0 }]}
+        onPress={() => (onAppui ? onAppui() : router.push(route as never))}
+        accessibilityRole="button"
+        accessibilityLabel={`${libelle} : ${valeur}`}
+      >
+        <Ionicons name={icone} size={Math.round(24 * echelle)} color={couleur ?? colors.primary} />
+        {nombre ? (
+          <View style={styles.badgeRouge}>
+            <Text style={styles.badgeTexte}>{nombre}</Text>
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       style={[styles.pastille, { flex: poids, paddingVertical: Math.round(8 * echelle) }]}
@@ -115,7 +137,7 @@ export function BandeauFerme({ onRappels, onRetour }: Props) {
         couleur={balance === undefined || balance === 0 ? undefined : balance < 0 ? colors.danger : colors.success}
         libelle={T.balance}
         route={ROUTES.COMPTABILITE_LISTE}
-        poids={2}
+        poids={3}
         echelle={echelle}
       />
       <Pastille
@@ -132,7 +154,7 @@ export function BandeauFerme({ onRappels, onRetour }: Props) {
         valeur={rappels === undefined ? '…' : String(rappels)}
         // La cloche est rouge quand des rappels attendent.
         couleur={rappels ? colors.danger : undefined}
-        grand
+        iconeSeule
         libelle={T.rappels}
         onAppui={onRappels}
         echelle={echelle}
@@ -186,4 +208,19 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   badgeTexte: { color: colors.blanc, fontSize: 11, fontWeight: '700' },
+  // La cloche seule : une pastille qui ne s'étire pas ; son nombre est en rouge, dans son coin.
+  pastilleSeule: { flex: 0, flexGrow: 0 },
+  badgeRouge: {
+    position: 'absolute',
+    top: -6,
+    right: -4,
+    minWidth: 20,
+    alignItems: 'center',
+    backgroundColor: colors.danger,
+    borderRadius: 999,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: colors.blanc,
+  },
 });
