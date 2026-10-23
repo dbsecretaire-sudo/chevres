@@ -28,6 +28,22 @@ const routesDuMenu = (menu: DefinitionMenu): string[] => [
   ...(menu.items ?? []).flatMap((e) => ('route' in e ? [e.route] : [])),
 ];
 
+type EntreeDeMenu = NonNullable<DefinitionMenu['items']>[number];
+/** Une partie d'un menu long : son titre (absent pour les premières entrées) et ses entrées. */
+interface PartieDeMenu {
+  titre?: string;
+  entrees: EntreeDeMenu[];
+}
+/** Découpe les entrées d'un menu en parties, à chaque trait qui porte un titre. */
+function partiesDuMenu(items: EntreeDeMenu[]): PartieDeMenu[] {
+  const parties: PartieDeMenu[] = [{ entrees: [] }];
+  for (const item of items) {
+    if ('separateur' in item && item.titre) parties.push({ titre: item.titre, entrees: [] });
+    else parties[parties.length - 1].entrees.push(item);
+  }
+  return parties.filter((p) => p.titre || p.entrees.length > 0);
+}
+
 /**
  * Le menu en arbre de la disposition « comptable » : les menus de l'application (l'accueil de la ferme, la comptabilité, les contacts, l'organisation…) comme des dossiers
  * qu'on déplie, avec la page ouverte en évidence. Au bas, les autres affichages (bureau, mobile).
@@ -46,6 +62,8 @@ function ArbreDesMenus() {
   const [choix, setChoix] = useState<{ adresse: string; menu: string | null } | null>(null);
   const ouvert = choix?.adresse === adresse ? choix.menu : dossierOuvert;
   const setOuvert = (menu: string | null) => setChoix({ adresse, menu });
+  // Les parties d'un menu long (« Gestion », « Intervenants »…) se plient aussi : seule celle de la page ouverte est dépliée d'office, un appui sur son titre en décide autrement.
+  const [partiesChoisies, setPartiesChoisies] = useState<Record<string, boolean>>({});
   const [taille, setTaille] = useState(lireTailleTexte);
   const choisirTaille = (sens: 1 | -1) => {
     const suivante = tailleVoisine(taille, sens);
@@ -80,29 +98,45 @@ function ArbreDesMenus() {
               </Text>
             </Pressable>
             {deplie
-              ? menu.items?.map((item, i) =>
-                  'separateur' in item ? (
-                    item.titre ? (
-                      <Text key={`s${i}`} style={styles.partie}>
-                        {item.titre}
-                      </Text>
-                    ) : (
-                      <View key={`s${i}`} style={styles.trait} />
-                    )
-                  ) : (
-                    <Pressable
-                      key={`${item.route}-${i}`}
-                      style={({ pressed }) => [styles.page, item.route === courante && styles.actif, pressed && styles.appuye]}
-                      onPress={() => router.push(item.route as never)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: item.route === courante }}
-                    >
-                      <Text style={[styles.pageTexte, item.route === courante && styles.pageCourante]} numberOfLines={2}>
-                        {item.label}
-                      </Text>
-                    </Pressable>
-                  ),
-                )
+              ? partiesDuMenu(menu.items ?? []).map((partie, p) => {
+                  const cle = `${menu.label}|${partie.titre ?? ''}`;
+                  const partieOuverte =
+                    !partie.titre || (partiesChoisies[cle] ?? partie.entrees.some((e) => 'route' in e && e.route === courante));
+                  return (
+                    <View key={cle + p}>
+                      {partie.titre ? (
+                        <Pressable
+                          style={({ pressed }) => [styles.partieEntete, pressed && styles.appuye]}
+                          onPress={() => setPartiesChoisies((c) => ({ ...c, [cle]: !partieOuverte }))}
+                          accessibilityRole="button"
+                          accessibilityState={{ expanded: partieOuverte }}
+                        >
+                          <Ionicons name={partieOuverte ? 'chevron-down' : 'chevron-forward'} size={11} color={colors.textMuted} />
+                          <Text style={styles.partie}>{partie.titre}</Text>
+                        </Pressable>
+                      ) : null}
+                      {partieOuverte
+                        ? partie.entrees.map((item, i) =>
+                            'separateur' in item ? (
+                              <View key={`s${i}`} style={styles.trait} />
+                            ) : (
+                              <Pressable
+                                key={`${item.route}-${i}`}
+                                style={({ pressed }) => [styles.page, item.route === courante && styles.actif, pressed && styles.appuye]}
+                                onPress={() => router.push(item.route as never)}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: item.route === courante }}
+                              >
+                                <Text style={[styles.pageTexte, item.route === courante && styles.pageCourante]} numberOfLines={2}>
+                                  {item.label}
+                                </Text>
+                              </Pressable>
+                            ),
+                          )
+                        : null}
+                    </View>
+                  );
+                })
               : null}
           </View>
         );
@@ -172,8 +206,9 @@ const styles = StyleSheet.create({
   pageCourante: { fontWeight: '800', color: colors.primaryDark },
   actif: { backgroundColor: colors.badgeBg },
   appuye: { opacity: 0.7 },
-  // Le titre d'une partie d'un menu long (« Gestion », « Intervenants »).
-  partie: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textMuted, marginTop: 10, marginBottom: 2, marginLeft: 34, marginRight: 10 },
+  // Le titre d'une partie d'un menu long (« Gestion », « Intervenants ») : une ligne sur laquelle on appuie pour déplier ou plier la partie.
+  partieEntete: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, marginTop: 4, marginLeft: 26, marginRight: 10 },
+  partie: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textMuted },
   trait: { height: 1, backgroundColor: colors.border, marginVertical: 4, marginLeft: 34, marginRight: 10 },
   taille: { gap: 6, paddingVertical: 10, paddingHorizontal: 14 },
   tailleBoutons: { flexDirection: 'row', gap: 6 },
