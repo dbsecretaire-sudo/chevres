@@ -21,7 +21,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { SENS_TRANSACTION } from '@/shared/constants/comptabilite';
-import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { CATEGORIE_FOURNISSEUR, CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
 import { ROUTES } from '@/shared/constants/routes';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { colors } from '@/shared/theme/colors';
@@ -111,7 +111,7 @@ export default function LieuAssociations() {
   );
 
   const associations = useMemo(
-    () => contacts.filter((c) => categorieDuContact(c, idsConnus).id === CATEGORIE_FOURNISSEUR.GROUPEMENT),
+    () => contacts.filter((c) => CATEGORIES_ASSOCIATION.includes(categorieDuContact(c, idsConnus).id ?? '')),
     [contacts, idsConnus],
   );
   const ecrituresDe = useCallback(
@@ -267,7 +267,7 @@ export default function LieuAssociations() {
           <ListRow
             title={G.ajouterTiers}
             icone="add-circle"
-            onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.GROUPEMENT}`)}
+            onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.ASSOCIATION_AGRICOLE}`)}
           />
         </BlocLignes>
       </GroupeAccueil>

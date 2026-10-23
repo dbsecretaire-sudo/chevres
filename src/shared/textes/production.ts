@@ -361,10 +361,11 @@ export const TEXTES_PRODUCTION = {
     },
     banque: {
       titre: 'Banque et comptabilité',
-      groupeTiers: 'Banques',
+      groupeTiers: 'Banques et comptables',
       ajouterTiers: 'Ajouter une banque',
-      groupeEcritures: 'Les frais bancaires',
-      nouvelle: 'Nouveaux frais bancaires',
+      ajouterComptable: 'Ajouter un comptable',
+      groupeEcritures: 'Les frais bancaires et comptables',
+      nouvelle: 'Nouveaux frais bancaires ou comptables',
       liens: {
         tresorerie: { titre: 'Trésorerie', aide: 'Solde mois par mois, échéancier, emprunts, alertes.' },
         tva: { titre: 'Pilotage de la TVA', aide: 'La TVA collectée et déductible, par période et par taux.' },

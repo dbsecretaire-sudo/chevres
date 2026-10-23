@@ -5,6 +5,7 @@ import { useBandeauFerme } from '@/features/accueil/ferme/useBandeauFerme';
 import { LOCALE } from '@/shared/constants/format';
 import { ROUTES } from '@/shared/constants/routes';
 import { effacerOrigine } from '@/shared/navigation/origineRetour';
+import { viderLaPile } from '@/shared/navigation/pileDesOnglets';
 import { colors } from '@/shared/theme/colors';
 import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
@@ -86,6 +87,8 @@ export function BandeauFerme({ onRappels }: Props) {
         style={[styles.portrait, { width: tailleMaison, height: tailleMaison, borderRadius: tailleMaison / 2 }]}
         onPress={() => {
           effacerOrigine();
+          // Un retour à l'accueil oublie les pages vues : on repart de zéro.
+          viderLaPile();
           router.navigate(ROUTES.accueilFerme() as never);
         }}
         accessibilityRole="button"

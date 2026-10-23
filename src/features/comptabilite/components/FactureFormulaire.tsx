@@ -58,6 +58,7 @@ import { estBoucleNumerotee } from '@/features/stock/services/boucles';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
+import { ChampNumeroOuContrat } from '@/features/comptabilite/components/ChampNumeroOuContrat';
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
 import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
 import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
@@ -254,10 +255,22 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         )}
         {/* Une aide n'a pas de numéro de facture : le tiers et le type d'aide la décrivent. */}
         {estAide ? null : (
-          <FormField
+          <ChampNumeroOuContrat
+            fournisseur={fournisseurDuTiers}
             label={T.nDeFactureOuObjet}
-            value={form.description ?? ''}
-            onChangeText={(description) => f.setForm({ ...form, description })}
+            valeur={form.description ?? ''}
+            onChoix={(description, contrat) =>
+              f.setForm({
+                ...form,
+                description,
+                // Le contrat dit ce qu'il couvre : l'objet de l'assurance et, pour un véhicule, sa plaque.
+                ...(contrat?.vehiculeId
+                  ? { objetAssurance: OBJET_ASSURANCE.VEHICULE, vehiculeId: contrat.vehiculeId }
+                  : contrat?.objet
+                    ? { objetAssurance: contrat.objet }
+                    : {}),
+              })
+            }
             placeholder={T.precisions}
           />
         )}

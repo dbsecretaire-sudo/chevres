@@ -1,8 +1,10 @@
-import { useCallback, useState } from 'react';
-import { FlatList, Text } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
+import { ChampRecherche } from '@/shared/components/ChampRecherche';
+import { documentsRecherches } from '@/features/bibliotheque/services/recherche';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
@@ -28,6 +30,8 @@ export default function BibliothequeDocuments() {
   const [documents, setDocuments] = useState<DocumentGenere[]>([]);
   const [aRetirer, setARetirer] = useState<DocumentGenere | null>(null);
   const [manquant, setManquant] = useState(false);
+  const [recherche, setRecherche] = useState('');
+  const affiches = useMemo(() => documentsRecherches(documents, recherche), [documents, recherche]);
 
   const charger = useCallback(() => lireBibliotheque().then(setDocuments), []);
   useFocusEffect(
@@ -44,15 +48,19 @@ export default function BibliothequeDocuments() {
 
   return (
     <Screen scroll={false}>
-      <Text style={commonStyles.note}>{T.aide}</Text>
+      <View style={commonStyles.topPadded}>
+        <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.rechercher} />
+        <Text style={commonStyles.note}>{T.aide}</Text>
+      </View>
       {manquant ? <Text style={commonStyles.mutedItalic}>{T.fichierManquant}</Text> : null}
       <FlatList
-        data={documents}
+        data={affiches}
         keyExtractor={(d) => d.id}
         contentContainerStyle={commonStyles.listeBlocAvecFab}
-        ListEmptyComponent={<EmptyState title={T.aucun} />}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={<EmptyState title={recherche.trim() ? T.aucunResultat : T.aucun} />}
         renderItem={({ item, index }) => (
-          <LigneDeBloc index={index} total={documents.length}>
+          <LigneDeBloc index={index} total={affiches.length}>
             <ListRow
               title={item.titre}
               subtitle={`${quand(item.genereLe)} · ${item.nomFichier}`}

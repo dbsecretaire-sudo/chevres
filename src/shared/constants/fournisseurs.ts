@@ -18,8 +18,14 @@ export const CATEGORIE_FOURNISSEUR = {
   ORGANISME: 'organisme',
   /** La chambre d'agriculture : ses factures sont des dépenses à part (« Autre ») ou des achats de production (les boucles d'identification qu'elle fournit). */
   CHAMBRE_AGRICULTURE: 'chambre_agriculture',
-  /** Un groupement (GDS, achats groupés…) : ses factures sont des cotisations ou des achats, de n'importe quelle dépense. */
+  /** Un groupement (GDS, achats groupés…) : ses factures sont des cotisations ou des achats, de n'importe quelle dépense. Ancienne catégorie des associations et coopératives agricoles. */
   GROUPEMENT: 'groupement',
+  /** Une association agricole : elle a ses volets (achats groupés, vente groupée…) dans « Association et coopérative agricole ». */
+  ASSOCIATION_AGRICOLE: 'association_agricole',
+  /** Une coopérative agricole : mêmes volets que l'association. */
+  COOPERATIVE_AGRICOLE: 'cooperative_agricole',
+  /** Un comptable : ses honoraires et frais se rangent avec les frais bancaires (« Banque et comptabilité »). */
+  COMPTABLE: 'comptable',
   /** Le groupement sanitaire (GDS) : un partenaire d'office ; il figure dans les coordonnées utiles du carnet de mise bas. */
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   /** Un laboratoire d'analyses (du lait, de la prophylaxie…) : ses factures sont des analyses de laboratoire ; il se choisit sur chaque analyse. */
@@ -39,6 +45,13 @@ export const CATEGORIE_FOURNISSEUR = {
   /** Un fournisseur qui ne remet pas de facture : ses dépenses sont notées « non facturées » (pas de TVA à déduire). */
   NON_FACTURABLE: 'non_facturable',
 } as const;
+
+/** Les catégories d'une association ou d'une coopérative agricole : celles qui ont des volets et que le lieu « Association et coopérative agricole » réunit (« groupement » est l'ancienne). */
+export const CATEGORIES_ASSOCIATION: readonly string[] = [
+  CATEGORIE_FOURNISSEUR.ASSOCIATION_AGRICOLE,
+  CATEGORIE_FOURNISSEUR.COOPERATIVE_AGRICOLE,
+  CATEGORIE_FOURNISSEUR.GROUPEMENT,
+];
 
 /** La catégorie d'un fournisseur dont la fiche n'en a pas (ou dont la catégorie a été retirée) : elle ne se retire pas de la liste. */
 export const CATEGORIE_FOURNISSEUR_PAR_DEFAUT = CATEGORIE_FOURNISSEUR.GENERAL;
@@ -83,6 +96,7 @@ export const DEPENSES_PAR_CATEGORIE_FOURNISSEUR: Record<string, readonly string[
   [CATEGORIE_FOURNISSEUR.ASSUREUR]: [CATEGORIE_DEPENSE.ASSURANCES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.LABORATOIRE]: [CATEGORIE_DEPENSE.ANALYSES_LABORATOIRE, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.BANQUE]: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES, CATEGORIE_DEPENSE.AUTRE],
+  [CATEGORIE_FOURNISSEUR.COMPTABLE]: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.EMBALLAGES]: [CATEGORIE_DEPENSE.PRODUCTION, CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.TOURISME]: [CATEGORIE_DEPENSE.AUTRE],
   [CATEGORIE_FOURNISSEUR.REPAS]: [CATEGORIE_DEPENSE.PRODUCTION, CATEGORIE_DEPENSE.AUTRE],

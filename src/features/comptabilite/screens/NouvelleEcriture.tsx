@@ -38,6 +38,8 @@ import type { CategorieDepense, CategorieRecette, TypeFacture } from '@/features
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, OBJET_ASSURANCE, TYPE_FACTURE, VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { currentYear, formatMontant } from '@/shared/utils/dates';
+import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
@@ -131,6 +133,15 @@ export default function NouvelleFacture() {
   if (params.fournisseur && !fournisseurChoisi && e.fournisseurs.some((f) => f.id === params.fournisseur)) {
     setFournisseurChoisi(true);
     e.changerFournisseur(params.fournisseur);
+  }
+  // Une réparation : le garage (réparateur) est choisi d'office quand il n'y en a qu'un parmi les contacts, sans écraser un fournisseur déjà choisi.
+  const [garageChoisi, setGarageChoisi] = useState(false);
+  if (e.categorieDepense === CATEGORIE_DEPENSE.REPARATION && !garageChoisi && !e.fournisseurId && !params.fournisseur) {
+    const garages = e.fournisseurs.filter((x) => categorieFournisseurDe(x.categorie).id === CATEGORIE_FOURNISSEUR.GARAGE);
+    if (garages.length > 0) {
+      setGarageChoisi(true);
+      if (garages.length === 1) e.changerFournisseur(garages[0].id);
+    }
   }
   // L'atelier donné par l'adresse : il pré-remplit le choix, une fois.
   const [atelierVu, setAtelierVu] = useState(false);

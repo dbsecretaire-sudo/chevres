@@ -16,6 +16,8 @@ export const TEXTES_EXPORT = {
     bouton: 'Documents déjà générés',
     aide: 'Tous les PDF générés par l’application, du plus récent au plus ancien : un appui le rouvre pour l’envoyer ou l’imprimer de nouveau.',
     aucun: 'Aucun document généré pour le moment.',
+    rechercher: 'Titre, fichier ou date (ex : 10/2026)…',
+    aucunResultat: 'Aucun document ne correspond à la recherche.',
     dejaGenere: (date: string) => `Généré le ${date}`,
     dejaGenereN: (date: string, n: number) => `Dernier le ${date} (${n})`,
     fichierManquant: 'Le fichier de ce document n’est pas dans cet appareil (il se récupère avec Google Drive ou une sauvegarde).',

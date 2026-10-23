@@ -79,6 +79,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/contacts\/dossier$/, (_, p) => (p.contact ? ROUTES.ficheContact(p.contact) : ROUTES.CONTACTS)],
   [/^\/comptabilite\/(clients|fournisseurs|contacts|comptes-pcg)\/(?!index$)[^/]+$/, (m) => `/comptabilite/${m[1]}`],
   [/^\/comptabilite\/plan-comptable$/, () => ROUTES.COMPTES_PCG],
+  // Un contrat d'assurance revient à la page de l'assurance (les contrats de tous les assureurs).
+  [/^\/comptabilite\/contacts\/contrat$/, () => ROUTES.lieu('assurance')],
   [/^\/comptabilite\/(stocks|conditionnement)$/, () => ROUTES.COMPTABILITE_INVENTAIRE],
   [/^\/comptabilite\/stock-(historique|statistiques|structure)$/, () => ROUTES.COMPTABILITE_STOCKS],
   [/^\/comptabilite\/tresorerie-reglages$/, () => ROUTES.COMPTABILITE_TRESORERIE],

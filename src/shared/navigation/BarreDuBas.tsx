@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { BandeauBas } from '@/features/accueil/ferme/BandeauBas';
 import { publierMenus, type EntreeMenu } from '@/shared/navigation/menusSections';
+import { memoriserNavigationDesOnglets } from '@/shared/navigation/pileDesOnglets';
 
 /**
  * La barre du bas de toutes les pages (à passer en `tabBar` des onglets). Sur le téléphone, il n'y a plus de barre d'onglets : les rubriques sont
@@ -12,6 +13,8 @@ import { publierMenus, type EntreeMenu } from '@/shared/navigation/menusSections
 export function BarreDuBas(props: BottomTabBarProps) {
   const { state, descriptors, navigation } = props;
   const courant = state.routes[state.index]?.name;
+  // La maison du bandeau vide la pile des pages avec cette navigation.
+  memoriserNavigationDesOnglets(navigation);
   const entrees: EntreeMenu[] = state.routes
     // Les écrans cachés des onglets (`href: null` : expo-router les masque par `display: none`) n'ont pas d'entrée : l'accueil, les pages de l'organisation…
     .filter((route) => StyleSheet.flatten(descriptors[route.key]?.options.tabBarItemStyle)?.display !== 'none')

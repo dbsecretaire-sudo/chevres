@@ -50,6 +50,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
+import { ChampNumeroOuContrat } from '@/features/comptabilite/components/ChampNumeroOuContrat';
 import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
 import { OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
@@ -110,10 +111,21 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
           onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
         />
 
-        <FormField
+        {/* Un assureur : le numéro de la facture est le numéro du contrat choisi dans sa liste ; sinon, un champ libre. */}
+        <ChampNumeroOuContrat
+          fournisseur={e.fournisseurSelectionne}
           label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
-          value={e.description}
-          onChangeText={e.setDescription}
+          valeur={e.description}
+          onChoix={(numero, contrat) => {
+            e.setDescription(numero);
+            // Le contrat dit ce qu'il couvre : l'objet de l'assurance et, pour un véhicule, sa plaque.
+            if (contrat?.vehiculeId) {
+              e.setObjetAssurance(OBJET_ASSURANCE.VEHICULE);
+              e.setVehiculeId(contrat.vehiculeId);
+            } else if (contrat?.objet) {
+              e.setObjetAssurance(contrat.objet);
+            }
+          }}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
         {/* Le paiement : payée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}

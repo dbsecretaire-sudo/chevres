@@ -13,6 +13,10 @@ export const FICHIER_COMMERCIAL = 'commercial.json';
 export const FICHIER_BIBLIOTHEQUE = 'bibliotheque.json';
 export const FICHIER_STOCK = 'stock.json';
 export const FICHIER_ANNEXES = 'annexes.json';
+/** Les documents d'identification et d'installation de l'exploitation. */
+export const FICHIER_IDENTIFICATION = 'identification.json';
+/** Les catégories de contacts ajoutées aux partenaires ou retirées (les laboratoires d'analyses, par exemple). */
+export const FICHIER_PARTENAIRES = 'partenaires.json';
 /** Espèces et activités de l'établissement. */
 export const FICHIER_ETABLISSEMENT = 'etablissement.json';
 export const FICHIER_COMPTES_PCG = 'comptes-pcg.json';

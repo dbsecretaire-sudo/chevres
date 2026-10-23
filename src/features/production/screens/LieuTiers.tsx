@@ -25,6 +25,7 @@ import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { contratsDe } from '@/features/fournisseurs/services/contratsAssureur';
 import { ContenuDossierPac } from '@/features/cheptel/screens/DossierPac';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
@@ -45,6 +46,8 @@ interface TextesLieu {
   /** Pour le groupement sanitaire : le groupe des vétérinaires, rangés avec lui. */
   groupeVeterinaires?: string;
   ajouterVeterinaire?: string;
+  /** Banque et comptabilité : l'ajout d'un comptable, à côté de celui d'une banque. */
+  ajouterComptable?: string;
   liens: object;
 }
 /** Combien d'écritures la page en montre : les plus récentes ; les autres sont dans la comptabilité. */
@@ -209,6 +212,14 @@ function LieuTiersStandard() {
                   )
                 }
               />
+              {/* Banque et comptabilité : le comptable s'ajoute aussi d'ici (sa catégorie est liée à la page). */}
+              {textes.ajouterComptable ? (
+                <ListRow
+                  title={textes.ajouterComptable}
+                  icone="add-circle"
+                  onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.COMPTABLE}`)}
+                />
+              ) : null}
             </BlocLignes>
           </GroupeAccueil>
 
@@ -238,6 +249,33 @@ function LieuTiersStandard() {
                   onPress={() =>
                     ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`)
                   }
+                />
+              </BlocLignes>
+            </GroupeAccueil>
+          ) : null}
+
+          {/* L'assurance : la liste des contrats de ses assureurs (leur numéro s'inscrit dans la facture quand on les choisit), chacun avec son dossier. */}
+          {cle === 'assurance' ? (
+            <GroupeAccueil titre={TEXTES.contacts.contrat.groupe}>
+              <BlocLignes>
+                {tiers.flatMap((c) =>
+                  contratsDe(c.fournisseur).map((contrat) => (
+                    <ListRow
+                      key={contrat.id}
+                      title={contrat.denomination}
+                      subtitle={TEXTES.contacts.contrat.ligne(c.nom, contrat.numero)}
+                      icone="shield-checkmark"
+                      onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
+                    />
+                  )),
+                )}
+                {tiers.every((c) => contratsDe(c.fournisseur).length === 0) ? (
+                  <Text style={commonStyles.mutedItalic}>{TEXTES.contacts.contrat.aucunContratListe}</Text>
+                ) : null}
+                <ListRow
+                  title={TEXTES.contacts.contrat.nouveauContrat}
+                  icone="add-circle"
+                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined }))}
                 />
               </BlocLignes>
             </GroupeAccueil>

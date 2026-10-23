@@ -11,7 +11,7 @@ import type { Contact } from '@/features/contacts/services/contacts';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
 import type { Controle } from '@/features/exploitation/types';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
-import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
 import { SOURCE_TRANSACTION } from '@/shared/constants/comptabilite';
 import type { CategorieClientReglage } from '@/shared/dictionnaire/categoriesClient';
 import type { CategorieFournisseurReglage } from '@/shared/dictionnaire/categoriesFournisseur';
@@ -194,7 +194,7 @@ export function fichesDuFormulaire(
   const resultat: ReturnType<typeof fichesDuFormulaire> = {};
   // Les volets ne valent que pour une association ou une coopérative agricole.
   const volets =
-    form.categorie === CATEGORIE_FOURNISSEUR.GROUPEMENT && form.volets.length > 0 ? form.volets : undefined;
+    CATEGORIES_ASSOCIATION.includes(form.categorie) && form.volets.length > 0 ? form.volets : undefined;
 
   if (form.recettes) {
     const base = existant?.client;

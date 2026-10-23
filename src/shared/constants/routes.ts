@@ -99,6 +99,14 @@ export const ROUTES = {
   /** Un document d'un contact (courrier, contrat, aide…), ouvert depuis sa fiche : il reste dans la section Contacts (nouveau sans identifiant, sinon modifié). */
   contactContenu: (groupementId: string, id?: string) =>
     `/comptabilite/contacts/contenu?groupementId=${groupementId}${id ? `&id=${id}` : ''}` as const,
+  /** Un contrat d'assurance (nouveau sans identifiant, sinon modifié) : de l'assureur donné, et du véhicule quand on le souscrit depuis sa fiche. */
+  contratAssureur: (options: { fournisseur?: string; id?: string; vehicule?: string } = {}) => {
+    const parametres = Object.entries(options)
+      .filter(([, valeur]) => !!valeur)
+      .map(([cle, valeur]) => `${cle}=${encodeURIComponent(valeur as string)}`)
+      .join('&');
+    return `/comptabilite/contacts/contrat${parametres ? `?${parametres}` : ''}` as const;
+  },
   /** Un dossier d'un contact (un organisme, une association) : ses dossiers et ses contenus. */
   contactDossier: (contactId: string, dossierId: string) =>
     `/comptabilite/contacts/dossier?contact=${contactId}&dossier=${dossierId}` as const,

@@ -5,7 +5,7 @@ import { SelectField } from '@/shared/components/SelectField';
 import { comparerAlphabetique } from '@/shared/utils/personne';
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import type { FormulaireContact } from '@/features/contacts/services/fiche';
-import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
 import { VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { LABEL_VOLET_COOPERATIVE } from '@/shared/textes/libelles';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -46,7 +46,7 @@ export function FormulaireContactChamps({ form, onChange, categories }: Props) {
         aide={T.aideCategorie}
       />
       {/* Une association ou une coopérative agricole : ce qu'elle fait pour l'exploitation ; ses écritures ne proposent que ces volets. */}
-      {form.categorie === CATEGORIE_FOURNISSEUR.GROUPEMENT ? (
+      {CATEGORIES_ASSOCIATION.includes(form.categorie) ? (
         <>
           <Text style={commonStyles.lineSemiBold}>{T.volets}</Text>
           <Text style={commonStyles.note}>{T.aideVolets}</Text>

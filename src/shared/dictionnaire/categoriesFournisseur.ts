@@ -53,6 +53,7 @@ export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] 
     CATEGORIE_FOURNISSEUR.ASSUREUR,
     CATEGORIE_FOURNISSEUR.LABORATOIRE,
     CATEGORIE_FOURNISSEUR.BANQUE,
+    CATEGORIE_FOURNISSEUR.COMPTABLE,
     CATEGORIE_FOURNISSEUR.EMBALLAGES,
     CATEGORIE_FOURNISSEUR.TOURISME,
     CATEGORIE_FOURNISSEUR.REPAS,
@@ -62,6 +63,8 @@ export const categoriesFournisseurParDefaut = (): CategorieFournisseurReglage[] 
     depenses: [...DEPENSES_PAR_CATEGORIE_FOURNISSEUR[id]],
   })),
   // Un groupement n'a pas de limite : une cotisation (autre), un achat groupé (alimentation, production…).
+  { id: CATEGORIE_FOURNISSEUR.ASSOCIATION_AGRICOLE, nom: LABEL_CATEGORIE_FOURNISSEUR.association_agricole },
+  { id: CATEGORIE_FOURNISSEUR.COOPERATIVE_AGRICOLE, nom: LABEL_CATEGORIE_FOURNISSEUR.cooperative_agricole },
   { id: CATEGORIE_FOURNISSEUR.GROUPEMENT, nom: LABEL_CATEGORIE_FOURNISSEUR.groupement },
   // Le groupement sanitaire (GDS) non plus : cotisations, analyses, achats de médicaments…
   { id: CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE, nom: LABEL_CATEGORIE_FOURNISSEUR.groupement_sanitaire },

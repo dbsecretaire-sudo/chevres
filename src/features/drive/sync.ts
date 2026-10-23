@@ -30,6 +30,15 @@ import {
 } from '@/features/annexes/repository';
 import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import {
+  listDocumentsIdentification,
+  remplacerTousDocumentsIdentification,
+} from '@/features/identification/repository';
+import {
+  choixLu,
+  enregistrerChoixPartenaires,
+  lireChoixPartenaires,
+} from '@/features/exploitation/repository/partenaires';
+import {
   appliquerProfilEtablissementActif,
   profilEstVide,
   profilEtablissementActif,
@@ -69,6 +78,8 @@ import {
   FICHIER_EXPLOITATION,
   FICHIER_FOURNISSEURS,
   FICHIER_GITE,
+  FICHIER_IDENTIFICATION,
+  FICHIER_PARTENAIRES,
   FICHIER_BAR,
   FICHIER_COMMERCIAL,
   FICHIER_BIBLIOTHEQUE,
@@ -266,6 +277,42 @@ export async function tirerCommercial(accessToken: string, folderId: string): Pr
       await remplacerArchiveCommercial(normaliserArchiveCommercial(archive));
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
+  }
+}
+
+/** Envoie les documents d'identification et d'installation de l'exploitation vers Google Drive ; leurs fichiers partent avec les pièces jointes. */
+export async function pousserIdentification(accessToken: string, folderId: string): Promise<void> {
+  const documents = await listDocumentsIdentification();
+  // Aucun document : rien à envoyer (cela n'écrase pas ceux d'un autre appareil).
+  if (documents.length === 0) return;
+  await deposer(accessToken, FICHIER_IDENTIFICATION, folderId, JSON.stringify(documents));
+}
+
+/** Récupère les documents d'identification depuis Google Drive, s'ils sont présents (ils remplacent les documents locaux). */
+export async function tirerIdentification(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_IDENTIFICATION, folderId);
+  if (!file || (await identique(file, JSON.stringify(await listDocumentsIdentification())))) return;
+  try {
+    const documents = JSON.parse(await downloadFileText(accessToken, file.id));
+    if (Array.isArray(documents)) await remplacerTousDocumentsIdentification(documents);
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les documents locaux.
+  }
+}
+
+/** Envoie le choix des partenaires (catégories de contacts ajoutées ou retirées, comme les laboratoires d'analyses) vers Google Drive. */
+export async function pousserPartenaires(accessToken: string, folderId: string): Promise<void> {
+  await deposer(accessToken, FICHIER_PARTENAIRES, folderId, JSON.stringify(await lireChoixPartenaires()));
+}
+
+/** Récupère le choix des partenaires depuis Google Drive, s'il est présent (il remplace le choix local). */
+export async function tirerPartenaires(accessToken: string, folderId: string): Promise<void> {
+  const file = await findFile(accessToken, FICHIER_PARTENAIRES, folderId);
+  if (!file || (await identique(file, JSON.stringify(await lireChoixPartenaires())))) return;
+  try {
+    await enregistrerChoixPartenaires(choixLu(JSON.parse(await downloadFileText(accessToken, file.id))));
+  } catch {
+    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser le choix local.
   }
 }
 
@@ -509,6 +556,8 @@ export async function pousserToutesAnnees(
   await pousserEtablissement(accessToken, folderId);
   await pousserFournisseurs(accessToken, folderId);
   await pousserClients(accessToken, folderId);
+  await pousserIdentification(accessToken, folderId);
+  await pousserPartenaires(accessToken, folderId);
   await pousserDossiers(accessToken, folderId);
   await pousserGite(accessToken, folderId);
   await pousserTrading(accessToken, folderId);
@@ -561,6 +610,8 @@ export async function tirerToutesAnnees(
   await tirerEtablissement(accessToken, folderId);
   await tirerFournisseurs(accessToken, folderId);
   await tirerClients(accessToken, folderId);
+  await tirerIdentification(accessToken, folderId);
+  await tirerPartenaires(accessToken, folderId);
   await tirerDossiers(accessToken, folderId);
   await tirerGite(accessToken, folderId);
   await tirerTrading(accessToken, folderId);

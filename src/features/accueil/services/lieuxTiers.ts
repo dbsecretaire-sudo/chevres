@@ -2,7 +2,7 @@ import type { Ionicons } from '@expo/vector-icons';
 import { SEXE } from '@/shared/constants/cheptel';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
-import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
+import { CATEGORIE_FOURNISSEUR, CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
@@ -141,7 +141,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     cle: 'banque',
     avecTiers: true,
     emoji: '🏦',
-    categoriesContact: [CATEGORIE_FOURNISSEUR.BANQUE],
+    categoriesContact: [CATEGORIE_FOURNISSEUR.BANQUE, CATEGORIE_FOURNISSEUR.COMPTABLE],
     categoriesFacture: [CATEGORIE_DEPENSE.FRAIS_BANCAIRES],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.FRAIS_BANCAIRES}`,
@@ -157,7 +157,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     cle: 'groupement',
     avecTiers: true,
     emoji: '🤝',
-    categoriesContact: [CATEGORIE_FOURNISSEUR.GROUPEMENT],
+    categoriesContact: CATEGORIES_ASSOCIATION,
     categoriesFacture: [],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
@@ -382,7 +382,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     emoji: '🏭',
     categoriesContact: [CATEGORIE_FOURNISSEUR.ABATTOIR],
     categoriesFacture: [CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE],
-    categoriesVente: [CATEGORIE_VENTE.VIANDE],
+    // Les viandes vendues (aux clients) n'y sont pas : seules les factures qui passent par l'abattoir (celles de ses contacts et de sa catégorie) y figurent.
+    categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
     liens: [
       // Amener des animaux : le lot d'abord (animaux, document de circulation, vivants ou morts), la facture de l'abattoir ensuite.
