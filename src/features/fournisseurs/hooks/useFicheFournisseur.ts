@@ -16,6 +16,7 @@ import type { Facture } from '@/features/comptabilite/types';
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 /** État et actions de la fiche d'un fournisseur : chargement, modification, suppression, factures liées. */
 export function useFicheFournisseur(id: string | undefined) {
@@ -76,7 +77,7 @@ export function useFicheFournisseur(id: string | undefined) {
   const supprimerDefinitivement = async () => {
     if (!fournisseur) return;
     await supprimerFournisseur(fournisseur.id);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return {

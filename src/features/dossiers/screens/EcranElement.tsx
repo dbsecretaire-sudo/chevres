@@ -55,6 +55,7 @@ import { currentYear, estDateISO, memeJourDansLAnnee, todayISO } from '@/shared/
 import { styles } from '@/shared/styles/exploitation/InformationsExploitation.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const PUCES_AVANCEMENT = Object.entries(LABEL_STATUT_ELEMENT).map(([valeur, label]) => ({ valeur, label }));
 
@@ -199,7 +200,7 @@ export default function EcranElement() {
     });
     for (const piece of retires) await supprimerPiece(piece);
     if (auto) setRetires([]);
-    else router.back();
+    else retournerALaPageDAvant(router);
     return true;
   };
 
@@ -213,7 +214,7 @@ export default function EcranElement() {
   const supprimer = async () => {
     if (id) await supprimerElement(id);
     setSuppressionOuverte(false);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (
@@ -348,7 +349,7 @@ export default function EcranElement() {
               style={commonStyles.flex1}
               variant="secondary"
               label={TEXTES.commun.general.annuler}
-              onPress={() => router.back()}
+              onPress={() => retournerALaPageDAvant(router)}
             />
             <Button
               style={commonStyles.flex1}

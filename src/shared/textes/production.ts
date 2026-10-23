@@ -459,7 +459,10 @@ export const TEXTES_PRODUCTION = {
       versement: 'Nouveau versement du groupement sanitaire',
       liens: {
         suivi: { titre: 'Traitements', aide: 'Les soins donnés aux animaux et leurs délais d’attente : le même suivi que chez le vétérinaire.' },
-        rapports: { titre: 'Rapports d’essais', aide: 'Les résultats d’analyses du laboratoire (brucellose, paratuberculose, Capra’Sana…).' },
+        visites: {
+          titre: 'Visites vétérinaires',
+          aide: 'Les visites du vétérinaire (celles de ses factures), avec les rapports d’essais qu’il fait faire après son intervention (brucellose, paratuberculose, Capra’Sana…).',
+        },
         documents: {
           titre: 'Documents du GDS',
           aide: 'Attestation PSE, bons de délivrance, biosécurité (grille d’autodiagnostic), quarantaine.',
@@ -535,8 +538,10 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les visites et factures du vétérinaire',
       nouvelle: 'Nouvelle visite',
       liens: {
-        traitements: { titre: 'Traitements', aide: 'Les soins donnés aux animaux, avec leurs délais d’attente.' },
-        rapports: { titre: 'Rapports d’essais', aide: 'Les résultats d’analyses du laboratoire (brucellose, paratuberculose, Capra’Sana…) : les mêmes que ceux du groupement sanitaire.' },
+        visites: {
+          titre: 'Visites vétérinaires',
+          aide: 'Les visites du vétérinaire (celles de ses factures), avec les traitements qu’il donne et les rapports d’essais qu’il fait faire après son intervention.',
+        },
       },
     },
     organismes: {

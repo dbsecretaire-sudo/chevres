@@ -19,6 +19,14 @@ export interface ColonneDuTableau<T> {
   triable?: boolean;
 }
 
+/** Une case du pied d'un tableau : elle couvre une ou plusieurs colonnes (« Balance » sous Débit et Crédit réunis). Les cases d'une ligne se suivent et couvrent toutes les colonnes. */
+export interface CaseDePied {
+  /** Les clés des colonnes qu'elle couvre, dans l'ordre. */
+  colonnes: string[];
+  contenu: ReactNode;
+  aligne?: 'gauche' | 'droite' | 'centre';
+}
+
 interface Props<T> {
   colonnes: readonly ColonneDuTableau<T>[];
   lignes: readonly T[];
@@ -28,6 +36,8 @@ interface Props<T> {
   vide: string;
   /** Une ligne de totaux sous le tableau (un solde, un effectif). */
   pied?: ReactNode;
+  /** Des lignes de totaux alignées sur les colonnes (« Totaux » sous Débit et Crédit, puis « Balance » sur les deux réunis) ; elles défilent avec le tableau. */
+  lignesDePied?: CaseDePied[][];
   /** L'ordre de départ : la colonne et son sens. */
   tri?: { cle: string; decroissant?: boolean };
   /** Vrai : le tableau est posé dans un écran qui défile déjà (l'inventaire) ; il prend sa hauteur et n'a pas de liste virtualisée. */
@@ -77,7 +87,7 @@ const comparer = (a: string | number | undefined, b: string | number | undefined
  * Un tableau de données comme dans un logiciel de comptabilité : un en-tête qui reste en haut, des colonnes qu'on trie d'un clic sur leur titre, des lignes
  * à bandes alternées dont un clic ouvre la fiche, et un pied pour les totaux. La liste est virtualisée (des milliers d'écritures restent fluides).
  */
-export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, vide, pied, tri: triDeDepart, integre = false }: Props<T>) {
+export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, vide, pied, lignesDePied, tri: triDeDepart, integre = false }: Props<T>) {
   const [tri, setTri] = useState(triDeDepart);
   /**
    * Les largeurs choisies à la souris (en points). Tant qu'on n'a rien tiré, les colonnes se partagent la largeur du tableau ; dès la première poignée saisie, toutes
@@ -174,6 +184,22 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
           renderItem={({ item, index }) => ligneDe(item, index)}
         />
       )}
+      {lignesDePied?.map((ligne, rang) => (
+        <View key={rang} style={[styles.lignePied, rang === 0 && styles.premiereLignePied]}>
+          {ligne.map((cellule) => {
+            const couvertes = colonnes.filter((c) => cellule.colonnes.includes(c.cle));
+            // Larges comme les colonnes qu'elle couvre : leur somme (largeurs figées) ou la somme de leurs parts.
+            const taille = couvertes.every((c) => largeurs[c.cle])
+              ? { width: couvertes.reduce((somme, c) => somme + largeurs[c.cle], 0), flexGrow: 0, flexShrink: 0 }
+              : { flex: couvertes.reduce((somme, c) => somme + (c.poids ?? 1), 0) };
+            return (
+              <View key={cellule.colonnes.join('+')} style={[styles.cellulePied, taille, { alignItems: cellule.aligne === 'droite' ? 'flex-end' : cellule.aligne === 'centre' ? 'center' : 'flex-start' }]}>
+                {typeof cellule.contenu === 'string' ? <Text style={styles.textePied}>{cellule.contenu}</Text> : cellule.contenu}
+              </View>
+            );
+          })}
+        </View>
+      ))}
       </View>
       </ScrollView>
       {pied ? <View style={styles.pied}>{pied}</View> : null}
@@ -205,5 +231,10 @@ const styles = StyleSheet.create({
   cellule: { paddingHorizontal: 10, paddingVertical: 6, justifyContent: 'center' },
   texte: { fontSize: 13, color: colors.text },
   vide: { padding: 20, textAlign: 'center', color: colors.textMuted, fontStyle: 'italic' },
+  // Les lignes de totaux alignées sur les colonnes : la première a le trait épais du pied, les suivantes un fin trait.
+  lignePied: { flexDirection: 'row', backgroundColor: colors.badgeBg, borderTopWidth: 1, borderTopColor: colors.border },
+  premiereLignePied: { borderTopWidth: 2, borderTopColor: colors.primary },
+  cellulePied: { paddingHorizontal: 10, paddingVertical: 8, justifyContent: 'center' },
+  textePied: { fontSize: 14, fontWeight: '800', color: colors.text },
   pied: { flexDirection: 'row', justifyContent: 'flex-start', gap: 24, paddingHorizontal: 12, paddingVertical: 8, borderTopWidth: 2, borderTopColor: colors.primary, backgroundColor: colors.badgeBg },
 });

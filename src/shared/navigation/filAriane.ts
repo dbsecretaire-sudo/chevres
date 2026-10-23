@@ -12,6 +12,25 @@ export const routesDuMenu = (menu: DefinitionMenu): string[] => [
   ...(menu.items ?? []).flatMap((e) => ('route' in e ? [e.route] : [])),
 ];
 
+/** Une entrée d'un menu : un écran, ou un trait (qui porte le titre de la partie qui suit). */
+export type EntreeDeMenu = NonNullable<DefinitionMenu['items']>[number];
+
+/** Une partie d'un menu long : son titre (absent pour les premières entrées) et ses entrées. */
+export interface PartieDeMenu {
+  titre?: string;
+  entrees: EntreeDeMenu[];
+}
+
+/** Découpe les entrées d'un menu en parties, à chaque trait qui porte un titre. */
+export function partiesDuMenu(items: EntreeDeMenu[]): PartieDeMenu[] {
+  const parties: PartieDeMenu[] = [{ entrees: [] }];
+  for (const item of items) {
+    if ('separateur' in item && item.titre) parties.push({ titre: item.titre, entrees: [] });
+    else parties[parties.length - 1].entrees.push(item);
+  }
+  return parties.filter((p) => p.titre || p.entrees.length > 0);
+}
+
 /** Deux noms qui ne diffèrent que par la casse, les accents, les espaces ou un pluriel (« Stock » et « Stocks ») sont le même. */
 const simple = (nom: string) => nom.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/s$/, '');
 const memeNom = (a: string, b: string) => simple(a) === simple(b);

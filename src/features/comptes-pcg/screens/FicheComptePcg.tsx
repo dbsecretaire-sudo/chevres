@@ -34,6 +34,7 @@ import {
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 export default function FicheComptePcg() {
   const { id, espece } = useLocalSearchParams<{ id: string; espece?: string }>();
@@ -127,7 +128,7 @@ export default function FicheComptePcg() {
       await retirerDeLInventaire(compte.numero);
       await supprimerComptePcg(compte.id);
     }
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const retablir = async () => {

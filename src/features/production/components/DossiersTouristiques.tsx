@@ -22,10 +22,13 @@ const T = TEXTES.production.lieux.tourisme.dossiers;
  */
 export function DossiersTouristiques({
   contacts,
+  exclure = [],
   ouvrir,
 }: {
   /** Tous les contacts : le contact qui range un dossier peut être un autre (l'ODARC). */
   contacts: Contact[];
+  /** Les partenaires de la page : leurs dossiers touristiques sont déjà sous eux, ils ne se répètent pas ici. */
+  exclure?: readonly Contact[];
   ouvrir: (route: string) => void;
 }) {
   const [controles, setControles] = useState<Controle[]>([]);
@@ -39,15 +42,18 @@ export function DossiersTouristiques({
     }, []),
   );
 
-  const dossiers = dossiersTouristiques(controles).map(({ entree, dossier }) => ({
-    entree,
-    dossier,
-    contact: contacts.find(
-      (c) =>
-        (!!c.fournisseur && entree.fournisseurId === c.fournisseur.id) ||
-        (!!c.client && entree.clientId === c.client.id),
-    ),
-  }));
+  const dossiers = dossiersTouristiques(controles)
+    .map(({ entree, dossier }) => ({
+      entree,
+      dossier,
+      contact: contacts.find(
+        (c) =>
+          (!!c.fournisseur && entree.fournisseurId === c.fournisseur.id) ||
+          (!!c.client && entree.clientId === c.client.id),
+      ),
+    }))
+    // Un dossier d'un partenaire est sous lui : ici, ceux des intervenants qui ne sont pas partenaires.
+    .filter(({ contact }) => !contact || !exclure.some((p) => p.cle === contact.cle));
 
   // Le poste de comptabilité : un tableau (dossier, contact qui le range, nombre de contenus) ; un clic ouvre le dossier du contact.
   if (comptable) {

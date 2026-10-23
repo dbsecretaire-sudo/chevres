@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'expo-router';
+import { pageAvantLaCreation, revenirA } from '@/shared/navigation/historiqueDesPages';
 
 /**
  * Quand on ouvre une page depuis un bouton de l'accueil, d'un intérieur (l'exploitation, le travail du produit) ou de la grange, la flèche de
@@ -49,7 +50,8 @@ export const useOrigineRetour = (): Origine | null =>
 
 /**
  * Ce que fait la flèche de retour d'une page : revenir à l'endroit d'où l'on a cliqué quand cette page vient d'un bouton, sinon le retour
- * habituel (`retourParDefaut`, ou l'écran d'avant, ou l'accueil).
+ * habituel (`retourParDefaut`, ou la page d'où a commencé la création d'après l'historique du téléphone, ou l'écran d'avant, ou l'accueil). Terminer un formulaire (enregistrer,
+ * annuler) ramène donc à la page d'où on l'a ouvert, même quand il n'a pas noté son origine.
  */
 export function useRetour(retourParDefaut?: () => void): () => void {
   const router = useRouter();
@@ -60,7 +62,14 @@ export function useRetour(retourParDefaut?: () => void): () => void {
       revenirDe(point);
       router.navigate(point.adresse as never);
     } else if (retourParDefaut) retourParDefaut();
-    else if (router.canGoBack()) router.back();
-    else router.replace('/');
+    else {
+      // Terminer un formulaire : la page d'où a commencé la création (la page d'Assurance pour une facture d'assurance, même après la création d'un intervenant entre-temps).
+      const avant = pageAvantLaCreation();
+      if (avant) {
+        revenirA(avant);
+        router.navigate(avant as never);
+      } else if (router.canGoBack()) router.back();
+      else router.replace('/');
+    }
   };
 }

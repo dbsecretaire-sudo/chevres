@@ -35,6 +35,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.production.fabricationPlat;
 /** La valeur du choix « + Nouveau plat… » dans la liste des plats. */
@@ -132,7 +133,7 @@ export default function FabricationPlat() {
         notes: notes || undefined,
         ingredients: utilises,
       });
-      router.back();
+      retournerALaPageDAvant(router);
     } catch (e: unknown) {
       Alert.alert(e instanceof Error ? e.message : '');
     } finally {

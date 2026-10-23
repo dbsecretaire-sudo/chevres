@@ -49,6 +49,9 @@ export const COLONNES_ECRITURES: readonly ColonneDuTableau<Transaction>[] = [
   },
 ];
 
+/** Les colonnes avant les montants : le libellé « Totaux » ou « Balance » s'y écrit. */
+const AVANT_LES_MONTANTS = ['date', 'libelle', 'detail', 'categorie', 'activite'];
+
 /**
  * Les écritures (dépenses et recettes) en tableau, pour l'affichage sobre sur un grand écran : la recherche et les filtres au-dessus, une ligne par écriture (date, libellé,
  * détail, catégorie, activité, débit, crédit) qu'on trie d'un clic sur son titre, et sous le tableau le total des débits, des crédits et le solde. Un clic ouvre la fiche.
@@ -78,19 +81,18 @@ export function TableauEcritures({ e }: { e: ReturnType<typeof useListeTransacti
         tri={{ cle: 'date', decroissant: true }}
         vide={T.aucuneEcriture}
         onLigne={(t) => router.push(t.source === SOURCE_TRANSACTION.FACTURE ? ROUTES.ficheFacture(t.id) : ROUTES.ficheVente(t.id))}
-        pied={
-          <>
-            <Text style={styles.total}>
-              {T.rentrees} : <Text style={{ color: colors.primary }}>{formatMontant(totalRentrees)}</Text>
-            </Text>
-            <Text style={styles.total}>
-              {TEXTES.commun.general.depenses} : <Text style={{ color: colors.danger }}>{formatMontant(totalDepenses)}</Text>
-            </Text>
-            <Text style={styles.total}>
-              {T.soldeEspace.trim()} <Text style={{ color: balance >= 0 ? colors.primary : colors.danger }}>{formatMontant(balance)}</Text>
-            </Text>
-          </>
-        }
+        // Les totaux sous les colonnes Débit et Crédit, puis la balance sur les deux réunies.
+        lignesDePied={[
+          [
+            { colonnes: AVANT_LES_MONTANTS, contenu: 'Totaux' },
+            { colonnes: ['debit'], aligne: 'droite', contenu: <Text style={[styles.total, { color: colors.danger }]}>{formatMontant(totalDepenses)}</Text> },
+            { colonnes: ['credit'], aligne: 'droite', contenu: <Text style={[styles.total, { color: colors.primary }]}>{formatMontant(totalRentrees)}</Text> },
+          ],
+          [
+            { colonnes: AVANT_LES_MONTANTS, contenu: 'Balance' },
+            { colonnes: ['debit', 'credit'], aligne: 'centre', contenu: <Text style={[styles.total, { color: balance >= 0 ? colors.primary : colors.danger }]}>{formatMontant(balance)}</Text> },
+          ],
+        ]}
       />
     </View>
   );

@@ -19,6 +19,7 @@ import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { formatDateShortFR, todayISO } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 /** Le rappel de fromages ou de charcuterie (paramètre `produit`) : on choisit un produit, puis ses lots à retirer de la vente, à une date. */
 export default function RappelFromages() {
@@ -68,7 +69,7 @@ export default function RappelFromages() {
     setEnregistrement(true);
     try {
       await rappelerLots(choisis, date);
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }

@@ -21,6 +21,7 @@ import { Fab } from '@/shared/components/Fab';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { OptionsModal } from '@/shared/components/OptionsModal';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
@@ -79,6 +80,8 @@ export default function RegistreAnalyses() {
   const { settings } = useAppSettings();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [impression, setImpression] = useState(false);
+  /** Le produit déroulé (téléphone) : un seul à la fois, tous enroulés au départ. */
+  const [ouvert, setOuvert] = useState<string | null>(null);
   const imprimer = (liste: readonly ProduitAnalyse[]) => {
     setImpression(false);
     exporterRegistreAnalysesPdf(liste).catch((e: unknown) => Alert.alert(R.erreurImpression, e instanceof Error ? e.message : ''));
@@ -134,7 +137,14 @@ export default function RegistreAnalyses() {
           );
         }
         return (
-          <GroupeAccueil key={produit} titre={T.produits[produit].titre}>
+          <SectionDeroulante
+            key={produit}
+            titre={T.produits[produit].titre}
+            nombre={fabrications.length}
+            accordeon
+            ouverte={ouvert === produit}
+            onBasculer={() => setOuvert((actuel) => (actuel === produit ? null : produit))}
+          >
             <BlocLignes>
               {fabrications.length === 0 ? <Text style={commonStyles.mutedItalic}>{R.aucuneFabrication}</Text> : null}
               {fabrications.map((f) => {
@@ -187,7 +197,7 @@ export default function RegistreAnalyses() {
                 onPress={() => router.push(ROUTES.analyseProduit(produit) as never)}
               />
             </BlocLignes>
-          </GroupeAccueil>
+          </SectionDeroulante>
         );
       })}
       <OptionsModal

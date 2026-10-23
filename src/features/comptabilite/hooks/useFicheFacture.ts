@@ -68,6 +68,7 @@ import { getChevre, reactiverChevre } from '@/features/cheptel/repository/chevre
 import { idsDesAnimauxEnvoyes } from '@/features/comptabilite/utils/ventes';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const montantEnTexte = (f: Facture) => String(f.montant).replace('.', ',');
 
@@ -370,7 +371,7 @@ export function useFicheFacture(id: string | undefined) {
       if (facture.stockApplique)
         await synchroniserStockAchat(facture.lignesMarchandises, undefined, facture.date);
       await retirerStockAlimentation(facture.id);
-      router.back();
+      retournerALaPageDAvant(router);
     } catch (error) {
       console.error(error);
       setErreur({

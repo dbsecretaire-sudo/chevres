@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { listAutresEtablissements, type Etablissement } from '@/features/etablissements/repository';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 interface Options<T> {
   /** Lit, sans les modifier, les éléments d'un autre établissement. */
@@ -46,7 +47,7 @@ export function useImportDepuisEtablissement<T extends { id: string }>({
       setErreur(messageDoublon(source));
       return;
     }
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return { autres, ouvertId, elements, basculer, importer, erreur, setErreur };

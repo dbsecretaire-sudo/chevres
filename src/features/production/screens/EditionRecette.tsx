@@ -18,6 +18,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
 import { parseDecimal } from '@/shared/utils/nombres';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.production.recettes;
 const E = T.edition;
@@ -106,7 +107,7 @@ export default function EditionRecette() {
         .map((i) => ({ article: i.article, quantite: parseDecimal(i.quantite) }))
         .filter((i) => i.article && i.quantite > 0),
     });
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (
@@ -164,7 +165,7 @@ export default function EditionRecette() {
         onConfirm={async () => {
           setSuppressionOuverte(false);
           if (existante) await supprimerRecette(existante.id);
-          router.back();
+          retournerALaPageDAvant(router);
         }}
       />
     </Screen>

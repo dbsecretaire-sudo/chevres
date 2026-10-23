@@ -14,6 +14,7 @@ import type { Facture, Vente } from '@/features/comptabilite/types';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 /** État et actions de la fiche d'un client : chargement, écritures liées et résumé, modification, suppression. */
 export function useFicheClient(id: string | undefined) {
@@ -94,7 +95,7 @@ export function useFicheClient(id: string | undefined) {
   const supprimerDefinitivement = async () => {
     if (!client) return;
     await supprimerClient(client.id);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return {

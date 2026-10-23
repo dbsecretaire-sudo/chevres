@@ -22,6 +22,7 @@ import { OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.contacts.contrat;
 
@@ -104,7 +105,7 @@ export default function ContratAssureurFiche() {
           dossierId: dossier || undefined,
         }),
       );
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }
@@ -113,7 +114,7 @@ export default function ContratAssureurFiche() {
   const supprimer = async () => {
     setSuppression(false);
     if (assureur && params.id) await enregistrerFournisseur(sansContrat(assureur, params.id));
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (

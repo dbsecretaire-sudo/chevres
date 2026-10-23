@@ -2,16 +2,22 @@ import { useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { changerAffichage } from '@/bureau/changerAffichage';
+import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { partiesDuMenu } from '@/shared/navigation/filAriane';
 import { useMenusSections } from '@/shared/navigation/menusSections';
-import { menusDeLaFerme } from '@/shared/navigation/structureMenus';
+import { menusDuPoste } from '@/shared/navigation/structureMenus';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 import { colors } from '@/shared/theme/colors';
 import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
+
+/** La place gardée sous la liste : la barre de navigation du système (48) et un peu d'air. */
+const MARGE_DU_BAS = 64;
 
 /**
  * La pastille « Menus » de la capsule du haut : un appui déroule, juste dessous, les menus de l'application. Pour un élevage avec l'accueil « ferme », ce sont ceux
@@ -25,6 +31,8 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const avecPlanDeLaFerme = !modeEntreprise() && !settings.exploitation?.accueilClassique;
   /** Le menu déroulé (son libellé) : un seul à la fois. */
   const [deroule, setDeroule] = useState<string | null>(null);
+  /** La partie d'un menu déroulée (menu et titre) : une seule à la fois, toutes repliées au départ, pour que la liste tienne dans l'écran. */
+  const [partieOuverte, setPartieOuverte] = useState<string | null>(null);
   // La version Windows propose, au bas de la liste, les deux autres affichages (bureau, mobile, sobre).
   const autresAffichages: ModeAffichage[] = estBureau()
     ? Object.values(AFFICHAGE).filter((mode) => mode !== modeAffichage)
@@ -32,19 +40,22 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const echelle = useEchelle();
   const ref = useRef<View>(null);
   const { width: largeurFenetre, height: hauteurFenetre } = useWindowDimensions();
+  const { bottom: bas } = useSafeAreaInsets();
   // La liste se pose sous la pastille, alignée sur son bord droit (la colonne est centrée dans une grande fenêtre).
   const [liste, setListe] = useState<{ haut: number; droite: number } | null>(null);
   const ouvrir = () =>
     ref.current?.measureInWindow((x, y, largeur, hauteur) => {
       setDeroule(null);
+      setPartieOuverte(null);
+      setPlan(avecPlanDeLaFerme ? menusDuPoste() : null);
       setListe({ haut: y + hauteur + 6, droite: Math.max(8, largeurFenetre - (x + largeur)) });
     });
   const aller = (route: string) => {
     setListe(null);
     router.push(route as never);
   };
-  // Les menus du plan de la ferme, relus à l'ouverture (ils changent avec l'espèce et les réglages).
-  const plan = liste && avecPlanDeLaFerme ? menusDeLaFerme() : null;
+  // Les menus des huit thèmes, relus à l'ouverture (ils changent avec l'espèce et les réglages) et gardés pendant la fermeture en fondu : sans cela, l'ancienne liste réapparaissait une seconde.
+  const [plan, setPlan] = useState<DefinitionMenu[] | null>(null);
   return (
     <>
       <Pressable
@@ -75,7 +86,8 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
       <Modal visible={liste !== null} transparent animationType="fade" onRequestClose={() => setListe(null)}>
         <Pressable style={styles.fond} onPress={() => setListe(null)} accessibilityLabel={TEXTES.commun.general.fermer}>
           <View style={[styles.liste, { top: liste?.haut ?? 0, right: liste?.droite ?? 12 }]}>
-            <ScrollView style={{ maxHeight: hauteurFenetre - (liste?.haut ?? 0) - 24 }} showsVerticalScrollIndicator={false}>
+            {/* La liste tient dans l'écran : on garde la place de la barre de navigation du système en bas (sur Android, la fenêtre la compte), et la liste défile, ascenseur visible. */}
+            <ScrollView style={{ maxHeight: Math.min(hauteurFenetre - (liste?.haut ?? 0) - bas - MARGE_DU_BAS, hauteurFenetre * 0.7) }} contentContainerStyle={{ paddingBottom: 8 }} showsVerticalScrollIndicator>
             {plan
               ? plan.map((menu) => {
                   const ouvert = deroule === menu.label;
@@ -93,26 +105,41 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
                         ) : null}
                       </Pressable>
                       {ouvert
-                        ? menu.items?.map((item, i) =>
-                            'separateur' in item ? (
-                              item.titre ? (
-                                <Text key={`s${i}`} style={styles.partie}>
-                                  {item.titre}
-                                </Text>
-                              ) : (
-                                <View key={`s${i}`} style={styles.trait} />
-                              )
-                            ) : (
-                              <Pressable
-                                key={`${item.route}-${i}`}
-                                style={({ pressed }) => [styles.sousEntree, pressed && styles.appuyee]}
-                                onPress={() => aller(item.route)}
-                                accessibilityRole="button"
-                              >
-                                <Text style={styles.sousEntreeTexte}>{item.label}</Text>
-                              </Pressable>
-                            ),
-                          )
+                        ? partiesDuMenu(menu.items ?? []).map((partie, p) => {
+                            const cle = `${menu.label}|${partie.titre ?? ''}`;
+                            const partieDeployee = !partie.titre || partieOuverte === cle;
+                            return (
+                              <View key={cle + p}>
+                                {partie.titre ? (
+                                  <Pressable
+                                    style={({ pressed }) => [styles.partieEntete, pressed && styles.appuyee]}
+                                    onPress={() => setPartieOuverte(partieDeployee ? null : cle)}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ expanded: partieDeployee }}
+                                  >
+                                    <Text style={styles.partie}>{partie.titre}</Text>
+                                    <Ionicons name={partieDeployee ? 'chevron-up' : 'chevron-down'} size={13} color={colors.textMuted} />
+                                  </Pressable>
+                                ) : null}
+                                {partieDeployee
+                                  ? partie.entrees.map((item, i) =>
+                                      'separateur' in item ? (
+                                        <View key={`s${i}`} style={styles.trait} />
+                                      ) : (
+                                        <Pressable
+                                          key={`${item.route}-${i}`}
+                                          style={({ pressed }) => [styles.sousEntree, pressed && styles.appuyee]}
+                                          onPress={() => aller(item.route)}
+                                          accessibilityRole="button"
+                                        >
+                                          <Text style={styles.sousEntreeTexte}>{item.label}</Text>
+                                        </Pressable>
+                                      ),
+                                    )
+                                  : null}
+                              </View>
+                            );
+                          })
                         : null}
                     </View>
                   );
@@ -187,16 +214,17 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
-  entree: { paddingHorizontal: 18, paddingVertical: 12 },
+  entree: { paddingHorizontal: 18, paddingVertical: 9 },
   entreeTexte: { fontSize: 16, fontWeight: '600', color: colors.text },
   // Le premier choix d'affichage : un trait le sépare des rubriques.
   separee: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 },
   entreeAffichage: { fontSize: 14, color: colors.textMuted },
   entreeMenu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  sousEntree: { paddingHorizontal: 18, paddingLeft: 30, paddingVertical: 8 },
-  sousEntreeTexte: { fontSize: 14, color: colors.text },
-  // Le titre d'une partie d'un menu long (« Gestion », « Intervenants »).
-  partie: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textMuted, marginTop: 8, marginBottom: 2, paddingLeft: 30, paddingRight: 18 },
+  sousEntree: { paddingHorizontal: 18, paddingLeft: 30, paddingVertical: 5 },
+  sousEntreeTexte: { fontSize: 13, color: colors.text },
+  // Le titre d'une partie d'un menu long (« Gestion », « Intervenants »), sur une ligne qu'on touche pour la déployer ou la replier.
+  partieEntete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingLeft: 30, paddingRight: 18, paddingVertical: 6 },
+  partie: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textMuted },
   trait: { height: 1, backgroundColor: colors.border, marginVertical: 4, marginHorizontal: 18 },
   entreeActive: { color: colors.primary, fontWeight: '800' },
 });

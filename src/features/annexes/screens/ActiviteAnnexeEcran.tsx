@@ -38,6 +38,7 @@ import { colors } from '@/shared/theme/colors';
 import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.annexes;
 
@@ -297,7 +298,7 @@ export default function ActiviteAnnexeEcran() {
         onConfirm={async () => {
           setSuppression(false);
           await supprimerActivite(activite.id);
-          router.back();
+          retournerALaPageDAvant(router);
         }}
       />
     </Screen>

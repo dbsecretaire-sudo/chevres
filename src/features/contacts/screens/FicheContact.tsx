@@ -57,6 +57,7 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.contacts.fiche;
 
@@ -183,7 +184,7 @@ export default function FicheContact() {
   const supprimer = async () => {
     if (!contact) return;
     await supprimerContact(contact);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   if (introuvable || (!contact && !id)) {

@@ -30,6 +30,7 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { estDateISO, todayISO } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.identification;
 
@@ -105,7 +106,7 @@ export default function FicheDocumentIdentification() {
     });
     for (const piece of retires) await supprimerPiece(piece);
     if (auto) setRetires([]);
-    else router.back();
+    else retournerALaPageDAvant(router);
     return true;
   };
 
@@ -122,7 +123,7 @@ export default function FicheDocumentIdentification() {
       for (const piece of [...fichiers, ...retires]) await supprimerPiece(piece);
     }
     setSuppressionOuverte(false);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (
@@ -176,7 +177,7 @@ export default function FicheDocumentIdentification() {
               style={commonStyles.flex1}
               variant="secondary"
               label={TEXTES.commun.general.annuler}
-              onPress={() => router.back()}
+              onPress={() => retournerALaPageDAvant(router)}
             />
             <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={() => enregistrer()} />
           </View>

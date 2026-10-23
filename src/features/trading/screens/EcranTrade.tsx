@@ -43,6 +43,7 @@ import { styles } from '@/shared/styles/exploitation/InformationsExploitation.st
 import { styles as stylesTrading } from '@/shared/styles/trading/Trading.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.trading.trade;
 
@@ -195,7 +196,7 @@ export default function EcranTrade() {
     const nouvelle = await synchroniserFactureTrade(enregistre);
     if (nouvelle !== enregistre.factureId) await enregistrerTrade({ ...enregistre, factureId: nouvelle });
     for (const piece of retirees) await supprimerPiece(piece);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const supprimer = async () => {
@@ -206,7 +207,7 @@ export default function EcranTrade() {
       await supprimerTrade(trade.id);
     }
     setSuppressionOuverte(false);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   // Aperçu : seulement quand l'essentiel est saisi.
@@ -404,7 +405,7 @@ export default function EcranTrade() {
             style={commonStyles.flex1}
             variant="secondary"
             label={TEXTES.commun.general.annuler}
-            onPress={() => router.back()}
+            onPress={() => retournerALaPageDAvant(router)}
           />
           <Button
             style={commonStyles.flex1}

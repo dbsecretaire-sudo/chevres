@@ -39,6 +39,7 @@ import { formatMontant, todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import { optionClient } from '@/features/contacts/services/optionsContacts';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.commercial.agritourisme.visite;
 
@@ -143,14 +144,14 @@ export default function FicheVisiteAgritourisme() {
     const visite = construire();
     if (!visite) return;
     await enregistrerVisite(visite);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const changerStatut = async (nouveau: StatutVisite) => {
     const visite = construire();
     if (!visite) return;
     await enregistrerVisite({ ...visite, statut: nouveau });
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const realiser = async (stock?: StockDeVisite[]) => {
@@ -159,7 +160,7 @@ export default function FicheVisiteAgritourisme() {
     const visite = construire();
     if (!visite) return;
     await realiserVisite(visite, formule, stock);
-    router.back();
+    retournerALaPageDAvant(router);
   };
   /** Le stock que la formule demande pour ce groupe : la réalisation passe alors par le choix des lots. */
   const besoins = besoinsDeLaVisite(formule, nombre > 0 ? nombre : 0);
@@ -168,13 +169,13 @@ export default function FicheVisiteAgritourisme() {
   const defaire = async () => {
     setConfirmation(null);
     if (existante) await defaireVisite(existante);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const supprimer = async () => {
     setConfirmation(null);
     if (existante) await supprimerVisite(existante.id);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (

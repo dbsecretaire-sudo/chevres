@@ -39,6 +39,7 @@ import { MOTIF_NUMERO_FACTURE_NUMERIQUE } from '@/shared/constants/clients';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { nomComplet } from '@/shared/utils/personne';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const montantEnTexte = (v: Vente | null | undefined) =>
   v?.prix != null ? String(v.prix).replace('.', ',') : '';
@@ -292,7 +293,7 @@ export function useFicheVente(id: string | undefined) {
     try {
       await supprimerLaVenteEtRemettreLesAnimaux(vente);
       // Les animaux vendus (et ceux envoyés vivants à l'abattoir) reviennent dans le cheptel : voir supprimerLaVenteEtRemettreLesAnimaux.
-      router.back();
+      retournerALaPageDAvant(router);
     } catch (error) {
       console.error(error);
       setErreur({

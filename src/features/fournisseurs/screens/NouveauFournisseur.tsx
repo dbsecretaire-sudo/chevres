@@ -20,6 +20,7 @@ import { ChampCategorieFournisseur } from '@/features/fournisseurs/components/Ch
 import { CATEGORIE_FOURNISSEUR_PAR_DEFAUT } from '@/shared/constants/fournisseurs';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 export default function NouveauFournisseur() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function NouveauFournisseur() {
         email: email.trim() || undefined,
         categorie,
       });
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }
@@ -159,7 +160,7 @@ export default function NouveauFournisseur() {
                 style={commonStyles.flex1}
                 variant="secondary"
                 label={TEXTES.commun.general.annuler}
-                onPress={() => router.back()}
+                onPress={() => retournerALaPageDAvant(router)}
               />
               <Button
                 style={commonStyles.flex1}

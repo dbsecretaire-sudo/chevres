@@ -5,12 +5,12 @@ import { TEXTES } from '@/shared/textes';
 export function libelleDuMenu(onglet: OngletDuBas, planDeLaFerme = false): string {
   return {
     accueil: TEXTES.navigation.layout.accueil,
-    // Avec le plan de la ferme, le cheptel est dans le menu Exploitation, la production dans l'Atelier, le commercial dans l'Agritourisme.
-    cheptel: planDeLaFerme ? TEXTES.accueil.ferme.zones.enclos : TEXTES.commun.general.cheptel,
-    production: planDeLaFerme ? TEXTES.accueil.ferme.transformation.pastille : TEXTES.production.titre,
-    commercial: planDeLaFerme ? TEXTES.accueil.ferme.agritourisme.titre : TEXTES.commercial.titre,
+    // Avec le plan de la ferme, les menus sont les huit thèmes : Cheptel, Production, Commercial, Comptabilité, et Données (l'ancienne Organisation).
+    cheptel: TEXTES.commun.general.cheptel,
+    production: planDeLaFerme ? 'Production' : TEXTES.production.titre,
+    commercial: TEXTES.commercial.titre,
     comptabilite: TEXTES.commun.general.comptabilite,
-    organisation: TEXTES.navigation.layout.reglages,
+    organisation: planDeLaFerme ? 'Données' : TEXTES.navigation.layout.reglages,
   }[onglet];
 }
 

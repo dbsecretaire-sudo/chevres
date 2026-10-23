@@ -64,6 +64,7 @@ import { formatDateFR, formatMontant, todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import { optionClient } from '@/features/contacts/services/optionsContacts';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.commercial.commande;
 
@@ -266,7 +267,7 @@ export default function FicheCommande() {
   };
 
   const enregistrerEtQuitter = async () => {
-    if (await enregistrer()) router.back();
+    if (await enregistrer()) retournerALaPageDAvant(router);
   };
 
   const changerStatut = async (nouveau: StatutCommande) => {
@@ -279,7 +280,7 @@ export default function FicheCommande() {
         ? { ...commande, statut: nouveau, lignes: commande.lignes.map((l) => ({ ...l, lotIds: undefined })) }
         : { ...commande, statut: nouveau },
     );
-    if (enregistree) router.back();
+    if (enregistree) retournerALaPageDAvant(router);
   };
 
   const livrer = async () => {
@@ -289,13 +290,13 @@ export default function FicheCommande() {
     const enregistree = await enregistrer(commande);
     if (!enregistree) return;
     await livrerCommande(enregistree, todayISO(), especeCourante(), declaree, numeroFacture);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const defaire = async () => {
     setConfirmation(null);
     if (existante) await annulerLivraison(existante);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   /** Les animaux réservés par ce bon de commande. */
@@ -335,7 +336,7 @@ export default function FicheCommande() {
     setConfirmation(null);
     await libererLesAnimaux();
     if (existante) await supprimerCommande(existante.id);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const bon = async () => {

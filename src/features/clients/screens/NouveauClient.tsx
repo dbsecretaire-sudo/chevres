@@ -17,6 +17,7 @@ import { nomDeContactPris } from '@/features/contacts/repository';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 export default function NouveauClient() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function NouveauClient() {
         email: email.trim() || undefined,
         adressePostale: adressePostale.trim() || undefined,
       });
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }
@@ -119,7 +120,7 @@ export default function NouveauClient() {
                 style={commonStyles.flex1}
                 variant="secondary"
                 label={TEXTES.commun.general.annuler}
-                onPress={() => router.back()}
+                onPress={() => retournerALaPageDAvant(router)}
               />
               <Button
                 style={commonStyles.flex1}

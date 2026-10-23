@@ -43,6 +43,7 @@ import { styles } from '@/shared/styles/dossiers/Dossiers.styles';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { formatDateFR, todayISO } from '@/shared/utils/dates';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const D = TEXTES.production.lieux.groupement.dossiers;
 const N = TEXTES.exploitation.controles.natureGroupement;
@@ -111,7 +112,7 @@ export default function DossierDuContact() {
     setSuppressionOuverte(false);
     if (!entree || !actuel) return;
     await modifierEntree(entree.id, (e) => sansDossier(e, actuel.id));
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   /** Chaque fichier choisi (Word, Excel, PDF, image) devient un contenu terminé de ce dossier. */

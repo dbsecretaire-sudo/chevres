@@ -36,6 +36,7 @@ import { fabricationsDuRegistre } from '@/features/analyses/services/registreAna
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { estDateISO, formatDateShortFR, todayISO } from '@/shared/utils/dates';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.analysesProduits;
 
@@ -173,7 +174,7 @@ export default function NouvelleAnalyseProduit() {
     const autres = (infos?.analysesProduits ?? []).filter((a) => a.id !== analyse.id);
     await patchSettings({ exploitation: { ...infos, analysesProduits: [...autres, analyse] } });
     for (const piece of retires) await supprimerPiece(piece);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const supprimer = async () => {
@@ -182,7 +183,7 @@ export default function NouvelleAnalyseProduit() {
     await patchSettings({ exploitation: { ...infos, analysesProduits: autres.length > 0 ? autres : undefined } });
     for (const piece of [...fichiers, ...retires]) await supprimerPiece(piece);
     setSuppressionOuverte(false);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (

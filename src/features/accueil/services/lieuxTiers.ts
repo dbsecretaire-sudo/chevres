@@ -3,7 +3,7 @@ import { SEXE } from '@/shared/constants/cheptel';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR, CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
 import { VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
@@ -189,7 +189,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     liens: [
       // Les traitements et les analyses du lait sont ceux du vétérinaire (les traitements) et de la laiterie (la qualité du lait) : les mêmes écrans.
       { cle: 'suivi', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
-      { cle: 'rapports', icone: 'flask-outline', route: ROUTES.RAPPORTS_ESSAIS_GDS },
+      // Les visites du vétérinaire sont celles de ses factures : la même liste que l'onglet Santé des contrôles, qui existe ainsi aussi ici.
+      { cle: 'visites', icone: 'medical', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE) },
       { cle: 'documents', icone: 'document-text', route: ROUTES.DOCUMENTS_GDS },
       { cle: 'analyses', icone: 'flask', route: ROUTES.santeControles(FAMILLE_CONTROLE.LAITIER) },
       { cle: 'avortements', icone: 'alert-circle', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.AVORTEMENT) },
@@ -345,10 +346,9 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_DEPENSE.VETERINAIRE],
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.VETERINAIRE}`,
-    // Les rapports d'essais sont les mêmes que ceux du groupement sanitaire : la même page, les mêmes documents.
+    // Les traitements et les rapports d'essais, que le vétérinaire donne ou fait faire à son intervention, sont avec ses visites (et les mêmes que ceux du groupement sanitaire).
     liens: [
-      { cle: 'traitements', icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
-      { cle: 'rapports', icone: 'flask-outline', route: ROUTES.RAPPORTS_ESSAIS_GDS },
+      { cle: 'visites', icone: 'medical', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE) },
     ],
   },
   organismes: {

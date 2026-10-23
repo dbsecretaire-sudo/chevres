@@ -61,6 +61,7 @@ import { styles } from '@/shared/styles/exploitation/InformationsExploitation.st
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { optionClient } from '@/features/contacts/services/optionsContacts';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.gite.sejour;
 
@@ -328,7 +329,7 @@ export default function EcranSejour() {
       setFactures({ factureId: nouvelles.factureId, factureRepasId: nouvelles.factureRepasId });
       return;
     }
-    if (!validerPaiement) return router.back();
+    if (!validerPaiement) return retournerALaPageDAvant(router);
     // Un nouveau séjour se rouvre comme séjour enregistré ; un séjour existant se fige sur place.
     if (!id) return router.replace(ROUTES.sejour(enregistre.id));
     setPaye(true);
@@ -391,7 +392,7 @@ export default function EcranSejour() {
       await supprimerSejour(sejour.id);
     }
     setSuppressionOuverte(false);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   // Une fois le paiement enregistré, plus rien ne se modifie (hors les notes) : toute trace de paiement reste en comptabilité.
@@ -619,7 +620,7 @@ export default function EcranSejour() {
             style={commonStyles.flex1}
             variant="secondary"
             label={TEXTES.commun.general.annuler}
-            onPress={() => router.back()}
+            onPress={() => retournerALaPageDAvant(router)}
           />
           <Button
             style={commonStyles.flex1}

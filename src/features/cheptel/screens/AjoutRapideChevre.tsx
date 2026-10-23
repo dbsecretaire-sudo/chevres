@@ -16,6 +16,7 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_SEXE } from '@/shared/textes/libelles';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 type Etape = ValeurDe<typeof ETAPE_AJOUT_RAPIDE>;
 
@@ -89,7 +90,7 @@ export default function AjoutRapide() {
             </Pressable>
           </BlocLignes>
 
-          <Button label={TEXTES.commun.general.annuler} variant="secondary" onPress={() => router.back()} />
+          <Button label={TEXTES.commun.general.annuler} variant="secondary" onPress={() => retournerALaPageDAvant(router)} />
         </Screen>
       </AccentColorProvider>
     );

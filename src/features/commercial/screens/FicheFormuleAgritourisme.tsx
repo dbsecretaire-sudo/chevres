@@ -30,6 +30,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/commercial/Commercial.styles';
 import { TEXTES } from '@/shared/textes';
 import { parseDecimal } from '@/shared/utils/nombres';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.commercial.agritourisme.formule;
 
@@ -104,12 +105,12 @@ export default function FicheFormuleAgritourisme() {
         return valides.length > 0 ? valides : undefined;
       })(),
     });
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const supprimer = async () => {
     setSuppression(false);
-    if (await supprimerFormule(identifiant)) router.back();
+    if (await supprimerFormule(identifiant)) retournerALaPageDAvant(router);
     else Alert.alert(T.utilisee);
   };
 

@@ -37,6 +37,7 @@ import { TEXTES } from '@/shared/textes';
 import { ajouterJours } from '@/shared/utils/calendrier';
 import { todayISO } from '@/shared/utils/dates';
 import { parseDecimal } from '@/shared/utils/nombres';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const T = TEXTES.production.fabricationSavon;
 /** La valeur du choix « + Nouveau savon… » dans la liste des savons. */
@@ -146,7 +147,7 @@ export default function FabricationSavon() {
       });
       // Le savon est fabriqué ; on prévient s'il ne pourra pas se vendre tant que son dossier n'est pas en règle.
       if (!dossierEnRegle(archive, article)) Alert.alert(T.dossierIncomplet);
-      router.back();
+      retournerALaPageDAvant(router);
     } catch (e: unknown) {
       Alert.alert(e instanceof Error ? e.message : '');
     } finally {

@@ -38,6 +38,7 @@ import { parseDecimal } from '@/shared/utils/nombres';
 import { todayISO } from '@/shared/utils/dates';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 /**
  * La fabrication de fromages ou de charcuterie (paramètre `produit`) : un lot par produit, numérotés à la suite du premier, qui
@@ -144,7 +145,7 @@ function FabricationDeLots() {
         ingredients: utilises,
         notes: notes || undefined,
       });
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }

@@ -10,6 +10,7 @@ import { generateId } from '@/shared/utils/id';
 import { SEXE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 export interface CabritNaissanceForm {
   key: string;
@@ -60,7 +61,7 @@ export function useNouvelleNaissance() {
     setCabrits((prev) => (prev.length > 1 ? prev.filter((c) => c.key !== key) : prev));
   };
 
-  const annuler = () => router.back();
+  const annuler = () => retournerALaPageDAvant(router);
 
   const enregistrer = async () => {
     if (!mereNumeroBoucle.trim()) {

@@ -29,6 +29,7 @@ import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { listTousControles } from '@/features/exploitation/repository/controles';
+import { dossiersTouristiquesDe, nombreDeContenus } from '@/features/exploitation/services/dossiersDeContenus';
 import type { Controle } from '@/features/exploitation/types';
 import { TableauAssurance } from '@/features/production/components/TableauAssurance';
 import { TableauEcrituresDuLieu, TableauTiersDuLieu } from '@/features/production/components/TableauxDuLieu';
@@ -302,6 +303,19 @@ function LieuTiersStandard() {
                       />,
                     ]
                   : []),
+                // L'office de tourisme : les dossiers touristiques d'un partenaire, en retrait juste en dessous de lui.
+                ...(cle === 'tourisme'
+                  ? dossiersTouristiquesDe(c, controles).map(({ entree, dossier }) => (
+                      <ListRow
+                        key={`${c.cle}:${dossier.id}`}
+                        retrait
+                        title={dossier.nom}
+                        subtitle={TEXTES.production.lieux.groupement.dossiers.contenus(nombreDeContenus(entree, dossier.id))}
+                        icone="folder"
+                        onPress={() => ouvrir(ROUTES.contactDossier(c.cle, dossier.id))}
+                      />
+                    ))
+                  : []),
               ])}
               {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
               <ListRow
@@ -331,7 +345,7 @@ function LieuTiersStandard() {
           )}
 
           {/* L'office de tourisme : les dossiers marqués touristiques (la Route des Sens Authentiques…), avec « Nouveau dossier » lié à un tiers. */}
-          {cle === 'tourisme' ? <DossiersTouristiques contacts={contacts} ouvrir={ouvrir} /> : null}
+          {cle === 'tourisme' ? <DossiersTouristiques contacts={contacts} exclure={tiers} ouvrir={ouvrir} /> : null}
 
           {/* Le groupement sanitaire accueille les vétérinaires : leurs fiches (traitements, visites, factures) s'ouvrent d'ici. */}
           {cle === 'groupementSanitaire' && comptable ? (

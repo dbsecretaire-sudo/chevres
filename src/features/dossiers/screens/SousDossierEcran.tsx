@@ -29,6 +29,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { styles } from '@/shared/styles/dossiers/Dossiers.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 /**
  * Un dossier : la recherche dans ce dossier, les dossiers qu'il contient et ses contenus. Le menu permet de le
@@ -97,7 +98,7 @@ export default function SousDossierEcran() {
   const supprimer = async () => {
     await supprimerSousDossier(id);
     setSuppressionOuverte(false);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   return (

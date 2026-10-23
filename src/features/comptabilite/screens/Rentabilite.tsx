@@ -5,8 +5,10 @@ import { LigneFiltres } from '@/shared/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { CoutsAgritourismeFormules } from '@/features/comptabilite/components/CoutsAgritourisme';
 import { PlanEconomies } from '@/features/comptabilite/components/PlanEconomies';
-import { useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
-import { vocabulaire } from '@/shared/dictionnaire/animaux';
+import { PERIMETRES_RENTABILITE, useRentabilite } from '@/features/comptabilite/hooks/useRentabilite';
+import type { LigneAtelier } from '@/features/comptabilite/services/rentabilite';
+import { ateliersDeLEspece } from '@/shared/constants/ateliers';
+import { especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { LABEL_ATELIER, LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 import { formatMontant } from '@/shared/utils/dates';
@@ -34,6 +36,12 @@ export default function Rentabilite() {
   const { annee, annees, setAnneeActive, resultat, laitier, plan, perimetre } = useRentabilite();
   if (!resultat) return null;
   const entreprise = modeEntreprise();
+  // Tous les ateliers de l'espèce (et du périmètre demandé) sont montrés : ceux qui n'ont eu ni recette ni charge cette année y sont à 0 €, après ceux qui ont une activité.
+  const dansLePerimetre: readonly string[] | undefined = perimetre ? PERIMETRES_RENTABILITE[perimetre] : undefined;
+  const sansActivite: LigneAtelier[] = ateliersDeLEspece(especeCourante())
+    .filter((atelier) => (!dansLePerimetre || dansLePerimetre.includes(atelier)) && !resultat.ateliers.some((l) => l.atelier === atelier))
+    .map((atelier) => ({ atelier, recettes: 0, chargesDirectes: 0, chargesCommunes: 0, charges: 0, marge: 0, tauxMarge: undefined }));
+  const lignesAteliers = [...resultat.ateliers, ...sansActivite];
 
   return (
     <Screen>
@@ -79,13 +87,13 @@ export default function Rentabilite() {
       </Card>
 
       {entreprise ? null : <Text style={stylesFiscalite.titreSection}>{T.ateliers.titre}</Text>}
-      {entreprise ? null : resultat.ateliers.length === 0 ? (
+      {entreprise ? null : lignesAteliers.length === 0 ? (
         <Card>
           <Text style={commonStyles.mutedItalic}>{T.ateliers.aucun}</Text>
         </Card>
       ) : (
         <Card>
-          {resultat.ateliers.map((a) => (
+          {lignesAteliers.map((a) => (
             <View key={a.atelier} style={commonStyles.gap2}>
               <View style={styles.ligne}>
                 <Text style={commonStyles.lineBold}>{LABEL_ATELIER[a.atelier]}</Text>

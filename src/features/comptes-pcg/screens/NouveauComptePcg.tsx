@@ -12,6 +12,7 @@ import { ChoixSuiviCompte, useSuiviCompte } from '@/features/comptes-pcg/compone
 import { ajouterListe } from '@/features/stock/services/structure';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 export default function NouveauComptePcg() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function NouveauComptePcg() {
           libelle: libelle.trim(),
         });
       }
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }
@@ -79,7 +80,7 @@ export default function NouveauComptePcg() {
             style={commonStyles.flex1}
             variant="secondary"
             label={TEXTES.commun.general.annuler}
-            onPress={() => router.back()}
+            onPress={() => retournerALaPageDAvant(router)}
           />
           <Button
             style={commonStyles.flex1}

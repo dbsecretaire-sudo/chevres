@@ -92,11 +92,11 @@ export function menusDeLaFerme(): DefinitionMenu[] {
 }
 
 /**
- * Les menus de l'application : le plan de la ferme (Accueil, Exploitation, Atelier, Agritourisme, Comptabilité, Contacts, Organisation) pour un élevage, les rubriques des onglets
+ * Les menus de l'application : les huit thèmes (Accueil, Cheptel, Stock, Production, Commercial, Comptabilité, Contacts, Données) pour un élevage, les rubriques des onglets
  * pour une entreprise ou avec l'accueil classique. La fenêtre Windows, le menu « Menus » du mobile et l'arbre de gauche du poste de comptabilité les prennent ici.
  */
 export const menusDeLApplication = (accueilClassique: boolean): DefinitionMenu[] =>
-  !modeEntreprise() && !accueilClassique ? menusDeLaFerme() : definitionDesMenus();
+  !modeEntreprise() && !accueilClassique ? menusDuPoste() : definitionDesMenus();
 
 /** Les noms des menus, de gauche à droite (sans « Affichage », que Windows ajoute en dernier). */
 export const libellesDesMenus = (accueilClassique: boolean): string[] => menusDeLApplication(accueilClassique).map((m) => m.label);
@@ -138,7 +138,6 @@ const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: Entre
     label: 'Stock',
     entrees: [
       '/comptabilite/stocks',
-      '/comptabilite/inventaire',
       '/comptabilite/conditionnement',
       '/comptabilite/stock-structure',
       '/comptabilite/stock-historique',
@@ -184,10 +183,8 @@ const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: Entre
   {
     label: 'Comptabilité',
     entrees: [
-      { partie: 'Écritures' },
-      '/comptabilite/nouvelle?type=recue',
       '/comptabilite/liste',
-      { partie: 'Analyse' },
+      '/comptabilite/inventaire',
       '/comptabilite/tresorerie',
       '/comptabilite/rentabilite',
       '/comptabilite/tva',

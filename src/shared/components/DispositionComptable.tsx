@@ -3,9 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { changerAffichage } from '@/bureau/changerAffichage';
-import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { BarreOutilsComptable } from '@/shared/components/BarreOutilsComptable';
-import { routesDuMenu } from '@/shared/navigation/filAriane';
+import { partiesDuMenu, routesDuMenu } from '@/shared/navigation/filAriane';
 import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
@@ -19,29 +18,13 @@ const LARGEUR_ARBRE = 250;
 /** La largeur de la zone des écrans : au-delà, un écran reste centré (un tableau n'a pas besoin de s'étirer sur un écran géant). */
 const LARGEUR_MAX_ZONE = 1500;
 
-type EntreeDeMenu = NonNullable<DefinitionMenu['items']>[number];
-/** Une partie d'un menu long : son titre (absent pour les premières entrées) et ses entrées. */
-interface PartieDeMenu {
-  titre?: string;
-  entrees: EntreeDeMenu[];
-}
-/** Découpe les entrées d'un menu en parties, à chaque trait qui porte un titre. */
-function partiesDuMenu(items: EntreeDeMenu[]): PartieDeMenu[] {
-  const parties: PartieDeMenu[] = [{ entrees: [] }];
-  for (const item of items) {
-    if ('separateur' in item && item.titre) parties.push({ titre: item.titre, entrees: [] });
-    else parties[parties.length - 1].entrees.push(item);
-  }
-  return parties.filter((p) => p.titre || p.entrees.length > 0);
-}
-
 /**
  * Le menu en arbre de la disposition « comptable » : les menus de l'application (l'accueil de la ferme, la comptabilité, les contacts, l'organisation…) comme des dossiers
  * qu'on déplie, avec la page ouverte en évidence. Au bas, les autres affichages (bureau, mobile).
  */
 function ArbreDesMenus() {
   const router = useRouter();
-  const { menus, courante, adresse } = usePositionDansLesMenus(true);
+  const { menus, courante, adresse } = usePositionDansLesMenus();
   // Le menu de la page ouverte est déplié d'office (on y arrive par un bouton de l'accueil, un rappel…) ; un appui sur un dossier le plie ou en déplie un autre, pour cette page.
   // Une seule entrée est la page ouverte : la plus précise (l'accueil de l'atelier, pas l'accueil tout court).
   const dossierOuvert = courante ? (menus.find((m) => routesDuMenu(m).includes(courante))?.label ?? null) : null;

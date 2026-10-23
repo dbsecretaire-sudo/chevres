@@ -21,6 +21,7 @@ import { todayISO } from '@/shared/utils/dates';
 import { STATUT_CHEVRE, VUE_FICHE_CHEVRE } from '@/shared/constants/cheptel';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 /** État et actions de la fiche d'une chèvre : chargement, modification, changement de statut, suppression. */
 export function useFicheChevre(id: string | undefined) {
@@ -100,7 +101,7 @@ export function useFicheChevre(id: string | undefined) {
   const supprimerDefinitivement = async () => {
     if (!chevre) return;
     await supprimerChevre(chevre.id);
-    router.back();
+    retournerALaPageDAvant(router);
   };
 
   const choisirStatut = async (statut: StatutChevre) => {

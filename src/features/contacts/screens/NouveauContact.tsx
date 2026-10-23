@@ -12,6 +12,7 @@ import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
 
 const F = TEXTES.contacts.formulaire;
 
@@ -41,7 +42,7 @@ export default function NouveauContact() {
       if (form.categorie) await assurerCategorie(form.categorie);
       const resultat = await enregistrerContact(form, undefined, idsConnus);
       if ('erreur' in resultat) return setErreur(TEXTES.contacts.erreurs[resultat.erreur]);
-      router.back();
+      retournerALaPageDAvant(router);
     } finally {
       setEnregistrement(false);
     }
@@ -56,7 +57,7 @@ export default function NouveauContact() {
             style={commonStyles.flex1}
             variant="secondary"
             label={F.annuler}
-            onPress={() => router.back()}
+            onPress={() => retournerALaPageDAvant(router)}
           />
           <Button
             style={commonStyles.flex1}

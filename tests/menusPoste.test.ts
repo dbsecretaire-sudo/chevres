@@ -12,7 +12,7 @@ describe('menus du poste de comptabilité : huit thèmes', () => {
   });
 
   /** Les pages que le poste de comptabilité ne montre volontairement plus : le stock de la grange, et la page des réglages des contacts (le menu Contacts a la liste et ses catégories). */
-  const RETIREES_VOLONTAIREMENT = ['/production/lieu?lieu=grange', '/organisation-tiers'];
+  const RETIREES_VOLONTAIREMENT = ['/production/lieu?lieu=grange', '/organisation-tiers', '/comptabilite/nouvelle?type=recue'];
 
   it('aucune page des menus de la ferme n’est perdue, hors celles qu’on a retirées exprès', () => {
     const rangees = new Set(routesDe(poste));
@@ -55,6 +55,13 @@ describe('menus du poste de comptabilité : huit thèmes', () => {
     const libelles = items.slice(debut + 1).flatMap((e) => ('label' in e ? [e.label] : []));
     expect(libelles.length).toBeGreaterThan(10);
     expect(libelles).toEqual([...libelles].sort((a, b) => a.localeCompare(b, 'fr')));
+  });
+
+  it('la comptabilité montre ses six pages directement, sans sous-menu, et « Nouvelle facture » est dans les écritures', () => {
+    const items = poste.find((m) => m.label === 'Comptabilité')?.items ?? [];
+    const directes = items.slice(0, items.findIndex((e) => 'separateur' in e)).flatMap((e) => ('label' in e ? [e.label] : []));
+    expect(directes).toEqual(['Écritures', 'Inventaire', 'Trésorerie', 'Rentabilité', 'Pilotage de la TVA', 'Fiscalité']);
+    expect(routesDe(poste)).not.toContain('/comptabilite/nouvelle?type=recue');
   });
 
   it('un thème qui n’a qu’une partie ne la titre pas (Stock n’a pas de partie « Stocks »)', () => {

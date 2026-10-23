@@ -282,6 +282,8 @@ export interface DocumentGdsDepose {
   piece: PieceJointe;
   /** Date et heure du dépôt (ISO). */
   deposeLe: string;
+  /** Pour un rapport d'essais : la visite du vétérinaire (celle d'une de ses factures) qui l'a fait faire ; la page des visites le montre sous elle. */
+  visiteId?: string;
 }
 
 /** Ce que l'éleveur garde du groupement sanitaire : ses documents, plusieurs par rubrique (un seul document, ancien format, reste lisible). */
