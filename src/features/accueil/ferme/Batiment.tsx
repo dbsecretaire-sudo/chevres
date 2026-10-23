@@ -29,6 +29,11 @@ interface Props {
   couleurDisque?: string;
 }
 
+/** Le diamètre du disque d'un compartiment, à l'échelle 1 : celui du logo d'un intervenant. */
+const DISQUE = 44;
+/** La taille d'origine du dessin d'un bouton (celle de l'accueil) : le disque le met à son échelle. */
+const TAILLE_DU_DESSIN = 30;
+
 /** Un compartiment : une porte du bâtiment, avec son dessin et son nom. */
 function Compartiment({
   entree,
@@ -46,6 +51,8 @@ function Compartiment({
   const ref = useRef<View>(null);
   // Sur un grand écran (Windows), le dessin et le nom grandissent avec la largeur de la colonne.
   const e = useEchelle();
+  // Le disque a la taille du logo d'un intervenant (50 à l'échelle 1, sans grandir au-delà) ; son dessin y occupe le tiers central. Le nom est à droite : le bâtiment garde sa hauteur.
+  const disque = Math.round(DISQUE * Math.min(e, 1));
   const appuyer = () =>
     ref.current?.measureInWindow((x, y, largeur, hauteur) => onAppui(entree.cle, { x, y, largeur, hauteur }));
   return (
@@ -56,6 +63,7 @@ function Compartiment({
         styles.compartiment,
         { backgroundColor: palette.compartiment, borderColor: palette.bord },
         styles.compartimentCompact,
+        styles.compartimentLigne,
         seul ? styles.compartimentSeul : null,
         seul ? styles.compartimentSeulCompact : null,
       ]}
@@ -68,13 +76,13 @@ function Compartiment({
           styles.disque,
           {
             backgroundColor: couleurDisque ?? entree.couleur ?? palette.toit,
-            width: Math.round(30 * e),
-            height: Math.round(30 * e),
-            borderRadius: Math.round(15 * e),
+            width: disque,
+            height: disque,
+            borderRadius: disque / 2,
           },
         ]}
       >
-        <View style={{ transform: [{ scale: 0.7 * e }] }}>{entree.icone}</View>
+        <View style={{ transform: [{ scale: (disque * 0.66) / TAILLE_DU_DESSIN }] }}>{entree.icone}</View>
         {entree.pastille ? (
           <View style={styles.pastille}>
             <Text style={styles.pastilleTexte}>{entree.pastille}</Text>
@@ -84,9 +92,10 @@ function Compartiment({
       <Text
         style={[
           styles.nom,
+          styles.nomACote,
           { fontSize: Math.round(10 * e) },
         ]}
-        numberOfLines={2}
+        numberOfLines={3}
       >
         {entree.titre}
       </Text>
@@ -167,6 +176,9 @@ const styles = StyleSheet.create({
   compartimentsCompacts: { padding: 0, gap: 0 },
   compartimentCompact: { width: '33.3333%', paddingVertical: 2, gap: 0 },
   compartimentSeulCompact: { width: '100%' },
+  // Le dessin à gauche, le nom à droite (il passe sur autant de lignes qu'il en faut).
+  compartimentLigne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 5, paddingHorizontal: 4 },
+  nomACote: { flex: 1, textAlign: 'left' },
   compartimentSeul: {
     width: '98%',
     flexDirection: 'row',

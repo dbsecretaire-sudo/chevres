@@ -103,3 +103,26 @@ describe('deux appareils qui ont travaillé chacun de leur côté', () => {
     expect(fusionner(undefined, { nom: 'Gîte', animaux: ['chevres'] })).toEqual({ nom: 'Gîte', animaux: ['chevres'] });
   });
 });
+
+describe('listes de choix personnalisées (réglages de l’exploitation)', () => {
+  const telephone = { listesPerso: { circuitsVente: { ajoutes: [{ id: 'perso:gare', nom: 'Vente en gare' }], masques: ['marche'], renommes: { ferme: 'Boutique' } } } };
+  const ordinateur = { listesPerso: { circuitsVente: { ajoutes: [{ id: 'perso:cave', nom: 'Cave' }], masques: ['panier'], renommes: { ferme: 'Vente directe' } } } };
+
+  it('les choix ajoutés et les choix masqués des deux appareils se réunissent', () => {
+    const r = fusionner(ordinateur, telephone) as typeof telephone;
+    const liste = r.listesPerso.circuitsVente;
+    expect(liste.ajoutes.map((a) => a.id).sort()).toEqual(['perso:cave', 'perso:gare']);
+    expect(liste.masques.sort()).toEqual(['marche', 'panier']);
+  });
+
+  it('un renommage différent des deux côtés : celui de l’appareil qui fusionne reste', () => {
+    const r = fusionner(ordinateur, telephone) as typeof telephone;
+    expect(r.listesPerso.circuitsVente.renommes.ferme).toBe('Vente directe');
+  });
+
+  it('un choix démasqué sur un seul appareil redevient masqué à la fusion (une suppression ne se propage pas)', () => {
+    const demasque = { listesPerso: { circuitsVente: { masques: [] as string[] } } };
+    const r = fusionner(demasque, telephone) as typeof telephone;
+    expect(r.listesPerso.circuitsVente.masques).toContain('marche');
+  });
+});
