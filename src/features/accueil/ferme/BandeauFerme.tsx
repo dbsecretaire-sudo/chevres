@@ -56,7 +56,7 @@ function Pastille({
     const nombre = valeur !== '0' && valeur !== '…' ? valeur : null;
     return (
       <Pressable
-        style={[styles.pastille, styles.pastilleSeule, { paddingVertical: Math.round(8 * echelle), width: Math.round(40 * echelle), paddingHorizontal: 0 }]}
+        style={[styles.pastilleSeule, { width: Math.round(40 * echelle), height: Math.round(40 * echelle) }]}
         onPress={() => (onAppui ? onAppui() : router.push(route as never))}
         accessibilityRole="button"
         accessibilityLabel={`${libelle} : ${valeur}`}
@@ -208,8 +208,15 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   badgeTexte: { color: colors.blanc, fontSize: 11, fontWeight: '700' },
-  // La cloche seule : une pastille qui ne s'étire pas ; son nombre est en rouge, dans son coin.
-  pastilleSeule: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
+  // La cloche seule : un rond de taille fixe (aucune règle d'étirement : sur Android, une pastille à `flex` perdait sa largeur) ; son nombre est en rouge, dans son coin.
+  pastilleSeule: {
+    flexGrow: 0,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.blanc,
+    borderRadius: 999,
+  },
   badgeRouge: {
     position: 'absolute',
     top: -6,
