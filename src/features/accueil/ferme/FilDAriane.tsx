@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { filDeLaPage, pageDuMenuRetenue } from '@/shared/navigation/filAriane';
-import { useTitreDeLaPage } from '@/shared/navigation/titreDeLaPage';
+import { useLibelleDuFil, useTitreDeLaPage } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { useEchelle } from '@/shared/theme/miseEnPage';
@@ -14,8 +14,9 @@ export function FilDAriane() {
   const router = useRouter();
   const { menus, courante, adresse } = usePositionDansLesMenus();
   const titre = useTitreDeLaPage(adresse);
+  const nomDeLaPage = useLibelleDuFil(adresse);
   const echelle = useEchelle();
-  const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), titre);
+  const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre);
   if (fil.length < 2) return null;
   const taille = Math.round(16 * echelle);
   return (

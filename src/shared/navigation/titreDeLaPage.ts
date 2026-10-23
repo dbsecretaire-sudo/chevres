@@ -8,22 +8,36 @@ interface TitrePublie {
 }
 
 let publie: TitrePublie = { titre: '', adresse: '' };
+/** Le nom que la page donne elle-même à sa dernière étape (la fiche d'un contact : le nom du contact, à la place de « Contact »). */
+let libelle: TitrePublie = { titre: '', adresse: '' };
 const ecouteurs = new Set<() => void>();
+const prevenir = () => ecouteurs.forEach((ecouteur) => ecouteur());
+const abonner = (ecouteur: () => void) => {
+  ecouteurs.add(ecouteur);
+  return () => ecouteurs.delete(ecouteur);
+};
 
 export function publierTitre(titre: string, adresse: string): void {
   if (publie.titre === titre && publie.adresse === adresse) return;
   publie = { titre, adresse };
-  ecouteurs.forEach((ecouteur) => ecouteur());
+  prevenir();
 }
 
 /** Le titre de la page à cette adresse ; vide tant que son en-tête ne l'a pas publié. */
 export function useTitreDeLaPage(adresse: string): string {
-  const courant = useSyncExternalStore(
-    (ecouteur) => {
-      ecouteurs.add(ecouteur);
-      return () => ecouteurs.delete(ecouteur);
-    },
-    () => publie,
-  );
+  const courant = useSyncExternalStore(abonner, () => publie);
+  return courant.adresse === adresse ? courant.titre : '';
+}
+
+/** La page donne son propre nom à la dernière étape du fil d'Ariane ; un nom vide le retire. */
+export function publierLibelleDuFil(nom: string, adresse: string): void {
+  if (libelle.titre === nom && libelle.adresse === adresse) return;
+  libelle = { titre: nom, adresse };
+  prevenir();
+}
+
+/** Le nom que la page de cette adresse donne à la dernière étape du fil d'Ariane (vide : le titre de la page). */
+export function useLibelleDuFil(adresse: string): string {
+  const courant = useSyncExternalStore(abonner, () => libelle);
   return courant.adresse === adresse ? courant.titre : '';
 }

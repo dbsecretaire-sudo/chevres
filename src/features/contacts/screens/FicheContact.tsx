@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -48,7 +48,9 @@ import {
   formulaireDuContact,
   type FormulaireContact,
 } from '@/features/contacts/services/fiche';
+import { contratsDe, estUnAssureur } from '@/features/fournisseurs/services/contratsAssureur';
 import { ROUTES } from '@/shared/constants/routes';
+import { publierLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { routeAvecContact } from '@/features/accueil/services/routeAvecContact';
 import { colors } from '@/shared/theme/colors';
@@ -58,8 +60,8 @@ import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 
 const T = TEXTES.contacts.fiche;
 
-/** Les deux onglets de la fiche : les écritures, et les documents (rangés en dossiers). */
-type Onglet = 'ecritures' | 'documents';
+/** Les onglets de la fiche : les écritures, les contrats (d'un assureur), et les documents (rangés en dossiers). */
+type Onglet = 'ecritures' | 'contrats' | 'documents';
 const F = TEXTES.contacts.formulaire;
 
 /** Un montant signé : une recette « + », une dépense « − », en vert ou en rouge. */
@@ -128,6 +130,15 @@ export default function FicheContact() {
     [contact, idsConnus],
   );
   const nomDeLaCategorie = (cle: string | undefined) => categories.find((c) => c.id === cle)?.nom;
+  // Le fil d'Ariane (« … > Assurance > GROUPAMA ») porte le nom du contact, à la place de « Contact ».
+  const page = usePathname();
+  const nom = contact?.nom;
+  useFocusEffect(
+    useCallback(() => {
+      publierLibelleDuFil(nom ?? '', page);
+      return () => publierLibelleDuFil('', page);
+    }, [nom, page]),
+  );
 
   /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
   const enregistrer = async (
@@ -191,6 +202,9 @@ export default function FicheContact() {
   const telephone = c?.telephone || f?.telephone;
   const email = c?.email || f?.email;
   const balance = balanceDuContact(ecritures);
+  // Les contrats : l'onglet d'un assureur (même sans contrat encore, pour en créer un).
+  const contrats = contratsDe(f);
+  const avecContrats = estUnAssureur(f) || contrats.length > 0;
   // Les documents : ce qui est rangé dans la fiche du contact (courriers, contrats, aides, notes…).
   const documents = elements.filter((x) => x.origine === 'partenaire');
   /** Les bons d'équarrissage (équarrisseur) et les documents de circulation (abattoir) qui s'y rangent tout seuls. */
@@ -404,6 +418,7 @@ export default function FicheContact() {
             <PucesDefilantes<Onglet>
               puces={[
                 { valeur: 'ecritures', label: T.ongletEcritures(ecritures.length) },
+                ...(avecContrats ? [{ valeur: 'contrats' as const, label: T.ongletContrats(contrats.length) }] : []),
                 { valeur: 'documents', label: T.ongletDocuments(documents.length + pieces.length) },
               ]}
               valeur={onglet}
@@ -434,6 +449,24 @@ export default function FicheContact() {
                     />
                   ))
                 )}
+              </View>
+            ) : onglet === 'contrats' && avecContrats ? (
+              <View style={commonStyles.gap10}>
+                {contrats.length === 0 ? <Text style={commonStyles.mutedItalic}>{TEXTES.contacts.contrat.aucunContrat}</Text> : null}
+                {contrats.map((contrat) => (
+                  <ListRow
+                    key={contrat.id}
+                    title={contrat.denomination}
+                    subtitle={TEXTES.contacts.contrat.ligneSousAssureur(contrat.numero)}
+                    icone="shield-checkmark"
+                    onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
+                  />
+                ))}
+                <ListRow
+                  title={TEXTES.contacts.contrat.nouveauContrat}
+                  icone="add-circle"
+                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: f?.id }))}
+                />
               </View>
             ) : (
               <View style={commonStyles.gap10}>

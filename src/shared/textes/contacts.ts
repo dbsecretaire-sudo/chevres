@@ -51,6 +51,8 @@ export const TEXTES_CONTACTS = {
     nouveauContrat: 'Nouveau contrat d’assurance',
     aucunContratListe: 'Aucun contrat d’assurance.',
     ligne: (assureur: string, numero: string) => [assureur, numero && `n° ${numero}`].filter(Boolean).join(' · '),
+    /** Un contrat rangé sous son assureur : le nom de l’assureur est déjà au-dessus. */
+    ligneSousAssureur: (numero: string) => (numero ? `n° ${numero}` : undefined),
   },
   aide: 'Un contact reçoit des recettes, fait des dépenses, ou les deux. Une seule fiche, une seule catégorie.',
   aideRubrique:
@@ -88,6 +90,8 @@ export const TEXTES_CONTACTS = {
     nouvelleRecette: 'Nouvelle recette',
     ongletEcritures: (n: number) => `Écritures liées${n > 0 ? ` (${n})` : ''}`,
     ongletDocuments: (n: number) => `Documents liés${n > 0 ? ` (${n})` : ''}`,
+    /** L’onglet des contrats d’un assureur, à gauche de ses documents. */
+    ongletContrats: (n: number) => `Contrats${n > 0 ? ` (${n})` : ''}`,
     ajouterDocument: '+ Ajouter un document, un courrier, une aide…',
     aucunDocument: 'Aucun document lié à ce contact pour l’instant.',
     origine: { partenaire: 'Document', dossier: 'Dossier' },

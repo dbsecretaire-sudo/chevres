@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
-import { publierTitre } from '@/shared/navigation/titreDeLaPage';
+import { publierTitre, useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
@@ -49,7 +49,9 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   // Pas de flèche de retour ici : sur téléphone elle est dans la barre du bas (BandeauFerme), et le poste de comptabilité (affichage sobre) n'en a pas.
   const droite = options.headerRight ? options.headerRight(parametres) : null;
   const titre = typeof options.title === 'string' ? options.title : '';
-  const fil = comptable ? filDeLaPage(menus, courante, pageDuMenuRetenue(), titre) : [];
+  // La page peut donner son propre nom à la dernière étape (la fiche d'un contact : le nom du contact, à la place de « Contact »).
+  const nomDeLaPage = useLibelleDuFil(adresse);
+  const fil = comptable ? filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre) : [];
   // Le fil d'Ariane du bas (téléphone) ne voit pas l'écran : l'en-tête de la page affichée lui donne son titre.
   useFocusEffect(useCallback(() => publierTitre(titre, adresse), [titre, adresse]));
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??

@@ -209,7 +209,8 @@ function LieuTiersStandard() {
         <>
           <GroupeAccueil titre={textes.groupeTiers ?? ''}>
             <BlocLignes>
-              {tiers.map((c) => (
+              {/* Une liste à plat (le bloc sépare chaque ligne d'un trait) : le tiers, puis — pour l'assurance — ses contrats juste en dessous de lui. */}
+              {tiers.flatMap((c) => [
                 <ListRow
                   key={c.cle}
                   title={c.nom}
@@ -220,8 +221,19 @@ function LieuTiersStandard() {
                   }
                   emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
                   onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
-                />
-              ))}
+                />,
+                ...(cle === 'assurance'
+                  ? contratsDe(c.fournisseur).map((contrat) => (
+                      <ListRow
+                        key={`${c.cle}:${contrat.id}`}
+                        title={contrat.denomination}
+                        subtitle={TEXTES.contacts.contrat.ligneSousAssureur(contrat.numero)}
+                        icone="shield-checkmark"
+                        onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
+                      />
+                    ))
+                  : []),
+              ])}
               {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
               <ListRow
                 title={textes.ajouterTiers ?? ''}
@@ -234,6 +246,13 @@ function LieuTiersStandard() {
                   )
                 }
               />
+              {cle === 'assurance' ? (
+                <ListRow
+                  title={TEXTES.contacts.contrat.nouveauContrat}
+                  icone="add-circle"
+                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined }))}
+                />
+              ) : null}
               {/* Banque et comptabilité : le comptable s'ajoute aussi d'ici (sa catégorie est liée à la page). */}
               {cle === 'tourisme' ? (
                 <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
@@ -274,33 +293,6 @@ function LieuTiersStandard() {
                   onPress={() =>
                     ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`)
                   }
-                />
-              </BlocLignes>
-            </GroupeAccueil>
-          ) : null}
-
-          {/* L'assurance : la liste des contrats de ses assureurs (leur numéro s'inscrit dans la facture quand on les choisit), chacun avec son dossier. */}
-          {cle === 'assurance' ? (
-            <GroupeAccueil titre={TEXTES.contacts.contrat.groupe}>
-              <BlocLignes>
-                {tiers.flatMap((c) =>
-                  contratsDe(c.fournisseur).map((contrat) => (
-                    <ListRow
-                      key={contrat.id}
-                      title={contrat.denomination}
-                      subtitle={TEXTES.contacts.contrat.ligne(c.nom, contrat.numero)}
-                      icone="shield-checkmark"
-                      onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
-                    />
-                  )),
-                )}
-                {tiers.every((c) => contratsDe(c.fournisseur).length === 0) ? (
-                  <Text style={commonStyles.mutedItalic}>{TEXTES.contacts.contrat.aucunContratListe}</Text>
-                ) : null}
-                <ListRow
-                  title={TEXTES.contacts.contrat.nouveauContrat}
-                  icone="add-circle"
-                  onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: tiers.length === 1 ? tiers[0].fournisseur?.id : undefined }))}
                 />
               </BlocLignes>
             </GroupeAccueil>
