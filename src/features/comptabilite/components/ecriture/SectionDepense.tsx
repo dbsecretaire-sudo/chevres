@@ -7,8 +7,8 @@ import { LignesChambreEditor } from '@/features/comptabilite/components/LignesCh
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
-import type { ReactNode } from 'react';
-import { Text } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -93,6 +93,9 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
   const categorieDuTiers = e.fournisseurSelectionne
     ? categorieFournisseurDe(e.fournisseurSelectionne.categorie)
     : undefined;
+  /** Le lien « Avancé » déplie les cases (paiement, non facturée, offerte) ; une case déjà cochée les garde ouvertes. */
+  const [avanceOuvert, setAvanceOuvert] = useState(false);
+  const uneCaseCochee = e.enAttente || e.sansFacture || e.offertDepenseCoche;
 
   return (
     <>
@@ -128,6 +131,11 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
           }}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
+        {/* Les cases rares (pas encore payée, non facturée, offerte) se rangent sous le lien « Avancé » ; elles s'ouvrent d'elles-mêmes quand l'une est cochée. */}
+        <Pressable onPress={() => setAvanceOuvert(!avanceOuvert)} accessibilityRole="button" accessibilityState={{ expanded: avanceOuvert || uneCaseCochee }}>
+          <Text style={commonStyles.lien}>{TEXTES.comptabilite.nouvelleEcriture.avance(avanceOuvert || uneCaseCochee)}</Text>
+        </Pressable>
+        {avanceOuvert || uneCaseCochee ? <>
         {/* Le paiement : payée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
         {pasPayeeAffichee(categorieDuTiers) ? (
           <ChampPaiement
@@ -162,6 +170,7 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
         {e.offertDepense ? (
           <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
         ) : null}
+        </> : null}
       </SectionForm>
     </>
   );

@@ -710,6 +710,8 @@ export const TEXTES_COMPTABILITE = {
       ajouter: 'Ajouter aux visites vétérinaires',
       motifRequis: 'Motif de la visite requis pour l’ajouter aux visites vétérinaires',
     },
+    /** Le lien qui déplie les cases rares d'une dépense (pas encore payée, non facturée, offerte). */
+    avance: (ouvert: boolean) => (ouvert ? 'Avancé ▴' : 'Avancé ▾'),
     nDeFacture: 'N° de facture',
     nDeFactureOuObjet: 'N° de facture / objet',
     depenseNonFacturee: 'Cette dépense n’a pas été facturée',

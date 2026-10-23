@@ -25,7 +25,9 @@ import {
   type ArticleAffiche,
 } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
-import { FILTRE_STOCK_TOUT, GENRE_ARTICLE } from '@/shared/constants/stock';
+import { ChoixEspeceStock } from '@/features/stock/components/ChoixEspeceStock';
+import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
+import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -42,6 +44,8 @@ const codeDe = (cle: string): string => cle.split(':')[1];
  */
 export default function Conditionnement() {
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
+  // Le conditionnement se voit pour une espèce, comme l'inventaire : ses fromages, sa viande, ses emballages (ou toutes les activités).
+  const { especes, filtreCourant, choisirFiltre } = useFiltreEspeceStock();
   /** L'élément dont on modifie le conditionnement. */
   const [enEdition, setEnEdition] = useState<string | null>(null);
   const [choixOuvert, setChoixOuvert] = useState(false);
@@ -70,10 +74,14 @@ export default function Conditionnement() {
   );
 
   if (!archive) return null;
-  const emballages = articlesDuGenre(GENRE_ARTICLE.EMBALLAGE, archive, FILTRE_STOCK_TOUT);
-  const fromages = articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, FILTRE_STOCK_TOUT);
-  /** Les produits finis (viande, charcuterie) et les produits animaux de l'inventaire : ceux qu'on peut ajouter ici. */
-  const produits = articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, FILTRE_STOCK_TOUT);
+  const emballages = articlesDuGenre(GENRE_ARTICLE.EMBALLAGE, archive, filtreCourant);
+  const fromages = articlesDuGenre(GENRE_ARTICLE.FROMAGE, archive, filtreCourant);
+  /** Tous les produits finis (viande et charcuterie, plats préparés, savons) et les produits animaux de l'inventaire : ceux qu'on peut ajouter ici. */
+  const produits = [
+    ...articlesDuGenre(GENRE_ARTICLE.VIANDE, archive, filtreCourant),
+    ...articlesDuGenre(GENRE_ARTICLE.PLAT, archive, filtreCourant),
+    ...articlesDuGenre(GENRE_ARTICLE.SAVON, archive, filtreCourant),
+  ];
   const ajoutes = produits.filter((p) => codeDe(p.cle) in archive.conditionnements);
   const proposes = produits.filter((p) => !(codeDe(p.cle) in archive.conditionnements));
   const lignes: { article: ArticleAffiche; retirable: boolean }[] = [
@@ -110,6 +118,7 @@ export default function Conditionnement() {
       <ScrollView contentContainerStyle={commonStyles.listFab}>
         <LigneFiltres>
           <YearPicker annees={annees} value={annee} onChange={setAnnee} />
+          <ChoixEspeceStock especes={especes} valeur={filtreCourant} onChoisir={choisirFiltre} />
         </LigneFiltres>
         <Text style={commonStyles.note}>{T.aide}</Text>
         <Text style={commonStyles.note}>{T.aideAnnee}</Text>

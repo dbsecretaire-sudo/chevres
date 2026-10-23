@@ -12,6 +12,7 @@ import {
 } from '@/features/drive/googleAuth';
 import {
   ensureRootFolder,
+  fusionnerAvecDrive,
   nomDossierDrive,
   pousserToutesAnnees,
   tirerToutesAnnees,
@@ -27,7 +28,7 @@ export function useGoogleDrive() {
 
   const [connecte, setConnecte] = useState(false);
   const [connexionEnCours, setConnexionEnCours] = useState(false);
-  const [syncEnCours, setSyncEnCours] = useState<'push' | 'pull' | null>(null);
+  const [syncEnCours, setSyncEnCours] = useState<'push' | 'pull' | 'merge' | null>(null);
   const [syncEtape, setSyncEtape] = useState('');
 
   const charger = useCallback(async () => {
@@ -105,7 +106,7 @@ export function useGoogleDrive() {
     setConnecte(false);
   };
 
-  const synchroniser = async (sens: 'push' | 'pull') => {
+  const synchroniser = async (sens: 'push' | 'pull' | 'merge') => {
     if (!settings.driveFolderId) return;
     setSyncEnCours(sens);
     try {
@@ -120,6 +121,17 @@ export function useGoogleDrive() {
       }
       const onProgress = (annee: number, categorie: string) => setSyncEtape(`${categorie} ${annee}`);
       let bilan;
+      if (sens === 'merge') {
+        // Deux appareils ont travaillé chacun de leur côté : tout est réuni, puis renvoyé sur Drive.
+        const fusion = await fusionnerAvecDrive(accessToken, settings.driveFolderId, setSyncEtape);
+        await recharger();
+        await refreshSettings();
+        await patchSettings({ derniereSynchronisation: new Date().toISOString() });
+        await noterSauvegarde();
+        Alert.alert(TEXTES.settings.reglages.termine, TEXTES.settings.reglages.fusionTerminee(fusion.ajoutes, fusion.conflits));
+        charger();
+        return;
+      }
       if (sens === 'push') {
         bilan = await pousserToutesAnnees(accessToken, settings.driveFolderId, onProgress);
       } else {

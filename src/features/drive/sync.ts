@@ -66,6 +66,7 @@ import {
 } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { empreinteTexte } from '@/shared/utils/empreinte';
+import { fusionner, type RapportFusion } from '@/features/drive/fusion';
 import type { Categorie } from '@/shared/storage/types';
 import {
   DOSSIER_RACINE_DRIVE,
@@ -627,4 +628,127 @@ export async function tirerToutesAnnees(
   // Les animaux ont pu changer : les poses de l'inventaire des boucles (dates comprises) se refont d'après eux.
   await synchroniserPoseBoucles();
   return bilan;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// La fusion : deux appareils branchés sur le même Drive qui ont travaillé chacun de leur côté.
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** Un fichier de données de Drive (JSON) : comment le lire ici, l'écrire ici, et quand il n'y a rien à envoyer. */
+interface FichierFusionnable {
+  fichier: string;
+  lire: () => Promise<unknown>;
+  ecrire: (valeur: any) => Promise<void>;
+  /** Vrai : le contenu n'est qu'un décor vide, il ne s'envoie pas (il écraserait celui d'un autre appareil). */
+  vide?: (valeur: any) => boolean;
+}
+
+const FICHIERS_FUSIONNABLES: readonly FichierFusionnable[] = [
+  {
+    fichier: FICHIER_EXPLOITATION,
+    lire: async () => (await getSettings()).exploitation ?? {},
+    ecrire: async (valeur) => void (await updateSettings({ exploitation: valeur })),
+  },
+  {
+    fichier: FICHIER_ESPECES,
+    lire: lireArchiveEspeces,
+    ecrire: remplacerArchiveEspeces,
+    vide: (a) => (a?.ajoutees?.length ?? 0) === 0 && Object.keys(a?.modifiees ?? {}).length === 0,
+  },
+  {
+    fichier: FICHIER_ETABLISSEMENT,
+    lire: profilEtablissementActif,
+    ecrire: appliquerProfilEtablissementActif,
+    vide: (p) => profilEstVide(p),
+  },
+  { fichier: FICHIER_FOURNISSEURS, lire: listFournisseurs, ecrire: remplacerTousFournisseurs },
+  { fichier: FICHIER_CLIENTS, lire: listClients, ecrire: remplacerTousClients },
+  {
+    fichier: FICHIER_IDENTIFICATION,
+    lire: listDocumentsIdentification,
+    ecrire: remplacerTousDocumentsIdentification,
+    vide: (d) => (d?.length ?? 0) === 0,
+  },
+  {
+    fichier: FICHIER_PARTENAIRES,
+    lire: lireChoixPartenaires,
+    ecrire: (valeur) => enregistrerChoixPartenaires(choixLu(valeur)),
+  },
+  { fichier: FICHIER_DOSSIERS, lire: lireArchiveDossiers, ecrire: remplacerArchiveDossiers },
+  { fichier: FICHIER_GITE, lire: lireArchiveGite, ecrire: (v) => remplacerArchiveGite(normaliserArchiveGite(v)) },
+  { fichier: FICHIER_TRADING, lire: lireArchiveTrading, ecrire: (v) => remplacerArchiveTrading({ trades: v.trades ?? [] }) },
+  { fichier: FICHIER_BAR, lire: lireArchiveBar, ecrire: (v) => remplacerArchiveBar(normaliserArchiveBar(v)) },
+  { fichier: FICHIER_COMMERCIAL, lire: lireArchiveCommercial, ecrire: (v) => remplacerArchiveCommercial(normaliserArchiveCommercial(v)) },
+  { fichier: FICHIER_BIBLIOTHEQUE, lire: lireBibliotheque, ecrire: (v) => remplacerBibliotheque(normaliserBibliotheque(v)) },
+  { fichier: FICHIER_STOCK, lire: lireArchiveStock, ecrire: (v) => remplacerArchiveStock(normaliserArchiveStock(v)) },
+  {
+    fichier: FICHIER_ANNEXES,
+    lire: lireArchiveAnnexes,
+    ecrire: (v) => remplacerArchiveAnnexes(normaliserArchiveAnnexes(v)),
+    vide: (a) => (a?.activites?.length ?? 0) === 0,
+  },
+  { fichier: FICHIER_COMPTES_PCG, lire: listComptesPcg, ecrire: remplacerTousComptesPcg },
+];
+
+/** Fusionne un fichier JSON : ce que Drive a de plus est ajouté ici, puis le tout est renvoyé sur Drive. */
+async function fusionnerFichier(accessToken: string, folderId: string, f: FichierFusionnable, rapport: RapportFusion): Promise<void> {
+  const local = await f.lire();
+  const file = await findFile(accessToken, f.fichier, folderId);
+  if (file) {
+    try {
+      const distant = JSON.parse(await downloadFileText(accessToken, file.id));
+      const fusion = fusionner(local, distant, rapport);
+      if (JSON.stringify(fusion) !== JSON.stringify(local)) await f.ecrire(fusion);
+    } catch {
+      // Fichier distant vide ou corrompu : on garde les données locales et on les renvoie.
+    }
+  }
+  const apres = await f.lire();
+  if (f.vide?.(apres)) return;
+  await deposer(accessToken, f.fichier, folderId, JSON.stringify(apres));
+}
+
+/** Fusionne une catégorie annuelle (écritures, ventes, animaux, traitements…) : chaque année réunit les éléments des deux appareils, par identifiant. */
+async function fusionnerCategorie(accessToken: string, folderId: string, categorie: Categorie, rapport: RapportFusion): Promise<void> {
+  const file = await findFile(accessToken, fileNameForCategorie(categorie), folderId);
+  if (file) {
+    const parAnnee = fromCSVParAnnees(categorie, await downloadFileText(accessToken, file.id));
+    for (const [annee, distants] of parAnnee) {
+      const locaux = await loadYear(categorie, annee);
+      const fusion = fusionner(locaux, distants, rapport) as unknown[];
+      if (JSON.stringify(fusion) === JSON.stringify(locaux)) continue;
+      await saveYear(categorie, annee, fusion as any);
+      await reindexYear(categorie, annee, fusion as any);
+    }
+  }
+  await pousserCategorie(accessToken, folderId, categorie);
+}
+
+/**
+ * Fusionne les données de cet appareil avec celles de Drive, quand un autre appareil a travaillé de son côté : tout ce que chacun a saisi est gardé (les écritures,
+ * les animaux, le stock, les contacts, les réglages…), puis le résultat est envoyé sur Drive et les fichiers joints manquants se récupèrent. Sur une valeur différente
+ * des deux côtés, celle de cet appareil reste ; une suppression faite d'un seul côté ne se propage pas.
+ */
+export async function fusionnerAvecDrive(
+  accessToken: string,
+  folderId: string,
+  onProgress?: (etape: string) => void,
+): Promise<BilanSynchro & RapportFusion> {
+  bilan = { misAJour: 0, inchanges: 0 };
+  const rapport: RapportFusion = { ajoutes: 0, conflits: 0 };
+  for (const categorie of CATEGORIES_STOCKAGE) {
+    onProgress?.(categorie);
+    await fusionnerCategorie(accessToken, folderId, categorie, rapport);
+  }
+  for (const f of FICHIERS_FUSIONNABLES) {
+    onProgress?.(f.fichier.replace('.json', ''));
+    await fusionnerFichier(accessToken, folderId, f, rapport);
+  }
+  onProgress?.('fichiers joints');
+  await tirerPieces(accessToken, folderId);
+  await pousserPieces(accessToken, folderId);
+  await rafraichirImages();
+  // Les animaux ont pu changer : les poses de l'inventaire des boucles (dates comprises) se refont d'après eux.
+  await synchroniserPoseBoucles();
+  return { ...bilan, ...rapport };
 }
