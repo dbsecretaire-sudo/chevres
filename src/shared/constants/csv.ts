@@ -72,6 +72,14 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'date',
     'activite',
     'documentCirculation',
+    // Ce qu'une assurance couvre, le véhicule, le motif, le volet d'une coopérative, le lot d'abattage, les lignes d'une visite vétérinaire et la catégorie ajoutée par l'utilisateur.
+    'vehiculeId',
+    'objetAssurance',
+    'motif',
+    'voletCooperative',
+    'lotId',
+    'lignesVeterinaire',
+    'categoriePerso',
     'type',
     'tiers',
     'description',
@@ -146,6 +154,10 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'prixUnitairePersonnalise',
     // Le document de circulation déposé (le fichier et son moment de dépôt) : en JSON dans sa cellule.
     'documentCirculation',
+    // Le lot d'abattage de la vente, et ce qui est offert (le produit, les frais).
+    'lotId',
+    'cadeauProduit',
+    'cadeauFrais',
   ],
   [CATEGORIE_STOCKAGE.CONTROLES]: [
     'id',
@@ -183,6 +195,10 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'uree',
     'igg',
     'contenus',
+    // Les dossiers d'un contact et le lien de l'entrée avec sa fiche (fournisseur ou client) : sans eux, un autre appareil ne retrouve pas les dossiers du contact.
+    'dossiers',
+    'fournisseurId',
+    'clientId',
   ],
 };
 
@@ -233,6 +249,8 @@ export const CHAMPS_BOOLEEN = new Set([
   'rapportEssais',
   'offert',
   'venduAuPoids',
+  'cadeauProduit',
+  'cadeauFrais',
 ]);
 
 /** Booléens tri-état où "faux" doit être distingué de "non renseigné" (ex: imposable par défaut). */
@@ -250,7 +268,15 @@ export const CHAMPS_LIGNES_CARBURANT = new Set(['lignesCarburant']);
 export const CHAMPS_FICHIERS = new Set(['fichiers']);
 
 /** Les champs écrits tels quels en JSON dans leur cellule (les contenus d'un groupement, avec leurs fichiers). */
-export const CHAMPS_JSON = new Set(['contenus', 'lignesProduction', 'lignesChambre', 'reservation', 'documentCirculation']);
+export const CHAMPS_JSON = new Set([
+  'contenus',
+  'dossiers',
+  'lignesProduction',
+  'lignesChambre',
+  'lignesVeterinaire',
+  'reservation',
+  'documentCirculation',
+]);
 
 export const CHAMPS_LIGNES_MARCHANDISES = new Set(['lignesMarchandises']);
 
