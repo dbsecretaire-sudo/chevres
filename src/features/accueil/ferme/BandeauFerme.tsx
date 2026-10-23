@@ -15,6 +15,8 @@ const T = TEXTES.accueil.ferme.bandeau;
 interface Props {
   /** Un appui sur la cloche : ouvre la liste des rappels. */
   onRappels: () => void;
+  /** La flèche de retour, à gauche de la maison (sous le pouce) : absente sur l'accueil, où il n'y a nulle part où revenir. */
+  onRetour?: () => void;
 }
 
 /** Une pastille du bandeau : son icône, sa valeur, et un appui qui ouvre l'écran qui la détaille. */
@@ -76,13 +78,23 @@ const montant = (valeur: number) => `${Math.round(valeur).toLocaleString(LOCALE)
  * Le bandeau du haut de la ferme, présent sur toutes les pages : la maison (l'accueil), la balance de l'année (deux places), les boucles posées et les
  * tiptag (une place) et les rappels (une place). Il lit lui-même ses chiffres.
  */
-export function BandeauFerme({ onRappels }: Props) {
+export function BandeauFerme({ onRappels, onRetour }: Props) {
   const router = useRouter();
   const { balance, boucles, rappels } = useBandeauFerme();
   const echelle = useEchelle();
   const tailleMaison = Math.round(42 * echelle);
   return (
     <View style={styles.bandeau}>
+      {onRetour ? (
+        <Pressable
+          style={[styles.portrait, styles.retour, { width: tailleMaison, height: tailleMaison, borderRadius: tailleMaison / 2 }]}
+          onPress={onRetour}
+          accessibilityRole="button"
+          accessibilityLabel={TEXTES.commun.general.retour}
+        >
+          <Ionicons name="arrow-back" size={Math.round(24 * echelle)} color={colors.blanc} />
+        </Pressable>
+      ) : null}
       <Pressable
         style={[styles.portrait, { width: tailleMaison, height: tailleMaison, borderRadius: tailleMaison / 2 }]}
         onPress={() => {
@@ -149,6 +161,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.blanc,
   },
+  // La flèche de retour : un rond comme la maison, mais sans contour blanc (la maison reste le bouton principal).
+  retour: { backgroundColor: colors.primaryDark, borderWidth: 0 },
   pastille: {
     flex: 1,
     flexDirection: 'row',

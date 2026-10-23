@@ -63,11 +63,14 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const pageDOnglet = route?.name === 'index' || route?.name === 'reglages';
   const parametres: ParametresBouton = { tintColor: colors.blanc, canGoBack: !!back };
   // Un écran qui a sa propre flèche (retour vers un endroit précis) la garde ; sinon, la flèche de retour de la pile.
-  const gauche = options.headerLeft ? (
+  const flecheDuHaut = options.headerLeft ? (
     options.headerLeft(parametres)
   ) : back || origine || (!pageDOnglet && router.canGoBack()) ? (
     <FlecheRetour onPress={retour} />
   ) : null;
+  // Sur téléphone, la flèche de retour n'est plus en haut (hors d'atteinte du pouce) : elle est dans la barre du bas, à gauche de la maison (BandeauFerme). Le poste de comptabilité
+  // (affichage sobre, grande fenêtre), qui n'a pas de barre du bas, garde la sienne ici.
+  const gauche = comptable ? flecheDuHaut : null;
   const droite = options.headerRight ? options.headerRight(parametres) : null;
   const titre = typeof options.title === 'string' ? options.title : '';
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
