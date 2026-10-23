@@ -3,7 +3,7 @@ export interface MenuBureau {
   label: string;
   route?: string;
   /** Les écrans du menu : un libellé et son écran, ou un séparateur entre deux groupes. */
-  items?: ({ label: string; route: string } | { separateur: true })[];
+  items?: ({ label: string; route: string } | { separateur: true; titre?: string })[];
 }
 
 /** Le pont de la version Windows (voir bureau/preload.js) : ce que l'ordinateur offre à l'application, et seulement cela. */

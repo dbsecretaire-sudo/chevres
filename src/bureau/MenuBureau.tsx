@@ -117,7 +117,7 @@ export function menusParNom() {
       // Les écrans de l'inventaire : les icônes de l'en-tête des stocks.
       ...(inventaireAccessible()
         ? [
-            { separateur: true as const },
+            { separateur: true as const, titre: TEXTES.navigation.menuBureau.stocks },
             { label: C.inventaire.stocks, route: ROUTES.COMPTABILITE_STOCKS },
             { label: TEXTES.stock.conditionnement.titre, route: ROUTES.COMPTABILITE_CONDITIONNEMENT },
             { label: TEXTES.stock.structure.titre, route: ROUTES.STOCK_STRUCTURE },

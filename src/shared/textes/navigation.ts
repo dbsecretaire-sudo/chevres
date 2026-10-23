@@ -17,6 +17,7 @@ export const TEXTES_NAVIGATION = {
   menuBureau: {
     historiqueDesStocks: 'Historique des stocks',
     statistiquesDesStocks: 'Statistiques des stocks',
+    stocks: 'Stocks',
   },
   layout: {
     accueil: 'Accueil',

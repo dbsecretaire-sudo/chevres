@@ -34,55 +34,56 @@ export function menusDeLaFerme(): DefinitionMenu[] {
   const { accueil, cheptel, production, commercial, comptabilite, contacts, organisation } = menusParNom();
   const deja = (entrees: Entree[]) => new Set(entrees.flatMap((e) => ('route' in e ? [e.route] : [])));
   /** Les entrées d'un ancien menu que la ferme ne montre pas déjà (un même écran ne se répète pas). */
-  const autres = (menu: DefinitionMenu, dejaMontrees: Set<string>): Entree[] => {
+  /** Un trait qui porte le nom de la partie qui suit (« Gestion », « Intervenants »…) : les menus longs se lisent par parties. */
+  const partie = (titre: string): Entree => ({ separateur: true, titre });
+  const autres = (menu: DefinitionMenu, dejaMontrees: Set<string>, titre: string): Entree[] => {
     const restes = (menu.items ?? []).filter(
       (e) => 'route' in e && !dejaMontrees.has(e.route) && !ENTREES_RETIREES_DES_MENUS.includes(e.route),
     );
-    return restes.length > 0 ? [{ separateur: true }, ...restes] : [];
+    return restes.length > 0 ? [partie(titre), ...restes] : [];
   };
   const B = BOUTONS_DE_LA_FERME;
 
   const gestionExploitation = entreesDe(B.exploitation.gestion);
   const intervenantsExploitation = entreesDe(B.exploitation.intervenants);
-  const exploitationFerme = [...gestionExploitation, { separateur: true } as Entree, ...intervenantsExploitation];
+  const exploitationFerme = [partie(TEXTES.accueil.ferme.gestion), ...gestionExploitation, partie(TEXTES.accueil.ferme.intervenants), ...intervenantsExploitation];
   // Le menu du Cheptel (toutes les rubriques des animaux) vient après : l'accueil n'a qu'un bouton « Cheptel ».
   const exploitation: DefinitionMenu = {
     label: TEXTES.accueil.ferme.zones.enclos,
     items: [
       accueilDuCote(TEXTES.accueil.ferme.zones.enclos, 'exploitation'),
-      { separateur: true },
       ...exploitationFerme,
-      ...autres(cheptel, deja(exploitationFerme)),
+      ...autres(cheptel, deja(exploitationFerme), TEXTES.accueil.ferme.menus.suiviDuCheptel),
     ],
   };
 
   const atelierFerme = [
+    partie(TEXTES.accueil.ferme.gestion),
     ...entreesDe(B.transformation.gestion),
-    { separateur: true } as Entree,
+    partie(TEXTES.accueil.ferme.intervenants),
     ...entreesDe(B.transformation.intervenants),
   ];
   const atelier: DefinitionMenu = {
     label: TEXTES.accueil.ferme.transformation.pastille,
     items: [
       accueilDuCote(TEXTES.accueil.ferme.transformation.pastille, 'transformation'),
-      { separateur: true },
       ...atelierFerme,
-      ...autres(production, deja(atelierFerme)),
+      ...autres(production, deja(atelierFerme), TEXTES.accueil.ferme.menus.autresPages),
     ],
   };
 
   const agritourismeFerme = [
+    partie(TEXTES.accueil.ferme.gestion),
     ...entreesDe(B.agritourisme.gestion),
-    { separateur: true } as Entree,
+    partie(TEXTES.accueil.ferme.intervenants),
     ...entreesDe(B.agritourisme.intervenants),
   ];
   const agritourisme: DefinitionMenu = {
     label: TEXTES.accueil.ferme.agritourisme.titre,
     items: [
       accueilDuCote(TEXTES.accueil.ferme.agritourisme.titre, 'agritourisme'),
-      { separateur: true },
       ...agritourismeFerme,
-      ...autres(commercial, deja(agritourismeFerme)),
+      ...autres(commercial, deja(agritourismeFerme), TEXTES.accueil.ferme.menus.autresPages),
     ],
   };
 

@@ -95,7 +95,13 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
                       {ouvert
                         ? menu.items?.map((item, i) =>
                             'separateur' in item ? (
-                              <View key={`s${i}`} style={styles.trait} />
+                              item.titre ? (
+                                <Text key={`s${i}`} style={styles.partie}>
+                                  {item.titre}
+                                </Text>
+                              ) : (
+                                <View key={`s${i}`} style={styles.trait} />
+                              )
                             ) : (
                               <Pressable
                                 key={`${item.route}-${i}`}
@@ -189,6 +195,8 @@ const styles = StyleSheet.create({
   entreeMenu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sousEntree: { paddingHorizontal: 18, paddingLeft: 30, paddingVertical: 8 },
   sousEntreeTexte: { fontSize: 14, color: colors.text },
+  // Le titre d'une partie d'un menu long (« Gestion », « Intervenants »).
+  partie: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textMuted, marginTop: 8, marginBottom: 2, paddingLeft: 30, paddingRight: 18 },
   trait: { height: 1, backgroundColor: colors.border, marginVertical: 4, marginHorizontal: 18 },
   entreeActive: { color: colors.primary, fontWeight: '800' },
 });

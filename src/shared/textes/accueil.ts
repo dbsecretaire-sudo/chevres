@@ -23,6 +23,8 @@ export const TEXTES_ACCUEIL = {
     },
     /** Le titre de la colonne des personnes et entreprises (les intervenants), à gauche de la scène. */
     intervenants: 'Intervenants',
+    /** Les titres des parties des menus longs. */
+    menus: { suiviDuCheptel: 'Suivi du cheptel', autresPages: 'Autres pages' },
     /** Le titre de la colonne des rubriques de l'application, à droite de la scène. */
     gestion: 'Gestion',
     /** La scène « Travail du produit » (la transformation) : ce qu'on fabrique et garde chez soi (fromages, boucherie et charcuterie, viande). */

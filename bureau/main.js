@@ -260,8 +260,13 @@ ipcMain.handle('menu:definir', (e, { menus, affichage }) => {
     menu.items
       ? {
           label: menu.label,
-          submenu: menu.items.map((item) =>
-            item.separateur ? { type: 'separator' } : { label: item.label, click: aller(item.route) },
+          // Un trait qui porte un titre (« Gestion », « Intervenants ») : le trait, puis le titre en grisé.
+          submenu: menu.items.flatMap((item) =>
+            item.separateur
+              ? item.titre
+                ? [{ type: 'separator' }, { label: item.titre.toUpperCase(), enabled: false }]
+                : [{ type: 'separator' }]
+              : [{ label: item.label, click: aller(item.route) }],
           ),
         }
       : { label: menu.label, click: aller(menu.route) },

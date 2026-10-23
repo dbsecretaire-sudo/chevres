@@ -82,7 +82,13 @@ function ArbreDesMenus() {
             {deplie
               ? menu.items?.map((item, i) =>
                   'separateur' in item ? (
-                    <View key={`s${i}`} style={styles.trait} />
+                    item.titre ? (
+                      <Text key={`s${i}`} style={styles.partie}>
+                        {item.titre}
+                      </Text>
+                    ) : (
+                      <View key={`s${i}`} style={styles.trait} />
+                    )
                   ) : (
                     <Pressable
                       key={`${item.route}-${i}`}
@@ -166,6 +172,8 @@ const styles = StyleSheet.create({
   pageCourante: { fontWeight: '800', color: colors.primaryDark },
   actif: { backgroundColor: colors.badgeBg },
   appuye: { opacity: 0.7 },
+  // Le titre d'une partie d'un menu long (« Gestion », « Intervenants »).
+  partie: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase', color: colors.textMuted, marginTop: 10, marginBottom: 2, marginLeft: 34, marginRight: 10 },
   trait: { height: 1, backgroundColor: colors.border, marginVertical: 4, marginLeft: 34, marginRight: 10 },
   taille: { gap: 6, paddingVertical: 10, paddingHorizontal: 14 },
   tailleBoutons: { flexDirection: 'row', gap: 6 },
