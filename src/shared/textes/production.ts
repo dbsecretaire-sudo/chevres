@@ -765,6 +765,8 @@ export const TEXTES_PRODUCTION = {
   lotsProduitSimple: {
     resume: (enStock: number, total: number) => `${enStock} en stock sur ${total} ${total > 1 ? 'lots' : 'lot'}`,
     aucun: 'Aucun lot pour le moment.',
+    aucunArticle: 'Rien dans l’inventaire pour le moment.',
+    autres: (titre: string) => `Voir les autres : ${titre.toLowerCase()}`,
     numero: (numero: string) => `N° ${numero}`,
     fabrique: (date: string) => `Fabriqué le ${date}`,
     enStock: 'En stock',
