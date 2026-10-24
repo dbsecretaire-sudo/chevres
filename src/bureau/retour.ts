@@ -106,6 +106,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/production\/flotte$/, () => ROUTES.lieu('garage')],
   // La page d'un lieu de la ferme (un intervenant, la grange, tous les animaux) revient à l'accueil de la ferme.
   [/^\/production\/lieu$/, () => '/'],
+  // L'écran terrain d'une zone de l'accueil revient à l'accueil de la ferme.
+  [/^\/production\/terrain$/, () => '/'],
   [/^\/production\/vehicule$/, () => ROUTES.FLOTTE],
   [/^\/comptabilite\/lot$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],

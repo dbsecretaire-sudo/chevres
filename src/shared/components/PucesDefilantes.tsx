@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, type ScrollView, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BadgeAlerte } from '@/shared/components/BadgeAlerte';
 import { DefilementFleches } from '@/shared/components/DefilementFleches';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
@@ -16,6 +17,8 @@ export interface Puce<T extends string> {
   label: string;
   /** Une explication : un « ? » dans la puce l'ouvre dans une fenêtre (le nom de la puce, sans son effectif, en titre). */
   aide?: string;
+  /** Un « ! » rouge dans la puce : ce qui est à faire se trouve dans cet onglet. */
+  badge?: boolean;
 }
 
 interface Props<T extends string> {
@@ -62,11 +65,12 @@ export function PucesDefilantes<T extends string>({ puces, valeur, onChoisir }: 
                 { backgroundColor: accentClair, borderColor: accentClair },
                 active && { backgroundColor: accent, borderColor: accent },
                 comptable && { paddingVertical: 4, paddingHorizontal: 10, minHeight: 0 },
-                p.aide ? { flexDirection: 'row', alignItems: 'center', gap: 6 } : null,
+                p.aide || p.badge ? { flexDirection: 'row', alignItems: 'center', gap: 6 } : null,
               ]}
               onPress={() => !active && onChoisir(p.valeur)}
             >
               <Text style={[styles.texte, comptable && { fontSize: 13 }, active && { color: colors.blanc }]}>{p.label}</Text>
+              {p.badge ? <BadgeAlerte /> : null}
               {p.aide ? (
                 <Pressable onPress={() => setAideOuverte(p)} hitSlop={8} accessibilityLabel={p.label}>
                   <Ionicons

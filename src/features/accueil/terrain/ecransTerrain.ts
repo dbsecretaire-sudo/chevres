@@ -1,0 +1,89 @@
+import type { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
+import { ROUTES } from '@/shared/constants/routes';
+import { TEXTES } from '@/shared/textes';
+
+/** Les trois zones animées de l'accueil qui ouvrent un écran « terrain » : l'enclos (le troupeau), le travail du produit (l'atelier) et l'agritourisme (l'accueil du public). */
+export type ZoneTerrain = 'troupeau' | 'atelier' | 'accueil';
+
+export const ZONES_TERRAIN: readonly ZoneTerrain[] = ['troupeau', 'atelier', 'accueil'];
+
+/** Un grand bouton de l'écran terrain : une seule action, lisible avec des gants. */
+export interface TuileTerrain {
+  cle: string;
+  titre: string;
+  icone: keyof typeof Ionicons.glyphMap;
+  /** Quand il est donné, le dessin vient de cette famille et remplace `icone`. */
+  iconeMci?: keyof typeof MaterialCommunityIcons.glyphMap;
+  route: string;
+  /** Le chiffre utile affiché sur le bouton (les animaux, les visites à venir…). */
+  nombre?: number;
+  /** Le chiffre est une alerte (à faire, qui manque) : il s'écrit en rouge. */
+  alerte?: boolean;
+}
+
+/** Ce que les boutons comptent : ce que l'accueil sait déjà (voir useFermeAccueil). */
+export interface ComptesTerrain {
+  animaux?: number;
+  naissances?: number;
+  /** Les animaux en délai d'attente après un traitement. */
+  delais: number;
+  ventesSansDocument: number;
+  lotsAFacturer: number;
+  /** Les animaux abattus qui restent à facturer à un client. */
+  viandeAFacturer: number;
+  lotsARappeler: number;
+  stockNegatif: boolean;
+  visitesAVenir: number;
+}
+
+const T = TEXTES.accueil.ferme.terrain.tuiles;
+
+/** Le bouton Contacts, utilisé tous les jours : il est sur les trois écrans. */
+const contacts = (): TuileTerrain => ({ cle: 'contacts', titre: T.contacts, icone: 'people', route: ROUTES.CONTACTS });
+
+/** Le titre de l'écran terrain d'une zone. */
+export const titreDuTerrain = (zone: ZoneTerrain): string => TEXTES.accueil.ferme.terrain.titres[zone];
+
+/** L'adresse de l'écran terrain d'une zone. */
+export const routeDuTerrain = (zone: ZoneTerrain): string => ROUTES.terrain(zone);
+
+/** Les grands boutons d'une zone, dans l'ordre où on s'en sert. Un nombre à zéro ne s'affiche pas. */
+export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerrain[] {
+  const avec = (nombre: number | undefined, alerte = false): Pick<TuileTerrain, 'nombre' | 'alerte'> =>
+    nombre ? { nombre, alerte } : {};
+  switch (zone) {
+    case 'troupeau':
+      return [
+        { cle: 'liste', titre: T.liste, icone: 'paw', route: ROUTES.lieu('animaux'), ...avec(c.animaux) },
+        { cle: 'ajoutRapide', titre: T.ajoutRapide, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
+        { cle: 'naissance', titre: T.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE, ...avec(c.naissances) },
+        { cle: 'traitement', titre: T.traitement, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU, ...avec(c.delais, true) },
+        { cle: 'sorties', titre: T.sorties, icone: 'log-out', route: ROUTES.CHEPTEL_HISTORIQUE },
+        { cle: 'lots', titre: T.lots, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
+        { cle: 'venteVivant', titre: T.venteVivant, icone: 'cash', iconeMci: 'truck-delivery', route: ROUTES.VENTES_VIVANTS, ...avec(c.ventesSansDocument, true) },
+        { cle: 'menuCheptel', titre: T.menuCheptel, icone: 'apps', route: ROUTES.CHEPTEL_MENU },
+        contacts(),
+      ];
+    case 'atelier':
+      return [
+        { cle: 'fromage', titre: T.fromage, icone: 'restaurant', iconeMci: 'cheese', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.FROMAGE) },
+        { cle: 'charcuterie', titre: T.charcuterie, icone: 'restaurant', iconeMci: 'knife', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE) },
+        { cle: 'plat', titre: T.plat, icone: 'restaurant', iconeMci: 'pot-steam', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.PLAT) },
+        { cle: 'savon', titre: T.savon, icone: 'restaurant', iconeMci: 'hand-wash', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.SAVON) },
+        { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.PRODUCTION_LAIT },
+        { cle: 'lotsAtelier', titre: T.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS, ...avec(c.lotsARappeler, true) },
+        { cle: 'viande', titre: T.viandeAFacturer, icone: 'receipt', iconeMci: 'food-steak', route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer`, ...avec(c.viandeAFacturer, true) },
+        { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },
+        contacts(),
+      ];
+    case 'accueil':
+      return [
+        { cle: 'nouvelleVisite', titre: T.nouvelleVisite, icone: 'add-circle', route: ROUTES.COMMERCIAL_VISITE },
+        { cle: 'visites', titre: T.visites, icone: 'trail-sign', route: ROUTES.COMMERCIAL_AGRITOURISME, ...avec(c.visitesAVenir) },
+        { cle: 'formules', titre: T.formules, icone: 'restaurant', route: ROUTES.COMMERCIAL_FORMULES },
+        { cle: 'accueilPublic', titre: T.accueilPublic, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
+        contacts(),
+      ];
+  }
+}

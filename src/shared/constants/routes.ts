@@ -80,6 +80,8 @@ export const ROUTES = {
   RAPPORTS_ESSAIS_GDS: '/production/rapports-essais',
   /** La fiche d'une vente d'animaux vivants : l'acheteur, les animaux, le document de circulation, la facture. */
   venteVivants: (id: string) => `/production/depart?id=${id}` as const,
+  /** L'écran « terrain » d'une zone de l'accueil (le troupeau, l'atelier, l'accueil du public) : de très grands boutons, une action chacun. */
+  terrain: (zone: string) => `/production/terrain?zone=${zone}` as const,
   /** Les ventes d'animaux vivants : la liste d'abord, puis « Nouvelle vente ». */
   VENTES_VIVANTS: '/production/ventes-vivants',
   /** Le cadre réglementaire de l'atelier (fabriquer et vendre fromages, viande, charcuterie ; la Corse). */

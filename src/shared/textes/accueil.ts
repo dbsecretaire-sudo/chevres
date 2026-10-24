@@ -108,6 +108,33 @@ export const TEXTES_ACCUEIL = {
       stock: 'Stock',
       contacts: 'Contacts',
     },
+    /** Les écrans « terrain » : de très grands boutons, ouverts d'un appui sur l'enclos, le travail du produit ou l'accueil du public. */
+    terrain: {
+      titres: { troupeau: 'Le troupeau', atelier: 'Travail du produit', accueil: 'Accueil du public' },
+      tuiles: {
+        liste: 'Animaux',
+        ajoutRapide: 'Ajout rapide',
+        naissance: 'Naissance',
+        traitement: 'Traitement',
+        sorties: 'Sorties et morts',
+        lots: 'Lots',
+        venteVivant: 'Vente (vivant)',
+        menuCheptel: 'Tout le cheptel',
+        contacts: 'Contacts',
+        fromage: 'Fabriquer un fromage',
+        charcuterie: 'Fabriquer de la charcuterie',
+        plat: 'Fabriquer un plat',
+        savon: 'Fabriquer un savon',
+        lait: 'Lait du jour',
+        lotsAtelier: 'Lots et étiquettes',
+        viandeAFacturer: 'Viande à facturer',
+        stock: 'Stock',
+        nouvelleVisite: 'Nouvelle visite',
+        visites: 'Visites',
+        formules: 'Formules',
+        accueilPublic: 'Accueil du public',
+      },
+    },
     /** La barre du bas. */
     barre: { annee: 'Année', espece: 'Animal', didacticiel: 'Didacticiel', reglages: 'Organisation' },
     bulles: {

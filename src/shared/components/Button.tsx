@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, Text, type ViewStyle } from 'react-native';
 
+import { BadgeAlerte } from '@/shared/components/BadgeAlerte';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
 import { styles } from '@/shared/styles/components/Button.styles';
 import { colors } from '@/shared/theme/colors';
@@ -12,9 +13,11 @@ interface Props {
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
+  /** Un « ! » rouge sur le bouton : c'est ici qu'on fait ce qui est à faire. */
+  badge?: boolean;
 }
 
-export function Button({ label, onPress, variant = 'primary', loading, disabled, style }: Props) {
+export function Button({ label, onPress, variant = 'primary', loading, disabled, style, badge }: Props) {
   const accent = useAccentColor();
   const accentSoft = useAccentSoftColor();
   const isDisabled = disabled || loading;
@@ -51,6 +54,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
           {label}
         </Text>
       )}
+      {badge ? <BadgeAlerte style={{ position: 'absolute', right: 12, top: '50%', marginTop: -12 }} /> : null}
     </Pressable>
   );
 }

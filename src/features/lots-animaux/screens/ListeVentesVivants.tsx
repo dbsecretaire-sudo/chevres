@@ -40,6 +40,7 @@ export default function ListeVentesVivants() {
                 title={titreDeLaVenteVivants(vente)}
                 subtitle={[T.animaux(nombreDAnimauxDeLaVente(vente)), vente.documentCirculation ? T.documentDepose : T.documentManque].join(' · ')}
                 icone="swap-horizontal"
+                badge={!vente.documentCirculation}
                 onPress={() => router.push(ROUTES.venteVivants(vente.id) as never)}
               />
             ))}

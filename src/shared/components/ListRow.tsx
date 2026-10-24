@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Image, Pressable, Text, View, type ImageSourcePropType } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { BadgeAlerte } from '@/shared/components/BadgeAlerte';
 import { useDansBloc } from '@/shared/components/BlocListe';
 import { afficheSobre } from '@/shared/utils/affichage';
 import { colors } from '@/shared/theme/colors';
@@ -31,6 +32,8 @@ interface Props {
   fondPastille?: string;
   /** Vrai : la ligne est rangée sous celle du dessus (un contrat sous son assureur) ; elle est décalée vers la droite. */
   retrait?: boolean;
+  /** Vrai : un « ! » rouge sur la ligne, à côté de la flèche (un document qui manque, une chose à faire). */
+  badge?: boolean;
 }
 
 export function ListRow({
@@ -48,6 +51,7 @@ export function ListRow({
   image: imageDemandee,
   fondPastille,
   retrait,
+  badge,
 }: Props) {
   const dansBloc = useDansBloc();
   // L'affichage sobre n'a pas de dessin : ni image ni emoji dans la pastille (l'icône d'un menu reste).
@@ -93,6 +97,7 @@ export function ListRow({
         <Text style={[styles.rowTitle, grise && styles.rowTitleGris]}>{title}</Text>
         {subtitle ? <Text style={commonStyles.muted}>{subtitle}</Text> : null}
       </View>
+      {badge ? <BadgeAlerte /> : null}
       {trailing ??
         ((icone || emoji || image) && onPress ? (
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />

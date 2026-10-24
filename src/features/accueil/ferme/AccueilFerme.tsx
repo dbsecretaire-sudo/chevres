@@ -12,6 +12,7 @@ import { ROUTE_DIRECTE } from '@/features/accueil/ferme/routesFerme';
 import { coteVoisin, estUnCote, lireDernierCote, noterDernierCote } from '@/features/accueil/ferme/dernierCote';
 import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accueil/ferme/FenetresFerme';
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
+import { routeDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
 import { SceneExploitation } from '@/features/accueil/ferme/SceneExploitation';
 import { AccueilSobre } from '@/features/accueil/ferme/AccueilSobre';
 import { lignesDeTransformation, SceneTransformation } from '@/features/accueil/ferme/SceneTransformation';
@@ -364,7 +365,7 @@ export default function AccueilFerme() {
               nombreAnimaux={f.stats?.totalVivantes}
               naissances={f.stats?.cabritsAnnee}
               estive={f.estive}
-              onAppui={() => ouvrir(ROUTES.lieu('animaux'))}
+              onAppui={() => ouvrir(routeDuTerrain('troupeau'))}
               intervenants={intervenants}
               gestion={gestion}
               onMaison={surMaison}
@@ -388,7 +389,7 @@ export default function AccueilFerme() {
               }}
               nomBatiment={TEXTES.accueil.ferme.agritourisme.batiment}
               entrer={TEXTES.accueil.ferme.agritourisme.entrer}
-              onAppui={() => ouvrir(ROUTES.COMMERCIAL_AGRITOURISME)}
+              onAppui={() => ouvrir(routeDuTerrain('accueil'))}
               intervenants={intervenants}
               gestion={gestion}
               onMaison={surMaison}
@@ -398,7 +399,7 @@ export default function AccueilFerme() {
             <SceneTransformation
               compte={f.transformation}
               alerteStock={f.stockNegatif}
-              onAppui={() => ouvrir(`${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`)}
+              onAppui={() => ouvrir(routeDuTerrain('atelier'))}
               intervenants={intervenants}
               gestion={gestion}
               onMaison={surMaison}

@@ -43,6 +43,7 @@ export function BonsDeLivraison({ lots, ouvrir }: { lots: readonly LotAnimaux[];
               lot.factureId ? T.factureLiee : T.aFacturer,
             ].join(' · ')}
             icone="document-text"
+            badge={!!lot.depart && !lot.documentCirculation}
             onPress={() => ouvrir(ROUTES.lotDeProduction(lot.id))}
           />
         ))}

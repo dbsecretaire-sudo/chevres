@@ -212,8 +212,10 @@ export function SceneTransformation({
         ))}
       </View>
       {campagne ? (
-        // La campagne : un pré avec un pique-nique, à la place de la rue.
-        <DecorPiqueNique hauteur={hauteurRue} echelle={Math.min(a, 1.2 * Math.max(1, hauteurRue / rueMin))} />
+        // La campagne : un pré avec un pique-nique, à la place de la rue. Il s'appuie comme la plaque : il ouvre l'écran de la zone.
+        <Pressable onPress={onAppui} accessibilityRole="button" accessibilityLabel={entrer ?? T.entrer}>
+          <DecorPiqueNique hauteur={hauteurRue} echelle={Math.min(a, 1.2 * Math.max(1, hauteurRue / rueMin))} />
+        </Pressable>
       ) : (
         <>
           <View style={styles.trottoir} />

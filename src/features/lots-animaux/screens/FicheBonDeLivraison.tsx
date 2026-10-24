@@ -236,13 +236,15 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
   );
 
   if (!existant) return null;
+  /** Un bon de livraison attend son document de circulation avant toute écriture : le « ! » va de la liste à l'onglet Animaux, puis au bouton du document. */
+  const documentManque = !!existant.depart && !existant.documentCirculation;
 
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       <Screen>
         <Text style={commonStyles.cardTitle}>{existant.nom}</Text>
         <PucesDefilantes<OngletBon>
-          puces={ONGLETS.map((valeur) => ({ valeur, label: libelleOnglet(valeur) }))}
+          puces={ONGLETS.map((valeur) => ({ valeur, label: libelleOnglet(valeur), badge: valeur === 'animaux' && documentManque }))}
           valeur={ongletActif}
           onChoisir={setOnglet}
         />
@@ -281,6 +283,7 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
               <Button
                 variant="secondary"
                 label={TEXTES.cheptel.circulation.boutonAbattoir}
+                badge={documentManque}
                 onPress={() => (liee || existant.depart ? setMenuCirculation(true) : genererLeModele())}
               />
             </AncreVisite>

@@ -93,7 +93,7 @@ export default function FicheVenteVivants() {
         </SectionForm>
 
         <SectionForm titre={TEXTES.cheptel.lots.depart.document.titre}>
-          <Button variant="secondary" label={C.boutonVente} onPress={() => setMenu(true)} />
+          <Button variant="secondary" label={C.boutonVente} badge={!document} onPress={() => setMenu(true)} />
           {document ? <ApercuPiece piece={document.piece} /> : <Text style={[commonStyles.note, { color: colors.danger }]}>{TEXTES.cheptel.lots.depart.document.manque}</Text>}
         </SectionForm>
 
