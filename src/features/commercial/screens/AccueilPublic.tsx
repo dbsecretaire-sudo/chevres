@@ -12,7 +12,7 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { Screen } from '@/shared/components/Screen';
-import { SectionForm } from '@/shared/components/SectionForm';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { ETAPE_ACCUEIL, ETAPES_ACCUEIL_OBLIGATOIRES } from '@/shared/constants/agritourisme';
 import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -33,6 +33,9 @@ const ETAPES: string[] = Object.values(ETAPE_ACCUEIL).sort(
  */
 export default function AccueilPublic() {
   const [archive, setArchive] = useState<ArchiveCommercial | null>(null);
+  /** Les démarches déroulées : toutes sont enroulées à l'ouverture. */
+  const [ouvertes, setOuvertes] = useState<string[]>([]);
+  const basculer = (cle: string) => setOuvertes((courantes) => (courantes.includes(cle) ? courantes.filter((c) => c !== cle) : [...courantes, cle]));
   const charger = useCallback(
     () =>
       lireArchiveCommercial()
@@ -78,12 +81,19 @@ export default function AccueilPublic() {
       {ETAPES.map((e) => {
         const textes = T.etapes[e as keyof typeof T.etapes];
         const donnees = etape(e);
+        const obligatoire = ETAPES_ACCUEIL_OBLIGATOIRES.includes(e);
         return (
-          <SectionForm
+          // Tout est enroulé : une démarche se déroule d'un appui sur son titre ; une pastille « ! » signale une démarche obligatoire pas encore faite.
+          <SectionDeroulante
             key={e}
-            titre={`${textes.titre} · ${ETAPES_ACCUEIL_OBLIGATOIRES.includes(e) ? T.obligatoire : T.facultatif}`}
-            aide={textes.aide}
+            accordeon
+            titre={`${textes.titre} · ${obligatoire ? T.obligatoire : T.facultatif}${donnees.fait ? ` · ${T.fait}` : ''}`}
+            ouverte={ouvertes.includes(e)}
+            onBasculer={() => basculer(e)}
+            alerte={obligatoire && !donnees.fait}
+            etat={!!donnees.fait}
           >
+            <Text style={commonStyles.note}>{textes.aide}</Text>
             <Checkbox
               label={T.fait}
               value={!!donnees.fait}
@@ -106,7 +116,7 @@ export default function AccueilPublic() {
                 onRetirer={(piece) => retirerFichier(e, piece)}
               />
             </View>
-          </SectionForm>
+          </SectionDeroulante>
         );
       })}
     </Screen>

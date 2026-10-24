@@ -15,6 +15,8 @@ interface Props {
   onBasculer: () => void;
   /** Vrai quand quelque chose, dans la section, demande l'attention : une pastille rouge « ! » s'affiche sur son titre. */
   alerte?: boolean;
+  /** Un petit repère devant le titre : « V » vert quand c'est fait (vrai), « X » rouge quand ça ne l'est pas (faux) ; rien sans cette valeur. */
+  etat?: boolean;
   /** Vrai : même sur ordinateur, la section reste enroulée tant qu'on ne l'ouvre pas (une longue liste de catégories, dont une seule se lit à la fois). */
   accordeon?: boolean;
   /** La couleur du panneau déroulé et de son cercle (le stock en cadre de jeu : un vert plus vif que le vert clair d'office). */
@@ -29,6 +31,7 @@ export function SectionDeroulante({
   ouverte,
   onBasculer,
   alerte,
+  etat,
   accordeon = false,
   fond,
   children,
@@ -45,6 +48,9 @@ export function SectionDeroulante({
       ]}
     >
       <Pressable style={[styles.entete, deplie && styles.enteteOuverte]} onPress={onBasculer}>
+        {etat === undefined ? null : (
+          <Ionicons name={etat ? 'checkmark-circle' : 'close-circle'} size={20} color={etat ? colors.primary : colors.danger} accessibilityLabel={etat ? 'Fait' : 'À faire'} />
+        )}
         <Text style={styles.titre}>
           {titre}
           {nombre !== undefined ? ` (${nombre})` : ''}

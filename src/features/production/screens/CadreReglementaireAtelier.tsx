@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Alert, Linking, Pressable, Text, View } from 'react-native';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
 import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
@@ -8,7 +9,7 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { Screen } from '@/shared/components/Screen';
-import { SectionForm } from '@/shared/components/SectionForm';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { ETAPES_ATELIER, ETAPES_ATELIER_OBLIGATOIRES } from '@/shared/constants/cadreAtelier';
 import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -27,6 +28,9 @@ export default function CadreReglementaireAtelier() {
   const infos = settings.exploitation;
   const etapes = infos?.cadreAtelier ?? {};
   const manque = ETAPES_ATELIER_OBLIGATOIRES.filter((e) => !etapes[e]?.fait);
+  /** Les démarches déroulées : toutes sont enroulées à l'ouverture. */
+  const [ouvertes, setOuvertes] = useState<string[]>([]);
+  const basculer = (cle: string) => setOuvertes((courantes) => (courantes.includes(cle) ? courantes.filter((c) => c !== cle) : [...courantes, cle]));
 
   const maj = (cle: string, modification: Partial<EtapeReglementaire>) =>
     patchSettings({ exploitation: { ...infos, cadreAtelier: { ...etapes, [cle]: { ...(etapes[cle] ?? {}), ...modification } } } });
@@ -54,12 +58,19 @@ export default function CadreReglementaireAtelier() {
       {ETAPES_ATELIER.map((cle) => {
         const textes = T.etapes[cle as keyof typeof T.etapes];
         const donnees = etapes[cle] ?? {};
+        const obligatoire = ETAPES_ATELIER_OBLIGATOIRES.includes(cle);
         return (
-          <SectionForm
+          // Tout est enroulé : une démarche se déroule d'un appui sur son titre ; une pastille « ! » signale une démarche obligatoire pas encore faite.
+          <SectionDeroulante
             key={cle}
-            titre={`${textes.titre} · ${ETAPES_ATELIER_OBLIGATOIRES.includes(cle) ? T.obligatoire : T.aVerifier}`}
-            aide={textes.aide}
+            accordeon
+            titre={`${textes.titre} · ${obligatoire ? T.obligatoire : T.aVerifier}${donnees.fait ? ` · ${T.fait}` : ''}`}
+            ouverte={ouvertes.includes(cle)}
+            onBasculer={() => basculer(cle)}
+            alerte={obligatoire && !donnees.fait}
+            etat={!!donnees.fait}
           >
+            <Text style={commonStyles.note}>{textes.aide}</Text>
             {textes.liens.map((lien) => (
               <Pressable key={lien.url} onPress={() => void Linking.openURL(lien.url)} accessibilityRole="link">
                 <Text style={commonStyles.lien}>{lien.titre}</Text>
@@ -87,10 +98,11 @@ export default function CadreReglementaireAtelier() {
                 onRetirer={(piece) => retirerFichier(cle, piece)}
               />
             </View>
-          </SectionForm>
+          </SectionDeroulante>
         );
       })}
-      <SectionForm titre={T.notes} aide={T.aideNotes}>
+      <SectionDeroulante accordeon titre={T.notes} ouverte={ouvertes.includes('notes')} onBasculer={() => basculer('notes')}>
+        <Text style={commonStyles.note}>{T.aideNotes}</Text>
         <FormField
           label={T.notes}
           defaultValue={infos?.notesCadreAtelier ?? ''}
@@ -100,7 +112,7 @@ export default function CadreReglementaireAtelier() {
             patchSettings({ exploitation: { ...infos, notesCadreAtelier: ev.nativeEvent.text.trim() || undefined } });
           }}
         />
-      </SectionForm>
+      </SectionDeroulante>
     </Screen>
   );
 }
