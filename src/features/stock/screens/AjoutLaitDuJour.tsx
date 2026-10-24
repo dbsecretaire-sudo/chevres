@@ -33,7 +33,8 @@ export default function AjoutLaitDuJour() {
   };
 
   return (
-    <Screen>
+    <Screen scroll={false}>
+      <View style={{ flex: 1, justifyContent: 'center', gap: 12, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
       <Text style={commonStyles.subheading}>{T.ajouter}</Text>
       <FormField
         label={T.litres}
@@ -51,6 +52,7 @@ export default function AjoutLaitDuJour() {
       <View style={commonStyles.row}>
         <Button style={commonStyles.flex1} variant="secondary" label={TEXTES.commun.general.annuler} onPress={() => retournerALaPageDAvant(router)} />
         <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={enregistrer} loading={enCours} />
+      </View>
       </View>
     </Screen>
   );

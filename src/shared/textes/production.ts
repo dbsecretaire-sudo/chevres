@@ -755,6 +755,8 @@ export const TEXTES_PRODUCTION = {
     erreur: 'L’enregistrement n’a pas marché. Réessayez.',
     fait: (nombre: number, produit: string) => `${nombre} ${nombre > 1 ? 'fabriqués' : 'fabriqué'} : ${produit}`,
     combienDeLait: 'Combien de litres de lait ?',
+    combienDeLaitSavon: 'Combien de litres de lait de chèvre ?',
+    sansLait: 'Sans lait de chèvre',
     laitFait: (litres: number) => `${String(litres).replace('.', ',')} L de lait ajoutés`,
     etiquettes: {
       quoi: 'Quel produit ?',

@@ -14,6 +14,7 @@ import { FeuilleRappels, FenetreDuJour, useFenetreDuJour } from '@/features/accu
 import { NomFerme } from '@/features/accueil/ferme/NomFerme';
 import { routeDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
 import { SceneExploitation } from '@/features/accueil/ferme/SceneExploitation';
+import { TransitionDeCote } from '@/features/accueil/ferme/TransitionDeCote';
 import { AccueilSobre } from '@/features/accueil/ferme/AccueilSobre';
 import { lignesDeTransformation, SceneTransformation } from '@/features/accueil/ferme/SceneTransformation';
 import { OptionsModal } from '@/shared/components/OptionsModal';
@@ -347,6 +348,7 @@ export default function AccueilFerme() {
       {/* La scène sur tout l'écran ; elle est recréée quand l'espèce change (elle relit ses données et reprend les mots et dessins de l'espèce). */}
       <View key={espece} style={styles.zoneDeScene} {...balayage.panHandlers}>
         <View style={[styles.scene, comptable && styles.largeComptable]}>
+          <TransitionDeCote cote={cote}>
           {afficheSobre() ? (
             // L'affichage sobre : les mêmes informations et la même organisation, en listes, sans scène ni dessin.
             <AccueilSobre
@@ -406,6 +408,7 @@ export default function AccueilFerme() {
               onGestion={surGestion}
             />
           )}
+          </TransitionDeCote>
         </View>
       </View>
       {comptable ? null : (

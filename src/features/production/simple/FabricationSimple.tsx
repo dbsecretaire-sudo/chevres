@@ -65,6 +65,7 @@ export function FabricationSimple({
   presentation?: PresentationDesChoix;
 }) {
   const fromage = produit === PRODUIT_A_LOTS.FROMAGE;
+  const savon = produit === PRODUIT_A_LOTS.SAVON;
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
@@ -85,7 +86,7 @@ export function FabricationSimple({
 
   const choisir = (article: ArticleAffiche) => {
     setSaisie('');
-    setEtape(fromage ? { nom: 'litres', article } : { nom: 'nombre', article });
+    setEtape(fromage || savon ? { nom: 'litres', article } : { nom: 'nombre', article });
   };
 
   const fabriquer = async (article: ArticleAffiche, nombre: number, litres?: number) => {
@@ -107,6 +108,7 @@ export function FabricationSimple({
           quantite: nombre,
           debut,
           finCure: ajouterJours(date, JOURS_DE_CURE_SAVON),
+          litresLait: litres,
           ingredients: [],
         });
       } else {
@@ -151,7 +153,7 @@ export function FabricationSimple({
       {etape.nom === 'litres' ? (
         <View style={styles.contenu}>
           <Text style={styles.detail}>{etape.article.libelle}</Text>
-          <Text style={styles.titre}>{T.combienDeLitres}</Text>
+          <Text style={styles.titre}>{savon ? T.combienDeLaitSavon : T.combienDeLitres}</Text>
           <FormField label={T.litres} value={saisie} onChangeText={setSaisie} keyboardType="decimal-pad" autoFocus />
           <Button
             label={T.valider}
@@ -162,6 +164,17 @@ export function FabricationSimple({
               setEtape({ nom: 'nombre', article: etape.article, litres });
             }}
           />
+          {/* Un savon peut se faire sans lait de chèvre : on passe cette étape. */}
+          {savon ? (
+            <Button
+              label={T.sansLait}
+              variant="secondary"
+              onPress={() => {
+                setSaisie('');
+                setEtape({ nom: 'nombre', article: etape.article });
+              }}
+            />
+          ) : null}
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
         </View>
       ) : null}
