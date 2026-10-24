@@ -7,7 +7,7 @@ import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
-import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
+import { especeDuSuivi } from '@/features/export/documents/suiviMouvementsPdf';
 import { ROUTES } from '@/shared/constants/routes';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';

@@ -9,7 +9,7 @@ import {
   remplirDeclarationEstive,
   separerNomPrenom,
   type DonneesEstive,
-} from '@/features/export/declarationEstivePdf';
+} from '@/features/export/documents/declarationEstivePdf';
 
 const animal = (id: string, plus: Partial<Chevre>): Chevre =>
   ({ id, sexe: 'F', statut: 'vivante', dateNaissance: '2020-01-01', numeroBoucle: `1000${id}`, ...plus }) as unknown as Chevre;

@@ -1,0 +1,150 @@
+import { ScrollView, Text } from 'react-native';
+import { TableauVisitesVeterinaire } from '@/features/sante/components/TableauVisitesVeterinaire';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { ListRow } from '@/shared/components/ListRow';
+import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
+import type { Facture } from '@/features/comptabilite/types';
+import { rapportsDeLaVisite, traitementsDeLaVisite } from '@/features/sante/services/visitesEtTraitements';
+import type { Traitement, VisiteVeterinaire } from '@/features/sante/types';
+import type { DocumentGdsDepose } from '@/features/settings/settings';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { styles } from '@/shared/styles/exploitation/ListeVisites.styles';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.exploitation.listeVisites;
+
+/**
+ * Les visites du vétérinaire : la liste de ses factures, de la plus récente à la plus ancienne (une facture est une visite, qu'elle ait ou non une fiche de visite). Sous chacune, en
+ * retrait : ses traitements — ce qui a été fait sur la facture et les traitements rattachés à elle, ou « Pas de traitement prescrit pour cette visite » —, puis ses rapports
+ * d'essais — celui que la fiche de visite annonce et les fichiers rattachés à elle, ou « Pas de rapport d'essais lié à cette visite ». Un appui sur la facture ouvre sa fiche de visite
+ * (ou la facture elle-même, sans fiche de visite) ; sur un traitement, le traitement ; sur un fichier, le fichier.
+ */
+export function ListeVisitesVeterinaire({
+  factures,
+  visites,
+  traitements,
+  rapports,
+  onOuvrir,
+  onOuvrirTraitement,
+  onOuvrirRapport,
+  onOuvrirTraitements,
+  onOuvrirRapports,
+}: {
+  /** Les factures du vétérinaire. */
+  factures: readonly Facture[];
+  /** Les fiches de visite : celle d'une facture (`factureId`) en dit plus (animaux, lot, rapport annoncé). */
+  visites: readonly VisiteVeterinaire[];
+  traitements: readonly Traitement[];
+  /** Les rapports d'essais déposés (les fichiers du laboratoire). */
+  rapports: readonly DocumentGdsDepose[];
+  /** Ouvre la fiche de la visite de cette facture, ou la facture quand elle n'a pas de fiche. */
+  onOuvrir: (facture: Facture, visite: VisiteVeterinaire | undefined) => void;
+  onOuvrirTraitement: (traitement: Traitement) => void;
+  /** Ouvre le rapport d'essais de cette visite (« Rapports d'essais > Rapport d'essais n° X ») : ses documents téléversés. */
+  onOuvrirRapport: (facture: Facture) => void;
+  /** Les deux premières lignes de la liste : tous les traitements, et tous les rapports d'essais (les documents). */
+  onOuvrirTraitements: () => void;
+  onOuvrirRapports: () => void;
+}) {
+  // Le poste de comptabilité (Windows, affichage sobre) montre les visites en tableau, avec leurs traitements et rapports d'essais liés sur la même ligne.
+  const comptable = useDispositionComptable();
+  return (
+    <ScrollView contentContainerStyle={commonStyles.listeBlocAvecFab}>
+      {/* Les deux liens défilent avec les visites et ont leur largeur ; un titre marque où commencent les visites. */}
+      <BlocLignes>
+        <ListRow title={T.traitements.titre} subtitle={T.traitements.aide} icone="medkit" onPress={onOuvrirTraitements} />
+        <ListRow title={T.rapportsEssais.titre} subtitle={T.rapportsEssais.aide} icone="flask-outline" onPress={onOuvrirRapports} />
+      </BlocLignes>
+      <GroupeAccueil titre={T.titre} espace>
+      {comptable ? (
+        <TableauVisitesVeterinaire
+          factures={factures}
+          visites={visites}
+          traitements={traitements}
+          rapports={rapports}
+          onOuvrir={onOuvrir}
+          onOuvrirTraitement={onOuvrirTraitement}
+          onOuvrirRapport={onOuvrirRapport}
+        />
+      ) : (
+      <BlocLignes>
+        {factures.length === 0 ? <ListRow grise title={T.aucuneVisiteCetteAnnee} /> : null}
+        {factures.flatMap((facture) => {
+          const visite = visites.find((v) => v.factureId === facture.id);
+          // La visite est identifiée par sa facture : c'est elle que les traitements et les rapports désignent.
+          const rattaches = traitementsDeLaVisite({ id: facture.id, date: facture.date }, traitements);
+          const actes = (facture.lignesVeterinaire ?? []).filter((l) => l.libelle.trim());
+          const fichiers = rapportsDeLaVisite(facture.id, rapports);
+          const nombreDAnimaux = numerosDeBoucles(visite?.chevreNumeroBoucle).length;
+          const rapportAnnonce = !!visite?.rapportEssais;
+          const ouvrir = () => onOuvrir(facture, visite);
+          return [
+            <ListRow
+              key={facture.id}
+              // Le cabinet, la date et les animaux : les motifs de la visite se lisent sur sa fiche.
+              title={facture.tiers || visite?.motif || facture.description}
+              subtitle={[formatDateFR(facture.date), nombreDAnimaux > 0 ? T.animaux(nombreDAnimaux) : undefined]
+                .filter(Boolean)
+                .join(' · ')}
+              trailing={<Text style={styles.cout}>{formatMontant(facture.montant)}</Text>}
+              icone="medical"
+              onPress={ouvrir}
+            />,
+            // Ses traitements, en retrait ; sans traitement, une ligne qui le dit.
+            ...actes.map((acte) => (
+              <ListRow
+                key={`${facture.id}:acte:${acte.id}`}
+                retrait
+                title={acte.libelle}
+                subtitle={[acte.animal, acte.dateDebut ? formatDateFR(acte.dateDebut) : undefined].filter(Boolean).join(' · ') || undefined}
+                icone="medkit"
+                onPress={ouvrir}
+              />
+            )),
+            ...rattaches.map((t) => (
+              <ListRow
+                key={`${facture.id}:${t.id}`}
+                retrait
+                title={t.produit}
+                subtitle={[formatDateFR(t.date), t.motif].filter(Boolean).join(' · ')}
+                icone="medkit"
+                onPress={() => onOuvrirTraitement(t)}
+              />
+            )),
+            ...(actes.length + rattaches.length === 0 ? [<ListRow key={`${facture.id}:sans-traitement`} retrait grise title={T.aucunTraitement} />] : []),
+            // Ses rapports d'essais, en retrait ; sans rapport, une ligne qui le dit.
+            // Un rapport annoncé (case cochée, avec son numéro) et ses fichiers déposés sont un seul rapport : une seule ligne, qui donne ses documents ; les fichiers ne se listent à part que sans rapport annoncé.
+            ...(rapportAnnonce
+              ? [
+                  <ListRow
+                    key={`${facture.id}:rapport`}
+                    retrait
+                    title={TEXTES.cheptel.ficheChevre.sante.rapportEssais(visite?.numeroRapport)}
+                    subtitle={fichiers.length > 0 ? T.documentsDuRapport(fichiers.length) : undefined}
+                    icone="flask-outline"
+                    onPress={() => onOuvrirRapport(facture)}
+                  />,
+                ]
+              : []),
+            ...(rapportAnnonce ? [] : fichiers).map((r) => (
+              <ListRow
+                key={`${facture.id}:fichier:${r.piece.id}`}
+                retrait
+                title={r.piece.nom}
+                subtitle={T.rapportDepose}
+                icone="flask-outline"
+                onPress={() => onOuvrirRapport(facture)}
+              />
+            )),
+            ...(!rapportAnnonce && fichiers.length === 0 ? [<ListRow key={`${facture.id}:sans-rapport`} retrait grise title={T.aucunRapport} />] : []),
+          ];
+        })}
+      </BlocLignes>
+      )}
+      </GroupeAccueil>
+    </ScrollView>
+  );
+}

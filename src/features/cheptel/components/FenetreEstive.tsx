@@ -7,7 +7,7 @@ import { FormField } from '@/shared/components/FormField';
 import { effectifALaMontee } from '@/features/cheptel/services/estive';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
-import { estLeGestionnaire, exporterDeclarationEstivePdf } from '@/features/export/declarationEstivePdf';
+import { estLeGestionnaire, exporterDeclarationEstivePdf } from '@/features/export/documents/declarationEstivePdf';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { ReglagesEstive } from '@/features/settings/settings';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';

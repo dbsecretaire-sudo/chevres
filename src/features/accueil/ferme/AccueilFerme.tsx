@@ -32,7 +32,6 @@ import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
-import { formatMontant } from '@/shared/utils/dates';
 
 const C = TEXTES.accueil.ferme.colonnes;
 const TAILLE_ICONE = 30;

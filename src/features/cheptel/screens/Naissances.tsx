@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Button } from '@/shared/components/Button';
-import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
+import { exporterCarnetMiseBasPdf } from '@/features/export/documents/carnetMiseBasPdf';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Fab } from '@/shared/components/Fab';

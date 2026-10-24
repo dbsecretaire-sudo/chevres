@@ -1,0 +1,62 @@
+import { Text } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Checkbox } from '@/shared/components/Checkbox';
+import { DateField } from '@/shared/components/DateField';
+import { FormField } from '@/shared/components/FormField';
+import { ListRow } from '@/shared/components/ListRow';
+import { SectionForm } from '@/shared/components/SectionForm';
+import { ChampMotifsVisite } from '@/features/sante/components/ChampMotifsVisite';
+import type { VisiteVeterinaireEnCours } from '@/features/sante/hooks/useVisiteVeterinaire';
+import { ROUTES } from '@/shared/constants/routes';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.exploitation.nouvelleVisite;
+
+/** Le haut de la fiche d'une visite : la dépense liée, puis la date et les motifs de la visite. */
+export function SectionsVisiteHaut({ v }: { v: VisiteVeterinaireEnCours }) {
+  const router = useRouter();
+  const { ecriture } = v;
+  return (
+    <>
+      {/* La dépense vétérinaire d'où vient la visite : sa date, son motif et son coût la suivent (le coût n'est pas saisi). */}
+      {ecriture ? (
+        <SectionForm titre={`${TEXTES.commun.general.ecrituresLiees} (1)`} aide={T.liee}>
+          <ListRow
+            title={ecriture.description || ecriture.tiers || TEXTES.commun.general.facture}
+            subtitle={[ecriture.tiers, formatDateFR(ecriture.date)].filter(Boolean).join(' · ')}
+            trailing={<Text style={commonStyles.lineBold}>-{formatMontant(ecriture.montant)}</Text>}
+            onPress={() => router.push(ROUTES.ficheFacture(ecriture.id))}
+          />
+        </SectionForm>
+      ) : null}
+      <SectionForm titre={T.sectionVisite}>
+        <DateField label={TEXTES.commun.general.date} required value={v.date} onChange={v.setDate} />
+        <ChampMotifsVisite motif={v.motif} onMotif={v.setMotif} required />
+      </SectionForm>
+    </>
+  );
+}
+
+/** Le bas de la fiche d'une visite : le rapport d'essais, la description et les fichiers de la visite. */
+export function SectionsVisiteBas({ v }: { v: VisiteVeterinaireEnCours }) {
+  return (
+    <>
+      <SectionForm titre={T.sectionAnalyses}>
+        <Checkbox label={T.rapportEssais} value={v.rapportEssais} onChange={v.setRapportEssais} />
+        {v.rapportEssais ? <FormField label={T.numeroRapport} value={v.numeroRapport} onChangeText={v.setNumeroRapport} /> : null}
+      </SectionForm>
+      <SectionForm titre={TEXTES.commun.general.description}>
+        <FormField
+          label={TEXTES.commun.general.description}
+          value={v.description}
+          onChangeText={v.setDescription}
+          multiline
+          style={commonStyles.textarea}
+        />
+      </SectionForm>
+    </>
+  );
+}
+

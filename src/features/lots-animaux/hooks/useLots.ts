@@ -1,0 +1,230 @@
+import { useCallback, useEffect } from 'react';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import type { Chevre } from '@/features/cheptel/types';
+import {
+  animauxARemettreALAbattoir,
+  categoriesDeLots,
+  designationsDesLots,
+  lotsDAbattoir,
+  lotsDeRenouvellementDeLAnnee,
+  lotsDeReproductionDeLAnnee,
+  retirerDesAutresLotsDeRenouvellement,
+  retirerLesLotsDeVisites,
+} from '@/features/lots-animaux/services/lots';
+import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repository/chevres';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { lotsDAbattoirSansFacture, retirerLesLotsDAbattoir } from '@/features/lots-animaux/services/lotsSansFacture';
+import {
+  ajouterAuLotAnnuel as ajouterAuLot,
+  signalerUnAvortement as signaler,
+  lotsDAvortementDeLAnnee,
+  type CategorieAnnuelle,
+} from '@/features/lots-animaux/services/lotsAnnuels';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
+import { enlevementsDepuisLesLots } from '@/features/lots-animaux/services/enlevements';
+import { ventesVivantesDepuisLesLots } from '@/features/lots-animaux/services/ventesVivants';
+import { enregistrerTraitement, listTousTraitements } from '@/features/sante/repository/traitements';
+import { currentYear } from '@/shared/utils/dates';
+import {
+  enregistrerVisiteVeterinaire,
+  listToutesVisitesVeterinaire,
+} from '@/features/sante/repository/visitesVeterinaire';
+import type { CategorieLotReglage, LotAnimaux } from '@/features/settings/settings';
+import { generateId } from '@/shared/utils/id';
+import { comparerAlphabetique } from '@/shared/utils/personne';
+
+/**
+ * Les lots d'animaux de l'établissement (un nom et des boucles), rangés dans les réglages : ils se sauvegardent avec eux. Un lot sert
+ * à désigner d'un geste les mêmes animaux pour un traitement, une visite ou un contrôle, et à suivre leur santé ensemble.
+ */
+/** La migration des lots de visites vétérinaires (qui n'existent plus) ne se lance qu'une fois par séance. */
+let migrationLancee = false;
+
+export function useLots() {
+  const { settings, patchSettings, loaded } = useAppSettings();
+  const infos = settings.exploitation;
+  const lots = [...(infos?.lots ?? [])].sort((a, b) => comparerAlphabetique(a.nom, b.nom));
+
+  const enregistrerLots = useCallback(
+    (suivants: LotAnimaux[]) => patchSettings({ exploitation: { ...infos, lots: suivants } }),
+    [infos, patchSettings],
+  );
+
+  /** Retire les anciens lots de visites vétérinaires : une visite garde ses boucles, ses traitements se rattachent à elle. */
+  const migrerLesLotsDeVisites = useCallback(async () => {
+    const migration = retirerLesLotsDeVisites(infos?.lots ?? [], await listToutesVisitesVeterinaire(), await listTousTraitements());
+    // Les anciens lots d'équarrissage deviennent des enlèvements (Équarrissage › Enlèvements).
+    const enlevements = enlevementsDepuisLesLots(migration.lots ?? infos?.lots ?? [], infos?.enlevements ?? []);
+    // Les anciens départs d'animaux vivants deviennent des ventes d'animaux vivants (Cheptel › Vente d'animaux vivants).
+    const sansEnlevements = enlevements?.lots ?? migration.lots ?? infos?.lots ?? [];
+    const ventes = ventesVivantesDepuisLesLots(sansEnlevements, infos?.ventesVivants ?? []);
+    const lotsSuivants = ventes?.lots ?? enlevements?.lots ?? migration.lots;
+    if (lotsSuivants || enlevements || ventes) {
+      await patchSettings({
+        exploitation: {
+          ...infos,
+          lots: lotsSuivants ?? infos?.lots,
+          ...(enlevements ? { enlevements: enlevements.enlevements } : {}),
+          ...(ventes ? { ventesVivants: ventes.ventesVivants } : {}),
+        },
+      });
+    }
+    for (const visite of migration.visites) await enregistrerVisiteVeterinaire(visite);
+    for (const traitement of migration.traitements) await enregistrerTraitement(traitement);
+  }, [infos, patchSettings]);
+  useEffect(() => {
+    if (!loaded || migrationLancee) return;
+    migrationLancee = true;
+    migrerLesLotsDeVisites().catch(() => {
+      migrationLancee = false;
+    });
+  }, [loaded, migrerLesLotsDeVisites]);
+
+  /** Crée un lot et le rend. */
+  const creer = useCallback(
+    async (nom: string, boucles: string, supplement: Partial<LotAnimaux> = {}): Promise<LotAnimaux> => {
+      const lot: LotAnimaux = { id: generateId(), nom: nom.trim(), boucles: boucles.trim(), ...supplement };
+      await enregistrerLots([...(infos?.lots ?? []), lot]);
+      return lot;
+    },
+    [infos, enregistrerLots],
+  );
+
+  const modifier = useCallback(
+    async (lot: LotAnimaux) => {
+      const suivants = (infos?.lots ?? []).map((l) => (l.id === lot.id ? lot : l));
+      await enregistrerLots(suivants);
+    },
+    [infos, enregistrerLots],
+  );
+
+  /**
+   * Enregistre un lot de renouvellement (ses animaux ajoutés ou retirés) : les autres lots de renouvellement perdent les animaux qu'il
+   * prend, et la désignation de chaque animal (sa case et son année de renouvellement) suit les lots.
+   */
+  const enregistrerRenouvellement = useCallback(
+    async (courants: LotAnimaux[], lot: LotAnimaux, animaux: Chevre[]) => {
+      const suivants = retirerDesAutresLotsDeRenouvellement(
+        courants.map((l) => (l.id === lot.id ? lot : l)),
+        lot,
+      );
+      await enregistrerLots(suivants);
+      for (const animal of designationsDesLots(animaux, suivants, true)) await saveChevre(animal);
+    },
+    [enregistrerLots],
+  );
+  const modifierRenouvellement = useCallback(
+    (lot: LotAnimaux, animaux: Chevre[]) => enregistrerRenouvellement(infos?.lots ?? [], lot, animaux),
+    [infos, enregistrerRenouvellement],
+  );
+
+  /**
+   * Ajoute un animal (sa boucle) au lot d'une année de la catégorie — l'année courante, que le lot permet de changer — et crée le lot s'il
+   * manque. Un animal ajouté au renouvellement est désigné pour l'année du lot (sa désignation suit les lots).
+   */
+  const ajouterAuLotAnnuel = useCallback(
+    async (categorie: CategorieAnnuelle, boucle: string): Promise<LotAnimaux> => {
+      const { lots: suivants, lot } = ajouterAuLot(infos?.lots ?? [], categorie, currentYear(), boucle);
+      if (categorie === CATEGORIE_LOT.RENOUVELLEMENT)
+        await enregistrerRenouvellement(suivants, lot, await listTousLesAnimauxDeLEspece());
+      else await enregistrerLots(suivants);
+      return lot;
+    },
+    [infos, enregistrerLots, enregistrerRenouvellement],
+  );
+
+  /** Signale un avortement d'une femelle pour une année : elle rejoint le lot d'avortements de l'année, et un second signalement la même année compte un de plus. */
+  const signalerUnAvortement = useCallback(
+    async (boucle: string, annee: number): Promise<LotAnimaux> => {
+      const { lots: suivants, lot } = signaler(infos?.lots ?? [], boucle, annee);
+      await enregistrerLots(suivants);
+      return lot;
+    },
+    [infos, enregistrerLots],
+  );
+
+  /** Les catégories de lots : celles d'office et celles de l'utilisateur, dans l'ordre qu'il a choisi, avec leurs noms. */
+  const categories = categoriesDeLots(infos?.categoriesLots, infos?.categoriesLotsListe);
+  const definirCategories = useCallback(
+    (liste: CategorieLotReglage[]) =>
+      patchSettings({ exploitation: { ...infos, categoriesLotsListe: liste } }),
+    [infos, patchSettings],
+  );
+
+  const supprimer = useCallback(
+    (id: string) => enregistrerLots((infos?.lots ?? []).filter((l) => l.id !== id)),
+    [infos, enregistrerLots],
+  );
+
+  /**
+   * Met les lots d'accord avec le cheptel et les visites, en un seul enregistrement : un lot par jour d'abattage (d'après les animaux
+   * envoyés à l'abattoir), un lot de renouvellement et un lot de mise à la reproduction par année, un lot par visite vétérinaire qui a des animaux, et les boucles des visites prises à leur lot.
+   */
+  const synchroniser = useCallback(
+    async (tousLesAnimaux: Chevre[]) => {
+      let courants = infos?.lots ?? [];
+      let changes = false;
+      let animaux = tousLesAnimaux;
+      // Une seule fois : les animaux de lots d'abattoir que l'ancienne version avait remis vivants retournent à l'abattoir, avant que les lots
+      // ne se déduisent des statuts.
+      const reparer = !infos?.reparationLotsAbattoir;
+      if (reparer) {
+        const remis = new Map(animauxARemettreALAbattoir(animaux, courants).map((a) => [a.id, a]));
+        for (const animal of remis.values()) await saveChevre(animal);
+        animaux = animaux.map((a) => remis.get(a.id) ?? a);
+      }
+      // Un lot d'abattoir dont la facture a été supprimée disparaît, et ses animaux (hors vente) reviennent vivants.
+      const sansFacture = lotsDAbattoirSansFacture(courants, new Set((await listToutesFactures()).map((f) => f.id)));
+      if (sansFacture.length > 0) {
+        const retrait = await retirerLesLotsDAbattoir(courants, sansFacture, animaux);
+        courants = retrait.lots;
+        animaux = retrait.animaux;
+        changes = true;
+      }
+      // Les deux anciens lots « Animaux vendus morts / vivants » n'existent plus : le passage morts / vivants se fait par la vente.
+      if (courants.some((l) => (l as { vendus?: string }).vendus)) {
+        courants = courants.filter((l) => !(l as { vendus?: string }).vendus);
+        changes = true;
+      }
+      const abattoirs = lotsDAbattoir(animaux, courants);
+      if (abattoirs) {
+        courants = abattoirs;
+        changes = true;
+      }
+      const renouvellements = lotsDeRenouvellementDeLAnnee(animaux, courants, currentYear());
+      if (renouvellements) {
+        courants = renouvellements;
+        changes = true;
+      }
+      const avortements = lotsDAvortementDeLAnnee(courants, currentYear());
+      if (avortements) {
+        courants = avortements;
+        changes = true;
+      }
+      const reproductions = lotsDeReproductionDeLAnnee(animaux, courants, currentYear());
+      if (reproductions) {
+        courants = reproductions;
+        changes = true;
+      }
+      if (changes || reparer) {
+        await patchSettings({ exploitation: { ...infos, lots: courants, reparationLotsAbattoir: true } });
+      }
+      // Les animaux des lots de renouvellement sont désignés pour leur année (l'année de désignation de leur fiche suit leur lot).
+      for (const animal of designationsDesLots(animaux, courants)) await saveChevre(animal);
+    },
+    [infos, patchSettings],
+  );
+
+  return {
+    lots,
+    creer,
+    modifier,
+    modifierRenouvellement,
+    ajouterAuLotAnnuel,
+    signalerUnAvortement,
+    supprimer,
+    synchroniser,
+    categories,
+    definirCategories,
+  };
+}

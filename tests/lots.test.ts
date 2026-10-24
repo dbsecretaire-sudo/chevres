@@ -5,9 +5,9 @@ import {
   lotDuTraitement,
   nomDeLotPris,
   traitementsDuLot,
-} from '@/features/exploitation/services/lots';
+} from '@/features/lots-animaux/services/lots';
 import type { Chevre } from '@/features/cheptel/types';
-import type { Traitement } from '@/features/exploitation/types';
+import type { Traitement } from '@/features/sante/types';
 
 const lot = { id: 'l1', nom: 'Chevrettes 2026', boucles: '10001, 10002 ,10003' };
 const animal = (b: string | undefined): Chevre => ({ id: b ?? 'x', numeroBoucle: b }) as unknown as Chevre;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ligneDeLaPortee } from '@/features/export/carnetMiseBasPdf';
-import { peutRejoindreLeLot } from '@/features/exploitation/services/lotsAnnuels';
+import { ligneDeLaPortee } from '@/features/export/documents/carnetMiseBasPdf';
+import { peutRejoindreLeLot } from '@/features/lots-animaux/services/lotsAnnuels';
 import { estTiptag } from '@/features/cheptel/utils/tiptag';
 import { numerosTiptag } from '@/features/stock/services/boucles';
 import type { Chevre } from '@/features/cheptel/types';

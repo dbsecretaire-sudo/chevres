@@ -1,7 +1,7 @@
 import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
-import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';
+import { useAccordDesLots } from '@/features/lots-animaux/hooks/useAccordDesLots';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';

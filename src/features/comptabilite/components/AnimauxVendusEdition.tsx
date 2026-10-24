@@ -15,7 +15,7 @@ import {
 } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
-import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
+import { useFraisAbattoir } from '@/features/lots-animaux/hooks/useFraisAbattoir';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { numerosTiptag } from '@/features/stock/services/boucles';

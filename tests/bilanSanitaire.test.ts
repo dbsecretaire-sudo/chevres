@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estBilanSanitaire, etatDuBilan } from '@/features/exploitation/services/bilanSanitaire';
+import { estBilanSanitaire, etatDuBilan } from '@/features/sante/services/bilanSanitaire';
 
 const visite = (date: string, motif: string) => ({ date, motif });
 

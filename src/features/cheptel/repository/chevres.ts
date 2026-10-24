@@ -96,14 +96,6 @@ export async function effectifsVivants(
   return effectifsDesAnimaux(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL), facturees, tiptags);
 }
 
-/** Les animaux vivants d'une espèce précise (pas forcément l'espèce courante) : on choisit celui d'une vente dans cette liste. */
-export async function listAnimauxVivantsDe(espece: EspeceAnimale): Promise<Chevre[]> {
-  const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);
-  return all
-    .filter((c) => c.statut === STATUT_CHEVRE.VIVANTE && especeDe(c) === espece)
-    .sort((a, b) => cleTriChevre(a).localeCompare(cleTriChevre(b)));
-}
-
 /** Les animaux de l'espèce envoyés à l'abattoir (avec leur jour d'abattage et leur poids) : de quoi facturer la viande. */
 export async function listAnimauxAbattusDe(espece: EspeceAnimale): Promise<Chevre[]> {
   const all = await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL);

@@ -1,0 +1,60 @@
+import { generateId } from '@/shared/utils/id';
+import { yearOf } from '@/shared/utils/dates';
+import type { VisiteVeterinaire } from '@/features/sante/types';
+import { getChevre, resolveChevreIdParBoucle } from '@/features/cheptel/repository/chevres';
+import type { Chevre } from '@/features/cheptel/types';
+import { concerneLaBoucle } from '@/features/cheptel/utils/numerosBoucles';
+import { deEspeceCourante, especeDe } from '@/features/cheptel/utils/espece';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
+import { deleteRecord, loadAllYears, loadYear, upsertRecord } from '@/shared/storage/localStore';
+import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+
+/** Une visite d'après son identifiant (toutes années). */
+export async function getVisiteVeterinaire(id: string): Promise<VisiteVeterinaire | undefined> {
+  return (await loadAllYears(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE)).find((v) => v.id === id);
+}
+
+/** Enregistre une visite ; avec un identifiant, c'est une modification (la visite change d'année avec sa date). */
+export async function enregistrerVisiteVeterinaire(
+  input: Omit<VisiteVeterinaire, 'id' | 'chevreId'> & { id?: string },
+): Promise<VisiteVeterinaire> {
+  const chevreId = await resolveChevreIdParBoucle(input.chevreNumeroBoucle, input.espece);
+  // L'espèce de la visite : celle de l'animal concerné, sinon l'espèce courante (troupeau entier).
+  const chevre = chevreId ? await getChevre(chevreId) : undefined;
+  const espece = input.espece ?? (chevre ? especeDe(chevre) : especeCourante());
+  const visite: VisiteVeterinaire = { ...input, id: input.id ?? generateId(), chevreId, espece };
+  if (input.id) {
+    const ancienne = await getVisiteVeterinaire(input.id);
+    if (ancienne && yearOf(ancienne.date) !== yearOf(visite.date)) {
+      await deleteRecord(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE, input.id);
+    }
+  }
+  await upsertRecord(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE, yearOf(visite.date), visite);
+  return visite;
+}
+
+/** Visites de l'année pour l'espèce courante. */
+export async function listVisitesVeterinaire(annee: number): Promise<VisiteVeterinaire[]> {
+  const items = deEspeceCourante(await loadYear(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE, annee));
+  return items.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/** Visites de toutes les années (« Tout ») pour l'espèce courante. */
+export async function listToutesVisitesVeterinaire(): Promise<VisiteVeterinaire[]> {
+  const items = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE));
+  return items.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export async function supprimerVisiteVeterinaire(id: string): Promise<void> {
+  await deleteRecord(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE, id);
+}
+
+/** Les visites d'un animal : celles qui lui sont liées, et celles dont le champ des boucles (plusieurs possibles) nomme la sienne. */
+export async function listVisitesPourChevre(
+  chevre: Pick<Chevre, 'id' | 'numeroBoucle'>,
+): Promise<VisiteVeterinaire[]> {
+  const all = await loadAllYears(CATEGORIE_STOCKAGE.VISITES_VETERINAIRE);
+  return all
+    .filter((v) => v.chevreId === chevre.id || concerneLaBoucle(v.chevreNumeroBoucle, chevre.numeroBoucle))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}

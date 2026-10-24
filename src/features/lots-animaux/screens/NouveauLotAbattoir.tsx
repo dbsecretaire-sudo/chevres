@@ -1,0 +1,218 @@
+import { useCallback, useState } from 'react';
+import { Alert, Text, View } from 'react-native';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Button } from '@/shared/components/Button';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { ChoixAcheteurDuDepart } from '@/features/lots-animaux/components/ChoixAcheteurDuDepart';
+import { DateField } from '@/shared/components/DateField';
+import { InfoModal } from '@/shared/components/InfoModal';
+import { Screen } from '@/shared/components/Screen';
+import { SectionForm } from '@/shared/components/SectionForm';
+import { AnimauxEnvoyesChoix } from '@/features/comptabilite/components/AnimauxEnvoyesChoix';
+import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
+import { declarerStatutChevre, listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
+import type { Chevre } from '@/features/cheptel/types';
+import { ApercuPiece } from '@/features/fichiers/components/ApercuPiece';
+import {
+  choisirFichiers,
+  ouvrirPiece,
+  piecesDisponibles,
+  rangerFichier,
+  supprimerPiece,
+} from '@/features/fichiers/services/pieces';
+import { exporterDocumentCirculationAbattoirPdf } from '@/features/export/documents/documentCirculationPdf';
+import { lotDuBonDeLivraison } from '@/features/lots-animaux/services/departDAnimaux';
+import { venteDuDepart } from '@/features/lots-animaux/services/ventesVivants';
+import { listFournisseurs } from '@/features/fournisseurs/repository';
+import { estUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
+import type { Fournisseur } from '@/features/fournisseurs/types';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, SEPARATEUR_ANIMAUX } from '@/shared/constants/comptabilite';
+import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
+import { ROUTES } from '@/shared/constants/routes';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
+import { estDateISO, todayISO } from '@/shared/utils/dates';
+
+const T = TEXTES.cheptel.lots.depart;
+
+/** Ce qui suit l'enregistrement du lot : rien, la facture de l'abattoir (animaux morts) ou la vente (animaux vivants). */
+type Suite = 'lot' | 'facture' | 'vente';
+
+const nomDuContact = (f: Fournisseur): string => (f.nomEntreprise || f.nom || '').trim();
+
+/**
+ * L'assistant « Nouveau lot d'abattoir » : des animaux partent vivants de l'exploitation, et leur lot se crée avant toute écriture comptable —
+ * la date du départ (en général celle de l'abattage), les animaux, le document de circulation (un seul pour tout le lot, obligatoire avant la
+ * facture ou la vente), puis vivants (vendus) ou morts (à l'abattoir, prestataire de service, dont la facture arrive quelques jours après). Les animaux
+ * morts passent au statut « abattoir » à la date du départ : ils deviennent des produits, en stock et à facturer aux clients.
+ */
+export default function NouveauLotAbattoir() {
+  const router = useRouter();
+  const { destination: destinationDemandee } = useLocalSearchParams<{ destination?: string }>();
+  const { settings, patchSettings } = useAppSettings();
+  const [date, setDate] = useState(todayISO());
+  const [ids, setIds] = useState<string[]>([]);
+  const [document, setDocument] = useState<DocumentCirculationDepose | undefined>();
+  // Le bouton « Vente (vivant) » ouvre l'assistant sur les animaux vendus vivants ; l'abattoir, sur un bon de livraison : la destination vient du bouton, elle ne se choisit pas ici.
+  const destination = destinationDemandee === 'vivants' ? 'vivants' : 'abattoir';
+  const [abattoirs, setAbattoirs] = useState<Fournisseur[]>([]);
+  const [abattoirId, setAbattoirId] = useState('');
+  const [acheteurId, setAcheteurId] = useState('');
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  const [enregistrement, setEnregistrement] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      listTousLesAnimauxDeLEspece()
+        .then(setAnimaux)
+        .catch(() => undefined);
+      listFournisseurs()
+        .then((tous) => {
+          const liste = tous.filter(estUnAbattoir);
+          setAbattoirs(liste);
+          // Le premier abattoir des contacts est choisi d'office.
+          setAbattoirId((deja) => deja || liste[0]?.id || '');
+        })
+        .catch(() => undefined);
+    }, []),
+  );
+
+  const abattoir = abattoirs.find((a) => a.id === abattoirId);
+  const choisis = animaux.filter((a) => ids.includes(a.id));
+
+  const deposer = async () => {
+    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
+    try {
+      const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
+      if (!choisi) return;
+      const piece = await rangerFichier(choisi);
+      // Le fichier remplacé est effacé de l'appareil.
+      if (document) await supprimerPiece(document.piece);
+      setDocument({ piece, deposeLe: new Date().toISOString() });
+    } catch (e: unknown) {
+      Alert.alert(e instanceof Error ? e.message : TEXTES.fichiers.erreurAjout);
+    }
+  };
+  const retirer = async () => {
+    if (document) await supprimerPiece(document.piece);
+    setDocument(undefined);
+  };
+  const genererLeModele = () =>
+    exporterDocumentCirculationAbattoirPdf(date, ids, abattoir ? nomDuContact(abattoir) : undefined, false).catch(
+      () => undefined,
+    );
+
+  const enregistrer = async (suite: Suite) => {
+    if (!estDateISO(date)) return setErreur(T.erreurs.date);
+    if (choisis.length === 0) return setErreur(T.erreurs.aucunAnimal);
+    const sansBoucle = choisis.filter((a) => !a.numeroBoucle?.trim());
+    if (sansBoucle.length > 0) return setErreur(T.erreurs.sansBoucle(sansBoucle.length));
+    setEnregistrement(true);
+    try {
+      // Morts : les animaux passent au statut « abattoir » à la date du départ (produits, en stock et à facturer). Vivants : leur fiche suivra la vente.
+      if (destination === 'abattoir') {
+        for (const a of choisis) await declarerStatutChevre(a.id, STATUT_CHEVRE.ABATTOIR, date);
+      }
+      const boucles = choisis.map((a) => (a.numeroBoucle as string).trim());
+      const nouvelle = ROUTES.COMPTABILITE_NOUVELLE;
+      if (destination === 'abattoir') {
+        const { lots, lot } = lotDuBonDeLivraison(settings.exploitation?.lots ?? [], { date, boucles, document, contactCle: abattoirId || undefined });
+        await patchSettings({ exploitation: { ...settings.exploitation, lots } });
+        if (suite === 'facture') {
+          router.replace(
+            `${nouvelle}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&lot=${lot.id}${abattoirId ? `&fournisseur=${abattoirId}` : ''}` as never,
+          );
+        } else {
+          router.replace(ROUTES.lotDeProduction(lot.id) as never);
+        }
+      } else {
+        const { ventes, vente } = venteDuDepart(settings.exploitation?.ventesVivants ?? [], { date, boucles, document, contactCle: acheteurId || undefined });
+        await patchSettings({ exploitation: { ...settings.exploitation, ventesVivants: ventes } });
+        if (suite === 'vente') {
+          router.replace(
+            `${nouvelle}?type=emise&categorie=${CATEGORIE_RECETTE.ANIMAL_VIVANT}&lot=${vente.id}&animaux=${choisis
+              .map((a) => a.id)
+              .join(SEPARATEUR_ANIMAUX)}&etat=vivants${acheteurId ? `&client=${acheteurId}` : ''}` as never,
+          );
+        } else {
+          router.replace(ROUTES.venteVivants(vente.id) as never);
+        }
+      }
+    } finally {
+      setEnregistrement(false);
+    }
+  };
+
+  const morts = destination === 'abattoir';
+  return (
+    <Screen>
+      <Stack.Screen options={{ title: morts ? T.titreBon : T.titreVente }} />
+      <Text style={commonStyles.note}>{morts ? T.aideBon : T.aideVente}</Text>
+
+      <SectionForm titre={T.date}>
+        <DateField label={T.date} required value={date} onChange={setDate} />
+      </SectionForm>
+
+      <SectionForm titre={T.animaux}>
+        <AnimauxEnvoyesChoix valeur={ids} onChange={setIds} />
+      </SectionForm>
+
+      <SectionForm titre={T.document.titre} aide={T.document.aide}>
+        <Button
+          variant="secondary"
+          label={T.document.generer}
+          onPress={genererLeModele}
+          disabled={choisis.length === 0}
+        />
+        <Button variant="secondary" label={document ? T.document.remplacer : T.document.deposer} onPress={deposer} />
+        {document ? (
+          <>
+            <Text style={[commonStyles.lineBold, { color: colors.primary }]}>{T.document.depose}</Text>
+            <ApercuPiece piece={document.piece} />
+            <Button variant="secondary" label={T.document.ouvrir} onPress={() => ouvrirPiece(document.piece)} />
+            <Button variant="secondary" label={T.document.retirer} onPress={retirer} />
+          </>
+        ) : (
+          <Text style={[commonStyles.note, { color: colors.danger }]}>{T.document.manque}</Text>
+        )}
+      </SectionForm>
+
+      {morts ? null : (
+        <SectionForm titre={T.acheteur.titre} aide={T.acheteur.aide}>
+          <ChoixAcheteurDuDepart valeur={acheteurId} onChange={setAcheteurId} />
+        </SectionForm>
+      )}
+      {morts ? (
+        <SectionForm titre={T.abattoir}>
+          {abattoirs.length > 0 ? (
+            <ChoixDeroulant
+              titre={T.abattoir}
+              valeur={abattoirId}
+              options={abattoirs.map((a) => ({ value: a.id, label: nomDuContact(a) }))}
+              onChoisir={setAbattoirId}
+            />
+          ) : (
+            <Text style={commonStyles.mutedItalic}>{T.aucunAbattoir}</Text>
+          )}
+        </SectionForm>
+      ) : null}
+
+      <View style={commonStyles.gap10}>
+        <Button label={morts ? T.enregistrerBon : T.enregistrerVente} onPress={() => enregistrer('lot')} loading={enregistrement} />
+        <Button
+          variant="secondary"
+          label={morts ? T.enregistrerEtFacture : T.enregistrerEtVente}
+          onPress={() => enregistrer(morts ? 'facture' : 'vente')}
+          loading={enregistrement}
+          disabled={!document}
+        />
+        {document ? null : <Text style={commonStyles.note}>{T.documentRequis}</Text>}
+      </View>
+      <InfoModal visible={!!erreur} title={erreur ?? ''} onClose={() => setErreur(null)} />
+    </Screen>
+  );
+}

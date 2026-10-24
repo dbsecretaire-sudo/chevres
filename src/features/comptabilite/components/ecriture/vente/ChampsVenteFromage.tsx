@@ -7,7 +7,7 @@ import { SuggestionParcours } from '@/features/didacticiel/components/Suggestion
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
-import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
+import { AvertissementDelais } from '@/features/sante/components/AvertissementDelais';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import { FormField } from '@/shared/components/FormField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';

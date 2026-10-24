@@ -29,8 +29,8 @@ import {
 import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { ageAtteint } from '@/shared/utils/age';
 import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
-import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
-import { useLots } from '@/features/exploitation/hooks/useLots';
+import { useInconsommables } from '@/features/lots-animaux/hooks/useInconsommables';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { idsDesAnimaux, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { BlocLignes, LigneDeBloc } from '@/shared/components/BlocListe';

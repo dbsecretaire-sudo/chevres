@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { exporterBouclesPdf } from '@/features/export/bouclesPdf';
+import { exporterBouclesPdf } from '@/features/export/documents/bouclesPdf';
 import { useListesBoucles } from '@/features/stock/hooks/useListeBoucles';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { bouclesDeLEspece } from '@/features/stock/services/boucles';

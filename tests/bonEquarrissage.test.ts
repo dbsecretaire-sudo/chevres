@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changementsDesAnimauxEnleves, enlevementsDepuisLesLots, enlevementsSansBon } from '@/features/exploitation/services/enlevements';
+import { changementsDesAnimauxEnleves, enlevementsDepuisLesLots, enlevementsSansBon } from '@/features/lots-animaux/services/enlevements';
 import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import type { EnlevementEquarrissage, LotAnimaux } from '@/features/settings/settings';
 

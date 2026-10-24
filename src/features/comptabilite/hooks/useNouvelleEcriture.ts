@@ -51,7 +51,7 @@ import {
   venteDeclareeParDefaut,
 } from '@/features/clients/services/categorie';
 import { construireEcriture, type ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
-import { lierLaFactureAuLot } from '@/features/exploitation/services/departDAnimaux';
+import { lierLaFactureAuLot } from '@/features/lots-animaux/services/departDAnimaux';
 import { useLignesDepense } from '@/features/comptabilite/hooks/nouvelleEcriture/useLignesDepense';
 import { useDonneesDeReference } from '@/features/comptabilite/hooks/nouvelleEcriture/useDonneesDeReference';
 import {

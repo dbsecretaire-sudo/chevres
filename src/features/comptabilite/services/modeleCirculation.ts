@@ -2,12 +2,12 @@ import type { EcritureACirculation } from '@/features/comptabilite/services/docu
 import { getFacture } from '@/features/comptabilite/repository/factures';
 import { idsDesAnimauxAchetes, idsDesAnimauxEnvoyes } from '@/features/comptabilite/utils/ventes';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
-import { animauxDuLot } from '@/features/exploitation/services/lots';
+import { animauxDuLot } from '@/features/lots-animaux/services/lots';
 import {
   exporterDocumentCirculationAbattoirPdf,
   exporterDocumentCirculationAchatPdf,
   exporterDocumentCirculationPdf,
-} from '@/features/export/documentCirculationPdf';
+} from '@/features/export/documents/documentCirculationPdf';
 import { getSettings } from '@/features/settings/settings';
 
 /**

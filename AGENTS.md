@@ -43,8 +43,9 @@ Docs: https://docs.expo.dev/eas/index.md
 ## Code organisation
 
 - `src/app/` holds **routes only**: each file is a one-line re-export (`export { default } from '@/features/<feature>/screens/<Screen>'`) plus the `_layout.tsx` navigators.
-- `src/features/<feature>/` is organised by domain (`cheptel`, `comptabilite`, `exploitation`, `entreprise`, `dossiers`, `clients`, `fournisseurs`, `comptes-pcg`, `etablissements`, `settings`, `drive`, `export`, `sauvegarde`, `accueil`) with sub-folders as needed: `screens/`, `components/`, `repository/` (storage access), `services/` (calculations), `forms/`, `utils/`, `types.ts`.
-- `src/shared/` is cross-feature code: `components/`, `styles/`, `storage/`, `theme/`, `hooks/`, `utils/`.
+- `src/features/<feature>/` is organised by domain (`cheptel`, `lots-animaux`, `sante`, `exploitation`, `comptabilite`, `stock`, `production`, `commercial`, `contacts`, `accueil`, `drive`, `export`… — the full list and what each one holds is in `docs/ARCHITECTURE.md`) with sub-folders as needed: `screens/`, `components/`, `hooks/`, `repository/` (storage access), `services/` (pure business rules — this is what gets tested), `forms/`, `utils/`, `types.ts`.
+- `src/shared/` is the base layer and **never imports a feature** (enforced by `tests/architecture.test.ts`): `components/`, `styles/`, `storage/`, `theme/`, `hooks/`, `utils/`, `constants/`, `textes/`. The app shell (menus, header, bottom bar) lives in `src/features/accueil/shell/`.
+- Layers only import downward: `app` → `features` → `shared`. See `docs/ARCHITECTURE.md` for the data-storage checklist (inventory of attachments, CSV columns, Drive merge, migrations).
 - All styles live in `src/shared/styles/` (never inside a feature): `shared/styles/<feature>/<Name>.styles.ts` (`export const styles`), `shared/styles/components/` for shared components. A style used by several files is defined once in `src/shared/styles/commonStyles.ts` (`commonStyles`) — reuse it instead of redefining it locally.
 - Format with `npx prettier --write "src/**/*.{ts,tsx}"` (config in `.prettierrc`).
 

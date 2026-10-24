@@ -5,8 +5,8 @@ import {
   lotDuBonDeLivraison,
   lotsDAbattoirAFacturer,
   poserLeDocumentDuLot,
-} from '@/features/exploitation/services/departDAnimaux';
-import { lotsDAbattoirSansFacture } from '@/features/exploitation/services/lotsSansFacture';
+} from '@/features/lots-animaux/services/departDAnimaux';
+import { lotsDAbattoirSansFacture } from '@/features/lots-animaux/services/lotsSansFacture';
 import type { LotAnimaux } from '@/features/settings/settings';
 
 const lot = (id: string, extra: Partial<LotAnimaux> = {}): LotAnimaux => ({ id, nom: id, boucles: '', ...extra });

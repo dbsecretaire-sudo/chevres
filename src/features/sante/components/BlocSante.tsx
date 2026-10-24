@@ -1,0 +1,62 @@
+import { Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Card } from '@/shared/components/Card';
+import { useSanteDuTroupeau } from '@/features/sante/hooks/useSanteDuTroupeau';
+import type { BilanSanitaire } from '@/features/sante/services/bilanSanitaire';
+import { ROUTES } from '@/shared/constants/routes';
+import { colors } from '@/shared/theme/colors';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+import { formatDateFR } from '@/shared/utils/dates';
+
+const T = TEXTES.cheptel.traitements;
+const B = T.bilan;
+
+/** Ce que dit le bilan sanitaire annuel ; valide, il n'y a rien à signaler (sauf si `inclureValide` : la liste des traitements le montre aussi). */
+export function texteDuBilan(bilan: BilanSanitaire, inclureValide = false): string | undefined {
+  switch (bilan.etat) {
+    case 'aucun':
+      return B.aucun;
+    case 'bientot':
+      return B.bientot(bilan.jours ?? 0, formatDateFR(bilan.echeance ?? ''));
+    case 'expire':
+      return B.expire(formatDateFR(bilan.echeance ?? ''));
+    default:
+      return inclureValide ? B.valide(formatDateFR(bilan.echeance ?? '')) : undefined;
+  }
+}
+
+/**
+ * Sur l'accueil : ce que la santé du troupeau demande aujourd'hui — les animaux en délai d'attente (le lait à ne pas livrer, la viande
+ * à ne pas vendre) et le bilan sanitaire annuel quand il manque, expire bientôt ou a expiré. Rien d'affiché quand tout va bien.
+ */
+export function BlocSante() {
+  const router = useRouter();
+  const s = useSanteDuTroupeau();
+  const bilan = s.avecBilan ? texteDuBilan(s.bilan) : undefined;
+  const aSignaler = s.finLait || s.finViande || bilan;
+  if (!aSignaler) return null;
+  return (
+    <Card style={commonStyles.gap8}>
+      <Text style={commonStyles.cardTitle}>{T.accueil}</Text>
+      {s.finLait ? (
+        <Pressable onPress={() => router.push(ROUTES.CHEPTEL_TRAITEMENTS as never)}>
+          <Text style={[commonStyles.lineBold, { color: colors.danger }]}>{T.laitEnDelai(s.nombreLait, formatDateFR(s.finLait))}</Text>
+        </Pressable>
+      ) : null}
+      {s.finViande ? (
+        <Pressable onPress={() => router.push(ROUTES.CHEPTEL_TRAITEMENTS as never)}>
+          <Text style={[commonStyles.lineBold, { color: colors.danger }]}>{T.viandeEnDelai(s.nombreViande, formatDateFR(s.finViande))}</Text>
+        </Pressable>
+      ) : null}
+      {bilan ? (
+        <Pressable onPress={() => router.push(ROUTES.CHEPTEL_TRAITEMENTS as never)}>
+          <View>
+            <Text style={commonStyles.lineBold}>{B.titre}</Text>
+            <Text style={[commonStyles.line, { color: s.bilan.etat === 'bientot' ? colors.textMuted : colors.danger }]}>{bilan}</Text>
+          </View>
+        </Pressable>
+      ) : null}
+    </Card>
+  );
+}

@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/ListeLots';
+export { default } from '@/features/lots-animaux/screens/ListeLots';

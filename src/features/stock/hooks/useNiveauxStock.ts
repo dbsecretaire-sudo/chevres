@@ -6,7 +6,7 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { numerosTiptag } from '@/features/stock/services/boucles';
 import { niveauxDeStock } from '@/features/stock/services/stock';
-import { idsDesInconsommables } from '@/features/exploitation/services/lots';
+import { idsDesInconsommables } from '@/features/lots-animaux/services/lots';
 import { getSettings } from '@/features/settings/settings';
 
 /**

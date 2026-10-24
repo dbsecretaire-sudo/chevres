@@ -5,7 +5,7 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { DateField } from '@/shared/components/DateField';
 import { ChampPoids } from '@/features/cheptel/components/ChampPoids';
-import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
+import { AvertissementDelais } from '@/features/sante/components/AvertissementDelais';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { statutLabel } from '@/features/cheptel/utils/chevreLabel';
 import type { Chevre, StatutChevre } from '@/features/cheptel/types';

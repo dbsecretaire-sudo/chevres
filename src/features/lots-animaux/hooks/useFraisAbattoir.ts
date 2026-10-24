@@ -1,0 +1,35 @@
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import type { Facture } from '@/features/comptabilite/types';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { fraisDuLotPourLaVente } from '@/features/lots-animaux/services/lots';
+
+/** Les frais d'abattoir d'un jour d'abattage pour une vente : la part, en € TTC, et le taux de TVA de la facture de l'abattoir liée. */
+export interface FraisAbattoir {
+  montant: number;
+  tauxTva?: number;
+}
+
+/**
+ * Les frais d'abattoir à refacturer : ce que l'abattoir a demandé pour le lot d'un jour d'abattage (le montant de sa facture liée),
+ * réparti entre les animaux du lot selon ceux que la vente prend.
+ */
+export function useFraisAbattoir(): (jour: string | undefined, animaux: number) => FraisAbattoir | undefined {
+  const { lots } = useLots();
+  const [factures, setFactures] = useState<Facture[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      listToutesFactures().then(setFactures);
+    }, []),
+  );
+  return (jour, animaux) => {
+    const lot = jour ? lots.find((l) => l.abattoir === jour) : undefined;
+    if (!lot) return undefined;
+    const facture = lot.factureId ? factures.find((f) => f.id === lot.factureId) : undefined;
+    // Pas de montant sans facture : sans facture liée au lot, il n'y a pas de frais à refacturer.
+    // Le montant de l'abattoir est fixe : les bêtes écartées (inconsommables, mortes pendant le transport) ne le réduisent pas.
+    const montant = fraisDuLotPourLaVente({ boucles: lot.boucles, fraisAbattoir: facture?.montant }, animaux, (lot.inconsommables ?? []).length);
+    return montant === undefined ? undefined : { montant, tauxTva: facture?.tauxTva };
+  };
+}

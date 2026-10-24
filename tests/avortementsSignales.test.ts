@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nombreDAvortements, signalerUnAvortement } from '@/features/exploitation/services/lotsAnnuels';
+import { nombreDAvortements, signalerUnAvortement } from '@/features/lots-animaux/services/lotsAnnuels';
 import type { LotAnimaux } from '@/features/settings/settings';
 
 describe('signaler un avortement', () => {

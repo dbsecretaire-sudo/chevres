@@ -17,9 +17,9 @@ import {
   pagesDeLignes,
   porteesParAnnee,
   resultatsDeLAnnee,
-} from '@/features/export/carnetMiseBasPdf';
+} from '@/features/export/documents/carnetMiseBasPdf';
 import { lirePoids, poidsTotal } from '@/features/cheptel/utils/poids';
-import { lotsDeReproductionDeLAnnee } from '@/features/exploitation/services/lots';
+import { lotsDeReproductionDeLAnnee } from '@/features/lots-animaux/services/lots';
 import type { LotAnimaux } from '@/features/settings/settings';
 import type { PorteeNaissance } from '@/features/cheptel/repository/naissances';
 import type { Chevre } from '@/features/cheptel/types';

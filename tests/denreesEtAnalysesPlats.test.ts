@@ -4,7 +4,7 @@ import { ingredientsProposables } from '@/features/production/services/ingredien
 import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import { rappelsAnalysesPlats } from '@/features/stock/services/analysesPlats';
 import { ID_LISTE_DENREES } from '@/features/stock/services/denrees';
-import { enregistrerAnalyseDePlats, fabriquerPlats } from '@/features/stock/services/lots';
+import { enregistrerAnalyseDePlats } from '@/features/stock/services/lots';
 import { ajouterArticle } from '@/features/stock/services/stock';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 

@@ -13,7 +13,7 @@ import {
 import type { ErreurSaisie } from '@/features/comptabilite/forms/construireEcriture';
 import type { ActiviteComptable, Facture, TypeFromage, Vente } from '@/features/comptabilite/types';
 import { idsDesAnimaux, sortieDesAnimauxDeLaVente } from '@/features/comptabilite/utils/ventes';
-import { synchroniserVisiteFacture } from '@/features/exploitation/services/visitesFacture';
+import { synchroniserVisiteFacture } from '@/features/sante/services/visitesFacture';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { fromagesRequis } from '@/features/stock/services/lots';
 import {

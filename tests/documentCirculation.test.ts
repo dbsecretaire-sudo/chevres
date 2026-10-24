@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { donneesDeCirculation, feuilletsCirculation, lieuDArrivee, mortsTransportDuJour, zonesACompleter, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documentCirculationPdf';
+import { donneesDeCirculation, feuilletsCirculation, lieuDArrivee, mortsTransportDuJour, zonesACompleter, petitOuTiptag, remplirDocumentCirculation } from '@/features/export/documents/documentCirculationPdf';
 import type { Chevre } from '@/features/cheptel/types';
 import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
@@ -104,7 +104,7 @@ describe('zones à compléter à la main', () => {
 
 describe('indicatif de marquage du formulaire', () => {
   it('s’écrit sans « FR » ni espaces, pour tenir un chiffre par case', async () => {
-    const { chiffresDeLIndicatif } = await import('@/features/export/documentCirculationPdf');
+    const { chiffresDeLIndicatif } = await import('@/features/export/documents/documentCirculationPdf');
     expect(chiffresDeLIndicatif('FR 212282')).toBe('212282');
     expect(chiffresDeLIndicatif('FR212282')).toBe('212282');
     expect(chiffresDeLIndicatif(' fr 21 22 82 ')).toBe('212282');

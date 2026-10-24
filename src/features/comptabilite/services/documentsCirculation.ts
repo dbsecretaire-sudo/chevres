@@ -9,12 +9,11 @@ import { tiersEstUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { todayISO, yearOf } from '@/shared/utils/dates';
 import { ajouterJours } from '@/shared/utils/calendrier';
-import { comparerAlphabetique } from '@/shared/utils/personne';
 import type { LotAnimaux, VenteDAnimauxVivants } from '@/features/settings/settings';
-import { titreDeLaVenteVivants } from '@/features/exploitation/services/ventesVivants';
+import { titreDeLaVenteVivants } from '@/features/lots-animaux/services/ventesVivants';
 import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
 import type { Chevre } from '@/features/cheptel/types';
-import { animauxDuLot } from '@/features/exploitation/services/lots';
+import { animauxDuLot } from '@/features/lots-animaux/services/lots';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 
 /** Pendant combien de jours un document de circulation manquant est rappelé (au-delà, l'écriture est trop ancienne pour qu'on le réclame). */
@@ -207,10 +206,6 @@ export function rechercherEcritures(ecritures: EcritureACirculation[], texte: st
 /** Les années où des écritures demandent un document (de la plus récente à la plus ancienne). */
 export const anneesDesEcritures = (ecritures: EcritureACirculation[]): number[] =>
   [...new Set(ecritures.map((e) => Number(e.date.slice(0, 4))))].sort((a, b) => b - a);
-
-/** Les tiers, rangés alphabétiquement : de quoi proposer une recherche. */
-export const tiersDesEcritures = (ecritures: EcritureACirculation[]): string[] =>
-  [...new Set(ecritures.map((e) => e.tiers).filter(Boolean))].sort(comparerAlphabetique);
 
 /** Dépose (ou retire, avec `undefined`) le document de circulation d'une vente ou d'une dépense. */
 export async function deposerDocumentCirculation(

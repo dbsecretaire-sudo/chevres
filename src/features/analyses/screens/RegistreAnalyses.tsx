@@ -14,7 +14,7 @@ import type { ProduitAnalyse } from '@/features/settings/settings';
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
-import { exporterRegistreAnalysesPdf } from '@/features/export/registreAnalysesPdf';
+import { exporterRegistreAnalysesPdf } from '@/features/export/documents/registreAnalysesPdf';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { Button } from '@/shared/components/Button';
 import { Fab } from '@/shared/components/Fab';

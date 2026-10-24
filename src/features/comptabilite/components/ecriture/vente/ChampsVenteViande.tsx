@@ -16,13 +16,13 @@ import { estTiptag } from '@/features/cheptel/utils/tiptag';
 import { parBoucleCroissante } from '@/features/cheptel/utils/chevreLabel';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
-import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
-import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
+import { useFraisAbattoir } from '@/features/lots-animaux/hooks/useFraisAbattoir';
+import { useInconsommables } from '@/features/lots-animaux/hooks/useInconsommables';
 import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
-import { usePoidsDuLot } from '@/features/exploitation/hooks/usePoidsDuLot';
+import { usePoidsDuLot } from '@/features/lots-animaux/hooks/usePoidsDuLot';
 import {
   cleJeunes,
   ligneDeLaCategorie,
@@ -52,7 +52,7 @@ import {
   type JourAbattu,
 } from '@/features/comptabilite/utils/animauxVendus';
 import { ChampDateAbattoir } from '@/features/comptabilite/components/ChampDateAbattoir';
-import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
+import { AvertissementDelais } from '@/features/sante/components/AvertissementDelais';
 import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendusEdition';
 import type { Chevre } from '@/features/cheptel/types';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
@@ -346,7 +346,6 @@ export function ChampsVenteViande({ e }: Props) {
   useEffect(() => {
     if (e.precision || !detailDemande || viandes.length === 0 || !animalEntier) return;
     const ligne = viandes.find((v) => roleDeLaViande(v.cle) === detailDemande);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (ligne) e.setPrecision(ligne.libelle);
     // Le détail se choisit une fois, quand l'inventaire est lu.
     // eslint-disable-next-line react-hooks/exhaustive-deps

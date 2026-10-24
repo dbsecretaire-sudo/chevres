@@ -68,14 +68,14 @@ Voir [docs.expo.dev/eas](https://docs.expo.dev/eas/index.md) pour la configurati
 
 ```
 src/
-  app/                  écrans (Expo Router, un fichier = une route)
-  components/           composants UI réutilisables (formulaires, listes…)
-  context/               état global léger (année active, réglages)
-  drive/                intégration Google Drive (auth OAuth + API REST + sync)
-  storage/               stockage local (AsyncStorage), CSV, logique métier (repositories.ts)
-  theme/                 couleurs
-  types/                  modèles de données (Chevre, Vente, Facture, …)
-  utils/                  dates, export Excel, libellés d'affichage
+  app/          routes (Expo Router) : un fichier = une route, qui ré-exporte un écran de features/
+  features/     le métier, une fonctionnalité par dossier (cheptel, lots-animaux, sante, comptabilite, stock…)
+  shared/       la base : composants, styles, stockage, textes, constantes, utilitaires
+  bureau/       adaptation Windows (Electron)
+tests/          tests Vitest (règles métier, structure du code)
+docs/           ARCHITECTURE.md : où ranger quoi, comment stocker une donnée, avant de livrer
 ```
 
-Toutes les données sont stockées localement sur l'appareil (AsyncStorage), organisées par catégorie et par année — la même structure que celle utilisée pour la synchronisation Drive et l'export Excel.
+Le détail (rôle de chaque fonctionnalité, règles d'import, liste de contrôle pour ajouter une donnée) est dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+Toutes les données sont stockées localement sur l'appareil (AsyncStorage), organisées par établissement, par catégorie et par année — la même structure que celle utilisée pour la synchronisation Drive et l'export Excel.

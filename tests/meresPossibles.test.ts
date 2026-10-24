@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { meresAyantMisBas } from '@/features/exploitation/services/lots';
+import { meresAyantMisBas } from '@/features/lots-animaux/services/lots';
 import { meresPossiblesLe } from '@/features/cheptel/services/meresPossibles';
 import type { Chevre } from '@/features/cheptel/types';
 

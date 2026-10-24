@@ -7,9 +7,9 @@ import {
   finDuDelai,
   finLaPlusTardive,
   traitementConcerne,
-} from '@/features/exploitation/services/delaisAttente';
+} from '@/features/sante/services/delaisAttente';
 import type { Chevre } from '@/features/cheptel/types';
-import type { Traitement } from '@/features/exploitation/types';
+import type { Traitement } from '@/features/sante/types';
 
 const traitement = (extra: Partial<Traitement> = {}): Traitement => ({
   id: 't',

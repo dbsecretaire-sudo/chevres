@@ -12,10 +12,11 @@ import {
   supprimerChevre,
 } from '@/features/cheptel/repository/chevres';
 import { listControlesPourChevre } from '@/features/exploitation/repository/controles';
-import { listVisitesPourChevre } from '@/features/exploitation/repository/visitesVeterinaire';
+import { listVisitesPourChevre } from '@/features/sante/repository/visitesVeterinaire';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import type { Chevre, StatutChevre } from '@/features/cheptel/types';
-import type { Controle, VisiteVeterinaire } from '@/features/exploitation/types';
+import type { Controle } from '@/features/exploitation/types';
+import type { VisiteVeterinaire } from '@/features/sante/types';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { todayISO } from '@/shared/utils/dates';
 import { STATUT_CHEVRE, VUE_FICHE_CHEVRE } from '@/shared/constants/cheptel';

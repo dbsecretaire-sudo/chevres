@@ -1,0 +1,53 @@
+import { useCallback } from 'react';
+import { listTousLesAnimauxDeLEspece, saveChevre } from '@/features/cheptel/repository/chevres';
+import { changementsDesAnimauxEnleves } from '@/features/lots-animaux/services/enlevements';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import type { EnlevementEquarrissage } from '@/features/settings/settings';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { generateId } from '@/shared/utils/id';
+
+/**
+ * Met à jour la fiche des animaux d'un enlèvement : ceux qu'il prend passent au statut mort, au jour de l'enlèvement (leur statut s'écrit « Équarrissage le … ») ; ceux qu'il ne prend
+ * plus perdent le lien avec lui (leur statut ne change pas : on les réactive d'un geste dans leur fiche).
+ */
+async function mettreLesAnimauxAJour(avant: EnlevementEquarrissage | undefined, apres: EnlevementEquarrissage | null) {
+  const animaux = await listTousLesAnimauxDeLEspece();
+  for (const c of changementsDesAnimauxEnleves(avant, apres, animaux)) {
+    const animal = animaux.find((a) => a.id === c.id);
+    if (!animal) continue;
+    if (c.enleve && apres) await saveChevre({ ...animal, statut: STATUT_CHEVRE.MORTE, dateStatut: apres.date, enlevementId: apres.id });
+    else await saveChevre({ ...animal, enlevementId: undefined });
+  }
+}
+
+/** Les enlèvements d'équarrissage de l'établissement, rangés dans les réglages (ils se sauvegardent avec eux). */
+export function useEnlevements() {
+  const { settings, patchSettings } = useAppSettings();
+  const infos = settings.exploitation;
+  const enlevements = infos?.enlevements ?? [];
+
+  /** Enregistre un enlèvement (un nouveau, sans identifiant, en reçoit un), met à jour ses animaux, et le rend. */
+  const enregistrer = useCallback(
+    async (enlevement: Omit<EnlevementEquarrissage, 'id'> & { id?: string }): Promise<EnlevementEquarrissage> => {
+      const complet: EnlevementEquarrissage = { ...enlevement, id: enlevement.id ?? generateId() };
+      const courants = infos?.enlevements ?? [];
+      const avant = courants.find((e) => e.id === complet.id);
+      const suivants = avant ? courants.map((e) => (e.id === complet.id ? complet : e)) : [...courants, complet];
+      await patchSettings({ exploitation: { ...infos, enlevements: suivants } });
+      await mettreLesAnimauxAJour(avant, complet);
+      return complet;
+    },
+    [infos, patchSettings],
+  );
+
+  const supprimer = useCallback(
+    async (id: string) => {
+      const avant = (infos?.enlevements ?? []).find((e) => e.id === id);
+      await patchSettings({ exploitation: { ...infos, enlevements: (infos?.enlevements ?? []).filter((e) => e.id !== id) } });
+      await mettreLesAnimauxAJour(avant, null);
+    },
+    [infos, patchSettings],
+  );
+
+  return { enlevements, enregistrer, supprimer };
+}

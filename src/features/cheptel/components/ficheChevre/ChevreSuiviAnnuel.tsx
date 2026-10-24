@@ -6,9 +6,9 @@ import { Badge } from '@/shared/components/Badge';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
-import { useLots } from '@/features/exploitation/hooks/useLots';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
 import { useTiptags } from '@/features/stock/hooks/useTiptags';
-import { bouclesDuLot } from '@/features/exploitation/services/lots';
+import { bouclesDuLot } from '@/features/lots-animaux/services/lots';
 import {
   anneeDuLot,
   lotsAnnuels,
@@ -16,7 +16,7 @@ import {
   nombreDAvortements,
   peutRejoindreLeLot,
   type CategorieAnnuelle,
-} from '@/features/exploitation/services/lotsAnnuels';
+} from '@/features/lots-animaux/services/lotsAnnuels';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import type { Chevre } from '@/features/cheptel/types';
 import { vocabulaire } from '@/shared/dictionnaire/animaux';

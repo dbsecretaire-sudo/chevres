@@ -10,8 +10,6 @@ export const ELEMENT_AGRITOURISME = {
   DEGUSTATION: 'degustation',
 } as const;
 
-export type ElementAgritourisme = ValeurDe<typeof ELEMENT_AGRITOURISME>;
-
 /** L'état d'une visite : à venir, faite (la recette est inscrite en comptabilité) ou annulée. */
 export const STATUT_VISITE = {
   PREVUE: 'prevue',

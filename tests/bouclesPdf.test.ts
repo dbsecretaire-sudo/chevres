@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, ligneRouge, pagesDesReperes, pagesDuDocument, separerSelonInstallation, typeDuRepere, type LigneListe, type ListeImprimee } from '@/features/export/bouclesPdf';
+import { bouclesHtml, LIGNES_PAR_PAGE_REPERES, ligneDeLaListe, ligneRouge, pagesDesReperes, pagesDuDocument, separerSelonInstallation, typeDuRepere, type LigneListe, type ListeImprimee } from '@/features/export/documents/bouclesPdf';
 import type { BoucleStock } from '@/features/stock/types';
 
 const boucle = (plus: Partial<BoucleStock>): BoucleStock => ({ id: 'b', article: 'boucle:boucles', numero: '200888', ...plus });

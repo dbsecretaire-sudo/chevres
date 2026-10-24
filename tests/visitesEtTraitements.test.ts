@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { facturesDuVeterinaire, rapportsDeLaVisite, traitementsDeLaVisite } from '@/features/exploitation/services/visitesEtTraitements';
+import { facturesDuVeterinaire, rapportsDeLaVisite, traitementsDeLaVisite } from '@/features/sante/services/visitesEtTraitements';
 import type { Facture } from '@/features/comptabilite/types';
-import type { Traitement } from '@/features/exploitation/types';
+import type { Traitement } from '@/features/sante/types';
 import type { DocumentGdsDepose } from '@/features/settings/settings';
 
 const traitement = (id: string, date: string, extra: Partial<Traitement> = {}): Traitement => ({ id, date, produit: `produit ${id}`, ...extra });

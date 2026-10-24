@@ -1,0 +1,73 @@
+import { Pressable, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import { Screen } from '@/shared/components/ScreenList';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { ListRow } from '@/shared/components/ListRow';
+import { Fab } from '@/shared/components/Fab';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { useDonneesDesLots } from '@/features/lots-animaux/hooks/useDonneesDesLots';
+import { groupesDeLots, iconeDeCategorieDeLots } from '@/features/lots-animaux/services/lots';
+import { ROUTES } from '@/shared/constants/routes';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
+import { colors } from '@/shared/theme/colors';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.cheptel.lots;
+
+/**
+ * Les lots d'animaux, par catégorie : un bouton par catégorie (abattoir, vétérinaire, mises à la reproduction, renouvellement, celles qu'on
+ * ajoute, puis les autres lots) avec le nombre de ses lots ; un appui ouvre la liste des lots de la catégorie, dans une autre page. Le
+ * bouton réglages du titre ouvre la gestion des catégories (renommer, ajouter, supprimer, ranger).
+ */
+export default function ListeLots() {
+  const router = useRouter();
+  const { lots, categories } = useLots();
+  // Les lots d'abattoir, de visite, de mise à la reproduction et de renouvellement se mettent d'accord avec le cheptel à l'ouverture.
+  useDonneesDesLots(true);
+  // L'abattoir et les animaux vendus morts ou vivants sont dans Production › Viande, plus ici.
+  const groupes = groupesDeLots(
+    lots.filter((l) => !l.abattoir && l.categorie !== CATEGORIE_LOT.ABATTOIR),
+    categories.filter((c) => c.id !== CATEGORIE_LOT.ABATTOIR),
+    T.categories.autres,
+    true,
+  );
+
+  return (
+    <Screen scroll={false}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              style={commonStyles.boutonEnteteDroite}
+              onPress={() => router.push(ROUTES.CHEPTEL_LOTS_CATEGORIES as never)}
+              hitSlop={10}
+              accessibilityLabel={T.categories.reglages}
+            >
+              <Ionicons name="settings" size={24} color={colors.blanc} />
+            </Pressable>
+          ),
+        }}
+      />
+      <ScrollView contentContainerStyle={commonStyles.listFab}>
+        <BlocLignes>
+          {groupes.map((g) => (
+            <ListRow
+              key={g.id}
+              title={g.nom}
+              subtitle={T.categories.nombre(g.lots.length)}
+              icone={iconeDeCategorieDeLots(g.id)}
+              onPress={() => router.push(ROUTES.lotsDeLaCategorie(g.id) as never)}
+            />
+          ))}
+        </BlocLignes>
+      </ScrollView>
+      <Fab
+        options={[
+          { label: T.nouveau, icon: 'add', onPress: () => router.push(ROUTES.CHEPTEL_LOT_NOUVEAU as never) },
+        ]}
+      />
+    </Screen>
+  );
+}

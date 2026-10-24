@@ -1,10 +1,10 @@
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
-import { TableauEnlevements } from '@/features/exploitation/components/TableauxDesDeparts';
+import { TableauEnlevements } from '@/features/lots-animaux/components/TableauxDesDeparts';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
-import { enlevementsRecentsDabord, titreDeLEnlevement } from '@/features/exploitation/services/enlevements';
+import { enlevementsRecentsDabord, titreDeLEnlevement } from '@/features/lots-animaux/services/enlevements';
 import type { EnlevementEquarrissage } from '@/features/settings/settings';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';

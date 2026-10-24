@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { categoriesDeLots, retirerLesLotsDeVisites } from '@/features/exploitation/services/lots';
-import type { Traitement, VisiteVeterinaire } from '@/features/exploitation/types';
+import { categoriesDeLots, retirerLesLotsDeVisites } from '@/features/lots-animaux/services/lots';
+import type { Traitement, VisiteVeterinaire } from '@/features/sante/types';
 import type { LotAnimaux } from '@/features/settings/settings';
 
 const visite = (id: string, extra: Record<string, unknown> = {}): VisiteVeterinaire =>

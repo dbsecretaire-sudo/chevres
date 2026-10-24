@@ -5,7 +5,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
-import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
+import { especeDuSuivi } from '@/features/export/documents/suiviMouvementsPdf';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { laiterieActive, oeufsActifs, productionActive } from '@/features/comptabilite/utils/recettes';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';

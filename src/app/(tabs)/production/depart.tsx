@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/FicheVenteVivants';
+export { default } from '@/features/lots-animaux/screens/FicheVenteVivants';

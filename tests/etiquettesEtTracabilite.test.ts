@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from '@/features/clients/types';
 import type { Vente } from '@/features/comptabilite/types';
-import { etiquettesHtml } from '@/features/export/etiquettesLotPdf';
-import { tracabiliteHtml } from '@/features/export/tracabiliteLotPdf';
+import { etiquettesHtml } from '@/features/export/documents/etiquettesLotPdf';
+import { tracabiliteHtml } from '@/features/export/documents/tracabiliteLotPdf';
 import { ingredientsEnManque, ingredientsProposables } from '@/features/production/services/ingredientsPlat';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { ajouterArticle } from '@/features/stock/services/stock';

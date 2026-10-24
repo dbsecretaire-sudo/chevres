@@ -1,0 +1,291 @@
+import { SEXE, STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
+import { ageAtteint } from '@/shared/utils/age';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { FormField } from '@/shared/components/FormField';
+import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
+import { SelectModal } from '@/shared/components/SelectModal';
+import { NomModal } from '@/features/dossiers/components/NomModal';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { groupesDeLots, meresAyantMisBas, nomDeLotPris } from '@/features/lots-animaux/services/lots';
+import { peutRejoindreLeLotDeLAnnee } from '@/features/lots-animaux/services/lotsAnnuels';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { listChevresPresentesLe, listChevresVivantes, listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
+import { vocabulaire } from '@/shared/dictionnaire/animaux';
+import { estDateISO, todayISO } from '@/shared/utils/dates';
+import type { Chevre } from '@/features/cheptel/types';
+import { numerosDeBoucles, repartirEnColonnes } from '@/features/cheptel/utils/numerosBoucles';
+import { comparerAlphabetique } from '@/shared/utils/personne';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { styles } from '@/shared/styles/exploitation/ChampBoucles.styles';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.commun.general;
+
+interface Props {
+  /** Les n° de boucle, séparés par des virgules (vide : le troupeau entier). */
+  value: string;
+  onChange: (valeur: string) => void;
+  /** La date du contrôle ou de la visite : la liste propose les animaux présents ce jour-là (vide : les vivants d'aujourd'hui). */
+  date?: string;
+  /**
+   * Les boucles s'affichent en liste de cinq colonnes, par ordre croissant, sans pouvoir s'écrire : on les choisit dans le cheptel, où
+   * celles déjà retenues sont cochées (les visites vétérinaires).
+   */
+  enColonnes?: boolean;
+  /** Appelée quand un lot est choisi (ou créé d'après les boucles saisies) : son identifiant. Sans elle, le lot ne fait que remplir les boucles. */
+  onLot?: (lotId: string) => void;
+  /** Vrai : pas de choix ni d'enregistrement de lot (le formulaire d'un lot lui-même). */
+  sansLots?: boolean;
+  /** Ce qu'on lit quand aucune boucle n'est choisie (en colonnes) : à défaut, « troupeau entier » ; un lot dit qu'il n'a pas encore d'animal. */
+  texteVide?: string;
+  /** Ce que le champ de saisie dit quand il est vide (à défaut « Vide = troupeau entier »). */
+  placeholderVide?: string;
+  /** Vrai : on choisit parmi les animaux vivants et les animaux morts (l'enlèvement de l'équarrisseur prend des morts, et marque morts ceux qui ne l'étaient pas encore). */
+  avecMorts?: boolean;
+  /** Vrai : la liste est figée (un lot vendu) — rien ne s'y choisit plus. */
+  verrouille?: boolean;
+  /** Des numéros que la liste ne propose pas (les tiptag, destinés à l'abattoir, pour un lot de renouvellement). */
+  exclure?: ReadonlySet<string>;
+  /**
+   * Vrai : la liste ne propose que les femelles présentes à la date et déjà à leur majorité sexuelle ce jour-là (les mises à la reproduction) ;
+   * celles déjà retenues restent proposées.
+   */
+  femellesSeulement?: boolean;
+  /** Le lot est celui d'une année (mises à la reproduction, avortements) : les femelles de toute l'année sont proposées, pas seulement celles du 1er janvier. */
+  anneeDuLot?: number;
+  /** Un lot de mises à la reproduction : les chèvres qui n'ont pas mis bas dans l'année du lot sont mises en évidence (en orange, avec leur nombre). */
+  metEnEvidenceSansMiseBas?: boolean;
+  /** Des numéros mis en évidence en rouge (les bêtes d'un lot d'abattage déclarées inconsommables ou mortes pendant le transport). */
+  enEvidence?: ReadonlySet<string>;
+  /**
+   * Les numéros des tiptag : la liste du cheptel propose alors deux puces, Tiptag (d'office) et Boucles, pour ne voir que les cabris à tiptag
+   * ou que les animaux à boucle (un lot d'abattoir reçoit les deux).
+   */
+  filtreTiptag?: ReadonlySet<string>;
+}
+
+/** Le nombre qui termine un n° de boucle : de quoi cocher une plage de boucles. */
+const numeroFinal = (boucle: string): number | undefined => {
+  const fin = /(\d+)$/.exec(boucle);
+  return fin ? Number(fin[1]) : undefined;
+};
+
+/**
+ * Le champ des boucles concernées par un contrôle ou une visite. Par défaut, le texte reste libre (un animal vendu ou d'un autre
+ * élevage s'y écrit à la main) et un lien ouvre la liste des animaux du cheptel pour en cocher plusieurs d'un coup — ils s'ajoutent au
+ * champ. En colonnes (une visite), la liste est affichée et non modifiable : le lien rouvre le cheptel avec les numéros de la visite
+ * déjà cochés.
+ */
+export function ChampBoucles({ value, onChange, date, enColonnes = false, onLot, sansLots = false, texteVide, placeholderVide, avecMorts = false, femellesSeulement = false, anneeDuLot, exclure, verrouille = false, metEnEvidenceSansMiseBas = false, enEvidence, filtreTiptag }: Props) {
+  const { espece } = useEtablissement();
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  const [ouvert, setOuvert] = useState(false);
+  const { lots, creer, categories } = useLots();
+  const [choixLot, setChoixLot] = useState(false);
+  /** Le choix d'un lot se fait en deux temps : la catégorie (Abattoir, Mises à la reproduction, Vétérinaire…), puis le lot de cette catégorie. */
+  const [categorieLot, setCategorieLot] = useState<string | null>(null);
+  // Les lots d'abattage ne se proposent pas ici : leurs animaux sont déjà partis à l'abattoir (rien à soigner, à contrôler ou à cocher).
+  const lotsChoisissables = lots.filter((l) => !l.abattoir);
+  const categoriesDeLots = groupesDeLots(lotsChoisissables, categories, TEXTES.cheptel.lots.categories.autres);
+  const fermerLeChoixDeLot = () => {
+    setChoixLot(false);
+    setCategorieLot(null);
+  };
+  /** Choisir une catégorie ferme sa fenêtre : sans ce repère, la fermeture effacerait aussi le choix et la liste des lots ne s'ouvrirait jamais. */
+  const categorieChoisie = useRef(false);
+  const [nomLot, setNomLot] = useState(false);
+
+  useEffect(() => {
+    // Un lot d'une année : tout le cheptel de l'espèce (les animaux nés ou sortis en cours d'année y comptent).
+    (avecMorts
+      ? listTousLesAnimauxDeLEspece().then((tous) => tous.filter((a) => a.statut === STATUT_CHEVRE.VIVANTE || a.statut === STATUT_CHEVRE.MORTE))
+      : anneeDuLot
+      ? listTousLesAnimauxDeLEspece()
+      : date && estDateISO(date)
+        ? listChevresPresentesLe(date)
+        : listChevresVivantes()
+    ).then(setAnimaux);
+  }, [espece, date, anneeDuLot, avecMorts]);
+
+  const numeros = numerosDeBoucles(value);
+  const dejaLa = new Set(numeros);
+  // Les animaux qui ont une boucle (en colonnes, tous : ceux de la visite sont cochés ; sinon, ceux qui ne sont pas déjà dans le champ).
+  const proposes = animaux.filter(
+    (a) =>
+      a.numeroBoucle &&
+      !exclure?.has(a.numeroBoucle.trim()) &&
+      (enColonnes || !dejaLa.has(a.numeroBoucle)) &&
+      (anneeDuLot
+        ? dejaLa.has(a.numeroBoucle) || peutRejoindreLeLotDeLAnnee(a, anneeDuLot)
+        : !femellesSeulement ||
+        (a.sexe === SEXE.FEMELLE &&
+          (dejaLa.has(a.numeroBoucle) || ageAtteint(a.dateNaissance, agePetitMax(), date && estDateISO(date) ? date : todayISO())))),
+  );
+  const lien = !verrouille && animaux.some((a) => a.numeroBoucle) ? (
+    <Pressable onPress={() => setOuvert(true)} hitSlop={8}>
+      <Text style={commonStyles.lien}>{T.choisirBoucles}</Text>
+    </Pressable>
+  ) : null;
+
+  const triees = [...numeros].sort(comparerAlphabetique);
+  /** Les chèvres du lot qui n'ont pas mis bas dans l'année du lot (rien tant que les animaux ne sont pas lus). */
+  const aMisBas = metEnEvidenceSansMiseBas && anneeDuLot && animaux.length > 0 ? meresAyantMisBas(animaux, anneeDuLot) : null;
+  const sansMiseBas = aMisBas ? new Set(triees.filter((n) => !aMisBas.has(n))) : null;
+  return (
+    <View style={commonStyles.gap6}>
+      {enColonnes ? (
+        <>
+          <Text style={commonStyles.lineSemiBold}>
+            {T.nDeBoucleConcerne}
+            {triees.length > 0 ? <Text style={commonStyles.note}> ({T.animauxSelectionnes(triees.length)})</Text> : null}
+          </Text>
+          {lien}
+          {triees.length === 0 ? (
+            <Text style={commonStyles.mutedItalic}>{texteVide ?? T.videTroupeauEntier}</Text>
+          ) : (
+            <View style={styles.colonnes}>
+              {repartirEnColonnes(triees).map((colonne, c) => (
+                <View key={c} style={styles.colonne}>
+                  {colonne.map((numero) => (
+                    <Text
+                      key={numero}
+                      style={enEvidence?.has(numero) ? styles.numeroEnEvidence : sansMiseBas?.has(numero) ? styles.numeroSansMiseBas : styles.numero}
+                    >
+                      {numero}
+                    </Text>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+          {sansMiseBas && anneeDuLot && triees.length > 0 ? (
+            <Text style={commonStyles.note}>{T.sansMiseBas(sansMiseBas.size, anneeDuLot)}</Text>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <FormField
+            label={T.nDeBoucleConcerne}
+            value={value}
+            onChangeText={onChange}
+            placeholder={placeholderVide ?? T.videTroupeauEntier}
+          />
+          {lien}
+        </>
+      )}
+      {/* Les lots : choisir celui qu'on a déjà, ou garder ces animaux sous un nom. */}
+      {!sansLots && (lotsChoisissables.length > 0 || numeros.length > 0) ? (
+        <View style={commonStyles.row}>
+          {lotsChoisissables.length > 0 ? (
+            <Pressable onPress={() => setChoixLot(true)} hitSlop={8}>
+              <Text style={commonStyles.lien}>{T.choisirUnLot}</Text>
+            </Pressable>
+          ) : null}
+          {numeros.length > 0 ? (
+            <Pressable onPress={() => setNomLot(true)} hitSlop={8}>
+              <Text style={commonStyles.lien}>{T.enregistrerCommeLot}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+      {/* D'abord la catégorie de lot (une seule : on passe directement à ses lots)… */}
+      <SelectModal<string>
+        visible={choixLot && categorieLot === null && categoriesDeLots.length > 1}
+        titre={T.titreCategorieLot}
+        value=""
+        options={categoriesDeLots.map((g) => ({ value: g.id, label: `${g.nom} (${T.nLots(g.lots.length)})` }))}
+        onSelect={(categorie) => {
+          categorieChoisie.current = true;
+          setCategorieLot(categorie);
+        }}
+        onClose={() => {
+          if (categorieChoisie.current) categorieChoisie.current = false;
+          else fermerLeChoixDeLot();
+        }}
+      />
+      {/* …puis le lot de cette catégorie (les plus récents d'abord). */}
+      <SelectModal<string>
+        visible={choixLot && (categorieLot !== null || categoriesDeLots.length <= 1)}
+        titre={categoriesDeLots.find((g) => g.id === categorieLot)?.nom ?? T.titreLots}
+        value=""
+        searchable
+        options={(categoriesDeLots.find((g) => g.id === categorieLot)?.lots ?? categoriesDeLots[0]?.lots ?? []).map((l) => ({
+          value: l.id,
+          label: `${l.nom} (${T.animauxSelectionnes(numerosDeBoucles(l.boucles).length)})`,
+        }))}
+        onSelect={(id) => {
+          const lot = lotsChoisissables.find((l) => l.id === id);
+          if (lot) {
+            onChange(lot.boucles);
+            onLot?.(lot.id);
+          }
+          fermerLeChoixDeLot();
+        }}
+        onClose={fermerLeChoixDeLot}
+      />
+      <NomModal
+        visible={nomLot}
+        titre={T.nomDuLot}
+        placeholder={T.exempleLot}
+        onValider={async (nom) => {
+          if (nom.trim() && !nomDeLotPris(nom, lots)) {
+            const lot = await creer(nom, value);
+            onLot?.(lot.id);
+          }
+          setNomLot(false);
+        }}
+        onAnnuler={() => setNomLot(false)}
+      />
+      <SelectModalMultiple<string>
+        // Recréée à chaque ouverture : les numéros de la visite sont cochés d'emblée.
+        key={ouvert ? 'ouverte' : 'fermee'}
+        visible={ouvert}
+        titre={T.titreBoucles}
+        // Du plus petit numéro au plus grand (40002 avant 40010).
+        options={[...proposes]
+          .sort((x, y) => comparerAlphabetique(x.numeroBoucle ?? '', y.numeroBoucle ?? ''))
+          .map((a) => ({
+          value: a.numeroBoucle as string,
+          label: a.nom ? `${a.numeroBoucle} · ${a.nom}` : (a.numeroBoucle as string),
+          }))}
+        initiales={enColonnes ? numeros : undefined}
+        libelleValider={T.ajouterLesBoucles}
+        filtres={
+          filtreTiptag
+            ? {
+                puces: [
+                  { valeur: 'tiptag', label: T.filtreTiptag },
+                  { valeur: 'boucles', label: T.filtreBoucles },
+                ],
+                // Les tiptag d'abord ; sans aucun tiptag à proposer, la liste s'ouvre sur les boucles.
+                defaut: proposes.some((a) => filtreTiptag.has((a.numeroBoucle ?? '').trim())) ? 'tiptag' : 'boucles',
+                appartient: (boucle, puce) => (filtreTiptag.has(boucle.trim()) ? 'tiptag' : 'boucles') === puce,
+              }
+            : undefined
+        }
+        raccourci={
+          aMisBas
+            ? {
+                libelle: (nombre) => T.cocherAyantMisBas(vocabulaire(espece).femelle.pluriel, nombre),
+                valeurs: proposes.map((a) => a.numeroBoucle as string).filter((b) => aMisBas.has(b)),
+              }
+            : undefined
+        }
+        onValider={(choisies) => {
+          if (enColonnes) {
+            // Un numéro de la visite qui n'est pas dans la liste (un animal parti depuis) est gardé.
+            const dansLaListe = new Set(proposes.map((a) => a.numeroBoucle));
+            const gardes = numeros.filter((n) => !dansLaListe.has(n));
+            onChange([...choisies, ...gardes].sort(comparerAlphabetique).join(', '));
+          } else {
+            onChange([...numeros, ...choisies].join(', '));
+          }
+          setOuvert(false);
+        }}
+        onClose={() => setOuvert(false)}
+        numeroDe={numeroFinal}
+      />
+    </View>
+  );
+}

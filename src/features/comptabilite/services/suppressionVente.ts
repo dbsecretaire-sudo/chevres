@@ -3,7 +3,7 @@ import { listToutesVentes, supprimerVente } from '@/features/comptabilite/reposi
 import { commandeApresSuppressionDeVente } from '@/features/commercial/services/reservations';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import { idsDesAnimaux, revientVivantApresLaVente } from '@/features/comptabilite/utils/ventes';
-import { animauxDuLot } from '@/features/exploitation/services/lots';
+import { animauxDuLot } from '@/features/lots-animaux/services/lots';
 import { getSettings } from '@/features/settings/settings';
 
 /**

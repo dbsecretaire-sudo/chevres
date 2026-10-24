@@ -1,0 +1,61 @@
+import { Text } from 'react-native';
+import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
+import { finDuDelai } from '@/features/sante/services/delaisAttente';
+import { lotDuTraitement } from '@/features/lots-animaux/services/lots';
+import type { Traitement } from '@/features/sante/types';
+import type { LotAnimaux } from '@/features/settings/settings';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
+import { formatDateFR } from '@/shared/utils/dates';
+
+const T = TEXTES.cheptel.traitements;
+
+/**
+ * Les traitements en tableau (poste de comptabilité) : la date, le produit, le motif, les animaux (le lot, les boucles ou le troupeau entier), le dernier jour de chaque délai d'attente
+ * (lait, viande) et « En délai » tant que l'un d'eux court. Un clic ouvre le traitement.
+ */
+export function TableauTraitements({
+  traitements,
+  lots,
+  enDelai,
+  onOuvrir,
+  vide,
+}: {
+  traitements: readonly Traitement[];
+  lots: LotAnimaux[];
+  /** Les traitements dont un délai d'attente court aujourd'hui. */
+  enDelai: ReadonlySet<string>;
+  onOuvrir: (traitement: Traitement) => void;
+  vide: string;
+}) {
+  const animauxDe = (t: Traitement): string => {
+    const lot = lotDuTraitement(t, lots);
+    const boucles = numerosDeBoucles(t.chevreNumeroBoucle);
+    return lot ? lot.nom : boucles.length > 0 ? T.animaux(boucles.length) : T.troupeauEntier;
+  };
+  const jour = (iso: string | undefined) => (iso ? formatDateFR(iso) : '');
+  const colonnes: readonly ColonneDuTableau<Traitement>[] = [
+    {
+      cle: 'date',
+      titre: 'Date',
+      poids: 1.6,
+      valeur: (t) => t.date,
+      texte: (t) => (t.dateFin && t.dateFin !== t.date ? `${formatDateFR(t.date)} → ${formatDateFR(t.dateFin)}` : formatDateFR(t.date)),
+    },
+    { cle: 'produit', titre: 'Produit', poids: 2.2, valeur: (t) => t.produit },
+    { cle: 'motif', titre: 'Motif', poids: 2, valeur: (t) => t.motif ?? '' },
+    { cle: 'animaux', titre: 'Animaux', poids: 1.6, valeur: animauxDe },
+    { cle: 'lait', titre: 'Lait interdit jusqu’au', poids: 1.4, valeur: (t) => finDuDelai(t, 'lait') ?? '', texte: (t) => jour(finDuDelai(t, 'lait')) },
+    { cle: 'viande', titre: 'Viande interdite jusqu’au', poids: 1.4, valeur: (t) => finDuDelai(t, 'viande') ?? '', texte: (t) => jour(finDuDelai(t, 'viande')) },
+    {
+      cle: 'etat',
+      titre: 'État',
+      poids: 1,
+      aligne: 'centre',
+      valeur: (t) => (enDelai.has(t.id) ? 1 : 0),
+      rendu: (t) => (enDelai.has(t.id) ? <Text style={{ fontSize: 13, fontWeight: '800', color: colors.danger }}>{T.enDelai}</Text> : null),
+    },
+  ];
+  return <TableauDeDonnees integre colonnes={colonnes} lignes={traitements} cleDeLaLigne={(t) => t.id} tri={{ cle: 'date', decroissant: true }} vide={vide} onLigne={onOuvrir} />;
+}

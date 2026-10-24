@@ -47,8 +47,8 @@ const CATEGORIES: [string, string, string][] = [
   ['CHEPTEL', 'src/features/cheptel/types.ts', 'Chevre'],
   ['VENTES', 'src/features/comptabilite/types.ts', 'Vente'],
   ['FACTURES', 'src/features/comptabilite/types.ts', 'Facture'],
-  ['VISITES_VETERINAIRE', 'src/features/exploitation/types.ts', 'VisiteVeterinaire'],
-  ['TRAITEMENTS', 'src/features/exploitation/types.ts', 'Traitement'],
+  ['VISITES_VETERINAIRE', 'src/features/sante/types.ts', 'VisiteVeterinaire'],
+  ['TRAITEMENTS', 'src/features/sante/types.ts', 'Traitement'],
   ['CONTROLES', 'src/features/exploitation/types.ts', 'Controle'],
 ];
 

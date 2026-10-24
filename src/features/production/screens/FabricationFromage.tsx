@@ -18,7 +18,7 @@ import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { exporterGuideLotsPdf } from '@/features/export/guideLotsPdf';
+import { exporterGuideLotsPdf } from '@/features/export/documents/guideLotsPdf';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle } from '@/features/stock/services/boucles';
 import {

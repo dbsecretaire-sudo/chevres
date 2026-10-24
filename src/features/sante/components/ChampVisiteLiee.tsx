@@ -1,0 +1,41 @@
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import type { Facture } from '@/features/comptabilite/types';
+import { facturesDuVeterinaire } from '@/features/sante/services/visitesEtTraitements';
+import { SelectField } from '@/shared/components/SelectField';
+import { TEXTES } from '@/shared/textes';
+import { formatDateFR } from '@/shared/utils/dates';
+
+const T = TEXTES.exploitation.visiteLiee;
+
+/** Le nom d'une visite dans la liste : la date de la facture du vétérinaire, son nom et ce qu'elle décrit (« 12/03/2026 · Cabinet vétérinaire · Contrôle du troupeau »). */
+export const libelleDeLaVisite = (facture: Pick<Facture, 'date' | 'tiers' | 'description'>): string =>
+  [formatDateFR(facture.date), facture.tiers, facture.description].filter(Boolean).join(' · ');
+
+/**
+ * « Visite vétérinaire liée » : le choix de la visite — une facture du vétérinaire — à laquelle un traitement ou un rapport d'essais se rattache. Sans choix, il reste libre ;
+ * l'identifiant gardé est celui de la facture.
+ */
+export function ChampVisiteLiee({ value, onChange, compact = false }: { value: string; onChange: (visiteId: string) => void; compact?: boolean }) {
+  const [factures, setFactures] = useState<Facture[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      listToutesFactures()
+        .then((toutes) => setFactures(facturesDuVeterinaire(toutes)))
+        .catch(() => undefined);
+    }, []),
+  );
+  return (
+    <SelectField<string>
+      label={T.label}
+      value={value}
+      onChange={onChange}
+      searchable
+      libelleCache={compact}
+      placeholder={T.aucune}
+      aide={compact ? undefined : T.aide}
+      options={[{ value: '', label: T.aucune }, ...factures.map((f) => ({ value: f.id, label: libelleDeLaVisite(f) }))]}
+    />
+  );
+}

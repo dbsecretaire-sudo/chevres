@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { remplirBordereauxPerte } from '@/features/export/bordereauPertePdf';
-import { remplirSuiviMouvements } from '@/features/export/suiviMouvementsPdf';
+import { remplirBordereauxPerte } from '@/features/export/documents/bordereauPertePdf';
+import { remplirSuiviMouvements } from '@/features/export/documents/suiviMouvementsPdf';
 import type { LigneMouvement, SuiviAnnuel } from '@/features/cheptel/services/suiviMouvements';
 import { remplirModele } from '@/features/export/services/modelePdf';
 import { MODELE_BORDEREAUX_2026 } from '@/features/export/modeles/bordereaux2026';

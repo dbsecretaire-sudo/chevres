@@ -272,20 +272,6 @@ export function numeroDeLot(archive: ArchiveStock, article: string, date: string
   return `${debut}${Math.max(0, ...rangs) + 1}`;
 }
 
-/** Le numéro de lot qui suit le plus grand déjà pris pour ce fromage (« 1 » quand il n'y en a pas encore). */
-export function numeroSuivant(archive: Pick<ArchiveStock, 'lots'>, article: string): string {
-  let meilleur: { tete: string; chiffres: string } | undefined;
-  for (const lot of archive.lots ?? []) {
-    const morceaux = /^(.*?)(\d+)$/.exec(lot.numero);
-    if (lot.article !== article || !morceaux) continue;
-    if (!meilleur || Number(morceaux[2]) > Number(meilleur.chiffres)) {
-      meilleur = { tete: morceaux[1], chiffres: morceaux[2] };
-    }
-  }
-  if (!meilleur) return '1';
-  return `${meilleur.tete}${String(Number(meilleur.chiffres) + 1).padStart(meilleur.chiffres.length, '0')}`;
-}
-
 /** Ce qui empêche de fabriquer ces fromages : le premier numéro manque, la plage est trop grande, ou un numéro est déjà pris. */
 export function erreurFabrication(
   archive: Pick<ArchiveStock, 'lots'>,

@@ -20,8 +20,8 @@ import type { Chevre } from '@/features/cheptel/types';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { joursAbattusAFacturer } from '@/features/comptabilite/utils/animauxVendus';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
-import { useSanteDuTroupeau } from '@/features/exploitation/hooks/useSanteDuTroupeau';
+import { useInconsommables } from '@/features/lots-animaux/hooks/useInconsommables';
+import { useSanteDuTroupeau } from '@/features/sante/hooks/useSanteDuTroupeau';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useRappelsAnalysesPlats } from '@/features/rappels/hooks/useRappelsAnalysesPlats';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
@@ -50,6 +50,8 @@ function useLotsAFacturer(): number {
       Promise.all([listTousLesAnimauxDeLEspece(), listToutesVentes()])
         .then(([animaux, ventes]) => setJours(joursAbattusAFacturer(animaux, ventes).map((j) => j.animaux)))
         .catch(() => undefined);
+      // L'espèce courante change ce qui est lu : la liste se relit avec elle.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [espece]),
   );
   // Seuls les animaux à boucle (non écartés du lot) se facturent ; sans boucle, la vente se fait sans facture.

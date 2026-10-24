@@ -3,15 +3,15 @@ import {
   exporterCheptelPdf,
   exporterRegistreCompletPdf,
   exporterPlanComptablePdf,
-} from '@/features/export/pdfExport';
+} from '@/features/export/documents/pdfExport';
 import {
   exporterExploitationExcel,
   exporterCheptelExcel,
   exporterPlanComptableExcel,
-} from '@/features/export/xlsxExport';
-import { exporterCarnetMiseBasPdf } from '@/features/export/carnetMiseBasPdf';
-import { exporterInventairePdf } from '@/features/export/inventairePdf';
-import { exporterInventaireGitePdf } from '@/features/export/inventaireGitePdf';
+} from '@/features/export/documents/xlsxExport';
+import { exporterCarnetMiseBasPdf } from '@/features/export/documents/carnetMiseBasPdf';
+import { exporterInventairePdf } from '@/features/export/documents/inventairePdf';
+import { exporterInventaireGitePdf } from '@/features/export/documents/inventaireGitePdf';
 import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import {
   NOM_FICHIER_EXPORT_CHEPTEL,

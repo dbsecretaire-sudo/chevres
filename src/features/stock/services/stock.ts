@@ -638,11 +638,6 @@ export async function enregistrerLaitJour(entree: Omit<LaitJour, 'id'> & { id?: 
   });
 }
 
-export async function supprimerLaitJour(id: string): Promise<void> {
-  const archive = await lireArchiveStock();
-  await remplacerArchiveStock({ ...archive, lait: archive.lait.filter((l) => l.id !== id) });
-}
-
 /** Change le nom d'un article : celui d'un article ajouté, ou le nom affiché d'un article d'office. */
 export async function renommerArticle(cle: string, nom: string): Promise<void> {
   const archive = await lireArchiveStock();

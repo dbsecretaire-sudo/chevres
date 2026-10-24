@@ -147,7 +147,6 @@ export function etapeSuivante(
   let suivante = index + 1;
   while (suivante < etapes.length && etapes[suivante].route instanceof RegExp && !etapeSurLaPage(etapes[suivante], adresse, colonnes)) suivante++;
   if (suivante >= etapes.length) return null;
-  const route = etapes[suivante].route;
   return { index: suivante, ouvrir: adresseAOuvrir(etapes[suivante], adresse, colonnes) };
 }
 

@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/RapportEssaisVisite';
+export { default } from '@/features/sante/screens/RapportEssaisVisite';

@@ -12,9 +12,6 @@ const NOM = 26;
 const LARGEUR = 68;
 /** La hauteur d'un intervenant et de son nom, à l'échelle 1 : de quoi les ranger en rangées. */
 export const HAUTEUR_DE_MAISON = LOGO + 3 + NOM;
-/** La largeur d'un intervenant avec la place de son nom, à l'échelle 1. */
-export const LARGEUR_DE_MAISON = LARGEUR + 16;
-
 interface Props {
   entree: EntreeDeColonne;
   /** Le rapport à la taille du dessin d'origine : les maisons rapetissent quand la scène est basse. */

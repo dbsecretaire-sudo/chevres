@@ -2,9 +2,9 @@ import { numerosDeBoucles, repartirEnColonnes } from '@/features/cheptel/utils/n
 import { describe, expect, it } from 'vitest';
 import type { Facture } from '@/features/comptabilite/types';
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
-import { bouclesDeLaVisite, lignesDuCarnet, pagesDuCarnet } from '@/features/exploitation/services/carnetSanitaire';
-import type { VisiteVeterinaire } from '@/features/exploitation/types';
-import { carnetHtml, tailleDuTexte } from '@/features/export/carnetSanitairePdf';
+import { bouclesDeLaVisite, lignesDuCarnet, pagesDuCarnet } from '@/features/sante/services/carnetSanitaire';
+import type { VisiteVeterinaire } from '@/features/sante/types';
+import { carnetHtml, tailleDuTexte } from '@/features/export/documents/carnetSanitairePdf';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 
 const facture = (plus: Partial<Facture>): Facture =>

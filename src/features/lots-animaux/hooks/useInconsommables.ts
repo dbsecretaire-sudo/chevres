@@ -1,0 +1,7 @@
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+
+/** Les animaux déclarés inconsommables dans les lots d'abattage (saisie sanitaire, mort pendant le transport) : ils ne se facturent pas. */
+export function useInconsommables(): ReadonlySet<string> {
+  const { lots } = useLots();
+  return new Set(lots.flatMap((l) => (l.inconsommables ?? []).map((i) => i.id)));
+}

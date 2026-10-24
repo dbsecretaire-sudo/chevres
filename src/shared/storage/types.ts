@@ -1,7 +1,8 @@
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import type { Chevre } from '@/features/cheptel/types';
-import type { Controle, Traitement, VisiteVeterinaire } from '@/features/exploitation/types';
+import type { Controle } from '@/features/exploitation/types';
+import type { Traitement, VisiteVeterinaire } from '@/features/sante/types';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 
 export type Categorie = ValeurDe<typeof CATEGORIE_STOCKAGE>;

@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/NouveauLotAbattoir';
+export { default } from '@/features/lots-animaux/screens/NouveauLotAbattoir';

@@ -563,21 +563,6 @@ export async function tirerCategorie(accessToken: string, folderId: string, cate
   return true;
 }
 
-/** Envoie les données locales de l'année vers Google Drive (écrase le fichier distant). */
-export async function pousserAnnee(
-  accessToken: string,
-  folderId: string,
-  annee: number,
-  onProgress?: (categorie: Categorie) => void,
-): Promise<void> {
-  for (const categorie of CATEGORIES_STOCKAGE) {
-    onProgress?.(categorie);
-    const items = await loadYear(categorie, annee);
-    const csv = toCSV(categorie, items);
-    await deposer(accessToken, fileNameFor(categorie, annee), folderId, csv);
-  }
-}
-
 /** Récupère les données de l'année depuis Google Drive (écrase les données locales). */
 export async function tirerAnnee(
   accessToken: string,

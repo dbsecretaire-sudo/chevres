@@ -1,5 +1,5 @@
 import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
-import { especeDuSuivi } from '@/features/export/suiviMouvementsPdf';
+import { especeDuSuivi } from '@/features/export/documents/suiviMouvementsPdf';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';

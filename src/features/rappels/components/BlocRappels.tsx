@@ -15,7 +15,7 @@ import { anneesDesEcritures } from '@/features/comptabilite/services/documentsCi
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useLotsARappeler, type RappelDeLot } from '@/features/stock/hooks/useLotsARappeler';
 import { destinationRappel } from '@/features/rappels/services/destination';
-import { enlevementsSansBon } from '@/features/exploitation/services/enlevements';
+import { enlevementsSansBon } from '@/features/lots-animaux/services/enlevements';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';

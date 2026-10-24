@@ -14,7 +14,7 @@ import {
   lotsDeReproductionDeLAnnee,
   lotsDeRenouvellementDeLAnnee,
   retirerDesAutresLotsDeRenouvellement,
-} from '@/features/exploitation/services/lots';
+} from '@/features/lots-animaux/services/lots';
 import { estLaRacineDUneRubrique, ligneDuMenuDe, pageParente } from '@/bureau/retour';
 import type { LotAnimaux } from '@/features/settings/settings';
 import type { Chevre } from '@/features/cheptel/types';

@@ -19,7 +19,7 @@ import { LotsVendusEdition } from '@/features/comptabilite/components/LotsVendus
 import { useFicheVente } from '@/features/comptabilite/hooks/useFicheVente';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
-import { useLots } from '@/features/exploitation/hooks/useLots';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { documentCirculationRequis, idsDesFromages, libelleCategorieVente } from '@/features/comptabilite/utils/ventes';

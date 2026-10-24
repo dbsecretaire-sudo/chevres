@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/FicheEnlevement';
+export { default } from '@/features/lots-animaux/screens/FicheEnlevement';

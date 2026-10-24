@@ -2,7 +2,7 @@ import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';
+import { useAccordDesLots } from '@/features/lots-animaux/hooks/useAccordDesLots';
 import { estLieuTiers } from '@/features/accueil/services/lieuxTiers';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { enteteDuBatiment } from '@/shared/components/EnteteBatiment';

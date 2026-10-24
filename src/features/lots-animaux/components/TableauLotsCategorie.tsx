@@ -1,0 +1,51 @@
+import type { Chevre } from '@/features/cheptel/types';
+import type { AnimalEnDelai } from '@/features/sante/services/delaisAttente';
+import { animauxDuLot, bouclesDuLot } from '@/features/lots-animaux/services/lots';
+import type { LotAnimaux } from '@/features/settings/settings';
+import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.cheptel.lots;
+
+/**
+ * Les lots d'une catégorie en tableau (poste de comptabilité) : le lot, ses animaux (vivants, sur ceux qu'il nomme), ceux qui sont en délai d'attente aujourd'hui. Un clic ouvre la fiche du lot.
+ */
+export function TableauLotsCategorie({
+  lots,
+  animaux,
+  enDelai,
+  onOuvrir,
+  vide,
+}: {
+  lots: readonly LotAnimaux[];
+  /** Les animaux vivants. */
+  animaux: Chevre[];
+  enDelai: AnimalEnDelai[];
+  onOuvrir: (lot: LotAnimaux) => void;
+  vide: string;
+}) {
+  const nombreEnDelai = (lot: LotAnimaux): number => {
+    const boucles = new Set(bouclesDuLot(lot));
+    return new Set(enDelai.filter((a) => a.animal.numeroBoucle && boucles.has(a.animal.numeroBoucle)).map((a) => a.animal.id)).size;
+  };
+  const colonnes: readonly ColonneDuTableau<LotAnimaux>[] = [
+    { cle: 'nom', titre: 'Lot', poids: 2.4, valeur: (l) => l.nom },
+    {
+      cle: 'animaux',
+      titre: 'Animaux',
+      poids: 1.6,
+      aligne: 'centre',
+      valeur: (l) => animauxDuLot(l, animaux).length,
+      texte: (l) => T.animaux(animauxDuLot(l, animaux).length, bouclesDuLot(l).length),
+    },
+    {
+      cle: 'delai',
+      titre: 'En délai d’attente',
+      poids: 1.3,
+      aligne: 'centre',
+      valeur: (l) => nombreEnDelai(l),
+      texte: (l) => (nombreEnDelai(l) > 0 ? String(nombreEnDelai(l)) : ''),
+    },
+  ];
+  return <TableauDeDonnees integre colonnes={colonnes} lignes={lots} cleDeLaLigne={(l) => l.id} tri={{ cle: 'nom' }} vide={vide} onLigne={onOuvrir} />;
+}

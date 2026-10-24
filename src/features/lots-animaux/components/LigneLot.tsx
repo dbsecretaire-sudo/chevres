@@ -1,0 +1,59 @@
+import { useRouter } from 'expo-router';
+import { ListRow } from '@/shared/components/ListRow';
+import type { Chevre } from '@/features/cheptel/types';
+import type { AnimalEnDelai } from '@/features/sante/services/delaisAttente';
+import { animauxDuLot, bouclesDuLot } from '@/features/lots-animaux/services/lots';
+import type { LotAnimaux } from '@/features/settings/settings';
+import { ROUTES } from '@/shared/constants/routes';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.cheptel.lots;
+
+interface Props {
+  lot: LotAnimaux;
+  /** Les animaux vivants. */
+  animaux: Chevre[];
+  /** Tous les animaux de l'espèce (sortis compris) : un lot d'abattoir est fait d'animaux déjà partis. */
+  tous: Chevre[];
+  /** Les animaux que vend une facture du client : un lot d'abattoir dont un animal n'y est pas est à facturer. */
+  animauxFactures: Set<string>;
+  /** Les animaux en délai d'attente aujourd'hui. */
+  enDelai: AnimalEnDelai[];
+}
+
+/** La ligne d'un lot : un lot d'abattoir (des animaux déjà partis, à facturer ou facturés) ou un lot d'animaux du troupeau. */
+export function LigneLot({ lot, animaux, tous, animauxFactures, enDelai }: Props) {
+  const router = useRouter();
+  const ouvrir = () => router.push(ROUTES.lot(lot.id) as never);
+  if (lot.abattoir) {
+    return (
+      <ListRow
+        title={lot.nom}
+        subtitle={[
+          T.abattus(animauxDuLot(lot, tous).length),
+          animauxDuLot(lot, tous).some((a) => !animauxFactures.has(a.id)) ? T.aFacturer : T.facture,
+        ].join(' · ')}
+        onPress={ouvrir}
+      />
+    );
+  }
+  const vivants = animauxDuLot(lot, animaux).length;
+  const boucles = new Set(bouclesDuLot(lot));
+  const nombreEnDelai = new Set(
+    enDelai
+      .filter((a) => a.animal.numeroBoucle && boucles.has(a.animal.numeroBoucle))
+      .map((a) => a.animal.id),
+  ).size;
+  return (
+    <ListRow
+      title={lot.nom}
+      subtitle={[
+        T.animaux(vivants, bouclesDuLot(lot).length),
+        nombreEnDelai > 0 ? T.enDelai(nombreEnDelai) : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+      onPress={ouvrir}
+    />
+  );
+}

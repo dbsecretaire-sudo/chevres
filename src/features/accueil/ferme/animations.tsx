@@ -59,56 +59,6 @@ export function Apparition({
   );
 }
 
-/** Une vue qui pulse doucement tant que `actif` (une échéance en retard attire l'œil). */
-export function Pulsation({
-  actif,
-  children,
-  style,
-}: {
-  actif: boolean;
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-}) {
-  const reduit = useMouvementReduit();
-  const [valeur] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!actif || reduit) {
-      valeur.setValue(0);
-      return;
-    }
-    const boucle = Animated.loop(
-      Animated.sequence([
-        Animated.timing(valeur, {
-          toValue: 1,
-          duration: 900,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-          isInteraction: false,
-        }),
-        Animated.timing(valeur, {
-          toValue: 0,
-          duration: 900,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-          isInteraction: false,
-        }),
-      ]),
-    );
-    boucle.start();
-    return () => boucle.stop();
-  }, [actif, reduit, valeur]);
-  return (
-    <Animated.View
-      style={[
-        style,
-        { transform: [{ scale: valeur.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] }) }] },
-      ]}
-    >
-      {children}
-    </Animated.View>
-  );
-}
-
 /**
  * Une vue qui se balade : elle va et vient de `amplitude` points, avec un petit saut à chaque pas (une chèvre dans son enclos). `duree`
  * varie d'une chèvre à l'autre pour qu'elles ne marchent pas en rang.
@@ -200,28 +150,6 @@ export function Balade({
       {children}
     </Animated.View>
   );
-}
-
-/** Une barre qui se remplit jusqu'à `ratio` (0 à 1) à l'affichage et à chaque changement. */
-export function useRemplissage(ratio: number): Animated.AnimatedInterpolation<string> {
-  const reduit = useMouvementReduit();
-  const [valeur] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (reduit) {
-      valeur.setValue(ratio);
-      return;
-    }
-    const animation = Animated.timing(valeur, {
-      toValue: ratio,
-      duration: 900,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-      isInteraction: false,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [ratio, reduit, valeur]);
-  return valeur.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 }
 
 /** Une vue qui rebondit une fois quand `declencheur` devient vrai (le coffre s'ouvre quand tous les papiers sont à jour). */

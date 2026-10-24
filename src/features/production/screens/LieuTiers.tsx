@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Text } from 'react-native';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import LieuAssociations from '@/features/production/screens/LieuAssociations';
 import { BonsDeLivraison } from '@/features/production/components/BonsDeLivraison';
 import { BonsDEnlevement } from '@/features/production/components/BonsDEnlevement';

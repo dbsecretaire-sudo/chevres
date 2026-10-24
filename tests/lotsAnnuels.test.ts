@@ -10,8 +10,8 @@ import {
   nomDuLotAnnuel,
   peutRejoindreLeLot,
   peutRejoindreLeLotDeLAnnee,
-} from '@/features/exploitation/services/lotsAnnuels';
-import { resultatsDeLAnnee } from '@/features/export/carnetMiseBasPdf';
+} from '@/features/lots-animaux/services/lotsAnnuels';
+import { resultatsDeLAnnee } from '@/features/export/documents/carnetMiseBasPdf';
 import type { LotAnimaux } from '@/features/settings/settings';
 import type { Chevre } from '@/features/cheptel/types';
 

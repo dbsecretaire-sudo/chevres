@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, usePathname, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
-import { BlocSante } from '@/features/exploitation/components/BlocSante';
+import { BlocSante } from '@/features/sante/components/BlocSante';
 import type { Minuteur } from '@/features/accueil/services/fermeAccueil';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { colors } from '@/shared/theme/colors';

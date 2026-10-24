@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/FicheVisiteVeterinaire';
+export { default } from '@/features/sante/screens/FicheVisiteVeterinaire';

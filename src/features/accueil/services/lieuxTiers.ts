@@ -1,12 +1,11 @@
 import type { Ionicons } from '@expo/vector-icons';
 import { SEXE } from '@/shared/constants/cheptel';
 import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
-import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, CATEGORIE_RECETTE, CATEGORIE_VENTE, VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR, CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
 import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
-import { VOLET_COOPERATIVE } from '@/shared/constants/comptabilite';
 import { SECTION_STOCK } from '@/shared/constants/stock';
 import { lienPourCategories } from '@/features/commercial/services/categoriesDuLien';
 
@@ -85,7 +84,6 @@ const liensDesClients = (categories: readonly string[] = []): readonly LienDuLie
   { cle: 'tarifs', icone: 'pricetag', route: lienPourCategories(ROUTES.COMMERCIAL_TARIFS, categories) },
   { cle: 'circuits', icone: 'navigate', route: ROUTES.COMMERCIAL_CIRCUITS },
 ];
-const LIENS_DES_CLIENTS = liensDesClients();
 
 /** Les rubriques de l'agritourisme que proposent les fiches de ses visiteurs : les visites, une nouvelle visite, les formules. */
 const LIENS_DE_LAGRITOURISME: readonly LienDuLieu[] = [

@@ -14,8 +14,6 @@ export const CIRCUIT_VENTE = {
   AUTRE: 'autre',
 } as const;
 
-export type CircuitVente = ValeurDe<typeof CIRCUIT_VENTE>;
-
 /** Le regroupement des ventes dont le circuit n'est pas renseigné (les ventes d'avant ce champ). */
 export const CIRCUIT_NON_RENSEIGNE = 'non_renseigne';
 
@@ -37,9 +35,6 @@ export const STATUTS_COMMANDE_OUVERTE: readonly StatutCommande[] = [
 
 /** Un client sans achat depuis ce nombre de jours est proposé à la relance. */
 export const JOURS_CLIENT_A_RELANCER = 90;
-
-/** Le nombre de clients de la liste des meilleurs clients. */
-export const NOMBRE_MEILLEURS_CLIENTS = 10;
 
 /** Le jour de la prochaine livraison d'une commande qu'on crée : dans ce nombre de jours. */
 export const JOURS_AVANT_LIVRAISON = 3;

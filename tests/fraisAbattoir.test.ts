@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { partsDeLaVente } from '@/features/comptabilite/utils/ventes';
-import { fraisDuLotPourLaVente } from '@/features/exploitation/services/lots';
+import { fraisDuLotPourLaVente } from '@/features/lots-animaux/services/lots';
 
 describe('frais d’abattoir refacturés', () => {
   it('une vente sans frais n’a qu’une part ; avec frais, la viande puis les frais à leur taux', () => {

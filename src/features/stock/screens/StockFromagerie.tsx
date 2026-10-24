@@ -37,7 +37,7 @@ import {
 import { ModalSynchroBoucles } from '@/features/stock/components/ModalSynchroBoucles';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
-import { idsDesInconsommables } from '@/features/exploitation/services/lots';
+import { idsDesInconsommables } from '@/features/lots-animaux/services/lots';
 import { JournalLait } from '@/features/stock/components/JournalLait';
 import { LaitJourModal } from '@/features/stock/components/LaitJourModal';
 import { MouvementStockModal } from '@/features/stock/components/MouvementStockModal';

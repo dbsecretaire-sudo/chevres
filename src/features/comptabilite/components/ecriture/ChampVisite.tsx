@@ -1,5 +1,5 @@
 import { Checkbox } from '@/shared/components/Checkbox';
-import { ChampMotifsVisite } from '@/features/exploitation/components/ChampMotifsVisite';
+import { ChampMotifsVisite } from '@/features/sante/components/ChampMotifsVisite';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.comptabilite.nouvelleEcriture.visite;
@@ -8,7 +8,7 @@ export {
   SEPARATEUR_MOTIFS,
   motifsDeLaVisite,
   texteDesMotifs,
-} from '@/features/exploitation/components/ChampMotifsVisite';
+} from '@/features/sante/components/ChampMotifsVisite';
 
 interface Props {
   motif: string;

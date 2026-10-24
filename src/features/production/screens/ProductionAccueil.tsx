@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuProduit, estArticleAvecLots } from '@/features/stock/services/lots';

@@ -2,7 +2,7 @@ import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres'
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 import { AncreVisite } from '@/shared/components/AncreVisite';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
-import { BlocSante } from '@/features/exploitation/components/BlocSante';
+import { BlocSante } from '@/features/sante/components/BlocSante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';

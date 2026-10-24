@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/DocumentsGds';
+export { default } from '@/features/sante/screens/DocumentsGds';

@@ -1,8 +1,8 @@
 import { Alert } from 'react-native';
 import { deposerDocumentCirculation, type EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
 import { genererLeModeleDeCirculation } from '@/features/comptabilite/services/modeleCirculation';
-import { useLots } from '@/features/exploitation/hooks/useLots';
-import { useVentesVivants } from '@/features/exploitation/hooks/useVentesVivants';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { useVentesVivants } from '@/features/lots-animaux/hooks/useVentesVivants';
 import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
 import {
   choisirFichiers,

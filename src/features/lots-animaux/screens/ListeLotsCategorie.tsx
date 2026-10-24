@@ -1,0 +1,75 @@
+import { ScrollView } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Screen } from '@/shared/components/ScreenList';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { Fab } from '@/shared/components/Fab';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { useDonneesDesLots } from '@/features/lots-animaux/hooks/useDonneesDesLots';
+import { LigneLot } from '@/features/lots-animaux/components/LigneLot';
+import { TableauLotsCategorie } from '@/features/lots-animaux/components/TableauLotsCategorie';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { estCategorieVerrouillee, groupesDeLots } from '@/features/lots-animaux/services/lots';
+import { ROUTES } from '@/shared/constants/routes';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.cheptel.lots;
+
+/**
+ * Les lots d'une catégorie, dans leur propre page (on y vient d'un bouton de Lots d'animaux), les plus récents d'abord. Les lots qui se créent
+ * tout seuls chaque année (mises à la reproduction, renouvellement) et ceux d'abattoir n'ont pas de bouton d'ajout.
+ */
+export default function ListeLotsCategorie() {
+  const router = useRouter();
+  // Le poste de comptabilité : les lots de la catégorie en tableau.
+  const comptable = useDispositionComptable();
+  const { categorie = '' } = useLocalSearchParams<{ categorie?: string }>();
+  const { lots, categories } = useLots();
+  const donnees = useDonneesDesLots();
+  // L'abattoir et les animaux vendus morts ou vivants sont dans Production › Viande, pas dans Lots d'animaux.
+  const visibles = lots.filter((l) => !l.abattoir && l.categorie !== 'abattoir' && !l.depart);
+  const groupe = groupesDeLots(visibles, categories, T.categories.autres, true).find(
+    (g) => g.id === categorie,
+  );
+  const nom = groupe?.nom ?? categories.find((c) => c.id === categorie)?.nom ?? T.categories.autres;
+  const duGroupe = groupe?.lots ?? [];
+  return (
+    <Screen scroll={false}>
+      <Stack.Screen options={{ title: nom }} />
+      <ScrollView contentContainerStyle={commonStyles.listFab}>
+        {duGroupe.length === 0 ? (
+          <EmptyState
+            title={T.aucun}
+            subtitle={estCategorieVerrouillee(categorie) ? undefined : T.aucunAide}
+          />
+        ) : comptable ? (
+          <TableauLotsCategorie
+            lots={duGroupe}
+            animaux={donnees.animaux}
+            enDelai={donnees.enDelai}
+            onOuvrir={(lot) => router.push(ROUTES.lot(lot.id) as never)}
+            vide={T.aucun}
+          />
+        ) : (
+          <BlocLignes>
+            {duGroupe.map((lot) => (
+              <LigneLot key={lot.id} lot={lot} {...donnees} />
+            ))}
+          </BlocLignes>
+        )}
+      </ScrollView>
+      {estCategorieVerrouillee(categorie) ? null : (
+        <Fab
+          options={[
+            {
+              label: T.nouveau,
+              icon: 'add',
+              onPress: () => router.push(ROUTES.lotNouveau(categorie) as never),
+            },
+          ]}
+        />
+      )}
+    </Screen>
+  );
+}

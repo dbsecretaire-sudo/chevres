@@ -4,7 +4,7 @@ import {
   documentsGds,
   remplacerUnDocumentGds,
   retirerUnDocumentGds,
-} from '@/features/exploitation/services/gds';
+} from '@/features/sante/services/gds';
 
 const document = (nom: string) => ({
   piece: { id: nom, nom, extension: 'pdf', mime: 'application/pdf', ajoutLe: '2026-10-21' },

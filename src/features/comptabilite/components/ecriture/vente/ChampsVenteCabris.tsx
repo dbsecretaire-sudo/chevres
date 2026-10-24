@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
+import { AvertissementDelais } from '@/features/sante/components/AvertissementDelais';
 import { FormField } from '@/shared/components/FormField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
 import { commonStyles } from '@/shared/styles/commonStyles';

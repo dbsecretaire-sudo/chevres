@@ -2,7 +2,7 @@ import { Text, View } from 'react-native';
 import { formatMontant } from '@/shared/utils/dates';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
-import { AvertissementDelais } from '@/features/exploitation/components/AvertissementDelais';
+import { AvertissementDelais } from '@/features/sante/components/AvertissementDelais';
 import { FormField } from '@/shared/components/FormField';
 import { ChampMontantTtc } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
 import { commonStyles } from '@/shared/styles/commonStyles';

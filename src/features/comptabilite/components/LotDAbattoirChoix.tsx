@@ -6,7 +6,7 @@ import { Card } from '@/shared/components/Card';
 import { ListRow } from '@/shared/components/ListRow';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
-import { lotsDAbattoirAFacturer } from '@/features/exploitation/services/departDAnimaux';
+import { lotsDAbattoirAFacturer } from '@/features/lots-animaux/services/departDAnimaux';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { LotAnimaux } from '@/features/settings/settings';
 import { ROUTES } from '@/shared/constants/routes';

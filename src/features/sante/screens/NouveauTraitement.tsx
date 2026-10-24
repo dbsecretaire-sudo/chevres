@@ -1,0 +1,269 @@
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Text, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Screen } from '@/shared/components/Screen';
+import { FormField } from '@/shared/components/FormField';
+import { DateField } from '@/shared/components/DateField';
+import { Button } from '@/shared/components/Button';
+import { Checkbox } from '@/shared/components/Checkbox';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { ChampBoucles } from '@/features/lots-animaux/components/ChampBoucles';
+import { ChampVisiteLiee } from '@/features/sante/components/ChampVisiteLiee';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { listToutesVisitesVeterinaire } from '@/features/sante/repository/visitesVeterinaire';
+import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
+import {
+  choisirFichiers,
+  piecesDisponibles,
+  rangerFichier,
+  supprimerPiece,
+} from '@/features/fichiers/services/pieces';
+import type { PieceJointe } from '@/features/fichiers/types';
+import {
+  enregistrerTraitement,
+  getTraitement,
+  supprimerTraitement,
+} from '@/features/sante/repository/traitements';
+import { finDuDelai } from '@/features/sante/services/delaisAttente';
+import type { Traitement } from '@/features/sante/types';
+import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
+import { colors } from '@/shared/theme/colors';
+import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+import { formatDateFR, todayISO } from '@/shared/utils/dates';
+import { retournerALaPageDAvant } from '@/shared/navigation/retourAvant';
+
+const T = TEXTES.cheptel.traitements;
+const F = T.form;
+
+/** Un nombre de jours saisi (vide ou invalide : rien). */
+const joursDe = (texte: string): number | undefined => {
+  const n = Math.floor(Number(texte.replace(',', '.')));
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+};
+
+/**
+ * Un traitement : le produit, les dates, les animaux (tout le troupeau, ou des boucles) et les délais d'attente du lait et de la viande.
+ * La fin de chaque délai se calcule et s'affiche au fil de la saisie ; l'ordonnance se joint en fichier.
+ */
+export default function NouveauTraitement() {
+  const router = useRouter();
+  const { id, lotId: lotIdDeLUrl, visite: visiteDeLUrl } = useLocalSearchParams<{ id?: string; lotId?: string; visite?: string }>();
+  const { lots } = useLots();
+  /** Le lot auquel on donne le traitement (ses boucles sont reprises) ; vide : aucun lot. */
+  const [lotId, setLotId] = useState('');
+  /** La visite du vétérinaire à laquelle il se rattache (vide : aucune). */
+  const [visiteId, setVisiteId] = useState(visiteDeLUrl ?? '');
+  const [existant, setExistant] = useState<Traitement | undefined>();
+  const [produit, setProduit] = useState('');
+  const [motif, setMotif] = useState('');
+  const [date, setDate] = useState(todayISO());
+  const [plusieursJours, setPlusieursJours] = useState(false);
+  const [dateFin, setDateFin] = useState(todayISO());
+  const [boucles, setBoucles] = useState('');
+  const [delaiLait, setDelaiLait] = useState('');
+  const [delaiViande, setDelaiViande] = useState('');
+  const [notes, setNotes] = useState('');
+  const [fichiers, setFichiers] = useState<PieceJointe[]>([]);
+  const [enregistrement, setEnregistrement] = useState(false);
+  const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  /** Les fichiers retirés (effacés à l'enregistrement) et ceux ajoutés (effacés si l'on quitte sans enregistrer). */
+  const retires = useRef<PieceJointe[]>([]);
+  const ajoutes = useRef<PieceJointe[]>([]);
+  const enregistre = useRef(false);
+
+  useEffect(() => {
+    if (!id) return;
+    getTraitement(id).then((t) => {
+      if (!t) return;
+      setExistant(t);
+      setProduit(t.produit);
+      setMotif(t.motif ?? '');
+      setDate(t.date);
+      setPlusieursJours(!!t.dateFin && t.dateFin !== t.date);
+      setDateFin(t.dateFin ?? t.date);
+      setBoucles(t.chevreNumeroBoucle ?? '');
+      setLotId(t.lotId ?? '');
+      setVisiteId(t.visiteId ?? '');
+      setDelaiLait(t.delaiLaitJours ? String(t.delaiLaitJours) : '');
+      setDelaiViande(t.delaiViandeJours ? String(t.delaiViandeJours) : '');
+      setNotes(t.notes ?? '');
+      setFichiers(t.fichiers ?? []);
+    });
+  }, [id]);
+  useEffect(
+    () => () => {
+      if (!enregistre.current) ajoutes.current.forEach((p) => supprimerPiece(p));
+    },
+    [],
+  );
+  // Un nouveau traitement pour un lot (depuis le suivi du lot) : ses boucles sont reprises une fois les lots lus.
+  const lotDeLUrlRepris = useRef(false);
+  useEffect(() => {
+    if (id || !lotIdDeLUrl || lotDeLUrlRepris.current) return;
+    const lot = lots.find((l) => l.id === lotIdDeLUrl);
+    if (!lot) return;
+    lotDeLUrlRepris.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBoucles(lot.boucles);
+    setLotId(lot.id);
+  }, [id, lotIdDeLUrl, lots]);
+  const lot = lots.find((l) => l.id === lotId);
+  /** « Tout le troupeau » : coché tant qu'aucune boucle n'est choisie (sauf si on l'a décoché pour en choisir) ; coché, le champ des boucles disparaît. */
+  const [toutManuel, setToutManuel] = useState<boolean | null>(visiteDeLUrl ? false : null);
+  const toutLeTroupeau = toutManuel ?? boucles.trim() === '';
+  /** Les chèvres de la visite liée : ce que « vide » veut dire quand « Tout le troupeau » est décoché. */
+  const [chevresDeLaVisite, setChevresDeLaVisite] = useState('');
+  useEffect(() => {
+    if (!visiteId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setChevresDeLaVisite('');
+      return;
+    }
+    listToutesVisitesVeterinaire()
+      .then((visites) => setChevresDeLaVisite(visites.find((v) => v.factureId === visiteId)?.chevreNumeroBoucle ?? ''))
+      .catch(() => undefined);
+  }, [visiteId]);
+  /** La visite regroupe déjà les animaux : pas de lot à choisir ni à nommer. */
+  const parLaVisite = !!visiteId;
+
+  const ajouterFichiers = async () => {
+    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
+    try {
+      const nouveaux: PieceJointe[] = [];
+      for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {
+        nouveaux.push(await rangerFichier(choisi));
+      }
+      ajoutes.current.push(...nouveaux);
+      setFichiers((actuels) => [...actuels, ...nouveaux]);
+    } catch (e: unknown) {
+      Alert.alert(e instanceof Error ? e.message : TEXTES.fichiers.erreurAjout);
+    }
+  };
+  const retirerFichier = (piece: PieceJointe) => {
+    retires.current.push(piece);
+    setFichiers((actuels) => actuels.filter((f) => f.id !== piece.id));
+  };
+
+  const derniere = plusieursJours ? dateFin : date;
+  const apercu = {
+    date,
+    dateFin: derniere,
+    delaiLaitJours: joursDe(delaiLait),
+    delaiViandeJours: joursDe(delaiViande),
+  };
+  const finLait = finDuDelai(apercu, 'lait');
+  const finViande = finDuDelai(apercu, 'viande');
+
+  const enregistrer = async () => {
+    if (!produit.trim()) return Alert.alert(F.produitRequis);
+    if (derniere < date) return Alert.alert(F.dateInvalide);
+    setEnregistrement(true);
+    try {
+      await enregistrerTraitement({
+        ...(existant ?? {}),
+        id: existant?.id,
+        date,
+        dateFin: plusieursJours && dateFin !== date ? dateFin : undefined,
+        produit: produit.trim(),
+        motif: motif.trim() || undefined,
+        // Sans boucle choisie et « Tout le troupeau » décoché, un traitement d'une visite concerne les chèvres de cette visite.
+        chevreNumeroBoucle: boucles.trim() || (!toutLeTroupeau && visiteId ? chevresDeLaVisite.trim() : '') || undefined,
+        lotId: lot ? lot.id : undefined,
+        visiteId: visiteId || undefined,
+        delaiLaitJours: joursDe(delaiLait),
+        delaiViandeJours: joursDe(delaiViande),
+        notes: notes.trim() || undefined,
+        fichiers: fichiers.length > 0 ? fichiers : undefined,
+      });
+      enregistre.current = true;
+      await Promise.all(retires.current.map((p) => supprimerPiece(p)));
+      retournerALaPageDAvant(router);
+    } finally {
+      setEnregistrement(false);
+    }
+  };
+
+  const supprimer = async () => {
+    if (!existant) return;
+    await supprimerTraitement(existant.id);
+    await Promise.all(fichiers.map((p) => supprimerPiece(p)));
+    enregistre.current = true;
+    retournerALaPageDAvant(router);
+  };
+
+  return (
+    <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
+      <Screen>
+        <FormField label={F.produit} required value={produit} onChangeText={setProduit} placeholder={F.produitExemple} />
+        <FormField label={F.motif} value={motif} onChangeText={setMotif} placeholder={F.motifExemple} />
+        <DateField label={F.date} required value={date} onChange={setDate} />
+        <Checkbox label={F.plusieursJours} value={plusieursJours} onChange={setPlusieursJours} />
+        {plusieursJours ? (
+          <>
+            <DateField label={F.derniereDate} value={dateFin} onChange={setDateFin} />
+            <Text style={commonStyles.note}>{F.aideDerniere}</Text>
+          </>
+        ) : null}
+        <Checkbox
+          label={F.toutLeTroupeau}
+          value={toutLeTroupeau}
+          onChange={(coche) => {
+            setToutManuel(coche);
+            if (coche) {
+              setBoucles('');
+              setLotId('');
+            }
+          }}
+        />
+        {toutLeTroupeau ? null : (
+        <ChampBoucles
+          value={boucles}
+          onChange={(valeur) => {
+            setBoucles(valeur);
+            // Les boucles qu'on change à la main ne sont plus celles du lot.
+            if (lot && valeur.trim() !== lot.boucles.trim()) setLotId('');
+          }}
+          date={date}
+          onLot={setLotId}
+          sansLots={parLaVisite}
+          placeholderVide={visiteId ? F.videChevresDeLaVisite : undefined}
+        />
+        )}
+        {!toutLeTroupeau && lot ? <Text style={commonStyles.lineBold}>{TEXTES.cheptel.lots.lotDuTraitement(lot.nom)}</Text> : null}
+        {toutLeTroupeau ? null : <Text style={commonStyles.note}>{F.aideAnimaux}</Text>}
+        <ChampVisiteLiee value={visiteId} onChange={setVisiteId} />
+        <FormField label={F.delaiLait} value={delaiLait} onChangeText={setDelaiLait} keyboardType="number-pad" />
+        <FormField label={F.delaiViande} value={delaiViande} onChangeText={setDelaiViande} keyboardType="number-pad" />
+        <Text style={commonStyles.note}>{F.aideDelais}</Text>
+        {finLait ? <Text style={[commonStyles.lineBold, { color: colors.danger }]}>{F.resumeLait(formatDateFR(finLait))}</Text> : null}
+        {finViande ? <Text style={[commonStyles.lineBold, { color: colors.danger }]}>{F.resumeViande(formatDateFR(finViande))}</Text> : null}
+        <FormField label={F.notes} value={notes} onChangeText={setNotes} multiline style={commonStyles.textarea} />
+        <ListeFichiers
+          titre={F.fichiers}
+          libelleAjout={TEXTES.fichiers.ajouter}
+          aide={TEXTES.fichiers.aide}
+          pieces={fichiers}
+          onAjouter={ajouterFichiers}
+          onRetirer={retirerFichier}
+          apercu
+        />
+        <Button label={TEXTES.commun.general.enregistrer} onPress={enregistrer} loading={enregistrement} />
+        {existant ? (
+          <View style={commonStyles.gap10}>
+            <Button variant="danger" label={F.supprimer} onPress={() => setSuppressionOuverte(true)} />
+          </View>
+        ) : null}
+        <ConfirmModal
+          visible={suppressionOuverte}
+          title={F.supprimerQuestion}
+          message={F.supprimerMessage}
+          confirmLabel={TEXTES.commun.general.supprimer}
+          onCancel={() => setSuppressionOuverte(false)}
+          onConfirm={supprimer}
+        />
+      </Screen>
+    </AccentColorProvider>
+  );
+}

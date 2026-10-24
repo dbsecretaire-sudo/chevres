@@ -13,13 +13,6 @@ export const CATEGORIE_SUIVI = {
 
 export type CategorieSuivi = ValeurDe<typeof CATEGORIE_SUIVI>;
 
-/** L'ordre des catégories dans les colonnes de chaque page. */
-export const CATEGORIES_SUIVI: readonly CategorieSuivi[] = [
-  CATEGORIE_SUIVI.JEUNES,
-  CATEGORIE_SUIVI.FEMELLES,
-  CATEGORIE_SUIVI.MALES,
-];
-
 /** Les causes d'entrée du lot (note 4 du formulaire). */
 export const CAUSE_ENTREE = {
   NAISSANCE: 'N',

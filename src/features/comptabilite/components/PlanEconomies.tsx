@@ -20,7 +20,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { reglageInvestissement, type ReglageInvestissement } from '@/features/settings/settings';
 import { CLE_FROMAGE_BROCCIU } from '@/shared/constants/lait';
-import { exporterSimulationLaitPdf } from '@/features/export/simulationLaitPdf';
+import { exporterSimulationLaitPdf } from '@/features/export/documents/simulationLaitPdf';
 import { LOCALE } from '@/shared/constants/format';
 import { formatMontant } from '@/shared/utils/dates';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';

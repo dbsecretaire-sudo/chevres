@@ -1,6 +1,7 @@
 import type { Chevre } from '@/features/cheptel/types';
 import { lignesProductionDe } from '@/features/comptabilite/utils/lignesProduction';
-import type { Controle, FamilleControle, Traitement, VisiteVeterinaire } from '@/features/exploitation/types';
+import type { Controle, FamilleControle } from '@/features/exploitation/types';
+import type { Traitement, VisiteVeterinaire } from '@/features/sante/types';
 import { FAMILLE_CONTROLE, PARAMETRES_LAIT, SURFACES_TERRAIN } from '@/shared/constants/controles';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import {

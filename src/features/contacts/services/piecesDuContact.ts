@@ -1,5 +1,5 @@
 import { estUnDepart, type EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
-import { titreDeLEnlevement } from '@/features/exploitation/services/enlevements';
+import { titreDeLEnlevement } from '@/features/lots-animaux/services/enlevements';
 import type { EnlevementEquarrissage, LotAnimaux, VenteDAnimauxVivants } from '@/features/settings/settings';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { ROUTES } from '@/shared/constants/routes';

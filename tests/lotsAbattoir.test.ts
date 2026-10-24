@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { animauxARemettreALAbattoir, lotsDAbattoir } from '@/features/exploitation/services/lots';
+import { animauxARemettreALAbattoir, lotsDAbattoir } from '@/features/lots-animaux/services/lots';
 import type { Chevre } from '@/features/cheptel/types';
 import type { LotAnimaux } from '@/features/settings/settings';
 

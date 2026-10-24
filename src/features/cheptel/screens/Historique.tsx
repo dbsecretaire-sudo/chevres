@@ -4,7 +4,7 @@ import { SelecteurEspece } from '@/features/etablissements/components/SelecteurE
 import { Alert, FlatList, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { SelectModal } from '@/shared/components/SelectModal';
-import { exporterBordereauxPertePdf } from '@/features/export/bordereauPertePdf';
+import { exporterBordereauxPertePdf } from '@/features/export/documents/bordereauPertePdf';
 import { anneesDuSuivi } from '@/features/cheptel/services/suiviMouvements';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';

@@ -1,0 +1,155 @@
+import { useCallback, useState } from 'react';
+import { FlatList, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Screen } from '@/shared/components/ScreenList';
+import { ListRow } from '@/shared/components/ListRow';
+import { Card } from '@/shared/components/Card';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { Fab } from '@/shared/components/Fab';
+import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
+import type { Chevre } from '@/features/cheptel/types';
+import { listTousTraitements } from '@/features/sante/repository/traitements';
+import { listToutesVisitesVeterinaire } from '@/features/sante/repository/visitesVeterinaire';
+import { etatDuBilan, type BilanSanitaire } from '@/features/sante/services/bilanSanitaire';
+import { texteDuBilan } from '@/features/sante/components/BlocSante';
+import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
+import {
+  animauxEnDelai,
+  delaisEnCours,
+  finDuDelai,
+  finLaPlusTardive,
+} from '@/features/sante/services/delaisAttente';
+import type { Traitement } from '@/features/sante/types';
+import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
+import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { TableauTraitements } from '@/features/sante/components/TableauTraitements';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { lotDuTraitement } from '@/features/lots-animaux/services/lots';
+import type { LotAnimaux } from '@/features/settings/settings';
+import { ROUTES } from '@/shared/constants/routes';
+import { colors } from '@/shared/theme/colors';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { TEXTES } from '@/shared/textes';
+import { formatDateFR, todayISO } from '@/shared/utils/dates';
+
+const T = TEXTES.cheptel.traitements;
+
+/** Ce que dit la ligne d'un traitement : ses dates, les animaux, ses délais. */
+function sousTitreDe(t: Traitement, lots: LotAnimaux[]): string {
+  const dates = t.dateFin && t.dateFin !== t.date ? `${formatDateFR(t.date)} → ${formatDateFR(t.dateFin)}` : formatDateFR(t.date);
+  const boucles = numerosDeBoucles(t.chevreNumeroBoucle);
+  const lot = lotDuTraitement(t, lots);
+  const animaux = lot ? lot.nom : boucles.length > 0 ? T.animaux(boucles.length) : T.troupeauEntier;
+  const lait = finDuDelai(t, 'lait');
+  const viande = finDuDelai(t, 'viande');
+  const delais = [
+    lait ? T.delaiLait(t.delaiLaitJours ?? 0, formatDateFR(lait)) : undefined,
+    viande ? T.delaiViande(t.delaiViandeJours ?? 0, formatDateFR(viande)) : undefined,
+  ].filter(Boolean);
+  return [dates, animaux, delais.length > 0 ? delais.join(' · ') : T.sansDelai].join(' · ');
+}
+
+/**
+ * Les traitements donnés aux animaux : en haut, ce qui est en délai d'attente aujourd'hui (le lait à ne pas livrer, la viande à ne pas
+ * vendre ni abattre, avec le dernier jour de chaque délai) ; dessous, l'historique, le plus récent d'abord.
+ */
+export default function ListeTraitements() {
+  const router = useRouter();
+  // Le poste de comptabilité : l'historique des traitements en tableau (les délais en cours restent en haut).
+  const comptable = useDispositionComptable();
+  const { espece } = useEtablissement();
+  const [traitements, setTraitements] = useState<Traitement[]>([]);
+  const [animaux, setAnimaux] = useState<Chevre[]>([]);
+  const [bilan, setBilan] = useState<BilanSanitaire>({ etat: 'valide' });
+  const aujourdhui = todayISO();
+  const { lots } = useLots();
+
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([listTousTraitements(), listChevresVivantes(), listToutesVisitesVeterinaire()])
+        .then(([t, a, visites]) => {
+          setTraitements(t);
+          setAnimaux(a);
+          setBilan(etatDuBilan(visites, todayISO()));
+        })
+        .catch(() => undefined);
+      // L'espèce courante change ce qui est lu : la liste se recharge avec elle.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [espece]),
+  );
+
+  const enLait = animauxEnDelai(animaux, traitements, aujourdhui, 'lait');
+  const enViande = animauxEnDelai(animaux, traitements, aujourdhui, 'viande');
+  const actifs = new Set(delaisEnCours(traitements, aujourdhui).map((d) => d.traitement.id));
+  const finLait = finLaPlusTardive(enLait);
+  const finViande = finLaPlusTardive(enViande);
+
+  /** Ce qui est en cours (les délais d'attente, le bilan sanitaire) et le titre de l'historique : en haut de la liste comme du tableau. */
+  const enTete = (
+    <View style={commonStyles.gap10}>
+      <Card style={commonStyles.gap8}>
+        <Text style={commonStyles.cardTitle}>{T.enCours}</Text>
+        {finLait ? (
+          <Text style={[commonStyles.lineBold, { color: colors.danger }]}>
+            {T.laitEnDelai(enLait.length, formatDateFR(finLait))}
+          </Text>
+        ) : null}
+        {finViande ? (
+          <Text style={[commonStyles.lineBold, { color: colors.danger }]}>
+            {T.viandeEnDelai(enViande.length, formatDateFR(finViande))}
+          </Text>
+        ) : null}
+        {!finLait && !finViande ? <Text style={commonStyles.mutedItalic}>{T.aucunEnCours}</Text> : null}
+      </Card>
+      {/* Le bilan sanitaire annuel (les petits ruminants) : valide, bientôt expiré, expiré, ou jamais noté. */}
+      {ESPECES_PETITS_RUMINANTS.includes(espece) ? (
+        <Card style={commonStyles.gap8}>
+          <Text style={commonStyles.cardTitle}>{T.bilan.titre}</Text>
+          <Text style={[commonStyles.line, bilan.etat === 'valide' ? null : { color: bilan.etat === 'bientot' ? colors.textMuted : colors.danger }]}>
+            {texteDuBilan(bilan, true)}
+          </Text>
+        </Card>
+      ) : null}
+      {traitements.length > 0 ? <Text style={commonStyles.cardTitle}>{T.historique}</Text> : null}
+    </View>
+  );
+
+  return (
+    <Screen scroll={false}>
+      {comptable ? (
+        <ScrollView contentContainerStyle={commonStyles.listFab}>
+          {enTete}
+          <TableauTraitements
+            traitements={traitements}
+            lots={lots}
+            enDelai={actifs}
+            onOuvrir={(item) => router.push(ROUTES.traitement(item.id) as never)}
+            vide={T.aucun}
+          />
+        </ScrollView>
+      ) : (
+      <FlatList
+        data={traitements}
+        keyExtractor={(t) => t.id}
+        contentContainerStyle={commonStyles.listFab}
+        ListHeaderComponent={enTete}
+        ListEmptyComponent={<EmptyState title={T.aucun} subtitle={T.aucunAide} />}
+        renderItem={({ item }) => (
+          <ListRow
+            title={item.produit}
+            subtitle={sousTitreDe(item, lots)}
+            trailing={actifs.has(item.id) ? <Text style={[commonStyles.lineBold, { color: colors.danger }]}>{T.enDelai}</Text> : undefined}
+            onPress={() => router.push(ROUTES.traitement(item.id) as never)}
+          />
+        )}
+      />
+      )}
+      <Fab
+        options={[
+          { label: T.nouveau, icon: 'add', onPress: () => router.push(ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU as never) },
+        ]}
+      />
+    </Screen>
+  );
+}

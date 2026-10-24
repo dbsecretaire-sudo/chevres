@@ -62,7 +62,7 @@ import {
 } from '@/features/comptabilite/utils/ventes';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
-import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
+import { useFraisAbattoir } from '@/features/lots-animaux/hooks/useFraisAbattoir';
 import { nomComplet } from '@/shared/utils/personne';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';

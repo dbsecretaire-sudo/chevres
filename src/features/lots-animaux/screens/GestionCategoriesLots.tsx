@@ -1,0 +1,126 @@
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen } from '@/shared/components/Screen';
+import { Button } from '@/shared/components/Button';
+import { Card } from '@/shared/components/Card';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
+import { NomModal } from '@/features/dossiers/components/NomModal';
+import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { estCategorieDeLotsProtegee, iconeDeCategorieDeLots } from '@/features/lots-animaux/services/lots';
+import type { CategorieLotReglage } from '@/features/settings/settings';
+import { colors } from '@/shared/theme/colors';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
+import { commonStyles } from '@/shared/styles/commonStyles';
+import { generateId } from '@/shared/utils/id';
+import { TEXTES } from '@/shared/textes';
+
+const T = TEXTES.cheptel.lots;
+const TC = T.categories;
+
+/**
+ * Les catégories de lots : la liste actuelle, avec leur nombre de lots. Chacune se renomme (le crayon), se monte et se descend, et se
+ * supprime (la corbeille) — sauf celles d'office, dont les lots se créent tout seuls. On en ajoute avec le bouton du bas. Tout s'enregistre
+ * tout de suite ; les lots d'une catégorie supprimée passent dans « Autres lots ».
+ */
+export default function GestionCategoriesLots() {
+  const { lots, categories, definirCategories } = useLots();
+  const [renommage, setRenommage] = useState<string | null>(null);
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  const [aRetirer, setARetirer] = useState<string | null>(null);
+
+  const enregistrer = (liste: CategorieLotReglage[]) => definirCategories(liste);
+  const deplacer = (index: number, sens: -1 | 1) => {
+    const autre = index + sens;
+    if (autre < 0 || autre >= categories.length) return;
+    const liste = [...categories];
+    [liste[index], liste[autre]] = [liste[autre], liste[index]];
+    enregistrer(liste);
+  };
+
+  return (
+    <Screen>
+      <Text style={commonStyles.note}>{TC.aideGerer}</Text>
+      {/* L'abattoir est dans Production › Viande : il n'est plus une catégorie de Lots d'animaux. */}
+      {categories.map((c, i) => {
+        if (c.id === CATEGORIE_LOT.ABATTOIR) return null;
+        const nombre = lots.filter((l) => l.categorie === c.id).length;
+        return (
+          <Card key={c.id}>
+            <View style={commonStyles.rowSpaceBetween}>
+              <Ionicons name={iconeDeCategorieDeLots(c.id)} size={22} color={colors.primary} />
+              <View style={commonStyles.flex1}>
+                <Text style={commonStyles.cardTitle}>{c.nom}</Text>
+                <Text style={commonStyles.note}>{TC.nombre(nombre)}</Text>
+              </View>
+              <Pressable
+                onPress={() => deplacer(i, -1)}
+                hitSlop={8}
+                accessibilityLabel={TC.monter}
+                disabled={i === 0}
+              >
+                <Ionicons name="chevron-up" size={24} color={i === 0 ? colors.textMuted : colors.primary} />
+              </Pressable>
+              <Pressable
+                onPress={() => deplacer(i, 1)}
+                hitSlop={8}
+                accessibilityLabel={TC.descendre}
+                disabled={i === categories.length - 1}
+              >
+                <Ionicons
+                  name="chevron-down"
+                  size={24}
+                  color={i === categories.length - 1 ? colors.textMuted : colors.primary}
+                />
+              </Pressable>
+              <Pressable onPress={() => setRenommage(c.id)} hitSlop={8} accessibilityLabel={TC.renommer}>
+                <Ionicons name="create-outline" size={24} color={colors.primary} />
+              </Pressable>
+              {estCategorieDeLotsProtegee(c.id) ? null : (
+                <Pressable onPress={() => setARetirer(c.id)} hitSlop={8} accessibilityLabel={TC.supprimer}>
+                  <Ionicons name="trash-outline" size={24} color={colors.danger} />
+                </Pressable>
+              )}
+            </View>
+            {estCategorieDeLotsProtegee(c.id) ? <Text style={commonStyles.note}>{TC.protegee}</Text> : null}
+          </Card>
+        );
+      })}
+      <Button variant="secondary" label={TC.ajouter} onPress={() => setAjoutOuvert(true)} />
+
+      <NomModal
+        visible={!!renommage}
+        titre={TC.renommer}
+        valeurInitiale={categories.find((c) => c.id === renommage)?.nom ?? ''}
+        placeholder={TC.exempleNom}
+        onValider={(nom) => {
+          if (renommage && nom.trim())
+            enregistrer(categories.map((c) => (c.id === renommage ? { ...c, nom: nom.trim() } : c)));
+          setRenommage(null);
+        }}
+        onAnnuler={() => setRenommage(null)}
+      />
+      <NomModal
+        visible={ajoutOuvert}
+        titre={TC.nomCategorie}
+        placeholder={TC.exempleNom}
+        onValider={(nom) => {
+          if (nom.trim()) enregistrer([...categories, { id: generateId(), nom: nom.trim() }]);
+          setAjoutOuvert(false);
+        }}
+        onAnnuler={() => setAjoutOuvert(false)}
+      />
+      <ConfirmModal
+        visible={!!aRetirer}
+        title={TC.supprimerQuestion}
+        message={TC.supprimerMessage}
+        confirmLabel={TEXTES.commun.general.supprimer}
+        onCancel={() => setARetirer(null)}
+        onConfirm={() => {
+          enregistrer(categories.filter((c) => c.id !== aRetirer));
+          setARetirer(null);
+        }}
+      />
+    </Screen>
+  );
+}

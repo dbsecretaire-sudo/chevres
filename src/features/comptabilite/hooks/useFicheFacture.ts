@@ -14,8 +14,8 @@ import {
 import { lignesVeterinaireRetenues } from '@/features/comptabilite/forms/lignesVeterinaire';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { delierLaFactureDuLot } from '@/features/exploitation/services/departDAnimaux';
-import { retirerLesLotsDAbattoir } from '@/features/exploitation/services/lotsSansFacture';
+import { delierLaFactureDuLot } from '@/features/lots-animaux/services/departDAnimaux';
+import { retirerLesLotsDAbattoir } from '@/features/lots-animaux/services/lotsSansFacture';
 import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -24,7 +24,7 @@ import { erreurAchatBoucles } from '@/features/stock/services/boucles';
 import {
   retirerVisiteFacture,
   synchroniserVisiteFacture,
-} from '@/features/exploitation/services/visitesFacture';
+} from '@/features/sante/services/visitesFacture';
 import {
   enregistrerFacture,
   getFacture,

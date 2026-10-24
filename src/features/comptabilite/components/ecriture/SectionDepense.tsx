@@ -42,7 +42,7 @@ import {
   sansFactureAffichee,
 } from '@/shared/dictionnaire/categoriesFournisseur';
 import type { Fournisseur } from '@/features/fournisseurs/types';
-import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_DEPENSE, OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { formatTotalEuros } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
@@ -52,7 +52,6 @@ import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule'
 import { ChampObjetAssurance } from '@/features/comptabilite/components/ChampObjetAssurance';
 import { ChampNumeroOuContrat } from '@/features/comptabilite/components/ChampNumeroOuContrat';
 import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
-import { OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { categorieAvecVehicule } from '@/features/exploitation/services/flotte';
 import { ChampElementAgritourisme } from '@/features/comptabilite/components/ChampElementAgritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';

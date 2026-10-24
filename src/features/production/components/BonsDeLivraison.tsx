@@ -1,9 +1,9 @@
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
-import { TableauBonsDeLivraison } from '@/features/exploitation/components/TableauxDesDeparts';
+import { TableauBonsDeLivraison } from '@/features/lots-animaux/components/TableauxDesDeparts';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
-import { bouclesDuLot } from '@/features/exploitation/services/lots';
+import { bouclesDuLot } from '@/features/lots-animaux/services/lots';
 import type { LotAnimaux } from '@/features/settings/settings';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';

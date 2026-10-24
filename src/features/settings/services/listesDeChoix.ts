@@ -22,10 +22,6 @@ export const choixObjetsAssurance = (perso: ListePerso | undefined, choisi?: str
 /** Le nom d'un « Assurance de » (d'office, renommé ou ajouté). */
 export const nomObjetAssurance = (id: string, perso: ListePerso | undefined): string => nomDuChoix(id, objetsAssuranceDOffice(), perso);
 
-/** Les choix de « Catégorie de dépense » (sans le renommage : le nom d'une catégorie d'office porte son sens comptable) ; les masquées ne sont plus proposées. */
-export const choixCategoriesDepense = (perso: ListePerso | undefined, choisie?: string): Choix[] =>
-  choixProposes(categoriesDepenseDOffice(), perso ? { ...perso, renommes: undefined } : undefined, choisie ? [choisie] : []);
-
 /** Les circuits de vente d'office (la ferme, le marché, les paniers…). */
 export const circuitsDOffice = (): { id: string; nom: string }[] =>
   Object.values(CIRCUIT_VENTE).map((id) => ({ id, nom: LABEL_CIRCUIT_VENTE[id] }));
