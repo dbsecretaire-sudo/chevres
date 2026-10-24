@@ -1,6 +1,8 @@
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
+import { TableauBonsDeLivraison } from '@/features/exploitation/components/TableauxDesDeparts';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { bouclesDuLot } from '@/features/exploitation/services/lots';
 import type { LotAnimaux } from '@/features/settings/settings';
 import { ROUTES } from '@/shared/constants/routes';
@@ -15,6 +17,18 @@ const T = TEXTES.exploitation.bonsDeLivraison;
  */
 export function BonsDeLivraison({ lots, ouvrir }: { lots: readonly LotAnimaux[]; ouvrir: (route: string) => void }) {
   const bons = lots.filter((l) => !!l.abattoir).sort((a, b) => (b.abattoir ?? '').localeCompare(a.abattoir ?? ''));
+  // Le poste de comptabilité (Windows, affichage sobre) montre les bons en tableau.
+  const comptable = useDispositionComptable();
+  if (comptable) {
+    return (
+      <GroupeAccueil titre={T.titre}>
+        <TableauBonsDeLivraison bons={bons} onOuvrir={(bon) => ouvrir(ROUTES.lotDeProduction(bon.id))} vide={T.aucun} />
+        <BlocLignes>
+          <ListRow title={T.ajouter} icone="add-circle" onPress={() => ouvrir(ROUTES.lotAbattoirNouveau())} />
+        </BlocLignes>
+      </GroupeAccueil>
+    );
+  }
   return (
     <GroupeAccueil titre={T.titre}>
       <BlocLignes>

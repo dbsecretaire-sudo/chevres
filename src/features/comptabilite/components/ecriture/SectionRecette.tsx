@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
+import { bonDeCommandeAuClient } from '@/features/clients/services/categorie';
 import { styles } from '@/shared/styles/comptabilite/SectionRecette.styles';
 import { useRouter } from 'expo-router';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
@@ -71,7 +72,7 @@ export function SectionRecetteContact({
       <SectionForm>
         {date}
         {/* Une commande à transformer en vente : le contact, le circuit et le produit sont repris. */}
-        {e.estProductionVente && onCommande ? (
+        {e.estProductionVente && onCommande && bonDeCommandeAuClient(e.clientSelectionne) ? (
           <Button
             variant="secondary"
             label={TEXTES.comptabilite.nouvelleEcriture.venteSurCommande}

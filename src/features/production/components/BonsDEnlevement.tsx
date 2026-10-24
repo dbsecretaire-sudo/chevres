@@ -1,6 +1,8 @@
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
+import { TableauEnlevements } from '@/features/exploitation/components/TableauxDesDeparts';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
 import { enlevementsRecentsDabord, titreDeLEnlevement } from '@/features/exploitation/services/enlevements';
 import type { EnlevementEquarrissage } from '@/features/settings/settings';
@@ -14,6 +16,18 @@ const T = TEXTES.exploitation.enlevements;
  * ouvre le bon ; « Ajouter un bon d'enlèvement » en crée un.
  */
 export function BonsDEnlevement({ enlevements, ouvrir }: { enlevements: readonly EnlevementEquarrissage[]; ouvrir: (route: string) => void }) {
+  // Le poste de comptabilité (Windows, affichage sobre) montre les bons en tableau.
+  const comptable = useDispositionComptable();
+  if (comptable) {
+    return (
+      <GroupeAccueil titre={T.groupe}>
+        <TableauEnlevements enlevements={enlevements} onOuvrir={(e) => ouvrir(ROUTES.enlevement(e.id))} vide={T.aucun} />
+        <BlocLignes>
+          <ListRow title={T.ajouter} icone="add-circle" onPress={() => ouvrir(ROUTES.enlevement())} />
+        </BlocLignes>
+      </GroupeAccueil>
+    );
+  }
   return (
     <GroupeAccueil titre={T.groupe}>
       <BlocLignes>

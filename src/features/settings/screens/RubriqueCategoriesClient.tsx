@@ -16,6 +16,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { CATEGORIE_CLIENT_PAR_DEFAUT, CATEGORIES_CLIENT_PROTEGEES } from '@/shared/constants/clients';
 import {
   categoriesClientParDefaut,
+  bonDeCommandePropose,
   fraisAbattoirFactures,
   prixPersonnalisePropose,
   groupesRecetteDeLaCategorie,
@@ -152,6 +153,11 @@ export default function RubriqueCategoriesClient() {
                 value={prixPersonnalisePropose(c)}
                 onChange={(prixPersonnalise) => maj(c.id, { prixPersonnalise })}
               />
+              <Checkbox
+                label={T.bonDeCommande}
+                value={bonDeCommandePropose(c)}
+                onChange={(bonDeCommande) => maj(c.id, { bonDeCommande })}
+              />
               <Text style={commonStyles.lineSemiBold}>{T.affichage}</Text>
               <Checkbox
                 label={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
@@ -259,6 +265,12 @@ export default function RubriqueCategoriesClient() {
                   coche: (id) => prixPersonnalisePropose(categories.find((c) => c.id === id)),
                   definir: (id, prixPersonnalise) => maj(id, { prixPersonnalise }),
                 },
+                {
+                  cle: 'bonDeCommande',
+                  titre: T.bonDeCommande,
+                  coche: (id) => bonDeCommandePropose(categories.find((c) => c.id === id)),
+                  definir: (id, bonDeCommande) => maj(id, { bonDeCommande }),
+                },
               ],
             },
             {
@@ -305,6 +317,7 @@ export default function RubriqueCategoriesClient() {
               { cle: 'prixLibre', titre: T.prixLibre, coche: (id) => !!categories.find((c) => c.id === id)?.prixLibre },
               { cle: 'fraisAbattoir', titre: T.fraisAbattoir, coche: (id) => fraisAbattoirFactures(categories.find((c) => c.id === id)) },
               { cle: 'prixPersonnalise', titre: T.prixPersonnalise, coche: (id) => prixPersonnalisePropose(categories.find((c) => c.id === id)) },
+              { cle: 'bonDeCommande', titre: T.bonDeCommande, coche: (id) => bonDeCommandePropose(categories.find((c) => c.id === id)) },
               { cle: 'pasEncaissee', titre: TEXTES.comptabilite.tresorerie.paiement.pasEncaissee, coche: (id) => pasEncaisseeAffichee(categories.find((c) => c.id === id)) },
             ]}
             resume={{ titre: T.recettes, texte: (id) => { const c = categories.find((x) => x.id === id); return c ? `${groupesRecetteDeLaCategorie(c).filter((g) => (groupesProposes as readonly string[]).includes(g)).length} sur ${groupesProposes.length}` : ''; } }}

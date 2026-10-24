@@ -1,5 +1,5 @@
 import type { Client } from '@/features/clients/types';
-import { categorieClientDe, fraisAbattoirFactures, groupesRecetteDeLaCategorie, prixPersonnalisePropose } from '@/shared/dictionnaire/categoriesClient';
+import { bonDeCommandePropose, categoriesClient, categorieClientDe, fraisAbattoirFactures, groupesRecetteDeLaCategorie, prixPersonnalisePropose } from '@/shared/dictionnaire/categoriesClient';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
 import { CATEGORIE_CLIENT, GROUPES_RECETTE_SANS_CLIENT } from '@/shared/constants/clients';
 
@@ -26,6 +26,13 @@ export const fraisAbattoirFacturesAuClient = (client: Pick<Client, 'categorie'> 
   fraisAbattoirFactures(categorieClientDe(client?.categorie));
 
 /** Vrai quand la case « Prix du produit personnalisé » se propose à ce client (selon sa catégorie : réglage, sinon oui sauf à prix libre). */
+/**
+ * Vrai quand la vente peut se faire à partir d'un bon de commande : pour ce client, si sa catégorie l'active ; sans client choisi encore, si une catégorie au moins l'active (d'office, aucune :
+ * le bouton « Vente basée sur une commande » n'apparaît pas).
+ */
+export const bonDeCommandeAuClient = (client: Pick<Client, 'categorie'> | undefined): boolean =>
+  client ? bonDeCommandePropose(categorieClientDe(client.categorie)) : categoriesClient().some((c) => bonDeCommandePropose(c));
+
 export const prixPersonnaliseAuClient = (client: Pick<Client, 'categorie'> | undefined): boolean =>
   prixPersonnalisePropose(categorieClientDe(client?.categorie));
 
