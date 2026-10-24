@@ -10,6 +10,7 @@ const comptes = (surcharge: Partial<ComptesTerrain> = {}): ComptesTerrain => ({
   aCompleter: 0,
   lotsAFacturer: 0,
   viandeAFacturer: 0,
+  viandeAVendre: 0,
   lotsARappeler: 0,
   stockNegatif: false,
   visitesAVenir: 0,
@@ -54,6 +55,8 @@ describe('écrans terrain des trois zones de l’accueil', () => {
   it('l’atelier compte la viande à facturer (pas le cheptel) et signale un stock négatif', () => {
     const tuiles = tuilesDuTerrain('atelier', comptes({ viandeAFacturer: 4, stockNegatif: true, lotsARappeler: 1 }));
     expect(tuiles.find((t) => t.cle === 'viande')).toMatchObject({ nombre: 4, alerte: true });
+    // La viande à vendre (les chèvres sans boucle) a sa propre tuile et son propre chiffre.
+    expect(tuilesDuTerrain('atelier', comptes({ viandeAVendre: 2 })).find((t) => t.cle === 'viandeAVendre')).toMatchObject({ nombre: 2, alerte: true });
     expect(tuiles.find((t) => t.cle === 'stock')?.alerte).toBe(true);
     expect(tuiles.find((t) => t.cle === 'lotsAtelier')).toMatchObject({ nombre: 1, alerte: true });
     // Les quatre fabrications ouvrent la page de fabrication de leur produit.

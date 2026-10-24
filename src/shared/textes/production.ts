@@ -874,6 +874,14 @@ export const TEXTES_PRODUCTION = {
     rappeler: 'Rappeler des lots',
     aucune: 'Aucune vente de viande cette année',
     abattoirLe: (date: string) => `Abattoir le ${date}`,
+    /** La page simple d'un jour d'abattage à facturer : le poids total et le client. */
+    simple: {
+      poidsTotal: 'Poids total (kg)',
+      clientAFacturer: 'Client à facturer',
+      choisirUnClient: 'Choisir un client',
+      facturer: 'Facturer',
+      vendre: 'Vendre',
+    },
     onglets: {
       aFacturer: (n: number) => (n > 0 ? `À facturer (${n})` : 'À facturer'),
       facturee: (n: number) => (n > 0 ? `Facturée (${n})` : 'Facturée'),

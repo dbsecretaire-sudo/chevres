@@ -37,6 +37,8 @@ import type { ArchiveStock } from '@/features/stock/types';
 import { CATEGORIE_ANIMAL, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { CLE_PRIX_LAIT, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
+import { animauxSansBoucleAVendre } from '@/features/production/simple/viandeAVendre';
+import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { todayISO } from '@/shared/utils/dates';
 
 /** Le nom court d'une déclaration à faire : « RSA », ou le nom de l'échéance. */
@@ -66,6 +68,24 @@ function useLotsAFacturer(): { jours: number; animaux: number } {
   return { jours: facturables.length, animaux: facturables.reduce((total, animaux) => total + animaux.length, 0) };
 }
 
+/** Les animaux sans boucle à vendre (la viande à vendre), relus à chaque retour sur l'écran. */
+function useViandeAVendre(): number {
+  const { espece } = useEtablissement();
+  const [nombre, setNombre] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([listTousLesAnimauxDeLEspece(), listToutesVentes()])
+        .then(([animaux, ventes]) =>
+          setNombre(animauxSansBoucleAVendre(animaux, new Set(ventes.flatMap((v) => idsDesAnimaux(v)))).length),
+        )
+        .catch(() => undefined);
+      // L'espèce courante change ce qui est lu : la liste se relit avec elle.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [espece]),
+  );
+  return nombre;
+}
+
 /** Jusqu'à quatre animaux qui représentent le troupeau dans l'enclos : une femelle, un mâle, un petit, une autre femelle. */
 export function animauxVedettes(vivants: readonly Chevre[]): Chevre[] {
   const parBoucle = (a: Chevre, b: Chevre) => (a.numeroBoucle ?? '').localeCompare(b.numeroBoucle ?? '');
@@ -85,6 +105,7 @@ export function useFermeAccueil() {
   const { rappels: analyses } = useRappelsAnalysesPlats();
   const { aRappeler, aValider } = useLotsARappeler();
   const { jours: lotsAFacturer, animaux: animauxAbattusAFacturer } = useLotsAFacturer();
+  const viandeAVendre = useViandeAVendre();
   /** Ce que le berger a saisi sur le terrain et qui reste à compléter (le badge du bouton Cheptel). */
   const { animaux: aCompleter } = useAnimauxACompleter();
   const { espece } = useEtablissement();
@@ -209,6 +230,8 @@ export function useFermeAccueil() {
     /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
     estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,
     lotsAFacturer,
+    /** Les animaux sans boucle à vendre. */
+    viandeAVendre,
     /** Les ventes d'animaux vivants dont le document de circulation manque. */
     ventesSansDocument: ventesVivantesSansDocument(settings.exploitation?.ventesVivants).length,
     aCompleter: aCompleter.length,

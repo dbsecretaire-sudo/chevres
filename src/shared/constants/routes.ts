@@ -179,6 +179,8 @@ export const ROUTES = {
   PRODUCTION_ETIQUETTES_SIMPLE: '/production/etiquettes-simple',
   /** La viande à facturer, en tuiles : un jour d'abattage par tuile. */
   PRODUCTION_VIANDE_SIMPLE: '/production/viande-simple',
+  /** La viande à vendre, en tuiles : une chèvre sans boucle par tuile. */
+  PRODUCTION_VIANDE_A_VENDRE_SIMPLE: '/production/viande-a-vendre',
   productionFabricationSimple: (produit: string) => `/production/fabrication-simple?produit=${produit}` as const,
   productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,
   PRODUCTION_RAPPELS_LOTS: '/production/rappels-lots',

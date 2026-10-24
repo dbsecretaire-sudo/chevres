@@ -32,6 +32,7 @@ export default function EcranTerrain() {
     aCompleter: f.aCompleter,
     lotsAFacturer: f.lotsAFacturer,
     viandeAFacturer: f.transformation.viande,
+    viandeAVendre: f.viandeAVendre,
     lotsARappeler: f.lotsARappeler,
     stockNegatif: f.stockNegatif,
     visitesAVenir: f.agritourisme.aVenir,

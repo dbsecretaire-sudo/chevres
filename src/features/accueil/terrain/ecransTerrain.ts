@@ -34,6 +34,8 @@ export interface ComptesTerrain {
   lotsAFacturer: number;
   /** Les animaux abattus qui restent à facturer à un client. */
   viandeAFacturer: number;
+  /** Les animaux sans boucle à vendre. */
+  viandeAVendre: number;
   lotsARappeler: number;
   stockNegatif: boolean;
   visitesAVenir: number;
@@ -76,6 +78,7 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
         { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.LAIT_DU_JOUR },
         { cle: 'etiquettes', titre: T.etiquettes, icone: 'pricetags', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
         { cle: 'lotsAtelier', titre: T.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS, ...avec(c.lotsARappeler, true) },
+        { cle: 'viandeAVendre', titre: T.viandeAVendre, icone: 'receipt', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE_A_VENDRE_SIMPLE, ...avec(c.viandeAVendre, true) },
         { cle: 'viande', titre: T.viandeAFacturer, icone: 'receipt', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE_SIMPLE, ...avec(c.viandeAFacturer, true) },
         { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },
         contacts(),

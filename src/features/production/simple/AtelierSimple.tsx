@@ -16,6 +16,7 @@ const SANS_COMPTES: ComptesTerrain = {
   aCompleter: 0,
   lotsAFacturer: 0,
   viandeAFacturer: 0,
+  viandeAVendre: 0,
   lotsARappeler: 0,
   stockNegatif: false,
   visitesAVenir: 0,
