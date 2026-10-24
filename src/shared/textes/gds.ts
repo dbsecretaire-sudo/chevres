@@ -11,7 +11,6 @@ export const TEXTES_GDS = {
     manque: 'Pas encore déposé',
     ajouter: 'Ajouter un document',
     ajouterUnAutre: 'Ajouter un autre document',
-    nouvelleEcriture: 'Nouvelle écriture',
     remplacer: 'Remplacer ce document',
     retirer: 'Retirer ce document',
     confirmerRetrait: 'Retirer ce document ?',
