@@ -378,7 +378,8 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
     // Le bon d'équarrissage est rangé dans le lot d'équarrissage (Lots d'animaux), avec ses animaux.
-    liens: [{ cle: 'bons', icone: 'document-text', route: ROUTES.ENLEVEMENTS }],
+    // Les bons d'enlèvement sont dans la page elle-même (un groupe en tête), pas derrière un lien.
+    liens: [],
   },
   abattoir: {
     cle: 'abattoir',

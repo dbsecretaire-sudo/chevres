@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import LieuAssociations from '@/features/production/screens/LieuAssociations';
 import { BonsDeLivraison } from '@/features/production/components/BonsDeLivraison';
+import { BonsDEnlevement } from '@/features/production/components/BonsDEnlevement';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
@@ -238,6 +239,9 @@ function LieuTiersStandard() {
           }
         />
       ) : null}
+
+      {/* L'équarrissage : ses bons d'enlèvement d'abord (les animaux morts pris, le n° du bon, le bon de l'équarrisseur). */}
+      {cle === 'equarrissage' ? <BonsDEnlevement enlevements={settings.exploitation?.enlevements ?? []} ouvrir={ouvrir} /> : null}
 
       {/* L'abattoir : ses bons de livraison d'abord (les animaux livrés, le document de circulation, la facture de l'abattoir liée). */}
       {cle === 'abattoir' ? <BonsDeLivraison lots={settings.exploitation?.lots ?? []} ouvrir={ouvrir} /> : null}
