@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
 import { GrosBouton } from '@/shared/components/GrosBouton';
 import { styles } from '@/shared/styles/accueil/EcranTerrain.styles';
 import { colors } from '@/shared/theme/colors';
@@ -12,6 +13,8 @@ export interface Choix {
   libelle: string;
   /** L'icône (MaterialCommunityIcons) : le bouton ou la tuile la montre quand elle est donnée. */
   icone?: keyof typeof MaterialCommunityIcons.glyphMap;
+  /** L'article du stock que le choix désigne : la tuile montre l'image qu'on lui a choisie (sinon son dessin, `emoji`). */
+  image?: { cle: string; emoji: string };
 }
 
 /** Une liste de choix, en très grands boutons ou en tuiles. Un appui rend le choix touché. */
@@ -48,7 +51,11 @@ export function ListeDeChoix({
           style={({ pressed }) => [styles.tuile, pressed ? styles.tuileAppuyee : null]}
         >
           <View style={styles.haut}>
-            {c.icone ? <MaterialCommunityIcons name={c.icone} size={44} color={colors.primary} /> : null}
+            {c.image ? (
+              <DessinDeCarte emoji={c.image.emoji} cle={c.image.cle} />
+            ) : c.icone ? (
+              <MaterialCommunityIcons name={c.icone} size={44} color={colors.primary} />
+            ) : null}
           </View>
           <Text style={styles.titre} numberOfLines={2}>
             {c.libelle}

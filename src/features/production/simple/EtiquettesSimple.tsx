@@ -4,9 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { exporterEtiquettesLotPdf } from '@/features/export/documents/etiquettesLotPdf';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { lireArchiveStock } from '@/features/stock/repository';
+import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { articlesDuProduit } from '@/features/stock/services/lots';
 import type { ArticleAffiche } from '@/features/stock/services/stock';
-import type { ArchiveStock, LotFromage } from '@/features/stock/types';
+import type { ArchiveStock, GenreArticle, LotFromage } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
@@ -116,7 +117,11 @@ export function EtiquettesSimple({
               presentation={presentation}
               choix={articlesDuProduit(etape.produit, archive, espece)
                 .filter((a) => fabricationsDe(archive, a.cle).length > 0)
-                .map((a) => ({ cle: a.cle, libelle: a.libelle }))}
+                .map((a) => ({
+                  cle: a.cle,
+                  libelle: a.libelle,
+                  image: { cle: a.cle, emoji: emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle) },
+                }))}
               onChoisir={(c) => {
                 const article = articlesDuProduit(etape.produit, archive, espece).find((a) => a.cle === c.cle);
                 if (article) setEtape({ nom: 'fabrication', article });

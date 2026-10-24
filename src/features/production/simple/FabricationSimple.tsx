@@ -11,8 +11,9 @@ import {
   fabriquerSavons,
   numeroDeLot,
 } from '@/features/stock/services/lots';
+import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/services/stock';
-import type { ArchiveStock } from '@/features/stock/types';
+import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
@@ -130,7 +131,12 @@ export function FabricationSimple({
           {articles.length === 0 ? <Text style={styles.detail}>{T.aucunProduit}</Text> : null}
           <ListeDeChoix
             presentation={presentation}
-            choix={articles.map((a) => ({ cle: a.cle, libelle: a.libelle, icone: ICONE_DU_PRODUIT[produit] }))}
+            choix={articles.map((a) => ({
+              cle: a.cle,
+              libelle: a.libelle,
+              icone: ICONE_DU_PRODUIT[produit],
+              image: { cle: a.cle, emoji: emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle) },
+            }))}
             onChoisir={(c) => {
               const article = articles.find((a) => a.cle === c.cle);
               if (article) choisir(article);

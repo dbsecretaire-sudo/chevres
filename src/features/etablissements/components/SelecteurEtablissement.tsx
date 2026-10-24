@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { Fab } from '@/shared/components/Fab';
+import { useRole } from '@/features/roles/context/RoleContext';
 import { useATraiter } from '@/features/a-traiter/hooks/useATraiter';
 import type { ATraiter } from '@/features/a-traiter/types';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
@@ -44,6 +45,7 @@ export function SelecteurEtablissement({
   onFermer,
 }: Props) {
   const [mode, setMode] = useState<Mode>({ type: 'liste' });
+  const { choisir } = useRole();
   // Le poste de comptabilité (affichage sobre, grande fenêtre) : les établissements en tableau.
   const comptable = useDispositionComptable();
   const [aSupprimer, setASupprimer] = useState<Etablissement | null>(null);
@@ -153,6 +155,8 @@ export function SelecteurEtablissement({
                 />
               ))}
             </BlocLignes>
+            {/* Le mode se choisit au lancement : on peut y revenir d'ici (téléphone). */}
+            <Button variant="secondary" label={TEXTES.roles.berger.changerDeRole} onPress={() => choisir(undefined)} />
           </>
           )
         )}
