@@ -292,7 +292,7 @@ export interface Vente {
   etatAnimaux?: 'vivants' | 'morts';
   /** Le document de circulation déposé (le scan du document rempli) ; absent tant qu'il manque. */
   documentCirculation?: DocumentCirculationDepose;
-  /** Une vente d'animaux vivants faite après leur départ : le lot de départ qu'elle facture (il porte le document de circulation). */
+  /** Une vente d'animaux vivants faite après leur départ : le bon de livraison ou la vente d'animaux vivants qu'elle facture (ils portent le document de circulation). */
   lotId?: string;
   /** Pour la vente d'animaux sur pied ou vivants : les fiches du cheptel des animaux vendus (leurs identifiants séparés par « ; »). */
   animaux?: string;

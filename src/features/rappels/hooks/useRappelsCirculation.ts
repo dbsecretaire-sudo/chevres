@@ -17,19 +17,20 @@ import { todayISO } from '@/shared/utils/dates';
 export function useRappelsCirculation(valides: readonly string[]) {
   const { espece } = useEtablissement();
   const lots = useAppSettings().settings.exploitation?.lots;
+  const ventesVivants = useAppSettings().settings.exploitation?.ventesVivants;
   const [ecritures, setEcritures] = useState<EcritureACirculation[]>([]);
   useFocusEffect(
     useCallback(() => {
       Promise.all([listToutesVentes(), listToutesFactures(), nomsDesAbattoirs()])
         .then(([ventes, factures, abattoirs]) =>
           setEcritures(
-            ecrituresACirculation(ventes, factures, abattoirs, lots).filter(
+            ecrituresACirculation(ventes, factures, abattoirs, lots, [], ventesVivants).filter(
               (e) => e.activite === espece || e.activite === ACTIVITE_COMMUNE,
             ),
           ),
         )
         .catch(() => undefined);
-    }, [espece, lots]),
+    }, [espece, lots, ventesVivants]),
   );
   return useMemo(() => rappelsEnvoiCirculation(ecritures, valides, todayISO()), [ecritures, valides]);
 }

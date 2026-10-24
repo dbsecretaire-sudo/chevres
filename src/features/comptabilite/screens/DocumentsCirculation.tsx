@@ -20,6 +20,7 @@ import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import {
   anneesDesEcritures,
   ecrituresACirculation,
+  estUnDepart,
   rechercherEcritures,
   type EcritureACirculation,
   type EcritureLiee,
@@ -47,11 +48,11 @@ const quand = (iso: string): { date: string; heure: string } => {
 
 /** Les écritures qu'un document couvre : celles de son lot (la prestation de l'abattoir, les ventes), ou l'écriture elle-même hors lot. */
 const lignesDuDocument = (e: EcritureACirculation): EcritureLiee[] =>
-  e.type === 'lot'
+  estUnDepart(e.type)
     ? e.liees
     : [
         {
-          type: e.type,
+          type: e.type === 'vente' ? 'vente' : 'facture',
           id: e.id,
           date: e.date,
           tiers: e.tiers,
@@ -118,6 +119,7 @@ export default function DocumentsCirculation() {
   const [ouverte, setOuverte] = useState<string | null>(null);
 
   const lots = settings.exploitation?.lots;
+  const ventesVivants = settings.exploitation?.ventesVivants;
   const charger = useCallback(async () => {
     const [ventes, factures, abattoirs, chevres] = await Promise.all([
       listToutesVentes(),
@@ -125,9 +127,9 @@ export default function DocumentsCirculation() {
       nomsDesAbattoirs(),
       listTousLesAnimauxDeLEspece(),
     ]);
-    // Les lots de départ y sont aussi : leur document se dépose avant toute écriture, et couvre la prestation de l'abattoir comme la vente.
-    setToutes(ecrituresACirculation(ventes, factures, abattoirs, lots, chevres));
-  }, [lots]);
+    // Les bons de livraison et les ventes d'animaux vivants y sont aussi : leur document se dépose avant toute écriture, et couvre la prestation de l'abattoir comme la vente.
+    setToutes(ecrituresACirculation(ventes, factures, abattoirs, lots, chevres, ventesVivants));
+  }, [lots, ventesVivants]);
   useFocusEffect(
     useCallback(() => {
       charger().catch(() => undefined);
@@ -160,7 +162,9 @@ export default function DocumentsCirculation() {
                   ? ROUTES.ficheVente(menu.id)
                   : menu.type === 'lot'
                     ? ROUTES.lot(menu.id)
-                    : ROUTES.ficheFacture(menu.id)) as never,
+                    : menu.type === 'vivants'
+                      ? ROUTES.venteVivants(menu.id)
+                      : ROUTES.ficheFacture(menu.id)) as never,
               ),
           },
         ],
@@ -207,7 +211,7 @@ export default function DocumentsCirculation() {
                     <Text style={commonStyles.muted}>
                       {[formatDateFR(item.date), item.reference].filter(Boolean).join(' · ')}
                     </Text>
-                    {item.type === 'lot' ? null : (
+                    {estUnDepart(item.type) ? null : (
                       <Text style={[commonStyles.lineBold, { color: item.montant < 0 ? colors.danger : colors.primary }]}>
                         {formatMontant(item.montant)}
                       </Text>

@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/FicheDepartVivants';
+export { default } from '@/features/exploitation/screens/FicheVenteVivants';

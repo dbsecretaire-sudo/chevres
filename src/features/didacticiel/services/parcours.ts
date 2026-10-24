@@ -251,7 +251,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('1', 'La liste des ventes', 'Le bouton « Vente (vivant) » ouvre d’abord la liste des ventes d’animaux vivants ; « Nouvelle vente » en ouvre une.', 'Accueil › Vente (vivant)', ROUTES.VENTES_VIVANTS),
         etape('2', 'Les animaux et l’acheteur', 'La date du départ, puis « Choisir les animaux » (Tiptag ou Boucles) et, si vous le connaissez, l’acheteur : le client chez qui le document de circulation se range.', 'Vente (vivant) › Nouvelle vente', ROUTES.lotAbattoirNouveau('vivants')),
         etape('3', 'Le document de circulation', 'Générez le modèle pré-rempli, remplissez-le, puis téléversez-le signé : il est obligatoire avant la facture. Il se range dans les documents du client acheteur.', 'Vente (vivant) › une vente', ROUTES.VENTES_VIVANTS),
-        etape('4', 'Je facture le départ', '« Facturer ce départ au détenteur d’arrivée » ouvre la vente, déjà préremplie : les animaux, l’acheteur et le lot. À l’enregistrement, leur fiche passe à « vendue ».', 'Vente (vivant) › une vente', ROUTES.VENTES_VIVANTS),
+        etape('4', 'Je facture le départ', '« Facturer ce départ au détenteur d’arrivée » ouvre la vente, déjà préremplie : les animaux, l’acheteur et la vente. À l’enregistrement, leur fiche passe à « vendue ».', 'Vente (vivant) › une vente', ROUTES.VENTES_VIVANTS),
       ],
     },
     {

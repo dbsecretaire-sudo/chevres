@@ -43,10 +43,11 @@ export async function toutesLesPieces(): Promise<PieceJointe[]> {
     ...trading.trades.flatMap((t) => t.captures ?? []),
     ...visites.flatMap((v) => v.fichiers ?? []),
     ...traitements.flatMap((t) => t.fichiers ?? []),
-    // Les fichiers joints à un lot d'abattage, et le document de circulation d'un bon de livraison ou d'une vente d'animaux vivants.
+    // Les fichiers joints à un lot d'abattage, et le document de circulation d'un bon de livraison.
     ...(settings.exploitation?.lots ?? []).flatMap((l) => [...(l.fichiers ?? []), ...(l.documentCirculation ? [l.documentCirculation.piece] : [])]),
-    // Le bon de l'équarrisseur de chaque enlèvement, les pièces du cadre réglementaire de l'atelier et les documents du groupement sanitaire (rapports d'essais compris).
+    // Le bon de l'équarrisseur de chaque enlèvement, le document de circulation de chaque vente d'animaux vivants, les pièces du cadre réglementaire de l'atelier et les documents du groupement sanitaire (rapports d'essais compris).
     ...(settings.exploitation?.enlevements ?? []).flatMap((e) => e.fichiers ?? []),
+    ...(settings.exploitation?.ventesVivants ?? []).flatMap((v) => (v.documentCirculation ? [v.documentCirculation.piece] : [])),
     ...Object.values(settings.exploitation?.cadreAtelier ?? {}).flatMap((e) => e.fichiers ?? []),
     ...Object.values(settings.exploitation?.gds?.documents ?? {}).flatMap((d) => (Array.isArray(d) ? d : [d]).map((x) => x.piece)),
     ...Object.values(settings.exploitation?.declarationsChambre ?? {}).flatMap(piecesDeLaDeclaration),

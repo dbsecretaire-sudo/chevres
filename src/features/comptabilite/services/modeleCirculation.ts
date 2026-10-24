@@ -20,13 +20,21 @@ export async function genererLeModeleDeCirculation(ecriture: Pick<EcritureACircu
     await exporterDocumentCirculationPdf(ecriture.id);
     return;
   }
-  // Un lot de départ : les animaux partent à la date du lot (le jour du départ), avant toute écriture.
+  // Une vente d'animaux vivants : les animaux partent le jour de la vente, vers l'acheteur, avant toute écriture.
+  if (ecriture.type === 'vivants') {
+    const vente = (await getSettings()).exploitation?.ventesVivants?.find((v) => v.id === ecriture.id);
+    if (!vente) return;
+    const animauxDeLaVente = animauxDuLot(vente, await listTousLesAnimauxDeLEspece());
+    await exporterDocumentCirculationAbattoirPdf(vente.date, animauxDeLaVente.map((a) => a.id), undefined, true);
+    return;
+  }
+  // Un bon de livraison : les animaux partent à la date du bon (le jour du départ), avant toute écriture.
   if (ecriture.type === 'lot') {
     const lot = (await getSettings()).exploitation?.lots?.find((l) => l.id === ecriture.id);
     if (!lot) return;
     const animauxDuDepart = animauxDuLot(lot, await listTousLesAnimauxDeLEspece());
     await exporterDocumentCirculationAbattoirPdf(
-      (lot.abattoir ?? lot.dateDepart) as string,
+      lot.abattoir as string,
       animauxDuDepart.map((a) => a.id),
       undefined,
       true,
@@ -45,7 +53,7 @@ export async function genererLeModeleDeCirculation(ecriture: Pick<EcritureACircu
   const deDepart = facture.lotId ? lots?.find((l) => l.id === facture.lotId) : undefined;
   if (deDepart) {
     await exporterDocumentCirculationAbattoirPdf(
-      (deDepart.abattoir ?? deDepart.dateDepart) as string,
+      deDepart.abattoir ?? facture.date,
       animauxDuLot(deDepart, await listTousLesAnimauxDeLEspece()).map((a) => a.id),
       facture.tiers,
       true,

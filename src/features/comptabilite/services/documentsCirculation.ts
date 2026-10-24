@@ -10,7 +10,8 @@ import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { todayISO, yearOf } from '@/shared/utils/dates';
 import { ajouterJours } from '@/shared/utils/calendrier';
 import { comparerAlphabetique } from '@/shared/utils/personne';
-import type { LotAnimaux } from '@/features/settings/settings';
+import type { LotAnimaux, VenteDAnimauxVivants } from '@/features/settings/settings';
+import { titreDeLaVenteVivants } from '@/features/exploitation/services/ventesVivants';
 import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
 import type { Chevre } from '@/features/cheptel/types';
 import { animauxDuLot } from '@/features/exploitation/services/lots';
@@ -19,11 +20,17 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 /** Pendant combien de jours un document de circulation manquant est rappelé (au-delà, l'écriture est trop ancienne pour qu'on le réclame). */
 export const JOURS_RAPPEL_CIRCULATION = 365;
 
-/** Ce qui demande un document de circulation : une vente, une dépense (achat d'animaux, abattoir), ou un lot de départ (le document est déposé avant toute écriture). */
+/** Le genre d'une écriture à document : une vente, une dépense, ou un départ (bon de livraison « lot », vente d'animaux vivants « vivants »). */
+export type TypeDEcritureACirculation = 'vente' | 'facture' | 'lot' | 'vivants';
+
+/** Vrai pour un départ (un bon de livraison ou une vente d'animaux vivants) : son document est déposé avant toute écriture, et couvre celles qui s'y rattachent. */
+export const estUnDepart = (type: TypeDEcritureACirculation): type is 'lot' | 'vivants' => type === 'lot' || type === 'vivants';
+
+/** Ce qui demande un document de circulation : une vente, une dépense (achat d'animaux, abattoir), un bon de livraison à l'abattoir ou une vente d'animaux vivants (le document est déposé avant toute écriture). */
 export interface EcritureACirculation {
-  /** « vente:identifiant », « facture:identifiant » ou « lot:identifiant » : de quoi la retrouver et la mettre en évidence. */
+  /** « vente:identifiant », « facture:identifiant », « lot:identifiant » (bon de livraison) ou « vivants:identifiant » : de quoi la retrouver et la mettre en évidence. */
   cle: string;
-  type: 'vente' | 'facture' | 'lot';
+  type: TypeDEcritureACirculation;
   id: string;
   date: string;
   /** Le client (vente) ou le fournisseur (dépense). */
@@ -38,11 +45,11 @@ export interface EcritureACirculation {
   nature: 'achat' | 'abattoir' | 'vente';
   /** Le document déposé ; absent tant qu'il manque. */
   depose?: DocumentCirculationDepose;
-  /** Pour un lot de départ : la prestation de l'abattoir et les ventes qui s'y rattachent (vide hors lot). */
+  /** Pour un départ (bon de livraison, vente d'animaux vivants) : la prestation de l'abattoir et les ventes qui s'y rattachent (vide hors lot). */
   liees: EcritureLiee[];
 }
 
-/** Une écriture rattachée à un lot de départ : la prestation de l'abattoir (dépense) ou la vente des animaux ou de leur viande. */
+/** Une écriture rattachée à un départ : la prestation de l'abattoir (dépense) ou la vente des animaux ou de leur viande. */
 export interface EcritureLiee {
   type: 'vente' | 'facture';
   id: string;
@@ -56,7 +63,7 @@ export interface EcritureLiee {
 }
 
 /**
- * Les écritures qui demandent un document de circulation, de la plus récente à la plus ancienne : les lots de départ (un document par lot, déposé
+ * Les écritures qui demandent un document de circulation, de la plus récente à la plus ancienne : les départs (un document par bon de livraison ou par vente d'animaux vivants, déposé
  * avant toute écriture, avec les écritures qui s'y rattachent), et, hors lot, les ventes déclarées d'animaux vivants et les dépenses d'animaux
  * vivants achetés ou d'un contact de catégorie Abattoir.
  */
@@ -66,9 +73,34 @@ export function ecrituresACirculation(
   abattoirs: ReadonlySet<string>,
   lots: readonly LotAnimaux[] = [],
   animaux: readonly Chevre[] = [],
+  ventesVivants: readonly VenteDAnimauxVivants[] = [],
 ): EcritureACirculation[] {
-  const lotsDeDepart = lots.filter((l) => l.depart && (l.abattoir || l.dateDepart));
-  const idsDesLots = new Set(lotsDeDepart.map((l) => l.id));
+  /** Ce qui porte un document de circulation avant toute écriture : les bons de livraison à l'abattoir et les ventes d'animaux vivants. */
+  const departs = [
+    ...lots
+      .filter((l) => l.depart && l.abattoir)
+      .map((l) => ({
+        type: 'lot' as const,
+        id: l.id,
+        date: l.abattoir as string,
+        nom: l.nom,
+        boucles: l.boucles,
+        nature: 'abattoir' as const,
+        depose: l.documentCirculation,
+        factureId: l.factureId,
+      })),
+    ...ventesVivants.map((v) => ({
+      type: 'vivants' as const,
+      id: v.id,
+      date: v.date,
+      nom: titreDeLaVenteVivants(v),
+      boucles: v.boucles,
+      nature: 'vente' as const,
+      depose: v.documentCirculation,
+      factureId: undefined,
+    })),
+  ];
+  const idsDesLots = new Set(departs.map((d) => d.id));
   const deVentes = ventes
     .filter((v) => documentCirculationRequis(v) && !(v.lotId && idsDesLots.has(v.lotId)))
     .map<EcritureACirculation>((v) => ({
@@ -104,11 +136,11 @@ export function ecrituresACirculation(
       depose: f.documentCirculation,
       liees: [],
     }));
-  const deLots = lotsDeDepart.map<EcritureACirculation>((l) => {
+  const deLots = departs.map<EcritureACirculation>((l) => {
     const boucles = numerosDeBoucles(l.boucles);
     const idsDuLot = new Set(animauxDuLot({ boucles: l.boucles }, [...animaux]).map((a) => a.id));
     const prestations = factures
-      .filter((f) => f.lotId === l.id || f.id === l.factureId)
+      .filter((f) => f.lotId === l.id || (!!l.factureId && f.id === l.factureId))
       .map<EcritureLiee>((f) => ({
         type: 'facture',
         id: f.id,
@@ -131,16 +163,16 @@ export function ecrituresACirculation(
         role: 'vente',
       }));
     return {
-      cle: `lot:${l.id}`,
-      type: 'lot',
+      cle: `${l.type}:${l.id}`,
+      type: l.type,
       id: l.id,
-      date: (l.abattoir ?? l.dateDepart) as string,
+      date: l.date,
       tiers: l.nom,
       reference: `${boucles.length} ${boucles.length > 1 ? 'animaux' : 'animal'}`,
       montant: 0,
       activite: ACTIVITE_COMMUNE,
-      nature: l.abattoir ? 'abattoir' : 'vente',
-      depose: l.documentCirculation,
+      nature: l.nature,
+      depose: l.depose,
       liees: [...prestations, ...vendues],
     };
   });
@@ -193,5 +225,5 @@ export async function deposerDocumentCirculation(
     const facture = await getFacture(ecriture.id);
     if (facture) await remplacerFacture({ ...facture, documentCirculation: depose });
   }
-  // Un lot de départ : son document est dans les réglages (les lots), que la couche des écrans met à jour (voir useActionsDocumentCirculation).
+  // Un départ (bon de livraison, vente d'animaux vivants) : son document est dans les réglages, que la couche des écrans met à jour (voir useActionsDocumentCirculation).
 }

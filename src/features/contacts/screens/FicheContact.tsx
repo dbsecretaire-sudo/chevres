@@ -82,6 +82,7 @@ export default function FicheContact() {
   const { categories, idsConnus, assurerCategorie } = useCategoriesContact();
   const lots = useAppSettings().settings.exploitation?.lots;
   const enlevements = useAppSettings().settings.exploitation?.enlevements;
+  const ventesVivants = useAppSettings().settings.exploitation?.ventesVivants;
 
   const [contact, setContact] = useState<Contact | undefined>();
   const [introuvable, setIntrouvable] = useState(false);
@@ -118,11 +119,11 @@ export default function FicheContact() {
       nomsDesAbattoirs(),
       listFournisseurs(),
     ]);
-    setCirculations(ecrituresACirculation(ventes, factures, abattoirs, lots));
+    setCirculations(ecrituresACirculation(ventes, factures, abattoirs, lots, [], ventesVivants));
     setEcritures(ecrituresDuContact(c, ventes, factures, fournisseurs.filter(estEquarrisseur).length === 1));
     setControles(controles);
     setElements(elementsDuContact(c, controles, archive));
-  }, [id, lots]);
+  }, [id, lots, ventesVivants]);
 
   useFocusEffect(
     useCallback(() => {
@@ -223,6 +224,7 @@ export default function FicheContact() {
     lots ?? [],
     circulations,
     enlevements ?? [],
+    ventesVivants ?? [],
   );
 
   return (

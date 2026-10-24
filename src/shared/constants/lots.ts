@@ -7,6 +7,4 @@ export const CATEGORIE_LOT = {
   RENOUVELLEMENT: 'renouvellement',
   /** Les femelles qui ont avorté une année : un lot par année, créé tout seul. */
   AVORTEMENT: 'avortement',
-  /** Les animaux qui partent vivants de l'exploitation (vendus vivants) : un lot par départ, avec son document de circulation, créé avant la vente. */
-  DEPART: 'depart',
 } as const;

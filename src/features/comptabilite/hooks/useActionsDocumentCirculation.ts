@@ -2,6 +2,7 @@ import { Alert } from 'react-native';
 import { deposerDocumentCirculation, type EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
 import { genererLeModeleDeCirculation } from '@/features/comptabilite/services/modeleCirculation';
 import { useLots } from '@/features/exploitation/hooks/useLots';
+import { useVentesVivants } from '@/features/exploitation/hooks/useVentesVivants';
 import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
 import {
   choisirFichiers,
@@ -18,7 +19,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.cheptel.circulation;
 
-/** Ce dont on dépose le document : une vente, une dépense ou un lot de départ, avec le document déjà déposé s'il y en a un. */
+/** Ce dont on dépose le document : une vente, une dépense, un bon de livraison ou une vente d'animaux vivants, avec le document déjà déposé s'il y en a un. */
 export type EcritureDuDocument = Pick<EcritureACirculation, 'type' | 'id' | 'depose'>;
 
 /** Une ligne du menu d'un document de circulation. */
@@ -31,11 +32,17 @@ export type OptionDuMenu = Option;
  */
 export function useActionsDocumentCirculation(recharger: () => Promise<void> | void) {
   const { lots, modifier } = useLots();
-  /** Pose (ou retire) le document : celui d'une écriture est dans ses enregistrements, celui d'un lot de départ dans les lots des réglages. */
+  const { ventes: ventesVivants, modifier: modifierLaVente } = useVentesVivants();
+  /** Pose (ou retire) le document : celui d'une écriture est dans ses enregistrements, celui d'un bon de livraison ou d'une vente d'animaux vivants dans les réglages. */
   const poser = async (e: EcritureDuDocument, document: DocumentCirculationDepose | undefined) => {
     if (e.type === 'lot') {
       const lot = lots.find((l) => l.id === e.id);
       if (lot) await modifier({ ...lot, documentCirculation: document });
+      return;
+    }
+    if (e.type === 'vivants') {
+      const vente = ventesVivants.find((v) => v.id === e.id);
+      if (vente) await modifierLaVente({ ...vente, documentCirculation: document });
       return;
     }
     await deposerDocumentCirculation(e, document);

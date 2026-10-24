@@ -247,8 +247,8 @@ export function useNouvelleEcriture(
     setLotVu(lotInitial);
     if (lotInitial) setLotId(lotInitial);
   }
-  /** Le lot d'abattoir choisi, et vrai quand son document de circulation manque (il se dépose avant toute écriture). */
-  const lotChoisi = (settings.exploitation?.lots ?? []).find((l) => l.id === lotId);
+  /** Le départ choisi (un bon de livraison ou une vente d'animaux vivants), et vrai quand son document de circulation manque (il se dépose avant toute écriture). */
+  const lotChoisi = [...(settings.exploitation?.lots ?? []), ...(settings.exploitation?.ventesVivants ?? [])].find((l) => l.id === lotId);
   const lotSansDocument = !!lotChoisi && !lotChoisi.documentCirculation;
   const [tauxTvaAchat, setTauxTvaAchat] = useState(
     entreprise

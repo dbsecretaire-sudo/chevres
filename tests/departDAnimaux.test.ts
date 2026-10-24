@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   delierLaFactureDuLot,
   lierLaFactureAuLot,
-  lotDuDepart,
+  lotDuBonDeLivraison,
   lotsDAbattoirAFacturer,
   poserLeDocumentDuLot,
 } from '@/features/exploitation/services/departDAnimaux';
@@ -14,7 +14,7 @@ const document = { piece: { id: 'p', nom: 'circulation.pdf' }, deposeLe: '2026-1
 
 describe('lot d’un départ d’animaux', () => {
   it('crée le lot d’abattoir du jour du départ, avec son document', () => {
-    const r = lotDuDepart([], { date: '2026-10-20', destination: 'abattoir', boucles: ['12', '7'], document, nouvelId: () => 'n1' });
+    const r = lotDuBonDeLivraison([], { date: '2026-10-20', boucles: ['12', '7'], document, nouvelId: () => 'n1' });
     expect(r.lot).toMatchObject({
       id: 'n1',
       boucles: '12, 7',
@@ -29,7 +29,7 @@ describe('lot d’un départ d’animaux', () => {
 
   it('complète le lot du même jour au lieu d’en créer un deuxième', () => {
     const existant = lot('a', { abattoir: '2026-10-20', boucles: '12, 7', depart: true, documentCirculation: document });
-    const r = lotDuDepart([existant, lot('b')], { date: '2026-10-20', destination: 'abattoir', boucles: ['7', '30'] });
+    const r = lotDuBonDeLivraison([existant, lot('b')], { date: '2026-10-20', boucles: ['7', '30'] });
     expect(r.lots).toHaveLength(2);
     expect(r.lot.id).toBe('a');
     expect(r.lot.boucles).toBe('12, 30, 7');
@@ -37,15 +37,9 @@ describe('lot d’un départ d’animaux', () => {
     expect(r.lot.documentCirculation).toBe(document);
   });
 
-  it('un départ d’animaux vendus vivants a son propre lot, qui n’est pas un lot d’abattoir', () => {
-    const r = lotDuDepart([lot('a', { abattoir: '2026-10-20' })], {
-      date: '2026-10-20',
-      destination: 'vivants',
-      boucles: ['5'],
-      nouvelId: () => 'v1',
-    });
-    expect(r.lot).toMatchObject({ id: 'v1', categorie: 'depart', dateDepart: '2026-10-20', depart: true });
-    expect(r.lot.abattoir).toBeUndefined();
+  it('un bon de livraison est toujours un lot d’abattoir : il ne crée jamais de départ d’animaux vivants', () => {
+    const r = lotDuBonDeLivraison([lot('a', { abattoir: '2026-10-19' })], { date: '2026-10-20', boucles: ['5'], nouvelId: () => 'v1' });
+    expect(r.lot).toMatchObject({ id: 'v1', categorie: 'abattoir', abattoir: '2026-10-20' });
     expect(r.lots).toHaveLength(2);
   });
 });
@@ -84,11 +78,11 @@ describe('facture de l’abattoir émise après le départ', () => {
 describe('plusieurs abattoirs', () => {
   it('deux départs le même jour vers deux abattoirs font deux lots, chacun avec son abattoir', () => {
     let lots: LotAnimaux[] = [];
-    lots = lotDuDepart(lots, { date: '2026-10-20', destination: 'abattoir', boucles: ['1'], contactCle: 'a1', nouvelId: () => 'x' }).lots;
-    const r = lotDuDepart(lots, { date: '2026-10-20', destination: 'abattoir', boucles: ['2'], contactCle: 'a2', nouvelId: () => 'y' });
+    lots = lotDuBonDeLivraison(lots, { date: '2026-10-20', boucles: ['1'], contactCle: 'a1', nouvelId: () => 'x' }).lots;
+    const r = lotDuBonDeLivraison(lots, { date: '2026-10-20', boucles: ['2'], contactCle: 'a2', nouvelId: () => 'y' });
     expect(r.lots.map((l) => [l.id, l.contactCle])).toEqual([['x', 'a1'], ['y', 'a2']]);
     // Le même abattoir le même jour complète le lot existant.
-    const suite = lotDuDepart(r.lots, { date: '2026-10-20', destination: 'abattoir', boucles: ['3'], contactCle: 'a1' });
+    const suite = lotDuBonDeLivraison(r.lots, { date: '2026-10-20', boucles: ['3'], contactCle: 'a1' });
     expect(suite.lots).toHaveLength(2);
     expect(suite.lot.boucles).toBe('1, 3');
   });

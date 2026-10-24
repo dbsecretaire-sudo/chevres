@@ -204,11 +204,11 @@ export interface LotAnimaux {
   /** Pour un lot d'abattoir : les fichiers de cet abattage ou de sa vente (poids, bon d'abattage, documents), joints à la fiche du lot. */
   fichiers?: PieceJointe[];
   /**
-   * Un lot créé par le départ d'animaux vivants (l'assistant « Nouveau lot d'abattoir ») : il existe avant toute écriture, avec son document de
-   * circulation, et ne disparaît pas avec sa facture (qui est émise quelques jours plus tard).
+   * Un bon de livraison créé par le départ des animaux vers l'abattoir (l'assistant « Nouveau bon de livraison ») : il existe avant toute écriture, avec son
+   * document de circulation, et ne disparaît pas avec sa facture (qui est émise quelques jours plus tard).
    */
   depart?: boolean;
-  /** Un lot de départ d'animaux vendus vivants : le jour du départ (AAAA-MM-JJ). Un lot d'abattoir a le sien dans `abattoir`. */
+  /** Ancien format : le jour d'un départ d'animaux vendus vivants (ils ont maintenant leur propre enregistrement, voir VenteDAnimauxVivants ; repris au démarrage). */
   dateDepart?: string;
   /** Le contact du lot : l'équarrisseur d'un lot d'équarrissage, l'abattoir d'un lot d'abattoir (l'identifiant de sa fiche) ; le lot se range dans ses documents. */
   contactCle?: string;
@@ -289,6 +289,22 @@ export interface EnlevementEquarrissage {
   numeroBon?: string;
   /** Le bon remis par l'équarrisseur (scan, photo, PDF). */
   fichiers?: PieceJointe[];
+}
+
+/**
+ * Une vente d'animaux vivants (un départ vers un acheteur) : le jour, les animaux qui partent (leurs boucles) et le document de circulation, déposé avant toute
+ * écriture. La facture au détenteur d'arrivée est créée d'ici ; elle porte l'identifiant de la vente dans son `lotId`.
+ */
+export interface VenteDAnimauxVivants {
+  id: string;
+  /** Le jour du départ (AAAA-MM-JJ). */
+  date: string;
+  /** Les boucles des animaux qui partent, séparées par des virgules. */
+  boucles: string;
+  /** L'acheteur (l'identifiant de sa fiche client), chez qui le document de circulation se range ; absent : à choisir. */
+  contactCle?: string;
+  /** Le document de circulation (le scan du document rempli) ; absent tant qu'il manque. */
+  documentCirculation?: DocumentCirculationDepose;
 }
 
 /** Un document du groupement sanitaire déposé par l'éleveur : le fichier (scan, photo) et le moment du dépôt. */
@@ -416,6 +432,8 @@ export interface InfosExploitation {
   notesCadreAtelier?: string;
   /** Les enlèvements d'équarrissage : le jour, l'équarrisseur, le bon et les animaux morts enlevés (Équarrissage › Enlèvements). */
   enlevements?: EnlevementEquarrissage[];
+  /** Les ventes d'animaux vivants : le jour, l'acheteur, les animaux et le document de circulation (Cheptel › Vente d'animaux vivants). */
+  ventesVivants?: VenteDAnimauxVivants[];
   /** Les lots d'animaux nommés : on les réutilise pour un traitement, une visite ou un contrôle, et on suit leur santé ensemble. */
   lots?: LotAnimaux[];
   /** La répartition du lait choisie dans le plan d'économies : la part (en %) du lait de l'année de chaque fromage, par identifiant d'article ; le reste est vendu tel quel. Absent : la répartition réelle. */

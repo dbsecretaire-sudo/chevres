@@ -16,8 +16,6 @@ export const lotsTextes = {
   enDelai: (nombre: number) => `${nombre} en délai d’attente`,
   /** Les lots d'abattoir : un par jour d'abattage, créés tout seuls d'après le cheptel. */
   abattoirDu: (date: string) => `Abattoir du ${date}`,
-  /** Les lots de départ d'animaux vendus vivants : un par départ, créés par l'assistant avant la vente. */
-  departDu: (date: string) => `Départ du ${date}`,
   /** L'assistant « Nouveau lot d'abattoir » : le départ d'animaux, avant toute écriture comptable. */
   depart: {
     titre: 'Départ d’animaux',
@@ -70,7 +68,6 @@ export const lotsTextes = {
   /** Les catégories de lots : Abattoir et Vétérinaire d'office, puis celles qu'on ajoute (le bouton réglages du titre). */
   categories: {
     abattoir: 'Abattoir',
-    depart: 'Départs d’animaux vivants',
     equarrissage: 'Équarrissage',
     veterinaire: 'Vétérinaire',
     reproduction: 'Mises à la reproduction',
