@@ -18,12 +18,12 @@ const comptes = (surcharge: Partial<ComptesTerrain> = {}): ComptesTerrain => ({
 });
 
 describe('écrans terrain des trois zones de l’accueil', () => {
-  it('chaque zone a son titre et au moins un bouton, et le bouton Contacts est sur les trois', () => {
+  it('chaque zone a son titre et au moins un bouton ; Contacts reste sur le troupeau seulement', () => {
     for (const zone of ZONES_TERRAIN) {
       expect(titreDuTerrain(zone)).not.toBe('');
       const tuiles = tuilesDuTerrain(zone, comptes());
       expect(tuiles.length).toBeGreaterThan(0);
-      expect(tuiles.find((t) => t.cle === 'contacts')?.route).toBe(ROUTES.CONTACTS);
+      expect(tuiles.find((t) => t.cle === 'contacts')?.route).toBe(zone === 'troupeau' ? ROUTES.CONTACTS : undefined);
     }
   });
 
@@ -57,15 +57,18 @@ describe('écrans terrain des trois zones de l’accueil', () => {
     expect(tuiles.find((t) => t.cle === 'viande')).toMatchObject({ nombre: 4, alerte: true });
     // La viande à vendre (les chèvres sans boucle) a sa propre tuile et son propre chiffre.
     expect(tuilesDuTerrain('atelier', comptes({ viandeAVendre: 2 })).find((t) => t.cle === 'viandeAVendre')).toMatchObject({ nombre: 2, alerte: true });
-    expect(tuiles.find((t) => t.cle === 'stock')?.alerte).toBe(true);
-    expect(tuiles.find((t) => t.cle === 'lotsAtelier')).toMatchObject({ nombre: 1, alerte: true });
+    // Le stock et les lots ne sont proposés que par le mode normal (qui a ses pages) : pas sur l'écran de l'atelier du mode avancé.
+    expect(tuiles.some((t) => t.cle === 'stock' || t.cle === 'lotsAtelier' || t.cle === 'contacts')).toBe(false);
+    const avecPages = tuilesDuTerrain('atelier', comptes({ stockNegatif: true, lotsARappeler: 1 }), true);
+    expect(avecPages.find((t) => t.cle === 'stock')?.alerte).toBe(true);
+    expect(avecPages.find((t) => t.cle === 'lotsAtelier')).toMatchObject({ nombre: 1, alerte: true });
     // Les quatre fabrications ouvrent la page de fabrication de leur produit.
     expect(tuiles.filter((t) => t.route.startsWith('/production/fabrication')).length).toBe(4);
   });
 
   it('l’accueil du public propose la nouvelle visite d’abord, et le nombre de visites à venir', () => {
     const tuiles = tuilesDuTerrain('accueil', comptes({ visitesAVenir: 5 }));
-    expect(tuiles[0]).toMatchObject({ cle: 'nouvelleVisite', route: ROUTES.COMMERCIAL_VISITE });
+    expect(tuiles[0]).toMatchObject({ cle: 'nouvelleVisite', route: ROUTES.COMMERCIAL_VISITE_SIMPLE });
     expect(tuiles.find((t) => t.cle === 'visites')?.nombre).toBe(5);
   });
 

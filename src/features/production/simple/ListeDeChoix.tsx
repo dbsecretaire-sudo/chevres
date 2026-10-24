@@ -3,6 +3,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
 import { GrosBouton } from '@/shared/components/GrosBouton';
 import { styles } from '@/shared/styles/accueil/EcranTerrain.styles';
+import { styles as stylesRoles } from '@/shared/styles/roles/Roles.styles';
 import { colors } from '@/shared/theme/colors';
 
 /** Comment les choix se montrent : de très grands boutons (le mode normal, une main gantée) ou des tuiles blanches en grille (le mode avancé). */
@@ -29,7 +30,7 @@ export function ListeDeChoix({
 }) {
   if (presentation === 'gros')
     return (
-      <>
+      <View style={stylesRoles.grille}>
         {choix.map((c) => (
           <GrosBouton
             key={c.cle}
@@ -38,7 +39,7 @@ export function ListeDeChoix({
             icone={c.icone ? <MaterialCommunityIcons name={c.icone} size={44} color={colors.blanc} /> : undefined}
           />
         ))}
-      </>
+      </View>
     );
   return (
     <View style={styles.grille}>

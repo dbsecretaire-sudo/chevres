@@ -35,7 +35,7 @@ interface JourChoisi {
  * « Viande à facturer » au plus simple : une tuile par jour d'abattage dont la viande n'est pas encore facturée (le jour, le nombre d'animaux, le poids). Un appui
  * ouvre une page de deux réponses — le poids total (kg) et le client à facturer — puis la facture de viande de ce jour s'ouvre, remplie.
  */
-export function ViandeSimple() {
+export function ViandeSimple({ onRetour }: { onRetour?: () => void }) {
   const router = useRouter();
   const { espece } = useEtablissement();
   const inconsommables = useInconsommables();
@@ -121,7 +121,7 @@ export function ViandeSimple() {
         })}
         onChoisir={(c) => setChoisi(groupes.find((g) => g.date === c.cle) ?? null)}
       />
-      <Pressable style={styles.discret} onPress={() => router.back()} accessibilityRole="button">
+      <Pressable style={styles.discret} onPress={onRetour ?? (() => router.back())} accessibilityRole="button">
         <Text style={styles.discretTexte}>{TEXTES.production.fabricationSimple.retour}</Text>
       </Pressable>
     </ScrollView>

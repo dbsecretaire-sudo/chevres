@@ -41,6 +41,19 @@ export interface ComptesTerrain {
   visitesAVenir: number;
 }
 
+/** Aucun chiffre sur les tuiles : le mode normal n'en a pas besoin. */
+export const COMPTES_VIDES: ComptesTerrain = {
+  delais: 0,
+  ventesSansDocument: 0,
+  aCompleter: 0,
+  lotsAFacturer: 0,
+  viandeAFacturer: 0,
+  viandeAVendre: 0,
+  lotsARappeler: 0,
+  stockNegatif: false,
+  visitesAVenir: 0,
+};
+
 const T = TEXTES.accueil.ferme.terrain.tuiles;
 
 /** Le bouton Contacts, utilisé tous les jours : il est sur les trois écrans. */
@@ -53,7 +66,7 @@ export const titreDuTerrain = (zone: ZoneTerrain): string => TEXTES.accueil.ferm
 export const routeDuTerrain = (zone: ZoneTerrain): string => ROUTES.terrain(zone);
 
 /** Les grands boutons d'une zone, dans l'ordre où on s'en sert. Un nombre à zéro ne s'affiche pas. */
-export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerrain[] {
+export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain, avecPages = false): TuileTerrain[] {
   const avec = (nombre: number | undefined, alerte = false): Pick<TuileTerrain, 'nombre' | 'alerte'> =>
     nombre ? { nombre, alerte } : {};
   switch (zone) {
@@ -77,19 +90,22 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
         { cle: 'savon', titre: T.savon, icone: 'restaurant', iconeMci: 'hand-wash', route: ROUTES.productionFabricationSimple(PRODUIT_A_LOTS.SAVON) },
         { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.LAIT_DU_JOUR },
         { cle: 'etiquettes', titre: T.etiquettes, icone: 'pricetags', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
-        { cle: 'lotsAtelier', titre: T.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS, ...avec(c.lotsARappeler, true) },
         { cle: 'viandeAVendre', titre: T.viandeAVendre, icone: 'receipt', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE_A_VENDRE_SIMPLE, ...avec(c.viandeAVendre, true) },
         { cle: 'viande', titre: T.viandeAFacturer, icone: 'receipt', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE_SIMPLE, ...avec(c.viandeAFacturer, true) },
-        { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },
-        contacts(),
+        // Le stock et les lots s'ouvrent dans leur page : seul le mode normal les propose ici (avec ses propres pages).
+        ...(avecPages
+          ? ([
+              { cle: 'lotsAtelier', titre: T.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS, ...avec(c.lotsARappeler, true) },
+              { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },
+            ] as TuileTerrain[])
+          : []),
       ];
     case 'accueil':
       return [
-        { cle: 'nouvelleVisite', titre: T.nouvelleVisite, icone: 'add-circle', route: ROUTES.COMMERCIAL_VISITE },
-        { cle: 'visites', titre: T.visites, icone: 'trail-sign', route: ROUTES.COMMERCIAL_AGRITOURISME, ...avec(c.visitesAVenir) },
-        { cle: 'formules', titre: T.formules, icone: 'restaurant', route: ROUTES.COMMERCIAL_FORMULES },
-        { cle: 'accueilPublic', titre: T.accueilPublic, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
-        contacts(),
+        { cle: 'nouvelleVisite', titre: T.nouvelleVisite, icone: 'add-circle', route: ROUTES.COMMERCIAL_VISITE_SIMPLE },
+        { cle: 'visites', titre: T.visites, icone: 'trail-sign', route: ROUTES.COMMERCIAL_VISITES_SIMPLE, ...avec(c.visitesAVenir) },
+        { cle: 'formules', titre: T.formules, icone: 'restaurant', route: ROUTES.COMMERCIAL_FORMULES_SIMPLE },
+        { cle: 'accueilPublic', titre: T.accueilPublic, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC_SIMPLE },
       ];
   }
 }

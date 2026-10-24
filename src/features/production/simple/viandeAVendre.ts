@@ -14,3 +14,10 @@ export function animauxSansBoucleAVendre(cheptel: Chevre[], idsVendus: ReadonlyS
     )
     .sort((a, b) => b.dateNaissance.localeCompare(a.dateNaissance));
 }
+
+/** L'âge d'un animal en jours entiers à une date (AAAA-MM-JJ) : rien si sa naissance est inconnue ou après cette date. */
+export function joursDeVie(dateNaissance: string | undefined, aujourdhui: string): number | undefined {
+  if (!dateNaissance) return undefined;
+  const jours = Math.floor((Date.parse(`${aujourdhui}T12:00:00Z`) - Date.parse(`${dateNaissance.slice(0, 10)}T12:00:00Z`)) / 86_400_000);
+  return Number.isFinite(jours) && jours >= 0 ? jours : undefined;
+}

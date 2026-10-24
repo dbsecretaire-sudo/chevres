@@ -12,13 +12,14 @@ import { libelleChevre } from '@/features/cheptel/utils/chevreLabel';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
 import { PageSimplePoidsClient } from '@/features/production/simple/PageSimplePoidsClient';
-import { animauxSansBoucleAVendre } from '@/features/production/simple/viandeAVendre';
+import { animauxSansBoucleAVendre, joursDeVie } from '@/features/production/simple/viandeAVendre';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { TEXTES } from '@/shared/textes';
+import { todayISO } from '@/shared/utils/dates';
 
 const T = TEXTES.production.viande;
 const S = TEXTES.production.viande.simple;
@@ -27,7 +28,7 @@ const S = TEXTES.production.viande.simple;
  * « Viande à vendre » au plus simple : une tuile par chèvre sans boucle à vendre. Un appui ouvre la page de deux réponses — le poids (kg) et le client — puis l'écriture de
  * la vente sans facture s'ouvre, avec l'animal et le client.
  */
-export function ViandeAVendreSimple() {
+export function ViandeAVendreSimple({ onRetour }: { onRetour?: () => void }) {
   const router = useRouter();
   const { espece } = useEtablissement();
   const [animaux, setAnimaux] = useState<Chevre[] | null>(null);
@@ -76,7 +77,7 @@ export function ViandeAVendreSimple() {
     return (
       <PageSimplePoidsClient
         titre={TEXTES.accueil.ferme.terrain.tuiles.viandeAVendre}
-        detail={libelleChevre(choisi)}
+        detail={[libelleChevre(choisi), joursDeVie(choisi.dateNaissance, todayISO()) === undefined ? '' : S.jours(joursDeVie(choisi.dateNaissance, todayISO()) as number)].filter(Boolean).join(' · ')}
         poidsInitial={choisi.poidsKg}
         clients={clients}
         libelleValider={S.vendre}
@@ -92,10 +93,17 @@ export function ViandeAVendreSimple() {
       {animaux !== null && animaux.length === 0 ? <Text style={styles.detail}>{T.rienAVendre}</Text> : null}
       <ListeDeChoix
         presentation="tuiles"
-        choix={(animaux ?? []).map((a) => ({ cle: a.id, libelle: libelleChevre(a), icone: 'food-steak' as const }))}
+        choix={(animaux ?? []).map((a) => {
+          const jours = joursDeVie(a.dateNaissance, todayISO());
+          return {
+            cle: a.id,
+            libelle: jours === undefined ? libelleChevre(a) : `${libelleChevre(a)}\n${S.jours(jours)}`,
+            icone: 'food-steak' as const,
+          };
+        })}
         onChoisir={(c) => setChoisi((animaux ?? []).find((a) => a.id === c.cle) ?? null)}
       />
-      <Pressable style={styles.discret} onPress={() => router.back()} accessibilityRole="button">
+      <Pressable style={styles.discret} onPress={onRetour ?? (() => router.back())} accessibilityRole="button">
         <Text style={styles.discretTexte}>{TEXTES.production.fabricationSimple.retour}</Text>
       </Pressable>
     </ScrollView>

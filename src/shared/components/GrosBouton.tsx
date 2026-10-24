@@ -20,12 +20,13 @@ export function GrosBouton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.grosBouton,
+        styles.moitie,
         clair ? [styles.grosBoutonClair, styles.grosBoutonBas] : null,
         pressed ? styles.grosBoutonAppuye : null,
       ]}
     >
       {icone}
-      <Text style={[styles.grosTexte, clair ? styles.grosTexteClair : null]}>{libelle}</Text>
+      <Text style={[styles.grosTexte, styles.grosTexteMoitie, clair ? styles.grosTexteClair : null]}>{libelle}</Text>
     </Pressable>
   );
 }

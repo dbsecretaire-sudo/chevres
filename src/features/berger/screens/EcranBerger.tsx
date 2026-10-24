@@ -16,6 +16,7 @@ import {
 import { useRole } from '@/features/roles/context/RoleContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useGoogleDriveSansNavigation } from '@/features/settings/hooks/useGoogleDrive';
+import { TourismeSimple } from '@/features/commercial/simple/TourismeSimple';
 import { AtelierSimple } from '@/features/production/simple/AtelierSimple';
 import { Button } from '@/shared/components/Button';
 import { GrosBouton } from '@/shared/components/GrosBouton';
@@ -32,14 +33,13 @@ const T = TEXTES.roles.berger;
 const DELAI_APRES_UN_CHANGEMENT = 400;
 
 type But = 'naissance' | 'mort';
-type Zone = 'chevres' | 'fromagerie' | 'tourisme';
 
 /** Ce que le berger fait : choisir une zone, une saisie, scanner la boucle, (pour une naissance) dire combien de petits, puis voir que c'est enregistré — avec de quoi l'annuler. */
 type Etape =
   | { nom: 'accueil' }
   | { nom: 'chevres' }
   | { nom: 'fromagerie' }
-  | { nom: 'bientot'; zone: Zone }
+  | { nom: 'tourisme' }
   | { nom: 'scan'; but: But }
   | { nom: 'main'; but: But }
   | { nom: 'petits'; mere: Chevre }
@@ -124,6 +124,7 @@ export default function EcranBerger() {
           {etape.nom === 'accueil' ? (
             <View style={styles.contenu}>
               <Text style={styles.titre}>{T.titre}</Text>
+              <View style={styles.grille}>
               <GrosBouton
                 libelle={T.chevres}
                 onPress={chevres}
@@ -136,7 +137,7 @@ export default function EcranBerger() {
               />
               <GrosBouton
                 libelle={T.tourisme}
-                onPress={() => setEtape({ nom: 'bientot', zone: 'tourisme' })}
+                onPress={() => setEtape({ nom: 'tourisme' })}
                 icone={<Ionicons name="trail-sign" size={52} color={colors.blanc} />}
               />
               <GrosBouton
@@ -145,6 +146,7 @@ export default function EcranBerger() {
                 clair
                 icone={<Ionicons name="cloud-upload" size={40} color={colors.primary} />}
               />
+              </View>
               <Pressable style={styles.discret} onPress={() => choisir(undefined)} accessibilityRole="button">
                 <Text style={styles.discretTexte}>{T.changerDeRole}</Text>
               </Pressable>
@@ -153,6 +155,7 @@ export default function EcranBerger() {
 
           {etape.nom === 'chevres' ? (
             <View style={styles.contenu}>
+              <View style={styles.grille}>
               <GrosBouton
                 libelle={T.naissance}
                 onPress={() => commencer('naissance')}
@@ -163,6 +166,7 @@ export default function EcranBerger() {
                 onPress={() => commencer('mort')}
                 icone={<MaterialCommunityIcons name="grave-stone" size={56} color={colors.blanc} />}
               />
+              </View>
               <Pressable style={styles.discret} onPress={accueil} accessibilityRole="button">
                 <Text style={styles.discretTexte}>{T.retour}</Text>
               </Pressable>
@@ -171,13 +175,7 @@ export default function EcranBerger() {
 
           {etape.nom === 'fromagerie' ? <AtelierSimple onQuitter={accueil} /> : null}
 
-          {etape.nom === 'bientot' ? (
-            <View style={styles.contenu}>
-              <Text style={styles.titre}>{etape.zone === 'fromagerie' ? T.fromagerie : T.tourisme}</Text>
-              <Text style={styles.message}>{T.bientot}</Text>
-              <Button label={T.retour} onPress={accueil} />
-            </View>
-          ) : null}
+          {etape.nom === 'tourisme' ? <TourismeSimple onQuitter={accueil} /> : null}
 
           {etape.nom === 'scan' ? (
             <View style={styles.scanner}>

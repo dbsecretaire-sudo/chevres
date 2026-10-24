@@ -881,6 +881,7 @@ export const TEXTES_PRODUCTION = {
       choisirUnClient: 'Choisir un client',
       facturer: 'Facturer',
       vendre: 'Vendre',
+      jours: (n: number) => `${n} ${n > 1 ? 'jours' : 'jour'}`,
     },
     onglets: {
       aFacturer: (n: number) => (n > 0 ? `À facturer (${n})` : 'À facturer'),

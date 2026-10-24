@@ -4,6 +4,9 @@ import { AncreVisite } from '@/shared/components/AncreVisite';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
 import { BlocSante } from '@/features/sante/components/BlocSante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
+import { Redirect } from 'expo-router';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { TuilesAccueil } from '@/features/accueil/components/TuilesAccueil';
@@ -14,6 +17,9 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 /** Accueil de l'élevage : la ferme (d'office), ou l'accueil classique en liste quand le réglage le demande. */
 export default function Accueil() {
   const { settings } = useAppSettings();
+  const { role } = useRole();
+  // Le mode normal a sa propre page d'accueil : l'accueil de la ferme y renvoie.
+  if (role === ROLE.BERGER) return <Redirect href="/berger" />;
   return settings.exploitation?.accueilClassique ? <AccueilElevage /> : <AccueilFerme />;
 }
 

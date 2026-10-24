@@ -197,6 +197,11 @@ export const ROUTES = {
   COMMERCIAL_TARIFS: '/commercial/tarifs',
   COMMERCIAL_COMMANDES: '/commercial/commandes',
   COMMERCIAL_CIRCUITS: '/commercial/circuits',
+  /** Les pages simples de l'accueil du public (tuiles) : nouvelle visite, visites, formules, obligations. */
+  COMMERCIAL_VISITE_SIMPLE: '/commercial/visite-simple',
+  COMMERCIAL_VISITES_SIMPLE: '/commercial/visites-simple',
+  COMMERCIAL_FORMULES_SIMPLE: '/commercial/formules-simple',
+  COMMERCIAL_ACCUEIL_PUBLIC_SIMPLE: '/commercial/accueil-public-simple',
   /** L'agritourisme : les visites, une visite (nouvelle ou celle dont on donne l'identifiant), les formules. */
   COMMERCIAL_AGRITOURISME: '/commercial/agritourisme',
   COMMERCIAL_VISITE: '/commercial/visite',
