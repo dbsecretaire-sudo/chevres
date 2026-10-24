@@ -264,6 +264,7 @@ export default function LieuAssociations() {
       <GroupeAccueil titre={G.groupeTiers}>
         {/* Chaque association ou coopérative, puis en dessous et en décalé ses actions (les dossiers rangés dans sa fiche), comme les contrats sous un assureur. */}
         <BlocLignes>
+          {associations.length === 0 ? <Text style={commonStyles.mutedItalic}>{G.aucunTiers}</Text> : null}
           {associations.flatMap((c) => {
             const ouvrirLAssociation = () => ouvrir(`${ROUTES.lieu('groupement')}&association=${c.cle}`);
             const volets = voletsDe(c);
@@ -287,9 +288,6 @@ export default function LieuAssociations() {
               )),
             ];
           })}
-        </BlocLignes>
-        {associations.length === 0 ? <Text style={commonStyles.mutedItalic}>{G.aucunTiers}</Text> : null}
-        <BlocLignes>
           <ListRow
             title={G.ajouterTiers}
             icone="add-circle"
