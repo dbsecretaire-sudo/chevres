@@ -21,11 +21,11 @@ export default function CategoriesDeLots() {
       ]
     : [{ cle: 'viande', titre: T.viande, route: ROUTES.PRODUCTION_VIANDE, icone: 'food-steak' as const }];
   const lignes = [
-    { cle: 'fromages', titre: T.fromages, route: ROUTES.PRODUCTION_FROMAGES, icone: 'cheese' as const },
+    { cle: 'fromages', titre: T.fromages, route: simple ? ROUTES.productionLotsSimple(PRODUIT_A_LOTS.FROMAGE) : ROUTES.PRODUCTION_FROMAGES, icone: 'cheese' as const },
     ...viande,
-    { cle: 'charcuterie', titre: T.charcuterie, route: ROUTES.PRODUCTION_CHARCUTERIE, icone: 'knife' as const },
-    { cle: PRODUIT_A_LOTS.PLAT, titre: T.plats, route: ROUTES.PRODUCTION_PLATS, icone: 'pot-steam' as const },
-    { cle: 'savons', titre: T.savons, route: ROUTES.PRODUCTION_SAVONS, icone: 'hand-wash' as const },
+    { cle: 'charcuterie', titre: T.charcuterie, route: simple ? ROUTES.productionLotsSimple(PRODUIT_A_LOTS.CHARCUTERIE) : ROUTES.PRODUCTION_CHARCUTERIE, icone: 'knife' as const },
+    { cle: PRODUIT_A_LOTS.PLAT, titre: T.plats, route: simple ? ROUTES.productionLotsSimple(PRODUIT_A_LOTS.PLAT) : ROUTES.PRODUCTION_PLATS, icone: 'pot-steam' as const },
+    { cle: 'savons', titre: T.savons, route: simple ? ROUTES.productionLotsSimple(PRODUIT_A_LOTS.SAVON) : ROUTES.PRODUCTION_SAVONS, icone: 'hand-wash' as const },
   ];
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>

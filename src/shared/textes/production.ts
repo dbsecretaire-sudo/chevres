@@ -761,6 +761,16 @@ export const TEXTES_PRODUCTION = {
     calculPieces: (quantite: string, prix: string) => `${quantite} × ${prix} (prix de l’inventaire)`,
     calculLitres: (quantite: string, prix: string) => `${quantite} L × ${prix} le litre (prix de l’inventaire)`,
   },
+  /** Les lots d'un produit (fromage, charcuterie, plat, savon) en lecture seule, dans le mode normal. */
+  lotsProduitSimple: {
+    resume: (enStock: number, total: number) => `${enStock} en stock sur ${total} ${total > 1 ? 'lots' : 'lot'}`,
+    aucun: 'Aucun lot pour le moment.',
+    numero: (numero: string) => `N° ${numero}`,
+    fabrique: (date: string) => `Fabriqué le ${date}`,
+    enStock: 'En stock',
+    vendu: (date: string) => (date ? `Vendu le ${date}` : 'Vendu'),
+    rappele: (date: string) => (date ? `Rappelé le ${date}` : 'Rappelé'),
+  },
   /** Les lots de viande du mode normal : la viande à facturer ou à vendre, avec ce qui est déjà fait. */
   lotsViandeSimple: {
     facturee: 'Facturée',

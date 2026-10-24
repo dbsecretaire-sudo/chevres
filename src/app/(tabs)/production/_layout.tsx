@@ -163,6 +163,7 @@ export default function ProductionLayout() {
       <Stack.Screen name="terrain" options={{ title: TEXTES.accueil.ferme.terrain.titres.troupeau }} />
       <Stack.Screen name="ventes-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.ventes }} />
       <Stack.Screen name="etiquettes-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.etiquettes }} />
+      <Stack.Screen name="lots-simple" options={{ title: TEXTES.production.lots.fromages }} />
       <Stack.Screen name="lots-viande-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.viandeAVendre }} />
       <Stack.Screen name="cadre-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.cadreReglementaire }} />
       <Stack.Screen name="fabrication-simple" options={{ title: TEXTES.production.fabricationSimple.titre }} />
