@@ -327,6 +327,7 @@ export const TEXTES_COMMERCIAL = {
           titre: 'Hygiène et santé animale (DDPP)',
           aide: 'Contact avec les animaux : lavage des mains, risques de zoonoses. Une dégustation ou un repas se déclare auprès de la direction départementale de la protection des populations.',
           reference: 'N° de déclaration',
+          liens: [{ titre: 'GDS France : accueil du public à la ferme et prévention en élevage caprin', url: 'https://www.gdsfrance.org/caprins/' }],
         },
         zoonoses: {
           titre: 'Précautions sanitaires (zoonoses)',
