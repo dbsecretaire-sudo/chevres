@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { exporterEtiquettesLotPdf } from '@/features/export/documents/etiquettesLotPdf';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -9,7 +9,7 @@ import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, LotFromage } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
-import { GrosBouton } from '@/shared/components/GrosBouton';
+import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { colors } from '@/shared/theme/colors';
@@ -61,7 +61,14 @@ type Etape =
  * Imprimer des étiquettes au plus simple, en très grands boutons : le produit (fromage, charcuterie, plat, savon), puis le produit précis, puis sa fabrication
  * (la plus récente d'abord), puis le nombre d'étiquettes voulu. Le PDF se partage ensuite pour l'imprimer.
  */
-export function EtiquettesSimple({ onTerminer }: { onTerminer: () => void }) {
+export function EtiquettesSimple({
+  onTerminer,
+  presentation = 'gros',
+}: {
+  onTerminer: () => void;
+  /** Les choix en très grands boutons (mode normal) ou en tuiles (mode avancé). */
+  presentation?: PresentationDesChoix;
+}) {
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [etape, setEtape] = useState<Etape>({ nom: 'produit' });
@@ -90,14 +97,11 @@ export function EtiquettesSimple({ onTerminer }: { onTerminer: () => void }) {
       {etape.nom === 'produit' ? (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
           <Text style={styles.titre}>{E.quoi}</Text>
-          {PRODUITS.map((p) => (
-            <GrosBouton
-              key={p}
-              libelle={E.produits[p]}
-              onPress={() => setEtape({ nom: 'article', produit: p })}
-              icone={<MaterialCommunityIcons name={ICONE[p]} size={44} color={colors.blanc} />}
-            />
-          ))}
+          <ListeDeChoix
+            presentation={presentation}
+            choix={PRODUITS.map((p) => ({ cle: p, libelle: E.produits[p], icone: ICONE[p] }))}
+            onChoisir={(c) => setEtape({ nom: 'article', produit: c.cle as Produit })}
+          />
           <Pressable style={styles.discret} onPress={onTerminer} accessibilityRole="button">
             <Text style={styles.discretTexte}>{T.retour}</Text>
           </Pressable>
@@ -107,13 +111,18 @@ export function EtiquettesSimple({ onTerminer }: { onTerminer: () => void }) {
       {etape.nom === 'article' ? (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
           <Text style={styles.titre}>{E.produits[etape.produit]}</Text>
-          {archive
-            ? articlesDuProduit(etape.produit, archive, espece)
+          {archive ? (
+            <ListeDeChoix
+              presentation={presentation}
+              choix={articlesDuProduit(etape.produit, archive, espece)
                 .filter((a) => fabricationsDe(archive, a.cle).length > 0)
-                .map((a) => (
-                  <GrosBouton key={a.cle} libelle={a.libelle} onPress={() => setEtape({ nom: 'fabrication', article: a })} />
-                ))
-            : null}
+                .map((a) => ({ cle: a.cle, libelle: a.libelle }))}
+              onChoisir={(c) => {
+                const article = articlesDuProduit(etape.produit, archive, espece).find((a) => a.cle === c.cle);
+                if (article) setEtape({ nom: 'fabrication', article });
+              }}
+            />
+          ) : null}
           <Pressable style={styles.discret} onPress={recommencer} accessibilityRole="button">
             <Text style={styles.discretTexte}>{T.retour}</Text>
           </Pressable>
@@ -123,18 +132,18 @@ export function EtiquettesSimple({ onTerminer }: { onTerminer: () => void }) {
       {etape.nom === 'fabrication' && archive ? (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
           <Text style={styles.titre}>{E.fabrication}</Text>
-          {fabricationsDe(archive, etape.article.cle)
-            .slice(0, 8)
-            .map((f) => (
-              <GrosBouton
-                key={f.lot.id}
-                libelle={E.fabrication_(f.lot.numero, f.nombre, formatDateFR(f.lot.dateFabrication))}
-                onPress={() => {
-                  setSaisie('');
-                  setEtape({ nom: 'nombre', fabrication: f });
-                }}
-              />
-            ))}
+          <ListeDeChoix
+            presentation={presentation}
+            choix={fabricationsDe(archive, etape.article.cle)
+              .slice(0, 8)
+              .map((f) => ({ cle: f.lot.id, libelle: E.fabrication_(f.lot.numero, f.nombre, formatDateFR(f.lot.dateFabrication)) }))}
+            onChoisir={(c) => {
+              const fabrication = fabricationsDe(archive, etape.article.cle).find((f) => f.lot.id === c.cle);
+              if (!fabrication) return;
+              setSaisie('');
+              setEtape({ nom: 'nombre', fabrication });
+            }}
+          />
           <Pressable style={styles.discret} onPress={recommencer} accessibilityRole="button">
             <Text style={styles.discretTexte}>{T.retour}</Text>
           </Pressable>

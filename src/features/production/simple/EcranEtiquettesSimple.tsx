@@ -14,7 +14,7 @@ export default function EcranEtiquettesSimple() {
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       <Stack.Screen options={{ title: TEXTES.accueil.ferme.terrain.tuiles.etiquettes }} />
       <View style={styles.page}>
-        <EtiquettesSimple onTerminer={() => retournerALaPageDAvant(router)} />
+        <EtiquettesSimple presentation="tuiles" onTerminer={() => retournerALaPageDAvant(router)} />
       </View>
     </AccentColorProvider>
   );

@@ -15,7 +15,7 @@ import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/s
 import type { ArchiveStock } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
-import { GrosBouton } from '@/shared/components/GrosBouton';
+import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
 import { JOURS_DE_CURE_SAVON, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { colors } from '@/shared/theme/colors';
@@ -53,7 +53,16 @@ type Etape =
  * fromage, les litres de lait caillé, puis combien ont été faits. La fabrication est celle d'aujourd'hui, numérotée comme d'habitude ; tout le reste
  * (ingrédients, notes) se complète dans l'écran habituel. `onTerminer` ferme l'écran.
  */
-export function FabricationSimple({ produit, onTerminer }: { produit: Produit; onTerminer: () => void }) {
+export function FabricationSimple({
+  produit,
+  onTerminer,
+  presentation = 'gros',
+}: {
+  produit: Produit;
+  onTerminer: () => void;
+  /** Les produits en très grands boutons (mode normal) ou en tuiles (mode avancé). */
+  presentation?: PresentationDesChoix;
+}) {
   const fromage = produit === PRODUIT_A_LOTS.FROMAGE;
   const { espece } = useEtablissement();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
@@ -119,14 +128,14 @@ export function FabricationSimple({ produit, onTerminer }: { produit: Produit; o
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
           <Text style={styles.titre}>{fromage ? T.quelFromage : T.quelProduit}</Text>
           {articles.length === 0 ? <Text style={styles.detail}>{T.aucunProduit}</Text> : null}
-          {articles.map((a) => (
-            <GrosBouton
-              key={a.cle}
-              libelle={a.libelle}
-              onPress={() => choisir(a)}
-              icone={<MaterialCommunityIcons name={ICONE_DU_PRODUIT[produit]} size={44} color={colors.blanc} />}
-            />
-          ))}
+          <ListeDeChoix
+            presentation={presentation}
+            choix={articles.map((a) => ({ cle: a.cle, libelle: a.libelle, icone: ICONE_DU_PRODUIT[produit] }))}
+            onChoisir={(c) => {
+              const article = articles.find((a) => a.cle === c.cle);
+              if (article) choisir(article);
+            }}
+          />
           <Pressable style={styles.discret} onPress={onTerminer} accessibilityRole="button">
             <Text style={styles.discretTexte}>{T.retour}</Text>
           </Pressable>

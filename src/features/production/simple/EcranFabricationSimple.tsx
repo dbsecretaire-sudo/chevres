@@ -18,6 +18,7 @@ export default function EcranFabricationSimple() {
       <View style={styles.page}>
         <FabricationSimple
           produit={produit === PRODUIT_A_LOTS.CHARCUTERIE ? PRODUIT_A_LOTS.CHARCUTERIE : PRODUIT_A_LOTS.FROMAGE}
+          presentation="tuiles"
           onTerminer={() => retournerALaPageDAvant(router)}
         />
       </View>
