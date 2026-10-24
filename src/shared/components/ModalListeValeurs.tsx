@@ -18,6 +18,8 @@ interface Props {
   valeursParDefaut: readonly string[];
   onValider: (valeurs: string[]) => void;
   onAnnuler: () => void;
+  /** Vrai : seulement des champs à réécrire et « Ajouter » (pas de corbeille ni de liste d'origine) ; vider un champ retire la valeur. */
+  simple?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export function ModalListeValeurs({
   valeursParDefaut,
   onValider,
   onAnnuler,
+  simple = false,
 }: Props) {
   const [brouillon, setBrouillon] = useState<string[]>(valeurs);
 
@@ -61,13 +64,15 @@ export function ModalListeValeurs({
                     placeholder={T.valeur}
                   />
                 </View>
-                <Pressable
-                  style={[commonStyles.boutonIcone, styles.retirer]}
-                  onPress={() => setBrouillon((l) => l.filter((_, j) => j !== i))}
-                  accessibilityLabel={T.retirer}
-                >
-                  <Ionicons name="trash" size={20} color={colors.danger} />
-                </Pressable>
+                {simple ? null : (
+                  <Pressable
+                    style={[commonStyles.boutonIcone, styles.retirer]}
+                    onPress={() => setBrouillon((l) => l.filter((_, j) => j !== i))}
+                    accessibilityLabel={T.retirer}
+                  >
+                    <Ionicons name="trash" size={20} color={colors.danger} />
+                  </Pressable>
+                )}
               </View>
             ))}
           </ScrollView>
@@ -77,10 +82,12 @@ export function ModalListeValeurs({
               <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
               <Text style={styles.texteLien}>{T.ajouter}</Text>
             </Pressable>
-            <Pressable style={styles.lien} onPress={() => setBrouillon([...valeursParDefaut])} accessibilityRole="button">
-              <Ionicons name="refresh" size={16} color={colors.primary} />
-              <Text style={styles.texteLien}>{T.retablir}</Text>
-            </Pressable>
+            {simple ? null : (
+              <Pressable style={styles.lien} onPress={() => setBrouillon([...valeursParDefaut])} accessibilityRole="button">
+                <Ionicons name="refresh" size={16} color={colors.primary} />
+                <Text style={styles.texteLien}>{T.retablir}</Text>
+              </Pressable>
+            )}
           </View>
           <View style={commonStyles.row}>
             <Button
