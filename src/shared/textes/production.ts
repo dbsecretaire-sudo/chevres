@@ -396,6 +396,7 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les écritures',
       nouvelle: 'Nouvelle facture',
       /** Sous la liste des associations : leurs factures de l'année et leurs actions (les dossiers rangés dans la fiche de chacune). */
+      aucunTiers: 'Aucun contact enregistré',
       groupeFactures: 'Factures',
       aucuneFacture: 'Aucune facture cette année.',
       groupeActions: 'Actions',

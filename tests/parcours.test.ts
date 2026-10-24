@@ -10,6 +10,7 @@ describe('parcours de cas du didacticiel', () => {
     expect(parcours.map((p) => p.id)).toEqual([
       'vente-sans-facture',
       'vente-abattoir',
+      'vente-vivants',
       'vente-lait',
       'vente-fromage',
       'vente-charcuterie',

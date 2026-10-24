@@ -81,8 +81,8 @@ describe('rangement des rubriques', () => {
     // Le carnet de naissance est un registre : il n'est plus dans le cheptel.
     expect(LIEUX_TIERS.cheptel.liens.map((l) => l.cle)).not.toContain('carnet');
   });
-  it('l’équarrissage range son bon dans la fiche de l’équarrisseur', () => {
-    expect(LIEUX_TIERS.equarrissage.liens.map((l) => l.cle)).toEqual(['bons']);
+  it('l’équarrissage montre ses bons d’enlèvement en tête de page, sans lien', () => {
+    expect(LIEUX_TIERS.equarrissage.liens).toEqual([]);
   });
   it('le commerce a ses rubriques de vente et des clients pour tiers', () => {
     expect(LIEUX_TIERS.commercial.liens.map((l) => l.cle)).toEqual(expect.arrayContaining(['ventes', 'commandes', 'tarifs']));

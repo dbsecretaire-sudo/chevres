@@ -288,7 +288,7 @@ export default function LieuAssociations() {
             ];
           })}
         </BlocLignes>
-        {associations.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
+        {associations.length === 0 ? <Text style={commonStyles.mutedItalic}>{G.aucunTiers}</Text> : null}
         <BlocLignes>
           <ListRow
             title={G.ajouterTiers}

@@ -1,5 +1,5 @@
 import type { EtapeVisite } from '@/features/didacticiel/services/visiteGuidee';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { LOT_ABATTOIR } from '@/features/didacticiel/services/adresses';
 
@@ -132,16 +132,16 @@ export function parcoursDeCas(): Parcours[] {
     {
       id: 'vente-abattoir',
       titre: 'Je vends un animal passé à l’abattoir',
-      resume: 'Du lot d’abattoir et de son document de circulation à la facture du client.',
+      resume: 'Du bon de livraison et de son document de circulation à la facture du client.',
       schema: ['animal', 'facture', 'abattoir', 'argent'],
       etapes: [
-        etape('1', 'Je crée le lot d’abattoir', 'Avant toute écriture : la date du départ, puis « Choisir les animaux » ouvre la liste (Tiptag ou Boucles). Déposez ensuite le document de circulation (un seul par lot, obligatoire) et indiquez si les animaux sont morts (à l’abattoir) ou vivants (vendus). Morts, ils passent à « abattoir » à la date du départ.', 'Abattoir › Nouveau lot d’abattoir', ROUTES.lotAbattoirNouveau(), 'ecriture.animauxEnvoyes'),
-        etape('1A', 'Je crée la facture de l’abattoir', 'Émise quelques jours après l’abattage : une dépense au nom de l’abattoir, rattachée au lot (sans lot, pas de facture). C’est elle qui donne les frais d’abattoir refacturés au client.', 'Comptabilité › Écritures › + › Débit › Animaux vivants (sortie)', ECRITURE('recue', undefined, false, true, '&depense=animaux_vivants_vente')),
+        etape('1', 'Je crée le bon de livraison', 'Avant toute écriture : la date de la livraison, puis « Choisir les animaux » ouvre la liste (Tiptag ou Boucles). Générez le document de circulation, puis téléversez-le signé (un seul par bon, obligatoire). Les animaux passent à « abattoir » à la date de la livraison.', 'Abattoir › Ajouter un bon de livraison', ROUTES.lotAbattoirNouveau(), 'ecriture.animauxEnvoyes'),
+        etape('1A', 'Je crée la facture de l’abattoir', 'Émise quelques jours après l’abattage : une dépense (en débit) au nom de l’abattoir, liée à un bon de livraison qui n’a pas encore de facture, choisi dans une liste (sans bon de livraison, pas de facture). C’est elle qui donne les frais d’abattoir refacturés au client.', 'Abattoir › Nouvelle facture', ECRITURE('recue', undefined, false, true, '&depense=animaux_vivants_vente')),
         etape('2', 'Je récupère le lot', 'Dans l’onglet « À facturer », touchez le lot (le jour d’abattage) pour ouvrir sa fiche. Vérifiez ensuite qu’aucun animal n’est mort ni saisi par l’abattoir.', 'Production › Viande › À facturer', VIANDE('afacturer'), 'viande.premierLot', true),
         etape('3', 'Je vérifie le poids total', 'Dans l’onglet Écritures du lot, contrôlez le poids total noté à l’abattoir : il remplit le poids de la facture au client.', 'Production › Viande › À facturer › lot › Écritures', LOT('facture'), 'lot.poids'),
         etape('3A', 'Animaux morts ou saisis', 'Dans le suivi sanitaire du lot, déclarez les bêtes saisies par l’abattoir ou mortes pendant le transport : elles ne se facturent pas au client et ne comptent pas parmi les animaux abattus.', 'Production › Viande › lot › Suivi sanitaire', LOT('suivi'), 'lot.inconsommables'),
         etape('3B', 'Comment elles s’affichent', 'Dans l’onglet Animaux, ces bêtes sont en rouge dans la liste des animaux du lot.', 'Production › Viande › lot › Animaux', LOT('animaux'), 'lot.animaux'),
-        etape('3C', 'Le document de circulation du lot', 'Les animaux sont partis vivants à l’abattoir : le document du lot (un seul) se dépose dès la création du lot, avant toute écriture. Ce bouton ouvre un menu pour le remplacer, l’ouvrir, le retirer, ou générer le modèle pré-rempli. En bas du document, vous notifiez un départ.', 'Production › Viande › lot › Animaux', LOT('animaux'), 'lot.circulation'),
+        etape('3C', 'Le document de circulation du bon', 'Les animaux sont partis vivants à l’abattoir : le document du bon (un seul) se dépose dès sa création, avant toute écriture. Ce bouton ouvre un menu pour le remplacer, l’ouvrir, le retirer, ou générer le modèle pré-rempli. En bas du document, vous notifiez un départ.', 'Production › Viande › lot › Animaux', LOT('animaux'), 'lot.circulation'),
         etape('3D', 'J’envoie le feuillet à la chambre d’agriculture', 'Vous gardez le blanc et le jaune, vous donnez le vert et le bleu à l’abattoir, et vous gardez le rose avant de l’envoyer à la chambre d’agriculture : sur l’accueil, le rappel « Envoyer le document du … (rose) » reste à valider tant qu’il n’est pas envoyé.', 'Cheptel › Dossier PAC › Documents de circulation', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION),
         etape('4', 'Je facture ce lot à un client', 'Le bouton « Facturer la viande de ce lot au client » (onglet Écritures) ouvre la facture, déjà préremplie.', 'Production › Viande › lot › Écritures', LOT('facture'), 'lot.facturer'),
         etape('5', 'Je termine la facture', 'Complétez les informations demandées (contact, date, TVA, paiement) puis enregistrez.', 'Comptabilité › Écritures › + › Crédit › Viande', ECRITURE('emise', 'viande', false, true)),
@@ -205,9 +205,11 @@ export function parcoursDeCas(): Parcours[] {
       schema: ['veterinaire', 'facture', 'traitement', 'delai'],
       etapes: [
         etape('1', 'La dépense du vétérinaire', 'Saisissez la facture du vétérinaire : une dépense, catégorie vétérinaire.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue')),
-        etape('2', 'Je note le motif de la visite', 'Indiquez le motif, puis « Ajouter aux visites vétérinaires » : la visite entre dans le carnet sanitaire (« Bilan sanitaire annuel » pour le bilan de l’année).', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue', undefined, false, true)),
-        etape('3', 'Je note le traitement', 'Le bouton « + » ajoute un traitement : le médicament, les animaux (vide : tout le troupeau) et les délais d’attente du lait et de la viande, ceux de l’ordonnance ou de la notice.', 'Cheptel › Santé › Traitements › +', ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU),
-        etape('4', 'Je suis les délais d’attente', 'La fin du délai d’attente se calcule toute seule : les animaux en délai sont listés, et signalés si vous les vendez avant la fin (document de circulation compris).', 'Cheptel › Santé › Traitements', ROUTES.CHEPTEL_TRAITEMENTS),
+        etape('2', 'Je note les motifs de la visite', 'Cochez les motifs (le crayon en change la liste), puis « Ajouter aux visites vétérinaires » : la visite a sa propre fiche, dans Groupement sanitaire › Visites du vétérinaire (« Bilan sanitaire annuel » pour le bilan de l’année).', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue', undefined, false, true)),
+        etape('3', 'Les animaux de la visite', 'Dans la fiche de la visite, l’onglet Animaux : choisissez les chèvres concernées dans le cheptel (sans animal, c’est le troupeau entier).', 'Groupement sanitaire › Visites du vétérinaire › Animaux', ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE)),
+        etape('4', 'Je note le traitement', 'Dans le suivi sanitaire de la visite : « Donner un traitement pour cette visite ». Le traitement s’y rattache ; vide, il concerne les chèvres de la visite (ou cochez « Tout le troupeau »), avec les délais d’attente du lait et de la viande de l’ordonnance.', 'Groupement sanitaire › Visites du vétérinaire › Suivi sanitaire', ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE)),
+        etape('5', 'Le rapport d’essais', 'Cochez « Rapport d’essais » avec son numéro : il apparaît dans le suivi sanitaire de la visite et dans Rapports d’essais ; touchez-le pour téléverser ses documents (PNG, JPG ou PDF).', 'Groupement sanitaire › Rapports d’essais', ROUTES.RAPPORTS_ESSAIS_GDS),
+        etape('6', 'Je suis les délais d’attente', 'La fin du délai d’attente se calcule toute seule : les animaux en délai sont listés, et signalés si vous les vendez avant la fin (document de circulation compris).', 'Cheptel › Santé › Traitements', ROUTES.CHEPTEL_TRAITEMENTS),
       ],
     },
     {
@@ -241,6 +243,18 @@ export function parcoursDeCas(): Parcours[] {
       ],
     },
     {
+      id: 'vente-vivants',
+      titre: 'Je vends des animaux vivants',
+      resume: 'De la liste des ventes à la facture au détenteur d’arrivée, avec le document de circulation.',
+      schema: ['animal', 'circulation', 'facture', 'argent'],
+      etapes: [
+        etape('1', 'La liste des ventes', 'Le bouton « Vente (vivant) » ouvre d’abord la liste des ventes d’animaux vivants ; « Nouvelle vente » en ouvre une.', 'Accueil › Vente (vivant)', ROUTES.VENTES_VIVANTS),
+        etape('2', 'Les animaux et l’acheteur', 'La date du départ, puis « Choisir les animaux » (Tiptag ou Boucles) et, si vous le connaissez, l’acheteur : le client chez qui le document de circulation se range.', 'Vente (vivant) › Nouvelle vente', ROUTES.lotAbattoirNouveau('vivants')),
+        etape('3', 'Le document de circulation', 'Générez le modèle pré-rempli, remplissez-le, puis téléversez-le signé : il est obligatoire avant la facture. Il se range dans les documents du client acheteur.', 'Vente (vivant) › une vente', ROUTES.VENTES_VIVANTS),
+        etape('4', 'Je facture le départ', '« Facturer ce départ au détenteur d’arrivée » ouvre la vente, déjà préremplie : les animaux, l’acheteur et le lot. À l’enregistrement, leur fiche passe à « vendue ».', 'Vente (vivant) › une vente', ROUTES.VENTES_VIVANTS),
+      ],
+    },
+    {
       id: 'achat-animaux',
       titre: 'J’achète des animaux vivants',
       resume: 'De la facture du vendeur au document de circulation (feuillet vert).',
@@ -250,7 +264,7 @@ export function parcoursDeCas(): Parcours[] {
         etape('2', 'Les animaux achetés', 'Catégorie « Animaux vivants (achat) » : saisissez chaque animal (boucle, sexe, naissance). Les fiches se créent d’elles-mêmes dans le cheptel.', 'Comptabilité › Écritures › + › Débit', ECRITURE('recue', undefined, false, true)),
         etape('3', 'Je vérifie l’atelier', ATELIER, 'Comptabilité › Écritures › + › Débit', ECRITURE('recue', undefined, false, true), 'ecriture.atelier'),
         etape('4', 'Les nouvelles fiches', 'Les animaux achetés sont dans la liste des animaux vivants, avec leur date d’entrée.', 'Cheptel › Animaux', ROUTES.CHEPTEL_LISTE),
-        etape('5', 'Le document de circulation', 'Le document part de chez le vendeur et arrive chez vous : déposez le vôtre, ou générez le modèle pré-rempli. En bas du document, vous notifiez une arrivée.', 'Cheptel › Dossier PAC › Documents de circulation', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION),
+        etape('5', 'Le document de circulation', 'Le document part de chez le vendeur et arrive chez vous : déposez le vôtre, ou générez le modèle pré-rempli. Il se range aussi dans les documents du vendeur (sa fiche). En bas du document, vous notifiez une arrivée.', 'Cheptel › Dossier PAC › Documents de circulation', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION),
         etape('6', 'Les feuillets', 'Vous gardez le feuillet bleu et donnez le blanc, le jaune et le rose. Le vert, vous le gardez d’abord, puis vous l’envoyez à la chambre d’agriculture.', 'Cheptel › Dossier PAC › Documents de circulation', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION),
         etape('7', 'Je valide l’envoi', 'Sur l’accueil, un rappel « Envoyer le document du … (vert) à la chambre d’agriculture » reste à valider tant que le feuillet n’est pas envoyé. La coche le valide ; il passe dans l’historique des rappels.', 'Accueil › Rappels', '/'),
       ],

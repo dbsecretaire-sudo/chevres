@@ -309,7 +309,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
       id: 'cheptel.circulation',
       route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION,
       titre: 'Les documents de circulation',
-      texte: 'Un document par lot d’animaux partis vivants (créé avant toute écriture), et par achat ou vente d’animaux vivants. Touchez une ligne : le document et les factures concernées (la prestation de l’abattoir, la vente) s’affichent. L’icône dépose votre document rempli (scan, photo), ou génère le modèle pré-rempli. Tant qu’il manque, l’accueil vous le rappelle.',
+      texte: 'Un document par bon de livraison à l’abattoir ou par vente d’animaux vivants (créé avant toute écriture), et par achat d’animaux vivants. Touchez une ligne : le document et les factures concernées (la prestation de l’abattoir, la vente) s’affichent. L’icône dépose votre document rempli (scan, photo), ou génère le modèle pré-rempli. Tant qu’il manque, l’accueil vous le rappelle.',
     },
     // --- Le cheptel, suite : les lots, les traitements, les réglages et les aides, le bilan -----------------------------------
     revenir('cheptel.suite', ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION, 'cheptel', 'Cheptel'),
@@ -325,7 +325,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
       route: ROUTES.CHEPTEL_LOTS,
       ancre: 'fab',
       titre: 'Regrouper des animaux',
-      texte: 'Un lot est un groupe d’animaux nommé, par leurs boucles. Certains se créent tout seuls : les jours d’abattage, les mises à la reproduction, les renouvellements, les avortements, les visites du vétérinaire. Le bouton + crée les vôtres. Un lot sert à traiter ou contrôler d’un geste les mêmes animaux, à suivre leur santé ensemble, et à retrouver ceux d’un jour d’abattage et sa facture.',
+      texte: 'Un lot est un groupe d’animaux nommé, par leurs boucles. Certains se créent tout seuls : les mises à la reproduction, les renouvellements, les avortements. Le bouton + crée les vôtres (les visites du vétérinaire, les bons d’enlèvement, les bons de livraison et les ventes d’animaux vivants ont leurs propres pages). Un lot sert à traiter ou contrôler d’un geste les mêmes animaux, à suivre leur santé ensemble, et à retrouver ceux d’un jour d’abattage et sa facture.',
     },
     revenir('cheptel.lots', ROUTES.CHEPTEL_LOTS, 'cheptel', 'Cheptel'),
     toucher(
@@ -413,7 +413,7 @@ export function etapesDeLaVisite(): EtapeVisite[] {
       id: 'production.viande.page',
       route: ROUTES.PRODUCTION_VIANDE,
       titre: 'Réserver et facturer la viande',
-      texte: '« À facturer » : un lot d’abattoir (créé au départ des animaux, avec son document de circulation) se facture d’un bloc, avec la facture de l’abattoir qui s’y rattache. « À vendre » : les animaux sans boucle, qu’on peut réserver pour un contact avant de les facturer ; « Facturée » et « Vendue » gardent l’historique. Les animaux sont ceux de l’inventaire : chaque vente les en sort.',
+      texte: '« À facturer » : un bon de livraison (créé à la livraison des animaux, avec son document de circulation) se facture d’un bloc, avec la facture de l’abattoir qui s’y rattache. « À vendre » : les animaux sans boucle, qu’on peut réserver pour un contact avant de les facturer ; « Facturée » et « Vendue » gardent l’historique. Les animaux sont ceux de l’inventaire : chaque vente les en sort.',
     },
     revenir('production.viande', ROUTES.PRODUCTION_VIANDE, 'production', 'Production'),
     toucher(

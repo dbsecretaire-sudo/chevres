@@ -109,7 +109,7 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
         {
           id: 'cheptel.circulation',
           titre: 'Documents de circulation',
-          texte: 'Un document par lot d’animaux partis vivants (créé avant toute écriture), ou par achat ou vente d’animaux vivants : déposez-le rempli (scan ou photo), ou générez le modèle pré-rempli. Touchez une ligne pour voir le document et les factures concernées (la prestation de l’abattoir, la vente). Tant qu’il manque, un rappel s’affiche sur l’accueil ; une fois déposé, un autre rappelle de l’envoyer à la chambre d’agriculture.',
+          texte: 'Un document par bon de livraison à l’abattoir ou par vente d’animaux vivants (créé avant toute écriture), ou par achat d’animaux vivants : déposez-le rempli (scan ou photo), ou générez le modèle pré-rempli. Touchez une ligne pour voir le document et les factures concernées (la prestation de l’abattoir, la vente). Tant qu’il manque, un rappel s’affiche sur l’accueil ; une fois déposé, un autre rappelle de l’envoyer à la chambre d’agriculture.',
           chemin: 'Cheptel › Dossier PAC › Documents de circulation',
           route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION,
         },
@@ -128,7 +128,7 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
       presentation: 'Ce que produit l’exploitation : fromages, viande, œufs, lait, contrôles.',
       etapes: [
         { id: 'production.fromages', titre: production.fromages.titre, texte: production.fromages.aide, chemin: 'Production', route: ROUTES.PRODUCTION_FROMAGES },
-        { id: 'production.viande', titre: production.viande.titre, texte: `${production.viande.aide} Les lots naissent d’un « Nouveau lot d’abattoir » (fiche de l’abattoir). Quatre onglets : À facturer (les lots, par jour d’abattage), Facturée, À vendre (animaux disponibles ou réservés) et Vendue (morts ou vivants).`, chemin: 'Production', route: ROUTES.PRODUCTION_VIANDE },
+        { id: 'production.viande', titre: production.viande.titre, texte: `${production.viande.aide} Les lots naissent d’un « bon de livraison » (page de l’abattoir). Quatre onglets : À facturer (les lots, par jour d’abattage), Facturée, À vendre (animaux disponibles ou réservés) et Vendue (morts ou vivants).`, chemin: 'Production', route: ROUTES.PRODUCTION_VIANDE },
         { id: 'production.charcuterie', titre: production.charcuterie.titre, texte: production.charcuterie.aide, chemin: 'Production', route: ROUTES.PRODUCTION_CHARCUTERIE },
         { id: 'production.laitier', titre: production.laitier.titre, texte: production.laitier.aide, chemin: 'Production' },
         { id: 'production.lait', titre: production.productionLait.titre, texte: production.productionLait.aide, chemin: 'Production', route: ROUTES.PRODUCTION_LAIT },
