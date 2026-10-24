@@ -183,8 +183,10 @@ export function SceneTransformation({
     Math.max(min, Math.min(max, Math.round(valeur)));
   // La plaque est dessinée pour cinq lignes : une de plus (l'alerte) lui donne la place.
   const lignesEnPlus = Math.max(1, contenu.lignes.length / 5);
-  const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a * lignesEnPlus);
-  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.34, plaqueMin, Math.round(170 * a * lignesEnPlus));
+  // L'air au-dessus et au-dessous du texte, dans la plaque.
+  const AIR_DE_LA_PLAQUE = 14;
+  const plaqueMin = Math.round(HAUTEUR_DE_LA_PLAQUE * a * lignesEnPlus) + 2 * AIR_DE_LA_PLAQUE;
+  const hauteurPlaque = hauteur === 0 ? plaqueMin : entre(reste * 0.34, plaqueMin, Math.round(170 * a * lignesEnPlus) + 2 * AIR_DE_LA_PLAQUE);
   // La plaque compte cinq lignes : la rue de l'atelier se rétrécit pour lui laisser la place.
   const rueMin = Math.round((campagne ? 100 : 34) * a);
   const hauteurRue =
@@ -314,6 +316,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 12,
+    paddingVertical: 14,
     marginHorizontal: MARGE,
     marginBottom: MARGE,
     borderWidth: 1,

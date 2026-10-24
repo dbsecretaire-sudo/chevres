@@ -3,6 +3,8 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { listClients } from '@/features/clients/repository';
+import { groupeRecetteAutorise } from '@/features/clients/services/categorie';
+import { GROUPE_RECETTE } from '@/shared/constants/comptabilite';
 import type { Client } from '@/features/clients/types';
 import { enregistrerVisite, montantVisite } from '@/features/commercial/services/agritourisme';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
@@ -83,7 +85,9 @@ export function NouvelleVisiteSimple({ onTerminer }: { onTerminer: () => void })
     }
   };
 
+  // Les contacts proposés : ceux dont la catégorie reçoit la recette « Touristique » (réglage des catégories de contact).
   const filtres = clients
+    .filter((c) => groupeRecetteAutorise(c, GROUPE_RECETTE.TOURISTIQUE))
     .filter((c) => nomComplet(c).toLowerCase().includes(recherche.trim().toLowerCase()))
     .slice(0, CONTACTS_MONTRES);
 

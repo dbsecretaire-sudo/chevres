@@ -91,6 +91,8 @@ export const CATEGORIE_RECETTE = {
   REMBOURSEMENT_ANALYSES: 'remboursement_analyses',
   /** Ce que l'assurance d'un véhicule verse (une indemnité après un sinistre, un remboursement de prime) : elle se lie à son véhicule. */
   ASSURANCE_VEHICULE: 'assurance_vehicule',
+  /** L'accueil du public (agritourisme) : ce que paient les visiteurs d'une visite de la ferme. */
+  TOURISTIQUE: 'touristique',
   // --- Entreprise (hors élevage) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -326,6 +328,7 @@ export const GROUPE_RECETTE = {
   GROUPEMENT_SANITAIRE: 'groupement_sanitaire',
   REMBOURSEMENT_ANALYSES: 'remboursement_analyses',
   ASSURANCE_VEHICULE: 'assurance_vehicule',
+  TOURISTIQUE: 'touristique',
   // --- Entreprise : un groupe par recette (pas de seconde liste) ---
   PRESTATIONS: 'prestations',
   VENTE_MARCHANDISES: 'vente_marchandises',
@@ -360,6 +363,8 @@ const AIDE_PRESTATIONS_ET_AUTRE: GroupeRecetteDefinition[] = [
   { groupe: GROUPE_RECETTE.REMBOURSEMENT_ANALYSES, categories: [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES] },
   // Ce que verse l'assurance d'un véhicule.
   { groupe: GROUPE_RECETTE.ASSURANCE_VEHICULE, categories: [CATEGORIE_RECETTE.ASSURANCE_VEHICULE] },
+  // Les visites de la ferme (agritourisme) : les contacts de cette recette sont ceux qu'on propose pour une nouvelle visite.
+  { groupe: GROUPE_RECETTE.TOURISTIQUE, categories: [CATEGORIE_RECETTE.TOURISTIQUE] },
   { groupe: GROUPE_RECETTE.PRESTATIONS, categories: [CATEGORIE_RECETTE.PRESTATIONS] },
   AIDE_ET_AUTRE[1],
 ];
@@ -460,6 +465,7 @@ export const ORDRE_CATEGORIE_RECETTE = [
   CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE,
   CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES,
   CATEGORIE_RECETTE.ASSURANCE_VEHICULE,
+  CATEGORIE_RECETTE.TOURISTIQUE,
   CATEGORIE_RECETTE.AUTRE,
 ] as const;
 

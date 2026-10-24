@@ -8,7 +8,7 @@ import { TEXTES } from '@/shared/textes';
 export default function EcranAccueilPublicSimple() {
   const router = useRouter();
   return (
-    <EcranSimple titre={TEXTES.accueil.ferme.terrain.tuiles.accueilPublic}>
+    <EcranSimple titre={TEXTES.accueil.ferme.terrain.tuiles.cadreReglementaire}>
       <AccueilPublicSimple onTerminer={() => retournerALaPageDAvant(router)} />
     </EcranSimple>
   );

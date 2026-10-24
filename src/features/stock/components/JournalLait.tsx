@@ -29,6 +29,7 @@ export function JournalLait({
   onModifierPrix,
   onOuvrir,
   onAutomatiqueChange,
+  lectureSeule,
 }: {
   lait: LaitJour[];
   /** Le bilan du lait : produit, utilisé, vendu et restant. */
@@ -36,6 +37,8 @@ export function JournalLait({
   /** Le prix de vente du lait (€ le litre), quand il est défini : c'est lui qui fait le prix des ventes de lait. */
   prix?: number;
   onModifierPrix: () => void;
+  /** Le mode normal regarde seulement : ni crayon du prix, ni historique au clic. */
+  lectureSeule?: boolean;
   onOuvrir: (entree: LaitJour) => void;
   /** Appelé quand la balance automatique du lait est activée ou désactivée : le bilan est relu. */
   onAutomatiqueChange?: () => void;
@@ -73,7 +76,7 @@ export function JournalLait({
     <View style={grilleDeCartes}>
       <CarteDeStock
         cle="lait"
-        onPress={() => setHistoriqueOuvert(true)}
+        onPress={lectureSeule ? undefined : () => setHistoriqueOuvert(true)}
         rang={0}
         large
         emoji="🥛"
@@ -81,7 +84,7 @@ export function JournalLait({
         sous={prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}
         quantite={T.ligne(enLitres(bilan.restant))}
         niveau={bilan.restant}
-        onRenommer={onModifierPrix}
+        onRenommer={lectureSeule ? undefined : onModifierPrix}
         pastilles={[
           // Le produit est toujours vert et ce qui est utilisé en fromagerie toujours rouge sombre, même à 0 L ; le restant et le vendu suivent le signe affiché : vert si positif, rouge si négatif (le vendu s'affiche en négatif), gris à 0.
           { icone: 'piece', quantite: T.ligne(enLitres(bilan.restant)), niveau: bilan.restant },

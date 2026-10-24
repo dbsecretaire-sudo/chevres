@@ -54,12 +54,16 @@ describe('écrans terrain des trois zones de l’accueil', () => {
 
   it('l’atelier compte la viande à facturer (pas le cheptel) et signale un stock négatif', () => {
     const tuiles = tuilesDuTerrain('atelier', comptes({ viandeAFacturer: 4, stockNegatif: true, lotsARappeler: 1 }));
-    expect(tuiles.find((t) => t.cle === 'viande')).toMatchObject({ nombre: 4, alerte: true });
-    // La viande à vendre (les chèvres sans boucle) a sa propre tuile et son propre chiffre.
-    expect(tuilesDuTerrain('atelier', comptes({ viandeAVendre: 2 })).find((t) => t.cle === 'viandeAVendre')).toMatchObject({ nombre: 2, alerte: true });
+    // Toutes les ventes sont réunies dans une tuile « Ventes » : la viande à facturer et la viande à vendre s'y additionnent (large seulement dans le mode normal).
+    expect(tuiles.find((t) => t.cle === 'ventes')).toMatchObject({ nombre: 4, alerte: true });
+    expect(tuiles.find((t) => t.cle === 'ventes')?.large).toBeUndefined();
+    expect(tuiles.some((t) => t.cle === 'cadreReglementaire')).toBe(true);
+    expect(tuilesDuTerrain('atelier', comptes({ viandeAFacturer: 4, viandeAVendre: 2 })).find((t) => t.cle === 'ventes')?.nombre).toBe(6);
+    expect(tuiles.some((t) => t.cle === 'viande' || t.cle === 'viandeAVendre')).toBe(false);
     // Le stock et les lots ne sont proposés que par le mode normal (qui a ses pages) : pas sur l'écran de l'atelier du mode avancé.
     expect(tuiles.some((t) => t.cle === 'stock' || t.cle === 'lotsAtelier' || t.cle === 'contacts')).toBe(false);
     const avecPages = tuilesDuTerrain('atelier', comptes({ stockNegatif: true, lotsARappeler: 1 }), true);
+    expect(avecPages.find((t) => t.cle === 'ventes')?.large).toBe(true);
     expect(avecPages.find((t) => t.cle === 'stock')?.alerte).toBe(true);
     expect(avecPages.find((t) => t.cle === 'lotsAtelier')).toMatchObject({ nombre: 1, alerte: true });
     // Les quatre fabrications ouvrent la page de fabrication de leur produit.

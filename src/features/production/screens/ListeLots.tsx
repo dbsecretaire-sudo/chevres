@@ -9,6 +9,8 @@ import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/Cartes
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { TableauDeDonnees } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
@@ -84,6 +86,8 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
   const annee = String(settings.anneeActive);
   // Le poste de comptabilité : les variétés en tableau.
   const comptable = useDispositionComptable();
+  // Le mode normal regarde seulement : le détail des lots (contrôle, dates, sélection) ne s'ouvre pas.
+  const simple = useRole().role === ROLE.BERGER;
   // Une année : ses lots fabriqués, et le stock tel qu'il est à la fin de cette année.
   const mouvements = (archive?.mouvements ?? []).filter((m) => regrouper || m.date.slice(0, 4) <= annee);
   const niveaux = archive ? niveauxDeStock(mouvements) : new Map<string, number>();
@@ -190,10 +194,14 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                 lignes={articles}
                 cleDeLaLigne={(a) => a.cle}
                 vide={T.aucun}
-                onLigne={(a) => {
-                  setOuvert(a);
-                  setVisible(true);
-                }}
+                onLigne={
+                  simple
+                    ? undefined
+                    : (a) => {
+                        setOuvert(a);
+                        setVisible(true);
+                      }
+                }
               />
             ) : (
             // Les cartes du stock, comme à la grange : le dessin, le nom, ses lots en petit et la pastille de ce qu'il en reste ; un appui ouvre le détail des lots.
@@ -222,10 +230,14 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                     sous={TEXTES.production.fromages.ligne(enStock(a.cle), total)}
                     quantite={String(niveau)}
                     niveau={niveau}
-                    onPress={() => {
-                      setOuvert(a);
-                      setVisible(true);
-                    }}
+                    onPress={
+                      simple
+                        ? undefined
+                        : () => {
+                            setOuvert(a);
+                            setVisible(true);
+                          }
+                    }
                   />
                 );
               })}

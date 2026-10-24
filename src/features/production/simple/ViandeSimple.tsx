@@ -11,12 +11,15 @@ import type { Chevre } from '@/features/cheptel/types';
 import { especeDe } from '@/features/cheptel/utils/espece';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
 import { useInconsommables } from '@/features/lots-animaux/hooks/useInconsommables';
+import { ControlePrix } from '@/features/production/simple/ControlePrix';
+import { cleLigneDeViande } from '@/features/production/simple/prixViande';
 import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
 import { PageSimplePoidsClient } from '@/features/production/simple/PageSimplePoidsClient';
 import { repartirLePoids } from '@/features/production/simple/repartitionDuPoids';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+import { ROLE_VIANDE } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { TEXTES } from '@/shared/textes';
@@ -35,7 +38,7 @@ interface JourChoisi {
  * « Viande à facturer » au plus simple : une tuile par jour d'abattage dont la viande n'est pas encore facturée (le jour, le nombre d'animaux, le poids). Un appui
  * ouvre une page de deux réponses — le poids total (kg) et le client à facturer — puis la facture de viande de ce jour s'ouvre, remplie.
  */
-export function ViandeSimple({ onRetour }: { onRetour?: () => void }) {
+function ViandeContenu({ onRetour }: { onRetour?: () => void }) {
   const router = useRouter();
   const { espece } = useEtablissement();
   const inconsommables = useInconsommables();
@@ -125,5 +128,15 @@ export function ViandeSimple({ onRetour }: { onRetour?: () => void }) {
         <Text style={styles.discretTexte}>{TEXTES.production.fabricationSimple.retour}</Text>
       </Pressable>
     </ScrollView>
+  );
+}
+
+/** La viande à facturer : avant la liste, le prix du kilo de l'animal sur pied est vérifié dans l'inventaire (et demandé, avec une page simple, s'il manque). */
+export function ViandeSimple({ onRetour }: { onRetour?: () => void }) {
+  const { espece } = useEtablissement();
+  return (
+    <ControlePrix cle={cleLigneDeViande(espece, ROLE_VIANDE.SUR_PIED)} unite="kilo">
+      <ViandeContenu onRetour={onRetour} />
+    </ControlePrix>
   );
 }

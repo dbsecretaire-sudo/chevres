@@ -6,6 +6,7 @@ export const TEXTES_ROLES = {
     secretaireAide: 'Toute l’application',
     berger: 'Mode normal',
     bergerAide: 'Chèvres, fromagerie, tourisme',
+    changerEtablissement: 'Changer d’établissement',
   },
   /** La liste de ce que le berger a saisi vite et que la secrétaire complète (Cheptel › À compléter). */
   aCompleter: {

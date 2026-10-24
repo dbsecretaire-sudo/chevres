@@ -86,6 +86,7 @@ export const COMPTE_PAR_RECETTE: Record<ValeurDe<typeof CATEGORIE_RECETTE>, Comp
   [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES]: { numero: '758000', libelle: 'Produits divers de gestion courante — Remboursement d’analyses' },
   [CATEGORIE_RECETTE.AUTRE]: { numero: '708000', libelle: 'Produits des activités annexes' },
   [CATEGORIE_RECETTE.PRESTATIONS]: { numero: '706000', libelle: 'Prestations de services' },
+  [CATEGORIE_RECETTE.TOURISTIQUE]: { numero: '706300', libelle: 'Prestations de services — Accueil touristique' },
   [CATEGORIE_RECETTE.VENTE_MARCHANDISES]: { numero: '707000', libelle: 'Ventes de marchandises' },
   [CATEGORIE_RECETTE.HEBERGEMENT]: { numero: '706100', libelle: 'Prestations de services — Hébergement' },
   [CATEGORIE_RECETTE.RESTAURATION]: { numero: '707100', libelle: 'Ventes de marchandises — Restauration' },

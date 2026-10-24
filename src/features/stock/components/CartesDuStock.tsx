@@ -15,6 +15,8 @@ import {
 import { Frisson } from '@/shared/components/ListeReordonnable';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
@@ -49,6 +51,9 @@ export function RubriquesDeCartes({
   const router = useRouter();
   // Le poste de comptabilité : chaque rubrique est un tableau (article, quantité), pas une grille de cartes.
   const comptable = useDispositionComptable();
+  // Le mode normal regarde seulement : ni crayon, ni historique au clic.
+  const { role } = useRole();
+  const simple = role === ROLE.BERGER;
   /** La carte dont on change l'image (le crayon n'y est que là où l'appareil range des fichiers). */
   const [imageDe, setImageDe] = useState<CarteStock | null>(null);
   /** La carte dont on regarde l'historique (un appui sur elle). */
@@ -70,7 +75,7 @@ export function RubriquesDeCartes({
               lignes={g.cartes}
               cleDeLaLigne={(c) => c.cle}
               vide={T.vide}
-              onLigne={(c) => (c.cle === 'oeufs' ? ouvrirLeStock(c) : setHistoriqueDe(c))}
+              onLigne={(c) => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
             />
           </View>
         ) : (
@@ -87,9 +92,9 @@ export function RubriquesDeCartes({
                 quantite={quantiteDeLaCarte(c)}
                 niveau={c.niveau}
                 libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
-                onRenommer={piecesDisponibles() ? () => setImageDe(c) : undefined}
+                onRenommer={piecesDisponibles() && !simple ? () => setImageDe(c) : undefined}
                 // Un article (et le lait) : son historique ; les œufs n'en ont pas, ils ouvrent l'inventaire.
-                onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : setHistoriqueDe(c))}
+                onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
               />
             ))}
             {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}

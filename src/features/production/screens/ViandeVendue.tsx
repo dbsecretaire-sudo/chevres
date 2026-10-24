@@ -2,6 +2,9 @@ import { useCallback, useState } from 'react';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { LotsViandeSimple } from '@/features/production/simple/LotsViandeSimple';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { Screen } from '@/shared/components/Screen';
@@ -76,8 +79,9 @@ type OngletViande = 'afacturer' | 'facturee' | 'avendre' | 'vendue';
 type SorteDeVendus = 'morts' | 'vivants';
 
 /** La viande vendue de l'année (pour l'animal actif), avec leur total : un appui ouvre la vente. */
-export default function ViandeVendue() {
+function ViandeVendueComplete() {
   const router = useRouter();
+  const simple = useRole().role === ROLE.BERGER;
   /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
   const retour = useAdresseCourante();
   const { espece } = useEtablissement();
@@ -538,8 +542,11 @@ export default function ViandeVendue() {
                     .join('\n')}
                   trailing={<Text style={commonStyles.lineBold}>{formatMontant(item.prix ?? 0)}</Text>}
                   // La vente : sa fiche porte le jour d'abattage en titre et mène au lot ; sa flèche de retour ramène ici.
-                  onPress={() =>
-                    router.push(ROUTES.ficheVenteDepuis(item.id, ROUTES.PRODUCTION_VIANDE) as never)
+                  // Le mode normal regarde seulement : ces ventes ne s'ouvrent pas.
+                  onPress={
+                    simple
+                      ? undefined
+                      : () => router.push(ROUTES.ficheVenteDepuis(item.id, ROUTES.PRODUCTION_VIANDE) as never)
                   }
                 />
               </LigneDeBloc>
@@ -713,4 +720,12 @@ export default function ViandeVendue() {
       </Screen>
     </CadreDeJeu>
   );
+}
+
+/** La viande : tous ses onglets en mode avancé ; le mode normal n'a pas d'onglets (la viande à facturer, ou celle à vendre, avec ce qui est fait ou non). */
+export default function ViandeVendue() {
+  const { onglet } = useLocalSearchParams<{ onglet?: string }>();
+  const simple = useRole().role === ROLE.BERGER;
+  if (!simple) return <ViandeVendueComplete />;
+  return <LotsViandeSimple quoi={onglet === 'afacturer' || onglet === 'facturee' ? 'afacturer' : 'avendre'} />;
 }

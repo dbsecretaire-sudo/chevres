@@ -4,10 +4,10 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
-import { router } from 'expo-router';
 import {
   choisirEspeceCourante,
   choisirEtablissementActif,
@@ -29,6 +29,8 @@ interface EtablissementContextValue {
   etablissements: Etablissement[];
   actif: Etablissement;
   ouvrirSelecteur: () => void;
+  /** L'écran où l'on voulait arriver en ouvrant l'établissement (la cloche « À traiter », un nouvel établissement) : donné une seule fois, une fois le mode choisi. */
+  prendreLaDestination: () => string | undefined;
   /** Espèces de l'établissement actif (une seule la plupart du temps). */
   especes: EspeceAnimale[];
   /** Espèce dont le cheptel est affiché en ce moment. */
@@ -41,13 +43,14 @@ interface EtablissementContextValue {
 
 const EtablissementContext = createContext<EtablissementContextValue | undefined>(undefined);
 
-export function EtablissementProvider({ children, sansSelecteur = false }: PropsWithChildren<{ sansSelecteur?: boolean }>) {
+export function EtablissementProvider({ children }: PropsWithChildren) {
   const [pret, setPret] = useState(false);
   const [liste, setListe] = useState<Etablissement[]>([]);
   const [actifId, setActifId] = useState('');
   const [espece, setEspece] = useState<EspeceAnimale>(especeCourante());
-  // L'application s'ouvre toujours sur le choix de l'établissement (sauf pour le berger : il travaille dans le dernier établissement ouvert).
-  const [selecteurOuvert, setSelecteurOuvert] = useState(!sansSelecteur);
+  // L'application s'ouvre toujours sur le choix de l'établissement ; le mode (normal ou avancé) se demande ensuite, pour l'établissement choisi.
+  const [selecteurOuvert, setSelecteurOuvert] = useState(true);
+  const destinationEnAttente = useRef<(() => string) | undefined>(undefined);
 
   useEffect(() => {
     initialiserEtablissements().then(({ liste: l, actifId: a }) => {
@@ -58,16 +61,19 @@ export function EtablissementProvider({ children, sansSelecteur = false }: Props
     });
   }, []);
 
-  /** Ouvre un établissement sur son accueil, ou directement sur un écran (`destination`, calculée une fois l'établissement ouvert). */
+  /** Ouvre un établissement : le mode se choisit ensuite, puis l'accueil s'ouvre (ou directement un écran : `destination`, calculée une fois l'établissement ouvert). */
   const entrer = useCallback(async (id: string, destination?: () => string) => {
     await choisirEtablissementActif(id);
     setActifId(id);
     setEspece(especeCourante());
+    destinationEnAttente.current = destination;
     setSelecteurOuvert(false);
-    setTimeout(() => {
-      router.replace('/');
-      if (destination) router.push(destination() as never);
-    }, 0);
+  }, []);
+
+  const prendreLaDestination = useCallback(() => {
+    const destination = destinationEnAttente.current;
+    destinationEnAttente.current = undefined;
+    return destination?.();
   }, []);
 
   const creer = useCallback(
@@ -130,6 +136,7 @@ export function EtablissementProvider({ children, sansSelecteur = false }: Props
         etablissements: liste,
         actif,
         ouvrirSelecteur: () => setSelecteurOuvert(true),
+        prendreLaDestination,
         especes: especesActives(),
         espece,
         changerEspece,

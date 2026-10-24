@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { BarreDeNavigation } from '@/features/stock/components/BarreDeNavigation';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
@@ -42,14 +44,17 @@ export function CadreDeJeu({
 }) {
   // Le poste de comptabilité : pas de cadre de jeu (ni bois, ni rail de flèches) — le contenu se pose à plat, et « Tout le stock » est un bouton comme les autres.
   const comptable = useDispositionComptable();
+  // Le mode normal n'a pas le stock complet : pas de bouton « Tout le stock ».
+  const { role } = useRole();
+  const toutLeStock = role === ROLE.BERGER ? undefined : onToutLeStock;
   if (comptable) {
     return (
       <View style={styles.plat}>
         {haut}
         <View style={styles.defile}>{children}</View>
-        {onToutLeStock ? (
+        {toutLeStock ? (
           <View style={styles.barrePlate}>
-            <BoutonPlat icone="list" libelle={TEXTES.production.lieux.entrepot.stockComplet} onPress={onToutLeStock} />
+            <BoutonPlat icone="list" libelle={TEXTES.production.lieux.entrepot.stockComplet} onPress={toutLeStock} />
           </View>
         ) : null}
       </View>
@@ -76,8 +81,8 @@ export function CadreDeJeu({
           </View>
         </View>
       </View>
-      {onToutLeStock ? (
-        <Pressable style={styles.complet} onPress={onToutLeStock} accessibilityRole="button">
+      {toutLeStock ? (
+        <Pressable style={styles.complet} onPress={toutLeStock} accessibilityRole="button">
           <Ionicons name="list" size={18} color={colors.blanc} />
           <Text style={styles.completTexte}>{TEXTES.production.lieux.entrepot.stockComplet}</Text>
         </Pressable>

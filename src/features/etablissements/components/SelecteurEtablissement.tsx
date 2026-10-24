@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
-import { styles as stylesRoles } from '@/shared/styles/roles/Roles.styles';
+import { BackHandler, ScrollView, Text, View } from 'react-native';
 import { Screen } from '@/shared/components/ScreenList';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { Fab } from '@/shared/components/Fab';
-import { useRole } from '@/features/roles/context/RoleContext';
 import { useATraiter } from '@/features/a-traiter/hooks/useATraiter';
 import type { ATraiter } from '@/features/a-traiter/types';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
@@ -46,7 +44,6 @@ export function SelecteurEtablissement({
   onFermer,
 }: Props) {
   const [mode, setMode] = useState<Mode>({ type: 'liste' });
-  const { choisir } = useRole();
   // Le poste de comptabilité (affichage sobre, grande fenêtre) : les établissements en tableau.
   const comptable = useDispositionComptable();
   const [aSupprimer, setASupprimer] = useState<Etablissement | null>(null);
@@ -156,10 +153,6 @@ export function SelecteurEtablissement({
                 />
               ))}
             </BlocLignes>
-            {/* Le mode se choisit au lancement : on peut y revenir d'ici (téléphone). */}
-            <Pressable style={stylesRoles.discret} onPress={() => choisir(undefined)} accessibilityRole="link">
-              <Text style={stylesRoles.discretTexte}>{TEXTES.roles.berger.changerDeRole}</Text>
-            </Pressable>
           </>
           )
         )}

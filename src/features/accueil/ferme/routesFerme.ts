@@ -119,10 +119,8 @@ export const BOUTONS_DE_LA_FERME = {
       ['stockFromagerie', C.stock],
       ['reserver', C.reserver],
       ['lots', C.lotsAtelier],
-      ['fabriquer', C.fabriquer],
       ['ventesAtelier', C.ventesAtelier],
       ['rentabiliteAtelier', C.rentabilite],
-      ['registreAnalyses', C.registreAnalyses],
       ['recettes', C.recettes],
     ],
     intervenants: [

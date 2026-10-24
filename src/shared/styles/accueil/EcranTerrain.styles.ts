@@ -16,6 +16,7 @@ export const styles = StyleSheet.create({
     padding: 14,
     justifyContent: 'space-between',
   },
+  tuileLarge: { flexBasis: '100%' },
   tuileAppuyee: { backgroundColor: colors.badgeBg },
   haut: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   nombre: { fontSize: 26, fontWeight: '800', color: colors.primary },

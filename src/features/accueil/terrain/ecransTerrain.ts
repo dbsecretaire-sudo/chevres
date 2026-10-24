@@ -20,6 +20,8 @@ export interface TuileTerrain {
   nombre?: number;
   /** Le chiffre est une alerte (à faire, qui manque) : il s'écrit en rouge. */
   alerte?: boolean;
+  /** La tuile prend toute la largeur (deux colonnes). */
+  large?: boolean;
 }
 
 /** Ce que les boutons comptent : ce que l'accueil sait déjà (voir useFermeAccueil). */
@@ -90,8 +92,10 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain, avecPages 
         { cle: 'savon', titre: T.savon, icone: 'restaurant', iconeMci: 'hand-wash', route: ROUTES.productionFabricationSimple(PRODUIT_A_LOTS.SAVON) },
         { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.LAIT_DU_JOUR },
         { cle: 'etiquettes', titre: T.etiquettes, icone: 'pricetags', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
-        { cle: 'viandeAVendre', titre: T.viandeAVendre, icone: 'receipt', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE_A_VENDRE_SIMPLE, ...avec(c.viandeAVendre, true) },
-        { cle: 'viande', titre: T.viandeAFacturer, icone: 'receipt', iconeMci: 'food-steak', route: ROUTES.PRODUCTION_VIANDE_SIMPLE, ...avec(c.viandeAFacturer, true) },
+        // Toutes les ventes sont réunies ici : on choisit ensuite le produit (le fromage, la charcuterie, un plat, un savon, le lait, la viande à vendre ou à facturer).
+        { cle: 'ventes', titre: T.ventes, icone: 'cash', route: ROUTES.PRODUCTION_VENTES_SIMPLE, ...(avecPages ? { large: true } : {}), ...avec(c.viandeAFacturer + c.viandeAVendre, true) },
+        // Les démarches pour fabriquer et vendre, en tuiles : pas dans le mode normal, qui ne montre que ses propres tuiles.
+        { cle: 'cadreReglementaire', titre: T.cadreReglementaire, icone: 'shield-checkmark', route: ROUTES.PRODUCTION_CADRE_SIMPLE },
         // Le stock et les lots s'ouvrent dans leur page : seul le mode normal les propose ici (avec ses propres pages).
         ...(avecPages
           ? ([
@@ -105,7 +109,7 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain, avecPages 
         { cle: 'nouvelleVisite', titre: T.nouvelleVisite, icone: 'add-circle', route: ROUTES.COMMERCIAL_VISITE_SIMPLE },
         { cle: 'visites', titre: T.visites, icone: 'trail-sign', route: ROUTES.COMMERCIAL_VISITES_SIMPLE, ...avec(c.visitesAVenir) },
         { cle: 'formules', titre: T.formules, icone: 'restaurant', route: ROUTES.COMMERCIAL_FORMULES_SIMPLE },
-        { cle: 'accueilPublic', titre: T.accueilPublic, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC_SIMPLE },
+        { cle: 'accueilPublic', titre: T.cadreReglementaire, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC_SIMPLE },
       ];
   }
 }

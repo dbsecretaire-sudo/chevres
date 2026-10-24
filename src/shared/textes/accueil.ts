@@ -128,6 +128,8 @@ export const TEXTES_ACCUEIL = {
         lait: 'Lait du jour',
         lotsAtelier: 'Lots et étiquettes',
         etiquettes: 'Imprimer des étiquettes',
+        ventes: 'Ventes',
+        cadreReglementaire: 'Cadre réglementaire',
         viandeAVendre: 'Viande à vendre',
         viandeAFacturer: 'Viande à facturer',
         stock: 'Stock',

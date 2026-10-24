@@ -177,10 +177,12 @@ export const ROUTES = {
   /** Fabriquer un fromage ou de la charcuterie en très grands boutons (le produit, les litres de lait, combien). */
   /** Imprimer des étiquettes en très grands boutons (le produit, sa fabrication, combien). */
   PRODUCTION_ETIQUETTES_SIMPLE: '/production/etiquettes-simple',
-  /** La viande à facturer, en tuiles : un jour d'abattage par tuile. */
-  PRODUCTION_VIANDE_SIMPLE: '/production/viande-simple',
-  /** La viande à vendre, en tuiles : une chèvre sans boucle par tuile. */
-  PRODUCTION_VIANDE_A_VENDRE_SIMPLE: '/production/viande-a-vendre',
+  /** Les ventes, en tuiles : on choisit le produit vendu (dont la viande à vendre et la viande à facturer). */
+  PRODUCTION_VENTES_SIMPLE: '/production/ventes-simple',
+  /** Le cadre réglementaire de la fromagerie en tuiles : une démarche par tuile, ouverte en pleine page. */
+  PRODUCTION_CADRE_SIMPLE: '/production/cadre-simple',
+  /** Les lots de viande du mode normal, sans onglets : `afacturer` (à facturer et facturée) ou `avendre` (à vendre et vendue). */
+  productionLotsViandeSimple: (quoi: 'afacturer' | 'avendre') => `/production/lots-viande-simple?quoi=${quoi}` as const,
   productionFabricationSimple: (produit: string) => `/production/fabrication-simple?produit=${produit}` as const,
   productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,
   PRODUCTION_RAPPELS_LOTS: '/production/rappels-lots',

@@ -201,17 +201,14 @@ export default function AccueilFerme() {
     { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
     { cle: 'venteVivant', titre: C.venteVivant, icone: iconeMCI('truck-delivery'), pastille: f.ventesSansDocument, couleur: ORANGE },
   ];
-  // À droite de la scène du travail du produit : le stock, la réservation d'un produit, les lots et fabriquer (en bulles), les ventes et la rentabilité de ce qu'on fabrique.
+  // À droite de la scène du travail du produit : le stock, la réservation d'un produit, les lots (en bulles), les ventes et la rentabilité de ce qu'on fabrique.
   const gestionTransformation: EntreeDeColonne[] = [
     { cle: 'stockFromagerie', titre: C.stock, icone: iconeIon('cube'), couleur: VENTE },
     { cle: 'reserver', titre: C.reserver, icone: iconeIon('bookmark'), couleur: VENTE },
     // Les lots : un seul bouton, dont les bulles ouvrent les lots (fromages, viande, charcuterie, plats préparés) ou leurs rappels (la pastille : ceux à faire).
     { cle: 'lots', titre: C.lotsAtelier, icone: iconeIon('layers'), pastille: f.lotsARappeler, couleur: '#6A767E' },
-    // Fabriquer : un seul bouton, dont les bulles ouvrent la fabrication d'un fromage ou de charcuterie.
-    { cle: 'fabriquer', titre: C.fabriquer, icone: iconeMCI('pot-mix'), couleur: '#6A767E' },
     { cle: 'ventesAtelier', titre: C.ventesAtelier, icone: iconeIon('cash'), couleur: VENTE },
     { cle: 'rentabiliteAtelier', titre: C.rentabilite, icone: iconeIon('stats-chart'), couleur: VENTE },
-    { cle: 'registreAnalyses', titre: C.registreAnalyses, icone: iconeIon('flask'), couleur: '#6A767E' },
     { cle: 'recettes', titre: C.recettes, icone: iconeIon('book'), couleur: '#6A767E' },
   ];
   // Le côté Agritourisme : ceux qui viennent (les visiteurs, leurs groupes), ceux qui les envoient (l'office de tourisme) et ceux qui fournissent le repas.

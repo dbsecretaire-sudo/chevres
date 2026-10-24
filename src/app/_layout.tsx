@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StyleComptable } from '@/shared/components/StyleComptable';
 import { EcranErreur } from '@/shared/components/EcranErreur';
 import { SuperpositionVisite } from '@/features/didacticiel/components/SuperpositionVisite';
@@ -8,7 +9,7 @@ import { installerAlerteWeb } from '@/shared/utils/alerteWeb';
 import { afficheSobre, ID_STYLE_SOBRE } from '@/shared/utils/affichage';
 import { appliquerTailleTexte, lireTailleTexte } from '@/shared/utils/tailleTexte';
 import { AppSettingsProvider } from '@/features/settings/context/AppSettingsContext';
-import { EtablissementProvider } from '@/features/etablissements/context/EtablissementContext';
+import { EtablissementProvider, useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { PorteDuRole } from '@/features/roles/components/PorteDuRole';
 import { RoleProvider, useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
@@ -31,33 +32,44 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
   return <EcranErreur error={error} retry={retry} />;
 }
 
+/** D'abord l'établissement, puis le mode (pour cet établissement), puis l'application : changer d'établissement redemande le mode. */
 export default function RootLayout() {
   return (
-    <RoleProvider>
-      <PorteDuRole>
-        <Application />
-      </PorteDuRole>
-    </RoleProvider>
+    <EtablissementProvider>
+      <RoleProvider>
+        <PorteDuRole>
+          <Application />
+        </PorteDuRole>
+      </RoleProvider>
+    </EtablissementProvider>
   );
 }
 
-/** L'application elle-même, une fois le rôle choisi : le mode avancé s'ouvre sur l'accueil de la ferme, le mode normal sur sa page de gros boutons (« /berger »). */
+/** L'application elle-même, une fois l'établissement et le mode choisis : le mode avancé s'ouvre sur l'accueil de la ferme, le mode normal sur sa page de gros boutons (« /berger »). */
 function Application() {
   const { role } = useRole();
+  const { prendreLaDestination } = useEtablissement();
   const berger = role === ROLE.BERGER;
+  // À l'ouverture de l'établissement (et du mode) : l'accueil, ou l'écran voulu (la cloche « À traiter », les informations d'un nouvel établissement).
+  useEffect(() => {
+    const minuteur = setTimeout(() => {
+      router.replace('/');
+      const destination = prendreLaDestination();
+      if (destination) router.push(destination as never);
+    }, 0);
+    return () => clearTimeout(minuteur);
+  }, [prendreLaDestination]);
   return (
-    <EtablissementProvider sansSelecteur={berger}>
-      <AppSettingsProvider>
-        <VisiteGuideeProvider>
-          <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
-            {/* La visite guidée : par-dessus toutes les pages. */}
-            {afficheSobre() || berger ? null : <SuperpositionVisite />}
-            {/* L'affichage sobre en grande fenêtre : le style d'un poste de comptabilité. */}
-            <StyleComptable />
-          </View>
-        </VisiteGuideeProvider>
-      </AppSettingsProvider>
-    </EtablissementProvider>
+    <AppSettingsProvider>
+      <VisiteGuideeProvider>
+        <View style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }} />
+          {/* La visite guidée : par-dessus toutes les pages. */}
+          {afficheSobre() || berger ? null : <SuperpositionVisite />}
+          {/* L'affichage sobre en grande fenêtre : le style d'un poste de comptabilité. */}
+          <StyleComptable />
+        </View>
+      </VisiteGuideeProvider>
+    </AppSettingsProvider>
   );
 }

@@ -7,6 +7,8 @@ import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { emojiDeLaCategorie, nombreEnStock } from '@/features/stock/services/entrepotJeu';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
 import { ROUTES } from '@/shared/constants/routes';
 import { noterOrigine } from '@/shared/navigation/origineRetour';
@@ -45,6 +47,8 @@ export default function EntrepotJeu({
 }) {
   const router = useRouter();
   const comptable = useDispositionComptable();
+  // Le mode normal n'a pas le stock complet.
+  const { role } = useRole();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
   // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
   // La page où l'on est : la grange ou l'entrepôt ; la flèche de retour des pages qu'elle ouvre y ramène.
@@ -106,16 +110,18 @@ export default function EntrepotJeu({
           </View>
         )}
         <RubriquesDeCartes groupes={groupes} origine={origine} />
-        <View style={styles.boutons}>
-          <BoutonPlat
-            icone="list"
-            libelle={TEXTES.production.lieux.entrepot.stockComplet}
-            onPress={() => {
-              noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
-              router.push(ROUTES.COMPTABILITE_STOCKS as never);
-            }}
-          />
-        </View>
+        {role === ROLE.BERGER ? null : (
+          <View style={styles.boutons}>
+            <BoutonPlat
+              icone="list"
+              libelle={TEXTES.production.lieux.entrepot.stockComplet}
+              onPress={() => {
+                noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
+                router.push(ROUTES.COMPTABILITE_STOCKS as never);
+              }}
+            />
+          </View>
+        )}
       </ScrollView>
     );
   }

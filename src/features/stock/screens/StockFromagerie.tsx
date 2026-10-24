@@ -78,6 +78,8 @@ import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { CarteDeStock, grilleDeCartes } from '@/features/stock/components/CartesDuStock';
 import { TableauArticles, type LigneArticle } from '@/features/stock/components/TableauArticles';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
@@ -232,6 +234,9 @@ export default function StockFromagerie() {
   const [prise, setPrise] = useState<string | null>(null);
   // Affichage sobre sur un grand écran : les articles en tableau.
   const comptable = useDispositionComptable();
+  // Le mode normal regarde seulement : ni crayon, ni historique au clic.
+  const { role } = useRole();
+  const simple = role === ROLE.BERGER;
   /** La liste qui défile, et où elle en est : les flèches de la barre de navigation la font avancer d'un cran. */
   const defilement = useRef<ScrollView>(null);
   const position = useRef(0);
@@ -354,11 +359,14 @@ export default function StockFromagerie() {
       } else if (estLigneDuCheptel(a.cle)) {
         // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
       } else if (estArticleAvecLots(a.cle)) {
-        setFromageOuvert(a);
-        setFromageVisible(true);
+        // Le mode normal ne modifie pas les lots (contrôle, dates, sélection) : la fenêtre ne s'ouvre pas.
+        if (!simple) {
+          setFromageOuvert(a);
+          setFromageVisible(true);
+        }
       } else {
         // Les autres articles (aliments, emballages, entretien, matériel, listes ajoutées…) : leur historique ; la quantité se saisit depuis lui.
-        setHistoriqueDe(a);
+        if (!simple) setHistoriqueDe(a);
       }
     };
     /** Le crayon d'un article : l'image d'une boucle, ou son nom, son compte et sa suppression. */
@@ -385,7 +393,7 @@ export default function StockFromagerie() {
           lignes={lignes}
           libelleModifier={boucles ? T.articleModal.image.modifier : TEXTES.commun.general.modifier}
           onOuvrir={(l, i) => ouvrirArticle(l.article, i)}
-          onModifier={boucles && !piecesDisponibles() ? undefined : (l) => modifierArticle(l.article)}
+          onModifier={simple || (boucles && !piecesDisponibles()) ? undefined : (l) => modifierArticle(l.article)}
         />
       );
     }
@@ -413,7 +421,9 @@ export default function StockFromagerie() {
                 selectionnee={prise === a.cle}
                 libelleDuCrayon={boucles ? T.articleModal.image.modifier : undefined}
                 onRenommer={
-                  boucles
+                  simple
+                    ? undefined
+                    : boucles
                     ? piecesDisponibles()
                       ? () => setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
                       : undefined
@@ -643,7 +653,7 @@ export default function StockFromagerie() {
                         </View>
                         <View style={commonStyles.row}>
                           {genre && aUnNegatif(articlesDeLaListe(genre, section)) ? <PastilleAlerte /> : null}
-                          {section === SECTION_STOCK.FROMAGES && fromagerie ? (
+                          {section === SECTION_STOCK.FROMAGES && fromagerie && !simple ? (
                             <Pressable
                               onPress={() => router.push(ROUTES.STOCK_STATISTIQUES)}
                               hitSlop={10}
@@ -684,6 +694,7 @@ export default function StockFromagerie() {
                           bilan={bilanLait(archive, litresVendus, ventesLait)}
                           prix={archive.prix[CLE_PRIX_LAIT]}
                           onModifierPrix={() => setPrixLaitOuvert(true)}
+                          lectureSeule={simple}
                           onOuvrir={setLaitOuvert}
                           onAutomatiqueChange={() => charger().catch(() => undefined)}
                         />

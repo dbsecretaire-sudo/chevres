@@ -8,6 +8,13 @@ import {
 } from '@/shared/constants/clients';
 import { LABEL_CATEGORIE_CLIENT } from '@/shared/textes/libelles';
 
+/** Les catégories de client qui reçoivent d'office la recette touristique : un particulier et les visiteurs. */
+const CATEGORIES_TOURISTIQUES: readonly string[] = [
+  CATEGORIE_CLIENT.PARTICULIER,
+  CATEGORIE_CLIENT.VISITEUR,
+  CATEGORIE_CLIENT.GROUPE_VISITEURS,
+];
+
 /**
  * Une catégorie de client. `declaree` : la vente est déclarée d'office (la case « le client souhaite déclarer la vente » est cochée) ;
  * `prixLibre` : le prix de la vente est saisi, le numéro de facture peut avoir des lettres et un réajustement est possible.
@@ -115,7 +122,11 @@ export const groupesRecetteDeLaCategorie = (categorie: CategorieClientReglage): 
   (categorie.id === CATEGORIE_CLIENT.ORGANISME
     ? GROUPES_RECETTE_ORGANISME
     : Object.values(GROUPE_RECETTE).filter(
-        (g) => g !== GROUPE_RECETTE.AIDE && !GROUPES_RECETTE_SANS_CLIENT.includes(g),
+        (g) =>
+          g !== GROUPE_RECETTE.AIDE &&
+          !GROUPES_RECETTE_SANS_CLIENT.includes(g) &&
+          // La recette touristique (les visites de la ferme) : celle des particuliers et des visiteurs ; les autres catégories la cochent si besoin.
+          (g !== GROUPE_RECETTE.TOURISTIQUE || CATEGORIES_TOURISTIQUES.includes(categorie.id)),
       ));
 
 /** La catégorie d'un identifiant ; une catégorie retirée ou inconnue vaut « particulier ». */

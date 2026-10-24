@@ -42,7 +42,7 @@ export default function CommercialLayout() {
       <Stack.Screen name="visite-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.nouvelleVisite }} />
       <Stack.Screen name="visites-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.visites }} />
       <Stack.Screen name="formules-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.formules }} />
-      <Stack.Screen name="accueil-public-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.accueilPublic }} />
+      <Stack.Screen name="accueil-public-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.cadreReglementaire }} />
       <Stack.Screen name="accueil-public" options={{ title: TEXTES.commercial.agritourisme.accueilPublic.titre }} />
       <Stack.Screen name="formules" options={{ title: TEXTES.commercial.agritourisme.listeFormules.titre }} />
       <Stack.Screen

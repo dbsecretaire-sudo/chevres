@@ -8,6 +8,8 @@ import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable'
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
 import { useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/features/accueil/shell/usePositionDansLesMenus';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 
@@ -39,6 +41,7 @@ export interface PropsEnTeteApplication {
 export function EnTeteApplication({ options, back, navigation, route }: PropsEnTeteApplication) {
   // La disposition « comptable » a sa barre d'outils au-dessus de tout : l'en-tête ne garde que la flèche, le titre et les boutons de l'écran, sur toute la largeur.
   const comptable = useDispositionComptable();
+  const { role } = useRole();
   const router = useRouter();
   // Le fil d'Ariane (« Atelier > Gestion > Réserver > Nouvelle commande ») : chaque étape ramène à sa page.
   const { menus, courante, adresse } = usePositionDansLesMenus();
@@ -55,6 +58,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre);
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
+  // Le mode normal n'a pas la navigation du mode avancé (capsule, fil d'Ariane) : la page seule, avec un « Retour » en bas.
+  if (role === ROLE.BERGER) return null;
   return (
     <View style={styles.fond}>
       {comptable ? null : (

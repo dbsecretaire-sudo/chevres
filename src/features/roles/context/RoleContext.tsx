@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, type PropsWithChildren } from 'react';
+import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { ROLE } from '@/shared/constants/roles';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
+import { definirModeSimple } from '@/shared/hooks/useModeSimple';
 import { afficheSobre } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 
@@ -20,6 +21,11 @@ const RoleContext = createContext<RoleContextValue | undefined>(undefined);
  */
 export function RoleProvider({ children }: PropsWithChildren) {
   const [role, setRole] = useState<Role | undefined>(estBureau() || afficheSobre() ? ROLE.SECRETAIRE : undefined);
+  // Les composants partagés (le bouton « + »…) savent ainsi que le mode normal est choisi.
+  useEffect(() => {
+    definirModeSimple(role === ROLE.BERGER);
+    return () => definirModeSimple(false);
+  }, [role]);
   return <RoleContext.Provider value={{ role, choisir: setRole }}>{children}</RoleContext.Provider>;
 }
 

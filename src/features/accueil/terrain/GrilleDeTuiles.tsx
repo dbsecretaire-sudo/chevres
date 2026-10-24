@@ -14,7 +14,7 @@ export function GrilleDeTuiles({ tuiles, onAppui }: { tuiles: TuileTerrain[]; on
           onPress={() => onAppui(t)}
           accessibilityRole="button"
           accessibilityLabel={t.nombre ? `${t.titre} : ${t.nombre}` : t.titre}
-          style={({ pressed }) => [styles.tuile, pressed ? styles.tuileAppuyee : null]}
+          style={({ pressed }) => [styles.tuile, t.large ? styles.tuileLarge : null, pressed ? styles.tuileAppuyee : null]}
         >
           <View style={styles.haut}>
             {t.iconeMci ? (

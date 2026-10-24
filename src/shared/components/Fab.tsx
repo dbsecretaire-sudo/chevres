@@ -7,6 +7,7 @@ import { styles } from '@/shared/styles/components/Fab.styles';
 import { useAncre } from '@/shared/components/AncreVisite';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { useModeSimple } from '@/shared/hooks/useModeSimple';
 
 interface Props {
   options: Option[];
@@ -33,6 +34,10 @@ export function Fab({ options, color = colors.primary, icon = 'add', cote = 'dro
   // Repéré par la visite guidée : c'est le bouton « + » qu'elle invite à toucher.
   const repere = useAncre('fab');
   const comptable = useDispositionComptable();
+  const modeSimple = useModeSimple();
+
+  // Le mode normal n'ajoute rien par ce bouton : il a ses propres pages.
+  if (modeSimple) return null;
 
   // Le poste de comptabilité : pas de bouton qui flotte, mais une barre de boutons à leur place, sous la liste.
   if (comptable) {
