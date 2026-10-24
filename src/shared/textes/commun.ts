@@ -235,15 +235,15 @@ export const TEXTES_COMMUN = {
     /** Sous le champ d'une date dont l'année est imposée (le filtre d'une période). */
     format: 'format : AAAA-MM-JJ',
     /** Sous le champ d'une date écrite jour d'abord (les filtres). */
-    formatJourMoisAnnee: 'format : JJ-MM-AAAA',
+    formatJourMoisAnnee: 'format : JJ/MM/AAAA',
     /** Quand l'année est imposée (une année active choisie) : seuls le jour et le mois s'écrivent. */
-    formatJourMois: 'format : JJ-MM',
-    jourMois: 'JJ-MM',
-    jourMoisAnnee: 'JJ-MM-AAAA',
+    formatJourMois: 'format : JJ/MM',
+    jourMois: 'JJ/MM',
+    jourMoisAnnee: 'JJ/MM/AAAA',
     anneeImposee: 'Pour une autre année, changer l’année active',
     /** Une seule note sous une date dont l'année est imposée : le format et l'année. */
     formatAvecAnnee: (format: string, annee: number) => `${format} · année ${annee}`,
-    invalide: 'Date invalide : écrivez-la sous la forme AAAA-MM-JJ (ex : 2026-10-04).',
+    invalide: 'Date invalide : écrivez-la sous la forme JJ/MM/AAAA (ex : 04/10/2026).',
   },
   infoModal: {
     ok: 'OK',

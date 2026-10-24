@@ -28,15 +28,17 @@ interface Props {
    * complète que le mois et le jour ; le choix d'une date reste dans cette année. Absente : l'année est libre.
    */
   anneeImposee?: number;
-  /** Vrai : la date s'écrit jour d'abord, « JJ-MM-AAAA » (les filtres), au lieu de « AAAA-MM-JJ ». */
+  /** Vrai : la date s'écrit jour d'abord, « JJ/MM/AAAA » (les filtres, et tout champ du poste Windows qui se tape), au lieu de « AAAA-MM-JJ ». Sur le web, c'est toujours le cas. */
   jourMoisAnnee?: boolean;
 }
 
-export function DateField({ label, value, onChange, required, anneeImposee, jourMoisAnnee }: Props) {
+export function DateField({ label, value, onChange, required, anneeImposee, jourMoisAnnee: jourMoisAnneeDemande }: Props) {
+  // Sur le web (le poste Windows), on tape toutes les dates « JJ/MM/AAAA » ; la valeur remontée reste « AAAA-MM-JJ ».
+  const jourMoisAnnee = jourMoisAnneeDemande || Platform.OS === 'web';
   const [showPicker, setShowPicker] = useState(false);
   const fond = useFondChamp();
   // Sur le web on tape la date : le texte en cours de saisie reste ici, et seule une vraie date remonte au formulaire.
-  /** Ce que le champ montre d'une valeur : « JJ-MM » (année imposée), « JJ-MM-AAAA », ou la date telle quelle. */
+  /** Ce que le champ montre d'une valeur : « JJ/MM » (année imposée), « JJ/MM/AAAA », ou la date telle quelle. */
   const affichageDe = (iso: string) =>
     jourMoisAnnee ? (anneeImposee ? jourEtMois(iso) : enJourMoisAnnee(iso)) : iso;
   const [saisie, setSaisie] = useState(affichageDe(value));
@@ -46,7 +48,7 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
     setValeurVue(value);
     setSaisie(affichageDe(value));
   }
-  // L'année imposée apparaît ou change (l'année active, « Tout ») : la saisie reprend la forme du champ (« JJ-MM » ou « JJ-MM-AAAA »).
+  // L'année imposée apparaît ou change (l'année active, « Tout ») : la saisie reprend la forme du champ (« JJ/MM » ou « JJ/MM/AAAA »).
   const [anneeVue, setAnneeVue] = useState(anneeImposee);
   if (anneeVue !== anneeImposee) {
     setAnneeVue(anneeImposee);
@@ -76,18 +78,21 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
   ) : null;
 
   if (Platform.OS === 'web' && jourMoisAnnee) {
-    // « JJ-MM-AAAA » ; avec une année imposée, on n'écrit que le jour et le mois (« JJ-MM »).
+    // « JJ/MM/AAAA » ; avec une année imposée, on n'écrit que le jour et le mois (« JJ/MM »).
     const invalide = saisie !== '' && !depuisJourMoisAnnee(saisie, anneeImposee);
     const bordure = invalide ? { borderColor: colors.danger } : undefined;
     const surChangement = (texte: string) => {
-      // Quand l'année est imposée, le tiret se met seul entre le jour et le mois (« 1001 » devient « 10-01 »).
-      const chiffres = anneeImposee ? texte.replace(/[^\d-]/g, '').slice(0, 5) : texte;
-      const propre =
-        anneeImposee && /^\d{3,4}$/.test(chiffres)
-          ? `${chiffres.slice(0, 2)}-${chiffres.slice(2)}`
-          : chiffres;
+      // La barre oblique se met seule entre le jour, le mois et l'année (« 1001 » devient « 10/01 » ; « 10012026 », « 10/01/2026 »).
+      const chiffres = texte.replace(/[^\d/.-]/g, '').slice(0, anneeImposee ? 5 : 10);
+      const brut = chiffres.replace(/[.-]/g, '/');
+      const propre = /^\d{3,4}$/.test(brut)
+        ? `${brut.slice(0, 2)}/${brut.slice(2)}`
+        : !anneeImposee && /^\d{5,8}$/.test(brut)
+          ? `${brut.slice(0, 2)}/${brut.slice(2, 4)}/${brut.slice(4)}`
+          : brut;
+      const grandit = propre.length > saisie.length;
       const nouveau =
-        anneeImposee && /^\d{2}$/.test(propre) && propre.length > saisie.length ? `${propre}-` : propre;
+        grandit && (/^\d{2}$/.test(propre) || (!anneeImposee && /^\d{2}\/\d{2}$/.test(propre))) ? `${propre}/` : propre;
       setSaisie(nouveau);
       if (nouveau === '') onChange('');
       else {
@@ -108,7 +113,7 @@ export function DateField({ label, value, onChange, required, anneeImposee, jour
           onChangeText={surChangement}
           placeholder={anneeImposee ? T.jourMois : T.jourMoisAnnee}
           placeholderTextColor={colors.textMuted}
-          maxLength={anneeImposee ? 5 : undefined}
+          maxLength={anneeImposee ? 5 : 10}
         />
       </View>
     );

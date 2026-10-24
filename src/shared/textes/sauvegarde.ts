@@ -21,7 +21,7 @@ export const TEXTES_SAUVEGARDE = {
     surDrive: 'Sur Google Drive',
     surAppareil: 'Sur cet appareil (fichier)',
     /** Les entrées du menu du haut (Windows). */
-    menuDrive: 'Enregistrer sur Google Drive',
+    menuDrive: 'Google Drive',
     menuAppareil: 'Enregistrer dans un fichier',
   },
   backup: {

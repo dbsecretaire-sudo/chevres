@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
-import { publierTitre, useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
+import { useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
@@ -51,9 +51,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const titre = typeof options.title === 'string' ? options.title : '';
   // La page peut donner son propre nom à la dernière étape (la fiche d'un contact : le nom du contact, à la place de « Contact »).
   const nomDeLaPage = useLibelleDuFil(adresse);
-  const fil = comptable ? filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre) : [];
-  // Le fil d'Ariane du bas (téléphone) ne voit pas l'écran : l'en-tête de la page affichée lui donne son titre.
-  useFocusEffect(useCallback(() => publierTitre(titre, adresse), [titre, adresse]));
+  // Le fil d'Ariane remplace le titre, sur le téléphone comme sur le poste de comptabilité.
+  const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre);
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   return (
@@ -72,7 +71,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
-            <Text style={[styles.titre, { color: couleur }]} numberOfLines={2}>
+            <Text style={[styles.titre, { color: couleur }, !comptable && styles.titrePhone]} numberOfLines={comptable ? 2 : 3}>
               {fil.length > 1
                 ? fil.map((maillon, i) => (
                     <Text key={`${i}-${maillon.libelle}`}>
@@ -125,6 +124,8 @@ const styles = StyleSheet.create({
   // Une étape du fil d'Ariane : grise, on la reconnaît à la main qui apparaît au survol ; la page ouverte, elle, garde la couleur de l'écran.
   etape: { color: colors.textMuted, cursor: 'pointer' } as never,
   separateur: { color: colors.textMuted, fontWeight: '400' },
+  // Sur le téléphone, le fil d'Ariane (plusieurs étapes) est un peu plus petit que le titre qu'il remplace.
+  titrePhone: { fontSize: 15, lineHeight: 22 },
   titreComptable: { paddingHorizontal: 20, paddingTop: 8 },
   pastilleBouton: {
     flexDirection: 'row',

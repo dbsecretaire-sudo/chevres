@@ -62,7 +62,7 @@ export function ModalListeValeurs({
                   />
                 </View>
                 <Pressable
-                  style={commonStyles.boutonIcone}
+                  style={[commonStyles.boutonIcone, styles.retirer]}
                   onPress={() => setBrouillon((l) => l.filter((_, j) => j !== i))}
                   accessibilityLabel={T.retirer}
                 >
@@ -71,12 +71,17 @@ export function ModalListeValeurs({
               </View>
             ))}
           </ScrollView>
-          <Button variant="secondary" label={T.ajouter} onPress={() => setBrouillon((l) => [...l, ''])} />
-          <Button
-            variant="secondary"
-            label={T.retablir}
-            onPress={() => setBrouillon([...valeursParDefaut])}
-          />
+          {/* Ajouter et rétablir : deux liens discrets sous la liste, pas deux grandes barres. */}
+          <View style={styles.liens}>
+            <Pressable style={styles.lien} onPress={() => setBrouillon((l) => [...l, ''])} accessibilityRole="button">
+              <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+              <Text style={styles.texteLien}>{T.ajouter}</Text>
+            </Pressable>
+            <Pressable style={styles.lien} onPress={() => setBrouillon([...valeursParDefaut])} accessibilityRole="button">
+              <Ionicons name="refresh" size={16} color={colors.primary} />
+              <Text style={styles.texteLien}>{T.retablir}</Text>
+            </Pressable>
+          </View>
           <View style={commonStyles.row}>
             <Button
               style={commonStyles.flex1}

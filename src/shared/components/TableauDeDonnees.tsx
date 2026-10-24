@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { garderLargeursDeColonnes, lireLargeursDeColonnes } from '@/shared/utils/largeursDeColonnes';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
@@ -93,7 +94,10 @@ export function TableauDeDonnees<T>({ colonnes, lignes, cleDeLaLigne, onLigne, v
    * Les largeurs choisies à la souris (en points). Tant qu'on n'a rien tiré, les colonnes se partagent la largeur du tableau ; dès la première poignée saisie, toutes
    * gardent leur largeur du moment, et seule la colonne qu'on tire change (le tableau défile en travers quand il dépasse la fenêtre).
    */
-  const [largeurs, setLargeurs] = useState<Record<string, number>>({});
+  // Elles sont gardées d'un démarrage à l'autre : un tableau rouvert retrouve les largeurs choisies.
+  const cleDuTableau = colonnes.map((c) => c.cle).join('|');
+  const [largeurs, setLargeurs] = useState<Record<string, number>>(() => lireLargeursDeColonnes(cleDuTableau.split('|')));
+  useEffect(() => garderLargeursDeColonnes(cleDuTableau.split('|'), largeurs), [cleDuTableau, largeurs]);
   const mesures = useRef<Record<string, number>>({});
   const figer = () =>
     setLargeurs((l) => (Object.keys(l).length > 0 ? l : Object.fromEntries(colonnes.map((c) => [c.cle, Math.round(mesures.current[c.cle] ?? 100)]))));

@@ -6,6 +6,9 @@
 /** Le nombre de pages gardées : au-delà, les plus anciennes s'oublient. */
 const PAGES_GARDEES = 60;
 
+/** Les pages de passage : elles ne montrent rien, elles renvoient aussitôt ailleurs (la fiche d'une visite ouvre son lot). Y revenir par « précédent » ne ferait que rouvrir ailleurs : elles ne se gardent pas. */
+const PAGES_DE_PASSAGE = ['/sante/veterinaire/visite'];
+
 let pile: string[] = [];
 
 /**
@@ -13,6 +16,7 @@ let pile: string[] = [];
  * formulaire) n'est pas ajoutée une seconde fois : l'historique revient à elle, et ce qui a été ouvert depuis s'oublie.
  */
 export function noterPage(adresse: string): void {
+  if (PAGES_DE_PASSAGE.includes(adresse.split('?')[0])) return;
   if (pile[pile.length - 1] === adresse) return;
   const dejaVue = pile.lastIndexOf(adresse);
   if (dejaVue >= 0) {

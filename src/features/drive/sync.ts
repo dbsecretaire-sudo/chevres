@@ -73,6 +73,7 @@ import {
 } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { empreinteTexte } from '@/shared/utils/empreinte';
+import { baseDeLAnnee, baseDuFichier, lireBase, noterBase } from '@/features/drive/baseDeSynchro';
 import { fusionner, type RapportFusion } from '@/features/drive/fusion';
 import type { Categorie } from '@/shared/storage/types';
 import {
@@ -627,6 +628,7 @@ export async function pousserToutesAnnees(
   await pousserAnnexes(accessToken, folderId);
   await pousserPieces(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
+  await noterEtatSynchronise();
   return bilan;
 }
 
@@ -685,6 +687,7 @@ export async function tirerToutesAnnees(
   await tirerComptesPcg(accessToken, folderId);
   // Les animaux ont pu changer : les poses de l'inventaire des boucles (dates comprises) se refont d'après eux.
   await synchroniserPoseBoucles();
+  await noterEtatSynchronise();
   return bilan;
 }
 
@@ -748,6 +751,22 @@ const FICHIERS_FUSIONNABLES: readonly FichierFusionnable[] = [
   { fichier: FICHIER_COMPTES_PCG, lire: listComptesPcg, ecrire: remplacerTousComptesPcg },
 ];
 
+/** Garde l'état de toutes les données (celui qui vient d'être envoyé ou récupéré) : à la prochaine fusion, ce qui n'y est plus a été supprimé. */
+async function noterEtatSynchronise(): Promise<void> {
+  for (const categorie of CATEGORIES_STOCKAGE) await noterEtatDeLaCategorie(categorie);
+  for (const f of FICHIERS_FUSIONNABLES) {
+    try {
+      await noterBase(baseDuFichier(f.fichier), await f.lire());
+    } catch {
+      // Une donnée illisible n'a pas de base : sa prochaine fusion ne fait que réunir.
+    }
+  }
+}
+
+async function noterEtatDeLaCategorie(categorie: Categorie): Promise<void> {
+  for (const annee of await getYears(categorie)) await noterBase(baseDeLAnnee(categorie, annee), await loadYear(categorie, annee));
+}
+
 /** Fusionne un fichier JSON : ce que Drive a de plus est ajouté ici, puis le tout est renvoyé sur Drive. */
 async function fusionnerFichier(accessToken: string, folderId: string, f: FichierFusionnable, rapport: RapportFusion): Promise<void> {
   const local = await f.lire();
@@ -755,7 +774,7 @@ async function fusionnerFichier(accessToken: string, folderId: string, f: Fichie
   if (file) {
     try {
       const distant = JSON.parse(await downloadFileText(accessToken, file.id));
-      const fusion = fusionner(local, distant, rapport);
+      const fusion = fusionner(local, distant, rapport, await lireBase(baseDuFichier(f.fichier)));
       if (JSON.stringify(fusion) !== JSON.stringify(local)) await f.ecrire(fusion);
     } catch {
       // Fichier distant vide ou corrompu : on garde les données locales et on les renvoie.
@@ -764,6 +783,7 @@ async function fusionnerFichier(accessToken: string, folderId: string, f: Fichie
   const apres = await f.lire();
   if (f.vide?.(apres)) return;
   await deposer(accessToken, f.fichier, folderId, JSON.stringify(apres));
+  await noterBase(baseDuFichier(f.fichier), apres);
 }
 
 /** Fusionne une catégorie annuelle (écritures, ventes, animaux, traitements…) : chaque année réunit les éléments des deux appareils, par identifiant. */
@@ -773,13 +793,14 @@ async function fusionnerCategorie(accessToken: string, folderId: string, categor
     const parAnnee = fromCSVParAnnees(categorie, await downloadFileText(accessToken, file.id));
     for (const [annee, distants] of parAnnee) {
       const locaux = await loadYear(categorie, annee);
-      const fusion = fusionner(locaux, distants, rapport) as unknown[];
+      const fusion = fusionner(locaux, distants, rapport, await lireBase(baseDeLAnnee(categorie, annee))) as unknown[];
       if (JSON.stringify(fusion) === JSON.stringify(locaux)) continue;
       await saveYear(categorie, annee, fusion as any);
       await reindexYear(categorie, annee, fusion as any);
     }
   }
   await pousserCategorie(accessToken, folderId, categorie);
+  await noterEtatDeLaCategorie(categorie);
 }
 
 /**
@@ -793,7 +814,7 @@ export async function driveADesDonneesEnPlus(accessToken: string, folderId: stri
     if (!file) continue;
     const parAnnee = fromCSVParAnnees(categorie, await downloadFileText(accessToken, file.id));
     for (const [annee, distants] of parAnnee) {
-      fusionner(await loadYear(categorie, annee), distants, rapport);
+      fusionner(await loadYear(categorie, annee), distants, rapport, await lireBase(baseDeLAnnee(categorie, annee)));
       if (rapport.ajoutes > 0) return true;
     }
   }
@@ -801,7 +822,7 @@ export async function driveADesDonneesEnPlus(accessToken: string, folderId: stri
     const file = await findFile(accessToken, f.fichier, folderId);
     if (!file) continue;
     try {
-      fusionner(await f.lire(), JSON.parse(await downloadFileText(accessToken, file.id)), rapport);
+      fusionner(await f.lire(), JSON.parse(await downloadFileText(accessToken, file.id)), rapport, await lireBase(baseDuFichier(f.fichier)));
     } catch {
       // Fichier distant vide ou corrompu : rien à fusionner.
     }
@@ -813,7 +834,7 @@ export async function driveADesDonneesEnPlus(accessToken: string, folderId: stri
 /**
  * Fusionne les données de cet appareil avec celles de Drive, quand un autre appareil a travaillé de son côté : tout ce que chacun a saisi est gardé (les écritures,
  * les animaux, le stock, les contacts, les réglages…), puis le résultat est envoyé sur Drive et les fichiers joints manquants se récupèrent. Sur une valeur différente
- * des deux côtés, celle de cet appareil reste ; une suppression faite d'un seul côté ne se propage pas.
+ * des deux côtés, celle de cet appareil reste. Une suppression se propage quand l'autre côté n'a pas touché à l'élément depuis la dernière synchronisation ; sinon l'élément modifié est gardé.
  */
 export async function fusionnerAvecDrive(
   accessToken: string,

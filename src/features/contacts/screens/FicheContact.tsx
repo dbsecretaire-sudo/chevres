@@ -18,6 +18,8 @@ import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { estVente } from '@/features/clients/components/ClientResume';
 import type { EcritureClient } from '@/features/clients/services/resumeClient';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import { estEquarrisseur } from '@/features/exploitation/services/partenaires';
+import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import {
   ecrituresACirculation,
@@ -107,15 +109,16 @@ export default function FicheContact() {
       setElements([]);
       return;
     }
-    const [ventes, factures, controles, archive, abattoirs] = await Promise.all([
+    const [ventes, factures, controles, archive, abattoirs, fournisseurs] = await Promise.all([
       listToutesVentes(),
       listToutesFactures(),
       listTousControles(),
       lireArchiveDossiers(),
       nomsDesAbattoirs(),
+      listFournisseurs(),
     ]);
     setCirculations(ecrituresACirculation(ventes, factures, abattoirs, lots));
-    setEcritures(ecrituresDuContact(c, ventes, factures));
+    setEcritures(ecrituresDuContact(c, ventes, factures, fournisseurs.filter(estEquarrisseur).length === 1));
     setControles(controles);
     setElements(elementsDuContact(c, controles, archive));
   }, [id, lots]);

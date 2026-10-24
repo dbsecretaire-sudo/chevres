@@ -6,6 +6,7 @@ import {
   filtrerParClient,
   type EcritureClient,
 } from '@/features/clients/services/resumeClient';
+import { facturesPayeesPourLEquarrisseur } from '@/features/exploitation/services/partenaires';
 import { facturesDuFournisseur } from '@/features/fournisseurs/services/resumeFournisseur';
 import type { Contact } from '@/features/contacts/services/contacts';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
@@ -18,8 +19,16 @@ import type { CategorieFournisseurReglage } from '@/shared/dictionnaire/categori
 import { TEXTES } from '@/shared/textes';
 import { nomComplet } from '@/shared/utils/personne';
 
-/** Les écritures d'un contact, côté client (ventes, factures émises, remboursements) et côté fournisseur (factures reçues), de la plus récente à la plus ancienne. Une recette est positive, une dépense négative. */
-export function ecrituresDuContact(contact: Contact, ventes: Vente[], factures: Facture[]): EcritureClient[] {
+/**
+ * Les écritures d'un contact, côté client (ventes, factures émises, remboursements) et côté fournisseur (factures reçues), de la plus récente à la plus ancienne. Une recette est positive, une dépense négative.
+ * Un équarrisseur a aussi les factures payées à la Chambre d'agriculture pour son compte (le montant de leurs lignes d'équarrissage) ; `equarrisseurUnique` : il est le seul, il reçoit aussi les lignes sans lien.
+ */
+export function ecrituresDuContact(
+  contact: Contact,
+  ventes: Vente[],
+  factures: Facture[],
+  equarrisseurUnique = false,
+): EcritureClient[] {
   let duClient: EcritureClient[] = [];
   if (contact.client) {
     const siennes = filtrerParClient(nomComplet(contact.client), ventes, factures);
@@ -38,7 +47,18 @@ export function ecrituresDuContact(contact: Contact, ventes: Vente[], factures: 
           source: SOURCE_TRANSACTION.FACTURE,
         }))
     : [];
-  return [...duClient, ...duFournisseur].sort((a, b) => b.date.localeCompare(a.date));
+  const parLaChambre: EcritureClient[] = contact.fournisseur
+    ? facturesPayeesPourLEquarrisseur(contact.fournisseur, factures, equarrisseurUnique)
+        .filter(({ facture }) => !dejaVues.has(facture.id))
+        .map(({ facture, montant }) => ({
+          id: facture.id,
+          date: facture.date,
+          titre: TEXTES.exploitation.controles.partenaires.factures.ligneChambre,
+          montant: -montant,
+          source: SOURCE_TRANSACTION.FACTURE,
+        }))
+    : [];
+  return [...duClient, ...duFournisseur, ...parLaChambre].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 /** La balance d'un contact : ce qu'il vous a payé moins ce que vous lui avez payé, au centime. */

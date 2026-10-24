@@ -22,7 +22,9 @@ import { AntenneGds, estLAntenneGds } from '@/features/production/components/Ant
 import { DossiersTouristiques } from '@/features/production/components/DossiersTouristiques';
 import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
 import { ChoixCategoriesTiers } from '@/shared/components/ChoixCategoriesTiers';
-import { categoriesDeLOrganisation } from '@/features/exploitation/services/partenaires';
+import { categoriesDeLOrganisation, ecrituresEquarrissagePayeesParUnAutre } from '@/features/exploitation/services/partenaires';
+import { listToutesFactures } from '@/features/comptabilite/repository/factures';
+import type { Facture } from '@/features/comptabilite/types';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
 import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisseur';
 import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
@@ -93,6 +95,8 @@ function LieuTiersStandard() {
   const nomDeLaCategorie = (c: Contact) => categories.find((x) => x.id === categorieDuContact(c, idsConnus).id)?.nom ?? '';
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  /** Les factures : celles de la Chambre d'agriculture ont des lignes d'équarrissage qui reviennent à l'équarrisseur. */
+  const [factures, setFactures] = useState<Facture[]>([]);
   /** Les contenus rangés des partenaires : les dossiers de chaque intervenant s'y trouvent. */
   const [controles, setControles] = useState<Controle[]>([]);
 
@@ -106,6 +110,9 @@ function LieuTiersStandard() {
         .catch(() => undefined);
       listTousControles()
         .then(setControles)
+        .catch(() => undefined);
+      listToutesFactures()
+        .then(setFactures)
         .catch(() => undefined);
     }, [settings.anneeActive]),
   );
@@ -135,16 +142,17 @@ function LieuTiersStandard() {
     () => contacts.filter((c) => categorieDuContact(c, idsConnus).id === CATEGORIE_FOURNISSEUR.VETERINAIRE),
     [contacts, idsConnus],
   );
-  const ecritures = useMemo(
-    () =>
-      ecrituresDuLieu(
-        config,
-        transactions,
-        tiers.map((c) => c.nom),
-        (categorie) => LABEL_CATEGORIE_VENTE[categorie as keyof typeof LABEL_CATEGORIE_VENTE],
-      ),
-    [config, transactions, tiers],
-  );
+  const ecritures = useMemo(() => {
+    const duLieu = ecrituresDuLieu(
+      config,
+      transactions,
+      tiers.map((c) => c.nom),
+      (categorie) => LABEL_CATEGORIE_VENTE[categorie as keyof typeof LABEL_CATEGORIE_VENTE],
+    );
+    // L'équarrissage : les factures payées à la Chambre d'agriculture pour le compte de l'équarrisseur en font partie (pour le montant de leurs lignes d'équarrissage).
+    if (cle !== 'equarrissage') return duLieu;
+    return [...duLieu, ...ecrituresEquarrissagePayeesParUnAutre(transactions, factures, duLieu)].sort((a, b) => b.date.localeCompare(a.date));
+  }, [config, transactions, tiers, cle, factures]);
   // La nouvelle écriture du lieu : avec son intervenant déjà choisi dans « Contact » (recette ou dépense). Un lieu qui n'a qu'un intervenant le donne
   // tel quel ; avec plusieurs, le choix reste à faire (la fiche de chacun a ses propres « Nouvelle dépense / recette »), sauf pour le groupement sanitaire.
   const intervenant = config.contactParDefaut ? tiers[0] : tiers.length === 1 ? tiers[0] : undefined;
