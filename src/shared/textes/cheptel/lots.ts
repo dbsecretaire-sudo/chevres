@@ -19,7 +19,6 @@ export const lotsTextes = {
   /** L'assistant « Nouveau lot d'abattoir » : le départ d'animaux, avant toute écriture comptable. */
   depart: {
     titre: 'Départ d’animaux',
-    aide: 'Des animaux quittent l’exploitation vivants : le lot et son document de circulation se font d’abord, avant toute écriture (facture de l’abattoir, vente).',
     date: 'Date du départ',
     animaux: 'Les animaux',
     document: {
@@ -32,13 +31,6 @@ export const lotsTextes = {
       retirer: 'Retirer le document',
       depose: 'Document déposé',
       manque: 'Document manquant : il faudra le déposer avant la facture ou la vente.',
-    },
-    destination: {
-      titre: 'Les animaux sont…',
-      morts: 'Morts (à l’abattoir)',
-      vivants: 'Vivants (vendus)',
-      aideMorts: 'Ils partent à l’abattoir, prestataire de service : leur fiche passe à « abattoir » (ils deviennent des produits, en stock et à facturer). La facture de l’abattoir, émise quelques jours après, se rattache à ce lot.',
-      aideVivants: 'Ils sont vendus vivants : leur fiche passera à « vendue » avec la vente, qui se rattache à ce lot.',
     },
     titreBon: 'Bon de livraison',
     titreVente: 'Vente d’animaux vivants',
@@ -170,9 +162,6 @@ export const lotsTextes = {
   },
   numeroBon: 'N° du bon d’équarrissage',
   exempleBon: 'ex : 2026-0412',
-  aideBonEquarrissage: 'Choisissez les animaux morts de cet enlèvement (onglet Animaux) et joignez le bon remis par l’équarrisseur (onglet Fichiers, une fois le lot créé).',
-  aideFichiersEquarrissage: 'Le bon d’équarrissage remis par l’équarrisseur (scan, photo, PDF).',
-  aideFichiersAbattage: 'Les poids, le bon d’abattage et les autres documents de cet abattage ou de sa vente (scan, photo, PDF).',
   aideFactureAbattoir: 'La facture de l’abattoir fait le montant des frais d’abattoir refacturés au client quand vous facturez la viande de ce lot. Il n’y a pas de montant sans facture : la facture se modifie dans la comptabilité.',
   /** Les onglets de la fiche d'un lot vétérinaire (une visite). */
   ongletsVisite: {
@@ -182,15 +171,12 @@ export const lotsTextes = {
     suivi: 'Suivi sanitaire',
   },
   aideVerrouille: 'Ce lot se crée tout seul (abattoir, visite vétérinaire…) : son nom et sa catégorie ne se modifient pas et il ne se supprime pas. On y change seulement les animaux.',
-  rapportNumero: (numero?: string) => (numero ? `rapport d’essais n° ${numero}` : 'rapport d’essais'),
   aFacturer: 'à facturer',
   facture: 'facturé',
   aucunAnimalDansLeLot: 'Aucun animal dans ce lot : choisissez-les dans le cheptel.',
   aideAbattoir: 'Un lot d’abattoir : les animaux (avec boucle) envoyés à l’abattoir ce jour-là. Il se crée et se complète tout seul.',
   lierFacture: 'Lier la facture de l’abattoir',
   factureAbattoir: 'Facture de l’abattoir',
-  creerLaFactureAbattoir: 'Créer la facture de l’abattoir',
-  factureApresDocument: 'Déposez d’abord le document de circulation du lot : il est obligatoire avant toute écriture.',
   aucuneFactureAbattoir: 'Aucune dépense d’un contact de la catégorie Abattoir : rangez votre abattoir dans cette catégorie (Contacts), puis saisissez sa facture.',
   cabrisATiptag: (nombre: number) => `${nombre} cabri${nombre > 1 ? 's' : ''} à tiptag pas encore à l’abattoir`,
   cabrisATiptagAide: 'Tout tiptag de cabri est destiné à l’abattoir. Les ajouter à ce lot (puis Enregistrer) les envoie à l’abattoir au jour du lot.',
@@ -210,8 +196,6 @@ export const lotsTextes = {
   ouvrirLesContacts: 'Ouvrir mes contacts',
   voirLaFacture: 'Voir ou modifier la facture',
   delierFacture: 'Délier cette facture',
-  montantAbattoir: 'Ou noter le montant demandé par l’abattoir (€ TTC)',
-  montantAbattoirAide: 'Ce que l’abattoir vous demande de payer (une dépense pour vous). Il est proposé en frais refacturés quand vous facturez la viande de ce lot au client.',
   suivi: 'Suivi sanitaire du lot',
   nouveauTraitement: 'Donner un traitement à ce lot',
   traitementsDuLot: (nombre: number) => `Traitements du lot${nombre > 0 ? ` (${nombre})` : ''}`,
