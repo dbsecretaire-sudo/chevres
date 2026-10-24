@@ -57,6 +57,7 @@ export default function CheptelLayout() {
           headerStyle: { backgroundColor: colors.ajout },
         }}
       />
+      <Stack.Screen name="menu" options={{ title: TEXTES.accueil.ferme.colonnes.cheptel }} />
       <Stack.Screen name="naissances" options={{ title: TEXTES.navigation.layout.naissances }} />
       <Stack.Screen
         name="historique"

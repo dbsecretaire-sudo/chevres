@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Text } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import LieuAssociations from '@/features/production/screens/LieuAssociations';
+import { BonsDeLivraison } from '@/features/production/components/BonsDeLivraison';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { useCategoriesContact } from '@/features/contacts/hooks/useCategoriesContact';
@@ -228,6 +229,9 @@ function LieuTiersStandard() {
           }
         />
       ) : null}
+
+      {/* L'abattoir : ses bons de livraison d'abord (les animaux livrés, le document de circulation, la facture de l'abattoir liée). */}
+      {cle === 'abattoir' ? <BonsDeLivraison lots={settings.exploitation?.lots ?? []} ouvrir={ouvrir} /> : null}
 
       {config.avecTiers ? (
         <>

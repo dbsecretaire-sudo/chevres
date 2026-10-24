@@ -12,7 +12,7 @@ describe('menus du poste de comptabilité : huit thèmes', () => {
   });
 
   /** Les pages que le poste de comptabilité ne montre volontairement plus : le stock de la grange, et la page des réglages des contacts (le menu Contacts a la liste et ses catégories). */
-  const RETIREES_VOLONTAIREMENT = ['/production/lieu?lieu=grange', '/organisation-tiers', '/comptabilite/nouvelle?type=recue'];
+  const RETIREES_VOLONTAIREMENT = ['/production/lieu?lieu=grange', '/organisation-tiers', '/comptabilite/nouvelle?type=recue', '/cheptel/menu'];
 
   it('aucune page des menus de la ferme n’est perdue, hors celles qu’on a retirées exprès', () => {
     const rangees = new Set(routesDe(poste));

@@ -1,4 +1,5 @@
 import type { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
 import { ROUTES } from '@/shared/constants/routes';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
@@ -75,4 +76,17 @@ export function actionsDuLieu(cible: CibleDesBulles): ActionDeLieu[] {
         { cle: 'stock', titre: B.stockNourriture, icone: 'cube', route: ROUTES.lieu('grange') },
       ];
   }
+}
+
+/** Les pages du cheptel, dans la page de menu qui s'ouvre avant d'y entrer : la liste des animaux, les naissances, les sorties, les lots, les traitements, les boucles et les contrôles. */
+export function pagesDuCheptel(): ActionDeLieu[] {
+  return [
+    { cle: 'cheptelListe', titre: B.cheptelListe, icone: 'paw', route: ROUTES.lieu('animaux') },
+    { cle: 'cheptelNaissances', titre: B.naissances, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCES },
+    { cle: 'cheptelSorties', titre: B.sorties, icone: 'log-out', route: ROUTES.CHEPTEL_HISTORIQUE },
+    { cle: 'cheptelLots', titre: B.lotsAnimaux, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
+    { cle: 'cheptelTraitements', titre: B.traitements, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENTS },
+    { cle: 'cheptelBoucles', titre: B.boucles, icone: 'pricetag', route: ROUTES.lieu('boucles') },
+    { cle: 'cheptelControles', titre: B.controlesAnimaux, icone: 'clipboard', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX) },
+  ];
 }

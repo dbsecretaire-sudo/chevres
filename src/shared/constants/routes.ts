@@ -32,6 +32,8 @@ export const ROUTES = {
   /** La liste des animaux vivants. */
   /** La liste des animaux : la page « Tous les animaux » (l'ancienne liste « Cheptel actif » n'existe plus). */
   CHEPTEL_LISTE: '/production/lieu?lieu=animaux',
+  /** La page de menu du cheptel : les pages où l'on entre (animaux, naissances, sorties, lots, traitements, boucles, contrôles). */
+  CHEPTEL_MENU: '/cheptel/menu',
   CHEPTEL_BILAN: '/cheptel/bilan',
   /** Le tableau de bord du cheptel : la pyramide des âges et les mouvements de l'année. */
   CHEPTEL_TABLEAU_DE_BORD: '/cheptel/tableau-de-bord',
@@ -76,6 +78,8 @@ export const ROUTES = {
     `/production/vehicule${id || onglet ? '?' : ''}${[id ? `id=${id}` : '', onglet ? `onglet=${onglet}` : ''].filter(Boolean).join('&')}` as const,
   /** Les rapports d'essais du laboratoire (prophylaxie) déposés par l'éleveur. */
   RAPPORTS_ESSAIS_GDS: '/production/rapports-essais',
+  /** Les ventes d'animaux vivants : la liste d'abord, puis « Nouvelle vente ». */
+  VENTES_VIVANTS: '/production/ventes-vivants',
   /** Le cadre réglementaire de l'atelier (fabriquer et vendre fromages, viande, charcuterie ; la Corse). */
   CADRE_REGLEMENTAIRE_ATELIER: '/production/cadre-reglementaire',
   /** Les enlèvements d'équarrissage (Équarrissage › Enlèvements). */

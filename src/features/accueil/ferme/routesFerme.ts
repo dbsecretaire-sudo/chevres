@@ -11,8 +11,8 @@ const C = TEXTES.accueil.ferme.colonnes;
  */
 export const ROUTE_DIRECTE: Record<string, string> = {
   // La gestion de l'exploitation : le cheptel (liste, lots, ajouts, boucles, carnet de naissance) et les documents.
-  // Le cheptel : directement la liste des animaux (les lots s'ouvrent depuis l'icône de son en-tête).
-  cheptel: ROUTES.lieu('animaux'),
+  // Le cheptel ouvre d'abord sa page de menu (liste des animaux, naissances, sorties, lots, traitements, boucles, contrôles), puis la page choisie.
+  cheptel: ROUTES.CHEPTEL_MENU,
   documents: ROUTES.lieu('documents'),
   organismes: ROUTES.lieu('organismes'),
   // Les intervenants de l'exploitation.
@@ -20,8 +20,8 @@ export const ROUTE_DIRECTE: Record<string, string> = {
   // Les partenaires (organismes, assureurs, équarrisseurs, contacts) : l'écran où ils sont tous rangés ; le vétérinaire est dans le groupement sanitaire.
   partenaires: ROUTES.santeControles(FAMILLE_CONTROLE.GROUPEMENT),
   bilanAnnuel: ROUTES.CHEPTEL_BILAN,
-  // Un animal qui part vivant (vendu à un particulier, à un autre éleveur…) : l'assistant du départ, avec son document de circulation.
-  venteVivant: ROUTES.lotAbattoirNouveau('vivants'),
+  // Les ventes d'animaux vivants (à un particulier, à un autre éleveur…) : la liste d'abord ; « Nouvelle vente » ouvre l'assistant du départ, avec son document de circulation.
+  venteVivant: ROUTES.VENTES_VIVANTS,
   // Une nouvelle dépense : la facture reçue (la catégorie — aliments, carburant, réparation… — se choisit dans l'écriture).
   nouvelleFacture: `${ROUTES.COMPTABILITE_NOUVELLE}?type=recue`,
   aliments: ROUTES.lieu('aliments'),

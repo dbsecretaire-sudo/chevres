@@ -94,6 +94,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/production\/lot$/, () => ROUTES.PRODUCTION_VIANDE],
   // Les documents et les rapports d'essais se trouvent sur la page du groupement sanitaire : on y revient, pas à l'accueil de la Production.
   [/^\/production\/(documents-gds|rapports-essais)$/, () => ROUTES.lieu('groupementSanitaire')],
+  // L'assistant d'une vente d'animaux vivants revient à la liste des ventes.
+  [/^\/production\/ventes-vivants$/, () => ROUTES.lieu('animaux')],
   // La fiche d'un enlèvement revient à la liste des enlèvements, qui revient à la page de l'équarrissage.
   [/^\/production\/enlevement$/, () => ROUTES.ENLEVEMENTS],
   [/^\/production\/enlevements$/, () => ROUTES.lieu('equarrissage')],

@@ -130,7 +130,7 @@ const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: Entre
       '/sante/controles/liste?famille=surface',
       '/cheptel/dossier-pac',
       '/production/lieu?lieu=documents',
-      '/production/lot-abattoir?destination=vivants',
+      '/production/ventes-vivants',
       '/cheptel/reglages',
     ],
   },
