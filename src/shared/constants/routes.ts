@@ -177,6 +177,8 @@ export const ROUTES = {
   /** Fabriquer un fromage ou de la charcuterie en très grands boutons (le produit, les litres de lait, combien). */
   /** Imprimer des étiquettes en très grands boutons (le produit, sa fabrication, combien). */
   PRODUCTION_ETIQUETTES_SIMPLE: '/production/etiquettes-simple',
+  /** La viande à facturer, en tuiles : un jour d'abattage par tuile. */
+  PRODUCTION_VIANDE_SIMPLE: '/production/viande-simple',
   productionFabricationSimple: (produit: string) => `/production/fabrication-simple?produit=${produit}` as const,
   productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,
   PRODUCTION_RAPPELS_LOTS: '/production/rappels-lots',

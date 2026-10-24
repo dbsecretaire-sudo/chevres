@@ -6,6 +6,7 @@ import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remi
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+import { generateId } from '@/shared/utils/id';
 import { todayISO } from '@/shared/utils/dates';
 
 const cle = () => cleStockage(CLE_STOCKAGE.STOCK);
@@ -156,6 +157,11 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
       : [],
     platsFabriques: platsValides(archive?.platsFabriques),
     sansAutomatique: automatiquesValides(archive?.sansAutomatique),
+    etiquettesImprimees: Array.isArray(archive?.etiquettesImprimees)
+      ? archive.etiquettesImprimees.filter(
+          (e) => e && typeof e.id === 'string' && typeof e.lotId === 'string' && typeof e.nombre === 'number',
+        )
+      : undefined,
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
     sectionsMasquees: sectionsMasqueesValides(archive?.sectionsMasquees),
     denreesAjoutees: archive?.denreesAjoutees === true ? true : undefined,
@@ -205,4 +211,17 @@ export async function reglerMouvementAutomatique(nom: 'lait' | 'aliments', actif
   }
   const sans = { ...archive.sansAutomatique, [nom]: actif ? undefined : todayISO() };
   await remplacerArchiveStock({ ...archive, sansAutomatique: automatiquesValides(sans) });
+}
+
+/** Note une impression d'étiquettes (les 50 dernières sont gardées) : de quoi les réimprimer plus tard. */
+export async function noterEtiquettesImprimees(impression: { lotId: string; nombre: number; date?: string }): Promise<void> {
+  const raw = await AsyncStorage.getItem(cle());
+  let archive: ArchiveStock;
+  try {
+    archive = normaliserArchiveStock(raw ? JSON.parse(raw) : undefined);
+  } catch {
+    archive = normaliserArchiveStock(undefined);
+  }
+  const nouvelle = { id: generateId(), lotId: impression.lotId, nombre: impression.nombre, date: impression.date ?? todayISO() };
+  await remplacerArchiveStock({ ...archive, etiquettesImprimees: [...(archive.etiquettesImprimees ?? []), nouvelle].slice(-50) });
 }

@@ -256,6 +256,16 @@ export interface ArchiveStock {
    * ceux d'avant restent comme ils étaient. Absent : les deux sont actifs.
    */
   sansAutomatique?: SansAutomatique;
+  /** Les étiquettes déjà imprimées (le lot, combien, quand) : de quoi en réimprimer. */
+  etiquettesImprimees?: EtiquetteImprimee[];
+}
+
+/** Une impression d'étiquettes : le lot dont elles portent le numéro, combien et le jour. */
+export interface EtiquetteImprimee {
+  id: string;
+  lotId: string;
+  nombre: number;
+  date: string;
 }
 
 /** La balance du lait (ce qui est sorti sans être noté est ajouté au lait produit) et la remise à zéro des aliments à chaque achat : la date où chacune s'arrête. */

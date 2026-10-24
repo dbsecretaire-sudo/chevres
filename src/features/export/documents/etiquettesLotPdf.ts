@@ -1,6 +1,6 @@
 import { documentHtml, echapper, ecrireEtPartagerPdf, noteHtml } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation } from '@/features/settings/settings';
-import { lireArchiveStock } from '@/features/stock/repository';
+import { lireArchiveStock, noterEtiquettesImprimees } from '@/features/stock/repository';
 import { etiquetteDuLot, type EtiquetteDeLot } from '@/features/stock/services/etiquetteLot';
 import { FORMAT_EXPORT, NOM_FICHIER_EXPORT_ETIQUETTES_LOTS } from '@/shared/constants/export';
 import { colors } from '@/shared/theme/colors';
@@ -71,4 +71,6 @@ export async function exporterEtiquettesLotPdf(lotId: string, contenuNet?: strin
     `${NOM_FICHIER_EXPORT_ETIQUETTES_LOTS}.${FORMAT_EXPORT.PDF}`,
     titre,
   );
+  // De quoi les réimprimer plus tard.
+  await noterEtiquettesImprimees({ lotId: lot.id, nombre: etiquettes.length });
 }

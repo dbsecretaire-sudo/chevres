@@ -161,6 +161,7 @@ export default function ProductionLayout() {
       <Stack.Screen name="rapports-essais" options={{ title: TEXTES.gds.documents.titreRapports }} />
       <Stack.Screen name="rapport-essais" options={{ title: TEXTES.gds.documents.titreRapports }} />
       <Stack.Screen name="terrain" options={{ title: TEXTES.accueil.ferme.terrain.titres.troupeau }} />
+      <Stack.Screen name="viande-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.viandeAFacturer }} />
       <Stack.Screen name="etiquettes-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.etiquettes }} />
       <Stack.Screen name="fabrication-simple" options={{ title: TEXTES.production.fabricationSimple.titre }} />
       <Stack.Screen name="lait-du-jour" options={{ title: TEXTES.stock.laitJour.ajouter }} />

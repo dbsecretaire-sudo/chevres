@@ -10,7 +10,7 @@ import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle, LotFromage } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
-import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
+import { ListeDeChoix, type Choix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { colors } from '@/shared/theme/colors';
@@ -50,8 +50,12 @@ function fabricationsDe(archive: ArchiveStock, article: string): Fabrication[] {
   return [...parFabrication.values()].sort((a, b) => b.lot.dateFabrication.localeCompare(a.lot.dateFabrication));
 }
 
+/** Le choix « Réimprimer des étiquettes », au milieu des produits. */
+const REIMPRESSION = 'reimpression';
+
 type Etape =
   | { nom: 'produit' }
+  | { nom: 'reimpression' }
   | { nom: 'article'; produit: Produit }
   | { nom: 'fabrication'; article: ArticleAffiche }
   | { nom: 'nombre'; fabrication: Fabrication }
@@ -100,10 +104,44 @@ export function EtiquettesSimple({
           <Text style={styles.titre}>{E.quoi}</Text>
           <ListeDeChoix
             presentation={presentation}
-            choix={PRODUITS.map((p) => ({ cle: p, libelle: E.produits[p], icone: ICONE[p] }))}
-            onChoisir={(c) => setEtape({ nom: 'article', produit: c.cle as Produit })}
+            choix={[
+              ...PRODUITS.map((p): Choix => ({ cle: p, libelle: E.produits[p], icone: ICONE[p] })),
+              { cle: REIMPRESSION, libelle: E.reimprimer, icone: 'printer' },
+            ]}
+            onChoisir={(c) => setEtape(c.cle === REIMPRESSION ? { nom: 'reimpression' } : { nom: 'article', produit: c.cle as Produit })}
           />
           <Pressable style={styles.discret} onPress={onTerminer} accessibilityRole="button">
+            <Text style={styles.discretTexte}>{T.retour}</Text>
+          </Pressable>
+        </ScrollView>
+      ) : null}
+
+      {etape.nom === 'reimpression' ? (
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+          <Text style={styles.titre}>{E.dejaImprimees}</Text>
+          {archive && (archive.etiquettesImprimees ?? []).length === 0 ? <Text style={styles.detail}>{E.aucuneReimpression}</Text> : null}
+          {archive ? (
+            <ListeDeChoix
+              presentation={presentation}
+              choix={[...(archive.etiquettesImprimees ?? [])]
+                .reverse()
+                .slice(0, 12)
+                .flatMap((i) => {
+                  const lot = (archive.lots ?? []).find((l) => l.id === i.lotId);
+                  return lot ? [{ cle: i.id, libelle: E.fabrication_(lot.numero, i.nombre, formatDateFR(i.date)) }] : [];
+                })}
+              onChoisir={(c) => {
+                const impression = (archive.etiquettesImprimees ?? []).find((i) => i.id === c.cle);
+                const lot = impression && (archive.lots ?? []).find((l) => l.id === impression.lotId);
+                if (!impression || !lot) return;
+                // Le même nombre est proposé : on peut le changer.
+                setSaisie(String(impression.nombre));
+                const fabrication = fabricationsDe(archive, lot.article).find((f) => (f.lot.mouvementId ?? f.lot.id) === (lot.mouvementId ?? lot.id));
+                setEtape({ nom: 'nombre', fabrication: fabrication ?? { lot, nombre: impression.nombre } });
+              }}
+            />
+          ) : null}
+          <Pressable style={styles.discret} onPress={recommencer} accessibilityRole="button">
             <Text style={styles.discretTexte}>{T.retour}</Text>
           </Pressable>
         </ScrollView>
@@ -145,7 +183,8 @@ export function EtiquettesSimple({
             onChoisir={(c) => {
               const fabrication = fabricationsDe(archive, etape.article.cle).find((f) => f.lot.id === c.cle);
               if (!fabrication) return;
-              setSaisie('');
+              // Le nombre de fromages de la fabrication est proposé : on peut le changer.
+              setSaisie(String(fabrication.nombre));
               setEtape({ nom: 'nombre', fabrication });
             }}
           />
@@ -158,12 +197,12 @@ export function EtiquettesSimple({
       {etape.nom === 'nombre' ? (
         <View style={styles.contenu}>
           <Text style={styles.detail}>{etape.fabrication.lot.numero}</Text>
-          <Text style={styles.titre}>{E.combien}</Text>
+          <Text style={styles.titre}>{E.combienFait(etape.fabrication.nombre)}</Text>
           <FormField label={E.nombre} value={saisie} onChangeText={setSaisie} keyboardType="number-pad" autoFocus />
           <Button
             label={E.imprimer}
-            disabled={!(Math.round(parseDecimal(saisie)) > 0)}
-            onPress={() => imprimer(etape.fabrication, Math.min(500, Math.round(parseDecimal(saisie))))}
+            disabled={!(Math.round(parseDecimal(saisie)) > 0) || Math.round(parseDecimal(saisie)) > etape.fabrication.nombre}
+            onPress={() => imprimer(etape.fabrication, Math.round(parseDecimal(saisie)))}
           />
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
         </View>

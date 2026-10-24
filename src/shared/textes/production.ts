@@ -765,6 +765,11 @@ export const TEXTES_PRODUCTION = {
       nombre: 'Nombre d’étiquettes',
       imprimer: 'Imprimer',
       aucunLot: 'Aucune fabrication pour ce produit.',
+      combienFait: (nombre: number) =>
+        `${nombre} ${nombre > 1 ? 'produits ont été fabriqués' : 'produit a été fabriqué'} pour ce lot. Combien d’étiquettes imprimer : ${nombre} ou moins ?`,
+      reimprimer: 'Réimprimer des étiquettes',
+      dejaImprimees: 'Étiquettes déjà imprimées',
+      aucuneReimpression: 'Aucune étiquette imprimée pour l’instant.',
       fait: (nombre: number) => `${nombre} ${nombre > 1 ? 'étiquettes prêtes' : 'étiquette prête'}`,
       faitDetail: 'Le PDF est prêt : imprimez-le ou partagez-le.',
       fabrication_: (premier: string, nombre: number, date: string) => `${premier} · ${nombre} · ${date}`,
