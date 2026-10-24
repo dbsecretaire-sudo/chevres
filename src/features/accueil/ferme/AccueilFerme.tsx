@@ -171,7 +171,6 @@ export default function AccueilFerme() {
       cle: 'equarrissage',
       titre: C.equarrissage,
       icone: iconeMCI('grave-stone'),
-      pastille: f.morts,
       couleur: ACHAT,
     },
     { cle: 'garage', titre: C.garage, icone: iconeMCI('car-wrench'), couleur: ACHAT },
@@ -198,7 +197,7 @@ export default function AccueilFerme() {
     { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
     { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
     { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
-    { cle: 'venteVivant', titre: C.venteVivant, icone: iconeMCI('truck-delivery'), couleur: ORANGE },
+    { cle: 'venteVivant', titre: C.venteVivant, icone: iconeMCI('truck-delivery'), pastille: f.ventesSansDocument, couleur: ORANGE },
   ];
   // À droite de la scène du travail du produit : le stock, la réservation d'un produit, les lots et fabriquer (en bulles), les ventes et la rentabilité de ce qu'on fabrique.
   const gestionTransformation: EntreeDeColonne[] = [

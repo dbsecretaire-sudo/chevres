@@ -23,6 +23,7 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { useInconsommables } from '@/features/lots-animaux/hooks/useInconsommables';
 import { useSanteDuTroupeau } from '@/features/sante/hooks/useSanteDuTroupeau';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { ventesVivantesSansDocument } from '@/features/lots-animaux/services/ventesVivants';
 import { useRappelsAnalysesPlats } from '@/features/rappels/hooks/useRappelsAnalysesPlats';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
@@ -40,8 +41,11 @@ import { todayISO } from '@/shared/utils/dates';
 /** Le nom court d'une déclaration à faire : « RSA », « URSSAF », ou le nom de l'échéance. */
 const NOM_COURT: Record<string, string> = { [GENRE_RAPPEL.RSA]: 'RSA', [GENRE_RAPPEL.URSSAF]: 'URSSAF' };
 
-/** Les jours d'abattage dont la viande n'est pas encore facturée à un client (le nombre), relus à chaque retour sur l'écran. */
-function useLotsAFacturer(): number {
+/**
+ * Ce qui reste à facturer à un client après l'abattoir : le nombre de jours d'abattage dont la viande n'est pas facturée, et le nombre d'animaux abattus qu'ils comptent,
+ * relus à chaque retour sur l'écran.
+ */
+function useLotsAFacturer(): { jours: number; animaux: number } {
   const { espece } = useEtablissement();
   const inconsommables = useInconsommables();
   const [jours, setJours] = useState<Chevre[][]>([]);
@@ -55,8 +59,10 @@ function useLotsAFacturer(): number {
     }, [espece]),
   );
   // Seuls les animaux à boucle (non écartés du lot) se facturent ; sans boucle, la vente se fait sans facture.
-  return jours.filter((animaux) => animaux.some((a) => !!a.numeroBoucle?.trim() && !inconsommables.has(a.id)))
-    .length;
+  const facturables = jours
+    .map((animaux) => animaux.filter((a) => !!a.numeroBoucle?.trim() && !inconsommables.has(a.id)))
+    .filter((animaux) => animaux.length > 0);
+  return { jours: facturables.length, animaux: facturables.reduce((total, animaux) => total + animaux.length, 0) };
 }
 
 /** Jusqu'à quatre animaux qui représentent le troupeau dans l'enclos : une femelle, un mâle, un petit, une autre femelle. */
@@ -77,7 +83,7 @@ export function useFermeAccueil() {
   const envois = useRappelsCirculation(valides);
   const { rappels: analyses } = useRappelsAnalysesPlats();
   const { aRappeler, aValider } = useLotsARappeler();
-  const lotsAFacturer = useLotsAFacturer();
+  const { jours: lotsAFacturer, animaux: animauxAbattusAFacturer } = useLotsAFacturer();
   const { espece } = useEtablissement();
   const { settings } = useAppSettings();
   // La transhumance de l'année en cours : le décor de la ferme passe à la montagne entre la montée et la descente.
@@ -120,9 +126,10 @@ export function useFermeAccueil() {
             savons: articlesDuGenre(GENRE_ARTICLE.SAVON, archiveStock, espece),
             niveau: (cle) => niveaux.get(cle) ?? 0,
             role: roleDeLaViande,
+            animauxAbattusAFacturer,
           })
         : { fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 },
-    [archiveStock, espece, niveaux],
+    [archiveStock, espece, niveaux, animauxAbattusAFacturer],
   );
 
   const [depensesTourisme, setDepensesTourisme] = useState(0);
@@ -199,6 +206,8 @@ export function useFermeAccueil() {
     /** Le troupeau est à l'estive (aux dates de la déclaration de transhumance) : sa zone et sa date de descente. */
     estive: enEstive ? { zone: estive?.zone, descente: estive?.dateDescente } : undefined,
     lotsAFacturer,
+    /** Les ventes d'animaux vivants dont le document de circulation manque. */
+    ventesSansDocument: ventesVivantesSansDocument(settings.exploitation?.ventesVivants).length,
     lotsARappeler: aRappeler + aValider.length,
     /** Les animaux en délai d'attente (lait et viande confondus). */
     delais: sante.nombreLait + sante.nombreViande,

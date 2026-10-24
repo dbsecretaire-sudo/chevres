@@ -34,7 +34,7 @@ export const TEXTES_ACCUEIL = {
       fromagerie: 'Atelier',
       fromages: (n: number) => `${n} ${n === 1 ? 'fromage' : 'fromages'}`,
       charcuterie: (n: number) => `${n} boucherie/charcuterie`,
-      viande: (n: number) => `${n} viande`,
+      viande: (n: number) => `${n} viande à facturer`,
       plats: (n: number) => `${n} ${n === 1 ? 'plat préparé' : 'plats préparés'}`,
       savons: (n: number) => `${n} ${n === 1 ? 'savon' : 'savons'}`,
       /** Un article de l'atelier est passé en négatif (fabriqué sans assez d'ingrédients en stock). */

@@ -6,6 +6,7 @@ import { Fab } from '@/shared/components/Fab';
 import { TableauCategories } from '@/features/settings/components/TableauCategories';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
+import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { contientTexte } from '@/shared/utils/recherche';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
@@ -24,6 +25,7 @@ import {
 import {
   categoriesFournisseurManquantes,
   categoriesFournisseurParDefaut,
+  sansAnciennesInutilisees,
   depensesDeLaCategorie,
   offertAffiche,
   pasPayeeAffichee,
@@ -108,6 +110,13 @@ export default function RubriqueCategoriesTiers() {
   const [rubriques, setRubriques] = useState<RubriqueOperations[]>([]);
   useEffect(() => {
     lireRubriquesDOperations().then(setRubriques).catch(() => undefined);
+  }, []);
+  /** Les catégories que portent les contacts : une ancienne catégorie ne se montre que si l'un d'eux l'a. */
+  const [utilisees, setUtilisees] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    listFournisseurs()
+      .then((tous) => setUtilisees(new Set(tous.map((f) => f.categorie).filter((c): c is string => !!c))))
+      .catch(() => undefined);
   }, []);
   const parInventaire = !modeEntreprise() && rubriques.length > 0;
   /** Les opérations d'une catégorie : celles réglées, sinon celles que ses dépenses d'office ouvraient. */
@@ -208,8 +217,8 @@ export default function RubriqueCategoriesTiers() {
     );
   };
 
-  /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
-  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
+  /** Les catégories qui correspondent à la recherche, par ordre alphabétique (sans l'ancienne catégorie « Groupement » quand aucun contact ne la porte). */
+  const visibles = parNom(sansAnciennesInutilisees(categories, utilisees)).filter((c) => contientTexte(c.nom, recherche));
 
   return (
     <Screen>

@@ -142,14 +142,17 @@ describe('comptes de la transformation', () => {
     'viande:saucisson': 5,
   };
   const role = (cle: string) => ({ 'viande:chevres_jeune': 'jeune', 'viande:chevres_pied': 'pied', 'viande:chevres_vivant': 'vivant' })[cle];
-  it('compte les fromages, la charcuterie et la viande (cabris, sur pied et vivants additionnés), sans les niveaux négatifs', () => {
+  it('compte les fromages et la charcuterie en stock, sans les niveaux négatifs ; la viande est celle des animaux abattus à facturer, pas celle du cheptel', () => {
     const c = compterTransformation({
       fromages: [{ cle: 'fromage:frais' }, { cle: 'fromage:tomme' }, { cle: 'fromage:vieux' }],
       viande: Object.keys(niveaux).filter((k) => k.startsWith('viande:')).map((cle) => ({ cle })),
       niveau: (cle) => niveaux[cle] ?? 0,
       role,
+      animauxAbattusAFacturer: 4,
     });
-    expect(c).toEqual({ fromages: 7, charcuterie: 5, viande: 256, plats: 0, savons: 0 });
+    // Les 236 animaux vivants du cheptel ne comptent pas comme de la viande.
+    expect(c).toEqual({ fromages: 7, charcuterie: 5, viande: 4, plats: 0, savons: 0 });
+    expect(compterTransformation({ fromages: [], viande: [], niveau: () => 0, role })).toMatchObject({ viande: 0 });
   });
   it('tout est à zéro sans rien en stock', () => {
     expect(compterTransformation({ fromages: [], viande: [], niveau: () => 0, role: () => undefined })).toEqual({ fromages: 0, charcuterie: 0, viande: 0, plats: 0, savons: 0 });

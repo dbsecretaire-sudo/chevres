@@ -81,5 +81,9 @@ export const ventesVivantesRecentesDabord = (ventes: readonly VenteDAnimauxVivan
 export const titreDeLaVenteVivants = (v: Pick<VenteDAnimauxVivants, 'date'>): string =>
   v.date ? TEXTES.exploitation.ventesVivants.venteDu(formatDateFR(v.date)) : TEXTES.exploitation.ventesVivants.titre;
 
+/** Les ventes dont le document de circulation manque : le badge du bouton « Vente (vivant) » de l'accueil. */
+export const ventesVivantesSansDocument = (ventes: readonly VenteDAnimauxVivants[] | undefined): VenteDAnimauxVivants[] =>
+  (ventes ?? []).filter((v) => !v.documentCirculation);
+
 /** Le nombre de boucles d'une vente. */
 export const nombreDAnimauxDeLaVente = (v: Pick<VenteDAnimauxVivants, 'boucles'>): number => numerosDeBoucles(v.boucles).length;

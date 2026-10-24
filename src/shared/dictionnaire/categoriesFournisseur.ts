@@ -95,6 +95,13 @@ export function definirCategoriesFournisseur(choisies?: CategorieFournisseurRegl
   ];
 }
 
+/** Les catégories qui ne s'offrent plus au choix : elles ne restent visibles que tant qu'un contact les porte (ses anciennes fiches ne perdent pas leur catégorie). */
+export const ANCIENNES_CATEGORIES_FOURNISSEUR: readonly string[] = [CATEGORIE_FOURNISSEUR.GROUPEMENT];
+
+/** Les catégories à proposer : sans les anciennes que personne n'utilise (`utilisees` : les catégories portées par un contact). */
+export const sansAnciennesInutilisees = <C extends { id: string }>(categories: readonly C[], utilisees: ReadonlySet<string>): C[] =>
+  categories.filter((c) => !ANCIENNES_CATEGORIES_FOURNISSEUR.includes(c.id) || utilisees.has(c.id));
+
 /** La catégorie d'un identifiant ; une catégorie retirée ou inconnue vaut la catégorie d'office. */
 export const categorieFournisseurDe = (id: string | undefined): CategorieFournisseurReglage =>
   liste.find((c) => c.id === id) ?? liste.find((c) => c.id === CATEGORIE_FOURNISSEUR_PAR_DEFAUT) ?? liste[0];

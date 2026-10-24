@@ -1,5 +1,5 @@
 import { SelectField } from '@/shared/components/SelectField';
-import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisseur';
+import { categoriesFournisseur, sansAnciennesInutilisees } from '@/shared/dictionnaire/categoriesFournisseur';
 import { TEXTES } from '@/shared/textes';
 
 /** La catégorie du fournisseur (la catégorie d'office à défaut) : liste déroulante des catégories de tiers de l'établissement. */
@@ -15,7 +15,8 @@ export function ChampCategorieFournisseur({
       label={TEXTES.fournisseurs.categories.champ}
       value={value}
       onChange={onChange}
-      options={categoriesFournisseur().map((c) => ({ value: c.id, label: c.nom }))}
+      // Une ancienne catégorie ne se propose plus, sauf à la fiche qui la porte déjà.
+      options={sansAnciennesInutilisees(categoriesFournisseur(), new Set([value])).map((c) => ({ value: c.id, label: c.nom }))}
       aide={TEXTES.fournisseurs.categories.aideChamp}
     />
   );

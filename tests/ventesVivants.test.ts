@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { ecrituresACirculation, estUnDepart } from '@/features/comptabilite/services/documentsCirculation';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import { piecesDuContact } from '@/features/contacts/services/piecesDuContact';
-import { venteDuDepart, ventesVivantesDepuisLesLots, ventesVivantesRecentesDabord } from '@/features/lots-animaux/services/ventesVivants';
+import { venteDuDepart, ventesVivantesDepuisLesLots, ventesVivantesRecentesDabord, ventesVivantesSansDocument } from '@/features/lots-animaux/services/ventesVivants';
+import { sansAnciennesInutilisees } from '@/shared/dictionnaire/categoriesFournisseur';
 import { categoriesDeLots, estCategorieVerrouillee } from '@/features/lots-animaux/services/lots';
 import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
 import type { PieceJointe } from '@/features/fichiers/types';
@@ -128,5 +129,19 @@ describe('sauvegarde et Google Drive', () => {
     const distant = { ventesVivants: [vente('a'), vente('b'), vente('d')] };
     const valeur = fusionner(local, distant, undefined, base);
     expect((valeur as { ventesVivants: VenteDAnimauxVivants[] }).ventesVivants.map((v) => v.id).sort()).toEqual(['a', 'c', 'd']);
+  });
+});
+
+describe('badge de « Vente (vivant) » et ancienne catégorie « Groupement »', () => {
+  it('le badge compte les ventes dont le document de circulation manque', () => {
+    expect(ventesVivantesSansDocument(undefined)).toEqual([]);
+    const ventes = [vente('a', { documentCirculation: document }), vente('b'), vente('c')];
+    expect(ventesVivantesSansDocument(ventes).map((v) => v.id)).toEqual(['b', 'c']);
+  });
+
+  it('l’ancienne catégorie « Groupement » est masquée tant qu’aucun contact ne la porte', () => {
+    const categories = [{ id: 'general' }, { id: 'groupement' }, { id: 'abattoir' }];
+    expect(sansAnciennesInutilisees(categories, new Set()).map((c) => c.id)).toEqual(['general', 'abattoir']);
+    expect(sansAnciennesInutilisees(categories, new Set(['groupement'])).map((c) => c.id)).toEqual(['general', 'groupement', 'abattoir']);
   });
 });
