@@ -29,6 +29,7 @@ export default function EcranTerrain() {
     naissances: f.stats?.cabritsAnnee,
     delais: f.delais,
     ventesSansDocument: f.ventesSansDocument,
+    aCompleter: f.aCompleter,
     lotsAFacturer: f.lotsAFacturer,
     viandeAFacturer: f.transformation.viande,
     lotsARappeler: f.lotsARappeler,

@@ -1,5 +1,4 @@
 import { vocabulaire } from '@/shared/dictionnaire/animaux';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 
 const V = vocabulaire;
 
@@ -26,7 +25,7 @@ export const TEXTES_SAUVEGARDE = {
   },
   backup: {
     get sauvegardeTroupeauChevres() {
-      return modeEntreprise() ? 'Sauvegarde de l’entreprise' : `Sauvegarde ${V().troupeau}`;
+      return `Sauvegarde ${V().troupeau}`;
     },
     ceFichierNEstPas: 'Ce fichier n’est pas une sauvegarde valide (JSON illisible).',
     ceFichierNEstPasUne: 'Ce fichier n’est pas une sauvegarde valide.',

@@ -1,10 +1,10 @@
 /** Textes de l'interface — « rôles » : le choix au lancement et l'écran du berger. À modifier ici uniquement. */
 export const TEXTES_ROLES = {
   choix: {
-    titre: 'Qui êtes-vous ?',
-    secretaire: 'Je suis secrétaire',
+    titre: 'Quel mode ?',
+    secretaire: 'Mode avancé',
     secretaireAide: 'Toute l’application',
-    berger: 'Je suis berger',
+    berger: 'Mode normal',
     bergerAide: 'Chèvres, fromagerie, tourisme',
   },
   /** La liste de ce que le berger a saisi vite et que la secrétaire complète (Cheptel › À compléter). */
@@ -19,14 +19,16 @@ export const TEXTES_ROLES = {
     morteLe: (date: string) => `Morte le ${date}`,
   },
   berger: {
-    titre: 'Berger',
+    titre: 'Mode normal',
     chevres: 'Chèvres',
     fromagerie: 'Fromagerie',
     tourisme: 'Tourisme',
     bientot: 'Cet écran simple n’est pas encore prêt.',
     naissance: 'Enregistrer une naissance',
     mort: 'Enregistrer une mort',
-    changerDeRole: 'Changer de rôle',
+    envoyer: 'Envoyer',
+    envoiEnCours: 'Envoi en cours…',
+    changerDeRole: 'Changer de mode',
     retour: 'Retour',
     terminer: 'Terminer',
     annuler: 'Annuler',

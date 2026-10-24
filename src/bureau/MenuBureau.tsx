@@ -2,8 +2,6 @@ import { FAMILLE_CONTROLE, VOLET_ANALYSES_PAR_ESPECE } from '@/shared/constants/
 import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { ROUTES } from '@/shared/constants/routes';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
 import { especeDuSuivi } from '@/features/export/documents/suiviMouvementsPdf';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
@@ -17,16 +15,13 @@ const K = TEXTES.commercial.accueil;
 
 /** Les menus de la barre du haut, chacun par son nom : la version bureau les range en barre, le menu « Menus » du mobile en reprend les écrans. */
 export function menusParNom() {
-  const entreprise = modeEntreprise();
   const accueil: DefinitionMenu = {
     label: TEXTES.navigation.layout.accueil,
     items: [
       { label: TEXTES.navigation.layout.accueil, route: '/' },
       { separateur: true },
       {
-        label: entreprise
-          ? TEXTES.commun.general.informationsDeLEntreprise
-          : TEXTES.commun.general.informationsDeLExploitation,
+        label: TEXTES.commun.general.informationsDeLExploitation,
         route: ROUTES.INFORMATIONS_EXPLOITATION,
       },
       { label: TEXTES.rappels.historique.titre, route: ROUTES.RAPPELS_HISTORIQUE },
@@ -35,10 +30,6 @@ export function menusParNom() {
       { label: TEXTES.sauvegarde.enregistrer.menuDrive, route: ROUTES.GOOGLE_DRIVE },
       { label: TEXTES.sauvegarde.enregistrer.menuAppareil, route: ROUTES.SAUVEGARDE_LOCALE },
     ],
-  };
-  const clients: DefinitionMenu = {
-    label: TEXTES.commun.general.clients,
-    route: ROUTES.CLIENTS,
   };
   /** Les contacts (clients, fournisseurs, organismes…) : une entrée du haut, car ils servent aux recettes, aux dépenses et aux documents. */
   const contacts: DefinitionMenu = {
@@ -139,10 +130,6 @@ export function menusParNom() {
         route: ROUTES.ORGANISATION_CATEGORIES_CLIENT,
       },
       { label: TEXTES.settings.reglages.sectionCategoriesTiers, route: ROUTES.ORGANISATION_CATEGORIES_TIERS },
-      // La structure des dossiers ne sert qu'au secrétariat (les dossiers de ses clients) : pas pour une exploitation agricole.
-      ...(activitesEtablissement().includes(ACTIVITE_SOCIETE.PRESTATIONS_SERVICE)
-        ? [{ label: TEXTES.dossiers.structure.titre, route: ROUTES.STRUCTURE_DOSSIERS }]
-        : []),
       { separateur: true },
       { label: TEXTES.settings.reglages.sectionDonnees, route: ROUTES.ORGANISATION_DONNEES },
       { label: TEXTES.settings.reglages.export, route: ROUTES.EXPORT_DONNEES },
@@ -153,23 +140,20 @@ export function menusParNom() {
       { label: TEXTES.settings.reglages.sectionRegles, route: ROUTES.ORGANISATION_REGLES },
     ],
   };
-  return { entreprise, accueil, clients, contacts, cheptel, production, commercial, comptabilite, organisation };
+  return { accueil, contacts, cheptel, production, commercial, comptabilite, organisation };
 }
 
 /** Les menus de la barre du haut : ce que les onglets du bas donnent sur le téléphone, avec leurs écrans en dessous. */
 export function definitionDesMenus(): DefinitionMenu[] {
-  const { entreprise, accueil, clients, contacts, cheptel, production, commercial, comptabilite, organisation } = menusParNom();
-  // Une entreprise a ses clients à la place du cheptel et de la production.
-  return entreprise
-    ? [accueil, clients, comptabilite, organisation]
-    : [
-        accueil,
-        cheptel,
-        // Les animaux de compagnie n'ont aucune production.
-        ...(productionActive(especeCourante()) ? [production] : []),
-        commercial,
-        comptabilite,
-        contacts,
-        organisation,
-      ];
+  const { accueil, contacts, cheptel, production, commercial, comptabilite, organisation } = menusParNom();
+  return [
+    accueil,
+    cheptel,
+    // Les animaux de compagnie n'ont aucune production.
+    ...(productionActive(especeCourante()) ? [production] : []),
+    commercial,
+    comptabilite,
+    contacts,
+    organisation,
+  ];
 }

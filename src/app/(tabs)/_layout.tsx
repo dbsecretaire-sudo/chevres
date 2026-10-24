@@ -7,14 +7,12 @@ import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRe
 import { useBarreAjoutBleue } from '@/shared/navigation/barreAjout';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { productionActive } from '@/features/comptabilite/utils/recettes';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { EtablissementHeaderButton } from '@/features/etablissements/components/EtablissementHeaderButton';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { MenuDeLaFenetre } from '@/bureau/MenuDeLaFenetre';
@@ -50,13 +48,9 @@ function Onglets() {
     !barreBleue && (depuisOrganisation || PAGES_ORGANISATION.some((p) => page.startsWith(p)));
   // Se réaffiche au changement d'espèce : les titres lisent le vocabulaire de l'espèce active.
   const { espece } = useEtablissement();
-  // Une entreprise a un onglet Clients à la place du Cheptel ; un élevage l'inverse.
-  const entreprise = modeEntreprise();
-  // Le stock : un onglet en bas pour une exploitation agricole (fromagerie, aliments) et pour un gîte (boissons, nourriture).
-  const stockGite = entreprise && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
   // L'accueil « ferme » (un élevage) a ses propres boutons : la barre d'icônes du bas y est masquée, elle revient sur les autres écrans.
   const { settings } = useAppSettings();
-  const accueilFerme = !entreprise && !settings.exploitation?.accueilClassique;
+  const accueilFerme = !settings.exploitation?.accueilClassique;
   return (
     <Tabs
       // La flèche (ou le retour du téléphone) ramène à l'onglet d'où l'on vient, pas toujours à l'accueil.
@@ -113,7 +107,6 @@ function Onglets() {
         options={{
           title: TEXTES.commun.general.cheptel,
           headerShown: false,
-          href: entreprise ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="paw"
@@ -131,28 +124,6 @@ function Onglets() {
           },
         })}
       />
-      <Tabs.Screen
-        name="clients"
-        options={{
-          title: TEXTES.commun.general.clients,
-          headerShown: false,
-          href: entreprise ? undefined : null,
-          // Un gîte : le logo de ses activités annexes ; un secrétariat : le dossier.
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name={stockGite ? 'storefront' : 'folder-open'}
-              size={size}
-              color={depuisOrganisation ? colors.textMuted : color}
-            />
-          ),
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('clients', { screen: 'index' });
-          },
-        })}
-      />
       {/* La production d'un élevage : fromages, viande vendue, contrôle laitier, groupements (le stock y est branché). */}
       <Tabs.Screen
         name="production"
@@ -160,7 +131,7 @@ function Onglets() {
           title: TEXTES.production.titre,
           headerShown: false,
           // Les animaux de compagnie n'ont aucune production.
-          href: entreprise || !productionActive(espece) ? null : undefined,
+          href: !productionActive(espece) ? null : undefined,
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="cheese" size={size} color={color} />,
         }}
         listeners={({ navigation }) => ({
@@ -176,7 +147,6 @@ function Onglets() {
         options={{
           title: TEXTES.commercial.titre,
           headerShown: false,
-          href: entreprise ? null : undefined,
           tabBarIcon: ({ color, size }) => <Ionicons name="cart" size={size} color={color} />,
         }}
         listeners={({ navigation }) => ({
@@ -268,15 +238,6 @@ function Onglets() {
         />
       ))}
       <Tabs.Screen
-        name="structure-dossiers"
-        options={{
-          href: null,
-          title: TEXTES.dossiers.structure.titre,
-          // Destination fixe : on revient toujours aux Réglages, d'où l'écran est ouvert.
-          headerLeft: () => <HeaderBackTo to={ROUTES.ORGANISATION_ETABLISSEMENT} />,
-        }}
-      />
-      <Tabs.Screen
         name="documents-identification"
         options={{
           href: null,
@@ -298,9 +259,7 @@ function Onglets() {
         name="informations-exploitation"
         options={{
           href: null,
-          title: entreprise
-            ? TEXTES.commun.general.informationsDeLEntreprise
-            : TEXTES.commun.general.informationsDeLExploitation,
+          title: TEXTES.commun.general.informationsDeLExploitation,
           // Destination fixe : on revient toujours à l'Accueil, d'où l'écran est ouvert.
           headerLeft: () => <HeaderBackTo to="/" />,
         }}

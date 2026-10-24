@@ -4,7 +4,7 @@ import type { Facture, Vente } from '@/features/comptabilite/types';
 import { partsDeLaVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { estCategorieVente } from '@/features/comptabilite/utils/recettes';
 import { tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
-import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
+import { tvaDuTtc } from '@/features/comptabilite/utils/tva';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import {
   CATEGORIES_DEPENSE_SANS_TVA,

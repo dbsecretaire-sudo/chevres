@@ -16,7 +16,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { delierLaFactureDuLot } from '@/features/lots-animaux/services/departDAnimaux';
 import { retirerLesLotsDAbattoir } from '@/features/lots-animaux/services/lotsSansFacture';
-import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import { retirerStockAlimentation, synchroniserStockAlimentation } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -33,11 +32,6 @@ import {
 import { listComptesPcg, type CompteComptableEnregistre } from '@/features/comptes-pcg/repository';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients } from '@/features/clients/repository';
-import {
-  lignesMarchandisesFinales,
-  versLignesMarchandisesForm,
-  type LigneMarchandiseForm,
-} from '@/features/comptabilite/forms/lignesMarchandises';
 import {
   lignesAlimentationFinales,
   versLignesAlimentationForm,
@@ -81,7 +75,6 @@ export function useFicheFacture(id: string | undefined) {
   const [form, setForm] = useState<Facture | null>(null);
   const [lignes, setLignes] = useState<LigneAlimentForm[]>([]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([]);
-  const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([]);
   const [lignesProduction, setLignesProduction] = useState<LigneProductionForm[]>([]);
   const [lignesChambre, setLignesChambre] = useState<LigneChambreForm[]>([]);
   /** Une facture de la Chambre d'agriculture saisie sans détail : on choisit de la détailler par article. */
@@ -100,10 +93,6 @@ export function useFicheFacture(id: string | undefined) {
   const estCarburant = facture?.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   /** Un achat de production : le détail par fourniture (une ancienne facture n'a qu'un article, repris comme première fourniture). */
   const estProduction = facture?.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
-  /** Un achat de marchandises d'un gîte détaillé par marchandise (les anciens achats gardent un seul montant). */
-  const estMarchandises =
-    facture?.categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
-    (facture.lignesMarchandises?.length ?? 0) > 0;
   /** Une dépense « Autre » détaillée par article de la Chambre d'agriculture (les anciennes factures gardent un seul montant). */
   const estChambre =
     facture?.categorieDepense === CATEGORIE_DEPENSE.AUTRE &&
@@ -114,7 +103,6 @@ export function useFicheFacture(id: string | undefined) {
   const offerteLignes = !!form?.offert && !estChambre && !estCarburant;
   const totalAlimentation = totalMontants(lignes, offerteLignes);
   const totalCarburant = totalMontants(lignesCarburant);
-  const totalMarchandises = totalMontants(lignesMarchandises, offerteLignes);
   const totalProduction = totalMontants(lignesProduction, offerteLignes);
   /** Le total d'une facture de la Chambre : ses articles, plus les boucles qu'elle commande. */
   const totalChambre = totalMontants(lignesChambre) + totalProduction;
@@ -126,7 +114,6 @@ export function useFicheFacture(id: string | undefined) {
     setForm(f ?? null);
     setLignes(f ? versLignesAlimentationForm(f) : []);
     setLignesCarburant(f ? versLignesCarburantForm(f) : []);
-    setLignesMarchandises(f ? versLignesMarchandisesForm(f) : []);
     // Une facture de la Chambre n'a de boucles que celles qu'elle a commandées (sinon, une ligne vide, pas son montant entier).
     const detailleeParChambre =
       f?.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (f.lignesChambre?.length ?? 0) > 0;
@@ -265,15 +252,6 @@ export function useFicheFacture(id: string | undefined) {
         stockQuantite: undefined,
         bouclesDebut: undefined,
       };
-    } else if (estMarchandises) {
-      const lignesRetenues = lignesMarchandisesFinales(lignesMarchandises, offerteLignes);
-      if (lignesRetenues.length === 0) {
-        return refuser({
-          titre: TEXTES.commun.general.montantInvalide,
-          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
-        });
-      }
-      aEnregistrer = { ...form, montant: totalMarchandises, lignesMarchandises: lignesRetenues };
     } else {
       montantOfferte = offerteLignes && form.cadeauMontant !== false;
       if (montantOfferte) aEnregistrer = { ...form, montant: 0 };
@@ -285,7 +263,6 @@ export function useFicheFacture(id: string | undefined) {
       [
         ...(aEnregistrer.lignesAlimentation ?? []),
         ...(aEnregistrer.lignesProduction ?? []),
-        ...(aEnregistrer.lignesMarchandises ?? []),
       ].some((l) => l.offert);
     aEnregistrer = { ...aEnregistrer, offert: offerteLignes && aDesOfferts ? true : undefined, cadeauMontant: undefined };
 
@@ -307,15 +284,7 @@ export function useFicheFacture(id: string | undefined) {
     }
 
     try {
-      const lignesAchetees = aEnregistrer.lignesMarchandises;
-      if (lignesAchetees?.length) aEnregistrer = { ...aEnregistrer, stockApplique: true };
       await enregistrerFacture(aEnregistrer);
-      // Seul l'écart de quantités achetées s'applique au stock (tout, pour une facture qui n'y avait pas encore été ajoutée).
-      await synchroniserStockAchat(
-        facture?.stockApplique ? facture.lignesMarchandises : undefined,
-        lignesAchetees,
-        aEnregistrer.date,
-      );
       await synchroniserStockAlimentation(aEnregistrer);
       await synchroniserVisiteFacture(aEnregistrer);
       setFacture(aEnregistrer);
@@ -340,7 +309,6 @@ export function useFicheFacture(id: string | undefined) {
       form,
       lignes,
       lignesCarburant,
-      lignesMarchandises,
       lignesProduction,
       lignesChambre,
     ]),
@@ -367,9 +335,6 @@ export function useFicheFacture(id: string | undefined) {
         if ((await getChevre(id))?.statut === STATUT_CHEVRE.ABATTOIR) await reactiverChevre(id);
       }
       await retirerVisiteFacture(facture.id);
-      // Supprimer l'achat retire du stock ce qu'il y avait ajouté.
-      if (facture.stockApplique)
-        await synchroniserStockAchat(facture.lignesMarchandises, undefined, facture.date);
       await retirerStockAlimentation(facture.id);
       retournerALaPageDAvant(router);
     } catch (error) {
@@ -406,8 +371,6 @@ export function useFicheFacture(id: string | undefined) {
     setLignes,
     lignesCarburant,
     setLignesCarburant,
-    lignesMarchandises,
-    setLignesMarchandises,
     lignesProduction,
     setLignesProduction,
     lignesChambre,
@@ -422,8 +385,6 @@ export function useFicheFacture(id: string | undefined) {
     },
     estProduction,
     totalProduction,
-    estMarchandises,
-    totalMarchandises,
     fournisseurs,
     clients,
     montantTexte,

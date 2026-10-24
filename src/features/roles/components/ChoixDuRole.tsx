@@ -9,7 +9,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.roles.choix;
 
-/** Le premier écran du téléphone : « Qui êtes-vous ? » — la secrétaire entre dans toute l'application, le berger dans ses saisies simples. */
+/** Le premier écran du téléphone : « Quel mode ? » — le mode avancé ouvre toute l'application, le mode normal ses saisies simples. */
 export function ChoixDuRole() {
   const { choisir } = useRole();
   return (

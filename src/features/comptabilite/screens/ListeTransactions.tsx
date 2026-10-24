@@ -1,5 +1,4 @@
 import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
-import { useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
@@ -9,7 +8,6 @@ import { Fab } from '@/shared/components/Fab';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { BandeauRestriction } from '@/features/comptabilite/components/BandeauRestriction';
 import { FiltreTransactionsModal } from '@/features/comptabilite/components/FiltreTransactionsModal';
-import { PucesRubrique } from '@/features/comptabilite/components/PucesRubrique';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { BarreRecherche, CarteSolde } from '@/features/comptabilite/components/SoldeTransactions';
 import { useListeTransactions } from '@/features/comptabilite/hooks/useListeTransactions';
@@ -18,10 +16,6 @@ import { styles } from '@/shared/styles/comptabilite/ListeTransactions.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
-import { SENS_MOUVEMENT } from '@/shared/constants/trading';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { MouvementCompteModal } from '@/features/comptabilite/components/MouvementCompteModal';
-import { activiteFinanciereSeule } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 import { TableauEcritures } from '@/features/comptabilite/components/TableauEcritures';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
@@ -31,8 +25,6 @@ export default function ComptabiliteIndex() {
   const e = useListeTransactions();
   // Affichage sobre sur un grand écran : les écritures en tableau.
   const comptable = useDispositionComptable();
-  // Activité financière : dépôt et retrait se saisissent dans une petite fenêtre flottante.
-  const [mouvement, setMouvement] = useState<ValeurDe<typeof SENS_MOUVEMENT> | null>(null);
 
   return (
     <Screen scroll={false}>
@@ -53,7 +45,6 @@ export default function ComptabiliteIndex() {
                 tout={e.toutesAnnees}
                 onChoisirTout={e.choisirToutesAnnees}
               />
-              <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
             </LigneFiltres>
             <CarteSolde
               soldes={e.soldes}
@@ -97,23 +88,7 @@ export default function ComptabiliteIndex() {
       />
 
       <Fab
-        options={
-          activiteFinanciereSeule()
-            ? [
-                {
-                  label: TEXTES.trading.compte.retrait,
-                  icon: 'remove-circle',
-                  color: colors.danger,
-                  onPress: () => setMouvement(SENS_MOUVEMENT.RETRAIT),
-                },
-                {
-                  label: TEXTES.trading.compte.depot,
-                  icon: 'add-circle',
-                  color: colors.primary,
-                  onPress: () => setMouvement(SENS_MOUVEMENT.DEPOT),
-                },
-              ]
-            : [
+        options={[
                 {
                   label: TEXTES.commun.general.debit,
                   icon: 'remove-circle',
@@ -134,10 +109,8 @@ export default function ComptabiliteIndex() {
                       params: { type: TYPE_FACTURE.EMISE },
                     }),
                 },
-              ]
-        }
+              ]}
       />
-      <MouvementCompteModal sens={mouvement} onFermer={() => setMouvement(null)} onEnregistre={e.recharger} />
     </Screen>
   );
 }

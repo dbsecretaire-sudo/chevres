@@ -4,7 +4,6 @@ export const TEXTES_RAPPELS = {
   aucun: 'Rien à valider pour le moment.',
   genre: {
     rsa: 'Déclaration RSA',
-    urssaf: 'Déclaration URSSAF',
   },
   trimestre: (rang: number, annee: number) => `${rang}${rang === 1 ? 'er' : 'e'} trimestre ${annee}`,
   ligne: (genre: string, periode: string) => `${genre} · ${periode}`,
@@ -62,7 +61,6 @@ export const TEXTES_RAPPELS = {
   reglages: {
     titre: 'Rappels de déclarations',
     rsa: 'Rappeler la déclaration trimestrielle du RSA',
-    urssaf: 'Rappeler la déclaration mensuelle de l’URSSAF',
     aide: 'Un rappel s’affiche sur l’accueil à la fin de chaque période, jusqu’à ce que vous le validiez. Vous pouvez les désactiver.',
   },
 } as const;

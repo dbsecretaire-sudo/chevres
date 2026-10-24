@@ -24,22 +24,12 @@ import {
 } from '@/shared/constants/comptabilite';
 import {
   ACTIVITE_COMMUNE,
-  ACTIVITE_SOCIETE,
   TYPE_ANIMAL_ETABLISSEMENT,
 } from '@/shared/constants/etablissements';
-import { NATURE_URSSAF, REGIME_FISCAL, REGIME_TVA, STATUT_JURIDIQUE } from '@/shared/constants/entreprise';
-import { FILTRE_DOSSIERS, STATUT_ELEMENT } from '@/shared/constants/dossiers';
+import { NATURE_URSSAF } from '@/shared/constants/entreprise';
+import { STATUT_ELEMENT } from '@/shared/constants/dossiers';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
-import { SERVICE_REPAS } from '@/shared/constants/gite';
 import { ARTICLE_BOUCLE, ARTICLE_EMBALLAGE, ARTICLE_MATERIEL } from '@/shared/constants/stock';
-import {
-  ANGLE_ANALYSE,
-  ETAT_ESPRIT,
-  FILTRE_TRADES,
-  PLAN_RESPECTE,
-  SENS_TRADE,
-  TYPE_INSTRUMENT,
-} from '@/shared/constants/trading';
 import { capitaliser, de, vocabulaire } from '@/shared/dictionnaire/animaux';
 
 /** Libellés des valeurs énumérées (sexe, statut, catégories, types…) — à modifier ici uniquement. */
@@ -317,14 +307,6 @@ export const LABEL_TYPE_ANIMAL_ETABLISSEMENT: Record<string, string> = {
   [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: 'Animaux domestiques',
 };
 
-export const LABEL_ACTIVITE_SOCIETE: Record<ValeurDe<typeof ACTIVITE_SOCIETE>, string> = {
-  [ACTIVITE_SOCIETE.LIBERAL]: 'Activité financière',
-  [ACTIVITE_SOCIETE.PRESTATIONS_SERVICE]: 'Secrétariat',
-  [ACTIVITE_SOCIETE.ASSOCIATION]: 'Gestion de gîte',
-  [ACTIVITE_SOCIETE.AGRICOLE]: 'Agriculture (élevage)',
-  [ACTIVITE_SOCIETE.PERSO]: 'Perso',
-};
-
 /** Activité d'une écriture comptable : une espèce, ou « commun ». */
 export const LABEL_ACTIVITE_COMPTABLE: Record<string, string> = {
   ...LABEL_TYPE_ANIMAL_ETABLISSEMENT,
@@ -356,38 +338,11 @@ export const LABEL_GROUPE_RECETTE: Record<ValeurDe<typeof GROUPE_RECETTE>, strin
   [GROUPE_RECETTE.DEPOT]: 'Dépôt sur le compte',
 };
 
-export const LABEL_STATUT_JURIDIQUE: Record<ValeurDe<typeof STATUT_JURIDIQUE>, string> = {
-  [STATUT_JURIDIQUE.MICRO_ENTREPRISE]: 'Auto-entrepreneur (micro-entreprise)',
-  [STATUT_JURIDIQUE.ENTREPRISE_INDIVIDUELLE]: 'Entreprise individuelle',
-  [STATUT_JURIDIQUE.EURL]: 'EURL',
-  [STATUT_JURIDIQUE.SASU]: 'SASU',
-  [STATUT_JURIDIQUE.SARL]: 'SARL',
-  [STATUT_JURIDIQUE.SAS]: 'SAS',
-  [STATUT_JURIDIQUE.ASSOCIATION]: 'Association loi 1901',
-  [STATUT_JURIDIQUE.AUTRE]: 'Autre',
-};
-
-export const LABEL_REGIME_FISCAL: Record<ValeurDe<typeof REGIME_FISCAL>, string> = {
-  [REGIME_FISCAL.MICRO_BNC]: 'Micro-BNC',
-  [REGIME_FISCAL.MICRO_BIC_SERVICES]: 'Micro-BIC (prestations de services)',
-  [REGIME_FISCAL.MICRO_BIC_VENTE]: 'Micro-BIC (vente de marchandises)',
-  [REGIME_FISCAL.DECLARATION_CONTROLEE]: 'Déclaration contrôlée (BNC au réel)',
-  [REGIME_FISCAL.REEL_SIMPLIFIE]: 'Réel simplifié (BIC)',
-  [REGIME_FISCAL.REEL_NORMAL]: 'Réel normal (BIC)',
-  [REGIME_FISCAL.IMPOT_SOCIETES]: 'Impôt sur les sociétés',
-  [REGIME_FISCAL.NON_FISCALISE]: 'Association non fiscalisée',
-};
-
 /** Les natures de recette de la déclaration URSSAF (les mots de la déclaration d'un micro-entrepreneur). */
 export const LABEL_NATURE_URSSAF: Record<ValeurDe<typeof NATURE_URSSAF>, string> = {
   [NATURE_URSSAF.VENTE_MARCHANDISES]: 'Vente de marchandises',
   [NATURE_URSSAF.SERVICES_COMMERCIAUX]: 'Prestations de services commerciales ou artisanales',
   [NATURE_URSSAF.SERVICES_LIBERAUX]: 'Prestations de services libérales',
-};
-
-export const LABEL_REGIME_TVA: Record<ValeurDe<typeof REGIME_TVA>, string> = {
-  [REGIME_TVA.REEL_SIMPLIFIE]: 'Réel simplifié',
-  [REGIME_TVA.REEL_NORMAL]: 'Réel normal',
 };
 
 export const LABEL_REGIME_TVA_PILOTAGE: Record<ValeurDe<typeof REGIME_TVA_PILOTAGE>, string> = {
@@ -423,60 +378,6 @@ export const LABEL_STATUT_ELEMENT: Record<ValeurDe<typeof STATUT_ELEMENT>, strin
   [STATUT_ELEMENT.TERMINE]: 'Terminé',
 };
 
-export const LABEL_FILTRE_DOSSIERS: Record<ValeurDe<typeof FILTRE_DOSSIERS>, string> = {
-  [FILTRE_DOSSIERS.TOUT]: 'Tout',
-  [FILTRE_DOSSIERS.A_FAIRE]: 'À faire',
-  [FILTRE_DOSSIERS.EN_COURS]: 'En cours',
-  [FILTRE_DOSSIERS.TERMINE]: 'Terminé',
-  [FILTRE_DOSSIERS.EN_RETARD]: 'En retard',
-};
-
-export const LABEL_SENS_TRADE: Record<ValeurDe<typeof SENS_TRADE>, string> = {
-  [SENS_TRADE.ACHAT]: 'Achat',
-  [SENS_TRADE.VENTE]: 'Vente',
-};
-
-export const LABEL_TYPE_INSTRUMENT: Record<ValeurDe<typeof TYPE_INSTRUMENT>, string> = {
-  [TYPE_INSTRUMENT.ACTION]: 'Action',
-  [TYPE_INSTRUMENT.ETF]: 'ETF',
-  [TYPE_INSTRUMENT.FOREX]: 'Forex',
-  [TYPE_INSTRUMENT.CRYPTO]: 'Crypto',
-  [TYPE_INSTRUMENT.FUTURES]: 'Futures',
-  [TYPE_INSTRUMENT.OPTION]: 'Option',
-  [TYPE_INSTRUMENT.CFD]: 'CFD',
-  [TYPE_INSTRUMENT.AUTRE]: 'Autre',
-};
-
-export const LABEL_ETAT_ESPRIT: Record<ValeurDe<typeof ETAT_ESPRIT>, string> = {
-  [ETAT_ESPRIT.CALME]: 'Calme',
-  [ETAT_ESPRIT.CONFIANT]: 'Confiant',
-  [ETAT_ESPRIT.HESITANT]: 'Hésitant',
-  [ETAT_ESPRIT.STRESSE]: 'Stressé',
-  [ETAT_ESPRIT.IMPULSIF]: 'Impulsif',
-  [ETAT_ESPRIT.PEUR_DE_RATER]: 'Peur de rater le mouvement',
-  [ETAT_ESPRIT.REVANCHE]: 'Envie de se refaire',
-};
-
-export const LABEL_PLAN_RESPECTE: Record<ValeurDe<typeof PLAN_RESPECTE>, string> = {
-  [PLAN_RESPECTE.OUI]: 'Oui',
-  [PLAN_RESPECTE.NON]: 'Non',
-};
-
-export const LABEL_FILTRE_TRADES: Record<ValeurDe<typeof FILTRE_TRADES>, string> = {
-  [FILTRE_TRADES.TOUS]: 'Tous',
-  [FILTRE_TRADES.OUVERTS]: 'Ouverts',
-  [FILTRE_TRADES.GAGNANTS]: 'Gagnants',
-  [FILTRE_TRADES.PERDANTS]: 'Perdants',
-  [FILTRE_TRADES.HORS_PLAN]: 'Hors plan',
-};
-
-export const LABEL_ANGLE_ANALYSE: Record<ValeurDe<typeof ANGLE_ANALYSE>, string> = {
-  [ANGLE_ANALYSE.STRATEGIE]: 'Stratégie',
-  [ANGLE_ANALYSE.INSTRUMENT]: 'Instrument',
-  [ANGLE_ANALYSE.ETAT_ESPRIT]: 'État d’esprit',
-  [ANGLE_ANALYSE.JOUR]: 'Jour',
-};
-
 export const LABEL_EMBALLAGE: Record<ValeurDe<typeof ARTICLE_EMBALLAGE>, string> = {
   [ARTICLE_EMBALLAGE.PAPIER_ALIMENTAIRE]: 'Papier alimentaire',
   [ARTICLE_EMBALLAGE.POT_500G]: 'Pot 500 g',
@@ -505,12 +406,6 @@ export const LABEL_MATERIEL: Record<ValeurDe<typeof ARTICLE_MATERIEL>, string> =
   [ARTICLE_MATERIEL.PRESURE]: 'Présure',
   [ARTICLE_MATERIEL.SEL]: 'Sel',
   [ARTICLE_MATERIEL.FERMENTS_LACTIQUES]: 'Ferments lactiques',
-};
-
-export const LABEL_SERVICE_REPAS: Record<ValeurDe<typeof SERVICE_REPAS>, string> = {
-  [SERVICE_REPAS.MIDI]: 'Midi',
-  [SERVICE_REPAS.SOIR]: 'Soir',
-  [SERVICE_REPAS.MIDI_SOIR]: 'Midi et soir',
 };
 
 /** Les circuits de vente. */

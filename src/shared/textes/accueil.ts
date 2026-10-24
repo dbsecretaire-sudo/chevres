@@ -112,6 +112,7 @@ export const TEXTES_ACCUEIL = {
     terrain: {
       titres: { troupeau: 'Le troupeau', atelier: 'Travail du produit', accueil: 'Accueil du public' },
       tuiles: {
+        aCompleter: 'À compléter',
         liste: 'Animaux',
         ajoutRapide: 'Ajout rapide',
         naissance: 'Naissance',

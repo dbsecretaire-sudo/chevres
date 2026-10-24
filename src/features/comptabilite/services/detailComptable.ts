@@ -5,7 +5,6 @@ import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/s
 import { activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
 import { venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import { categoriesRecetteActivite } from '@/features/comptabilite/utils/recettes';
 import { especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
@@ -101,7 +100,7 @@ export async function calculerDetailComptable(
   // Les recettes que proposent les espèces de l'établissement (pas de lait ni de fromage pour des cochons),
   // plus toute catégorie qui a un montant (anciennes écritures).
   const proposees = new Set<string>(
-    modeEntreprise() || filtre === ACTIVITE_COMMUNE
+    filtre === ACTIVITE_COMMUNE
       ? categoriesRecetteActivite(ACTIVITE_COMMUNE)
       : especesDuFiltre(filtre).flatMap((e) => CATEGORIES_RECETTE_PAR_ESPECE[e]),
   );

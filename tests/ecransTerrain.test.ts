@@ -7,6 +7,7 @@ const comptes = (surcharge: Partial<ComptesTerrain> = {}): ComptesTerrain => ({
   naissances: 18,
   delais: 0,
   ventesSansDocument: 0,
+  aCompleter: 0,
   lotsAFacturer: 0,
   viandeAFacturer: 0,
   lotsARappeler: 0,
@@ -41,6 +42,13 @@ describe('écrans terrain des trois zones de l’accueil', () => {
     const alertes = tuilesDuTerrain('troupeau', comptes({ delais: 3, ventesSansDocument: 2 }));
     expect(alertes.find((t) => t.cle === 'traitement')).toMatchObject({ nombre: 3, alerte: true });
     expect(alertes.find((t) => t.cle === 'venteVivant')).toMatchObject({ nombre: 2, alerte: true });
+  });
+
+  it('le troupeau propose « À compléter » (ce que le berger a saisi), avec son nombre en rouge quand il y en a', () => {
+    const sans = tuilesDuTerrain('troupeau', comptes()).find((t) => t.cle === 'aCompleter');
+    expect(sans).toMatchObject({ route: ROUTES.CHEPTEL_A_COMPLETER });
+    expect(sans?.nombre).toBeUndefined();
+    expect(tuilesDuTerrain('troupeau', comptes({ aCompleter: 3 })).find((t) => t.cle === 'aCompleter')).toMatchObject({ nombre: 3, alerte: true });
   });
 
   it('l’atelier compte la viande à facturer (pas le cheptel) et signale un stock négatif', () => {

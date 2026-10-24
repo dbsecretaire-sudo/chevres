@@ -4,10 +4,8 @@ import { colors } from '@/shared/theme/colors';
 import { ATraiterEtablissement } from '@/features/a-traiter/components/ATraiterEtablissement';
 import type { ATraiter } from '@/features/a-traiter/types';
 import type { Etablissement } from '@/features/etablissements/repository';
-import {
-  iconeEtablissement,
-  libelleTypesEtablissement,
-} from '@/features/etablissements/utils/typesEtablissement';
+import { libelleTypesEtablissement } from '@/features/etablissements/utils/typesEtablissement';
+import { ICONE_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { styles } from '@/shared/styles/etablissements/SelecteurEtablissement.styles';
 import { TEXTES } from '@/shared/textes';
 
@@ -54,7 +52,7 @@ export function CarteEtablissement({
             accessibilityLabel={TEXTES.aTraiter.logo(aTraiter.length)}
           >
             <Ionicons
-              name={iconeEtablissement(etablissement) as keyof typeof Ionicons.glyphMap}
+              name={ICONE_ETABLISSEMENT as keyof typeof Ionicons.glyphMap}
               size={26}
               color={colors.primary}
             />
@@ -65,7 +63,7 @@ export function CarteEtablissement({
         ) : (
           <View style={styles.logo}>
             <Ionicons
-              name={iconeEtablissement(etablissement) as keyof typeof Ionicons.glyphMap}
+              name={ICONE_ETABLISSEMENT as keyof typeof Ionicons.glyphMap}
               size={26}
               color={colors.primary}
             />

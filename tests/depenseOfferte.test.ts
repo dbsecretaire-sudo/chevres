@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ligneAlimentVide, lignesAlimentationFinales, versLignesAlimentationForm } from '@/features/comptabilite/forms/lignesAlimentation';
 import { ligneProductionVide, lignesProductionFinales } from '@/features/comptabilite/forms/lignesProduction';
-import { ligneMarchandiseVide, lignesMarchandisesFinales } from '@/features/comptabilite/forms/lignesMarchandises';
 import { totalMontants } from '@/shared/utils/nombres';
 import { offertAffiche } from '@/shared/dictionnaire/categoriesFournisseur';
 import type { Facture } from '@/features/comptabilite/types';
@@ -38,12 +37,6 @@ describe('dépense offerte par le fournisseur (cadeau)', () => {
     const finales = lignesProductionFinales(lignes, true);
     expect(finales).toEqual([{ article: 'perso:sel', quantite: 12, montant: 0, bouclesDebut: undefined, offert: true }]);
     expect(lignesProductionFinales(lignes)).toEqual([]);
-  });
-
-  it('une marchandise offerte garde sa quantité pour 0 €', () => {
-    const lignes = [{ ...ligneMarchandiseVide(), marchandise: 'Bière', quantite: '24', montant: '' }];
-    expect(lignesMarchandisesFinales(lignes, true)).toMatchObject([{ marchandise: 'Bière', quantite: 24, montant: 0, offert: true }]);
-    expect(lignesMarchandisesFinales(lignes)).toEqual([]);
   });
 
   it('à la modification, une ligne facturée d’une dépense offerte garde son bouton désactivé', () => {

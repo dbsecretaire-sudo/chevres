@@ -9,7 +9,6 @@ import { PERIMETRES_RENTABILITE, useRentabilite } from '@/features/comptabilite/
 import type { LigneAtelier } from '@/features/comptabilite/services/rentabilite';
 import { ateliersDeLEspece } from '@/shared/constants/ateliers';
 import { especeCourante, vocabulaire } from '@/shared/dictionnaire/animaux';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { LABEL_ATELIER, LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 import { formatMontant } from '@/shared/utils/dates';
 import { colors } from '@/shared/theme/colors';
@@ -29,13 +28,11 @@ const nombre = (valeur: number) =>
 
 /**
  * Comptabilité › Rentabilité : le résultat de l'année (avec et sans les aides), la marge de chaque atelier, le coût de production du
- * litre de lait et de l'animal, et le poids de chaque poste de charges. Une entreprise (secrétariat, gîte, activité financière) n'a ni
- * ateliers, ni coûts de production, ni plan d'économies : elle ne garde que le résultat et le poids de ses charges.
+ * litre de lait et de l'animal, et le poids de chaque poste de charges.
  */
 export default function Rentabilite() {
   const { annee, annees, setAnneeActive, resultat, laitier, plan, perimetre } = useRentabilite();
   if (!resultat) return null;
-  const entreprise = modeEntreprise();
   // Tous les ateliers de l'espèce (et du périmètre demandé) sont montrés : ceux qui n'ont eu ni recette ni charge cette année y sont à 0 €, après ceux qui ont une activité.
   const dansLePerimetre: readonly string[] | undefined = perimetre ? PERIMETRES_RENTABILITE[perimetre] : undefined;
   const sansActivite: LigneAtelier[] = ateliersDeLEspece(especeCourante())
@@ -86,8 +83,8 @@ export default function Rentabilite() {
         <Text style={commonStyles.note}>{resultat.horsTaxes ? T.horsTaxes : T.toutesTaxes}</Text>
       </Card>
 
-      {entreprise ? null : <Text style={stylesFiscalite.titreSection}>{T.ateliers.titre}</Text>}
-      {entreprise ? null : lignesAteliers.length === 0 ? (
+      <Text style={stylesFiscalite.titreSection}>{T.ateliers.titre}</Text>
+      {lignesAteliers.length === 0 ? (
         <Card>
           <Text style={commonStyles.mutedItalic}>{T.ateliers.aucun}</Text>
         </Card>
@@ -114,46 +111,44 @@ export default function Rentabilite() {
         </Card>
       )}
 
-      {entreprise ? null : <Text style={stylesFiscalite.titreSection}>{T.couts.titre}</Text>}
-      {entreprise ? null : (
-        <Card>
-          {laitier && perimetre !== 'agritourisme' ? (
-            <View style={commonStyles.gap2}>
-              <View style={styles.ligne}>
-                <Text style={commonStyles.lineBold}>{T.couts.parLitre}</Text>
-                <Text style={commonStyles.lineBold}>
-                  {resultat.coutParLitre === undefined ? '—' : formatMontant(resultat.coutParLitre)}
-                </Text>
-              </View>
-              <Text style={commonStyles.note}>
-                {resultat.coutParLitre !== undefined
-                  ? T.couts.parLitreAide(nombre(resultat.litresProduits), formatMontant(resultat.charges))
-                  : resultat.litresProduits > 0
-                    ? T.couts.parLitreSansCharges(nombre(resultat.litresProduits))
-                    : T.couts.parLitreSansLait(annee)}
-              </Text>
-            </View>
-          ) : null}
-          {perimetre ? null : (
+      <Text style={stylesFiscalite.titreSection}>{T.couts.titre}</Text>
+      <Card>
+        {laitier && perimetre !== 'agritourisme' ? (
           <View style={commonStyles.gap2}>
             <View style={styles.ligne}>
-              <Text style={commonStyles.lineBold}>{T.couts.parAnimal(vocabulaire().femelle.singulier)}</Text>
+              <Text style={commonStyles.lineBold}>{T.couts.parLitre}</Text>
               <Text style={commonStyles.lineBold}>
-                {resultat.coutParAnimal === undefined ? '—' : formatMontant(resultat.coutParAnimal)}
+                {resultat.coutParLitre === undefined ? '—' : formatMontant(resultat.coutParLitre)}
               </Text>
             </View>
             <Text style={commonStyles.note}>
-              {resultat.coutParAnimal === undefined || resultat.effectif === undefined
-                ? T.couts.parAnimalAbsent
-                : T.couts.parAnimalAide(nombre(resultat.effectif), formatMontant(resultat.charges))}
+              {resultat.coutParLitre !== undefined
+                ? T.couts.parLitreAide(nombre(resultat.litresProduits), formatMontant(resultat.charges))
+                : resultat.litresProduits > 0
+                  ? T.couts.parLitreSansCharges(nombre(resultat.litresProduits))
+                  : T.couts.parLitreSansLait(annee)}
             </Text>
           </View>
-          )}
-          {perimetre === 'atelier' ? null : <CoutsAgritourismeFormules annee={annee} horsTaxes={resultat.horsTaxes} />}
-        </Card>
-      )}
+        ) : null}
+        {perimetre ? null : (
+        <View style={commonStyles.gap2}>
+          <View style={styles.ligne}>
+            <Text style={commonStyles.lineBold}>{T.couts.parAnimal(vocabulaire().femelle.singulier)}</Text>
+            <Text style={commonStyles.lineBold}>
+              {resultat.coutParAnimal === undefined ? '—' : formatMontant(resultat.coutParAnimal)}
+            </Text>
+          </View>
+          <Text style={commonStyles.note}>
+            {resultat.coutParAnimal === undefined || resultat.effectif === undefined
+              ? T.couts.parAnimalAbsent
+              : T.couts.parAnimalAide(nombre(resultat.effectif), formatMontant(resultat.charges))}
+          </Text>
+        </View>
+        )}
+        {perimetre === 'atelier' ? null : <CoutsAgritourismeFormules annee={annee} horsTaxes={resultat.horsTaxes} />}
+      </Card>
 
-      {plan && !entreprise ? <PlanEconomies plan={plan} litresProduits={resultat.litresProduits} /> : null}
+      {plan ? <PlanEconomies plan={plan} litresProduits={resultat.litresProduits} /> : null}
 
       <Text style={stylesFiscalite.titreSection}>{T.postes.titre}</Text>
       {resultat.postes.length === 0 ? (

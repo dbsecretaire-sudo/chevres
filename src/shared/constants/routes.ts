@@ -1,4 +1,3 @@
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 
 /** Adresses (routes) de navigation de l'application — à modifier ici uniquement. */
 
@@ -82,6 +81,8 @@ export const ROUTES = {
   RAPPORTS_ESSAIS_GDS: '/production/rapports-essais',
   /** La fiche d'une vente d'animaux vivants : l'acheteur, les animaux, le document de circulation, la facture. */
   venteVivants: (id: string) => `/production/depart?id=${id}` as const,
+  /** « Ajouter du lait » : le lait du jour, sans date (celle d'aujourd'hui), seulement les litres. */
+  LAIT_DU_JOUR: '/production/lait-du-jour',
   /** L'écran « terrain » d'une zone de l'accueil (le troupeau, l'atelier, l'accueil du public) : de très grands boutons, une action chacun. */
   terrain: (zone: string) => `/production/terrain?zone=${zone}` as const,
   /** Les ventes d'animaux vivants : la liste d'abord, puis « Nouvelle vente ». */
@@ -218,7 +219,6 @@ export const ROUTES = {
   FISCALITE: '/comptabilite/fiscalite',
   FISCALITE_IMPOTS: '/comptabilite/fiscalite-impots',
   FISCALITE_RSA: '/comptabilite/fiscalite-rsa',
-  URSSAF: '/comptabilite/urssaf',
   TVA: '/comptabilite/tva',
   RENTABILITE: '/comptabilite/rentabilite',
   COMPTABILITE_TRESORERIE: '/comptabilite/tresorerie',
@@ -232,15 +232,10 @@ export const ROUTES = {
   /** Les fournisseurs, ouverts depuis un formulaire en cours : `retour` est l'adresse où la flèche de retour ramène. */
   fournisseursDepuis: (retour: string) =>
     `/comptabilite/fournisseurs?retour=${encodeURIComponent(retour)}` as const,
-  // Les clients d'une entreprise ont leur propre onglet ; ceux d'un élevage restent dans le menu de la comptabilité.
-  get CLIENTS() {
-    return modeEntreprise() ? ('/clients/liste' as const) : ('/comptabilite/clients' as const);
-  },
+  CLIENTS: '/comptabilite/clients',
   /** Les clients, ouverts depuis un formulaire en cours : `retour` est l'adresse où la flèche de retour ramène. */
   clientsDepuis: (retour: string): string => `${ROUTES.CLIENTS}?retour=${encodeURIComponent(retour)}`,
-  get CLIENT_NOUVEAU() {
-    return modeEntreprise() ? ('/clients/nouveau' as const) : ('/comptabilite/clients/nouveau' as const);
-  },
+  CLIENT_NOUVEAU: '/comptabilite/clients/nouveau',
   COMPTES_PCG: '/comptabilite/comptes-pcg',
   /** Le plan comptable général en consultation : tous les comptes et de quoi choisir en cas de doute. */
   PLAN_COMPTABLE: '/comptabilite/plan-comptable',
@@ -259,11 +254,7 @@ export const ROUTES = {
   /** La fiche d'une vente ouverte d'un écran précis : sa flèche de retour y ramène (Production › Viande, par exemple). */
   ficheVenteDepuis: (id: string, retour: string) => `/comptabilite/vente/${id}?retour=${encodeURIComponent(retour)}` as const,
   ficheFournisseur: (id: string) => `/comptabilite/fournisseurs/${id}` as const,
-  ficheClient: (id: string) =>
-    modeEntreprise() ? (`/clients/${id}` as const) : (`/comptabilite/clients/${id}` as const),
-  // Explorateur de dossiers d'une entreprise
-  CLIENTS_EXPLORATEUR: '/clients',
-  STRUCTURE_DOSSIERS: '/structure-dossiers',
+  ficheClient: (id: string) => `/comptabilite/clients/${id}` as const,
   /** Les documents d'identification et d'installation de l'exploitation (Mon établissement), et l'un d'eux (nouveau sans identifiant). */
   DOCUMENTS_IDENTIFICATION: '/documents-identification',
   documentIdentification: (id?: string) =>

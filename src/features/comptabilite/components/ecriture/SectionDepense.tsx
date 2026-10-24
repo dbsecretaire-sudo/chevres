@@ -17,7 +17,6 @@ import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
-import { LignesMarchandisesEditor } from '@/features/comptabilite/components/LignesMarchandisesEditor';
 import { ChampStockProduction } from '@/features/comptabilite/components/ecriture/ChampStockProduction';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
@@ -58,7 +57,6 @@ import { ATELIER } from '@/shared/constants/ateliers';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { todayISO } from '@/shared/utils/dates';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_CATEGORIE_DEPENSE } from '@/shared/textes/libelles';
 import { optionFournisseur } from '@/features/contacts/services/optionsContacts';
@@ -318,21 +316,6 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
             </Card>
           </>
         )}
-        {e.estMarchandisesGite && (
-          <>
-            <LignesMarchandisesEditor
-              lignes={e.lignesMarchandises}
-              onChange={e.setLignesMarchandises}
-              offerte={e.offertDepense}
-            />
-            <Card style={commonStyles.gap10}>
-              <Text style={styles.total}>
-                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-                {formatTotalEuros(e.totalMarchandises)}
-              </Text>
-            </Card>
-          </>
-        )}
         {estCarburant && (
           <>
             <LignesCarburantEditor lignes={e.lignesCarburant} onChange={e.setLignesCarburant} />
@@ -344,7 +327,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
             </Card>
           </>
         )}
-        {!estAlimentation && !estProduction && !estCarburant && !e.estMarchandisesGite && !e.estChambre && (
+        {!estAlimentation && !estProduction && !estCarburant && !e.estChambre && (
           <>
             <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
             {/* Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (actif d'office : 0 €). */}
@@ -357,14 +340,12 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
             ) : null}
           </>
         )}
-        {e.afficherTva && (
-          <SelectField
-            label={TEXTES.commun.general.tauxDeTva}
-            value={e.tauxTvaAchat}
-            onChange={e.setTauxTvaAchat}
-            options={OPTIONS_TAUX_TVA}
-          />
-        )}
+        <SelectField
+          label={TEXTES.commun.general.tauxDeTva}
+          value={e.tauxTvaAchat}
+          onChange={e.setTauxTvaAchat}
+          options={OPTIONS_TAUX_TVA}
+        />
         {/* Une association ou une coopérative agricole : son volet (achat groupé, mutualisation, experts, transports). */}
         {e.voletAffiche ? (
           <ChampVoletCooperative value={e.voletCooperative} volets={e.voletsProposes} onChange={e.setVoletCooperative} />
@@ -395,7 +376,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         ) : null}
         {/* L'atelier de la charge (facultatif) : la marge par atelier de la rentabilité. */}
         {/* Un fournisseur dont la catégorie impose la dépense (un vétérinaire) n'en demande pas l'atelier. */}
-        {modeEntreprise() || depenseImposee(e.fournisseurSelectionne) ? null : (
+        {depenseImposee(e.fournisseurSelectionne) ? null : (
           <AncreVisite id="ecriture.atelier">
             <ChampAtelier value={e.atelier} onChange={e.setAtelier} activite={e.activite} />
           </AncreVisite>

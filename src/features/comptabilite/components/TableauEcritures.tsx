@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BandeauRestriction } from '@/features/comptabilite/components/BandeauRestriction';
-import { PucesRubrique } from '@/features/comptabilite/components/PucesRubrique';
 import { BarreRecherche } from '@/features/comptabilite/components/SoldeTransactions';
 import type { useListeTransactions } from '@/features/comptabilite/hooks/useListeTransactions';
 import type { Transaction } from '@/features/comptabilite/services/transactions';
@@ -63,7 +62,6 @@ export function TableauEcritures({ e }: { e: ReturnType<typeof useListeTransacti
     <View style={styles.cadre}>
       {e.restriction ? <BandeauRestriction titre={e.restriction.titre} onEffacer={e.effacerRestriction} /> : null}
       <View style={styles.filtres}>
-        <PucesRubrique valeur={e.rubrique} onChange={e.setRubrique} />
         <View style={styles.recherche}>
           <BarreRecherche
             recherche={e.recherche}

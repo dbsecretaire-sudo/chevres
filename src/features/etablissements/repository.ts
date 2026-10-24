@@ -1,11 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateId } from '@/shared/utils/id';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { chargerEspeces } from '@/features/especes/repository';
 import { toutesLesEspeces } from '@/features/especes/services/registre';
-import { definirModeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { estEntreprise } from '@/features/etablissements/utils/typesEtablissement';
-import type { ValeurDe } from '@/shared/constants/valeurDe';
 import {
   definirEspeceCourante,
   definirEspecesActives,
@@ -29,15 +25,12 @@ import {
 } from '@/shared/storage/etablissementActif';
 
 export type TypeAnimalEtablissement = string;
-export type ActiviteSociete = ValeurDe<typeof ACTIVITE_SOCIETE>;
 
 /** Ce que l'utilisateur renseigne pour un établissement (hors identifiant). */
 export interface DonneesEtablissement {
   nom: string;
   /** Espèces élevées (choix multiple) — absent pour les établissements créés avant l'ajout du type. */
   animaux?: TypeAnimalEtablissement[];
-  /** Activités de la société (choix multiple). */
-  activites?: ActiviteSociete[];
 }
 
 export interface Etablissement extends DonneesEtablissement {
@@ -62,10 +55,9 @@ export async function listEtablissements(): Promise<Etablissement[]> {
   if (raw) {
     try {
       const liste = JSON.parse(raw) as Etablissement[];
-      // Les types disparus (ex. « Vente », retiré) sont ignorés pour les établissements déjà enregistrés.
-      const connues: string[] = Object.values(ACTIVITE_SOCIETE);
+      // Les anciens types (secrétariat, gîte…) ne sont plus gardés : un établissement n'a plus qu'un nom et ses espèces.
       if (Array.isArray(liste) && liste.length > 0) {
-        return liste.map((e) => ({ ...e, activites: e.activites?.filter((a) => connues.includes(a)) }));
+        return liste.map((e) => ({ id: e.id, nom: e.nom, animaux: e.animaux }));
       }
     } catch {
       // liste corrompue : on repart sur l'établissement par défaut
@@ -101,7 +93,6 @@ export async function initialiserEtablissements(): Promise<{ liste: Etablissemen
   definirEtablissementActif(liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id);
   const actif = liste.find((e) => e.id === getIdEtablissementActif());
   definirEspecesActives(actif?.animaux, await lireEspeceMemorisee());
-  definirModeEntreprise(!!actif && estEntreprise(actif), actif?.activites);
   return { liste, actifId: getIdEtablissementActif() };
 }
 
@@ -112,36 +103,30 @@ export async function choisirEtablissementActif(id: string): Promise<void> {
   definirEtablissementActif(id);
   await AsyncStorage.setItem(KEY_ACTIF, id);
   definirEspecesActives(cible.animaux, await lireEspeceMemorisee());
-  definirModeEntreprise(estEntreprise(cible), cible.activites);
 }
 
-/** Les types d'un établissement (espèces élevées, activités), sans son nom : ce qui voyage avec ses données. */
-export type ProfilEtablissement = Pick<DonneesEtablissement, 'animaux' | 'activites'>;
+/** Les espèces élevées par un établissement, sans son nom : ce qui voyage avec ses données. */
+export type ProfilEtablissement = Pick<DonneesEtablissement, 'animaux'>;
 
-/** Vrai si aucune espèce ni activité n'est renseignée. */
-export const profilEstVide = (profil: ProfilEtablissement): boolean =>
-  (profil.animaux?.length ?? 0) === 0 && (profil.activites?.length ?? 0) === 0;
+/** Vrai si aucune espèce n'est renseignée. */
+export const profilEstVide = (profil: ProfilEtablissement): boolean => (profil.animaux?.length ?? 0) === 0;
 
 export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
   const actif = (await listEtablissements()).find((e) => e.id === getIdEtablissementActif());
-  return { animaux: actif?.animaux ?? [], activites: actif?.activites ?? [] };
+  return { animaux: actif?.animaux ?? [] };
 }
 
 /**
- * Applique à l'établissement actif les types lus dans une sauvegarde ou sur Drive (son nom ne change pas) ;
- * les valeurs inconnues sont ignorées. Un profil vide n'écrase rien : un appareil sans types renseignés ne doit pas
- * effacer ceux d'un autre.
+ * Applique à l'établissement actif les espèces lues dans une sauvegarde ou sur Drive (son nom ne change pas) ;
+ * les valeurs inconnues sont ignorées. Un profil vide n'écrase rien : un appareil sans espèces renseignées ne doit pas
+ * effacer celles d'un autre.
  */
 export async function appliquerProfilEtablissementActif(profil: ProfilEtablissement): Promise<void> {
   const actif = (await listEtablissements()).find((e) => e.id === getIdEtablissementActif());
   if (!actif || !profil || typeof profil !== 'object' || profilEstVide(profil)) return;
   const garder = <T extends string>(valeurs: unknown, permises: readonly T[]): T[] =>
     Array.isArray(valeurs) ? valeurs.filter((v): v is T => permises.includes(v)) : [];
-  await modifierEtablissement(actif.id, {
-    nom: actif.nom,
-    animaux: garder(profil.animaux, toutesLesEspeces()),
-    activites: garder(profil.activites, Object.values(ACTIVITE_SOCIETE)),
-  });
+  await modifierEtablissement(actif.id, { nom: actif.nom, animaux: garder(profil.animaux, toutesLesEspeces()) });
 }
 
 export async function creerEtablissement(donnees: DonneesEtablissement): Promise<Etablissement> {
@@ -156,7 +141,6 @@ export async function modifierEtablissement(id: string, donnees: DonneesEtabliss
   await ecrireListe(liste.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
   if (id === getIdEtablissementActif()) {
     definirEspecesActives(donnees.animaux, especeCourante());
-    definirModeEntreprise(estEntreprise(donnees), donnees.activites);
   }
 }
 

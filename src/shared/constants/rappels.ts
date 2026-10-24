@@ -1,9 +1,8 @@
-/** Valeurs des rappels de déclarations (RSA agricole, URSSAF) — à modifier ici uniquement. */
+/** Valeurs des rappels de déclarations (RSA agricole) — à modifier ici uniquement. */
 
-/** Les rappels de déclaration : le RSA agricole se déclare chaque trimestre, l'URSSAF (gîte, secrétariat) chaque mois. */
+/** Les rappels de déclaration : le RSA agricole se déclare chaque trimestre. */
 export const GENRE_RAPPEL = {
   RSA: 'rsa',
-  URSSAF: 'urssaf',
   /** L'échéance d'un contenu d'un groupement (GDS, achat groupé…) : elle se valide en passant le contenu à « terminé ». */
   GROUPEMENT: 'groupement',
   /** L'envoi à la chambre d'agriculture du document de circulation d'une vente, d'un achat ou d'un envoi à l'abattoir : il se valide une fois envoyé. */

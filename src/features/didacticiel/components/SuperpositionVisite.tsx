@@ -7,7 +7,6 @@ import { HAUTEUR_BARRE_ONGLETS, zoneDeLaFlecheRetour, zoneDeLOnglet } from '@/fe
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { libellesDesMenus } from '@/features/accueil/shell/structureMenus';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { afficheBureau } from '@/shared/utils/affichage';
@@ -121,7 +120,7 @@ export function SuperpositionVisite() {
   if (!visite.actif || !etape) return null;
 
   // Sur Windows, l'onglet est un menu de la barre du haut, que la page ne peut pas entourer : une flèche le désigne, d'après son nom.
-  const menuDuHaut = afficheBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet, !modeEntreprise() && !settings.exploitation?.accueilClassique) : null;
+  const menuDuHaut = afficheBureau() && onglet && !ancre && !zone ? libelleDuMenu(onglet, !settings.exploitation?.accueilClassique) : null;
   const centreMenu = menuDuHaut ? centreDuMenu(libellesDesMenus(!!settings.exploitation?.accueilClassique), menuDuHaut, largeurDansLaBarre) : null;
 
   // Éloigné de la page de l'étape : une pastille propose de reprendre ou de quitter.

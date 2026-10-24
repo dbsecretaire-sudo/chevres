@@ -1,19 +1,10 @@
 import { Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { getIdEtablissementActif } from '@/features/etablissements/repository';
 import type { PieceJointe } from '@/features/fichiers/types';
-import {
-  ADRESSE_FICHIERS_BUREAU,
-  DOSSIER_PIECES_LOCAL,
-  EXTENSION_PAR_MIME,
-  EXTENSION_PDF,
-  LARGEUR_IMAGE_PDF,
-  MIME_FICHIER,
-  MIME_PAR_EXTENSION,
-} from '@/shared/constants/fichiers';
+import { ADRESSE_FICHIERS_BUREAU, DOSSIER_PIECES_LOCAL, EXTENSION_PAR_MIME, MIME_FICHIER, MIME_PAR_EXTENSION } from '@/shared/constants/fichiers';
 import { todayISO } from '@/shared/utils/dates';
 import { estBureau } from '@/shared/utils/plateforme';
 import { generateId } from '@/shared/utils/id';
@@ -69,27 +60,6 @@ export async function rangerFichier(source: FichierChoisi): Promise<PieceJointe>
   await FileSystem.makeDirectoryAsync(dossierLocal(), { intermediates: true });
   await FileSystem.copyAsync({ from: source.uri, to: uriPiece(piece) });
   return piece;
-}
-
-/** Fabrique un PDF d'une page à partir d'une image (capture d'écran, photo) et renvoie son adresse. */
-async function imageEnPdf(uri: string, mime: string): Promise<string> {
-  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-  const html = `<html><body style="margin:0"><img src="data:${mime};base64,${base64}" style="width:${LARGEUR_IMAGE_PDF}" /></body></html>`;
-  const { uri: pdf } = await Print.printToFileAsync({ html, base64: false });
-  return pdf;
-}
-
-/**
- * Range une capture : une image (PNG, JPEG, capture d'écran du téléphone) est transformée en PDF, un PDF est gardé tel
- * quel. Le PDF reprend le nom de l'image.
- */
-export async function rangerCapture(source: FichierChoisi): Promise<PieceJointe> {
-  if (!source.mime.startsWith('image/')) return rangerFichier(source);
-  const pdf = await imageEnPdf(source.uri, source.mime);
-  const nomSansExtension = source.nom.includes('.')
-    ? source.nom.slice(0, source.nom.lastIndexOf('.'))
-    : source.nom;
-  return rangerFichier({ uri: pdf, nom: `${nomSansExtension}.${EXTENSION_PDF}`, mime: MIME_FICHIER.PDF });
 }
 
 export async function supprimerPiece(piece: PieceJointe): Promise<void> {

@@ -28,14 +28,11 @@ import {
 import type { CategorieInventairePerso, ListeInventaire, ReglageCategorie } from '@/features/stock/types';
 import {
   SECTIONS,
-  SECTIONS_GITE,
   categoriesDeLEtablissement,
-  etablissementGite,
   type InfosCategorie,
 } from '@/features/stock/utils/categories';
 import {
   COMPTE_PAR_SECTION_INVENTAIRE,
-  COMPTE_PAR_SECTION_INVENTAIRE_GITE,
   type CompteComptable,
 } from '@/shared/constants/planComptable';
 import { ROUTES } from '@/shared/constants/routes';
@@ -80,27 +77,19 @@ export default function StructureListes() {
   const [fenetreCategorie, setFenetreCategorie] = useState<'nouvelle' | InfosCategorie | null>(null);
   const [categorieASupprimer, setCategorieASupprimer] = useState<InfosCategorie | null>(null);
 
-  /** Un gîte a ses propres catégories (marchandises, autres approvisionnements, immobilisations) et ses listes d'office. */
-  const gite = etablissementGite();
   const categories = categoriesDeLEtablissement(ajoutees, reglagesCategories);
   const listesDOffice = (categorie: string) =>
-    gite
-      ? SECTIONS_GITE.filter((x) => x.categorie === categorie).map((x) => ({
-          cle: x.section,
-          titre: x.titre,
-          compte: COMPTE_PAR_SECTION_INVENTAIRE_GITE[x.section],
-        }))
-      : SECTIONS.filter(
-          (x) =>
-            x.categorie === categorie &&
-            (fromagerie || !x.fromagerie) &&
-            (poules || !x.poules) &&
-            !retireePourToutes(sectionsMasquees[x.section], concernees),
-        ).map((x) => ({
-          cle: x.section,
-          titre: x.titre,
-          compte: COMPTE_PAR_SECTION_INVENTAIRE[x.section],
-        }));
+    SECTIONS.filter(
+      (x) =>
+        x.categorie === categorie &&
+        (fromagerie || !x.fromagerie) &&
+        (poules || !x.poules) &&
+        !retireePourToutes(sectionsMasquees[x.section], concernees),
+    ).map((x) => ({
+      cle: x.section,
+      titre: x.titre,
+      compte: COMPTE_PAR_SECTION_INVENTAIRE[x.section],
+    }));
 
   const charger = useCallback(async () => {
     const archive = await lireArchiveStock();

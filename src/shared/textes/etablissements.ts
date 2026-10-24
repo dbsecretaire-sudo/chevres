@@ -2,7 +2,7 @@
 export const TEXTES_ETABLISSEMENTS = {
   selecteurEtablissement: {
     choisirUnEtablissement: 'Mes établissements',
-    nomDeLEtablissement: 'Nom de l’établissement',
+    nomDeLEtablissement: 'Nom de l’exploitation',
     nouvelEtablissement: 'Nouvel établissement',
     creationImpossible: 'Impossible de créer l’établissement',
     modifierLEtablissement: 'Modifier l’établissement',
@@ -13,17 +13,14 @@ export const TEXTES_ETABLISSEMENTS = {
     supprimerCetEtablissementQuestion: 'Supprimer cet établissement ?',
     toutesLesDonneesLocalesDe: (valeur: string) =>
       `Toutes les données locales de « ${valeur} » (cheptel, comptabilité, fournisseurs, clients…) seront supprimées définitivement de cet appareil.`,
-    typeNonRenseigne: 'Type non renseigné',
+    typeNonRenseigne: 'Espèces non renseignées',
     modifier: 'Modifier',
     ajouterUnEtablissement: 'Ajouter un établissement',
     changerDEtablissement: 'Changer d’établissement',
   },
   typeEtablissement: {
-    typeDEtablissement: 'Type d’établissement',
     plusieursChoixPossibles: 'Plusieurs choix possibles.',
-    animaux: 'Animaux',
     especesElevees: 'Espèces élevées',
-    choisirUnType: 'Choisir un type',
   },
   etablissementContext: {
     useetablissementDoitEtreUtiliseDans: 'useEtablissement doit être utilisé dans EtablissementProvider',

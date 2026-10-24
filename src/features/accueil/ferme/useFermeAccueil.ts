@@ -39,8 +39,8 @@ import { CLE_PRIX_LAIT, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { GENRE_RAPPEL } from '@/shared/constants/rappels';
 import { todayISO } from '@/shared/utils/dates';
 
-/** Le nom court d'une déclaration à faire : « RSA », « URSSAF », ou le nom de l'échéance. */
-const NOM_COURT: Record<string, string> = { [GENRE_RAPPEL.RSA]: 'RSA', [GENRE_RAPPEL.URSSAF]: 'URSSAF' };
+/** Le nom court d'une déclaration à faire : « RSA », ou le nom de l'échéance. */
+const NOM_COURT: Record<string, string> = { [GENRE_RAPPEL.RSA]: 'RSA' };
 
 /**
  * Ce qui reste à facturer à un client après l'abattoir : le nombre de jours d'abattage dont la viande n'est pas facturée, et le nombre d'animaux abattus qu'ils comptent,

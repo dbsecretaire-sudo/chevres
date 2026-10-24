@@ -45,7 +45,7 @@ Le sens est toujours **écran → hook → service → repository**. Un service 
 | `production` | les pages de l'onglet Production (fabrication, viande vendue, lieux : abattoir, équarrissage, associations) |
 | `commercial` | commandes, circuits de vente, agritourisme et accueil du public |
 | `contacts`, `clients`, `fournisseurs` | les contacts (fiche commune) et leurs deux familles |
-| `dossiers`, `entreprise`, `gite`, `annexes`, `bar`, `trading` | les activités hors élevage (secrétariat, entreprise, gîte, activités annexes, bar, journal de trading) |
+| `dossiers` | les dossiers rattachés à un contact (les anciennes activités secrétariat, gîte, bar et trading ont été retirées : l'application ne gère plus que des exploitations) |
 | `accueil` | l'accueil « ferme » et la **coque de l'application** (`accueil/shell` : menus, en-tête, barre du bas) |
 | `rappels`, `a-traiter` | les rappels de l'accueil et ce qui reste à traiter par établissement |
 | `etablissements`, `especes` | les établissements (données séparées) et les espèces élevées |

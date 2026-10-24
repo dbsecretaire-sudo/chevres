@@ -1,7 +1,6 @@
 import { actionsDuLieu, type CibleDesBulles } from '@/features/accueil/ferme/actionsLieu';
 import { BOUTONS_DE_LA_FERME, ENTREES_RETIREES_DES_MENUS, ROUTE_DIRECTE } from '@/features/accueil/ferme/routesFerme';
 import { definitionDesMenus, menusParNom } from '@/bureau/MenuBureau';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -92,11 +91,11 @@ export function menusDeLaFerme(): DefinitionMenu[] {
 }
 
 /**
- * Les menus de l'application : les huit thèmes (Accueil, Cheptel, Stock, Production, Commercial, Comptabilité, Contacts, Données) pour un élevage, les rubriques des onglets
- * pour une entreprise ou avec l'accueil classique. La fenêtre Windows, le menu « Menus » du mobile et l'arbre de gauche du poste de comptabilité les prennent ici.
+ * Les menus de l'application : les thèmes de la ferme (Accueil, Exploitation, Atelier, Agritourisme, Comptabilité, Contacts, Données), ou les rubriques des onglets
+ * avec l'accueil classique. La fenêtre Windows, le menu « Menus » du mobile et l'arbre de gauche du poste de comptabilité les prennent ici.
  */
 export const menusDeLApplication = (accueilClassique: boolean): DefinitionMenu[] =>
-  !modeEntreprise() && !accueilClassique ? menusDuPoste() : definitionDesMenus();
+  accueilClassique ? definitionDesMenus() : menusDuPoste();
 
 /** Les noms des menus, de gauche à droite (sans « Affichage », que Windows ajoute en dernier). */
 export const libellesDesMenus = (accueilClassique: boolean): string[] => menusDeLApplication(accueilClassique).map((m) => m.label);

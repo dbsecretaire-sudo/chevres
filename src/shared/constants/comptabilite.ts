@@ -122,37 +122,6 @@ export const UNITE_MARCHANDISE = {
   LITRE: 'litre',
 } as const;
 
-/** Les unités proposées pour une quantité achetée (« Unité » et « Bac » ne le sont plus, mais d'anciennes saisies les gardent). */
-export const UNITES_MARCHANDISE_PROPOSEES = [
-  UNITE_MARCHANDISE.KG,
-  UNITE_MARCHANDISE.PIECE,
-  UNITE_MARCHANDISE.LITRE,
-] as const;
-
-/** Les rubriques de la liste de comptabilité d'un gîte : tout, le gîte (hébergement, repas), le bar, ou le reste de l'activité. */
-export const RUBRIQUE_COMPTABILITE = {
-  TOUT: 'tout',
-  GITE: 'gite',
-  BAR: 'bar',
-  ACTIVITE: 'activite',
-} as const;
-
-/** La rubrique de la liste de comptabilité d'une marchandise achetée, selon l'activité qu'elle sert. */
-export const RUBRIQUE_COMPTABLE_DE_MARCHANDISE = {
-  [RUBRIQUE_MARCHANDISE.BAR]: RUBRIQUE_COMPTABILITE.BAR,
-  [RUBRIQUE_MARCHANDISE.RESTAURANT]: RUBRIQUE_COMPTABILITE.GITE,
-  [RUBRIQUE_MARCHANDISE.ANNEXE]: RUBRIQUE_COMPTABILITE.ACTIVITE,
-} as const;
-
-/** Les catégories de recette qui relèvent du gîte (le reste hors bar est « Activité »). */
-export const RECETTES_DU_GITE: readonly string[] = [
-  CATEGORIE_RECETTE.HEBERGEMENT,
-  CATEGORIE_RECETTE.RESTAURATION,
-];
-
-/** Les catégories de dépense qui relèvent du gîte : les remboursements faits aux clients. */
-export const DEPENSES_DU_GITE: readonly string[] = [CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT];
-
 /** Catégories de vente de production (saisies comme des ventes, pas comme des factures). */
 export const CATEGORIE_VENTE = {
   LAIT: 'lait',
@@ -449,60 +418,6 @@ export const GROUPES_RECETTE_PAR_ESPECE: Record<string, GroupeRecetteDefinition[
   [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: AIDE_PRESTATIONS_ET_AUTRE,
 };
 
-// --- Entreprise (hors élevage) ---
-const unSeulChoix = (
-  groupe: ValeurDe<typeof GROUPE_RECETTE>,
-  categorie: ValeurDe<typeof CATEGORIE_RECETTE>,
-): GroupeRecetteDefinition => ({ groupe, categories: [categorie] });
-
-/** Recettes d'une activité de prestations de service ou libérale. */
-export const GROUPES_RECETTE_SERVICES: GroupeRecetteDefinition[] = [
-  unSeulChoix(GROUPE_RECETTE.PRESTATIONS, CATEGORIE_RECETTE.PRESTATIONS),
-  unSeulChoix(GROUPE_RECETTE.VENTE_MARCHANDISES, CATEGORIE_RECETTE.VENTE_MARCHANDISES),
-  ...AIDE_ET_AUTRE,
-];
-
-/** Recettes d'une association (gîte, restauration, bar) : hébergement, restauration, bar, cotisations, dons… */
-export const GROUPES_RECETTE_ASSOCIATION: GroupeRecetteDefinition[] = [
-  unSeulChoix(GROUPE_RECETTE.HEBERGEMENT, CATEGORIE_RECETTE.HEBERGEMENT),
-  unSeulChoix(GROUPE_RECETTE.RESTAURATION, CATEGORIE_RECETTE.RESTAURATION),
-  unSeulChoix(GROUPE_RECETTE.BAR, CATEGORIE_RECETTE.BAR),
-  unSeulChoix(GROUPE_RECETTE.VENTE_MARCHANDISES, CATEGORIE_RECETTE.VENTE_MARCHANDISES),
-  unSeulChoix(GROUPE_RECETTE.COTISATIONS, CATEGORIE_RECETTE.COTISATIONS),
-  unSeulChoix(GROUPE_RECETTE.DONS, CATEGORIE_RECETTE.DONS),
-  ...AIDE_ET_AUTRE,
-];
-
-/** Recettes d'une activité financière : les gains du journal de trading et les dépôts sur le compte. */
-export const GROUPES_RECETTE_FINANCE: GroupeRecetteDefinition[] = [
-  unSeulChoix(GROUPE_RECETTE.GAINS_TRADING, CATEGORIE_RECETTE.GAINS_TRADING),
-  unSeulChoix(GROUPE_RECETTE.DEPOT, CATEGORIE_RECETTE.DEPOT),
-];
-
-/** Dépenses propres à une activité financière : les pertes du journal de trading et les retraits du compte. */
-export const CATEGORIES_DEPENSE_FINANCE = [
-  CATEGORIE_DEPENSE.PERTES_TRADING,
-  CATEGORIE_DEPENSE.RETRAIT,
-] as const;
-
-/**
- * Dépenses d'une entreprise (hors élevage), dans l'ordre d'affichage : les dépenses régulières seulement. Les achats
- * ponctuels (matériel, réparation, formation…) se rangent sous « Autre » ; le remboursement d'un client se crée tout seul.
- */
-export const CATEGORIES_DEPENSE_ENTREPRISE = [
-  CATEGORIE_DEPENSE.FOURNITURES,
-  CATEGORIE_DEPENSE.ACHATS_MARCHANDISES,
-  CATEGORIE_DEPENSE.LOYER_CHARGES,
-  CATEGORIE_DEPENSE.ASSURANCES,
-  CATEGORIE_DEPENSE.TELECOM,
-  CATEGORIE_DEPENSE.DEPLACEMENTS,
-  CATEGORIE_DEPENSE.FRAIS_BANCAIRES,
-  CATEGORIE_DEPENSE.COTISATIONS_SOCIALES,
-  CATEGORIE_DEPENSE.HONORAIRES,
-  CATEGORIE_DEPENSE.IMPOTS,
-  CATEGORIE_DEPENSE.AUTRE,
-] as const;
-
 /** Groupes d'une écriture « commune » (qui ne concerne aucune espèce en particulier). */
 export const GROUPES_RECETTE_COMMUNS = AIDE_PRESTATIONS_ET_AUTRE;
 
@@ -563,24 +478,6 @@ export const TAUX_TVA_CARBURANT = 13;
 
 /** Taux pré-rempli pour une dépense d'entreprise assujettie à la TVA. */
 export const TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT = 20;
-
-/** Taux pré-rempli pour une recette d'entreprise assujettie à la TVA, selon sa catégorie (à confirmer avec votre comptable). */
-export const TAUX_TVA_RECETTE_ENTREPRISE = {
-  [CATEGORIE_RECETTE.PRESTATIONS]: 20,
-  [CATEGORIE_RECETTE.VENTE_MARCHANDISES]: 20,
-  [CATEGORIE_RECETTE.HEBERGEMENT]: 10,
-  [CATEGORIE_RECETTE.RESTAURATION]: 10,
-  [CATEGORIE_RECETTE.BAR]: 20,
-  [CATEGORIE_RECETTE.GAINS_TRADING]: 0,
-  [CATEGORIE_RECETTE.DEPOT]: 0,
-  [CATEGORIE_RECETTE.COTISATIONS]: 0,
-  [CATEGORIE_RECETTE.DONS]: 0,
-  [CATEGORIE_RECETTE.AIDE]: 0,
-  [CATEGORIE_RECETTE.GROUPEMENT_SANITAIRE]: 0,
-  [CATEGORIE_RECETTE.REMBOURSEMENT_ANALYSES]: 0,
-  [CATEGORIE_RECETTE.ASSURANCE_VEHICULE]: 0,
-  [CATEGORIE_RECETTE.AUTRE]: 20,
-} as const;
 
 /** Taux pré-rempli pour une vente de production, selon sa catégorie (indicatif — à confirmer avec le comptable/CGA). */
 export const TAUX_TVA_VENTE_PAR_CATEGORIE = {

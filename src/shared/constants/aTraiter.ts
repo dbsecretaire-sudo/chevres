@@ -2,20 +2,10 @@
 
 /** Les sortes de choses à traiter, dans l'ordre où elles s'affichent. */
 export const GENRE_A_TRAITER = {
-  TACHE_EN_RETARD: 'tache_en_retard',
-  TACHE_PROCHE: 'tache_proche',
-  /** Une déclaration (RSA, URSSAF) à valider. */
+  /** Une déclaration (RSA) à valider. */
   RAPPEL_FISCAL: 'rappel_fiscal',
   /** Des lots vendus dont le contrôle n'est pas ok : à rappeler. */
   LOTS_A_RAPPELER: 'lots_a_rappeler',
   /** Le rappel d'un lot déjà lancé, à valider quand il est fait. */
   RAPPEL_LOT_A_VALIDER: 'rappel_lot_a_valider',
-  SEJOUR_A_ENCAISSER: 'sejour_a_encaisser',
-  NOTE_A_FACTURER: 'note_a_facturer',
 } as const;
-
-/** Une tâche non terminée dont l'échéance tombe dans ce nombre de jours (ou moins) est à traiter bientôt. */
-export const JOURS_TACHE_PROCHE = 7;
-
-/** Un séjour non encaissé est à traiter dès que son arrivée tombe dans ce nombre de jours (ou qu'il a déjà commencé). */
-export const JOURS_SEJOUR_A_ENCAISSER = 7;

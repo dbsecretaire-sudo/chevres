@@ -365,7 +365,7 @@ export default function AccueilFerme() {
               nombreAnimaux={f.stats?.totalVivantes}
               naissances={f.stats?.cabritsAnnee}
               estive={f.estive}
-              onAppui={() => ouvrir(routeDuTerrain('troupeau'))}
+              onAppui={() => ouvrir(ROUTES.lieu('animaux'))}
               intervenants={intervenants}
               gestion={gestion}
               onMaison={surMaison}

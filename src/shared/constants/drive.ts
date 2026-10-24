@@ -6,13 +6,9 @@ export const FICHIER_EXPLOITATION = 'exploitation.json';
 export const FICHIER_FOURNISSEURS = 'fournisseurs.json';
 export const FICHIER_CLIENTS = 'clients.json';
 export const FICHIER_DOSSIERS = 'dossiers.json';
-export const FICHIER_GITE = 'gite.json';
-export const FICHIER_TRADING = 'trading.json';
-export const FICHIER_BAR = 'bar.json';
 export const FICHIER_COMMERCIAL = 'commercial.json';
 export const FICHIER_BIBLIOTHEQUE = 'bibliotheque.json';
 export const FICHIER_STOCK = 'stock.json';
-export const FICHIER_ANNEXES = 'annexes.json';
 /** Les documents d'identification et d'installation de l'exploitation. */
 export const FICHIER_IDENTIFICATION = 'identification.json';
 /** Les catégories de contacts ajoutées aux partenaires ou retirées (les laboratoires d'analyses, par exemple). */

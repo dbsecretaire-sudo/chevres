@@ -2,7 +2,7 @@ import type { ElementFormule, FormuleAgritourisme, VisiteAgritourisme } from '@/
 import { coutCarburantDeLaVisite } from '@/features/comptabilite/services/fraisTouristiques';
 import type { Facture } from '@/features/comptabilite/types';
 import type { Vehicule } from '@/features/settings/settings';
-import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
+import { tvaDuTtc } from '@/features/comptabilite/utils/tva';
 import { STATUTS_VISITE_COMPTEES } from '@/shared/constants/agritourisme';
 import { ATELIER } from '@/shared/constants/ateliers';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';

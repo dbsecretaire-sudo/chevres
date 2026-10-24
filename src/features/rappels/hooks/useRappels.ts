@@ -15,7 +15,6 @@ import {
   type GenreRappel,
   type Rappel,
 } from '@/features/rappels/services/rappels';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { todayISO } from '@/shared/utils/dates';
 
 /** Les rappels de déclaration de l'établissement actif, et de quoi les valider ou les (dés)activer. */
@@ -25,15 +24,13 @@ export function useRappels() {
   useEtablissement();
   const infos = settings.exploitation;
   const contexte = {
-    elevage: !modeEntreprise(),
-    activites: activitesEtablissement(),
     desactives: infos?.rappelsDesactives,
     valides: infos?.rappelsValides,
   };
   const declarations = useMemo(
     () => rappelsDus(todayISO(), contexte),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contexte.elevage, contexte.activites, contexte.desactives, contexte.valides],
+    [contexte.desactives, contexte.valides],
   );
   /** Les échéances des contenus des groupements, relues à chaque retour sur l'écran. */
   const [echeances, setEcheances] = useState<EcheanceGroupement[]>([]);
@@ -50,7 +47,7 @@ export function useRappels() {
       ),
     [declarations, echeances],
   );
-  const genres: GenreRappel[] = genresApplicables(contexte);
+  const genres: GenreRappel[] = genresApplicables();
 
   const valider = async (rappel: Rappel) => {
     // L'échéance d'un groupement se valide en terminant son contenu ; une déclaration, en la notant dans les réglages.

@@ -8,7 +8,6 @@ import { colors } from '@/shared/theme/colors';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { styles } from '@/shared/styles/comptabilite/ListeTransactions.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 
 /** Une vente ou une facture dans la liste des écritures ; ouvre sa fiche. */
 export function LigneTransaction({ item }: { item: Transaction }) {
@@ -18,7 +17,7 @@ export function LigneTransaction({ item }: { item: Transaction }) {
   const estFacture = item.source === SOURCE_TRANSACTION.FACTURE;
   /** Le total de la facture se lit dans le sous-titre pour une facture d'alimentation (répartie entre cheptels : à droite, la part comptabilisée). */
   const montantDansLeSousTitre =
-    estFacture && !estEntree && !modeEntreprise() && item.categorie === CATEGORIE_DEPENSE.ALIMENTATION;
+    estFacture && !estEntree && item.categorie === CATEGORIE_DEPENSE.ALIMENTATION;
 
   return (
     <ListRow

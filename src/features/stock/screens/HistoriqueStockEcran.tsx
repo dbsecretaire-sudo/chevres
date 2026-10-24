@@ -3,12 +3,7 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { HistoriqueInventaireGite } from '@/features/stock/components/HistoriqueInventaireGite';
 import { HistoriqueStock } from '@/features/stock/components/HistoriqueStock';
-import { lireArchiveBar } from '@/features/bar/repository';
-import type { ArchiveBar } from '@/features/bar/types';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { lireArchiveStock } from '@/features/stock/repository';
 import type { FiltreStock } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
@@ -29,16 +24,12 @@ export default function HistoriqueStockEcran() {
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [ventesLait, setVentesLait] = useState<VenteLait[]>([]);
   const [ventesAnimaux, setVentesAnimaux] = useState<VenteAnimaux[]>([]);
-  /** Un gîte a son propre historique (marchandises, autres approvisionnements, immobilisations). */
-  const gite = modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
-  const [bar, setBar] = useState<ArchiveBar | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      Promise.all([lireArchiveStock(), listToutesVentes(), lireArchiveBar()]).then(
-        ([stock, ventes, archiveBar]) => {
+      Promise.all([lireArchiveStock(), listToutesVentes()]).then(
+        ([stock, ventes]) => {
           setArchive(stock);
-          setBar(archiveBar);
           setVentesLait(
             ventes
               .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && v.quantite)
@@ -65,12 +56,6 @@ export default function HistoriqueStockEcran() {
   const voulu = (espece ?? especeActive) as FiltreStock;
   const filtreInitial: FiltreStock =
     voulu === FILTRE_STOCK_TOUT || especes.includes(voulu) ? voulu : FILTRE_STOCK_TOUT;
-
-  if (gite) {
-    return (
-      <Screen>{archive && bar ? <HistoriqueInventaireGite bar={bar} inventaire={archive} /> : null}</Screen>
-    );
-  }
 
   return (
     <Screen>

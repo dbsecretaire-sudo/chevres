@@ -29,6 +29,8 @@ export interface ComptesTerrain {
   /** Les animaux en délai d'attente après un traitement. */
   delais: number;
   ventesSansDocument: number;
+  /** Ce que le berger a saisi sur le terrain et qui reste à compléter. */
+  aCompleter: number;
   lotsAFacturer: number;
   /** Les animaux abattus qui restent à facturer à un client. */
   viandeAFacturer: number;
@@ -55,6 +57,7 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
   switch (zone) {
     case 'troupeau':
       return [
+        { cle: 'aCompleter', titre: T.aCompleter, icone: 'create', route: ROUTES.CHEPTEL_A_COMPLETER, ...avec(c.aCompleter, true) },
         { cle: 'liste', titre: T.liste, icone: 'paw', route: ROUTES.lieu('animaux'), ...avec(c.animaux) },
         { cle: 'ajoutRapide', titre: T.ajoutRapide, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
         { cle: 'naissance', titre: T.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE, ...avec(c.naissances) },
@@ -70,7 +73,7 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
         { cle: 'charcuterie', titre: T.charcuterie, icone: 'restaurant', iconeMci: 'knife', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.CHARCUTERIE) },
         { cle: 'plat', titre: T.plat, icone: 'restaurant', iconeMci: 'pot-steam', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.PLAT) },
         { cle: 'savon', titre: T.savon, icone: 'restaurant', iconeMci: 'hand-wash', route: ROUTES.productionFabrication(PRODUIT_A_LOTS.SAVON) },
-        { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.PRODUCTION_LAIT },
+        { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.LAIT_DU_JOUR },
         { cle: 'lotsAtelier', titre: T.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS, ...avec(c.lotsARappeler, true) },
         { cle: 'viande', titre: T.viandeAFacturer, icone: 'receipt', iconeMci: 'food-steak', route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer`, ...avec(c.viandeAFacturer, true) },
         { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },

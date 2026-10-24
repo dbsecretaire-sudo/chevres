@@ -10,10 +10,34 @@ import {
 } from '@/shared/constants/google';
 import { TEXTES } from '@/shared/textes';
 
+/** Un mot lu par Google Vision : son texte et le cadre (ses coins) où il se trouve sur la photo. */
+export interface MotLu {
+  description?: string;
+  boundingPoly?: { vertices?: { x?: number; y?: number }[] };
+}
+
+/** La hauteur d'un mot sur la photo : la taille de son écriture. */
+const hauteurDuMot = (mot: MotLu): number => {
+  const ys = (mot.boundingPoly?.vertices ?? []).map((v) => v.y ?? 0);
+  return ys.length > 0 ? Math.max(...ys) - Math.min(...ys) : 0;
+};
+
+/**
+ * Les nombres lus sur la photo, du plus grand au plus petit (par la taille de leur écriture). Sur une boucle, le numéro de l'animal est écrit en gros et le numéro de l'exploitation
+ * en petit au-dessus : le plus grand est donc la boucle, même si le numéro d'exploitation a plus de chiffres. À taille égale, le plus long d'abord.
+ */
+export function nombresParTaille(mots: readonly MotLu[]): string[] {
+  const nombres = mots
+    .map((m) => ({ texte: (m.description ?? '').replace(/\s+/g, ''), taille: hauteurDuMot(m) }))
+    .filter((m) => /^\d+$/.test(m.texte) && m.texte.length >= LONGUEUR_MIN_NUMERO_BOUCLE);
+  nombres.sort((a, b) => b.taille - a.taille || b.texte.length - a.texte.length);
+  return [...new Set(nombres.map((m) => m.texte))];
+}
+
 export interface ResultatOCR {
   /** Texte brut détecté (toutes lignes), pour affichage/debug. */
   texteBrut: string;
-  /** Suites de chiffres trouvées dans le texte, des plus longues (donc les plus probables) aux plus courtes. */
+  /** Les nombres trouvés : d'abord ceux écrits en gros (le numéro de la boucle), puis les autres (le numéro d'exploitation, plus petit). */
   candidats: string[];
 }
 
@@ -52,9 +76,12 @@ export async function lireNumeroBoucle(base64Jpeg: string): Promise<ResultatOCR>
 
   // Cherche les suites de chiffres (avec espaces internes éventuels retirés), du plus long au plus court.
   const suites = texteBrut.match(/[\d ]{2,}\d/g) ?? [];
-  const candidats = Array.from(
+  const parLongueur = Array.from(
     new Set(suites.map((s) => s.replace(/\s+/g, '')).filter((s) => s.length >= LONGUEUR_MIN_NUMERO_BOUCLE)),
   ).sort((a, b) => b.length - a.length);
+  // Le premier élément de la liste est tout le texte ; les suivants sont les mots, avec leur cadre : le plus gros nombre est la boucle.
+  const mots: MotLu[] = (json.responses?.[0]?.textAnnotations ?? []).slice(1);
+  const candidats = [...new Set([...nombresParTaille(mots), ...parLongueur])];
 
   return { texteBrut, candidats };
 }

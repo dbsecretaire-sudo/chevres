@@ -21,7 +21,7 @@ interface Props {
 export function TableauEtablissements({ etablissements, actifId, aTraiterDe, onChoisir, onModifier }: Props) {
   const colonnes: readonly ColonneDuTableau<Etablissement>[] = [
     { cle: 'nom', titre: 'Établissement', poids: 3, valeur: (e) => e.nom, texte: (e) => `${e.id === actifId ? '★ ' : ''}${e.nom}` },
-    { cle: 'types', titre: 'Types', poids: 3, valeur: (e) => libelleTypesEtablissement(e) || 'Type non renseigné' },
+    { cle: 'types', titre: 'Espèces', poids: 3, valeur: (e) => libelleTypesEtablissement(e) || 'Espèces non renseignées' },
     { cle: 'traiter', titre: 'À traiter', poids: 1, aligne: 'droite', valeur: (e) => aTraiterDe(e.id).length, texte: (e) => (aTraiterDe(e.id).length ? String(aTraiterDe(e.id).length) : '') },
     {
       cle: 'modifier',

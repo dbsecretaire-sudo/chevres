@@ -1,5 +1,4 @@
-import { HEURE_MIDI } from '@/shared/constants/temps';
-import { JOURS_PAR_SEMAINE_CALENDRIER } from '@/shared/constants/gite';
+import { HEURE_MIDI, JOURS_PAR_SEMAINE as JOURS_PAR_SEMAINE_CALENDRIER } from '@/shared/constants/temps';
 import { toISODate } from '@/shared/utils/dates';
 
 /** Un mois du calendrier : l'année et le mois de 0 (janvier) à 11. */
@@ -48,11 +47,4 @@ export function semainesDuMois(annee: number, mois: number): (string | null)[][]
     semaines.push(cases.slice(i, i + JOURS_PAR_SEMAINE_CALENDRIER));
   }
   return semaines;
-}
-
-/** Les nuits d'un séjour : de l'arrivée jusqu'à la veille du départ. */
-export function nuitsDuSejour(arrivee: string, depart: string): string[] {
-  const nuits: string[] = [];
-  for (let nuit = arrivee; nuit < depart; nuit = ajouterJours(nuit, 1)) nuits.push(nuit);
-  return nuits;
 }

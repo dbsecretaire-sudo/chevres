@@ -15,7 +15,6 @@ import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres'
 import { SectionForm } from '@/shared/components/SectionForm';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
-import { LignesMarchandisesEditor } from '@/features/comptabilite/components/LignesMarchandisesEditor';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import { ChampTauxImposition } from '@/features/comptabilite/components/ChampTauxImposition';
@@ -29,9 +28,6 @@ import {
   fournisseursPourLaDepense,
   fournituresSeulementBoucles,
 } from '@/features/fournisseurs/services/categorie';
-import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import {
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
@@ -40,7 +36,6 @@ import {
   TYPE_FACTURE,
 } from '@/shared/constants/comptabilite';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
-import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
 import { ROUTES } from '@/shared/constants/routes';
 import { DossiersDeLAide } from '@/features/exploitation/components/DossiersDeLAide';
 import { idVisiteDeLaFacture } from '@/features/sante/services/visitesFacture';
@@ -90,7 +85,6 @@ const T = TEXTES.comptabilite.nouvelleEcriture;
 export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   const router = useRouter();
   const retour = useAdresseCourante();
-  const { settings } = useAppSettings();
   const { form, fournisseurs, clients } = f;
   if (!form) return null;
 
@@ -108,9 +102,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   /** Une dépense offerte par le fournisseur : la case est cochée et sa catégorie la propose ; chaque ligne a son bouton « Cadeau ». */
   const offerte = !estEmise && !!form.offert && offertAffiche(categorieFournisseurDuTiers) && !f.estChambre && !f.estCarburant;
   const fournisseur = fournisseurs.find((x) => x.nomEntreprise === form.tiers);
-  // Une entreprise non assujettie à la TVA n'a pas de taux à saisir.
-  const sansTva = modeEntreprise() && !settings.exploitation?.entreprise?.tvaApplicable;
-  const champTauxTva = sansTva ? null : (
+  const champTauxTva = (
     <SelectField
       label={TEXTES.commun.general.tauxDeTva}
       value={form.tauxTva?.toString() ?? ''}
@@ -132,21 +124,13 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       ? (form.categoriePerso ?? LABEL_CATEGORIE_DEPENSE[form.categorieDepense])
       : '';
 
-  /** Le montant : un seul champ, ou le total des lignes (alimentation, carburant, marchandises) qui le font. */
+  /** Le montant : un seul champ, ou le total des lignes (alimentation, carburant) qui le font. */
   const montant = f.estAlimentation ? (
     <>
       <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} offerte={offerte} />
       <Text style={styles.total}>
         {TEXTES.commun.general.totalFactureTtcDeuxPoints}
         {formatTotalEuros(f.totalAlimentation)}
-      </Text>
-    </>
-  ) : f.estMarchandises ? (
-    <>
-      <LignesMarchandisesEditor lignes={f.lignesMarchandises} onChange={f.setLignesMarchandises} offerte={offerte} />
-      <Text style={styles.total}>
-        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-        {formatTotalEuros(f.totalMarchandises)}
       </Text>
     </>
   ) : f.estChambre ? (
@@ -410,20 +394,6 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           </>
         )}
 
-        {/* La nature de la recette pour la déclaration URSSAF (une entreprise). */}
-        {modeEntreprise() &&
-        ((estEmise &&
-          form.categorieRecette &&
-          (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(form.categorieRecette)) ||
-          (!estEmise && form.categorieDepense === CATEGORIE_DEPENSE.REMBOURSEMENT_CLIENT)) ? (
-          <ChampNatureUrssaf
-            value={form.natureUrssaf ?? ''}
-            onChange={(valeur) =>
-              f.setForm({ ...form, natureUrssaf: (valeur || undefined) as typeof form.natureUrssaf })
-            }
-          />
-        ) : null}
-
         {/* Le volet d'une écriture d'une association ou d'une coopérative agricole. */}
         {form.voletCooperative ? (
           <ChampVoletCooperative
@@ -457,7 +427,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           <ChampVehicule value={form.vehiculeId ?? ''} onChange={(id) => f.setForm({ ...form, vehiculeId: id || undefined })} />
         ) : null}
         {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
-        {!estEmise && !modeEntreprise() && !depenseImposee(fournisseur) ? (
+        {!estEmise && !depenseImposee(fournisseur) ? (
           <ChampAtelier
             activite={form.activite}
             value={form.atelier ?? ''}

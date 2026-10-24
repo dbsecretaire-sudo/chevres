@@ -3,8 +3,6 @@ import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
-import ChiffreAffaires from '@/features/entreprise/screens/ChiffreAffaires';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { Card } from '@/shared/components/Card';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { PucesActivite } from '@/features/comptabilite/components/PucesActivite';
@@ -20,12 +18,8 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 import { NOMS_MOIS } from '@/shared/textes/libelles';
 
-/** Déclaration RSA de l'élevage, ou, pour une entreprise, son chiffre d'affaires par mois (URSSAF). */
+/** Déclaration RSA de l'élevage. */
 export default function FiscaliteRSA() {
-  return modeEntreprise() ? <ChiffreAffaires /> : <RsaElevage />;
-}
-
-function RsaElevage() {
   const { settings, setAnneeActive } = useAppSettings();
   const [annees, setAnnees] = useState<number[]>([settings.anneeActive]);
   const [mois, setMois] = useState<RecettesMois[]>([]);

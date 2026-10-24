@@ -19,7 +19,6 @@ import {
   CATEGORIE_VENTE,
   TYPE_FACTURE,
   CATEGORIE_RECETTE,
-  RUBRIQUE_COMPTABLE_DE_MARCHANDISE,
   TYPE_AIDE,
   TYPE_ALIMENT,
 } from '@/shared/constants/comptabilite';
@@ -43,8 +42,6 @@ export interface Transaction {
   activite: ActiviteComptable;
   /** Catégorie d'une facture (recette ou dépense) : sert à classer l'écriture par rubrique (gîte, bar, activité). */
   categorie?: string;
-  /** Pour un achat de marchandises détaillé : les rubriques (gîte, bar, activité) que ses lignes servent. */
-  rubriques?: string[];
   /** Vrai pour une vente dont le client ne souhaite pas la déclaration (sans facture) : elle compte dans le solde, pas dans le RSA ni les impôts. */
   sansFacture?: boolean;
   /** Le nom de la catégorie de l'écriture (« Alimentation », « Vente de fromage »…), pour la recherche. */
@@ -156,9 +153,6 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
       termes: termesDeFacture(f),
       volet: f.voletCooperative,
       sansFacture: f.type === TYPE_FACTURE.RECUE && f.sansFacture ? true : undefined,
-      rubriques: f.lignesMarchandises?.length
-        ? [...new Set(f.lignesMarchandises.map((l) => RUBRIQUE_COMPTABLE_DE_MARCHANDISE[l.rubrique]))]
-        : undefined,
     })),
   );
 

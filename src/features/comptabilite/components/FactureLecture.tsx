@@ -8,10 +8,9 @@ import { libelleArticle } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { Text, View } from 'react-native';
 import { AnimauxEnvoyesListe } from '@/features/comptabilite/components/AnimauxEnvoyesListe';
-import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
-import { formatDateFR, formatDateShortFR, formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import {
   LABEL_ACTIVITE_COMPTABLE,
   LABEL_CATEGORIE_DEPENSE,
@@ -30,9 +29,6 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TYPE_ALIMENT, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { activiteLigne, activitesFacture } from '@/features/comptabilite/utils/activite';
 import { plusieursEspeces } from '@/shared/dictionnaire/animaux';
-import { sejourDeFacture } from '@/features/gite/repository';
-import type { Sejour } from '@/features/gite/types';
-import { ROUTES } from '@/shared/constants/routes';
 import { useNomsMateriel } from '@/features/stock/hooks/useNomsMateriel';
 import { TEXTES } from '@/shared/textes';
 
@@ -59,12 +55,6 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
   useEffect(() => {
     if (facture.lignesProduction?.length) lireArchiveStock().then(setArchiveLecture);
   }, [facture.lignesProduction]);
-  const router = useRouter();
-  /** La réservation du gîte dont cette écriture est le paiement (hébergement, repas, acompte, remboursement). */
-  const [reservation, setReservation] = useState<Sejour | undefined>();
-  useEffect(() => {
-    sejourDeFacture(facture.id).then(setReservation);
-  }, [facture.id]);
 
   return (
     <Card>
@@ -160,24 +150,6 @@ export function FactureLecture({ facture, compte, onModifier }: Props) {
           {TEXTES.comptabilite.nouvelleEcriture.natureUrssaf} : {LABEL_NATURE_URSSAF[facture.natureUrssaf]}
         </Text>
       ) : null}
-      {reservation ? (
-        <Text style={commonStyles.line}>
-          {TEXTES.comptabilite.factureLecture.reservationLieeDeuxPoints}
-          {/* Une réservation abandonnée n'est plus au calendrier : on la retrouve dans l'historique. */}
-          <Text
-            style={commonStyles.lien}
-            onPress={() =>
-              router.push(
-                reservation.abandonne ? ROUTES.giteHistorique(reservation.id) : ROUTES.sejour(reservation.id),
-              )
-            }
-          >
-            {reservation.nom} — {formatDateShortFR(reservation.arrivee)} →{' '}
-            {formatDateShortFR(reservation.depart)}
-          </Text>
-        </Text>
-      ) : null}
-
       {idsDesAnimauxAchetes(facture).length > 0 ? (
         <Text style={commonStyles.line}>
           {TEXTES.comptabilite.nouvelleEcriture.animauxAchetes.nAnimaux(idsDesAnimauxAchetes(facture).length)}

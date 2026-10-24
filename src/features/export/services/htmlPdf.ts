@@ -88,10 +88,6 @@ export function sectionHtml(titre: string, contenu: string): string {
   return `<section><h2>${echapper(titre)}</h2>${contenu}</section>`;
 }
 
-/** Le titre d'une liste d'articles (en gras) et, en gris, son compte du plan comptable. */
-export const listeTitreHtml = (titre: string, detail: string): string =>
-  `<div class="liste-titre"><strong>${echapper(titre)}</strong><span>${echapper(detail)}</span></div>`;
-
 /**
  * Un histogramme en colonnes (de simples blocs) : une barre par valeur — pleine pour la référence, cernée pour les autres — avec son nom,
  * sa valeur et une ligne de détail dessous. La plus grande valeur donne la hauteur du dessin.

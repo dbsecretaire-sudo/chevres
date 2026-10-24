@@ -8,7 +8,6 @@ export interface EntreeDeSauvegardeComplete<S> {
   id: string;
   nom: string;
   animaux?: string[];
-  activites?: string[];
   sauvegarde: S;
 }
 

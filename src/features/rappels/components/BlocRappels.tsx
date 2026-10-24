@@ -26,7 +26,7 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.rappels;
 
 /**
- * Les déclarations à valider (RSA trimestriel, URSSAF mensuel) : une ligne par rappel, qui ouvre l'écran de la déclaration ; la
+ * Les déclarations à valider (RSA trimestriel) : une ligne par rappel, qui ouvre l'écran de la déclaration ; la
  * coche à droite la marque comme faite. N'affiche rien s'il n'y en a pas.
  */
 function BlocRappelsDeclarations() {

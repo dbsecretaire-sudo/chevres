@@ -2,7 +2,6 @@ import { useGlobalSearchParams, usePathname } from 'expo-router';
 import { definitionDesMenus } from '@/bureau/MenuBureau';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { routesDuMenu } from '@/shared/navigation/filAriane';
 import { routeLaPlusPrecise, type ParametresDePage } from '@/shared/navigation/pageOuverte';
 import { menusDuPoste } from '@/features/accueil/shell/structureMenus';
@@ -12,7 +11,7 @@ export function usePositionDansLesMenus(): { menus: DefinitionMenu[]; courante: 
   const adresse = usePathname();
   const parametres = useGlobalSearchParams() as ParametresDePage;
   const { settings } = useAppSettings();
-  const avecPlanDeLaFerme = !modeEntreprise() && !settings.exploitation?.accueilClassique;
+  const avecPlanDeLaFerme = !settings.exploitation?.accueilClassique;
   const menus = avecPlanDeLaFerme ? menusDuPoste() : definitionDesMenus();
   return { menus, courante: routeLaPlusPrecise(menus.flatMap(routesDuMenu), adresse, parametres), adresse };
 }

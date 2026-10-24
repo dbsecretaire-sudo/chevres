@@ -33,7 +33,7 @@ export interface BilanDeLAccueil {
 
 export interface DeclarationAFaire {
   id: string;
-  /** « RSA », « URSSAF », ou le nom d'une échéance. */
+  /** « RSA », ou le nom d'une échéance. */
   libelle: string;
   /** Son nom complet (« Déclaration RSA · 2e trimestre 2026 »). */
   titre?: string;

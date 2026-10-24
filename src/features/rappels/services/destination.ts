@@ -4,4 +4,4 @@ import type { GenreRappel, GenreRappelDeLot } from '@/features/rappels/services/
 
 /** L'écran où l'on fait la déclaration d'un rappel. */
 export const destinationRappel = (genre: GenreRappel | GenreRappelDeLot): string =>
-  genre === GENRE_RAPPEL.RSA ? ROUTES.FISCALITE_RSA : ROUTES.URSSAF;
+  genre === GENRE_RAPPEL.RSA ? ROUTES.FISCALITE_RSA : ROUTES.FISCALITE;

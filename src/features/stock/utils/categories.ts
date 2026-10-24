@@ -1,5 +1,4 @@
 import type { CategorieInventairePerso, GenreArticle, ReglageCategorie } from '@/features/stock/types';
-import { ONGLET_STOCK_BAR } from '@/shared/constants/bar';
 import {
   CATEGORIE_INVENTAIRE,
   CLASSE_INVENTAIRE,
@@ -9,8 +8,6 @@ import {
   SECTION_STOCK,
 } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 export type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
@@ -131,41 +128,6 @@ export const SECTIONS: {
   },
 ];
 
-export type SectionGite = ValeurDe<typeof ONGLET_STOCK_BAR>;
-
-const TG = TEXTES.bar.stock;
-
-/** Les catégories de l'inventaire d'un gîte, dans l'ordre de l'organisation comptable : leur nom. */
-export const CATEGORIES_GITE: { categorie: Categorie; nom: string }[] = [
-  { categorie: CATEGORIE_INVENTAIRE.MARCHANDISES, nom: T.categories.marchandises },
-  { categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS, nom: T.categories.autresApprovisionnements },
-  { categorie: CATEGORIE_INVENTAIRE.IMMOBILISATIONS, nom: T.categories.immobilisations },
-];
-
-/** Les listes d'office de chaque catégorie d'un gîte : les boissons et la nourriture, les consommables, le matériel. */
-export const SECTIONS_GITE: { section: SectionGite; categorie: Categorie; titre: string }[] = [
-  {
-    section: ONGLET_STOCK_BAR.CONSOMMABLES,
-    categorie: CATEGORIE_INVENTAIRE.MARCHANDISES,
-    titre: TG.boissonsNourriture,
-  },
-  {
-    section: ONGLET_STOCK_BAR.CONDITIONNEMENT,
-    categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
-    titre: TG.onglets.conditionnement,
-  },
-  {
-    section: ONGLET_STOCK_BAR.ENTRETIEN,
-    categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
-    titre: TG.onglets.entretien,
-  },
-  {
-    section: ONGLET_STOCK_BAR.MATERIEL,
-    categorie: CATEGORIE_INVENTAIRE.IMMOBILISATIONS,
-    titre: TG.onglets.materiel,
-  },
-];
-
 /** Le nom de chaque catégorie d'office. */
 const NOMS_CATEGORIE: Record<Categorie, string> = {
   [CATEGORIE_INVENTAIRE.PRODUITS_FINIS]: T.categories.produitsFinis,
@@ -230,13 +192,8 @@ export function categoriesAvecAjoutees(
   ];
 }
 
-/** Vrai pour un établissement qui est un gîte : il a ses propres catégories d'inventaire (marchandises, immobilisations…). */
-export const etablissementGite = (): boolean =>
-  modeEntreprise() && activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
-
 /** Les catégories de l'inventaire de l'établissement, celles d'office puis celles que l'utilisateur a ajoutées. */
 export const categoriesDeLEtablissement = (
   ajoutees: CategorieInventairePerso[] = [],
   personnalises: Record<string, ReglageCategorie> = {},
-): InfosCategorie[] =>
-  categoriesAvecAjoutees(etablissementGite() ? CATEGORIES_GITE : CATEGORIES, ajoutees, personnalises);
+): InfosCategorie[] => categoriesAvecAjoutees(CATEGORIES, ajoutees, personnalises);

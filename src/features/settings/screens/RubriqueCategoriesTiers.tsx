@@ -42,7 +42,6 @@ import {
   sensDansLesDepenses,
   type RubriqueOperations,
 } from '@/features/contacts/services/operationsInventaire';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { CATEGORIE_DEPENSE } from '@/shared/constants/comptabilite';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { colors } from '@/shared/theme/colors';
@@ -118,7 +117,7 @@ export default function RubriqueCategoriesTiers() {
       .then((tous) => setUtilisees(new Set(tous.map((f) => f.categorie).filter((c): c is string => !!c))))
       .catch(() => undefined);
   }, []);
-  const parInventaire = !modeEntreprise() && rubriques.length > 0;
+  const parInventaire = rubriques.length > 0;
   /** Les opérations d'une catégorie : celles réglées, sinon celles que ses dépenses d'office ouvraient. */
   const operationsDe = (c: CategorieFournisseurReglage, permises: readonly string[]) =>
     c.operations ?? operationsDesDepenses(permises, rubriques);

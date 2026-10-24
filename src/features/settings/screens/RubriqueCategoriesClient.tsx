@@ -31,7 +31,6 @@ import {
   operationsDesRecettes,
   type RubriqueOperations,
 } from '@/features/contacts/services/operationsInventaire';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { GROUPE_RECETTE } from '@/shared/constants/comptabilite';
 import { ChoixVueCategories } from '@/features/settings/components/ChoixVueCategories';
 import { ReglagesParOption } from '@/features/settings/components/ReglagesParOption';
@@ -89,7 +88,7 @@ export default function RubriqueCategoriesClient() {
   useEffect(() => {
     lireRubriquesDOperations().then(setRubriques).catch(() => undefined);
   }, []);
-  const parInventaire = !modeEntreprise() && rubriques.length > 0;
+  const parInventaire = rubriques.length > 0;
 
   useEffect(() => {
     // Chargement initial unique depuis les réglages.

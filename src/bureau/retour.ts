@@ -83,7 +83,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/(stocks|conditionnement)$/, () => ROUTES.COMPTABILITE_INVENTAIRE],
   [/^\/comptabilite\/stock-(historique|statistiques|structure)$/, () => ROUTES.COMPTABILITE_STOCKS],
   [/^\/comptabilite\/tresorerie-reglages$/, () => ROUTES.COMPTABILITE_TRESORERIE],
-  [/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|urssaf)$/, () => ROUTES.FISCALITE],
+  [/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa)$/, () => ROUTES.FISCALITE],
   [/^\/comptabilite\/taux$/, () => ROUTES.COMPTABILITE_REGLAGES],
   [/^\/comptabilite\/detail$/, () => ROUTES.COMPTABILITE_LISTE],
   // Un lot revient aux lots d'animaux, un traitement aux traitements, une nouvelle naissance aux naissances.
@@ -108,6 +108,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/production\/lieu$/, () => '/'],
   // L'écran terrain d'une zone de l'accueil revient à l'accueil de la ferme.
   [/^\/production\/terrain$/, () => '/'],
+  [/^\/production\/lait-du-jour$/, () => ROUTES.terrain('atelier')],
   [/^\/production\/vehicule$/, () => ROUTES.FLOTTE],
   [/^\/comptabilite\/lot$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/cheptel\/traitement$/, () => ROUTES.CHEPTEL_TRAITEMENTS],
@@ -169,12 +170,12 @@ const RUBRIQUES = ['cheptel', 'production', 'commercial', 'comptabilite', 'clien
 /**
  * La ligne du menu de gauche qui représente un écran absent du menu (un écran « de dessous ») : celle de sa page parente. Les documents
  * de circulation s'ouvrent du dossier PAC, même depuis un rappel de l'accueil : c'est la ligne « Dossier PAC » qui s'allume. De même la
- * déclaration RSA, l'URSSAF et les impôts : ce sont des écrans de la Fiscalité (Comptabilité › Fiscalité › Déclaration RSA).
+ * déclaration RSA et les impôts : ce sont des écrans de la Fiscalité (Comptabilité › Fiscalité › Déclaration RSA).
  */
 export const ligneDuMenuDe = (adresse: string): string => {
   const chemin = sansRequete(adresse);
   if (/^\/cheptel\/documents-circulation$/.test(chemin)) return ROUTES.CHEPTEL_DOSSIER_PAC;
-  if (/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|urssaf)$/.test(chemin)) return ROUTES.FISCALITE;
+  if (/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa)$/.test(chemin)) return ROUTES.FISCALITE;
   // Un lot ouvert depuis une vente reste dans la Comptabilité : c'est la ligne des écritures qui s'allume.
   if (/^\/comptabilite\/lot$/.test(chemin)) return ROUTES.COMPTABILITE_LISTE;
   return adresse;

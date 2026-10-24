@@ -3,10 +3,6 @@ import {
   type LigneAlimentForm,
 } from '@/features/comptabilite/forms/lignesAlimentation';
 import {
-  lignesMarchandisesFinales,
-  type LigneMarchandiseForm,
-} from '@/features/comptabilite/forms/lignesMarchandises';
-import {
   lignesProductionFinales,
   type LigneProductionForm,
 } from '@/features/comptabilite/forms/lignesProduction';
@@ -23,7 +19,6 @@ import type {
   LigneAlimentation,
   LigneChambre,
   LigneVeterinaire,
-  LigneMarchandise,
   LigneProduction,
   LigneCarburant,
   TypeAide,
@@ -95,8 +90,6 @@ export interface SaisieEcriture {
   motifVisite?: string;
   ajouterVisite?: boolean;
   lignesAlimentation: LigneAlimentForm[];
-  /** Le détail des marchandises, quand l'achat est un achat de marchandises d'un gîte. */
-  lignesMarchandises?: LigneMarchandiseForm[];
   lignesCarburant: LigneCarburantForm[];
   /** Le détail par fourniture d'un achat de production. */
   lignesProduction?: LigneProductionForm[];
@@ -140,8 +133,6 @@ export interface SaisieEcriture {
   clientSelectionne?: Client;
   /** Vrai si l'écriture est une vente de production (lait, fromage, cabris) plutôt qu'une facture. */
   estProductionVente: boolean;
-  /** Vrai pour une recette d'entreprise assujettie à la TVA : le taux saisi est alors enregistré sur la facture émise. */
-  tvaEmise: boolean;
   /** Le client souhaite que la vente soit déclarée (avec facture) : coché d'office. */
   avecFacture: boolean;
   /** La nature de la recette pour l'URSSAF (vide : selon la catégorie). */
@@ -348,7 +339,6 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
   let montantFinal: number;
   let lignesAlimentation: LigneAlimentation[] | undefined;
   let lignesCarburant: LigneCarburant[] | undefined;
-  let lignesMarchandises: LigneMarchandise[] | undefined;
   let lignesChambre: LigneChambre[] | undefined;
   let lignesProduction: LigneProduction[] | undefined;
   /** Dépense offerte : la case est cochée et la dépense a des montants que le fournisseur peut offrir (ni la Chambre, ni le carburant). */
@@ -400,17 +390,6 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
     }
     lignesProduction = boucles.length > 0 ? boucles : undefined;
     montantFinal = [...lignesChambre, ...boucles].reduce((total, l) => total + l.montant, 0);
-  } else if (estRecue && s.lignesMarchandises) {
-    lignesMarchandises = lignesMarchandisesFinales(s.lignesMarchandises, offerte);
-    if (lignesMarchandises.length === 0) {
-      return {
-        erreur: {
-          titre: TEXTES.commun.general.montantInvalide,
-          message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
-        },
-      };
-    }
-    montantFinal = totalMontants(s.lignesMarchandises, offerte);
   } else if (estCarburant) {
     lignesCarburant = lignesCarburantFinales(s.lignesCarburant);
     if (lignesCarburant.length === 0) {
@@ -452,7 +431,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       offert:
         offerte &&
         (montantOfferte ||
-          [...(lignesAlimentation ?? []), ...(lignesProduction ?? []), ...(lignesMarchandises ?? [])].some((l) => l.offert))
+          [...(lignesAlimentation ?? []), ...(lignesProduction ?? [])].some((l) => l.offert))
           ? true
           : undefined,
       categorieDepense: estRecue ? s.categorieDepense : undefined,
@@ -480,7 +459,6 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       sansFacture: estRecue && s.sansFacture ? true : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       lignesAlimentation,
-      lignesMarchandises,
       lignesChambre,
       lignesVeterinaire: visite
         ? lignesVeterinaireRetenues({
@@ -510,11 +488,7 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
           : estEmise && s.categorieRecette === CATEGORIE_RECETTE.AUTRE
             ? s.compteRecetteAutre
             : undefined,
-      tauxTva: estRecue
-        ? parseDecimal(s.tauxTvaAchat)
-        : s.tvaEmise
-          ? parseDecimal(s.tauxTvaVente)
-          : undefined,
+      tauxTva: estRecue ? parseDecimal(s.tauxTvaAchat) : undefined,
     },
   };
 }

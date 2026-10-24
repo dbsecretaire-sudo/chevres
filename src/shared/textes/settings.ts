@@ -1,19 +1,6 @@
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
 import { vocabulaire } from '@/shared/dictionnaire/animaux';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 
 const V = vocabulaire;
-
-/** Ce que contient une entreprise, pour décrire ses exports et sauvegardes (le gîte seulement pour une association). */
-const contenuEntreprise = (base: string): string => {
-  const activites = activitesEtablissement();
-  return [
-    base,
-    ...(activites.includes(ACTIVITE_SOCIETE.ASSOCIATION) ? ['séjours du gîte', 'boissons du bar'] : []),
-    ...(activites.includes(ACTIVITE_SOCIETE.LIBERAL) ? ['trades'] : []),
-    'fichiers joints',
-  ].join(', ');
-};
 
 /** Textes de l'interface — « settings ». À modifier ici uniquement. */
 export const TEXTES_SETTINGS = {
@@ -96,44 +83,32 @@ export const TEXTES_SETTINGS = {
       clients: number;
       comptesPcg: number;
       contenus: number;
-      sejours: number;
-      trades: number;
       misAJour: number;
       inchanges: number;
     }) => {
       const bilan = `${r.misAJour} jeu(x) de données mis à jour, ${r.inchanges} déjà à jour (laissé(s) tel(s) quel(s)).`;
-      return modeEntreprise()
-        ? `${r.clients + r.fournisseurs} contact(s), ${r.contenus} contenu(s) de dossier, ${r.sejours} séjour(s), ${r.trades} trade(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`
-        : `${r.animaux} animal/animaux, ${r.clients + r.fournisseurs} contact(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`;
+      return `${r.animaux} animal/animaux, ${r.clients + r.fournisseurs} contact(s) et ${r.comptesPcg} compte(s) PCG importés. ${bilan}`;
     },
     erreurDImport: 'Erreur d’import',
     export: 'Export',
     descriptionExport: (annee: number) =>
-      modeEntreprise()
-        ? `Génère un rapport (${contenuEntreprise('synthèse, factures, contacts, contenus des dossiers')}) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`
-        : `Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`,
+      `Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`,
     exporter: 'Exporter',
     sauvegardeLocale: 'Sauvegarde locale',
     get exporteToutesLesDonneesDe() {
-      const contenu = modeEntreprise()
-        ? contenuEntreprise('factures, contacts, dossiers et contenus')
-        : 'cheptel, ventes, factures, visites, contrôles, contacts';
+      const contenu = 'cheptel, ventes, factures, visites, contrôles, contacts';
       return `Exporte toutes les données de l’appli (toutes années, ${contenu}) dans un seul fichier à conserver ailleurs (mail, stockage…) — permet de tout récupérer après une réinstallation, sans passer par Google Drive.`;
     },
     importer: 'Importer',
     restaurerUneSauvegardeQuestion: 'Restaurer une sauvegarde ?',
     get toutesLesDonneesActuellementEnregistrees() {
-      const contenu = modeEntreprise()
-        ? contenuEntreprise('factures, contacts, dossiers et contenus')
-        : 'cheptel, ventes, factures, visites, contrôles, contacts';
+      const contenu = 'cheptel, ventes, factures, visites, contrôles, contacts';
       return `Toutes les données actuellement enregistrées sur cet appareil (${contenu}) seront remplacées par celles du fichier choisi. Cette action est irréversible.`;
     },
     choisirLeFichier: 'Choisir le fichier',
     googleDrive: 'Google Drive',
     get synchroniseLesFichiersTexteCheptel() {
-      const contenu = modeEntreprise()
-        ? contenuEntreprise('factures, contacts, dossiers et contenus')
-        : 'cheptel, ventes, factures, visites vétérinaire, contrôles';
+      const contenu = 'cheptel, ventes, factures, visites vétérinaire, contrôles';
       return `Synchronise les fichiers texte (${contenu}) dans un dossier « Troupeau Chèvres » sur Google Drive, pour partager les données entre plusieurs appareils.`;
     },
     laSynchronisationGoogleDriveN:
@@ -157,9 +132,7 @@ export const TEXTES_SETTINGS = {
       }. Les données fusionnées sont sur Drive.`,
     seDeconnecter: 'Se déconnecter',
     get troupeauChevresToutesLesDonnees() {
-      return modeEntreprise()
-        ? 'Toutes les données restent d’abord enregistrées sur cet appareil.'
-        : `${V().troupeau} — toutes les données restent d’abord enregistrées sur cet appareil.`;
+      return `${V().troupeau} — toutes les données restent d’abord enregistrées sur cet appareil.`;
     },
     donneesEnvoyeesVersGoogleDrive: 'Données envoyées vers Google Drive.',
     donneesRecupereesDepuisGoogleDrive: 'Données récupérées depuis Google Drive.',

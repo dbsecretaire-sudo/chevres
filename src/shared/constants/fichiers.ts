@@ -34,14 +34,6 @@ export const TYPES_FICHIERS_ACCEPTES: string[] = [
   MIME_FICHIER.JPEG,
 ];
 
-/** Les captures d'un trade : des images (converties en PDF) ou des PDF. */
-export const TYPES_CAPTURES_ACCEPTES: string[] = [
-  MIME_FICHIER.PNG,
-  MIME_FICHIER.JPEG,
-  MIME_FICHIER.PDF,
-  'image/*',
-];
-
 /** Les analyses du contrôle laitier : un PDF ou une image. */
 export const TYPES_ANALYSES_ACCEPTES: string[] = [
   MIME_FICHIER.PDF,
@@ -49,8 +41,6 @@ export const TYPES_ANALYSES_ACCEPTES: string[] = [
   MIME_FICHIER.JPEG,
   'image/*',
 ];
-
-export const EXTENSION_PDF = 'pdf';
 
 /** Le type d'un fichier d'après son extension (quand le sélecteur de fichiers ne le donne pas). */
 export const MIME_PAR_EXTENSION: Record<string, string> = {
@@ -74,9 +64,6 @@ export const EXTENSION_PAR_MIME: Record<string, string> = {
   [MIME_FICHIER.PNG]: 'png',
   [MIME_FICHIER.JPEG]: 'jpg',
 };
-
-/** Largeur maximale (%) d'une image dans le PDF qui la contient. */
-export const LARGEUR_IMAGE_PDF = '100%';
 
 /** Les extensions de fichiers qui sont des images : on en montre un aperçu. */
 export const EXTENSIONS_IMAGE: readonly string[] = ['jpg', 'jpeg', 'png'];

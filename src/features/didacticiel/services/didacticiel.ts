@@ -53,7 +53,7 @@ export function didacticielDeLApplication(): ChapitreDidacticiel[] {
         {
           id: 'accueil.rappels',
           titre: 'Rappels',
-          texte: 'Les déclarations à valider (RSA, URSSAF), les lots à rappeler, les documents de circulation manquants et ceux à envoyer à la chambre d’agriculture (à valider une fois envoyés). Le crayon règle les rappels, l’horloge montre ceux déjà validés.',
+          texte: 'Les déclarations à valider (RSA), les lots à rappeler, les documents de circulation manquants et ceux à envoyer à la chambre d’agriculture (à valider une fois envoyés). Le crayon règle les rappels, l’horloge montre ceux déjà validés.',
           route: ROUTES.RAPPELS_HISTORIQUE,
         },
         {

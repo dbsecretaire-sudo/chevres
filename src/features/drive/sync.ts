@@ -13,21 +13,13 @@ import { getSettings, updateSettings } from '@/features/settings/settings';
 import { listFournisseurs, remplacerTousFournisseurs } from '@/features/fournisseurs/repository';
 import { listClients, remplacerTousClients } from '@/features/clients/repository';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
-import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
 import { lireBibliotheque, normaliserBibliotheque, remplacerBibliotheque } from '@/features/bibliotheque/repository';
-import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
-import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
 import {
   lireArchiveCommercial,
   normaliserArchiveCommercial,
   remplacerArchiveCommercial,
 } from '@/features/commercial/repository';
-import {
-  lireArchiveAnnexes,
-  normaliserArchiveAnnexes,
-  remplacerArchiveAnnexes,
-} from '@/features/annexes/repository';
 import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import {
   listDocumentsIdentification,
@@ -78,7 +70,6 @@ import { fusionner, type RapportFusion } from '@/features/drive/fusion';
 import type { Categorie } from '@/shared/storage/types';
 import {
   DOSSIER_RACINE_DRIVE,
-  FICHIER_ANNEXES,
   FICHIER_CLIENTS,
   FICHIER_COMPTES_PCG,
   FICHIER_DOSSIERS,
@@ -86,14 +77,11 @@ import {
   FICHIER_ETABLISSEMENT,
   FICHIER_EXPLOITATION,
   FICHIER_FOURNISSEURS,
-  FICHIER_GITE,
   FICHIER_IDENTIFICATION,
   FICHIER_PARTENAIRES,
-  FICHIER_BAR,
   FICHIER_COMMERCIAL,
   FICHIER_BIBLIOTHEQUE,
   FICHIER_STOCK,
-  FICHIER_TRADING,
   MOTIF_FICHIER_ANNEE,
 } from '@/shared/constants/drive';
 import { DOSSIER_PIECES_DRIVE, SEPARATEUR_NOM_PIECE } from '@/shared/constants/fichiers';
@@ -301,25 +289,6 @@ export async function tirerDossiers(accessToken: string, folderId: string): Prom
   }
 }
 
-/** Envoie les séjours du gîte vers Google Drive. */
-export async function pousserGite(accessToken: string, folderId: string): Promise<void> {
-  const archive = await lireArchiveGite();
-  await deposer(accessToken, FICHIER_GITE, folderId, JSON.stringify(archive));
-}
-
-/** Récupère les séjours du gîte depuis Google Drive, s'ils sont présents (remplace les données locales). */
-export async function tirerGite(accessToken: string, folderId: string): Promise<void> {
-  const file = await findFile(accessToken, FICHIER_GITE, folderId);
-  if (!file || (await identique(file, JSON.stringify(await lireArchiveGite())))) return;
-  const json = await downloadFileText(accessToken, file.id);
-  try {
-    const archive = JSON.parse(json);
-    if (Array.isArray(archive?.sejours)) await remplacerArchiveGite(normaliserArchiveGite(archive));
-  } catch {
-    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
-  }
-}
-
 /** Envoie les commandes et les tarifs du volet commercial vers Google Drive. */
 export async function pousserCommercial(accessToken: string, folderId: string): Promise<void> {
   const archive = await lireArchiveCommercial();
@@ -393,25 +362,6 @@ export async function tirerBibliotheque(accessToken: string, folderId: string): 
   }
 }
 
-/** Envoie la liste des boissons du bar vers Google Drive. */
-export async function pousserBar(accessToken: string, folderId: string): Promise<void> {
-  const archive = await lireArchiveBar();
-  await deposer(accessToken, FICHIER_BAR, folderId, JSON.stringify(archive));
-}
-
-/** Récupère la liste des boissons depuis Google Drive, si elle est présente (remplace les données locales). */
-export async function tirerBar(accessToken: string, folderId: string): Promise<void> {
-  const file = await findFile(accessToken, FICHIER_BAR, folderId);
-  if (!file || (await identique(file, JSON.stringify(await lireArchiveBar())))) return;
-  const json = await downloadFileText(accessToken, file.id);
-  try {
-    const archive = JSON.parse(json);
-    if (Array.isArray(archive?.boissons)) await remplacerArchiveBar(normaliserArchiveBar(archive));
-  } catch {
-    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
-  }
-}
-
 /** Envoie le stock de la fromagerie vers Google Drive. */
 export async function pousserStock(accessToken: string, folderId: string): Promise<void> {
   const archive = await lireArchiveStock();
@@ -426,46 +376,6 @@ export async function tirerStock(accessToken: string, folderId: string): Promise
   try {
     const archive = JSON.parse(json);
     if (Array.isArray(archive?.mouvements)) await remplacerArchiveStock(normaliserArchiveStock(archive));
-  } catch {
-    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
-  }
-}
-
-/** Envoie les activités annexes du gîte (catégories, articles, prix, stocks, tickets) vers Google Drive. */
-export async function pousserAnnexes(accessToken: string, folderId: string): Promise<void> {
-  const archive = await lireArchiveAnnexes();
-  // Aucune activité : rien à envoyer (cela n'écrase pas celles d'un autre appareil).
-  if (archive.activites.length === 0) return;
-  await deposer(accessToken, FICHIER_ANNEXES, folderId, JSON.stringify(archive));
-}
-
-/** Récupère les activités annexes depuis Google Drive, si elles sont présentes (remplace les données locales). */
-export async function tirerAnnexes(accessToken: string, folderId: string): Promise<void> {
-  const file = await findFile(accessToken, FICHIER_ANNEXES, folderId);
-  if (!file || (await identique(file, JSON.stringify(await lireArchiveAnnexes())))) return;
-  const json = await downloadFileText(accessToken, file.id);
-  try {
-    const archive = JSON.parse(json);
-    if (Array.isArray(archive?.activites)) await remplacerArchiveAnnexes(normaliserArchiveAnnexes(archive));
-  } catch {
-    // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
-  }
-}
-
-/** Envoie le journal de trading vers Google Drive. */
-export async function pousserTrading(accessToken: string, folderId: string): Promise<void> {
-  const archive = await lireArchiveTrading();
-  await deposer(accessToken, FICHIER_TRADING, folderId, JSON.stringify(archive));
-}
-
-/** Récupère le journal de trading depuis Google Drive, s'il est présent (remplace les données locales). */
-export async function tirerTrading(accessToken: string, folderId: string): Promise<void> {
-  const file = await findFile(accessToken, FICHIER_TRADING, folderId);
-  if (!file || (await identique(file, JSON.stringify(await lireArchiveTrading())))) return;
-  const json = await downloadFileText(accessToken, file.id);
-  try {
-    const archive = JSON.parse(json);
-    if (Array.isArray(archive?.trades)) await remplacerArchiveTrading({ trades: archive.trades });
   } catch {
     // Fichier distant vide ou corrompu — on ignore plutôt que d'écraser les données locales.
   }
@@ -604,13 +514,9 @@ export async function pousserToutesAnnees(
   await pousserIdentification(accessToken, folderId);
   await pousserPartenaires(accessToken, folderId);
   await pousserDossiers(accessToken, folderId);
-  await pousserGite(accessToken, folderId);
-  await pousserTrading(accessToken, folderId);
-  await pousserBar(accessToken, folderId);
   await pousserCommercial(accessToken, folderId);
   await pousserBibliotheque(accessToken, folderId);
   await pousserStock(accessToken, folderId);
-  await pousserAnnexes(accessToken, folderId);
   await pousserPieces(accessToken, folderId);
   await pousserComptesPcg(accessToken, folderId);
   await noterEtatSynchronise();
@@ -659,13 +565,9 @@ export async function tirerToutesAnnees(
   await tirerIdentification(accessToken, folderId);
   await tirerPartenaires(accessToken, folderId);
   await tirerDossiers(accessToken, folderId);
-  await tirerGite(accessToken, folderId);
-  await tirerTrading(accessToken, folderId);
-  await tirerBar(accessToken, folderId);
   await tirerCommercial(accessToken, folderId);
   await tirerBibliotheque(accessToken, folderId);
   await tirerStock(accessToken, folderId);
-  await tirerAnnexes(accessToken, folderId);
   await tirerPieces(accessToken, folderId);
   // Les images des cartes du stock viennent d'arriver : les cartes affichées les relisent.
   await rafraichirImages();
@@ -721,18 +623,9 @@ const FICHIERS_FUSIONNABLES: readonly FichierFusionnable[] = [
     ecrire: (valeur) => enregistrerChoixPartenaires(choixLu(valeur)),
   },
   { fichier: FICHIER_DOSSIERS, lire: lireArchiveDossiers, ecrire: remplacerArchiveDossiers },
-  { fichier: FICHIER_GITE, lire: lireArchiveGite, ecrire: (v) => remplacerArchiveGite(normaliserArchiveGite(v)) },
-  { fichier: FICHIER_TRADING, lire: lireArchiveTrading, ecrire: (v) => remplacerArchiveTrading({ trades: v.trades ?? [] }) },
-  { fichier: FICHIER_BAR, lire: lireArchiveBar, ecrire: (v) => remplacerArchiveBar(normaliserArchiveBar(v)) },
   { fichier: FICHIER_COMMERCIAL, lire: lireArchiveCommercial, ecrire: (v) => remplacerArchiveCommercial(normaliserArchiveCommercial(v)) },
   { fichier: FICHIER_BIBLIOTHEQUE, lire: lireBibliotheque, ecrire: (v) => remplacerBibliotheque(normaliserBibliotheque(v)) },
   { fichier: FICHIER_STOCK, lire: lireArchiveStock, ecrire: (v) => remplacerArchiveStock(normaliserArchiveStock(v)) },
-  {
-    fichier: FICHIER_ANNEXES,
-    lire: lireArchiveAnnexes,
-    ecrire: (v) => remplacerArchiveAnnexes(normaliserArchiveAnnexes(v)),
-    vide: (a) => (a?.activites?.length ?? 0) === 0,
-  },
   { fichier: FICHIER_COMPTES_PCG, lire: listComptesPcg, ecrire: remplacerTousComptesPcg },
 ];
 

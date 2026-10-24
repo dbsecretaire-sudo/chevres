@@ -1,8 +1,6 @@
 import { TEXTES_A_TRAITER } from '@/shared/textes/aTraiter';
 import { TEXTES_ACCUEIL } from '@/shared/textes/accueil';
 import { TEXTES_ANALYSES_PRODUITS } from '@/shared/textes/analysesProduits';
-import { TEXTES_ANNEXES } from '@/shared/textes/annexes';
-import { TEXTES_BAR } from '@/shared/textes/bar';
 import { TEXTES_CHEPTEL } from '@/shared/textes/cheptel';
 import { TEXTES_CLIENTS } from '@/shared/textes/clients';
 import { TEXTES_COMMERCIAL } from '@/shared/textes/commercial';
@@ -13,7 +11,6 @@ import { TEXTES_CONTACTS } from '@/shared/textes/contacts';
 import { TEXTES_DIDACTICIEL } from '@/shared/textes/didacticiel';
 import { TEXTES_DOSSIERS } from '@/shared/textes/dossiers';
 import { TEXTES_DRIVE } from '@/shared/textes/drive';
-import { TEXTES_ENTREPRISE } from '@/shared/textes/entreprise';
 import { TEXTES_ERREUR_ECRAN } from '@/shared/textes/erreurEcran';
 import { TEXTES_ESPECES } from '@/shared/textes/especes';
 import { TEXTES_ETABLISSEMENTS } from '@/shared/textes/etablissements';
@@ -23,7 +20,6 @@ import { TEXTES_FICHIERS } from '@/shared/textes/fichiers';
 import { TEXTES_FOURNISSEURS } from '@/shared/textes/fournisseurs';
 import { TEXTES_GDS } from '@/shared/textes/gds';
 import { TEXTES_FLOTTE } from '@/shared/textes/flotte';
-import { TEXTES_GITE } from '@/shared/textes/gite';
 import { TEXTES_CARNET } from '@/shared/textes/carnet';
 import { TEXTES_IDENTIFICATION } from '@/shared/textes/identification';
 import { TEXTES_NAVIGATION } from '@/shared/textes/navigation';
@@ -33,15 +29,12 @@ import { TEXTES_ROLES } from '@/shared/textes/roles';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
 import { TEXTES_STOCK } from '@/shared/textes/stock';
-import { TEXTES_TRADING } from '@/shared/textes/trading';
 
 /** Tous les textes de l'application, groupés par domaine puis par écran. */
 export const TEXTES = {
   accueil: TEXTES_ACCUEIL,
   aTraiter: TEXTES_A_TRAITER,
   analysesProduits: TEXTES_ANALYSES_PRODUITS,
-  annexes: TEXTES_ANNEXES,
-  bar: TEXTES_BAR,
   cheptel: TEXTES_CHEPTEL,
   clients: TEXTES_CLIENTS,
   commercial: TEXTES_COMMERCIAL,
@@ -53,7 +46,6 @@ export const TEXTES = {
   erreurEcran: TEXTES_ERREUR_ECRAN,
   dossiers: TEXTES_DOSSIERS,
   drive: TEXTES_DRIVE,
-  entreprise: TEXTES_ENTREPRISE,
   especes: TEXTES_ESPECES,
   etablissements: TEXTES_ETABLISSEMENTS,
   exploitation: TEXTES_EXPLOITATION,
@@ -62,7 +54,6 @@ export const TEXTES = {
   fournisseurs: TEXTES_FOURNISSEURS,
   gds: TEXTES_GDS,
   flotte: TEXTES_FLOTTE,
-  gite: TEXTES_GITE,
   identification: TEXTES_IDENTIFICATION,
   carnet: TEXTES_CARNET,
   navigation: TEXTES_NAVIGATION,
@@ -72,5 +63,4 @@ export const TEXTES = {
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,
   stock: TEXTES_STOCK,
-  trading: TEXTES_TRADING,
 } as const;

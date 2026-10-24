@@ -20,13 +20,7 @@ import {
 } from '@/features/exploitation/repository/partenaires';
 import { lireArchiveDossiers, remplacerArchiveDossiers } from '@/features/dossiers/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
-import { lireArchiveGite, normaliserArchiveGite, remplacerArchiveGite } from '@/features/gite/repository';
-import type { ArchiveGite } from '@/features/gite/types';
-import { lireArchiveTrading, remplacerArchiveTrading } from '@/features/trading/repository';
-import type { ArchiveTrading } from '@/features/trading/types';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
-import { lireArchiveBar, normaliserArchiveBar, remplacerArchiveBar } from '@/features/bar/repository';
-import type { ArchiveBar } from '@/features/bar/types';
 import {
   lireArchiveCommercial,
   normaliserArchiveCommercial,
@@ -35,12 +29,6 @@ import {
 import type { ArchiveCommercial } from '@/features/commercial/types';
 import type { DocumentGenere } from '@/features/bibliotheque/types';
 import { lireBibliotheque, normaliserBibliotheque, remplacerBibliotheque } from '@/features/bibliotheque/repository';
-import {
-  lireArchiveAnnexes,
-  normaliserArchiveAnnexes,
-  remplacerArchiveAnnexes,
-} from '@/features/annexes/repository';
-import type { ArchiveAnnexes } from '@/features/annexes/types';
 import { lireArchiveStock, normaliserArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import type { ArchiveStock } from '@/features/stock/types';
 import { lireArchiveEspeces, remplacerArchiveEspeces } from '@/features/especes/repository';
@@ -83,9 +71,7 @@ import {
   VERSION_SAUVEGARDE,
   EXTENSION_SAUVEGARDE,
   NOM_FICHIER_SAUVEGARDE,
-  NOM_FICHIER_SAUVEGARDE_ENTREPRISE,
 } from '@/shared/constants/export';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { TEXTES } from '@/shared/textes';
 
 /** Un fichier joint dans la sauvegarde : sa fiche et son contenu en base64. */
@@ -106,20 +92,12 @@ interface FichierSauvegarde {
   partenaires?: ChoixPartenaires;
   /** Sous-dossiers et contenus de l'explorateur de dossiers (absent des anciennes sauvegardes). */
   dossiers?: ArchiveDossiers;
-  /** Séjours du gîte (absent des anciennes sauvegardes). */
-  gite?: ArchiveGite;
-  /** Trades du journal de trading (absent des anciennes sauvegardes). */
-  trading?: ArchiveTrading;
-  /** Boissons du bar (absent des anciennes sauvegardes). */
-  bar?: ArchiveBar;
   /** Commandes des clients et tarifs par catégorie de client (absent des anciennes sauvegardes). */
   commercial?: ArchiveCommercial;
   /** Les documents générés (la bibliothèque) : leurs fichiers sont dans les pièces (absent des anciennes sauvegardes). */
   bibliotheque?: DocumentGenere[];
   /** Stock de la fromagerie (absent des anciennes sauvegardes). */
   stock?: ArchiveStock;
-  /** Les activités annexes du gîte : catégories, articles, prix, stocks, tickets (absent des anciennes sauvegardes). */
-  annexes?: ArchiveAnnexes;
   /** Fichiers joints des contenus et des trades (absent des anciennes sauvegardes). */
   pieces?: PieceSauvegardee[];
   comptesPcg?: CompteComptableEnregistre[];
@@ -151,30 +129,22 @@ async function construireSauvegarde(): Promise<FichierSauvegarde> {
     fournisseurs,
     clients,
     dossiers,
-    gite,
-    trading,
-    bar,
     commercial,
     stock,
     comptesPcg,
     settings,
     etablissement,
     especes,
-    annexes,
   ] = await Promise.all([
     listFournisseurs(),
     listClients(),
     lireArchiveDossiers(),
-    lireArchiveGite(),
-    lireArchiveTrading(),
-    lireArchiveBar(),
     lireArchiveCommercial(),
     lireArchiveStock(),
     listComptesPcg(),
     getSettings(),
     profilEtablissementActif(),
     lireArchiveEspeces(),
-    lireArchiveAnnexes(),
   ]);
   const identification = await listDocumentsIdentification();
   const partenaires = await lireChoixPartenaires();
@@ -195,9 +165,6 @@ async function construireSauvegarde(): Promise<FichierSauvegarde> {
     identification,
     partenaires,
     dossiers,
-    gite,
-    trading,
-    bar,
     commercial,
     bibliotheque: await lireBibliotheque(),
     stock,
@@ -206,7 +173,6 @@ async function construireSauvegarde(): Promise<FichierSauvegarde> {
     exploitation: settings.exploitation,
     etablissement,
     especes,
-    annexes,
   };
 
   return sauvegarde;
@@ -224,7 +190,7 @@ async function sauvegardeDeTousLesEtablissements(): Promise<FichierSauvegarde | 
   try {
     for (const e of etablissements) {
       await choisirEtablissementActif(e.id);
-      entrees.push({ id: e.id, nom: e.nom, animaux: e.animaux, activites: e.activites, sauvegarde: await construireSauvegarde() });
+      entrees.push({ id: e.id, nom: e.nom, animaux: e.animaux, sauvegarde: await construireSauvegarde() });
     }
   } finally {
     await choisirEtablissementActif(depart);
@@ -234,8 +200,7 @@ async function sauvegardeDeTousLesEtablissements(): Promise<FichierSauvegarde | 
 
 export async function exporterSauvegardeLocale(): Promise<void> {
   const sauvegarde = await sauvegardeDeTousLesEtablissements();
-  const debutNom = modeEntreprise() ? NOM_FICHIER_SAUVEGARDE_ENTREPRISE : NOM_FICHIER_SAUVEGARDE;
-  const nomFichier = `${debutNom}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
+  const nomFichier = `${NOM_FICHIER_SAUVEGARDE}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
   const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
   await FileSystem.writeAsStringAsync(destination, JSON.stringify(sauvegarde), {
     encoding: FileSystem.EncodingType.UTF8,
@@ -258,12 +223,8 @@ export interface ResultatImport {
   fournisseurs: number;
   clients: number;
   comptesPcg: number;
-  /** Contenus des dossiers des clients (mode entreprise). */
+  /** Contenus des dossiers des contacts. */
   contenus: number;
-  /** Séjours du gîte (association). */
-  sejours: number;
-  /** Trades du journal de trading (activité financière). */
-  trades: number;
   /** Jeux de données (années, listes, fichiers joints) réellement remplacés par ceux de la sauvegarde. */
   misAJour: number;
   /** Jeux de données déjà identiques à ceux de la sauvegarde, laissés tels quels. */
@@ -303,8 +264,6 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
       clients: 0,
       comptesPcg: 0,
       contenus: 0,
-      sejours: 0,
-      trades: 0,
       misAJour: 0,
       inchanges: 0,
     };
@@ -335,14 +294,14 @@ async function importerSauvegardeComplete(complete: SauvegardeComplete<FichierSa
       const locaux = await listEtablissements();
       const cible =
         etablissementDeLEntree(locaux, entree) ??
-        (await creerEtablissement({ nom: entree.nom, animaux: entree.animaux, activites: entree.activites as never }));
+        (await creerEtablissement({ nom: entree.nom, animaux: entree.animaux }));
       await choisirEtablissementActif(cible.id);
       resultats.push(await appliquerSauvegarde(entree.sauvegarde));
     }
   } finally {
     await choisirEtablissementActif(depart);
   }
-  const vide: ResultatImport = { annule: false, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0, contenus: 0, sejours: 0, trades: 0, misAJour: 0, inchanges: 0 };
+  const vide: ResultatImport = { annule: false, animaux: 0, fournisseurs: 0, clients: 0, comptesPcg: 0, contenus: 0, misAJour: 0, inchanges: 0 };
   return sommeDesCompteurs(resultats, vide);
 }
 
@@ -408,21 +367,6 @@ async function appliquerSauvegarde(sauvegarde: FichierSauvegarde): Promise<Resul
     );
   }
 
-  if (sauvegarde.gite && Array.isArray(sauvegarde.gite.sejours)) {
-    const gite = normaliserArchiveGite(sauvegarde.gite);
-    await appliquerSiDifferent(await lireArchiveGite(), gite, () => remplacerArchiveGite(gite));
-  }
-
-  if (sauvegarde.trading && Array.isArray(sauvegarde.trading.trades)) {
-    const trading = { trades: sauvegarde.trading.trades };
-    await appliquerSiDifferent(await lireArchiveTrading(), trading, () => remplacerArchiveTrading(trading));
-  }
-
-  if (sauvegarde.bar && Array.isArray(sauvegarde.bar.boissons)) {
-    const bar = normaliserArchiveBar(sauvegarde.bar);
-    await appliquerSiDifferent(await lireArchiveBar(), bar, () => remplacerArchiveBar(bar));
-  }
-
   if (sauvegarde.commercial && Array.isArray(sauvegarde.commercial.commandes)) {
     const commercial = normaliserArchiveCommercial(sauvegarde.commercial);
     await appliquerSiDifferent(await lireArchiveCommercial(), commercial, () =>
@@ -438,11 +382,6 @@ async function appliquerSauvegarde(sauvegarde: FichierSauvegarde): Promise<Resul
   if (sauvegarde.stock && Array.isArray(sauvegarde.stock.mouvements)) {
     const stock = normaliserArchiveStock(sauvegarde.stock);
     await appliquerSiDifferent(await lireArchiveStock(), stock, () => remplacerArchiveStock(stock));
-  }
-
-  if (sauvegarde.annexes && Array.isArray(sauvegarde.annexes.activites)) {
-    const annexes = normaliserArchiveAnnexes(sauvegarde.annexes);
-    await appliquerSiDifferent(await lireArchiveAnnexes(), annexes, () => remplacerArchiveAnnexes(annexes));
   }
 
   if (Array.isArray(sauvegarde.pieces) && piecesDisponibles()) {
@@ -493,8 +432,6 @@ async function appliquerSauvegarde(sauvegarde: FichierSauvegarde): Promise<Resul
     clients: sauvegarde.clients?.length ?? 0,
     comptesPcg: sauvegarde.comptesPcg?.length ?? 0,
     contenus: sauvegarde.dossiers?.elements?.length ?? 0,
-    sejours: sauvegarde.gite?.sejours?.length ?? 0,
-    trades: sauvegarde.trading?.trades?.length ?? 0,
     misAJour,
     inchanges,
   };

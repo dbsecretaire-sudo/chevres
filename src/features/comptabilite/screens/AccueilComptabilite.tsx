@@ -7,7 +7,6 @@ import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { inventaireAccessible } from '@/features/settings/utils/rubriques';
 import { TEXTES } from '@/shared/textes';
@@ -33,7 +32,7 @@ export default function AccueilComptabilite() {
     icone: keyof typeof Ionicons.glyphMap;
     route: string;
   };
-  /** Les écritures, avec l'inventaire (qui existe pour un élevage et pour un gîte, pas pour un secrétariat ni une activité financière). */
+  /** Les écritures, avec l'inventaire de l'exploitation. */
   const ecritures: Rubrique[] = [
     { cle: 'ecritures', titre: T.ecritures, icone: 'list', route: ROUTES.COMPTABILITE_LISTE },
     {
@@ -66,7 +65,7 @@ export default function AccueilComptabilite() {
     {
       cle: 'rentabilite',
       titre: T.rentabilite.titre,
-      aide: modeEntreprise() ? T.rentabilite.aideEntreprise : T.rentabilite.aide,
+      aide: T.rentabilite.aide,
       icone: 'trending-up',
       route: ROUTES.RENTABILITE,
     },

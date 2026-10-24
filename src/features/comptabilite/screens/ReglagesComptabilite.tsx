@@ -15,7 +15,6 @@ import { reglagesTva } from '@/features/comptabilite/utils/reglagesTva';
 import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
 import { MarquerBoucles } from '@/features/stock/components/MarquerBoucles';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { PERIODICITE_TVA, REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import { LABEL_PERIODICITE_TVA, LABEL_REGIME_TVA_PILOTAGE } from '@/shared/textes/libelles';
 import { parseDecimal } from '@/shared/utils/nombres';
@@ -40,8 +39,6 @@ export default function ReglagesComptabilite() {
     setSynchroBoucles(synchroBouclesActive(settings.exploitation));
   }, [settings.exploitation]);
   const tva = reglagesTva(infos);
-  /** Une entreprise qui n'est pas assujettie à la TVA est en franchise : son régime se règle dans ses informations. */
-  const entrepriseNonAssujettie = modeEntreprise() && !infos?.entreprise?.tvaApplicable;
   const enregistrerTva = (patch: { regime?: string; periodicite?: string; tauxRfa?: number | undefined }) =>
     patchSettings({
       exploitation: {
@@ -55,66 +52,58 @@ export default function ReglagesComptabilite() {
   return (
     <Screen>
       <SectionForm titre={T.titre} aide={T.aide}>
-        {entrepriseNonAssujettie ? (
-          <Text style={commonStyles.note}>{TEXTES.entreprise.tva.nonAssujetti}</Text>
-        ) : (
-          <>
-            <SelectField
-              label={T.regime}
-              value={tva.regime}
-              onChange={(regime) => enregistrerTva({ regime })}
-              options={Object.values(REGIME_TVA_PILOTAGE).map((valeur) => ({
-                value: valeur,
-                label: LABEL_REGIME_TVA_PILOTAGE[valeur],
-              }))}
-            />
-            {sansDeclaration ? null : (
-              <SelectField
-                label={T.periodicite}
-                value={tva.periodicite}
-                onChange={(periodicite) => enregistrerTva({ periodicite })}
-                options={Object.values(PERIODICITE_TVA).map((valeur) => ({
-                  value: valeur,
-                  label: LABEL_PERIODICITE_TVA[valeur],
-                }))}
-              />
-            )}
-            {tva.regime === REGIME_TVA_PILOTAGE.RFA ? (
-              <FormField
-                label={T.tauxRfa}
-                value={tva.tauxRfa === undefined ? '' : String(tva.tauxRfa).replace('.', ',')}
-                onChangeText={(v) =>
-                  /^\d*[.,]?\d*$/.test(v) &&
-                  enregistrerTva({ tauxRfa: v.trim() ? parseDecimal(v) : undefined })
-                }
-                keyboardType="decimal-pad"
-                placeholder="0"
-                aide={T.aideTauxRfa}
-              />
-            ) : null}
-          </>
+        <SelectField
+          label={T.regime}
+          value={tva.regime}
+          onChange={(regime) => enregistrerTva({ regime })}
+          options={Object.values(REGIME_TVA_PILOTAGE).map((valeur) => ({
+            value: valeur,
+            label: LABEL_REGIME_TVA_PILOTAGE[valeur],
+          }))}
+        />
+        {sansDeclaration ? null : (
+          <SelectField
+            label={T.periodicite}
+            value={tva.periodicite}
+            onChange={(periodicite) => enregistrerTva({ periodicite })}
+            options={Object.values(PERIODICITE_TVA).map((valeur) => ({
+              value: valeur,
+              label: LABEL_PERIODICITE_TVA[valeur],
+            }))}
+          />
         )}
+        {tva.regime === REGIME_TVA_PILOTAGE.RFA ? (
+          <FormField
+            label={T.tauxRfa}
+            value={tva.tauxRfa === undefined ? '' : String(tva.tauxRfa).replace('.', ',')}
+            onChangeText={(v) =>
+              /^\d*[.,]?\d*$/.test(v) &&
+              enregistrerTva({ tauxRfa: v.trim() ? parseDecimal(v) : undefined })
+            }
+            keyboardType="decimal-pad"
+            placeholder="0"
+            aide={T.aideTauxRfa}
+          />
+        ) : null}
       </SectionForm>
 
       {/* Les boucles de l'inventaire : synchronisées avec le cheptel, ou non (un élevage seulement). */}
-      {modeEntreprise() ? null : (
-        <SectionForm titre={TEXTES.stock.boucles.synchro.titre}>
-          <Checkbox
-            label={TEXTES.stock.boucles.synchro.option}
-            value={synchroBoucles}
-            onChange={async (actif) => {
-              // La case suit le doigt sans attendre l'écriture ; celle-ci part des réglages enregistrés les plus récents.
-              setSynchroBoucles(actif);
-              const { exploitation } = await getSettings();
-              await patchSettings({ exploitation: { ...exploitation, synchroBoucles: actif } });
-              // Réactivée : les poses se remettent d'accord avec le cheptel tout de suite.
-              if (actif) await synchroniserPoseBoucles();
-            }}
-          />
-          <Text style={commonStyles.note}>{TEXTES.stock.boucles.synchro.optionAide}</Text>
-          <MarquerBoucles />
-        </SectionForm>
-      )}
+      <SectionForm titre={TEXTES.stock.boucles.synchro.titre}>
+        <Checkbox
+          label={TEXTES.stock.boucles.synchro.option}
+          value={synchroBoucles}
+          onChange={async (actif) => {
+            // La case suit le doigt sans attendre l'écriture ; celle-ci part des réglages enregistrés les plus récents.
+            setSynchroBoucles(actif);
+            const { exploitation } = await getSettings();
+            await patchSettings({ exploitation: { ...exploitation, synchroBoucles: actif } });
+            // Réactivée : les poses se remettent d'accord avec le cheptel tout de suite.
+            if (actif) await synchroniserPoseBoucles();
+          }}
+        />
+        <Text style={commonStyles.note}>{TEXTES.stock.boucles.synchro.optionAide}</Text>
+        <MarquerBoucles />
+      </SectionForm>
 
       {/* Les taux proposés par produit : la TVA des ventes et l'imposition des aides. */}
       <BlocLignes>
@@ -136,7 +125,7 @@ export default function ReglagesComptabilite() {
         />
       </BlocLignes>
 
-      {/* Les rappels de déclaration (RSA trimestriel, URSSAF mensuel) : chacun peut être désactivé. */}
+      {/* Les rappels de déclaration (RSA trimestriel) : chacun peut être désactivé. */}
       {genres.length > 0 ? (
         <SectionForm titre={TEXTES.rappels.reglages.titre} aide={TEXTES.rappels.reglages.aide}>
           {genres.map((genre) => (

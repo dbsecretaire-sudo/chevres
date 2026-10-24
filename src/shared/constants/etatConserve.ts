@@ -2,7 +2,6 @@
 export const ETAT_CONSERVE = {
   COMPTABILITE_RECHERCHE: 'comptabilite.recherche',
   COMPTABILITE_FILTRES: 'comptabilite.filtres',
-  COMPTABILITE_RUBRIQUE: 'comptabilite.rubrique',
   CHEPTEL_RECHERCHE: 'cheptel.recherche',
   CHEPTEL_STATUT: 'cheptel.statut',
   CHEPTEL_CATEGORIE: 'cheptel.categorie',

@@ -4,7 +4,7 @@ import { listVentes } from '@/features/comptabilite/repository/ventes';
 import { partsDeLaVente } from '@/features/comptabilite/utils/ventes';
 import type { Facture, Vente } from '@/features/comptabilite/types';
 import { activiteFacture, activiteVente, partsDeFacture } from '@/features/comptabilite/utils/activite';
-import { tvaDuTtc } from '@/features/entreprise/services/fiscaliteEntreprise';
+import { tvaDuTtc } from '@/features/comptabilite/utils/tva';
 import { TOUTES_ACTIVITES, type FiltreActivite } from '@/features/comptabilite/services/filtresTransactions';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articleDeLaLigneDeLaVente, bilanLait, roleDeLaLigneDeLaVente } from '@/features/stock/services/stock';

@@ -3,17 +3,15 @@ import { animalAcheteVide, type AnimalAcheteForm } from '@/features/comptabilite
 import { ligneAlimentVide, type LigneAlimentForm } from '@/features/comptabilite/forms/lignesAlimentation';
 import { lignesChambreParDefaut, type LigneChambreForm } from '@/features/comptabilite/forms/lignesChambre';
 import { ligneCarburantVide, type LigneCarburantForm } from '@/features/comptabilite/forms/lignesCarburant';
-import { ligneMarchandiseVide, type LigneMarchandiseForm } from '@/features/comptabilite/forms/lignesMarchandises';
 import { ligneProductionVide, type LigneProductionForm } from '@/features/comptabilite/forms/lignesProduction';
 import type { LigneVeterinaire } from '@/features/comptabilite/types';
 
 /**
- * Les lignes saisies d'une dépense (facture reçue), une liste par sorte de dépense : aliments, marchandises d'un gîte, carburant,
+ * Les lignes saisies d'une dépense (facture reçue), une liste par sorte de dépense : aliments, carburant,
  * fournitures de production, articles de la Chambre d'agriculture, actes du vétérinaire, animaux achetés ou envoyés à l'abattoir.
  */
 export function useLignesDepense() {
   const [lignesAlimentation, setLignesAlimentation] = useState<LigneAlimentForm[]>([ligneAlimentVide()]);
-  const [lignesMarchandises, setLignesMarchandises] = useState<LigneMarchandiseForm[]>([ligneMarchandiseVide()]);
   const [lignesCarburant, setLignesCarburant] = useState<LigneCarburantForm[]>([ligneCarburantVide()]);
   /** Une dépense « Animaux vivants » : les animaux achetés (leurs fiches se créent à l'enregistrement). */
   const [animauxAchetes, setAnimauxAchetes] = useState<AnimalAcheteForm[]>([animalAcheteVide()]);
@@ -31,7 +29,6 @@ export function useLignesDepense() {
   /** Vide ce qui est propre à une écriture (après « Enregistrer et en ajouter une autre ») ; la Chambre et le vétérinaire se gardent. */
   const reinitialiserLesLignes = () => {
     setLignesAlimentation([ligneAlimentVide()]);
-    setLignesMarchandises([ligneMarchandiseVide()]);
     setLignesCarburant([ligneCarburantVide()]);
     setLignesProduction([ligneProductionVide()]);
     setAnimauxAchetes([animalAcheteVide()]);
@@ -42,8 +39,6 @@ export function useLignesDepense() {
   return {
     lignesAlimentation,
     setLignesAlimentation,
-    lignesMarchandises,
-    setLignesMarchandises,
     lignesCarburant,
     setLignesCarburant,
     animauxAchetes,

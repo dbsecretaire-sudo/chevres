@@ -1,4 +1,3 @@
-import { synchroniserStockAchat } from '@/features/bar/services/achats';
 import {
   creerChevre,
   declarerStatutChevre,
@@ -156,7 +155,6 @@ export interface DepenseAEnregistrer {
 
 /** Enregistre la dépense avec ce qu'elle entraîne : les fiches des animaux achetés ou envoyés, le stock acheté, la visite du vétérinaire. */
 export async function enregistrerLaDepense(facture: Omit<Facture, 'id'>, d: DepenseAEnregistrer): Promise<Facture> {
-  const achat = facture.lignesMarchandises;
   // Les animaux achetés entrent au cheptel : une fiche chacun, à la date de naissance saisie.
   let animauxCrees: string | undefined;
   if (d.achatAnimaux) {
@@ -180,13 +178,11 @@ export async function enregistrerLaDepense(facture: Omit<Facture, 'id'>, d: Depe
   if (d.envoiAnimaux && !d.lotId) for (const id of d.animauxEnvoyes) await declarerStatutChevre(id, STATUT_CHEVRE.ABATTOIR, d.date);
   const enregistree = await enregistrerFacture({
     ...facture,
-    stockApplique: achat?.length ? true : undefined,
     animauxAchetes: animauxCrees,
     animauxEnvoyes: d.envoiAnimaux ? d.animauxEnvoyes.join(SEPARATEUR_ANIMAUX) : undefined,
     lotId: d.envoiAnimaux ? d.lotId : undefined,
   });
-  // Un achat de marchandises du gîte augmente le stock de ce qui est acheté ; une facture d'alimentation, celui des aliments.
-  await synchroniserStockAchat(undefined, achat, enregistree.date);
+  // Une facture d'alimentation augmente le stock des aliments.
   await synchroniserStockAlimentation(enregistree);
   // Une dépense vétérinaire peut inscrire sa visite dans les visites vétérinaires.
   await synchroniserVisiteFacture(enregistree);

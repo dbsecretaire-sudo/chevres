@@ -40,15 +40,12 @@ export const NOM_FICHIER_EXPORT_REGISTRE_ANALYSES = 'registre_analyses';
 export const NOM_FICHIER_EXPORT_ETIQUETTES_LOTS = 'etiquettes_lots';
 /** La fiche de traçabilité d'un lot (ingrédients, destination des lots). */
 export const NOM_FICHIER_EXPORT_TRACABILITE_LOT = 'tracabilite_lot';
-/** Export de l'année d'une entreprise (prestations de service, association…). */
-export const NOM_FICHIER_EXPORT_ENTREPRISE = 'entreprise';
 
 /** Version du format du fichier de sauvegarde locale (à incrémenter si sa structure change). */
 export const VERSION_SAUVEGARDE = 1;
 
 /** Début du nom du fichier de sauvegarde locale (suivi de la date et de l'extension .json). */
 export const NOM_FICHIER_SAUVEGARDE = 'troupeau_chevres_sauvegarde';
-export const NOM_FICHIER_SAUVEGARDE_ENTREPRISE = 'entreprise_sauvegarde';
 export const EXTENSION_SAUVEGARDE = 'json';
 
 /** Le document de suivi des mouvements des brebis et/ou chèvres (dossier PAC). */

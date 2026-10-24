@@ -14,6 +14,8 @@ import {
   nombresDePetits,
 } from '@/features/berger/services/saisies';
 import { useRole } from '@/features/roles/context/RoleContext';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
+import { useGoogleDriveSansNavigation } from '@/features/settings/hooks/useGoogleDrive';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { nbPetitsMax, SEXE } from '@/shared/constants/cheptel';
@@ -42,16 +44,30 @@ type Etape =
   | { nom: 'annule' }
   | { nom: 'erreur'; message: string; but: But };
 
-/** Un très grand bouton : l'icône, le mot, rien d'autre. */
-function GrosBouton({ libelle, onPress, icone }: { libelle: string; onPress: () => void; icone: ReactNode }) {
+/** Un très grand bouton : l'icône, le mot, rien d'autre. `clair` : un bouton moins haut et sans fond, pour ce qui n'est pas une saisie (Envoyer). */
+function GrosBouton({
+  libelle,
+  onPress,
+  icone,
+  clair = false,
+}: {
+  libelle: string;
+  onPress: () => void;
+  icone: ReactNode;
+  clair?: boolean;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.grosBouton, pressed ? styles.grosBoutonAppuye : null]}
+      style={({ pressed }) => [
+        styles.grosBouton,
+        clair ? [styles.grosBoutonClair, styles.grosBoutonBas] : null,
+        pressed ? styles.grosBoutonAppuye : null,
+      ]}
     >
       {icone}
-      <Text style={styles.grosTexte}>{libelle}</Text>
+      <Text style={[styles.grosTexte, clair ? styles.grosTexteClair : null]}>{libelle}</Text>
     </Pressable>
   );
 }
@@ -62,6 +78,8 @@ function GrosBouton({ libelle, onPress, icone }: { libelle: string; onPress: () 
  */
 export default function EcranBerger() {
   const { choisir } = useRole();
+  const { settings } = useAppSettings();
+  const drive = useGoogleDriveSansNavigation();
   const [etape, setEtape] = useState<Etape>({ nom: 'accueil' });
   const [numero, setNumero] = useState('');
   // Un appui qui suit de trop près un changement d'écran ne compte pas : un double appui (un doigt ganté) ne doit pas déclencher le bouton de l'écran suivant, placé au même endroit.
@@ -74,6 +92,14 @@ export default function EcranBerger() {
   }, [etape]);
   const accueil = () => setEtape({ nom: 'accueil' });
   const chevres = () => setEtape({ nom: 'chevres' });
+
+  /** Envoyer sur Drive : on se connecte d'abord si l'appareil ne l'est pas, puis on relie le dossier de l'exploitation, puis les données partent. */
+  const envoyer = async () => {
+    if (drive.syncEnCours || drive.connexionEnCours) return;
+    if (!drive.connecte) return drive.seConnecter();
+    if (!settings.driveFolderId) return drive.lier();
+    await drive.synchroniser('push');
+  };
 
   /** La boucle est connue (scannée ou saisie) : on retrouve l'animal, puis on enregistre la mort ou on demande le nombre de petits. */
   const surBoucle = async (but: But, boucle: string) => {
@@ -137,6 +163,12 @@ export default function EcranBerger() {
                 libelle={T.tourisme}
                 onPress={() => setEtape({ nom: 'bientot', zone: 'tourisme' })}
                 icone={<Ionicons name="trail-sign" size={52} color={colors.blanc} />}
+              />
+              <GrosBouton
+                libelle={drive.syncEnCours ? T.envoiEnCours : T.envoyer}
+                onPress={envoyer}
+                clair
+                icone={<Ionicons name="cloud-upload" size={40} color={colors.primary} />}
               />
               <Pressable style={styles.discret} onPress={() => choisir(undefined)} accessibilityRole="button">
                 <Text style={styles.discretTexte}>{T.changerDeRole}</Text>

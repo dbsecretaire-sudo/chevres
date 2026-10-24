@@ -10,11 +10,6 @@ import { BoutonsContact } from '@/features/clients/components/BoutonsContact';
 import { ClientEcritures, ClientResume, estVente } from '@/features/clients/components/ClientResume';
 import { ClientFormulaire, ClientLecture } from '@/features/clients/components/ClientFiche';
 import { ContactLie } from '@/features/contacts/components/ContactLie';
-import { ClientReservations } from '@/features/gite/components/ClientReservations';
-import { ClientTaches } from '@/features/dossiers/components/ClientTaches';
-import { NoteDuClient } from '@/features/dossiers/components/NoteDuClient';
-import { ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { useFicheClient } from '@/features/clients/hooks/useFicheClient';
 import { ROUTES } from '@/shared/constants/routes';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -26,7 +21,6 @@ export default function FicheClient() {
   const router = useRouter();
   const fiche = useFicheClient(id);
   const { client, form } = fiche;
-  const gite = activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
 
   if (!client || !form) {
     return (
@@ -91,18 +85,11 @@ export default function FicheClient() {
         )}
         {!fiche.editing ? <ContactLie id={client.id} /> : null}
 
-        {/* Un gîte liste les réservations du client ; un secrétariat, ses tâches et contenus. */}
-        {!fiche.editing && modeEntreprise() && gite ? <ClientReservations clientId={client.id} /> : null}
-        {!fiche.editing && modeEntreprise() && !gite ? <ClientTaches clientId={client.id} /> : null}
-
         {!fiche.editing && fiche.ecritures.length > 0 && <ClientResume resume={fiche.resume} />}
 
         {!fiche.editing && (
           <ClientEcritures
             ecritures={fiche.ecritures}
-            enTete={
-              modeEntreprise() ? <NoteDuClient client={client} onFacturee={fiche.recharger} /> : undefined
-            }
             onOuvrir={(e) => router.push(estVente(e) ? ROUTES.ficheVente(e.id) : ROUTES.ficheFacture(e.id))}
           />
         )}

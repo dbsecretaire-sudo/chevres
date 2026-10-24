@@ -16,6 +16,7 @@ export const styles = StyleSheet.create({
     padding: 16,
   },
   grosBoutonClair: { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary },
+  grosBoutonBas: { minHeight: 90 },
   grosBoutonAppuye: { opacity: 0.85 },
   grosTexte: { fontSize: 24, fontWeight: '800', color: colors.blanc, textAlign: 'center' },
   grosTexteClair: { color: colors.primary },

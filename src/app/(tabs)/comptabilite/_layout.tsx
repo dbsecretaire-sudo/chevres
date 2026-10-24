@@ -2,7 +2,6 @@ import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
 import { Stack, type Href } from 'expo-router';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
@@ -27,7 +26,6 @@ export default function ComptabiliteLayout() {
         'fiscalite',
         'fiscalite-impots',
         'fiscalite-rsa',
-        'urssaf',
         'tva',
         'rentabilite',
         'tresorerie',
@@ -67,18 +65,15 @@ export default function ComptabiliteLayout() {
       <Stack.Screen
         name="fiscalite-impots"
         options={{
-          title: modeEntreprise() ? TEXTES.entreprise.menu.impots : TEXTES.commun.general.impotsMicroBa,
+          title: TEXTES.commun.general.impotsMicroBa,
         }}
       />
       <Stack.Screen
         name="fiscalite-rsa"
         options={{
-          title: modeEntreprise()
-            ? TEXTES.entreprise.menu.chiffreAffaires
-            : TEXTES.commun.general.declarationRsa,
+          title: TEXTES.commun.general.declarationRsa,
         }}
       />
-      <Stack.Screen name="urssaf" options={{ title: TEXTES.entreprise.menu.urssaf }} />
       <Stack.Screen name="tresorerie" options={{ title: TEXTES.comptabilite.accueil.tresorerie.titre }} />
       <Stack.Screen
         name="tresorerie-reglages"

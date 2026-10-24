@@ -4,8 +4,6 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { exporterAnneeExcel } from '@/features/export/documents/xlsxExport';
 import { exporterAnneePdf } from '@/features/export/documents/pdfExport';
-import { exporterAnneeEntrepriseExcel, exporterAnneeEntreprisePdf } from '@/features/export/documents/entrepriseExport';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { exporterSauvegardeLocale, importerSauvegardeLocale } from '@/features/sauvegarde/backup';
 import { FORMAT_EXPORT, type FormatExport } from '@/shared/constants/export';
 import { TEXTES } from '@/shared/textes';
@@ -26,11 +24,10 @@ export function useExportEtSauvegarde() {
   const exporter = async (format: FormatExport) => {
     setExportEnCours(true);
     try {
-      const entreprise = modeEntreprise();
       if (format === FORMAT_EXPORT.PDF) {
-        await (entreprise ? exporterAnneeEntreprisePdf : exporterAnneePdf)(settings.anneeActive);
+        await exporterAnneePdf(settings.anneeActive);
       } else {
-        await (entreprise ? exporterAnneeEntrepriseExcel : exporterAnneeExcel)(settings.anneeActive);
+        await exporterAnneeExcel(settings.anneeActive);
       }
     } catch (e: any) {
       Alert.alert(TEXTES.commun.general.erreurExport, e?.message ?? String(e));

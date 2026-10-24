@@ -49,10 +49,6 @@ export const TEXTES_EXPORT = {
       titre: 'Plan comptable',
       aide: 'Les factures de l’année rangées par compte, en PDF ou en Excel.',
     },
-    inventaireGite: {
-      titre: 'Inventaire du gîte',
-      aide: 'Les articles et les quantités en stock, par catégorie.',
-    },
   },
   pdfExport: {
     nExploitation: 'N° exploitation',

@@ -9,7 +9,6 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { partiesDuMenu } from '@/shared/navigation/filAriane';
 import { useMenusSections } from '@/shared/navigation/menusSections';
 import { menusDuPoste } from '@/features/accueil/shell/structureMenus';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 import { colors } from '@/shared/theme/colors';
@@ -28,7 +27,7 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const entrees = useMenusSections();
   const router = useRouter();
   const { settings } = useAppSettings();
-  const avecPlanDeLaFerme = !modeEntreprise() && !settings.exploitation?.accueilClassique;
+  const avecPlanDeLaFerme = !settings.exploitation?.accueilClassique;
   /** Le menu déroulé (son libellé) : un seul à la fois. */
   const [deroule, setDeroule] = useState<string | null>(null);
   /** La partie d'un menu déroulée (menu et titre) : une seule à la fois, toutes repliées au départ, pour que la liste tienne dans l'écran. */

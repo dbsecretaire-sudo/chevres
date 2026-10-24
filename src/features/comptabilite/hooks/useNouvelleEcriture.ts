@@ -87,20 +87,16 @@ import {
   type GroupeRecette,
   premiereCategorieRecette,
 } from '@/features/comptabilite/utils/recettes';
-import { ACTIVITE_COMMUNE, ACTIVITE_SOCIETE } from '@/shared/constants/etablissements';
-import { activitesEtablissement, modeEntreprise } from '@/shared/dictionnaire/entreprise';
+import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
 import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
 import {
-  CATEGORIES_DEPENSE_ENTREPRISE,
   CATEGORIE_DEPENSE,
   CATEGORIE_RECETTE,
   GROUPE_RECETTE,
   CATEGORIE_VENTE,
   POURCENTAGE_MIN,
   TAUX_TVA_ACHAT_DEFAUT,
-  TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT,
-  TAUX_TVA_RECETTE_ENTREPRISE,
   TAUX_TVA_CARBURANT,
   TYPE_AIDE,
   TYPE_ALIMENT,
@@ -183,17 +179,7 @@ export function useNouvelleEcriture(
   const [voletChoisi, setVoletChoisi] = useState('');
   /** L'élément de l'agritourisme d'une charge de l'atelier Agritourisme (vide : toutes les visites). */
   const [elementAgri, setElementAgri] = useState('');
-  // Une entreprise n'a pas d'espèces : ses écritures sont « communes », avec ses propres catégories. La TVA ne
-  // s'applique (champ affiché, taux enregistré) que si elle a coché « Assujetti à la TVA » dans ses informations.
-  const entreprise = modeEntreprise();
-  const tvaEntreprise = entreprise && !!settings.exploitation?.entreprise?.tvaApplicable;
-  // Le taux de TVA se montre quand la TVA s'applique (un élevage, ou une entreprise assujettie).
-  const afficherTva = !entreprise || tvaEntreprise;
-  const activiteInitiale: ActiviteComptable = entreprise ? ACTIVITE_COMMUNE : especeCourante();
-  const tauxTvaEntreprise = (categorie: CategorieRecette): string =>
-    tvaEntreprise
-      ? String(TAUX_TVA_RECETTE_ENTREPRISE[categorie as keyof typeof TAUX_TVA_RECETTE_ENTREPRISE] ?? 0)
-      : '0';
+  const activiteInitiale: ActiviteComptable = especeCourante();
 
   const [type, setType] = useState<TypeFacture>(
     typeInitial === TYPE_FACTURE.EMISE ? TYPE_FACTURE.EMISE : TYPE_FACTURE.RECUE,
@@ -216,15 +202,11 @@ export function useNouvelleEcriture(
   const [erreur, setErreur] = useState<ErreurSaisie | null>(null);
 
   // Débit (facture reçue)
-  const [categorieDepense, setCategorieDepense] = useState<CategorieDepense>(
-    entreprise ? CATEGORIES_DEPENSE_ENTREPRISE[0] : CATEGORIE_DEPENSE.ALIMENTATION,
-  );
-  // Les lignes saisies d'une dépense (aliments, marchandises, carburant, fournitures, Chambre, vétérinaire, animaux achetés ou envoyés).
+  const [categorieDepense, setCategorieDepense] = useState<CategorieDepense>(CATEGORIE_DEPENSE.ALIMENTATION);
+  // Les lignes saisies d'une dépense (aliments, carburant, fournitures, Chambre, vétérinaire, animaux achetés ou envoyés).
   const {
     lignesAlimentation,
     setLignesAlimentation,
-    lignesMarchandises,
-    setLignesMarchandises,
     lignesCarburant,
     setLignesCarburant,
     animauxAchetes,
@@ -250,13 +232,7 @@ export function useNouvelleEcriture(
   /** Le départ choisi (un bon de livraison ou une vente d'animaux vivants), et vrai quand son document de circulation manque (il se dépose avant toute écriture). */
   const lotChoisi = [...(settings.exploitation?.lots ?? []), ...(settings.exploitation?.ventesVivants ?? [])].find((l) => l.id === lotId);
   const lotSansDocument = !!lotChoisi && !lotChoisi.documentCirculation;
-  const [tauxTvaAchat, setTauxTvaAchat] = useState(
-    entreprise
-      ? tvaEntreprise
-        ? String(TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT)
-        : '0'
-      : String(TAUX_TVA_ACHAT_DEFAUT),
-  );
+  const [tauxTvaAchat, setTauxTvaAchat] = useState(String(TAUX_TVA_ACHAT_DEFAUT));
   const [compteDepenseAutre, setCompteDepenseAutre] = useState(
     COMPTE_PAR_DEPENSE[CATEGORIE_DEPENSE.AUTRE].numero,
   );
@@ -322,9 +298,7 @@ export function useNouvelleEcriture(
     COMPTE_PAR_RECETTE[CATEGORIE_RECETTE.AUTRE].numero,
   );
   const [tauxTvaVente, setTauxTvaVente] = useState(
-    entreprise
-      ? tauxTvaEntreprise(premiereCategorieRecette(activiteInitiale))
-      : String(tauxTvaParDefaut(categorieInitiale ?? premiereCategorieRecette(especeCourante()))),
+    String(tauxTvaParDefaut(categorieInitiale ?? premiereCategorieRecette(especeCourante()))),
   );
   const [clientId, setClientId] = useState(clientInitial ?? '');
 
@@ -371,11 +345,6 @@ export function useNouvelleEcriture(
     type === TYPE_FACTURE.RECUE && categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION;
   // L'alimentation et les ventes de production sont propres à une espèce ; le reste peut être « commun ».
   const avecCommunActivite = !estAlimentationDebit && !estProductionVente;
-  // Un achat de marchandises d'un gîte se détaille par marchandise (bar, restaurant, activité annexe).
-  const estMarchandisesGite =
-    type === TYPE_FACTURE.RECUE &&
-    categorieDepense === CATEGORIE_DEPENSE.ACHATS_MARCHANDISES &&
-    activitesEtablissement().includes(ACTIVITE_SOCIETE.ASSOCIATION);
 
   // Les comptes proposés (de charges et de produits), selon l’espèce de l’écriture ; ceux de l’inventaire d’abord pour une dépense.
   const { comptesDepense, comptesRecette, optionsCompteDepense, optionsCompteRecette } = optionsDesComptes(
@@ -439,7 +408,6 @@ export function useNouvelleEcriture(
     offertAffiche(categorieDuFournisseur) &&
     !estChambre &&
     categorieDepense !== CATEGORIE_DEPENSE.CARBURANT;
-  const totalMarchandises = totalMontants(lignesMarchandises, offertDepense);
   const totalAlimentation = totalMontants(lignesAlimentation, offertDepense);
   const totalCarburant = totalMontants(lignesCarburant);
   const totalProduction = totalMontants(lignesProduction, offertDepense);
@@ -484,8 +452,6 @@ export function useNouvelleEcriture(
     if (estCategorieVente(v)) {
       setTauxTvaVente(String(tauxTvaDeLaVente(v)));
       rattacherSiCommun();
-    } else if (entreprise) {
-      setTauxTvaVente(tauxTvaEntreprise(v));
     }
   };
 
@@ -496,15 +462,13 @@ export function useNouvelleEcriture(
     setStockQuantite(undefined);
     setBouclesDebut('');
     if (v === CATEGORIE_DEPENSE.ALIMENTATION) rattacherSiCommun();
-    // Une entreprise garde le taux choisi (ou l'absence de TVA) ; un élevage a un taux par défaut selon la catégorie.
-    if (!entreprise) {
-      setTauxTvaAchat(String(v === CATEGORIE_DEPENSE.CARBURANT ? TAUX_TVA_CARBURANT : TAUX_TVA_ACHAT_DEFAUT));
-    }
+    // Un taux par défaut selon la catégorie.
+    setTauxTvaAchat(String(v === CATEGORIE_DEPENSE.CARBURANT ? TAUX_TVA_CARBURANT : TAUX_TVA_ACHAT_DEFAUT));
   };
 
   // Une catégorie ajoutée par l'utilisateur : une recette « autre » dont le compte est celui qu'il a choisi.
   const [categorieAjouteeId, setCategorieAjouteeId] = useState<string | undefined>();
-  const categoriesAjouteesActivite = activite === ACTIVITE_COMMUNE || entreprise ? [] : categoriesAjoutees();
+  const categoriesAjouteesActivite = activite === ACTIVITE_COMMUNE ? [] : categoriesAjoutees();
   const categorieAjoutee =
     categorieRecette === CATEGORIE_RECETTE.AUTRE
       ? categoriesAjouteesActivite.find((c) => c.id === categorieAjouteeId)
@@ -687,7 +651,6 @@ export function useNouvelleEcriture(
         motifVisite,
         ajouterVisite,
         lignesAlimentation,
-        lignesMarchandises: estMarchandisesGite ? lignesMarchandises : undefined,
         lignesProduction,
         lignesChambre: estChambre ? lignesChambre : undefined,
         lignesVeterinaire,
@@ -716,7 +679,6 @@ export function useNouvelleEcriture(
         precision,
         clientSelectionne,
         estProductionVente,
-        tvaEmise: tvaEntreprise && type === TYPE_FACTURE.EMISE && categorieRecette !== CATEGORIE_RECETTE.AIDE,
         avecFacture,
         numeroFacture,
         enAttente,
@@ -820,8 +782,6 @@ export function useNouvelleEcriture(
     activite,
     changerActivite,
     avecCommunActivite,
-    entreprise,
-    afficherTva,
     type,
     setType,
     date,
@@ -857,10 +817,6 @@ export function useNouvelleEcriture(
     setAjouterVisite,
     lignesAlimentation,
     setLignesAlimentation,
-    lignesMarchandises,
-    setLignesMarchandises,
-    estMarchandisesGite,
-    totalMarchandises,
     lignesCarburant,
     setLignesCarburant,
     lignesProduction,

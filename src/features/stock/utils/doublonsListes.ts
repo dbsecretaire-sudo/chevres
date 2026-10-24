@@ -1,23 +1,15 @@
 import type { ArchiveStock } from '@/features/stock/types';
 import { CATEGORIE_INVENTAIRE } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
-import { SECTIONS, SECTIONS_GITE, etablissementGite } from '@/features/stock/utils/categories';
-import {
-  COMPTE_PAR_SECTION_INVENTAIRE,
-  COMPTE_PAR_SECTION_INVENTAIRE_GITE,
-} from '@/shared/constants/planComptable';
+import { SECTIONS } from '@/features/stock/utils/categories';
+import { COMPTE_PAR_SECTION_INVENTAIRE } from '@/shared/constants/planComptable';
 
-/** Les listes d'office de l'inventaire avec leur catégorie et leur compte (celles d'un gîte, ou celles d'une exploitation agricole). */
+/** Les listes d'office de l'inventaire avec leur catégorie et leur compte. */
 export const listesDOffice = (): { categorie: string; compte: string }[] =>
-  etablissementGite()
-    ? SECTIONS_GITE.map((x) => ({
-        categorie: x.categorie,
-        compte: COMPTE_PAR_SECTION_INVENTAIRE_GITE[x.section].numero,
-      }))
-    : SECTIONS.map((x) => ({
-        categorie: x.categorie,
-        compte: COMPTE_PAR_SECTION_INVENTAIRE[x.section].numero,
-      }));
+  SECTIONS.map((x) => ({
+    categorie: x.categorie,
+    compte: COMPTE_PAR_SECTION_INVENTAIRE[x.section].numero,
+  }));
 
 /**
  * L'inventaire sans les listes ajoutées qui font doublon avec une liste d'office : même compte (dans n'importe quelle catégorie), et

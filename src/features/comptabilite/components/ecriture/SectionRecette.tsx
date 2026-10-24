@@ -26,15 +26,11 @@ import {
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
 import type { Vente } from '@/features/comptabilite/types';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
-import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
 import { AncreVisite } from '@/shared/components/AncreVisite';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
-import { CATEGORIES_RECETTE_AVEC_NATURE_URSSAF } from '@/shared/constants/entreprise';
-import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
-import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { ROUTES } from '@/shared/constants/routes';
 import { SECTION_STOCK, SECTION_STOCK_PAR_CATEGORIE_RECETTE } from '@/shared/constants/stock';
 import { categorieClientDe, pasEncaisseeAffichee } from '@/shared/dictionnaire/categoriesClient';
@@ -158,7 +154,7 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
           // Le libellé est un lien : l'inventaire, à la section de la catégorie choisie (c'est lui qui tient ses prix et ses lignes).
           onPressLabel={
-            !e.entreprise && e.activite !== ACTIVITE_COMMUNE
+            e.activite !== ACTIVITE_COMMUNE
               ? () =>
                   router.push(
                     ROUTES.stockDepuis(
@@ -233,30 +229,11 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           </>
         ) : null}
 
-        {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE ||
-          e.categorieRecette === CATEGORIE_RECETTE.PRESTATIONS ||
-          (e.entreprise && e.categorieRecette !== CATEGORIE_RECETTE.AIDE)) && (
+        {(e.categorieRecette === CATEGORIE_RECETTE.AUTRE || e.categorieRecette === CATEGORIE_RECETTE.PRESTATIONS) && (
           <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
         )}
 
-        {/* Une entreprise assujettie à la TVA indique le taux de chaque recette (hors aide). */}
-        {e.entreprise && e.afficherTva && e.categorieRecette !== CATEGORIE_RECETTE.AIDE && (
-          <SelectField
-            label={TEXTES.commun.general.tauxDeTva}
-            value={e.tauxTvaVente}
-            onChange={e.setTauxTvaVente}
-            options={OPTIONS_TAUX_TVA}
-          />
-        )}
-
         {e.categorieRecette === CATEGORIE_RECETTE.AIDE && <ChampsAide e={e} />}
-
-        {/* Une entreprise : la nature de la recette pour la déclaration URSSAF (selon la catégorie tant qu'on n'en choisit pas). */}
-        {modeEntreprise() &&
-        !e.estProductionVente &&
-        (CATEGORIES_RECETTE_AVEC_NATURE_URSSAF as readonly string[]).includes(e.categorieRecette) ? (
-          <ChampNatureUrssaf value={e.natureUrssaf} onChange={e.setNatureUrssaf} />
-        ) : null}
 
         {e.categorieRecette === CATEGORIE_RECETTE.LAIT && <ChampsVenteLait e={e} />}
         {e.categorieRecette === CATEGORIE_RECETTE.FROMAGE && <ChampsVenteFromage e={e} />}

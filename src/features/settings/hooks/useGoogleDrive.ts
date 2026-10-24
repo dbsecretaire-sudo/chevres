@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -24,8 +24,11 @@ import { noterSauvegarde } from '@/features/sauvegarde/derniereSauvegarde';
 import { ID_ETABLISSEMENT_DEFAUT } from '@/shared/constants/stockage';
 import { TEXTES } from '@/shared/textes';
 
-/** Connexion à Google Drive et synchronisation (envoi / récupération) des données de l'établissement. */
-export function useGoogleDrive() {
+/**
+ * Connexion à Google Drive et synchronisation (envoi / récupération) des données de l'établissement, sans rien demander à la navigation :
+ * l'écran du mode normal, qui n'a pas de pile d'écrans, s'en sert directement.
+ */
+export function useGoogleDriveSansNavigation() {
   const { settings, patchSettings, refreshSettings } = useAppSettings();
   const { actif, recharger } = useEtablissement();
 
@@ -38,11 +41,10 @@ export function useGoogleDrive() {
     setConnecte(await isGoogleConnected());
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      charger();
-    }, [charger]),
-  );
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    charger();
+  }, [charger]);
 
   const seConnecter = async () => {
     setConnexionEnCours(true);
@@ -197,6 +199,7 @@ export function useGoogleDrive() {
   };
 
   return {
+    charger,
     connecte,
     connexionEnCours,
     syncEnCours,
@@ -206,4 +209,16 @@ export function useGoogleDrive() {
     seDeconnecter,
     synchroniser,
   };
+}
+
+/** Comme ci-dessus, et la connexion est relue à chaque fois que l'écran reprend le focus (après une connexion faite ailleurs). */
+export function useGoogleDrive() {
+  const drive = useGoogleDriveSansNavigation();
+  const { charger } = drive;
+  useFocusEffect(
+    useCallback(() => {
+      charger();
+    }, [charger]),
+  );
+  return drive;
 }
