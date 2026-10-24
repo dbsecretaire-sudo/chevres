@@ -5,7 +5,7 @@ import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/Button';
 
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
-import { lireNumeroBoucle } from '@/features/cheptel/ocr/googleVision';
+import { lireNumeroBoucleDeLaPhoto, photoEnBase64Requise } from '@/features/cheptel/ocr/lectureDeLaPhoto';
 import { styles } from '@/shared/styles/cheptel/ScannerBoucleCore.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { QUALITE_PHOTO_OCR } from '@/shared/constants/google';
@@ -38,9 +38,9 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire }:
     if (!cameraRef.current || enCours) return;
     setEnCours(true);
     try {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: QUALITE_PHOTO_OCR });
+      const photo = await cameraRef.current.takePictureAsync({ base64: photoEnBase64Requise(), quality: QUALITE_PHOTO_OCR });
       setPhotoUri(photo.uri);
-      const { candidats: trouves } = await lireNumeroBoucle(photo.base64 ?? '');
+      const { candidats: trouves } = await lireNumeroBoucleDeLaPhoto({ uri: photo.uri, base64: photo.base64 });
       setCandidats(trouves);
       setValeur(trouves[0] ?? '');
       if (trouves.length === 0) {

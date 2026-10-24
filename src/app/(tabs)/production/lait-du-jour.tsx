@@ -1,1 +1,1 @@
-export { default } from '@/features/stock/screens/AjoutLaitDuJour';
+export { default } from '@/features/production/simple/EcranLaitSimple';

@@ -1,9 +1,9 @@
-import { Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
+import { styles as stylesRoles } from '@/shared/styles/roles/Roles.styles';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { Screen } from '@/shared/components/Screen';
-import { Button } from '@/shared/components/Button';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
@@ -40,7 +40,9 @@ export default function RubriqueEtablissement() {
       />
       <Text style={commonStyles.note}>{TEXTES.accueil.ferme.reglage.aide}</Text>
       {/* Le mode se choisit au lancement : on peut y revenir d'ici (le choix « Mode normal » ou « Mode avancé » s'affiche de nouveau). */}
-      <Button variant="secondary" label={TEXTES.roles.berger.changerDeRole} onPress={() => choisir(undefined)} />
+      <Pressable style={stylesRoles.discret} onPress={() => choisir(undefined)} accessibilityRole="link">
+        <Text style={stylesRoles.discretTexte}>{TEXTES.roles.berger.changerDeRole}</Text>
+      </Pressable>
     </Screen>
   );
 }

@@ -8,7 +8,7 @@ import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
-/** « Fabriquer un fromage » (ou de la charcuterie, paramètre `produit`) en très grands boutons : ouvert d'un appui sur la tuile de l'atelier. */
+/** « Fabriquer » un fromage, de la charcuterie, un plat ou un savon (paramètre `produit`) : ouvert d'un appui sur la tuile de l'atelier. */
 export default function EcranFabricationSimple() {
   const { produit } = useLocalSearchParams<{ produit?: string }>();
   const router = useRouter();
@@ -17,7 +17,11 @@ export default function EcranFabricationSimple() {
       <Stack.Screen options={{ title: TEXTES.production.fabricationSimple.titre }} />
       <View style={styles.page}>
         <FabricationSimple
-          produit={produit === PRODUIT_A_LOTS.CHARCUTERIE ? PRODUIT_A_LOTS.CHARCUTERIE : PRODUIT_A_LOTS.FROMAGE}
+          produit={
+            produit === PRODUIT_A_LOTS.CHARCUTERIE || produit === PRODUIT_A_LOTS.PLAT || produit === PRODUIT_A_LOTS.SAVON
+              ? produit
+              : PRODUIT_A_LOTS.FROMAGE
+          }
           presentation="tuiles"
           onTerminer={() => retournerALaPageDAvant(router)}
         />

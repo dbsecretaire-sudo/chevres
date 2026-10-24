@@ -14,10 +14,13 @@ import { TEXTES } from '@/shared/textes';
 export interface MotLu {
   description?: string;
   boundingPoly?: { vertices?: { x?: number; y?: number }[] };
+  /** La hauteur du mot sur la photo, quand elle est donnée directement (la lecture sur le téléphone). */
+  hauteur?: number;
 }
 
 /** La hauteur d'un mot sur la photo : la taille de son écriture. */
 const hauteurDuMot = (mot: MotLu): number => {
+  if (mot.hauteur !== undefined) return mot.hauteur;
   const ys = (mot.boundingPoly?.vertices ?? []).map((v) => v.y ?? 0);
   return ys.length > 0 ? Math.max(...ys) - Math.min(...ys) : 0;
 };
@@ -40,6 +43,9 @@ export interface ResultatOCR {
   /** Les nombres trouvés : d'abord ceux écrits en gros (le numéro de la boucle), puis les autres (le numéro d'exploitation, plus petit). */
   candidats: string[];
 }
+
+/** Vrai quand une clé Google Vision est configurée. */
+export const cleVisionConfiguree = (): boolean => !!GOOGLE_VISION_API_KEY && GOOGLE_VISION_API_KEY !== CLE_VISION_NON_CONFIGUREE;
 
 /** Envoie une photo (base64 JPEG) à Google Cloud Vision et en extrait les suites de chiffres détectées. */
 export async function lireNumeroBoucle(base64Jpeg: string): Promise<ResultatOCR> {

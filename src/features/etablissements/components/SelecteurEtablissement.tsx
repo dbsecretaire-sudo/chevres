@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BackHandler, ScrollView, Text, View } from 'react-native';
+import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
+import { styles as stylesRoles } from '@/shared/styles/roles/Roles.styles';
 import { Screen } from '@/shared/components/ScreenList';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { Button } from '@/shared/components/Button';
@@ -156,7 +157,9 @@ export function SelecteurEtablissement({
               ))}
             </BlocLignes>
             {/* Le mode se choisit au lancement : on peut y revenir d'ici (téléphone). */}
-            <Button variant="secondary" label={TEXTES.roles.berger.changerDeRole} onPress={() => choisir(undefined)} />
+            <Pressable style={stylesRoles.discret} onPress={() => choisir(undefined)} accessibilityRole="link">
+              <Text style={stylesRoles.discretTexte}>{TEXTES.roles.berger.changerDeRole}</Text>
+            </Pressable>
           </>
           )
         )}

@@ -9,7 +9,7 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.roles.choix;
 
-/** Le premier écran du téléphone : « Quel mode ? » — le mode avancé ouvre toute l'application, le mode normal ses saisies simples. */
+/** Le premier écran du téléphone : « Quel mode ? » — le mode normal (ses saisies simples) d'abord, puis le mode avancé (toute l'application). */
 export function ChoixDuRole() {
   const { choisir } = useRole();
   return (
@@ -18,21 +18,21 @@ export function ChoixDuRole() {
         <Text style={styles.titre}>{T.titre}</Text>
         <Pressable
           accessibilityRole="button"
-          onPress={() => choisir(ROLE.SECRETAIRE)}
+          onPress={() => choisir(ROLE.BERGER)}
           style={({ pressed }) => [styles.grosBouton, pressed ? styles.grosBoutonAppuye : null]}
         >
-          <Ionicons name="briefcase" size={52} color={colors.blanc} />
-          <Text style={styles.grosTexte}>{T.secretaire}</Text>
-          <Text style={styles.aide}>{T.secretaireAide}</Text>
+          <Ionicons name="paw" size={52} color={colors.blanc} />
+          <Text style={styles.grosTexte}>{T.berger}</Text>
+          <Text style={styles.aide}>{T.bergerAide}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          onPress={() => choisir(ROLE.BERGER)}
+          onPress={() => choisir(ROLE.SECRETAIRE)}
           style={({ pressed }) => [styles.grosBouton, styles.grosBoutonClair, pressed ? styles.grosBoutonAppuye : null]}
         >
-          <Ionicons name="paw" size={52} color={colors.primary} />
-          <Text style={[styles.grosTexte, styles.grosTexteClair]}>{T.berger}</Text>
-          <Text style={[styles.aide, styles.aideClaire]}>{T.bergerAide}</Text>
+          <Ionicons name="briefcase" size={52} color={colors.primary} />
+          <Text style={[styles.grosTexte, styles.grosTexteClair]}>{T.secretaire}</Text>
+          <Text style={[styles.aide, styles.aideClaire]}>{T.secretaireAide}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
