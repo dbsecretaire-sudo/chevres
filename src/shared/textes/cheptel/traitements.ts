@@ -43,7 +43,11 @@ export const traitementsTextes = {
     derniereDate: 'Dernière prise',
     aideDerniere: 'Le délai d’attente se compte à partir de la dernière prise.',
     animaux: 'Animaux traités',
-    aideAnimaux: 'Vide : tout le troupeau. Sinon, écrivez ou choisissez les boucles.',
+    aideAnimaux: 'Écrivez ou choisissez les boucles des animaux soignés.',
+    /** La case qui dit que le traitement concerne tous les animaux : les boucles ne se demandent alors plus. */
+    toutLeTroupeau: 'Tout le troupeau',
+    /** Le champ des boucles d'un traitement rattaché à une visite : vide, ce sont les chèvres de la visite. */
+    videChevresDeLaVisite: 'Vide = chèvres de la visite',
     delaiLait: 'Délai d’attente du lait (jours)',
     delaiViande: 'Délai d’attente de la viande (jours)',
     aideDelais: 'Ceux de l’ordonnance ou de la notice. Laissez vide ou 0 s’il n’y en a pas.',
