@@ -19,6 +19,7 @@ import {
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { InfoModal } from '@/shared/components/InfoModal';
 import { AntenneGds, estLAntenneGds } from '@/features/production/components/AntenneGds';
 import { DossiersTouristiques } from '@/features/production/components/DossiersTouristiques';
 import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
@@ -158,6 +159,14 @@ function LieuTiersStandard() {
   // tel quel ; avec plusieurs, le choix reste à faire (la fiche de chacun a ses propres « Nouvelle dépense / recette »), sauf pour le groupement sanitaire.
   const intervenant = config.contactParDefaut ? tiers[0] : tiers.length === 1 ? tiers[0] : undefined;
   const routeNouvelle = routeAvecContact(config.nouvelle, intervenant);
+  // Une facture de l'abattoir (une dépense, en débit d'office) se lie à un bon de livraison qui n'a pas encore de facture : sans bon à facturer, elle ne s'ouvre pas.
+  const [bonRequis, setBonRequis] = useState(false);
+  const bonsAFacturer = (settings.exploitation?.lots ?? []).filter((l) => !!l.abattoir && !l.factureId);
+  const nouvelleEcriture = () => {
+    if (cle !== 'abattoir') return ouvrir(routeNouvelle);
+    if (bonsAFacturer.length === 0) return setBonRequis(true);
+    ouvrir(bonsAFacturer.length === 1 ? `${routeNouvelle}&lot=${bonsAFacturer[0].id}` : routeNouvelle);
+  };
   const routeVersement = config.recetteDuLieu
     ? routeAvecContact(
         `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${config.recetteDuLieu}`,
@@ -397,7 +406,7 @@ function LieuTiersStandard() {
               <TableauEcrituresDuLieu ecritures={ecritures} ouvrir={ouvrir} vide={T.aucuneEcriture} />
               <Fab
                 options={[
-                  { label: textes.nouvelle ?? '', icon: 'add', onPress: () => ouvrir(routeNouvelle) },
+                  { label: textes.nouvelle ?? '', icon: 'add', onPress: nouvelleEcriture },
                   ...(routeVersement && textes.versement ? [{ label: textes.versement, icon: 'add' as const, onPress: () => ouvrir(routeVersement) }] : []),
                 ]}
               />
@@ -428,7 +437,7 @@ function LieuTiersStandard() {
               <ListRow
                 title={textes.nouvelle ?? ''}
                 icone="add-circle"
-                onPress={() => ouvrir(routeNouvelle)}
+                onPress={nouvelleEcriture}
               />
               {routeVersement && textes.versement ? (
                 <ListRow title={textes.versement} icone="add-circle" onPress={() => ouvrir(routeVersement)} />
@@ -454,6 +463,12 @@ function LieuTiersStandard() {
           onClose={() => setChoixOuvert(false)}
         />
       ) : null}
+      <InfoModal
+        visible={bonRequis}
+        title={TEXTES.exploitation.bonsDeLivraison.factureSansBon}
+        message={TEXTES.exploitation.bonsDeLivraison.factureSansBonMessage}
+        onClose={() => setBonRequis(false)}
+      />
     </Screen>
   );
 }

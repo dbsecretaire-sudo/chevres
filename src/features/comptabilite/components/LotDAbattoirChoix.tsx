@@ -26,6 +26,10 @@ interface Props {
   onAnimaux: (ids: string[]) => void;
 }
 
+/** Le nom d'un bon de livraison : « Bon de livraison du 24/10/2026 » (le lot d'abattoir de ce jour). */
+const nomDuBon = (lot: LotAnimaux): string =>
+  lot.abattoir ? TEXTES.exploitation.bonsDeLivraison.bonDu(formatDateFR(lot.abattoir)) : lot.nom;
+
 /** Le résumé d'un lot : sa date de départ, ses animaux et l'état de son document de circulation. */
 function ResumeDuLot({ lot }: { lot: LotAnimaux }) {
   const nombre = numerosDeBoucles(lot.boucles).length;
@@ -76,11 +80,10 @@ export function LotDAbattoirChoix({ lotId, onChoisir, animauxEnvoyes, onAnimaux 
   return (
     <Card style={commonStyles.gap10}>
       <Text style={commonStyles.cardTitle}>{T.titre}</Text>
-      <Text style={commonStyles.note}>{T.aide}</Text>
       {choisi && !changer ? (
         <>
           <ListRow
-            title={choisi.nom}
+            title={nomDuBon(choisi)}
             subtitle={<ResumeDuLot lot={choisi} />}
             onPress={() => router.push(ROUTES.lot(choisi.id) as never)}
           />
@@ -98,7 +101,7 @@ export function LotDAbattoirChoix({ lotId, onChoisir, animauxEnvoyes, onAnimaux 
           {enAttente.map((lot) => (
             <ListRow
               key={lot.id}
-              title={lot.nom}
+              title={nomDuBon(lot)}
               subtitle={<ResumeDuLot lot={lot} />}
               onPress={() => {
                 setChanger(false);
