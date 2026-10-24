@@ -328,6 +328,15 @@ export const TEXTES_COMMERCIAL = {
           aide: 'Contact avec les animaux : lavage des mains, risques de zoonoses. Une dégustation ou un repas se déclare auprès de la direction départementale de la protection des populations.',
           reference: 'N° de déclaration',
         },
+        zoonoses: {
+          titre: 'Précautions sanitaires (zoonoses)',
+          aide: 'Les ruminants peuvent porter des maladies transmissibles à l’homme (contact direct, voie orale en portant les mains à la bouche, voie respiratoire : fièvre Q…). Le guide « Accueil du public à la ferme » du GDS recommande : sécuriser et baliser le parcours de visite (zones interdites, panneaux à l’entrée, pas de matériel dangereux ni souillé) ; prévoir l’hygiène générale (point de lavage des mains avec eau potable, savon et essuie-mains jetable, sur-bottes jetables, pas de nourriture ni de pique-nique près des animaux, limiter la circulation des chiens et chats) ; repérer et isoler les animaux à risque (malades, femelles avant et après la mise bas, nouveau-nés de 0 à 1 mois) dans un endroit inaccessible aux visiteurs ; appliquer les bonnes pratiques de mises bas et d’avortements (éviter les visites pendant les mises bas, détruire les délivrances, prévenir le vétérinaire en cas d’avortement) ; et déclarer les avortements (à partir de trois avortements sur sept jours en élevage ovin ou caprin). Les panneaux préviennent notamment les femmes enceintes et les personnes immunodéprimées.',
+          reference: 'Référence du guide / date des panneaux',
+          liens: [
+            { titre: 'GDS France : accueil du public à la ferme et prévention en élevage caprin', url: 'https://www.gdsfrance.org/caprins/' },
+            { titre: 'GDS France : l’action sanitaire, de l’élevage aux produits finis', url: 'https://www.gdsfrance.org/laction-sanitaire-de-lelevage-aux-produits-finis/' },
+          ],
+        },
         consignes: {
           titre: 'Consignes aux visiteurs',
           aide: 'Affichage à l’entrée (lavage des mains, pas de nourriture aux animaux, enfants accompagnés), trousse de premiers secours et numéros d’urgence.',

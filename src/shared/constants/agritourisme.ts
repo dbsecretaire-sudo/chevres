@@ -48,6 +48,8 @@ export const ETAPE_ACCUEIL = {
   ASSURANCE: 'assurance',
   /** L'hygiène et la santé animale auprès de la DDPP : zoonoses, dégustation ou repas. */
   DDPP: 'ddpp',
+  /** Les précautions sanitaires pour éviter la transmission de zoonoses aux visiteurs (guide « Accueil du public à la ferme » du GDS) : parcours balisé, hygiène, animaux à risque isolés. */
+  ZOONOSES: 'zoonoses',
   /** Les consignes aux visiteurs, la trousse de premiers secours et les numéros d'urgence. */
   CONSIGNES: 'consignes',
   /** Le registre de sécurité où se notent les contrôles. */

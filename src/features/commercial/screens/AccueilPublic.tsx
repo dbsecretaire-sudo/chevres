@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { lireArchiveCommercial, enregistrerEtapeAccueil } from '@/features/commercial/repository';
 import { etapesAccueilManquantes } from '@/features/commercial/services/accueilPublic';
@@ -94,6 +94,12 @@ export default function AccueilPublic() {
             etat={!!donnees.fait}
           >
             <Text style={commonStyles.note}>{textes.aide}</Text>
+            {/* Les liens vers les guides officiels, quand la démarche en a. */}
+            {((textes as { liens?: readonly { titre: string; url: string }[] }).liens ?? []).map((lien) => (
+              <Pressable key={lien.url} onPress={() => void Linking.openURL(lien.url)} accessibilityRole="link">
+                <Text style={commonStyles.lien}>{lien.titre}</Text>
+              </Pressable>
+            ))}
             <Checkbox
               label={T.fait}
               value={!!donnees.fait}

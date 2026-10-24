@@ -11,6 +11,15 @@ export const TEXTES_GDS = {
     manque: 'Pas encore déposé',
     ajouter: 'Ajouter un document',
     ajouterUnAutre: 'Ajouter un autre document',
+    /** Sous les rubriques : les pages et guides de prévention du GDS. */
+    prevention: {
+      titre: 'Prévention : les guides du GDS',
+      aide: 'Le GDS parle beaucoup de prévention : maladies d’élevage (CAEV, paratuberculose, fièvre Q), biosécurité, accueil du public à la ferme (précautions contre les zoonoses), qualité du lait cru. Déposez ici, dans les rubriques, ceux que vous gardez.',
+      liens: [
+        { titre: 'GDS France : prévention en élevage caprin (guides, biosécurité, accueil du public à la ferme)', url: 'https://www.gdsfrance.org/caprins/' },
+        { titre: 'GDS France : l’action sanitaire, de l’élevage aux produits finis', url: 'https://www.gdsfrance.org/laction-sanitaire-de-lelevage-aux-produits-finis/' },
+      ],
+    },
     remplacer: 'Remplacer ce document',
     retirer: 'Retirer ce document',
     confirmerRetrait: 'Retirer ce document ?',
