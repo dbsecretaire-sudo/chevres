@@ -21,7 +21,7 @@ function BadgeChevre({ chevre }: { chevre: Chevre }) {
     return <Badge label={TEXTES.commun.general.renouvellement} color={colors.primary} />;
   }
   if (chevre.statut !== STATUT_CHEVRE.VIVANTE) {
-    return <Badge label={statutLabel(chevre.statut, chevre.sexe)} color={statutColors[chevre.statut]} />;
+    return <Badge label={statutLabel(chevre.statut, chevre.sexe, !!chevre.enlevementId)} color={statutColors[chevre.statut]} />;
   }
   return null;
 }

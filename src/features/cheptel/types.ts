@@ -46,6 +46,8 @@ export interface Chevre {
   pereNumeroBoucle?: string;
   statut: StatutChevre;
   dateStatut?: string; // YYYY-MM-DD, présent quand statut !== 'vivante'
+  /** L'enlèvement d'équarrissage qui a pris l'animal mort (son statut s'écrit alors « Équarrissage » avec le jour de l'enlèvement). */
+  enlevementId?: string;
   /** Désigné(e) pour rester dans le troupeau reproducteur (indépendant du statut vivant/mort). */
   renouvellement?: boolean;
   /** Année pour laquelle la désignation au renouvellement a été faite. */

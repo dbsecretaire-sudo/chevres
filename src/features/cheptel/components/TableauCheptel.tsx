@@ -21,12 +21,12 @@ const COLONNES: readonly ColonneDuTableau<Chevre>[] = [
     cle: 'statut',
     titre: 'Statut',
     poids: 2,
-    valeur: (a) => statutLabel(a.statut, a.sexe),
+    valeur: (a) => statutLabel(a.statut, a.sexe, !!a.enlevementId),
     // Un animal sorti dit aussi la date de sa sortie.
     texte: (a) =>
       a.statut !== STATUT_CHEVRE.VIVANTE && a.dateStatut
-        ? `${statutLabel(a.statut, a.sexe)} · ${formatDateFR(a.dateStatut)}`
-        : statutLabel(a.statut, a.sexe),
+        ? `${statutLabel(a.statut, a.sexe, !!a.enlevementId)} · ${formatDateFR(a.dateStatut)}`
+        : statutLabel(a.statut, a.sexe, !!a.enlevementId),
   },
   { cle: 'poids', titre: 'Poids', poids: 0.9, aligne: 'droite', valeur: (a) => a.poidsKg, texte: (a) => (a.poidsKg ? String(a.poidsKg) : '') },
   { cle: 'notes', titre: 'Notes', poids: 1.2, valeur: (a) => a.notes ?? '' },

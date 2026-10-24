@@ -5,6 +5,7 @@ import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import type { PieceJointe } from '@/features/fichiers/types';
+import type { EtapeReglementaire } from '@/features/stock/types';
 import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { definirCategoriesClient, type CategorieClientReglage } from '@/shared/dictionnaire/categoriesClient';
@@ -275,6 +276,21 @@ export const reglageInvestissement = (
   valeur: ReglageInvestissement | number | undefined,
 ): ReglageInvestissement => (typeof valeur === 'number' ? { cout: valeur } : (valeur ?? {}));
 
+/** Un enlèvement d'animaux morts par l'équarrisseur : son jour, son bon (le numéro et les fichiers remis par l'équarrisseur) et les animaux enlevés. */
+export interface EnlevementEquarrissage {
+  id: string;
+  /** Le jour de l'enlèvement (AAAA-MM-JJ) ; vide pour un ancien lot sans date. */
+  date: string;
+  /** Les boucles des animaux morts enlevés, séparées par des virgules. */
+  boucles: string;
+  /** L'équarrisseur (l'identifiant de sa fiche) ; absent : à choisir. */
+  contactCle?: string;
+  /** Le numéro du bon d'équarrissage remis par l'équarrisseur. */
+  numeroBon?: string;
+  /** Le bon remis par l'équarrisseur (scan, photo, PDF). */
+  fichiers?: PieceJointe[];
+}
+
 /** Un document du groupement sanitaire déposé par l'éleveur : le fichier (scan, photo) et le moment du dépôt. */
 export interface DocumentGdsDepose {
   piece: PieceJointe;
@@ -394,6 +410,12 @@ export interface InfosExploitation {
   traites?: Record<string, ReglagesTraite>;
   /** La transhumance d'une année (« 2026 ») : de quoi remplir la déclaration de montée et descente d'estive. */
   estives?: Record<string, ReglagesEstive>;
+  /** Le cadre réglementaire de l'atelier : chaque démarche (clé de ETAPES_ATELIER) avec sa case « fait », sa date, sa référence et ses pièces. */
+  cadreAtelier?: Record<string, EtapeReglementaire>;
+  /** Les notes de l'éleveur sur le cadre réglementaire de l'atelier (dérogations, contacts). */
+  notesCadreAtelier?: string;
+  /** Les enlèvements d'équarrissage : le jour, l'équarrisseur, le bon et les animaux morts enlevés (Équarrissage › Enlèvements). */
+  enlevements?: EnlevementEquarrissage[];
   /** Les lots d'animaux nommés : on les réutilise pour un traitement, une visite ou un contrôle, et on suit leur santé ensemble. */
   lots?: LotAnimaux[];
   /** La répartition du lait choisie dans le plan d'économies : la part (en %) du lait de l'année de chaque fromage, par identifiant d'article ; le reste est vendu tel quel. Absent : la répartition réelle. */

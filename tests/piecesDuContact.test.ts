@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
 import { piecesDuContact } from '@/features/contacts/services/piecesDuContact';
-import type { LotAnimaux } from '@/features/settings/settings';
+import type { EnlevementEquarrissage, LotAnimaux } from '@/features/settings/settings';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
-import { CATEGORIE_LOT } from '@/shared/constants/lots';
 
 const lot = (extra: Partial<LotAnimaux>): LotAnimaux => ({ id: 'l', nom: 'Lot', boucles: '', ...extra });
 const circulation = (extra: Partial<EcritureACirculation>): EcritureACirculation => ({
@@ -22,34 +21,28 @@ const circulation = (extra: Partial<EcritureACirculation>): EcritureACirculation
 
 describe('les pièces qui se rangent toutes seules dans les documents d’un contact', () => {
   const equarrisseur = { nom: 'Équarrisseur Nord', cle: 'e1', ids: ['f-e1'] };
-  const bon = (extra: Partial<LotAnimaux>) => lot({ categorie: CATEGORIE_LOT.EQUARRISSAGE, ...extra });
+  const bon = (extra: Partial<EnlevementEquarrissage>): EnlevementEquarrissage => ({ id: 'e', date: '', boucles: '', ...extra });
 
   it('range chez chaque équarrisseur les bons des lots qu’il a enlevés, et signale le bon qui manque', () => {
-    const lots = [
-      bon({
-        id: 'a',
-        nom: 'Enlèvement mars',
-        numeroBon: '4521',
-        dateEnlevement: '2026-03-10',
-        contactCle: 'f-e1',
-      }),
-      bon({ id: 'b', nom: 'Enlèvement juin', dateEnlevement: '2026-06-02', contactCle: 'e1' }),
-      bon({ id: 'c', nom: 'Chez l’autre', dateEnlevement: '2026-07-02', contactCle: 'autre' }),
-      lot({ id: 'd', nom: 'Autre lot', categorie: CATEGORIE_LOT.ABATTOIR }),
+    const enlevements = [
+      bon({ id: 'a', numeroBon: '4521', date: '2026-03-10', contactCle: 'f-e1' }),
+      bon({ id: 'b', date: '2026-06-02', contactCle: 'e1' }),
+      bon({ id: 'c', date: '2026-07-02', contactCle: 'autre' }),
     ];
-    const pieces = piecesDuContact(equarrisseur, CATEGORIE_FOURNISSEUR.EQUARRISSAGE, lots, []);
+    const pieces = piecesDuContact(equarrisseur, CATEGORIE_FOURNISSEUR.EQUARRISSAGE, [], [], enlevements);
     expect(pieces.map((p) => p.cle)).toEqual(['bon-b', 'bon-a']);
     expect(pieces[0].manque).toBe(true);
     expect(pieces[1].titre).toContain('4521');
-    expect(pieces[1].route).toContain('onglet=fichiers');
+    expect(pieces[1].route).toContain('/production/enlevement');
   });
 
   it('montre à chaque équarrisseur un lot sans équarrisseur choisi, en le disant', () => {
     const pieces = piecesDuContact(
       equarrisseur,
       CATEGORIE_FOURNISSEUR.EQUARRISSAGE,
-      [bon({ id: 'x', dateEnlevement: '2026-01-01' })],
       [],
+      [],
+      [bon({ id: 'x', date: '2026-01-01' })],
     );
     expect(pieces).toHaveLength(1);
     expect(pieces[0].detail).toContain('Équarrisseur à choisir');
@@ -128,8 +121,9 @@ describe('les pièces qui se rangent toutes seules dans les documents d’un con
       piecesDuContact(
         { nom: 'Garage', cle: 'g' },
         CATEGORIE_FOURNISSEUR.GARAGE,
-        [bon({})],
+        [],
         [circulation({})],
+        [bon({})],
       ),
     ).toEqual([]);
   });

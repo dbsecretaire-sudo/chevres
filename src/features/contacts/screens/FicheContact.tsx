@@ -81,6 +81,7 @@ export default function FicheContact() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { categories, idsConnus, assurerCategorie } = useCategoriesContact();
   const lots = useAppSettings().settings.exploitation?.lots;
+  const enlevements = useAppSettings().settings.exploitation?.enlevements;
 
   const [contact, setContact] = useState<Contact | undefined>();
   const [introuvable, setIntrouvable] = useState(false);
@@ -221,6 +222,7 @@ export default function FicheContact() {
     categorie.id,
     lots ?? [],
     circulations,
+    enlevements ?? [],
   );
 
   return (

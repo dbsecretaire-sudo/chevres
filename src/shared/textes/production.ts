@@ -665,15 +665,15 @@ export const TEXTES_PRODUCTION = {
       groupeEcritures: 'Les factures d’équarrissage',
       nouvelle: 'Nouvelle facture d’équarrissage',
       liens: {
-        bons: { titre: 'Bon d’équarrissage', aide: 'Un lot par enlèvement (Lots d’animaux › Équarrissage) : les animaux morts, le n° du bon et son scan.' },
+        bons: { titre: 'Enlèvements d’équarrissage', aide: 'Un enlèvement par passage de l’équarrisseur : les animaux morts, le n° du bon et le bon lui-même.' },
       },
     },
     abattoir: {
       titre: 'Abattoir',
       groupeTiers: 'Abattoirs',
       ajouterTiers: 'Ajouter un abattoir',
-      groupeEcritures: 'Les ventes et factures de l’abattoir',
-      nouvelle: 'Nouvelle vente de viande',
+      groupeEcritures: 'Factures de l’abattoir',
+      nouvelle: 'Nouvelle facture',
       liens: {
         amener: {
           titre: 'Nouveau lot d’abattoir',

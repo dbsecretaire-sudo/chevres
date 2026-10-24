@@ -1,6 +1,6 @@
 import type { EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
-import type { LotAnimaux } from '@/features/settings/settings';
-import { CATEGORIE_LOT } from '@/shared/constants/lots';
+import { titreDeLEnlevement } from '@/features/exploitation/services/enlevements';
+import type { EnlevementEquarrissage, LotAnimaux } from '@/features/settings/settings';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
@@ -34,28 +34,29 @@ export function piecesDuContact(
   categorieId: string | undefined,
   lots: readonly LotAnimaux[],
   ecritures: readonly EcritureACirculation[],
+  enlevements: readonly EnlevementEquarrissage[] = [],
 ): PieceDuContact[] {
   const ids = new Set([contact.cle, ...(contact.ids ?? [])].filter(Boolean));
   const pieces: PieceDuContact[] = [];
   if (categorieId === CATEGORIE_FOURNISSEUR.EQUARRISSAGE) {
-    for (const l of lots.filter((x) => x.categorie === CATEGORIE_LOT.EQUARRISSAGE)) {
-      if (l.contactCle && !ids.has(l.contactCle)) continue;
-      const fichiers = l.fichiers?.length ?? 0;
-      const manque = fichiers === 0 && !l.numeroBon;
+    for (const e of enlevements) {
+      if (e.contactCle && !ids.has(e.contactCle)) continue;
+      const fichiers = e.fichiers?.length ?? 0;
+      const manque = fichiers === 0 && !e.numeroBon;
       pieces.push({
-        cle: `bon-${l.id}`,
-        titre: l.numeroBon ? T.bonNumero(l.numeroBon) : T.bonDuLot(l.nom),
+        cle: `bon-${e.id}`,
+        titre: e.numeroBon ? T.bonNumero(e.numeroBon) : titreDeLEnlevement(e),
         detail: [
-          l.dateEnlevement ? formatDateFR(l.dateEnlevement) : undefined,
+          e.date ? formatDateFR(e.date) : undefined,
           fichiers > 0 ? TEXTES.fichiers.nombre(fichiers) : undefined,
           manque ? T.bonManque : undefined,
-          l.contactCle ? undefined : T.equarrisseurAChoisir,
+          e.contactCle ? undefined : T.equarrisseurAChoisir,
         ]
           .filter(Boolean)
           .join(' · '),
-        date: l.dateEnlevement ?? '',
+        date: e.date,
         manque,
-        route: `${ROUTES.lot(l.id)}&onglet=fichiers`,
+        route: ROUTES.enlevement(e.id),
       });
     }
   }

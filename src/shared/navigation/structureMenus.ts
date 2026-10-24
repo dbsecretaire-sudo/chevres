@@ -158,6 +158,8 @@ const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: Entre
       '/production/recettes',
       '/production/registre-analyses',
       ['/comptabilite/stocks?vue=atelier', 'Stock de l’atelier'],
+      { partie: 'Réglementation' },
+      '/production/cadre-reglementaire',
       { partie: 'Suivi' },
       '/comptabilite/rentabilite?perimetre=atelier',
     ],

@@ -15,8 +15,7 @@ import { anneesDesEcritures } from '@/features/comptabilite/services/documentsCi
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useLotsARappeler, type RappelDeLot } from '@/features/stock/hooks/useLotsARappeler';
 import { destinationRappel } from '@/features/rappels/services/destination';
-import { lotsSansBonEquarrissage } from '@/features/exploitation/services/lots';
-import { CATEGORIE_LOT } from '@/shared/constants/lots';
+import { enlevementsSansBon } from '@/features/exploitation/services/enlevements';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -43,14 +42,11 @@ function BlocRappelsDeclarations() {
   const manquantsCirculation = useDocumentsCirculationManquants();
   const circulation = manquantsCirculation.length;
   const { settings } = useAppSettings();
-  /** Les lots d'équarrissage sans bon : rappelés tant que leur bon n'est pas joint, comme les documents de circulation. */
-  const lotsSansBon = lotsSansBonEquarrissage(settings.exploitation?.lots);
-  const bonsManquants = lotsSansBon.length;
-  /** Un seul lot sans bon : le rappel ouvre ce lot sur son onglet Fichiers, là où le bon se joint ; plusieurs : la liste des lots d'équarrissage. */
-  const routeDuBon =
-    lotsSansBon.length === 1
-      ? `${ROUTES.lot(lotsSansBon[0].id)}&onglet=fichiers`
-      : ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.EQUARRISSAGE);
+  /** Les enlèvements d'équarrissage sans bon : rappelés tant que leur bon n'est pas joint, comme les documents de circulation. */
+  const enlevementsSansLeBon = enlevementsSansBon(settings.exploitation?.enlevements);
+  const bonsManquants = enlevementsSansLeBon.length;
+  /** Un seul enlèvement sans bon : le rappel ouvre sa fiche, là où le bon se joint ; plusieurs : la liste des enlèvements. */
+  const routeDuBon = enlevementsSansLeBon.length === 1 ? ROUTES.enlevement(enlevementsSansLeBon[0].id) : ROUTES.ENLEVEMENTS;
   /** Les années (autres que celle choisie) où des documents manquent : l'accueil le dit. */
   const anneesAilleurs = settings.toutesAnnees
     ? []

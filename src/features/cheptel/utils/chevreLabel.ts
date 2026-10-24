@@ -2,13 +2,14 @@ import type { ValeurDe } from '@/shared/constants/valeurDe';
 import {
   CATEGORIE_ANIMAL,
   SEXE,
+  STATUT_CHEVRE,
   agePetitMax,
   PREMIER_MOIS_SECOND_SEMESTRE,
 } from '@/shared/constants/cheptel';
 import type { Chevre, Sexe, StatutChevre } from '@/features/cheptel/types';
 import { ageAtteint } from '@/shared/utils/age';
 import { currentYear, formatDateFR, yearOf } from '@/shared/utils/dates';
-import { LIBELLES_STATUT_CHEVRE } from '@/shared/textes/libelles';
+import { LIBELLES_STATUT_CHEVRE, LIBELLE_STATUT_EQUARRISSAGE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 
 /** Libellé d'affichage d'une chèvre/cabrit, avec repli propre quand le n° de boucle n'a pas encore été posé. */
@@ -83,7 +84,8 @@ export function categorieAnimal(c: Pick<Chevre, 'dateNaissance' | 'sexe'>): Cate
 }
 
 /** Libellé de statut accordé au genre de l'animal (ex: "Vivant" pour un bouc, "Vivante" pour une chèvre). */
-export function statutLabel(statut: StatutChevre, sexe: Sexe): string {
+export function statutLabel(statut: StatutChevre, sexe: Sexe, enleveParLEquarrisseur = false): string {
+  if (enleveParLEquarrisseur && statut === STATUT_CHEVRE.MORTE) return LIBELLE_STATUT_EQUARRISSAGE;
   const m = sexe === SEXE.MALE;
   return LIBELLES_STATUT_CHEVRE[statut][m ? 1 : 0];
 }

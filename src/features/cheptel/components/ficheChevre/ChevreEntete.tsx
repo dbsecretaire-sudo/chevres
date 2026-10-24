@@ -43,7 +43,7 @@ export function ChevreEntete({ chevre, destineAAbattoir }: Props) {
       </View>
       <View style={commonStyles.headerDroite}>
         <View style={styles.badges}>
-          <Badge label={statutLabel(chevre.statut, chevre.sexe)} color={statutColors[chevre.statut]} />
+          <Badge label={statutLabel(chevre.statut, chevre.sexe, !!chevre.enlevementId)} color={statutColors[chevre.statut]} />
           {destineAAbattoir ? (
             <Badge label={TEXTES.cheptel.ficheChevre.destineAAbattoir} color={statutColors[STATUT_CHEVRE.ABATTOIR]} />
           ) : null}

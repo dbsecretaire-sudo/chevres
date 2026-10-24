@@ -103,8 +103,8 @@ export function ChevreSortie({
   const [deverrouillee, setDeverrouillee] = useState(false);
   const [date, setDate] = useState(chevre.dateStatut ?? '');
   const titre = chevre.dateStatut
-    ? T.titreAvecDate(statutLabel(chevre.statut, chevre.sexe), formatDateFR(chevre.dateStatut))
-    : statutLabel(chevre.statut, chevre.sexe);
+    ? T.titreAvecDate(statutLabel(chevre.statut, chevre.sexe, !!chevre.enlevementId), formatDateFR(chevre.dateStatut))
+    : statutLabel(chevre.statut, chevre.sexe, !!chevre.enlevementId);
   return (
     <Card style={commonStyles.gap8}>
       <View style={commonStyles.rowSpaceBetween}>

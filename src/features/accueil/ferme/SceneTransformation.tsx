@@ -107,7 +107,7 @@ const PAR_RANGEE = 3;
 /** La hauteur des trottoirs, des marges, et celle de base de la plaque blanche (la rue et la plaque se règlent d'après la place, voir plus bas). */
 const TROTTOIR = 8;
 const MARGE = 8;
-const HAUTEUR_DE_LA_PLAQUE = 104;
+const HAUTEUR_DE_LA_PLAQUE = 124;
 
 interface Props {
   compte?: CompteTransformation;

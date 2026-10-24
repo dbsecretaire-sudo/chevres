@@ -49,6 +49,9 @@ export const LABEL_SEXE: Record<ValeurDe<typeof SEXE>, string> = {
   [SEXE.MALE]: 'Mâle',
 };
 
+/** Le statut d'un animal mort enlevé par l'équarrisseur (même mot pour les deux genres). */
+export const LIBELLE_STATUT_EQUARRISSAGE = 'Équarrissage';
+
 /** Libellé de statut accordé au genre de l'animal : [féminin, masculin]. */
 export const LIBELLES_STATUT_CHEVRE: Record<
   ValeurDe<typeof STATUT_CHEVRE>,

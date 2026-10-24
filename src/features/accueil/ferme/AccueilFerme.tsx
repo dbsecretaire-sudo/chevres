@@ -189,6 +189,7 @@ export default function AccueilFerme() {
     { cle: 'entreprises', titre: C.entreprises, icone: iconeIon('business'), couleur: VENTE },
     { cle: 'emballages', titre: C.emballages, icone: iconeMCI('package-variant-closed'), couleur: ACHAT },
     { cle: 'analyses', titre: C.analyses, icone: iconeIon('flask'), couleur: ORANGE },
+    { cle: 'cadreReglementaireAtelier', titre: C.cadreReglementaire, icone: iconeIon('shield-checkmark'), couleur: ORANGE },
   ];
   // À droite de la scène de l'exploitation : la santé et la grange (en bulles), le cheptel (les animaux : liste, lots, ajouts, boucles, carnet de
   // naissance), les organismes, et les documents (l'estive) (bilan, dossier PAC, circulation, identification, historique).

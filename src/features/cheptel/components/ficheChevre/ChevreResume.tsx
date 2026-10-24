@@ -62,7 +62,7 @@ export function ChevreResume({ chevre, indicatif, onModifier }: Props) {
       </Text>
       {chevre.statut !== STATUT_CHEVRE.VIVANTE && (
         <Text style={commonStyles.line}>
-          {statutLabel(chevre.statut, chevre.sexe)} {TEXTES.cheptel.ficheChevre.leEspace}
+          {statutLabel(chevre.statut, chevre.sexe, !!chevre.enlevementId)} {TEXTES.cheptel.ficheChevre.leEspace}
           {formatDateFR(chevre.dateStatut)}
         </Text>
       )}

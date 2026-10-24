@@ -40,6 +40,8 @@ export const ROUTE_DIRECTE: Record<string, string> = {
   entreprises: ROUTES.lieu('entreprises'),
   // Les analyses : celles du lait, du fromage et de la charcuterie.
   analyses: ROUTES.lieu('analyses'),
+  // Les démarches pour fabriquer et vendre fromages, viande et charcuterie (déclaration, PMS, analyses, étiquetage, brocciu AOP…).
+  cadreReglementaireAtelier: ROUTES.CADRE_REGLEMENTAIRE_ATELIER,
   // Le registre des analyses de l'atelier : les fabrications et leurs analyses.
   registreAnalyses: ROUTES.PRODUCTION_REGISTRE_ANALYSES,
   // La bibliothèque de recettes de l'atelier.
@@ -129,6 +131,7 @@ export const BOUTONS_DE_LA_FERME = {
       ['entreprises', C.entreprises],
       ['emballages', C.emballages],
       ['analyses', C.analyses],
+      ['cadreReglementaireAtelier', C.cadreReglementaire],
     ],
   },
   agritourisme: {

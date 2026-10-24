@@ -31,6 +31,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'pereNumeroBoucle',
     'statut',
     'dateStatut',
+    'enlevementId',
     'renouvellement',
     'renouvellementAnnee',
     'poidsKg',

@@ -378,7 +378,7 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesVente: [],
     nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.AUTRE}`,
     // Le bon d'équarrissage est rangé dans le lot d'équarrissage (Lots d'animaux), avec ses animaux.
-    liens: [{ cle: 'bons', icone: 'document-text', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.EQUARRISSAGE) }],
+    liens: [{ cle: 'bons', icone: 'document-text', route: ROUTES.ENLEVEMENTS }],
   },
   abattoir: {
     cle: 'abattoir',
@@ -388,18 +388,10 @@ export const LIEUX_TIERS: Record<CleLieuTiers, ConfigLieuTiers> = {
     categoriesFacture: [CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE],
     // Les viandes vendues (aux clients) n'y sont pas : seules les factures qui passent par l'abattoir (celles de ses contacts et de sa catégorie) y figurent.
     categoriesVente: [],
-    nouvelle: `${NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.VIANDE}`,
-    liens: [
-      // Amener des animaux : le lot d'abord (animaux, document de circulation, vivants ou morts), la facture de l'abattoir ensuite.
-      { cle: 'amener', icone: 'cut', route: ROUTES.lotAbattoirNouveau() },
-      {
-        cle: 'facture',
-        icone: 'document-text',
-        route: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&abattoirContact=1`,
-      },
-      { cle: 'afacturer', icone: 'receipt', route: `${ROUTES.PRODUCTION_VIANDE}?onglet=afacturer` },
-      { cle: 'stock', icone: 'cube', route: stock(SECTION_STOCK.VIANDE) },
-    ],
+    // Une nouvelle facture de l'abattoir (une dépense) ; la vente de viande se fait dans l'Atelier.
+    nouvelle: `${NOUVELLE}?type=recue&depense=${CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE}&abattoirContact=1`,
+    // La vente de viande (lots à facturer, stock) se fait dans l'Atelier : cette page ne montre que les abattoirs et leurs écritures.
+    liens: [],
   },
   boucherie: {
     cle: 'boucherie',

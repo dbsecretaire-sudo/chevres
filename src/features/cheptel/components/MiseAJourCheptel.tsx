@@ -42,7 +42,7 @@ export function MiseAJourCheptel() {
         titre={T.choisir}
         options={(candidats ?? []).map((a) => ({
           value: a.id,
-          label: `${libelleChevreAvecDate(a)} · ${statutLabel(a.statut, a.sexe)}${a.dateStatut ? ` le ${formatDateFR(a.dateStatut)}` : ''}`,
+          label: `${libelleChevreAvecDate(a)} · ${statutLabel(a.statut, a.sexe, !!a.enlevementId)}${a.dateStatut ? ` le ${formatDateFR(a.dateStatut)}` : ''}`,
         }))}
         libelleValider={T.remettre}
         onValider={async (ids) => {
