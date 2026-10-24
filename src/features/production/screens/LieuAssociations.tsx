@@ -29,7 +29,7 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { LABEL_VOLET_COOPERATIVE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
-import { formatMontant } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 import { nomComplet } from '@/shared/utils/personne';
 
 const T = TEXTES.production.lieux;
@@ -179,6 +179,27 @@ export default function LieuAssociations() {
     </GroupeAccueil>
   );
 
+  // Les factures de toutes les associations (une écriture n'est comptée qu'une fois), les plus récentes d'abord, et leurs actions (dossiers).
+  const facturesDesAssociations = useMemo(() => {
+    const vues = new Set<string>();
+    return associations
+      .flatMap((c) => ecrituresDe(c))
+      .filter((t) => {
+        const cle = `${t.id}:${t.activite}`;
+        if (vues.has(cle)) return false;
+        vues.add(cle);
+        return true;
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [associations, ecrituresDe]);
+  const actions = useMemo(
+    () =>
+      associations
+        .flatMap((c) => elementsDuContact(c, controles, dossiers).map((element) => ({ element, association: c })))
+        .sort((a, b) => b.element.date.localeCompare(a.element.date)),
+    [associations, controles, dossiers],
+  );
+
   if (choisie) {
     const siennes = ecrituresDe(choisie);
     const volets = voletsDe(choisie);
@@ -270,6 +291,25 @@ export default function LieuAssociations() {
             icone="add-circle"
             onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.ASSOCIATION_AGRICOLE}`)}
           />
+        </BlocLignes>
+      </GroupeAccueil>
+
+      {/* Leurs factures (ces associations et coopératives sont en général payantes) : toutes celles de l'année, avec la nouvelle facture. */}
+      {groupeDEcritures('factures', G.groupeFactures, facturesDesAssociations, G.aucuneFacture, G.nouvelle, config.nouvelle)}
+
+      {/* Leurs actions : les dossiers rangés dans la fiche de chaque association ou coopérative (courriers, démarches, aides), du plus récent au plus ancien. */}
+      <GroupeAccueil titre={G.groupeActions}>
+        <BlocLignes>
+          {actions.length === 0 ? <Text style={commonStyles.mutedItalic}>{G.aucuneAction}</Text> : null}
+          {actions.map(({ element, association: c }) => (
+            <ListRow
+              key={`${c.cle}:${element.cle}`}
+              title={element.titre}
+              subtitle={[c.nom, formatDateFR(element.date)].filter(Boolean).join(' · ')}
+              icone="document-text"
+              onPress={() => ouvrir(`${ROUTES.lieu('groupement')}&association=${c.cle}`)}
+            />
+          ))}
         </BlocLignes>
       </GroupeAccueil>
     </Screen>

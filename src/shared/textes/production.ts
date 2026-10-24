@@ -395,6 +395,11 @@ export const TEXTES_PRODUCTION = {
       ajouterTiers: 'Ajouter une association ou une coopérative',
       groupeEcritures: 'Les écritures',
       nouvelle: 'Nouvelle facture',
+      /** Sous la liste des associations : leurs factures de l'année et leurs actions (les dossiers rangés dans la fiche de chacune). */
+      groupeFactures: 'Factures',
+      aucuneFacture: 'Aucune facture cette année.',
+      groupeActions: 'Actions',
+      aucuneAction: 'Aucune action : les dossiers (courriers, démarches, aides) se rangent dans la fiche de chaque association ou coopérative.',
       liens: {
         courriers: {
           titre: 'Courriers, démarches et aides',
