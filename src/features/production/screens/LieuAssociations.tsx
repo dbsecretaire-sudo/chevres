@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
@@ -179,7 +179,7 @@ export default function LieuAssociations() {
     </GroupeAccueil>
   );
 
-  // Les factures de toutes les associations (une écriture n'est comptée qu'une fois), les plus récentes d'abord, et leurs actions (dossiers).
+  // Les factures de toutes les associations (une écriture n'est comptée qu'une fois), les plus récentes d'abord.
   const facturesDesAssociations = useMemo(() => {
     const vues = new Set<string>();
     return associations
@@ -192,13 +192,6 @@ export default function LieuAssociations() {
       })
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [associations, ecrituresDe]);
-  const actions = useMemo(
-    () =>
-      associations
-        .flatMap((c) => elementsDuContact(c, controles, dossiers).map((element) => ({ element, association: c })))
-        .sort((a, b) => b.element.date.localeCompare(a.element.date)),
-    [associations, controles, dossiers],
-  );
 
   if (choisie) {
     const siennes = ecrituresDe(choisie);
@@ -269,21 +262,32 @@ export default function LieuAssociations() {
     <Screen>
       {rangeeDesLiens}
       <GroupeAccueil titre={G.groupeTiers}>
-        {associations.map((c) => (
-          <Pressable
-            key={c.cle}
-            style={styles.carte}
-            onPress={() => ouvrir(`${ROUTES.lieu('groupement')}&association=${c.cle}`)}
-            accessibilityRole="button"
-            accessibilityLabel={c.nom}
-          >
-            <Text style={styles.nom}>🤝 {c.nom}</Text>
-            <PastillesDesVolets volets={voletsDe(c)} />
-            <Text style={commonStyles.muted}>
-              {G.soldeAnnee(settings.anneeActive, soldeEcrit(ecrituresDe(c)))}
-            </Text>
-          </Pressable>
-        ))}
+        {/* Chaque association ou coopérative, puis en dessous et en décalé ses actions (les dossiers rangés dans sa fiche), comme les contrats sous un assureur. */}
+        <BlocLignes>
+          {associations.flatMap((c) => {
+            const ouvrirLAssociation = () => ouvrir(`${ROUTES.lieu('groupement')}&association=${c.cle}`);
+            const volets = voletsDe(c);
+            return [
+              <ListRow
+                key={c.cle}
+                title={c.nom}
+                subtitle={[volets.map(libelleDuVolet).join(', '), G.soldeAnnee(settings.anneeActive, soldeEcrit(ecrituresDe(c)))].filter(Boolean).join(' · ')}
+                icone="business"
+                onPress={ouvrirLAssociation}
+              />,
+              ...elementsDuContact(c, controles, dossiers).map((element) => (
+                <ListRow
+                  key={`${c.cle}:${element.cle}`}
+                  retrait
+                  title={element.titre}
+                  subtitle={formatDateFR(element.date)}
+                  icone="document-text"
+                  onPress={ouvrirLAssociation}
+                />
+              )),
+            ];
+          })}
+        </BlocLignes>
         {associations.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
         <BlocLignes>
           <ListRow
@@ -296,36 +300,11 @@ export default function LieuAssociations() {
 
       {/* Leurs factures (ces associations et coopératives sont en général payantes) : toutes celles de l'année, avec la nouvelle facture. */}
       {groupeDEcritures('factures', G.groupeFactures, facturesDesAssociations, G.aucuneFacture, G.nouvelle, config.nouvelle)}
-
-      {/* Leurs actions : les dossiers rangés dans la fiche de chaque association ou coopérative (courriers, démarches, aides), du plus récent au plus ancien. */}
-      <GroupeAccueil titre={G.groupeActions}>
-        <BlocLignes>
-          {actions.length === 0 ? <Text style={commonStyles.mutedItalic}>{G.aucuneAction}</Text> : null}
-          {actions.map(({ element, association: c }) => (
-            <ListRow
-              key={`${c.cle}:${element.cle}`}
-              title={element.titre}
-              subtitle={[c.nom, formatDateFR(element.date)].filter(Boolean).join(' · ')}
-              icone="document-text"
-              onPress={() => ouvrir(`${ROUTES.lieu('groupement')}&association=${c.cle}`)}
-            />
-          ))}
-        </BlocLignes>
-      </GroupeAccueil>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  carte: {
-    backgroundColor: colors.blanc,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DDE5D2',
-    padding: 12,
-    gap: 6,
-    marginBottom: 8,
-  },
   entete: { gap: 6 },
   nom: { fontSize: 17, fontWeight: '800', color: colors.primary },
   pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
