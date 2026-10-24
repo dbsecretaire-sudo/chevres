@@ -251,4 +251,15 @@ export interface ArchiveStock {
   dossiersSavons?: Record<string, DossierSavon>;
   /** La bibliothèque de recettes des plats préparés et des savons. */
   recettes?: RecetteDeFabrication[];
+  /**
+   * Les mouvements automatiques désactivés, chacun avec la date (AAAA-MM-JJ) de sa désactivation : ils ne se font plus à partir de ce jour,
+   * ceux d'avant restent comme ils étaient. Absent : les deux sont actifs.
+   */
+  sansAutomatique?: SansAutomatique;
+}
+
+/** La balance du lait (ce qui est sorti sans être noté est ajouté au lait produit) et la remise à zéro des aliments à chaque achat : la date où chacune s'arrête. */
+export interface SansAutomatique {
+  lait?: string;
+  aliments?: string;
 }

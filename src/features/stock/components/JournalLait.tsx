@@ -28,6 +28,7 @@ export function JournalLait({
   prix,
   onModifierPrix,
   onOuvrir,
+  onAutomatiqueChange,
 }: {
   lait: LaitJour[];
   /** Le bilan du lait : produit, utilisé, vendu et restant. */
@@ -36,6 +37,8 @@ export function JournalLait({
   prix?: number;
   onModifierPrix: () => void;
   onOuvrir: (entree: LaitJour) => void;
+  /** Appelé quand la balance automatique du lait est activée ou désactivée : le bilan est relu. */
+  onAutomatiqueChange?: () => void;
 }) {
   /** L'historique du lait (un appui sur sa carte) : le journal, les fabrications et les ventes. */
   const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
@@ -92,6 +95,7 @@ export function JournalLait({
   const fenetreHistorique = (
     <HistoriqueArticleModal
       article={historiqueOuvert ? { cle: 'lait', titre: T.carte, emoji: '🥛', unite: 'L' } : null}
+      onAutomatiqueChange={onAutomatiqueChange}
       onFermer={() => setHistoriqueOuvert(false)}
     />
   );

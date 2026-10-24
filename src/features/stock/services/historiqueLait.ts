@@ -10,7 +10,7 @@ export const CLE_LAIT = 'lait';
  * forcément été produit : la balance automatique ajoute en production ce que le journal ne couvre pas, à la date de chaque sortie.
  */
 export function mouvementsDuLait(
-  archive: Pick<ArchiveStock, 'mouvements' | 'lait'>,
+  archive: Pick<ArchiveStock, 'mouvements' | 'lait' | 'sansAutomatique'>,
   ventesLait: { id: string; date: string; litres: number }[],
 ): MouvementStock[] {
   const ventes: MouvementStock[] = ventesLait.map((v) => ({
@@ -37,9 +37,13 @@ export function mouvementsDuLait(
     origine: ORIGINE_MOUVEMENT.PRODUCTION,
   }));
   // La balance automatique : ce qui est sorti sans que le journal le couvre est ajouté en production, sortie par sortie.
+  // Désactivée à une date, la balance ne compte plus les sorties de ce jour et d'après ; celles d'avant gardent leur lait produit.
+  const arret = archive.sansAutomatique?.lait;
   const deduits: MouvementStock[] = productionDeduite(
     archive.lait.reduce((total, l) => total + l.litres, 0),
-    [...ventes, ...fabrications].map((m) => ({ id: m.id, date: m.date, litres: -m.delta })),
+    [...ventes, ...fabrications]
+      .filter((m) => !arret || m.date < arret)
+      .map((m) => ({ id: m.id, date: m.date, litres: -m.delta })),
   ).map((d) => ({
     id: `balance:${d.id}`,
     article: CLE_LAIT,

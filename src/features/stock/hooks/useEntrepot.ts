@@ -40,7 +40,8 @@ export function useEntrepot(): Entrepot {
   const { concernees, fromagerie, poules, filtreCourant } = useFiltreEspeceStock();
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   // Les litres de lait vendus : le bilan du lait en a besoin pour dire ce qu'il en reste.
-  const [litresVendus, setLitresVendus] = useState(0);
+  const [ventesLait, setVentesLait] = useState<{ id: string; date: string; litres: number }[]>([]);
+  const litresVendus = ventesLait.reduce((total, v) => total + v.litres, 0);
   const niveauxDuCheptel = useNiveauxStock();
 
   useFocusEffect(
@@ -50,10 +51,10 @@ export function useEntrepot(): Entrepot {
         .catch(() => undefined);
       listToutesVentes()
         .then((ventes) =>
-          setLitresVendus(
+          setVentesLait(
             ventes
               .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT)
-              .reduce((total, v) => total + (v.quantite ?? 0), 0),
+              .map((v) => ({ id: v.id, date: v.date, litres: v.quantite ?? 0 })),
           ),
         )
         .catch(() => undefined);
@@ -77,12 +78,12 @@ export function useEntrepot(): Entrepot {
       articlesDe: (genre: Parameters<typeof articlesDeLaSection>[0], section?: string, listeId?: string) =>
         articlesDeLaSection(genre, section as Section | undefined, archive, filtreCourant, listeId),
       niveau,
-      lait: fromagerie ? carteDuLait(T.lait, bilanLait(archive, litresVendus).restant) : undefined,
+      lait: fromagerie ? carteDuLait(T.lait, bilanLait(archive, litresVendus, ventesLait).restant) : undefined,
       oeufs: poules ? carteDesOeufs(T.oeufs, prixDesOeufs(archive)) : undefined,
     };
     for (const c of categories) parCategorie.set(c.categorie, groupesDeLaCategorie(c, lecture));
     return parCategorie;
-  }, [archive, categories, filtreCourant, fromagerie, poules, litresVendus, niveauxDuCheptel]);
+  }, [archive, categories, filtreCourant, fromagerie, poules, litresVendus, ventesLait, niveauxDuCheptel]);
 
   return { categories, groupesParCategorie };
 }

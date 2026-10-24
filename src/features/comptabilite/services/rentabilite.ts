@@ -253,6 +253,9 @@ export async function litresProduitsDeLAnnee(annee: number, ventes: Vente[]): Pr
       mouvements: archive.mouvements.filter((m) => deLAnnee(m.date)),
     },
     litresVendus,
+    ventes
+      .filter((v) => v.categorie === CATEGORIE_VENTE.LAIT && deLAnnee(v.date))
+      .map((v) => ({ id: v.id, date: v.date, litres: v.quantite ?? 0 })),
   ).produit;
 }
 

@@ -143,6 +143,11 @@ export const TEXTES_STOCK = {
     aucun: 'Aucun mouvement pour cet article.',
     ouvrirLeStock: 'Ouvrir dans l’inventaire',
     ajuster: 'Quantité',
+    /** Les mouvements automatiques, à activer ou désactiver (désactivés, ils s'arrêtent à partir d'aujourd'hui : l'historique d'avant reste). */
+    automatiqueLait: 'Mouvement automatique : ajouter au lait produit ce qui est sorti sans être noté',
+    automatiqueAliments: 'Mouvement automatique : remettre l’aliment à zéro à chaque nouvel achat',
+    automatiqueAide: 'Désactivé, il s’arrête à partir d’aujourd’hui : les mouvements d’avant restent.',
+    automatiqueDepuis: (date: string) => `Désactivé depuis le ${date} : les mouvements d’avant restent.`,
   },
   suppression: {
     titre: 'Supprimer cet article ?',
@@ -299,6 +304,9 @@ export const TEXTES_STOCK = {
     erreurImpression: 'Le document n’a pas pu être édité.',
     etiquettes: 'Étiquettes de la fabrication',
     etiquettesAvecContenu: 'Étiquettes avec le contenu net',
+    etiquettesNombre: 'Imprimer un nombre d’étiquettes',
+    nombreEtiquettesTitre: 'Combien d’étiquettes ?',
+    nombreEtiquettesExemple: 'ex : 24',
     tracabilite: 'Fiche de traçabilité',
     contenuNetTitre: 'Contenu net de chaque produit',
     contenuNetExemple: 'ex : 100 g',

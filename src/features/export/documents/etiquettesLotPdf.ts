@@ -54,14 +54,17 @@ export function etiquettesHtml(etiquettes: EtiquetteDeLot[], infos: InfosExploit
 
 /**
  * Les étiquettes d'un lot de plats préparés ou de savons en PDF : une par lot de la fabrication (numéro de lot, fabrication, durabilité, ingrédients ou liste INCI,
- * contenu net si on le donne, nom et adresse du responsable), à découper. Tout vient des données déjà saisies.
+ * contenu net si on le donne, nom et adresse du responsable), à découper. Tout vient des données déjà saisies. Avec `nombre`, ce nombre d'étiquettes du lot choisi.
  */
-export async function exporterEtiquettesLotPdf(lotId: string, contenuNet?: string): Promise<void> {
+export async function exporterEtiquettesLotPdf(lotId: string, contenuNet?: string, nombre?: number): Promise<void> {
   const [settings, archive] = await Promise.all([getSettings(), lireArchiveStock()]);
   const lot = (archive.lots ?? []).find((l) => l.id === lotId);
   if (!lot) return;
   const lots = lot.mouvementId ? (archive.lots ?? []).filter((l) => l.mouvementId === lot.mouvementId) : [lot];
-  const etiquettes = lots.map((l) => etiquetteDuLot(l, archive));
+  // Un nombre souhaité : autant d'étiquettes de ce lot ; sinon, une par lot de la fabrication.
+  const etiquettes = nombre
+    ? Array.from({ length: nombre }, () => etiquetteDuLot(lot, archive))
+    : lots.map((l) => etiquetteDuLot(l, archive));
   const titre = P.titre(etiquettes[0].produit);
   await ecrireEtPartagerPdf(
     documentHtml(titre, settings.exploitation, etiquettesHtml(etiquettes, settings.exploitation, contenuNet), undefined, ''),

@@ -6,6 +6,7 @@ import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remi
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { ArchiveStock, ReglageCategorie } from '@/features/stock/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+import { todayISO } from '@/shared/utils/dates';
 
 const cle = () => cleStockage(CLE_STOCKAGE.STOCK);
 
@@ -64,6 +65,15 @@ function platsValides(plats: ArchiveStock['platsFabriques']): ArchiveStock['plat
     if (p && Array.isArray(p.ingredients)) valides[id] = p;
   }
   return valides;
+}
+
+/** Les mouvements automatiques désactivés lus : ceux qui ont une date bien formée (rien : tout est actif). */
+function automatiquesValides(brut: ArchiveStock['sansAutomatique']): ArchiveStock['sansAutomatique'] {
+  const sans: NonNullable<ArchiveStock['sansAutomatique']> = {};
+  const date = (valeur: unknown): valeur is string => typeof valeur === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valeur);
+  if (date(brut?.lait)) sans.lait = brut.lait;
+  if (date(brut?.aliments)) sans.aliments = brut.aliments;
+  return Object.keys(sans).length > 0 ? sans : undefined;
 }
 
 export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefined): ArchiveStock {
@@ -145,6 +155,7 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
         )
       : [],
     platsFabriques: platsValides(archive?.platsFabriques),
+    sansAutomatique: automatiquesValides(archive?.sansAutomatique),
     masques: Array.isArray(archive?.masques) ? archive.masques.filter((cle) => typeof cle === 'string') : [],
     sectionsMasquees: sectionsMasqueesValides(archive?.sectionsMasquees),
     denreesAjoutees: archive?.denreesAjoutees === true ? true : undefined,
@@ -164,7 +175,8 @@ export async function lireArchiveStock(): Promise<ArchiveStock> {
   if (!raw) return avecNomsHarmonises(avecListesDOffice({ ...VIDE }));
   try {
     const archive = avecNomsHarmonises(sansDoublonsDOffice(avecListesDOffice(normaliserArchiveStock(JSON.parse(raw)))));
-    return { ...archive, mouvements: avecRemisesAZero(archive.mouvements) };
+    // La remise à zéro des aliments s'arrête à la date où elle a été désactivée : celles d'avant restent.
+    return { ...archive, mouvements: avecRemisesAZero(archive.mouvements, archive.sansAutomatique?.aliments) };
   } catch {
     return avecNomsHarmonises(avecListesDOffice({ ...VIDE }));
   }
@@ -177,4 +189,20 @@ export async function remplacerArchiveStock(archive: ArchiveStock): Promise<void
     cle(),
     JSON.stringify({ ...archive, mouvements: archive.mouvements.filter((m) => !estRemiseAZero(m)) }),
   );
+}
+
+/**
+ * Active ou désactive un mouvement automatique du stock : la balance du lait, ou la remise à zéro des aliments à chaque achat. Désactivé, il ne se
+ * fait plus à partir d'aujourd'hui ; ce qu'il avait fait avant reste.
+ */
+export async function reglerMouvementAutomatique(nom: 'lait' | 'aliments', actif: boolean): Promise<void> {
+  const raw = await AsyncStorage.getItem(cle());
+  let archive: ArchiveStock;
+  try {
+    archive = normaliserArchiveStock(raw ? JSON.parse(raw) : undefined);
+  } catch {
+    archive = normaliserArchiveStock(undefined);
+  }
+  const sans = { ...archive.sansAutomatique, [nom]: actif ? undefined : todayISO() };
+  await remplacerArchiveStock({ ...archive, sansAutomatique: automatiquesValides(sans) });
 }

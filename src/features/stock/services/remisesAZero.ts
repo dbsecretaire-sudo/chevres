@@ -9,13 +9,19 @@ export const estRemiseAZero = (m: MouvementStock): boolean =>
  * Ajoute aux mouvements la remise à zéro des aliments : à chaque achat d'un aliment, ce qui restait de ce même aliment (ses
  * achats précédents, moins ce qui a été consommé à la main) est considéré comme consommé. Ces mouvements se déduisent à
  * chaque lecture et ne sont jamais enregistrés : le stock d'un aliment est donc toujours celui de son dernier achat, même pour
- * des achats saisis avant cette règle ou dans le désordre.
+ * des achats saisis avant cette règle ou dans le désordre. `jusquAu` : la date (AAAA-MM-JJ) où l'utilisateur l'a désactivée ; les achats
+ * de ce jour et d'après n'en ont plus, ceux d'avant gardent la leur.
  */
-export function avecRemisesAZero(mouvements: MouvementStock[]): MouvementStock[] {
+export function avecRemisesAZero(mouvements: MouvementStock[], jusquAu?: string): MouvementStock[] {
   const bases = mouvements.filter((m) => !estRemiseAZero(m));
   const remises: MouvementStock[] = [];
   const achats = bases
-    .filter((m) => m.origine === ORIGINE_MOUVEMENT.ACHAT && m.article.startsWith(`${GENRE_ARTICLE.ALIMENT}:`))
+    .filter(
+      (m) =>
+        m.origine === ORIGINE_MOUVEMENT.ACHAT &&
+        m.article.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) &&
+        (!jusquAu || m.date < jusquAu),
+    )
     .sort((a, b) => a.date.localeCompare(b.date));
   for (const achat of achats) {
     const reste = [...bases, ...remises]

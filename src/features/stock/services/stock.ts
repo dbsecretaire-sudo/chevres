@@ -766,7 +766,7 @@ export interface BilanLait {
  * Le bilan du lait : les litres notés jour par jour, moins ceux des fabrications (les litres saisis en ajoutant des fromages ;
  * pour le brocciu, ceux versés dans le lactosérum) et ceux des ventes de lait.
  */
-export function bilanLait(archive: ArchiveStock, litresVendus: number): BilanLait {
+export function bilanLait(archive: ArchiveStock, litresVendus: number, ventesDatees?: SortieLait[]): BilanLait {
   const arrondi = (nombre: number) => Math.round(nombre * 100) / 100;
   const note = archive.lait.reduce((total, l) => total + l.litres, 0);
   const utilise = archive.mouvements
@@ -774,7 +774,20 @@ export function bilanLait(archive: ArchiveStock, litresVendus: number): BilanLai
     .reduce((total, m) => total + (m.litres ?? 0), 0);
   // Tout ce qui a été utilisé ou vendu a forcément été produit : le lait produit est au moins ce qui est sorti (le litrage noté
   // peut être plus grand, la différence est ce qu'il reste).
-  const produit = Math.max(note, utilise + litresVendus);
+  const arret = archive.sansAutomatique?.lait;
+  // La balance automatique, désactivée à une date, ne compte plus que les sorties d'avant : ensuite, le lait produit est celui qui est noté.
+  const produit = arret
+    ? note +
+      productionDeduite(
+        note,
+        [
+          ...archive.mouvements
+            .filter((m) => m.origine === ORIGINE_MOUVEMENT.MANUEL && m.delta > 0 && (m.litres ?? 0) > 0)
+            .map((m) => ({ id: m.id, date: m.date, litres: m.litres ?? 0 })),
+          ...(ventesDatees ?? []),
+        ].filter((s) => s.date < arret),
+      ).reduce((total, s) => total + s.litres, 0)
+    : Math.max(note, utilise + litresVendus);
   return {
     produit: arrondi(produit),
     utilise: arrondi(utilise),

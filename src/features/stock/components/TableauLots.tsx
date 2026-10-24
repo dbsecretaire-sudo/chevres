@@ -73,6 +73,8 @@ export function TableauLots({
   /** Le lot dont on imprime l'étiquette ou la fiche de traçabilité, et l'étiquette en attente du contenu net. */
   const [lotAImprimer, setLotAImprimer] = useState<LotFromage | undefined>();
   const [etiquetteDe, setEtiquetteDe] = useState<LotFromage | undefined>();
+  /** Le lot dont on imprime un nombre choisi d'étiquettes. */
+  const [nombreDe, setNombreDe] = useState<LotFromage | undefined>();
   /** Un lot rappelé n'est plus à contrôler : sa case ne se coche plus, et « Tout cocher » ne le compte pas. */
   const rappele = (l: LotFromage) => etatDuLot(l) === ETAT_LOT.RAPPELE;
   const aControler = lignes.filter((l) => !rappele(l));
@@ -239,6 +241,11 @@ export function TableauLots({
                   onPress: () => imprimer(exporterEtiquettesLotPdf(lotAImprimer.id)),
                 },
                 {
+                  label: T.etiquettesNombre,
+                  icon: 'copy-outline' as const,
+                  onPress: () => setNombreDe(lotAImprimer),
+                },
+                {
                   label: T.etiquettesAvecContenu,
                   icon: 'pricetags-outline' as const,
                   onPress: () => setEtiquetteDe(lotAImprimer),
@@ -264,6 +271,18 @@ export function TableauLots({
           if (lotEtiquete) imprimer(exporterEtiquettesLotPdf(lotEtiquete.id, texte));
         }}
         onAnnuler={() => setEtiquetteDe(undefined)}
+      />
+      <NomModal
+        visible={!!nombreDe}
+        titre={T.nombreEtiquettesTitre}
+        placeholder={T.nombreEtiquettesExemple}
+        onValider={(texte) => {
+          const lotEtiquete = nombreDe;
+          setNombreDe(undefined);
+          const nombre = Math.min(500, Math.floor(Number(texte.replace(',', '.'))));
+          if (lotEtiquete && nombre >= 1) imprimer(exporterEtiquettesLotPdf(lotEtiquete.id, undefined, nombre));
+        }}
+        onAnnuler={() => setNombreDe(undefined)}
       />
       <DateFabricationModal
         visible={!!lotADater}

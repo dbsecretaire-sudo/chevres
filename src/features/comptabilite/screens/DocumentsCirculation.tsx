@@ -4,21 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
-import { YearPicker } from '@/shared/components/YearPicker';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
-import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { ListRow } from '@/shared/components/ListRow';
 import { OptionsModal } from '@/shared/components/OptionsModal';
-import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
-import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { ApercuPiece } from '@/features/fichiers/components/ApercuPiece';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import {
-  anneesDesEcritures,
   ecrituresACirculation,
   estUnDepart,
   rechercherEcritures,
@@ -27,7 +22,6 @@ import {
 } from '@/features/comptabilite/services/documentsCirculation';
 import { useActionsDocumentCirculation } from '@/features/comptabilite/hooks/useActionsDocumentCirculation';
 import { nomsDesAbattoirs } from '@/features/fournisseurs/services/abattoirs';
-import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -101,18 +95,15 @@ function DetailDuDocument({
 }
 
 /**
- * Dossier PAC › Documents de circulation : les ventes et les dépenses d'animaux vivants (achat, abattoir), de l'année et de l'espèce choisies,
- * avec leur document de circulation. Tant qu'il manque, l'écriture porte un « ! » rouge (et l'accueil le rappelle) ; l'icône à droite dépose
- * le document rempli (scan, photo), le rouvre, le remplace, ou génère le modèle pré-rempli. Une recherche retrouve une écriture.
+ * Dossier PAC › Documents de circulation : tous les documents, de toutes les années et de toutes les espèces (un bon de livraison, une vente d'animaux
+ * vivants, un achat d'animaux), avec ou sans écriture comptable. Tant qu'il manque, la ligne porte un « ! » rouge (et l'accueil le rappelle) ; l'icône
+ * à droite dépose le document rempli (scan, photo), le rouvre, le remplace, ou génère le modèle pré-rempli. Une recherche retrouve un document.
  */
 export default function DocumentsCirculation() {
   const router = useRouter();
-  const { espece } = useEtablissement();
   const { ecriture: aMettreEnEvidence } = useLocalSearchParams<{ ecriture?: string }>();
   const [toutes, setToutes] = useState<EcritureACirculation[]>([]);
-  // L'année de l'écran est l'année active de l'application (ou toutes, quand elles sont regroupées), comme partout ailleurs.
-  const { settings, setAnneeActive, choisirToutesAnnees } = useAppSettings();
-  const regrouper = !!settings.toutesAnnees;
+  const { settings } = useAppSettings();
   const [recherche, setRecherche] = useState('');
   const [menu, setMenu] = useState<EcritureACirculation | null>(null);
   /** Le document ouvert dans la liste (sa clé) : on y voit le document et les écritures qu'il couvre. */
@@ -136,16 +127,9 @@ export default function DocumentsCirculation() {
     }, [charger]),
   );
 
-  // Celles de l'espèce choisie (ou communes à toutes), de l'année choisie, qui répondent à la recherche.
-  const deLEspece = toutes.filter((e) => e.activite === espece || e.activite === ACTIVITE_COMMUNE);
-  const annees = anneesDesEcritures(deLEspece);
-  const deLAnnee = regrouper ? deLEspece : deLEspece.filter((e) => e.date.startsWith(String(settings.anneeActive)));
-  const affichees = rechercherEcritures(deLAnnee, recherche);
-  /** Les documents qui manquent dans les autres années (ni ceux de l'année choisie, ni les déposés) : on le dit, avec de quoi les voir. */
-  const manquantsAilleurs = regrouper
-    ? []
-    : deLEspece.filter((e) => !e.depose && !e.date.startsWith(String(settings.anneeActive)));
-  const anneesDesManquants = anneesDesEcritures(manquantsAilleurs);
+  // Tous les documents, quelle que soit l'année ou l'espèce : ceux qui répondent à la recherche, et combien manquent.
+  const affichees = rechercherEcritures(toutes, recherche);
+  const nManquants = toutes.filter((e) => !e.depose).length;
 
   const ouvrirEcritureLiee = (type: 'vente' | 'facture', id: string) =>
     router.push((type === 'vente' ? ROUTES.ficheVente(id) : ROUTES.ficheFacture(id)) as never);
@@ -173,26 +157,12 @@ export default function DocumentsCirculation() {
 
   return (
     <Screen scroll={false}>
-      <LigneFiltres>
-        <YearPicker
-          annees={annees}
-          value={settings.anneeActive}
-          onChange={setAnneeActive}
-          tout={regrouper}
-          onChoisirTout={choisirToutesAnnees}
-        />
-        <SelecteurEspece />
-      </LigneFiltres>
-      {manquantsAilleurs.length > 0 ? (
-        <Pressable onPress={() => choisirToutesAnnees()} accessibilityRole="button">
-          <Text style={[commonStyles.note, { color: colors.danger, fontWeight: "700" }]}>
-            {T.autresAnnees(manquantsAilleurs.length, anneesDesManquants)} {T.voirToutesLesAnnees}
-          </Text>
-        </Pressable>
+      {nManquants > 0 ? (
+        <Text style={[commonStyles.note, { color: colors.danger, fontWeight: '700' }]}>{T.nManquants(nManquants)}</Text>
       ) : null}
       <Text style={commonStyles.note}>{T.aideEcran}</Text>
       <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.rechercher} />
-      <Text style={commonStyles.cardTitle}>{T.ecritures(affichees.length)}</Text>
+      <Text style={commonStyles.cardTitle}>{T.documents(affichees.length)}</Text>
       <FlatList
         data={affichees}
         keyExtractor={(e) => e.cle}
@@ -211,11 +181,6 @@ export default function DocumentsCirculation() {
                     <Text style={commonStyles.muted}>
                       {[formatDateFR(item.date), item.reference].filter(Boolean).join(' · ')}
                     </Text>
-                    {estUnDepart(item.type) ? null : (
-                      <Text style={[commonStyles.lineBold, { color: item.montant < 0 ? colors.danger : colors.primary }]}>
-                        {formatMontant(item.montant)}
-                      </Text>
-                    )}
                   </View>
                 }
                 trailing={

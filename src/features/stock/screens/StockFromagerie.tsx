@@ -681,10 +681,11 @@ export default function StockFromagerie() {
                       ) : section === SECTION_STOCK.LAIT ? (
                         <JournalLait
                           lait={archive.lait}
-                          bilan={bilanLait(archive, litresVendus)}
+                          bilan={bilanLait(archive, litresVendus, ventesLait)}
                           prix={archive.prix[CLE_PRIX_LAIT]}
                           onModifierPrix={() => setPrixLaitOuvert(true)}
                           onOuvrir={setLaitOuvert}
+                          onAutomatiqueChange={() => charger().catch(() => undefined)}
                         />
                       ) : section === SECTION_STOCK.OEUFS ? (
                         <Card>
@@ -887,6 +888,7 @@ export default function StockFromagerie() {
           setArticle(historiqueDe);
           setHistoriqueDe(null);
         }}
+        onAutomatiqueChange={() => charger().catch(() => undefined)}
         onFermer={() => setHistoriqueDe(null)}
       />
       <ArticleStockModal
