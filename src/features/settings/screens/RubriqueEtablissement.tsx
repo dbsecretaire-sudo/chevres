@@ -3,6 +3,8 @@ import { Checkbox } from '@/shared/components/Checkbox';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { Screen } from '@/shared/components/Screen';
+import { Button } from '@/shared/components/Button';
+import { useRole } from '@/features/roles/context/RoleContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
 import { ROUTES } from '@/shared/constants/routes';
@@ -13,6 +15,7 @@ const T = TEXTES.settings.reglages;
 /** Organisation › Mon exploitation : ses informations, ses documents d'identification et le choix de l'accueil. */
 export default function RubriqueEtablissement() {
   const { settings, patchSettings } = useAppSettings();
+  const { choisir } = useRole();
   return (
     <Screen>
       <BlocLignes>
@@ -36,6 +39,8 @@ export default function RubriqueEtablissement() {
         onChange={(classique) => patchSettings({ exploitation: { ...settings.exploitation, accueilClassique: classique || undefined } })}
       />
       <Text style={commonStyles.note}>{TEXTES.accueil.ferme.reglage.aide}</Text>
+      {/* Le mode se choisit au lancement : on peut y revenir d'ici (le choix « Mode normal » ou « Mode avancé » s'affiche de nouveau). */}
+      <Button variant="secondary" label={TEXTES.roles.berger.changerDeRole} onPress={() => choisir(undefined)} />
     </Screen>
   );
 }

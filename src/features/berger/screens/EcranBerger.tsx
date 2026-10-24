@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +16,9 @@ import {
 import { useRole } from '@/features/roles/context/RoleContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useGoogleDriveSansNavigation } from '@/features/settings/hooks/useGoogleDrive';
+import { AtelierSimple } from '@/features/production/simple/AtelierSimple';
 import { Button } from '@/shared/components/Button';
+import { GrosBouton } from '@/shared/components/GrosBouton';
 import { FormField } from '@/shared/components/FormField';
 import { nbPetitsMax, SEXE } from '@/shared/constants/cheptel';
 import { styles } from '@/shared/styles/roles/Roles.styles';
@@ -36,6 +38,7 @@ type Zone = 'chevres' | 'fromagerie' | 'tourisme';
 type Etape =
   | { nom: 'accueil' }
   | { nom: 'chevres' }
+  | { nom: 'fromagerie' }
   | { nom: 'bientot'; zone: Zone }
   | { nom: 'scan'; but: But }
   | { nom: 'main'; but: But }
@@ -43,34 +46,6 @@ type Etape =
   | { nom: 'fait'; titre: string; detail: string; annuler: () => Promise<void> }
   | { nom: 'annule' }
   | { nom: 'erreur'; message: string; but: But };
-
-/** Un très grand bouton : l'icône, le mot, rien d'autre. `clair` : un bouton moins haut et sans fond, pour ce qui n'est pas une saisie (Envoyer). */
-function GrosBouton({
-  libelle,
-  onPress,
-  icone,
-  clair = false,
-}: {
-  libelle: string;
-  onPress: () => void;
-  icone: ReactNode;
-  clair?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.grosBouton,
-        clair ? [styles.grosBoutonClair, styles.grosBoutonBas] : null,
-        pressed ? styles.grosBoutonAppuye : null,
-      ]}
-    >
-      {icone}
-      <Text style={[styles.grosTexte, clair ? styles.grosTexteClair : null]}>{libelle}</Text>
-    </Pressable>
-  );
-}
 
 /**
  * L'écran du berger, sans menu ni autre page : trois gros boutons au départ (Chèvres, Fromagerie, Tourisme). Chèvres : « Enregistrer une naissance » (on scanne la boucle de la mère, on dit
@@ -156,7 +131,7 @@ export default function EcranBerger() {
               />
               <GrosBouton
                 libelle={T.fromagerie}
-                onPress={() => setEtape({ nom: 'bientot', zone: 'fromagerie' })}
+                onPress={() => setEtape({ nom: 'fromagerie' })}
                 icone={<MaterialCommunityIcons name="cheese" size={52} color={colors.blanc} />}
               />
               <GrosBouton
@@ -193,6 +168,8 @@ export default function EcranBerger() {
               </Pressable>
             </View>
           ) : null}
+
+          {etape.nom === 'fromagerie' ? <AtelierSimple onQuitter={accueil} /> : null}
 
           {etape.nom === 'bientot' ? (
             <View style={styles.contenu}>

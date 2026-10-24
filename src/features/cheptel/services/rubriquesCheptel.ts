@@ -41,6 +41,8 @@ export function groupesCheptel(avecDossierPac: boolean): GroupeRubrique[] {
       titre: C.accueil.groupes.troupeau,
       lignes: [
         { cle: 'animaux', titre: L.animaux.titre, aide: L.animaux.aide, icone: 'paw', route: ROUTES.CHEPTEL_LISTE },
+        // Ce que le mode normal a saisi sur le terrain (naissances, morts) et qu'il reste à compléter.
+        { cle: 'aCompleter', titre: TEXTES.roles.aCompleter.titre, aide: TEXTES.roles.aCompleter.rienAide, icone: 'create', route: ROUTES.CHEPTEL_A_COMPLETER },
         { cle: 'naissances', titre: L.naissances.titre, aide: L.naissances.aide, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCES },
         { cle: 'sorties', titre: L.sorties.titre, aide: L.sorties.aide, icone: 'exit', route: ROUTES.CHEPTEL_HISTORIQUE },
         { cle: 'lots', titre: C.lots.titre, aide: C.lots.aide, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },

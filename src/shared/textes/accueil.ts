@@ -127,6 +127,7 @@ export const TEXTES_ACCUEIL = {
         savon: 'Fabriquer un savon',
         lait: 'Lait du jour',
         lotsAtelier: 'Lots et étiquettes',
+        etiquettes: 'Imprimer des étiquettes',
         viandeAFacturer: 'Viande à facturer',
         stock: 'Stock',
         nouvelleVisite: 'Nouvelle visite',

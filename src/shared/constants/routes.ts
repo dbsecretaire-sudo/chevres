@@ -174,6 +174,10 @@ export const ROUTES = {
   PRODUCTION_REGISTRE_ANALYSES: '/production/registre-analyses',
   /** La fabrication et le rappel d'un produit suivi par lot (`produit` : fromage ou charcuterie). */
   productionFabrication: (produit: string) => `/production/fabrication?produit=${produit}` as const,
+  /** Fabriquer un fromage ou de la charcuterie en très grands boutons (le produit, les litres de lait, combien). */
+  /** Imprimer des étiquettes en très grands boutons (le produit, sa fabrication, combien). */
+  PRODUCTION_ETIQUETTES_SIMPLE: '/production/etiquettes-simple',
+  productionFabricationSimple: (produit: string) => `/production/fabrication-simple?produit=${produit}` as const,
   productionRappel: (produit: string) => `/production/rappel?produit=${produit}` as const,
   PRODUCTION_RAPPELS_LOTS: '/production/rappels-lots',
   PRODUCTION_VIANDE: '/production/viande',

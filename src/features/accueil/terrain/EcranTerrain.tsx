@@ -1,5 +1,4 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { ScrollView } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
@@ -9,6 +8,7 @@ import {
   type ComptesTerrain,
   type ZoneTerrain,
 } from '@/features/accueil/terrain/ecransTerrain';
+import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { styles } from '@/shared/styles/accueil/EcranTerrain.styles';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -40,29 +40,7 @@ export default function EcranTerrain() {
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       <Stack.Screen options={{ title: titreDuTerrain(zone) }} />
       <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
-        <View style={styles.grille}>
-          {tuilesDuTerrain(zone, comptes).map((t) => (
-            <Pressable
-              key={t.cle}
-              onPress={() => ouvrir(t.route)}
-              accessibilityRole="button"
-              accessibilityLabel={t.nombre ? `${t.titre} : ${t.nombre}` : t.titre}
-              style={({ pressed }) => [styles.tuile, pressed ? styles.tuileAppuyee : null]}
-            >
-              <View style={styles.haut}>
-                {t.iconeMci ? (
-                  <MaterialCommunityIcons name={t.iconeMci} size={44} color={colors.primary} />
-                ) : (
-                  <Ionicons name={t.icone} size={44} color={colors.primary} />
-                )}
-                {t.nombre ? <Text style={[styles.nombre, t.alerte ? styles.nombreAlerte : null]}>{t.nombre}</Text> : null}
-              </View>
-              <Text style={styles.titre} numberOfLines={2}>
-                {t.titre}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} onAppui={(t) => ouvrir(t.route)} />
       </ScrollView>
     </AccentColorProvider>
   );

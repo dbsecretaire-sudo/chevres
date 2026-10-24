@@ -11,7 +11,7 @@ export const TEXTES_ROLES = {
   aCompleter: {
     titre: 'À compléter',
     rien: 'Rien à compléter.',
-    rienAide: 'Les naissances et les morts saisies par le berger apparaissent ici, avec leurs détails à compléter.',
+    rienAide: 'Les naissances et les morts saisies en mode normal apparaissent ici, avec leurs détails à compléter.',
     sansBoucle: 'Sans boucle',
     fait: 'Fait',
     naissanceDu: (date: string) => `Naissance du ${date}`,
