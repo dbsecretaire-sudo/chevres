@@ -160,6 +160,7 @@ export default function ProductionLayout() {
       <Stack.Screen name="vehicule" options={{ title: TEXTES.flotte.titreFiche }} />
       <Stack.Screen name="rapports-essais" options={{ title: TEXTES.gds.documents.titreRapports }} />
       <Stack.Screen name="rapport-essais" options={{ title: TEXTES.gds.documents.titreRapports }} />
+      <Stack.Screen name="depart" options={{ title: TEXTES.exploitation.ventesVivants.titreFiche }} />
       <Stack.Screen name="ventes-vivants" options={{ title: TEXTES.exploitation.ventesVivants.titre }} />
       <Stack.Screen name="cadre-reglementaire" options={{ title: TEXTES.exploitation.cadreAtelier.titre }} />
       <Stack.Screen name="enlevements" options={{ title: TEXTES.exploitation.enlevements.titre }} />

@@ -78,6 +78,8 @@ export const ROUTES = {
     `/production/vehicule${id || onglet ? '?' : ''}${[id ? `id=${id}` : '', onglet ? `onglet=${onglet}` : ''].filter(Boolean).join('&')}` as const,
   /** Les rapports d'essais du laboratoire (prophylaxie) déposés par l'éleveur. */
   RAPPORTS_ESSAIS_GDS: '/production/rapports-essais',
+  /** La fiche d'une vente d'animaux vivants (un départ) : l'acheteur, les animaux, le document de circulation, la facture. */
+  departVivants: (id: string) => `/production/depart?id=${id}` as const,
   /** Les ventes d'animaux vivants : la liste d'abord, puis « Nouvelle vente ». */
   VENTES_VIVANTS: '/production/ventes-vivants',
   /** Le cadre réglementaire de l'atelier (fabriquer et vendre fromages, viande, charcuterie ; la Corse). */

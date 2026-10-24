@@ -48,6 +48,12 @@ export const lotsTextes = {
     aideVente: 'Des animaux partent vivants : la date, les animaux, puis le document de circulation (à générer, puis à téléverser une fois signé), obligatoire avant la vente.',
     enregistrerBon: 'Enregistrer le bon de livraison',
     enregistrerVente: 'Enregistrer le départ',
+    acheteur: {
+      titre: 'Acheteur (client)',
+      nonPrecise: 'Non précisé',
+      introuvable: 'Client introuvable',
+      aide: 'Le document de circulation se range dans les documents de ce client.',
+    },
     abattoir: 'Abattoir',
     aucunAbattoir: 'Aucun contact de catégorie Abattoir : ajoutez-le dans les contacts.',
     enregistrer: 'Enregistrer le lot',

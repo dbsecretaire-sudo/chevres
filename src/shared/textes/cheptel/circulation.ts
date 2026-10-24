@@ -40,6 +40,11 @@ export const circulationTextes = {
   },
   sansFactureLiee: 'Pour déposer votre propre document, liez d’abord la facture de l’abattoir (onglet Écritures) : le document y est rattaché.',
   boutonAbattoir: 'Document de circulation vers l’abattoir',
+  /** Le document de circulation d'un départ d'animaux vivants : il va chez l'acheteur, pas à l'abattoir. */
+  boutonVente: 'Document de circulation',
+  /** Le bouton qui crée la vente du départ, au nom de l'acheteur (le détenteur d'arrivée). */
+  facturerLeDepart: 'Facturer ce départ au détenteur d’arrivée',
+  facturerApresDocument: 'Déposez d’abord le document de circulation : il est obligatoire avant la facture.',
   aide: 'Pré-rempli d’après la vente, pour exemple : à recopier sur la liasse officielle de la Chambre d’agriculture.',
   fichier: 'document_circulation',
   exemple: 'EXEMPLE',
