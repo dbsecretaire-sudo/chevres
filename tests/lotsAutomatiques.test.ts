@@ -134,15 +134,15 @@ describe('catégories de lots', () => {
 
 describe('gestion des catégories de lots', () => {
   it('sans réglage : celles d’office puis celles ajoutées ; avec une liste : ses noms et son ordre, les catégories d’office toujours là', () => {
-    expect(categoriesDeLots(['Chevrettes']).map((c) => c.id)).toEqual(['abattoir', 'depart', 'equarrissage', 'veterinaire', 'reproduction', 'avortement', 'renouvellement', 'Chevrettes']);
+    expect(categoriesDeLots(['Chevrettes']).map((c) => c.id)).toEqual(['abattoir', 'depart', 'equarrissage', 'reproduction', 'avortement', 'renouvellement', 'Chevrettes']);
     const liste = [
       { id: 'renouvellement', nom: 'Futures chèvres' },
       { id: 'abc', nom: 'Chevrettes' },
       { id: 'abattoir', nom: 'Boucherie' },
     ];
     const categories = categoriesDeLots([], liste);
-    // Départ, Équarrissage, Vétérinaire, Mises à la reproduction et Avortements manquaient de la liste : elles reviennent en tête.
-    expect(categories.map((c) => c.id)).toEqual(['depart', 'equarrissage', 'veterinaire', 'reproduction', 'avortement', 'renouvellement', 'abc', 'abattoir']);
+    // Départ, Équarrissage, Mises à la reproduction et Avortements manquaient de la liste : elles reviennent en tête.
+    expect(categories.map((c) => c.id)).toEqual(['depart', 'equarrissage', 'reproduction', 'avortement', 'renouvellement', 'abc', 'abattoir']);
     expect(categories.find((c) => c.id === 'renouvellement')?.nom).toBe('Futures chèvres');
     expect(estCategorieDeLotsProtegee('abattoir')).toBe(true);
     expect(estCategorieDeLotsProtegee('abc')).toBe(false);
@@ -150,14 +150,12 @@ describe('gestion des catégories de lots', () => {
 });
 
 describe('lots verrouillés', () => {
-  it('abattoir, visite vétérinaire et lots d’une année ne se renomment ni ne se suppriment ; un lot libre, si', () => {
+  it('abattoir et lots d’une année ne se renomment ni ne se suppriment ; un lot libre, si', () => {
     expect(estLotVerrouille(lot({ categorie: 'abattoir', abattoir: '2026-02-25' }))).toBe(true);
-    expect(estLotVerrouille(lot({ categorie: 'veterinaire', visiteId: 'v' }))).toBe(true);
-    expect(estLotVerrouille(lot({ categorie: 'veterinaire' }))).toBe(true);
     expect(estLotVerrouille(lot({ categorie: 'avortement', avortement: 2026 }))).toBe(true);
     expect(estLotVerrouille(lot({ categorie: 'Chevrettes' }))).toBe(false);
     expect(estLotVerrouille(lot({}))).toBe(false);
-    expect(['abattoir', 'veterinaire', 'reproduction', 'avortement', 'renouvellement'].every(estCategorieVerrouillee)).toBe(true);
+    expect(['abattoir', 'reproduction', 'avortement', 'renouvellement'].every(estCategorieVerrouillee)).toBe(true);
     expect(estCategorieVerrouillee('Chevrettes')).toBe(false);
   });
 });
@@ -168,7 +166,6 @@ describe('flèche de retour d’un lot', () => {
     expect(pageParente('/cheptel/lots-categorie?categorie=abattoir')).toBe('/cheptel/lots');
     expect(pageParente('/cheptel/traitement?id=x')).toBe('/cheptel/traitements');
     expect(pageParente('/cheptel/naissance-nouvelle')).toBe('/cheptel/naissances');
-    expect(pageParente('/sante/veterinaire/visite?id=x')).toBe('/cheptel/lots-categorie?categorie=veterinaire');
   });
 });
 

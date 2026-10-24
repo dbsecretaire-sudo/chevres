@@ -1,1 +1,1 @@
-export { default } from '@/features/exploitation/screens/NouvelleVisite';
+export { default } from '@/features/exploitation/screens/FicheVisiteVeterinaire';

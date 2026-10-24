@@ -52,6 +52,8 @@ export const ROUTES = {
   CHEPTEL_TRAITEMENT_NOUVEAU: '/cheptel/traitement',
   /** Un nouveau traitement pour un lot d'animaux (ses boucles sont déjà reprises). */
   traitementPourLot: (lotId: string) => `/cheptel/traitement?lotId=${lotId}` as const,
+  /** Un nouveau traitement pour une visite vétérinaire (`visite` : la facture du vétérinaire) : il s'y rattache. */
+  traitementPourVisite: (visite: string) => `/cheptel/traitement?visite=${visite}` as const,
   /** Les lots d'animaux et le suivi sanitaire de chacun. */
   CHEPTEL_LOTS: '/cheptel/lots',
   CHEPTEL_LOT_NOUVEAU: '/cheptel/lot',

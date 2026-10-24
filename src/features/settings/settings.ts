@@ -192,8 +192,6 @@ export interface LotAnimaux {
   avortement?: number;
   /** Un lot de renouvellement : l'année de désignation de ses animaux (renouvellementAnnee de leur fiche, que le lot tient à jour). */
   renouvellement?: number;
-  /** Un lot créé tout seul pour une visite vétérinaire : la visite (son nom et sa date la suivent). */
-  visiteId?: string;
   /** Pour un lot d'abattoir : la facture (dépense) de l'abattoir qui le concerne ; son montant est proposé en frais refacturés au client. */
   factureId?: string;
   /** Sans facture liée : le montant que l'abattoir demande de payer (€ TTC), noté à la main. */

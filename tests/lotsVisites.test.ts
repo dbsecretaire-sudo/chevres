@@ -1,67 +1,50 @@
 import { describe, expect, it } from 'vitest';
-import { accorderLotsEtVisites, categoriesDeLots, groupesDeLots } from '@/features/exploitation/services/lots';
-import type { VisiteVeterinaire } from '@/features/exploitation/types';
+import { categoriesDeLots, retirerLesLotsDeVisites } from '@/features/exploitation/services/lots';
+import type { Traitement, VisiteVeterinaire } from '@/features/exploitation/types';
 import type { LotAnimaux } from '@/features/settings/settings';
 
-const visite = (id: string, date: string, boucles?: string, lotId?: string): VisiteVeterinaire =>
-  ({ id, date, motif: 'Prophylaxie', chevreNumeroBoucle: boucles, lotId }) as VisiteVeterinaire;
-let n = 0;
-const id = () => `lot${++n}`;
+const visite = (id: string, extra: Record<string, unknown> = {}): VisiteVeterinaire =>
+  ({ id, date: '2026-08-26', motif: 'Prophylaxie', ...extra }) as VisiteVeterinaire;
+const ancienLot = (id: string, boucles: string, visiteId?: string): LotAnimaux =>
+  ({ id, nom: 'Visite vétérinaire du 26/08/2026', boucles, categorie: 'veterinaire', visiteId }) as unknown as LotAnimaux;
+const traitement = (id: string, extra: Partial<Traitement> = {}): Traitement => ({ id, date: '2026-08-26', produit: 'p', ...extra });
 
-describe('lots et visites vétérinaires d’accord', () => {
-  it('une visite qui a des boucles reçoit un lot « Visite vétérinaire du … » de catégorie vétérinaire', () => {
-    const r = accorderLotsEtVisites([visite('v1', '2026-08-26', '30002, 10001')], [], id);
-    expect(r.lots).toHaveLength(1);
-    expect(r.lots?.[0]).toMatchObject({ nom: 'Visite vétérinaire du 26/08/2026', boucles: '10001, 30002', visiteId: 'v1', categorie: 'veterinaire' });
-    expect(r.visites[0].lotId).toBe(r.lots?.[0].id);
+describe('les lots de visites vétérinaires n’existent plus', () => {
+  it('le lot de la visite est retiré ; la visite garde ses boucles et n’a plus de lot', () => {
+    const r = retirerLesLotsDeVisites(
+      [ancienLot('l1', '30002, 10001', 'v1'), { id: 'libre', nom: 'Chevrettes', boucles: '5' } as LotAnimaux],
+      [visite('v1', { lotId: 'l1', chevreNumeroBoucle: '1' })],
+      [],
+    );
+    expect(r.lots?.map((l) => l.id)).toEqual(['libre']);
+    expect(r.visites).toHaveLength(1);
+    expect(r.visites[0].chevreNumeroBoucle).toBe('10001, 30002');
+    expect('lotId' in r.visites[0]).toBe(false);
   });
 
-  it('une visite du troupeau entier (sans boucle) reçoit aussi son lot, vide', () => {
-    const r = accorderLotsEtVisites([visite('v1', '2026-08-26')], [], id);
-    expect(r.lots).toHaveLength(1);
-    expect(r.lots?.[0]).toMatchObject({ nom: 'Visite vétérinaire du 26/08/2026', boucles: '', visiteId: 'v1', categorie: 'veterinaire' });
-    expect(r.visites[0].lotId).toBe(r.lots?.[0].id);
-    // Le lot est là : rien de plus à faire.
-    expect(accorderLotsEtVisites([{ ...visite('v1', '2026-08-26'), lotId: r.lots?.[0].id }], r.lots ?? [], id)).toEqual({ lots: null, visites: [] });
+  it('un lot vide (troupeau entier) laisse la visite sans boucle', () => {
+    const r = retirerLesLotsDeVisites([ancienLot('l1', '', 'v1')], [visite('v1', { lotId: 'l1' })], []);
+    expect(r.visites[0].chevreNumeroBoucle).toBeUndefined();
   });
 
-  it('un lot fait à la main, aux mêmes boucles, est adopté (renommé), pas doublé', () => {
-    const manuel: LotAnimaux = { id: 'm', nom: 'Visite vétérinaire du 2025-09-20', boucles: '1, 2' };
-    const r = accorderLotsEtVisites([visite('v1', '2025-09-20', '2, 1')], [manuel], id);
-    expect(r.lots).toHaveLength(1);
-    expect(r.lots?.[0]).toMatchObject({ id: 'm', nom: 'Visite vétérinaire du 20/09/2025', visiteId: 'v1', categorie: 'veterinaire' });
-    expect(r.visites[0].lotId).toBe('m');
+  it('un traitement donné au lot se rattache à la visite (sa facture), sans le lot', () => {
+    const r = retirerLesLotsDeVisites(
+      [ancienLot('l1', '1', 'v1')],
+      [visite('v1', { lotId: 'l1', factureId: 'f1' })],
+      [traitement('t1', { lotId: 'l1' }), traitement('t2', { lotId: 'autre' })],
+    );
+    expect(r.traitements).toHaveLength(1);
+    expect(r.traitements[0]).toMatchObject({ id: 't1', visiteId: 'f1' });
+    expect('lotId' in r.traitements[0]).toBe(false);
   });
 
-  it('une visite prend les boucles de son lot (le lot est la source) ; sans boucle, le troupeau entier', () => {
-    const lot: LotAnimaux = { id: 'l', nom: 'Chevrettes', boucles: '5, 6', categorie: undefined };
-    expect(accorderLotsEtVisites([visite('v1', '2026-01-01', '1', 'l')], [lot], id).visites[0].chevreNumeroBoucle).toBe('5, 6');
-    const vide: LotAnimaux = { id: 'l', nom: 'Chevrettes', boucles: '' };
-    expect(accorderLotsEtVisites([visite('v1', '2026-01-01', '1', 'l')], [vide], id).visites[0].chevreNumeroBoucle).toBeUndefined();
-    // Déjà d'accord : rien à changer.
-    expect(accorderLotsEtVisites([visite('v1', '2026-01-01', '5, 6', 'l')], [lot], id)).toEqual({ lots: null, visites: [] });
+  it('une fois fait, plus rien à changer', () => {
+    const r = retirerLesLotsDeVisites([{ id: 'libre', nom: 'Chevrettes', boucles: '5' } as LotAnimaux], [visite('v1')], [traitement('t1')]);
+    expect(r).toEqual({ lots: null, visites: [], traitements: [] });
   });
 
-  it('le lot d’une visite suit la date de la visite', () => {
-    const lot: LotAnimaux = { id: 'l', nom: 'Visite vétérinaire du 26/08/2026', boucles: '1', visiteId: 'v1', categorie: 'veterinaire' };
-    const r = accorderLotsEtVisites([visite('v1', '2026-09-01', '1', 'l')], [lot], id);
-    expect(r.lots?.[0].nom).toBe('Visite vétérinaire du 01/09/2026');
-  });
-
-  it('les lots rangés par catégorie : abattoir, vétérinaire, celles ajoutées, puis les autres', () => {
-    const lots: LotAnimaux[] = [
-      { id: 'a', nom: 'A', boucles: '', categorie: 'veterinaire' },
-      { id: 'b', nom: 'B', boucles: '', categorie: 'abattoir' },
-      { id: 'c', nom: 'C', boucles: '' },
-      { id: 'd', nom: 'D', boucles: '', categorie: 'Reproduction' },
-      { id: 'e', nom: 'E', boucles: '', categorie: 'Disparue' },
-    ];
-    const groupes = groupesDeLots(lots, categoriesDeLots(['Reproduction']), 'Autres lots');
-    expect(groupes.map((g) => [g.nom, g.lots.map((l) => l.id)])).toEqual([
-      ['Abattoir', ['b']],
-      ['Vétérinaire', ['a']],
-      ['Reproduction', ['d']],
-      ['Autres lots', ['c', 'e']],
-    ]);
+  it('la catégorie « Vétérinaire » n’est plus proposée, même gardée dans les réglages', () => {
+    expect(categoriesDeLots([], [{ id: 'veterinaire', nom: 'Vétérinaire' }]).some((c) => c.id === 'veterinaire')).toBe(false);
+    expect(categoriesDeLots().some((c) => c.id === 'veterinaire')).toBe(false);
   });
 });

@@ -71,14 +71,6 @@ describe('historique des pages pour la flèche de retour', () => {
     expect(estUneCreation('/production/lieu?lieu=assurance')).toBe(false);
   });
 
-  it('une page de passage (la fiche d’une visite, qui ouvre son lot) n’entre pas dans l’historique', () => {
-    repartirDeLAccueil('/');
-    noterPage('/sante/controles/liste?famille=animaux&onglet=sante');
-    noterPage('/sante/veterinaire/visite?id=abc');
-    noterPage('/cheptel/lot?id=l1');
-    expect(pageDAvant()).toBe('/sante/controles/liste?famille=animaux&onglet=sante');
-  });
-
   it('un retour à l’accueil oublie ce qui a été vu avant', () => {
     noterPage('/a');
     noterPage('/b');
