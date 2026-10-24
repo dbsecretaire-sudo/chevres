@@ -1,6 +1,6 @@
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
 import { BlocSante } from '@/features/exploitation/components/BlocSante';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';

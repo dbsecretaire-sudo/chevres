@@ -7,7 +7,7 @@ import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
 import { useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
-import { usePositionDansLesMenus } from '@/shared/navigation/usePositionDansLesMenus';
+import { usePositionDansLesMenus } from '@/features/accueil/shell/usePositionDansLesMenus';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
 

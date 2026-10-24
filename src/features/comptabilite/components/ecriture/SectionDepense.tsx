@@ -1,5 +1,5 @@
 import { estBoucleNumerotee } from '@/features/stock/services/boucles';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { AnimauxAchetesEditor } from '@/features/comptabilite/components/AnimauxAchetesEditor';
 import { LotDAbattoirChoix } from '@/features/comptabilite/components/LotDAbattoirChoix';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';

@@ -15,7 +15,7 @@ import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { NomModal } from '@/features/dossiers/components/NomModal';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';

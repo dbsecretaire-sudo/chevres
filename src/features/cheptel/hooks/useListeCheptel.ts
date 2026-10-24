@@ -23,7 +23,7 @@ import {
 } from '@/features/cheptel/utils/filtresCheptel';
 import { FILTRE_CATEGORIE_CHEPTEL, FILTRE_STATUT_CHEPTEL, TRI_CHEPTEL } from '@/shared/constants/cheptel';
 import { ETAT_CONSERVE } from '@/shared/constants/etatConserve';
-import { useEtatConserve } from '@/shared/hooks/useEtatConserve';
+import { useEtatConserve } from '@/features/etablissements/hooks/useEtatConserve';
 import { TEXTES } from '@/shared/textes';
 
 /** État de la liste du cheptel : chargement, filtres, tri, recherche et libellés dérivés. */

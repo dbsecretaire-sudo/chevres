@@ -28,7 +28,7 @@ import { FenetreCategorieDepense } from '@/features/settings/components/FenetreC
 import { FormField } from '@/shared/components/FormField';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { Screen } from '@/shared/components/Screen';
 import { SelectField } from '@/shared/components/SelectField';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';

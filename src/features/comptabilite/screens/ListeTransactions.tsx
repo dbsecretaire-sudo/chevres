@@ -1,4 +1,4 @@
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';

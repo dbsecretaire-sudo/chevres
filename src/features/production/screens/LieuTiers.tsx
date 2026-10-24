@@ -30,7 +30,7 @@ import { listToutesFactures } from '@/features/comptabilite/repository/factures'
 import type { Facture } from '@/features/comptabilite/types';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
 import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisseur';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { listTousControles } from '@/features/exploitation/repository/controles';

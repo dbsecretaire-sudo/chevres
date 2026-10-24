@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { ancreDe } from '@/features/didacticiel/components/AncreVisite';
+import { ancreDe } from '@/shared/components/AncreVisite';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { centreDuMenu, libelleDuMenu } from '@/features/didacticiel/services/menuHaut';
 import { HAUTEUR_BARRE_ONGLETS, zoneDeLaFlecheRetour, zoneDeLOnglet } from '@/features/didacticiel/services/visiteGuidee';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { libellesDesMenus } from '@/shared/navigation/structureMenus';
+import { libellesDesMenus } from '@/features/accueil/shell/structureMenus';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { colors } from '@/shared/theme/colors';

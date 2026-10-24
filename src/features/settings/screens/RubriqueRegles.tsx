@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Text } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { reglesDeLApplication } from '@/features/settings/services/reglesApplication';

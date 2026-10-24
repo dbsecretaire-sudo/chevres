@@ -18,7 +18,7 @@ import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/exploitation/hooks/useFraisAbattoir';
 import { useInconsommables } from '@/features/exploitation/hooks/useInconsommables';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SuggestionParcours } from '@/features/didacticiel/components/SuggestionParcours';
 import { ChampPrixPersonnalise } from '@/features/comptabilite/components/ecriture/ChampPrixPersonnalise';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';

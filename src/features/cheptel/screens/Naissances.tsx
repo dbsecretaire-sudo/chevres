@@ -9,7 +9,7 @@ import { Fab } from '@/shared/components/Fab';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { Badge } from '@/shared/components/Badge';

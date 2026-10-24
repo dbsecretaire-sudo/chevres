@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter, usePathname, useGlobalSearchParams, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAncre } from '@/features/didacticiel/components/AncreVisite';
+import { useAncre } from '@/shared/components/AncreVisite';
 import { dansLeMenuDeGauche, pageParente } from '@/bureau/retour';
 import { ROUTES } from '@/shared/constants/routes';
 import { useOrigineRetour, useRetour } from '@/shared/navigation/origineRetour';

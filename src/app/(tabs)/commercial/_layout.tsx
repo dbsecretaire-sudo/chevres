@@ -1,4 +1,4 @@
-import { enteteApplication } from '@/shared/navigation/enteteApplication';
+import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
 import { Stack } from 'expo-router';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';

@@ -9,7 +9,7 @@ import { Fab } from '@/shared/components/Fab';
 import { Screen } from '@/shared/components/ScreenList';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { YearPicker } from '@/shared/components/YearPicker';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { lireArchiveStock } from '@/features/stock/repository';

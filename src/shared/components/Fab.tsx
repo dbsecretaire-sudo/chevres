@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { OptionsModal, type Option } from '@/shared/components/OptionsModal';
 import { styles } from '@/shared/styles/components/Fab.styles';
-import { useAncre } from '@/features/didacticiel/components/AncreVisite';
+import { useAncre } from '@/shared/components/AncreVisite';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 

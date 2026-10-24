@@ -9,7 +9,7 @@ import Reglages from '@/features/settings/screens/Reglages';
 import { DansColonneGauche, useDeuxColonnes } from '@/bureau/colonnes';
 import { useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { ROUTES } from '@/shared/constants/routes';
-import { DispositionComptable } from '@/shared/components/DispositionComptable';
+import { DispositionComptable } from '@/features/accueil/shell/DispositionComptable';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { afficheBureau } from '@/shared/utils/affichage';
 import { LARGEUR_MENU, styles } from '@/shared/styles/bureau/EnDeuxColonnes.styles';

@@ -4,7 +4,7 @@ import { changerAffichage } from '@/bureau/changerAffichage';
 import { useVisiteGuidee } from '@/features/didacticiel/context/VisiteGuidee';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { menusDeLApplication } from '@/shared/navigation/structureMenus';
+import { menusDeLApplication } from '@/features/accueil/shell/structureMenus';
 import { afficheBureau, modeAffichage, modeDeLaCommande } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 

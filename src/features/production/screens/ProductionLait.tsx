@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { Text } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';

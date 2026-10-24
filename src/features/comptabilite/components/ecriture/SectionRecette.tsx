@@ -28,7 +28,7 @@ import type { Vente } from '@/features/comptabilite/types';
 import { libelleCategorieVente } from '@/features/comptabilite/utils/ventes';
 import { ChampNatureUrssaf } from '@/features/comptabilite/components/ChampNatureUrssaf';
 import { CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { ChampVehicule } from '@/features/comptabilite/components/ChampVehicule';
 import { ChampVoletCooperative } from '@/features/comptabilite/components/ChampVoletCooperative';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';

@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { Screen } from '@/shared/components/Screen';
 import { LigneImprimerBoucles } from '@/features/stock/components/LigneImprimerBoucles';
 import EntrepotJeu from '@/features/stock/screens/EntrepotJeu';

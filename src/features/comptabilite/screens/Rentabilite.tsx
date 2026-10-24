@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import { Screen } from '@/shared/components/Screen';
 import { Card } from '@/shared/components/Card';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { CoutsAgritourismeFormules } from '@/features/comptabilite/components/CoutsAgritourisme';
 import { PlanEconomies } from '@/features/comptabilite/components/PlanEconomies';

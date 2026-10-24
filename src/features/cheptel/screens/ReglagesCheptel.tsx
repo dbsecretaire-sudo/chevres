@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';

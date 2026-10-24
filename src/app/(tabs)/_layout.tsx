@@ -1,5 +1,5 @@
-import { enteteApplication } from '@/shared/navigation/enteteApplication';
-import { BarreDuBas } from '@/shared/navigation/BarreDuBas';
+import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
+import { BarreDuBas } from '@/features/accueil/shell/BarreDuBas';
 import { Tabs, useSegments } from 'expo-router';
 import { EcranErreur } from '@/shared/components/EcranErreur';
 import { effacerOrigine } from '@/shared/navigation/origineRetour';

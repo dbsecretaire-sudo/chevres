@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';

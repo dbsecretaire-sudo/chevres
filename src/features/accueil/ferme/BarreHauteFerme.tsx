@@ -6,7 +6,7 @@ import { BoutonEnregistrer } from '@/features/sauvegarde/components/BoutonEnregi
 import { SelecteursFerme } from '@/features/accueil/ferme/SelecteursFerme';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
-import { PastilleMenus } from '@/shared/components/PastilleMenus';
+import { PastilleMenus } from '@/features/accueil/shell/PastilleMenus';
 import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';

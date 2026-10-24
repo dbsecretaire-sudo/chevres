@@ -5,7 +5,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { routesDuMenu } from '@/shared/navigation/filAriane';
 import { routeLaPlusPrecise, type ParametresDePage } from '@/shared/navigation/pageOuverte';
-import { menusDuPoste } from '@/shared/navigation/structureMenus';
+import { menusDuPoste } from '@/features/accueil/shell/structureMenus';
 
 /** Les menus de l'application tels que l'arbre de gauche, le menu « Menus » du téléphone et le fil d'Ariane les montrent (les huit thèmes), et la page de menu qui est ouverte (une seule : la plus précise). */
 export function usePositionDansLesMenus(): { menus: DefinitionMenu[]; courante: string | undefined; adresse: string } {

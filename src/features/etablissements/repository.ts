@@ -20,6 +20,13 @@ import {
   SEPARATEUR_CLE,
 } from '@/shared/constants/stockage';
 import { TEXTES } from '@/shared/textes';
+import {
+  cleStockage,
+  cleStockagePour,
+  definirEtablissementActif,
+  getIdEtablissementActif,
+  prefixeDeStockage,
+} from '@/shared/storage/etablissementActif';
 
 export type TypeAnimalEtablissement = string;
 export type ActiviteSociete = ValeurDe<typeof ACTIVITE_SOCIETE>;
@@ -42,31 +49,12 @@ const KEY_ACTIF = `${PREFIXE_STOCKAGE}${CLE_STOCKAGE.ETABLISSEMENT_ACTIF}`;
 
 const NOM_DEFAUT = TEXTES.etablissements.repository.monExploitation;
 
-let idActif = ID_ETABLISSEMENT_DEFAUT;
-
-function prefixePour(id: string): string {
-  return id === ID_ETABLISSEMENT_DEFAUT
-    ? PREFIXE_STOCKAGE
-    : `${PREFIXE_STOCKAGE}${SEGMENT_ETABLISSEMENT}${SEPARATEUR_CLE}${id}${SEPARATEUR_CLE}`;
-}
-
-/** Clé AsyncStorage d'une donnée propre à un établissement donné (pour lire les données d'un autre établissement). */
-export function cleStockagePour(etablissementId: string, suffixe: string): string {
-  return `${prefixePour(etablissementId)}${suffixe}`;
-}
-
-/** Clé AsyncStorage d'une donnée propre à l'établissement actif. */
-export function cleStockage(suffixe: string): string {
-  return cleStockagePour(idActif, suffixe);
-}
-
-export function getIdEtablissementActif(): string {
-  return idActif;
-}
+// L'établissement actif et les clés de stockage sont dans la base du stockage (shared) ; ils restent exportés d'ici pour les fonctionnalités.
+export { cleStockage, cleStockagePour, getIdEtablissementActif };
 
 /** Les établissements autres que l'établissement actif. */
 export async function listAutresEtablissements(): Promise<Etablissement[]> {
-  return (await listEtablissements()).filter((e) => e.id !== idActif);
+  return (await listEtablissements()).filter((e) => e.id !== getIdEtablissementActif());
 }
 
 export async function listEtablissements(): Promise<Etablissement[]> {
@@ -110,18 +98,18 @@ export async function initialiserEtablissements(): Promise<{ liste: Etablissemen
   await chargerEspeces();
   const liste = await listEtablissements();
   const sauvegarde = await AsyncStorage.getItem(KEY_ACTIF);
-  idActif = liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id;
-  const actif = liste.find((e) => e.id === idActif);
+  definirEtablissementActif(liste.some((e) => e.id === sauvegarde) ? (sauvegarde as string) : liste[0].id);
+  const actif = liste.find((e) => e.id === getIdEtablissementActif());
   definirEspecesActives(actif?.animaux, await lireEspeceMemorisee());
   definirModeEntreprise(!!actif && estEntreprise(actif), actif?.activites);
-  return { liste, actifId: idActif };
+  return { liste, actifId: getIdEtablissementActif() };
 }
 
 export async function choisirEtablissementActif(id: string): Promise<void> {
   const liste = await listEtablissements();
   const cible = liste.find((e) => e.id === id);
   if (!cible) return;
-  idActif = id;
+  definirEtablissementActif(id);
   await AsyncStorage.setItem(KEY_ACTIF, id);
   definirEspecesActives(cible.animaux, await lireEspeceMemorisee());
   definirModeEntreprise(estEntreprise(cible), cible.activites);
@@ -135,7 +123,7 @@ export const profilEstVide = (profil: ProfilEtablissement): boolean =>
   (profil.animaux?.length ?? 0) === 0 && (profil.activites?.length ?? 0) === 0;
 
 export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
-  const actif = (await listEtablissements()).find((e) => e.id === idActif);
+  const actif = (await listEtablissements()).find((e) => e.id === getIdEtablissementActif());
   return { animaux: actif?.animaux ?? [], activites: actif?.activites ?? [] };
 }
 
@@ -145,7 +133,7 @@ export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
  * effacer ceux d'un autre.
  */
 export async function appliquerProfilEtablissementActif(profil: ProfilEtablissement): Promise<void> {
-  const actif = (await listEtablissements()).find((e) => e.id === idActif);
+  const actif = (await listEtablissements()).find((e) => e.id === getIdEtablissementActif());
   if (!actif || !profil || typeof profil !== 'object' || profilEstVide(profil)) return;
   const garder = <T extends string>(valeurs: unknown, permises: readonly T[]): T[] =>
     Array.isArray(valeurs) ? valeurs.filter((v): v is T => permises.includes(v)) : [];
@@ -166,7 +154,7 @@ export async function creerEtablissement(donnees: DonneesEtablissement): Promise
 export async function modifierEtablissement(id: string, donnees: DonneesEtablissement): Promise<void> {
   const liste = await listEtablissements();
   await ecrireListe(liste.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
-  if (id === idActif) {
+  if (id === getIdEtablissementActif()) {
     definirEspecesActives(donnees.animaux, especeCourante());
     definirModeEntreprise(estEntreprise(donnees), donnees.activites);
   }
@@ -178,14 +166,14 @@ export async function modifierEtablissement(id: string, donnees: DonneesEtabliss
  */
 export async function supprimerEtablissement(id: string): Promise<{ supprime: boolean; actifId: string }> {
   const liste = await listEtablissements();
-  if (liste.length <= 1 || !liste.some((e) => e.id === id)) return { supprime: false, actifId: idActif };
+  if (liste.length <= 1 || !liste.some((e) => e.id === id)) return { supprime: false, actifId: getIdEtablissementActif() };
 
   const restants = liste.filter((e) => e.id !== id);
-  if (id === idActif) await choisirEtablissementActif(restants[0].id);
+  if (id === getIdEtablissementActif()) await choisirEtablissementActif(restants[0].id);
 
   // L'établissement historique a pour préfixe celui de toute l'application : on ne touche ni aux autres
   // établissements, ni à la liste, ni au choix de l'établissement actif.
-  const prefixe = prefixePour(id);
+  const prefixe = prefixeDeStockage(id);
   const prefixeAutres = `${PREFIXE_STOCKAGE}${SEGMENT_ETABLISSEMENT}${SEPARATEUR_CLE}`;
   const cles = (await AsyncStorage.getAllKeys()).filter(
     (k) =>
@@ -195,5 +183,5 @@ export async function supprimerEtablissement(id: string): Promise<{ supprime: bo
   );
   if (cles.length > 0) await AsyncStorage.multiRemove(cles);
   await ecrireListe(restants);
-  return { supprime: true, actifId: idActif };
+  return { supprime: true, actifId: getIdEtablissementActif() };
 }

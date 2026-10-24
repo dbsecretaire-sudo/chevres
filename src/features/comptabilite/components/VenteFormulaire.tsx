@@ -30,7 +30,7 @@ import type { Client } from '@/features/clients/types';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import type { Vente } from '@/features/comptabilite/types';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';

@@ -1,4 +1,4 @@
-import { enteteApplication } from '@/shared/navigation/enteteApplication';
+import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
 import { Stack } from 'expo-router';
 import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranParEspece';
 import { useAccordDesLots } from '@/features/exploitation/hooks/useAccordDesLots';

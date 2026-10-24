@@ -8,7 +8,7 @@ import { FiltresCheptel } from '@/features/cheptel/components/FiltresCheptel';
 import { LigneChevre } from '@/features/cheptel/components/LigneChevre';
 import { useListeCheptel } from '@/features/cheptel/hooks/useListeCheptel';
 import type { Chevre } from '@/features/cheptel/types';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';

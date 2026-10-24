@@ -5,7 +5,7 @@ import { categoriesDuLien, deCesCategories, PARAMETRE_CATEGORIES } from '@/featu
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ColonnesVerticales } from '@/shared/components/ColonnesVerticales';
 import { EmptyState } from '@/shared/components/EmptyState';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { ListRow } from '@/shared/components/ListRow';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Screen } from '@/shared/components/Screen';

@@ -6,7 +6,7 @@ import {
   categoriesAvecAjoutees,
   type Section,
 } from '@/features/stock/utils/categories';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/ScreenList';

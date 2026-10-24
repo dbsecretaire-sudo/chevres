@@ -8,7 +8,7 @@ import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { partiesDuMenu } from '@/shared/navigation/filAriane';
 import { useMenusSections } from '@/shared/navigation/menusSections';
-import { menusDuPoste } from '@/shared/navigation/structureMenus';
+import { menusDuPoste } from '@/features/accueil/shell/structureMenus';
 import { modeEntreprise } from '@/shared/dictionnaire/entreprise';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';

@@ -11,7 +11,7 @@ import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { CATEGORIE_VENTE, CATEGORIE_RECETTE } from '@/shared/constants/comptabilite';

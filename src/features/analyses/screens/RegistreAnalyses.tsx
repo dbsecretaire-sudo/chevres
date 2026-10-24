@@ -22,7 +22,7 @@ import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/Tab
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { FAMILLE_CONTROLE } from '@/shared/constants/controles';

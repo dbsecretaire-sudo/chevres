@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { menusDeLaFerme, menusDuPoste } from '@/shared/navigation/structureMenus';
+import { menusDeLaFerme, menusDuPoste } from '@/features/accueil/shell/structureMenus';
 
 const routesDe = (menus: ReturnType<typeof menusDuPoste>): string[] =>
   menus.flatMap((m) => [...(m.route ? [m.route] : []), ...(m.items ?? []).flatMap((e) => ('route' in e ? [e.route] : []))]);

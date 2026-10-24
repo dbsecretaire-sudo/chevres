@@ -12,7 +12,7 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { FormField } from '@/shared/components/FormField';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { Screen } from '@/shared/components/Screen';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';

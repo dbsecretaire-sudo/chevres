@@ -8,7 +8,7 @@ import { YearPicker } from '@/shared/components/YearPicker';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { ListRow } from '@/shared/components/ListRow';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';

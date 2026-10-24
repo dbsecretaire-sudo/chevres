@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Categorie, RecordMap } from '@/shared/storage/types';
-import { cleStockage } from '@/features/etablissements/repository';
+import { cleStockage } from '@/shared/storage/etablissementActif';
 import { CLE_STOCKAGE, SEPARATEUR_CLE } from '@/shared/constants/stockage';
 
 /**

@@ -6,7 +6,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { Fab } from '@/shared/components/Fab';
 import { Screen } from '@/shared/components/Screen';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { ListRow } from '@/shared/components/ListRow';
 import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { YearPicker } from '@/shared/components/YearPicker';

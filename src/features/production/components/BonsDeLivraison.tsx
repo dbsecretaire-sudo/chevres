@@ -1,5 +1,5 @@
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { TableauBonsDeLivraison } from '@/features/exploitation/components/TableauxDesDeparts';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';

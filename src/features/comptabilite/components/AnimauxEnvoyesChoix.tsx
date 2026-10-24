@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { FiltresExclusifs } from '@/shared/components/FiltresExclusifs';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';

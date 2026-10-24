@@ -16,7 +16,7 @@ import {
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
 import { RUBRIQUE_COMPTABILITE } from '@/shared/constants/comptabilite';
 import { ETAT_CONSERVE } from '@/shared/constants/etatConserve';
-import { useEtatConserve } from '@/shared/hooks/useEtatConserve';
+import { useEtatConserve } from '@/features/etablissements/hooks/useEtatConserve';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { memeJourDansLAnnee } from '@/shared/utils/dates';
 

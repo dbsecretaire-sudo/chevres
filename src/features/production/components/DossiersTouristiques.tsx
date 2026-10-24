@@ -6,7 +6,7 @@ import { listTousControles } from '@/features/exploitation/repository/controles'
 import { dossiersTouristiques, nombreDeContenus } from '@/features/exploitation/services/dossiersDeContenus';
 import type { Controle } from '@/features/exploitation/types';
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';

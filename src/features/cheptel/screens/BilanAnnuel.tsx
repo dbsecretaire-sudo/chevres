@@ -16,7 +16,7 @@ import {
   primesPrevisionnelles,
   ugbDe,
 } from '@/features/cheptel/services/ugb';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { DeclarationChambre } from '@/features/cheptel/components/bilan/DeclarationChambre';
 import { Text } from 'react-native';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';

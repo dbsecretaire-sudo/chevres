@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
 import { ListRow } from '@/shared/components/ListRow';
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
+import { AncreVisite } from '@/shared/components/AncreVisite';
 import { useLigneActive } from '@/bureau/colonnes';
 
 /** Une ligne d'un menu de l'organisation : une icône, un titre, une phrase, et l'écran qu'elle ouvre. */

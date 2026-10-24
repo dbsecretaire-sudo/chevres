@@ -1,4 +1,4 @@
-import { enteteApplication } from '@/shared/navigation/enteteApplication';
+import { enteteApplication } from '@/features/accueil/shell/optionsEnTete';
 import { Stack, type Href } from 'expo-router';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { quitterRetour, useRetourContexte } from '@/shared/navigation/contexteRetour';

@@ -5,7 +5,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { ListRow } from '@/shared/components/ListRow';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { LigneElement } from '@/features/dossiers/components/LigneElement';
 import type { EtatExplorateur } from '@/features/dossiers/hooks/useExplorateur';

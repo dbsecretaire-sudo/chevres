@@ -18,7 +18,7 @@ import type { ArchiveDossiers } from '@/features/dossiers/types';
 import { listTousControles } from '@/features/exploitation/repository/controles';
 import type { Controle } from '@/features/exploitation/types';
 import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
-import { GroupeAccueil } from '@/shared/components/GroupeAccueil';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
 import { SENS_TRANSACTION } from '@/shared/constants/comptabilite';

@@ -1,5 +1,5 @@
-import { AncreVisite } from '@/features/didacticiel/components/AncreVisite';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { AncreVisite } from '@/shared/components/AncreVisite';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Card } from '@/shared/components/Card';

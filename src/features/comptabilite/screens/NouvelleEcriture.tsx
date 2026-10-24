@@ -9,7 +9,7 @@ import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { precocherFraisTouristiques } from '@/features/comptabilite/services/fraisTouristiques';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ATELIER } from '@/shared/constants/ateliers';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { colors } from '@/shared/theme/colors';
 import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';

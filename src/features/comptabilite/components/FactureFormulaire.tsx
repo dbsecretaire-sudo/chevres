@@ -11,7 +11,7 @@ import { Button } from '@/shared/components/Button';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';

@@ -5,7 +5,7 @@ import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
-import { LigneFiltres } from '@/shared/components/LigneFiltres';
+import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
