@@ -165,6 +165,8 @@ export async function creerChevre(input: {
   statut?: StatutChevre;
   renouvellement?: boolean;
   renouvellementAnnee?: number;
+  /** Saisi vite sur le terrain : à compléter à la maison. */
+  aCompleter?: boolean;
 }): Promise<Chevre> {
   const statut = input.statut ?? STATUT_CHEVRE.VIVANTE;
   const chevre: Chevre = {
@@ -183,6 +185,7 @@ export async function creerChevre(input: {
     dateStatut: statut !== STATUT_CHEVRE.VIVANTE ? input.dateNaissance : undefined,
     renouvellement: input.renouvellement,
     renouvellementAnnee: input.renouvellement ? input.renouvellementAnnee : undefined,
+    aCompleter: input.aCompleter,
     notes: input.notes,
   };
   await saveChevre(chevre);

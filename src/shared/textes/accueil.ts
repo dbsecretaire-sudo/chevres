@@ -119,7 +119,6 @@ export const TEXTES_ACCUEIL = {
         sorties: 'Sorties et morts',
         lots: 'Lots',
         venteVivant: 'Vente (vivant)',
-        menuCheptel: 'Tout le cheptel',
         contacts: 'Contacts',
         fromage: 'Fabriquer un fromage',
         charcuterie: 'Fabriquer de la charcuterie',

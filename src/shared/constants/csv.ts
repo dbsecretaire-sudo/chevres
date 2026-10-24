@@ -35,6 +35,7 @@ export const COLONNES_CSV: Record<ValeurDe<typeof CATEGORIE_STOCKAGE>, string[]>
     'renouvellement',
     'renouvellementAnnee',
     'poidsKg',
+    'aCompleter',
     'notes',
     // Réservé pour un client (le client, son bon de commande, vivants ou morts) : en JSON dans sa cellule.
     'reservation',
@@ -243,6 +244,7 @@ export const CHAMPS_NOMBRE = new Set([
 /** Booléens simples où "absent" et "faux" sont équivalents (pas besoin de distinguer). */
 export const CHAMPS_BOOLEEN = new Set([
   'renouvellement',
+  'aCompleter',
   'stockApplique',
   'jeune',
   'visiteVeterinaire',

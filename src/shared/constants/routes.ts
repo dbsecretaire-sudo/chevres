@@ -34,6 +34,8 @@ export const ROUTES = {
   CHEPTEL_LISTE: '/production/lieu?lieu=animaux',
   /** La page de menu du cheptel : les pages où l'on entre (animaux, naissances, sorties, lots, traitements, boucles, contrôles). */
   CHEPTEL_MENU: '/cheptel/menu',
+  /** Ce que le berger a saisi sur le terrain (naissances, morts) et qui reste à compléter. */
+  CHEPTEL_A_COMPLETER: '/cheptel/a-completer',
   CHEPTEL_BILAN: '/cheptel/bilan',
   /** Le tableau de bord du cheptel : la pyramide des âges et les mouvements de l'année. */
   CHEPTEL_TABLEAU_DE_BORD: '/cheptel/tableau-de-bord',

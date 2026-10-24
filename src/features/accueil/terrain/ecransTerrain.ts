@@ -62,7 +62,6 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
         { cle: 'sorties', titre: T.sorties, icone: 'log-out', route: ROUTES.CHEPTEL_HISTORIQUE },
         { cle: 'lots', titre: T.lots, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
         { cle: 'venteVivant', titre: T.venteVivant, icone: 'cash', iconeMci: 'truck-delivery', route: ROUTES.VENTES_VIVANTS, ...avec(c.ventesSansDocument, true) },
-        { cle: 'menuCheptel', titre: T.menuCheptel, icone: 'apps', route: ROUTES.CHEPTEL_MENU },
         contacts(),
       ];
     case 'atelier':

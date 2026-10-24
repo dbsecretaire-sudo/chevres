@@ -121,6 +121,7 @@ const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: Entre
       '/cheptel/historique',
       '/cheptel/lots',
       '/cheptel/traitements',
+      ['/cheptel/a-completer', 'À compléter'],
       '/production/lieu?lieu=boucles',
       '/sante/controles/liste?famille=animaux&onglet=animaux',
       { partie: 'Suivi' },

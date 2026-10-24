@@ -54,5 +54,7 @@ export interface Chevre {
   renouvellementAnnee?: number;
   /** Le poids en kilos : celui donné par l'abattoir (poids de carcasse) à la sortie d'un petit, ou une pesée. */
   poidsKg?: number;
+  /** Saisi vite sur le terrain (le berger : une naissance ou une mort au scan) : les détails (sexe, boucles, cause) restent à compléter à la maison. */
+  aCompleter?: boolean;
   notes?: string;
 }

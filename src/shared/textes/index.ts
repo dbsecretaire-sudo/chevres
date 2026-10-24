@@ -29,6 +29,7 @@ import { TEXTES_IDENTIFICATION } from '@/shared/textes/identification';
 import { TEXTES_NAVIGATION } from '@/shared/textes/navigation';
 import { TEXTES_PRODUCTION } from '@/shared/textes/production';
 import { TEXTES_RAPPELS } from '@/shared/textes/rappels';
+import { TEXTES_ROLES } from '@/shared/textes/roles';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
 import { TEXTES_STOCK } from '@/shared/textes/stock';
@@ -67,6 +68,7 @@ export const TEXTES = {
   navigation: TEXTES_NAVIGATION,
   production: TEXTES_PRODUCTION,
   rappels: TEXTES_RAPPELS,
+  roles: TEXTES_ROLES,
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,
   stock: TEXTES_STOCK,

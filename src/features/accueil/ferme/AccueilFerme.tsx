@@ -195,7 +195,7 @@ export default function AccueilFerme() {
   const gestionExploitation: EntreeDeColonne[] = [
     { cle: 'documents', titre: C.documents, icone: iconeIon('document-text'), couleur: ORANGE },
     { cle: 'organismes', titre: C.organismes, icone: iconeMCI('bank'), couleur: ORANGE },
-    { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), couleur: ORANGE },
+    { cle: 'cheptel', titre: C.cheptel, icone: iconeIon('paw'), pastille: f.aCompleter, couleur: ORANGE },
     { cle: 'grange', titre: C.grange, icone: iconeMCI('barn'), couleur: ORANGE },
     { cle: 'bilanAnnuel', titre: C.bilanAnnuel, icone: iconeIon('stats-chart'), couleur: ORANGE },
     { cle: 'venteVivant', titre: C.venteVivant, icone: iconeMCI('truck-delivery'), pastille: f.ventesSansDocument, couleur: ORANGE },

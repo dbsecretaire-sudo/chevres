@@ -24,6 +24,7 @@ import { useInconsommables } from '@/features/lots-animaux/hooks/useInconsommabl
 import { useSanteDuTroupeau } from '@/features/sante/hooks/useSanteDuTroupeau';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ventesVivantesSansDocument } from '@/features/lots-animaux/services/ventesVivants';
+import { useAnimauxACompleter } from '@/features/cheptel/hooks/useAnimauxACompleter';
 import { useRappelsAnalysesPlats } from '@/features/rappels/hooks/useRappelsAnalysesPlats';
 import { useRappelsCirculation } from '@/features/rappels/hooks/useRappelsCirculation';
 import { useRappels } from '@/features/rappels/hooks/useRappels';
@@ -84,6 +85,8 @@ export function useFermeAccueil() {
   const { rappels: analyses } = useRappelsAnalysesPlats();
   const { aRappeler, aValider } = useLotsARappeler();
   const { jours: lotsAFacturer, animaux: animauxAbattusAFacturer } = useLotsAFacturer();
+  /** Ce que le berger a saisi sur le terrain et qui reste à compléter (le badge du bouton Cheptel). */
+  const { animaux: aCompleter } = useAnimauxACompleter();
   const { espece } = useEtablissement();
   const { settings } = useAppSettings();
   // La transhumance de l'année en cours : le décor de la ferme passe à la montagne entre la montée et la descente.
@@ -208,6 +211,7 @@ export function useFermeAccueil() {
     lotsAFacturer,
     /** Les ventes d'animaux vivants dont le document de circulation manque. */
     ventesSansDocument: ventesVivantesSansDocument(settings.exploitation?.ventesVivants).length,
+    aCompleter: aCompleter.length,
     lotsARappeler: aRappeler + aValider.length,
     /** Les animaux en délai d'attente (lait et viande confondus). */
     delais: sante.nombreLait + sante.nombreViande,

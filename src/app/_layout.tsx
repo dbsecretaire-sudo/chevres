@@ -9,6 +9,10 @@ import { afficheSobre, ID_STYLE_SOBRE } from '@/shared/utils/affichage';
 import { appliquerTailleTexte, lireTailleTexte } from '@/shared/utils/tailleTexte';
 import { AppSettingsProvider } from '@/features/settings/context/AppSettingsContext';
 import { EtablissementProvider } from '@/features/etablissements/context/EtablissementContext';
+import EcranBerger from '@/features/berger/screens/EcranBerger';
+import { PorteDuRole } from '@/features/roles/components/PorteDuRole';
+import { RoleProvider, useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 
 installerAlerteWeb();
 
@@ -30,13 +34,26 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 
 export default function RootLayout() {
   return (
-    <EtablissementProvider>
+    <RoleProvider>
+      <PorteDuRole>
+        <Application />
+      </PorteDuRole>
+    </RoleProvider>
+  );
+}
+
+/** L'application elle-même, une fois le rôle choisi : la secrétaire a toutes les pages, le berger ses saisies simples (sans menu ni autre page). */
+function Application() {
+  const { role } = useRole();
+  const berger = role === ROLE.BERGER;
+  return (
+    <EtablissementProvider sansSelecteur={berger}>
       <AppSettingsProvider>
         <VisiteGuideeProvider>
           <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
+            {berger ? <EcranBerger /> : <Stack screenOptions={{ headerShown: false }} />}
             {/* La visite guidée : par-dessus toutes les pages. */}
-            {afficheSobre() ? null : <SuperpositionVisite />}
+            {afficheSobre() || berger ? null : <SuperpositionVisite />}
             {/* L'affichage sobre en grande fenêtre : le style d'un poste de comptabilité. */}
             <StyleComptable />
           </View>

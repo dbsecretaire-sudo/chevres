@@ -41,13 +41,13 @@ interface EtablissementContextValue {
 
 const EtablissementContext = createContext<EtablissementContextValue | undefined>(undefined);
 
-export function EtablissementProvider({ children }: PropsWithChildren) {
+export function EtablissementProvider({ children, sansSelecteur = false }: PropsWithChildren<{ sansSelecteur?: boolean }>) {
   const [pret, setPret] = useState(false);
   const [liste, setListe] = useState<Etablissement[]>([]);
   const [actifId, setActifId] = useState('');
   const [espece, setEspece] = useState<EspeceAnimale>(especeCourante());
-  // L'application s'ouvre toujours sur le choix de l'établissement.
-  const [selecteurOuvert, setSelecteurOuvert] = useState(true);
+  // L'application s'ouvre toujours sur le choix de l'établissement (sauf pour le berger : il travaille dans le dernier établissement ouvert).
+  const [selecteurOuvert, setSelecteurOuvert] = useState(!sansSelecteur);
 
   useEffect(() => {
     initialiserEtablissements().then(({ liste: l, actifId: a }) => {

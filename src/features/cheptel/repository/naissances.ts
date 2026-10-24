@@ -17,6 +17,7 @@ export interface CabritInput {
   mortNe?: boolean;
   renouvellement?: boolean;
   renouvellementAnnee?: number;
+  aCompleter?: boolean;
 }
 
 export async function enregistrerNaissance(input: {
@@ -47,6 +48,7 @@ export async function enregistrerNaissance(input: {
         statut: c.mortNe ? STATUT_CHEVRE.MORT_NE : STATUT_CHEVRE.VIVANTE,
         renouvellement: c.renouvellement,
         renouvellementAnnee: c.renouvellement ? c.renouvellementAnnee : undefined,
+        aCompleter: c.aCompleter,
       }),
     ),
   );
