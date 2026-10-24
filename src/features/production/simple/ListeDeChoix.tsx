@@ -58,7 +58,7 @@ export function ListeDeChoix({
               <MaterialCommunityIcons name={c.icone} size={44} color={colors.primary} />
             ) : null}
           </View>
-          <Text style={styles.titre} numberOfLines={2}>
+          <Text style={styles.titre} numberOfLines={3}>
             {c.libelle}
           </Text>
         </Pressable>

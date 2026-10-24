@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { enregistrerLaVente, sortirLesAnimauxDeLaVente } from '@/features/comptabilite/hooks/nouvelleEcriture/enregistrement';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { listClients } from '@/features/clients/repository';
@@ -13,20 +15,37 @@ import { especeDe } from '@/features/cheptel/utils/espece';
 import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
 import { PageSimplePoidsClient } from '@/features/production/simple/PageSimplePoidsClient';
 import { animauxSansBoucleAVendre, joursDeVie } from '@/features/production/simple/viandeAVendre';
-import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
-import { ROUTES } from '@/shared/constants/routes';
+import { Button } from '@/shared/components/Button';
+import { FormField } from '@/shared/components/FormField';
+import { GrosBouton } from '@/shared/components/GrosBouton';
+import { agePetitMax } from '@/shared/constants/cheptel';
+import { CATEGORIE_VENTE, TYPE_CHOIX_FACTURE, UNITE_VENTE } from '@/shared/constants/comptabilite';
+import { CIRCUIT_VENTE } from '@/shared/constants/commercial';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
+import { tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { loadAllYears } from '@/shared/storage/localStore';
+import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
-import { todayISO } from '@/shared/utils/dates';
+import { ageAtteint } from '@/shared/utils/age';
+import { formatMontant, todayISO } from '@/shared/utils/dates';
+import { parseDecimal } from '@/shared/utils/nombres';
+import { nomComplet } from '@/shared/utils/personne';
 
 const T = TEXTES.production.viande;
 const S = TEXTES.production.viande.simple;
 
+/** Où l'on en est : la chèvre (la liste), son poids et son client, vivante ou morte, le prix et le paiement, puis la vente est notée. */
+type Etape =
+  | { nom: 'infos' }
+  | { nom: 'etat'; poids?: number; client?: Client }
+  | { nom: 'prix'; poids?: number; client?: Client; etat: 'vivants' | 'morts' }
+  | { nom: 'fait'; resume: string };
+
 /**
- * « Viande à vendre » au plus simple : une tuile par chèvre sans boucle à vendre. Un appui ouvre la page de deux réponses — le poids (kg) et le client — puis l'écriture de
- * la vente sans facture s'ouvre, avec l'animal et le client.
+ * « Viande à vendre » au plus simple : une tuile par chèvre sans boucle à vendre. Un appui demande le poids et le client, puis si le client la veut vivante ou morte (deux gros
+ * boutons : vivante à gauche, morte à droite), puis le prix total et si c'est payé. La vente est notée sans facture, par la vente à la ferme, dans la catégorie Animaux, avec
+ * l'animal déjà choisi : elle se retrouve dans les ventes du mode avancé, comme n'importe quelle vente.
  */
 export function ViandeAVendreSimple({ onRetour }: { onRetour?: () => void }) {
   const router = useRouter();
@@ -34,10 +53,12 @@ export function ViandeAVendreSimple({ onRetour }: { onRetour?: () => void }) {
   const [animaux, setAnimaux] = useState<Chevre[] | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [choisi, setChoisi] = useState<Chevre | null>(null);
+  const [etape, setEtape] = useState<Etape>({ nom: 'infos' });
+  const [prix, setPrix] = useState('');
   const [enCours, setEnCours] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
+  const charger = useCallback(
+    () =>
       Promise.all([loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL) as Promise<Chevre[]>, listToutesVentes(), listClients()])
         .then(([cheptel, ventes, tous]) => {
           setClients(tous);
@@ -48,43 +69,113 @@ export function ViandeAVendreSimple({ onRetour }: { onRetour?: () => void }) {
             ),
           );
         })
-        .catch(() => undefined);
-    }, [espece]),
+        .catch(() => undefined),
+    [espece],
+  );
+  useFocusEffect(
+    useCallback(() => {
+      charger();
+    }, [charger]),
   );
 
-  const vendre = async (animal: Chevre, poids: number | undefined, clientId: string) => {
+  /** Note la vente (sans facture, vente à la ferme, catégorie Animaux) : l'animal sort du cheptel. */
+  const vendre = async (animal: Chevre, e: { poids?: number; client?: Client; etat: 'vivants' | 'morts' }, paye: boolean) => {
     if (enCours) return;
+    const total = parseDecimal(prix);
+    if (!(total > 0)) return;
     setEnCours(true);
     try {
-      if (poids !== undefined && poids !== animal.poidsKg) await saveChevre({ ...animal, poidsKg: poids });
-      router.push({
-        pathname: ROUTES.COMPTABILITE_NOUVELLE,
-        params: {
-          type: TYPE_FACTURE.EMISE,
-          categorie: CATEGORIE_RECETTE.VIANDE,
-          facture: 'non',
-          animaux: animal.id,
-          ...(clientId ? { client: clientId } : {}),
-        },
+      if (e.poids !== undefined && e.poids !== animal.poidsKg) await saveChevre({ ...animal, poidsKg: e.poids });
+      const vente = await enregistrerLaVente({
+        activite: espece,
+        date: todayISO(),
+        categorie: CATEGORIE_VENTE.VIANDE,
+        quantite: 1,
+        unite: UNITE_VENTE.PIECE,
+        prix: Math.round(total * 100) / 100,
+        tauxTva: tauxTvaDeLaVente(CATEGORIE_VENTE.VIANDE),
+        client: e.client ? nomComplet(e.client) : undefined,
+        poidsKg: e.poids,
+        jeune: !ageAtteint(animal.dateNaissance, agePetitMax(), todayISO()) ? true : undefined,
+        etatAnimaux: e.etat,
+        animaux: animal.id,
+        choixFacture: TYPE_CHOIX_FACTURE.SANS_FACTURE,
+        circuit: CIRCUIT_VENTE.FERME,
+        payee: paye ? undefined : false,
       });
-      setChoisi(null);
+      await sortirLesAnimauxDeLaVente(vente);
+      setEtape({ nom: 'fait', resume: S.venteDetail(e.client ? nomComplet(e.client) : '', formatMontant(vente.prix ?? 0), paye) });
+      await charger();
     } finally {
       setEnCours(false);
     }
   };
 
-  if (choisi)
+  const retourListe = () => {
+    setChoisi(null);
+    setEtape({ nom: 'infos' });
+  };
+
+  if (choisi && etape.nom === 'infos') {
+    const jours = joursDeVie(choisi.dateNaissance, todayISO());
     return (
       <PageSimplePoidsClient
         titre={TEXTES.accueil.ferme.terrain.tuiles.viandeAVendre}
-        detail={[libelleChevre(choisi), joursDeVie(choisi.dateNaissance, todayISO()) === undefined ? '' : S.jours(joursDeVie(choisi.dateNaissance, todayISO()) as number)].filter(Boolean).join(' · ')}
+        detail={[libelleChevre(choisi), jours === undefined ? '' : S.jours(jours)].filter(Boolean).join(' · ')}
         poidsInitial={choisi.poidsKg}
         clients={clients}
-        libelleValider={S.vendre}
-        enCours={enCours}
-        onValider={(poids, clientId) => vendre(choisi, poids, clientId)}
-        onRetour={() => setChoisi(null)}
+        libelleValider={S.suivant}
+        enCours={false}
+        onValider={(poids, clientId) => {
+          setPrix('');
+          setEtape({ nom: 'etat', poids, client: clients.find((c) => c.id === clientId) });
+        }}
+        onRetour={retourListe}
       />
+    );
+  }
+
+  if (choisi && etape.nom === 'etat') {
+    const { poids, client } = etape;
+    return (
+      <View style={styles.contenu}>
+        <Text style={styles.titre}>{S.vivantOuMort}</Text>
+        <View style={styles.grille}>
+          <GrosBouton libelle={S.vivant} onPress={() => setEtape({ nom: 'prix', poids, client, etat: 'vivants' })} icone={<Ionicons name="paw" size={44} color={colors.blanc} />} />
+          <GrosBouton libelle={S.mort} onPress={() => setEtape({ nom: 'prix', poids, client, etat: 'morts' })} icone={<Ionicons name="restaurant" size={44} color={colors.blanc} />} />
+        </View>
+        <Button label={TEXTES.production.fabricationSimple.retour} variant="secondary" onPress={() => setEtape({ nom: 'infos' })} />
+      </View>
+    );
+  }
+
+  if (choisi && etape.nom === 'prix') {
+    const e = etape;
+    const valide = parseDecimal(prix) > 0;
+    return (
+      <View style={styles.contenu}>
+        <Text style={styles.detail}>{`${libelleChevre(choisi)} · ${e.etat === 'vivants' ? S.vivant : S.mort}`}</Text>
+        <Text style={styles.titre}>{S.prixTotal}</Text>
+        <FormField label={S.prixEnEuros} value={prix} onChangeText={setPrix} keyboardType="decimal-pad" autoFocus />
+        <Text style={styles.message}>{S.paye}</Text>
+        {/* Payé ? : « Oui » ou « Non » note la vente. */}
+        <View style={styles.grille}>
+          <GrosBouton libelle={S.oui} onPress={() => (valide ? vendre(choisi, e, true) : undefined)} icone={<Ionicons name="checkmark" size={44} color={colors.blanc} />} />
+          <GrosBouton libelle={S.non} onPress={() => (valide ? vendre(choisi, e, false) : undefined)} icone={<Ionicons name="close" size={44} color={colors.blanc} />} />
+        </View>
+        <Button label={TEXTES.production.fabricationSimple.retour} variant="secondary" onPress={() => setEtape({ nom: 'etat', poids: e.poids, client: e.client })} />
+      </View>
+    );
+  }
+
+  if (etape.nom === 'fait')
+    return (
+      <View style={styles.contenu}>
+        <Ionicons name="checkmark-circle" size={96} color={colors.primary} style={styles.coche} />
+        <Text style={styles.message}>{S.venteEnregistree}</Text>
+        <Text style={styles.detail}>{etape.resume}</Text>
+        <Button label={S.terminer} onPress={retourListe} />
+      </View>
     );
 
   return (
@@ -101,7 +192,10 @@ export function ViandeAVendreSimple({ onRetour }: { onRetour?: () => void }) {
             icone: 'food-steak' as const,
           };
         })}
-        onChoisir={(c) => setChoisi((animaux ?? []).find((a) => a.id === c.cle) ?? null)}
+        onChoisir={(c) => {
+          setEtape({ nom: 'infos' });
+          setChoisi((animaux ?? []).find((a) => a.id === c.cle) ?? null);
+        }}
       />
       <Pressable style={styles.discret} onPress={onRetour ?? (() => router.back())} accessibilityRole="button">
         <Text style={styles.discretTexte}>{TEXTES.production.fabricationSimple.retour}</Text>

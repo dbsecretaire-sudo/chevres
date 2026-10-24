@@ -6,6 +6,8 @@ import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/Button';
 import { ChampCategorieClient } from '@/features/clients/components/ChampCategorieClient';
 import { CATEGORIE_CLIENT_PAR_DEFAUT } from '@/shared/constants/clients';
+import { CIRCUIT_VENTE } from '@/shared/constants/commercial';
+import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { colors } from '@/shared/theme/colors';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -23,6 +25,8 @@ export default function NouveauClient() {
   const router = useRouter();
   const [nom, setNom] = useState('');
   const [categorie, setCategorie] = useState<string>(CATEGORIE_CLIENT_PAR_DEFAUT);
+  /** Son circuit de vente privilégié : repris d'office dans ses ventes, ses réservations et ses commandes (la vente à la ferme d'office). */
+  const [circuit, setCircuit] = useState<string>(CIRCUIT_VENTE.FERME);
   const [prenom, setPrenom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
@@ -47,6 +51,7 @@ export default function NouveauClient() {
       await creerClient({
         nom: nom.trim(),
         categorie,
+        circuit: circuit || undefined,
         prenom: prenom.trim() || undefined,
         telephone: telephone.trim() || undefined,
         email: email.trim() || undefined,
@@ -86,6 +91,7 @@ export default function NouveauClient() {
               placeholder={TEXTES.clients.nouveauClient.nomDuClient}
             />
             <ChampCategorieClient value={categorie} onChange={setCategorie} />
+            <ChampCircuit label={TEXTES.contacts.formulaire.circuitPrivilegie} aide={TEXTES.contacts.formulaire.aideCircuit} value={circuit} onChange={setCircuit} />
             <FormField
               label={TEXTES.commun.general.prenom}
               value={prenom}

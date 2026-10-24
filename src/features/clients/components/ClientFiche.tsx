@@ -3,6 +3,7 @@ import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
 import { ChampCategorieClient } from '@/features/clients/components/ChampCategorieClient';
+import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { categorieClientDe } from '@/shared/dictionnaire/categoriesClient';
 import { categorieDuClient } from '@/features/clients/services/categorie';
 import type { Client } from '@/features/clients/types';
@@ -65,6 +66,12 @@ export function ClientFormulaire({ form, onChange }: FormulaireProps) {
       <ChampCategorieClient
         value={categorieDuClient(form)}
         onChange={(categorie) => onChange({ ...form, categorie })}
+      />
+      <ChampCircuit
+        label={TEXTES.contacts.formulaire.circuitPrivilegie}
+        aide={TEXTES.contacts.formulaire.aideCircuit}
+        value={form.circuit ?? ''}
+        onChange={(circuit) => onChange({ ...form, circuit: circuit || undefined })}
       />
       <FormField
         label={TEXTES.commun.general.prenom}
