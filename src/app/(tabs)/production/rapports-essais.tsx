@@ -1,1 +1,1 @@
-export { RapportsEssaisGds as default } from '@/features/exploitation/screens/DocumentsGds';
+export { RapportsEssaisGds as default } from '@/features/exploitation/screens/ListeRapportsEssais';
