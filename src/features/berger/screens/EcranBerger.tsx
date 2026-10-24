@@ -67,6 +67,7 @@ export default function EcranBerger() {
   // Un appui qui suit de trop près un changement d'écran ne compte pas : un double appui (un doigt ganté) ne doit pas déclencher le bouton de l'écran suivant, placé au même endroit.
   const [protege, setProtege] = useState(true);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProtege(true);
     const fin = setTimeout(() => setProtege(false), DELAI_APRES_UN_CHANGEMENT);
     return () => clearTimeout(fin);
