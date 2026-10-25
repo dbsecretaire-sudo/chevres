@@ -3,7 +3,7 @@
 return [
   'hote' => 'prontabchevres.mysql.db',
   'base' => 'prontabchevres',
-  'utilisateur' => 'prontab',
+  'utilisateur' => 'prontabchevres',
   'mot_de_passe' => 'A_REMPLIR',
   // Une phrase longue et secrète, pour créer les comptes (voir creer-utilisateur.php). À supprimer avec ce fichier une fois les comptes créés.
   'cle_installation' => 'A_REMPLIR',
