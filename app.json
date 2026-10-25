@@ -27,7 +27,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "name": "Troupeau Chèvres",
+      "shortName": "Chèvres",
+      "description": "Le suivi du troupeau et de la fromagerie.",
+      "lang": "fr",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "themeColor": "#3F6B3A",
+      "backgroundColor": "#FFFFFF"
     },
     "plugins": [
       "expo-router",

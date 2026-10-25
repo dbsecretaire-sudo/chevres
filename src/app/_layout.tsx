@@ -6,6 +6,7 @@ import { EcranErreur } from '@/shared/components/EcranErreur';
 import { SuperpositionVisite } from '@/features/didacticiel/components/SuperpositionVisite';
 import { VisiteGuideeProvider } from '@/features/didacticiel/context/VisiteGuidee';
 import { installerAlerteWeb } from '@/shared/utils/alerteWeb';
+import { installerBalisesPwa } from '@/shared/utils/pwaWeb';
 import { afficheSobre, ID_STYLE_SOBRE } from '@/shared/utils/affichage';
 import { appliquerTailleTexte, lireTailleTexte } from '@/shared/utils/tailleTexte';
 import { AppSettingsProvider } from '@/features/settings/context/AppSettingsContext';
@@ -15,6 +16,7 @@ import { RoleProvider, useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 
 installerAlerteWeb();
+installerBalisesPwa();
 
 // L'affichage sobre : toute la page en nuances de gris (sur le web ; la version Windows l'a déjà fait au chargement).
 if (afficheSobre() && typeof document !== 'undefined' && !document.getElementById(ID_STYLE_SOBRE)) {
