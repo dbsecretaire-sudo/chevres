@@ -4,44 +4,61 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 
-interface Entree {
+interface Tuile {
   libelle: string;
   aide: string;
   icone: keyof typeof Ionicons.glyphMap;
   route: string;
+  /** L'action principale : la tuile est remplie en vert, comme sur la maquette. */
+  principale?: boolean;
 }
 
-/** L'accueil du tourisme : les visites de la ferme, les formules et l'accueil du public. */
-const ENTREES: Entree[] = [
-  { libelle: 'Nouvelle visite', aide: 'Date, personnes, formule', icone: 'add-circle-outline', route: ROUTES.COMMERCIAL_VISITE },
-  { libelle: 'Formules', aide: 'Visite, dégustation, repas à la ferme', icone: 'restaurant-outline', route: ROUTES.COMMERCIAL_FORMULES },
+/** L'accueil du tourisme, en tuiles comme sur la maquette : la visite à créer d'abord, puis les visites du jour, les formules et les tarifs. */
+const TUILES: Tuile[] = [
+  { libelle: 'Nouvelle visite', aide: 'Date, personnes, formule', icone: 'add', route: ROUTES.COMMERCIAL_VISITE, principale: true },
+  { libelle: 'Aujourd’hui', aide: 'Visites du jour', icone: 'calendar-outline', route: ROUTES.COMMERCIAL_AGRITOURISME },
+  { libelle: 'Repas', aide: 'Formules et réservations', icone: 'restaurant-outline', route: ROUTES.COMMERCIAL_FORMULES },
+  { libelle: 'Tarifs', aide: 'Prix des formules', icone: 'pricetag-outline', route: ROUTES.COMMERCIAL_TARIFS },
   { libelle: 'Accueil du public', aide: 'Obligations et informations', icone: 'information-circle-outline', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
-  { libelle: 'Agritourisme', aide: 'Recettes et charges de l’activité', icone: 'leaf-outline', route: ROUTES.COMMERCIAL_AGRITOURISME },
 ];
 
 /** La rubrique Visites : le tourisme de la ferme, séparé des ventes et des contacts (dans « Plus »). */
 export default function EcranVisites() {
   const router = useRouter();
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} style={{ backgroundColor: colors.background }}>
-      <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 4 }}>Visites</Text>
-      {ENTREES.map((e) => (
-        <Pressable
-          key={e.libelle}
-          accessibilityRole="button"
-          onPress={() => router.push(e.route as never)}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}
-        >
-          <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.badgeBg, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name={e.icone} size={22} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>{e.libelle}</Text>
-            <Text style={{ color: colors.textMuted }}>{e.aide}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-      ))}
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }} style={{ backgroundColor: colors.background }}>
+      <View>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text }}>Visites</Text>
+        <Text style={{ color: colors.textMuted }}>Agritourisme</Text>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+        {TUILES.map((t) => {
+          const principale = t.principale === true;
+          return (
+            <Pressable
+              key={t.libelle}
+              accessibilityRole="button"
+              onPress={() => router.push(t.route as never)}
+              style={{
+                width: '48%',
+                minHeight: 150,
+                justifyContent: 'space-between',
+                padding: 14,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: principale ? colors.primary : colors.border,
+                backgroundColor: principale ? colors.primary : colors.surface,
+              }}
+            >
+              <Ionicons name={t.icone} size={28} color={principale ? colors.blanc : colors.primary} />
+              <View style={{ gap: 2 }}>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: principale ? colors.blanc : colors.text }}>{t.libelle}</Text>
+                <Text style={{ fontSize: 13, color: principale ? colors.blanc : colors.textMuted }}>{t.aide}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
     </ScrollView>
   );
 }

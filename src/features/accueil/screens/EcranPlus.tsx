@@ -19,7 +19,7 @@ const RUBRIQUES: Rubrique[] = [
   { libelle: 'Partenaires', aide: 'Abattoir, équarrissage, clients', icone: 'people-outline', route: '/commercial/partenaires' },
   { libelle: 'Bilans', aide: 'Bilan annuel, rentabilité, export', icone: 'stats-chart-outline', route: ROUTES.CHEPTEL_BILAN },
   { libelle: 'Historique', aide: 'Naissances, soins, lots, ventes', icone: 'time-outline', route: ROUTES.CHEPTEL_HISTORIQUE },
-  { libelle: 'Réglages', aide: 'Année, établissement, sauvegarde', icone: 'settings-outline', route: ROUTES.REGLAGES },
+  { libelle: 'Réglages', aide: 'Année, Drive, imprimante, mode', icone: 'settings-outline', route: ROUTES.REGLAGES },
 ];
 
 /** La page « Plus » : les rubriques qui ne tiennent pas dans la barre du bas, plus l'accueil de la ferme et les rappels. */
@@ -28,7 +28,14 @@ export default function EcranPlus() {
   const ouvrir = (route: string) => router.push(route as never);
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} style={{ backgroundColor: colors.background }}>
-      <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 4 }}>Plus</Text>
+      <View style={{ marginBottom: 4 }}>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text }}>Plus</Text>
+        <Text style={{ color: colors.textMuted }}>Tout le reste de l’application</Text>
+      </View>
+      {/* Comme sur la maquette : le mode avancé est affiché en tête de la page, avec le chemin pour le changer. */}
+      <View style={{ alignSelf: 'flex-start', backgroundColor: colors.text, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 }}>
+        <Text style={{ color: colors.blanc, fontSize: 13, fontWeight: '600' }}>Mode avancé activé · Réglages › Mode avancé</Text>
+      </View>
       {RUBRIQUES.map((r) => (
         <Pressable
           key={r.libelle}
