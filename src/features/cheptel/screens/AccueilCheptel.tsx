@@ -13,7 +13,8 @@ import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
 import { GrilleTerrain } from '@/features/accueil/terrain/EcranTerrain';
 import { afficheBureau } from '@/shared/utils/affichage';
-import { View } from 'react-native';
+import { BlocSante } from '@/features/sante/components/BlocSante';
+import { BlocRappels } from '@/features/rappels/components/BlocRappels';
 
 /**
  * L'onglet Chèvres. Sur le téléphone : les six tuiles de la maquette (scanner, naissance, soin, mouvement, décès, cheptel). Sur Windows : le menu en groupes
@@ -22,10 +23,16 @@ import { View } from 'react-native';
 export default function AccueilCheptel() {
   if (afficheBureau()) return <ListeCheptel />;
   return (
-    <View style={{ flex: 1 }}>
-      <SelecteurEspece />
-      <GrilleTerrain zone="troupeau" />
-    </View>
+    <GrilleTerrain
+      zone="troupeau"
+      enTete={
+        <>
+          <SelecteurEspece />
+          <BlocSante />
+          <BlocRappels />
+        </>
+      }
+    />
   );
 }
 

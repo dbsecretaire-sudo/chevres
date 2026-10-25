@@ -91,6 +91,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Banque et comptabilité', aide: 'Comptes, comptable', icone: 'business-outline', route: ROUTES.COMPTABILITE_TRESORERIE },
           { libelle: 'Fiscalité', aide: 'Impôts, TVA, RSA', icone: 'calculator-outline', route: ROUTES.FISCALITE },
           { libelle: 'Garage', aide: 'Véhicules et entretien', icone: 'car-outline', route: ROUTES.FLOTTE },
+          { libelle: 'Assurance', aide: 'Contrats et échéances', icone: 'shield-checkmark-outline', route: ROUTES.lieu('assurance') },
           { libelle: 'Export comptable', aide: 'Fichier pour le comptable', icone: 'download-outline', route: ROUTES.EXPORT_DONNEES },
         ],
       },
@@ -105,6 +106,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
         lignes: [
           { libelle: 'Abattoir', aide: 'Départs et retours de carcasses', icone: 'business-outline', route: ROUTES.lieu('abattoir') },
           { libelle: 'Équarrissage', aide: 'Enlèvements', icone: 'trash-outline', route: ROUTES.ENLEVEMENTS },
+          { libelle: 'Organismes', aide: 'Organismes et associations', icone: 'business-outline', route: ROUTES.lieu('organismes') },
           { libelle: 'Groupement sanitaire', aide: 'Vétérinaire et protocoles', icone: 'shield-outline', route: '/commercial/partenaires' },
         ],
       },
@@ -148,6 +150,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Soins et traitements', aide: 'Par animal et par date', icone: 'medkit-outline', route: ROUTES.CHEPTEL_TRAITEMENTS },
           { libelle: 'Lots d’animaux', aide: 'Groupes nommés', icone: 'layers-outline', route: ROUTES.CHEPTEL_LOTS },
           { libelle: 'Ventes d’animaux vivants', aide: 'Acheteurs et documents', icone: 'cash-outline', route: ROUTES.VENTES_VIVANTS },
+          { libelle: 'Grange', aide: 'Foin, aliments et stock', icone: 'home-outline', route: ROUTES.lieu('grange') },
         ],
       },
       {
