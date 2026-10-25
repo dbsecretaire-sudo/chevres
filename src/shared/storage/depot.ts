@@ -15,7 +15,8 @@ const SEGMENTS_LOCAUX = ['index', 'years', 'settings', 'derniere-sauvegarde', 'e
 export function estSynchronisable(cle: string): boolean {
   if (!cle.startsWith(PREFIXE_STOCKAGE)) return false;
   if (cle.startsWith(`${PREFIXE_STOCKAGE}sync-`)) return false;
-  const localesParNom = ['a-envoyer', 'visite-guidee', 'rappel-du-jour'];
+  // Le code d'accès (son empreinte) reste sur l'appareil : jamais envoyé au serveur.
+  const localesParNom = ['a-envoyer', 'visite-guidee', 'rappel-du-jour', 'securite-code'];
   if (localesParNom.some((nom) => cle.startsWith(`${PREFIXE_STOCKAGE}${nom}`))) return false;
   return !cle.split(SEPARATEUR_CLE).some((segment) => SEGMENTS_LOCAUX.includes(segment));
 }

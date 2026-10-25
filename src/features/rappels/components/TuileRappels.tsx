@@ -15,7 +15,7 @@ export function TuileRappels({ nombre }: { nombre: number }) {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={alerte ? `Rappels : ${nombre} à valider` : 'Rappels'}
-      onPress={() => router.push(ROUTES.RAPPELS_HISTORIQUE as never)}
+      onPress={() => router.push(ROUTES.RAPPELS as never)}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}
     >
       <Ionicons name="notifications-outline" size={24} color={alerte ? colors.danger : colors.primary} />

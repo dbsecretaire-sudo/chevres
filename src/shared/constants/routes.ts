@@ -21,6 +21,9 @@ export const ROUTES = {
   accueilFerme: () => `/?accueil=${Date.now()}` as const,
   /** L'accueil tel qu'on l'a quitté (dans l'intérieur donné, ou sur la carte) : là où la flèche de retour ramène après un bouton. */
   retourAccueil: (interieur?: string) => `/?accueil=retour&interieur=${interieur ?? ''}` as const,
+  /** La page Rappels : ce qui est à valider (en retard, à venir). */
+  RAPPELS: '/rappels',
+  /** L'historique des rappels validés (ouvert par l'horloge de la page Rappels). */
   RAPPELS_HISTORIQUE: '/rappels-historique',
   /** Le didacticiel : toutes les options de l'application, expliquées (activable sur l'accueil). */
   DIDACTICIEL: '/didacticiel',

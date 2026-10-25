@@ -3,6 +3,7 @@ import { useAccueilEnDeuxColonnes } from '@/bureau/colonnes';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
+import { CarteCodeAcces } from '@/features/settings/components/CarteCodeAcces';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { ROUTES } from '@/shared/constants/routes';
@@ -36,6 +37,7 @@ export default function Reglages() {
           trackColor={{ true: colors.primary }}
         />
       </View>
+      <CarteCodeAcces />
       <BlocLignes>
         <LigneRubrique
           titre={T.sectionEtablissement}

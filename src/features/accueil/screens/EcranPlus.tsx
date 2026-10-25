@@ -42,7 +42,7 @@ export default function EcranPlus() {
       <Pressable accessibilityRole="button" onPress={() => ouvrir('/')} style={{ marginTop: 10, alignItems: 'center', padding: 12 }}>
         <Text style={{ color: colors.primary, fontWeight: '700' }}>Accueil</Text>
       </Pressable>
-      <Pressable accessibilityRole="button" onPress={() => ouvrir(ROUTES.RAPPELS_HISTORIQUE)} style={{ alignItems: 'center', padding: 12 }}>
+      <Pressable accessibilityRole="button" onPress={() => ouvrir(ROUTES.RAPPELS)} style={{ alignItems: 'center', padding: 12 }}>
         <Text style={{ color: colors.primary, fontWeight: '700' }}>Rappels</Text>
       </Pressable>
     </ScrollView>

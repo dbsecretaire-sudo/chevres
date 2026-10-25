@@ -214,6 +214,13 @@ function Onglets() {
         }}
       />
       <Tabs.Screen
+        name="rappels"
+        options={{
+          href: null,
+          title: TEXTES.rappels.titre,
+        }}
+      />
+      <Tabs.Screen
         name="rappels-historique"
         options={{
           href: null,

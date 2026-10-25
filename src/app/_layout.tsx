@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Stack, router } from 'expo-router';
+import { VerrouAcces } from '@/features/securite/VerrouAcces';
 import { StyleComptable } from '@/shared/components/StyleComptable';
 import { EcranErreur } from '@/shared/components/EcranErreur';
 import { SuperpositionVisite } from '@/features/didacticiel/components/SuperpositionVisite';
@@ -36,14 +37,17 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 
 /** D'abord l'établissement, puis le mode (pour cet établissement), puis l'application : changer d'établissement redemande le mode. */
 export default function RootLayout() {
+  // Le code d'accès passe avant tout le reste : rien de l'application ne s'affiche avant la saisie.
   return (
-    <EtablissementProvider>
-      <RoleProvider>
-        <PorteDuRole>
-          <Application />
-        </PorteDuRole>
-      </RoleProvider>
-    </EtablissementProvider>
+    <VerrouAcces>
+      <EtablissementProvider>
+        <RoleProvider>
+          <PorteDuRole>
+            <Application />
+          </PorteDuRole>
+        </RoleProvider>
+      </EtablissementProvider>
+    </VerrouAcces>
   );
 }
 
