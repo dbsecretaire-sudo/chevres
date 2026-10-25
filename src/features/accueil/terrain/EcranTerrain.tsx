@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
@@ -27,7 +27,7 @@ const TUILE_PRINCIPALE: Partial<Record<ZoneTerrain, string>> = {
  * Les grandes tuiles d'une zone, avec le chiffre utile de chacune. Sert à l'écran terrain (une page ouverte d'un appui sur la zone) et, sur le téléphone,
  * à l'accueil des onglets Chèvres et Atelier, comme sur la maquette.
  */
-export function GrilleTerrain({ zone, enTete }: { zone: ZoneTerrain; enTete?: ReactNode }) {
+export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTerrain; enTete?: ReactNode; remplir?: boolean }) {
   const ouvrir = useOuvrir();
   const f = useFermeAccueil();
   const comptes: ComptesTerrain = {
@@ -45,11 +45,18 @@ export function GrilleTerrain({ zone, enTete }: { zone: ZoneTerrain; enTete?: Re
   };
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
-      <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
-        {/* Ce qui demande une action (alertes de santé, rappels) passe au-dessus des tuiles. */}
-        {enTete}
-        <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={(t) => ouvrir(t.route)} />
-      </ScrollView>
+      {/* Ce qui demande une action (alertes de santé, rappels) passe au-dessus des tuiles. Avec « remplir », les tuiles prennent la place restante, sans défiler. */}
+      {remplir ? (
+        <View style={[commonStyles.screenBg, styles.contenu, { flex: 1 }]}>
+          {enTete}
+          <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={(t) => ouvrir(t.route)} remplir />
+        </View>
+      ) : (
+        <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
+          {enTete}
+          <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={(t) => ouvrir(t.route)} />
+        </ScrollView>
+      )}
     </AccentColorProvider>
   );
 }

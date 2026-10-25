@@ -25,6 +25,8 @@ interface Props {
   desactive?: boolean;
   /** La tuile prend toute la largeur. */
   large?: boolean;
+  /** Une hauteur imposée (l'écran qui remplit la place restante) ; sans elle, la tuile garde sa hauteur minimale. */
+  hauteur?: number;
 }
 
 /** Une tuile de la maquette, sous l'une des deux présentations. Elle est accessible au doigt, sans être un gros bouton plein. */
@@ -39,6 +41,7 @@ export function TuileMaquette({
   detail,
   desactive = false,
   large = false,
+  hauteur,
 }: Props) {
   const simple = variante === 'simple';
   const couleurIcone = principale ? colors.blanc : colors.primary;
@@ -55,6 +58,7 @@ export function TuileMaquette({
         styles.carte,
         simple ? styles.carteSimple : styles.carteAvance,
         large ? styles.large : styles.demi,
+        hauteur !== undefined ? { height: hauteur } : null,
         principale ? styles.principale : null,
         pressed ? styles.appuyee : null,
         desactive ? styles.desactivee : null,
