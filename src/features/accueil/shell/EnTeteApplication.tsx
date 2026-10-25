@@ -60,8 +60,9 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre);
   // Le fil d'Ariane ne reste que pour le poste de comptabilité et Windows : sur le téléphone, le titre de la page suffit.
   const filAffiche = comptable || afficheBureau() ? fil : [];
-  // Sur le téléphone, la flèche ramène simplement à la page d'avant.
-  const retourDuTelephone = () => navigation.goBack();
+  // Sur le téléphone, une page à l'intérieur d'une rubrique a une flèche : elle ramène à l'écran réellement précédent (pas à une étape du fil).
+  const precedent = fil.length > 1 ? fil[fil.length - 2] : undefined;
+  const retourDuTelephone = () => (back ? navigation.goBack() : router.back());
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   // Le mode normal n'a pas la navigation du mode avancé (capsule, fil d'Ariane) : la page seule, avec un « Retour » en bas.
@@ -82,7 +83,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
-            {!comptable && !afficheBureau() && back ? (
+            {!comptable && !afficheBureau() && (back || precedent) ? (
               <Pressable onPress={retourDuTelephone} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
                 <Ionicons name="chevron-back" size={22} color={colors.text} />
               </Pressable>
