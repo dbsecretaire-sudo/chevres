@@ -106,7 +106,7 @@ export const TEXTES_SETTINGS = {
       return `Toutes les données actuellement enregistrées sur cet appareil (${contenu}) seront remplacées par celles du fichier choisi. Cette action est irréversible.`;
     },
     choisirLeFichier: 'Choisir le fichier',
-    googleDrive: 'Google Drive',
+    googleDrive: 'Synchronisation',
     get synchroniseLesFichiersTexteCheptel() {
       const contenu = 'cheptel, ventes, factures, visites vétérinaire, contrôles';
       return `Synchronise les fichiers texte (${contenu}) dans un dossier « Troupeau Chèvres » sur Google Drive, pour partager les données entre plusieurs appareils.`;

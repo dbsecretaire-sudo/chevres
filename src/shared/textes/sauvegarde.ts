@@ -20,7 +20,7 @@ export const TEXTES_SAUVEGARDE = {
     surServeur: 'Sur le serveur de la ferme',
     surAppareil: 'Sur cet appareil (fichier)',
     /** Les entrées du menu du haut (Windows). */
-    menuDrive: 'Google Drive',
+    menuDrive: 'Serveur de la ferme',
     menuAppareil: 'Enregistrer dans un fichier',
   },
   backup: {
