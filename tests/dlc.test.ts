@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dlcDuLot, dureeDeVieDuLot, dureesDeVieDeLArticle, suffixeDeVariante, VARIANTES_DE_FROMAGE } from '@/features/stock/services/dlc';
+import { dlcDuLot, dureeDeVieDuLot, dureesDeVieDeLArticle, suffixeDeVariante, VARIANTES_DE_FROMAGE, variantesImposees, variantesPossibles } from '@/features/stock/services/dlc';
 import { definirDureesDeVie } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 
@@ -33,6 +33,15 @@ describe('la DLC d’un fromage selon le sel et le lait', () => {
   it('six variantes : trois laits, salés ou non', () => {
     expect(VARIANTES_DE_FROMAGE).toHaveLength(6);
     expect(suffixeDeVariante({ sale: true, lait: 'pasteurise' })).toBe('sale|pasteurise');
+  });
+
+  it('le vieux est toujours salé, le brocciu toujours salé et pasteurisé', () => {
+    expect(variantesImposees('fromage:affine')).toEqual({ sale: true });
+    expect(variantesImposees('fromage:brocciu')).toEqual({ sale: true, lait: 'pasteurise' });
+    expect(variantesImposees('fromage:frais')).toEqual({});
+    expect(variantesPossibles('fromage:affine')).toHaveLength(3);
+    expect(variantesPossibles('fromage:brocciu')).toEqual([{ sale: true, lait: 'pasteurise' }]);
+    expect(variantesPossibles('fromage:frais')).toHaveLength(6);
   });
 
   it('les durées d’un article se règlent d’un coup, par variante', async () => {

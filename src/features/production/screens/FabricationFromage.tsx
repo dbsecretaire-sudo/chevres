@@ -17,7 +17,7 @@ import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
-import type { TypeLait } from '@/features/stock/services/dlc';
+import { variantesImposees, type TypeLait } from '@/features/stock/services/dlc';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { exporterGuideLotsPdf } from '@/features/export/documents/guideLotsPdf';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -106,7 +106,15 @@ function FabricationDeLots() {
   );
 
   // Le numéro du premier lot se propose d'après le produit et la date (on peut le modifier ensuite).
-  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive, article, date) : '');
+  // Le vieux est toujours salé, le brocciu toujours salé et pasteurisé : on ne les demande pas.
+  const imposee = variantesImposees(article);
+  const saleEffectif: 'oui' | 'non' | '' = imposee.sale === undefined ? sale : imposee.sale ? 'oui' : 'non';
+  const laitEffectif: TypeLait | '' = imposee.lait ?? lait;
+  const premier =
+    premierSaisi ??
+    (archive && article && date
+      ? numeroDeLot(archive, article, date, fromage && saleEffectif && laitEffectif ? { sale: saleEffectif === 'oui', lait: laitEffectif } : undefined)
+      : '');
 
   const choisirArticle = (cle: string) => {
     setArticle(cle);
@@ -128,7 +136,7 @@ function FabricationDeLots() {
     if (!archive) return;
     const erreur = erreurFabrication(archive, article, premier, nombre);
     if (erreur) return Alert.alert(erreur);
-    if (fromage && (!sale || !lait)) return Alert.alert(TEXTES.production.fabrication.varianteRequise);
+    if (fromage && (!saleEffectif || !laitEffectif)) return Alert.alert(TEXTES.production.fabrication.varianteRequise);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
     if (fromage && !(litresParFromage > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
     const utilises = ingredients
@@ -147,8 +155,8 @@ function FabricationDeLots() {
         quantite: nombre,
         debut: premier,
         litres: fromage ? laitUtilise : undefined,
-        sale: fromage ? sale === 'oui' : undefined,
-        lait: fromage && lait ? lait : undefined,
+        sale: fromage ? saleEffectif === 'oui' : undefined,
+        lait: fromage && laitEffectif ? laitEffectif : undefined,
         ingredients: utilises,
         notes: notes || undefined,
       });
@@ -168,23 +176,34 @@ function FabricationDeLots() {
           onChange={choisirArticle}
           options={articles.map((a) => ({ value: a.cle, label: a.libelle }))}
         />
-        {fromage ? (
+        {fromage && imposee.sale !== undefined && imposee.lait ? (
+          <Text style={commonStyles.note}>{TEXTES.production.fabrication.variantImposee(imposee.sale, imposee.lait)}</Text>
+        ) : null}
+        {fromage && !(imposee.sale !== undefined && imposee.lait) ? (
           <>
+            {imposee.sale !== undefined ? <Text style={commonStyles.note}>{TEXTES.production.fabrication.variantImposee(imposee.sale)}</Text> : (
             <SelectField
               label={TEXTES.production.fabrication.sale}
               required
               value={sale}
-              onChange={(v) => setSale(v as 'oui' | 'non')}
+              onChange={(v) => {
+                setSale(v as 'oui' | 'non');
+                setPremierSaisi(null);
+              }}
               options={[
                 { value: 'non', label: TEXTES.production.fabrication.non },
                 { value: 'oui', label: TEXTES.production.fabrication.oui },
               ]}
             />
+            )}
             <SelectField
               label={TEXTES.production.fabrication.lait}
               required
               value={lait}
-              onChange={(v) => setLait(v as TypeLait)}
+              onChange={(v) => {
+                setLait(v as TypeLait);
+                setPremierSaisi(null);
+              }}
               options={[
                 { value: 'cru', label: TEXTES.production.fabrication.laitCru },
                 { value: 'pasteurise', label: TEXTES.production.fabrication.laitPasteurise },

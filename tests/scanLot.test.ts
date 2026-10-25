@@ -31,12 +31,14 @@ describe('le numéro de lot tapé sur le clavier', () => {
     expect(formaterNumeroDeLot('BV261202', numeros)).toBe('BV26120-2');
   });
 
-  it('sans lot connu, il se place après le jour de l’année (7 caractères)', () => {
+  it('sans lot connu, il se place après le jour de l’année (les lettres, 2 chiffres d’année, 3 de jour)', () => {
     expect(formaterNumeroDeLot('PF2630012', [])).toBe('PF26300-12');
+    expect(formaterNumeroDeLot('FFNSC2629716', [])).toBe('FFNSC26297-16');
     expect(formaterNumeroDeLot('', numeros)).toBe('');
   });
 
   it('le clavier propose les lettres des produits et celles des numéros déjà donnés', () => {
-    expect(lettresDesNumeros(numeros)).toEqual(['B', 'F', 'P', 'S', 'V']);
+    expect(lettresDesNumeros(numeros)).toEqual(['B', 'C', 'F', 'N', 'P', 'S', 'U', 'V']);
+    expect(lettresDesNumeros(['XZ12-1'])).toContain('X');
   });
 });

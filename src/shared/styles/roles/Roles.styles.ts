@@ -17,6 +17,9 @@ export const styles = StyleSheet.create({
   },
   grosBoutonClair: { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary },
   grosBoutonBas: { minHeight: 90 },
+  /** Un bouton compact (Oui / Non sous un clavier) : une seule ligne, l'icône à côté du mot, à peine plus haut qu'un bouton de saisie. */
+  grosBoutonCompact: { minHeight: 62, flexDirection: 'row', flexWrap: 'nowrap', gap: 10, paddingVertical: 8 },
+  grosTexteCompact: { fontSize: 22 },
   /** Les gros boutons se rangent par deux sur une ligne (un seul, seul sur sa ligne, prend toute la largeur). */
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   moitie: { flexBasis: '47%', flexGrow: 1, minHeight: 130, padding: 12 },
@@ -48,9 +51,11 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lettreChoixTexte: { fontSize: 22, fontWeight: '800', color: colors.primary },
-  /** L'étiquette rouge sous le mot d'un gros bouton (« 3 à envoyer »). */
-  grosEtiquette: { backgroundColor: colors.danger, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3, marginTop: 4 },
+  /** L'étiquette rouge d'un gros bouton (« 3 à envoyer ») : posée sur son coin en haut à droite, à cheval sur le bord. */
+  grosEtiquette: { position: 'absolute', top: -13, right: 10, backgroundColor: colors.danger, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
   grosEtiquetteTexte: { fontSize: 15, fontWeight: '800', color: colors.blanc, textAlign: 'center' },
+  /** Une page de saisie qui défile quand elle est plus haute que l'écran, et se centre sinon. */
+  contenuDefilant: { flexGrow: 1, justifyContent: 'center', padding: 16, gap: 12 },
   affichageNumero: {
     minHeight: 56,
     borderRadius: 12,
@@ -74,6 +79,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  /** Une touche plus étroite : quatre tiennent sur une ligne (la dernière rangée du clavier avec la virgule). */
+  petitChoixEtroit: { width: 66, height: 62, borderRadius: 14, backgroundColor: colors.blanc, borderWidth: 2, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   petitChoixActif: { backgroundColor: colors.primary },
   petitChoixTexte: { fontSize: 26, fontWeight: '800', color: colors.primary },
   petitChoixTexteActif: { color: colors.blanc },

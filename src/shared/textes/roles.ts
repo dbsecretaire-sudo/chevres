@@ -41,6 +41,7 @@ export const TEXTES_ROLES = {
     numeroAMain: 'Numéro de boucle',
     toutSupprimer: 'Tout supprimer',
     retourEnArriere: 'Effacer le dernier chiffre',
+    virgule: 'Virgule',
     valider: 'Valider',
     combienDePetits: 'Combien de petits ?',
     mere: (boucle: string) => `Mère : ${boucle}`,

@@ -1,5 +1,5 @@
 import type { LotFromage } from '@/features/stock/types';
-import { LETTRE_PRODUIT_LOT, SEPARATEUR_NUMERO_LOT } from '@/shared/constants/stock';
+import { LETTRE_CATEGORIE_LOT, LETTRE_LAIT_LOT, LETTRE_PRODUIT_LOT, LETTRES_SEL_LOT, SEPARATEUR_NUMERO_LOT } from '@/shared/constants/stock';
 
 /** Un numéro de lot comparé sans majuscules, espaces ni tirets : « ff26297-16 » et « FF26297 16 » sont le même. */
 const normaliser = (numero: string): string => numero.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -16,21 +16,33 @@ export function lotsDuNumero(lots: readonly LotFromage[], saisie: string): LotFr
   return lots.filter((l) => normaliser(l.numero).endsWith(cherche));
 }
 
-/** Les lettres du clavier d'un numéro de lot : celles des produits (F, B, P, S) et celles des numéros déjà donnés (la catégorie : F, V, C, B…), dans l'ordre alphabétique. */
+/**
+ * Les lettres du clavier d'un numéro de lot : celles des produits (F, B, P, S), des catégories de fromage (F, V, C, B), de la variante d'un fromage (N, S pour le sel ; C, P, U pour le
+ * lait) et celles des numéros déjà donnés (l'initiale d'un autre produit…), dans l'ordre alphabétique.
+ */
 export function lettresDesNumeros(numeros: readonly string[]): string[] {
-  const lettres = new Set<string>(Object.values(LETTRE_PRODUIT_LOT));
+  const lettres = new Set<string>(
+    [
+      ...Object.values(LETTRE_PRODUIT_LOT),
+      ...Object.values(LETTRE_CATEGORIE_LOT),
+      ...Object.values(LETTRES_SEL_LOT),
+      ...Object.values(LETTRE_LAIT_LOT),
+    ].join('').split(''),
+  );
   for (const numero of numeros) for (const c of numero.toUpperCase()) if (/[A-Z]/.test(c)) lettres.add(c);
   return [...lettres].sort();
 }
 
 /**
  * Le numéro tapé touche par touche, écrit comme un numéro de lot : le « - » se met tout seul, là où les lots connus l'ont (« FF26297-16 », d'après « FF26297 » puis « 16 »).
- * Sans lot connu qui commence ainsi, il se met après le jour de l'année, soit 7 caractères (2 lettres, l'année, 3 chiffres).
+ * Sans lot connu qui commence ainsi, il se met après le jour de l'année (les lettres, l'année sur 2 chiffres, le jour sur 3).
  */
 export function formaterNumeroDeLot(saisie: string, numeros: readonly string[]): string {
   const brut = normaliser(saisie);
   const modele = numeros.find((n) => normaliser(n).startsWith(brut) && n.includes(SEPARATEUR_NUMERO_LOT));
-  const place = modele ? modele.indexOf(SEPARATEUR_NUMERO_LOT) : /^[A-Z]{2}\d+$/.test(brut) ? 7 : -1;
+  const lettresDebut = /^[A-Z]+/.exec(brut)?.[0] ?? '';
+  // Sans lot connu : après les lettres, l'année (2 chiffres) et le jour de l'année (3 chiffres).
+  const place = modele ? modele.indexOf(SEPARATEUR_NUMERO_LOT) : lettresDebut.length >= 2 && /^[A-Z]+\d+$/.test(brut) ? lettresDebut.length + 5 : -1;
   if (place < 0 || brut.length <= place) return brut;
   return `${brut.slice(0, place)}${SEPARATEUR_NUMERO_LOT}${brut.slice(place)}`;
 }

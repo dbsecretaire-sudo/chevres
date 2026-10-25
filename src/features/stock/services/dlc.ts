@@ -1,5 +1,6 @@
 import type { ArchiveStock, LotFromage } from '@/features/stock/types';
-import { TYPE_LAIT_FROMAGE } from '@/shared/constants/stock';
+import { TYPE_FROMAGE } from '@/shared/constants/comptabilite';
+import { GENRE_ARTICLE, TYPE_LAIT_FROMAGE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { ajouterJours } from '@/shared/utils/calendrier';
 
@@ -12,6 +13,22 @@ export const TYPES_DE_LAIT: readonly TypeLait[] = [TYPE_LAIT_FROMAGE.CRU, TYPE_L
 export interface VarianteDeFromage {
   sale: boolean;
   lait: TypeLait;
+}
+
+/**
+ * Ce qu'un fromage est toujours, sans qu'on le demande : le vieux (l'affiné) est toujours salé ; le brocciu est toujours salé et pasteurisé. Rien d'imposé pour les autres :
+ * on demande alors s'il est salé et de quel lait.
+ */
+export function variantesImposees(article: string): { sale?: boolean; lait?: TypeLait } {
+  if (article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.AFFINE}`) return { sale: true };
+  if (article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.BROCCIU}`) return { sale: true, lait: TYPE_LAIT_FROMAGE.PASTEURISE };
+  return {};
+}
+
+/** Les variantes possibles d'un fromage : toutes, moins celles que son type exclut (un vieux n'est jamais non salé). */
+export function variantesPossibles(article: string): VarianteDeFromage[] {
+  const imposee = variantesImposees(article);
+  return VARIANTES_DE_FROMAGE.filter((v) => (imposee.sale === undefined || v.sale === imposee.sale) && (!imposee.lait || v.lait === imposee.lait));
 }
 
 /** Le suffixe d'une variante (« nonsale|cru ») : il s'ajoute à l'identifiant de l'article pour retrouver sa durée de conservation. */

@@ -12,12 +12,12 @@ import {
   numeroDeLot,
 } from '@/features/stock/services/lots';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
-import { TYPES_DE_LAIT, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
+import { TYPES_DE_LAIT, variantesImposees, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
 import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
+import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { Button } from '@/shared/components/Button';
-import { FormField } from '@/shared/components/FormField';
 import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
 import { JOURS_DE_CURE_SAVON, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
@@ -93,14 +93,19 @@ export function FabricationSimple({
 
   const choisir = (article: ArticleAffiche) => {
     setSaisie('');
-    setEtape(fromage ? { nom: 'sale', article } : savon ? { nom: 'litres', article } : { nom: 'nombre', article });
+    if (!fromage) return setEtape(savon ? { nom: 'litres', article } : { nom: 'nombre', article });
+    // Le vieux est toujours salé, le brocciu toujours salé et pasteurisé : ces questions ne se posent pas.
+    const imposee = variantesImposees(article.cle);
+    if (imposee.sale === undefined) return setEtape({ nom: 'sale', article });
+    if (!imposee.lait) return setEtape({ nom: 'lait', article, sale: imposee.sale });
+    setEtape({ nom: 'litres', article, variante: { sale: imposee.sale, lait: imposee.lait } });
   };
 
   const fabriquer = async (article: ArticleAffiche, nombre: number, litres?: number, variante?: VarianteDeFromage) => {
     if (!archive) return;
     try {
       const date = todayISO();
-      const debut = numeroDeLot(archive, article.cle, date);
+      const debut = numeroDeLot(archive, article.cle, date, fromage ? variante : undefined);
       const erreur = erreurFabrication(archive, article.cle, debut, nombre);
       if (erreur) return setEtape({ nom: 'erreur', message: erreur });
       // Les litres par fromage, quand l'inventaire ne les a pas encore : gardés pour la fois suivante.
@@ -199,10 +204,14 @@ export function FabricationSimple({
       ) : null}
 
       {etape.nom === 'litres' ? (
-        <View style={styles.contenu}>
+        <ScrollView contentContainerStyle={styles.contenuDefilant}>
           <Text style={styles.detail}>{etape.article.libelle}</Text>
           <Text style={styles.titre}>{savon ? T.combienDeLaitSavon : T.combienDeLitres}</Text>
-          <FormField label={T.litres} value={saisie} onChangeText={setSaisie} keyboardType="decimal-pad" autoFocus />
+          <ClavierNumerique valeur={saisie} onChange={setSaisie} virgule />
+          {/* Les litres tapés : centrés, non modifiables à la main. */}
+          <View style={styles.affichageNumero} accessibilityLabel={`${T.litres} ${saisie}`}>
+            <Text style={styles.affichageNumeroTexte}>{saisie}</Text>
+          </View>
           <Button
             label={T.valider}
             disabled={!(parseDecimal(saisie) > 0)}
@@ -224,21 +233,25 @@ export function FabricationSimple({
             />
           ) : null}
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
-        </View>
+        </ScrollView>
       ) : null}
 
       {etape.nom === 'nombre' ? (
-        <View style={styles.contenu}>
+        <ScrollView contentContainerStyle={styles.contenuDefilant}>
           <Text style={styles.detail}>{etape.article.libelle}</Text>
           <Text style={styles.titre}>{fromage ? T.combienDeFromages : T.combienDePieces}</Text>
-          <FormField label={T.nombre} value={saisie} onChangeText={setSaisie} keyboardType="number-pad" autoFocus />
+          <ClavierNumerique valeur={saisie} onChange={setSaisie} />
+          {/* Le nombre tapé : centré, non modifiable à la main. */}
+          <View style={styles.affichageNumero} accessibilityLabel={`${T.nombre} ${saisie}`}>
+            <Text style={styles.affichageNumeroTexte}>{saisie}</Text>
+          </View>
           <Button
             label={T.valider}
             disabled={!(Math.round(parseDecimal(saisie)) > 0)}
             onPress={() => fabriquer(etape.article, Math.round(parseDecimal(saisie)), etape.litres, etape.variante)}
           />
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
-        </View>
+        </ScrollView>
       ) : null}
 
       {etape.nom === 'fait' ? (

@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import type { Client } from '@/features/clients/types';
 import { lirePoids } from '@/features/cheptel/utils/poids';
 import { Button } from '@/shared/components/Button';
-import { FormField } from '@/shared/components/FormField';
+import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { SelectField } from '@/shared/components/SelectField';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { TEXTES } from '@/shared/textes';
@@ -40,7 +40,11 @@ export function PageSimplePoidsClient({
     <View style={styles.contenu}>
       <Text style={styles.detail}>{detail}</Text>
       <Text style={styles.titre}>{titre}</Text>
-      <FormField label={S.poidsTotal} value={poids} onChangeText={setPoids} keyboardType="decimal-pad" autoFocus />
+      <ClavierNumerique valeur={poids} onChange={setPoids} virgule />
+          {/* Le nombre tapé : centré, non modifiable à la main. */}
+          <View style={styles.affichageNumero} accessibilityLabel={`${S.poidsTotal} ${poids}`}>
+            <Text style={styles.affichageNumeroTexte}>{poids}</Text>
+          </View>
       <SelectField<string>
         label={S.clientAFacturer}
         value={clientId}

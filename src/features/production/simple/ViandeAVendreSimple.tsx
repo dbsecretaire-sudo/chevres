@@ -21,8 +21,8 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { PageSimplePoidsClient } from '@/features/production/simple/PageSimplePoidsClient';
 import { animauxSansBoucleAVendre, joursDeVie } from '@/features/production/simple/viandeAVendre';
 import { Button } from '@/shared/components/Button';
-import { FormField } from '@/shared/components/FormField';
 import { GrosBouton } from '@/shared/components/GrosBouton';
+import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { agePetitMax } from '@/shared/constants/cheptel';
 import { CATEGORIE_VENTE, TYPE_CHOIX_FACTURE, UNITE_VENTE } from '@/shared/constants/comptabilite';
 import { CIRCUIT_VENTE } from '@/shared/constants/commercial';
@@ -190,12 +190,16 @@ function ViandeAVendreContenu({ onRetour }: { onRetour?: () => void }) {
         <Text style={styles.detail}>{`${libelleChevre(choisi)} · ${e.etat === 'vivants' ? S.vivant : S.mort}`}</Text>
         <Text style={styles.titre}>{S.prixTotal}</Text>
         {e.calcul ? <Text style={styles.detail}>{e.calcul}</Text> : null}
-        <FormField label={S.prixEnEuros} value={prix} onChangeText={setPrix} keyboardType="decimal-pad" autoFocus />
+        <ClavierNumerique valeur={prix} onChange={setPrix} virgule />
+          {/* Le prix tapé : centré, non modifiable à la main. */}
+          <View style={styles.affichageNumero} accessibilityLabel={`${S.prixEnEuros} ${prix}`}>
+            <Text style={styles.affichageNumeroTexte}>{prix}</Text>
+          </View>
         <Text style={styles.message}>{S.paye}</Text>
         {/* Payé ? : « Oui » ou « Non » note la vente. */}
         <View style={styles.grille}>
-          <GrosBouton libelle={S.oui} onPress={() => (valide ? vendre(choisi, e, true) : undefined)} icone={<Ionicons name="checkmark" size={44} color={colors.blanc} />} />
-          <GrosBouton libelle={S.non} onPress={() => (valide ? vendre(choisi, e, false) : undefined)} icone={<Ionicons name="close" size={44} color={colors.blanc} />} />
+          <GrosBouton compact libelle={S.non} onPress={() => (valide ? vendre(choisi, e, false) : undefined)} icone={<Ionicons name="close" size={28} color={colors.blanc} />} />
+          <GrosBouton compact libelle={S.oui} onPress={() => (valide ? vendre(choisi, e, true) : undefined)} icone={<Ionicons name="checkmark" size={28} color={colors.blanc} />} />
         </View>
         <Button label={TEXTES.production.fabricationSimple.retour} variant="secondary" onPress={() => setEtape({ nom: 'etat', poids: e.poids, client: e.client })} />
       </View>

@@ -390,6 +390,17 @@ export const LETTRE_PRODUIT_LOT: Record<string, string> = {
 };
 
 /**
+ * Les lettres de la variante d'un fromage dans son numéro de lot, après celle de sa catégorie : « NS » non salé ou « S » salé, puis le lait (C cru, P pasteurisé, U UHT) —
+ * « FFNSC261-1 » est un fromage frais non salé au lait cru.
+ */
+export const LETTRES_SEL_LOT = { NON_SALE: 'NS', SALE: 'S' } as const;
+export const LETTRE_LAIT_LOT: Record<string, string> = {
+  [TYPE_LAIT_FROMAGE.CRU]: 'C',
+  [TYPE_LAIT_FROMAGE.PASTEURISE]: 'P',
+  [TYPE_LAIT_FROMAGE.UHT]: 'U',
+};
+
+/**
  * La lettre de la catégorie dans le numéro d'un lot, pour les fromages d'office : Frais, Vieux (l'affiné), Crottin, Brocciu. Un
  * autre produit (un fromage ajouté, la charcuterie : Figatellu…) prend l'initiale de son nom.
  */

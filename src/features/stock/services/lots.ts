@@ -29,7 +29,9 @@ import {
   GENRE_ARTICLE,
   LETTRE_CATEGORIE_LOT,
   LETTRE_CATEGORIE_LOT_PAR_DEFAUT,
+  LETTRE_LAIT_LOT,
   LETTRE_PRODUIT_LOT,
+  LETTRES_SEL_LOT,
   LOTS_MAX_PAR_FABRICATION,
   ORIGINE_MOUVEMENT,
   PRODUIT_A_LOTS,
@@ -246,7 +248,7 @@ export function lettreDeCategorie(article: string, archive: ArchiveStock): strin
 }
 
 /** Le début du numéro des lots d'un produit fabriqué un jour : « FF261 » (fromage, frais, 2026, 1er jour). */
-export function prefixeDeLot(article: string, date: string, archive: ArchiveStock): string {
+export function prefixeDeLot(article: string, date: string, archive: ArchiveStock, variante?: { sale: boolean; lait: string }): string {
   const produit = estArticleFromage(article)
     ? PRODUIT_A_LOTS.FROMAGE
     : estArticlePlat(article)
@@ -255,7 +257,12 @@ export function prefixeDeLot(article: string, date: string, archive: ArchiveStoc
         ? PRODUIT_A_LOTS.SAVON
         : PRODUIT_A_LOTS.CHARCUTERIE;
   const annee = String(Number(date.slice(0, 4)) % 100).padStart(2, '0');
-  return `${LETTRE_PRODUIT_LOT[produit]}${lettreDeCategorie(article, archive)}${annee}${jourDeLAnnee(date)}`;
+  // Un fromage dont on sait s'il est salé et de quel lait : ses lettres suivent celle de sa catégorie (« FFNSC261 » : frais, non salé, cru).
+  const lettresVariante =
+    produit === PRODUIT_A_LOTS.FROMAGE && variante
+      ? `${variante.sale ? LETTRES_SEL_LOT.SALE : LETTRES_SEL_LOT.NON_SALE}${LETTRE_LAIT_LOT[variante.lait] ?? ''}`
+      : '';
+  return `${LETTRE_PRODUIT_LOT[produit]}${lettreDeCategorie(article, archive)}${lettresVariante}${annee}${jourDeLAnnee(date)}`;
 }
 
 /**
@@ -263,8 +270,8 @@ export function prefixeDeLot(article: string, date: string, archive: ArchiveStoc
  * C crottin, B brocciu, l'initiale du nom sinon), l'année, le jour de l'année, puis le n° du produit. Une deuxième fabrication du même
  * jour continue la numérotation de la première.
  */
-export function numeroDeLot(archive: ArchiveStock, article: string, date: string): string {
-  const prefixe = prefixeDeLot(article, date, archive);
+export function numeroDeLot(archive: ArchiveStock, article: string, date: string, variante?: { sale: boolean; lait: string }): string {
+  const prefixe = prefixeDeLot(article, date, archive, variante);
   const debut = `${prefixe}${SEPARATEUR_NUMERO_LOT}`;
   const rangs = (archive.lots ?? [])
     .filter((l) => l.numero.startsWith(debut))

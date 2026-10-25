@@ -9,13 +9,16 @@ export function GrosBouton({
   icone,
   clair = false,
   detail,
+  compact = false,
 }: {
   libelle: string;
   onPress: () => void;
   icone?: ReactNode;
   clair?: boolean;
-  /** Une étiquette rouge sous le mot (« 3 à envoyer »). */
+  /** Une étiquette rouge sur le coin en haut à droite du bouton (« 3 à envoyer »). */
   detail?: string;
+  /** Un bouton moins haut (Oui / Non sous un clavier). */
+  compact?: boolean;
 }) {
   return (
     <Pressable
@@ -25,11 +28,12 @@ export function GrosBouton({
         styles.grosBouton,
         styles.moitie,
         clair ? [styles.grosBoutonClair, styles.grosBoutonBas] : null,
+        compact ? styles.grosBoutonCompact : null,
         pressed ? styles.grosBoutonAppuye : null,
       ]}
     >
       {icone}
-      <Text style={[styles.grosTexte, styles.grosTexteMoitie, clair ? styles.grosTexteClair : null]}>{libelle}</Text>
+      <Text style={[styles.grosTexte, styles.grosTexteMoitie, clair ? styles.grosTexteClair : null, compact ? styles.grosTexteCompact : null]}>{libelle}</Text>
       {detail ? (
         <View style={styles.grosEtiquette}>
           <Text style={styles.grosEtiquetteTexte}>{detail}</Text>

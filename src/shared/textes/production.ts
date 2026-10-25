@@ -718,7 +718,7 @@ export const TEXTES_PRODUCTION = {
     premier: 'N° du premier lot',
     /** L'explication du « ? » à côté du n° du premier lot : comment le numéro se compose. */
     explicationNumero:
-      'Le numéro d’un lot se lit, par exemple, « FF261-1 » :\n\n• F : le produit (F fromage, B boucherie et charcuterie)\n• F : la catégorie (F frais, V vieux, C crottin, B brocciu, F figatellu… : l’initiale du nom pour un autre produit)\n• 26 : l’année de fabrication (2 chiffres)\n• 1 : le jour de l’année (de 1 à 365)\n• -1 : le numéro du fromage de cette fabrication, qui se poursuit à chaque fromage (-2, -3…)\n\nLe numéro est proposé tout seul d’après le produit et la date ; deux fabrications du même produit le même jour se poursuivent.',
+      'Le numéro d’un lot se lit, par exemple, « FF261-1 » :\n\n• F : le produit (F fromage, B boucherie et charcuterie)\n• F : la catégorie (F frais, V vieux, C crottin, B brocciu, F figatellu… : l’initiale du nom pour un autre produit)\n• Pour un fromage, ses lettres de variante après la catégorie : NS non salé ou S salé, puis le lait (C cru, P pasteurisé, U UHT) — « FFNSC261-1 » est un frais non salé au lait cru\n• 26 : l’année de fabrication (2 chiffres)\n• 1 : le jour de l’année (de 1 à 365)\n• -1 : le numéro du fromage de cette fabrication, qui se poursuit à chaque fromage (-2, -3…)\n\nLe numéro est proposé tout seul d’après le produit et la date ; deux fabrications du même produit le même jour se poursuivent.',
     premierAide: 'Chaque fromage a son numéro de lot, à la suite du premier.',
     /** Le bouton qui donne le guide des numéros de lot en PDF. */
     guide: 'Guide des numéros de lot (PDF)',
@@ -733,6 +733,8 @@ export const TEXTES_PRODUCTION = {
     laitCru: 'Lait cru',
     laitPasteurise: 'Lait pasteurisé',
     laitUht: 'Lait UHT',
+    variantImposee: (sale: boolean, lait?: string) =>
+      `${sale ? 'Fromage toujours salé' : 'Fromage non salé'}${lait ? `, au lait ${lait === 'pasteurise' ? 'pasteurisé' : lait === 'uht' ? 'UHT' : 'cru'}` : ''}.`,
     varianteRequise: 'Précisez si le fromage est salé et de quel lait il est fait : la DLC en dépend.',
     litresRequis:
       'Indiquez les litres de lait qu’il faut pour un fromage : ils sont gardés dans l’inventaire.',
@@ -766,7 +768,7 @@ export const TEXTES_PRODUCTION = {
     combienDeLitres: 'Combien de litres ?',
     nombre: 'Nombre',
     litres: 'Litres',
-    calculPieces: (quantite: string, prix: string) => `${quantite} × ${prix} (prix de l’inventaire)`,
+    calculPieces: (quantite: string, libelle: string, prix: string) => `${quantite} ${libelle} × ${prix}`,
     calculLitres: (quantite: string, prix: string) => `${quantite} L × ${prix} le litre (prix de l’inventaire)`,
   },
   /** « Scanner un lot » : le numéro photographié ou tapé, puis ce qu'on sait du lot. */

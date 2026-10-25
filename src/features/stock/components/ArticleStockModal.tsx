@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
-import { suffixeDeVariante, TYPES_DE_LAIT, type TypeLait } from '@/features/stock/services/dlc';
+import { suffixeDeVariante, TYPES_DE_LAIT, variantesPossibles, type TypeLait } from '@/features/stock/services/dlc';
 import type { ChoixImage } from '@/features/stock/services/imagesArticles';
 import { ChampPrixParCategorie } from '@/features/stock/components/ChampPrixParCategorie';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
@@ -235,9 +235,9 @@ export function ArticleStockModal({
             <>
               <Text style={commonStyles.lineBold}>{T.dlcJours}</Text>
               <Text style={commonStyles.note}>{T.dlcFromageAide}</Text>
-              {TYPES_DE_LAIT.map((lait) => (
+              {TYPES_DE_LAIT.filter((lait) => variantesPossibles(cle ?? '').some((v) => v.lait === lait)).map((lait) => (
                 <View key={lait} style={commonStyles.row}>
-                  {[false, true].map((sale) => {
+                  {[false, true].filter((sale) => variantesPossibles(cle ?? '').some((v) => v.lait === lait && v.sale === sale)).map((sale) => {
                     const suffixe = suffixeDeVariante({ sale, lait });
                     return (
                       <View key={suffixe} style={commonStyles.flex1}>
