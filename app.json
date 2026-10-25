@@ -44,8 +44,6 @@
       "expo-web-browser",
       "expo-sharing",
       "@react-native-community/datetimepicker",
-      "expo-secure-store",
-      "@react-native-google-signin/google-signin",
       [
         "expo-camera",
         {
@@ -56,9 +54,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "761729bb-1007-41ec-aba3-059a1a946e1a"
+        "projectId": "35f5f91b-ca0e-4371-b496-da6d7781f51e"
       }
     },
-    "owner": "fmusicsuno1"
+    "owner": "gostaar"
   }
 }
