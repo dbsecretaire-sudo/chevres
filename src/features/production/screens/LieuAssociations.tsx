@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LigneTransaction } from '@/features/comptabilite/components/LigneTransaction';
 import { listTransactions, type Transaction } from '@/features/comptabilite/services/transactions';
@@ -21,6 +21,7 @@ import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDes
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
 import { Screen } from '@/shared/components/Screen';
+import { Fab } from '@/shared/components/Fab';
 import { SENS_TRANSACTION } from '@/shared/constants/comptabilite';
 import { CATEGORIE_FOURNISSEUR, CATEGORIES_ASSOCIATION } from '@/shared/constants/fournisseurs';
 import { ROUTES } from '@/shared/constants/routes';
@@ -259,7 +260,8 @@ export default function LieuAssociations() {
   }
 
   return (
-    <Screen>
+    <Screen scroll={false}>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       {rangeeDesLiens}
       <GroupeAccueil titre={G.groupeTiers}>
         {/* Chaque association ou coopérative, puis en dessous et en décalé ses actions (les dossiers rangés dans sa fiche), comme les contrats sous un assureur. */}
@@ -288,16 +290,22 @@ export default function LieuAssociations() {
               )),
             ];
           })}
-          <ListRow
-            title={G.ajouterTiers}
-            icone="add-circle"
-            onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.ASSOCIATION_AGRICOLE}`)}
-          />
         </BlocLignes>
       </GroupeAccueil>
 
       {/* Leurs factures (ces associations et coopératives sont en général payantes) : toutes celles de l'année, avec la nouvelle facture. */}
       {groupeDEcritures('factures', G.groupeFactures, facturesDesAssociations, G.aucuneFacture, G.nouvelle, config.nouvelle)}
+    </ScrollView>
+      {/* Le bouton flottant, en bas à droite : une association ou une coopérative. */}
+      <Fab
+        options={[
+          {
+            label: G.ajouterTiers,
+            icon: 'add',
+            onPress: () => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.ASSOCIATION_AGRICOLE}`),
+          },
+        ]}
+      />
     </Screen>
   );
 }

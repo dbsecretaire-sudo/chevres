@@ -10,6 +10,7 @@ import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { BlocLignes } from '@/shared/components/BlocListe';
+import { Fab } from '@/shared/components/Fab';
 import { balanceDesEcritures } from '@/features/comptabilite/services/balanceDesEcritures';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
@@ -23,7 +24,7 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { LABEL_CATEGORIE_VENTE } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
-import { Text } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 
 const T = TEXTES.production.laiterie;
 const A = TEXTES.production.accueil;
@@ -92,7 +93,8 @@ export default function Laiterie() {
   ];
 
   return (
-    <Screen>
+    <Screen scroll={false}>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       {lait.length > 0 ? (
         <GroupeAccueil titre={T.groupeLait}>
           <BlocLignes>
@@ -125,11 +127,6 @@ export default function Laiterie() {
             />
           ))}
           {recolteurs.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunRecolteur}</Text> : null}
-          <ListRow
-            title={T.ajouterRecolteur}
-            icone="add-circle"
-            onPress={() => router.push(ROUTES.CONTACT_NOUVEAU as never)}
-          />
         </BlocLignes>
       </GroupeAccueil>
 
@@ -164,6 +161,16 @@ export default function Laiterie() {
           />
         </BlocLignes>
       </GroupeAccueil>
+    </ScrollView>
+      <Fab
+        options={[
+          {
+            label: T.ajouterRecolteur,
+            icon: 'add',
+            onPress: () => router.push(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_CLIENT.RECOLTEUR}` as never),
+          },
+        ]}
+      />
     </Screen>
   );
 }

@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ScrollView, Text } from 'react-native';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
-import { colors } from '@/shared/theme/colors';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import LieuAssociations from '@/features/production/screens/LieuAssociations';
 import { BonsDeLivraison } from '@/features/production/components/BonsDeLivraison';
@@ -140,14 +138,14 @@ function LieuTiersStandard() {
   /** Les tiers par catégorie, dans l'ordre alphabétique des noms de catégorie. */
   const groupesDeTiers = useMemo(() => {
     const parCategorie = new Map<string, Contact[]>();
-    for (const c of tiers) {
+    for (const c of cle === 'particuliers' ? contacts : tiers) {
       const id = categorieDuContact(c, idsConnus).id ?? '';
       parCategorie.set(id, [...(parCategorie.get(id) ?? []), c]);
     }
     return [...parCategorie.entries()]
       .map(([id, membres]) => ({ id, nom: categories.find((x) => x.id === id)?.nom ?? id, membres }))
       .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-  }, [tiers, idsConnus, categories]);
+  }, [tiers, contacts, cle, idsConnus, categories]);
   const nombreParCategorie = useMemo(() => {
     const nombre: Record<string, number> = {};
     for (const c of contacts) {
@@ -199,8 +197,47 @@ function LieuTiersStandard() {
     <ListRow key={l.cle} title={l.titre} subtitle={l.aide} icone={l.icone} onPress={() => ouvrir(l.route)} />
   );
 
+  /** Les pages de contacts des clients : leurs ventes sont dans les fiches des contacts, et « Dans l'application » est passé dans Stock, Réserver et Ventes. */
+  const pageDesContacts = ['particuliers', 'entreprises', 'surfacesCommerciales'].includes(cle);
+  /** Les choix du bouton flottant : un contact (dans la catégorie déroulée, s'il y en a une), ou, selon le lieu, un organisme, une chambre ou un état. */
+  const ajouterContact = (categorie?: string) =>
+    ouvrir(categorie ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${categorie}` : ROUTES.CONTACT_NOUVEAU);
+  const optionsDAjout =
+    cle === 'assurance'
+      ? [
+          { label: T.ajouterAssureur, icon: 'business' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.ASSUREUR) },
+          { label: TEXTES.contacts.contrat.nouveauContrat, icon: 'shield-checkmark' as const, onPress: () => ouvrir(ROUTES.contratAssureur({})) },
+        ]
+      : cle === 'groupementSanitaire'
+      ? [
+          { label: T.ajouterGroupement, icon: 'people' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE) },
+          { label: T.ajouterVeto, icon: 'medkit' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.VETERINAIRE) },
+        ]
+      : cle === 'banque'
+      ? [
+          { label: T.ajouterComptable, icon: 'calculator' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.COMPTABLE) },
+          { label: T.ajouterBanque, icon: 'card' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.BANQUE) },
+        ]
+      : cle === 'organismes'
+      ? [
+          { label: T.ajouterOrganisme, icon: 'business' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.ORGANISME) },
+          { label: T.ajouterChambre, icon: 'leaf' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.CHAMBRE_AGRICULTURE) },
+          { label: T.ajouterEtat, icon: 'flag' as const, onPress: () => ajouterContact(CATEGORIE_FOURNISSEUR.ETAT) },
+        ]
+      : [
+          {
+            label: T.ajouterUnContact,
+            icon: 'person-add' as const,
+            onPress: () => ajouterContact(categorieOuverte ?? config.categoriesContact[0]),
+          },
+          ...(cle === 'particuliers'
+            ? [{ label: TEXTES.clients.categories.nouvelle, icon: 'folder-open' as const, onPress: () => ouvrir(ROUTES.ORGANISATION_CATEGORIES_CLIENT) }]
+            : []),
+        ];
+
   return (
-    <Screen>
+    <Screen scroll={false}>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       {/* Les organismes : le dossier PAC (suivi des mouvements, recensement, estive, documents générés) et les terrains, directement dans la page. */}
       {config.dossierPac ? (
         <GroupeAccueil titre={T.groupeLiens}>
@@ -229,7 +266,7 @@ function LieuTiersStandard() {
           />
         </GroupeAccueil>
       ) : null}
-      {liens.length > 0 && !config.registre ? (
+      {liens.length > 0 && !config.registre && !pageDesContacts ? (
         <GroupeAccueil titre={T.groupeLiens}>
           <BlocLignes>
             {liens.map((l) => (
@@ -370,25 +407,11 @@ function LieuTiersStandard() {
                 </BlocLignes>
               </SectionDeroulante>
             ))}
-            {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
-            {/* Le petit + : ajouter un contact, dans la catégorie déroulée s'il y en a une. */}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={textes.ajouterTiers ?? ''}
-              hitSlop={8}
-              style={{ alignSelf: 'flex-end', padding: 4 }}
-              onPress={() =>
-                ouvrir(
-                  categorieOuverte
-                    ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${categorieOuverte}`
-                    : config.categoriesContact[0]
-                      ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`
-                      : ROUTES.CONTACT_NOUVEAU,
-                )
-              }
-            >
-              <Ionicons name="add-circle" size={34} color={colors.primary} />
-            </Pressable>
+            {tiers.length === 0 ? (
+              <BlocLignes>
+                <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text>
+              </BlocLignes>
+            ) : null}
             {cle === 'tourisme' || textes.ajouterComptable ? (
               <BlocLignes>
                 {cle === 'tourisme' ? (
@@ -442,7 +465,7 @@ function LieuTiersStandard() {
             </GroupeAccueil>
           ) : null}
 
-          {comptable ? (
+          {pageDesContacts ? null : comptable ? (
             <GroupeAccueil titre={textes.groupeEcritures ?? ''} balance={ecritures.length > 0 ? balanceDesEcritures(ecritures) : undefined}>
               <TableauEcrituresDuLieu ecritures={ecritures} ouvrir={ouvrir} vide={T.aucuneEcriture} />
               <Fab
@@ -510,6 +533,8 @@ function LieuTiersStandard() {
         message={TEXTES.exploitation.bonsDeLivraison.factureSansBonMessage}
         onClose={() => setBonRequis(false)}
       />
+    </ScrollView>
+      {config.avecTiers && !comptable ? <Fab options={optionsDAjout} /> : null}
     </Screen>
   );
 }

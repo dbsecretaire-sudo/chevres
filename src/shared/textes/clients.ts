@@ -41,6 +41,7 @@ export const TEXTES_CLIENTS = {
   categories: {
     aide: 'Renommez, ajoutez ou retirez des catégories, et réglez ce qu’elles changent dans les ventes.',
     parCategorie: 'Par catégorie',
+    nouvelle: 'Nouvelle catégorie',
     parOption: 'Par option',
     aideParOption: 'Ouvrez une option et cochez les catégories qui l’appliquent.',
     dansLesVentes: 'Dans les ventes',

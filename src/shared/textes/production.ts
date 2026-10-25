@@ -332,6 +332,15 @@ export const TEXTES_PRODUCTION = {
   lieux: {
     groupeLiens: 'Dans l’application',
     aucunTiers: 'Aucun contact pour ce lieu.',
+    ajouterUnContact: 'Ajouter un contact',
+    ajouterOrganisme: 'Ajouter un organisme',
+    ajouterChambre: 'Ajouter une chambre d’agriculture',
+    ajouterEtat: 'Ajouter un état',
+    ajouterComptable: 'Ajouter un comptable',
+    ajouterBanque: 'Ajouter une banque',
+    ajouterGroupement: 'Ajouter un groupement sanitaire',
+    ajouterVeto: 'Ajouter un vétérinaire',
+    ajouterAssureur: 'Ajouter un assureur',
     aucuneEcriture: 'Aucune écriture de ce lieu cette année.',
     plusDEcritures: (n: number) => `${n} autres écritures dans la comptabilité`,
     aliments: {
@@ -598,7 +607,7 @@ export const TEXTES_PRODUCTION = {
     },
     particuliers: {
       titre: 'Particuliers',
-      groupeTiers: 'Clients particuliers',
+      groupeTiers: 'Contacts',
       ajouterTiers: 'Ajouter un particulier',
       groupeEcritures: 'Les ventes aux particuliers',
       nouvelle: 'Nouvelle vente',
