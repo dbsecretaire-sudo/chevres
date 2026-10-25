@@ -8,6 +8,7 @@ import {
   enregistrerUneNaissance,
   nombresDePetits,
   petitsDuBerger,
+  rangeesDePetits,
 } from '@/features/berger/services/saisies';
 import { creerChevre, getChevre, listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import { listNaissancesGroupees } from '@/features/cheptel/repository/naissances';
@@ -26,15 +27,21 @@ describe('le berger : une naissance, une mort, c’est tout', () => {
     expect(animalDeLaBoucle(animaux, '999')).toBeUndefined();
   });
 
-  it('propose de 1 petit jusqu’au maximum d’une mise bas', () => {
-    expect(nombresDePetits(3)).toEqual([1, 2, 3]);
-    expect(nombresDePetits(0)).toEqual([1]);
+  it('propose de 0 jusqu’au maximum d’une mise bas, pour les femelles puis pour les mâles', () => {
+    expect(nombresDePetits(3)).toEqual([0, 1, 2, 3]);
+    expect(nombresDePetits(0)).toEqual([0, 1]);
   });
 
-  it('les petits sont marqués à compléter (leur sexe n’est pas connu)', () => {
-    const petits = petitsDuBerger(2);
-    expect(petits).toHaveLength(2);
+  it('les nombres se rangent trois par ligne, le 0 seul en dessous', () => {
+    expect(rangeesDePetits(6)).toEqual([[1, 2, 3], [4, 5, 6], [0]]);
+    expect(rangeesDePetits(4)).toEqual([[1, 2, 3], [4], [0]]);
+  });
+
+  it('les petits ont le sexe donné et sont marqués à compléter (les boucles se posent à la maison)', () => {
+    const petits = petitsDuBerger(2, 1);
+    expect(petits.map((p) => p.sexe)).toEqual(['F', 'F', 'M']);
     expect(petits.every((p) => p.aCompleter === true)).toBe(true);
+    expect(petitsDuBerger(0, 0)).toHaveLength(1);
   });
 
   it('un animal mort au scan : morte au jour donné, à compléter, et le reste de sa fiche ne change pas', () => {
@@ -51,8 +58,9 @@ describe('le berger : une naissance, une mort, c’est tout', () => {
 
   it('enregistre une naissance (petits nés le jour donné, de la mère) et l’annule', async () => {
     const mere = await creerChevre({ numeroBoucle: '12345', sexe: SEXE.FEMELLE, dateNaissance: '2022-02-02' });
-    const petits = await enregistrerUneNaissance(mere, 2, '2026-10-24');
+    const petits = await enregistrerUneNaissance(mere, 1, 1, '2026-10-24');
     expect(petits).toHaveLength(2);
+    expect(petits.map((p) => p.sexe).sort()).toEqual(['F', 'M']);
     const portees = (await listNaissancesGroupees()).filter((p) => p.mereNumeroBoucle === '12345');
     expect(portees).toHaveLength(1);
     expect(portees[0]).toMatchObject({ date: '2026-10-24' });

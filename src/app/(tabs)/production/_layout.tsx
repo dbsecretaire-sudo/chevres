@@ -166,7 +166,6 @@ export default function ProductionLayout() {
       <Stack.Screen name="lots-simple" options={{ title: TEXTES.production.lots.fromages }} />
       <Stack.Screen name="lots-viande-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.viandeAVendre }} />
       <Stack.Screen name="scan-lot-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.scanLot }} />
-      <Stack.Screen name="imprimer-lots-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.imprimerLots }} />
       <Stack.Screen name="cadre-simple" options={{ title: TEXTES.accueil.ferme.terrain.tuiles.cadreReglementaire }} />
       <Stack.Screen name="fabrication-simple" options={{ title: TEXTES.production.fabricationSimple.titre }} />
       <Stack.Screen name="lait-du-jour" options={{ title: TEXTES.stock.laitJour.ajouter }} />

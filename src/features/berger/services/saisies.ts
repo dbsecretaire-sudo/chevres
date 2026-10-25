@@ -8,15 +8,30 @@ import { todayISO } from '@/shared/utils/dates';
 export const animalDeLaBoucle = (animaux: readonly Chevre[], boucle: string): Chevre | undefined =>
   animaux.find((a) => a.statut === STATUT_CHEVRE.VIVANTE && a.numeroBoucle?.trim() === boucle.trim());
 
-/** Les nombres de petits proposés en gros boutons : de 1 au maximum d'une mise bas. */
-export const nombresDePetits = (maximum: number): number[] => Array.from({ length: Math.max(1, maximum) }, (_, i) => i + 1);
+/** Les nombres proposés en gros boutons, pour les femelles puis pour les mâles : de 0 au maximum d'une mise bas. */
+export const nombresDePetits = (maximum: number): number[] => Array.from({ length: Math.max(1, maximum) + 1 }, (_, i) => i);
+
+/** Ces nombres rangés comme à l'écran : 1 2 3, puis 4 5 6, puis le 0 seul en dessous (trois par ligne, pour de grands boutons). */
+export const rangeesDePetits = (maximum: number): number[][] => {
+  const nombres = nombresDePetits(maximum).filter((n) => n > 0);
+  const rangees: number[][] = [];
+  for (let i = 0; i < nombres.length; i += 3) rangees.push(nombres.slice(i, i + 3));
+  return [...rangees, [0]];
+};
 
 /**
- * Les petits d'une naissance saisie sur le terrain : on ne connaît que leur nombre. Leur sexe est mis à femelle d'office, et chacun est marqué « à compléter » :
- * la secrétaire règle le sexe et les boucles à la maison.
+ * Les petits d'une naissance saisie sur le terrain : on connaît le nombre de femelles et de mâles (au moins un petit). Chacun est marqué « à compléter » : la secrétaire
+ * pose les boucles à la maison.
  */
-export const petitsDuBerger = (nombre: number): CabritInput[] =>
-  Array.from({ length: Math.max(1, nombre) }, () => ({ sexe: SEXE.FEMELLE, aCompleter: true }));
+export const petitsDuBerger = (femelles: number, males: number): CabritInput[] => {
+  const f = Math.max(0, femelles);
+  const m = Math.max(0, males);
+  const petits: CabritInput[] = [
+    ...Array.from({ length: f }, () => ({ sexe: SEXE.FEMELLE, aCompleter: true })),
+    ...Array.from({ length: m }, () => ({ sexe: SEXE.MALE, aCompleter: true })),
+  ];
+  return petits.length > 0 ? petits : [{ sexe: SEXE.FEMELLE, aCompleter: true }];
+};
 
 /** La fiche d'un animal mort, saisie sur le terrain : morte au jour donné, à compléter (la cause, l'enlèvement) à la maison. */
 export const animalMort = (animal: Chevre, date: string): Chevre => ({
@@ -29,13 +44,13 @@ export const animalMort = (animal: Chevre, date: string): Chevre => ({
 /** Les animaux vivants du troupeau (de l'espèce courante), où chercher la boucle scannée. */
 export const animauxDuTroupeau = (): Promise<Chevre[]> => listChevresVivantes();
 
-/** Enregistre une naissance : `nombre` petits de la mère, nés le jour du scan. Rend les petits créés (de quoi l'annuler). */
-export async function enregistrerUneNaissance(mere: Chevre, nombre: number, date: string = todayISO()): Promise<Chevre[]> {
+/** Enregistre une naissance : `femelles` et `males` petits de la mère, nés le jour du scan. Rend les petits créés (de quoi l'annuler). */
+export async function enregistrerUneNaissance(mere: Chevre, femelles: number, males: number, date: string = todayISO()): Promise<Chevre[]> {
   return enregistrerNaissance({
     date,
     mereId: mere.id,
     mereNumeroBoucle: (mere.numeroBoucle ?? '').trim(),
-    cabrits: petitsDuBerger(nombre),
+    cabrits: petitsDuBerger(femelles, males),
   });
 }
 

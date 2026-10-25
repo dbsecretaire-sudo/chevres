@@ -178,8 +178,8 @@ export function TableauLots({
                       onPress={() => setLotAImprimer(lot)}
                       accessibilityLabel={T.imprimer}
                     >
-                      <Text style={styles.texteLigne}>{lot.numero}</Text>
-                      <Ionicons name="print-outline" size={14} color={colors.textMuted} />
+                      <Text style={[styles.texteLigne, styles.texteNumero]}>{lot.numero}</Text>
+                      <Ionicons name="print-outline" size={14} color={colors.textMuted} style={{ flexShrink: 0 }} />
                     </Pressable>
                   ) : (
                     <Text style={[styles.texteLigne, styles.colonneNumero]}>{lot.numero}</Text>

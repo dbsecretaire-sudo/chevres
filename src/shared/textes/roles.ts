@@ -43,8 +43,11 @@ export const TEXTES_ROLES = {
     mere: (boucle: string) => `Mère : ${boucle}`,
     introuvable: (boucle: string) => `La boucle ${boucle} n’est pas dans le troupeau.`,
     pasUneFemelle: (boucle: string) => `La boucle ${boucle} n’est pas celle d’une femelle.`,
-    naissanceFaite: (nombre: number) => `${nombre} ${nombre > 1 ? 'petits enregistrés' : 'petit enregistré'}`,
-    naissanceDetail: (boucle: string) => `Nés aujourd’hui de la mère ${boucle}. La secrétaire complétera le sexe et les boucles.`,
+    naissanceFaite: (femelles: number, males: number) =>
+      `${femelles + males} ${femelles + males > 1 ? 'petits enregistrés' : 'petit enregistré'} : ${femelles} ${femelles > 1 ? 'femelles' : 'femelle'}, ${males} ${males > 1 ? 'mâles' : 'mâle'}`,
+    naissanceDetail: (boucle: string) => `Nés aujourd’hui de la mère ${boucle}. La secrétaire posera les boucles.`,
+    femelles: 'Femelles',
+    males: 'Mâles',
     mortFaite: 'Mort enregistrée',
     mortDetail: (boucle: string) => `Boucle ${boucle}, aujourd’hui. La secrétaire complétera le reste.`,
     annulee: 'C’est annulé.',

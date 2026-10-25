@@ -16,10 +16,13 @@ interface Props {
   /** Bouton/texte secondaire affiché sous la caméra et sous les écrans d'annulation (ex: "Annuler" ou "Passer à la saisie classique"). */
   texteSecondaire: string;
   onSecondaire: () => void;
+  /** On scanne le numéro d'un lot (lettres comprises) et non d'une boucle : les phrases et le clavier changent. */
+  lot?: boolean;
 }
 
 /** Cœur de la logique de scan (caméra → OCR → confirmation), sans Modal — réutilisable en popup ou plein écran. */
-export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire }: Props) {
+export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, lot = false }: Props) {
+  const textes = lot ? { ...TEXTES.cheptel.scannerBoucleCore, ...TEXTES.cheptel.scannerBoucleCore.lot } : TEXTES.cheptel.scannerBoucleCore;
   const accent = useAccentColor();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -67,7 +70,7 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire }:
   if (!permission.granted) {
     return (
       <View style={styles.centre}>
-        <Text style={styles.info}>{TEXTES.cheptel.scannerBoucleCore.lAccesALAppareil}</Text>
+        <Text style={styles.info}>{textes.lAccesALAppareil}</Text>
         <Button
           label={TEXTES.cheptel.scannerBoucleCore.autoriserLAppareilPhoto}
           onPress={requestPermission}
@@ -105,7 +108,8 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire }:
               label={TEXTES.cheptel.scannerBoucleCore.numeroDetecteVerifiezAvantDe}
               value={valeur}
               onChangeText={setValeur}
-              keyboardType="number-pad"
+              keyboardType={lot ? 'default' : 'number-pad'}
+              autoCapitalize={lot ? 'characters' : undefined}
               autoFocus
             />
             <View style={commonStyles.row}>
@@ -134,7 +138,7 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire }:
       <CameraView ref={cameraRef} style={commonStyles.flex1} facing="back" />
       <View style={styles.overlay} pointerEvents="none">
         <View style={styles.cadre} />
-        <Text style={styles.consigne}>{TEXTES.cheptel.scannerBoucleCore.cadrezLeNumeroDeBoucle}</Text>
+        <Text style={styles.consigne}>{textes.cadrezLeNumeroDeBoucle}</Text>
       </View>
       <View style={styles.controles}>
         <View style={styles.boutonVide} />

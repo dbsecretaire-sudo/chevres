@@ -34,15 +34,21 @@ export const styles = StyleSheet.create({
   message: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center' },
   detail: { fontSize: 16, color: colors.textMuted, textAlign: 'center' },
   erreur: { fontSize: 20, fontWeight: '700', color: colors.danger, textAlign: 'center' },
-  rangeeNombres: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
-  nombre: {
-    width: '45%',
-    minHeight: 110,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
+  /** Les petits d'une naissance : une rangée de 0 à 6 pour les femelles, une pour les mâles. */
+  sexeTitre: { fontSize: 22, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  petitsRangee: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  petitChoix: {
+    width: 88,
+    height: 62,
+    borderRadius: 14,
+    backgroundColor: colors.blanc,
+    borderWidth: 2,
+    borderColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nombreTexte: { fontSize: 48, fontWeight: '800', color: colors.blanc },
+  petitChoixActif: { backgroundColor: colors.primary },
+  petitChoixTexte: { fontSize: 26, fontWeight: '800', color: colors.primary },
+  petitChoixTexteActif: { color: colors.blanc },
   coche: { alignSelf: 'center' },
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Alert, ScrollView, Text } from 'react-native';
+import { Alert, Pressable, ScrollView, Text } from 'react-native';
 import { exporterListeLotsPdf, type ProduitDeLaListe } from '@/features/export/documents/listeLotsPdf';
-import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
+import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { TEXTES } from '@/shared/textes';
@@ -22,7 +22,7 @@ const CHOIX = [
  * « Imprimer les lots » : on choisit un produit (ou tous), et la liste de ses lots — numéro, fabrication, contrôle, état, client et prix pour un lot vendu — se prépare en PDF,
  * prête à imprimer ou à partager. Ce n'est pas l'étiquette d'un lot : c'est la liste.
  */
-export function ImprimerLotsSimple() {
+export function ImprimerLotsSimple({ presentation = 'tuiles', onRetour }: { presentation?: PresentationDesChoix; onRetour?: () => void }) {
   const [enCours, setEnCours] = useState(false);
   const imprimer = async (cle: string) => {
     const choix = CHOIX.find((c) => c.cle === cle);
@@ -40,7 +40,12 @@ export function ImprimerLotsSimple() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       <Text style={styles.titre}>{T.titre}</Text>
       <Text style={styles.detail}>{enCours ? T.enCours : T.aide}</Text>
-      <ListeDeChoix presentation="tuiles" choix={CHOIX} onChoisir={(c) => imprimer(c.cle)} />
+      <ListeDeChoix presentation={presentation} choix={CHOIX} onChoisir={(c) => imprimer(c.cle)} />
+      {onRetour ? (
+        <Pressable style={styles.discret} onPress={onRetour} accessibilityRole="button">
+          <Text style={styles.discretTexte}>{TEXTES.production.fabricationSimple.retour}</Text>
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 }

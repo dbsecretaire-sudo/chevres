@@ -22,10 +22,12 @@ export const styles = StyleSheet.create({
   titreColonne: { flexShrink: 1 },
   /** Un titre de colonne et son bouton de filtre côte à côte. */
   celluleEntete: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  colonneNumero: { flex: 1, minWidth: 40 },
+  colonneNumero: { flex: 1, minWidth: 56 },
   colonneDate: { width: 76 },
   /** Le numéro d'un lot et son icône d'impression, côte à côte. */
-  celluleNumero: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // Le numéro se coupe en deux lignes si la colonne est étroite (téléphone) : l'icône d'impression reste à sa place et ne déborde plus sur la date.
+  celluleNumero: { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' },
+  texteNumero: { flexShrink: 1 },
   /** La colonne « Morte » : une case, centrée sous son titre. */
   colonneMorte: { width: 54, alignItems: 'center', justifyContent: 'center' },
   titreMorte: { fontSize: 11, color: colors.text },

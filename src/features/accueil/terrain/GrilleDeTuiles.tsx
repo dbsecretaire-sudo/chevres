@@ -24,7 +24,7 @@ export function GrilleDeTuiles({ tuiles, onAppui }: { tuiles: TuileTerrain[]; on
             )}
             {t.nombre ? <Text style={[styles.nombre, t.alerte ? styles.nombreAlerte : null]}>{t.nombre}</Text> : null}
           </View>
-          <Text style={styles.titre} numberOfLines={2}>
+          <Text style={styles.titre} numberOfLines={3}>
             {t.titre}
           </Text>
         </Pressable>

@@ -8,6 +8,7 @@ import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
 import { articlesDuProduit } from '@/features/stock/services/lots';
 import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle, LotFromage } from '@/features/stock/types';
+import { ImprimerLotsSimple } from '@/features/production/simple/ImprimerLotsSimple';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { ListeDeChoix, type Choix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
@@ -52,10 +53,13 @@ function fabricationsDe(archive: ArchiveStock, article: string): Fabrication[] {
 
 /** Le choix « Réimprimer des étiquettes », au milieu des produits. */
 const REIMPRESSION = 'reimpression';
+/** Le choix « Imprimer la liste des lots » (le PDF des lots, pas leurs étiquettes). */
+const LISTE_DES_LOTS = 'listeLots';
 
 type Etape =
   | { nom: 'produit' }
   | { nom: 'reimpression' }
+  | { nom: 'listeLots' }
   | { nom: 'article'; produit: Produit }
   | { nom: 'fabrication'; article: ArticleAffiche }
   | { nom: 'nombre'; fabrication: Fabrication }
@@ -107,14 +111,25 @@ export function EtiquettesSimple({
             choix={[
               ...PRODUITS.map((p): Choix => ({ cle: p, libelle: E.produits[p], icone: ICONE[p] })),
               { cle: REIMPRESSION, libelle: E.reimprimer, icone: 'printer' },
+              { cle: LISTE_DES_LOTS, libelle: E.listeLots, icone: 'format-list-bulleted' },
             ]}
-            onChoisir={(c) => setEtape(c.cle === REIMPRESSION ? { nom: 'reimpression' } : { nom: 'article', produit: c.cle as Produit })}
+            onChoisir={(c) =>
+              setEtape(
+                c.cle === REIMPRESSION
+                  ? { nom: 'reimpression' }
+                  : c.cle === LISTE_DES_LOTS
+                    ? { nom: 'listeLots' }
+                    : { nom: 'article', produit: c.cle as Produit },
+              )
+            }
           />
           <Pressable style={styles.discret} onPress={onTerminer} accessibilityRole="button">
             <Text style={styles.discretTexte}>{T.retour}</Text>
           </Pressable>
         </ScrollView>
       ) : null}
+
+      {etape.nom === 'listeLots' ? <ImprimerLotsSimple presentation={presentation} onRetour={recommencer} /> : null}
 
       {etape.nom === 'reimpression' ? (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>

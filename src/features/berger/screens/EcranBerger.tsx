@@ -11,7 +11,7 @@ import {
   annulerUneNaissance,
   enregistrerUneMort,
   enregistrerUneNaissance,
-  nombresDePetits,
+  rangeesDePetits,
 } from '@/features/berger/services/saisies';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
@@ -57,6 +57,9 @@ export default function EcranBerger() {
   const drive = useGoogleDriveSansNavigation();
   const [etape, setEtape] = useState<Etape>({ nom: 'accueil' });
   const [numero, setNumero] = useState('');
+  /** Les petits d'une naissance : combien de femelles et combien de mâles (de 0 à 6 chacun). */
+  const [femelles, setFemelles] = useState(0);
+  const [males, setMales] = useState(0);
   // Un appui qui suit de trop près un changement d'écran ne compte pas : un double appui (un doigt ganté) ne doit pas déclencher le bouton de l'écran suivant, placé au même endroit.
   const [protege, setProtege] = useState(true);
   useEffect(() => {
@@ -84,6 +87,8 @@ export default function EcranBerger() {
       if (but === 'naissance') {
         if (animal.sexe !== SEXE.FEMELLE)
           return setEtape({ nom: 'erreur', but, message: T.pasUneFemelle(boucle) });
+        setFemelles(0);
+        setMales(0);
         return setEtape({ nom: 'petits', mere: animal });
       }
       const avant = await enregistrerUneMort(animal);
@@ -98,12 +103,12 @@ export default function EcranBerger() {
     }
   };
 
-  const surPetits = async (mere: Chevre, nombre: number) => {
+  const surPetits = async (mere: Chevre) => {
     try {
-      const petits = await enregistrerUneNaissance(mere, nombre);
+      const petits = await enregistrerUneNaissance(mere, femelles, males);
       setEtape({
         nom: 'fait',
-        titre: T.naissanceFaite(nombre),
+        titre: T.naissanceFaite(femelles, males),
         detail: T.naissanceDetail((mere.numeroBoucle ?? '').trim()),
         annuler: () => annulerUneNaissance(petits),
       });
@@ -215,19 +220,30 @@ export default function EcranBerger() {
             <View style={styles.contenu}>
               <Text style={styles.detail}>{T.mere((etape.mere.numeroBoucle ?? '').trim())}</Text>
               <Text style={styles.titre}>{T.combienDePetits}</Text>
-              <View style={styles.rangeeNombres}>
-                {nombresDePetits(nbPetitsMax()).map((n) => (
-                  <Pressable
-                    key={n}
-                    accessibilityRole="button"
-                    accessibilityLabel={String(n)}
-                    onPress={() => surPetits(etape.mere, n)}
-                    style={({ pressed }) => [styles.nombre, pressed ? styles.grosBoutonAppuye : null]}
-                  >
-                    <Text style={styles.nombreTexte}>{n}</Text>
-                  </Pressable>
-                ))}
-              </View>
+              {[
+                { cle: 'femelles', titre: T.femelles, valeur: femelles, choisir: setFemelles },
+                { cle: 'males', titre: T.males, valeur: males, choisir: setMales },
+              ].map((rangee) => (
+                <View key={rangee.cle} style={{ gap: 8 }}>
+                  <Text style={styles.sexeTitre}>{rangee.titre}</Text>
+                  {rangeesDePetits(nbPetitsMax()).map((ligne) => (
+                    <View key={ligne.join('-')} style={styles.petitsRangee}>
+                      {ligne.map((n) => (
+                        <Pressable
+                          key={n}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${rangee.titre} ${n}`}
+                          onPress={() => rangee.choisir(n)}
+                          style={[styles.petitChoix, rangee.valeur === n ? styles.petitChoixActif : null]}
+                        >
+                          <Text style={[styles.petitChoixTexte, rangee.valeur === n ? styles.petitChoixTexteActif : null]}>{n}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              ))}
+              <Button label={T.valider} disabled={femelles + males < 1} onPress={() => surPetits(etape.mere)} />
               <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
                 <Text style={styles.discretTexte}>{T.retour}</Text>
               </Pressable>
