@@ -11,6 +11,15 @@ export const styles = StyleSheet.create({
   },
   filtreEffacerTexte: { fontSize: 13, fontWeight: '700', color: colors.danger },
   balanceCard: { alignItems: 'center' },
+  /** La carte du solde, comme sur la maquette : verte, le texte en blanc. */
+  carteVerte: { backgroundColor: colors.primary, borderColor: colors.primary, gap: 12 },
+  enteteVerte: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  boutonDetailsVerte: { borderWidth: 1, borderColor: colors.blanc, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  soldeBlanc: { fontSize: 30, fontWeight: '800', color: colors.blanc },
+  statsVertes: { flexDirection: 'row', gap: 10 },
+  boiteVerte: { flex: 1, backgroundColor: colors.primaryDark, borderRadius: 12, padding: 10, gap: 2 },
+  texteBlanc: { fontSize: 13, color: colors.blanc },
+  valeurBlanche: { fontSize: 16, fontWeight: '700', color: colors.blanc },
   /** Le lien vers le détail par catégorie, en haut à droite de la carte dépliée. */
   soldeDetails: { position: 'absolute', top: 12, right: 14 },
   soldeDetailsTexte: { fontSize: 13, color: colors.primary, textDecorationLine: 'underline' },

@@ -65,33 +65,34 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
     );
   }
 
+  // Comme sur la maquette : la carte est verte, le solde et les deux totaux sont en blanc, dans des cases vert foncé.
   return (
     <Pressable onPress={() => setDeplie(false)}>
-      <Card style={{ ...styles.balanceCard, ...fondSolde }}>
-        <Pressable
-          style={styles.soldeDetails}
-          hitSlop={8}
-          onPress={() => router.push(ROUTES.COMPTABILITE_DETAIL)}
-        >
-          <Text style={styles.soldeDetailsTexte}>{TEXTES.comptabilite.listeTransactions.details}</Text>
-        </Pressable>
-        <Text style={commonStyles.caption}>
-          {TEXTES.comptabilite.listeTransactions.soldeEspace}
-          {periode}
-        </Text>
-        <Text style={[styles.balanceValeur, { color: couleurSolde }]}>{formatMontant(soldes.balance)}</Text>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statBloc}>
-            <Text style={styles.statLabel}>{TEXTES.comptabilite.listeTransactions.rentrees}</Text>
-            <Text style={[styles.statValeur, { color: colors.primary }]}>
-              {formatMontant(soldes.totalRentrees)}
+      <Card style={styles.carteVerte}>
+        <View style={styles.enteteVerte}>
+          <View style={commonStyles.flex1}>
+            <Text style={styles.texteBlanc}>
+              {TEXTES.comptabilite.listeTransactions.soldeEspace}
+              {periode}
             </Text>
+            <Text style={styles.soldeBlanc}>{formatMontant(soldes.balance)}</Text>
           </View>
-          <View style={styles.statSeparateur} />
-          <View style={styles.statBloc}>
-            <Text style={styles.statLabel}>{TEXTES.commun.general.depenses}</Text>
-            <Text style={[styles.statValeur, { color: colors.danger }]}>{depenses}</Text>
+          <Pressable
+            style={styles.boutonDetailsVerte}
+            hitSlop={8}
+            onPress={() => router.push(ROUTES.COMPTABILITE_DETAIL)}
+          >
+            <Text style={styles.texteBlanc}>{TEXTES.comptabilite.listeTransactions.details}</Text>
+          </Pressable>
+        </View>
+        <View style={styles.statsVertes}>
+          <View style={styles.boiteVerte}>
+            <Text style={styles.texteBlanc}>{TEXTES.comptabilite.listeTransactions.rentrees}</Text>
+            <Text style={styles.valeurBlanche}>{formatMontant(soldes.totalRentrees)}</Text>
+          </View>
+          <View style={styles.boiteVerte}>
+            <Text style={styles.texteBlanc}>{TEXTES.commun.general.depenses}</Text>
+            <Text style={styles.valeurBlanche}>{depenses}</Text>
           </View>
         </View>
       </Card>

@@ -78,6 +78,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
       {
         titre: 'Factures et ventes',
         lignes: [
+          { libelle: 'Écritures', aide: 'Toutes les factures et ventes', icone: 'list-outline', route: ROUTES.COMPTABILITE_LISTE },
           { libelle: 'Nouvelle facture', aide: 'Photo ou saisie', icone: 'add-circle-outline', route: ROUTES.COMPTABILITE_NOUVELLE },
           { libelle: 'Ventes', aide: 'Atelier et visites', icone: 'cash-outline', route: ROUTES.COMMERCIAL_VENTES },
           { libelle: 'Commandes', aide: 'Commandes et livraisons', icone: 'cart-outline', route: ROUTES.COMMERCIAL_COMMANDES },

@@ -1,5 +1,5 @@
 import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
-import { FlatList, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -36,6 +36,8 @@ export default function ComptabiliteIndex() {
         // Années, activités, solde et recherche défilent avec la liste : plus de place pour les écritures.
         ListHeaderComponent={
           <View style={[commonStyles.topBox, styles.entete]}>
+            {/* Comme sur la maquette : la rubrique d'où vient la page, en légende de la liste. */}
+            <Text style={commonStyles.muted}>Argent · toutes les factures</Text>
             {e.restriction ? <BandeauRestriction titre={e.restriction.titre} onEffacer={e.effacerRestriction} /> : null}
             <LigneFiltres>
               <YearPicker
