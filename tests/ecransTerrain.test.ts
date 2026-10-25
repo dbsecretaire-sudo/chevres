@@ -52,20 +52,20 @@ describe('écrans terrain des trois zones de l’accueil', () => {
     expect(tuilesDuTerrain('troupeau', comptes({ aCompleter: 3 })).find((t) => t.cle === 'aCompleter')).toMatchObject({ nombre: 3, alerte: true });
   });
 
-  it('l’atelier compte la viande à facturer (pas le cheptel) et signale un stock négatif', () => {
+  it('l’atelier suit la maquette : lait, fabriquer, scanner un lot, étiquettes, vendre, stock ; un stock négatif se signale', () => {
     const tuiles = tuilesDuTerrain('atelier', comptes({ viandeAFacturer: 4, stockNegatif: true, lotsARappeler: 1 }));
-    // Toutes les ventes sont réunies dans une tuile « Ventes », sans chiffre.
+    expect(tuiles.map((t) => t.cle)).toEqual(['lait', 'fabriquer', 'scanLot', 'etiquettes', 'ventes', 'stock']);
+    // Toutes les ventes sont réunies dans une tuile « Vendre », sans chiffre.
+    expect(tuiles.find((t) => t.cle === 'ventes')).toMatchObject({ titre: 'Vendre' });
     expect(tuiles.find((t) => t.cle === 'ventes')?.nombre).toBeUndefined();
-    expect(tuiles.find((t) => t.cle === 'ventes')?.large).toBeUndefined();
-    expect(tuiles.some((t) => t.cle === 'cadreReglementaire')).toBe(true);
-    expect(tuiles.some((t) => t.cle === 'viande' || t.cle === 'viandeAVendre')).toBe(false);
-    // Le stock et les lots ne sont proposés que par le mode normal (qui a ses pages) : pas sur l'écran de l'atelier du mode avancé.
-    expect(tuiles.some((t) => t.cle === 'stock' || t.cle === 'lotsAtelier' || t.cle === 'contacts')).toBe(false);
-    const avecPages = tuilesDuTerrain('atelier', comptes({ stockNegatif: true, lotsARappeler: 1 }), true);
-    expect(avecPages.find((t) => t.cle === 'stock')?.alerte).toBe(true);
-    expect(avecPages.find((t) => t.cle === 'lotsAtelier')).toMatchObject({ nombre: 1, alerte: true });
-    // Les quatre fabrications ouvrent la page de fabrication de leur produit.
-    expect(tuiles.filter((t) => t.route.startsWith('/production/fabrication')).length).toBe(4);
+    expect(tuiles.find((t) => t.cle === 'stock')?.alerte).toBe(true);
+    // Les lots, le cadre réglementaire (dans le menu « Plus ») et les contacts ne sont pas sur l'atelier.
+    expect(tuiles.some((t) => t.cle === 'lotsAtelier' || t.cle === 'cadreReglementaire' || t.cle === 'contacts')).toBe(false);
+    // « Fabriquer » ouvre sa propre page, et c'est là que les quatre fabrications ouvrent la page de leur produit.
+    expect(tuiles.find((t) => t.cle === 'fabriquer')?.route).toBe(ROUTES.terrain('fabriquer'));
+    const fabriquer = tuilesDuTerrain('fabriquer', comptes());
+    expect(fabriquer.map((t) => t.cle)).toEqual(['fromage', 'charcuterie', 'plat', 'savon']);
+    expect(fabriquer.every((t) => t.route.startsWith('/production/fabrication'))).toBe(true);
   });
 
   it('l’accueil du public propose la nouvelle visite d’abord, et le nombre de visites à venir', () => {

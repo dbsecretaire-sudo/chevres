@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { PageBerger } from '@/features/berger/components/PageBerger';
 import { EnteteBerger } from '@/features/berger/components/EnteteBerger';
 import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
-import { COMPTES_VIDES, tuilesDuTerrain, type TuileTerrain } from '@/features/accueil/terrain/ecransTerrain';
+import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
 import { EtiquettesSimple } from '@/features/production/simple/EtiquettesSimple';
 import { FabricationSimple } from '@/features/production/simple/FabricationSimple';
 import { LaitSimple } from '@/features/production/simple/LaitSimple';
@@ -21,21 +21,11 @@ const PRODUITS_DES_TUILES: Record<string, typeof PRODUIT_A_LOTS.FROMAGE | typeof
   plat: PRODUIT_A_LOTS.PLAT,
   savon: PRODUIT_A_LOTS.SAVON,
 };
-/** La tuile « Fabriquer » du menu : elle ouvre la liste des produits (elle n'existe pas dans les tuiles du terrain). */
-const FABRIQUER: TuileTerrain = { cle: 'fabriquer', titre: 'Fabriquer', icone: 'restaurant', iconeMci: 'silverware-fork-knife', route: '' };
-/** Les tuiles du menu, dans l'ordre de la maquette : le lait, fabriquer, scanner un lot, les étiquettes, vendre, le stock. */
-const ORDRE_DU_MENU = ['lait', 'fabriquer', 'scanLot', 'etiquettes', 'ventes', 'stock'];
 /** Les tuiles qui s'ouvrent ici, sans quitter la page : les autres (le stock) ouvrent leur page. */
-const AVEC_FLUX = [...Object.keys(PRODUITS_DES_TUILES), 'fabriquer', 'lait', 'etiquettes', 'ventes', 'scanLot'];
-
-/** Les tuiles du menu de la fromagerie, dans l'ordre de la maquette. */
-const tuilesDuMenu = (): TuileTerrain[] => {
-  const tuilesTerrain = tuilesDuTerrain('atelier', COMPTES_VIDES, true);
-  return ORDRE_DU_MENU.flatMap((cle) => (cle === 'fabriquer' ? [FABRIQUER] : tuilesTerrain.filter((t) => t.cle === cle)));
-};
+const AVEC_FLUX = ['fabriquer', 'lait', 'etiquettes', 'ventes', 'scanLot'];
 
 /**
- * La fromagerie du mode normal : le menu (lait du jour, fabriquer, scanner un lot, étiquettes, vendre, stock). « Fabriquer » ouvre les quatre produits
+ * La fromagerie du mode normal : le menu de l'atelier (lait du jour, fabriquer, scanner un lot, étiquettes, vendre, stock). « Fabriquer » ouvre les quatre produits
  * (fromage, charcuterie, plat, savon) ; chaque flux s'ouvre ici, le stock ouvre sa page. `onQuitter` revient à l'accueil du mode normal.
  */
 export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
@@ -55,10 +45,7 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
     return (
       <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
         <EnteteBerger titre="Fabriquer" onRetour={retour} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-        <GrilleDeTuiles
-          tuiles={tuilesDuTerrain('atelier', COMPTES_VIDES, true).filter((t) => t.cle in PRODUITS_DES_TUILES)}
-          onAppui={(t) => setTuile(t.cle)}
-        />
+        <GrilleDeTuiles tuiles={tuilesDuTerrain('fabriquer', COMPTES_VIDES)} onAppui={(t) => setTuile(t.cle)} />
       </ScrollView>
     );
   if (tuile === 'lait')
@@ -88,7 +75,10 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <EnteteBerger titre={TEXTES.roles.berger.fromagerie} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-      <GrilleDeTuiles tuiles={tuilesDuMenu()} onAppui={(t) => (AVEC_FLUX.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))} />
+      <GrilleDeTuiles
+        tuiles={tuilesDuTerrain('atelier', COMPTES_VIDES)}
+        onAppui={(t) => (AVEC_FLUX.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))}
+      />
     </ScrollView>
   );
 }

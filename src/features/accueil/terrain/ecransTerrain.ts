@@ -3,10 +3,13 @@ import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
-/** Les trois zones animées de l'accueil qui ouvrent un écran « terrain » : l'enclos (le troupeau), le travail du produit (l'atelier) et l'agritourisme (l'accueil du public). */
-export type ZoneTerrain = 'troupeau' | 'atelier' | 'accueil';
+/**
+ * Les zones qui ouvrent un écran « terrain » : l'enclos (le troupeau), le travail du produit (l'atelier), la page des fabrications que l'atelier ouvre
+ * (« Fabriquer » : les quatre produits), et l'agritourisme (l'accueil du public).
+ */
+export type ZoneTerrain = 'troupeau' | 'atelier' | 'fabriquer' | 'accueil';
 
-export const ZONES_TERRAIN: readonly ZoneTerrain[] = ['troupeau', 'atelier', 'accueil'];
+export const ZONES_TERRAIN: readonly ZoneTerrain[] = ['troupeau', 'atelier', 'fabriquer', 'accueil'];
 
 /** Un grand bouton de l'écran terrain : une seule action, lisible avec des gants. */
 export interface TuileTerrain {
@@ -68,7 +71,7 @@ export const titreDuTerrain = (zone: ZoneTerrain): string => TEXTES.accueil.ferm
 export const routeDuTerrain = (zone: ZoneTerrain): string => ROUTES.terrain(zone);
 
 /** Les grands boutons d'une zone, dans l'ordre où on s'en sert. Un nombre à zéro ne s'affiche pas. */
-export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain, avecPages = false): TuileTerrain[] {
+export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerrain[] {
   const avec = (nombre: number | undefined, alerte = false): Pick<TuileTerrain, 'nombre' | 'alerte'> =>
     nombre ? { nombre, alerte } : {};
   switch (zone) {
@@ -85,33 +88,31 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain, avecPages 
         contacts(),
       ];
     case 'atelier':
+      // Comme sur la maquette : le lait, fabriquer (une page avec les produits), scanner un lot, les étiquettes, vendre, le stock.
+      return [
+        { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.LAIT_DU_JOUR },
+        { cle: 'fabriquer', titre: T.fabriquer, icone: 'restaurant', iconeMci: 'silverware-fork-knife', route: ROUTES.terrain('fabriquer') },
+        // Scanner un lot (son numéro, puis sa fabrication, son contrôle, sa vente).
+        { cle: 'scanLot', titre: T.scanLot, icone: 'qr-code', route: ROUTES.PRODUCTION_SCAN_LOT_SIMPLE },
+        { cle: 'etiquettes', titre: T.etiquettes, icone: 'pricetags', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
+        // Toutes les ventes sont réunies ici : on choisit ensuite le produit (le fromage, la charcuterie, un plat, un savon, le lait, la viande à vendre ou à facturer). Aucun chiffre sur la tuile.
+        { cle: 'ventes', titre: T.ventes, icone: 'cash', route: ROUTES.PRODUCTION_VENTES_SIMPLE },
+        { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },
+      ];
+    case 'fabriquer':
+      // Les quatre produits, chacun avec son flux en très grands boutons.
       return [
         { cle: 'fromage', titre: T.fromage, icone: 'restaurant', iconeMci: 'cheese', route: ROUTES.productionFabricationSimple(PRODUIT_A_LOTS.FROMAGE) },
         { cle: 'charcuterie', titre: T.charcuterie, icone: 'restaurant', iconeMci: 'knife', route: ROUTES.productionFabricationSimple(PRODUIT_A_LOTS.CHARCUTERIE) },
         { cle: 'plat', titre: T.plat, icone: 'restaurant', iconeMci: 'pot-steam', route: ROUTES.productionFabricationSimple(PRODUIT_A_LOTS.PLAT) },
         { cle: 'savon', titre: T.savon, icone: 'restaurant', iconeMci: 'hand-wash', route: ROUTES.productionFabricationSimple(PRODUIT_A_LOTS.SAVON) },
-        { cle: 'lait', titre: T.lait, icone: 'water', route: ROUTES.LAIT_DU_JOUR },
-        { cle: 'etiquettes', titre: T.etiquettes, icone: 'pricetags', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
-        // Toutes les ventes sont réunies ici : on choisit ensuite le produit (le fromage, la charcuterie, un plat, un savon, le lait, la viande à vendre ou à facturer). Aucun chiffre sur la tuile.
-        { cle: 'ventes', titre: T.ventes, icone: 'cash', route: ROUTES.PRODUCTION_VENTES_SIMPLE },
-        // Scanner un lot (son numéro, puis sa fabrication, son contrôle, sa vente).
-        { cle: 'scanLot', titre: T.scanLot, icone: 'qr-code', route: ROUTES.PRODUCTION_SCAN_LOT_SIMPLE },
-        // Les démarches pour fabriquer et vendre, en tuiles : pas dans le mode normal, qui ne montre que ses propres tuiles.
-        { cle: 'cadreReglementaire', titre: T.cadreReglementaire, icone: 'shield-checkmark', route: ROUTES.PRODUCTION_CADRE_SIMPLE },
-        // Le stock et les lots s'ouvrent dans leur page : seul le mode normal les propose ici (avec ses propres pages).
-        ...(avecPages
-          ? ([
-              { cle: 'lotsAtelier', titre: T.lotsAtelier, icone: 'layers', route: ROUTES.PRODUCTION_LOTS, ...avec(c.lotsARappeler, true) },
-              { cle: 'stock', titre: T.stock, icone: 'cube', route: `${ROUTES.COMPTABILITE_STOCKS}?vue=atelier`, ...(c.stockNegatif ? { alerte: true } : {}) },
-            ] as TuileTerrain[])
-          : []),
       ];
     case 'accueil':
       return [
         { cle: 'nouvelleVisite', titre: T.nouvelleVisite, icone: 'add-circle', route: ROUTES.COMMERCIAL_VISITE_SIMPLE },
         { cle: 'visites', titre: T.visites, icone: 'trail-sign', route: ROUTES.COMMERCIAL_VISITES_SIMPLE, ...avec(c.visitesAVenir) },
         { cle: 'formules', titre: T.formules, icone: 'restaurant', route: ROUTES.COMMERCIAL_FORMULES_SIMPLE },
-        { cle: 'accueilPublic', titre: T.cadreReglementaire, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC_SIMPLE },
+        { cle: 'accueilPublic', titre: T.accueilPublic, icone: 'people-circle', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC_SIMPLE },
       ];
   }
 }

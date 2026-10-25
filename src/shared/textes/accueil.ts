@@ -110,7 +110,7 @@ export const TEXTES_ACCUEIL = {
     },
     /** Les écrans « terrain » : de très grands boutons, ouverts d'un appui sur l'enclos, le travail du produit ou l'accueil du public. */
     terrain: {
-      titres: { troupeau: 'Le troupeau', atelier: 'Travail du produit', accueil: 'Accueil du public' },
+      titres: { troupeau: 'Le troupeau', atelier: 'Travail du produit', fabriquer: 'Fabriquer', accueil: 'Accueil du public' },
       tuiles: {
         aCompleter: 'À compléter',
         liste: 'Animaux',
@@ -126,9 +126,10 @@ export const TEXTES_ACCUEIL = {
         plat: 'Fabriquer un plat',
         savon: 'Fabriquer un savon',
         lait: 'Lait du jour',
+        fabriquer: 'Fabriquer',
         lotsAtelier: 'Lots et étiquettes',
-        etiquettes: 'Imprimer des étiquettes et des lots',
-        ventes: 'Ventes',
+        etiquettes: 'Étiquettes',
+        ventes: 'Vendre',
         cadreReglementaire: 'Cadre réglementaire',
         scanLot: 'Scanner un lot',
         viandeAVendre: 'Viande à vendre',
