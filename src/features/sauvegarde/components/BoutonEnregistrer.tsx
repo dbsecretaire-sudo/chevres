@@ -3,8 +3,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { exporterSauvegardeLocale } from '@/features/sauvegarde/backup';
-import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { useGoogleDrive } from '@/features/settings/hooks/useGoogleDrive';
+import { useSynchronisation } from '@/features/sync/useSynchronisation';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { OptionsModal } from '@/shared/components/OptionsModal';
 import { ROUTES } from '@/shared/constants/routes';
@@ -15,21 +14,20 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.sauvegarde.enregistrer;
 
 /**
- * La disquette de la capsule du haut : « Enregistrer » propose Google Drive (les données y partent d'un appui quand le compte est connecté ; sinon l'écran de
- * connexion s'ouvre) ou un fichier sur l'appareil (la sauvegarde complète, à garder hors de l'appareil).
+ * La disquette de la capsule du haut : « Enregistrer » propose le serveur de la ferme (les données y partent d'un appui quand le compte est connecté ; sinon
+ * l'écran de connexion s'ouvre) ou un fichier sur l'appareil (la sauvegarde complète, à garder hors de l'appareil).
  */
 export function BoutonEnregistrer({ plat = false }: { plat?: boolean }) {
   const router = useRouter();
   const echelle = useEchelle();
-  const drive = useGoogleDrive();
-  const { settings } = useAppSettings();
+  const sync = useSynchronisation();
   const [menu, setMenu] = useState(false);
   const [fichierEnCours, setFichierEnCours] = useState(false);
 
-  const surDrive = () => {
-    // Pas encore connecté (ou pas de dossier Drive pour cet établissement) : l'écran de Google Drive, où l'on se connecte.
-    if (!drive.connecte || !settings.driveFolderId) return router.push(ROUTES.GOOGLE_DRIVE as never);
-    drive.synchroniser('push').catch(() => undefined);
+  const surServeur = () => {
+    // Pas encore connecté : l'écran de synchronisation, où l'on se connecte.
+    if (!sync.connexion) return router.push(ROUTES.GOOGLE_DRIVE as never);
+    sync.envoyer().catch(() => undefined);
   };
   const surAppareil = async () => {
     setFichierEnCours(true);
@@ -41,7 +39,7 @@ export function BoutonEnregistrer({ plat = false }: { plat?: boolean }) {
       setFichierEnCours(false);
     }
   };
-  const occupe = fichierEnCours || drive.syncEnCours !== null;
+  const occupe = fichierEnCours || sync.occupe !== null;
 
   return (
     <>
@@ -71,7 +69,7 @@ export function BoutonEnregistrer({ plat = false }: { plat?: boolean }) {
         onClose={() => setMenu(false)}
         title={T.titre}
         options={[
-          { label: T.surDrive, icon: 'cloud-upload', onPress: surDrive },
+          { label: T.surServeur, icon: 'cloud-upload', onPress: surServeur },
           { label: T.surAppareil, icon: 'download', onPress: surAppareil },
         ]}
       />

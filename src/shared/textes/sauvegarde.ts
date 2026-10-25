@@ -17,7 +17,7 @@ export const TEXTES_SAUVEGARDE = {
   enregistrer: {
     bouton: 'Enregistrer',
     titre: 'Enregistrer mes données',
-    surDrive: 'Sur Google Drive',
+    surServeur: 'Sur le serveur de la ferme',
     surAppareil: 'Sur cet appareil (fichier)',
     /** Les entrées du menu du haut (Windows). */
     menuDrive: 'Google Drive',

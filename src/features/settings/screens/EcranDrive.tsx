@@ -1,13 +1,11 @@
 import { Screen } from '@/shared/components/Screen';
-import { CarteGoogleDrive } from '@/features/settings/components/CarteGoogleDrive';
-import { useGoogleDrive } from '@/features/settings/hooks/useGoogleDrive';
+import { CarteSynchronisation } from '@/features/settings/components/CarteSynchronisation';
 
-/** La synchronisation avec Google Drive, sur son propre écran. */
+/** La synchronisation avec le serveur de la ferme, sur son propre écran (l'adresse de cet écran ne change pas). */
 export default function EcranDrive() {
-  const drive = useGoogleDrive();
   return (
     <Screen>
-      <CarteGoogleDrive drive={drive} />
+      <CarteSynchronisation />
     </Screen>
   );
 }

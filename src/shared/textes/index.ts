@@ -29,6 +29,7 @@ import { TEXTES_ROLES } from '@/shared/textes/roles';
 import { TEXTES_SAUVEGARDE } from '@/shared/textes/sauvegarde';
 import { TEXTES_SETTINGS } from '@/shared/textes/settings';
 import { TEXTES_STOCK } from '@/shared/textes/stock';
+import { TEXTES_SYNCHRONISATION } from '@/shared/textes/synchronisation';
 
 /** Tous les textes de l'application, groupés par domaine puis par écran. */
 export const TEXTES = {
@@ -63,4 +64,5 @@ export const TEXTES = {
   sauvegarde: TEXTES_SAUVEGARDE,
   settings: TEXTES_SETTINGS,
   stock: TEXTES_STOCK,
+  synchronisation: TEXTES_SYNCHRONISATION,
 } as const;

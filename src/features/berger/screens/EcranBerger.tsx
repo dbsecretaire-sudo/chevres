@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { useAEnvoyer } from '@/shared/hooks/useAEnvoyer';
@@ -17,8 +18,8 @@ import {
   rangeesDePetits,
 } from '@/features/berger/services/saisies';
 import { useRole } from '@/features/roles/context/RoleContext';
-import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
-import { useGoogleDriveSansNavigation } from '@/features/settings/hooks/useGoogleDrive';
+import { useSynchronisation } from '@/features/sync/useSynchronisation';
+import { ROUTES } from '@/shared/constants/routes';
 import { TourismeSimple } from '@/features/commercial/simple/TourismeSimple';
 import { AtelierSimple } from '@/features/production/simple/AtelierSimple';
 import { Button } from '@/shared/components/Button';
@@ -55,8 +56,8 @@ type Etape =
  */
 export default function EcranBerger() {
   const { choisir } = useRole();
-  const { settings } = useAppSettings();
-  const drive = useGoogleDriveSansNavigation();
+  const sync = useSynchronisation();
+  const router = useRouter();
   /** Les saisies du mode normal pas encore envoyées : écrites sous « Envoyer ». */
   const aEnvoyer = useAEnvoyer();
   const [etape, setEtape] = useState<Etape>({ nom: 'accueil' });
@@ -75,12 +76,11 @@ export default function EcranBerger() {
   const accueil = () => setEtape({ nom: 'accueil' });
   const chevres = () => setEtape({ nom: 'chevres' });
 
-  /** Envoyer sur Drive : on se connecte d'abord si l'appareil ne l'est pas, puis on relie le dossier de l'exploitation, puis les données partent. */
+  /** Envoyer au serveur de la ferme : si l'appareil n'est pas connecté, on ouvre l'écran de synchronisation pour le faire. */
   const envoyer = async () => {
-    if (drive.syncEnCours || drive.connexionEnCours) return;
-    if (!drive.connecte) return drive.seConnecter();
-    if (!settings.driveFolderId) return drive.lier();
-    await drive.synchroniser('push');
+    if (sync.occupe) return;
+    if (!sync.connexion) return router.push(ROUTES.GOOGLE_DRIVE as never);
+    await sync.envoyer();
   };
 
   /** La boucle est connue (scannée ou saisie) : on retrouve l'animal, puis on enregistre la mort ou on demande le nombre de petits. */
@@ -158,7 +158,7 @@ export default function EcranBerger() {
                 icone={<Ionicons name="trail-sign" size={52} color={colors.blanc} />}
               />
               <GrosBouton
-                libelle={drive.syncEnCours ? T.envoiEnCours : T.envoyer}
+                libelle={sync.occupe === 'envoi' ? T.envoiEnCours : T.envoyer}
                 detail={aEnvoyer > 0 ? T.aEnvoyer(aEnvoyer) : undefined}
                 onPress={envoyer}
                 clair

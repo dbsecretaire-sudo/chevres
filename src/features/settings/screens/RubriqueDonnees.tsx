@@ -27,8 +27,8 @@ export default function RubriqueDonnees() {
           route={ROUTES.SAUVEGARDE_LOCALE}
         />
         <LigneRubrique
-          titre={T.googleDrive}
-          aide={T.aideDrive}
+          titre={TEXTES.synchronisation.titre}
+          aide={TEXTES.synchronisation.aide}
           icone="cloud-upload"
           route={ROUTES.GOOGLE_DRIVE}
         />
