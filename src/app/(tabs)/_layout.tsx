@@ -19,6 +19,9 @@ import { MenuDeLaFenetre } from '@/bureau/MenuDeLaFenetre';
 import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
 import { afficheBureau } from '@/shared/utils/affichage';
 import { SynchronisationAutomatique } from '@/features/sync/SynchronisationAutomatique';
+import { ExigerConnexion } from '@/features/sync/ExigerConnexion';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
 import { titreDeLaRubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
 
 /** Les pages (cachées de la barre) qui font partie de l'Organisation : son onglet y reste en couleur. */
@@ -289,11 +292,14 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 }
 
 export default function TabsLayout() {
+  const { role } = useRole();
+  // Le mode avancé ne s'ouvre qu'avec le compte de la ferme ; le mode normal (qui n'a pas de compte) reste ouvert, et son argent demande aussi la connexion.
+  const onglets = role === ROLE.BERGER ? <Onglets /> : <ExigerConnexion><Onglets /></ExigerConnexion>;
   return (
     <>
       <MenuDeLaFenetre />
       <EnDeuxColonnes>
-        <Onglets />
+        {onglets}
       </EnDeuxColonnes>
       {/* La synchronisation sans bouton : une seule fois, pour toute l'application (elle n'affiche rien). */}
       <SynchronisationAutomatique />

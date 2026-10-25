@@ -14,7 +14,8 @@ import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
 import { GrilleTerrain } from '@/features/accueil/terrain/EcranTerrain';
 import { afficheBureau } from '@/shared/utils/affichage';
 import { BlocSante } from '@/features/sante/components/BlocSante';
-import { BlocRappels } from '@/features/rappels/components/BlocRappels';
+import { TuileRappels } from '@/features/rappels/components/TuileRappels';
+import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
 import { colors } from '@/shared/theme/colors';
 import { Text, View } from 'react-native';
@@ -31,6 +32,7 @@ export default function AccueilCheptel() {
 /** La page Chèvres du téléphone : l'aliment par animal et par jour (en tête, comme sur la maquette), puis les alertes et les tuiles. */
 function PageChevresTelephone() {
   const { stats } = useAccueil();
+  const { nombreDeRappels: rappels } = useFermeAccueil();
   const grammes = stats?.gParAnimalParJour;
   return (
     <GrilleTerrain
@@ -46,7 +48,7 @@ function PageChevresTelephone() {
             </Text>
           </View>
           <BlocSante />
-          <BlocRappels />
+          <TuileRappels nombre={rappels} />
         </>
       }
     />
