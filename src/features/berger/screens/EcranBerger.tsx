@@ -393,7 +393,41 @@ export default function EcranBerger() {
             </View>
           ) : null}
         </View>
+        {etape.nom === 'accueil' || etape.nom === 'chevres' || etape.nom === 'fromagerie' || etape.nom === 'tourisme' ? (
+          <BarreModeSimple
+            actif={etape.nom}
+            onChoisir={(nom) => setEtape(nom === 'chevres' ? { nom: 'chevres' } : nom === 'fromagerie' ? { nom: 'fromagerie' } : { nom: 'tourisme' })}
+          />
+        ) : null}
       </SafeAreaView>
     </AccentColorProvider>
+  );
+}
+
+/** La barre du bas du mode normal : Chèvres, Fromagerie, Tourisme. La rubrique ouverte est en couleur. */
+function BarreModeSimple({ actif, onChoisir }: { actif: string; onChoisir: (nom: 'chevres' | 'fromagerie' | 'tourisme') => void }) {
+  const rubriques = [
+    { nom: 'chevres' as const, libelle: T.chevres, icone: (c: string) => <Ionicons name="paw" size={24} color={c} /> },
+    { nom: 'fromagerie' as const, libelle: T.fromagerie, icone: (c: string) => <MaterialCommunityIcons name="cheese" size={24} color={c} /> },
+    { nom: 'tourisme' as const, libelle: T.tourisme, icone: (c: string) => <Ionicons name="trail-sign" size={24} color={c} /> },
+  ];
+  return (
+    <View style={{ flexDirection: 'row', height: 64, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}>
+      {rubriques.map((r) => {
+        const couleur = actif === r.nom ? colors.primary : colors.textMuted;
+        return (
+          <Pressable
+            key={r.nom}
+            accessibilityRole="button"
+            accessibilityState={{ selected: actif === r.nom }}
+            onPress={() => onChoisir(r.nom)}
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}
+          >
+            {r.icone(couleur)}
+            <Text style={{ fontSize: 11, fontWeight: '600', color: couleur }}>{r.libelle}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
