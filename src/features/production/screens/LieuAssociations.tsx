@@ -261,7 +261,7 @@ export default function LieuAssociations() {
 
   return (
     <Screen scroll={false}>
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 96 }}>
       {rangeeDesLiens}
       <GroupeAccueil titre={G.groupeTiers}>
         {/* Chaque association ou coopérative, puis en dessous et en décalé ses actions (les dossiers rangés dans sa fiche), comme les contrats sous un assureur. */}

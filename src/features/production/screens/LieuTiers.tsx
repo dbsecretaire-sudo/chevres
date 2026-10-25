@@ -225,7 +225,7 @@ function LieuTiersStandard() {
 
   return (
     <Screen scroll={false}>
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 96 }}>
       {/* Les organismes : le dossier PAC (suivi des mouvements, recensement, estive, documents générés) et les terrains, directement dans la page. */}
       {config.dossierPac ? (
         <GroupeAccueil titre={T.groupeLiens}>
@@ -332,8 +332,7 @@ function LieuTiersStandard() {
               />
             </GroupeAccueil>
           ) : (
-          <GroupeAccueil titre={textes.groupeTiers ?? ''}>
-            {/* Les contacts par catégorie : toutes enroulées, une seule se déroule à la fois. */}
+          <GroupeAccueil titre={cle === 'groupementSanitaire' ? T.groupeGdsEtVeto : (textes.groupeTiers ?? '')}>
             <BlocLignes>
               {membresAffiches.flatMap((c) => [
                 <ListRow
@@ -383,6 +382,20 @@ function LieuTiersStandard() {
                     ))
                   : []),
               ])}
+              {/* Les vétérinaires, dans la même liste que les groupements sanitaires. */}
+              {cle === 'groupementSanitaire'
+                ? veterinaires.map((c) => (
+                    <ListRow
+                      key={`veto:${c.cle}`}
+                      title={c.nom}
+                      subtitle={
+                        [(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email].filter(Boolean).join(' · ') || undefined
+                      }
+                      emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
+                      onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
+                    />
+                  ))
+                : null}
             </BlocLignes>
             {tiers.length === 0 ? (
               <BlocLignes>
@@ -414,24 +427,6 @@ function LieuTiersStandard() {
             <GroupeAccueil titre={textes.groupeVeterinaires ?? ''}>
               <TableauTiersDuLieu controles={controles} tiers={veterinaires} categorieDe={nomDeLaCategorie} ouvrir={ouvrir} vide={T.aucunTiers} />
               <Fab options={[{ label: textes.ajouterVeterinaire ?? '', icon: 'add', onPress: () => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`) }]} />
-            </GroupeAccueil>
-          ) : cle === 'groupementSanitaire' ? (
-            <GroupeAccueil titre={textes.groupeVeterinaires ?? ''}>
-              <BlocLignes>
-                {veterinaires.map((c) => (
-                  <ListRow
-                    key={c.cle}
-                    title={c.nom}
-                    subtitle={
-                      [(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email]
-                        .filter(Boolean)
-                        .join(' · ') || undefined
-                    }
-                    emoji={portraitDeTiers(categorieDuContact(c, idsConnus).id).emoji}
-                    onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
-                  />
-                ))}
-              </BlocLignes>
             </GroupeAccueil>
           ) : null}
 

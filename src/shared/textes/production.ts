@@ -341,6 +341,7 @@ export const TEXTES_PRODUCTION = {
     ajouterGroupement: 'Ajouter un groupement sanitaire',
     ajouterVeto: 'Ajouter un vétérinaire',
     ajouterAssureur: 'Ajouter un assureur',
+    groupeGdsEtVeto: 'Groupements sanitaires (GDS) et vétérinaires',
     aucuneEcriture: 'Aucune écriture de ce lieu cette année.',
     plusDEcritures: (n: number) => `${n} autres écritures dans la comptabilité`,
     aliments: {
