@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { EnteteBerger } from '@/features/berger/components/EnteteBerger';
 import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { useAEnvoyer } from '@/shared/hooks/useAEnvoyer';
 import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
@@ -157,7 +158,7 @@ export default function EcranBerger() {
         <View style={{ flex: 1 }} pointerEvents={protege ? 'none' : 'auto'}>
           {etape.nom === 'accueil' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.titre}</Text>
+              <EnteteBerger titre={T.titre} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
               <GrosBouton
                 libelle={T.chevres}
@@ -191,6 +192,7 @@ export default function EcranBerger() {
 
           {etape.nom === 'chevres' ? (
             <View style={styles.contenu}>
+              <EnteteBerger titre={T.chevres} onRetour={accueil} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
               <GrosBouton
                 libelle={T.naissance}
@@ -228,15 +230,12 @@ export default function EcranBerger() {
                 icone={<MaterialCommunityIcons name="grave-stone" size={56} color={colors.blanc} />}
               />
               </View>
-              <Pressable style={styles.discret} onPress={accueil} accessibilityRole="button">
-                <Text style={styles.discretTexte}>{T.retour}</Text>
-              </Pressable>
             </View>
           ) : null}
 
           {etape.nom === 'soin' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.soin}</Text>
+              <EnteteBerger titre={T.soin} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <SoinSimple
                 animal={etape.animal}
                 onFait={(traitementId) =>
@@ -253,21 +252,15 @@ export default function EcranBerger() {
 
           {etape.nom === 'achat' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.achat}</Text>
+              <EnteteBerger titre={T.achat} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <AchatSimple onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })} />
-              <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
-                <Text style={styles.discretTexte}>{T.retour}</Text>
-              </Pressable>
             </View>
           ) : null}
 
           {etape.nom === 'cheptel' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.cheptel}</Text>
+              <EnteteBerger titre={T.cheptel} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <CheptelSimple onOuvrir={(animal) => setEtape({ nom: 'fiche', animal })} />
-              <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
-                <Text style={styles.discretTexte}>{T.retour}</Text>
-              </Pressable>
             </View>
           ) : null}
 
@@ -281,15 +274,12 @@ export default function EcranBerger() {
                 onNaissance={() => surBoucle('naissance', (etape.animal.numeroBoucle ?? '').trim())}
                 onDeces={() => surBoucle('mort', (etape.animal.numeroBoucle ?? '').trim())}
               />
-              <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
-                <Text style={styles.discretTexte}>{T.retour}</Text>
-              </Pressable>
             </View>
           ) : null}
 
           {etape.nom === 'vente' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.venteVivante}</Text>
+              <EnteteBerger titre={T.venteVivante} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <VenteVivanteSimple
                 animal={etape.animal}
                 onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })}
@@ -299,7 +289,7 @@ export default function EcranBerger() {
 
           {etape.nom === 'mouvement' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.mouvement}</Text>
+              <EnteteBerger titre={T.mouvement} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <MouvementSimple
                 animal={etape.animal}
                 onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })}
@@ -339,7 +329,7 @@ export default function EcranBerger() {
 
           {etape.nom === 'main' ? (
             <View style={styles.contenu}>
-              <Text style={styles.titre}>{T.numeroAMain}</Text>
+              <EnteteBerger titre={T.numeroAMain} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <ClavierNumerique valeur={numero} onChange={setNumero} />
               {/* Le numéro tapé : centré, et non modifiable à la main. */}
               <View style={styles.affichageNumero} accessibilityLabel={`${T.numeroAMain} ${numero}`}>
@@ -357,7 +347,7 @@ export default function EcranBerger() {
           {etape.nom === 'petits' ? (
             <View style={styles.contenu}>
               <Text style={styles.detail}>{T.mere((etape.mere.numeroBoucle ?? '').trim())}</Text>
-              <Text style={styles.titre}>{T.combienDePetits}</Text>
+              <EnteteBerger titre={T.combienDePetits} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               {[
                 { cle: 'femelles', titre: T.femelles, valeur: femelles, choisir: setFemelles },
                 { cle: 'males', titre: T.males, valeur: males, choisir: setMales },
@@ -382,9 +372,6 @@ export default function EcranBerger() {
                 </View>
               ))}
               <Button label={T.valider} disabled={femelles + males < 1} onPress={() => surPetits(etape.mere)} />
-              <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
-                <Text style={styles.discretTexte}>{T.retour}</Text>
-              </Pressable>
             </View>
           ) : null}
 
