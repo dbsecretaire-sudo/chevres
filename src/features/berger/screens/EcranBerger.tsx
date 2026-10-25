@@ -175,6 +175,12 @@ export default function EcranBerger() {
               />
               <TuileMaquette
                 variante="simple"
+                libelle={T.argent}
+                onPress={() => router.push(ROUTES.COMPTABILITE_LISTE as never)}
+                icone={(c) => <Ionicons name="cash-outline" size={30} color={c} />}
+              />
+              <TuileMaquette
+                variante="simple"
                 libelle={sync.occupe === 'envoi' ? T.envoiEnCours : T.envoyer}
                 detail={aEnvoyer > 0 ? T.aEnvoyer(aEnvoyer) : undefined}
                 onPress={envoyer}

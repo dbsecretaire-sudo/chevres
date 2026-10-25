@@ -24,6 +24,7 @@ export const TEXTES_ROLES = {
     chevres: 'Chèvres',
     fromagerie: 'Fromagerie',
     tourisme: 'Tourisme',
+    argent: 'Argent',
     bientot: 'Cet écran simple n’est pas encore prêt.',
     naissance: 'Naissance',
     mort: 'Décès',
