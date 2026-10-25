@@ -44,8 +44,14 @@ describe('écrans terrain des zones de l’accueil', () => {
     expect(alertes.find((t) => t.cle === 'traitement')).toMatchObject({ nombre: 3, alerte: true });
   });
 
-  it('le mouvement des chèvres s’ouvre dans sa rubrique (entrée, vente vivante, abattoir, sorties)', () => {
+  it('le mouvement des chèvres s’ouvre dans sa rubrique, et signale les ventes vivantes sans document en rouge', () => {
     expect(tuilesDuTerrain('troupeau', comptes()).find((t) => t.cle === 'mouvement')?.route).toBe(ROUTES.rubrique('mouvement'));
+    expect(tuilesDuTerrain('troupeau', comptes({ ventesSansDocument: 2 })).find((t) => t.cle === 'mouvement')).toMatchObject({ nombre: 2, alerte: true });
+  });
+
+  it('les naissances et morts à compléter se voient sur le cheptel, en rouge, à la place du nombre d’animaux', () => {
+    const alerte = tuilesDuTerrain('troupeau', comptes({ aCompleter: 3 })).find((t) => t.cle === 'cheptel');
+    expect(alerte).toMatchObject({ nombre: 3, alerte: true, route: ROUTES.CHEPTEL_A_COMPLETER });
   });
 
   it('l’atelier suit la maquette : lait, fabriquer, scanner un lot, étiquettes, vendre, stock ; un stock négatif se signale', () => {
