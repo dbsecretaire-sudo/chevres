@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { generateId } from '@/shared/utils/id';
 import { chargerEspeces } from '@/features/especes/repository';
 import { toutesLesEspeces } from '@/features/especes/services/registre';
@@ -64,12 +65,12 @@ export async function listEtablissements(): Promise<Etablissement[]> {
     }
   }
   const initiale = [{ id: ID_ETABLISSEMENT_DEFAUT, nom: NOM_DEFAUT }];
-  await AsyncStorage.setItem(KEY_LISTE, JSON.stringify(initiale));
+  await ecrireDonnee(KEY_LISTE, initiale);
   return initiale;
 }
 
 async function ecrireListe(liste: Etablissement[]): Promise<void> {
-  await AsyncStorage.setItem(KEY_LISTE, JSON.stringify(liste));
+  await ecrireDonnee(KEY_LISTE, liste);
 }
 
 /** Choix mémorisé de l'espèce courante de l'établissement actif (undefined s'il n'y en a pas). */

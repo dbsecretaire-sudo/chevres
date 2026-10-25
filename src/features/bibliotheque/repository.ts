@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { cleStockage } from '@/features/etablissements/repository';
 import type { DocumentGenere } from '@/features/bibliotheque/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
@@ -26,7 +27,7 @@ export async function lireBibliotheque(): Promise<DocumentGenere[]> {
 
 /** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
 export async function remplacerBibliotheque(liste: DocumentGenere[]): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(normaliserBibliotheque(liste)));
+  await ecrireDonnee(cle(), normaliserBibliotheque(liste));
 }
 
 export async function ajouterDocument(document: DocumentGenere): Promise<void> {

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { avecNomsHarmonises, sansDoublonsDOffice } from '@/features/stock/utils/doublonsListes';
 import { avecListesDOffice } from '@/features/stock/services/denrees';
 import { avecRemisesAZero, estRemiseAZero } from '@/features/stock/services/remisesAZero';
@@ -196,10 +197,7 @@ export async function lireArchiveStock(): Promise<ArchiveStock> {
 /** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
 export async function remplacerArchiveStock(archive: ArchiveStock): Promise<void> {
   // Les remises à zéro se déduisent à chaque lecture : on ne les enregistre pas.
-  await AsyncStorage.setItem(
-    cle(),
-    JSON.stringify({ ...archive, mouvements: archive.mouvements.filter((m) => !estRemiseAZero(m)) }),
-  );
+  await ecrireDonnee(cle(), { ...archive, mouvements: archive.mouvements.filter((m) => !estRemiseAZero(m)) });
 }
 
 /**
