@@ -5,10 +5,8 @@ import { piecesDuContact } from '@/features/contacts/services/piecesDuContact';
 import { venteDuDepart, ventesVivantesDepuisLesLots, ventesVivantesRecentesDabord, ventesVivantesSansDocument } from '@/features/lots-animaux/services/ventesVivants';
 import { sansAnciennesInutilisees } from '@/shared/dictionnaire/categoriesFournisseur';
 import { categoriesDeLots, estCategorieVerrouillee } from '@/features/lots-animaux/services/lots';
-import { toutesLesPieces } from '@/features/fichiers/services/inventaire';
 import type { PieceJointe } from '@/features/fichiers/types';
-import { updateSettings, type LotAnimaux, type VenteDAnimauxVivants } from '@/features/settings/settings';
-import { empreintesDe, fusionner } from '@/features/drive/fusion';
+import { type LotAnimaux, type VenteDAnimauxVivants } from '@/features/settings/settings';
 
 const piece = (id: string): PieceJointe => ({ id, nom: `${id}.pdf`, extension: 'pdf', mime: 'application/pdf', ajoutLe: '2026-10-22' });
 const document = { piece: piece('circulation'), deposeLe: '2026-10-20T10:00:00Z' };
@@ -114,21 +112,6 @@ describe('documents de circulation d’une vente d’animaux vivants', () => {
     expect(chezC1.map((p) => p.cle)).toEqual(['circulation-vivants:v1']);
     const parLeNom = piecesDuContact({ nom: 'marie particulier', cle: 'c9' }, undefined, [], ecritures, [], [vente('v1', { contactCle: 'c1' })]);
     expect(parLeNom.map((p) => p.cle)).toEqual(['circulation-vivants:v1']);
-  });
-});
-
-describe('sauvegarde et Google Drive', () => {
-  it('la sauvegarde garde le document de circulation d’une vente d’animaux vivants', async () => {
-    await updateSettings({ exploitation: { ventesVivants: [vente('v1', { documentCirculation: { piece: piece('circulation-vivants'), deposeLe: '2026-10-20T10:00:00Z' } })] } });
-    expect((await toutesLesPieces()).map((p) => p.id)).toContain('circulation-vivants');
-  });
-
-  it('la fusion Drive additionne les ventes des deux appareils et propage une suppression', () => {
-    const base = empreintesDe({ ventesVivants: [vente('a'), vente('b')] });
-    const local = { ventesVivants: [vente('a'), vente('c')] };
-    const distant = { ventesVivants: [vente('a'), vente('b'), vente('d')] };
-    const valeur = fusionner(local, distant, undefined, base);
-    expect((valeur as { ventesVivants: VenteDAnimauxVivants[] }).ventesVivants.map((v) => v.id).sort()).toEqual(['a', 'c', 'd']);
   });
 });
 

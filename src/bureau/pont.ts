@@ -37,12 +37,6 @@ export interface PontBureau {
     /** L'écran choisi dans un menu ; rend la fonction qui arrête l'écoute. */
     surChoix: (rappel: (route: string) => void) => () => void;
   };
-  google: {
-    connexion: () => Promise<{ email: string; accessToken: string } | null>;
-    jeton: () => Promise<string | null>;
-    email: () => Promise<string | null>;
-    deconnexion: () => Promise<void>;
-  };
 }
 
 declare global {

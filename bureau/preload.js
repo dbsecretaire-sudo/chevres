@@ -39,12 +39,6 @@ contextBridge.exposeInMainWorld('bureau', {
       return () => ipcRenderer.removeListener('menu:aller', ecoute);
     },
   },
-  google: {
-    connexion: () => appeler('google:connexion'),
-    jeton: () => appeler('google:jeton'),
-    email: () => appeler('google:email'),
-    deconnexion: () => appeler('google:deconnexion'),
-  },
 });
 
 // ---------------------------------------------------------------------------------------------------------------------

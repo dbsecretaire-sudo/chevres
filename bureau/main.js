@@ -1,10 +1,9 @@
 // Troupeau Chèvres pour Windows : la version web de l'application dans une fenêtre de bureau, qui fonctionne sans internet.
-// Les données sont rangées dans des fichiers de l'ordinateur (dossier de l'application dans %APPDATA%) ; internet ne sert qu'à Google Drive.
+// Les données sont rangées dans des fichiers de l'ordinateur (dossier de l'application dans %APPDATA%) ; internet ne sert qu’à la synchronisation avec le serveur de la ferme.
 const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, screen, session, shell } = require('electron');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { connexionGoogle, deconnexionGoogle, emailGoogle, jetonGoogle } = require('./google');
 const { TEXTES } = require('./textes');
 
 // Les données au même endroit que l'application soit lancée par le développeur ou installée : %APPDATA%Troupeau Chèvres.
@@ -100,7 +99,7 @@ function ecrireDonnees() {
 }
 
 // Une copie par jour des données, gardée trente jours : de quoi revenir en arrière après une fausse manœuvre ou un fichier abîmé.
-// Elle est sur le même disque : elle ne remplace pas une sauvegarde hors de l'ordinateur (fichier ou Google Drive).
+// Elle est sur le même disque : elle ne remplace pas une sauvegarde hors de l'ordinateur (fichier ou sur le serveur de la ferme).
 const NOMBRE_DE_COPIES = 30;
 const dossierCopies = () => path.join(dossierDonnees(), 'sauvegardes-auto');
 
@@ -244,7 +243,7 @@ ipcMain.handle('pdf:imprimer', async (_e, { html, paysage, sansMarges, pied }) =
 });
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Google Drive : la seule chose qui demande internet.
+// Les menus : la seule chose qui relie cette fenêtre au reste de l’application.
 // ---------------------------------------------------------------------------------------------------------------------
 /** Les menus de la barre du haut (en haut à gauche) : ceux que l'application donne, plus l'affichage. Un choix envoie son écran à la page. */
 ipcMain.handle('menu:definir', (e, { menus, affichage }) => {
@@ -295,10 +294,6 @@ ipcMain.handle('menu:definir', (e, { menus, affichage }) => {
   }
 });
 
-ipcMain.handle('google:connexion', () => connexionGoogle(dossierDonnees()));
-ipcMain.handle('google:jeton', () => jetonGoogle(dossierDonnees()));
-ipcMain.handle('google:email', () => emailGoogle(dossierDonnees()));
-ipcMain.handle('google:deconnexion', () => deconnexionGoogle(dossierDonnees()));
 
 // ---------------------------------------------------------------------------------------------------------------------
 // La fenêtre.
