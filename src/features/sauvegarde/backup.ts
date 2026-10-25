@@ -198,6 +198,21 @@ async function sauvegardeDeTousLesEtablissements(): Promise<FichierSauvegarde | 
   return { version: VERSION_SAUVEGARDE, exporteLe: new Date().toISOString(), etablissements: entrees };
 }
 
+/** La sauvegarde complète, sans rien enregistrer ni partager : c'est ce que la synchronisation envoie au serveur. */
+export function construireSauvegardeComplete(): Promise<FichierSauvegarde | SauvegardeComplete<FichierSauvegarde>> {
+  return sauvegardeDeTousLesEtablissements();
+}
+
+/** Restaure une sauvegarde reçue du serveur, complète ou d'un seul établissement (sans passer par le sélecteur de fichiers). */
+export function restaurerSauvegarde(lue: unknown): Promise<ResultatImport> {
+  if (estSauvegardeComplete(lue)) return importerSauvegardeComplete(lue as SauvegardeComplete<FichierSauvegarde>);
+  const sauvegarde = lue as FichierSauvegarde;
+  if (!sauvegarde || typeof sauvegarde !== 'object' || !sauvegarde.donnees) {
+    throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
+  }
+  return appliquerSauvegarde(sauvegarde);
+}
+
 export async function exporterSauvegardeLocale(): Promise<void> {
   const sauvegarde = await sauvegardeDeTousLesEtablissements();
   const nomFichier = `${NOM_FICHIER_SAUVEGARDE}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
