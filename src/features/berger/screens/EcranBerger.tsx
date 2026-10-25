@@ -210,6 +210,11 @@ export default function EcranBerger() {
                 icone={<Ionicons name="swap-horizontal" size={56} color={colors.blanc} />}
               />
               <GrosBouton
+                libelle={T.scannerUneChevre}
+                onPress={() => commencer('fiche')}
+                icone={<Ionicons name="scan" size={56} color={colors.blanc} />}
+              />
+              <GrosBouton
                 libelle={T.achat}
                 onPress={() => setEtape({ nom: 'achat' })}
                 icone={<Ionicons name="cart" size={56} color={colors.blanc} />}

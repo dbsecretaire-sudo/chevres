@@ -59,6 +59,7 @@ export const TEXTES_ROLES = {
     ficheVivante: 'Vivante',
     ficheActions: 'Que faire avec cette chèvre ?',
     ficheSansBoucle: 'Sans boucle',
+    scannerUneChevre: 'Scanner une chèvre',
     ficheNaissance: 'Naissance',
     ficheDeces: 'Décès',
     achat: 'Achat',
