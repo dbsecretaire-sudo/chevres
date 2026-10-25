@@ -74,6 +74,9 @@ import {
 } from '@/shared/constants/export';
 import { TEXTES } from '@/shared/textes';
 
+/** La taille maximale du texte des pièces dans un même fichier de sauvegarde (en caractères). */
+const TAILLE_MAX_FICHIER_PIECES = 20000000;
+
 /** Un fichier joint dans la sauvegarde : sa fiche et son contenu en base64. */
 interface PieceSauvegardee {
   piece: PieceJointe;
@@ -149,12 +152,6 @@ async function construireSauvegarde(): Promise<FichierSauvegarde> {
   const identification = await listDocumentsIdentification();
   const partenaires = await lireChoixPartenaires();
 
-  const pieces: PieceSauvegardee[] = [];
-  if (piecesDisponibles()) {
-    for (const piece of await toutesLesPieces()) {
-      if (await pieceExiste(piece)) pieces.push({ piece, base64: await lirePieceBase64(piece) });
-    }
-  }
 
   const sauvegarde: FichierSauvegarde = {
     version: VERSION_SAUVEGARDE,
@@ -168,7 +165,6 @@ async function construireSauvegarde(): Promise<FichierSauvegarde> {
     commercial,
     bibliotheque: await lireBibliotheque(),
     stock,
-    pieces,
     comptesPcg,
     exploitation: settings.exploitation,
     etablissement,
@@ -214,19 +210,47 @@ export function restaurerSauvegarde(lue: unknown): Promise<ResultatImport> {
 }
 
 export async function exporterSauvegardeLocale(): Promise<void> {
+  const date = new Date().toISOString().slice(0, 10);
+  const dossier = FileSystem.cacheDirectory ?? '';
+  // Les données d'abord, dans leur fichier.
   const sauvegarde = await sauvegardeDeTousLesEtablissements();
-  const nomFichier = `${NOM_FICHIER_SAUVEGARDE}_${new Date().toISOString().slice(0, 10)}.${EXTENSION_SAUVEGARDE}`;
-  const destination = `${FileSystem.cacheDirectory}${nomFichier}`;
-  await FileSystem.writeAsStringAsync(destination, JSON.stringify(sauvegarde), {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
+  const fichiers: string[] = [];
+  const fichierDonnees = `${dossier}${NOM_FICHIER_SAUVEGARDE}_${date}.${EXTENSION_SAUVEGARDE}`;
+  await FileSystem.writeAsStringAsync(fichierDonnees, JSON.stringify(sauvegarde), { encoding: FileSystem.EncodingType.UTF8 });
+  fichiers.push(fichierDonnees);
 
+  // Puis les pièces jointes, en plusieurs fichiers : un seul texte aurait dépassé la taille qu'accepte l'appareil.
+  let lot: PieceSauvegardee[] = [];
+  let taille = 0;
+  let numero = 0;
+  const ecrireLot = async () => {
+    if (lot.length === 0) return;
+    numero += 1;
+    const fichier = `${dossier}${NOM_FICHIER_SAUVEGARDE}_pieces_${numero}_${date}.${EXTENSION_SAUVEGARDE}`;
+    await FileSystem.writeAsStringAsync(fichier, JSON.stringify({ version: VERSION_SAUVEGARDE, pieces: lot }), {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+    fichiers.push(fichier);
+    lot = [];
+    taille = 0;
+  };
+  if (piecesDisponibles()) {
+    for (const piece of await toutesLesPieces()) {
+      if (!(await pieceExiste(piece))) continue;
+      const base64 = await lirePieceBase64(piece);
+      if (lot.length > 0 && taille + base64.length > TAILLE_MAX_FICHIER_PIECES) await ecrireLot();
+      lot.push({ piece, base64 });
+      taille += base64.length;
+    }
+  }
+  await ecrireLot();
+
+  // Chaque fichier se partage à part : le premier est celui des données.
   const disponible = await Sharing.isAvailableAsync();
   if (disponible) {
-    await Sharing.shareAsync(destination, {
-      mimeType: 'application/json',
-      dialogTitle: TEXTES.sauvegarde.backup.sauvegardeTroupeauChevres,
-    });
+    for (const fichier of fichiers) {
+      await Sharing.shareAsync(fichier, { mimeType: 'application/json', dialogTitle: TEXTES.sauvegarde.backup.sauvegardeTroupeauChevres });
+    }
   }
   await noterSauvegarde();
 }
@@ -263,14 +287,13 @@ async function lireFichierChoisi(uri: string): Promise<string> {
 }
 
 /**
- * Restaure une sauvegarde locale précédemment exportée : remplace intégralement les données
- * actuelles (toutes années, toutes catégories, fournisseurs, informations d'exploitation) par
- * celles du fichier choisi — pensé pour une réinstallation, pas pour une fusion avec l'existant.
+ * Restaure une sauvegarde locale : le fichier des données, et les fichiers des pièces (un ou plusieurs), choisis ensemble.
+ * Les données remplacent celles de l'appareil ; les pièces s'ajoutent (une pièce déjà là ne se réécrit pas).
  */
 export async function importerSauvegardeLocale(): Promise<ResultatImport> {
   // Tous les types sont proposés : selon l'application d'où vient le fichier (Drive, messagerie, gestionnaire de fichiers), un
   // .json est annoncé « application/octet-stream » et serait grisé avec un filtre strict.
-  const choix = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+  const choix = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: true });
   if (choix.canceled)
     return {
       annule: true,
@@ -283,20 +306,52 @@ export async function importerSauvegardeLocale(): Promise<ResultatImport> {
       inchanges: 0,
     };
 
-  const contenu = await lireFichierChoisi(choix.assets[0].uri);
+  let donnees: unknown;
+  const lotsDePieces: PieceSauvegardee[][] = [];
+  for (const fichier of choix.assets) {
+    const contenu = await lireFichierChoisi(fichier.uri);
+    let lu: unknown;
+    try {
+      lu = JSON.parse(contenu);
+    } catch {
+      throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPas);
+    }
+    const estDesPieces =
+      !!lu && typeof lu === 'object' && Array.isArray((lu as { pieces?: unknown }).pieces) && !('donnees' in lu) && !('etablissements' in lu);
+    if (estDesPieces) {
+      lotsDePieces.push((lu as { pieces: PieceSauvegardee[] }).pieces);
+    } else {
+      if (donnees !== undefined) throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
+      donnees = lu;
+    }
+  }
+  if (donnees === undefined) throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
 
-  let sauvegarde: FichierSauvegarde;
-  try {
-    sauvegarde = JSON.parse(contenu);
-  } catch {
-    throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPas);
+  const resultat = await restaurerSauvegarde(donnees);
+  for (const pieces of lotsDePieces) {
+    const { misAJour, inchanges } = await ecrirePiecesSauvegardees(pieces);
+    resultat.misAJour += misAJour;
+    resultat.inchanges += inchanges;
   }
-  const lu: unknown = sauvegarde;
-  if (estSauvegardeComplete(lu)) return importerSauvegardeComplete(lu as SauvegardeComplete<FichierSauvegarde>);
-  if (!sauvegarde || typeof sauvegarde !== 'object' || !sauvegarde.donnees) {
-    throw new Error(TEXTES.sauvegarde.backup.ceFichierNEstPasUne);
+  return resultat;
+}
+
+/** Écrit les pièces d'un fichier de sauvegarde ; une pièce déjà présente ne se réécrit pas. */
+async function ecrirePiecesSauvegardees(pieces: PieceSauvegardee[]): Promise<{ misAJour: number; inchanges: number }> {
+  let misAJour = 0;
+  let inchanges = 0;
+  if (!piecesDisponibles()) return { misAJour, inchanges };
+  for (const { piece, base64 } of pieces) {
+    if (!piece || !base64) continue;
+    if (await pieceExiste(piece)) {
+      inchanges += 1;
+      continue;
+    }
+    await ecrirePieceBase64(piece, base64);
+    misAJour += 1;
   }
-  return appliquerSauvegarde(sauvegarde);
+  await rafraichirImages();
+  return { misAJour, inchanges };
 }
 
 /** Restaure une sauvegarde complète : chaque établissement reçoit son jeu de données (un établissement absent est recréé). */
