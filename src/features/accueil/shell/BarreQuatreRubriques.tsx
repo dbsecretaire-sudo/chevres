@@ -3,8 +3,9 @@ import type { BottomTabBarProps } from 'expo-router/build/react-navigation/botto
 import { Pressable, Text, View } from 'react-native';
 import { colors } from '@/shared/theme/colors';
 
-/** Les quatre rubriques de la barre du bas (téléphone, mode avancé). Chacune garde sa page ; « Plus » regroupe le reste. */
+/** Les rubriques de la barre du bas (téléphone, mode avancé) : l'accueil, puis les quatre rubriques. Chacune garde sa page ; « Plus » regroupe le reste. */
 const RUBRIQUES = [
+  { route: 'index', libelle: 'Accueil', icone: (c: string) => <Ionicons name="home" size={24} color={c} /> },
   { route: 'cheptel', libelle: 'Chèvres', icone: (c: string) => <Ionicons name="paw" size={24} color={c} /> },
   { route: 'production', libelle: 'Atelier', icone: (c: string) => <MaterialCommunityIcons name="cheese" size={24} color={c} /> },
   { route: 'visites', libelle: 'Visites', icone: (c: string) => <Ionicons name="trail-sign" size={24} color={c} /> },
