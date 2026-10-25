@@ -15,19 +15,35 @@ import { GrilleTerrain } from '@/features/accueil/terrain/EcranTerrain';
 import { afficheBureau } from '@/shared/utils/affichage';
 import { BlocSante } from '@/features/sante/components/BlocSante';
 import { BlocRappels } from '@/features/rappels/components/BlocRappels';
+import { useAccueil } from '@/features/accueil/hooks/useAccueil';
+import { colors } from '@/shared/theme/colors';
+import { Text, View } from 'react-native';
 
 /**
- * L'onglet Chèvres. Sur le téléphone : les six tuiles de la maquette (scanner, naissance, soin, mouvement, décès, cheptel). Sur Windows : le menu en groupes
- * titrés (voir ListeCheptel), à côté du cheptel.
+ * L'onglet Chèvres, et l'accueil de l'élevage. Sur le téléphone : le compteur d'aliment, les alertes de santé et les rappels, puis les six tuiles de la maquette
+ * (scanner, naissance, soin, mouvement, décès, cheptel). Sur Windows : le menu en groupes titrés (voir ListeCheptel), à côté du cheptel.
  */
 export default function AccueilCheptel() {
   if (afficheBureau()) return <ListeCheptel />;
+  return <PageChevresTelephone />;
+}
+
+/** La page Chèvres du téléphone : l'aliment par animal et par jour (en tête, comme sur la maquette), puis les alertes et les tuiles. */
+function PageChevresTelephone() {
+  const { stats } = useAccueil();
+  const grammes = stats?.gParAnimalParJour;
   return (
     <GrilleTerrain
       zone="troupeau"
       enTete={
         <>
           <SelecteurEspece />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.badgeBg, borderRadius: 14, padding: 12 }}>
+            <Text style={{ color: colors.textMuted }}>Aliment par animal et par jour</Text>
+            <Text style={{ fontWeight: '800', color: colors.primary }}>
+              {grammes === undefined ? '—' : `${Math.round(grammes).toLocaleString('fr-FR')} g`}
+            </Text>
+          </View>
           <BlocSante />
           <BlocRappels />
         </>
