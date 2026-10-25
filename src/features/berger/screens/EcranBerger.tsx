@@ -29,7 +29,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { TourismeSimple } from '@/features/commercial/simple/TourismeSimple';
 import { AtelierSimple } from '@/features/production/simple/AtelierSimple';
 import { Button } from '@/shared/components/Button';
-import { GrosBouton } from '@/shared/components/GrosBouton';
+import { TuileMaquette } from '@/shared/components/TuileMaquette';
 import { nbPetitsMax, SEXE } from '@/shared/constants/cheptel';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -155,28 +155,31 @@ export default function EcranBerger() {
             <View style={styles.contenuEnHaut}>
               <EnteteBerger titre={T.titre} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.chevres}
                 onPress={chevres}
-                icone={<Ionicons name="paw" size={52} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="paw" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.fromagerie}
                 onPress={() => setEtape({ nom: 'fromagerie' })}
-                icone={<MaterialCommunityIcons name="cheese" size={52} color={colors.blanc} />}
+                icone={(c) => <MaterialCommunityIcons name="cheese" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.tourisme}
                 onPress={() => setEtape({ nom: 'tourisme' })}
-                icone={<Ionicons name="trail-sign" size={52} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="trail-sign" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={sync.occupe === 'envoi' ? T.envoiEnCours : T.envoyer}
                 detail={aEnvoyer > 0 ? T.aEnvoyer(aEnvoyer) : undefined}
                 onPress={envoyer}
                 desactive={aEnvoyer === 0 || sync.occupe !== null}
-                clair
-                icone={<Ionicons name="cloud-upload" size={40} color={colors.primary} />}
+                icone={(c) => <Ionicons name="cloud-upload" size={30} color={c} />}
               />
               </View>
               <Pressable style={styles.discret} onPress={() => choisir(undefined)} accessibilityRole="button">
@@ -189,35 +192,42 @@ export default function EcranBerger() {
             <View style={styles.contenuEnHaut}>
               <EnteteBerger titre={T.chevres} onRetour={accueil} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
+                principale
                 libelle={T.scannerUneChevre}
                 onPress={() => commencer('fiche')}
-                icone={<Ionicons name="scan" size={56} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="scan" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.naissance}
                 onPress={() => commencer('naissance')}
-                icone={<Ionicons name="heart" size={56} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="heart" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.soin}
                 onPress={() => commencer('soin')}
-                icone={<Ionicons name="medkit" size={56} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="medkit" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.mouvement}
                 onPress={() => commencer('mouvement')}
-                icone={<Ionicons name="swap-horizontal" size={56} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="swap-horizontal" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.mort}
                 onPress={() => commencer('mort')}
-                icone={<MaterialCommunityIcons name="grave-stone" size={56} color={colors.blanc} />}
+                icone={(c) => <MaterialCommunityIcons name="grave-stone" size={30} color={c} />}
               />
-              <GrosBouton
+              <TuileMaquette
+                variante="simple"
                 libelle={T.cheptel}
                 onPress={() => setEtape({ nom: 'cheptel' })}
-                icone={<Ionicons name="list" size={56} color={colors.blanc} />}
+                icone={(c) => <Ionicons name="list" size={30} color={c} />}
               />
               </View>
             </View>

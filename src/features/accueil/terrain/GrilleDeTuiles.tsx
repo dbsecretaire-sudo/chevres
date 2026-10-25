@@ -1,33 +1,46 @@
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { TuileTerrain } from '@/features/accueil/terrain/ecransTerrain';
+import { TuileMaquette, type VarianteTuile } from '@/shared/components/TuileMaquette';
 import { styles } from '@/shared/styles/accueil/EcranTerrain.styles';
-import { colors } from '@/shared/theme/colors';
 
-/** Les grandes tuiles d'une zone : l'icône, le chiffre utile (rouge quand il y a quelque chose à faire), le titre. Un appui rend la tuile touchée. */
-export function GrilleDeTuiles({ tuiles, onAppui }: { tuiles: TuileTerrain[]; onAppui: (tuile: TuileTerrain) => void }) {
+/**
+ * Les grandes tuiles d'une zone, comme sur la maquette : la présentation (« simple » au centre, « avance » en haut à gauche), la tuile principale
+ * (remplie en vert, donnée par sa clé), le chiffre utile quand il y en a un. Un appui rend la tuile touchée.
+ */
+export function GrilleDeTuiles({
+  tuiles,
+  onAppui,
+  variante = 'avance',
+  principale,
+}: {
+  tuiles: TuileTerrain[];
+  onAppui: (tuile: TuileTerrain) => void;
+  variante?: VarianteTuile;
+  /** La clé de la tuile principale de cet écran. */
+  principale?: string;
+}) {
+  const taille = variante === 'simple' ? 30 : 32;
   return (
     <View style={styles.grille}>
       {tuiles.map((t) => (
-        <Pressable
+        <TuileMaquette
           key={t.cle}
-          onPress={() => onAppui(t)}
-          accessibilityRole="button"
-          accessibilityLabel={t.nombre ? `${t.titre} : ${t.nombre}` : t.titre}
-          style={({ pressed }) => [styles.tuile, t.large ? styles.tuileLarge : null, pressed ? styles.tuileAppuyee : null]}
-        >
-          <View style={styles.haut}>
-            {t.iconeMci ? (
-              <MaterialCommunityIcons name={t.iconeMci} size={44} color={colors.primary} />
+          libelle={t.titre}
+          variante={variante}
+          principale={t.cle === principale}
+          large={t.large}
+          nombre={t.nombre}
+          alerte={t.alerte}
+          icone={(couleur) =>
+            t.iconeMci ? (
+              <MaterialCommunityIcons name={t.iconeMci} size={taille} color={couleur} />
             ) : (
-              <Ionicons name={t.icone} size={44} color={colors.primary} />
-            )}
-            {t.nombre ? <Text style={[styles.nombre, t.alerte ? styles.nombreAlerte : null]}>{t.nombre}</Text> : null}
-          </View>
-          <Text style={styles.titre} numberOfLines={3}>
-            {t.titre}
-          </Text>
-        </Pressable>
+              <Ionicons name={t.icone} size={taille} color={couleur} />
+            )
+          }
+          onPress={() => onAppui(t)}
+        />
       ))}
     </View>
   );

@@ -15,6 +15,13 @@ import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
+/** La tuile remplie en vert sur chaque zone, comme sur la maquette : Scanner une chèvre, Scanner un lot, Nouvelle visite. */
+const TUILE_PRINCIPALE: Partial<Record<ZoneTerrain, string>> = {
+  troupeau: 'scanner',
+  atelier: 'scanLot',
+  accueil: 'nouvelleVisite',
+};
+
 /**
  * Les grandes tuiles d'une zone, avec le chiffre utile de chacune. Sert à l'écran terrain (une page ouverte d'un appui sur la zone) et, sur le téléphone,
  * à l'accueil des onglets Chèvres et Atelier, comme sur la maquette.
@@ -38,7 +45,7 @@ export function GrilleTerrain({ zone }: { zone: ZoneTerrain }) {
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
-        <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} onAppui={(t) => ouvrir(t.route)} />
+        <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={(t) => ouvrir(t.route)} />
       </ScrollView>
     </AccentColorProvider>
   );

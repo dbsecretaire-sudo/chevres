@@ -45,7 +45,7 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
     return (
       <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
         <EnteteBerger titre="Fabriquer" onRetour={retour} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-        <GrilleDeTuiles tuiles={tuilesDuTerrain('fabriquer', COMPTES_VIDES)} onAppui={(t) => setTuile(t.cle)} />
+        <GrilleDeTuiles variante="simple" tuiles={tuilesDuTerrain('fabriquer', COMPTES_VIDES)} onAppui={(t) => setTuile(t.cle)} />
       </ScrollView>
     );
   if (tuile === 'lait')
@@ -76,6 +76,8 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <EnteteBerger titre={TEXTES.roles.berger.fromagerie} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
       <GrilleDeTuiles
+        variante="simple"
+        principale="fabriquer"
         tuiles={tuilesDuTerrain('atelier', COMPTES_VIDES)}
         onAppui={(t) => (AVEC_FLUX.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))}
       />

@@ -66,7 +66,7 @@ export function TourismeSimple({ onQuitter }: { onQuitter: () => void }) {
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <EnteteBerger titre={TEXTES.roles.berger.tourisme} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-      <GrilleDeTuiles tuiles={tuilesDuTourisme()} onAppui={(t) => (AVEC_PAGE.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))} />
+      <GrilleDeTuiles variante="simple" principale="nouvelleVisite" tuiles={tuilesDuTourisme()}onAppui={(t) => (AVEC_PAGE.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))} />
     </ScrollView>
   );
 }
