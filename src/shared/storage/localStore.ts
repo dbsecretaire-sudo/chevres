@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Categorie, RecordMap } from '@/shared/storage/types';
 import { cleStockage } from '@/shared/storage/etablissementActif';
-import { ecrireDonnee } from '@/shared/storage/depot';
+import { ecrireDonnee, surReception } from '@/shared/storage/depot';
 import { CLE_STOCKAGE, SEPARATEUR_CLE } from '@/shared/constants/stockage';
 
 /**
@@ -207,3 +207,23 @@ export async function deleteRecord(categorie: Categorie, id: string): Promise<vo
     await setIdIndex(categorie, index);
   });
 }
+
+/** Retrouve la catégorie et l'année d'une clé de données (« …:data:<categorie>:<année> »). Undefined pour toute autre clé. */
+function categorieEtAnneeDeLaZone(zone: string): { categorie: Categorie; annee: number } | undefined {
+  const repere = `${SEPARATEUR_CLE}${CLE_STOCKAGE.DONNEES}${SEPARATEUR_CLE}`;
+  const position = zone.indexOf(repere);
+  if (position < 0) return undefined;
+  const [categorie, annee] = zone.slice(position + repere.length).split(SEPARATEUR_CLE);
+  const nombre = Number(annee);
+  return categorie && Number.isInteger(nombre) ? { categorie: categorie as Categorie, annee: nombre } : undefined;
+}
+
+// Une année reçue du serveur : la liste des années et l'index de cet appareil suivent, sans que rien ne soit renvoyé.
+// Seule l'année de l'établissement actif est reconstruite ici (ses listes sont celles qu'on lit).
+surReception(async (zone) => {
+  const repere = categorieEtAnneeDeLaZone(zone);
+  if (!repere || zone !== dataKey(repere.categorie, repere.annee)) return;
+  await ensureYearRegistered(repere.categorie, repere.annee);
+  const items = await loadYear(repere.categorie, repere.annee);
+  await reindexYear(repere.categorie, repere.annee, items as never);
+});

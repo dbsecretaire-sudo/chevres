@@ -31,7 +31,7 @@ export async function lireConnexion(): Promise<Connexion | null> {
 }
 
 /** Appelle une action de l'API et rend le code HTTP avec la réponse en JSON. */
-async function appeler(
+export async function appeler(
   action: string,
   methode: 'GET' | 'POST' | 'PUT',
   { corps, parametres = '', jeton }: { corps?: unknown; parametres?: string; jeton?: string } = {},
@@ -48,7 +48,7 @@ async function appeler(
   return { statut: reponse.status, json };
 }
 
-async function jetonDeConnexion(): Promise<string> {
+export async function jetonDeConnexion(): Promise<string> {
   const connexion = await lireConnexion();
   if (!connexion) throw new ConnexionExpiree('Connecte-toi d’abord.');
   return connexion.jeton;
