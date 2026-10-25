@@ -78,6 +78,8 @@ export default function RubriqueCategoriesTiers() {
   const [renommage, setRenommage] = useState<string | null>(null);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [aRetirer, setARetirer] = useState<string | null>(null);
+  /** La rubrique d'une catégorie déroulée (« id:affichage » ou « id:depenses ») : toutes sont repliées au départ, une seule à la fois. */
+  const [sousOuverte, setSousOuverte] = useState<string | null>(null);
   /** La catégorie déroulée (une seule à la fois) : toutes sont enroulées au départ. */
   const [ouverte, setOuverte] = useState<string | null>(null);
   /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
@@ -146,7 +148,12 @@ export default function RubriqueCategoriesTiers() {
                   <Ionicons name="create-outline" size={24} color={colors.primary} />
                 </Pressable>
               </View>
-              <Text style={commonStyles.lineSemiBold}>{T.affichage}</Text>
+              <SectionDeroulante
+                titre={T.affichage}
+                accordeon
+                ouverte={sousOuverte === `${c.id}:affichage`}
+                onBasculer={() => setSousOuverte((a) => (a === `${c.id}:affichage` ? null : `${c.id}:affichage`))}
+              >
               <Checkbox
                 label={TEXTES.comptabilite.tresorerie.paiement.pasPayee}
                 value={pasPayeeAffichee(c)}
@@ -163,7 +170,13 @@ export default function RubriqueCategoriesTiers() {
                 onChange={(offert) => maj(c.id, { offert })}
               />
               <Text style={commonStyles.note}>{T.aideAffichage}</Text>
-              <Text style={commonStyles.lineSemiBold}>{T.depenses}</Text>
+              </SectionDeroulante>
+              <SectionDeroulante
+                titre={T.depensesResume(permises.filter((d) => (depensesProposees as readonly string[]).includes(d)).length, depensesProposees.length)}
+                accordeon
+                ouverte={sousOuverte === `${c.id}:depenses`}
+                onBasculer={() => setSousOuverte((a) => (a === `${c.id}:depenses` ? null : `${c.id}:depenses`))}
+              >
               {parInventaire ? (
                 <>
                   <Text style={commonStyles.note}>{TEXTES.contacts.operations.aideAchats}</Text>
@@ -205,6 +218,7 @@ export default function RubriqueCategoriesTiers() {
                 ))
               )}
               <Text style={commonStyles.note}>{T.aideDepenses}</Text>
+              </SectionDeroulante>
               {CATEGORIES_FOURNISSEUR_PROTEGEES.includes(c.id) ? (
                 <Text style={commonStyles.note}>
                   {c.id === CATEGORIE_FOURNISSEUR_PAR_DEFAUT ? T.parDefaut : T.protegee}

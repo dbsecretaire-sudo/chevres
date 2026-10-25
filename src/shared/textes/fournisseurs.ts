@@ -35,6 +35,7 @@ export const TEXTES_FOURNISSEURS = {
     ajouter: '+ Ajouter une catégorie',
     ajouterManquantes: (nombre: number) => `Ajouter les catégories d’office manquantes (${nombre})`,
     depenses: 'Dépenses proposées',
+    depensesResume: (n: number, total: number) => `Dépenses proposées : ${n} sur ${total}`,
     aideDepenses:
       'Un contact ne propose que les dépenses cochées : un vétérinaire n’a que la dépense vétérinaire, l’État que les impôts et taxes, et ni l’un ni l’autre n’a à choisir l’atelier.',
     parDefaut: 'Catégorie d’office des contacts : elle ne se retire pas.',

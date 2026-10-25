@@ -6,6 +6,7 @@ import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecran
 import { EtiquettesSimple } from '@/features/production/simple/EtiquettesSimple';
 import { FabricationSimple } from '@/features/production/simple/FabricationSimple';
 import { LaitSimple } from '@/features/production/simple/LaitSimple';
+import { ScanLotSimple } from '@/features/production/simple/ScanLotSimple';
 import { VentesSimple } from '@/features/production/simple/VentesSimple';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
@@ -19,7 +20,7 @@ const PRODUITS_DES_TUILES: Record<string, typeof PRODUIT_A_LOTS.FROMAGE | typeof
   savon: PRODUIT_A_LOTS.SAVON,
 };
 /** Les tuiles qui s'ouvrent ici, sans quitter la page : les autres (le stock, les lots) ouvrent leur page. */
-const AVEC_FLUX = [...Object.keys(PRODUITS_DES_TUILES), 'lait', 'etiquettes', 'ventes'];
+const AVEC_FLUX = [...Object.keys(PRODUITS_DES_TUILES), 'lait', 'etiquettes', 'ventes', 'scanLot'];
 const TUILES_MONTREES = [...AVEC_FLUX, 'stock', 'lotsAtelier'];
 
 /**
@@ -35,6 +36,7 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
   if (tuile === 'lait') return <LaitSimple onTerminer={retour} />;
   if (tuile === 'etiquettes') return <EtiquettesSimple onTerminer={retour} />;
   if (tuile === 'ventes') return <VentesSimple onRetour={retour} />;
+  if (tuile === 'scanLot') return <ScanLotSimple onRetour={retour} />;
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <Text style={styles.titre}>{TEXTES.roles.berger.fromagerie}</Text>

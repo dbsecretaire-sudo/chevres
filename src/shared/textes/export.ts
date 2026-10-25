@@ -219,6 +219,18 @@ export const TEXTES_EXPORT = {
       avertissement:
         'Correspondance indicative entre vos factures et les comptes du plan comptable, non validée par un expert-comptable : à confirmer avant tout usage officiel.',
     },
+    /** La liste des lots d'un produit (ou de tous) : numéro, fabrication, contrôle, état, client et prix. */
+    listeLots: {
+      titre: (produit: string) => `Liste des lots : ${produit}`,
+      aucun: 'Aucun lot pour le moment.',
+      colonnes: { lot: 'Lot', article: 'Article', fabrication: 'Fabriqué le', controle: 'Contrôle', etat: 'État', client: 'Client', prix: 'Prix' },
+      ok: 'Ok',
+      nonOk: 'Non ok',
+      rappele: (date: string) => `Rappelé le ${date}`,
+      enStock: 'En stock',
+      rappeleEtat: 'Rappelé',
+      vendu: (date: string) => (date ? `Vendu le ${date}` : 'Vendu'),
+    },
     /** Le guide des numéros de lot : la lecture d'un numéro, les lettres des produits, les règles. */
     guideLots: {
       titre: 'Guide des numéros de lot',

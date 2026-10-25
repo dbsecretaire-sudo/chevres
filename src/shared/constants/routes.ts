@@ -181,6 +181,10 @@ export const ROUTES = {
   PRODUCTION_VENTES_SIMPLE: '/production/ventes-simple',
   /** Le cadre réglementaire de la fromagerie en tuiles : une démarche par tuile, ouverte en pleine page. */
   PRODUCTION_CADRE_SIMPLE: '/production/cadre-simple',
+  /** Scanner un lot : ce qu'on sait du lot dont on lit le numéro. */
+  PRODUCTION_SCAN_LOT_SIMPLE: '/production/scan-lot-simple',
+  /** Imprimer la liste des lots d'un produit (PDF). */
+  PRODUCTION_IMPRIMER_LOTS_SIMPLE: '/production/imprimer-lots-simple',
   /** Les lots de viande du mode normal, sans onglets : `afacturer` (à facturer et facturée) ou `avendre` (à vendre et vendue). */
   /** Les lots d'un produit (`fromage`, `charcuterie`, `plat`, `savon`) en lecture seule : le mode normal. */
   productionLotsSimple: (produit: string) => `/production/lots-simple?produit=${produit}` as const,

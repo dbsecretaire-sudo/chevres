@@ -79,6 +79,8 @@ export default function RubriqueCategoriesClient() {
   const [ouverte, setOuverte] = useState<string | null>(null);
   const groupesProposes = groupesRecetteProposes();
   const [aRetirer, setARetirer] = useState<string | null>(null);
+  /** La rubrique d'une catégorie déroulée (« id:ventes » ou « id:recettes ») : toutes sont repliées au départ, une seule à la fois. */
+  const [sousOuverte, setSousOuverte] = useState<string | null>(null);
   /** La vue : chaque catégorie et ses options (d'office), ou chaque option et les catégories qui l'appliquent. */
   const [parOption, setParOption] = useState(false);
   /** Ce qu'on cherche dans les catégories (leur nom) : la liste ne garde que celles qui le contiennent. */
@@ -132,6 +134,12 @@ export default function RubriqueCategoriesClient() {
                   <Ionicons name="create-outline" size={24} color={colors.primary} />
                 </Pressable>
               </View>
+              <SectionDeroulante
+                titre={T.reglagesVentes}
+                accordeon
+                ouverte={sousOuverte === `${c.id}:ventes`}
+                onBasculer={() => setSousOuverte((a) => (a === `${c.id}:ventes` ? null : `${c.id}:ventes`))}
+              >
               <Checkbox
                 label={T.declaree}
                 value={c.declaree}
@@ -164,8 +172,14 @@ export default function RubriqueCategoriesClient() {
                 onChange={(pasEncaissee) => maj(c.id, { pasEncaissee })}
               />
               <Text style={commonStyles.note}>{T.aideAffichage}</Text>
+              </SectionDeroulante>
               {/* Les recettes que ses clients peuvent recevoir : l'aide n'est cochée que pour un organisme, d'office. */}
-              <Text style={commonStyles.lineSemiBold}>{T.recettes}</Text>
+              <SectionDeroulante
+                titre={T.recettesResume(groupesRecetteDeLaCategorie(c).filter((g) => (groupesProposes as readonly string[]).includes(g)).length, groupesProposes.length)}
+                accordeon
+                ouverte={sousOuverte === `${c.id}:recettes`}
+                onBasculer={() => setSousOuverte((a) => (a === `${c.id}:recettes` ? null : `${c.id}:recettes`))}
+              >
               {parInventaire ? (
                 <>
                   <Text style={commonStyles.note}>{TEXTES.contacts.operations.aideVentes}</Text>
@@ -208,6 +222,7 @@ export default function RubriqueCategoriesClient() {
                 ))
               )}
               <Text style={commonStyles.note}>{T.aideRecettes}</Text>
+              </SectionDeroulante>
               {CATEGORIES_CLIENT_PROTEGEES.includes(c.id) ? (
                 <Text style={commonStyles.note}>
                   {c.id === CATEGORIE_CLIENT_PAR_DEFAUT ? T.parDefaut : T.protegee}

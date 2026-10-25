@@ -761,6 +761,37 @@ export const TEXTES_PRODUCTION = {
     calculPieces: (quantite: string, prix: string) => `${quantite} × ${prix} (prix de l’inventaire)`,
     calculLitres: (quantite: string, prix: string) => `${quantite} L × ${prix} le litre (prix de l’inventaire)`,
   },
+  /** « Scanner un lot » : le numéro photographié ou tapé, puis ce qu'on sait du lot. */
+  scanLotSimple: {
+    titre: 'Scanner un lot',
+    aide: 'Photographiez le numéro du lot sur l’étiquette, ou tapez-le.',
+    scanner: 'Photographier le numéro',
+    numeroDuLot: 'Numéro du lot',
+    chercher: 'Chercher',
+    introuvable: 'Aucun lot ne porte ce numéro.',
+    plusieurs: 'Quel lot ?',
+    numero: (numero: string) => `Lot ${numero}`,
+    fabrication: 'Date de fabrication',
+    controle: 'Contrôle',
+    controleOk: 'Contrôle ok',
+    controleNonOk: 'Contrôle non ok',
+    rappele: (date: string) => `Rappelé le ${date}`,
+    vente: 'Vente',
+    prixInconnu: 'Prix non noté',
+    clientInconnu: 'Client non noté',
+    pourLots: (n: number) => `Prix de la vente de ${n} lots`,
+    venduSansFiche: (date: string) => `Vendu le ${date}`,
+    pasVendu: 'Pas encore vendu',
+    autreLot: 'Scanner un autre lot',
+  },
+  /** « Imprimer les lots » : la liste des lots d'un produit en PDF. */
+  imprimerLotsSimple: {
+    titre: 'Imprimer les lots',
+    aide: 'Choisissez le produit : la liste de ses lots se prépare en PDF.',
+    enCours: 'Préparation du PDF…',
+    tous: 'Tous les lots',
+    erreur: 'Impression impossible',
+  },
   /** Les lots d'un produit (fromage, charcuterie, plat, savon) en lecture seule, dans le mode normal. */
   lotsProduitSimple: {
     resume: (enStock: number, total: number) => `${enStock} en stock sur ${total} ${total > 1 ? 'lots' : 'lot'}`,

@@ -94,6 +94,10 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain, avecPages 
         { cle: 'etiquettes', titre: T.etiquettes, icone: 'pricetags', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
         // Toutes les ventes sont réunies ici : on choisit ensuite le produit (le fromage, la charcuterie, un plat, un savon, le lait, la viande à vendre ou à facturer).
         { cle: 'ventes', titre: T.ventes, icone: 'cash', route: ROUTES.PRODUCTION_VENTES_SIMPLE, ...(avecPages ? { large: true } : {}), ...avec(c.viandeAFacturer + c.viandeAVendre, true) },
+        // Scanner un lot (son numéro, puis sa fabrication, son contrôle, sa vente) : large dans le mode normal, où il tient seul sur sa ligne.
+        { cle: 'scanLot', titre: T.scanLot, icone: 'qr-code', route: ROUTES.PRODUCTION_SCAN_LOT_SIMPLE, ...(avecPages ? { large: true } : {}) },
+        // La liste des lots en PDF (pas seulement leurs étiquettes) : seulement dans le mode avancé en affichage simple.
+        { cle: 'imprimerLots', titre: T.imprimerLots, icone: 'print', route: ROUTES.PRODUCTION_IMPRIMER_LOTS_SIMPLE },
         // Les démarches pour fabriquer et vendre, en tuiles : pas dans le mode normal, qui ne montre que ses propres tuiles.
         { cle: 'cadreReglementaire', titre: T.cadreReglementaire, icone: 'shield-checkmark', route: ROUTES.PRODUCTION_CADRE_SIMPLE },
         // Le stock et les lots s'ouvrent dans leur page : seul le mode normal les propose ici (avec ses propres pages).

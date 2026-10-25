@@ -34,6 +34,7 @@ export const NOM_FICHIER_EXPORT_BOUCLES = 'boucles';
 export const NOM_FICHIER_EXPORT_SIMULATION_LAIT = 'simulation_lait';
 /** Le guide des numéros de lot (comment se lit un numéro, les lettres de chaque produit). */
 export const NOM_FICHIER_EXPORT_GUIDE_LOTS = 'guide_numeros_lots';
+export const NOM_FICHIER_EXPORT_LISTE_LOTS = 'liste_des_lots';
 /** Le registre des analyses de l'atelier (une ligne par analyse : rien à signaler, ou à signaler). */
 export const NOM_FICHIER_EXPORT_REGISTRE_ANALYSES = 'registre_analyses';
 /** Les étiquettes imprimables d'un lot (plats préparés, savons). */

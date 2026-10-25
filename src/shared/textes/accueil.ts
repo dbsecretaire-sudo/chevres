@@ -130,6 +130,8 @@ export const TEXTES_ACCUEIL = {
         etiquettes: 'Imprimer des étiquettes',
         ventes: 'Ventes',
         cadreReglementaire: 'Cadre réglementaire',
+        scanLot: 'Scanner un lot',
+        imprimerLots: 'Imprimer les lots',
         viandeAVendre: 'Viande à vendre',
         viandeAFacturer: 'Viande à facturer',
         stock: 'Stock',

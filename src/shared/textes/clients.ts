@@ -44,6 +44,8 @@ export const TEXTES_CLIENTS = {
     parOption: 'Par option',
     aideParOption: 'Ouvrez une option et cochez les catégories qui l’appliquent.',
     dansLesVentes: 'Dans les ventes',
+    reglagesVentes: 'Réglages des ventes',
+    recettesResume: (n: number, total: number) => `Recettes reçues : ${n} sur ${total}`,
     renommer: 'Modifier le nom de la catégorie',
     nomCategorie: 'Nom de la catégorie',
     affichage: 'Afficher dans les factures de ses contacts',
