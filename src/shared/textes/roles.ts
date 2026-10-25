@@ -45,7 +45,7 @@ export const TEXTES_ROLES = {
     cheptel: 'Cheptel',
     cheptelBandeau: (vivantes: number, nees: number) =>
       `${vivantes} vivante${vivantes > 1 ? 's' : ''} · ${nees} née${nees > 1 ? 's' : ''} cette année`,
-    cheptelRecherche: 'Taper ou scanner une boucle',
+    cheptelRecherche: 'Scanner ou taper une boucle',
     cheptelFiltreToutes: 'Toutes',
     cheptelFiltreFemelles: 'Femelles',
     cheptelFiltreMales: 'Mâles',

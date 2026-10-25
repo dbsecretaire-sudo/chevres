@@ -10,6 +10,8 @@ import { listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import type { Chevre } from '@/features/cheptel/types';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { Fab } from '@/shared/components/Fab';
+import { ListeTroupeau } from '@/features/accueil/ferme/ListeTroupeau';
+import { afficheBureau } from '@/shared/utils/affichage';
 import { ROUTES } from '@/shared/constants/routes';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { TEXTES } from '@/shared/textes';
@@ -49,7 +51,8 @@ export default function TousLesAnimaux() {
           ),
         }}
       />
-      <ChevrerieInterieure vedettes={vedettes} />
+      {/* Sur le téléphone, la liste de la maquette (compteur, recherche, filtres, boucles en jaune). La chèvrerie reste sur Windows. */}
+      {afficheBureau() ? <ChevrerieInterieure vedettes={vedettes} /> : <ListeTroupeau />}
       {/* Ajouter un animal au cheptel : sa flèche de retour ramène ici. */}
       <Fab
         options={[
