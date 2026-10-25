@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { BoutonDidacticiel } from '@/features/didacticiel/components/BoutonDidacticiel';
-import { BoutonEnregistrer } from '@/features/sauvegarde/components/BoutonEnregistrer';
+import { PastilleEnvoi } from '@/features/accueil/ferme/PastilleEnvoi';
+import { afficheBureau } from '@/shared/utils/affichage';
 import { SelecteursFerme } from '@/features/accueil/ferme/SelecteursFerme';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
@@ -11,7 +12,6 @@ import { useEchelle } from '@/shared/theme/miseEnPage';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
-import { colors } from '@/shared/theme/colors';
 
 /** La largeur estimée d'une lettre de la capsule (en gras, à 14 points), et ce que prennent ses marges, ses écarts et le bouton de sauvegarde. */
 const LARGEUR_D_UNE_LETTRE = 7.3;
@@ -57,21 +57,22 @@ export function BarreHauteFerme({ sansMenus = false }: { sansMenus?: boolean }) 
         forme="pastille"
       />
       <BoutonDidacticiel forme="pastille" />
-      <BoutonEnregistrer />
+      <PastilleEnvoi />
       {/* La disposition « comptable » a son menu en arbre à gauche : pas de pastille « Menus ». */}
-      {sansMenus ? null : <PastilleMenus compact={compact} />}
+      {/* Le téléphone a ses rubriques dans la barre du bas : « Menus » ne reste que sous Windows, où il les porte. */}
+      {sansMenus || !afficheBureau() ? null : <PastilleMenus compact={compact} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // La même capsule verte que le bandeau du bas, avec ses pastilles blanches.
+  // Comme sur les maquettes : pas de bandeau vert, les pastilles posées sur la page, avec leur bordure verte.
   barre: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    padding: 6,
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
 });
