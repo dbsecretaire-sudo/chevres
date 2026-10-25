@@ -21,6 +21,7 @@ import { SoinSimple } from '@/features/berger/screens/SoinSimple';
 import { MouvementSimple } from '@/features/berger/screens/MouvementSimple';
 import { VenteVivanteSimple } from '@/features/berger/screens/VenteVivanteSimple';
 import { CheptelSimple } from '@/features/berger/screens/CheptelSimple';
+import { AchatSimple } from '@/features/berger/screens/AchatSimple';
 import { FicheAnimalSimple } from '@/features/berger/screens/FicheAnimalSimple';
 import { annulerSoin } from '@/features/berger/services/soin';
 import { useRole } from '@/features/roles/context/RoleContext';
@@ -56,6 +57,7 @@ type Etape =
   | { nom: 'mouvement'; animal: Chevre }
   | { nom: 'vente'; animal: Chevre }
   | { nom: 'cheptel' }
+  | { nom: 'achat' }
   | { nom: 'fiche'; animal: Chevre }
   | { nom: 'fait'; titre: string; detail: string; annuler: () => Promise<void> }
   | { nom: 'annule' }
@@ -206,6 +208,11 @@ export default function EcranBerger() {
                 icone={<Ionicons name="swap-horizontal" size={56} color={colors.blanc} />}
               />
               <GrosBouton
+                libelle={T.achat}
+                onPress={() => setEtape({ nom: 'achat' })}
+                icone={<Ionicons name="cart" size={56} color={colors.blanc} />}
+              />
+              <GrosBouton
                 libelle={T.cheptel}
                 onPress={() => setEtape({ nom: 'cheptel' })}
                 icone={<Ionicons name="list" size={56} color={colors.blanc} />}
@@ -241,6 +248,16 @@ export default function EcranBerger() {
                   })
                 }
               />
+            </View>
+          ) : null}
+
+          {etape.nom === 'achat' ? (
+            <View style={styles.contenu}>
+              <Text style={styles.titre}>{T.achat}</Text>
+              <AchatSimple onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })} />
+              <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
+                <Text style={styles.discretTexte}>{T.retour}</Text>
+              </Pressable>
             </View>
           ) : null}
 

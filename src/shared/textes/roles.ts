@@ -59,6 +59,18 @@ export const TEXTES_ROLES = {
     ficheVivante: 'Vivante',
     ficheActions: 'Que faire avec cette chèvre ?',
     ficheSansBoucle: 'Sans boucle',
+    achat: 'Achat',
+    achatBoucle: 'Numéro de boucle (facultatif)',
+    achatSexe: 'Sexe',
+    achatVendeur: 'Acheté à',
+    achatPrix: 'Prix (facultatif, €)',
+    achatAvecPrix: 'Avec un prix, la dépense est notée dans la comptabilité.',
+    achatSansPrix: 'Sans prix, l’animal entre au troupeau, sans dépense pour l’instant.',
+    achatDate: 'Date de l’achat',
+    achatValider: 'Enregistrer l’achat',
+    achatFait: 'Achat enregistré',
+    achatDetail: (boucle: string, prix?: number) =>
+      `${boucle ? `Chèvre ${boucle}` : 'Animal'} entré au troupeau${prix !== undefined ? `, pour ${prix.toLocaleString('fr-FR')} €` : ''}.`,
     venteVivanteFaite: 'Vente enregistrée',
     venteVivanteDetail: (boucle: string, acheteur: string) =>
       `Chèvre ${boucle} vendue à ${acheteur}. Le document de circulation est à déposer.`,
