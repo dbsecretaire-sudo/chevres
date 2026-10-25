@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
 import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
+import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
 import { AccueilPublicSimple } from '@/features/commercial/simple/AccueilPublicSimple';
 import { FormulesSimple } from '@/features/commercial/simple/FormulesSimple';
 import { NouvelleVisiteSimple } from '@/features/commercial/simple/NouvelleVisiteSimple';
 import { VisitesSimple } from '@/features/commercial/simple/VisitesSimple';
 import { EnteteBerger } from '@/features/berger/components/EnteteBerger';
-import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
+import { PageBerger } from '@/features/berger/components/PageBerger';
 import { TEXTES } from '@/shared/textes';
 
 /** Les tuiles de l'accueil du public qui ont leur page simple (les contacts ouvrent leur page à part). */
@@ -21,10 +22,30 @@ export function TourismeSimple({ onQuitter }: { onQuitter: () => void }) {
   const { aEnvoyer, envoyer } = useEnvoiBerger();
   const [tuile, setTuile] = useState<string | null>(null);
   const retour = () => setTuile(null);
-  if (tuile === 'nouvelleVisite') return <NouvelleVisiteSimple onTerminer={retour} />;
-  if (tuile === 'visites') return <VisitesSimple onRetour={retour} />;
-  if (tuile === 'formules') return <FormulesSimple onTerminer={retour} />;
-  if (tuile === 'accueilPublic') return <AccueilPublicSimple onTerminer={retour} />;
+  if (tuile === 'nouvelleVisite')
+    return (
+      <PageBerger titre="Nouvelle visite" onRetour={retour}>
+        <NouvelleVisiteSimple onTerminer={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'visites')
+    return (
+      <PageBerger titre="Aujourd’hui" onRetour={retour}>
+        <VisitesSimple onRetour={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'formules')
+    return (
+      <PageBerger titre="Formules" onRetour={retour}>
+        <FormulesSimple onTerminer={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'accueilPublic')
+    return (
+      <PageBerger titre="Accueil du public" onRetour={retour}>
+        <AccueilPublicSimple onTerminer={retour} />
+      </PageBerger>
+    );
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <EnteteBerger titre={TEXTES.roles.berger.tourisme} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />

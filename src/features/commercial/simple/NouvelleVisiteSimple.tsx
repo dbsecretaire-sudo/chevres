@@ -108,9 +108,6 @@ export function NouvelleVisiteSimple({ onTerminer }: { onTerminer: () => void })
               if (client) setEtape({ nom: 'formule', client });
             }}
           />
-          <Pressable style={styles.discret} onPress={onTerminer} accessibilityRole="button">
-            <Text style={styles.discretTexte}>{T.retour}</Text>
-          </Pressable>
         </ScrollView>
       ) : null}
 

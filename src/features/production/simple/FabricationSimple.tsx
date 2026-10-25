@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, Pressable, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -165,9 +165,6 @@ export function FabricationSimple({
               if (article) choisir(article);
             }}
           />
-          <Pressable style={styles.discret} onPress={onTerminer} accessibilityRole="button">
-            <Text style={styles.discretTexte}>{T.retour}</Text>
-          </Pressable>
         </ScrollView>
       ) : null}
 

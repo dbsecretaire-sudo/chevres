@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
 import { VenteProduitSimple, type ProduitVendu } from '@/features/production/simple/VenteProduitSimple';
 import { ViandeAVendreSimple } from '@/features/production/simple/ViandeAVendreSimple';
@@ -49,9 +49,6 @@ export function VentesSimple({ onRetour }: { onRetour: () => void }) {
         ]}
         onChoisir={(c) => setChoix(c.cle)}
       />
-      <Pressable style={styles.discret} onPress={onRetour} accessibilityRole="button">
-        <Text style={styles.discretTexte}>{T.retour}</Text>
-      </Pressable>
     </ScrollView>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView } from 'react-native';
 import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
 import { useRouter } from 'expo-router';
+import { PageBerger } from '@/features/berger/components/PageBerger';
 import { EnteteBerger } from '@/features/berger/components/EnteteBerger';
 import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
 import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
@@ -34,11 +35,35 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
   const [tuile, setTuile] = useState<string | null>(null);
   const retour = () => setTuile(null);
   if (tuile && tuile in PRODUITS_DES_TUILES)
-    return <FabricationSimple produit={PRODUITS_DES_TUILES[tuile]} onTerminer={retour} />;
-  if (tuile === 'lait') return <LaitSimple onTerminer={retour} />;
-  if (tuile === 'etiquettes') return <EtiquettesSimple onTerminer={retour} />;
-  if (tuile === 'ventes') return <VentesSimple onRetour={retour} />;
-  if (tuile === 'scanLot') return <ScanLotSimple onRetour={retour} />;
+    return (
+      <PageBerger titre="Fabriquer" onRetour={retour}>
+        <FabricationSimple produit={PRODUITS_DES_TUILES[tuile]} onTerminer={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'lait')
+    return (
+      <PageBerger titre="Lait du jour" onRetour={retour}>
+        <LaitSimple onTerminer={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'etiquettes')
+    return (
+      <PageBerger titre="Étiquettes" onRetour={retour}>
+        <EtiquettesSimple onTerminer={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'ventes')
+    return (
+      <PageBerger titre="Vendre" onRetour={retour}>
+        <VentesSimple onRetour={retour} />
+      </PageBerger>
+    );
+  if (tuile === 'scanLot')
+    return (
+      <PageBerger titre="Scanner un lot" onRetour={retour}>
+        <ScanLotSimple onRetour={retour} />
+      </PageBerger>
+    );
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <EnteteBerger titre={TEXTES.roles.berger.fromagerie} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />

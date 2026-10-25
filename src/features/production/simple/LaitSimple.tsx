@@ -49,7 +49,6 @@ export function LaitSimple({ onTerminer }: { onTerminer: () => void }) {
       </View>
       {erreur ? <Text style={styles.erreur}>{T.erreur}</Text> : null}
       <Button label={T.valider} disabled={!(parseDecimal(litres) > 0)} onPress={enregistrer} />
-      <Button label={T.retour} variant="secondary" onPress={onTerminer} />
     </ScrollView>
   );
 }
