@@ -158,6 +158,8 @@ function Onglets() {
       />
       {/* La santé (alimentation, visites, contrôles) s'ouvre depuis l'en-tête du Cheptel : l'onglet du Cheptel y reste en couleur. */}
       <Tabs.Screen name="sante" options={{ href: null, headerShown: false }} />
+      {/* La rubrique « Plus » : la page qui regroupe ce qui ne tient pas dans la barre du bas. */}
+      <Tabs.Screen name="plus" options={{ title: 'Plus', headerShown: false }} />
       <Tabs.Screen
         name="comptabilite"
         options={{

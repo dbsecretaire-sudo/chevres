@@ -8,6 +8,8 @@ import { BarreRetourSimple } from '@/features/roles/components/BarreRetourSimple
 import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
+import { afficheBureau } from '@/shared/utils/affichage';
+import { BarreQuatreRubriques } from '@/features/accueil/shell/BarreQuatreRubriques';
 
 /**
  * La barre du bas de toutes les pages (à passer en `tabBar` des onglets). Sur le téléphone, il n'y a plus de barre d'onglets : les rubriques sont
@@ -44,5 +46,8 @@ export function BarreDuBas(props: BottomTabBarProps) {
   }, [signature]);
   // Le mode normal : un seul bouton « Retour » à la place de la navigation du mode avancé.
   if (role === ROLE.BERGER) return <BarreRetourSimple />;
-  return comptable ? null : <BandeauBas />;
+  if (comptable) return null;
+  // Le téléphone : les quatre rubriques du bas. Sous Windows, le bandeau de la ferme reste pour l'instant.
+  if (!afficheBureau()) return <BarreQuatreRubriques {...props} />;
+  return <BandeauBas />;
 }
