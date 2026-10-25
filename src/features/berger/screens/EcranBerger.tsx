@@ -161,6 +161,7 @@ export default function EcranBerger() {
                 libelle={sync.occupe === 'envoi' ? T.envoiEnCours : T.envoyer}
                 detail={aEnvoyer > 0 ? T.aEnvoyer(aEnvoyer) : undefined}
                 onPress={envoyer}
+                desactive={aEnvoyer === 0 || sync.occupe !== null}
                 clair
                 icone={<Ionicons name="cloud-upload" size={40} color={colors.primary} />}
               />

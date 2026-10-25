@@ -10,6 +10,7 @@ export function GrosBouton({
   clair = false,
   detail,
   compact = false,
+  desactive = false,
 }: {
   libelle: string;
   onPress: () => void;
@@ -19,10 +20,14 @@ export function GrosBouton({
   detail?: string;
   /** Un bouton moins haut (Oui / Non sous un clavier). */
   compact?: boolean;
+  /** Rien à faire pour le moment : le bouton est grisé et ne réagit pas (Envoyer, quand rien n'est à envoyer). */
+  desactive?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled: desactive }}
+      disabled={desactive}
       onPress={onPress}
       style={({ pressed }) => [
         styles.grosBouton,
@@ -30,6 +35,7 @@ export function GrosBouton({
         clair ? [styles.grosBoutonClair, styles.grosBoutonBas] : null,
         compact ? styles.grosBoutonCompact : null,
         pressed ? styles.grosBoutonAppuye : null,
+        desactive ? { opacity: 0.4 } : null,
       ]}
     >
       {icone}
