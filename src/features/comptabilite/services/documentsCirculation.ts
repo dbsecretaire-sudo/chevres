@@ -9,7 +9,7 @@ import { tiersEstUnAbattoir } from '@/features/fournisseurs/services/abattoirs';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import { todayISO, yearOf } from '@/shared/utils/dates';
 import { ajouterJours } from '@/shared/utils/calendrier';
-import type { LotAnimaux, VenteDAnimauxVivants } from '@/features/settings/settings';
+import type { EntreeAnimaux, LotAnimaux, VenteDAnimauxVivants } from '@/features/settings/settings';
 import { titreDeLaVenteVivants } from '@/features/lots-animaux/services/ventesVivants';
 import { numerosDeBoucles } from '@/features/cheptel/utils/numerosBoucles';
 import type { Chevre } from '@/features/cheptel/types';
@@ -20,7 +20,7 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 export const JOURS_RAPPEL_CIRCULATION = 365;
 
 /** Le genre d'une écriture à document : une vente, une dépense, ou un départ (bon de livraison « lot », vente d'animaux vivants « vivants »). */
-export type TypeDEcritureACirculation = 'vente' | 'facture' | 'lot' | 'vivants';
+export type TypeDEcritureACirculation = 'vente' | 'facture' | 'lot' | 'vivants' | 'entree';
 
 /** Vrai pour un départ (un bon de livraison ou une vente d'animaux vivants) : son document est déposé avant toute écriture, et couvre celles qui s'y rattachent. */
 export const estUnDepart = (type: TypeDEcritureACirculation): type is 'lot' | 'vivants' => type === 'lot' || type === 'vivants';
@@ -73,6 +73,7 @@ export function ecrituresACirculation(
   lots: readonly LotAnimaux[] = [],
   animaux: readonly Chevre[] = [],
   ventesVivants: readonly VenteDAnimauxVivants[] = [],
+  entrees: readonly EntreeAnimaux[] = [],
 ): EcritureACirculation[] {
   /** Ce qui porte un document de circulation avant toute écriture : les bons de livraison à l'abattoir et les ventes d'animaux vivants. */
   const departs = [
@@ -175,7 +176,21 @@ export function ecrituresACirculation(
       liees: [...prestations, ...vendues],
     };
   });
-  return [...deVentes, ...deDepenses, ...deLots].sort((a, b) => b.date.localeCompare(a.date));
+  // Un animal acheté sans prix : son entrée porte le document (un animal sans boucle n'en demande pas).
+  const deEntrees = entrees.map<EcritureACirculation>((e) => ({
+    cle: `entree:${e.id}`,
+    type: 'entree',
+    id: e.id,
+    date: e.date,
+    tiers: e.vendeur ?? '',
+    reference: `Boucle ${e.boucle}`,
+    montant: 0,
+    activite: e.activite ?? ACTIVITE_COMMUNE,
+    nature: 'achat',
+    depose: e.documentCirculation,
+    liees: [],
+  }));
+  return [...deVentes, ...deDepenses, ...deLots, ...deEntrees].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 /** Celles dont le document manque et qui sont assez récentes pour être rappelées. */

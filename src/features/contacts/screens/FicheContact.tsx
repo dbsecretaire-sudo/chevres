@@ -83,6 +83,7 @@ export default function FicheContact() {
   const lots = useAppSettings().settings.exploitation?.lots;
   const enlevements = useAppSettings().settings.exploitation?.enlevements;
   const ventesVivants = useAppSettings().settings.exploitation?.ventesVivants;
+  const entreesAnimaux = useAppSettings().settings.exploitation?.entreesAnimaux;
 
   const [contact, setContact] = useState<Contact | undefined>();
   const [introuvable, setIntrouvable] = useState(false);
@@ -119,11 +120,11 @@ export default function FicheContact() {
       nomsDesAbattoirs(),
       listFournisseurs(),
     ]);
-    setCirculations(ecrituresACirculation(ventes, factures, abattoirs, lots, [], ventesVivants));
+    setCirculations(ecrituresACirculation(ventes, factures, abattoirs, lots, [], ventesVivants, entreesAnimaux));
     setEcritures(ecrituresDuContact(c, ventes, factures, fournisseurs.filter(estEquarrisseur).length === 1));
     setControles(controles);
     setElements(elementsDuContact(c, controles, archive));
-  }, [id, lots, ventesVivants]);
+  }, [id, lots, ventesVivants, entreesAnimaux]);
 
   useFocusEffect(
     useCallback(() => {

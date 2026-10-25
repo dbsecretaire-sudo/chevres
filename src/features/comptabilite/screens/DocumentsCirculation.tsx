@@ -111,6 +111,7 @@ export default function DocumentsCirculation() {
 
   const lots = settings.exploitation?.lots;
   const ventesVivants = settings.exploitation?.ventesVivants;
+  const entreesAnimaux = settings.exploitation?.entreesAnimaux;
   const charger = useCallback(async () => {
     const [ventes, factures, abattoirs, chevres] = await Promise.all([
       listToutesVentes(),
@@ -119,8 +120,8 @@ export default function DocumentsCirculation() {
       listTousLesAnimauxDeLEspece(),
     ]);
     // Les bons de livraison et les ventes d'animaux vivants y sont aussi : leur document se dépose avant toute écriture, et couvre la prestation de l'abattoir comme la vente.
-    setToutes(ecrituresACirculation(ventes, factures, abattoirs, lots, chevres, ventesVivants));
-  }, [lots, ventesVivants]);
+    setToutes(ecrituresACirculation(ventes, factures, abattoirs, lots, chevres, ventesVivants, entreesAnimaux));
+  }, [lots, ventesVivants, entreesAnimaux]);
   useFocusEffect(
     useCallback(() => {
       charger().catch(() => undefined);

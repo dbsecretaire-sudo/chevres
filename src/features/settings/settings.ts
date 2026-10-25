@@ -295,6 +295,19 @@ export interface EnlevementEquarrissage {
  * Une vente d'animaux vivants (un départ vers un acheteur) : le jour, les animaux qui partent (leurs boucles) et le document de circulation, déposé avant toute
  * écriture. La facture au détenteur d'arrivée est créée d'ici ; elle porte l'identifiant de la vente dans son `lotId`.
  */
+/** Un animal acheté sans prix (un achat avec un prix passe par la dépense) : son entrée au troupeau et son document de circulation. */
+export interface EntreeAnimaux {
+  id: string;
+  /** Le jour de l’achat (AAAA-MM-JJ). */
+  date: string;
+  /** Le n° de boucle de l’animal (sans boucle, il n’y a pas de document). */
+  boucle: string;
+  vendeur?: string;
+  /** L’activité (l’espèce) de l’achat. */
+  activite?: string;
+  documentCirculation?: DocumentCirculationDepose;
+}
+
 export interface VenteDAnimauxVivants {
   id: string;
   /** Le jour du départ (AAAA-MM-JJ). */
@@ -434,6 +447,8 @@ export interface InfosExploitation {
   enlevements?: EnlevementEquarrissage[];
   /** Les ventes d'animaux vivants : le jour, l'acheteur, les animaux et le document de circulation (Cheptel › Vente d'animaux vivants). */
   ventesVivants?: VenteDAnimauxVivants[];
+  /** Les achats d’animaux sans prix : chaque animal avec sa boucle entre au troupeau, et son document de circulation se dépose ici. */
+  entreesAnimaux?: EntreeAnimaux[];
   /** Les lots d'animaux nommés : on les réutilise pour un traitement, une visite ou un contrôle, et on suit leur santé ensemble. */
   lots?: LotAnimaux[];
   /** La répartition du lait choisie dans le plan d'économies : la part (en %) du lait de l'année de chaque fromage, par identifiant d'article ; le reste est vendu tel quel. Absent : la répartition réelle. */

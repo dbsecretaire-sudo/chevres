@@ -1,6 +1,7 @@
 import { Alert } from 'react-native';
 import { deposerDocumentCirculation, type EcritureACirculation } from '@/features/comptabilite/services/documentsCirculation';
 import { genererLeModeleDeCirculation } from '@/features/comptabilite/services/modeleCirculation';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useLots } from '@/features/lots-animaux/hooks/useLots';
 import { useVentesVivants } from '@/features/lots-animaux/hooks/useVentesVivants';
 import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
@@ -33,6 +34,7 @@ export type OptionDuMenu = Option;
 export function useActionsDocumentCirculation(recharger: () => Promise<void> | void) {
   const { lots, modifier } = useLots();
   const { ventes: ventesVivants, modifier: modifierLaVente } = useVentesVivants();
+  const { settings, patchSettings } = useAppSettings();
   /** Pose (ou retire) le document : celui d'une écriture est dans ses enregistrements, celui d'un bon de livraison ou d'une vente d'animaux vivants dans les réglages. */
   const poser = async (e: EcritureDuDocument, document: DocumentCirculationDepose | undefined) => {
     if (e.type === 'lot') {
@@ -43,6 +45,13 @@ export function useActionsDocumentCirculation(recharger: () => Promise<void> | v
     if (e.type === 'vivants') {
       const vente = ventesVivants.find((v) => v.id === e.id);
       if (vente) await modifierLaVente({ ...vente, documentCirculation: document });
+      return;
+    }
+    if (e.type === 'entree') {
+      const entrees = settings.exploitation?.entreesAnimaux ?? [];
+      await patchSettings({
+        exploitation: { ...settings.exploitation, entreesAnimaux: entrees.map((x) => (x.id === e.id ? { ...x, documentCirculation: document } : x)) },
+      });
       return;
     }
     await deposerDocumentCirculation(e, document);

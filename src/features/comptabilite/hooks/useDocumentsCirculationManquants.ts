@@ -20,19 +20,20 @@ export function useDocumentsCirculationManquants(): EcritureACirculation[] {
   const { espece } = useEtablissement();
   const lots = useAppSettings().settings.exploitation?.lots;
   const ventesVivants = useAppSettings().settings.exploitation?.ventesVivants;
+  const entreesAnimaux = useAppSettings().settings.exploitation?.entreesAnimaux;
   const [manquants, setManquants] = useState<EcritureACirculation[]>([]);
   useFocusEffect(
     useCallback(() => {
       Promise.all([listToutesVentes(), listToutesFactures(), nomsDesAbattoirs()])
         .then(([ventes, factures, abattoirs]) =>
           setManquants(
-            documentsManquantsToutesAnnees(ecrituresACirculation(ventes, factures, abattoirs, lots, [], ventesVivants)).filter(
+            documentsManquantsToutesAnnees(ecrituresACirculation(ventes, factures, abattoirs, lots, [], ventesVivants, entreesAnimaux)).filter(
               (e) => e.activite === espece || e.activite === ACTIVITE_COMMUNE,
             ),
           ),
         )
         .catch(() => undefined);
-    }, [espece, lots, ventesVivants]),
+    }, [espece, lots, ventesVivants, entreesAnimaux]),
   );
   return manquants;
 }
