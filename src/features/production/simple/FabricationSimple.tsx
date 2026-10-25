@@ -108,8 +108,8 @@ export function FabricationSimple({
       const debut = numeroDeLot(archive, article.cle, date, fromage ? variante : undefined);
       const erreur = erreurFabrication(archive, article.cle, debut, nombre);
       if (erreur) return setEtape({ nom: 'erreur', message: erreur });
-      // Les litres par fromage, quand l'inventaire ne les a pas encore : gardés pour la fois suivante.
-      if (fromage && litres && archive.litresParFromage?.[article.cle] === undefined)
+      // Les litres par fromage se recalculent à chaque fabrication : les litres caillés divisés par le nombre de fromages, gardés pour la fois suivante.
+      if (fromage && litres && litres > 0 && nombre > 0)
         await definirLitresParFromage(article.cle, Math.round((litres / nombre) * 100) / 100);
       if (produit === PRODUIT_A_LOTS.PLAT) {
         await fabriquerPlats({ article: article.cle, date, quantite: nombre, debut, ingredients: [] });

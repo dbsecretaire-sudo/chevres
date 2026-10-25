@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { colors } from '@/shared/theme/colors';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import LieuAssociations from '@/features/production/screens/LieuAssociations';
 import { BonsDeLivraison } from '@/features/production/components/BonsDeLivraison';
@@ -93,6 +96,8 @@ function LieuTiersStandard() {
   const { settings, patchSettings } = useAppSettings();
   /** Partenariats : la fenêtre qui coche les catégories de tiers. */
   const [choixOuvert, setChoixOuvert] = useState(false);
+  /** La catégorie de contacts déroulée (une seule à la fois) : toutes sont enroulées à l'ouverture. */
+  const [categorieOuverte, setCategorieOuverte] = useState<string | null>(null);
   const { idsConnus, categories } = useCategoriesContact();
   /** Le nom de la catégorie d'un contact (pour les tableaux). */
   const nomDeLaCategorie = (c: Contact) => categories.find((x) => x.id === categorieDuContact(c, idsConnus).id)?.nom ?? '';
@@ -132,6 +137,17 @@ function LieuTiersStandard() {
       ),
     [contacts, idsConnus, config, cochees],
   );
+  /** Les tiers par catégorie, dans l'ordre alphabétique des noms de catégorie. */
+  const groupesDeTiers = useMemo(() => {
+    const parCategorie = new Map<string, Contact[]>();
+    for (const c of tiers) {
+      const id = categorieDuContact(c, idsConnus).id ?? '';
+      parCategorie.set(id, [...(parCategorie.get(id) ?? []), c]);
+    }
+    return [...parCategorie.entries()]
+      .map(([id, membres]) => ({ id, nom: categories.find((x) => x.id === id)?.nom ?? id, membres }))
+      .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  }, [tiers, idsConnus, categories]);
   const nombreParCategorie = useMemo(() => {
     const nombre: Record<string, number> = {};
     for (const c of contacts) {
@@ -292,9 +308,18 @@ function LieuTiersStandard() {
             </GroupeAccueil>
           ) : (
           <GroupeAccueil titre={textes.groupeTiers ?? ''}>
-            <BlocLignes>
-              {/* Une liste à plat (le bloc sépare chaque ligne d'un trait) : le tiers, puis — pour l'assurance — ses contrats en retrait juste en dessous de lui, et « Nouveau contrat » pour lui. */}
-              {tiers.flatMap((c) => [
+            {/* Les contacts par catégorie : toutes enroulées, une seule se déroule à la fois. */}
+            {groupesDeTiers.map((groupe) => (
+              <SectionDeroulante
+                key={groupe.id}
+                titre={groupe.nom}
+                nombre={groupe.membres.length}
+                accordeon
+                ouverte={categorieOuverte === groupe.id}
+                onBasculer={() => setCategorieOuverte((actuelle) => (actuelle === groupe.id ? null : groupe.id))}
+              >
+                <BlocLignes>
+                  {groupe.membres.flatMap((c) => [
                 <ListRow
                   key={c.cle}
                   title={c.nom}
@@ -342,30 +367,42 @@ function LieuTiersStandard() {
                     ))
                   : []),
               ])}
-              {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
-              <ListRow
-                title={textes.ajouterTiers ?? ''}
-                icone="add-circle"
-                onPress={() =>
-                  ouvrir(
-                    config.categoriesContact[0]
+                </BlocLignes>
+              </SectionDeroulante>
+            ))}
+            {tiers.length === 0 ? <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text> : null}
+            {/* Le petit + : ajouter un contact, dans la catégorie déroulée s'il y en a une. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={textes.ajouterTiers ?? ''}
+              hitSlop={8}
+              style={{ alignSelf: 'flex-end', padding: 4 }}
+              onPress={() =>
+                ouvrir(
+                  categorieOuverte
+                    ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${categorieOuverte}`
+                    : config.categoriesContact[0]
                       ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${config.categoriesContact[0]}`
                       : ROUTES.CONTACT_NOUVEAU,
-                  )
-                }
-              />
-              {/* Banque et comptabilité : le comptable s'ajoute aussi d'ici (sa catégorie est liée à la page). */}
-              {cle === 'tourisme' ? (
-                <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
-              ) : null}
-              {textes.ajouterComptable ? (
-                <ListRow
-                  title={textes.ajouterComptable}
-                  icone="add-circle"
-                  onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.COMPTABLE}`)}
-                />
-              ) : null}
-            </BlocLignes>
+                )
+              }
+            >
+              <Ionicons name="add-circle" size={34} color={colors.primary} />
+            </Pressable>
+            {cle === 'tourisme' || textes.ajouterComptable ? (
+              <BlocLignes>
+                {cle === 'tourisme' ? (
+                  <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
+                ) : null}
+                {textes.ajouterComptable ? (
+                  <ListRow
+                    title={textes.ajouterComptable}
+                    icone="add-circle"
+                    onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.COMPTABLE}`)}
+                  />
+                ) : null}
+              </BlocLignes>
+            ) : null}
           </GroupeAccueil>
           )}
 

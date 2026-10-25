@@ -58,7 +58,7 @@ export const TEXTES_ACCUEIL = {
     /** Les boutons des deux colonnes de l'accueil : les lieux de la ferme. */
     colonnes: {
       alimentation: 'Aliments',
-      particuliers: 'Particuliers',
+      particuliers: 'Contacts',
       surfacesCommerciales: 'Surfaces commerciales',
       entreprises: 'Entreprises et surfaces commerciales',
       visiteurs: 'Visiteurs',

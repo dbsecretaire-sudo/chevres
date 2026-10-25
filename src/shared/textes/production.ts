@@ -738,6 +738,9 @@ export const TEXTES_PRODUCTION = {
     varianteRequise: 'Précisez si le fromage est salé et de quel lait il est fait : la DLC en dépend.',
     litresRequis:
       'Indiquez les litres de lait qu’il faut pour un fromage : ils sont gardés dans l’inventaire.',
+    litresCaille: 'Litres de lait caillé',
+    litresCailleAide: 'Le litrage par fromage se calcule seul (litres caillés divisés par le nombre de fromages) : il se garde pour les statistiques.',
+    litresParFromageCalcule: (par: string) => `Soit ${par} L de lait par fromage`,
     laitUtilise: (nombre: number, par: string, total: string) =>
       `Lait utilisé : ${nombre} × ${par} L = ${total} L`,
     enregistrer: 'Fabriquer',

@@ -127,9 +127,9 @@ function FabricationDeLots() {
 
   const nombre = Math.round(Number(quantite) || 0);
   /** Les litres de lait par fromage : ceux de l'inventaire, sinon ceux qu'on vient d'indiquer. */
-  const litresDeLInventaire = archive?.litresParFromage?.[article];
-  const litresParFromage = litresDeLInventaire ?? parseDecimal(litresSaisis);
-  const laitUtilise = Math.round(nombre * litresParFromage * 100) / 100;
+  // Les litres caillés sont saisis ; le litrage par fromage s'en déduit et se garde pour l'inventaire (statistiques).
+  const laitUtilise = Math.round(parseDecimal(litresSaisis) * 100) / 100;
+  const litresParFromage = nombre > 0 ? Math.round((laitUtilise / nombre) * 100) / 100 : 0;
   const dernier = nombre > 0 && premier ? derniereBoucle(premier, nombre) : undefined;
 
   const fabriquer = async (confirme = false) => {
@@ -138,7 +138,7 @@ function FabricationDeLots() {
     if (erreur) return Alert.alert(erreur);
     if (fromage && (!saleEffectif || !laitEffectif)) return Alert.alert(TEXTES.production.fabrication.varianteRequise);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
-    if (fromage && !(litresParFromage > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
+    if (fromage && !(laitUtilise > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
     const utilises = ingredients
       .map((i) => ({ i, q: parseDecimal(i.quantite) }))
       .filter(({ i, q }) => i.article && q > 0)
@@ -147,8 +147,7 @@ function FabricationDeLots() {
     setEnregistrement(true);
     try {
       // Les litres par fromage indiqués ici sont gardés dans l'inventaire : on ne les redemande plus.
-      if (fromage && litresDeLInventaire === undefined)
-        await definirLitresParFromage(article, litresParFromage);
+      if (fromage && litresParFromage > 0) await definirLitresParFromage(article, litresParFromage);
       await fabriquerFromages({
         article,
         date,
@@ -234,29 +233,22 @@ function FabricationDeLots() {
           onPress={() => exporterGuideLotsPdf(espece)}
         />
         {fromage ? (
-          litresDeLInventaire ? (
-            nombre > 0 ? (
+          <>
+            <FormField
+              label={TEXTES.production.fabrication.litresCaille}
+              required
+              value={litresSaisis}
+              onChangeText={setLitresSaisis}
+              keyboardType="decimal-pad"
+              placeholder="0"
+            />
+            {laitUtilise > 0 && nombre > 0 ? (
               <Text style={commonStyles.note}>
-                {TEXTES.production.fabrication.laitUtilise(
-                  nombre,
-                  String(litresDeLInventaire).replace('.', ','),
-                  String(laitUtilise).replace('.', ','),
-                )}
+                {TEXTES.production.fabrication.litresParFromageCalcule(String(litresParFromage).replace('.', ','))}
               </Text>
-            ) : null
-          ) : (
-            <>
-              <FormField
-                label={TEXTES.production.fabrication.litresParFromage}
-                required
-                value={litresSaisis}
-                onChangeText={setLitresSaisis}
-                keyboardType="decimal-pad"
-                placeholder="0"
-              />
-              <Text style={commonStyles.note}>{TEXTES.production.fabrication.litresParFromageAide}</Text>
-            </>
-          )
+            ) : null}
+            <Text style={commonStyles.note}>{TEXTES.production.fabrication.litresCailleAide}</Text>
+          </>
         ) : null}
         <SectionForm titre={TEXTES.production.recettes.sectionTitre} aide={TEXTES.production.recettes.sectionAideFromagerie}>
           <ChampRecette

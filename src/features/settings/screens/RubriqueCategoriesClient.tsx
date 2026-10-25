@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { listClients } from '@/features/clients/repository';
+import type { Client } from '@/features/clients/types';
 import { Screen } from '@/shared/components/Screen';
 import { Fab } from '@/shared/components/Fab';
 import { TableauCategories } from '@/features/settings/components/TableauCategories';
@@ -16,6 +18,7 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { CATEGORIE_CLIENT_PAR_DEFAUT, CATEGORIES_CLIENT_PROTEGEES } from '@/shared/constants/clients';
 import {
   categoriesClientParDefaut,
+  categorieClientDe,
   bonDeCommandePropose,
   fraisAbattoirFactures,
   prixPersonnalisePropose,
@@ -85,6 +88,16 @@ export default function RubriqueCategoriesClient() {
   const [parOption, setParOption] = useState(false);
   /** Ce qu'on cherche dans les catégories (leur nom) : la liste ne garde que celles qui le contiennent. */
   const [recherche, setRecherche] = useState('');
+  /** Les contacts : une catégorie qu'aucun contact n'utilise est repliée, sauf sur demande (« Voir toutes les catégories »). */
+  const [contacts, setContacts] = useState<Client[]>([]);
+  const [toutesVisibles, setToutesVisibles] = useState(false);
+  useEffect(() => {
+    listClients().then(setContacts).catch(() => undefined);
+  }, []);
+  const utilisees = new Set(contacts.map((c) => categorieClientDe(c.categorie).id));
+  const masquee = (c: CategorieClientReglage) =>
+    !utilisees.has(c.id) && !CATEGORIES_CLIENT_PROTEGEES.includes(c.id) && ouverte !== c.id;
+  const cachees = categories.filter(masquee).length;
   /** Les rubriques de l'inventaire et leurs listes : les opérations (vente, achat) se règlent liste par liste (élevage ; une entreprise garde sa liste). */
   const [rubriques, setRubriques] = useState<RubriqueOperations[]>([]);
   useEffect(() => {
@@ -235,7 +248,9 @@ export default function RubriqueCategoriesClient() {
   };
 
   /** Les catégories qui correspondent à la recherche, par ordre alphabétique. */
-  const visibles = parNom(categories).filter((c) => contientTexte(c.nom, recherche));
+  const visibles = parNom(categories).filter(
+    (c) => contientTexte(c.nom, recherche) && (toutesVisibles || recherche.trim() !== '' || !masquee(c)),
+  );
 
   return (
     <Screen>
@@ -247,6 +262,12 @@ export default function RubriqueCategoriesClient() {
         libelleParOption={T.parOption}
       />
       <ChampRecherche value={recherche} onChangeText={setRecherche} />
+      {recherche.trim() === '' && !toutesVisibles && cachees > 0 ? (
+        <Button variant="secondary" label={T.voirToutes(cachees)} onPress={() => setToutesVisibles(true)} />
+      ) : null}
+      {recherche.trim() === '' && toutesVisibles ? (
+        <Button variant="secondary" label={T.masquerInutilisees} onPress={() => setToutesVisibles(false)} />
+      ) : null}
       {parOption ? <Text style={styles.aide}>{T.aideParOption}</Text> : null}
       {parOption ? (
         <ReglagesParOption

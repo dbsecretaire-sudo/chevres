@@ -59,7 +59,6 @@ import {
   articlesDuGenre,
   bilanLait,
   cleArticle,
-  definirLitresParFromage,
   definirDureesDeVie,
   definirPrixArticle,
   definirPrixVifArticle,
@@ -540,9 +539,6 @@ export default function StockFromagerie() {
       await definirPrixArticle(renomme.cle, prix);
       // Un animal vivant a aussi son prix au kilo vif (un animal de réforme vendu au poids).
       if (roleDeLaViande(renomme.cle) === ROLE_VIANDE.VIVANT) await definirPrixVifArticle(renomme.cle, plus?.prixVif);
-      // Un fromage garde aussi les litres de lait qu'il faut pour le faire.
-      if (renomme.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`))
-        await definirLitresParFromage(renomme.cle, litres);
       // Un fromage ou un produit de charcuterie garde la durée de conservation qui fait sa DLC.
       if (avecDlcPour(renomme.cle)) await definirDureesDeVie(renomme.cle, plus?.dureesDeVie ?? {});
       // Changer de compte : en dernier, l'identifiant de l'article change avec son genre.
@@ -876,8 +872,6 @@ export default function StockFromagerie() {
           NATURE_PAR_GENRE[article.cle.split(':')[0] as GenreArticle] === NATURE_STOCK.CONSOMMABLE
         }
         niveau={article ? niveaux.get(article.cle) : undefined}
-        avecLitres={article?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
-        litresParFromage={article ? archive.litresParFromage?.[article.cle] : undefined}
         libelleLitres={
           article?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu') ? T.modal.litresBrocciu : undefined
         }
@@ -923,11 +917,9 @@ export default function StockFromagerie() {
         prixVif={renomme?.prixVif}
         comptes={renomme && compteDe(renomme) ? comptesPossibles() : undefined}
         compte={renomme ? compteDe(renomme) : undefined}
-        avecLitres={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
         avecDlc={!!renomme && avecDlcPour(renomme.cle)}
         dlcParVariante={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
         dureesDeVie={renomme ? dureesDeVieDeLArticle(archive, renomme.cle) : undefined}
-        litresParFromage={renomme?.litresParFromage}
         libelleLitres={
           renomme?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu')
             ? T.articleModal.litresBrocciu

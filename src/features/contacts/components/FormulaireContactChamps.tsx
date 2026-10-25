@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -29,9 +29,15 @@ export function FormulaireContactChamps({ form, onChange, categories }: Props) {
   const maj = (patch: Partial<FormulaireContact>) => onChange({ ...form, ...patch });
   return (
     <>
-      <Text style={commonStyles.lineSemiBold}>{T.type}</Text>
-      <Checkbox label={T.recettes} value={form.recettes} onChange={(recettes) => maj({ recettes })} />
-      <Checkbox label={T.depenses} value={form.depenses} onChange={(depenses) => maj({ depenses })} />
+      {/* Une seule ligne : recettes et dépenses, cochées l'une ou l'autre. */}
+      <View style={commonStyles.row}>
+        <View style={commonStyles.flex1}>
+          <Checkbox label={T.recettes} value={form.recettes} onChange={(recettes) => maj({ recettes })} />
+        </View>
+        <View style={commonStyles.flex1}>
+          <Checkbox label={T.depenses} value={form.depenses} onChange={(depenses) => maj({ depenses })} />
+        </View>
+      </View>
 
       <SelectField
         label={T.categorie}

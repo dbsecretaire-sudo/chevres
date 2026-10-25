@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
 import { suffixeDeVariante, TYPES_DE_LAIT, variantesPossibles, type TypeLait } from '@/features/stock/services/dlc';
@@ -98,6 +99,8 @@ export function ArticleStockModal({
   const [prixSaisi, setPrixSaisi] = useState('');
   const [litresSaisis, setLitresSaisis] = useState('');
   const [dlcSaisies, setDlcSaisies] = useState<Record<string, string>>({});
+  /** La section des durées de conservation : repliée à l'ouverture de la fenêtre. */
+  const [dlcOuverte, setDlcOuverte] = useState(false);
   const [prixVifSaisi, setPrixVifSaisi] = useState('');
   const [compteSaisi, setCompteSaisi] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
@@ -232,8 +235,8 @@ export function ArticleStockModal({
             </>
           ) : null}
           {avecDlc && dlcParVariante ? (
-            <>
-              <Text style={commonStyles.lineBold}>{T.dlcJours}</Text>
+            // Repliée d'office : la fenêtre reste courte sur un téléphone, où le champ de l'image s'ajoute déjà.
+            <SectionDeroulante titre={T.dlcJours} ouverte={dlcOuverte} onBasculer={() => setDlcOuverte((o) => !o)}>
               <Text style={commonStyles.note}>{T.dlcFromageAide}</Text>
               {TYPES_DE_LAIT.filter((lait) => variantesPossibles(cle ?? '').some((v) => v.lait === lait)).map((lait) => (
                 <View key={lait} style={commonStyles.row}>
@@ -254,7 +257,7 @@ export function ArticleStockModal({
                 </View>
               ))}
               <FormField label={T.dlcDeBase} value={dlcSaisies[''] ?? ''} onChangeText={(v) => changerDlc('', v)} keyboardType="number-pad" placeholder="0" />
-            </>
+            </SectionDeroulante>
           ) : null}
           {comptes && comptes.length > 0 ? (
             <>
