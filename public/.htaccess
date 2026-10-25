@@ -1,0 +1,10 @@
+RewriteEngine On
+RewriteBase /
+
+# Let's Encrypt vérifie le domaine à une adresse /.well-known/ : elle doit arriver telle quelle, sans être réécrite.
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+
+# Les fichiers et dossiers existants sont servis directement ; les autres adresses (par exemple /berger) vont à l'application.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
