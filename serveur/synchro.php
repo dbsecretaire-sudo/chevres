@@ -5,7 +5,7 @@ declare(strict_types=1);
 // La dernière modification gagne sur la fiche touchée ; l'ancienne version reste dans l'historique. Le serveur date les modifications lui-même.
 
 const LIMITE_MODIFICATIONS_PAR_ENVOI = 200;
-const TAILLE_MAX_FICHE = 2097152; // 2 Mo par fiche
+const TAILLE_MAX_FICHE = 4194304; // 4 Mo par fiche
 const LIMITE_LECTURE = 500;
 
 /** Le motif du refus d'une modification, ou null si elle est correcte. */
@@ -25,21 +25,32 @@ function motifDeRefus(mixed $modification): ?string {
 }
 
 /**
- * Enregistre des modifications de fiches, toutes ensemble ou aucune. Chaque remplacement garde l'ancienne version dans l'historique.
- * Rend le nombre de modifications reçues. Lève InvalidArgumentException si l'envoi est refusé.
+ * Enregistre les modifications de fiches correctes. Chaque remplacement garde l'ancienne version dans l'historique.
+ * Une fiche refusée (trop lourde, mal formée) n'empêche pas les autres : elle est signalée dans « refusees ».
+ * Lève InvalidArgumentException seulement si l'envoi lui-même est mal formé.
  */
 function pousserModifications(PDO $db, string $auteur, string $etablissement, array $modifications): array {
   if (count($modifications) > LIMITE_MODIFICATIONS_PAR_ENVOI) {
     throw new InvalidArgumentException('Trop de modifications en un seul envoi.');
   }
+  $acceptees = [];
+  $refusees = [];
   foreach ($modifications as $modification) {
     $motif = motifDeRefus($modification);
-    if ($motif !== null) throw new InvalidArgumentException($motif);
+    if ($motif === null) {
+      $acceptees[] = $modification;
+    } else {
+      $refusees[] = [
+        'zone' => is_array($modification) && is_string($modification['zone'] ?? null) ? $modification['zone'] : '',
+        'identifiant' => is_array($modification) && is_string($modification['identifiant'] ?? null) ? $modification['identifiant'] : '',
+        'motif' => $motif,
+      ];
+    }
   }
 
   $db->beginTransaction();
   try {
-    foreach ($modifications as $modification) {
+    foreach ($acceptees as $modification) {
       $zone = $modification['zone'];
       $identifiant = $modification['identifiant'];
       $contenu = $modification['contenu'] === null ? null : json_encode($modification['contenu'], JSON_UNESCAPED_UNICODE);
@@ -72,7 +83,7 @@ function pousserModifications(PDO $db, string $auteur, string $etablissement, ar
     $db->rollBack();
     throw $erreur;
   }
-  return ['recu' => count($modifications)];
+  return ['recu' => count($acceptees), 'refusees' => $refusees];
 }
 
 /**

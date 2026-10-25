@@ -14,6 +14,8 @@ export const TEXTES_SYNCHRONISATION = {
   envoyer: 'Envoyer',
   recevoir: 'Recevoir',
   envoiEnCours: 'Envoi…',
+  refusees: (nombre: number) =>
+    `${nombre} modification${nombre > 1 ? 's' : ''} n’${nombre > 1 ? 'ont' : 'a'} pas pu partir (fiche trop lourde ou refusée). ${nombre > 1 ? 'Elles restent' : 'Elle reste'} sur cet appareil.`,
   envoyee: 'Sauvegarde envoyée',
   envoyeeTexte: 'Les données de la ferme sont sur le serveur.',
   recue: 'Sauvegarde reçue',

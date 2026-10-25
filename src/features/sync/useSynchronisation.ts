@@ -80,10 +80,11 @@ export function useSynchronisation() {
   const envoyer = async () => {
     setOccupe('envoi');
     try {
-      await synchroniser();
+      const bilan = await synchroniser();
       await remettreAEnvoyer();
       await finirSynchronisation();
-      Alert.alert(T.envoyee, T.envoyeeTexte);
+      if (bilan.refusees > 0) Alert.alert(T.erreurTitre, T.refusees(bilan.refusees));
+      else Alert.alert(T.envoyee, T.envoyeeTexte);
     } catch (erreur) {
       signaler(erreur);
       await actualiserEnAttente().catch(() => undefined);

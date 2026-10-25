@@ -30,7 +30,7 @@ describe('le moteur de synchronisation', () => {
     await ecrireDonnee('troupeau:v1:animaux', [{ id: 'a', n: 1 }]);
     fetchSimule.mockResolvedValueOnce(reponse(200, { recu: 1 }));
 
-    expect(await envoyerAttente()).toBe(1);
+    expect((await envoyerAttente()).envoyees).toBe(1);
     expect(await lireAttente()).toEqual([]);
     const [url, init] = fetchSimule.mock.calls[1];
     expect(url).toContain('r=pousser');
@@ -43,6 +43,31 @@ describe('le moteur de synchronisation', () => {
     fetchSimule.mockResolvedValueOnce(reponse(500, { erreur: 'Serveur indisponible.' }));
 
     await expect(envoyerAttente()).rejects.toThrow('Serveur indisponible.');
+    expect(await lireAttente()).toHaveLength(1);
+  });
+
+  it('une fiche refusée par le serveur reste sur l’appareil, les autres partent', async () => {
+    await seConnecterSimule();
+    await ecrireDonnee('troupeau:v1:animaux', [{ id: 'bonne' }, { id: 'mauvaise' }]);
+    fetchSimule.mockResolvedValueOnce(
+      reponse(200, { recu: 1, refusees: [{ zone: 'troupeau:v1:animaux', identifiant: 'mauvaise', motif: 'Fiche trop lourde.' }] }),
+    );
+
+    const bilan = await envoyerAttente();
+
+    expect(bilan).toEqual({ envoyees: 1, refusees: 1 });
+    expect((await lireAttente()).map((m) => m.identifiant)).toEqual(['mauvaise']);
+  });
+
+  it('une fiche trop lourde pour un envoi est mise à part sans être envoyée', async () => {
+    await seConnecterSimule();
+    await ecrireDonnee('troupeau:v1:stock', { gros: 'a'.repeat(3100000) });
+    fetchSimule.mockClear();
+
+    const bilan = await envoyerAttente();
+
+    expect(bilan).toEqual({ envoyees: 0, refusees: 1 });
+    expect(fetchSimule).not.toHaveBeenCalled();
     expect(await lireAttente()).toHaveLength(1);
   });
 
