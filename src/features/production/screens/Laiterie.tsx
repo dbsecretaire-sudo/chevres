@@ -94,7 +94,7 @@ export default function Laiterie() {
 
   return (
     <Screen scroll={false}>
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 96 }}>
       {lait.length > 0 ? (
         <GroupeAccueil titre={T.groupeLait}>
           <BlocLignes>

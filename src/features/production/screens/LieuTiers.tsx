@@ -186,7 +186,7 @@ function LieuTiersStandard() {
   /** Les pages de contacts des clients : leurs ventes sont dans les fiches des contacts, et « Dans l'application » est passé dans Stock, Réserver et Ventes. */
   const pageDesContacts = ['particuliers', 'entreprises', 'surfacesCommerciales'].includes(cle);
   /** Les contacts de la page, par ordre alphabétique : le titre de la page dit déjà leur catégorie. */
-  const membresAffiches = [...(pageDesContacts ? contacts : tiers)].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  const membresAffiches = [...(cle === 'particuliers' ? contacts : tiers)].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   /** Les choix du bouton flottant : un contact (dans la catégorie déroulée, s'il y en a une), ou, selon le lieu, un organisme, une chambre ou un état. */
   const ajouterContact = (categorie?: string) =>
     ouvrir(categorie ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${categorie}` : ROUTES.CONTACT_NOUVEAU);
@@ -359,13 +359,6 @@ function LieuTiersStandard() {
                           onPress={() => ouvrir(ROUTES.contratAssureur({ id: contrat.id }))}
                         />
                       )),
-                      <ListRow
-                        key={`${c.cle}:nouveau`}
-                        retrait
-                        title={TEXTES.contacts.contrat.nouveauContrat}
-                        icone="add-circle"
-                        onPress={() => ouvrir(ROUTES.contratAssureur({ fournisseur: c.fournisseur?.id }))}
-                      />,
                     ]
                   : []),
                 // L'office de tourisme : les dossiers touristiques d'un partenaire, en retrait juste en dessous de lui.
@@ -402,18 +395,9 @@ function LieuTiersStandard() {
                 <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text>
               </BlocLignes>
             ) : null}
-            {cle === 'tourisme' || textes.ajouterComptable ? (
+            {cle === 'tourisme' ? (
               <BlocLignes>
-                {cle === 'tourisme' ? (
-                  <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
-                ) : null}
-                {textes.ajouterComptable ? (
-                  <ListRow
-                    title={textes.ajouterComptable}
-                    icone="add-circle"
-                    onPress={() => ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.COMPTABLE}`)}
-                  />
-                ) : null}
+                <ListRow title={T.tourisme.choisirTiers} icone="checkbox-outline" onPress={() => setChoixOuvert(true)} />
               </BlocLignes>
             ) : null}
           </GroupeAccueil>
