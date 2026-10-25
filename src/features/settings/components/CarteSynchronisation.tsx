@@ -55,6 +55,7 @@ export function CarteSynchronisation() {
       ) : (
         <View style={commonStyles.gap10}>
           <Text style={commonStyles.line}>{T.connecteEn(sync.connexion.identifiant)}</Text>
+          <Text style={commonStyles.muted}>{T.enAttente(sync.enAttente)}</Text>
           <Text style={commonStyles.muted}>
             {settings.derniereSynchronisation
               ? T.derniere(new Date(settings.derniereSynchronisation).toLocaleString(LOCALE))

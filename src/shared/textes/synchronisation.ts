@@ -8,6 +8,8 @@ export const TEXTES_SYNCHRONISATION = {
   seDeconnecter: 'Se déconnecter',
   connecteEn: (identifiant: string) => `Connecté en tant que ${identifiant}.`,
   derniere: (date: string) => `Dernière synchronisation : ${date}`,
+  enAttente: (nombre: number) =>
+    nombre === 0 ? 'Rien en attente d’envoi.' : `${nombre} modification${nombre > 1 ? 's' : ''} en attente d’envoi.`,
   jamais: 'Jamais synchronisé.',
   envoyer: 'Envoyer',
   recevoir: 'Recevoir',

@@ -4,15 +4,14 @@ import { useEtablissement } from '@/features/etablissements/context/Etablissemen
 import { noterSauvegarde } from '@/features/sauvegarde/derniereSauvegarde';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import {
-  ConflitDeSynchronisation,
   ConnexionExpiree,
-  envoyerSauvegarde,
   lireConnexion,
-  recevoirSauvegarde,
   seConnecter,
   seDeconnecter,
   type Connexion,
 } from '@/features/sync/synchronisation';
+import { premiereSynchronisation, recevoirChangements, synchroniser } from '@/features/sync/moteur';
+import { lireAttente, lireCurseur } from '@/shared/storage/depot';
 import { remettreAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { TEXTES } from '@/shared/textes';
 
@@ -32,19 +31,24 @@ export function useSynchronisation() {
     lireConnexion().then(setConnexion).catch(() => setConnexion(null));
   }, []);
 
-  /** Une connexion expirée ou un conflit se explique ; les autres erreurs sont montrées telles quelles. */
+  /** Une connexion expirée se explique ; les autres erreurs sont montrées telles quelles. */
   const signaler = (erreur: unknown) => {
     if (erreur instanceof ConnexionExpiree) {
       setConnexion(null);
       Alert.alert(T.connexionExpiree, T.reconnecteToi);
       return;
     }
-    if (erreur instanceof ConflitDeSynchronisation) {
-      Alert.alert(T.conflitTitre, T.conflitTexte);
-      return;
-    }
     Alert.alert(T.erreurTitre, erreur instanceof Error ? erreur.message : String(erreur));
   };
+
+  /** Le nombre de modifications qui attendent d'être envoyées (affiché sous les boutons). */
+  const [enAttente, setEnAttente] = useState(0);
+  const actualiserEnAttente = async () => {
+    setEnAttente((await lireAttente()).length);
+  };
+  useEffect(() => {
+    lireAttente().then((file) => setEnAttente(file.length)).catch(() => setEnAttente(0));
+  }, []);
 
   const seConnecterAvec = async (identifiant: string, motDePasse: string) => {
     setOccupe('connexion');
@@ -63,29 +67,39 @@ export function useSynchronisation() {
     setConnexion(null);
   };
 
+  /** Après une synchronisation : les données reçues s'affichent, et ce qui était en attente est parti. */
+  const finirSynchronisation = async () => {
+    await recharger();
+    await refreshSettings();
+    await noterSauvegarde();
+    await patchSettings({ derniereSynchronisation: new Date().toISOString() });
+    await actualiserEnAttente();
+  };
+
+  /** Envoie ce qui attend, puis reçoit ce que les autres ont envoyé. */
   const envoyer = async () => {
     setOccupe('envoi');
     try {
-      await envoyerSauvegarde();
+      await synchroniser();
       await remettreAEnvoyer();
-      await noterSauvegarde();
-      await patchSettings({ derniereSynchronisation: new Date().toISOString() });
+      await finirSynchronisation();
       Alert.alert(T.envoyee, T.envoyeeTexte);
     } catch (erreur) {
       signaler(erreur);
+      await actualiserEnAttente().catch(() => undefined);
     } finally {
       setOccupe(null);
     }
   };
 
+  /** Reçoit seulement ce que les autres ont envoyé (ce qui attend sur cet appareil ne bouge pas). */
   const recevoir = async () => {
     setOccupe('reception');
     try {
-      await recevoirSauvegarde();
-      await recharger();
-      await refreshSettings();
-      await noterSauvegarde();
-      await patchSettings({ derniereSynchronisation: new Date().toISOString() });
+      // La toute première fois, la première synchronisation complète se fait (elle envoie aussi ce que cet appareil a déjà).
+      if ((await lireCurseur()) === undefined) await premiereSynchronisation();
+      else await recevoirChangements();
+      await finirSynchronisation();
       Alert.alert(T.recue, T.recueTexte);
     } catch (erreur) {
       signaler(erreur);
@@ -94,5 +108,5 @@ export function useSynchronisation() {
     }
   };
 
-  return { connexion, occupe, seConnecterAvec, deconnecter, envoyer, recevoir };
+  return { connexion, occupe, enAttente, seConnecterAvec, deconnecter, envoyer, recevoir };
 }
