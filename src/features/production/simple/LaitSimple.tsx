@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { enregistrerLaitJour } from '@/features/stock/services/stock';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
@@ -23,6 +24,7 @@ export function LaitSimple({ onTerminer }: { onTerminer: () => void }) {
     if (!(valeur > 0)) return;
     try {
       await enregistrerLaitJour({ date: todayISO(), litres: valeur });
+      await noterAEnvoyer();
       setFait(valeur);
     } catch {
       setErreur(true);

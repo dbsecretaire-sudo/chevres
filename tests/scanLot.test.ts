@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lotsDuNumero } from '@/features/production/simple/lotsDuNumero';
+import { formaterNumeroDeLot, lettresDesNumeros, lotsDuNumero } from '@/features/production/simple/lotsDuNumero';
 import type { LotFromage } from '@/features/stock/types';
 
 const lot = (id: string, numero: string): LotFromage => ({ id, article: 'fromage:frais', numero, dateFabrication: '2026-10-24' });
@@ -18,5 +18,25 @@ describe('retrouver un lot d’après le numéro lu ou tapé', () => {
   it('rien quand le numéro est vide ou inconnu', () => {
     expect(lotsDuNumero(lots, '  ')).toEqual([]);
     expect(lotsDuNumero(lots, 'XX1')).toEqual([]);
+  });
+});
+
+describe('le numéro de lot tapé sur le clavier', () => {
+  const numeros = ['FF26297-15', 'FF26297-16', 'BV26120-2'];
+
+  it('le « - » se place tout seul là où les lots connus l’ont', () => {
+    expect(formaterNumeroDeLot('FF26297', numeros)).toBe('FF26297');
+    expect(formaterNumeroDeLot('FF262971', numeros)).toBe('FF26297-1');
+    expect(formaterNumeroDeLot('FF2629716', numeros)).toBe('FF26297-16');
+    expect(formaterNumeroDeLot('BV261202', numeros)).toBe('BV26120-2');
+  });
+
+  it('sans lot connu, il se place après le jour de l’année (7 caractères)', () => {
+    expect(formaterNumeroDeLot('PF2630012', [])).toBe('PF26300-12');
+    expect(formaterNumeroDeLot('', numeros)).toBe('');
+  });
+
+  it('le clavier propose les lettres des produits et celles des numéros déjà donnés', () => {
+    expect(lettresDesNumeros(numeros)).toEqual(['B', 'F', 'P', 'S', 'V']);
   });
 });

@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
-import { lotsDuNumero } from '@/features/production/simple/lotsDuNumero';
+import { formaterNumeroDeLot, lettresDesNumeros, lotsDuNumero } from '@/features/production/simple/lotsDuNumero';
+import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { etiquetteDuLot } from '@/features/stock/services/etiquetteLot';
 import { articlesDuProduit, estArticleFromage, etatDuLot } from '@/features/stock/services/lots';
 import type { ArchiveStock, LotFromage } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
-import { FormField } from '@/shared/components/FormField';
 import { ETAT_LOT, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles as stylesRoles } from '@/shared/styles/roles/Roles.styles';
 import { colors } from '@/shared/theme/colors';
@@ -51,6 +51,8 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
     setChoisi(lots.length === 1 ? lots[0] : null);
   };
 
+  /** Les numéros de lot connus : de quoi placer le « - » et choisir les lettres du clavier. */
+  const numeros = (archive?.lots ?? []).map((l) => l.numero);
   const articles = archive ? Object.values(PRODUIT_A_LOTS).flatMap((p) => articlesDuProduit(p, archive, espece)) : [];
   const nomDeLArticle = (cle: string) => articles.find((a) => a.cle === cle)?.libelle ?? '';
 
@@ -80,13 +82,15 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
     const ok = !!choisi.controleOk && !choisi.dateRappel;
     const restant = (archive?.lots ?? []).filter((l) => l.article === choisi.article && etatDuLot(l) === ETAT_LOT.EN_STOCK).length;
     // La DLC d'un plat ou d'un savon vient de sa fabrication ; celle d'un fromage reste à configurer.
-    const dlc = archive ? etiquetteDuLot(choisi, archive).ddm : undefined;
+    const etiquette = archive ? etiquetteDuLot(choisi, archive) : undefined;
+    const dlc = etiquette?.dlc ?? etiquette?.ddm;
     return (
       <ScrollView contentContainerStyle={styles.centre}>
         <Text style={styles.produit}>{estArticleFromage(choisi.article) ? `Fromage ${nomDeLArticle(choisi.article).toLowerCase()}` : nomDeLArticle(choisi.article)}</Text>
         <Text style={styles.petit}>{T.numero(choisi.numero)}</Text>
         <Text style={styles.ligne}>{T.fabricationLe(formatDateFR(choisi.dateFabrication))}</Text>
         {dlc ? <Text style={styles.ligne}>{T.dlc(formatDateFR(dlc))}</Text> : estArticleFromage(choisi.article) ? <Text style={styles.ligne}>{T.dlcAConfigurer}</Text> : null}
+        {choisi.lait ? <Text style={styles.ligne}>{T.variante(choisi.sale, choisi.lait)}</Text> : null}
         <Text style={styles.ligne}>{T.stockRestant(restant)}</Text>
         <Ionicons
           name={ok ? 'checkmark-circle-outline' : 'close-circle-outline'}
@@ -104,7 +108,7 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
         ) : (
           <Text style={styles.ligne}>{choisi.dateVente ? T.venduSansFiche(formatDateFR(choisi.dateVente)) : T.pasVendu}</Text>
         )}
-        <Button label={T.autreLot} variant="secondary" onPress={() => { setChoisi(null); setTrouves(null); setSaisie(''); setScanOuvert(true); }} />
+        <Button label={T.autreLot} variant="secondary" style={styles.pleine} onPress={() => { setChoisi(null); setTrouves(null); setSaisie(''); setScanOuvert(true); }} />
         {lienRetour}
       </ScrollView>
     );
@@ -113,25 +117,29 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
   // Plusieurs lots pour ce numéro : on choisit.
   if (trouves && trouves.length > 1)
     return (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
+      <ScrollView contentContainerStyle={styles.centre}>
         <Text style={stylesRoles.titre}>{T.plusieurs}</Text>
         <ListeDeChoix
           presentation="tuiles"
           choix={trouves.map((l) => ({ cle: l.id, libelle: `${nomDeLArticle(l.article)}\n${T.numero(l.numero)}`, icone: 'tag' as const }))}
           onChoisir={(c) => setChoisi(trouves.find((l) => l.id === c.cle) ?? null)}
         />
-        <Button label={T.autreLot} variant="secondary" onPress={() => setTrouves(null)} />
+        <Button label={T.autreLot} variant="secondary" style={styles.pleine} onPress={() => setTrouves(null)} />
         {scanner}
       </ScrollView>
     );
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.centre, { gap: 12 }]} keyboardShouldPersistTaps="handled">
       <Text style={stylesRoles.titre}>{T.titre}</Text>
       <Text style={stylesRoles.detail}>{T.aide}</Text>
-      <Button label={T.scanner} onPress={() => setScanOuvert(true)} />
-      <FormField label={T.numeroDuLot} value={saisie} onChangeText={setSaisie} autoCapitalize="characters" />
-      <Button label={T.chercher} variant="secondary" disabled={!saisie.trim()} onPress={() => chercher(saisie)} />
+      <Button label={T.scanner} style={styles.pleine} onPress={() => setScanOuvert(true)} />
+      <ClavierNumerique valeur={saisie} onChange={setSaisie} lettres={lettresDesNumeros(numeros)} />
+      {/* Le numéro tapé : centré, non modifiable à la main, avec son « - » placé tout seul. */}
+      <View style={[stylesRoles.affichageNumero, styles.pleine]} accessibilityLabel={`${T.numeroDuLot} ${saisie}`}>
+        <Text style={stylesRoles.affichageNumeroTexte}>{formaterNumeroDeLot(saisie, numeros)}</Text>
+      </View>
+      <Button label={T.chercher} variant="secondary" style={styles.pleine} disabled={!saisie.trim()} onPress={() => chercher(saisie)} />
       {trouves && trouves.length === 0 ? <Text style={[stylesRoles.detail, { color: colors.danger }]}>{T.introuvable}</Text> : null}
       {lienRetour}
       {scanner}
@@ -146,4 +154,6 @@ const styles = StyleSheet.create({
   petit: { fontSize: 14, color: colors.textMuted, textAlign: 'center', marginBottom: 6 },
   ligne: { fontSize: 20, color: colors.text, textAlign: 'center' },
   symbole: { marginVertical: 10 },
+  // Un bouton ou un champ : toute la largeur de la page, sans dépasser 420 px, centré.
+  pleine: { width: '100%', maxWidth: 420 },
 });

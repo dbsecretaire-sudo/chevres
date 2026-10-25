@@ -13,6 +13,9 @@ export function definirModeSimple(valeur: boolean): void {
   abonnes.forEach((rappel) => rappel());
 }
 
+/** Vrai pendant que le mode normal est choisi (pour du code qui n'est pas un composant). */
+export const modeSimpleActif = (): boolean => simple;
+
 export const useModeSimple = (): boolean =>
   useSyncExternalStore(
     (rappel) => {

@@ -17,6 +17,7 @@ import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
+import type { TypeLait } from '@/features/stock/services/dlc';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { exporterGuideLotsPdf } from '@/features/export/documents/guideLotsPdf';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -68,6 +69,9 @@ function FabricationDeLots() {
   const [premierSaisi, setPremierSaisi] = useState<string | null>(null);
   /** Les litres de lait par fromage, demandés une seule fois quand l'inventaire ne les a pas encore. */
   const [litresSaisis, setLitresSaisis] = useState('');
+  /** Un fromage : salé ou non, et son lait (la DLC en dépend) ; à préciser à chaque fabrication. */
+  const [sale, setSale] = useState<'oui' | 'non' | ''>('');
+  const [lait, setLait] = useState<TypeLait | ''>('');
   /** Ce qui sort du stock pour cette fabrication (présure, sel, ferments…) et l'explicatif de la recette. */
   const [ingredients, setIngredients] = useState<SaisieIngredient[]>([]);
   const [notes, setNotes] = useState('');
@@ -124,6 +128,7 @@ function FabricationDeLots() {
     if (!archive) return;
     const erreur = erreurFabrication(archive, article, premier, nombre);
     if (erreur) return Alert.alert(erreur);
+    if (fromage && (!sale || !lait)) return Alert.alert(TEXTES.production.fabrication.varianteRequise);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
     if (fromage && !(litresParFromage > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
     const utilises = ingredients
@@ -142,6 +147,8 @@ function FabricationDeLots() {
         quantite: nombre,
         debut: premier,
         litres: fromage ? laitUtilise : undefined,
+        sale: fromage ? sale === 'oui' : undefined,
+        lait: fromage && lait ? lait : undefined,
         ingredients: utilises,
         notes: notes || undefined,
       });
@@ -161,6 +168,31 @@ function FabricationDeLots() {
           onChange={choisirArticle}
           options={articles.map((a) => ({ value: a.cle, label: a.libelle }))}
         />
+        {fromage ? (
+          <>
+            <SelectField
+              label={TEXTES.production.fabrication.sale}
+              required
+              value={sale}
+              onChange={(v) => setSale(v as 'oui' | 'non')}
+              options={[
+                { value: 'non', label: TEXTES.production.fabrication.non },
+                { value: 'oui', label: TEXTES.production.fabrication.oui },
+              ]}
+            />
+            <SelectField
+              label={TEXTES.production.fabrication.lait}
+              required
+              value={lait}
+              onChange={(v) => setLait(v as TypeLait)}
+              options={[
+                { value: 'cru', label: TEXTES.production.fabrication.laitCru },
+                { value: 'pasteurise', label: TEXTES.production.fabrication.laitPasteurise },
+                { value: 'uht', label: TEXTES.production.fabrication.laitUht },
+              ]}
+            />
+          </>
+        ) : null}
         <DateField label={T.date} required value={date} onChange={changerDate} />
         <FormField
           label={T.quantite}

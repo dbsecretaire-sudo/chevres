@@ -22,6 +22,8 @@ function etiquetteHtml(e: EtiquetteDeLot, infos: InfosExploitation | undefined, 
   const responsable = [infos?.nomExploitant, infos?.adresseExploitant].filter(Boolean).map(echapper).join(', ');
   const lignes = [
     `<div class="ligne">${echapper(P.fabriqueLe(formatDateFR(e.dateFabrication)))}</div>`,
+    e.dlc ? `<div class="ligne"><strong>${echapper(P.dlc(formatDateFR(e.dlc)))}</strong></div>` : '',
+    e.lait ? `<div class="ligne">${echapper([e.sale ? P.sale : P.nonSale, P.lait[e.lait]].join(' · '))}</div>` : '',
     e.finCure ? `<div class="ligne">${echapper(P.finCure(formatDateFR(e.finCure)))}</div>` : '',
     e.ddm
       ? `<div class="ligne"><strong>${echapper(e.savon ? P.avantSavon : P.avantPlat)} ${echapper(formatDateFR(e.ddm))}</strong></div>`

@@ -625,6 +625,18 @@ export async function definirLitresParFromage(cle: string, litres: number | unde
   });
 }
 
+/**
+ * Garde les durées de conservation d'un produit (par suffixe : « » pour la durée de base, « nonsale|cru » pour une variante de fromage) ; celles qui manquent sont retirées.
+ * La DLC de chacun de ses lots se calcule d'après elles.
+ */
+export async function definirDureesDeVie(cle: string, durees: Record<string, number>): Promise<void> {
+  const archive = await lireArchiveStock();
+  const autres: Record<string, number> = {};
+  for (const [k, jours] of Object.entries(archive.dureeDeVie ?? {})) if (k !== cle && !k.startsWith(`${cle}|`)) autres[k] = jours;
+  for (const [suffixe, jours] of Object.entries(durees)) if (jours > 0) autres[suffixe ? `${cle}|${suffixe}` : cle] = Math.round(jours);
+  await remplacerArchiveStock({ ...archive, dureeDeVie: autres });
+}
+
 /** Enregistre le litrage d'un jour : un nouveau (sans identifiant) ou un litrage modifié. */
 export async function enregistrerLaitJour(entree: Omit<LaitJour, 'id'> & { id?: string }): Promise<void> {
   const archive = await lireArchiveStock();

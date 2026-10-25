@@ -1,4 +1,4 @@
-import type { GENRE_ARTICLE, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
+import type { GENRE_ARTICLE, ORIGINE_MOUVEMENT, TYPE_LAIT_FROMAGE } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import type { PieceJointe } from '@/features/fichiers/types';
 
@@ -120,6 +120,9 @@ export interface LotFromage {
   dateRappelValide?: string;
   /** Le contrôle du fromage est bon. */
   controleOk?: boolean;
+  /** Un fromage : salé ou non, et son lait (cru, pasteurisé, UHT). Ils changent la DLC ; ils se disent à la fabrication. */
+  sale?: boolean;
+  lait?: ValeurDe<typeof TYPE_LAIT_FROMAGE>;
   /** Réservé pour un client particulier : le lot reste en stock jusqu'à sa vente. */
   reservation?: { client: string; clientId?: string; date: string };
 }
@@ -227,6 +230,8 @@ export interface ArchiveStock {
   prixVif?: Record<string, number>;
   /** Les litres de lait qu'il faut pour un fromage (par identifiant d'article) : la fabrication en déduit le lait utilisé, et la rentabilité compare le fromage à la vente du lait. */
   litresParFromage?: Record<string, number>;
+  /** La durée de conservation, en jours, d'un fromage ou d'un produit de boucherie / charcuterie : la DLC d'un lot est sa date de fabrication plus ces jours. La clé est l'identifiant de l'article (durée de base) ou, pour un fromage, « article|salé ou non|lait » (voir dlc.ts). */
+  dureeDeVie?: Record<string, number>;
   /** Les listes que l'utilisateur a ajoutées aux catégories de l'inventaire. */
   listes?: ListeInventaire[];
   /** Les catégories que l'utilisateur a ajoutées à l'inventaire (avec leurs propres listes). */

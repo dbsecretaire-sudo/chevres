@@ -4,6 +4,7 @@ import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { ChampImageArticle } from '@/features/stock/components/ChampImageArticle';
+import { suffixeDeVariante, TYPES_DE_LAIT, type TypeLait } from '@/features/stock/services/dlc';
 import type { ChoixImage } from '@/features/stock/services/imagesArticles';
 import { ChampPrixParCategorie } from '@/features/stock/components/ChampPrixParCategorie';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
@@ -25,6 +26,11 @@ interface Props {
   /** Les litres de lait par fromage : le champ n'est proposé que pour un fromage (`avecLitres`). */
   litresParFromage?: number;
   avecLitres?: boolean;
+  /** La durée de conservation en jours (la DLC du produit) : le champ n'est proposé que pour un fromage ou un produit de charcuterie (`avecDlc`). */
+  dureesDeVie?: Record<string, number>;
+  avecDlc?: boolean;
+  /** Un fromage : une durée par lait (cru, pasteurisé, UHT), salé ou non. */
+  dlcParVariante?: boolean;
   /** Le nom du champ des litres quand il diffère (brocciu : le lait versé dans le lactosérum). */
   libelleLitres?: string;
   /** Le prix se compte au kilo (les lignes d'animaux de la viande). */
@@ -49,7 +55,7 @@ interface Props {
     litres?: number,
     image?: ChoixImage,
     /** Le prix au kilo vif, et le compte choisi quand il diffère de celui d'origine. */
-    plus?: { prixVif?: number; compte?: string },
+    plus?: { prixVif?: number; compte?: string; dureesDeVie?: Record<string, number> },
   ) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (après confirmation). */
   onSupprimer?: () => void;
@@ -57,6 +63,9 @@ interface Props {
 }
 
 const T = TEXTES.stock.articleModal;
+
+/** Le nom de chaque lait, pour les champs de DLC d'un fromage. */
+const LAITS: Record<TypeLait, string> = { cru: T.laitCru, pasteurise: T.laitPasteurise, uht: T.laitUht };
 
 /** Petite fenêtre pour modifier un article du stock : son nom et, pour un fromage ou une viande, son prix de vente. */
 export function ArticleStockModal({
@@ -68,6 +77,9 @@ export function ArticleStockModal({
   avecPrix,
   litresParFromage,
   avecLitres,
+  dureesDeVie,
+  avecDlc,
+  dlcParVariante,
   libelleLitres,
   parKg,
   prixUnitaire,
@@ -85,6 +97,7 @@ export function ArticleStockModal({
   const [nomSaisi, setNomSaisi] = useState('');
   const [prixSaisi, setPrixSaisi] = useState('');
   const [litresSaisis, setLitresSaisis] = useState('');
+  const [dlcSaisies, setDlcSaisies] = useState<Record<string, string>>({});
   const [prixVifSaisi, setPrixVifSaisi] = useState('');
   const [compteSaisi, setCompteSaisi] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
@@ -106,6 +119,7 @@ export function ArticleStockModal({
       setNomSaisi(nom ?? '');
       setPrixSaisi(prix ? formatMontant(prix) : '');
       setLitresSaisis(litresParFromage ? String(litresParFromage).replace('.', ',') : '');
+      setDlcSaisies(Object.fromEntries(Object.entries(dureesDeVie ?? {}).map(([k, jours]) => [k, String(jours)])));
       setPrixVifSaisi(prixVif ? formatMontant(prixVif) : '');
       setCompteSaisi(compte ?? '');
       setErreur(null);
@@ -120,6 +134,13 @@ export function ArticleStockModal({
     if (prixSaisi.trim() && !(montant > 0)) return setErreur(T.prixInvalide);
     const litres = parseDecimal(litresSaisis);
     if (avecLitres && litresSaisis.trim() && !(litres > 0)) return setErreur(T.litresInvalide);
+    const durees: Record<string, number> = {};
+    for (const [suffixe, texte] of Object.entries(dlcSaisies)) {
+      if (!avecDlc || !texte.trim()) continue;
+      const jours = Math.round(parseDecimal(texte));
+      if (!(jours > 0)) return setErreur(T.dlcInvalide);
+      durees[suffixe] = jours;
+    }
     const montantVif = parseMontant(prixVifSaisi);
     if (avecPrixVif && prixVifSaisi.trim() && !(montantVif > 0)) return setErreur(T.prixInvalide);
     onValider(
@@ -130,10 +151,12 @@ export function ArticleStockModal({
       {
         prixVif: avecPrixVif && montantVif > 0 ? montantVif : undefined,
         compte: compteSaisi && compteSaisi !== compte ? compteSaisi : undefined,
+        dureesDeVie: avecDlc ? durees : undefined,
       },
     );
   };
 
+  const changerDlc = (suffixe: string, valeur: string) => setDlcSaisies((actuelles) => ({ ...actuelles, [suffixe]: valeur.replace(/\D/g, '') }));
   const champNom = <FormField label={T.nom} required value={nomSaisi} onChangeText={setNomSaisi} />;
   /** Le prix en un seul champ (pas de tarifs par catégorie de contact) : il se range à côté du nom, pour tenir en moins de place. */
   const prixSimple = avecPrix && (prixUnitaire || !(cle && tarifs));
@@ -201,6 +224,37 @@ export function ArticleStockModal({
               keyboardType="decimal-pad"
               placeholder="0"
             />
+          ) : null}
+          {avecDlc && !dlcParVariante ? (
+            <>
+              <FormField label={T.dlcJours} value={dlcSaisies[''] ?? ''} onChangeText={(v) => changerDlc('', v)} keyboardType="number-pad" placeholder="0" />
+              <Text style={commonStyles.note}>{T.dlcAide}</Text>
+            </>
+          ) : null}
+          {avecDlc && dlcParVariante ? (
+            <>
+              <Text style={commonStyles.lineBold}>{T.dlcJours}</Text>
+              <Text style={commonStyles.note}>{T.dlcFromageAide}</Text>
+              {TYPES_DE_LAIT.map((lait) => (
+                <View key={lait} style={commonStyles.row}>
+                  {[false, true].map((sale) => {
+                    const suffixe = suffixeDeVariante({ sale, lait });
+                    return (
+                      <View key={suffixe} style={commonStyles.flex1}>
+                        <FormField
+                          label={`${LAITS[lait]} · ${sale ? T.sale : T.nonSale}`}
+                          value={dlcSaisies[suffixe] ?? ''}
+                          onChangeText={(v) => changerDlc(suffixe, v)}
+                          keyboardType="number-pad"
+                          placeholder="0"
+                        />
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
+              <FormField label={T.dlcDeBase} value={dlcSaisies[''] ?? ''} onChangeText={(v) => changerDlc('', v)} keyboardType="number-pad" placeholder="0" />
+            </>
           ) : null}
           {comptes && comptes.length > 0 ? (
             <>

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { enregistrerLaVente, sortirLesAnimauxDeLaVente } from '@/features/comptabilite/hooks/nouvelleEcriture/enregistrement';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
@@ -119,6 +120,7 @@ function ViandeAVendreContenu({ onRetour }: { onRetour?: () => void }) {
         payee: paye ? undefined : false,
       });
       await sortirLesAnimauxDeLaVente(vente);
+      await noterAEnvoyer();
       setEtape({ nom: 'fait', resume: S.venteDetail(e.client ? nomComplet(e.client) : '', formatMontant(vente.prix ?? 0), paye) });
       await charger();
     } finally {

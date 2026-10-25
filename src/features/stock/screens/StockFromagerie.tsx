@@ -23,7 +23,8 @@ import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
 import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesModal';
 import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
-import { estArticleAvecLots, lotsDeLInventaire } from '@/features/stock/services/lots';
+import { dureesDeVieDeLArticle } from '@/features/stock/services/dlc';
+import { estArticleAvecLots, estArticlePlat, estArticleSavon, lotsDeLInventaire } from '@/features/stock/services/lots';
 import { Button } from '@/shared/components/Button';
 import {
   bouclesDeLEspece,
@@ -59,6 +60,7 @@ import {
   bilanLait,
   cleArticle,
   definirLitresParFromage,
+  definirDureesDeVie,
   definirPrixArticle,
   definirPrixVifArticle,
   prixDesOeufs,
@@ -529,7 +531,7 @@ export default function StockFromagerie() {
     prix?: number,
     litres?: number,
     image?: ChoixImage,
-    plus?: { prixVif?: number; compte?: string },
+    plus?: { prixVif?: number; compte?: string; dureesDeVie?: Record<string, number> },
   ) => {
     if (renomme) {
       if (image) await definirImageArticle(renomme.cle, image);
@@ -541,6 +543,8 @@ export default function StockFromagerie() {
       // Un fromage garde aussi les litres de lait qu'il faut pour le faire.
       if (renomme.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`))
         await definirLitresParFromage(renomme.cle, litres);
+      // Un fromage ou un produit de charcuterie garde la durée de conservation qui fait sa DLC.
+      if (avecDlcPour(renomme.cle)) await definirDureesDeVie(renomme.cle, plus?.dureesDeVie ?? {});
       // Changer de compte : en dernier, l'identifiant de l'article change avec son genre.
       if (plus?.compte) {
         const [genreCible, listeId] = plus.compte.split('|');
@@ -550,6 +554,10 @@ export default function StockFromagerie() {
     setRenomme(null);
     charger();
   };
+
+  /** La DLC se règle pour un fromage et pour un produit de boucherie / charcuterie (pas pour un animal, un plat ni un savon : ils ont leur durabilité à la fabrication). */
+  const avecDlcPour = (cle: string): boolean =>
+    cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) || (estArticleAvecLots(cle) && roleDeLaViande(cle) === undefined && !estArticlePlat(cle) && !estArticleSavon(cle));
 
   /** Vrai quand le crayon modifie un fromage ou une viande (produit fini ou animal) : on n'y change que le prix. */
   const produitFiniModifie =
@@ -916,6 +924,9 @@ export default function StockFromagerie() {
         comptes={renomme && compteDe(renomme) ? comptesPossibles() : undefined}
         compte={renomme ? compteDe(renomme) : undefined}
         avecLitres={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
+        avecDlc={!!renomme && avecDlcPour(renomme.cle)}
+        dlcParVariante={!!renomme?.cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)}
+        dureesDeVie={renomme ? dureesDeVieDeLArticle(archive, renomme.cle) : undefined}
         litresParFromage={renomme?.litresParFromage}
         libelleLitres={
           renomme?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu')

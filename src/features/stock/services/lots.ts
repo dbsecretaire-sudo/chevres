@@ -308,6 +308,9 @@ export function fabriquerFromages(saisie: {
   quantite: number;
   debut: string;
   litres?: number;
+  /** Un fromage salé ou non, et son lait (cru, pasteurisé, UHT) : notés sur chaque lot, ils changent la DLC. */
+  sale?: boolean;
+  lait?: LotFromage['lait'];
   /** Ce qui sort du stock pour cette fabrication (la présure, le sel, les ferments…), et les notes de la recette. */
   ingredients?: readonly { article: string; quantite: number; lotIds: string[] }[];
   notes?: string;
@@ -324,6 +327,8 @@ export function fabriquerFromages(saisie: {
       numero,
       dateFabrication: saisie.date,
       mouvementId,
+      ...(saisie.sale !== undefined ? { sale: saisie.sale } : {}),
+      ...(saisie.lait ? { lait: saisie.lait } : {}),
     }));
     const mouvement: MouvementStock = {
       id: mouvementId,

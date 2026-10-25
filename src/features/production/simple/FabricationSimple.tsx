@@ -12,6 +12,8 @@ import {
   numeroDeLot,
 } from '@/features/stock/services/lots';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
+import { TYPES_DE_LAIT, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { Button } from '@/shared/components/Button';
@@ -27,6 +29,9 @@ import { parseDecimal } from '@/shared/utils/nombres';
 
 const T = TEXTES.production.fabricationSimple;
 
+/** Le nom de chaque lait. */
+const LAITS: Record<TypeLait, string> = { cru: T.laitCru, pasteurise: T.laitPasteurise, uht: T.laitUht };
+
 type Produit =
   | typeof PRODUIT_A_LOTS.FROMAGE
   | typeof PRODUIT_A_LOTS.CHARCUTERIE
@@ -41,11 +46,13 @@ const ICONE_DU_PRODUIT = {
   [PRODUIT_A_LOTS.SAVON]: 'hand-wash',
 } as const;
 
-/** Où l'on en est : choisir le produit, dire les litres de lait caillé (un fromage), dire combien, puis voir que c'est enregistré. */
+/** Où l'on en est : choisir le produit, dire (un fromage) s'il est salé et de quel lait, les litres de lait caillé, combien, puis voir que c'est enregistré. */
 type Etape =
   | { nom: 'produit' }
-  | { nom: 'litres'; article: ArticleAffiche }
-  | { nom: 'nombre'; article: ArticleAffiche; litres?: number }
+  | { nom: 'sale'; article: ArticleAffiche }
+  | { nom: 'lait'; article: ArticleAffiche; sale: boolean }
+  | { nom: 'litres'; article: ArticleAffiche; variante?: VarianteDeFromage }
+  | { nom: 'nombre'; article: ArticleAffiche; litres?: number; variante?: VarianteDeFromage }
   | { nom: 'fait'; titre: string; detail: string }
   | { nom: 'erreur'; message: string };
 
@@ -86,10 +93,10 @@ export function FabricationSimple({
 
   const choisir = (article: ArticleAffiche) => {
     setSaisie('');
-    setEtape(fromage || savon ? { nom: 'litres', article } : { nom: 'nombre', article });
+    setEtape(fromage ? { nom: 'sale', article } : savon ? { nom: 'litres', article } : { nom: 'nombre', article });
   };
 
-  const fabriquer = async (article: ArticleAffiche, nombre: number, litres?: number) => {
+  const fabriquer = async (article: ArticleAffiche, nombre: number, litres?: number, variante?: VarianteDeFromage) => {
     if (!archive) return;
     try {
       const date = todayISO();
@@ -112,8 +119,17 @@ export function FabricationSimple({
           ingredients: [],
         });
       } else {
-        await fabriquerFromages({ article: article.cle, date, quantite: nombre, debut, litres: fromage ? litres : undefined });
+        await fabriquerFromages({
+          article: article.cle,
+          date,
+          quantite: nombre,
+          debut,
+          litres: fromage ? litres : undefined,
+          sale: variante?.sale,
+          lait: variante?.lait,
+        });
       }
+      await noterAEnvoyer();
       setArchive(await lireArchiveStock());
       setEtape({
         nom: 'fait',
@@ -150,6 +166,38 @@ export function FabricationSimple({
         </ScrollView>
       ) : null}
 
+      {etape.nom === 'sale' ? (
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+          <Text style={styles.detail}>{etape.article.libelle}</Text>
+          <Text style={styles.titre}>{T.leFromageEstSale}</Text>
+          <ListeDeChoix
+            presentation={presentation}
+            choix={[
+              { cle: 'non', libelle: T.nonSale, icone: 'cheese' },
+              { cle: 'oui', libelle: T.sale, icone: 'shaker-outline' },
+            ]}
+            onChoisir={(c) => setEtape({ nom: 'lait', article: etape.article, sale: c.cle === 'oui' })}
+          />
+          <Button label={T.retour} variant="secondary" onPress={recommencer} />
+        </ScrollView>
+      ) : null}
+
+      {etape.nom === 'lait' ? (
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+          <Text style={styles.detail}>{`${etape.article.libelle} · ${etape.sale ? T.sale : T.nonSale}`}</Text>
+          <Text style={styles.titre}>{T.quelLait}</Text>
+          <ListeDeChoix
+            presentation={presentation}
+            choix={TYPES_DE_LAIT.map((lait) => ({ cle: lait, libelle: LAITS[lait], icone: 'water' as const }))}
+            onChoisir={(c) => {
+              setSaisie('');
+              setEtape({ nom: 'litres', article: etape.article, variante: { sale: etape.sale, lait: c.cle as TypeLait } });
+            }}
+          />
+          <Button label={T.retour} variant="secondary" onPress={() => setEtape({ nom: 'sale', article: etape.article })} />
+        </ScrollView>
+      ) : null}
+
       {etape.nom === 'litres' ? (
         <View style={styles.contenu}>
           <Text style={styles.detail}>{etape.article.libelle}</Text>
@@ -161,7 +209,7 @@ export function FabricationSimple({
             onPress={() => {
               const litres = parseDecimal(saisie);
               setSaisie('');
-              setEtape({ nom: 'nombre', article: etape.article, litres });
+              setEtape({ nom: 'nombre', article: etape.article, litres, variante: etape.variante });
             }}
           />
           {/* Un savon peut se faire sans lait de chèvre : on passe cette étape. */}
@@ -187,7 +235,7 @@ export function FabricationSimple({
           <Button
             label={T.valider}
             disabled={!(Math.round(parseDecimal(saisie)) > 0)}
-            onPress={() => fabriquer(etape.article, Math.round(parseDecimal(saisie)), etape.litres)}
+            onPress={() => fabriquer(etape.article, Math.round(parseDecimal(saisie)), etape.litres, etape.variante)}
           />
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
         </View>

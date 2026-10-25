@@ -35,6 +35,33 @@ export const styles = StyleSheet.create({
   detail: { fontSize: 16, color: colors.textMuted, textAlign: 'center' },
   erreur: { fontSize: 20, fontWeight: '700', color: colors.danger, textAlign: 'center' },
   /** Les petits d'une naissance : une rangée de 0 à 6 pour les femelles, une pour les mâles. */
+  /** Les lettres du clavier d'un numéro de lot : de petites touches sur plusieurs lignes. */
+  lettresRangee: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 330 },
+  lettreChoix: {
+    width: 54,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: colors.blanc,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lettreChoixTexte: { fontSize: 22, fontWeight: '800', color: colors.primary },
+  /** L'étiquette rouge sous le mot d'un gros bouton (« 3 à envoyer »). */
+  grosEtiquette: { backgroundColor: colors.danger, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3, marginTop: 4 },
+  grosEtiquetteTexte: { fontSize: 15, fontWeight: '800', color: colors.blanc, textAlign: 'center' },
+  affichageNumero: {
+    minHeight: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D8D4C8',
+    backgroundColor: colors.blanc,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  affichageNumeroTexte: { fontSize: 30, fontWeight: '800', color: colors.text, textAlign: 'center', letterSpacing: 2 },
   sexeTitre: { fontSize: 22, fontWeight: '800', color: colors.text, textAlign: 'center' },
   petitsRangee: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
   petitChoix: {

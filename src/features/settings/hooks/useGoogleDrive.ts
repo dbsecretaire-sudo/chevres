@@ -21,6 +21,7 @@ import {
   tirerToutesAnnees,
 } from '@/features/drive/sync';
 import { noterSauvegarde } from '@/features/sauvegarde/derniereSauvegarde';
+import { remettreAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { ID_ETABLISSEMENT_DEFAUT } from '@/shared/constants/stockage';
 import { TEXTES } from '@/shared/textes';
 
@@ -160,6 +161,7 @@ export function useGoogleDriveSansNavigation() {
         await refreshSettings();
         await patchSettings({ derniereSynchronisation: new Date().toISOString() });
         await noterSauvegarde();
+        await remettreAEnvoyer();
         Alert.alert(TEXTES.settings.reglages.termine, TEXTES.settings.reglages.fusionTerminee(fusion.ajoutes, fusion.conflits));
         charger();
         return;
@@ -180,7 +182,10 @@ export function useGoogleDriveSansNavigation() {
       }
       await patchSettings({ derniereSynchronisation: new Date().toISOString() });
       // Les données envoyées sur Drive sont sauvegardées (pas celles qu'on en récupère).
-      if (sens === 'push') await noterSauvegarde();
+      if (sens === 'push') {
+        await noterSauvegarde();
+        await remettreAEnvoyer();
+      }
       Alert.alert(
         TEXTES.settings.reglages.termine,
         `${

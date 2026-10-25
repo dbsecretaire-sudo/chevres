@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
+import { useAEnvoyer } from '@/shared/hooks/useAEnvoyer';
+import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { ScannerBoucleCore } from '@/features/cheptel/components/ScannerBoucleCore';
 import type { Chevre } from '@/features/cheptel/types';
 import {
@@ -20,7 +23,6 @@ import { TourismeSimple } from '@/features/commercial/simple/TourismeSimple';
 import { AtelierSimple } from '@/features/production/simple/AtelierSimple';
 import { Button } from '@/shared/components/Button';
 import { GrosBouton } from '@/shared/components/GrosBouton';
-import { FormField } from '@/shared/components/FormField';
 import { nbPetitsMax, SEXE } from '@/shared/constants/cheptel';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -55,6 +57,8 @@ export default function EcranBerger() {
   const { choisir } = useRole();
   const { settings } = useAppSettings();
   const drive = useGoogleDriveSansNavigation();
+  /** Les saisies du mode normal pas encore envoyées : écrites sous « Envoyer ». */
+  const aEnvoyer = useAEnvoyer();
   const [etape, setEtape] = useState<Etape>({ nom: 'accueil' });
   const [numero, setNumero] = useState('');
   /** Les petits d'une naissance : combien de femelles et combien de mâles (de 0 à 6 chacun). */
@@ -92,11 +96,15 @@ export default function EcranBerger() {
         return setEtape({ nom: 'petits', mere: animal });
       }
       const avant = await enregistrerUneMort(animal);
+      await noterAEnvoyer();
       setEtape({
         nom: 'fait',
         titre: T.mortFaite,
         detail: T.mortDetail(boucle),
-        annuler: () => annulerUneMort(avant),
+        annuler: async () => {
+          await annulerUneMort(avant);
+          await noterAEnvoyer(-1);
+        },
       });
     } catch {
       setEtape({ nom: 'erreur', but, message: T.erreur });
@@ -106,11 +114,15 @@ export default function EcranBerger() {
   const surPetits = async (mere: Chevre) => {
     try {
       const petits = await enregistrerUneNaissance(mere, femelles, males);
+      await noterAEnvoyer(petits.length);
       setEtape({
         nom: 'fait',
         titre: T.naissanceFaite(femelles, males),
         detail: T.naissanceDetail((mere.numeroBoucle ?? '').trim()),
-        annuler: () => annulerUneNaissance(petits),
+        annuler: async () => {
+          await annulerUneNaissance(petits);
+          await noterAEnvoyer(-petits.length);
+        },
       });
     } catch {
       setEtape({ nom: 'erreur', but: 'naissance', message: T.erreur });
@@ -147,6 +159,7 @@ export default function EcranBerger() {
               />
               <GrosBouton
                 libelle={drive.syncEnCours ? T.envoiEnCours : T.envoyer}
+                detail={aEnvoyer > 0 ? T.aEnvoyer(aEnvoyer) : undefined}
                 onPress={envoyer}
                 clair
                 icone={<Ionicons name="cloud-upload" size={40} color={colors.primary} />}
@@ -200,13 +213,12 @@ export default function EcranBerger() {
 
           {etape.nom === 'main' ? (
             <View style={styles.contenu}>
-              <FormField
-                label={T.numeroAMain}
-                value={numero}
-                onChangeText={setNumero}
-                keyboardType="number-pad"
-                autoFocus
-              />
+              <Text style={styles.titre}>{T.numeroAMain}</Text>
+              <ClavierNumerique valeur={numero} onChange={setNumero} />
+              {/* Le numéro tapé : centré, et non modifiable à la main. */}
+              <View style={styles.affichageNumero} accessibilityLabel={`${T.numeroAMain} ${numero}`}>
+                <Text style={styles.affichageNumeroTexte}>{numero}</Text>
+              </View>
               <Button
                 label={T.valider}
                 disabled={!numero.trim()}

@@ -371,6 +371,13 @@ export const ETAPES_SAVON_OBLIGATOIRES: readonly string[] = [
 /** Les jours de cure proposés d'office après la saponification (4 à 6 semaines : 6 pour un savon au lait). */
 export const JOURS_DE_CURE_SAVON = 42;
 
+/** Le lait d'un fromage : cru, pasteurisé ou UHT (la date limite de consommation n'est pas la même). */
+export const TYPE_LAIT_FROMAGE = {
+  CRU: 'cru',
+  PASTEURISE: 'pasteurise',
+  UHT: 'uht',
+} as const;
+
 /** Le numéro d'un lot se lit « FF261-1 » : le produit, la catégorie, l'année (2 chiffres), le jour de l'année, « - » et le n° du produit. */
 export const SEPARATEUR_NUMERO_LOT = '-';
 

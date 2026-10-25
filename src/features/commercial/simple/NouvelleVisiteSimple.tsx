@@ -6,6 +6,7 @@ import { listClients } from '@/features/clients/repository';
 import { groupeRecetteAutorise } from '@/features/clients/services/categorie';
 import { GROUPE_RECETTE } from '@/shared/constants/comptabilite';
 import type { Client } from '@/features/clients/types';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { enregistrerVisite, montantVisite } from '@/features/commercial/services/agritourisme';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import type { FormuleAgritourisme } from '@/features/commercial/types';
@@ -79,6 +80,7 @@ export function NouvelleVisiteSimple({ onTerminer }: { onTerminer: () => void })
         statut: STATUT_VISITE.PREVUE,
       };
       await enregistrerVisite(visite);
+      await noterAEnvoyer();
       setEtape({ nom: 'fait', resume: T.resume(visite.client, nombre, formatMontant(montantVisite(visite))) });
     } finally {
       setEnCours(false);

@@ -726,6 +726,14 @@ export const TEXTES_PRODUCTION = {
     litresParFromage: 'Litres de lait par fromage',
     litresParFromageAide:
       'À indiquer une seule fois : il est gardé dans l’inventaire (crayon du fromage), et le lait utilisé se calcule ensuite d’après le nombre de fromages.',
+    sale: 'Fromage salé ?',
+    oui: 'Salé',
+    non: 'Non salé',
+    lait: 'Lait',
+    laitCru: 'Lait cru',
+    laitPasteurise: 'Lait pasteurisé',
+    laitUht: 'Lait UHT',
+    varianteRequise: 'Précisez si le fromage est salé et de quel lait il est fait : la DLC en dépend.',
     litresRequis:
       'Indiquez les litres de lait qu’il faut pour un fromage : ils sont gardés dans l’inventaire.',
     laitUtilise: (nombre: number, par: string, total: string) =>
@@ -772,6 +780,7 @@ export const TEXTES_PRODUCTION = {
     plusieurs: 'Quel lot ?',
     numero: (numero: string) => `Lot ${numero}`,
     fabricationLe: (date: string) => `Date de fabrication : ${date}`,
+    variante: (sale: boolean | undefined, lait: string) => `${sale ? 'Salé' : 'Non salé'} · ${lait === 'cru' ? 'lait cru' : lait === 'pasteurise' ? 'lait pasteurisé' : 'lait UHT'}`,
     dlc: (date: string) => `DLC : ${date}`,
     dlcAConfigurer: 'DLC : à configurer',
     stockRestant: (n: number) => `Stock restant : ${n}`,
@@ -819,6 +828,13 @@ export const TEXTES_PRODUCTION = {
   fabricationSimple: {
     titre: 'Fabriquer',
     quelFromage: 'Quel fromage ?',
+    leFromageEstSale: 'Le fromage est-il salé ?',
+    sale: 'Salé',
+    nonSale: 'Non salé',
+    quelLait: 'Quel lait ?',
+    laitCru: 'Lait cru',
+    laitPasteurise: 'Lait pasteurisé',
+    laitUht: 'Lait UHT',
     quelProduit: 'Quel produit ?',
     aucunProduit: 'Aucun produit dans l’inventaire : ajoutez-en un dans le stock.',
     combienDeLitres: 'Combien de litres de lait caillé ?',

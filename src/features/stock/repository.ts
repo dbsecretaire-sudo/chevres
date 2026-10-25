@@ -115,6 +115,10 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
   for (const [cle, litres] of Object.entries(archive?.litresParFromage ?? {})) {
     if (typeof litres === 'number' && litres > 0) litresParFromage[cle] = litres;
   }
+  const dureeDeVie: Record<string, number> = {};
+  for (const [cle, jours] of Object.entries(archive?.dureeDeVie ?? {})) {
+    if (typeof jours === 'number' && jours > 0) dureeDeVie[cle] = Math.round(jours);
+  }
   return {
     mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
     articles: Array.isArray(archive?.articles) ? archive.articles : [],
@@ -127,6 +131,7 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
     prix,
     prixVif,
     litresParFromage,
+    dureeDeVie,
     listes: Array.isArray(archive?.listes)
       ? archive.listes.filter(
           (l) => l && typeof l.id === 'string' && typeof l.nom === 'string' && typeof l.compte === 'string',

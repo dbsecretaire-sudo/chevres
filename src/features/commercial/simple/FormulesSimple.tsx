@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { elementsDeFormule, enregistrerFormule } from '@/features/commercial/services/agritourisme';
 import type { ElementFormule, FormuleAgritourisme } from '@/features/commercial/types';
 import { VisitesSimple } from '@/features/commercial/simple/VisitesSimple';
@@ -63,6 +64,7 @@ export function FormulesSimple({ onTerminer }: { onTerminer: () => void }) {
     try {
       const formule: FormuleAgritourisme = { id: generateId(), nom: nom.trim(), prix: parseDecimal(prix), elements: coches };
       await enregistrerFormule(formule);
+      await noterAEnvoyer();
       await charger();
       setEtape({ nom: 'fait', formule });
     } finally {

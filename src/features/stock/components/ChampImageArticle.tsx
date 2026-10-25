@@ -24,7 +24,7 @@ export function ChampImageArticle({
   onChoix: (choix: ChoixImage | null) => void;
 }) {
   const actuelle = useImageDeLArticle(cle);
-  if (!piecesDisponibles()) return null;
+  if (!piecesDisponibles()) return <Text style={commonStyles.note}>{T.indisponible}</Text>;
   const retiree = !!choix && 'retirer' in choix;
   const uri =
     choix && 'fichier' in choix ? choix.fichier.uri : actuelle && !retiree ? uriAffichagePiece(actuelle) : undefined;

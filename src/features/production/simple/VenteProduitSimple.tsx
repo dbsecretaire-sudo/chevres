@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { enregistrerLaVente } from '@/features/comptabilite/hooks/nouvelleEcriture/enregistrement';
 import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
@@ -139,6 +140,7 @@ export function VenteProduitSimple({ produit, onRetour }: { produit: ProduitVend
         circuit: client?.circuit || CIRCUIT_VENTE.FERME,
         payee: paye ? undefined : false,
       });
+      await noterAEnvoyer();
       setResume(S.venteDetail(client ? nomComplet(client) : '', formatMontant(vente.prix ?? 0), paye));
       setEtape('fait');
     } finally {

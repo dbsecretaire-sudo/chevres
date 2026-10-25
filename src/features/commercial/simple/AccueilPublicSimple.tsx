@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { enregistrerEtapeAccueil, lireArchiveCommercial } from '@/features/commercial/repository';
 import { etapesAccueilManquantes } from '@/features/commercial/services/accueilPublic';
 import type { ArchiveCommercial } from '@/features/commercial/types';
@@ -64,6 +65,7 @@ export function AccueilPublicSimple({ onTerminer }: { onTerminer: () => void }) 
         date: fait ? date || todayISO() : date || undefined,
         reference: reference.trim() || undefined,
       });
+      await noterAEnvoyer();
       await charger();
       setChoisie(null);
     } finally {
