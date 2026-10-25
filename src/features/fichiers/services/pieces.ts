@@ -8,6 +8,7 @@ import { ADRESSE_FICHIERS_BUREAU, DOSSIER_PIECES_LOCAL, EXTENSION_PAR_MIME, MIME
 import { todayISO } from '@/shared/utils/dates';
 import { estBureau } from '@/shared/utils/plateforme';
 import { generateId } from '@/shared/utils/id';
+import { ajouterPieceAEnvoyer, TAILLE_MAX_PIECE } from '@/features/fichiers/services/piecesFile';
 
 /** Les fichiers joints sont rangés dans l'appareil : indisponibles sur le web, mais pas dans la version Windows. */
 export const piecesDisponibles = (): boolean => Platform.OS !== 'web' || estBureau();
@@ -19,7 +20,8 @@ export interface FichierChoisi {
   mime: string;
 }
 
-const dossierLocal = (): string =>
+/** Le dossier des fichiers joints de l'établissement actif (la synchronisation y range aussi ceux qu'elle reçoit). */
+export const dossierLocal = (): string =>
   `${FileSystem.documentDirectory}${DOSSIER_PIECES_LOCAL}/${getIdEtablissementActif()}/`;
 
 /** Où le fichier joint est rangé dans l'appareil. */
@@ -48,8 +50,11 @@ export async function choisirFichiers(types: string[], multiple = false): Promis
   return choix.assets.map((a) => ({ uri: a.uri, nom: a.name, mime: mimeDe(a.name, a.mimeType) }));
 }
 
-/** Range une copie du fichier dans l'appareil et renvoie sa fiche. */
+/** Range une copie du fichier dans l'appareil, la met en file pour le serveur de la ferme, et renvoie sa fiche. Un fichier trop lourd est refusé. */
 export async function rangerFichier(source: FichierChoisi): Promise<PieceJointe> {
+  // La taille n'est connue que sur le téléphone : sur l'ordinateur, le fichier est rangé sans cette vérification.
+  const taille = ((await FileSystem.getInfoAsync(source.uri)) as { size?: number }).size;
+  if (taille && taille > TAILLE_MAX_PIECE) throw new Error('Ce fichier dépasse 5 Mo : il ne peut pas être envoyé à la ferme.');
   const piece: PieceJointe = {
     id: generateId(),
     nom: source.nom,
@@ -59,6 +64,7 @@ export async function rangerFichier(source: FichierChoisi): Promise<PieceJointe>
   };
   await FileSystem.makeDirectoryAsync(dossierLocal(), { intermediates: true });
   await FileSystem.copyAsync({ from: source.uri, to: uriPiece(piece) });
+  await ajouterPieceAEnvoyer(piece);
   return piece;
 }
 

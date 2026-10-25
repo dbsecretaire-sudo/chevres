@@ -13,6 +13,9 @@ import {
   retirerDeAttente,
 } from '@/shared/storage/depot';
 import { appliquerModification, modificationsDe, type Modification } from '@/shared/storage/fiches';
+import { piecesDe } from '@/features/fichiers/services/piecesFile';
+import { envoyerPiecesEnAttente, mettreEnFileLesPiecesAnciennes, recevoirPiecesManquantes } from '@/features/fichiers/services/piecesSynchro';
+import type { PieceJointe } from '@/features/fichiers/types';
 
 /** L'exploitation sur le serveur : une seule, pour tous les appareils. */
 export const EXPLOITATION_SYNC = 'exploitation';
@@ -104,6 +107,8 @@ export function recevoirChangements(): Promise<number> {
   return enExclusivite(async () => {
     const jeton = await jetonDeConnexion();
     let recues = 0;
+    // Les fichiers joints citées par les fiches reçues : téléchargés une fois la réception finie.
+    const piecesRecues: PieceJointe[] = [];
     for (;;) {
       const depuis = (await lireCurseur()) ?? 0;
       const { statut, json } = await appeler('tirer', 'GET', {
@@ -117,6 +122,7 @@ export function recevoirChangements(): Promise<number> {
       const zonesModifiees = new Set<string>();
       for (const modification of json.modifications as Modification[]) {
         recues++;
+        piecesRecues.push(...piecesDe(modification.contenu));
         if (!estSynchronisable(modification.zone)) continue;
         if (enAttente.has(`${modification.zone}\u0000${modification.identifiant}`)) continue;
         const locale = await lireValeurLocale(modification.zone);
@@ -128,7 +134,10 @@ export function recevoirChangements(): Promise<number> {
       for (const zone of zonesModifiees) await prevenirReception(zone);
 
       await ecrireCurseur(Number(json.curseur));
-      if (!json.encore) return recues;
+      if (!json.encore) {
+        await recevoirPiecesManquantes(EXPLOITATION_SYNC, piecesRecues);
+        return recues;
+      }
     }
   });
 }
@@ -151,8 +160,15 @@ export async function premiereSynchronisation(): Promise<BilanEnvoi> {
 
 /** Une synchronisation complète : ce que cet appareil a envoyé, puis ce que les autres ont envoyé. */
 export async function synchroniser(): Promise<BilanEnvoi> {
-  if ((await lireCurseur()) === undefined) return premiereSynchronisation();
+  await mettreEnFileLesPiecesAnciennes();
+  if ((await lireCurseur()) === undefined) {
+    const bilan = await premiereSynchronisation();
+    await envoyerPiecesEnAttente(EXPLOITATION_SYNC);
+    return bilan;
+  }
   const bilan = await envoyerAttente();
+  // Les fichiers joints partent après les fiches qui les citent, puis on reçoit ce que les autres ont envoyé (y compris leurs fichiers).
+  await envoyerPiecesEnAttente(EXPLOITATION_SYNC);
   await recevoirChangements();
   return bilan;
 }
