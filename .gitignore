@@ -45,3 +45,6 @@ yarn-error.*
 # Version Windows
 bureau-dist/
 bureau/google.json
+
+# Le vrai fichier de configuration du serveur (mot de passe de la base) : jamais dans le dépôt.
+serveur/config.php
