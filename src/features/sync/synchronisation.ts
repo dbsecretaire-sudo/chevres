@@ -66,6 +66,13 @@ export async function seConnecter(identifiant: string, motDePasse: string): Prom
 
 /** Oublie la connexion et la version connue de cet appareil. */
 export async function seDeconnecter(): Promise<void> {
+  // Le serveur supprime la session : le jeton ne sert plus, même s'il a été copié. Hors ligne, on efface quand même ici ; la session expire alors seule au bout de 30 jours.
+  try {
+    const connexion = await lireConnexion();
+    if (connexion) await appeler('deconnexion', 'POST', { jeton: connexion.jeton });
+  } catch {
+    // Pas de réseau : rien à faire de plus.
+  }
   await AsyncStorage.removeItem(CLE_CONNEXION);
   await AsyncStorage.removeItem(CLE_VERSION);
 }

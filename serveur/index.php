@@ -41,27 +41,43 @@ if (!is_array($corps)) $corps = [];
 if ($action === 'connexion' && $methode === 'POST') {
   $identifiant = trim((string) ($corps['identifiant'] ?? ''));
   $motDePasse = (string) ($corps['mot_de_passe'] ?? '');
+  // Trop d'échecs pour cet identifiant (5 en 15 minutes) : on refuse avant même de vérifier le mot de passe, contre les essais en série.
+  $requete = $db->prepare('SELECT COUNT(*) FROM connexions_echouees WHERE identifiant = ? AND quand > (NOW() - INTERVAL 15 MINUTE)');
+  $requete->execute([$identifiant]);
+  if ((int) $requete->fetchColumn() >= 5) {
+    repondre(429, ['erreur' => 'Trop de tentatives. Réessaie dans 15 minutes.']);
+  }
   $requete = $db->prepare('SELECT id, mot_de_passe_hash FROM utilisateurs WHERE identifiant = ?');
   $requete->execute([$identifiant]);
   $utilisateur = $requete->fetch();
   if (!$utilisateur || !password_verify($motDePasse, $utilisateur['mot_de_passe_hash'])) {
+    $db->prepare('INSERT INTO connexions_echouees (identifiant) VALUES (?)')->execute([$identifiant]);
     repondre(401, ['erreur' => 'Identifiant ou mot de passe incorrect.']);
   }
+  $db->prepare('DELETE FROM connexions_echouees WHERE identifiant = ?')->execute([$identifiant]);
+  // Le jeton part vers l'appareil ; le serveur ne garde que son empreinte : une lecture de la base ne donne pas de session utilisable.
   $jeton = bin2hex(random_bytes(32));
   $db->prepare('INSERT INTO sessions (jeton, utilisateur_id, expire_le) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))')
-    ->execute([$jeton, $utilisateur['id']]);
+    ->execute([hash('sha256', $jeton), $utilisateur['id']]);
   repondre(200, ['jeton' => $jeton, 'identifiant' => $identifiant]);
 }
 
 // Toutes les autres actions demandent le jeton de connexion.
 $entete = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
 $jeton = str_starts_with($entete, 'Bearer ') ? substr($entete, 7) : '';
+$empreinte = hash('sha256', $jeton);
 $requete = $db->prepare(
   'SELECT u.identifiant FROM sessions s JOIN utilisateurs u ON u.id = s.utilisateur_id WHERE s.jeton = ? AND s.expire_le > NOW()'
 );
-$requete->execute([$jeton]);
+$requete->execute([$empreinte]);
 $moi = $requete->fetch();
 if (!$moi) repondre(401, ['erreur' => 'Connexion expirée : reconnecte-toi.']);
+
+// Se déconnecter : la session est supprimée du serveur, le jeton ne sert plus nulle part.
+if ($action === 'deconnexion' && $methode === 'POST') {
+  $db->prepare('DELETE FROM sessions WHERE jeton = ?')->execute([$empreinte]);
+  repondre(200, ['ok' => true]);
+}
 
 // Lire la sauvegarde d'un établissement.
 if ($action === 'lire' && $methode === 'GET') {
