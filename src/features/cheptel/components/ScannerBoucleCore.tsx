@@ -31,14 +31,11 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
   const [permission, requestPermission] = useCameraPermissions();
   const [enCours, setEnCours] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  /** Le numéro se tape à la main, sans photo. */
-  const [saisieLibre, setSaisieLibre] = useState(false);
   const [candidats, setCandidats] = useState<string[]>([]);
   const [valeur, setValeur] = useState('');
 
   const reinitialiser = () => {
     setPhotoUri(null);
-    setSaisieLibre(false);
     setCandidats([]);
     setValeur('');
   };
@@ -90,10 +87,10 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
     );
   }
 
-  if (photoUri || saisieLibre) {
+  if (photoUri) {
     return (
       <View style={commonStyles.flex1}>
-        {photoUri ? <Image source={{ uri: photoUri }} style={styles.apercu} resizeMode="cover" /> : null}
+        <Image source={{ uri: photoUri }} style={styles.apercu} resizeMode="cover" />
         {enCours ? (
           <View style={styles.centre}>
             <ActivityIndicator color={accent} size="large" />
@@ -155,7 +152,7 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
         <Text style={styles.consigne}>{textes.cadrezLeNumeroDeBoucle}</Text>
       </View>
       <View style={styles.haut}>
-        <Button label={TEXTES.cheptel.scannerBoucleCore.saisirALaMain} variant="secondary" onPress={() => setSaisieLibre(true)} />
+        <Button label={texteSecondaire} variant="secondary" onPress={onSecondaire} />
       </View>
       <View style={styles.controles}>
         <View style={styles.boutonVide} />

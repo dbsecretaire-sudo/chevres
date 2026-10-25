@@ -10,7 +10,6 @@ export const scannerBoucleCoreTextes = {
   reprendreLaPhoto: 'Reprendre la photo',
   utiliserCeNumero: 'Utiliser ce numéro',
   cadrezLeNumeroDeBoucle: 'Cadrez le numéro de boucle',
-  saisirALaMain: 'Saisir le numéro à la main',
   /** Les mêmes phrases quand on scanne le numéro d'un lot (fromage, charcuterie, plat, savon). */
   lot: {
     lAccesALAppareil: 'L’accès à l’appareil photo est nécessaire pour scanner un numéro de lot.',
