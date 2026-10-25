@@ -59,6 +59,8 @@ export const TEXTES_ROLES = {
     ficheVivante: 'Vivante',
     ficheActions: 'Que faire avec cette chèvre ?',
     ficheSansBoucle: 'Sans boucle',
+    ficheNaissance: 'Naissance',
+    ficheDeces: 'Décès',
     achat: 'Achat',
     achatBoucle: 'Numéro de boucle (facultatif)',
     achatSexe: 'Sexe',

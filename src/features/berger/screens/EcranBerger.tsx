@@ -278,6 +278,8 @@ export default function EcranBerger() {
                 onSoin={() => setEtape({ nom: 'soin', animal: etape.animal })}
                 onMouvement={() => setEtape({ nom: 'mouvement', animal: etape.animal })}
                 onVente={() => setEtape({ nom: 'vente', animal: etape.animal })}
+                onNaissance={() => surBoucle('naissance', (etape.animal.numeroBoucle ?? '').trim())}
+                onDeces={() => surBoucle('mort', (etape.animal.numeroBoucle ?? '').trim())}
               />
               <Pressable style={styles.discret} onPress={chevres} accessibilityRole="button">
                 <Text style={styles.discretTexte}>{T.retour}</Text>
