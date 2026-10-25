@@ -18,6 +18,7 @@ import { TEXTES } from '@/shared/textes';
 import { MenuDeLaFenetre } from '@/bureau/MenuDeLaFenetre';
 import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
 import { afficheBureau } from '@/shared/utils/affichage';
+import { SynchronisationAutomatique } from '@/features/sync/SynchronisationAutomatique';
 import { titreDeLaRubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
 
 /** Les pages (cachées de la barre) qui font partie de l'Organisation : son onglet y reste en couleur. */
@@ -294,6 +295,8 @@ export default function TabsLayout() {
       <EnDeuxColonnes>
         <Onglets />
       </EnDeuxColonnes>
+      {/* La synchronisation sans bouton : une seule fois, pour toute l'application (elle n'affiche rien). */}
+      <SynchronisationAutomatique />
     </>
   );
 }

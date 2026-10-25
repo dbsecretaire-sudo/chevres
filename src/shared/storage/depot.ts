@@ -47,9 +47,19 @@ export async function lireAttente(): Promise<Modification[]> {
   return (await lireJson<Modification[]>(CLE_ATTENTE)) ?? [];
 }
 
+/** Les écouteurs de la file sont prévenus de son nombre à chaque écriture (la synchronisation automatique et les compteurs les suivent). */
+const ecouteursAttente = new Set<(nombre: number) => void>();
+
+/** Suit le nombre de modifications en attente. Rend la fonction qui se désabonne. */
+export function surAttente(ecouteur: (nombre: number) => void): () => void {
+  ecouteursAttente.add(ecouteur);
+  return () => ecouteursAttente.delete(ecouteur);
+}
+
 /** Écrit la file, sans verrou : à n'appeler que depuis une écriture déjà en série. */
 async function ecrireAttenteSansVerrou(file: Modification[]): Promise<void> {
   await AsyncStorage.setItem(CLE_ATTENTE, JSON.stringify(file));
+  for (const ecouteur of [...ecouteursAttente]) ecouteur(file.length);
 }
 
 /** La valeur gardée sur cet appareil pour une clé (undefined s'il n'y en a pas). */

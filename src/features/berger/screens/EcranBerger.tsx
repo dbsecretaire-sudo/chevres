@@ -152,7 +152,7 @@ export default function EcranBerger() {
       <SafeAreaView style={styles.page}>
         <View style={{ flex: 1 }} pointerEvents={protege ? 'none' : 'auto'}>
           {etape.nom === 'accueil' ? (
-            <View style={styles.contenu}>
+            <View style={styles.contenuEnHaut}>
               <EnteteBerger titre={T.titre} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
               <GrosBouton
@@ -186,7 +186,7 @@ export default function EcranBerger() {
           ) : null}
 
           {etape.nom === 'chevres' ? (
-            <View style={styles.contenu}>
+            <View style={styles.contenuEnHaut}>
               <EnteteBerger titre={T.chevres} onRetour={accueil} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
               <GrosBouton

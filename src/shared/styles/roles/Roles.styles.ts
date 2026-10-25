@@ -5,6 +5,8 @@ import { colors } from '@/shared/theme/colors';
 export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.background },
   contenu: { flex: 1, padding: 16, gap: 16, justifyContent: 'center' },
+  /** Un écran de tuiles (l'accueil, une rubrique) : il commence en haut, comme les autres pages, et ne se centre pas. */
+  contenuEnHaut: { flex: 1, padding: 16, gap: 16, justifyContent: 'flex-start' },
   titre: { fontSize: 26, fontWeight: '800', color: colors.text, textAlign: 'center', marginBottom: 8 },
   grosBouton: {
     minHeight: 150,
