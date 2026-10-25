@@ -16,12 +16,10 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
 /**
- * L'écran « terrain » d'une zone de l'accueil (le troupeau, le travail du produit, l'accueil du public) : de très grands boutons, une action chacun, avec le chiffre utile dessus.
- * Il s'ouvre d'un appui sur la partie animée de la zone, à la place de la page d'avant (qui reste dans les menus).
+ * Les grandes tuiles d'une zone, avec le chiffre utile de chacune. Sert à l'écran terrain (une page ouverte d'un appui sur la zone) et, sur le téléphone,
+ * à l'accueil des onglets Chèvres et Atelier, comme sur la maquette.
  */
-export default function EcranTerrain() {
-  const { zone: zoneDemandee } = useLocalSearchParams<{ zone?: string }>();
-  const zone: ZoneTerrain = ZONES_TERRAIN.find((z) => z === zoneDemandee) ?? 'troupeau';
+export function GrilleTerrain({ zone }: { zone: ZoneTerrain }) {
   const ouvrir = useOuvrir();
   const f = useFermeAccueil();
   const comptes: ComptesTerrain = {
@@ -39,10 +37,24 @@ export default function EcranTerrain() {
   };
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
-      <Stack.Screen options={{ title: titreDuTerrain(zone) }} />
       <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
         <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} onAppui={(t) => ouvrir(t.route)} />
       </ScrollView>
     </AccentColorProvider>
+  );
+}
+
+/**
+ * L'écran « terrain » d'une zone de l'accueil (le troupeau, le travail du produit, la fabrication, l'accueil du public) : de très grands boutons, une action chacun,
+ * avec le chiffre utile dessus. Il s'ouvre d'un appui sur la partie animée de la zone, à la place de la page d'avant (qui reste dans les menus).
+ */
+export default function EcranTerrain() {
+  const { zone: zoneDemandee } = useLocalSearchParams<{ zone?: string }>();
+  const zone: ZoneTerrain = ZONES_TERRAIN.find((z) => z === zoneDemandee) ?? 'troupeau';
+  return (
+    <>
+      <Stack.Screen options={{ title: titreDuTerrain(zone) }} />
+      <GrilleTerrain zone={zone} />
+    </>
   );
 }

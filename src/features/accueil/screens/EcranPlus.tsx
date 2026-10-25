@@ -1,28 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { RUBRIQUES_DU_PLUS } from '@/features/accueil/rubriques/rubriquesDuPlus';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 
-interface Rubrique {
-  libelle: string;
-  aide: string;
-  icone: keyof typeof Ionicons.glyphMap;
-  route: string;
-}
-
-/** Ce qui reste hors des trois premiers onglets : la réglementation, l'argent, les partenaires, les bilans, l'historique et les réglages. */
-const RUBRIQUES: Rubrique[] = [
-  { libelle: 'Réglementation', aide: 'Cadre, étiquetage, agrément, analyses', icone: 'shield-checkmark-outline', route: ROUTES.CADRE_REGLEMENTAIRE_ATELIER },
-  { libelle: 'Argent', aide: 'Factures, ventes, banque, assurance', icone: 'cash-outline', route: ROUTES.COMPTABILITE },
-  { libelle: 'Ventes et contacts', aide: 'Chiffre d’affaires, tarifs, commandes, contacts', icone: 'cart-outline', route: ROUTES.COMMERCIAL },
-  { libelle: 'Partenaires', aide: 'Abattoir, équarrissage, clients', icone: 'people-outline', route: '/commercial/partenaires' },
-  { libelle: 'Bilans', aide: 'Bilan annuel, rentabilité, export', icone: 'stats-chart-outline', route: ROUTES.CHEPTEL_BILAN },
-  { libelle: 'Historique', aide: 'Naissances, soins, lots, ventes', icone: 'time-outline', route: ROUTES.CHEPTEL_HISTORIQUE },
-  { libelle: 'Réglages', aide: 'Année, Drive, imprimante, mode', icone: 'settings-outline', route: ROUTES.REGLAGES },
-];
-
-/** La page « Plus » : les rubriques qui ne tiennent pas dans la barre du bas, plus l'accueil de la ferme et les rappels. */
+/**
+ * La page « Plus », comme sur la maquette : les rubriques qui ne tiennent pas dans la barre du bas (chacune ouvre sa page de liste), plus l'accueil de la ferme
+ * et les rappels.
+ */
 export default function EcranPlus() {
   const router = useRouter();
   const ouvrir = (route: string) => router.push(route as never);
@@ -36,11 +22,11 @@ export default function EcranPlus() {
       <View style={{ alignSelf: 'flex-start', backgroundColor: colors.text, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 }}>
         <Text style={{ color: colors.blanc, fontSize: 13, fontWeight: '600' }}>Mode avancé activé · Réglages › Mode avancé</Text>
       </View>
-      {RUBRIQUES.map((r) => (
+      {RUBRIQUES_DU_PLUS.map((r) => (
         <Pressable
-          key={r.libelle}
+          key={r.cle}
           accessibilityRole="button"
-          onPress={() => ouvrir(r.route)}
+          onPress={() => ouvrir(ROUTES.rubrique(r.cle))}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}
         >
           <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.badgeBg, alignItems: 'center', justifyContent: 'center' }}>

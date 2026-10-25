@@ -11,12 +11,29 @@ import { especeDuSuivi } from '@/features/export/documents/suiviMouvementsPdf';
 import { ROUTES } from '@/shared/constants/routes';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
+import { GrilleTerrain } from '@/features/accueil/terrain/EcranTerrain';
+import { afficheBureau } from '@/shared/utils/affichage';
+import { View } from 'react-native';
+
+/**
+ * L'onglet Chèvres. Sur le téléphone : les six tuiles de la maquette (scanner, naissance, soin, mouvement, décès, cheptel). Sur Windows : le menu en groupes
+ * titrés (voir ListeCheptel), à côté du cheptel.
+ */
+export default function AccueilCheptel() {
+  if (afficheBureau()) return <ListeCheptel />;
+  return (
+    <View style={{ flex: 1 }}>
+      <SelecteurEspece />
+      <GrilleTerrain zone="troupeau" />
+    </View>
+  );
+}
 
 /**
  * L'onglet Cheptel, en groupes titrés (voir groupesCheptel) : le troupeau, la santé, l'identification et la PAC, les statistiques, la
  * technique. Depuis ces écrans, la flèche de retour ramène ici.
  */
-export default function AccueilCheptel() {
+function ListeCheptel() {
   const router = useRouter();
   const estActive = useLigneActive();
   const { espece } = useEtablissement();

@@ -85,6 +85,8 @@ export const ROUTES = {
   LAIT_DU_JOUR: '/production/lait-du-jour',
   /** L'écran « terrain » d'une zone de l'accueil (le troupeau, l'atelier, l'accueil du public) : de très grands boutons, une action chacun. */
   terrain: (zone: string) => `/production/terrain?zone=${zone}` as const,
+  /** Une page de rubrique du mode avancé (les listes du menu « Plus », le mouvement des chèvres) : `nom` désigne la rubrique (voir rubriquesDuPlus). */
+  rubrique: (nom: string) => `/rubrique/${nom}` as const,
   /** Les ventes d'animaux vivants : la liste d'abord, puis « Nouvelle vente ». */
   VENTES_VIVANTS: '/production/ventes-vivants',
   /** Le cadre réglementaire de l'atelier (fabriquer et vendre fromages, viande, charcuterie ; la Corse). */
@@ -202,6 +204,8 @@ export const ROUTES = {
   commercialVentes: (vue: 'encaisser' | 'relancer') => `/commercial/ventes?vue=${vue}` as const,
   COMMERCIAL_TARIFS: '/commercial/tarifs',
   COMMERCIAL_COMMANDES: '/commercial/commandes',
+  /** Les groupes à venir (les visites prévues, par groupe) : la page « Groupes » des Visites. */
+  COMMERCIAL_GROUPES: '/commercial/groupes',
   COMMERCIAL_CIRCUITS: '/commercial/circuits',
   /** Les pages simples de l'accueil du public (tuiles) : nouvelle visite, visites, formules, obligations. */
   COMMERCIAL_VISITE_SIMPLE: '/commercial/visite-simple',

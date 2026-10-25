@@ -5,7 +5,7 @@ import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
 import { COMPTES_VIDES, tuilesDuTerrain, type TuileTerrain } from '@/features/accueil/terrain/ecransTerrain';
 import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
 import { FormulesSimple } from '@/features/commercial/simple/FormulesSimple';
-import { GroupesSimple } from '@/features/commercial/simple/GroupesSimple';
+import GroupesSimple from '@/features/commercial/simple/GroupesSimple';
 import { NouvelleVisiteSimple } from '@/features/commercial/simple/NouvelleVisiteSimple';
 import { VisitesSimple } from '@/features/commercial/simple/VisitesSimple';
 import { EnteteBerger } from '@/features/berger/components/EnteteBerger';

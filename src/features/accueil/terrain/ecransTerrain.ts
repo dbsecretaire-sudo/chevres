@@ -61,9 +61,6 @@ export const COMPTES_VIDES: ComptesTerrain = {
 
 const T = TEXTES.accueil.ferme.terrain.tuiles;
 
-/** Le bouton Contacts, utilisé tous les jours : il est sur les trois écrans. */
-const contacts = (): TuileTerrain => ({ cle: 'contacts', titre: T.contacts, icone: 'people', route: ROUTES.CONTACTS });
-
 /** Le titre de l'écran terrain d'une zone. */
 export const titreDuTerrain = (zone: ZoneTerrain): string => TEXTES.accueil.ferme.terrain.titres[zone];
 
@@ -76,16 +73,14 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
     nombre ? { nombre, alerte } : {};
   switch (zone) {
     case 'troupeau':
+      // Comme sur la maquette : six tuiles. Le reste (à compléter, lots, vente vivante, contacts…) est dans les rubriques du menu « Plus » et dans Mouvement.
       return [
-        { cle: 'aCompleter', titre: T.aCompleter, icone: 'create', route: ROUTES.CHEPTEL_A_COMPLETER, ...avec(c.aCompleter, true) },
-        { cle: 'liste', titre: T.liste, icone: 'paw', route: ROUTES.lieu('animaux'), ...avec(c.animaux) },
-        { cle: 'ajoutRapide', titre: T.ajoutRapide, icone: 'add-circle', route: ROUTES.CHEPTEL_AJOUT_RAPIDE },
+        { cle: 'scanner', titre: T.scanner, icone: 'scan', route: ROUTES.CHEPTEL_LISTE },
         { cle: 'naissance', titre: T.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCE_NOUVELLE, ...avec(c.naissances) },
         { cle: 'traitement', titre: T.traitement, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU, ...avec(c.delais, true) },
-        { cle: 'sorties', titre: T.sorties, icone: 'log-out', route: ROUTES.CHEPTEL_HISTORIQUE },
-        { cle: 'lots', titre: T.lots, icone: 'layers', route: ROUTES.CHEPTEL_LOTS },
-        { cle: 'venteVivant', titre: T.venteVivant, icone: 'cash', iconeMci: 'truck-delivery', route: ROUTES.VENTES_VIVANTS, ...avec(c.ventesSansDocument, true) },
-        contacts(),
+        { cle: 'mouvement', titre: T.mouvement, icone: 'swap-horizontal', route: ROUTES.rubrique('mouvement') },
+        { cle: 'deces', titre: T.deces, icone: 'add', route: ROUTES.CHEPTEL_HISTORIQUE },
+        { cle: 'cheptel', titre: T.cheptel, icone: 'list', route: ROUTES.CHEPTEL_LISTE, ...avec(c.animaux) },
       ];
     case 'atelier':
       // Comme sur la maquette : le lait, fabriquer (une page avec les produits), scanner un lot, les étiquettes, vendre, le stock.

@@ -17,13 +17,13 @@ const comptes = (surcharge: Partial<ComptesTerrain> = {}): ComptesTerrain => ({
   ...surcharge,
 });
 
-describe('écrans terrain des trois zones de l’accueil', () => {
-  it('chaque zone a son titre et au moins un bouton ; Contacts reste sur le troupeau seulement', () => {
+describe('écrans terrain des zones de l’accueil', () => {
+  it('chaque zone a son titre et au moins un bouton ; les contacts sont dans les rubriques du menu, plus sur les écrans terrain', () => {
     for (const zone of ZONES_TERRAIN) {
       expect(titreDuTerrain(zone)).not.toBe('');
       const tuiles = tuilesDuTerrain(zone, comptes());
       expect(tuiles.length).toBeGreaterThan(0);
-      expect(tuiles.find((t) => t.cle === 'contacts')?.route).toBe(zone === 'troupeau' ? ROUTES.CONTACTS : undefined);
+      expect(tuiles.find((t) => t.cle === 'contacts')).toBeUndefined();
     }
   });
 
@@ -35,21 +35,17 @@ describe('écrans terrain des trois zones de l’accueil', () => {
     }
   });
 
-  it('le troupeau montre le nombre d’animaux, et les alertes (délais, document qui manque) en rouge ; zéro ne s’affiche pas', () => {
+  it('le troupeau montre les six tuiles de la maquette, dans l’ordre ; le cheptel donne le nombre d’animaux, et le délai d’attente se signale en rouge', () => {
     const propre = tuilesDuTerrain('troupeau', comptes());
-    expect(propre.find((t) => t.cle === 'liste')).toMatchObject({ nombre: 236, alerte: false });
+    expect(propre.map((t) => t.cle)).toEqual(['scanner', 'naissance', 'traitement', 'mouvement', 'deces', 'cheptel']);
+    expect(propre.find((t) => t.cle === 'cheptel')).toMatchObject({ nombre: 236, alerte: false });
     expect(propre.find((t) => t.cle === 'traitement')?.nombre).toBeUndefined();
-    expect(propre.find((t) => t.cle === 'venteVivant')?.nombre).toBeUndefined();
-    const alertes = tuilesDuTerrain('troupeau', comptes({ delais: 3, ventesSansDocument: 2 }));
+    const alertes = tuilesDuTerrain('troupeau', comptes({ delais: 3 }));
     expect(alertes.find((t) => t.cle === 'traitement')).toMatchObject({ nombre: 3, alerte: true });
-    expect(alertes.find((t) => t.cle === 'venteVivant')).toMatchObject({ nombre: 2, alerte: true });
   });
 
-  it('le troupeau propose « À compléter » (ce que le berger a saisi), avec son nombre en rouge quand il y en a', () => {
-    const sans = tuilesDuTerrain('troupeau', comptes()).find((t) => t.cle === 'aCompleter');
-    expect(sans).toMatchObject({ route: ROUTES.CHEPTEL_A_COMPLETER });
-    expect(sans?.nombre).toBeUndefined();
-    expect(tuilesDuTerrain('troupeau', comptes({ aCompleter: 3 })).find((t) => t.cle === 'aCompleter')).toMatchObject({ nombre: 3, alerte: true });
+  it('le mouvement des chèvres s’ouvre dans sa rubrique (entrée, vente vivante, abattoir, sorties)', () => {
+    expect(tuilesDuTerrain('troupeau', comptes()).find((t) => t.cle === 'mouvement')?.route).toBe(ROUTES.rubrique('mouvement'));
   });
 
   it('l’atelier suit la maquette : lait, fabriquer, scanner un lot, étiquettes, vendre, stock ; un stock négatif se signale', () => {

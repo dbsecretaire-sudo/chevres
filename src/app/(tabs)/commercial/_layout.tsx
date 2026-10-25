@@ -21,6 +21,7 @@ export default function CommercialLayout() {
       <Stack.Screen name="ventes" options={{ title: TEXTES.commercial.ventes.titre }} />
       <Stack.Screen name="tarifs" options={{ title: TEXTES.commercial.tarifs.titre }} />
       <Stack.Screen name="commandes" options={{ title: TEXTES.commercial.commandes.titre }} />
+      <Stack.Screen name="groupes" options={{ title: 'Groupes' }} />
       <Stack.Screen
         name="commande"
         options={({ route }) => ({

@@ -18,6 +18,7 @@ import { TEXTES } from '@/shared/textes';
 import { MenuDeLaFenetre } from '@/bureau/MenuDeLaFenetre';
 import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
 import { afficheBureau } from '@/shared/utils/affichage';
+import { titreDeLaRubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
 
 /** Les pages (cachées de la barre) qui font partie de l'Organisation : son onglet y reste en couleur. */
 const PAGES_ORGANISATION = [
@@ -160,6 +161,14 @@ function Onglets() {
       <Tabs.Screen name="sante" options={{ href: null, headerShown: false }} />
       {/* La rubrique « Plus » : la page qui regroupe ce qui ne tient pas dans la barre du bas. */}
       <Tabs.Screen name="plus" options={{ title: 'Plus', headerShown: false }} />
+      {/* Une page de rubrique du mode avancé (les listes du « Plus », le mouvement des chèvres) : son titre vient de la rubrique ouverte. */}
+      <Tabs.Screen
+        name="rubrique/[nom]"
+        options={({ route }) => ({
+          href: null,
+          title: titreDeLaRubrique((route.params as { nom?: string } | undefined)?.nom),
+        })}
+      />
       {/* La rubrique « Visites » : le tourisme, séparé des ventes et des contacts. */}
       <Tabs.Screen name="visites" options={{ title: 'Visites', headerShown: false }} />
       <Tabs.Screen

@@ -29,15 +29,26 @@ import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { ROUTES } from '@/shared/constants/routes';
 import { useAccueilEnDeuxColonnes, useLigneActive } from '@/bureau/colonnes';
 import { TEXTES } from '@/shared/textes';
+import { GrilleTerrain } from '@/features/accueil/terrain/EcranTerrain';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 const T = TEXTES.production.accueil;
 const G = T.groupes;
 
 /**
+ * L'onglet Atelier. Sur le téléphone : les six tuiles de la maquette (lait, fabriquer, scanner un lot, étiquettes, vendre, stock). Sur Windows : les groupes
+ * titrés (voir ListeProduction), à côté du cheptel.
+ */
+export default function ProductionAccueil() {
+  if (afficheBureau()) return <ListeProduction />;
+  return <GrilleTerrain zone="atelier" />;
+}
+
+/**
  * L'onglet Production d'un élevage, à côté du Cheptel : des groupes titrés — le produit (fromages et charcuterie par lot, viande
  * vendue), l'analyse et le contrôle du lait, les produits dangereux (rappels de lots). Le stock y est branché : les lots sont ceux de l'inventaire.
  */
-export default function ProductionAccueil() {
+function ListeProduction() {
   const ouvrir = useOuvrir();
   const { espece } = useEtablissement();
   // Un stock en négatif (plus vendu que fabriqué) : la ligne du produit porte la pastille rouge.

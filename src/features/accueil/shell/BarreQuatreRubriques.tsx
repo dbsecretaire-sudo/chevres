@@ -13,7 +13,14 @@ const RUBRIQUES = [
 
 /** La barre à quatre onglets du bas : la rubrique ouverte est en couleur. */
 export function BarreQuatreRubriques({ state, navigation }: BottomTabBarProps) {
-  const courant = state.routes[state.index]?.name;
+  const ouvert = state.routes[state.index];
+  // Une page de rubrique garde en couleur l'onglet d'où elle vient : « Plus » pour le menu, « Chèvres » pour le mouvement des chèvres.
+  const courant =
+    ouvert?.name === 'rubrique/[nom]'
+      ? (ouvert.params as { nom?: string } | undefined)?.nom === 'mouvement'
+        ? 'cheptel'
+        : 'plus'
+      : ouvert?.name;
   return (
     <View style={{ flexDirection: 'row', height: 64, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}>
       {RUBRIQUES.map((r) => {

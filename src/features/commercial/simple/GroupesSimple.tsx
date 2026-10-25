@@ -16,7 +16,7 @@ const T = TEXTES.commercial.agritourisme.simple;
  * Les groupes à venir, en cartes : le nom du groupe, le jour de la visite et le nombre de personnes, du plus proche au plus lointain.
  * Ce sont les visites prévues (un groupe, une visite) : rien d'autre à saisir ici, la visite se crée dans « Nouvelle visite ».
  */
-export function GroupesSimple() {
+export default function GroupesSimple() {
   const [groupes, setGroupes] = useState<VisiteAgritourisme[] | null>(null);
 
   useFocusEffect(
