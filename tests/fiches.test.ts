@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appliquerModification, fichesDe, FICHE_ENTIERE, fusionnerModifications, modificationsDe } from '@/features/sync/fiches';
+import { appliquerModification, fichesDe, FICHE_ENTIERE, fusionnerModifications, modificationsDe } from '@/shared/storage/fiches';
 
 describe('le découpage des valeurs en fiches', () => {
   it('une liste d’éléments avec un id donne une fiche par élément', () => {

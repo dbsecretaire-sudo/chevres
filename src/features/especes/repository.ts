@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { appliquerEspece, estEspeceOffice, retirerEspece } from '@/features/especes/services/registre';
 import type { ArchiveEspeces, DefinitionEspece } from '@/features/especes/types';
 import { CLE_STOCKAGE, PREFIXE_STOCKAGE } from '@/shared/constants/stockage';
@@ -16,7 +17,7 @@ export async function remplacerArchiveEspeces(archive: ArchiveEspeces): Promise<
     ajoutees: Array.isArray(archive.ajoutees) ? archive.ajoutees : [],
     modifiees: archive.modifiees && typeof archive.modifiees === 'object' ? archive.modifiees : {},
   };
-  await AsyncStorage.setItem(CLE, JSON.stringify(nouvelle));
+  await ecrireDonnee(CLE, nouvelle);
   // Les espèces qui ne sont plus dans la sauvegarde quittent les dictionnaires, les autres s'y mettent à jour.
   for (const ancienne of avant.ajoutees) {
     if (!nouvelle.ajoutees.some((e) => e.id === ancienne.id)) retirerEspece(ancienne.id);
@@ -54,7 +55,7 @@ export async function enregistrerEspece(definition: DefinitionEspece): Promise<v
   } else {
     archive.ajoutees = [...archive.ajoutees.filter((e) => e.id !== definition.id), definition];
   }
-  await AsyncStorage.setItem(CLE, JSON.stringify(archive));
+  await ecrireDonnee(CLE, archive);
   appliquerEspece(definition);
 }
 
@@ -63,6 +64,6 @@ export async function supprimerEspece(id: string): Promise<void> {
   if (estEspeceOffice(id)) return;
   const archive = await lire();
   archive.ajoutees = archive.ajoutees.filter((e) => e.id !== id);
-  await AsyncStorage.setItem(CLE, JSON.stringify(archive));
+  await ecrireDonnee(CLE, archive);
   retirerEspece(id);
 }

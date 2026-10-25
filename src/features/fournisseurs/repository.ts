@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { generateId } from '@/shared/utils/id';
 import { cleStockage, cleStockagePour } from '@/features/etablissements/repository';
 import type { Fournisseur } from '@/features/fournisseurs/types';
@@ -18,7 +19,7 @@ async function lireTous(cleLecture: string = cle()): Promise<Fournisseur[]> {
 }
 
 async function ecrireTous(items: Fournisseur[]): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(items));
+  await ecrireDonnee(cle(), items);
 }
 
 /** Le nom sous lequel un fournisseur s'affiche dans les listes : celui de son entreprise (à défaut, celui de son contact). */

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { generateId } from '@/shared/utils/id';
 import {
   COMPTES_PCG_DEPENSE,
@@ -78,7 +79,7 @@ async function lireTous(): Promise<CompteComptableEnregistre[]> {
 }
 
 async function ecrireTous(items: CompteComptableEnregistre[]): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(items));
+  await ecrireDonnee(cle(), items);
 }
 
 /** Comptes PCG triés par numéro, pour la liste et les sélecteurs. */

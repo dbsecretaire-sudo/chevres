@@ -1,4 +1,5 @@
 
+import { ecrireDonnee } from '@/shared/storage/depot';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleStockage } from '@/features/etablissements/repository';
 import type { ArchiveDossiers } from '@/features/dossiers/types';
@@ -23,7 +24,7 @@ export async function lireArchiveDossiers(): Promise<ArchiveDossiers> {
 
 /** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
 export async function remplacerArchiveDossiers(archive: ArchiveDossiers): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(archive));
+  await ecrireDonnee(cle(), archive);
 }
 
 /** Supprime tout ce qui concerne un client (quand sa fiche est supprimée). */

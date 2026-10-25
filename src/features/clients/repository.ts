@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { generateId } from '@/shared/utils/id';
 import { cleStockage, cleStockagePour } from '@/features/etablissements/repository';
 import { comparerAlphabetique, nomComplet } from '@/shared/utils/personne';
@@ -19,7 +20,7 @@ async function lireTous(cleLecture: string = cle()): Promise<Client[]> {
 }
 
 async function ecrireTous(items: Client[]): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(items));
+  await ecrireDonnee(cle(), items);
 }
 
 /** Clients triés par ordre alphabétique de leur nom (et non par ordre de création), pour la liste et les sélecteurs. */

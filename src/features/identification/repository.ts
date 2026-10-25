@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { cleStockage } from '@/features/etablissements/repository';
 import type { DocumentIdentification } from '@/features/identification/types';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
@@ -17,7 +18,7 @@ async function lireTous(): Promise<DocumentIdentification[]> {
 }
 
 async function ecrireTous(documents: DocumentIdentification[]): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(documents));
+  await ecrireDonnee(cle(), documents);
 }
 
 /** Les documents d'identification de l'établissement, du plus récent au plus ancien. */

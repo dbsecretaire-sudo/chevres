@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { cleStockage } from '@/features/etablissements/repository';
 import type { ArchiveCommercial, Commande } from '@/features/commercial/types';
 import type { EtapeReglementaire } from '@/features/stock/types';
@@ -58,7 +59,7 @@ export async function lireArchiveCommercial(): Promise<ArchiveCommercial> {
 
 /** Remplace tout — utilisé par la restauration d'une sauvegarde et le tirage depuis Google Drive. */
 export async function remplacerArchiveCommercial(archive: ArchiveCommercial): Promise<void> {
-  await AsyncStorage.setItem(cle(), JSON.stringify(archive));
+  await ecrireDonnee(cle(), archive);
 }
 
 /** Note ou corrige une démarche d'accueil du public (faite ou non, sa date, sa référence, ses pièces) : les autres ne bougent pas. */

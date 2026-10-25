@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Categorie, RecordMap } from '@/shared/storage/types';
 import { cleStockage } from '@/shared/storage/etablissementActif';
+import { ecrireDonnee } from '@/shared/storage/depot';
 import { CLE_STOCKAGE, SEPARATEUR_CLE } from '@/shared/constants/stockage';
 
 /**
@@ -77,7 +78,8 @@ export async function saveYear<C extends Categorie>(
   annee: number,
   items: RecordMap[C][],
 ): Promise<void> {
-  await AsyncStorage.setItem(dataKey(categorie, annee), JSON.stringify(items));
+  // Les données d'une année se synchronisent fiche par fiche (voir depot.ts) ; l'année et l'index, eux, se reconstruisent sur chaque appareil.
+  await ecrireDonnee(dataKey(categorie, annee), items);
   await ensureYearRegistered(categorie, annee);
   for (const ecouteur of [...ecouteurs]) {
     try {
