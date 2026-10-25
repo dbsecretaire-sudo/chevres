@@ -197,5 +197,25 @@ export const RUBRIQUES: Record<string, Rubrique> = {
   },
 };
 
+/** Une tuile de la rubrique Visites : la visite à créer d'abord (remplie en vert, la principale), puis les visites du jour et le reste. */
+export interface TuileVisites {
+  libelle: string;
+  aide: string;
+  icone: Icone;
+  route: string;
+  principale?: boolean;
+}
+
+/** Les tuiles de la rubrique Visites, comme sur la maquette (Windows les reprend dans son menu Visites). */
+export const TUILES_VISITES: TuileVisites[] = [
+  { libelle: 'Nouvelle visite', aide: 'Date, personnes, formule', icone: 'add', route: ROUTES.COMMERCIAL_VISITE, principale: true },
+  { libelle: 'Aujourd’hui', aide: 'Visites du jour', icone: 'calendar-outline', route: ROUTES.COMMERCIAL_AGRITOURISME },
+  { libelle: 'Encaisser', aide: 'Montant et paiement', icone: 'cash-outline', route: ROUTES.commercialVentes('encaisser') },
+  { libelle: 'Repas', aide: 'Formules et réservations', icone: 'restaurant-outline', route: ROUTES.COMMERCIAL_FORMULES },
+  { libelle: 'Groupes', aide: 'Cars et associations', icone: 'people-outline', route: ROUTES.COMMERCIAL_GROUPES },
+  { libelle: 'Tarifs', aide: 'Prix des formules', icone: 'pricetag-outline', route: ROUTES.COMMERCIAL_TARIFS },
+  { libelle: 'Accueil du public', aide: 'Obligations et informations', icone: 'information-circle-outline', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
+];
+
 /** Le titre d'une page de rubrique (celui de la barre du haut), ou une chaîne vide quand la rubrique n'existe pas. */
 export const titreDeLaRubrique = (nom: string | undefined): string => (nom && RUBRIQUES[nom] ? RUBRIQUES[nom].titre : '');

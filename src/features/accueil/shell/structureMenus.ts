@@ -4,6 +4,11 @@ import { definitionDesMenus, menusParNom } from '@/bureau/MenuBureau';
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
+import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
+import { groupesCheptel } from '@/features/cheptel/services/rubriquesCheptel';
+import { especeDuSuivi } from '@/features/export/documents/suiviMouvementsPdf';
+import { especeCourante } from '@/shared/dictionnaire/animaux';
+import { RUBRIQUES, RUBRIQUES_DU_PLUS, TUILES_VISITES } from '@/features/accueil/rubriques/rubriquesDuPlus';
 
 /** Une entrée d'un menu : un écran (libellé et route), ou un trait entre deux groupes. */
 type Entree = NonNullable<DefinitionMenu['items']>[number];
@@ -90,12 +95,63 @@ export function menusDeLaFerme(): DefinitionMenu[] {
   return [accueil, exploitation, atelier, agritourisme, comptabilite, contacts, organisation];
 }
 
+const separateur = (titre: string): Entree => ({ separateur: true, titre });
+
+const routesDeMenus = (menus: DefinitionMenu[]): Set<string> =>
+  new Set(menus.flatMap((m) => [...(m.route ? [m.route] : []), ...(m.items ?? []).flatMap((e) => ('route' in e ? [e.route] : []))]));
+
 /**
- * Les menus de l'application : les thèmes de la ferme (Accueil, Exploitation, Atelier, Agritourisme, Comptabilité, Contacts, Données), ou les rubriques des onglets
- * avec l'accueil classique. La fenêtre Windows, le menu « Menus » du mobile et l'arbre de gauche du poste de comptabilité les prennent ici.
+ * Les quatre rubriques de la fenêtre Windows, comme sur le téléphone : Chèvres, Atelier, Visites, Plus. Chacune reprend ses tuiles, puis son détail (le menu du
+ * cheptel, les fabrications, les listes du Plus). Les pages de l'ancienne organisation qu'aucune rubrique ne reprend restent dans Plus, rangées par thème :
+ * rien ne disparaît.
  */
-export const menusDeLApplication = (accueilClassique: boolean): DefinitionMenu[] =>
-  accueilClassique ? definitionDesMenus() : menusDuPoste();
+export function menusDeLaFenetre(): DefinitionMenu[] {
+  const tuiles = (cle: 'troupeau' | 'atelier' | 'fabriquer') => tuilesDuTerrain(cle, COMPTES_VIDES).map((t) => ({ label: t.titre, route: t.route }));
+  const chevres: DefinitionMenu = {
+    label: 'Chèvres',
+    items: [
+      { label: 'Accueil des chèvres', route: ROUTES.CHEPTEL },
+      ...tuiles('troupeau'),
+      separateur('Suivi'),
+      ...groupesCheptel(especeDuSuivi(especeCourante())).flatMap((groupe) => [
+        separateur(groupe.titre),
+        ...groupe.lignes.map((l) => ({ label: l.titre, route: l.route })),
+      ]),
+    ],
+  };
+  const atelier: DefinitionMenu = {
+    label: 'Atelier',
+    items: [{ label: 'Accueil de l’atelier', route: ROUTES.PRODUCTION }, ...tuiles('atelier'), separateur('Fabriquer'), ...tuiles('fabriquer')],
+  };
+  const visites: DefinitionMenu = {
+    label: 'Visites',
+    items: TUILES_VISITES.map((t) => ({ label: t.libelle, route: t.route })),
+  };
+  const plusRubriques: DefinitionMenu = {
+    label: 'Plus',
+    items: [
+      { label: 'Accueil de la ferme', route: '/' },
+      ...RUBRIQUES_DU_PLUS.flatMap((r) => [
+        separateur(r.libelle),
+        ...RUBRIQUES[r.cle].sections.flatMap((s) => [separateur(s.titre), ...s.lignes.map((l) => ({ label: l.libelle, route: l.route }))]),
+      ]),
+    ],
+  };
+  // Les pages que les quatre rubriques ne reprennent pas encore : elles restent dans Plus, par thème de l'ancienne organisation.
+  const montrees = routesDeMenus([chevres, atelier, visites, plusRubriques]);
+  const restantes = menusDuPoste().flatMap((theme) => {
+    const pages = (theme.items ?? []).filter((e): e is { label: string; route: string } => 'route' in e && !montrees.has(e.route));
+    return pages.length > 0 ? [separateur(theme.label), ...pages] : [];
+  });
+  return [chevres, atelier, visites, { ...plusRubriques, items: [...(plusRubriques.items ?? []), ...restantes] }];
+}
+
+/**
+ * Les menus de l'application : la fenêtre Windows prend les quatre rubriques (Chèvres, Atelier, Visites, Plus), avec l'accueil classique ce sont les menus
+ * d'avant, et le poste de comptabilité (affichage sobre et large) garde ses huit thèmes dans l'arbre de gauche.
+ */
+export const menusDeLApplication = (accueilClassique: boolean, comptable = false): DefinitionMenu[] =>
+  accueilClassique ? definitionDesMenus() : comptable ? menusDuPoste() : menusDeLaFenetre();
 
 /** Les noms des menus, de gauche à droite (sans « Affichage », que Windows ajoute en dernier). */
 export const libellesDesMenus = (accueilClassique: boolean): string[] => menusDeLApplication(accueilClassique).map((m) => m.label);

@@ -8,7 +8,8 @@ import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { partiesDuMenu } from '@/shared/navigation/filAriane';
 import { useMenusSections } from '@/shared/navigation/menusSections';
-import { menusDuPoste } from '@/features/accueil/shell/structureMenus';
+import { menusDeLaFenetre, menusDuPoste } from '@/features/accueil/shell/structureMenus';
+import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 import { colors } from '@/shared/theme/colors';
@@ -28,6 +29,7 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const { settings } = useAppSettings();
   const avecPlanDeLaFerme = !settings.exploitation?.accueilClassique;
+  const comptable = useDispositionComptable();
   /** Le menu déroulé (son libellé) : un seul à la fois. */
   const [deroule, setDeroule] = useState<string | null>(null);
   /** La partie d'un menu déroulée (menu et titre) : une seule à la fois, toutes repliées au départ, pour que la liste tienne dans l'écran. */
@@ -46,7 +48,7 @@ export function PastilleMenus({ compact = false }: { compact?: boolean }) {
     ref.current?.measureInWindow((x, y, largeur, hauteur) => {
       setDeroule(null);
       setPartieOuverte(null);
-      setPlan(avecPlanDeLaFerme ? menusDuPoste() : null);
+      setPlan(avecPlanDeLaFerme ? (comptable ? menusDuPoste() : menusDeLaFenetre()) : null);
       setListe({ haut: y + hauteur + 6, droite: Math.max(8, largeurFenetre - (x + largeur)) });
     });
   const aller = (route: string) => {
