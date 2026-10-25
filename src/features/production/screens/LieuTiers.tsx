@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
-import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import LieuAssociations from '@/features/production/screens/LieuAssociations';
 import { BonsDeLivraison } from '@/features/production/components/BonsDeLivraison';
@@ -94,8 +93,6 @@ function LieuTiersStandard() {
   const { settings, patchSettings } = useAppSettings();
   /** Partenariats : la fenêtre qui coche les catégories de tiers. */
   const [choixOuvert, setChoixOuvert] = useState(false);
-  /** La catégorie de contacts déroulée (une seule à la fois) : toutes sont enroulées à l'ouverture. */
-  const [categorieOuverte, setCategorieOuverte] = useState<string | null>(null);
   const { idsConnus, categories } = useCategoriesContact();
   /** Le nom de la catégorie d'un contact (pour les tableaux). */
   const nomDeLaCategorie = (c: Contact) => categories.find((x) => x.id === categorieDuContact(c, idsConnus).id)?.nom ?? '';
@@ -135,17 +132,6 @@ function LieuTiersStandard() {
       ),
     [contacts, idsConnus, config, cochees],
   );
-  /** Les tiers par catégorie, dans l'ordre alphabétique des noms de catégorie. */
-  const groupesDeTiers = useMemo(() => {
-    const parCategorie = new Map<string, Contact[]>();
-    for (const c of cle === 'particuliers' ? contacts : tiers) {
-      const id = categorieDuContact(c, idsConnus).id ?? '';
-      parCategorie.set(id, [...(parCategorie.get(id) ?? []), c]);
-    }
-    return [...parCategorie.entries()]
-      .map(([id, membres]) => ({ id, nom: categories.find((x) => x.id === id)?.nom ?? id, membres }))
-      .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-  }, [tiers, contacts, cle, idsConnus, categories]);
   const nombreParCategorie = useMemo(() => {
     const nombre: Record<string, number> = {};
     for (const c of contacts) {
@@ -199,6 +185,8 @@ function LieuTiersStandard() {
 
   /** Les pages de contacts des clients : leurs ventes sont dans les fiches des contacts, et « Dans l'application » est passé dans Stock, Réserver et Ventes. */
   const pageDesContacts = ['particuliers', 'entreprises', 'surfacesCommerciales'].includes(cle);
+  /** Les contacts de la page, par ordre alphabétique : le titre de la page dit déjà leur catégorie. */
+  const membresAffiches = [...(pageDesContacts ? contacts : tiers)].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   /** Les choix du bouton flottant : un contact (dans la catégorie déroulée, s'il y en a une), ou, selon le lieu, un organisme, une chambre ou un état. */
   const ajouterContact = (categorie?: string) =>
     ouvrir(categorie ? `${ROUTES.CONTACT_NOUVEAU}?categorie=${categorie}` : ROUTES.CONTACT_NOUVEAU);
@@ -228,7 +216,7 @@ function LieuTiersStandard() {
           {
             label: T.ajouterUnContact,
             icon: 'person-add' as const,
-            onPress: () => ajouterContact(categorieOuverte ?? config.categoriesContact[0]),
+            onPress: () => ajouterContact(config.categoriesContact[0]),
           },
           ...(cle === 'particuliers'
             ? [{ label: TEXTES.clients.categories.nouvelle, icon: 'folder-open' as const, onPress: () => ouvrir(ROUTES.ORGANISATION_CATEGORIES_CLIENT) }]
@@ -346,17 +334,8 @@ function LieuTiersStandard() {
           ) : (
           <GroupeAccueil titre={textes.groupeTiers ?? ''}>
             {/* Les contacts par catégorie : toutes enroulées, une seule se déroule à la fois. */}
-            {groupesDeTiers.map((groupe) => (
-              <SectionDeroulante
-                key={groupe.id}
-                titre={groupe.nom}
-                nombre={groupe.membres.length}
-                accordeon
-                ouverte={categorieOuverte === groupe.id}
-                onBasculer={() => setCategorieOuverte((actuelle) => (actuelle === groupe.id ? null : groupe.id))}
-              >
-                <BlocLignes>
-                  {groupe.membres.flatMap((c) => [
+            <BlocLignes>
+              {membresAffiches.flatMap((c) => [
                 <ListRow
                   key={c.cle}
                   title={c.nom}
@@ -404,9 +383,7 @@ function LieuTiersStandard() {
                     ))
                   : []),
               ])}
-                </BlocLignes>
-              </SectionDeroulante>
-            ))}
+            </BlocLignes>
             {tiers.length === 0 ? (
               <BlocLignes>
                 <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text>
@@ -454,13 +431,6 @@ function LieuTiersStandard() {
                     onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
                   />
                 ))}
-                <ListRow
-                  title={textes.ajouterVeterinaire ?? ''}
-                  icone="add-circle"
-                  onPress={() =>
-                    ouvrir(`${ROUTES.CONTACT_NOUVEAU}?categorie=${CATEGORIE_FOURNISSEUR.VETERINAIRE}`)
-                  }
-                />
               </BlocLignes>
             </GroupeAccueil>
           ) : null}
