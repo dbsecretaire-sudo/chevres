@@ -7,7 +7,7 @@ import { colors } from '@/shared/theme/colors';
 const RUBRIQUES = [
   { route: 'cheptel', libelle: 'Chèvres', icone: (c: string) => <Ionicons name="paw" size={24} color={c} /> },
   { route: 'production', libelle: 'Atelier', icone: (c: string) => <MaterialCommunityIcons name="cheese" size={24} color={c} /> },
-  { route: 'commercial', libelle: 'Visites', icone: (c: string) => <Ionicons name="trail-sign" size={24} color={c} /> },
+  { route: 'visites', libelle: 'Visites', icone: (c: string) => <Ionicons name="trail-sign" size={24} color={c} /> },
   { route: 'plus', libelle: 'Plus', icone: (c: string) => <Ionicons name="menu" size={24} color={c} /> },
 ] as const;
 

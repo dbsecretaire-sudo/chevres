@@ -15,6 +15,7 @@ interface Rubrique {
 const RUBRIQUES: Rubrique[] = [
   { libelle: 'Réglementation', aide: 'Cadre, étiquetage, agrément, analyses', icone: 'shield-checkmark-outline', route: ROUTES.CADRE_REGLEMENTAIRE_ATELIER },
   { libelle: 'Argent', aide: 'Factures, ventes, banque, assurance', icone: 'cash-outline', route: ROUTES.COMPTABILITE },
+  { libelle: 'Ventes et contacts', aide: 'Chiffre d’affaires, tarifs, commandes, contacts', icone: 'cart-outline', route: ROUTES.COMMERCIAL },
   { libelle: 'Partenaires', aide: 'Abattoir, équarrissage, clients', icone: 'people-outline', route: '/commercial/partenaires' },
   { libelle: 'Bilans', aide: 'Bilan annuel, rentabilité, export', icone: 'stats-chart-outline', route: ROUTES.CHEPTEL_BILAN },
   { libelle: 'Historique', aide: 'Naissances, soins, lots, ventes', icone: 'time-outline', route: ROUTES.CHEPTEL_HISTORIQUE },
