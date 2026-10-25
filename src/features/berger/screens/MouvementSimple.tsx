@@ -3,12 +3,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
 import type { Chevre } from '@/features/cheptel/types';
-import {
-  annulerEnvoiALAbattoir,
-  annulerSortieSansVente,
-  envoyerALAbattoir,
-  enregistrerSortieSansVente,
-} from '@/features/berger/services/mouvement';
+import { annulerEnvoiALAbattoir, envoyerALAbattoir } from '@/features/berger/services/mouvement';
 import { dateDuJour } from '@/features/berger/services/soin';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -16,8 +11,8 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.roles.berger;
 
-/** Les mouvements faits depuis le mode normal. La vente vivante et l'entrée viendront ensuite (elles ont leur propre parcours). */
-type Mouvement = 'sortie' | 'abattoir';
+/** Les mouvements faits depuis le mode normal. L'autre départ (prêt, don, transfert), la vente vivante et l'entrée viendront ensuite. */
+type Mouvement = 'abattoir';
 
 interface Props {
   animal: Chevre;
@@ -25,7 +20,7 @@ interface Props {
   onFait: (titre: string, detail: string, annuler: () => Promise<void>) => void;
 }
 
-/** Un mouvement d'une chèvre : sortie sans vente (c'est une mort) ou envoi à l'abattoir. */
+/** Un mouvement d'une chèvre : pour l'instant, l'envoi à l'abattoir. */
 export function MouvementSimple({ animal, onFait }: Props) {
   const [mouvement, setMouvement] = useState<Mouvement | undefined>(undefined);
   const [date, setDate] = useState(dateDuJour());
@@ -36,13 +31,8 @@ export function MouvementSimple({ animal, onFait }: Props) {
     if (!mouvement) return;
     setEnCours(true);
     try {
-      if (mouvement === 'sortie') {
-        const avant = await enregistrerSortieSansVente(animal, date);
-        onFait(T.sortieFaite, T.sortieDetail(boucle), () => annulerSortieSansVente(avant));
-      } else {
-        await envoyerALAbattoir(animal, date);
-        onFait(T.abattoirFait, T.abattoirDetail(boucle), () => annulerEnvoiALAbattoir(animal));
-      }
+      await envoyerALAbattoir(animal, date);
+      onFait(T.abattoirFait, T.abattoirDetail(boucle), () => annulerEnvoiALAbattoir(animal));
     } catch (erreur) {
       Alert.alert(T.erreur, erreur instanceof Error ? erreur.message : String(erreur));
     } finally {
@@ -50,10 +40,7 @@ export function MouvementSimple({ animal, onFait }: Props) {
     }
   };
 
-  const choix: { valeur: Mouvement; libelle: string }[] = [
-    { valeur: 'sortie', libelle: T.mouvementSortie },
-    { valeur: 'abattoir', libelle: T.mouvementAbattoir },
-  ];
+  const choix: { valeur: Mouvement; libelle: string }[] = [{ valeur: 'abattoir', libelle: T.mouvementAbattoir }];
 
   return (
     <View style={commonStyles.flex1}>
