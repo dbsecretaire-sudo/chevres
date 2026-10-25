@@ -4,6 +4,8 @@ import { colors } from '@/shared/theme/colors';
 export const styles = StyleSheet.create({
   centre: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
   info: { color: colors.blanc, fontSize: 15, textAlign: 'center' },
+  /** Le bouton de saisie à la main, en haut de la caméra : visible même quand le bas de l'écran est caché. */
+  haut: { position: 'absolute', top: 16, left: 16, right: 16 },
   overlay: {
     position: 'absolute',
     top: 0,

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/Button';
+import { CameraNavigateur, type CameraNavigateurHandle } from '@/features/cheptel/components/CameraNavigateur';
 
 import { useAccentColor } from '@/shared/theme/AccentColorContext';
 import { lireNumeroBoucleDeLaPhoto, photoEnBase64Requise } from '@/features/cheptel/ocr/lectureDeLaPhoto';
@@ -24,24 +25,33 @@ interface Props {
 export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, lot = false }: Props) {
   const textes = lot ? { ...TEXTES.cheptel.scannerBoucleCore, ...TEXTES.cheptel.scannerBoucleCore.lot } : TEXTES.cheptel.scannerBoucleCore;
   const accent = useAccentColor();
+  const surNavigateur = Platform.OS === 'web';
   const cameraRef = useRef<CameraView>(null);
+  const cameraNavigateurRef = useRef<CameraNavigateurHandle>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [enCours, setEnCours] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  /** Le numéro se tape à la main, sans photo. */
+  const [saisieLibre, setSaisieLibre] = useState(false);
   const [candidats, setCandidats] = useState<string[]>([]);
   const [valeur, setValeur] = useState('');
 
   const reinitialiser = () => {
     setPhotoUri(null);
+    setSaisieLibre(false);
     setCandidats([]);
     setValeur('');
   };
 
   const capturer = async () => {
-    if (!cameraRef.current || enCours) return;
+    if (enCours) return;
     setEnCours(true);
     try {
-      const photo = await cameraRef.current.takePictureAsync({ base64: photoEnBase64Requise(), quality: QUALITE_PHOTO_OCR });
+      // Sur le web, la photo vient de la vidéo du navigateur ; sur le téléphone, de la caméra de l'application.
+      const photo = surNavigateur
+        ? cameraNavigateurRef.current?.capturer(QUALITE_PHOTO_OCR)
+        : await cameraRef.current?.takePictureAsync({ base64: photoEnBase64Requise(), quality: QUALITE_PHOTO_OCR });
+      if (!photo) return;
       setPhotoUri(photo.uri);
       const { candidats: trouves } = await lireNumeroBoucleDeLaPhoto({ uri: photo.uri, base64: photo.base64 });
       setCandidats(trouves);
@@ -65,9 +75,9 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
     reinitialiser();
   };
 
-  if (!permission) return <View style={styles.centre} />;
+  if (!surNavigateur && !permission) return <View style={styles.centre} />;
 
-  if (!permission.granted) {
+  if (!surNavigateur && !permission?.granted) {
     return (
       <View style={styles.centre}>
         <Text style={styles.info}>{textes.lAccesALAppareil}</Text>
@@ -80,10 +90,10 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
     );
   }
 
-  if (photoUri) {
+  if (photoUri || saisieLibre) {
     return (
       <View style={commonStyles.flex1}>
-        <Image source={{ uri: photoUri }} style={styles.apercu} resizeMode="cover" />
+        {photoUri ? <Image source={{ uri: photoUri }} style={styles.apercu} resizeMode="cover" /> : null}
         {enCours ? (
           <View style={styles.centre}>
             <ActivityIndicator color={accent} size="large" />
@@ -135,10 +145,17 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
 
   return (
     <View style={commonStyles.flex1}>
-      <CameraView ref={cameraRef} style={commonStyles.flex1} facing="back" />
+      {surNavigateur ? (
+        <CameraNavigateur ref={cameraNavigateurRef} messageErreur={textes.lAccesALAppareil} />
+      ) : (
+        <CameraView ref={cameraRef} style={commonStyles.flex1} facing="back" />
+      )}
       <View style={styles.overlay} pointerEvents="none">
         <View style={styles.cadre} />
         <Text style={styles.consigne}>{textes.cadrezLeNumeroDeBoucle}</Text>
+      </View>
+      <View style={styles.haut}>
+        <Button label={TEXTES.cheptel.scannerBoucleCore.saisirALaMain} variant="secondary" onPress={() => setSaisieLibre(true)} />
       </View>
       <View style={styles.controles}>
         <View style={styles.boutonVide} />
