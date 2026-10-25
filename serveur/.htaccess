@@ -1,0 +1,4 @@
+# Le fichier de configuration (mots de passe) n'est jamais servi.
+<Files "config.php">
+  Require all denied
+</Files>

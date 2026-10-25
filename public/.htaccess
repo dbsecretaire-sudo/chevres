@@ -3,6 +3,8 @@ RewriteBase /
 
 # Let's Encrypt vérifie le domaine à une adresse /.well-known/ : elle doit arriver telle quelle, sans être réécrite.
 RewriteCond %{REQUEST_URI} !^/\.well-known/
+# Le serveur de synchronisation (dossier api) répond lui-même : pas de réécriture vers l'application.
+RewriteCond %{REQUEST_URI} !^/api/
 
 # Les fichiers et dossiers existants sont servis directement ; les autres adresses (par exemple /berger) vont à l'application.
 RewriteCond %{REQUEST_FILENAME} !-f
