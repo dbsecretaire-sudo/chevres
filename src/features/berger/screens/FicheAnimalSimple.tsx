@@ -14,13 +14,12 @@ interface Props {
   animal: Chevre;
   onSoin: () => void;
   onMouvement: () => void;
-  onVente: () => void;
   onNaissance: () => void;
   onDeces: () => void;
 }
 
 /** La fiche d'une chèvre : sa boucle, son sexe, sa naissance et sa mère, son entrée, et ce qu'on peut faire avec elle. */
-export function FicheAnimalSimple({ animal, onSoin, onMouvement, onVente, onNaissance, onDeces }: Props) {
+export function FicheAnimalSimple({ animal, onSoin, onMouvement, onNaissance, onDeces }: Props) {
   const boucle = (animal.numeroBoucle ?? '').trim();
   return (
     <ScrollView contentContainerStyle={commonStyles.gap10}>
@@ -40,7 +39,6 @@ export function FicheAnimalSimple({ animal, onSoin, onMouvement, onVente, onNais
         <Button label={T.soin} variant="secondary" onPress={onSoin} />
         {animal.sexe === SEXE.FEMELLE ? <Button label={T.ficheNaissance} variant="secondary" onPress={onNaissance} /> : null}
         <Button label={T.mouvement} variant="secondary" onPress={onMouvement} />
-        <Button label={T.venteVivante} variant="secondary" onPress={onVente} />
         <Button label={T.ficheDeces} variant="secondary" onPress={onDeces} />
       </View>
     </ScrollView>

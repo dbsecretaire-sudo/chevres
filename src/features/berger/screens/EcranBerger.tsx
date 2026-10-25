@@ -20,9 +20,7 @@ import {
 } from '@/features/berger/services/saisies';
 import { SoinSimple } from '@/features/berger/screens/SoinSimple';
 import { MouvementSimple } from '@/features/berger/screens/MouvementSimple';
-import { VenteVivanteSimple } from '@/features/berger/screens/VenteVivanteSimple';
 import { CheptelSimple } from '@/features/berger/screens/CheptelSimple';
-import { AchatSimple } from '@/features/berger/screens/AchatSimple';
 import { FicheAnimalSimple } from '@/features/berger/screens/FicheAnimalSimple';
 import { annulerSoin } from '@/features/berger/services/soin';
 import { useRole } from '@/features/roles/context/RoleContext';
@@ -43,7 +41,7 @@ const T = TEXTES.roles.berger;
 /** Le temps, après un changement d'écran, pendant lequel les appuis sont ignorés (en millisecondes). */
 const DELAI_APRES_UN_CHANGEMENT = 400;
 
-type But = 'naissance' | 'mort' | 'soin' | 'mouvement' | 'vente' | 'fiche';
+type But = 'naissance' | 'mort' | 'soin' | 'mouvement' | 'fiche';
 
 /** Ce que le berger fait : choisir une zone, une saisie, scanner la boucle, (pour une naissance) dire combien de petits, puis voir que c'est enregistré — avec de quoi l'annuler. */
 type Etape =
@@ -56,9 +54,7 @@ type Etape =
   | { nom: 'petits'; mere: Chevre }
   | { nom: 'soin'; animal: Chevre }
   | { nom: 'mouvement'; animal: Chevre }
-  | { nom: 'vente'; animal: Chevre }
   | { nom: 'cheptel' }
-  | { nom: 'achat' }
   | { nom: 'fiche'; animal: Chevre }
   | { nom: 'fait'; titre: string; detail: string; annuler: () => Promise<void> }
   | { nom: 'annule' }
@@ -104,7 +100,6 @@ export default function EcranBerger() {
       if (!animal) return setEtape({ nom: 'erreur', but, message: T.introuvable(boucle) });
       if (but === 'soin') return setEtape({ nom: 'soin', animal });
       if (but === 'mouvement') return setEtape({ nom: 'mouvement', animal });
-      if (but === 'vente') return setEtape({ nom: 'vente', animal });
       if (but === 'fiche') return setEtape({ nom: 'fiche', animal });
       if (but === 'naissance') {
         if (animal.sexe !== SEXE.FEMELLE)
@@ -195,6 +190,11 @@ export default function EcranBerger() {
               <EnteteBerger titre={T.chevres} onRetour={accueil} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
               <View style={styles.grille}>
               <GrosBouton
+                libelle={T.scannerUneChevre}
+                onPress={() => commencer('fiche')}
+                icone={<Ionicons name="scan" size={56} color={colors.blanc} />}
+              />
+              <GrosBouton
                 libelle={T.naissance}
                 onPress={() => commencer('naissance')}
                 icone={<Ionicons name="heart" size={56} color={colors.blanc} />}
@@ -210,29 +210,14 @@ export default function EcranBerger() {
                 icone={<Ionicons name="swap-horizontal" size={56} color={colors.blanc} />}
               />
               <GrosBouton
-                libelle={T.scannerUneChevre}
-                onPress={() => commencer('fiche')}
-                icone={<Ionicons name="scan" size={56} color={colors.blanc} />}
-              />
-              <GrosBouton
-                libelle={T.achat}
-                onPress={() => setEtape({ nom: 'achat' })}
-                icone={<Ionicons name="cart" size={56} color={colors.blanc} />}
+                libelle={T.mort}
+                onPress={() => commencer('mort')}
+                icone={<MaterialCommunityIcons name="grave-stone" size={56} color={colors.blanc} />}
               />
               <GrosBouton
                 libelle={T.cheptel}
                 onPress={() => setEtape({ nom: 'cheptel' })}
                 icone={<Ionicons name="list" size={56} color={colors.blanc} />}
-              />
-              <GrosBouton
-                libelle={T.venteVivante}
-                onPress={() => commencer('vente')}
-                icone={<Ionicons name="cash" size={56} color={colors.blanc} />}
-              />
-              <GrosBouton
-                libelle={T.mort}
-                onPress={() => commencer('mort')}
-                icone={<MaterialCommunityIcons name="grave-stone" size={56} color={colors.blanc} />}
               />
               </View>
             </View>
@@ -255,13 +240,6 @@ export default function EcranBerger() {
             </View>
           ) : null}
 
-          {etape.nom === 'achat' ? (
-            <View style={styles.contenu}>
-              <EnteteBerger titre={T.achat} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-              <AchatSimple onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })} />
-            </View>
-          ) : null}
-
           {etape.nom === 'cheptel' ? (
             <View style={styles.contenu}>
               <EnteteBerger titre={T.cheptel} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
@@ -275,19 +253,8 @@ export default function EcranBerger() {
                 animal={etape.animal}
                 onSoin={() => setEtape({ nom: 'soin', animal: etape.animal })}
                 onMouvement={() => setEtape({ nom: 'mouvement', animal: etape.animal })}
-                onVente={() => setEtape({ nom: 'vente', animal: etape.animal })}
                 onNaissance={() => surBoucle('naissance', (etape.animal.numeroBoucle ?? '').trim())}
                 onDeces={() => surBoucle('mort', (etape.animal.numeroBoucle ?? '').trim())}
-              />
-            </View>
-          ) : null}
-
-          {etape.nom === 'vente' ? (
-            <View style={styles.contenu}>
-              <EnteteBerger titre={T.venteVivante} onRetour={chevres} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-              <VenteVivanteSimple
-                animal={etape.animal}
-                onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })}
               />
             </View>
           ) : null}
@@ -315,9 +282,7 @@ export default function EcranBerger() {
                     ? T.scanSoin
                     : etape.but === 'mouvement'
                       ? T.scanMouvement
-                      : etape.but === 'vente'
-                        ? T.scanVenteVivante
-                        : etape.but === 'fiche'
+                      : etape.but === 'fiche'
                           ? T.scanFiche
                           : T.scanMort}
               </Text>
