@@ -54,7 +54,7 @@ if ($action === 'connexion' && $methode === 'POST') {
 }
 
 // Toutes les autres actions demandent le jeton de connexion.
-$entete = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+$entete = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
 $jeton = str_starts_with($entete, 'Bearer ') ? substr($entete, 7) : '';
 $requete = $db->prepare(
   'SELECT u.identifiant FROM sessions s JOIN utilisateurs u ON u.id = s.utilisateur_id WHERE s.jeton = ? AND s.expire_le > NOW()'

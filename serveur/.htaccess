@@ -2,3 +2,7 @@
 <Files "config.php">
   Require all denied
 </Files>
+
+# Certains hébergeurs ne transmettent pas l'en-tête Authorization à PHP : on le fait passer par une variable d'environnement.
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
