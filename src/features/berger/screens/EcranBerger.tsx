@@ -18,6 +18,7 @@ import {
   rangeesDePetits,
 } from '@/features/berger/services/saisies';
 import { SoinSimple } from '@/features/berger/screens/SoinSimple';
+import { MouvementSimple } from '@/features/berger/screens/MouvementSimple';
 import { annulerSoin } from '@/features/berger/services/soin';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { useSynchronisation } from '@/features/sync/useSynchronisation';
@@ -37,7 +38,7 @@ const T = TEXTES.roles.berger;
 /** Le temps, après un changement d'écran, pendant lequel les appuis sont ignorés (en millisecondes). */
 const DELAI_APRES_UN_CHANGEMENT = 400;
 
-type But = 'naissance' | 'mort' | 'soin';
+type But = 'naissance' | 'mort' | 'soin' | 'mouvement';
 
 /** Ce que le berger fait : choisir une zone, une saisie, scanner la boucle, (pour une naissance) dire combien de petits, puis voir que c'est enregistré — avec de quoi l'annuler. */
 type Etape =
@@ -49,6 +50,7 @@ type Etape =
   | { nom: 'main'; but: But }
   | { nom: 'petits'; mere: Chevre }
   | { nom: 'soin'; animal: Chevre }
+  | { nom: 'mouvement'; animal: Chevre }
   | { nom: 'fait'; titre: string; detail: string; annuler: () => Promise<void> }
   | { nom: 'annule' }
   | { nom: 'erreur'; message: string; but: But };
@@ -92,6 +94,7 @@ export default function EcranBerger() {
       const animal = animalDeLaBoucle(await animauxDuTroupeau(), boucle);
       if (!animal) return setEtape({ nom: 'erreur', but, message: T.introuvable(boucle) });
       if (but === 'soin') return setEtape({ nom: 'soin', animal });
+      if (but === 'mouvement') return setEtape({ nom: 'mouvement', animal });
       if (but === 'naissance') {
         if (animal.sexe !== SEXE.FEMELLE)
           return setEtape({ nom: 'erreur', but, message: T.pasUneFemelle(boucle) });
@@ -190,6 +193,11 @@ export default function EcranBerger() {
                 icone={<Ionicons name="medkit" size={56} color={colors.blanc} />}
               />
               <GrosBouton
+                libelle={T.mouvement}
+                onPress={() => commencer('mouvement')}
+                icone={<Ionicons name="swap-horizontal" size={56} color={colors.blanc} />}
+              />
+              <GrosBouton
                 libelle={T.mort}
                 onPress={() => commencer('mort')}
                 icone={<MaterialCommunityIcons name="grave-stone" size={56} color={colors.blanc} />}
@@ -218,6 +226,16 @@ export default function EcranBerger() {
             </View>
           ) : null}
 
+          {etape.nom === 'mouvement' ? (
+            <View style={styles.contenu}>
+              <Text style={styles.titre}>{T.mouvement}</Text>
+              <MouvementSimple
+                animal={etape.animal}
+                onFait={(titre, detail, annuler) => setEtape({ nom: 'fait', titre, detail, annuler })}
+              />
+            </View>
+          ) : null}
+
           {etape.nom === 'fromagerie' ? <AtelierSimple onQuitter={accueil} /> : null}
 
           {etape.nom === 'tourisme' ? <TourismeSimple onQuitter={accueil} /> : null}
@@ -225,7 +243,13 @@ export default function EcranBerger() {
           {etape.nom === 'scan' ? (
             <View style={styles.scanner}>
               <Text style={[styles.message, styles.messageClair, { padding: 12 }]}>
-                {etape.but === 'naissance' ? T.scanNaissance : etape.but === 'soin' ? T.scanSoin : T.scanMort}
+                {etape.but === 'naissance'
+                  ? T.scanNaissance
+                  : etape.but === 'soin'
+                    ? T.scanSoin
+                    : etape.but === 'mouvement'
+                      ? T.scanMouvement
+                      : T.scanMort}
               </Text>
               <ScannerBoucleCore
                 onDetected={(boucle) => surBoucle(etape.but, boucle)}
