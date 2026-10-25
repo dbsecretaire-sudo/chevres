@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
@@ -12,6 +13,7 @@ import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
+import { afficheBureau } from '@/shared/utils/affichage';
 
 interface ParametresBouton {
   tintColor?: string;
@@ -75,8 +77,14 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         // La colonne centrée (largeur maximale) est un conteneur à part : avec des marges sur elle-même, la flèche collait au bord de la fenêtre.
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
+            {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
+            {!comptable && !afficheBureau() && back ? (
+              <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
+                <Ionicons name="chevron-back" size={22} color={colors.text} />
+              </Pressable>
+            ) : null}
             {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
-            <Text style={[styles.titre, { color: couleur }, !comptable && styles.titrePhone]} numberOfLines={comptable ? 2 : 3}>
+            <Text style={[styles.titre, { color: comptable || afficheBureau() ? couleur : colors.text }, !comptable && styles.titrePhone]} numberOfLines={comptable ? 2 : 3}>
               {fil.length > 1
                 ? fil.map((maillon, i) => (
                     <Text key={`${i}-${maillon.libelle}`}>
@@ -130,7 +138,17 @@ const styles = StyleSheet.create({
   etape: { color: colors.textMuted, cursor: 'pointer' } as never,
   separateur: { color: colors.textMuted, fontWeight: '400' },
   // Sur le téléphone, le fil d'Ariane (plusieurs étapes) est un peu plus petit que le titre qu'il remplace.
-  titrePhone: { fontSize: 15, lineHeight: 22 },
+  titrePhone: { fontSize: 26, lineHeight: 32, fontWeight: '800' },
+  retour: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   titreComptable: { paddingHorizontal: 20, paddingTop: 8 },
   pastilleBouton: {
     flexDirection: 'row',
