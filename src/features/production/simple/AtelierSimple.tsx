@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
 import { useRouter } from 'expo-router';
+import { EnteteBerger } from '@/features/berger/components/EnteteBerger';
+import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
 import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
 import { EtiquettesSimple } from '@/features/production/simple/EtiquettesSimple';
 import { FabricationSimple } from '@/features/production/simple/FabricationSimple';
@@ -9,7 +11,6 @@ import { LaitSimple } from '@/features/production/simple/LaitSimple';
 import { ScanLotSimple } from '@/features/production/simple/ScanLotSimple';
 import { VentesSimple } from '@/features/production/simple/VentesSimple';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
-import { styles } from '@/shared/styles/roles/Roles.styles';
 import { TEXTES } from '@/shared/textes';
 
 /** Les tuiles de l'atelier qui ont leur flux en très grands boutons. */
@@ -29,6 +30,7 @@ const TUILES_MONTREES = [...AVEC_FLUX, 'stock', 'lotsAtelier'];
  */
 export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
   const router = useRouter();
+  const { aEnvoyer, envoyer } = useEnvoiBerger();
   const [tuile, setTuile] = useState<string | null>(null);
   const retour = () => setTuile(null);
   if (tuile && tuile in PRODUITS_DES_TUILES)
@@ -39,16 +41,11 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
   if (tuile === 'scanLot') return <ScanLotSimple onRetour={retour} />;
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
-      <Text style={styles.titre}>{TEXTES.roles.berger.fromagerie}</Text>
+      <EnteteBerger titre={TEXTES.roles.berger.fromagerie} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
       <GrilleDeTuiles
         tuiles={tuilesDuTerrain('atelier', COMPTES_VIDES, true).filter((t) => TUILES_MONTREES.includes(t.cle))}
         onAppui={(t) => (AVEC_FLUX.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))}
       />
-      <View>
-        <Pressable style={styles.discret} onPress={onQuitter} accessibilityRole="button">
-          <Text style={styles.discretTexte}>{TEXTES.roles.berger.retour}</Text>
-        </Pressable>
-      </View>
     </ScrollView>
   );
 }
