@@ -30,6 +30,7 @@ import { listToutesFactures } from '@/features/comptabilite/repository/factures'
 import type { Facture } from '@/features/comptabilite/types';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
+import { colors } from '@/shared/theme/colors';
 import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisseur';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
@@ -371,6 +372,7 @@ function LieuTiersStandard() {
                     titre={g.titre}
                     nombre={g.total}
                     accordeon
+                    fond={{ panneau: colors.surface, bord: colors.border }}
                     ouverte={groupeOuvert === g.cle}
                     onBasculer={() => basculerGroupe(g.cle)}
                   >
@@ -380,6 +382,7 @@ function LieuTiersStandard() {
                         titre={cat.nom}
                         nombre={cat.membres.length}
                         accordeon
+                        fond={{ panneau: colors.surface, bord: colors.border }}
                         ouverte={categorieOuverte === cat.id}
                         onBasculer={() => setCategorieOuverte((a) => (a === cat.id ? null : cat.id))}
                       >
