@@ -333,6 +333,7 @@ function LieuTiersStandard() {
             </GroupeAccueil>
           ) : (
           <GroupeAccueil titre={cle === 'groupementSanitaire' ? T.groupeGdsEtVeto : (textes.groupeTiers ?? '')}>
+            {membresAffiches.length > 0 || (cle === 'groupementSanitaire' && veterinaires.length > 0) ? (
             <BlocLignes>
               {membresAffiches.flatMap((c) => [
                 <ListRow
@@ -390,6 +391,7 @@ function LieuTiersStandard() {
                   ))
                 : null}
             </BlocLignes>
+            ) : null}
             {tiers.length === 0 ? (
               <BlocLignes>
                 <Text style={commonStyles.mutedItalic}>{T.aucunTiers}</Text>
