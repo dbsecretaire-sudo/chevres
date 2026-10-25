@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Appelée par l'application en « api/index.php?r=... ».
 
 $config = require __DIR__ . '/config.php';
+require __DIR__ . '/synchro.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -31,7 +32,9 @@ $db = new PDO(
 
 $action = $_GET['r'] ?? '';
 $methode = $_SERVER['REQUEST_METHOD'];
-$corps = json_decode(file_get_contents('php://input') ?: '{}', true);
+$brut = file_get_contents('php://input') ?: '{}';
+if (strlen($brut) > 8388608) repondre(413, ['erreur' => 'Envoi trop lourd.']);
+$corps = json_decode($brut, true);
 if (!is_array($corps)) $corps = [];
 
 // Connexion : identifiant et mot de passe contre un jeton.
@@ -97,6 +100,25 @@ if ($action === 'ecrire' && $methode === 'PUT') {
   )->execute([$etablissement, json_encode($donnees, JSON_UNESCAPED_UNICODE), $nouvelle, $moi['identifiant']]);
   $db->commit();
   repondre(200, ['version' => $nouvelle]);
+}
+
+// Les fiches, une à une (voir synchro.php et schema-v2.sql) : envoi des modifications, puis réception de ce qui a changé.
+$etablissement = (string) ($_GET['etablissement'] ?? $corps['etablissement'] ?? '');
+if (!preg_match('/^[a-z0-9_\-]{1,64}$/', $etablissement)) repondre(400, ['erreur' => 'Établissement invalide.']);
+
+if ($action === 'pousser' && $methode === 'POST') {
+  $modifications = $corps['modifications'] ?? null;
+  if (!is_array($modifications)) repondre(400, ['erreur' => 'Modifications manquantes.']);
+  try {
+    repondre(200, pousserModifications($db, $moi['identifiant'], $etablissement, $modifications));
+  } catch (InvalidArgumentException $erreur) {
+    repondre(400, ['erreur' => $erreur->getMessage()]);
+  }
+}
+
+if ($action === 'tirer' && $methode === 'GET') {
+  $depuis = max(0, (int) ($_GET['depuis'] ?? 0));
+  repondre(200, tirerModifications($db, $etablissement, $depuis));
 }
 
 repondre(404, ['erreur' => 'Action inconnue.']);
