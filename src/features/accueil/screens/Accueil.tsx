@@ -11,16 +11,16 @@ import { Screen } from '@/shared/components/Screen';
 import { YearPicker } from '@/shared/components/YearPicker';
 import { TuilesAccueil } from '@/features/accueil/components/TuilesAccueil';
 import { useAccueil } from '@/features/accueil/hooks/useAccueil';
-import AccueilFerme from '@/features/accueil/ferme/AccueilFerme';
+import AccueilChevres from '@/features/cheptel/screens/AccueilCheptel';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 
-/** Accueil de l'élevage : la ferme (d'office), ou l'accueil classique en liste quand le réglage le demande. */
+/** Accueil de l'élevage : les chèvres (d'office, comme sur la maquette, et non plus la scène de la ferme), ou l'accueil classique en liste quand le réglage le demande. */
 export default function Accueil() {
   const { settings } = useAppSettings();
   const { role } = useRole();
   // Le mode normal a sa propre page d'accueil : l'accueil de la ferme y renvoie.
   if (role === ROLE.BERGER) return <Redirect href="/berger" />;
-  return settings.exploitation?.accueilClassique ? <AccueilElevage /> : <AccueilFerme />;
+  return settings.exploitation?.accueilClassique ? <AccueilElevage /> : <AccueilChevres />;
 }
 
 function AccueilElevage() {

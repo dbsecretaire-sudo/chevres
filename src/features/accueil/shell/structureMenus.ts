@@ -130,7 +130,7 @@ export function menusDeLaFenetre(): DefinitionMenu[] {
   const plusRubriques: DefinitionMenu = {
     label: 'Plus',
     items: [
-      { label: 'Accueil de la ferme', route: '/' },
+      { label: 'Accueil', route: '/' },
       ...RUBRIQUES_DU_PLUS.flatMap((r) => [
         separateur(r.libelle),
         ...RUBRIQUES[r.cle].sections.flatMap((s) => [separateur(s.titre), ...s.lignes.map((l) => ({ label: l.libelle, route: l.route }))]),
