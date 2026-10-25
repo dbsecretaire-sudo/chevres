@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
-import { BandeauBas } from '@/features/accueil/ferme/BandeauBas';
 import { publierMenus, type EntreeMenu } from '@/shared/navigation/menusSections';
 import { memoriserNavigationDesOnglets } from '@/shared/navigation/pileDesOnglets';
 import { BarreRetourSimple } from '@/features/roles/components/BarreRetourSimple';
@@ -16,15 +15,27 @@ import { BarreQuatreRubriques } from '@/features/accueil/shell/BarreQuatreRubriq
  * dans le menu « Menus » de la capsule du haut (elle les reçoit d'ici), et le bandeau de la ferme est seul tout en bas, là où le pouce arrive
  * le mieux. Sous Windows, c'est la même disposition : la capsule du haut (année, animal, didacticiel, « Menus »), le bandeau de la ferme en bas.
  */
+/** Les quatre rubriques de la capsule « Menus » sous Windows : la même structure que le téléphone, sans barre du bas. */
+const RUBRIQUES_BUREAU: { cle: string; libelle: string }[] = [
+  { cle: 'cheptel', libelle: 'Chèvres' },
+  { cle: 'production', libelle: 'Atelier' },
+  { cle: 'visites', libelle: 'Visites' },
+  { cle: 'plus', libelle: 'Plus' },
+];
+
 export function BarreDuBas(props: BottomTabBarProps) {
   const { state, descriptors, navigation } = props;
   // La disposition « comptable » a sa barre d'outils en haut : pas de bandeau en bas.
   const comptable = useDispositionComptable();
   const { role } = useRole();
   const courant = state.routes[state.index]?.name;
+  // Sous Windows (hors mode normal, hors disposition comptable) : la capsule ne propose que les quatre rubriques.
+  const bureauQuatre = afficheBureau() && role !== ROLE.BERGER && !comptable;
   // La maison du bandeau vide la pile des pages avec cette navigation.
   memoriserNavigationDesOnglets(navigation);
-  const entrees: EntreeMenu[] = state.routes
+  const entrees: EntreeMenu[] = bureauQuatre
+    ? RUBRIQUES_BUREAU.map((r) => ({ cle: r.cle, libelle: r.libelle, actif: courant === r.cle, onPress: () => navigation.navigate(r.cle) }))
+    : state.routes
     // Les écrans cachés des onglets (`href: null` : expo-router les masque par `display: none`) n'ont pas d'entrée : l'accueil, les pages de l'organisation…
     .filter((route) => StyleSheet.flatten(descriptors[route.key]?.options.tabBarItemStyle)?.display !== 'none')
     .map((route) => ({
@@ -48,6 +59,6 @@ export function BarreDuBas(props: BottomTabBarProps) {
   if (role === ROLE.BERGER) return <BarreRetourSimple />;
   if (comptable) return null;
   // Le téléphone : les quatre rubriques du bas. Sous Windows, le bandeau de la ferme reste pour l'instant.
-  if (!afficheBureau()) return <BarreQuatreRubriques {...props} />;
-  return <BandeauBas />;
+  if (afficheBureau()) return null;
+  return <BarreQuatreRubriques {...props} />;
 }
