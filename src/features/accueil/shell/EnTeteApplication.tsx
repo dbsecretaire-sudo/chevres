@@ -58,6 +58,10 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const nomDeLaPage = useLibelleDuFil(adresse);
   // Le fil d'Ariane remplace le titre, sur le téléphone comme sur le poste de comptabilité.
   const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre);
+  // Le fil d'Ariane ne reste que pour le poste de comptabilité et Windows : sur le téléphone, le titre de la page suffit.
+  const filAffiche = comptable || afficheBureau() ? fil : [];
+  // Sur le téléphone, la flèche ramène simplement à la page d'avant.
+  const retourDuTelephone = () => navigation.goBack();
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   // Le mode normal n'a pas la navigation du mode avancé (capsule, fil d'Ariane) : la page seule, avec un « Retour » en bas.
@@ -79,14 +83,14 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
             {!comptable && !afficheBureau() && back ? (
-              <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
+              <Pressable onPress={retourDuTelephone} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
                 <Ionicons name="chevron-back" size={22} color={colors.text} />
               </Pressable>
             ) : null}
             {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
             <Text style={[styles.titre, { color: comptable || afficheBureau() ? couleur : colors.text }, !comptable && styles.titrePhone]} numberOfLines={comptable ? 2 : 3}>
-              {fil.length > 1
-                ? fil.map((maillon, i) => (
+              {filAffiche.length > 1
+                ? filAffiche.map((maillon, i) => (
                     <Text key={`${i}-${maillon.libelle}`}>
                       {i > 0 ? <Text style={styles.separateur}>{' > '}</Text> : null}
                       {maillon.route ? (
