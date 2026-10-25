@@ -32,7 +32,7 @@ export function MouvementSimple({ animal, onFait }: Props) {
     setEnCours(true);
     try {
       await envoyerALAbattoir(animal, date);
-      onFait(T.abattoirFait, T.abattoirDetail(boucle), () => annulerEnvoiALAbattoir(animal));
+      onFait(T.abattoirFait, T.abattoirDetail(boucle), () => annulerEnvoiALAbattoir(animal, date));
     } catch (erreur) {
       Alert.alert(T.erreur, erreur instanceof Error ? erreur.message : String(erreur));
     } finally {
