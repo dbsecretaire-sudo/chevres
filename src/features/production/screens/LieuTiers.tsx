@@ -29,6 +29,7 @@ import { categoriesDeLOrganisation, ecrituresEquarrissagePayeesParUnAutre } from
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import type { Facture } from '@/features/comptabilite/types';
 import { categoriesClient } from '@/shared/dictionnaire/categoriesClient';
+import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { categoriesFournisseur } from '@/shared/dictionnaire/categoriesFournisseur';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { ListRow } from '@/shared/components/ListRow';
@@ -93,6 +94,9 @@ function LieuTiersStandard() {
   const { settings, patchSettings } = useAppSettings();
   /** Partenariats : la fenêtre qui coche les catégories de tiers. */
   const [choixOuvert, setChoixOuvert] = useState(false);
+  /** Sur la page des contacts : le groupe ouvert (recette ou dépense) et la catégorie ouverte dedans. Un seul à la fois à chaque niveau ; Particulier est déroulé d'office. */
+  const [groupeOuvert, setGroupeOuvert] = useState<'recette' | 'depense' | null>('recette');
+  const [categorieOuverte, setCategorieOuverte] = useState<string | null>('particulier');
   const { idsConnus, categories } = useCategoriesContact();
   /** Le nom de la catégorie d'un contact (pour les tableaux). */
   const nomDeLaCategorie = (c: Contact) => categories.find((x) => x.id === categorieDuContact(c, idsConnus).id)?.nom ?? '';
@@ -186,6 +190,32 @@ function LieuTiersStandard() {
   /** Les pages de contacts des clients : leurs ventes sont dans les fiches des contacts, et « Dans l'application » est passé dans Stock, Réserver et Ventes. */
   const pageDesContacts = ['particuliers', 'entreprises', 'surfacesCommerciales'].includes(cle);
   /** Les contacts de la page, par ordre alphabétique : le titre de la page dit déjà leur catégorie. */
+  /** Les contacts de la page des contacts, par catégorie, rangées en catégories de recette et catégories de dépense. */
+  const groupesDeContacts = (() => {
+    const recettes = new Set(categoriesClient().map((c) => c.id));
+    const parCategorie = new Map<string, Contact[]>();
+    for (const c of contacts) {
+      const id = categorieDuContact(c, idsConnus).id ?? '';
+      parCategorie.set(id, [...(parCategorie.get(id) ?? []), c]);
+    }
+    const cats = [...parCategorie.entries()].map(([id, membres]) => ({
+      id,
+      nom: categories.find((x) => x.id === id)?.nom ?? id,
+      membres: [...membres].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+    }));
+    const groupe = (cle: 'recette' | 'depense', titre: string, estRecette: boolean) => {
+      const categoriesDuGroupe = cats
+        .filter((c) => recettes.has(c.id) === estRecette)
+        .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+      return { cle, titre, total: categoriesDuGroupe.reduce((n, c) => n + c.membres.length, 0), categories: categoriesDuGroupe };
+    };
+    return [groupe('recette', T.categoriesRecette, true), groupe('depense', T.categoriesDepense, false)].filter((g) => g.categories.length > 0);
+  })();
+  const basculerGroupe = (g: 'recette' | 'depense') => {
+    if (groupeOuvert === g) return setGroupeOuvert(null);
+    setGroupeOuvert(g);
+    setCategorieOuverte(g === 'recette' ? 'particulier' : null);
+  };
   const membresAffiches = [...(cle === 'particuliers' ? contacts : tiers)].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   /** Les choix du bouton flottant : un contact (dans la catégorie déroulée, s'il y en a une), ou, selon le lieu, un organisme, une chambre ou un état. */
   const ajouterContact = (categorie?: string) =>
@@ -333,7 +363,47 @@ function LieuTiersStandard() {
             </GroupeAccueil>
           ) : (
           <GroupeAccueil titre={cle === 'groupementSanitaire' ? T.groupeGdsEtVeto : (textes.groupeTiers ?? '')}>
-            {membresAffiches.length > 0 || (cle === 'groupementSanitaire' && veterinaires.length > 0) ? (
+            {cle === 'particuliers' ? (
+              <>
+                {groupesDeContacts.map((g) => (
+                  <SectionDeroulante
+                    key={g.cle}
+                    titre={g.titre}
+                    nombre={g.total}
+                    accordeon
+                    ouverte={groupeOuvert === g.cle}
+                    onBasculer={() => basculerGroupe(g.cle)}
+                  >
+                    {g.categories.map((cat) => (
+                      <SectionDeroulante
+                        key={cat.id}
+                        titre={cat.nom}
+                        nombre={cat.membres.length}
+                        accordeon
+                        ouverte={categorieOuverte === cat.id}
+                        onBasculer={() => setCategorieOuverte((a) => (a === cat.id ? null : cat.id))}
+                      >
+                        <BlocLignes>
+                          {cat.membres.map((c) => (
+                            <ListRow
+                              key={c.cle}
+                              title={c.nom}
+                              subtitle={
+                                [(c.client ?? c.fournisseur)?.telephone, (c.client ?? c.fournisseur)?.email]
+                                  .filter(Boolean)
+                                  .join(' · ') || undefined
+                              }
+                              emoji={portraitDeTiers(cat.id).emoji}
+                              onPress={() => ouvrir(ROUTES.ficheContact(c.cle))}
+                            />
+                          ))}
+                        </BlocLignes>
+                      </SectionDeroulante>
+                    ))}
+                  </SectionDeroulante>
+                ))}
+              </>
+            ) : membresAffiches.length > 0 || (cle === 'groupementSanitaire' && veterinaires.length > 0) ? (
             <BlocLignes>
               {membresAffiches.flatMap((c) => [
                 <ListRow
