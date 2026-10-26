@@ -80,7 +80,7 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
         { cle: 'traitement', titre: T.traitement, icone: 'medkit', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU, ...avec(c.delais, true) },
         // Les ventes de vivants sans document de circulation se signalent sur Mouvement (où se font les ventes vivantes).
         { cle: 'mouvement', titre: T.mouvement, icone: 'swap-horizontal', route: ROUTES.rubrique('mouvement'), ...avec(c.ventesSansDocument, true) },
-        { cle: 'deces', titre: T.deces, icone: 'add', route: ROUTES.CHEPTEL_HISTORIQUE },
+        { cle: 'deces', titre: T.deces, icone: 'add', route: ROUTES.CHEPTEL_DECES },
         // Le cheptel montre le nombre d'animaux ; quand le berger a saisi des naissances ou des morts à compléter, ce chiffre (en rouge) remplace le nombre.
         c.aCompleter
           ? { cle: 'cheptel', titre: T.cheptel, icone: 'list', route: ROUTES.CHEPTEL_A_COMPLETER, nombre: c.aCompleter, alerte: true }

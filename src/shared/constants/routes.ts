@@ -110,6 +110,8 @@ export const ROUTES = {
   CHEPTEL_AJOUT_RAPIDE: '/cheptel/ajout-rapide',
   CHEPTEL_NOUVELLE: '/cheptel/nouvelle',
   CHEPTEL_NAISSANCE_NOUVELLE: '/cheptel/naissance-nouvelle',
+  /** Déclarer un décès : la boucle, la cause (dont « perdue en montagne »), le jour, et l'équarrissage. */
+  CHEPTEL_DECES: '/cheptel/deces',
 
   // L'onglet Santé d'un élevage : alimentation, vétérinaire, contrôles
   SANTE_ALIMENTATION: '/sante/alimentation',

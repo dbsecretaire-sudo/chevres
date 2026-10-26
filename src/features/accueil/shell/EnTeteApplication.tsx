@@ -62,7 +62,12 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const filAffiche = comptable || afficheBureau() ? fil : [];
   // Sur le téléphone, une page à l'intérieur d'une rubrique a une flèche : elle ramène à l'écran réellement précédent (pas à une étape du fil).
   const precedent = fil.length > 1 ? fil[fil.length - 2] : undefined;
-  const retourDuTelephone = () => (back ? navigation.goBack() : router.back());
+  // Le Précédent remonte le fil d'Ariane : il mène à la page de l'étape d'avant (Accueil › Cheptel › Scanner → Cheptel). Sans page pour cette étape, il revient comme avant.
+  const retourDuTelephone = () => {
+    if (precedent?.route) router.replace(precedent.route as never);
+    else if (back) navigation.goBack();
+    else router.back();
+  };
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   // Le mode normal n'a pas la navigation du mode avancé (capsule, fil d'Ariane) : la page seule, avec un « Retour » en bas.

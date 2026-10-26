@@ -68,6 +68,7 @@ export default function CheptelLayout() {
       <Stack.Screen name="traitements" options={{ title: TEXTES.cheptel.traitements.titre }} />
       <Stack.Screen name="tableau-de-bord" options={{ title: TEXTES.cheptel.tableauDeBord.titre }} />
       <Stack.Screen name="traitement" options={{ title: TEXTES.cheptel.traitements.modifier }} />
+      <Stack.Screen name="deces" options={{ title: 'Décès' }} />
       <Stack.Screen name="lots" options={{ title: TEXTES.cheptel.lots.titre }} />
       <Stack.Screen name="lots-categories" options={{ title: TEXTES.cheptel.lots.categories.gererTitre }} />
       <Stack.Screen name="lots-categorie" options={{ title: TEXTES.cheptel.lots.titre }} />
