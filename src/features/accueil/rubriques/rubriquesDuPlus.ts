@@ -182,6 +182,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Sauvegarde et export', aide: 'Fichier de secours', icone: 'save-outline', route: ROUTES.ORGANISATION_DONNEES },
           { libelle: 'Réglages du cheptel', aide: 'UGB, primes, effectif déclaré', icone: 'settings-outline', route: ROUTES.CHEPTEL_REGLAGES },
           { libelle: 'Recettes de l’atelier', aide: 'Fromages, charcuterie, plats, savons', icone: 'book-outline', route: ROUTES.PRODUCTION_RECETTES },
+          { libelle: 'Plan comptable', aide: 'Tous les comptes, pour choisir en cas de doute', icone: 'list-outline', route: ROUTES.PLAN_COMPTABLE },
           { libelle: 'Tous les réglages', aide: 'Année, mode, options', icone: 'options-outline', route: ROUTES.REGLAGES },
         ],
       },
