@@ -2,13 +2,14 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarreHauteFerme } from '@/features/accueil/ferme/BarreHauteFerme';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
 import { useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/features/accueil/shell/usePositionDansLesMenus';
+import { parentDeLaPage } from '@/shared/navigation/parentDeLaPage';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { colors } from '@/shared/theme/colors';
@@ -60,14 +61,11 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   const fil = filDeLaPage(menus, courante, pageDuMenuRetenue(), nomDeLaPage || titre);
   // Le fil d'Ariane ne reste que pour le poste de comptabilité et Windows : sur le téléphone, le titre de la page suffit.
   const filAffiche = comptable || afficheBureau() ? fil : [];
-  // Sur le téléphone, une page à l'intérieur d'une rubrique a une flèche : elle ramène à l'écran réellement précédent (pas à une étape du fil).
-  // La racine d'une rubrique (Atelier, Chèvres : le premier maillon du fil) n'a pas de Précédent : la flèche n'apparaît qu'à partir de la deuxième étape.
-  const precedent = fil.length > 2 ? fil[fil.length - 2] : undefined;
-  // Le Précédent remonte le fil d'Ariane : il mène à la page de l'étape d'avant (Accueil › Cheptel › Scanner → Cheptel). Sans page pour cette étape, il revient comme avant.
-  // Les pages racines (l'accueil et les quatre rubriques de la barre du bas) n'ont jamais de flèche, même si l'historique en contient une.
-  const racineDeRubrique = ['/', '/cheptel', '/production', '/visites', '/plus'].includes(adresse);
+  // Le Précédent : la page d'où l'on vient, lue dans une seule règle (parentDeLaPage). Une page racine n'en a pas.
+  const { lieu } = useGlobalSearchParams<{ lieu?: string }>();
+  const parent = parentDeLaPage(adresse, lieu);
   const retourDuTelephone = () => {
-    if (precedent?.route) router.replace(precedent.route as never);
+    if (parent) router.replace(parent as never);
     else if (back) navigation.goBack();
     else router.back();
   };
@@ -91,7 +89,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
-            {!comptable && !afficheBureau() && !racineDeRubrique && (back || precedent) ? (
+            {!comptable && !afficheBureau() && parent !== undefined ? (
               <Pressable onPress={retourDuTelephone} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
                 <Ionicons name="chevron-back" size={22} color={colors.text} />
               </Pressable>

@@ -17,12 +17,14 @@ interface Props {
   /** Bouton/texte secondaire affiché sous la caméra et sous les écrans d'annulation (ex: "Annuler" ou "Passer à la saisie classique"). */
   texteSecondaire: string;
   onSecondaire: () => void;
+  /** Le bouton du haut : écrire le numéro à la main (sinon, il fait le même effet que le bouton secondaire). */
+  onEcrire?: () => void;
   /** On scanne le numéro d'un lot (lettres comprises) et non d'une boucle : les phrases et le clavier changent. */
   lot?: boolean;
 }
 
 /** Cœur de la logique de scan (caméra → OCR → confirmation), sans Modal — réutilisable en popup ou plein écran. */
-export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, lot = false }: Props) {
+export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, onEcrire, lot = false }: Props) {
   const textes = lot ? { ...TEXTES.cheptel.scannerBoucleCore, ...TEXTES.cheptel.scannerBoucleCore.lot } : TEXTES.cheptel.scannerBoucleCore;
   const accent = useAccentColor();
   const surNavigateur = Platform.OS === 'web';
@@ -152,7 +154,7 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
         <Text style={styles.consigne}>{textes.cadrezLeNumeroDeBoucle}</Text>
       </View>
       <View style={styles.haut}>
-        <Button label={textes.ecrireLeNumero} variant="secondary" onPress={onSecondaire} />
+        <Button label={textes.ecrireLeNumero} variant="secondary" onPress={onEcrire ?? onSecondaire} />
       </View>
       <View style={styles.controles}>
         <View style={styles.boutonVide} />

@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
   filtreEffacerTexte: { fontSize: 13, fontWeight: '700', color: colors.danger },
   balanceCard: { alignItems: 'center' },
   /** La carte du solde, comme sur la maquette : verte, le texte en blanc. */
-  carteVerte: { backgroundColor: colors.primary, borderColor: colors.primary, gap: 12 },
+  carteVerte: { backgroundColor: colors.primary, borderColor: colors.primary, gap: 12, width: '100%', alignSelf: 'stretch' },
   enteteVerte: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   boutonDetailsVerte: { borderWidth: 1, borderColor: colors.blanc, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
   soldeBlanc: { fontSize: 30, fontWeight: '800', color: colors.blanc },

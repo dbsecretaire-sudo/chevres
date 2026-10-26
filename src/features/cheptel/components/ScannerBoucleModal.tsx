@@ -10,9 +10,11 @@ interface Props {
   onDetected: (numero: string) => void;
   /** On scanne le numéro d'un lot : les phrases parlent de lot, pas de boucle. */
   lot?: boolean;
+  /** Le bouton « Écrire le numéro » : ferme la photo et ouvre la saisie à la main. */
+  onEcrire?: () => void;
 }
 
-export function ScannerBoucleModal({ visible, onClose, onDetected, lot }: Props) {
+export function ScannerBoucleModal({ visible, onClose, onDetected, lot, onEcrire }: Props) {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe}>
@@ -24,6 +26,7 @@ export function ScannerBoucleModal({ visible, onClose, onDetected, lot }: Props)
           }}
           texteSecondaire={TEXTES.commun.general.annuler}
           onSecondaire={onClose}
+          onEcrire={onEcrire}
         />
       </SafeAreaView>
     </Modal>

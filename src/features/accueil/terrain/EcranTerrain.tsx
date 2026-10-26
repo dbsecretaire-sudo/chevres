@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { Alert, Modal, ScrollView, Text, TextInput, View } from 'react-native';
+import { Button } from '@/shared/components/Button';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
@@ -39,6 +40,9 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
   const router = useRouter();
   // « Scanner une chèvre » lit la boucle avec la caméra, puis ouvre la fiche de l'animal vivant qui la porte (et non la liste du cheptel).
   const [scanOuvert, setScanOuvert] = useState(false);
+  // « Écrire le numéro de boucle » : la photo se ferme, et on tape le numéro (il ouvre la même fiche que le scan).
+  const [saisieOuverte, setSaisieOuverte] = useState(false);
+  const [numeroSaisi, setNumeroSaisi] = useState('');
   const surTuile = (t: TuileTerrain) => (t.cle === 'scanner' ? setScanOuvert(true) : ouvrir(t.route));
   const trouverLaChevre = async (numero: string) => {
     const animaux = await listTousLesAnimauxDeLEspece();
@@ -93,7 +97,36 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
         onDetected={(numero) => {
           void trouverLaChevre(numero);
         }}
+        onEcrire={() => {
+          setScanOuvert(false);
+          setSaisieOuverte(true);
+        }}
       />
+      <Modal visible={saisieOuverte} transparent animationType="fade" onRequestClose={() => setSaisieOuverte(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, gap: 12 }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>Numéro de boucle</Text>
+            <TextInput
+              value={numeroSaisi}
+              onChangeText={setNumeroSaisi}
+              keyboardType="number-pad"
+              autoFocus
+              placeholder="Numéro de boucle"
+              style={{ backgroundColor: colors.background, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, fontSize: 18, color: colors.text }}
+            />
+            <Button
+              label="Ouvrir la fiche"
+              disabled={numeroSaisi.trim() === ''}
+              onPress={() => {
+                setSaisieOuverte(false);
+                void trouverLaChevre(numeroSaisi);
+                setNumeroSaisi('');
+              }}
+            />
+            <Button label="Annuler" variant="secondary" onPress={() => setSaisieOuverte(false)} />
+          </View>
+        </View>
+      </Modal>
     </AccentColorProvider>
   );
 }

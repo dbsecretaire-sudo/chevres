@@ -59,7 +59,7 @@ export default function DeclarerDeces() {
   };
 
   return (
-    <ScrollView contentContainerStyle={commonStyles.gap10} style={{ backgroundColor: colors.background }}>
+    <ScrollView contentContainerStyle={[commonStyles.gap10, { padding: 16 }]} style={{ backgroundColor: colors.background }}>
       <FormField label="Boucle de la chèvre" value={boucle} onChangeText={setBoucle} keyboardType="number-pad" />
 
       <Text style={commonStyles.cardTitle}>Cause</Text>

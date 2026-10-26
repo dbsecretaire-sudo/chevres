@@ -85,16 +85,10 @@ export function CarteSolde({ soldes, anneeActive, toutesAnnees, filtresActifs }:
             <Text style={styles.texteBlanc}>{TEXTES.comptabilite.listeTransactions.details}</Text>
           </Pressable>
         </View>
-        <View style={styles.statsVertes}>
-          <View style={styles.boiteVerte}>
-            <Text style={styles.texteBlanc}>{TEXTES.comptabilite.listeTransactions.rentrees}</Text>
-            <Text style={styles.valeurBlanche}>{formatMontant(soldes.totalRentrees)}</Text>
-          </View>
-          <View style={styles.boiteVerte}>
-            <Text style={styles.texteBlanc}>{TEXTES.commun.general.depenses}</Text>
-            <Text style={styles.valeurBlanche}>{depenses}</Text>
-          </View>
-        </View>
+        {/* Les rentrées et les dépenses sur une seule ligne, comme sur la maquette. */}
+        <Text style={styles.texteBlanc}>
+          {`${TEXTES.comptabilite.listeTransactions.rentrees} ${formatMontant(soldes.totalRentrees)} · ${TEXTES.commun.general.depenses} ${depenses}`}
+        </Text>
       </Card>
     </Pressable>
   );

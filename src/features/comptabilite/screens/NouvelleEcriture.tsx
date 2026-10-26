@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { precocherFraisTouristiques } from '@/features/comptabilite/services/fraisTouristiques';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ATELIER } from '@/shared/constants/ateliers';
