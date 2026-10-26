@@ -14,10 +14,8 @@ export default function EcranPlus() {
   const ouvrir = (route: string) => router.push(route as never);
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} style={{ backgroundColor: colors.background }}>
-      <View style={{ marginBottom: 4 }}>
-        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text }}>Plus</Text>
-        <Text style={{ color: colors.textMuted }}>Tout le reste de l’application</Text>
-      </View>
+      {/* Le titre « Plus » est dans la capsule du haut ; la ligne ci-dessous dit ce que cette page regroupe. */}
+      <Text style={{ color: colors.textMuted }}>Tout le reste de l’application</Text>
       {/* Comme sur la maquette : le mode avancé est affiché en tête de la page, avec le chemin pour le changer. */}
       <View style={{ alignSelf: 'flex-start', backgroundColor: colors.text, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 }}>
         <Text style={{ color: colors.blanc, fontSize: 13, fontWeight: '600' }}>Mode avancé activé · Réglages › Mode avancé</Text>

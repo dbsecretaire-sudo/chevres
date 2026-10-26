@@ -164,7 +164,7 @@ function Onglets() {
       {/* La santé (alimentation, visites, contrôles) s'ouvre depuis l'en-tête du Cheptel : l'onglet du Cheptel y reste en couleur. */}
       <Tabs.Screen name="sante" options={{ href: null, headerShown: false }} />
       {/* La rubrique « Plus » : la page qui regroupe ce qui ne tient pas dans la barre du bas. */}
-      <Tabs.Screen name="plus" options={{ title: 'Plus', headerShown: false }} />
+      <Tabs.Screen name="plus" options={{ title: 'Plus' }} />
       {/* Une page de rubrique du mode avancé (les listes du « Plus », le mouvement des chèvres) : son titre vient de la rubrique ouverte. */}
       <Tabs.Screen
         name="rubrique/[nom]"
@@ -174,7 +174,7 @@ function Onglets() {
         })}
       />
       {/* La rubrique « Visites » : le tourisme, séparé des ventes et des contacts. */}
-      <Tabs.Screen name="visites" options={{ title: 'Visites', headerShown: false }} />
+      <Tabs.Screen name="visites" options={{ title: 'Visites' }} />
       <Tabs.Screen
         name="comptabilite"
         options={{

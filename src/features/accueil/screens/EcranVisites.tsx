@@ -13,10 +13,8 @@ export default function EcranVisites() {
   const router = useRouter();
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }} style={{ backgroundColor: colors.background }}>
-      <View>
-        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text }}>Visites</Text>
-        <Text style={{ color: colors.textMuted }}>Agritourisme</Text>
-      </View>
+      {/* Le titre « Visites » est dans la capsule du haut ; la ligne ci-dessous dit de quelle activité il s'agit. */}
+      <Text style={{ color: colors.textMuted }}>Agritourisme</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {TUILES_VISITES.map((t) => (
           <TuileMaquette

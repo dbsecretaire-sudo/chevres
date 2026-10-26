@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
@@ -28,6 +28,8 @@ const TUILE_PRINCIPALE: Partial<Record<ZoneTerrain, string>> = {
  * à l'accueil des onglets Chèvres et Atelier, comme sur la maquette.
  */
 export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTerrain; enTete?: ReactNode; remplir?: boolean }) {
+  // La place que la grille peut prendre, mesurée à l'écran (pour que les tuiles s'y ajustent).
+  const [hauteur, setHauteur] = useState(0);
   const ouvrir = useOuvrir();
   const f = useFermeAccueil();
   const comptes: ComptesTerrain = {
@@ -49,7 +51,17 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
       {remplir ? (
         <View style={[commonStyles.screenBg, styles.contenu, { flex: 1 }]}>
           {enTete}
-          <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={(t) => ouvrir(t.route)} remplir />
+          {/* La grille prend la place restante, et défile si les tuiles n'y tiennent pas : aucune tuile n'est cachée sous la barre du bas. */}
+          <View style={{ flex: 1 }} onLayout={(e) => setHauteur(e.nativeEvent.layout.height)}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+              <GrilleDeTuiles
+                tuiles={tuilesDuTerrain(zone, comptes)}
+                principale={TUILE_PRINCIPALE[zone]}
+                onAppui={(t) => ouvrir(t.route)}
+                hauteurDispo={hauteur}
+              />
+            </ScrollView>
+          </View>
         </View>
       ) : (
         <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
