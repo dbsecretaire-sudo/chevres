@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { piecesDisponibles } from '@/features/fichiers/services/pieces';
-import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
 import { Apparition } from '@/features/accueil/ferme/animations';
@@ -24,9 +23,12 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.production.lieux.entrepot;
 
-/** La quantité d'une carte, avec son unité : « 4 250 kg », « 42 L », « 0,4 € », ou un nombre d'articles. */
+/** La couleur d'une quantité négative (une sortie non notée) : le rouge de la maquette. */
+const COULEUR_NEGATIVE = '#B8402A';
+
+/** La quantité d'une carte, avec son unité : « 4 250 kg », « 42 L », « 0,4 € », ou « 36 en stock » pour un nombre d'articles. */
 const quantiteDeLaCarte = (carte: CarteStock): string =>
-  `${formaterQuantite(carte.niveau)}${carte.unite ? ` ${carte.unite}` : ''}`;
+  carte.unite ? `${formaterQuantite(carte.niveau)} ${carte.unite}` : `${formaterQuantite(carte.niveau)} en stock`;
 
 /** Les colonnes du tableau d'une rubrique du stock. */
 const COLONNES_STOCK: readonly ColonneDuTableau<CarteStock>[] = [
@@ -35,21 +37,19 @@ const COLONNES_STOCK: readonly ColonneDuTableau<CarteStock>[] = [
 ];
 
 /**
- * Les rubriques d'une catégorie du stock (« Ventes — Fromages »…), chacune avec ses cartes : elles montrent le même stock que l'écran du
- * stock. Sur un fond clair (la transformation), les titres sont en vert foncé.
+ * Les rubriques d'une catégorie du stock (« Fromages », « Matières premières »…), chacune avec ses articles en cartes blanches : elles montrent le
+ * même stock que l'écran du stock. Sur le poste de comptabilité, chaque rubrique est un tableau.
  */
 export function RubriquesDeCartes({
   groupes,
-  clair = false,
   origine,
 }: {
   groupes: readonly GroupeDeCartes[];
-  clair?: boolean;
   /** La page où l'on est (l'adresse) : la flèche de retour de la page ouverte par une carte y ramène. */
   origine?: string;
 }) {
   const router = useRouter();
-  // Le poste de comptabilité : chaque rubrique est un tableau (article, quantité), pas une grille de cartes.
+  // Le poste de comptabilité : chaque rubrique est un tableau (article, quantité), pas une liste de cartes.
   const comptable = useDispositionComptable();
   // Le mode normal regarde seulement : ni crayon, ni historique au clic.
   const { role } = useRole();
@@ -68,7 +68,7 @@ export function RubriquesDeCartes({
       {groupes.map((g) =>
         comptable ? (
           <View key={g.cle} style={styles.rubrique}>
-            <Text style={[styles.rubriqueTitre, clair ? styles.rubriqueTitreSurClair : null]}>{g.titre}</Text>
+            <Text style={styles.rubriqueTitre}>{g.titre}</Text>
             <TableauDeDonnees
               integre
               colonnes={COLONNES_STOCK}
@@ -79,27 +79,25 @@ export function RubriquesDeCartes({
             />
           </View>
         ) : (
-        <View key={g.cle} style={styles.rubrique}>
-          <Text style={[styles.rubriqueTitre, clair ? styles.rubriqueTitreSurClair : null]}>{g.titre}</Text>
-          <View style={styles.grille}>
-            {g.cartes.map((c, i) => (
-              <CarteDeStock
-                key={c.cle}
-                cle={c.cle}
-                rang={i}
-                emoji={c.emoji}
-                titre={c.titre}
-                quantite={quantiteDeLaCarte(c)}
-                niveau={c.niveau}
-                libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
-                onRenommer={piecesDisponibles() && !simple ? () => setImageDe(c) : undefined}
-                // Un article (et le lait) : son historique ; les œufs n'en ont pas, ils ouvrent l'inventaire.
-                onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
-              />
-            ))}
-            {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
+          <View key={g.cle} style={styles.rubrique}>
+            <Text style={styles.rubriqueTitre}>{g.titre}</Text>
+            <View style={styles.liste}>
+              {g.cartes.map((c, i) => (
+                <CarteDeStock
+                  key={c.cle}
+                  rang={i}
+                  titre={c.titre}
+                  quantite={quantiteDeLaCarte(c)}
+                  niveau={c.niveau}
+                  libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
+                  onRenommer={piecesDisponibles() && !simple ? () => setImageDe(c) : undefined}
+                  // Un article (et le lait) : son historique ; les œufs n'en ont pas, ils ouvrent l'inventaire.
+                  onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
+                />
+              ))}
+              {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}
+            </View>
           </View>
-        </View>
         ),
       )}
       <HistoriqueArticleModal
@@ -119,13 +117,11 @@ export function RubriquesDeCartes({
 }
 
 /**
- * Une carte d'article du stock, la même que celles de la grange : son dessin, son nom (et dessous un petit texte : son prix), puis la pastille de ce qu'il en reste.
- * Un appui l'ouvre ; un appui long la prend (elle frémit) pour la déplacer ; le crayon, en haut à droite, la renomme.
+ * Une carte d'article du stock, comme sur la maquette : une ligne blanche, son nom (et dessous un petit texte : son prix), puis ce qu'il en reste
+ * à droite. Un appui l'ouvre ; un appui long la prend (elle frémit) pour la déplacer ; le crayon, en haut à droite, la renomme.
  */
 export function CarteDeStock({
-  cle,
   libelleDuCrayon,
-  emoji,
   titre,
   quantite,
   niveau,
@@ -136,17 +132,11 @@ export function CarteDeStock({
   onLongPress,
   onRenommer,
   pastilles,
-  large,
 }: {
-  /** La carte prend la largeur de trois cartes (le lait) : ses pastilles se rangent sur deux colonnes. */
-  large?: boolean;
-  /** L'identifiant de l'article : l'image que l'utilisateur lui a choisie remplace le dessin d'origine. */
-  cle?: string;
   /** Ce que dit le crayon (changer le nom, ou seulement l'image). */
   libelleDuCrayon?: string;
-  /** Plusieurs pastilles l'une sous l'autre (le lait) à la place de la pastille unique : une icône (« piece » : la pièce du stock, ou un dessin), sa quantité et son niveau. */
+  /** Plusieurs quantités l'une sous l'autre (le lait) à la place de la quantité unique ; une couleur imposée (rouge) ou le signe de la quantité. */
   pastilles?: readonly { icone: string; quantite: string; niveau: number; couleur?: 'vert' | 'rouge' }[];
-  emoji: string;
   titre: string;
   quantite: string;
   niveau: number;
@@ -158,54 +148,36 @@ export function CarteDeStock({
   onRenommer?: () => void;
 }) {
   return (
-    <Apparition delai={rang * 30} style={large ? styles.celluleLarge : styles.cellule}>
+    <Apparition delai={rang * 30} style={styles.cellule}>
       <Frisson actif={!!selectionnee}>
-        {/* La carte (le cadre) contient la zone d'appui et, à côté d'elle, le crayon : un bouton ne peut pas en contenir un autre. */}
         <View style={[styles.carte, selectionnee ? styles.carteSelectionnee : null]}>
           <Pressable
-            style={styles.zoneDeLaCarte}
+            style={styles.zone}
             onPress={onPress}
             onLongPress={onLongPress}
             accessibilityRole="button"
             accessibilityLabel={`${titre} : ${quantite}`}
           >
-            <DessinDeCarte emoji={emoji} cle={cle} />
-            <Text style={styles.nom} numberOfLines={2}>
-              {titre}
-            </Text>
-            {sous ? (
-              <Text style={styles.sous} numberOfLines={2}>
-                {sous}
+            <View style={styles.texte}>
+              <Text style={styles.nom} numberOfLines={2}>
+                {titre}
               </Text>
-            ) : null}
-            <View style={large ? styles.pastillesEnColonnes : styles.pastillesEmpilees}>
-            {(pastilles ?? [{ icone: 'piece', quantite, niveau }]).map((p, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.pastille,
-                  large ? styles.pastilleMoitie : null,
-                  i > 0 && !large ? styles.pastilleSuivante : null,
-                  // Une couleur imposée (le lait : produit toujours vert, utilisé en fromagerie toujours rouge sombre), sinon vert, gris à 0, rouge si négatif.
-                  !p.couleur && p.niveau < 0 ? styles.pastilleRouge : null,
-                  !p.couleur && p.niveau === 0 ? styles.pastilleVide : null,
-                  p.couleur === 'rouge' ? styles.pastilleRougeSombre : null,
-                ]}
-              >
-                {p.icone === 'piece' ? (
-                  <View style={styles.piece}>
-                    <Ionicons name="cube" size={12} color="#7A5410" />
-                  </View>
-                ) : (
-                  <Text style={styles.dessinDePastille} accessibilityElementsHidden importantForAccessibility="no">
-                    {p.icone}
-                  </Text>
-                )}
-                <Text style={styles.quantite} numberOfLines={1}>
+              {sous ? (
+                <Text style={styles.sous} numberOfLines={2}>
+                  {sous}
+                </Text>
+              ) : null}
+            </View>
+            <View style={styles.quantites}>
+              {(pastilles ?? [{ icone: 'piece', quantite, niveau }]).map((p, i) => (
+                <Text
+                  key={i}
+                  style={[styles.quantite, { color: p.couleur === 'rouge' || p.niveau < 0 ? COULEUR_NEGATIVE : colors.primary }]}
+                  numberOfLines={1}
+                >
                   {p.quantite}
                 </Text>
-              </View>
-            ))}
+              ))}
             </View>
           </Pressable>
           {onRenommer ? (
@@ -225,87 +197,49 @@ export function CarteDeStock({
   );
 }
 
-/** La grille des cartes d'une rubrique : trois par ligne, comme à la grange. */
+/** La liste des cartes d'une rubrique : une carte par ligne. */
 export const grilleDeCartes = StyleSheet.create({
-  grille: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 10 },
+  grille: { gap: 8 },
 }).grille;
 
-const PARCHEMIN = '#F4E7C8';
-
 const styles = StyleSheet.create({
-  rubrique: { gap: 6 },
+  rubrique: { gap: 8 },
   rubriqueTitre: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#4B2D0E',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  rubriqueTitreSurClair: { color: '#4B2D0E' },
-  grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  cellule: { width: '31%' },
-  celluleLarge: { width: '100%' },
-  pastillesEmpilees: { alignSelf: 'stretch' },
-  pastillesEnColonnes: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap' },
-  pastilleMoitie: { width: '50%' },
-  carte: {
-    backgroundColor: PARCHEMIN,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.badgeBg,
     borderRadius: 8,
-    borderWidth: 3,
-    borderColor: '#9A6B3C',
-    paddingTop: 8,
-    alignItems: 'center',
-    gap: 2,
-    overflow: 'hidden',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
   },
-  carteSelectionnee: { borderColor: '#E8892B' },
-  zoneDeLaCarte: { alignSelf: 'stretch', alignItems: 'center', gap: 2 },
-  sous: { fontSize: 10, color: '#7A5A36', textAlign: 'center', paddingHorizontal: 4, marginTop: -4 },
+  liste: { gap: 8 },
+  cellule: { width: '100%' },
+  carte: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+  },
+  carteSelectionnee: { borderColor: colors.primary },
+  zone: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingRight: 28 },
+  texte: { flex: 1, gap: 2 },
+  nom: { fontSize: 16, fontWeight: '700', color: colors.text },
+  sous: { fontSize: 13, color: colors.textMuted },
+  quantites: { alignItems: 'flex-end', gap: 2 },
+  quantite: { fontSize: 16, fontWeight: '800' },
   crayon: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 8,
+    right: 8,
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: colors.badgeBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nom: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#4B2D0E',
-    textAlign: 'center',
-    minHeight: 30,
-    paddingHorizontal: 4,
-  },
-  pastille: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#5F9330',
-    borderTopWidth: 3,
-    borderTopColor: '#3F6B1E',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  pastilleSuivante: { borderTopWidth: 1 },
-  pastilleRougeSombre: { backgroundColor: '#8B0016', borderTopColor: '#5C000E' },
-  dessinDePastille: { width: 20, fontSize: 15, textAlign: 'center' },
-  pastilleRouge: { backgroundColor: '#B8402A', borderTopColor: '#7E2616' },
-  pastilleVide: { backgroundColor: '#8E9A7C', borderTopColor: '#6B7660' },
-  piece: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#F2C94C',
-    borderWidth: 1,
-    borderColor: '#B58B1A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantite: { flex: 1, textAlign: 'right', color: colors.blanc, fontSize: 14, fontWeight: '900' },
-  vide: { width: '100%', color: '#4B2D0E', fontSize: 13, fontWeight: '700', paddingVertical: 6 },
+  vide: { color: colors.textMuted, fontSize: 13, paddingVertical: 6 },
 });

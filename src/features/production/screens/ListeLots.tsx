@@ -212,7 +212,6 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                 return (
                   <CarteDeStock
                     key={a.cle}
-                    cle={a.cle}
                     libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
                     onRenommer={
                       piecesDisponibles()
@@ -225,7 +224,6 @@ export function ListeLots({ produit }: { produit: ValeurDe<typeof PRODUIT_A_LOTS
                         : undefined
                     }
                     rang={i}
-                    emoji={emojiDeLArticle(a.cle.split(':')[0] as GenreArticle, a.libelle)}
                     titre={a.libelle}
                     sous={TEXTES.production.fromages.ligne(enStock(a.cle), total)}
                     quantite={String(niveau)}

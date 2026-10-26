@@ -159,6 +159,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Lots de l’atelier', aide: 'Fabriqués, contrôlés, rappelés', icone: 'cube-outline', route: ROUTES.PRODUCTION_LOTS },
           { libelle: 'Lait par animal', aide: 'Lait et traites', icone: 'water-outline', route: ROUTES.PRODUCTION_LAIT },
           { libelle: 'Viande', aide: 'Ventes et lots de viande', icone: 'restaurant-outline', route: ROUTES.PRODUCTION_VIANDE },
+          { libelle: 'Stock', aide: 'Toutes les catégories : fromages, viande, aliments, boucles…', icone: 'cube-outline', route: ROUTES.COMPTABILITE_STOCKS },
         ],
       },
       {

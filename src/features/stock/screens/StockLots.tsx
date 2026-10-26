@@ -32,17 +32,28 @@ const ONGLET_OEUFS = 'oeufs';
 
 type Onglet = typeof ONGLET_OEUFS | GenreArticle;
 
-/** Les onglets du stock, comme sur la maquette : chacun montre les articles d'un genre (ou les œufs), et son bouton d'ajout. */
-const ONGLETS: { cle: Onglet; titre: string; ajout?: string }[] = [
+/**
+ * Les onglets du stock : une pastille par catégorie, comme sur la maquette. `ajout` est le bouton d'ajout de la catégorie (absent quand on ne
+ * l'ajoute pas à la main : les boucles entrent par un achat, les œufs n'ont pas d'article). `unite` est celle de la quantité (le kilo des aliments).
+ */
+const ONGLETS: { cle: Onglet; titre: string; ajout?: string; unite?: string }[] = [
   { cle: GENRE_ARTICLE.FROMAGE, titre: 'Fromages', ajout: 'Ajouter un fromage' },
   { cle: ONGLET_OEUFS, titre: 'Œufs' },
+  { cle: GENRE_ARTICLE.VIANDE, titre: 'Viande', ajout: 'Ajouter une viande' },
+  { cle: GENRE_ARTICLE.PLAT, titre: 'Plats', ajout: 'Ajouter un plat' },
+  { cle: GENRE_ARTICLE.SAVON, titre: 'Savons', ajout: 'Ajouter un savon' },
   { cle: GENRE_ARTICLE.EMBALLAGE, titre: 'Emballages', ajout: 'Ajouter un emballage' },
+  { cle: GENRE_ARTICLE.ALIMENT, titre: 'Aliments', ajout: 'Ajouter un aliment', unite: 'kg' },
+  { cle: GENRE_ARTICLE.BOUCLE, titre: 'Boucles' },
+  { cle: GENRE_ARTICLE.ENTRETIEN, titre: 'Entretien', ajout: 'Ajouter un produit d’entretien' },
+  { cle: GENRE_ARTICLE.MATERIEL, titre: 'Matériel', ajout: 'Ajouter un matériel' },
+  { cle: GENRE_ARTICLE.BATIMENT, titre: 'Bâtiment', ajout: 'Ajouter un matériel de bâtiment' },
   { cle: GENRE_ARTICLE.EQUIPEMENT, titre: 'Équipement', ajout: 'Ajouter un équipement' },
 ];
 
 /**
- * Le stock sur le téléphone, comme sur la maquette : des onglets par genre (fromages, emballages, équipement), une carte par article avec
- * son prix à la pièce et son nombre en stock, un bouton pour ajouter, puis les rubriques avancées (structure des listes, historique, statistiques).
+ * Le stock sur le téléphone, comme sur la maquette : une pastille par catégorie du stock (fromages, viande, aliments, boucles…), une carte par
+ * article avec son prix et son nombre en stock, un bouton pour ajouter, puis les rubriques avancées (structure des listes, historique, statistiques).
  */
 export default function StockLots() {
   const router = useRouter();
@@ -90,7 +101,7 @@ export default function StockLots() {
 
   return (
     <ScrollView contentContainerStyle={styles.contenu} style={styles.fond}>
-      <View style={styles.onglets}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.onglets}>
         {ONGLETS.map((o) => {
           const actif = o.cle === onglet;
           return (
@@ -105,7 +116,7 @@ export default function StockLots() {
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       <View style={styles.entete}>
         <Text style={styles.enteteTexte}>{ongletCourant.titre}</Text>
@@ -127,15 +138,22 @@ export default function StockLots() {
       ) : (
         <>
           {articles.length === 0 ? <Text style={styles.vide}>Aucun article pour le moment.</Text> : null}
-          {articles.map((a) => (
-            <View key={a.cle} style={styles.carte}>
-              <View style={styles.carteTexte}>
-                <Text style={styles.nom}>{a.libelle}</Text>
-                {a.prix ? <Text style={styles.prix}>{`${formatMontant(a.prix)} la pièce`}</Text> : null}
+          {articles.map((a) => {
+            const niveau = niveaux.get(a.cle) ?? 0;
+            return (
+              <View key={a.cle} style={styles.carte}>
+                <View style={styles.carteTexte}>
+                  <Text style={styles.nom}>{a.libelle}</Text>
+                  {a.prix ? (
+                    <Text style={styles.prix}>{`${formatMontant(a.prix)} ${ongletCourant.unite ? 'le kilo' : 'la pièce'}`}</Text>
+                  ) : null}
+                </View>
+                <Text style={styles.quantite}>
+                  {ongletCourant.unite ? `${niveau} ${ongletCourant.unite}` : `${niveau} en stock`}
+                </Text>
               </View>
-              <Text style={styles.quantite}>{`${niveaux.get(a.cle) ?? 0} en stock`}</Text>
-            </View>
-          ))}
+            );
+          })}
           {ongletCourant.ajout ? <Button label={ongletCourant.ajout} onPress={() => setAjoutOuvert(true)} /> : null}
         </>
       )}
@@ -190,7 +208,7 @@ export default function StockLots() {
 const styles = StyleSheet.create({
   fond: { flex: 1, backgroundColor: colors.background },
   contenu: { padding: 16, gap: 12 },
-  onglets: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  onglets: { gap: 8, paddingVertical: 4 },
   onglet: {
     paddingVertical: 8,
     paddingHorizontal: 14,

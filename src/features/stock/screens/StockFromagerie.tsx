@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   CATEGORIES,
@@ -110,9 +110,6 @@ const T = TEXTES.stock;
 
 /** La couleur des catégories déroulées du stock en cadre de jeu : un beige parchemin un peu plus soutenu que le fond, avec son cercle. */
 const PANNEAU_DE_JEU = { panneau: '#EFE3C4', bord: '#C2A76B' };
-
-/** De combien de points les flèches de la barre de navigation font défiler la liste. */
-const PAS_DE_DEFILEMENT = 190;
 
 /** Les boucles d'identification ne s'ajoutent pas à la main : elles entrent par un achat en comptabilité. */
 type GenreAjoutable = Exclude<GenreArticle, typeof GENRE_ARTICLE.BOUCLE>;
@@ -238,13 +235,6 @@ export default function StockFromagerie() {
   // Le mode normal regarde seulement : ni crayon, ni historique au clic.
   const { role } = useRole();
   const simple = role === ROLE.BERGER;
-  /** La liste qui défile, et où elle en est : les flèches de la barre de navigation la font avancer d'un cran. */
-  const defilement = useRef<ScrollView>(null);
-  const position = useRef(0);
-  const defiler = (pas: number) => {
-    position.current = Math.max(0, position.current + pas);
-    defilement.current?.scrollTo({ y: position.current, animated: true });
-  };
   /** Le menu en haut à droite (burger) et la feuille des statistiques qu'il ouvre. */
 
   /** Les litres de lait vendus (les ventes de lait en comptabilité), pour le lait restant. */
@@ -413,8 +403,6 @@ export default function StockFromagerie() {
               <CarteDeStock
                 key={a.cle}
                 rang={i}
-                cle={a.cle}
-                emoji={emojiDeLArticle(genreDeLaCle(a.cle), a.libelle)}
                 titre={a.libelle}
                 quantite={a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau)}
                 niveau={niveau}
@@ -616,12 +604,10 @@ export default function StockFromagerie() {
 
   return (
     <CadreDeJeu
-      onHaut={() => defiler(-PAS_DE_DEFILEMENT)}
-      onBas={() => defiler(PAS_DE_DEFILEMENT)}
       onToutLeStock={vueAtelier ? () => router.setParams({ vue: '' }) : undefined}
     >
     <Screen scroll={false} transparent>
-      <ScrollView ref={defilement} onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={64} showsVerticalScrollIndicator={false} contentContainerStyle={[commonStyles.listFab, jeu.listeLarge]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[commonStyles.listFab, jeu.listeLarge]}>
         {categoriesAvecAjoutees(CATEGORIES, archive.categories, archive.reglagesCategories)
           .filter((c) => !(vueAtelier && c.categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES))
           .map(({ categorie, nom, classe, perso }) => {

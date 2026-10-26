@@ -75,11 +75,8 @@ export function JournalLait({
   ) : (
     <View style={grilleDeCartes}>
       <CarteDeStock
-        cle="lait"
         onPress={lectureSeule ? undefined : () => setHistoriqueOuvert(true)}
         rang={0}
-        large
-        emoji="🥛"
         titre={T.carte}
         sous={prix ? T.prixLitre(enLitres(prix)) : T.prixAFixer}
         quantite={T.ligne(enLitres(bilan.restant))}

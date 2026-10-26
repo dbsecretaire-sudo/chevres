@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
-import { emojiDeLaCategorie, nombreEnStock } from '@/features/stock/services/entrepotJeu';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { useRole } from '@/features/roles/context/RoleContext';
@@ -15,13 +14,10 @@ import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
-/** De combien de points les flèches font défiler la grille. */
-const PAS_DE_DEFILEMENT = 190;
-
 /**
- * L'entrepôt, présenté comme l'inventaire d'un jeu de ferme : un cadre de bois, un onglet d'icône par catégorie du stock (35. Produits finis,
- * 33. Produits animaux, 31. Matières premières…), puis les rubriques de la catégorie comme dans le stock, chacune avec ses cartes et leur
- * quantité en dessous. Il lit le stock lui-même : tout changement du stock s'y retrouve, et chaque carte ouvre sa rubrique du stock.
+ * L'entrepôt (la grange, le stock des boucles), comme sur la maquette du stock : une pastille par catégorie du stock, puis les rubriques de la
+ * catégorie en cartes blanches, chacune avec ses articles et leur quantité à droite. Il lit le stock lui-même : tout changement du stock s'y
+ * retrouve, et chaque carte ouvre sa rubrique du stock.
  */
 export default function EntrepotJeu({
   seulement,
@@ -42,7 +38,7 @@ export default function EntrepotJeu({
   lieu?: string;
   /** Vrai : chaque rubrique porte en titre son compte du plan comptable (« 601100 Achats stockés — Aliments du bétail »). */
   avecCompte?: boolean;
-  /** Vrai : l'entrepôt est dans une autre page (le stock de la page Boucles) : pas de croix rouge qui ferme tout. */
+  /** Vrai : l'entrepôt est dans une autre page (le stock de la page Boucles) : pas de bouton de fermeture. */
   sansFermer?: boolean;
 }) {
   const router = useRouter();
@@ -50,15 +46,13 @@ export default function EntrepotJeu({
   // Le mode normal n'a pas le stock complet.
   const { role } = useRole();
   const { categories: toutes, groupesParCategorie } = useEntrepot();
-  // La grange ne montre qu'une catégorie (les matières premières), sans onglets, sous son propre titre.
   // La page où l'on est : la grange ou l'entrepôt ; la flèche de retour des pages qu'elle ouvre y ramène.
   const origine = ROUTES.lieu(lieu ?? (seulement ? 'grange' : 'entrepot'));
-  /** Une page sans onglets : une seule catégorie (la grange) ou des rubriques choisies. */
+  /** Une page sans pastilles : une seule catégorie (la grange) ou des rubriques choisies. */
   const sansOnglets = !!seulement || !!sections;
   const categories = seulement ? toutes.filter((c) => c.categorie === seulement) : toutes;
   const [onglet, setOnglet] = useState<string | null>(null);
   const defilement = useRef<ScrollView>(null);
-  const position = useRef(0);
 
   const actuelle = categories.find((c) => c.categorie === onglet) ?? categories[0];
   const groupesDeLaCategorie = sections
@@ -81,13 +75,8 @@ export default function EntrepotJeu({
         return compte ? { ...g, titre: `${compte.numero} ${compte.libelle}` } : g;
       })
     : sansExclues;
-  const defiler = (pas: number) => {
-    position.current = Math.max(0, position.current + pas);
-    defilement.current?.scrollTo({ y: position.current, animated: true });
-  };
   const choisir = (categorie: string) => {
     setOnglet(categorie);
-    position.current = 0;
     defilement.current?.scrollTo({ y: 0, animated: false });
   };
 
@@ -128,8 +117,6 @@ export default function EntrepotJeu({
   return (
     <CadreDeJeu
       onFermer={sansFermer ? undefined : () => router.replace('/')}
-      onHaut={() => defiler(-PAS_DE_DEFILEMENT)}
-      onBas={() => defiler(PAS_DE_DEFILEMENT)}
       onToutLeStock={() => {
         noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
         router.push(ROUTES.COMPTABILITE_STOCKS as never);
@@ -137,55 +124,29 @@ export default function EntrepotJeu({
       haut={
         <>
           {sansOnglets ? null : (
-            <View style={styles.tetes}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.onglets}
-                style={styles.ongletsDefile}
-              >
-                {categories.map((c) => {
-                  const actif = c.categorie === actuelle?.categorie;
-                  const enStock = nombreEnStock(groupesParCategorie.get(c.categorie) ?? []);
-                  return (
-                    <Pressable
-                      key={c.categorie}
-                      style={[styles.onglet, actif ? styles.ongletActif : null]}
-                      onPress={() => choisir(c.categorie)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: actif }}
-                      accessibilityLabel={TEXTES.stock.enteteCategorie(c.classe, c.nom)}
-                    >
-                      <Text style={styles.ongletEmoji}>{emojiDeLaCategorie(c.categorie)}</Text>
-                      {enStock > 0 ? (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeTexte}>{enStock}</Text>
-                        </View>
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pastilles}>
+              {categories.map((c) => {
+                const actif = c.categorie === actuelle?.categorie;
+                return (
+                  <Pressable
+                    key={c.categorie}
+                    style={[styles.pastille, actif ? styles.pastilleActive : null]}
+                    onPress={() => choisir(c.categorie)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: actif }}
+                    accessibilityLabel={TEXTES.stock.enteteCategorie(c.classe, c.nom)}
+                  >
+                    <Text style={[styles.pastilleTexte, actif ? styles.pastilleTexteActive : null]}>{c.nom}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           )}
-          {actuelle || sections ? (
-            <Text style={[styles.titre, sansOnglets ? { paddingRight: 44 } : null]} numberOfLines={1}>
-              {titre ?? (actuelle ? TEXTES.stock.enteteCategorie(actuelle.classe, actuelle.nom) : '')}
-            </Text>
-          ) : null}
+          {actuelle || sections ? <Text style={styles.titre}>{intitule}</Text> : null}
         </>
       }
     >
-      <ScrollView
-        ref={defilement}
-        style={styles.defile}
-        contentContainerStyle={styles.rubriques}
-        showsVerticalScrollIndicator={false}
-        onScroll={(e) => {
-          position.current = e.nativeEvent.contentOffset.y;
-        }}
-        scrollEventThrottle={64}
-      >
+      <ScrollView ref={defilement} style={styles.defile} contentContainerStyle={styles.rubriques} showsVerticalScrollIndicator={false}>
         <RubriquesDeCartes groupes={groupes} origine={origine} />
       </ScrollView>
     </CadreDeJeu>
@@ -196,35 +157,19 @@ const styles = StyleSheet.create({
   fiche: { gap: 12, padding: 12 },
   titreFiche: { fontSize: 16, fontWeight: '800', color: colors.text },
   boutons: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tetes: { flexDirection: 'row', alignItems: 'center', paddingRight: 44 },
-  ongletsDefile: { flexGrow: 0 },
-  onglets: { gap: 8, paddingTop: 8, paddingRight: 8 },
-  onglet: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: '#F4DE9A',
-    borderWidth: 3,
-    borderColor: '#C98A2B',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ongletActif: { backgroundColor: '#6B3F1B', borderColor: '#3F230E' },
-  ongletEmoji: { fontSize: 26 },
-  badge: {
-    position: 'absolute',
-    top: -7,
-    right: -7,
-    minWidth: 20,
-    borderRadius: 10,
-    backgroundColor: colors.danger,
-    paddingHorizontal: 4,
-    alignItems: 'center',
+  pastilles: { gap: 8, paddingVertical: 4 },
+  pastille: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.blanc,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  badgeTexte: { color: colors.blanc, fontSize: 11, fontWeight: '800' },
-  titre: { fontSize: 15, fontWeight: '900', color: '#4B2D0E', letterSpacing: 0.5 },
+  pastilleActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  pastilleTexte: { fontWeight: '600', color: colors.text },
+  pastilleTexteActive: { color: colors.blanc },
+  titre: { fontSize: 18, fontWeight: '800', color: colors.text },
   defile: { flex: 1 },
   rubriques: { gap: 14, paddingBottom: 10 },
 });
