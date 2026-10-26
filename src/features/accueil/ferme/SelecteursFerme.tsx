@@ -11,9 +11,6 @@ import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { LABEL_TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/textes/libelles';
 
-/** Le nombre d'années proposées dans le menu (les plus récentes) ; les autres se retrouvent avec « Tout ». */
-const ANNEES_AFFICHEES = 6;
-
 interface Props {
   annees: number[];
   annee: number;
@@ -35,9 +32,8 @@ export function SelecteursFerme({ annees, annee, onChoisirAnnee, tout = false, o
   const { especes, espece, changerEspece } = useEtablissement();
   const [anneeOuverte, setAnneeOuverte] = useState(false);
   const [especeOuverte, setEspeceOuverte] = useState(false);
-  // La liste reste courte : les années les plus récentes, et l'année choisie même si elle est plus ancienne. « Tout » regroupe l'ensemble.
-  const recentes = [...new Set([...annees, annee])].sort((a, b) => b - a);
-  const listeAnnees = recentes.filter((a, rang) => rang < ANNEES_AFFICHEES || a === annee);
+  // Toutes les années, de la plus récente à la plus ancienne : la liste défile.
+  const listeAnnees = [...new Set([...annees, annee])].sort((a, b) => b - a);
   const libelleEspece = LABEL_TYPE_ANIMAL_ETABLISSEMENT[espece] ?? espece;
   const ouvrirAnnee = () => setAnneeOuverte(true);
   // Toujours la liste des animaux (même avec une seule espèce) ; son dernier choix mène aux informations de l'exploitation, pour en ajouter.
