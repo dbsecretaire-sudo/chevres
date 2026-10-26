@@ -131,7 +131,7 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
 
   return (
     <ScrollView contentContainerStyle={[styles.centre, { gap: 12 }]} keyboardShouldPersistTaps="handled">
-      <Text style={stylesRoles.titre}>{T.titre}</Text>
+      {/* Le titre « Scanner un lot » est déjà dans l'en-tête de la page : ici, seulement ce qu'on fait. */}
       <Text style={stylesRoles.detail}>{T.aide}</Text>
       <Button label={T.scanner} style={styles.pleine} onPress={() => setScanOuvert(true)} />
       <ClavierNumerique valeur={saisie} onChange={setSaisie} lettres={lettresDesNumeros(numeros)} />

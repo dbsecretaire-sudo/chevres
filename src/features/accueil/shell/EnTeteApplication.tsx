@@ -64,6 +64,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   // La racine d'une rubrique (Atelier, Chèvres : le premier maillon du fil) n'a pas de Précédent : la flèche n'apparaît qu'à partir de la deuxième étape.
   const precedent = fil.length > 2 ? fil[fil.length - 2] : undefined;
   // Le Précédent remonte le fil d'Ariane : il mène à la page de l'étape d'avant (Accueil › Cheptel › Scanner → Cheptel). Sans page pour cette étape, il revient comme avant.
+  // Les pages racines (l'accueil et les quatre rubriques de la barre du bas) n'ont jamais de flèche, même si l'historique en contient une.
+  const racineDeRubrique = ['/', '/cheptel', '/production', '/visites', '/plus'].includes(adresse);
   const retourDuTelephone = () => {
     if (precedent?.route) router.replace(precedent.route as never);
     else if (back) navigation.goBack();
@@ -89,7 +91,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
-            {!comptable && !afficheBureau() && (back || precedent) ? (
+            {!comptable && !afficheBureau() && !racineDeRubrique && (back || precedent) ? (
               <Pressable onPress={retourDuTelephone} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
                 <Ionicons name="chevron-back" size={22} color={colors.text} />
               </Pressable>

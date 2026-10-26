@@ -152,7 +152,7 @@ export function ScannerBoucleCore({ onDetected, texteSecondaire, onSecondaire, l
         <Text style={styles.consigne}>{textes.cadrezLeNumeroDeBoucle}</Text>
       </View>
       <View style={styles.haut}>
-        <Button label={texteSecondaire} variant="secondary" onPress={onSecondaire} />
+        <Button label={textes.ecrireLeNumero} variant="secondary" onPress={onSecondaire} />
       </View>
       <View style={styles.controles}>
         <View style={styles.boutonVide} />

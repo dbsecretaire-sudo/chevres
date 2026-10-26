@@ -1,12 +1,17 @@
 import { useState, type ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Alert, ScrollView, View } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
+import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
+import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
+import { ROUTES } from '@/shared/constants/routes';
 import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
 import {
   tuilesDuTerrain,
   titreDuTerrain,
   ZONES_TERRAIN,
   type ComptesTerrain,
+  type TuileTerrain,
   type ZoneTerrain,
 } from '@/features/accueil/terrain/ecransTerrain';
 import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
@@ -31,6 +36,19 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
   // La place que la grille peut prendre, mesurée à l'écran (pour que les tuiles s'y ajustent).
   const [hauteur, setHauteur] = useState(0);
   const ouvrir = useOuvrir();
+  const router = useRouter();
+  // « Scanner une chèvre » lit la boucle avec la caméra, puis ouvre la fiche de l'animal vivant qui la porte (et non la liste du cheptel).
+  const [scanOuvert, setScanOuvert] = useState(false);
+  const surTuile = (t: TuileTerrain) => (t.cle === 'scanner' ? setScanOuvert(true) : ouvrir(t.route));
+  const trouverLaChevre = async (numero: string) => {
+    const animaux = await listTousLesAnimauxDeLEspece();
+    const animal = animaux.find((a) => (a.numeroBoucle ?? '').trim() === numero.trim() && a.statut === STATUT_CHEVRE.VIVANTE);
+    if (!animal) {
+      Alert.alert('Chèvre introuvable', 'Aucune chèvre vivante ne porte ce numéro.');
+      return;
+    }
+    router.push(ROUTES.ficheChevre(animal.id) as never);
+  };
   const f = useFermeAccueil();
   const comptes: ComptesTerrain = {
     animaux: f.stats?.totalVivantes,
@@ -57,7 +75,7 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
               <GrilleDeTuiles
                 tuiles={tuilesDuTerrain(zone, comptes)}
                 principale={TUILE_PRINCIPALE[zone]}
-                onAppui={(t) => ouvrir(t.route)}
+                onAppui={surTuile}
                 hauteurDispo={hauteur}
               />
             </ScrollView>
@@ -66,9 +84,16 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
       ) : (
         <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
           {enTete}
-          <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={(t) => ouvrir(t.route)} />
+          <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={surTuile} />
         </ScrollView>
       )}
+      <ScannerBoucleModal
+        visible={scanOuvert}
+        onClose={() => setScanOuvert(false)}
+        onDetected={(numero) => {
+          void trouverLaChevre(numero);
+        }}
+      />
     </AccentColorProvider>
   );
 }

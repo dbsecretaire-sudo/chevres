@@ -161,6 +161,12 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Viande', aide: 'Ventes et lots de viande', icone: 'restaurant-outline', route: ROUTES.PRODUCTION_VIANDE },
         ],
       },
+      {
+        titre: 'Rappels',
+        lignes: [
+          { libelle: 'Historique des rappels', aide: 'Rappels validés, à remettre à valider', icone: 'time-outline', route: ROUTES.RAPPELS_HISTORIQUE },
+        ],
+      },
     ],
   },
   reglages: {

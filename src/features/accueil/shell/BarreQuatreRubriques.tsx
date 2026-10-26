@@ -32,7 +32,8 @@ export function BarreQuatreRubriques({ state, navigation }: BottomTabBarProps) {
             key={r.route}
             accessibilityRole="button"
             accessibilityState={{ selected: actif }}
-            onPress={() => navigation.navigate(r.route)}
+            // Chèvres et Atelier ont une pile de pages : un appui ramène à leur page racine, et non à la dernière page visitée (le stock, la grange…).
+            onPress={() => (r.route === 'cheptel' || r.route === 'production' ? navigation.navigate(r.route, { screen: 'index' }) : navigation.navigate(r.route))}
             style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}
           >
             {r.icone(couleur)}
