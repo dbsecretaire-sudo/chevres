@@ -1,103 +1,172 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Badge } from '@/shared/components/Badge';
+import { Button } from '@/shared/components/Button';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { ListRow } from '@/shared/components/ListRow';
+import { NomModal } from '@/features/dossiers/components/NomModal';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { lotsDeLInventaire } from '@/features/stock/services/lots';
-import { libelleArticle } from '@/features/stock/services/stock';
-import type { ArchiveStock, LotFromage } from '@/features/stock/types';
-import { ETAT_LOT } from '@/shared/constants/stock';
+import { ajouterArticle, articlesDuGenre, niveauxDeStock } from '@/features/stock/services/stock';
+import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
+import { useRole } from '@/features/roles/context/RoleContext';
+import { ROLE } from '@/shared/constants/roles';
+import { ROUTES } from '@/shared/constants/routes';
+import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
-import { formatDateFR } from '@/shared/utils/dates';
+import { formatMontant } from '@/shared/utils/dates';
 
-/** Le filtre « tous les lots » : les autres filtres sont les articles (fromage frais, affiné…). */
-const TOUS = 'tous';
-
-/** Un lot tel qu'on le lit en stock : les pièces d'une même fabrication (même article, même numéro) ne font qu'une ligne. */
-interface LigneDeLot {
-  cle: string;
-  article: string;
-  numero: string;
-  dateFabrication: string;
-  pieces: number;
-}
-
-/** Regroupe les lots en stock par article et numéro, avec leur nombre de pièces. */
-function lignesDeLots(lots: LotFromage[]): LigneDeLot[] {
-  const groupes = new Map<string, LigneDeLot>();
-  for (const lot of lots) {
-    const cle = `${lot.article}|${lot.numero}`;
-    const existant = groupes.get(cle);
-    if (existant) existant.pieces += 1;
-    else groupes.set(cle, { cle, article: lot.article, numero: lot.numero, dateFabrication: lot.dateFabrication, pieces: 1 });
-  }
-  return [...groupes.values()].sort((a, b) => b.dateFabrication.localeCompare(a.dateFabrication));
-}
+/** Les onglets du stock, comme sur la maquette : chacun montre les articles d'un genre, et son bouton d'ajout. */
+const ONGLETS: { genre: GenreArticle; titre: string; ajout: string }[] = [
+  { genre: GENRE_ARTICLE.FROMAGE, titre: 'Fromages', ajout: 'Ajouter un fromage' },
+  { genre: GENRE_ARTICLE.EMBALLAGE, titre: 'Emballages', ajout: 'Ajouter un emballage' },
+  { genre: GENRE_ARTICLE.EQUIPEMENT, titre: 'Équipement', ajout: 'Ajouter un équipement' },
+];
 
 /**
- * Le stock des lots, comme sur la maquette : le nombre de lots en stock, les filtres par article (Tous, Frais, Affiné…), puis une ligne par lot : son nom
- * et son numéro, la date de fabrication, et le nombre de pièces restant en stock.
+ * Le stock sur le téléphone, comme sur la maquette : des onglets par genre (fromages, emballages, équipement), une carte par article avec
+ * son prix à la pièce et son nombre en stock, un bouton pour ajouter, puis les rubriques avancées (structure des listes, historique, statistiques).
  */
 export default function StockLots() {
+  const router = useRouter();
+  const { role } = useRole();
+  // Le mode normal regarde seulement : les rubriques avancées ne s'affichent pas.
+  const simple = role === ROLE.BERGER;
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
-  const [filtre, setFiltre] = useState<string>(TOUS);
+  const [onglet, setOnglet] = useState<GenreArticle>(ONGLETS[0].genre);
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
+
+  const charger = useCallback(() => {
+    lireArchiveStock()
+      .then(setArchive)
+      .catch(() => undefined);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      lireArchiveStock()
-        .then(setArchive)
-        .catch(() => undefined);
-    }, []),
+      charger();
+    }, [charger]),
   );
 
-  const lignes = useMemo(() => (archive ? lignesDeLots(lotsDeLInventaire(archive, ETAT_LOT.EN_STOCK)) : []), [archive]);
-  const articles = useMemo(() => [...new Set(lignes.map((l) => l.article))], [lignes]);
-  const visibles = filtre === TOUS ? lignes : lignes.filter((l) => l.article === filtre);
+  const articles = useMemo(() => (archive ? articlesDuGenre(onglet, archive) : []), [archive, onglet]);
+  const niveaux = useMemo(() => (archive ? niveauxDeStock(archive.mouvements) : new Map<string, number>()), [archive]);
   if (!archive) return null;
+  const ongletCourant = ONGLETS.find((o) => o.genre === onglet) ?? ONGLETS[0];
+
+  const ajouter = async (nom: string) => {
+    await ajouterArticle(onglet, nom);
+    setAjoutOuvert(false);
+    charger();
+  };
+
+  const avance = (
+    <View style={styles.trailing}>
+      <Badge label="Avancé" color={colors.text} />
+      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+    </View>
+  );
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }} style={{ backgroundColor: colors.background }}>
-      <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>{`${lignes.length} lots en stock`}</Text>
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {[TOUS, ...articles].map((cle) => {
-          const actif = filtre === cle;
+    <ScrollView contentContainerStyle={styles.contenu} style={styles.fond}>
+      <View style={styles.onglets}>
+        {ONGLETS.map((o) => {
+          const actif = o.genre === onglet;
           return (
             <Pressable
-              key={cle}
+              key={o.genre}
               accessibilityRole="button"
               accessibilityState={{ selected: actif }}
-              onPress={() => setFiltre(cle)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: actif ? colors.primary : colors.border,
-                backgroundColor: actif ? colors.primary : colors.surface,
-              }}
+              onPress={() => setOnglet(o.genre)}
+              style={[styles.onglet, actif && styles.ongletActif]}
             >
-              <Text style={{ fontWeight: '600', color: actif ? colors.blanc : colors.text }}>
-                {cle === TOUS ? 'Tous' : libelleArticle(cle, archive)}
-              </Text>
+              <Text style={[styles.ongletTexte, actif && styles.ongletTexteActif]}>{o.titre}</Text>
             </Pressable>
           );
         })}
       </View>
 
-      {visibles.map((l) => (
-        <View
-          key={l.cle}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}
-        >
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>{`${libelleArticle(l.article, archive)} · lot ${l.numero}`}</Text>
-            <Text style={{ color: colors.textMuted }}>{`Fabriqué le ${formatDateFR(l.dateFabrication)}`}</Text>
+      <View style={styles.entete}>
+        <Text style={styles.enteteTexte}>{ongletCourant.titre}</Text>
+      </View>
+
+      {articles.length === 0 ? <Text style={styles.vide}>Aucun article pour le moment.</Text> : null}
+      {articles.map((a) => (
+        <View key={a.cle} style={styles.carte}>
+          <View style={styles.carteTexte}>
+            <Text style={styles.nom}>{a.libelle}</Text>
+            {a.prix ? <Text style={styles.prix}>{`${formatMontant(a.prix)} la pièce`}</Text> : null}
           </View>
-          <Text style={{ fontWeight: '800', color: colors.primary }}>{`${l.pieces} ${l.pieces > 1 ? 'pièces' : 'pièce'}`}</Text>
+          <Text style={styles.quantite}>{`${niveaux.get(a.cle) ?? 0} en stock`}</Text>
         </View>
       ))}
 
-      {visibles.length === 0 ? <Text style={{ color: colors.textMuted, textAlign: 'center' }}>Aucun lot en stock.</Text> : null}
+      <Button label={ongletCourant.ajout} onPress={() => setAjoutOuvert(true)} />
+
+      {simple ? null : (
+        <BlocLignes>
+          <ListRow
+            title="Structure des listes"
+            icone="list"
+            trailing={avance}
+            onPress={() => router.push(ROUTES.STOCK_STRUCTURE)}
+          />
+          <ListRow
+            title="Historique"
+            icone="time"
+            trailing={avance}
+            onPress={() => router.push(ROUTES.stockHistorique())}
+          />
+          <ListRow
+            title="Statistiques"
+            icone="stats-chart"
+            trailing={avance}
+            onPress={() => router.push(ROUTES.STOCK_STATISTIQUES)}
+          />
+        </BlocLignes>
+      )}
+
+      <NomModal
+        visible={ajoutOuvert}
+        titre={ongletCourant.ajout}
+        onValider={ajouter}
+        onAnnuler={() => setAjoutOuvert(false)}
+      />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  fond: { flex: 1, backgroundColor: colors.background },
+  contenu: { padding: 16, gap: 12 },
+  onglets: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  onglet: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  ongletActif: { backgroundColor: colors.primary, borderColor: colors.primary },
+  ongletTexte: { fontWeight: '600', color: colors.text },
+  ongletTexteActif: { color: colors.blanc },
+  entete: { backgroundColor: colors.badgeBg, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
+  enteteTexte: { fontWeight: '700', color: colors.primary },
+  vide: { color: colors.textMuted, textAlign: 'center' },
+  carte: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+  },
+  carteTexte: { flex: 1, gap: 2 },
+  nom: { fontSize: 16, fontWeight: '700', color: colors.text },
+  prix: { color: colors.textMuted },
+  quantite: { fontSize: 16, fontWeight: '800', color: colors.text },
+  trailing: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+});
