@@ -34,8 +34,10 @@ describe('la synchronisation avec le serveur OVH', () => {
   it('la connexion garde le jeton, pas le mot de passe', async () => {
     fetchSimule.mockResolvedValueOnce(reponse(200, { jeton: 'abc', identifiant: 'moi' }));
     await seConnecter('moi', 'un-mot-de-passe');
-    expect(await lireConnexion()).toEqual({ jeton: 'abc', identifiant: 'moi' });
-    expect(JSON.stringify(await lireConnexion())).not.toContain('un-mot-de-passe');
+    const connexion = await lireConnexion();
+    expect(connexion).toMatchObject({ jeton: 'abc', identifiant: 'moi' });
+    expect(connexion?.obtenueLe).toBeGreaterThan(0);
+    expect(JSON.stringify(connexion)).not.toContain('un-mot-de-passe');
   });
 
   it('une mauvaise connexion ne garde rien', async () => {

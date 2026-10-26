@@ -57,7 +57,7 @@ if ($action === 'connexion' && $methode === 'POST') {
   $db->prepare('DELETE FROM connexions_echouees WHERE identifiant = ?')->execute([$identifiant]);
   // Le jeton part vers l'appareil ; le serveur ne garde que son empreinte : une lecture de la base ne donne pas de session utilisable.
   $jeton = bin2hex(random_bytes(32));
-  $db->prepare('INSERT INTO sessions (jeton, utilisateur_id, expire_le) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))')
+  $db->prepare('INSERT INTO sessions (jeton, utilisateur_id, expire_le) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 DAY))')
     ->execute([hash('sha256', $jeton), $utilisateur['id']]);
   repondre(200, ['jeton' => $jeton, 'identifiant' => $identifiant]);
 }

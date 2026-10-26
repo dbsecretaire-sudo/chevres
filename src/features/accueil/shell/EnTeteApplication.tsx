@@ -61,7 +61,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   // Le fil d'Ariane ne reste que pour le poste de comptabilité et Windows : sur le téléphone, le titre de la page suffit.
   const filAffiche = comptable || afficheBureau() ? fil : [];
   // Sur le téléphone, une page à l'intérieur d'une rubrique a une flèche : elle ramène à l'écran réellement précédent (pas à une étape du fil).
-  const precedent = fil.length > 1 ? fil[fil.length - 2] : undefined;
+  // La racine d'une rubrique (Atelier, Chèvres : le premier maillon du fil) n'a pas de Précédent : la flèche n'apparaît qu'à partir de la deuxième étape.
+  const precedent = fil.length > 2 ? fil[fil.length - 2] : undefined;
   // Le Précédent remonte le fil d'Ariane : il mène à la page de l'étape d'avant (Accueil › Cheptel › Scanner → Cheptel). Sans page pour cette étape, il revient comme avant.
   const retourDuTelephone = () => {
     if (precedent?.route) router.replace(precedent.route as never);

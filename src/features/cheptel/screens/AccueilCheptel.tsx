@@ -37,7 +37,6 @@ function PageChevresTelephone() {
   return (
     <GrilleTerrain
       zone="troupeau"
-      remplir
       enTete={
         <>
           <SelecteurEspece />

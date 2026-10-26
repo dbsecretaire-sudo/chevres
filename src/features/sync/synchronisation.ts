@@ -13,7 +13,12 @@ const CLE_VERSION = 'troupeau:v1:sync-version';
 export interface Connexion {
   jeton: string;
   identifiant: string;
+  /** Quand la connexion a été faite (en millisecondes) : elle vaut 24 heures, puis il faut se reconnecter. */
+  obtenueLe?: number;
 }
+
+/** Une connexion dure au plus une journée : au-delà, l'appareil ne la reprend plus et on redemande le compte. */
+const DUREE_CONNEXION_MS = 24 * 60 * 60 * 1000;
 
 /** Le serveur a une version plus récente que celle de cet appareil : il faut recevoir avant d'envoyer. */
 export class ConflitDeSynchronisation extends Error {
@@ -27,7 +32,14 @@ export class ConnexionExpiree extends Error {}
 
 export async function lireConnexion(): Promise<Connexion | null> {
   const brut = await AsyncStorage.getItem(CLE_CONNEXION);
-  return brut ? (JSON.parse(brut) as Connexion) : null;
+  if (!brut) return null;
+  const connexion = JSON.parse(brut) as Connexion;
+  // Une connexion sans date (faite avant cette règle) ou plus vieille qu'une journée est effacée : on se reconnecte.
+  if (!connexion.obtenueLe || Date.now() - connexion.obtenueLe > DUREE_CONNEXION_MS) {
+    await AsyncStorage.removeItem(CLE_CONNEXION);
+    return null;
+  }
+  return connexion;
 }
 
 /** Appelle une action de l'API et rend le code HTTP avec la réponse en JSON. */
@@ -60,7 +72,7 @@ export async function seConnecter(identifiant: string, motDePasse: string): Prom
     corps: { identifiant, mot_de_passe: motDePasse },
   });
   if (statut !== 200) throw new Error(json.erreur ?? 'Connexion impossible.');
-  const connexion: Connexion = { jeton: json.jeton, identifiant: json.identifiant };
+  const connexion: Connexion = { jeton: json.jeton, identifiant: json.identifiant, obtenueLe: Date.now() };
   await AsyncStorage.setItem(CLE_CONNEXION, JSON.stringify(connexion));
 }
 

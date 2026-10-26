@@ -10,6 +10,8 @@ import {
 } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import StockFromagerie from '@/features/stock/screens/StockFromagerie';
+import StockLots from '@/features/stock/screens/StockLots';
+import { afficheBureau } from '@/shared/utils/affichage';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
@@ -20,7 +22,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 export default function StockScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { retour } = useLocalSearchParams<{ retour?: string }>();
+  const { retour, vue } = useLocalSearchParams<{ retour?: string; vue?: string }>();
 
   // La flèche ne vaut que pour cette visite : en quittant le stock, l'adresse de retour est oubliée.
   useFocusEffect(
@@ -43,7 +45,8 @@ export default function StockScreen() {
             : undefined,
         }}
       />
-      <StockFromagerie />
+      {/* Sur le téléphone, le stock des lots comme sur la maquette (filtres par article, une ligne par lot). L'ordinateur et les aliments gardent leur page. */}
+      {afficheBureau() || vue === 'aliments' ? <StockFromagerie /> : <StockLots />}
     </>
   );
 }
