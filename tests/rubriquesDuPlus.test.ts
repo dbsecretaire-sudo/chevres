@@ -25,7 +25,8 @@ describe('les rubriques du mode avancé', () => {
 
   it('le mouvement des chèvres propose l’entrée, la vente vivante, l’abattoir et les sorties', () => {
     const routes = RUBRIQUES.mouvement.sections.flatMap((s) => s.lignes.map((l) => l.route));
-    expect(routes).toEqual([ROUTES.CHEPTEL_NOUVELLE, ROUTES.VENTES_VIVANTS, ROUTES.lotAbattoirNouveau(), ROUTES.CHEPTEL_HISTORIQUE]);
+    // La sortie « Sortie ou mort » ouvre la page Décès, comme la tuile Décès des chèvres : un seul chemin pour déclarer un décès.
+    expect(routes).toEqual([ROUTES.CHEPTEL_NOUVELLE, ROUTES.VENTES_VIVANTS, ROUTES.lotAbattoirNouveau(), ROUTES.CHEPTEL_DECES]);
   });
 
   it('le titre d’une rubrique vient de sa page ; une rubrique inconnue n’a pas de titre', () => {

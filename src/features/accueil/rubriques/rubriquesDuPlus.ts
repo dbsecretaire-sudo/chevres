@@ -194,7 +194,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
         lignes: [
           { libelle: 'Vente vivante', aide: 'Acheteur et document de circulation', icone: 'cash-outline', route: ROUTES.VENTES_VIVANTS },
           { libelle: 'Envoi à l’abattoir', aide: 'Départ d’un lot d’animaux', icone: 'exit-outline', route: ROUTES.lotAbattoirNouveau() },
-          { libelle: 'Sortie ou mort', aide: 'Historique des sorties', icone: 'close-circle-outline', route: ROUTES.CHEPTEL_HISTORIQUE },
+          { libelle: 'Sortie ou mort', aide: 'Déclarer un décès, avec sa cause', icone: 'close-circle-outline', route: ROUTES.CHEPTEL_DECES },
         ],
       },
     ],
