@@ -1,22 +1,30 @@
-import { Checkbox } from '@/shared/components/Checkbox';
+import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
 import { DateField } from '@/shared/components/DateField';
 import { TEXTES } from '@/shared/textes';
 
 interface Props {
-  /** Le libellé de la case : « Pas encore encaissée » pour une recette, « Pas encore payée » pour une dépense. */
-  libelle: string;
+  /** Les deux réglages en pastilles : « Payé » ou « Encaissé » (à sa date), « À payer » ou « À encaisser » (pas encore). */
+  libellePayee: string;
+  libelleAttente: string;
   enAttente: boolean;
   onEnAttente: (enAttente: boolean) => void;
   echeance: string;
   onEcheance: (echeance: string) => void;
 }
 
-/** Le paiement d'une écriture : payée à sa date (d'office), ou pas encore, avec la date prévue : la trésorerie la compte à cette date. */
-export function ChampPaiement({ libelle, enAttente, onEnAttente, echeance, onEcheance }: Props) {
+/** Le règlement d'une écriture : payée à sa date (d'office), ou pas encore, avec la date prévue : la trésorerie la compte à cette date. */
+export function ChampPaiement({ libellePayee, libelleAttente, enAttente, onEnAttente, echeance, onEcheance }: Props) {
   const T = TEXTES.comptabilite.tresorerie.paiement;
   return (
     <>
-      <Checkbox label={libelle} value={enAttente} onChange={onEnAttente} />
+      <ChoixPastilles
+        options={[
+          { value: 'payee', label: libellePayee },
+          { value: 'attente', label: libelleAttente },
+        ]}
+        value={enAttente ? 'attente' : 'payee'}
+        onChange={(choix) => onEnAttente(choix === 'attente')}
+      />
       {enAttente ? <DateField label={T.echeance} value={echeance} onChange={onEcheance} /> : null}
     </>
   );

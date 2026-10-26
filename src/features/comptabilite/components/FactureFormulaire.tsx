@@ -261,11 +261,8 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         {/* Le paiement : réglée ou encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
         {paiementAffiche ? (
           <ChampPaiement
-            libelle={
-              estEmise
-                ? TEXTES.comptabilite.tresorerie.paiement.pasEncaissee
-                : TEXTES.comptabilite.tresorerie.paiement.pasPayee
-            }
+            libellePayee={estEmise ? 'Encaissé' : 'Payé'}
+            libelleAttente={estEmise ? 'À encaisser' : 'À payer'}
             enAttente={form.payee === false}
             onEnAttente={(attente) => f.setForm(avecPaiement(form, attente))}
             echeance={form.echeance ?? ''}

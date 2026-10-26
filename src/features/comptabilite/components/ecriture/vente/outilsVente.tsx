@@ -6,11 +6,9 @@ import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
 import { prixDuTarif } from '@/features/commercial/services/commandes';
 import { prixDesOeufs } from '@/features/stock/services/stock';
-import { SelectField } from '@/shared/components/SelectField';
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
-import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
+import { ChampTauxTva } from '@/features/comptabilite/components/ecriture/ChampTauxTva';
 import { CLE_PRIX_LAIT } from '@/shared/constants/stock';
-import { TEXTES } from '@/shared/textes';
 
 export type Props = { e: EtatNouvelleEcriture };
 
@@ -75,13 +73,6 @@ export function usePrixInventaire(genre: 'lait' | 'oeufs'): number | undefined {
 }
 
 export function ChampTauxTvaVente({ e }: Props) {
-  return (
-    <SelectField
-      label={TEXTES.commun.general.tauxDeTva}
-      value={e.tauxTvaVente}
-      onChange={e.setTauxTvaVente}
-      options={OPTIONS_TAUX_TVA}
-    />
-  );
+  return <ChampTauxTva value={e.tauxTvaVente} onChange={e.setTauxTvaVente} ttc={parseDecimal(e.montant)} />;
 }
 

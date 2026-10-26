@@ -241,7 +241,8 @@ export function VenteFormulaire({
 
         {/* Le paiement : encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
         <ChampPaiement
-          libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+          libellePayee="Encaissé"
+          libelleAttente="À encaisser"
           enAttente={form.payee === false}
           onEnAttente={(attente) => onChange(avecPaiement(form, attente))}
           echeance={form.echeance ?? ''}

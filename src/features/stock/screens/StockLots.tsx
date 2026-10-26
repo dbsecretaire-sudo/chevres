@@ -6,22 +6,38 @@ import { Badge } from '@/shared/components/Badge';
 import { Button } from '@/shared/components/Button';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
+import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { lireArchiveStock } from '@/features/stock/repository';
-import { ajouterArticle, articlesDuGenre, niveauxDeStock } from '@/features/stock/services/stock';
+import {
+  ajouterArticle,
+  articlesDuGenre,
+  definirPrixArticle,
+  niveauxDeStock,
+  prixDesOeufs,
+} from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { ROUTES } from '@/shared/constants/routes';
-import { GENRE_ARTICLE } from '@/shared/constants/stock';
+import { CLE_PRIX_OEUFS, GENRE_ARTICLE } from '@/shared/constants/stock';
 import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
 import { formatMontant } from '@/shared/utils/dates';
 
-/** Les onglets du stock, comme sur la maquette : chacun montre les articles d'un genre, et son bouton d'ajout. */
-const ONGLETS: { genre: GenreArticle; titre: string; ajout: string }[] = [
-  { genre: GENRE_ARTICLE.FROMAGE, titre: 'Fromages', ajout: 'Ajouter un fromage' },
-  { genre: GENRE_ARTICLE.EMBALLAGE, titre: 'Emballages', ajout: 'Ajouter un emballage' },
-  { genre: GENRE_ARTICLE.EQUIPEMENT, titre: 'Équipement', ajout: 'Ajouter un équipement' },
+const T = TEXTES.stock;
+
+/** L'onglet des œufs : ils n'ont pas d'article, seulement un prix (celui de l'inventaire). */
+const ONGLET_OEUFS = 'oeufs';
+
+type Onglet = typeof ONGLET_OEUFS | GenreArticle;
+
+/** Les onglets du stock, comme sur la maquette : chacun montre les articles d'un genre (ou les œufs), et son bouton d'ajout. */
+const ONGLETS: { cle: Onglet; titre: string; ajout?: string }[] = [
+  { cle: GENRE_ARTICLE.FROMAGE, titre: 'Fromages', ajout: 'Ajouter un fromage' },
+  { cle: ONGLET_OEUFS, titre: 'Œufs' },
+  { cle: GENRE_ARTICLE.EMBALLAGE, titre: 'Emballages', ajout: 'Ajouter un emballage' },
+  { cle: GENRE_ARTICLE.EQUIPEMENT, titre: 'Équipement', ajout: 'Ajouter un équipement' },
 ];
 
 /**
@@ -34,8 +50,9 @@ export default function StockLots() {
   // Le mode normal regarde seulement : les rubriques avancées ne s'affichent pas.
   const simple = role === ROLE.BERGER;
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
-  const [onglet, setOnglet] = useState<GenreArticle>(ONGLETS[0].genre);
+  const [onglet, setOnglet] = useState<Onglet>(ONGLETS[0].cle);
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  const [prixOeufsOuvert, setPrixOeufsOuvert] = useState(false);
 
   const charger = useCallback(() => {
     lireArchiveStock()
@@ -49,12 +66,16 @@ export default function StockLots() {
     }, [charger]),
   );
 
-  const articles = useMemo(() => (archive ? articlesDuGenre(onglet, archive) : []), [archive, onglet]);
+  const articles = useMemo(
+    () => (archive && onglet !== ONGLET_OEUFS ? articlesDuGenre(onglet, archive) : []),
+    [archive, onglet],
+  );
   const niveaux = useMemo(() => (archive ? niveauxDeStock(archive.mouvements) : new Map<string, number>()), [archive]);
   if (!archive) return null;
-  const ongletCourant = ONGLETS.find((o) => o.genre === onglet) ?? ONGLETS[0];
+  const ongletCourant = ONGLETS.find((o) => o.cle === onglet) ?? ONGLETS[0];
 
   const ajouter = async (nom: string) => {
+    if (onglet === ONGLET_OEUFS) return;
     await ajouterArticle(onglet, nom);
     setAjoutOuvert(false);
     charger();
@@ -71,13 +92,13 @@ export default function StockLots() {
     <ScrollView contentContainerStyle={styles.contenu} style={styles.fond}>
       <View style={styles.onglets}>
         {ONGLETS.map((o) => {
-          const actif = o.genre === onglet;
+          const actif = o.cle === onglet;
           return (
             <Pressable
-              key={o.genre}
+              key={o.cle}
               accessibilityRole="button"
               accessibilityState={{ selected: actif }}
-              onPress={() => setOnglet(o.genre)}
+              onPress={() => setOnglet(o.cle)}
               style={[styles.onglet, actif && styles.ongletActif]}
             >
               <Text style={[styles.ongletTexte, actif && styles.ongletTexteActif]}>{o.titre}</Text>
@@ -90,18 +111,34 @@ export default function StockLots() {
         <Text style={styles.enteteTexte}>{ongletCourant.titre}</Text>
       </View>
 
-      {articles.length === 0 ? <Text style={styles.vide}>Aucun article pour le moment.</Text> : null}
-      {articles.map((a) => (
-        <View key={a.cle} style={styles.carte}>
-          <View style={styles.carteTexte}>
-            <Text style={styles.nom}>{a.libelle}</Text>
-            {a.prix ? <Text style={styles.prix}>{`${formatMontant(a.prix)} la pièce`}</Text> : null}
+      {onglet === ONGLET_OEUFS ? (
+        <>
+          <View style={styles.carte}>
+            <View style={styles.carteTexte}>
+              <Text style={styles.nom}>{T.oeufs.prixDeLOeuf}</Text>
+              <Text style={styles.prix}>{T.oeufs.prixOeuf(formatMontant(prixDesOeufs(archive)))}</Text>
+            </View>
+            <Pressable onPress={() => setPrixOeufsOuvert(true)} hitSlop={8} accessibilityLabel={T.oeufs.modifierLePrix}>
+              <Ionicons name="pencil" size={20} color={colors.ajout} />
+            </Pressable>
           </View>
-          <Text style={styles.quantite}>{`${niveaux.get(a.cle) ?? 0} en stock`}</Text>
-        </View>
-      ))}
-
-      <Button label={ongletCourant.ajout} onPress={() => setAjoutOuvert(true)} />
+          <Text style={styles.note}>{T.oeufs.note}</Text>
+        </>
+      ) : (
+        <>
+          {articles.length === 0 ? <Text style={styles.vide}>Aucun article pour le moment.</Text> : null}
+          {articles.map((a) => (
+            <View key={a.cle} style={styles.carte}>
+              <View style={styles.carteTexte}>
+                <Text style={styles.nom}>{a.libelle}</Text>
+                {a.prix ? <Text style={styles.prix}>{`${formatMontant(a.prix)} la pièce`}</Text> : null}
+              </View>
+              <Text style={styles.quantite}>{`${niveaux.get(a.cle) ?? 0} en stock`}</Text>
+            </View>
+          ))}
+          {ongletCourant.ajout ? <Button label={ongletCourant.ajout} onPress={() => setAjoutOuvert(true)} /> : null}
+        </>
+      )}
 
       {simple ? null : (
         <BlocLignes>
@@ -128,9 +165,23 @@ export default function StockLots() {
 
       <NomModal
         visible={ajoutOuvert}
-        titre={ongletCourant.ajout}
+        titre={ongletCourant.ajout ?? ''}
         onValider={ajouter}
         onAnnuler={() => setAjoutOuvert(false)}
+      />
+
+      <ArticleStockModal
+        visible={prixOeufsOuvert}
+        titre={T.oeufs.modifierLePrix}
+        prix={prixDesOeufs(archive)}
+        avecPrix
+        libellePrix={T.oeufs.prixLabel}
+        onValider={async (_nom, prix) => {
+          await definirPrixArticle(CLE_PRIX_OEUFS, prix);
+          setPrixOeufsOuvert(false);
+          charger();
+        }}
+        onAnnuler={() => setPrixOeufsOuvert(false)}
       />
     </ScrollView>
   );
@@ -154,6 +205,7 @@ const styles = StyleSheet.create({
   entete: { backgroundColor: colors.badgeBg, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
   enteteTexte: { fontWeight: '700', color: colors.primary },
   vide: { color: colors.textMuted, textAlign: 'center' },
+  note: { color: colors.textMuted, fontSize: 13 },
   carte: {
     flexDirection: 'row',
     alignItems: 'center',

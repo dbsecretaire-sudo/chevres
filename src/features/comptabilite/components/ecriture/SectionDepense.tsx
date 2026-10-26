@@ -14,8 +14,8 @@ import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { FormField } from '@/shared/components/FormField';
-import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
+import { ChampTauxTva } from '@/features/comptabilite/components/ecriture/ChampTauxTva';
 import { LignesAlimentationEditor } from '@/features/comptabilite/components/LignesAlimentationEditor';
 import { ChampStockProduction } from '@/features/comptabilite/components/ecriture/ChampStockProduction';
 import { ChampVisite } from '@/features/comptabilite/components/ecriture/ChampVisite';
@@ -26,7 +26,6 @@ import {
   NoteComptePcg,
 } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
 import type { EtatNouvelleEcriture } from '@/features/comptabilite/hooks/useNouvelleEcriture';
-import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import type { CategorieDepense } from '@/features/comptabilite/types';
 import { categoriesDepenseDuMode } from '@/features/comptabilite/utils/categories';
 import {
@@ -43,7 +42,7 @@ import {
 import type { Fournisseur } from '@/features/fournisseurs/types';
 import { CATEGORIE_DEPENSE, OBJET_ASSURANCE } from '@/shared/constants/comptabilite';
 import { ROUTES } from '@/shared/constants/routes';
-import { formatTotalEuros } from '@/shared/utils/nombres';
+import { formatTotalEuros, parseDecimal } from '@/shared/utils/nombres';
 import { styles } from '@/shared/styles/comptabilite/NouvelleEcriture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ChampAtelier } from '@/features/comptabilite/components/ChampAtelier';
@@ -101,7 +100,7 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
     : undefined;
   /** Le lien « Avancé » déplie les cases (paiement, non facturée, offerte) ; une case déjà cochée les garde ouvertes. */
   const [avanceOuvert, setAvanceOuvert] = useState(false);
-  const uneCaseCochee = e.enAttente || e.sansFacture || e.offertDepenseCoche;
+  const uneCaseCochee = e.sansFacture || e.offertDepenseCoche;
 
   return (
     <>
@@ -137,24 +136,11 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
           }}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
-        {/* Les cases rares (pas encore payée, non facturée, offerte) se rangent sous le lien « Avancé » ; elles s'ouvrent d'elles-mêmes quand l'une est cochée. */}
+        {/* Les cases rares (non facturée, offerte) se rangent sous le lien « Avancé » ; elles s'ouvrent d'elles-mêmes quand l'une est cochée. */}
         <Pressable onPress={() => setAvanceOuvert(!avanceOuvert)} accessibilityRole="button" accessibilityState={{ expanded: avanceOuvert || uneCaseCochee }}>
           <Text style={commonStyles.lien}>{TEXTES.comptabilite.nouvelleEcriture.avance(avanceOuvert || uneCaseCochee)}</Text>
         </Pressable>
         {avanceOuvert || uneCaseCochee ? <>
-        {/* Le paiement : payée à sa date (d'office), ou pas encore — la trésorerie la compte à son échéance. */}
-        {pasPayeeAffichee(categorieDuTiers) ? (
-          <ChampPaiement
-            libelle={TEXTES.comptabilite.tresorerie.paiement.pasPayee}
-            enAttente={e.enAttente}
-            onEnAttente={(attente) => {
-              e.setEnAttente(attente);
-              if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
-            }}
-            echeance={e.echeance}
-            onEcheance={e.setEcheance}
-          />
-        ) : null}
         {sansFactureAffichee(categorieDuTiers) ? (
           <Checkbox
             label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
@@ -202,6 +188,18 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
   const estProduction = e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
   const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   const estAnimauxVivants = e.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
+  /** Le montant TTC de la dépense : celui de son détail (lignes, chambre, carburant), sinon le montant saisi. */
+  const montantDepense = estAlimentation
+    ? e.totalAlimentation
+    : estProduction
+      ? e.totalProduction
+      : estCarburant
+        ? e.totalCarburant
+        : e.estChambre
+          ? e.totalChambre
+          : parseDecimal(e.montant);
+  /** La catégorie du fournisseur : elle dit si le règlement (payée, à payer) se demande. */
+  const categorieDuTiers = e.fournisseurSelectionne ? categorieFournisseurDe(e.fournisseurSelectionne.categorie) : undefined;
 
   return (
     <>
@@ -340,12 +338,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
             ) : null}
           </>
         )}
-        <SelectField
-          label={TEXTES.commun.general.tauxDeTva}
-          value={e.tauxTvaAchat}
-          onChange={e.setTauxTvaAchat}
-          options={OPTIONS_TAUX_TVA}
-        />
+        <ChampTauxTva value={e.tauxTvaAchat} onChange={e.setTauxTvaAchat} ttc={montantDepense} />
         {/* Une association ou une coopérative agricole : son volet (achat groupé, mutualisation, experts, transports). */}
         {e.voletAffiche ? (
           <ChampVoletCooperative value={e.voletCooperative} volets={e.voletsProposes} onChange={e.setVoletCooperative} />
@@ -383,6 +376,23 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         )}
         {e.atelier === ATELIER.AGRITOURISME ? (
           <ChampElementAgritourisme value={e.elementAgri} onChange={e.setElementAgri} />
+        ) : null}
+        {/* Le règlement : payée à sa date (d'office), ou à payer — la trésorerie la compte à son échéance. */}
+        {pasPayeeAffichee(categorieDuTiers) ? (
+          <>
+            <Text style={commonStyles.lineBold}>Règlement</Text>
+            <ChampPaiement
+              libellePayee="Payé"
+              libelleAttente="À payer"
+              enAttente={e.enAttente}
+              onEnAttente={(attente) => {
+                e.setEnAttente(attente);
+                if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+              }}
+              echeance={e.echeance}
+              onEcheance={e.setEcheance}
+            />
+          </>
         ) : null}
       </SectionForm>
     </>

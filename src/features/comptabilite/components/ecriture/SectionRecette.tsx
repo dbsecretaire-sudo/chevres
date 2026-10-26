@@ -247,7 +247,7 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           e.categorieRecette === CATEGORIE_RECETTE.SAVONS) && <ChampsVenteViande e={e} />}
 
         {/* Le paiement : offert au client, ou encaissé à sa date (d'office), ou pas encore. */}
-        <Text style={commonStyles.lineBold}>{TEXTES.comptabilite.nouvelleEcriture.paiement}</Text>
+        <Text style={commonStyles.lineBold}>Règlement</Text>
         {e.estProductionVente ? (
           <>
             <Checkbox
@@ -264,7 +264,8 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           e.clientSelectionne ? categorieClientDe(e.clientSelectionne.categorie) : undefined,
         ) ? (
           <ChampPaiement
-            libelle={TEXTES.comptabilite.tresorerie.paiement.pasEncaissee}
+            libellePayee="Encaissé"
+            libelleAttente="À encaisser"
             enAttente={e.enAttente}
             onEnAttente={(attente) => {
               e.setEnAttente(attente);

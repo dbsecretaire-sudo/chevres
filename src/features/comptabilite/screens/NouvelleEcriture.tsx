@@ -22,6 +22,7 @@ import {
   SectionRecetteContact,
   SectionRecetteVente,
 } from '@/features/comptabilite/components/ecriture/SectionRecette';
+import { ResumeEcriture } from '@/features/comptabilite/components/ecriture/ResumeEcriture';
 import { SelectModal } from '@/shared/components/SelectModal';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { commandeOuverte, totalCommande } from '@/features/commercial/services/commandes';
@@ -293,7 +294,10 @@ export default function NouvelleFacture() {
           etape === 'contact' ? (
             <SectionDepenseContact e={e} date={champDate} />
           ) : (
-            <SectionDepenseDetail e={e} />
+            <>
+              <ResumeEcriture e={e} />
+              <SectionDepenseDetail e={e} />
+            </>
           )
         ) : etape === 'contact' ? (
           <>
@@ -308,7 +312,10 @@ export default function NouvelleFacture() {
             ) : null}
           </>
         ) : (
-          <SectionRecetteVente e={e} />
+          <>
+            <ResumeEcriture e={e} />
+            <SectionRecetteVente e={e} />
+          </>
         )}
 
         {e.enchainees > 0 ? (
@@ -340,26 +347,14 @@ export default function NouvelleFacture() {
           </View>
         ) : (
           <>
+            <Button label={TEXTES.commun.general.enregistrer} onPress={() => e.enregistrer()} loading={e.enregistrement} />
+            <Button variant="secondary" label={TEXTES.commun.general.retour} onPress={() => setEtape('contact')} />
             <Button
               variant="secondary"
               label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
               onPress={() => e.enregistrer(true)}
               loading={e.enregistrement}
             />
-            <View style={commonStyles.row}>
-              <Button
-                style={commonStyles.flex1}
-                variant="secondary"
-                label={TEXTES.comptabilite.nouvelleEcriture.precedent}
-                onPress={() => setEtape('contact')}
-              />
-              <Button
-                style={commonStyles.flex1}
-                label={TEXTES.commun.general.enregistrer}
-                onPress={() => e.enregistrer()}
-                loading={e.enregistrement}
-              />
-            </View>
           </>
         )}
       </Screen>
