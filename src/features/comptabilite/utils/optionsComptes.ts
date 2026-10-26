@@ -24,7 +24,10 @@ export function optionsDesComptes(
   activite: ActiviteComptable,
   comptesInventaire: string[],
 ) {
-  const deLActivite = comptes.filter((c) => compteProposePour(c, activite === ACTIVITE_COMMUNE ? [] : [activite]));
+  // Un même numéro enregistré deux fois ne s'affiche qu'une fois (le premier gagne).
+  const deLActivite = comptes
+    .filter((c) => compteProposePour(c, activite === ACTIVITE_COMMUNE ? [] : [activite]))
+    .filter((c, rang, tous) => tous.findIndex((x) => x.numero === c.numero) === rang);
   const comptesDepense = deLActivite.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_DEPENSE));
   const comptesRecette = deLActivite.filter((c) => c.numero.startsWith(PREFIXE_COMPTES_RECETTE));
   const optionsCompteDepense = comptesDepense

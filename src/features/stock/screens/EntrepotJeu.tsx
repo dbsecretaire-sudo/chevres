@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
@@ -26,7 +27,7 @@ export default function EntrepotJeu({
   sections,
   lieu,
   avecCompte,
-  sansFermer,
+  avecRetour,
 }: {
   seulement?: string;
   titre?: string;
@@ -38,8 +39,8 @@ export default function EntrepotJeu({
   lieu?: string;
   /** Vrai : chaque rubrique porte en titre son compte du plan comptable (« 601100 Achats stockés — Aliments du bétail »). */
   avecCompte?: boolean;
-  /** Vrai : l'entrepôt est dans une autre page (le stock de la page Boucles) : pas de bouton de fermeture. */
-  sansFermer?: boolean;
+  /** Vrai : la page a sa flèche de retour et son titre en grand, en tête (la grange). */
+  avecRetour?: boolean;
 }) {
   const router = useRouter();
   const comptable = useDispositionComptable();
@@ -116,7 +117,6 @@ export default function EntrepotJeu({
   }
   return (
     <CadreDeJeu
-      onFermer={sansFermer ? undefined : () => router.replace('/')}
       onToutLeStock={() => {
         noterOrigine(origine, ROUTES.COMPTABILITE_STOCKS);
         router.push(ROUTES.COMPTABILITE_STOCKS as never);
@@ -142,7 +142,21 @@ export default function EntrepotJeu({
               })}
             </ScrollView>
           )}
-          {actuelle || sections ? <Text style={styles.titre}>{intitule}</Text> : null}
+          {avecRetour ? (
+            <View style={styles.enTete}>
+              <Pressable
+                style={styles.retour}
+                onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+                accessibilityRole="button"
+                accessibilityLabel={TEXTES.commun.general.retour}
+              >
+                <Ionicons name="chevron-back" size={24} color={colors.text} />
+              </Pressable>
+              <Text style={styles.titreGrand}>{intitule}</Text>
+            </View>
+          ) : actuelle || sections ? (
+            <Text style={styles.titre}>{intitule}</Text>
+          ) : null}
         </>
       }
     >
@@ -170,6 +184,18 @@ const styles = StyleSheet.create({
   pastilleTexte: { fontWeight: '600', color: colors.text },
   pastilleTexteActive: { color: colors.blanc },
   titre: { fontSize: 18, fontWeight: '800', color: colors.text },
+  enTete: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  retour: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titreGrand: { fontSize: 28, fontWeight: '800', color: colors.text },
   defile: { flex: 1 },
   rubriques: { gap: 14, paddingBottom: 10 },
 });

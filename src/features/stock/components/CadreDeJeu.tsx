@@ -16,13 +16,10 @@ import { TEXTES } from '@/shared/textes';
 export function CadreDeJeu({
   haut,
   children,
-  onFermer,
   onToutLeStock,
 }: {
   haut?: ReactNode;
   children: ReactNode;
-  /** Un bouton « fermer » en haut à droite (la grange). */
-  onFermer?: () => void;
   /** Quand elle est donnée : le bouton « Tout le stock » sous la liste. */
   onToutLeStock?: () => void;
 }) {
@@ -46,18 +43,6 @@ export function CadreDeJeu({
   }
   return (
     <View style={styles.fond}>
-      {onFermer ? (
-        <View style={styles.ligneFermer}>
-          <Pressable
-            style={styles.fermer}
-            onPress={onFermer}
-            accessibilityRole="button"
-            accessibilityLabel={TEXTES.production.lieux.entrepot.fermer}
-          >
-            <Ionicons name="close" size={22} color={colors.text} />
-          </Pressable>
-        </View>
-      ) : null}
       {haut}
       <View style={styles.defile}>{children}</View>
       {toutLeStock ? (
@@ -74,17 +59,6 @@ const styles = StyleSheet.create({
   plat: { flex: 1 },
   barrePlate: { flexDirection: 'row', paddingVertical: 8 },
   fond: { flex: 1, backgroundColor: colors.background, padding: 16, gap: 12 },
-  ligneFermer: { alignItems: 'flex-end' },
-  fermer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   defile: { flex: 1 },
   complet: {
     alignSelf: 'center',

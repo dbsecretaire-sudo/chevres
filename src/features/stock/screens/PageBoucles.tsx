@@ -23,7 +23,7 @@ export default function PageBoucles() {
       </GroupeAccueil>
       <GroupeAccueil titre={T.documents.pageBoucles.groupeStock}>
         <View style={{ height: 480 }}>
-          <EntrepotJeu avecCompte sansFermer lieu="boucles" sections={[SECTION_STOCK.BOUCLES]} titre={TEXTES.stock.boucles.stockDeBoucles} />
+          <EntrepotJeu avecCompte lieu="boucles" sections={[SECTION_STOCK.BOUCLES]} titre={TEXTES.stock.boucles.stockDeBoucles} />
         </View>
       </GroupeAccueil>
     </Screen>

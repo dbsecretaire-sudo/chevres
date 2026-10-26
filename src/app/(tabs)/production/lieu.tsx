@@ -28,6 +28,7 @@ export default function Lieu() {
           // Les matières alimentaires consommables et celles des savons sont celles de l'atelier : elles sont dans son stock, pas à la grange.
           sauf={[SECTION_STOCK.BOUCLES, `liste:${ID_LISTE_DENREES}`, `liste:${ID_LISTE_MATIERES_SAVON}`]}
           titre={TEXTES.production.lieux.entrepot.grange}
+          avecRetour
         />
       </View>
     );
