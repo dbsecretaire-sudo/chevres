@@ -57,7 +57,7 @@ const AVANT_LES_MONTANTS = ['date', 'libelle', 'detail', 'categorie', 'activite'
  */
 export function TableauEcritures({ e }: { e: ReturnType<typeof useListeTransactions> }) {
   const router = useRouter();
-  const { totalRentrees, totalDepenses, balance } = e.soldes;
+  const { totalRentrees, rentreesSansFactures, totalDepenses, balance } = e.soldes;
   return (
     <View style={styles.cadre}>
       {e.restriction ? <BandeauRestriction titre={e.restriction.titre} onEffacer={e.effacerRestriction} /> : null}
@@ -85,6 +85,10 @@ export function TableauEcritures({ e }: { e: ReturnType<typeof useListeTransacti
             { colonnes: AVANT_LES_MONTANTS, contenu: 'Totaux' },
             { colonnes: ['debit'], aligne: 'droite', contenu: <Text style={[styles.total, { color: colors.danger }]}>{formatMontant(totalDepenses)}</Text> },
             { colonnes: ['credit'], aligne: 'droite', contenu: <Text style={[styles.total, { color: colors.primary }]}>{formatMontant(totalRentrees)}</Text> },
+          ],
+          [
+            { colonnes: AVANT_LES_MONTANTS, contenu: TEXTES.comptabilite.detailComptable.dontSansFacture },
+            { colonnes: ['credit'], aligne: 'droite', contenu: <Text style={[styles.total, { color: colors.primary }]}>{formatMontant(rentreesSansFactures)}</Text> },
           ],
           [
             { colonnes: AVANT_LES_MONTANTS, contenu: 'Balance' },
