@@ -151,8 +151,8 @@ export interface RecettesDuMois {
 }
 
 /**
- * Les recettes perçues de l'année, mois par mois, pour la déclaration RSA. La notice demande toutes les ressources perçues : les ventes et les
- * recettes émises, avec ou sans facture. Les dépôts et les dons ne sont pas des recettes.
+ * Les recettes perçues de l'année, mois par mois, pour la déclaration RSA. Le chiffre d'affaires ne compte que les ventes et les recettes avec
+ * facture : celles sans facture ne sont pas déclarées. Les aides (PAC, ICHN) comptent toujours. Les dépôts et les dons ne sont pas des recettes.
  */
 export async function recettesPerceuesParMois(annee: number): Promise<RecettesDuMois[]> {
   const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
@@ -160,7 +160,7 @@ export async function recettesPerceuesParMois(annee: number): Promise<RecettesDu
   const indice = (date: string) => Number(date.slice(5, 7)) - 1;
   for (const v of ventes) {
     const m = indice(v.date);
-    if (m >= 0 && m < 12) mois[m].ca += v.prix ?? 0;
+    if (m >= 0 && m < 12 && venteADeclarer(v)) mois[m].ca += v.prix ?? 0;
   }
   for (const f of factures) {
     const m = indice(f.date);
@@ -168,7 +168,7 @@ export async function recettesPerceuesParMois(annee: number): Promise<RecettesDu
     if (f.categorieRecette === CATEGORIE_RECETTE.AIDE) {
       if (f.typeAide === TYPE_AIDE.ICHN) mois[m].ichn += f.montant;
       else mois[m].aidesCourantes += f.montant;
-    } else if (f.categorieRecette && f.categorieRecette !== CATEGORIE_RECETTE.DEPOT && f.categorieRecette !== CATEGORIE_RECETTE.DONS) {
+    } else if (f.categorieRecette && !f.sansFacture && f.categorieRecette !== CATEGORIE_RECETTE.DEPOT && f.categorieRecette !== CATEGORIE_RECETTE.DONS) {
       mois[m].ca += f.montant;
     }
   }
