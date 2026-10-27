@@ -38,14 +38,14 @@ export const commonStyles = StyleSheet.create({
   enteteListe: { gap: 12 },
   /** Le contenu d'une liste d'un écran qui a déjà sa marge (Screen) : rien sur les côtés. */
   listeSimple: { paddingBottom: 24, gap: 10 },
-  /** Le contenu d'une liste d'un écran pleine largeur (ScreenList) : sa marge de 16 de chaque côté, avec la place du bouton « + ». */
-  listFab: { paddingHorizontal: 16, paddingBottom: 160, paddingTop: 4, gap: 10 },
+  /** Le contenu d'une liste d'un écran pleine largeur (ScreenList) : sa marge de 8 de chaque côté, avec la place du bouton « + ». */
+  listFab: { paddingHorizontal: 8, paddingBottom: 160, paddingTop: 4, gap: 10 },
   /** Idem pour un écran qui a déjà sa marge (Screen) : rien sur les côtés. */
   listeAvecFab: { paddingBottom: 160, paddingTop: 4, gap: 10 },
   /** Une liste dont les lignes forment un seul bloc (LigneDeBloc) : aucun espace entre elles. */
   listeBlocAvecFab: { paddingBottom: 160, paddingTop: 4 },
-  /** Le haut d'une liste d'un écran pleine largeur : recherche et filtres avec leur marge de 16. */
-  topPadded: { paddingHorizontal: 16, paddingTop: 16, gap: 10 },
+  /** Le haut d'une liste d'un écran pleine largeur : recherche et filtres avec leur marge de 8. */
+  topPadded: { paddingHorizontal: 8, paddingTop: 12, gap: 10 },
   screenBg: { flex: 1, backgroundColor: colors.background },
   separateur: { borderTopWidth: 1, borderTopColor: colors.border, marginVertical: 4 },
   pressed: { opacity: 0.7 },
