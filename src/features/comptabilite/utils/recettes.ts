@@ -92,6 +92,23 @@ export const categoriesGroupe = (groupe: GroupeRecette, activite: ActiviteCompta
 export const groupesRecetteActivite = (activite: ActiviteComptable): GroupeRecette[] =>
   groupesDe(activite).map((g) => g.groupe);
 
+/**
+ * Les groupes qui ne se saisissent jamais sans facture : l'aide (déclarée d'office), les remboursements et indemnités (GDS, analyses,
+ * assurance du véhicule), les dons, les dépôts et les gains. Les ventes de production, les prestations et l'autre recette peuvent l'être.
+ */
+const GROUPES_RECETTE_AVEC_FACTURE: GroupeRecette[] = [
+  GROUPE_RECETTE.AIDE,
+  GROUPE_RECETTE.GROUPEMENT_SANITAIRE,
+  GROUPE_RECETTE.REMBOURSEMENT_ANALYSES,
+  GROUPE_RECETTE.ASSURANCE_VEHICULE,
+  GROUPE_RECETTE.DONS,
+  GROUPE_RECETTE.DEPOT,
+  GROUPE_RECETTE.GAINS_TRADING,
+];
+
+/** Vrai quand une recette de ce groupe peut être saisie sans facture (la liste « Catégorie de recette » ne propose que celles-là). */
+export const groupeAccepteSansFacture = (groupe: GroupeRecette): boolean => !GROUPES_RECETTE_AVEC_FACTURE.includes(groupe);
+
 /** Le groupe d'une recette pour cette activité (la boucherie est un groupe à part pour les vaches et les cochons). */
 export const groupeRecette = (categorie: CategorieRecette, activite: ActiviteComptable): GroupeRecette =>
   (groupesDe(activite).find((g) => g.categories.includes(categorie)) ?? groupesDe(activite)[0]).groupe;

@@ -68,7 +68,7 @@ export function SectionRecetteContact({
         variant={e.avecFacture ? 'primary' : 'secondary'}
         label={e.avecFacture ? TEXTES.comptabilite.nouvelleEcriture.avecFacture : TEXTES.comptabilite.nouvelleEcriture.sansFacture}
         onPress={() => {
-          e.setAvecFacture(!e.avecFacture);
+          e.basculerAvecFacture();
           // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
           e.setAnimaux([]);
         }}
@@ -131,7 +131,7 @@ export function SectionRecetteContact({
                     : TEXTES.comptabilite.nouvelleEcriture.sansFacture
                 }
                 onPress={() => {
-                  e.setAvecFacture(!e.avecFacture);
+                  e.basculerAvecFacture();
                   // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
                   e.setAnimaux([]);
                 }}

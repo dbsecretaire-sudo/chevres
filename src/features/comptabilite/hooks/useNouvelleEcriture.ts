@@ -82,6 +82,7 @@ import {
   categoriesGroupe,
   categoriesRecetteActivite,
   estCategorieVente,
+  groupeAccepteSansFacture,
   groupeRecette,
   groupesRecetteActivite,
   type GroupeRecette,
@@ -453,6 +454,20 @@ export function useNouvelleEcriture(
       setTauxTvaVente(String(tauxTvaDeLaVente(v)));
       rattacherSiCommun();
     }
+  };
+
+  /**
+   * Passe de « avec facture » à « sans facture » et inversement. Une recette sans facture ne se choisit que parmi les groupes qui
+   * l'acceptent : si la catégorie en cours n'en fait pas partie, la première qui en fait partie prend sa place.
+   */
+  const basculerAvecFacture = () => {
+    const avecLaFacture = !avecFacture;
+    setAvecFacture(avecLaFacture);
+    if (avecLaFacture || groupeAccepteSansFacture(groupeRecette(categorieRecette, activite))) return;
+    const permis = groupesRecetteActivite(activite).find(
+      (g) => groupeRecetteAutorise(clientSelectionne, g) && groupeAccepteSansFacture(g),
+    );
+    if (permis) changerCategorieRecette(categoriesGroupe(permis, activite)[0]);
   };
 
   const changerCategorieDepense = (v: CategorieDepense) => {
@@ -887,10 +902,13 @@ export function useNouvelleEcriture(
     setPrecision: choisirDetail,
     groupeRecette: groupeRecette(categorieRecette, activite),
     groupesRecette: groupesRecetteActivite(activite),
-    /** Les choix de la liste « Catégorie de recette » : celles d'office, puis celles que l'utilisateur a ajoutées. */
+    /**
+     * Les choix de la liste « Catégorie de recette » : celles d'office, puis celles que l'utilisateur a ajoutées. Sans facture, seules
+     * les catégories qui acceptent la vente sans facture sont proposées.
+     */
     optionsGroupesRecette: [
       ...groupesRecetteActivite(activite)
-        .filter((g) => groupeRecetteAutorise(clientSelectionne, g))
+        .filter((g) => groupeRecetteAutorise(clientSelectionne, g) && (avecFacture || groupeAccepteSansFacture(g)))
         .map((g) => ({
           value: g as string,
           label: LABEL_GROUPE_RECETTE[g],
@@ -945,6 +963,7 @@ export function useNouvelleEcriture(
     compteAffiche,
     avecFacture,
     setAvecFacture,
+    basculerAvecFacture,
     atelier,
     setAtelier,
     vehiculeId,

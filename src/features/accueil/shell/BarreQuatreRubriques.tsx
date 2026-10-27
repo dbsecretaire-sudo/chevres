@@ -1,7 +1,11 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/shared/theme/colors';
+
+/** La hauteur des rubriques, sans compter la barre de navigation du téléphone : celle-ci reste sous la barre, jamais par-dessus. */
+const HAUTEUR_RUBRIQUES = 64;
 
 /** Les rubriques de la barre du bas (téléphone, mode avancé) : l'accueil, puis les quatre rubriques. Chacune garde sa page ; « Plus » regroupe le reste. */
 const RUBRIQUES = [
@@ -14,6 +18,8 @@ const RUBRIQUES = [
 
 /** La barre à quatre onglets du bas : la rubrique ouverte est en couleur. */
 export function BarreQuatreRubriques({ state, navigation }: BottomTabBarProps) {
+  // La barre de navigation du système (retour, accueil, récents) occupe le bas de l'écran : les rubriques passent au-dessus.
+  const { bottom } = useSafeAreaInsets();
   const ouvert = state.routes[state.index];
   // Une page de rubrique garde en couleur l'onglet d'où elle vient : « Plus » pour le menu, « Chèvres » pour le mouvement des chèvres.
   const courant =
@@ -23,7 +29,16 @@ export function BarreQuatreRubriques({ state, navigation }: BottomTabBarProps) {
         : 'plus'
       : ouvert?.name;
   return (
-    <View style={{ flexDirection: 'row', height: 64, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        height: HAUTEUR_RUBRIQUES + bottom,
+        paddingBottom: bottom,
+        backgroundColor: colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+      }}
+    >
       {RUBRIQUES.map((r) => {
         const actif = courant === r.route;
         const couleur = actif ? colors.primary : colors.textMuted;
