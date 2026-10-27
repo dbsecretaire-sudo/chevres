@@ -90,6 +90,13 @@ export async function calculerDetailComptable(
         f.categorieRecette,
         (recettesParCategorie.get(f.categorieRecette) ?? 0) + f.montant,
       );
+      // Une recette émise sans facture compte dans le total « dont sans facture », comme une vente sans facture.
+      if (f.sansFacture) {
+        sansFactureParCategorie.set(
+          f.categorieRecette,
+          (sansFactureParCategorie.get(f.categorieRecette) ?? 0) + f.montant,
+        );
+      }
     }
   }
 

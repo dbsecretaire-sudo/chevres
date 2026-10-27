@@ -7,6 +7,7 @@ import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { getSettings, piecesDeLaDeclaration } from '@/features/settings/settings';
 import { listDocumentsIdentification } from '@/features/identification/repository';
+import { lireDeclarationsChambre } from '@/features/cheptel/services/declarationsChambre';
 
 /** Tous les fichiers joints de l'exploitation : les images des cartes du stock, les certificats des véhicules, les analyses du contrôle laitier, les visites vétérinaires, les documents d'identification et les déclarations jointes au bilan annuel. */
 export async function toutesLesPieces(): Promise<PieceJointe[]> {
@@ -44,7 +45,7 @@ export async function toutesLesPieces(): Promise<PieceJointe[]> {
     ...(settings.exploitation?.ventesVivants ?? []).flatMap((v) => (v.documentCirculation ? [v.documentCirculation.piece] : [])),
     ...Object.values(settings.exploitation?.cadreAtelier ?? {}).flatMap((e) => e.fichiers ?? []),
     ...Object.values(settings.exploitation?.gds?.documents ?? {}).flatMap((d) => (Array.isArray(d) ? d : [d]).map((x) => x.piece)),
-    ...Object.values(settings.exploitation?.declarationsChambre ?? {}).flatMap(piecesDeLaDeclaration),
+    ...Object.values(await lireDeclarationsChambre(settings.exploitation?.declarationsChambre)).flatMap(piecesDeLaDeclaration),
     ...controles.flatMap((c) => [
       ...(c.fichiers ?? []),
       ...(c.contenus ?? []).flatMap((contenu) => contenu.fichiers ?? []),

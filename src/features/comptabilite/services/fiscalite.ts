@@ -51,7 +51,11 @@ export async function calculerRecettesMicroBA(
 
   const ventesProduits = ventes.reduce((s, v) => s + (v.prix ?? 0), 0);
   const emises = factures.filter(
-    (f) => f.type === TYPE_FACTURE.EMISE && correspondAuFiltre(filtre, activiteFacture(f)),
+    // Les aides (primes PAC, ICHN…) comptent toujours : une recette sans facture n'entre ni dans le RSA ni dans les impôts, sauf une aide.
+    (f) =>
+      f.type === TYPE_FACTURE.EMISE &&
+      (!f.sansFacture || f.categorieRecette === CATEGORIE_RECETTE.AIDE) &&
+      correspondAuFiltre(filtre, activiteFacture(f)),
   );
 
   const aides = emises.filter((f) => f.categorieRecette === CATEGORIE_RECETTE.AIDE);
@@ -107,7 +111,11 @@ export async function calculerRecettesMensuelles(
     (v) => venteADeclarer(v) && correspondAuFiltre(filtre, activiteVente(v)),
   );
   const emises = factures.filter(
-    (f) => f.type === TYPE_FACTURE.EMISE && correspondAuFiltre(filtre, activiteFacture(f)),
+    // Les aides (primes PAC, ICHN…) comptent toujours : une recette sans facture n'entre ni dans le RSA ni dans les impôts, sauf une aide.
+    (f) =>
+      f.type === TYPE_FACTURE.EMISE &&
+      (!f.sansFacture || f.categorieRecette === CATEGORIE_RECETTE.AIDE) &&
+      correspondAuFiltre(filtre, activiteFacture(f)),
   );
 
   const mois: RecettesMois[] = Array.from({ length: 12 }, (_, i) => ({

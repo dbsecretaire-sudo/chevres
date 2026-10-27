@@ -13,13 +13,14 @@ import { TEXTES } from '@/shared/textes';
 /**
  * L'aperçu d'un fichier joint : une image se voit telle quelle, et un appui l'ouvre en plein écran avec un zoom ; un PDF, un Word ou
  * un Excel (dont l'application ne sait pas dessiner la page) montrent un cadre avec son type, et un appui ouvre le fichier.
+ * Sur le web, l'image vient du serveur (`uri`) et l'appui ouvre le fichier (`ouvrir`) au lieu du zoom.
  */
-export function ApercuPiece({ piece }: { piece: PieceJointe }) {
+export function ApercuPiece({ piece, uri, ouvrir }: { piece: PieceJointe; uri?: string; ouvrir?: () => void }) {
   const extension = piece.extension.toLowerCase();
   const [pleinEcran, setPleinEcran] = useState(false);
   if (!EXTENSIONS_IMAGE.includes(extension))
     return (
-      <Pressable onPress={() => ouvrirPiece(piece)} accessibilityLabel={piece.nom}>
+      <Pressable onPress={ouvrir ?? (() => ouvrirPiece(piece))} accessibilityLabel={piece.nom}>
         <View style={commonStyles.apercuDocument}>
           <Ionicons name="document-text-outline" size={40} color={colors.textMuted} />
           <Text style={commonStyles.muted}>{extension.toUpperCase()}</Text>
@@ -29,11 +30,11 @@ export function ApercuPiece({ piece }: { piece: PieceJointe }) {
   return (
     <>
       <Pressable
-        onPress={() => setPleinEcran(true)}
+        onPress={ouvrir ?? (() => setPleinEcran(true))}
         accessibilityLabel={TEXTES.fichiers.visionneuse.agrandir}
       >
         <Image
-          source={{ uri: uriAffichagePiece(piece) }}
+          source={{ uri: uri ?? uriAffichagePiece(piece) }}
           style={commonStyles.apercuImage}
           resizeMode="contain"
         />
@@ -41,7 +42,7 @@ export function ApercuPiece({ piece }: { piece: PieceJointe }) {
           <Ionicons name="expand-outline" size={18} color={colors.blanc} />
         </View>
       </Pressable>
-      <VisionneuseImage piece={piece} visible={pleinEcran} onFermer={() => setPleinEcran(false)} />
+      {ouvrir ? null : <VisionneuseImage piece={piece} visible={pleinEcran} onFermer={() => setPleinEcran(false)} />}
     </>
   );
 }

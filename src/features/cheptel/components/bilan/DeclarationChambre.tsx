@@ -5,7 +5,8 @@ import { Card } from '@/shared/components/Card';
 import { ApercuPiece } from '@/features/fichiers/components/ApercuPiece';
 import { ListRow } from '@/shared/components/ListRow';
 import { useDeclarationChambre } from '@/features/cheptel/hooks/useDeclarationChambre';
-import { ouvrirPiece } from '@/features/fichiers/services/pieces';
+import { ouvrirPiece, piecesDisponibles } from '@/features/fichiers/services/pieces';
+import { ouvrirPieceWeb } from '@/features/fichiers/services/piecesWeb';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -17,13 +18,14 @@ const T = TEXTES.cheptel.bilanAnnuel.declaration;
  * crayon le remplace par un autre. Il n'y a pas de bouton pour le retirer.
  */
 export function DeclarationChambre({ annee }: { annee: number }) {
-  const { piece, choisir } = useDeclarationChambre(annee);
+  const { piece, uriWeb, choisir } = useDeclarationChambre(annee);
+  const ouvrir = uriWeb ? () => ouvrirPieceWeb(uriWeb) : undefined;
   return (
     <Card>
       <Text style={commonStyles.cardTitle}>{T.titre(annee)}</Text>
       {piece ? (
         <>
-          <ApercuPiece piece={piece} />
+          {piecesDisponibles() || uriWeb ? <ApercuPiece piece={piece} uri={uriWeb} ouvrir={ouvrir} /> : null}
           <ListRow
             title={piece.nom}
             subtitle={piece.extension.toUpperCase()}
@@ -32,7 +34,7 @@ export function DeclarationChambre({ annee }: { annee: number }) {
                 <Ionicons name="create-outline" size={24} color={colors.primary} />
               </Pressable>
             }
-            onPress={() => ouvrirPiece(piece)}
+            onPress={ouvrir ?? (() => ouvrirPiece(piece))}
           />
         </>
       ) : (

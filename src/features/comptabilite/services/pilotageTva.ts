@@ -100,6 +100,7 @@ function recettesTva(ventes: Vente[], factures: Facture[]): RecetteTva[] {
       .filter(
         (f) =>
           f.type === TYPE_FACTURE.EMISE &&
+          !f.sansFacture &&
           f.categorieRecette !== CATEGORIE_RECETTE.AIDE &&
           f.categorieRecette !== CATEGORIE_RECETTE.DEPOT &&
           f.categorieRecette !== CATEGORIE_RECETTE.DONS,
@@ -138,7 +139,7 @@ function controlerTva(ventes: Vente[], factures: Facture[]): ControleTva[] {
         f.categorieRecette === CATEGORIE_RECETTE.AIDE ||
         f.categorieRecette === CATEGORIE_RECETTE.DEPOT ||
         f.categorieRecette === CATEGORIE_RECETTE.DONS;
-      if (!horsTva && f.tauxTva === undefined) {
+      if (!horsTva && !f.sansFacture && f.tauxTva === undefined) {
         controles.push({ ...base, type: TYPE_CONTROLE_TVA.RECETTE_SANS_TAUX });
       }
     } else if (
