@@ -104,6 +104,22 @@ export default function FiscaliteRsaTrimestrielle() {
             {montants[i].aucuneRessource ? ', aucune ressource' : ''}
           </Text>
         ))}
+        {nouvelInstalle ? null : (
+          <>
+            <Text style={commonStyles.note}>
+              Chiffre d’affaires de ces mois, pour information (il n’est pas écrit dans ce formulaire) :
+            </Text>
+            {mois.map((m) => (
+              <Text key={`ca-${m.annee}-${m.mois}`} style={commonStyles.note}>
+                {NOMS_MOIS[m.mois - 1]} : {Math.floor(recettes[m.annee]?.[m.mois - 1]?.ca ?? 0)} €
+              </Text>
+            ))}
+            <Text style={commonStyles.note}>
+              Pourquoi le lait n’y est pas : une activité imposée sur une année complète ne déclare pas son chiffre d’affaires ici. La MSA prend ses
+              revenus dans la déclaration annuelle, d’après son avis d’imposition. Seules les aides PAC sont écrites dans ce formulaire.
+            </Text>
+          </>
+        )}
         {ichn > 0 ? (
           <Text style={commonStyles.note}>
             L’ICHN ({ichn} € sur ces mois) n’est pas dans ce formulaire : elle se déclare dans la déclaration annuelle.
