@@ -31,6 +31,8 @@ export async function envoyerPiecesEnAttente(etablissement: string): Promise<num
       corps: { etablissement, id: piece.id, extension: piece.extension, mime: piece.mime, contenu },
     });
     if (statut === 401) throw new ConnexionExpiree(json.erreur);
+    // Un fichier que le serveur refuse reste dans la file, sans bloquer les autres ni le reste de la synchronisation.
+    if (statut === 400) continue;
     if (statut !== 200) throw new Error(json.erreur ?? 'Envoi du fichier impossible.');
     await retirerPieceAEnvoyer(piece.id);
     envoyees++;

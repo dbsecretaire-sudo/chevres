@@ -128,7 +128,7 @@ if ($action === 'piece_envoyer' && $methode === 'POST') {
   $extension = preg_replace('/[^a-z0-9]/', '', strtolower((string) ($corps['extension'] ?? '')));
   $mime = substr((string) ($corps['mime'] ?? 'application/octet-stream'), 0, 128);
   $contenu = base64_decode((string) ($corps['contenu'] ?? ''), true);
-  if (!preg_match('/^[a-z0-9]{1,64}$/i', $id) || $contenu === false) repondre(400, ['erreur' => 'Fichier incomplet.']);
+  if (!preg_match('/^[a-z0-9\-]{1,64}$/i', $id) || $contenu === false) repondre(400, ['erreur' => 'Fichier incomplet.']);
   if (strlen($contenu) > 5242880) repondre(413, ['erreur' => 'Fichier trop lourd (5 Mo au plus).']);
   $db->prepare(
     'INSERT INTO pieces_jointes (etablissement, id, extension, mime, taille, contenu, envoye_par) VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -139,7 +139,7 @@ if ($action === 'piece_envoyer' && $methode === 'POST') {
 
 if ($action === 'piece_recevoir' && $methode === 'GET') {
   $id = (string) ($_GET['id'] ?? '');
-  if (!preg_match('/^[a-z0-9]{1,64}$/i', $id)) repondre(400, ['erreur' => 'Identifiant invalide.']);
+  if (!preg_match('/^[a-z0-9\-]{1,64}$/i', $id)) repondre(400, ['erreur' => 'Identifiant invalide.']);
   $requete = $db->prepare('SELECT extension, mime, contenu FROM pieces_jointes WHERE etablissement = ? AND id = ?');
   $requete->execute([$etablissement, $id]);
   $ligne = $requete->fetch();
