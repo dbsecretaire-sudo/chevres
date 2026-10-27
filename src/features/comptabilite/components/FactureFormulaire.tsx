@@ -269,7 +269,13 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             onEcheance={(echeance) => f.setForm({ ...form, echeance })}
           />
         ) : null}
-        {estEmise || !sansFactureAffichee(categorieFournisseurDuTiers) ? null : (
+        {estEmise ? (
+          <Checkbox
+            label={TEXTES.comptabilite.nouvelleEcriture.sansFacture}
+            value={!!form.sansFacture}
+            onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
+          />
+        ) : !sansFactureAffichee(categorieFournisseurDuTiers) ? null : (
           <>
             <Checkbox
               label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}

@@ -456,7 +456,8 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
       elementAgri:
         estRecue && s.atelier === ATELIER.AGRITOURISME && s.elementAgri ? s.elementAgri : undefined,
       payee: s.enAttente ? false : undefined,
-      sansFacture: estRecue && s.sansFacture ? true : undefined,
+      // Une facture reçue se marque « sans facture » par sa case ; une facture émise, par le choix avec ou sans facture de l'étape 1.
+      sansFacture: (estRecue ? s.sansFacture : !s.avecFacture) ? true : undefined,
       echeance: s.enAttente && s.echeance ? s.echeance : undefined,
       lignesAlimentation,
       lignesChambre,

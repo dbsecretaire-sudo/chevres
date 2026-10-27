@@ -61,6 +61,20 @@ export function SectionRecetteContact({
   const router = useRouter();
   const retour = useAdresseCourante();
   const optionsClients = e.clients.map(optionClient);
+  /** Le choix avec ou sans facture : il vaut pour toute recette, pas seulement pour les ventes de production. */
+  const boutonFacture = (
+    <View style={styles.basculeFacture}>
+      <Button
+        variant={e.avecFacture ? 'primary' : 'secondary'}
+        label={e.avecFacture ? TEXTES.comptabilite.nouvelleEcriture.avecFacture : TEXTES.comptabilite.nouvelleEcriture.sansFacture}
+        onPress={() => {
+          e.setAvecFacture(!e.avecFacture);
+          // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
+          e.setAnimaux([]);
+        }}
+      />
+    </View>
+  );
 
   return (
     <>
@@ -125,12 +139,17 @@ export function SectionRecetteContact({
             </View>
           </View>
         ) : e.categorieRecette !== CATEGORIE_RECETTE.AIDE ? (
-          <FormField
-            label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
-            value={e.description}
-            onChangeText={e.setDescription}
-            placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
-          />
+          <View style={commonStyles.row}>
+            <View style={commonStyles.flex1}>
+              <FormField
+                label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
+                value={e.description}
+                onChangeText={e.setDescription}
+                placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
+              />
+            </View>
+            {boutonFacture}
+          </View>
         ) : null}
         {/* Le circuit par lequel la vente passe (facultatif) : le volet Commercial en fait le bilan. */}
         {e.estProductionVente ? <ChampCircuit value={e.circuit} onChange={e.setCircuit} required /> : null}

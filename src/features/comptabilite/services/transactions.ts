@@ -152,7 +152,7 @@ export async function listTransactions(annee?: number): Promise<Transaction[]> {
           : undefined,
       termes: termesDeFacture(f),
       volet: f.voletCooperative,
-      sansFacture: f.type === TYPE_FACTURE.RECUE && f.sansFacture ? true : undefined,
+      sansFacture: f.sansFacture ? true : undefined,
     })),
   );
 
