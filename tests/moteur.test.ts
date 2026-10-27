@@ -135,6 +135,28 @@ describe('le moteur de synchronisation', () => {
     expect(await AsyncStorage.getItem(CLE_CURSEUR)).toBe('0');
   });
 
+  it('la première synchronisation ne renvoie pas une fiche que le serveur a déjà, même si l’appareil en a une autre', async () => {
+    await seConnecterSimule();
+    await AsyncStorage.setItem('troupeau:v1:animaux', JSON.stringify([{ id: 'a', n: 'valeur par défaut' }, { id: 'local', n: 1 }]));
+    fetchSimule
+      .mockResolvedValueOnce(
+        reponse(200, {
+          modifications: [{ rang: 1, zone: 'troupeau:v1:animaux', identifiant: 'a', contenu: { id: 'a', n: 'serveur' } }],
+          curseur: 1,
+          encore: false,
+        }),
+      )
+      .mockResolvedValueOnce(reponse(200, { recu: 1 }));
+
+    await premiereSynchronisation();
+
+    expect(JSON.parse(fetchSimule.mock.calls[2][1].body).modifications).toEqual([
+      { zone: 'troupeau:v1:animaux', identifiant: 'local', contenu: { id: 'local', n: 1 } },
+    ]);
+    const locales = JSON.parse((await AsyncStorage.getItem('troupeau:v1:animaux')) as string);
+    expect(locales.find((f: { id: string }) => f.id === 'a')).toEqual({ id: 'a', n: 'serveur' });
+  });
+
   it('une synchronisation déjà faite ne fait que envoyer puis recevoir', async () => {
     await seConnecterSimule();
     await ecrireDonnee('troupeau:v1:animaux', [{ id: 'a' }]);

@@ -103,7 +103,7 @@ export function envoyerAttente(): Promise<BilanEnvoi> {
  * Reçoit du serveur ce qui a changé depuis la dernière réception. Une fiche qui a une modification pas encore envoyée sur cet appareil est gardée
  * telle quelle : cette modification partira au prochain envoi. Rend le nombre de modifications reçues.
  */
-export function recevoirChangements(): Promise<number> {
+export function recevoirChangements(fichesRecues?: Set<string>): Promise<number> {
   return enExclusivite(async () => {
     const jeton = await jetonDeConnexion();
     let recues = 0;
@@ -122,6 +122,7 @@ export function recevoirChangements(): Promise<number> {
       const zonesModifiees = new Set<string>();
       for (const modification of json.modifications as Modification[]) {
         recues++;
+        fichesRecues?.add(cleFiche(modification));
         piecesRecues.push(...piecesDe(modification.contenu));
         if (!estSynchronisable(modification.zone)) continue;
         if (enAttente.has(`${modification.zone}\u0000${modification.identifiant}`)) continue;
@@ -143,18 +144,20 @@ export function recevoirChangements(): Promise<number> {
 }
 
 /**
- * La toute première synchronisation de cet appareil. Tout ce qu'il contient part : la file reçoit d'abord toutes ses données. Puis la réception
- * garde ses propres données là où elles sont en attente, et ajoute ce qu'il ne connaît pas. Enfin tout part.
- * Les autres appareils ne sont donc jamais écrasés par une donnée qu'ils ont déjà envoyée, sauf quand cet appareil a une modification plus récente.
+ * La toute première synchronisation de cet appareil. Le serveur est lu d'abord : une fiche qu'il a déjà garde sa version, même si cet appareil
+ * en a une autre (une valeur par défaut, par exemple, qui écraserait des espèces déjà enregistrées). Seules les fiches que le serveur ne connaît
+ * pas encore partent ensuite.
  */
 export async function premiereSynchronisation(): Promise<BilanEnvoi> {
   if ((await lireCurseur()) !== undefined) return { envoyees: 0, refusees: 0 };
+  const fichesDuServeur = new Set<string>();
+  await recevoirChangements(fichesDuServeur);
   const cles = (await AsyncStorage.getAllKeys()).filter(estSynchronisable);
   for (const cle of cles) {
     const valeur = await lireValeurLocale(cle);
-    if (valeur !== undefined) await ajouterAttente(modificationsDe(cle, undefined, valeur));
+    if (valeur === undefined) continue;
+    await ajouterAttente(modificationsDe(cle, undefined, valeur).filter((m) => !fichesDuServeur.has(cleFiche(m))));
   }
-  await recevoirChangements();
   return envoyerAttente();
 }
 
