@@ -247,6 +247,7 @@ export const ROUTES = {
   FISCALITE: '/comptabilite/fiscalite',
   FISCALITE_IMPOTS: '/comptabilite/fiscalite-impots',
   FISCALITE_RSA: '/comptabilite/fiscalite-rsa',
+  FISCALITE_RSA_TRIMESTRIELLE: '/comptabilite/fiscalite-rsa-trimestrielle',
   TVA: '/comptabilite/tva',
   RENTABILITE: '/comptabilite/rentabilite',
   COMPTABILITE_TRESORERIE: '/comptabilite/tresorerie',

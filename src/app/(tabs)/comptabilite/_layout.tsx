@@ -26,6 +26,7 @@ export default function ComptabiliteLayout() {
         'fiscalite',
         'fiscalite-impots',
         'fiscalite-rsa',
+        'fiscalite-rsa-trimestrielle',
         'tva',
         'rentabilite',
         'tresorerie',
@@ -74,6 +75,7 @@ export default function ComptabiliteLayout() {
           title: TEXTES.commun.general.declarationRsa,
         }}
       />
+      <Stack.Screen name="fiscalite-rsa-trimestrielle" options={{ title: 'Déclaration trimestrielle RSA' }} />
       <Stack.Screen name="tresorerie" options={{ title: TEXTES.comptabilite.accueil.tresorerie.titre }} />
       <Stack.Screen
         name="tresorerie-reglages"

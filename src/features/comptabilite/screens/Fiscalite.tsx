@@ -31,6 +31,12 @@ export default function Fiscalite() {
           icone="calendar"
           onPress={() => router.push(ROUTES.FISCALITE_RSA)}
         />
+        <ListRow
+          title="Déclaration trimestrielle RSA préremplie"
+          subtitle="Le formulaire de la MSA, rempli d’après vos recettes du trimestre"
+          icone="document-text"
+          onPress={() => router.push(ROUTES.FISCALITE_RSA_TRIMESTRIELLE)}
+        />
       </BlocLignes>
     </Screen>
   );

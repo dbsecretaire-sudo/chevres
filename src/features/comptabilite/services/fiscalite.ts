@@ -142,3 +142,35 @@ export async function calculerRecettesMensuelles(
 
   return mois;
 }
+
+/** Les recettes perçues d'un mois, comme la déclaration trimestrielle RSA les demande : le chiffre d'affaires, les aides courantes (PAC) et l'ICHN à part. */
+export interface RecettesDuMois {
+  ca: number;
+  aidesCourantes: number;
+  ichn: number;
+}
+
+/**
+ * Les recettes perçues de l'année, mois par mois, pour la déclaration RSA. La notice demande toutes les ressources perçues : les ventes et les
+ * recettes émises, avec ou sans facture. Les dépôts et les dons ne sont pas des recettes.
+ */
+export async function recettesPerceuesParMois(annee: number): Promise<RecettesDuMois[]> {
+  const [ventes, factures] = await Promise.all([listVentes(annee), listFactures(annee)]);
+  const mois: RecettesDuMois[] = Array.from({ length: 12 }, () => ({ ca: 0, aidesCourantes: 0, ichn: 0 }));
+  const indice = (date: string) => Number(date.slice(5, 7)) - 1;
+  for (const v of ventes) {
+    const m = indice(v.date);
+    if (m >= 0 && m < 12) mois[m].ca += v.prix ?? 0;
+  }
+  for (const f of factures) {
+    const m = indice(f.date);
+    if (f.type !== TYPE_FACTURE.EMISE || m < 0 || m >= 12) continue;
+    if (f.categorieRecette === CATEGORIE_RECETTE.AIDE) {
+      if (f.typeAide === TYPE_AIDE.ICHN) mois[m].ichn += f.montant;
+      else mois[m].aidesCourantes += f.montant;
+    } else if (f.categorieRecette && f.categorieRecette !== CATEGORIE_RECETTE.DEPOT && f.categorieRecette !== CATEGORIE_RECETTE.DONS) {
+      mois[m].ca += f.montant;
+    }
+  }
+  return mois;
+}
