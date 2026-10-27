@@ -37,6 +37,12 @@ export default function Fiscalite() {
           icone="document-text"
           onPress={() => router.push(ROUTES.FISCALITE_RSA_TRIMESTRIELLE)}
         />
+        <ListRow
+          title="Déclaration annuelle RSA préremplie"
+          subtitle="Le formulaire des non-salariés : micro-BA et ICHN de l’année"
+          icone="document-text"
+          onPress={() => router.push(ROUTES.FISCALITE_RSA_ANNUELLE)}
+        />
       </BlocLignes>
     </Screen>
   );
