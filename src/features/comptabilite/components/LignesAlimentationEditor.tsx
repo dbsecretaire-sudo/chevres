@@ -64,6 +64,8 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
   const retour = useAdresseCourante();
   const especeFacture = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
   const [stock, setStock] = useState<ArchiveStock>(ARCHIVE_VIDE);
+  /** L'achat dont la fiche est ouverte (un appui sur sa carte) ; les autres restent réduits à leur carte. */
+  const [ouverte, setOuverte] = useState<string | null>(null);
 
   // La liste est relue à chaque retour sur l'écran : ce qu'on vient d'ajouter ou de renommer au stock y apparaît.
   useFocusEffect(
@@ -119,6 +121,24 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
     return options;
   };
 
+  /** Le nom d'un achat, tel qu'il se choisit dans la liste (ou son texte libre). */
+  const nomDeLaLigne = (ligne: LigneAlimentForm) =>
+    optionsAliments(ligne.activite || especeFacture, ligne).find((o) => o.value === valeurDe(ligne))?.label ??
+    ligne.typeLibre;
+
+  /** Le détail d'un achat sur sa carte : la quantité, le montant TTC et le taux de TVA. */
+  const detailDeLaLigne = (ligne: LigneAlimentForm) => {
+    const montant = parseDecimal(ligne.montant);
+    const taux = ligne.tauxTva ?? tauxDefaut;
+    return [
+      ligne.quantiteKg ? `${ligne.quantiteKg} kg` : '',
+      montant ? `${formatMontant(montant)} TTC` : '',
+      taux ? `TVA ${taux} %` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  };
+
   return (
     <Card style={commonStyles.gap10}>
       <View style={commonStyles.rowSpaceBetween}>
@@ -140,6 +160,24 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
         const espece = ligne.activite || especeFacture;
         return (
           <View key={ligne.key} style={commonStyles.gap8}>
+            {/* L'achat est une carte : son nom, et son détail dessous. Un appui ouvre la fiche de l'achat. */}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setOuverte(ouverte === ligne.key ? null : ligne.key)}
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 12,
+                padding: 12,
+                backgroundColor: colors.surface,
+                gap: 4,
+              }}
+            >
+              <Text style={commonStyles.lineSemiBold}>{nomDeLaLigne(ligne) || titreDeLaLigne(ligne)(index + 1)}</Text>
+              {detailDeLaLigne(ligne) ? <Text style={commonStyles.note}>{detailDeLaLigne(ligne)}</Text> : null}
+            </Pressable>
+            {ouverte === ligne.key ? (
+              <>
             <View style={commonStyles.rowSpaceBetween}>
               <Text style={commonStyles.lineSemiBold}>{titreDeLaLigne(ligne)(index + 1)}</Text>
               <View style={commonStyles.headerDroite}>
@@ -309,6 +347,8 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                 ) : null}
               </>
             )}
+              </>
+            ) : null}
           </View>
         );
       })}
