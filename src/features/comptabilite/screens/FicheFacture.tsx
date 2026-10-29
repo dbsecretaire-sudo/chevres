@@ -66,7 +66,7 @@ export default function FicheFacture() {
           }}
         />
       ) : null}
-      <ScrollView style={commonStyles.flex1} contentContainerStyle={commonStyles.scrollContent}>
+      <ScrollView style={commonStyles.flex1} contentContainerStyle={[commonStyles.scrollContent, { paddingBottom: 12 }]}>
         <View style={commonStyles.header}>
           <View style={commonStyles.flex1}>
             <Text style={commonStyles.title}>{facture.tiers}</Text>

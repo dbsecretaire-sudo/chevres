@@ -32,7 +32,12 @@ export function Interrupteur({ label, value, onChange, note }: Props) {
         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
       >
         <Text style={[commonStyles.lineSemiBold, { flex: 1 }]}>{label}</Text>
-        <Switch value={value} onValueChange={onChange} trackColor={{ false: colors.border, true: accent }} />
+        <Switch
+          value={value}
+          onValueChange={onChange}
+          trackColor={{ false: colors.border, true: accent }}
+          thumbColor={colors.blanc}
+        />
       </Pressable>
       {note ? <Text style={commonStyles.note}>{note}</Text> : null}
     </View>

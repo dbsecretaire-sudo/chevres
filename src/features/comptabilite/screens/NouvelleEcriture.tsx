@@ -289,7 +289,7 @@ export default function NouvelleFacture() {
 
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
-      <Screen>
+      <Screen margeBasse={12}>
         <LigneFiltres>
           <YearPicker
             annees={annees}
