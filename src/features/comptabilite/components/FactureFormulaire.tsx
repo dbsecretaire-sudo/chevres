@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { AnimauxEnvoyesListe } from '@/features/comptabilite/components/AnimauxEnvoyesListe';
 import { LignesChambreEditor } from '@/features/comptabilite/components/LignesChambreEditor';
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
@@ -19,8 +20,8 @@ import { LignesAlimentationEditor } from '@/features/comptabilite/components/Lig
 import { LignesCarburantEditor } from '@/features/comptabilite/components/LignesCarburantEditor';
 import { ChampTauxImposition } from '@/features/comptabilite/components/ChampTauxImposition';
 import { ChampMontantTtc, NoteComptePcg } from '@/features/comptabilite/components/ecriture/ChampsEcriture';
+import { ChampTauxTva } from '@/features/comptabilite/components/ecriture/ChampTauxTva';
 import type { EtatFicheFacture } from '@/features/comptabilite/hooks/useFicheFacture';
-import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { clientsPourLaRecette } from '@/features/comptabilite/utils/recettes';
 import {
   depenseImposee,
@@ -40,7 +41,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { DossiersDeLAide } from '@/features/exploitation/components/DossiersDeLAide';
 import { idVisiteDeLaFacture } from '@/features/sante/services/visitesFacture';
 import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
-import { formatTotalEuros } from '@/shared/utils/nombres';
+import { formatTotalEuros, parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import {
   categorieFournisseurDe,
@@ -65,6 +66,7 @@ import { avecPaiement } from '@/features/comptabilite/utils/paiement';
 import { ChampStockProduction } from '@/features/comptabilite/components/ecriture/ChampStockProduction';
 import { styles } from '@/shared/styles/comptabilite/FicheFacture.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import {
   LABEL_ACTIVITE_COMPTABLE,
@@ -77,14 +79,52 @@ import { optionClient, optionFournisseur } from '@/features/contacts/services/op
 
 const T = TEXTES.comptabilite.nouvelleEcriture;
 
+/** Les trois onglets de la modification : l'identification, le détail de ce qui est acheté ou vendu, puis le coût (montant, TVA, règlement). */
+type OngletFacture = 'general' | 'details' | 'cout';
+
+const ONGLETS_FACTURE: { value: OngletFacture; label: string }[] = [
+  { value: 'general', label: TEXTES.comptabilite.ficheFacture.ongletGeneral },
+  { value: 'details', label: TEXTES.comptabilite.ficheFacture.ongletDetails },
+  { value: 'cout', label: TEXTES.comptabilite.ficheFacture.ongletCout },
+];
+
+/** Les onglets, en pastilles de liste : l'onglet ouvert est sur fond clair. */
+function OngletsFacture({ value, onChange }: { value: OngletFacture; onChange: (onglet: OngletFacture) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', backgroundColor: colors.badgeBg, borderRadius: 10, padding: 3, marginBottom: 10 }}>
+      {ONGLETS_FACTURE.map((onglet) => {
+        const actif = onglet.value === value;
+        return (
+          <Pressable
+            key={onglet.value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: actif }}
+            onPress={() => onChange(onglet.value)}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              alignItems: 'center',
+              borderRadius: 8,
+              backgroundColor: actif ? colors.surface : 'transparent',
+            }}
+          >
+            <Text style={{ fontWeight: actif ? '700' : '500', color: colors.text }}>{onglet.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 /**
- * Formulaire de modification d'une facture : les mêmes deux blocs, les mêmes champs et le même ordre qu'à la création — d'abord
- * l'identification (date, tiers, n° de facture, paiement), puis les informations (catégorie, ce qui lui est propre, montant, TVA,
- * atelier). Le type et la catégorie ne se modifient pas.
+ * Formulaire de modification d'une facture, en trois onglets : Général (la date, le tiers, l'atelier, les cases de la facture), Détails
+ * (la catégorie, ce qui est acheté ou vendu, le numéro de facture) et Coût (le montant, la TVA, le règlement). Les mêmes champs qu'à la
+ * création. Le type et la catégorie ne se modifient pas.
  */
 export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   const router = useRouter();
   const retour = useAdresseCourante();
+  const [onglet, setOnglet] = useState<OngletFacture>('general');
   const { form, fournisseurs, clients } = f;
   if (!form) return null;
 
@@ -102,14 +142,6 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   /** Une dépense offerte par le fournisseur : la case est cochée et sa catégorie la propose ; chaque ligne a son bouton « Cadeau ». */
   const offerte = !estEmise && !!form.offert && offertAffiche(categorieFournisseurDuTiers) && !f.estChambre && !f.estCarburant;
   const fournisseur = fournisseurs.find((x) => x.nomEntreprise === form.tiers);
-  const champTauxTva = (
-    <SelectField
-      label={TEXTES.commun.general.tauxDeTva}
-      value={form.tauxTva?.toString() ?? ''}
-      onChange={f.changerTauxTva}
-      options={OPTIONS_TAUX_TVA}
-    />
-  );
   const OPTIONS_TYPE_AIDE = Object.entries(LABEL_TYPE_AIDE).map(([value, label]) => ({
     value: value as TypeAide,
     label,
@@ -124,15 +156,21 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       ? (form.categoriePerso ?? LABEL_CATEGORIE_DEPENSE[form.categorieDepense])
       : '';
 
-  /** Le montant : un seul champ, ou le total des lignes (alimentation, carburant) qui le font. */
-  const montant = f.estAlimentation ? (
-    <>
-      <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} offerte={offerte} />
-      <Text style={styles.total}>
-        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-        {formatTotalEuros(f.totalAlimentation)}
-      </Text>
-    </>
+  /** Ce qui est acheté ou vendu en détail (alimentation, production, carburant, chambre) : ses lignes, à l'onglet Détails. */
+  const estDetaille = f.estAlimentation || f.estChambre || f.estProduction || f.estCarburant;
+  /** Le total de ces lignes, à l'onglet Coût. */
+  const totalDetaille = f.estAlimentation
+    ? f.totalAlimentation
+    : f.estChambre
+      ? f.totalChambre
+      : f.estProduction
+        ? f.totalProduction
+        : f.totalCarburant;
+  /** Le montant TTC de la facture : celui du détail, sinon le montant saisi. */
+  const montantTtc = estDetaille ? totalDetaille : parseDecimal(f.montantTexte);
+
+  const lignesDuDetail = f.estAlimentation ? (
+    <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} offerte={offerte} />
   ) : f.estChambre ? (
     <>
       <LignesChambreEditor lignes={f.lignesChambre} onChange={f.setLignesChambre} />
@@ -142,32 +180,24 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         seulementBoucles
         titre={TEXTES.fournisseurs.chambre.boucles}
       />
-      <Text style={styles.total}>
-        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-        {formatTotalEuros(f.totalChambre)}
-      </Text>
     </>
   ) : f.estProduction ? (
-    <>
-      <LignesProductionEditor
-        lignes={f.lignesProduction}
-        onChange={f.setLignesProduction}
-        seulementBoucles={fournituresSeulementBoucles(fournisseur)}
-        offerte={offerte}
-      />
-      <Text style={styles.total}>
-        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-        {formatTotalEuros(f.totalProduction)}
-      </Text>
-    </>
+    <LignesProductionEditor
+      lignes={f.lignesProduction}
+      onChange={f.setLignesProduction}
+      seulementBoucles={fournituresSeulementBoucles(fournisseur)}
+      offerte={offerte}
+    />
   ) : f.estCarburant ? (
-    <>
-      <LignesCarburantEditor lignes={f.lignesCarburant} onChange={f.setLignesCarburant} />
-      <Text style={styles.total}>
-        {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-        {formatTotalEuros(f.totalCarburant)}
-      </Text>
-    </>
+    <LignesCarburantEditor lignes={f.lignesCarburant} onChange={f.setLignesCarburant} />
+  ) : null;
+
+  /** Le montant de la facture, à l'onglet Coût : le total de son détail, ou un champ. */
+  const coutMontant = estDetaille ? (
+    <Text style={styles.total}>
+      {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+      {formatTotalEuros(totalDetaille)}
+    </Text>
   ) : (
     <>
       <ChampMontantTtc value={f.montantTexte} onChange={f.changerMontant} />
@@ -177,14 +207,6 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           actif={form.cadeauMontant !== false}
           onChange={(actif) => f.setForm({ ...form, cadeauMontant: actif ? undefined : false })}
           ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauMontantDepense}
-        />
-      ) : null}
-      {/* Une dépense « Autre » d'un fournisseur de la Chambre d'agriculture : on peut la détailler par article. */}
-      {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && estChambreAgriculture(fournisseur) ? (
-        <Button
-          variant="secondary"
-          label={TEXTES.fournisseurs.chambre.detailler}
-          onPress={f.detaillerChambreAgriculture}
         />
       ) : null}
     </>
@@ -204,253 +226,279 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
         </LigneFiltres>
       ) : null}
 
-      {/* L'identification : la date, le tiers, le numéro de la facture et le paiement. */}
-      <SectionForm>
-        <DateField
-          label={TEXTES.commun.general.date}
-          required
-          value={form.date}
-          onChange={(date) => f.setForm({ ...form, date })}
-        />
-        {estEmise ? (
-          <SelectFieldEditable
-            label={T.clientOrganisme}
+      <OngletsFacture value={onglet} onChange={setOnglet} />
+
+      {/* Général : la date, le tiers, les cases de la facture (non facturée, offerte) et l'atelier. */}
+      {onglet === 'general' ? (
+        <SectionForm>
+          <DateField
+            label={TEXTES.commun.general.date}
             required
-            searchable
-            placeholder={TEXTES.commun.general.choixDuClient}
-            value={clients.find((c) => nomComplet(c) === form.tiers)?.id ?? ''}
-            onChange={f.choisirClient}
-            options={clientsPourLaRecette(clients, form.categorieRecette, f.activiteForm, form.tiers).map(optionClient)}
-            parCategories
-            onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
+            value={form.date}
+            onChange={(date) => f.setForm({ ...form, date })}
           />
-        ) : (
-          <SelectFieldEditable
-            label={TEXTES.commun.general.fournisseur}
-            required
-            searchable
-            placeholder={TEXTES.commun.general.choixDuFournisseur}
-            value={fournisseur?.id ?? ''}
-            onChange={f.choisirFournisseur}
-            options={fournisseursPourLaDepense(fournisseurs, form.categorieDepense, form.tiers).map(optionFournisseur)}
-            parCategories
-            onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
-          />
-        )}
-        {/* Une aide n'a pas de numéro de facture : le tiers et le type d'aide la décrivent. */}
-        {estAide ? null : (
-          <ChampNumeroOuContrat
-            fournisseur={fournisseurDuTiers}
-            label={T.nDeFactureOuObjet}
-            valeur={form.description ?? ''}
-            onChoix={(description, contrat) =>
-              f.setForm({
-                ...form,
-                description,
-                // Le contrat dit ce qu'il couvre : l'objet de l'assurance et, pour un véhicule, sa plaque.
-                ...(contrat?.vehiculeId
-                  ? { objetAssurance: OBJET_ASSURANCE.VEHICULE, vehiculeId: contrat.vehiculeId }
-                  : contrat?.objet
-                    ? { objetAssurance: contrat.objet }
-                    : {}),
-              })
-            }
-            placeholder={T.precisions}
-          />
-        )}
-        {/* Le paiement : réglée ou encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
-        {paiementAffiche ? (
-          <ChampPaiement
-            libellePayee={estEmise ? 'Encaissé' : 'Payé'}
-            libelleAttente={estEmise ? 'À encaisser' : 'À payer'}
-            enAttente={form.payee === false}
-            onEnAttente={(attente) => f.setForm(avecPaiement(form, attente))}
-            echeance={form.echeance ?? ''}
-            onEcheance={(echeance) => f.setForm({ ...form, echeance })}
-          />
-        ) : null}
-        {estEmise ? (
-          <Checkbox
-            label={TEXTES.comptabilite.nouvelleEcriture.sansFacture}
-            value={!!form.sansFacture}
-            onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
-          />
-        ) : !sansFactureAffichee(categorieFournisseurDuTiers) ? null : (
-          <>
+          {estEmise ? (
+            <SelectFieldEditable
+              label={T.clientOrganisme}
+              required
+              searchable
+              placeholder={TEXTES.commun.general.choixDuClient}
+              value={clients.find((c) => nomComplet(c) === form.tiers)?.id ?? ''}
+              onChange={f.choisirClient}
+              options={clientsPourLaRecette(clients, form.categorieRecette, f.activiteForm, form.tiers).map(optionClient)}
+              parCategories
+              onEdit={() => router.push(ROUTES.clientsDepuis(retour))}
+            />
+          ) : (
+            <SelectFieldEditable
+              label={TEXTES.commun.general.fournisseur}
+              required
+              searchable
+              placeholder={TEXTES.commun.general.choixDuFournisseur}
+              value={fournisseur?.id ?? ''}
+              onChange={f.choisirFournisseur}
+              options={fournisseursPourLaDepense(fournisseurs, form.categorieDepense, form.tiers).map(optionFournisseur)}
+              parCategories
+              onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
+            />
+          )}
+          {estEmise ? (
             <Checkbox
-              label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+              label={TEXTES.comptabilite.nouvelleEcriture.sansFacture}
               value={!!form.sansFacture}
               onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
             />
-            {form.sansFacture ? (
-              <Text style={commonStyles.note}>
-                {TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
-              </Text>
-            ) : null}
-          </>
-        )}
-        {/* Offerte par le fournisseur (un cadeau) : le bouton « Cadeau » de chaque ligne l'offre ou la facture. */}
-        {estEmise || !offertAffiche(categorieFournisseurDuTiers) ? null : (
-          <>
-            <Checkbox
-              label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
-              value={!!form.offert}
-              onChange={(offert) => f.setForm({ ...form, offert: offert || undefined })}
-            />
-            {offerte ? (
-              <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
-            ) : null}
-          </>
-        )}
-      </SectionForm>
-
-      {/* Les informations : la catégorie (fixe), ce qui lui est propre, le montant, la TVA, l'atelier. */}
-      <SectionForm>
-        <FormField
-          label={estEmise ? T.categorieDeRecette : T.categorieDeDepense}
-          value={categorie}
-          editable={false}
-          style={commonStyles.verrouille}
-          aide={TEXTES.comptabilite.ficheFacture.nonModifiableLaCategorieLe}
-        />
-        {f.compteAffiche ? <NoteComptePcg compte={f.compteAffiche} /> : null}
-        <AnimauxEnvoyesListe facture={form} />
-
-        {/* Une aide se décrit par son type (DPB, ICHN…). */}
-        {estAide && (
-          <>
-            <SelectField
-              label={T.typeDAide}
-              required
-              value={form.typeAide ?? ''}
-              onChange={(typeAide) => f.setForm({ ...form, typeAide: typeAide as typeof form.typeAide })}
-              options={OPTIONS_TYPE_AIDE}
-            />
-            {form.typeAide === TYPE_AIDE.AUTRE && (
-              <FormField
-                label={T.preciserLeTypeDAide}
-                value={form.typeAideLibre ?? ''}
-                onChangeText={(typeAideLibre) => f.setForm({ ...form, typeAideLibre })}
-                placeholder={T.exAideGnrGuerreUkrainePoints}
+          ) : !sansFactureAffichee(categorieFournisseurDuTiers) ? null : (
+            <>
+              <Checkbox
+                label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+                value={!!form.sansFacture}
+                onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
               />
-            )}
-          </>
-        )}
-
-        {/* Une recette d'aide : le dossier de l'aide (ses pièces jointes) qui la lie, rangé chez l'organisme. */}
-        {estAide && form.id ? <DossiersDeLAide factureId={form.id} /> : null}
-
-        {/* Une dépense vétérinaire : le motif de la visite ; une dépense de production ou autre : le stock qu'elle alimente. */}
-        {form.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
-          <>
-            <ChampVisite
-              motif={form.motifVisite ?? ''}
-              ajouter={!!form.visiteVeterinaire}
-              onMotif={(motif) => f.setForm({ ...form, motifVisite: motif || undefined })}
-              onAjouter={(ajouter) => f.setForm({ ...form, visiteVeterinaire: ajouter || undefined })}
+              {form.sansFacture ? (
+                <Text style={commonStyles.note}>
+                  {TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
+                </Text>
+              ) : null}
+            </>
+          )}
+          {/* Offerte par le fournisseur (un cadeau) : le bouton « Cadeau » de chaque ligne l'offre ou la facture. */}
+          {estEmise || !offertAffiche(categorieFournisseurDuTiers) ? null : (
+            <>
+              <Checkbox
+                label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+                value={!!form.offert}
+                onChange={(offert) => f.setForm({ ...form, offert: offert || undefined })}
+              />
+              {offerte ? (
+                <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
+              ) : null}
+            </>
+          )}
+          {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
+          {!estEmise && !depenseImposee(fournisseur) ? (
+            <ChampAtelier
+              activite={form.activite}
+              value={form.atelier ?? ''}
+              onChange={(atelier) =>
+                f.setForm({
+                  ...form,
+                  atelier: atelier || undefined,
+                  elementAgri: atelier === ATELIER.AGRITOURISME ? form.elementAgri : undefined,
+                })
+              }
             />
-            <LignesVeterinaireEditor
-              lignes={form.lignesVeterinaire ?? []}
-              onChange={(lignesVeterinaire) => f.setForm({ ...form, lignesVeterinaire })}
-              dateParDefaut={form.date}
-              visiteId={form.visiteVeterinaire ? idVisiteDeLaFacture(form.id) : undefined}
-              retour={ROUTES.ficheFacture(form.id)}
+          ) : null}
+          {!estEmise && form.atelier === ATELIER.AGRITOURISME ? (
+            <ChampElementAgritourisme
+              value={form.elementAgri ?? ''}
+              onChange={(element) => f.setForm({ ...form, elementAgri: element || undefined })}
             />
-          </>
-        )}
-        {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
-          <ChampStockProduction
-            compte={form.compteManuel}
-            article={form.stockArticle ?? ''}
-            quantite={form.stockQuantite}
-            debut={form.bouclesDebut}
-            onChangeDebut={(debut) => f.setForm({ ...form, bouclesDebut: debut || undefined })}
-            onChange={(article, quantite) =>
-              f.setForm({
-                ...form,
-                stockArticle: article || undefined,
-                stockQuantite: article ? quantite : undefined,
-                bouclesDebut: estBoucleNumerotee(article) ? form.bouclesDebut : undefined,
-              })
-            }
-          />
-        )}
+          ) : null}
+        </SectionForm>
+      ) : null}
 
-        {/* Le montant, puis le taux de TVA ; une aide a, à côté du montant, son taux d'imposition (comme à la création). */}
-        {estAide ? (
-          <>
-            <View style={commonStyles.row}>
-              <View style={commonStyles.flex1}>{montant}</View>
-              <View style={commonStyles.flex1}>
-                <ChampTauxImposition
-                  value={String(tauxImpositionAide(form.typeAide ?? TYPE_AIDE.AUTRE, form.tauxImposition))}
-                  onChange={(taux) => f.setForm({ ...form, tauxImposition: Number(taux) })}
-                />
-              </View>
-            </View>
-            <Text style={commonStyles.note}>{T.partDuMontantIncluseDans}</Text>
-          </>
-        ) : (
-          <>
-            {montant}
-            {champTauxTva}
-          </>
-        )}
-
-        {/* Le volet d'une écriture d'une association ou d'une coopérative agricole. */}
-        {form.voletCooperative ? (
-          <ChampVoletCooperative
-            value={form.voletCooperative}
-            onChange={(volet) => f.setForm({ ...form, voletCooperative: volet || undefined })}
-          />
-        ) : null}
-        {/* Une réparation ou une assurance : le véhicule de la flotte. */}
-        {form.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES ? (
-          <ChampObjetAssurance
-            value={form.objetAssurance ?? ''}
-            onChange={(objet) =>
-              f.setForm({
-                ...form,
-                objetAssurance: objet || undefined,
-                vehiculeId: objet === OBJET_ASSURANCE.VEHICULE ? form.vehiculeId : undefined,
-              })
-            }
-          />
-        ) : null}
-        {form.categorieDepense === CATEGORIE_DEPENSE.REPARATION || form.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE ? (
+      {/* Détails : la catégorie (fixe), le numéro de la facture, ce qui est acheté ou vendu et ce qui est propre à la catégorie. */}
+      {onglet === 'details' ? (
+        <SectionForm>
           <FormField
-            label={form.categorieRecette ? TEXTES.flotte.motif.indemnite : TEXTES.flotte.motif.reparation}
-            required={!!form.categorieRecette || !!form.vehiculeId}
-            value={form.motif ?? ''}
-            onChangeText={(motif) => f.setForm({ ...form, motif: motif || undefined })}
-            aide={TEXTES.flotte.motif.aide}
+            label={estEmise ? T.categorieDeRecette : T.categorieDeDepense}
+            value={categorie}
+            editable={false}
+            style={commonStyles.verrouille}
+            aide={TEXTES.comptabilite.ficheFacture.nonModifiableLaCategorieLe}
           />
-        ) : null}
-        {categorieAvecVehicule(form.categorieDepense, form.categorieRecette, form.objetAssurance) ? (
-          <ChampVehicule value={form.vehiculeId ?? ''} onChange={(id) => f.setForm({ ...form, vehiculeId: id || undefined })} />
-        ) : null}
-        {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
-        {!estEmise && !depenseImposee(fournisseur) ? (
-          <ChampAtelier
-            activite={form.activite}
-            value={form.atelier ?? ''}
-            onChange={(atelier) =>
-              f.setForm({
-                ...form,
-                atelier: atelier || undefined,
-                elementAgri: atelier === ATELIER.AGRITOURISME ? form.elementAgri : undefined,
-              })
-            }
-          />
-        ) : null}
-        {!estEmise && form.atelier === ATELIER.AGRITOURISME ? (
-          <ChampElementAgritourisme
-            value={form.elementAgri ?? ''}
-            onChange={(element) => f.setForm({ ...form, elementAgri: element || undefined })}
-          />
-        ) : null}
-      </SectionForm>
+          {f.compteAffiche ? <NoteComptePcg compte={f.compteAffiche} /> : null}
+          {/* Une aide n'a pas de numéro de facture : le tiers et le type d'aide la décrivent. */}
+          {estAide ? null : (
+            <ChampNumeroOuContrat
+              fournisseur={fournisseurDuTiers}
+              label={T.nDeFactureOuObjet}
+              valeur={form.description ?? ''}
+              onChoix={(description, contrat) =>
+                f.setForm({
+                  ...form,
+                  description,
+                  // Le contrat dit ce qu'il couvre : l'objet de l'assurance et, pour un véhicule, sa plaque.
+                  ...(contrat?.vehiculeId
+                    ? { objetAssurance: OBJET_ASSURANCE.VEHICULE, vehiculeId: contrat.vehiculeId }
+                    : contrat?.objet
+                      ? { objetAssurance: contrat.objet }
+                      : {}),
+                })
+              }
+              placeholder={T.precisions}
+            />
+          )}
+          <AnimauxEnvoyesListe facture={form} />
 
+          {/* Une aide se décrit par son type (DPB, ICHN…). */}
+          {estAide && (
+            <>
+              <SelectField
+                label={T.typeDAide}
+                required
+                value={form.typeAide ?? ''}
+                onChange={(typeAide) => f.setForm({ ...form, typeAide: typeAide as typeof form.typeAide })}
+                options={OPTIONS_TYPE_AIDE}
+              />
+              {form.typeAide === TYPE_AIDE.AUTRE && (
+                <FormField
+                  label={T.preciserLeTypeDAide}
+                  value={form.typeAideLibre ?? ''}
+                  onChangeText={(typeAideLibre) => f.setForm({ ...form, typeAideLibre })}
+                  placeholder={T.exAideGnrGuerreUkrainePoints}
+                />
+              )}
+            </>
+          )}
+
+          {/* Une recette d'aide : le dossier de l'aide (ses pièces jointes) qui la lie, rangé chez l'organisme. */}
+          {estAide && form.id ? <DossiersDeLAide factureId={form.id} /> : null}
+
+          {/* Une dépense vétérinaire : le motif de la visite ; une dépense de production ou autre : le stock qu'elle alimente. */}
+          {form.categorieDepense === CATEGORIE_DEPENSE.VETERINAIRE && (
+            <>
+              <ChampVisite
+                motif={form.motifVisite ?? ''}
+                ajouter={!!form.visiteVeterinaire}
+                onMotif={(motif) => f.setForm({ ...form, motifVisite: motif || undefined })}
+                onAjouter={(ajouter) => f.setForm({ ...form, visiteVeterinaire: ajouter || undefined })}
+              />
+              <LignesVeterinaireEditor
+                lignes={form.lignesVeterinaire ?? []}
+                onChange={(lignesVeterinaire) => f.setForm({ ...form, lignesVeterinaire })}
+                dateParDefaut={form.date}
+                visiteId={form.visiteVeterinaire ? idVisiteDeLaFacture(form.id) : undefined}
+                retour={ROUTES.ficheFacture(form.id)}
+              />
+            </>
+          )}
+          {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && (
+            <ChampStockProduction
+              compte={form.compteManuel}
+              article={form.stockArticle ?? ''}
+              quantite={form.stockQuantite}
+              debut={form.bouclesDebut}
+              onChangeDebut={(debut) => f.setForm({ ...form, bouclesDebut: debut || undefined })}
+              onChange={(article, quantite) =>
+                f.setForm({
+                  ...form,
+                  stockArticle: article || undefined,
+                  stockQuantite: article ? quantite : undefined,
+                  bouclesDebut: estBoucleNumerotee(article) ? form.bouclesDebut : undefined,
+                })
+              }
+            />
+          )}
+
+          {/* Ce qui est acheté ou vendu en détail : ses lignes. Le total se lit à l'onglet Coût. */}
+          {lignesDuDetail}
+          {/* Une dépense « Autre » d'un fournisseur de la Chambre d'agriculture : on peut la détailler par article. */}
+          {form.categorieDepense === CATEGORIE_DEPENSE.AUTRE && estChambreAgriculture(fournisseur) ? (
+            <Button
+              variant="secondary"
+              label={TEXTES.fournisseurs.chambre.detailler}
+              onPress={f.detaillerChambreAgriculture}
+            />
+          ) : null}
+
+          {/* Le volet d'une écriture d'une association ou d'une coopérative agricole. */}
+          {form.voletCooperative ? (
+            <ChampVoletCooperative
+              value={form.voletCooperative}
+              onChange={(volet) => f.setForm({ ...form, voletCooperative: volet || undefined })}
+            />
+          ) : null}
+          {/* Une réparation ou une assurance : le véhicule de la flotte. */}
+          {form.categorieDepense === CATEGORIE_DEPENSE.ASSURANCES ? (
+            <ChampObjetAssurance
+              value={form.objetAssurance ?? ''}
+              onChange={(objet) =>
+                f.setForm({
+                  ...form,
+                  objetAssurance: objet || undefined,
+                  vehiculeId: objet === OBJET_ASSURANCE.VEHICULE ? form.vehiculeId : undefined,
+                })
+              }
+            />
+          ) : null}
+          {form.categorieDepense === CATEGORIE_DEPENSE.REPARATION || form.categorieRecette === CATEGORIE_RECETTE.ASSURANCE_VEHICULE ? (
+            <FormField
+              label={form.categorieRecette ? TEXTES.flotte.motif.indemnite : TEXTES.flotte.motif.reparation}
+              required={!!form.categorieRecette || !!form.vehiculeId}
+              value={form.motif ?? ''}
+              onChangeText={(motif) => f.setForm({ ...form, motif: motif || undefined })}
+              aide={TEXTES.flotte.motif.aide}
+            />
+          ) : null}
+          {categorieAvecVehicule(form.categorieDepense, form.categorieRecette, form.objetAssurance) ? (
+            <ChampVehicule value={form.vehiculeId ?? ''} onChange={(id) => f.setForm({ ...form, vehiculeId: id || undefined })} />
+          ) : null}
+        </SectionForm>
+      ) : null}
+
+      {/* Coût : le montant, puis le taux de TVA ; une aide a, à côté du montant, son taux d'imposition. Puis le règlement. */}
+      {onglet === 'cout' ? (
+        <SectionForm>
+          {estAide ? (
+            <>
+              <View style={commonStyles.row}>
+                <View style={commonStyles.flex1}>{coutMontant}</View>
+                <View style={commonStyles.flex1}>
+                  <ChampTauxImposition
+                    value={String(tauxImpositionAide(form.typeAide ?? TYPE_AIDE.AUTRE, form.tauxImposition))}
+                    onChange={(taux) => f.setForm({ ...form, tauxImposition: Number(taux) })}
+                  />
+                </View>
+              </View>
+              <Text style={commonStyles.note}>{T.partDuMontantIncluseDans}</Text>
+            </>
+          ) : (
+            <>
+              {coutMontant}
+              <ChampTauxTva value={form.tauxTva?.toString() ?? ''} onChange={f.changerTauxTva} ttc={montantTtc} />
+            </>
+          )}
+          {/* Le paiement : réglée ou encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
+          {paiementAffiche ? (
+            <ChampPaiement
+              libellePayee={estEmise ? 'Encaissé' : 'Payé'}
+              libelleAttente={estEmise ? 'À encaisser' : 'À payer'}
+              enAttente={form.payee === false}
+              onEnAttente={(attente) => f.setForm(avecPaiement(form, attente))}
+              echeance={form.echeance ?? ''}
+              onEcheance={(echeance) => f.setForm({ ...form, echeance })}
+            />
+          ) : null}
+        </SectionForm>
+      ) : null}
+
+      {/* Quitter la modification : les changements se sont déjà enregistrés au fil de la saisie. */}
+      <View style={commonStyles.row}>
+        <Button style={commonStyles.flex1} variant="secondary" label={TEXTES.commun.general.annuler} onPress={() => f.setEditing(false)} />
+        <Button style={commonStyles.flex1} label={TEXTES.commun.general.enregistrer} onPress={() => f.enregistrerModifications()} />
+      </View>
     </>
   );
 }

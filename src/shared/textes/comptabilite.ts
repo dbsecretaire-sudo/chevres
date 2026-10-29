@@ -97,6 +97,10 @@ export const TEXTES_COMPTABILITE = {
     recettes: 'Recettes',
   },
   ficheFacture: {
+    /** Les onglets de la modification : l'identification, les détails, puis le coût. */
+    ongletGeneral: 'Général',
+    ongletDetails: 'Détails',
+    ongletCout: 'Coût',
     impossibleDeSupprimerLaFacture: 'Impossible de supprimer la facture.',
     factureIntrouvable: 'Facture introuvable.',
     nonModifiableLaCategorieLe:
