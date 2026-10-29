@@ -263,11 +263,6 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                     })),
                   ]}
                 />
-                {lignes.length > 1 && (
-                  <Pressable style={commonStyles.boutonPastille} onPress={() => supprimer(ligne.key)}>
-                    <Ionicons name="close-circle" size={28} color={colors.danger} />
-                  </Pressable>
-                )}
               </View>
             </View>
             <View>
@@ -382,11 +377,14 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                 ) : null}
               </>
             )}
-              <Pressable accessibilityRole="button" onPress={() => { supprimer(ligne.key); fermer(false); }}>
-                <Text style={{ color: colors.danger, textDecorationLine: 'underline', textAlign: 'center' }}>
-                  Supprimer cet article
-                </Text>
-              </Pressable>
+              {/* Un seul article ne se supprime pas : le lien n'apparaît qu'à partir du deuxième. */}
+              {lignes.length > 1 ? (
+                <Pressable accessibilityRole="button" onPress={() => { supprimer(ligne.key); fermer(false); }}>
+                  <Text style={{ color: colors.danger, textDecorationLine: 'underline', textAlign: 'center' }}>
+                    Supprimer cet article
+                  </Text>
+                </Pressable>
+              ) : null}
               </ScrollView>
               <View style={[commonStyles.row, { padding: 16 }]}>
                 <Button style={commonStyles.flex1} variant="secondary" label={TEXTES.commun.general.annuler} onPress={() => fermer(true)} />
