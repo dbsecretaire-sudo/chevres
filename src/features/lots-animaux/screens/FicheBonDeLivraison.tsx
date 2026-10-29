@@ -342,9 +342,7 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
             ) : (
               <>
                 {/* Les dépenses des contacts classés Abattoir (et elles seules), les plus proches du jour d'abattage d'abord : la liste déroulante lie la facture au bon. */}
-                {vendu ? (
-                  <Text style={commonStyles.mutedItalic}>{T.aucuneFactureAbattoirLiee}</Text>
-                ) : choixFactures.length > 0 ? (
+                {choixFactures.length > 0 ? (
                   <SelectField<string>
                     label={T.choisirLaFactureAbattoir}
                     value=""
