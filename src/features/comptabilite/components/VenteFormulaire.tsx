@@ -6,6 +6,7 @@ import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement'
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
 import { avecPaiement } from '@/features/comptabilite/utils/paiement';
 import { Checkbox } from '@/shared/components/Checkbox';
+import { Interrupteur } from '@/shared/components/Interrupteur';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
@@ -205,7 +206,7 @@ export function VenteFormulaire({
         />
 
         {/* Le client souhaite-t-il que la vente soit déclarée (avec facture) ? Coché d'office, comme à la création. */}
-        <Checkbox
+        <Interrupteur
           label={T.declarerLaVente}
           value={venteADeclarer(form)}
           onChange={(declaree) =>
@@ -385,7 +386,7 @@ export function VenteFormulaire({
       {onglet === 'cout' ? (
       <SectionForm>
         {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
-        <Checkbox
+        <Interrupteur
           label={TEXTES.comptabilite.nouvelleEcriture.offert}
           value={!!form.offert}
           onChange={(offert) => onChange({ ...form, offert: offert ? true : undefined })}
