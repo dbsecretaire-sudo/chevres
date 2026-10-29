@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { Alert, FlatList, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
@@ -11,7 +11,8 @@ import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { lireBibliotheque, retirerDocument } from '@/features/bibliotheque/repository';
 import type { DocumentGenere } from '@/features/bibliotheque/types';
-import { ouvrirPiece, pieceExiste, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { ouvrirPiece, piecesDisponibles, pieceExiste, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { enregistrerSurAppareil } from '@/features/bibliotheque/services/telechargement';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -46,6 +47,16 @@ export default function BibliothequeDocuments() {
     await ouvrirPiece(document.piece);
   };
 
+  const telecharger = async (document: DocumentGenere) => {
+    if (!(await pieceExiste(document.piece))) return setManquant(true);
+    setManquant(false);
+    try {
+      await enregistrerSurAppareil(document.piece);
+    } catch {
+      Alert.alert(T.enregistrementImpossible);
+    }
+  };
+
   return (
     <Screen scroll={false}>
       <View style={commonStyles.topPadded}>
@@ -65,7 +76,12 @@ export default function BibliothequeDocuments() {
               title={item.titre}
               subtitle={`${quand(item.genereLe)} · ${item.nomFichier}`}
               trailing={
-                <Ionicons name="trash-outline" size={22} color={colors.danger} onPress={() => setARetirer(item)} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                  {piecesDisponibles() ? (
+                    <Ionicons name="download-outline" size={22} color={colors.primary} onPress={() => telecharger(item)} />
+                  ) : null}
+                  <Ionicons name="trash-outline" size={22} color={colors.danger} onPress={() => setARetirer(item)} />
+                </View>
               }
               onPress={() => ouvrir(item)}
             />

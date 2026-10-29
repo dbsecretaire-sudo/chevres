@@ -21,6 +21,8 @@ export const TEXTES_EXPORT = {
     dejaGenere: (date: string) => `Généré le ${date}`,
     dejaGenereN: (date: string, n: number) => `Dernier le ${date} (${n})`,
     fichierManquant: 'Le fichier de ce document n’est pas dans cet appareil (il se récupère avec Google Drive ou une sauvegarde).',
+    enregistrer: 'Télécharger sur l’appareil',
+    enregistrementImpossible: 'Le document n’a pas pu être enregistré sur l’appareil.',
     retirerQuestion: 'Retirer ce document ?',
     retirerMessage: 'Il disparaît de la liste et son fichier est supprimé de cet appareil.',
   },
