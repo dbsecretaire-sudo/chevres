@@ -48,7 +48,7 @@ export default function ComptabiliteIndex() {
           <FlatList
             data={e.filtrees}
             // La liste s'arrête au-dessus des deux boutons du bas : la dernière écriture reste lisible.
-            style={{ marginBottom: 88 }}
+            style={{ marginBottom: 40 }}
             // Années, solde et recherche défilent avec la liste : plus de place pour les écritures.
             ListHeaderComponent={
               <View style={[commonStyles.topBox, styles.entete]}>
