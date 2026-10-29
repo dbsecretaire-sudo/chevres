@@ -28,6 +28,8 @@ export interface PropsEnTeteApplication {
     headerStyle?: unknown;
     headerLeft?: (parametres: ParametresBouton) => ReactNode;
     headerRight?: (parametres: ParametresBouton) => ReactNode;
+    /** Faux : l'écran n'a pas de flèche de retour (une étape d'une saisie, qui revient par son bouton Précédent). */
+    headerBackVisible?: boolean;
   };
   /** L'écran ouvert : son nom (« index » : la page d'accueil d'un onglet, qui n'a pas de flèche de retour). */
   route?: { name?: string };
@@ -89,7 +91,7 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
-            {!comptable && !afficheBureau() && parent !== undefined ? (
+            {!comptable && !afficheBureau() && parent !== undefined && options.headerBackVisible !== false ? (
               <Pressable onPress={retourDuTelephone} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
                 <Ionicons name="chevron-back" size={22} color={colors.text} />
               </Pressable>

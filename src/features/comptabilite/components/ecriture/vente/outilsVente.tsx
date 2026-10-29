@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { parseDecimal } from '@/shared/utils/nombres';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ROUTES } from '@/shared/constants/routes';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
 import { prixUnitaireEffectif } from '@/features/comptabilite/utils/prixPersonnalise';
@@ -73,6 +74,14 @@ export function usePrixInventaire(genre: 'lait' | 'oeufs'): number | undefined {
 }
 
 export function ChampTauxTvaVente({ e }: Props) {
-  return <ChampTauxTva value={e.tauxTvaVente} onChange={e.setTauxTvaVente} ttc={parseDecimal(e.montant)} />;
+  const router = useRouter();
+  return (
+    <ChampTauxTva
+      value={e.tauxTvaVente}
+      onChange={e.setTauxTvaVente}
+      ttc={parseDecimal(e.montant)}
+      parProduit={() => router.push(ROUTES.COMPTABILITE_TAUX as never)}
+    />
+  );
 }
 

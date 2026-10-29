@@ -6,7 +6,6 @@ import { ecranParEspeceSauf } from '@/features/etablissements/components/EcranPa
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
-import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 export default function ComptabiliteLayout() {
@@ -43,14 +42,7 @@ export default function ComptabiliteLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: TEXTES.commun.general.comptabilite }} />
-      {/* Les écritures et leur saisie se reviennent à Argent (Plus) ; une facture ouverte depuis la liste revient à la liste. */}
-      <Stack.Screen
-        name="liste"
-        options={{
-          title: TEXTES.comptabilite.accueil.ecritures,
-          headerLeft: () => <HeaderBackTo to={ROUTES.rubrique('argent') as Href} />,
-        }}
-      />
+      <Stack.Screen name="liste" options={{ title: TEXTES.comptabilite.accueil.ecritures }} />
       <Stack.Screen name="inventaire" options={{ title: TEXTES.comptabilite.accueil.inventaire.titre }} />
       <Stack.Screen name="stocks" options={{ title: TEXTES.comptabilite.accueil.inventaire.stocks }} />
       <Stack.Screen name="stock-historique" options={{ title: TEXTES.stock.historique.titre }} />
@@ -64,17 +56,10 @@ export default function ComptabiliteLayout() {
         options={{
           title: TEXTES.navigation.layout.nouvelleEcriture,
           presentation: 'modal',
-          headerStyle: { backgroundColor: colors.ajout },
-          headerLeft: () => <HeaderBackTo to={ROUTES.rubrique('argent') as Href} />,
+          headerStyle: { backgroundColor: colors.primary },
         }}
       />
-      <Stack.Screen
-        name="facture/[id]"
-        options={{
-          title: TEXTES.commun.general.facture,
-          headerLeft: () => <HeaderBackTo to={ROUTES.COMPTABILITE_LISTE as Href} />,
-        }}
-      />
+      <Stack.Screen name="facture/[id]" options={{ title: TEXTES.commun.general.facture }} />
       <Stack.Screen name="vente/[id]" options={{ title: TEXTES.commun.general.vente }} />
       <Stack.Screen name="lot" options={{ title: TEXTES.cheptel.lots.lot }} />
       <Stack.Screen name="detail" options={{ title: TEXTES.commun.general.detail }} />

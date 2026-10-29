@@ -11,7 +11,8 @@ import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/shared/components/Card';
-import { Checkbox } from '@/shared/components/Checkbox';
+import { Interrupteur } from '@/shared/components/Interrupteur';
+import { estUnAssureur } from '@/features/fournisseurs/services/contratsAssureur';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { FormField } from '@/shared/components/FormField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
@@ -90,26 +91,29 @@ export function SectionDepenseDate({ e, date }: { e: EtatNouvelleEcriture; date:
   return (
     <SectionForm>
       {date}
+      {/* Le numéro de la facture, ou son objet : un champ libre à ce stade (le fournisseur se choisit à l'étape suivante). */}
+      <FormField
+        label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
+        value={e.description}
+        onChangeText={e.setDescription}
+        placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
+      />
       {sansFactureAffichee(categorieDuTiers) ? (
-        <Checkbox
+        <Interrupteur
           label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
           value={e.sansFacture}
           onChange={e.setSansFacture}
+          note={TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
         />
-      ) : null}
-      {e.sansFacture && sansFactureAffichee(categorieDuTiers) ? (
-        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
       ) : null}
       {/* Offerte par le fournisseur (un cadeau) : les lignes offertes comptent 0 € (le bouton « Cadeau » de chaque ligne, à l'étape suivante). */}
       {offertAffiche(categorieDuTiers) ? (
-        <Checkbox
-          label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+        <Interrupteur
+          label={TEXTES.comptabilite.nouvelleEcriture.offerteFacture}
           value={e.offertDepenseCoche}
           onChange={e.setOffertDepense}
+          note={e.offertDepense ? TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide : undefined}
         />
-      ) : null}
-      {e.offertDepense ? (
-        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
       ) : null}
     </SectionForm>
   );
@@ -135,7 +139,8 @@ export function SectionDepenseContact({ e }: { e: EtatNouvelleEcriture }) {
           onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
         />
 
-        {/* Un assureur : le numéro de la facture est le numéro du contrat choisi dans sa liste ; sinon, un champ libre. */}
+        {/* Un assureur : le numéro de la facture est le numéro du contrat choisi dans sa liste (le champ libre est à l'étape précédente). */}
+        {e.fournisseurSelectionne && estUnAssureur(e.fournisseurSelectionne) ? (
         <ChampNumeroOuContrat
           fournisseur={e.fournisseurSelectionne}
           label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
@@ -152,6 +157,7 @@ export function SectionDepenseContact({ e }: { e: EtatNouvelleEcriture }) {
           }}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
+        ) : null}
       </SectionForm>
     </>
   );

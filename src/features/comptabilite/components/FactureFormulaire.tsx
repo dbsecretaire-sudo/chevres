@@ -6,13 +6,11 @@ import { LignesVeterinaireEditor } from '@/features/comptabilite/components/Lign
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
-import { Checkbox } from '@/shared/components/Checkbox';
+import { Interrupteur } from '@/shared/components/Interrupteur';
 import { useRouter } from 'expo-router';
 import { Button } from '@/shared/components/Button';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
-import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { SectionForm } from '@/shared/components/SectionForm';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
@@ -36,11 +34,9 @@ import {
   TYPE_AIDE,
   TYPE_FACTURE,
 } from '@/shared/constants/comptabilite';
-import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import { ROUTES } from '@/shared/constants/routes';
 import { DossiersDeLAide } from '@/features/exploitation/components/DossiersDeLAide';
 import { idVisiteDeLaFacture } from '@/features/sante/services/visitesFacture';
-import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
 import { formatTotalEuros, parseDecimal } from '@/shared/utils/nombres';
 import { nomComplet } from '@/shared/utils/personne';
 import {
@@ -69,7 +65,6 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import {
-  LABEL_ACTIVITE_COMPTABLE,
   LABEL_CATEGORIE_DEPENSE,
   LABEL_CATEGORIE_RECETTE,
   LABEL_TYPE_AIDE,
@@ -146,7 +141,6 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
     value: value as TypeAide,
     label,
   }));
-  const activites = [...especesActives(), ...(f.estAlimentation ? [] : [ACTIVITE_COMMUNE])];
 
   const categorie = estEmise
     ? form.categorieRecette
@@ -214,18 +208,6 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
 
   return (
     <>
-      {/* Comme à la création : l'activité en tête, d'une puce (un établissement à plusieurs espèces seulement). */}
-      {plusieursEspeces() ? (
-        <LigneFiltres>
-          <ChoixDeroulant
-            titre={TEXTES.comptabilite.activite.activite}
-            valeur={f.activiteForm}
-            options={activites.map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
-            onChoisir={f.changerActivite}
-          />
-        </LigneFiltres>
-      ) : null}
-
       <OngletsFacture value={onglet} onChange={setOnglet} />
 
       {/* Général : la date, le tiers, les cases de la facture (non facturée, offerte) et l'atelier. */}
@@ -263,37 +245,27 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             />
           )}
           {estEmise ? (
-            <Checkbox
+            <Interrupteur
               label={TEXTES.comptabilite.nouvelleEcriture.sansFacture}
               value={!!form.sansFacture}
               onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
             />
           ) : !sansFactureAffichee(categorieFournisseurDuTiers) ? null : (
-            <>
-              <Checkbox
-                label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
-                value={!!form.sansFacture}
-                onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
-              />
-              {form.sansFacture ? (
-                <Text style={commonStyles.note}>
-                  {TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
-                </Text>
-              ) : null}
-            </>
+            <Interrupteur
+              label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+              value={!!form.sansFacture}
+              onChange={(sansFacture) => f.setForm({ ...form, sansFacture: sansFacture || undefined })}
+              note={TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}
+            />
           )}
           {/* Offerte par le fournisseur (un cadeau) : le bouton « Cadeau » de chaque ligne l'offre ou la facture. */}
           {estEmise || !offertAffiche(categorieFournisseurDuTiers) ? null : (
-            <>
-              <Checkbox
-                label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
-                value={!!form.offert}
-                onChange={(offert) => f.setForm({ ...form, offert: offert || undefined })}
-              />
-              {offerte ? (
-                <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
-              ) : null}
-            </>
+            <Interrupteur
+              label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+              value={!!form.offert}
+              onChange={(offert) => f.setForm({ ...form, offert: offert || undefined })}
+              note={offerte ? TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide : undefined}
+            />
           )}
           {/* L'atelier de la charge (facultatif) : un fournisseur dont la catégorie impose la dépense (vétérinaire…) n'en demande pas. */}
           {!estEmise && !depenseImposee(fournisseur) ? (

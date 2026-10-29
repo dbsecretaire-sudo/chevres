@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { Screen } from '@/shared/components/Screen';
 import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
@@ -21,6 +20,7 @@ import {
   SectionDepenseMontant,
 } from '@/features/comptabilite/components/ecriture/SectionDepense';
 import { BarreEtapes } from '@/shared/components/BarreEtapes';
+import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
 import {
   SectionRecetteContact,
   SectionRecetteVente,
@@ -198,6 +198,11 @@ export default function NouvelleFacture() {
    */
   const dernierEtape = e.type === TYPE_FACTURE.RECUE ? 3 : 2;
   const [etape, setEtape] = useState(params.etape === 'vente' ? 2 : 1);
+  // À partir de la deuxième étape, la flèche de l'en-tête disparaît : on revient par le bouton Précédent, comme sur la maquette.
+  const navigation = useNavigation();
+  useEffect(() => {
+    navigation.setOptions({ headerBackVisible: etape === 1 });
+  }, [navigation, etape]);
   // L'adresse demande une autre étape (le didacticiel passe d'une étape de la saisie à l'autre) : l'écran la suit.
   const [etapeDemandeeVue, setEtapeDemandeeVue] = useState(params.etape);
   if (params.etape !== etapeDemandeeVue) {
@@ -274,9 +279,16 @@ export default function NouvelleFacture() {
       jourMoisAnnee
     />
   );
+  /** La première étape : le type (débit ou crédit) en pastilles, puis la date ; c'est comme sur la maquette. */
+  const ouvertureDeLaSaisie = (
+    <>
+      <ChoixPastilles options={OPTIONS_TYPE} value={e.type} onChange={e.setType} />
+      {champDate}
+    </>
+  );
 
   return (
-    <AccentColorProvider color={colors.ajout} softColor={colors.ajoutBadgeBg}>
+    <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       <Screen>
         <LigneFiltres>
           <YearPicker
@@ -286,18 +298,12 @@ export default function NouvelleFacture() {
             tout={e.toutesAnnees}
             onChoisirTout={e.choisirToutesAnnees}
           />
-          <ChoixDeroulant
-            titre={TEXTES.commun.general.type}
-            valeur={e.type}
-            options={OPTIONS_TYPE}
-            onChoisir={e.setType}
-          />
         </LigneFiltres>
 
         <BarreEtapes etape={etape} total={dernierEtape} />
         {e.type === TYPE_FACTURE.RECUE ? (
           etape === 1 ? (
-            <SectionDepenseDate e={e} date={champDate} />
+            <SectionDepenseDate e={e} date={ouvertureDeLaSaisie} />
           ) : etape === 2 ? (
             <>
               <SectionDepenseContact e={e} />
@@ -308,7 +314,7 @@ export default function NouvelleFacture() {
           )
         ) : etape === 1 ? (
           <>
-            <SectionRecetteContact e={e} date={champDate} onCommande={ouvrirLesCommandes} />
+            <SectionRecetteContact e={e} date={ouvertureDeLaSaisie} onCommande={ouvrirLesCommandes} />
             {e.commande ? (
               <Text style={commonStyles.note}>
                 {TEXTES.comptabilite.nouvelleEcriture.commandeEnCours(
@@ -355,13 +361,13 @@ export default function NouvelleFacture() {
         ) : (
           <>
             <Button label={TEXTES.commun.general.enregistrer} onPress={() => e.enregistrer()} loading={e.enregistrement} />
-            <Button variant="secondary" label={TEXTES.comptabilite.nouvelleEcriture.precedent} onPress={() => setEtape(etape - 1)} />
             <Button
               variant="secondary"
               label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
               onPress={() => e.enregistrer(true)}
               loading={e.enregistrement}
             />
+            <Button variant="secondary" label={TEXTES.comptabilite.nouvelleEcriture.precedent} onPress={() => setEtape(etape - 1)} />
           </>
         )}
       </Screen>
