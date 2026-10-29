@@ -13,9 +13,7 @@ import {
   retirerDeAttente,
 } from '@/shared/storage/depot';
 import { appliquerModification, modificationsDe, type Modification } from '@/shared/storage/fiches';
-import { piecesDe } from '@/features/fichiers/services/piecesFile';
-import { envoyerPiecesEnAttente, mettreEnFileLesPiecesAnciennes, recevoirPiecesManquantes } from '@/features/fichiers/services/piecesSynchro';
-import type { PieceJointe } from '@/features/fichiers/types';
+import { envoyerPiecesEnAttente, mettreEnFileLesPiecesAnciennes, piecesDeLAppareil, recevoirPiecesManquantes } from '@/features/fichiers/services/piecesSynchro';
 
 /** L'exploitation sur le serveur : une seule, pour tous les appareils. */
 export const EXPLOITATION_SYNC = 'exploitation';
@@ -108,7 +106,6 @@ export function recevoirChangements(fichesRecues?: Set<string>): Promise<number>
     const jeton = await jetonDeConnexion();
     let recues = 0;
     // Les fichiers joints citées par les fiches reçues : téléchargés une fois la réception finie.
-    const piecesRecues: PieceJointe[] = [];
     for (;;) {
       const depuis = (await lireCurseur()) ?? 0;
       const { statut, json } = await appeler('tirer', 'GET', {
@@ -123,7 +120,6 @@ export function recevoirChangements(fichesRecues?: Set<string>): Promise<number>
       for (const modification of json.modifications as Modification[]) {
         recues++;
         fichesRecues?.add(cleFiche(modification));
-        piecesRecues.push(...piecesDe(modification.contenu));
         if (!estSynchronisable(modification.zone)) continue;
         if (enAttente.has(`${modification.zone}\u0000${modification.identifiant}`)) continue;
         const locale = await lireValeurLocale(modification.zone);
@@ -136,7 +132,8 @@ export function recevoirChangements(fichesRecues?: Set<string>): Promise<number>
 
       await ecrireCurseur(Number(json.curseur));
       if (!json.encore) {
-        await recevoirPiecesManquantes(EXPLOITATION_SYNC, piecesRecues);
+        // Toutes les pièces des données de l'appareil, et non seulement celles de cette réception : une pièce pas encore envoyée est reprise ici.
+        await recevoirPiecesManquantes(EXPLOITATION_SYNC, await piecesDeLAppareil());
         return recues;
       }
     }

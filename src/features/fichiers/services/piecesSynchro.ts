@@ -75,3 +75,16 @@ export async function mettreEnFileLesPiecesAnciennes(): Promise<void> {
   }
   await AsyncStorage.setItem(CLE_RATTRAPAGE, 'fait');
 }
+
+/**
+ * Toutes les pièces référencées par les données synchronisées de l'appareil. Une pièce dont le fichier n'est pas encore sur le serveur
+ * (le PC n'a pas fini de l'envoyer) n'est reçue qu'à une synchronisation ultérieure : celle-ci les reprend toutes, pas seulement les fiches
+ * qui arrivent à cet instant.
+ */
+export async function piecesDeLAppareil(): Promise<PieceJointe[]> {
+  const pieces: PieceJointe[] = [];
+  for (const cle of (await AsyncStorage.getAllKeys()).filter(estSynchronisable)) {
+    pieces.push(...piecesDe(await lireValeurLocale(cle)));
+  }
+  return pieces;
+}
