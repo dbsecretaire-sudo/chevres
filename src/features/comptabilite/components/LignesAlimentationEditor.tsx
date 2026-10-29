@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Button } from '@/shared/components/Button';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,6 +67,13 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
   const [stock, setStock] = useState<ArchiveStock>(ARCHIVE_VIDE);
   /** L'achat dont la fiche est ouverte (un appui sur sa carte) ; les autres restent réduits à leur carte. */
   const [ouverte, setOuverte] = useState<string | null>(null);
+  /** Les achats tels qu'ils étaient à l'ouverture de la fiche : Annuler les y remet. */
+  const [avantOuverture, setAvantOuverture] = useState<LigneAlimentForm[] | null>(null);
+  const fermer = (annuler: boolean) => {
+    if (annuler && avantOuverture) onChange(avantOuverture);
+    setOuverte(null);
+    setAvantOuverture(null);
+  };
 
   // La liste est relue à chaque retour sur l'écran : ce qu'on vient d'ajouter ou de renommer au stock y apparaît.
   useFocusEffect(
@@ -163,7 +171,10 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
             {/* L'achat est une carte : son nom, et son détail dessous. Un appui ouvre la fiche de l'achat. */}
             <Pressable
               accessibilityRole="button"
-              onPress={() => setOuverte(ouverte === ligne.key ? null : ligne.key)}
+              onPress={() => {
+                setAvantOuverture(lignes);
+                setOuverte(ligne.key);
+              }}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -176,8 +187,12 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
               <Text style={commonStyles.lineSemiBold}>{nomDeLaLigne(ligne) || titreDeLaLigne(ligne)(index + 1)}</Text>
               {detailDeLaLigne(ligne) ? <Text style={commonStyles.note}>{detailDeLaLigne(ligne)}</Text> : null}
             </Pressable>
-            {ouverte === ligne.key ? (
-              <>
+            <Modal
+              visible={ouverte === ligne.key}
+              animationType="slide"
+              onRequestClose={() => fermer(true)}
+            >
+              <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
             <View style={commonStyles.rowSpaceBetween}>
               <Text style={commonStyles.lineSemiBold}>{titreDeLaLigne(ligne)(index + 1)}</Text>
               <View style={commonStyles.headerDroite}>
@@ -347,8 +362,17 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                 ) : null}
               </>
             )}
-              </>
-            ) : null}
+              <Pressable accessibilityRole="button" onPress={() => { supprimer(ligne.key); fermer(false); }}>
+                <Text style={{ color: colors.danger, textDecorationLine: 'underline', textAlign: 'center' }}>
+                  Supprimer cet article
+                </Text>
+              </Pressable>
+              </ScrollView>
+              <View style={[commonStyles.row, { padding: 16 }]}>
+                <Button style={commonStyles.flex1} variant="secondary" label={TEXTES.commun.general.annuler} onPress={() => fermer(true)} />
+                <Button style={commonStyles.flex1} label="Valider" onPress={() => fermer(false)} />
+              </View>
+            </Modal>
           </View>
         );
       })}
