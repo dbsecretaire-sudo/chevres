@@ -170,6 +170,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
       activite={f.activiteForm}
       offerte={offerte}
       tauxDefaut={form.tauxTva}
+      sousTitre={`${form.tiers} · facture ${form.description ?? ''}`}
     />
   ) : f.estChambre ? (
     <>

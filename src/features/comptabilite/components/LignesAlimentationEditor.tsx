@@ -28,7 +28,7 @@ import { TYPE_ALIMENT } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
-import { OPTIONS_TAUX_TVA, tvaDuTtc } from '@/features/comptabilite/utils/tva';
+import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { formatMontant } from '@/shared/utils/dates';
 
 interface Props {
@@ -40,6 +40,8 @@ interface Props {
   offerte?: boolean;
   /** Le taux proposé pour un nouvel achat (celui de la facture) ; chaque achat garde le sien. */
   tauxDefaut?: number;
+  /** Ce qui identifie la facture sous le titre d'un achat (le client, le numéro de facture). */
+  sousTitre?: string;
 }
 
 /** Début de la valeur d'un aliment ajouté au stock (suivie de son nom) : il s'enregistre comme « autre » avec ce nom. */
@@ -60,7 +62,7 @@ const ARCHIVE_VIDE: ArchiveStock = {
  * (avec recherche) dans la liste du stock — ceux d'office de l'espèce, puis ceux qu'on y a ajoutés ; le crayon mène au
  * stock et la liste s'y met à jour.
  */
-export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, tauxDefaut }: Props) {
+export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, tauxDefaut, sousTitre }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const especeFacture = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
@@ -193,8 +195,31 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
               onRequestClose={() => fermer(true)}
             >
               <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Retour"
+                    onPress={() => fermer(true)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Ionicons name="chevron-back" size={24} color={colors.text} />
+                  </Pressable>
+                  <View style={{ flex: 1 }}>
+                    <Text style={commonStyles.title}>{`Article ${index + 1}`}</Text>
+                    {sousTitre ? <Text style={commonStyles.muted}>{sousTitre}</Text> : null}
+                  </View>
+                </View>
             <View style={commonStyles.rowSpaceBetween}>
-              <Text style={commonStyles.lineSemiBold}>{titreDeLaLigne(ligne)(index + 1)}</Text>
+              <Text style={commonStyles.lineSemiBold}>{TEXTES.comptabilite.lignesAlimentationEditor.cheptelConcerne}</Text>
               <View style={commonStyles.headerDroite}>
                 {/* Un seul lien : le cheptel concerné, ou « Matériel » (un investissement) ; ce qu'on choisit s'affiche ici. */}
                 <SelectLien<string>
@@ -252,8 +277,7 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
             <View style={commonStyles.rowFin}>
               <View style={commonStyles.flex2}>
                 <SelectFieldEditable<string>
-                  label={titreDeLaLigne(ligne)(index + 1)}
-                  libelleCache
+                  label="Article"
                   searchable
                   placeholder={TEXTES.comptabilite.lignesAlimentationEditor.choixAliment}
                   value={valeurDe(ligne)}
@@ -296,25 +320,22 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                   />
                 </View>
               )}
-              <View style={commonStyles.flex1}>
-                <FormField
-                  label={TEXTES.comptabilite.lignesAlimentationEditor.montantTtcCourt}
-                  value={ligne.montant}
-                  onChangeText={(v) => maj(ligne.key, { montant: v })}
-                  keyboardType="decimal-pad"
-                  placeholder={TEXTES.comptabilite.lignesAlimentationEditor.ex120}
-                />
-              </View>
             </View>
-            {/* Le taux de TVA de cet achat : il se choisit ligne par ligne, et le HT et la TVA s'en déduisent. */}
+            {/* Le taux de TVA de cet achat : il se choisit ligne par ligne ; le HTVA et le TTC s'en déduisent. */}
+            <Text style={commonStyles.lineSemiBold}>TVA (%)</Text>
             <ChoixPastilles
               options={OPTIONS_TAUX_TVA}
               value={String(ligne.tauxTva ?? tauxDefaut ?? '')}
               onChange={(v) => maj(ligne.key, { tauxTva: Number(v) })}
             />
-            {parseDecimal(ligne.montant) > 0 && (ligne.tauxTva ?? tauxDefaut) ? (
+            <ChampsHtvaTtc
+              montant={ligne.montant}
+              taux={ligne.tauxTva ?? tauxDefaut ?? 0}
+              onMontant={(v) => maj(ligne.key, { montant: v })}
+            />
+            {parseDecimal(ligne.montant) > 0 && parseDecimal(ligne.quantiteKg) > 0 ? (
               <Text style={commonStyles.note}>
-                {`HT : ${formatMontant(parseDecimal(ligne.montant) - tvaDuTtc(parseDecimal(ligne.montant), ligne.tauxTva ?? tauxDefaut))} · TVA : ${formatMontant(tvaDuTtc(parseDecimal(ligne.montant), ligne.tauxTva ?? tauxDefaut))}`}
+                {`Soit ${formatMontant(parseDecimal(ligne.montant) / parseDecimal(ligne.quantiteKg))} le kg.`}
               </Text>
             ) : null}
             {/* Dépense offerte : le bouton « Cadeau » de la ligne (actif d'office : elle compte 0 € ; désactivé, elle est facturée). */}
@@ -377,6 +398,48 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
         );
       })}
     </Card>
+  );
+}
+
+/**
+ * Le prix HTVA et le prix TTC d'un achat : celui qu'on tape, l'autre s'en déduit au taux de TVA choisi. Le TTC reste enregistré.
+ */
+function ChampsHtvaTtc({
+  montant,
+  taux,
+  onMontant,
+}: {
+  montant: string;
+  taux: number;
+  onMontant: (montant: string) => void;
+}) {
+  // Le HTVA tapé à la main reste affiché pendant la saisie : il n'est recalculé qu'à partir du TTC.
+  const [htTape, setHtTape] = useState<string | null>(null);
+  const ttc = parseDecimal(montant);
+  const ht = ttc ? ttc / (1 + taux / 100) : 0;
+  return (
+    <>
+      <FormField
+        label="Prix HTVA (€)"
+        value={htTape ?? (ht ? ht.toFixed(2).replace('.', ',') : '')}
+        onChangeText={(v) => {
+          setHtTape(v);
+          onMontant(String(Math.round(parseDecimal(v) * (1 + taux / 100) * 100) / 100));
+        }}
+        keyboardType="decimal-pad"
+        placeholder="ex: 10"
+      />
+      <FormField
+        label="Prix TTC (€)"
+        value={montant}
+        onChangeText={(v) => {
+          setHtTape(null);
+          onMontant(v);
+        }}
+        keyboardType="decimal-pad"
+        placeholder="ex: 11,30"
+      />
+    </>
   );
 }
 
