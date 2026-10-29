@@ -29,11 +29,7 @@ import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAn
 import type { Client } from '@/features/clients/types';
 import { ChampNumeroFacture } from '@/features/comptabilite/components/ChampNumeroFacture';
 import type { Vente } from '@/features/comptabilite/types';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
-import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { SectionForm } from '@/shared/components/SectionForm';
-import { especesActives, plusieursEspeces } from '@/shared/dictionnaire/animaux';
-import { LABEL_ACTIVITE_COMPTABLE } from '@/shared/textes/libelles';
 import { activiteVente } from '@/features/comptabilite/utils/activite';
 import {
   fromageAjouteChoisi,
@@ -168,17 +164,6 @@ export function VenteFormulaire({
 
   return (
     <>
-      {/* Comme à la création : l'activité en tête, d'une puce (un établissement à plusieurs espèces seulement). */}
-      {plusieursEspeces() ? (
-        <LigneFiltres>
-          <ChoixDeroulant
-            titre={TEXTES.comptabilite.activite.activite}
-            valeur={activite}
-            options={especesActives().map((a) => ({ value: a, label: LABEL_ACTIVITE_COMPTABLE[a] }))}
-            onChoisir={(nouvelle) => onChange({ ...form, activite: nouvelle })}
-          />
-        </LigneFiltres>
-      ) : null}
 
       {/* L'identification : la date, le client, la déclaration de la vente (n° de facture) et le paiement — comme à la création. */}
       <SectionForm>
