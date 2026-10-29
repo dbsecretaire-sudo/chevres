@@ -74,7 +74,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/comptabilite\/(facture|vente)\/[^/]+$/, () => ROUTES.COMPTABILITE_LISTE],
   // Les écritures et leur saisie reviennent à Argent (Plus) ; une facture ouverte depuis la liste revient à la liste.
   [/^\/comptabilite\/liste$/, () => ROUTES.rubrique('argent')],
-  [/^\/comptabilite\/nouvelle$/, () => ROUTES.rubrique('argent')],
+  [/^\/comptabilite\/nouvelle$/, () => ROUTES.COMPTABILITE_LISTE],
   [/^\/comptabilite\/fournisseurs$/, () => ROUTES.CONTACTS],
   // Un dossier d'un contact revient à sa fiche.
   [/^\/comptabilite\/contacts\/dossier$/, (_, p) => (p.contact ? ROUTES.ficheContact(p.contact) : ROUTES.CONTACTS)],

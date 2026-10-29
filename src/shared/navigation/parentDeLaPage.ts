@@ -27,8 +27,9 @@ const COMMERCIAL_DES_VISITES = ['/commercial/visite', '/commercial/visites-simpl
 export function parentDeLaPage(adresse: string, lieu?: string): string | undefined {
   if (PAGES_RACINES.includes(adresse)) return undefined;
   if (adresse in PAGES_DE_L_ACCUEIL) return PAGES_DE_L_ACCUEIL[adresse];
-  // Les écritures et leur saisie reviennent à Argent (Plus) ; une facture ou une vente ouverte depuis la liste revient à la liste.
-  if (adresse === '/comptabilite/liste' || adresse === '/comptabilite/nouvelle') return '/rubrique/argent';
+  // Les écritures reviennent à Argent (Plus) ; la saisie d'une écriture revient à la liste des écritures.
+  if (adresse === '/comptabilite/liste') return '/rubrique/argent';
+  if (adresse === '/comptabilite/nouvelle') return '/comptabilite/liste';
   if (/^\/comptabilite\/(facture|vente)\/[^/]+$/.test(adresse)) return '/comptabilite/liste';
   if (adresse === '/production/lieu') {
     if (lieu && LIEUX_DE_L_ACCUEIL.includes(lieu)) return '/';
