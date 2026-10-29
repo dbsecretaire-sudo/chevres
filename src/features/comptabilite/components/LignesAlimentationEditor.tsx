@@ -8,7 +8,6 @@ import { Card } from '@/shared/components/Card';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
-import { SelectLien } from '@/shared/components/SelectLien';
 import { colors } from '@/shared/theme/colors';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -27,8 +26,6 @@ import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dic
 import { TYPE_ALIMENT } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
-import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
-import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
 import { formatMontant } from '@/shared/utils/dates';
 
 interface Props {
@@ -214,15 +211,15 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                     <Ionicons name="chevron-back" size={24} color={colors.text} />
                   </Pressable>
                   <View style={{ flex: 1 }}>
-                    <Text style={commonStyles.title}>{`Article ${index + 1}`}</Text>
+                    <Text style={commonStyles.title}>{nomDeLaLigne(ligne) || `Article ${index + 1}`}</Text>
                     {sousTitre ? <Text style={commonStyles.muted}>{sousTitre}</Text> : null}
                   </View>
                 </View>
-            <View style={commonStyles.rowSpaceBetween}>
-              <Text style={commonStyles.lineSemiBold}>{TEXTES.comptabilite.lignesAlimentationEditor.cheptelConcerne}</Text>
-              <View style={commonStyles.headerDroite}>
-                {/* Un seul lien : le cheptel concerné, ou « Matériel » (un investissement) ; ce qu'on choisit s'affiche ici. */}
-                <SelectLien<string>
+            <View style={{ gap: 6 }}>
+              <Text style={commonStyles.lineSemiBold}>Cheptel</Text>
+              <View>
+                {/* Le cheptel concerné (ou « Matériel », un investissement) : une case pleine largeur, comme sur la maquette. */}
+                <SelectField<string>
                   label={TEXTES.comptabilite.lignesAlimentationEditor.cheptelConcerne}
                   value={
                     estEquipement(ligne) ? CHOIX_EQUIPEMENT : estMateriel(ligne) ? CHOIX_MATERIEL : espece
@@ -274,8 +271,8 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                 )}
               </View>
             </View>
-            <View style={commonStyles.rowFin}>
-              <View style={commonStyles.flex2}>
+            <View>
+              <View>
                 <SelectFieldEditable<string>
                   label="Article"
                   searchable
@@ -305,14 +302,13 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                   }
                 />
               </View>
+            </View>
+            <View style={commonStyles.rowFin}>
               {!estConditionne && (
                 <View style={commonStyles.flex1}>
                   <FormField
-                    label={
-                      estMateriel(ligne) || estEquipement(ligne)
-                        ? TEXTES.comptabilite.lignesAlimentationEditor.quantiteCourt
-                        : TEXTES.comptabilite.lignesAlimentationEditor.quantiteKgCourt
-                    }
+                    label={estMateriel(ligne) || estEquipement(ligne) ? 'Quantité' : 'Quantité (kg)'}
+                    required
                     value={ligne.quantiteKg}
                     onChangeText={(v) => maj(ligne.key, { quantiteKg: v })}
                     keyboardType="decimal-pad"
@@ -320,14 +316,18 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                   />
                 </View>
               )}
+              {/* Le taux de TVA de cet achat : il se saisit ligne par ligne ; le HTVA et le TTC s'en déduisent. */}
+              <View style={commonStyles.flex1}>
+                <FormField
+                  label="TVA (%)"
+                  required
+                  value={String(ligne.tauxTva ?? tauxDefaut ?? '')}
+                  onChangeText={(v) => maj(ligne.key, { tauxTva: parseDecimal(v) || undefined })}
+                  keyboardType="decimal-pad"
+                  placeholder="ex: 13"
+                />
+              </View>
             </View>
-            {/* Le taux de TVA de cet achat : il se choisit ligne par ligne ; le HTVA et le TTC s'en déduisent. */}
-            <Text style={commonStyles.lineSemiBold}>TVA (%)</Text>
-            <ChoixPastilles
-              options={OPTIONS_TAUX_TVA}
-              value={String(ligne.tauxTva ?? tauxDefaut ?? '')}
-              onChange={(v) => maj(ligne.key, { tauxTva: Number(v) })}
-            />
             <ChampsHtvaTtc
               montant={ligne.montant}
               taux={ligne.tauxTva ?? tauxDefaut ?? 0}
