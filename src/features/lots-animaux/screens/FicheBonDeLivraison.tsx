@@ -12,7 +12,6 @@ import { Button } from '@/shared/components/Button';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ListRow } from '@/shared/components/ListRow';
-import { parseDecimal } from '@/shared/utils/nombres';
 import { poidsTotal } from '@/features/cheptel/utils/poids';
 import { InconsommablesDuLot } from '@/features/lots-animaux/components/InconsommablesDuLot';
 import { ListeAnimauxCliquables } from '@/features/cheptel/components/ListeAnimauxCliquables';
@@ -28,7 +27,6 @@ import { STATUT_CHEVRE, agePetitMax } from '@/shared/constants/cheptel';
 import { SelectField } from '@/shared/components/SelectField';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import type { Facture, Vente } from '@/features/comptabilite/types';
-import { ChoixContactDuLot } from '@/features/lots-animaux/components/ChoixContactDuLot';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
 import { categorieFournisseurDe } from '@/shared/dictionnaire/categoriesFournisseur';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
@@ -166,7 +164,7 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
       ...existant,
       boucles: [...new Set([...deja, ...bouclesDuLot({ boucles })])].sort().join(', '),
       factureId: factureId || undefined,
-      poidsKg: parseDecimal(poidsLot) > 0 ? parseDecimal(poidsLot) : undefined,
+      poidsKg: poidsTotal(abattusDuJour),
       contactCle: contactCle || undefined,
       // Pas de montant sans facture : les frais d'abattoir sont ceux de la facture liée.
       fraisAbattoir: undefined,
@@ -200,6 +198,11 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
   const optionsFactures = recues
     .filter((f) => noms.has(f.tiers.trim().toLowerCase()))
     .sort((a, b) => Math.abs(Date.parse(a.date) - jourAbattage) - Math.abs(Date.parse(b.date) - jourAbattage));
+  // Sans dépense d'un contact Abattoir, toutes les dépenses se proposent : la facture de l'abattoir se lie à la main.
+  const choixFactures =
+    optionsFactures.length > 0
+      ? optionsFactures
+      : [...recues].sort((a, b) => Math.abs(Date.parse(a.date) - jourAbattage) - Math.abs(Date.parse(b.date) - jourAbattage));
   // La facture de l'abattoir se lie d'office quand une seule dépense d'un contact Abattoir porte la date du jour d'abattage : les frais
   // refacturés au client suivent, sans qu'on ait à la choisir. Un bon de livraison (départ) attend la sienne, créée d'ici.
   const delIdUnique = existant && !existant.depart && !existant.factureId && charge && !vendu ? optionsFactures.filter((f) => f.date === existant.abattoir) : [];
@@ -341,14 +344,14 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
                 {/* Les dépenses des contacts classés Abattoir (et elles seules), les plus proches du jour d'abattage d'abord : la liste déroulante lie la facture au bon. */}
                 {vendu ? (
                   <Text style={commonStyles.mutedItalic}>{T.aucuneFactureAbattoirLiee}</Text>
-                ) : optionsFactures.length > 0 ? (
+                ) : choixFactures.length > 0 ? (
                   <SelectField<string>
                     label={T.choisirLaFactureAbattoir}
                     value=""
                     onChange={(choisie) => choisie && lierLaFacture(choisie)}
                     searchable
                     placeholder={T.lierFacture}
-                    options={optionsFactures.map((f) => ({
+                    options={choixFactures.map((f) => ({
                       value: f.id,
                       label: [f.tiers, formatDateFR(f.date), f.description, formatMontant(f.montant)].filter(Boolean).join(' · '),
                     }))}
@@ -362,22 +365,17 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
               </>
             )}
             <Text style={commonStyles.note}>{T.aideFactureAbattoir}</Text>
-            {/* L'abattoir du bon (on peut en avoir plusieurs) : le bon se range dans ses documents. */}
-            <ChoixContactDuLot genre="abattoir" valeur={contactCle} onChange={setContactCle} />
+            {/* Le poids de tout le lot : la somme des fiches des animaux abattus, non modifiable ici. */}
             <AncreVisite id="lot.poids">
               <FormField
                 label={T.poidsDuLot}
                 aide={T.poidsDuLotAide}
-                value={poidsLot}
-                onChangeText={setPoidsLot}
-                editable={!vendu}
+                value={poidsTotal(abattusDuJour) !== undefined ? String(poidsTotal(abattusDuJour)).replace('.', ',') : ''}
+                editable={false}
+                style={commonStyles.verrouille}
                 keyboardType="decimal-pad"
-                placeholder="ex: 600"
               />
             </AncreVisite>
-            {poidsTotal(abattusDuJour) !== undefined && !poidsLot.trim() ? (
-              <Text style={commonStyles.note}>{T.poidsDesFiches(String(poidsTotal(abattusDuJour)).replace('.', ','))}</Text>
-            ) : null}
             {vendu ? null : (
               <AncreVisite id="lot.facturer">
                 <Button
