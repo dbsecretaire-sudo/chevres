@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { tauxCommun } from '@/features/comptabilite/utils/tva';
 import {
   ligneProductionVide,
   lignesProductionFinales,
@@ -200,7 +201,8 @@ export function useFicheFacture(id: string | undefined) {
           message: TEXTES.commun.general.ajoutezAuMoinsUnMontant,
         });
       }
-      aEnregistrer = { ...form, montant: totalAlimentation, lignesAlimentation: lignesFinales };
+      // Le taux de la facture : celui de tous ses achats, ou rien quand ils en ont plusieurs (chaque ligne porte le sien).
+      aEnregistrer = { ...form, montant: totalAlimentation, lignesAlimentation: lignesFinales, tauxTva: tauxCommun(lignesFinales) };
     } else if (estCarburant) {
       const lignesRetenues = lignesCarburantFinales(lignesCarburant);
       if (lignesRetenues.length === 0) {

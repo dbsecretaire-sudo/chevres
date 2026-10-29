@@ -4,7 +4,7 @@ import type { Facture, Vente } from '@/features/comptabilite/types';
 import { partsDeLaVente, venteADeclarer } from '@/features/comptabilite/utils/ventes';
 import { estCategorieVente } from '@/features/comptabilite/utils/recettes';
 import { tauxTvaDeLaVente } from '@/shared/dictionnaire/tauxParProduit';
-import { tvaDuTtc } from '@/features/comptabilite/utils/tva';
+import { tvaDuTtc, ventilationTva } from '@/features/comptabilite/utils/tva';
 import { CATEGORIE_RECETTE, TYPE_FACTURE } from '@/shared/constants/comptabilite';
 import {
   CATEGORIES_DEPENSE_SANS_TVA,
@@ -144,7 +144,7 @@ function controlerTva(ventes: Vente[], factures: Facture[]): ControleTva[] {
       }
     } else if (
       !(f.categorieDepense && CATEGORIES_DEPENSE_SANS_TVA.includes(f.categorieDepense)) &&
-      !f.tauxTva
+      ventilationTva(f).length === 0
     ) {
       controles.push({ ...base, type: TYPE_CONTROLE_TVA.ACHAT_SANS_TVA, taux: f.tauxTva });
     }
@@ -189,11 +189,14 @@ export function calculerPilotageTva(entree: EntreePilotageTva): PilotageTva {
     // Une dépense non facturée n'a pas de TVA à déduire.
     for (const f of factures.filter((x) => x.type === TYPE_FACTURE.RECUE && !x.sansFacture)) {
       const m = moisDe(f.date);
-      if (m < 1 || m > 12 || !f.tauxTva) continue;
-      const tva = tvaDuTtc(f.montant, f.tauxTva);
-      periodes[periodeDe(f.date)].deductible += tva;
-      ligne(parTaux, f.tauxTva).deductible += tva;
-      ligne(parTauxDePeriode[periodeDe(f.date)], f.tauxTva).deductible += tva;
+      if (m < 1 || m > 12) continue;
+      // Chaque achat compte à son taux : une facture à plusieurs taux se répartit entre eux.
+      for (const { taux, ttc } of ventilationTva(f)) {
+        const tva = tvaDuTtc(ttc, taux);
+        periodes[periodeDe(f.date)].deductible += tva;
+        ligne(parTaux, taux).deductible += tva;
+        ligne(parTauxDePeriode[periodeDe(f.date)], taux).deductible += tva;
+      }
     }
   }
   periodes.forEach((p, i) => {

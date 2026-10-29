@@ -26,6 +26,9 @@ import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dic
 import { TYPE_ALIMENT } from '@/shared/constants/comptabilite';
 import { TEXTES } from '@/shared/textes';
 import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
+import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
+import { OPTIONS_TAUX_TVA, tvaDuTtc } from '@/features/comptabilite/utils/tva';
+import { formatMontant } from '@/shared/utils/dates';
 
 interface Props {
   lignes: LigneAlimentForm[];
@@ -34,6 +37,8 @@ interface Props {
   activite: ActiviteComptable;
   /** La dépense est offerte par le fournisseur : chaque ligne a son bouton « Cadeau ». */
   offerte?: boolean;
+  /** Le taux proposé pour un nouvel achat (celui de la facture) ; chaque achat garde le sien. */
+  tauxDefaut?: number;
 }
 
 /** Début de la valeur d'un aliment ajouté au stock (suivie de son nom) : il s'enregistre comme « autre » avec ce nom. */
@@ -54,7 +59,7 @@ const ARCHIVE_VIDE: ArchiveStock = {
  * (avec recherche) dans la liste du stock — ceux d'office de l'espèce, puis ceux qu'on y a ajoutés ; le crayon mène au
  * stock et la liste s'y met à jour.
  */
-export function LignesAlimentationEditor({ lignes, onChange, activite, offerte }: Props) {
+export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, tauxDefaut }: Props) {
   const router = useRouter();
   const retour = useAdresseCourante();
   const especeFacture = activite === ACTIVITE_COMMUNE ? especeCourante() : activite;
@@ -122,7 +127,9 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte }
         </Text>
         <Pressable
           style={commonStyles.boutonPastille}
-          onPress={() => onChange([...lignes, ligneAlimentVide(typesAlimentEspece(especeFacture)[0])])}
+          onPress={() =>
+            onChange([...lignes, { ...ligneAlimentVide(typesAlimentEspece(especeFacture)[0]), tauxTva: tauxDefaut }])
+          }
         >
           <Ionicons name="add-circle" size={28} color={colors.ajout} />
         </Pressable>
@@ -246,6 +253,17 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte }
                 />
               </View>
             </View>
+            {/* Le taux de TVA de cet achat : il se choisit ligne par ligne, et le HT et la TVA s'en déduisent. */}
+            <ChoixPastilles
+              options={OPTIONS_TAUX_TVA}
+              value={String(ligne.tauxTva ?? tauxDefaut ?? '')}
+              onChange={(v) => maj(ligne.key, { tauxTva: Number(v) })}
+            />
+            {parseDecimal(ligne.montant) > 0 && (ligne.tauxTva ?? tauxDefaut) ? (
+              <Text style={commonStyles.note}>
+                {`HT : ${formatMontant(parseDecimal(ligne.montant) - tvaDuTtc(parseDecimal(ligne.montant), ligne.tauxTva ?? tauxDefaut))} · TVA : ${formatMontant(tvaDuTtc(parseDecimal(ligne.montant), ligne.tauxTva ?? tauxDefaut))}`}
+              </Text>
+            ) : null}
             {/* Dépense offerte : le bouton « Cadeau » de la ligne (actif d'office : elle compte 0 € ; désactivé, elle est facturée). */}
             {offerte ? (
               <BoutonCadeau

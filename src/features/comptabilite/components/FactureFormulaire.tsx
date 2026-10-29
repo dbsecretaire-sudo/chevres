@@ -164,7 +164,13 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
   const montantTtc = estDetaille ? totalDetaille : parseDecimal(f.montantTexte);
 
   const lignesDuDetail = f.estAlimentation ? (
-    <LignesAlimentationEditor lignes={f.lignes} onChange={f.setLignes} activite={f.activiteForm} offerte={offerte} />
+    <LignesAlimentationEditor
+      lignes={f.lignes}
+      onChange={f.setLignes}
+      activite={f.activiteForm}
+      offerte={offerte}
+      tauxDefaut={form.tauxTva}
+    />
   ) : f.estChambre ? (
     <>
       <LignesChambreEditor lignes={f.lignesChambre} onChange={f.setLignesChambre} />
@@ -449,7 +455,10 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
           ) : (
             <>
               {coutMontant}
-              <ChampTauxTva value={form.tauxTva?.toString() ?? ''} onChange={f.changerTauxTva} ttc={montantTtc} />
+              {/* Une alimentation a le taux de chacun de ses achats : pas de taux commun à choisir ici. */}
+              {f.estAlimentation ? null : (
+                <ChampTauxTva value={form.tauxTva?.toString() ?? ''} onChange={f.changerTauxTva} ttc={montantTtc} />
+              )}
             </>
           )}
           {/* Le paiement : réglée ou encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}

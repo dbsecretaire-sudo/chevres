@@ -60,6 +60,8 @@ export interface LigneAlimentation {
   quantiteKg?: number;
   /** Précision libre quand type === 'autre' (ex: "Frais de livraison", "Compléments minéraux"). */
   typeLibre?: string;
+  /** Le taux de TVA de cet achat (en %). Absent : celui de la facture (les factures enregistrées avant ce réglage). */
+  tauxTva?: number;
   /** Uniquement pour type luzerne/foin/paille : conditionnement saisi (conservé pour ré-affichage lors de la modification). */
   uniteConditionnement?: UniteConditionnement;
   /** Uniquement pour type luzerne/foin/paille : nombre d'unités saisi (conservé pour ré-affichage lors de la modification). */

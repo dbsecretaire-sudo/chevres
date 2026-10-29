@@ -202,7 +202,10 @@ export function SectionDepenseMontant({ e }: { e: EtatNouvelleEcriture }) {
           ) : null}
         </>
       )}
-      <ChampTauxTva value={e.tauxTvaAchat} onChange={e.setTauxTvaAchat} ttc={montantDeLaDepense(e)} />
+      {/* Une alimentation a le taux de chacun de ses achats (à l'étape précédente) : pas de taux commun à choisir ici. */}
+      {e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION ? null : (
+        <ChampTauxTva value={e.tauxTvaAchat} onChange={e.setTauxTvaAchat} ttc={montantDeLaDepense(e)} />
+      )}
       {/* Le règlement : payée à sa date (d'office), ou à payer — la trésorerie la compte à son échéance. */}
       {pasPayeeAffichee(categorieDuTiers) ? (
         <>
@@ -337,6 +340,7 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
               onChange={e.setLignesAlimentation}
               activite={e.activite}
               offerte={e.offertDepense}
+              tauxDefaut={e.tauxTvaAchat ? Number(e.tauxTvaAchat) : undefined}
             />
           </>
         )}

@@ -30,6 +30,8 @@ export interface LigneAlimentForm {
   equipement?: boolean;
   /** Dépense offerte : le bouton « Cadeau » de la ligne (faux : elle est facturée ; absent : offerte). */
   offert?: boolean;
+  /** Le taux de TVA de cet achat (en %) ; absent, celui que la facture propose. */
+  tauxTva?: number;
 }
 
 /** Nouvelle ligne : le premier aliment de l'espèce courante par défaut. */
@@ -54,6 +56,8 @@ export function versLignesAlimentationForm(facture: Facture): LigneAlimentForm[]
     typeLibre: l.typeLibre ?? '',
     materiel: l.materiel,
     equipement: l.equipement,
+    // Une facture enregistrée avant le taux par article : chaque ligne prend le taux de la facture.
+    tauxTva: l.tauxTva ?? facture.tauxTva,
     // Dans une dépense offerte, une ligne sans cadeau garde son montant : son bouton est désactivé.
     offert: facture.offert && !l.offert ? false : undefined,
     uniteConditionnement: l.uniteConditionnement ?? UNITE_CONDITIONNEMENT.MATELAS,
@@ -97,6 +101,7 @@ export function lignesAlimentationFinales(
         nombreUnitesConditionnement: nombreUnites,
         materiel: l.materiel || undefined,
         equipement: l.equipement || undefined,
+        tauxTva: l.tauxTva,
       };
     })
     .filter((l) => l.montant > 0 || (l.offert && (l.indicatif || !!l.quantiteKg)))

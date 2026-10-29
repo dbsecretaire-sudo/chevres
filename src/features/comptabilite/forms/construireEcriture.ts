@@ -2,6 +2,7 @@ import {
   lignesAlimentationFinales,
   type LigneAlimentForm,
 } from '@/features/comptabilite/forms/lignesAlimentation';
+import { tauxCommun } from '@/features/comptabilite/utils/tva';
 import {
   lignesProductionFinales,
   type LigneProductionForm,
@@ -489,7 +490,11 @@ function construireFacture(s: SaisieEcriture): ResultatSaisie {
           : estEmise && s.categorieRecette === CATEGORIE_RECETTE.AUTRE
             ? s.compteRecetteAutre
             : undefined,
-      tauxTva: estRecue ? parseDecimal(s.tauxTvaAchat) : undefined,
+      tauxTva: estRecue
+        ? lignesAlimentation
+          ? tauxCommun(lignesAlimentation)
+          : parseDecimal(s.tauxTvaAchat)
+        : undefined,
     },
   };
 }
