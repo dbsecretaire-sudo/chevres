@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parentDeLaPage } from '@/shared/navigation/parentDeLaPage';
+import { parentDeLaPage } from '@/features/accueil/navigation/parentDeLaPage';
 import { pageParente } from '@/bureau/retour';
 
 describe('retour des écrans du menu Argent', () => {

@@ -9,7 +9,7 @@ import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable'
 import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navigation/filAriane';
 import { useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/features/accueil/shell/usePositionDansLesMenus';
-import { parentDeLaPage } from '@/shared/navigation/parentDeLaPage';
+import { parentDeLaPage } from '@/features/accueil/navigation/parentDeLaPage';
 import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { colors } from '@/shared/theme/colors';
