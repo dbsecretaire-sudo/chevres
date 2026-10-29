@@ -457,6 +457,7 @@ export function FactureFormulaire({ f }: { f: EtatFicheFacture }) {
             <ChampPaiement
               libellePayee={estEmise ? 'Encaissé' : 'Payé'}
               libelleAttente={estEmise ? 'À encaisser' : 'À payer'}
+              desactive={!estEmise && !!form.offert}
               enAttente={form.payee === false}
               onEnAttente={(attente) => f.setForm(avecPaiement(form, attente))}
               echeance={form.echeance ?? ''}

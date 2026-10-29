@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
 import { DateField } from '@/shared/components/DateField';
 import { TEXTES } from '@/shared/textes';
@@ -10,13 +11,15 @@ interface Props {
   onEnAttente: (enAttente: boolean) => void;
   echeance: string;
   onEcheance: (echeance: string) => void;
+  /** Grisé et non modifiable : une facture offerte n'a pas de règlement à choisir. */
+  desactive?: boolean;
 }
 
 /** Le règlement d'une écriture : payée à sa date (d'office), ou pas encore, avec la date prévue : la trésorerie la compte à cette date. */
-export function ChampPaiement({ libellePayee, libelleAttente, enAttente, onEnAttente, echeance, onEcheance }: Props) {
+export function ChampPaiement({ libellePayee, libelleAttente, enAttente, onEnAttente, echeance, onEcheance, desactive }: Props) {
   const T = TEXTES.comptabilite.tresorerie.paiement;
   return (
-    <>
+    <View style={desactive ? { opacity: 0.4 } : undefined} pointerEvents={desactive ? 'none' : 'auto'}>
       <ChoixPastilles
         options={[
           { value: 'payee', label: libellePayee },
@@ -26,6 +29,6 @@ export function ChampPaiement({ libellePayee, libelleAttente, enAttente, onEnAtt
         onChange={(choix) => onEnAttente(choix === 'attente')}
       />
       {enAttente ? <DateField label={T.echeance} value={echeance} onChange={onEcheance} /> : null}
-    </>
+    </View>
   );
 }

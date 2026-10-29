@@ -83,6 +83,8 @@ const optionsCategorieDepense = (fournisseur: Fournisseur | undefined, perso: Li
 
 /** La première étape d'une dépense : la date, et les cases qui disent comment la facture est reçue (non facturée, offerte). */
 export function SectionDepenseDate({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
+  const router = useRouter();
+  const retour = useAdresseCourante();
   /** La catégorie du fournisseur choisi : elle dit quelles cases s'affichent (sans fournisseur choisi, toutes). */
   const categorieDuTiers = e.fournisseurSelectionne
     ? categorieFournisseurDe(e.fournisseurSelectionne.categorie)
@@ -91,7 +93,19 @@ export function SectionDepenseDate({ e, date }: { e: EtatNouvelleEcriture; date:
   return (
     <SectionForm>
       {date}
-      {/* Le numéro de la facture, ou son objet : un champ libre à ce stade (le fournisseur se choisit à l'étape suivante). */}
+      {/* Le fournisseur : d'abord à qui la facture est, puis le numéro, puis les cases. */}
+      <SelectFieldEditable
+        label={TEXTES.commun.general.fournisseur}
+        required
+        searchable
+        placeholder={TEXTES.commun.general.choixDuFournisseur}
+        value={e.fournisseurId}
+        onChange={e.changerFournisseur}
+        options={e.fournisseurs.map(optionFournisseur)}
+        parCategories
+        onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
+      />
+      {/* Le numéro de la facture, ou son objet : un champ libre (pour un assureur, le numéro se choisit parmi ses contrats à l'étape suivante). */}
       <FormField
         label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
         value={e.description}
@@ -119,47 +133,29 @@ export function SectionDepenseDate({ e, date }: { e: EtatNouvelleEcriture; date:
   );
 }
 
-/** La deuxième étape d'une dépense : le fournisseur et le numéro de sa facture. */
+/** La deuxième étape d'une dépense : le numéro de la facture d'un assureur, qui se choisit parmi ses contrats. Les autres n'ont rien ici. */
 export function SectionDepenseContact({ e }: { e: EtatNouvelleEcriture }) {
-  const router = useRouter();
-  const retour = useAdresseCourante();
+  if (!e.fournisseurSelectionne || !estUnAssureur(e.fournisseurSelectionne)) return null;
 
   return (
-    <>
-      <SectionForm>
-        <SelectFieldEditable
-          label={TEXTES.commun.general.fournisseur}
-          required
-          searchable
-          placeholder={TEXTES.commun.general.choixDuFournisseur}
-          value={e.fournisseurId}
-          onChange={e.changerFournisseur}
-          options={e.fournisseurs.map(optionFournisseur)}
-          parCategories
-          onEdit={() => router.push(ROUTES.fournisseursDepuis(retour))}
-        />
-
-        {/* Un assureur : le numéro de la facture est le numéro du contrat choisi dans sa liste (le champ libre est à l'étape précédente). */}
-        {e.fournisseurSelectionne && estUnAssureur(e.fournisseurSelectionne) ? (
-        <ChampNumeroOuContrat
-          fournisseur={e.fournisseurSelectionne}
-          label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
-          valeur={e.description}
-          onChoix={(numero, contrat) => {
-            e.setDescription(numero);
-            // Le contrat dit ce qu'il couvre : l'objet de l'assurance et, pour un véhicule, sa plaque.
-            if (contrat?.vehiculeId) {
-              e.setObjetAssurance(OBJET_ASSURANCE.VEHICULE);
-              e.setVehiculeId(contrat.vehiculeId);
-            } else if (contrat?.objet) {
-              e.setObjetAssurance(contrat.objet);
-            }
-          }}
-          placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
-        />
-        ) : null}
-      </SectionForm>
-    </>
+    <SectionForm>
+      <ChampNumeroOuContrat
+        fournisseur={e.fournisseurSelectionne}
+        label={TEXTES.comptabilite.nouvelleEcriture.nDeFactureOuObjet}
+        valeur={e.description}
+        onChoix={(numero, contrat) => {
+          e.setDescription(numero);
+          // Le contrat dit ce qu'il couvre : l'objet de l'assurance et, pour un véhicule, sa plaque.
+          if (contrat?.vehiculeId) {
+            e.setObjetAssurance(OBJET_ASSURANCE.VEHICULE);
+            e.setVehiculeId(contrat.vehiculeId);
+          } else if (contrat?.objet) {
+            e.setObjetAssurance(contrat.objet);
+          }
+        }}
+        placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
+      />
+    </SectionForm>
   );
 }
 
@@ -214,6 +210,7 @@ export function SectionDepenseMontant({ e }: { e: EtatNouvelleEcriture }) {
           <ChampPaiement
             libellePayee="Payé"
             libelleAttente="À payer"
+            desactive={e.offertDepenseCoche}
             enAttente={e.enAttente}
             onEnAttente={(attente) => {
               e.setEnAttente(attente);
