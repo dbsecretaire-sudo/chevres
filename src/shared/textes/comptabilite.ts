@@ -748,6 +748,7 @@ export const TEXTES_COMPTABILITE = {
     sansFacture: 'Sans facture',
     suivant: 'Suivant',
     precedent: 'Précédent',
+    etapeSur: (etape: number, total: number) => `Étape ${etape} sur ${total}`,
     paiement: 'Paiement',
     offert: 'Offert au client (cadeau)',
     offertAide: 'Le prix est de 0 € : les animaux et les produits sortent du stock comme pour une vente. Le bouton « Cadeau » en face de chaque ligne l’offre ou la facture.',

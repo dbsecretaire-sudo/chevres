@@ -7,8 +7,8 @@ import { LignesChambreEditor } from '@/features/comptabilite/components/LignesCh
 import { LignesVeterinaireEditor } from '@/features/comptabilite/components/LignesVeterinaireEditor';
 import { LignesProductionEditor } from '@/features/comptabilite/components/LignesProductionEditor';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
-import { useState, type ReactNode } from 'react';
-import { Pressable, Text } from 'react-native';
+import type { ReactNode } from 'react';
+import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/shared/components/Card';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -80,33 +80,49 @@ const optionsCategorieDepense = (fournisseur: Fournisseur | undefined, perso: Li
   return [...deLApplication, ...deLUtilisateur];
 };
 
-/** Champs d'un débit (facture reçue) : catégorie, fournisseur, TVA et détail des montants. */
-export function SectionDepense({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
-  return (
-    <>
-      <SectionDepenseContact e={e} date={date} />
-      <SectionDepenseDetail e={e} />
-    </>
-  );
-}
-
-/** La première étape d'une dépense : la date, le fournisseur, le numéro de la facture et le paiement. */
-export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
-  const router = useRouter();
-  const retour = useAdresseCourante();
-  /** La catégorie du fournisseur choisi : elle dit quelles cases (paiement, non facturée) s'affichent. */
+/** La première étape d'une dépense : la date, et les cases qui disent comment la facture est reçue (non facturée, offerte). */
+export function SectionDepenseDate({ e, date }: { e: EtatNouvelleEcriture; date: ReactNode }) {
+  /** La catégorie du fournisseur choisi : elle dit quelles cases s'affichent (sans fournisseur choisi, toutes). */
   const categorieDuTiers = e.fournisseurSelectionne
     ? categorieFournisseurDe(e.fournisseurSelectionne.categorie)
     : undefined;
-  /** Le lien « Avancé » déplie les cases (paiement, non facturée, offerte) ; une case déjà cochée les garde ouvertes. */
-  const [avanceOuvert, setAvanceOuvert] = useState(false);
-  const uneCaseCochee = e.sansFacture || e.offertDepenseCoche;
+
+  return (
+    <SectionForm>
+      {date}
+      {sansFactureAffichee(categorieDuTiers) ? (
+        <Checkbox
+          label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
+          value={e.sansFacture}
+          onChange={e.setSansFacture}
+        />
+      ) : null}
+      {e.sansFacture && sansFactureAffichee(categorieDuTiers) ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
+      ) : null}
+      {/* Offerte par le fournisseur (un cadeau) : les lignes offertes comptent 0 € (le bouton « Cadeau » de chaque ligne, à l'étape suivante). */}
+      {offertAffiche(categorieDuTiers) ? (
+        <Checkbox
+          label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
+          value={e.offertDepenseCoche}
+          onChange={e.setOffertDepense}
+        />
+      ) : null}
+      {e.offertDepense ? (
+        <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
+      ) : null}
+    </SectionForm>
+  );
+}
+
+/** La deuxième étape d'une dépense : le fournisseur et le numéro de sa facture. */
+export function SectionDepenseContact({ e }: { e: EtatNouvelleEcriture }) {
+  const router = useRouter();
+  const retour = useAdresseCourante();
 
   return (
     <>
-      {/* L'identification : la date, le fournisseur et le numéro de la facture. */}
       <SectionForm>
-        {date}
         <SelectFieldEditable
           label={TEXTES.commun.general.fournisseur}
           required
@@ -136,39 +152,77 @@ export function SectionDepenseContact({ e, date }: { e: EtatNouvelleEcriture; da
           }}
           placeholder={TEXTES.comptabilite.nouvelleEcriture.precisions}
         />
-        {/* Les cases rares (non facturée, offerte) se rangent sous le lien « Avancé » ; elles s'ouvrent d'elles-mêmes quand l'une est cochée. */}
-        <Pressable onPress={() => setAvanceOuvert(!avanceOuvert)} accessibilityRole="button" accessibilityState={{ expanded: avanceOuvert || uneCaseCochee }}>
-          <Text style={commonStyles.lien}>{TEXTES.comptabilite.nouvelleEcriture.avance(avanceOuvert || uneCaseCochee)}</Text>
-        </Pressable>
-        {avanceOuvert || uneCaseCochee ? <>
-        {sansFactureAffichee(categorieDuTiers) ? (
-          <Checkbox
-            label={TEXTES.comptabilite.nouvelleEcriture.depenseNonFacturee}
-            value={e.sansFacture}
-            onChange={e.setSansFacture}
-          />
-        ) : null}
-        {e.sansFacture && sansFactureAffichee(categorieDuTiers) ? (
-          <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.depenseNonFactureeAide}</Text>
-        ) : null}
-        {/* Offerte par le fournisseur (un cadeau) : les lignes offertes comptent 0 € (le bouton « Cadeau » de chaque ligne, à l'étape suivante). */}
-        {offertAffiche(categorieDuTiers) ? (
-          <Checkbox
-            label={TEXTES.comptabilite.nouvelleEcriture.offertFournisseur}
-            value={e.offertDepenseCoche}
-            onChange={e.setOffertDepense}
-          />
-        ) : null}
-        {e.offertDepense ? (
-          <Text style={commonStyles.note}>{TEXTES.comptabilite.nouvelleEcriture.offertFournisseurAide}</Text>
-        ) : null}
-        </> : null}
       </SectionForm>
     </>
   );
 }
 
-/** La seconde étape d'une dépense : la catégorie, ce qui est acheté (le détail), la TVA et le montant. */
+/** Le montant TTC de la dépense : celui de son détail (lignes, chambre, carburant), sinon le montant saisi. */
+function montantDeLaDepense(e: EtatNouvelleEcriture): number {
+  if (e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION) return e.totalAlimentation;
+  if (e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION) return e.totalProduction;
+  if (e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT) return e.totalCarburant;
+  if (e.estChambre) return e.totalChambre;
+  return parseDecimal(e.montant);
+}
+
+/**
+ * La troisième étape d'une dépense : le montant (ou le total du détail), la TVA et le règlement. Le détail se saisit à l'étape
+ * précédente ; son total se lit ici.
+ */
+export function SectionDepenseMontant({ e }: { e: EtatNouvelleEcriture }) {
+  const categorieDuTiers = e.fournisseurSelectionne ? categorieFournisseurDe(e.fournisseurSelectionne.categorie) : undefined;
+  const estDetaille =
+    e.categorieDepense === CATEGORIE_DEPENSE.ALIMENTATION ||
+    e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION ||
+    e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT ||
+    e.estChambre;
+
+  return (
+    <SectionForm>
+      {estDetaille ? (
+        <Card style={commonStyles.gap10}>
+          <Text style={styles.total}>
+            {TEXTES.commun.general.totalFactureTtcDeuxPoints}
+            {formatTotalEuros(montantDeLaDepense(e))}
+          </Text>
+        </Card>
+      ) : (
+        <>
+          <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
+          {/* Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (actif d'office : 0 €). */}
+          {e.offertDepense ? (
+            <BoutonCadeau
+              actif={e.cadeauMontantDepense}
+              onChange={e.setCadeauMontantDepense}
+              ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauMontantDepense}
+            />
+          ) : null}
+        </>
+      )}
+      <ChampTauxTva value={e.tauxTvaAchat} onChange={e.setTauxTvaAchat} ttc={montantDeLaDepense(e)} />
+      {/* Le règlement : payée à sa date (d'office), ou à payer — la trésorerie la compte à son échéance. */}
+      {pasPayeeAffichee(categorieDuTiers) ? (
+        <>
+          <Text style={commonStyles.lineBold}>Règlement</Text>
+          <ChampPaiement
+            libellePayee="Payé"
+            libelleAttente="À payer"
+            enAttente={e.enAttente}
+            onEnAttente={(attente) => {
+              e.setEnAttente(attente);
+              if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
+            }}
+            echeance={e.echeance}
+            onEcheance={e.setEcheance}
+          />
+        </>
+      ) : null}
+    </SectionForm>
+  );
+}
+
+/** La deuxième étape d'une dépense : la catégorie, ce qui est acheté (le détail) et l'atelier. */
 export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
   const router = useRouter();
   const { listes } = useListesPerso();
@@ -188,22 +242,9 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
   const estProduction = e.categorieDepense === CATEGORIE_DEPENSE.PRODUCTION;
   const estCarburant = e.categorieDepense === CATEGORIE_DEPENSE.CARBURANT;
   const estAnimauxVivants = e.categorieDepense === CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
-  /** Le montant TTC de la dépense : celui de son détail (lignes, chambre, carburant), sinon le montant saisi. */
-  const montantDepense = estAlimentation
-    ? e.totalAlimentation
-    : estProduction
-      ? e.totalProduction
-      : estCarburant
-        ? e.totalCarburant
-        : e.estChambre
-          ? e.totalChambre
-          : parseDecimal(e.montant);
-  /** La catégorie du fournisseur : elle dit si le règlement (payée, à payer) se demande. */
-  const categorieDuTiers = e.fournisseurSelectionne ? categorieFournisseurDe(e.fournisseurSelectionne.categorie) : undefined;
-
   return (
     <>
-      {/* Les informations : la catégorie, la TVA et les montants. */}
+      {/* Les informations : la catégorie, le détail, puis l'atelier. Le montant et la TVA sont à l'étape suivante. */}
       <SectionForm>
         <ChampCategorieCompte
           label={TEXTES.comptabilite.nouvelleEcriture.categorieDeDepense}
@@ -273,12 +314,6 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
               seulementBoucles={fournituresSeulementBoucles(e.fournisseurSelectionne)}
               offerte={e.offertDepense}
             />
-            <Card style={commonStyles.gap10}>
-              <Text style={styles.total}>
-                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-                {formatTotalEuros(e.totalProduction)}
-              </Text>
-            </Card>
           </>
         )}
         {e.estChambre && (
@@ -290,12 +325,6 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
               seulementBoucles
               titre={TEXTES.fournisseurs.chambre.boucles}
             />
-            <Card style={commonStyles.gap10}>
-              <Text style={styles.total}>
-                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-                {formatTotalEuros(e.totalChambre)}
-              </Text>
-            </Card>
           </>
         )}
         {estAlimentation && (
@@ -306,39 +335,13 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
               activite={e.activite}
               offerte={e.offertDepense}
             />
-            <Card style={commonStyles.gap10}>
-              <Text style={styles.total}>
-                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-                {formatTotalEuros(e.totalAlimentation)}
-              </Text>
-            </Card>
           </>
         )}
         {estCarburant && (
           <>
             <LignesCarburantEditor lignes={e.lignesCarburant} onChange={e.setLignesCarburant} />
-            <Card style={commonStyles.gap10}>
-              <Text style={styles.total}>
-                {TEXTES.commun.general.totalFactureTtcDeuxPoints}
-                {formatTotalEuros(e.totalCarburant)}
-              </Text>
-            </Card>
           </>
         )}
-        {!estAlimentation && !estProduction && !estCarburant && !e.estChambre && (
-          <>
-            <ChampMontantTtc value={e.montant} onChange={e.setMontant} />
-            {/* Dépense offerte sans détail par ligne : le bouton « Cadeau » du montant (actif d'office : 0 €). */}
-            {e.offertDepense ? (
-              <BoutonCadeau
-                actif={e.cadeauMontantDepense}
-                onChange={e.setCadeauMontantDepense}
-                ligne={TEXTES.comptabilite.nouvelleEcriture.cadeauMontantDepense}
-              />
-            ) : null}
-          </>
-        )}
-        <ChampTauxTva value={e.tauxTvaAchat} onChange={e.setTauxTvaAchat} ttc={montantDepense} />
         {/* Une association ou une coopérative agricole : son volet (achat groupé, mutualisation, experts, transports). */}
         {e.voletAffiche ? (
           <ChampVoletCooperative value={e.voletCooperative} volets={e.voletsProposes} onChange={e.setVoletCooperative} />
@@ -376,23 +379,6 @@ export function SectionDepenseDetail({ e }: { e: EtatNouvelleEcriture }) {
         )}
         {e.atelier === ATELIER.AGRITOURISME ? (
           <ChampElementAgritourisme value={e.elementAgri} onChange={e.setElementAgri} />
-        ) : null}
-        {/* Le règlement : payée à sa date (d'office), ou à payer — la trésorerie la compte à son échéance. */}
-        {pasPayeeAffichee(categorieDuTiers) ? (
-          <>
-            <Text style={commonStyles.lineBold}>Règlement</Text>
-            <ChampPaiement
-              libellePayee="Payé"
-              libelleAttente="À payer"
-              enAttente={e.enAttente}
-              onEnAttente={(attente) => {
-                e.setEnAttente(attente);
-                if (attente && !e.echeance) e.setEcheance(ajouterMois(todayISO(), 1));
-              }}
-              echeance={e.echeance}
-              onEcheance={e.setEcheance}
-            />
-          </>
         ) : null}
       </SectionForm>
     </>

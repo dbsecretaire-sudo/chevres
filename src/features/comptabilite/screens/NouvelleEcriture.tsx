@@ -16,8 +16,11 @@ import { useAjoutTabBarBleu } from '@/shared/hooks/useAjoutTabBarBleu';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
 import {
   SectionDepenseContact,
+  SectionDepenseDate,
   SectionDepenseDetail,
+  SectionDepenseMontant,
 } from '@/features/comptabilite/components/ecriture/SectionDepense';
+import { BarreEtapes } from '@/shared/components/BarreEtapes';
 import {
   SectionRecetteContact,
   SectionRecetteVente,
@@ -190,26 +193,27 @@ export default function NouvelleFacture() {
     }, []),
   );
   /**
-   * Une écriture se saisit en deux étapes, pour une dépense comme pour une recette : le contact (la date, le tiers, la facture), puis
-   * ce qui est acheté ou vendu (son détail, son montant, son paiement).
+   * Une écriture se saisit en étapes. Une dépense en a trois : la date et la facture, le fournisseur et ce qui est acheté, le montant,
+   * la TVA et le paiement. Une recette en a deux : le contact (la date, le client, la facture), puis ce qui est vendu, son montant et son paiement.
    */
-  const [etape, setEtape] = useState<'contact' | 'vente'>(params.etape === 'vente' ? 'vente' : 'contact');
+  const dernierEtape = e.type === TYPE_FACTURE.RECUE ? 3 : 2;
+  const [etape, setEtape] = useState(params.etape === 'vente' ? 2 : 1);
   // L'adresse demande une autre étape (le didacticiel passe d'une étape de la saisie à l'autre) : l'écran la suit.
   const [etapeDemandeeVue, setEtapeDemandeeVue] = useState(params.etape);
   if (params.etape !== etapeDemandeeVue) {
     setEtapeDemandeeVue(params.etape);
-    setEtape(params.etape === 'vente' ? 'vente' : 'contact');
+    setEtape(params.etape === 'vente' ? 2 : 1);
   }
   // Une écriture enchaînée, ou un autre type d'écriture (dépense, recette), repart de la première étape.
   const [enchaineesVues, setEnchaineesVues] = useState(0);
   if (enchaineesVues !== e.enchainees) {
     setEnchaineesVues(e.enchainees);
-    setEtape('contact');
+    setEtape(1);
   }
   const [typeVu, setTypeVu] = useState(e.type);
   if (typeVu !== e.type) {
     setTypeVu(e.type);
-    setEtape('contact');
+    setEtape(1);
   }
   /** Les commandes à transformer en vente : celles qui restent à préparer ou à livrer. */
   const [commandes, setCommandes] = useState<Commande[]>([]);
@@ -290,16 +294,19 @@ export default function NouvelleFacture() {
           />
         </LigneFiltres>
 
+        <BarreEtapes etape={etape} total={dernierEtape} />
         {e.type === TYPE_FACTURE.RECUE ? (
-          etape === 'contact' ? (
-            <SectionDepenseContact e={e} date={champDate} />
-          ) : (
+          etape === 1 ? (
+            <SectionDepenseDate e={e} date={champDate} />
+          ) : etape === 2 ? (
             <>
-              <ResumeEcriture e={e} />
+              <SectionDepenseContact e={e} />
               <SectionDepenseDetail e={e} />
             </>
+          ) : (
+            <SectionDepenseMontant e={e} />
           )
-        ) : etape === 'contact' ? (
+        ) : etape === 1 ? (
           <>
             <SectionRecetteContact e={e} date={champDate} onCommande={ouvrirLesCommandes} />
             {e.commande ? (
@@ -323,14 +330,14 @@ export default function NouvelleFacture() {
             {TEXTES.comptabilite.nouvelleEcriture.enchainees(e.enchainees)}
           </Text>
         ) : null}
-        {etape === 'contact' ? (
-          // Première étape : annuler, ou passer à la suite.
+        {etape < dernierEtape ? (
+          // Une étape qu'il reste à passer : annuler (la première), ou revenir, puis aller à la suite.
           <View style={commonStyles.row}>
             <Button
               style={commonStyles.flex1}
               variant="secondary"
-              label={TEXTES.commun.general.annuler}
-              onPress={e.annuler}
+              label={etape === 1 ? TEXTES.commun.general.annuler : TEXTES.comptabilite.nouvelleEcriture.precedent}
+              onPress={etape === 1 ? e.annuler : () => setEtape(etape - 1)}
             />
             <Button
               style={commonStyles.flex1}
@@ -341,14 +348,14 @@ export default function NouvelleFacture() {
                   e.setErreur({ titre: TEXTES.comptabilite.nouvelleEcriture.circuitRequis });
                   return;
                 }
-                setEtape('vente');
+                setEtape(etape + 1);
               }}
             />
           </View>
         ) : (
           <>
             <Button label={TEXTES.commun.general.enregistrer} onPress={() => e.enregistrer()} loading={e.enregistrement} />
-            <Button variant="secondary" label={TEXTES.commun.general.retour} onPress={() => setEtape('contact')} />
+            <Button variant="secondary" label={TEXTES.comptabilite.nouvelleEcriture.precedent} onPress={() => setEtape(etape - 1)} />
             <Button
               variant="secondary"
               label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
