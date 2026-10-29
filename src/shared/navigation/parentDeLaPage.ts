@@ -1,3 +1,5 @@
+import { estUnEcranDeLaRubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
+
 /**
  * Le Précédent du téléphone, pour chaque page : la page d'où l'on vient (la racine de sa rubrique, ou l'accueil pour les lieux de la ferme).
  * C'est une seule règle, lue par la flèche de l'en-tête : une page racine (l'accueil, Chèvres, Atelier, Visites, Plus) n'a pas de Précédent.
@@ -27,8 +29,11 @@ const COMMERCIAL_DES_VISITES = ['/commercial/visite', '/commercial/visites-simpl
 export function parentDeLaPage(adresse: string, lieu?: string): string | undefined {
   if (PAGES_RACINES.includes(adresse)) return undefined;
   if (adresse in PAGES_DE_L_ACCUEIL) return PAGES_DE_L_ACCUEIL[adresse];
-  // Les écritures reviennent à Argent (Plus) ; la saisie d'une écriture revient à la liste des écritures.
-  if (adresse === '/comptabilite/liste') return '/rubrique/argent';
+  // Chaque écran du menu Argent revient à Argent ; ses sous-pages (fiscalité, trésorerie) à leur écran parent.
+  if (estUnEcranDeLaRubrique('argent', adresse, lieu)) return '/rubrique/argent';
+  if (/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|fiscalite-rsa-trimestrielle|fiscalite-rsa-annuelle)$/.test(adresse)) return '/comptabilite/fiscalite';
+  if (adresse === '/comptabilite/tresorerie-reglages') return '/comptabilite/tresorerie';
+  // La saisie d'une écriture revient à la liste des écritures.
   if (adresse === '/comptabilite/nouvelle') return '/comptabilite/liste';
   if (/^\/comptabilite\/(facture|vente)\/[^/]+$/.test(adresse)) return '/comptabilite/liste';
   if (adresse === '/production/lieu') {

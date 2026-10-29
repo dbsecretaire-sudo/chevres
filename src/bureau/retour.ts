@@ -79,13 +79,15 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   // Un dossier d'un contact revient à sa fiche.
   [/^\/comptabilite\/contacts\/dossier$/, (_, p) => (p.contact ? ROUTES.ficheContact(p.contact) : ROUTES.CONTACTS)],
   [/^\/comptabilite\/(clients|fournisseurs|contacts|comptes-pcg)\/(?!index$)[^/]+$/, (m) => `/comptabilite/${m[1]}`],
-  [/^\/comptabilite\/plan-comptable$/, () => ROUTES.COMPTES_PCG],
+  // Les écrans du menu Argent (banque, plan comptable, fiscalité, ventes, commandes, circuits, garage) reviennent à Argent.
+  [/^\/comptabilite\/(plan-comptable|tresorerie|fiscalite)$/, () => ROUTES.rubrique('argent')],
+  [/^\/commercial\/(ventes|commandes|circuits)$/, () => ROUTES.rubrique('argent')],
   // Un contrat d'assurance revient à la page de l'assurance (les contrats de tous les assureurs).
   [/^\/comptabilite\/contacts\/contrat$/, () => ROUTES.lieu('assurance')],
   [/^\/comptabilite\/(stocks|conditionnement)$/, () => ROUTES.COMPTABILITE_INVENTAIRE],
   [/^\/comptabilite\/stock-(historique|statistiques|structure)$/, () => ROUTES.COMPTABILITE_STOCKS],
   [/^\/comptabilite\/tresorerie-reglages$/, () => ROUTES.COMPTABILITE_TRESORERIE],
-  [/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa)$/, () => ROUTES.FISCALITE],
+  [/^\/comptabilite\/(fiscalite-impots|fiscalite-rsa|fiscalite-rsa-trimestrielle|fiscalite-rsa-annuelle)$/, () => ROUTES.FISCALITE],
   [/^\/comptabilite\/taux$/, () => ROUTES.COMPTABILITE_REGLAGES],
   [/^\/comptabilite\/detail$/, () => ROUTES.COMPTABILITE_LISTE],
   // Un lot revient aux lots d'animaux, un traitement aux traitements, une nouvelle naissance aux naissances.
@@ -104,8 +106,8 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/production\/enlevements$/, () => ROUTES.lieu('equarrissage')],
   // Le rapport d'essais d'une visite revient à la liste des rapports d'essais.
   [/^\/production\/rapport-essais$/, () => ROUTES.RAPPORTS_ESSAIS_GDS],
-  // La flotte revient au garage, un véhicule à la flotte.
-  [/^\/production\/flotte$/, () => ROUTES.lieu('garage')],
+  // La flotte (le garage du menu Argent) revient à Argent ; un véhicule revient à la flotte.
+  [/^\/production\/flotte$/, () => ROUTES.rubrique('argent')],
   // La page d'un lieu de la ferme (un intervenant, la grange, tous les animaux) revient à l'accueil de la ferme.
   [/^\/production\/lieu$/, () => '/'],
   // L'écran terrain d'une zone de l'accueil revient à l'accueil de la ferme.
@@ -196,6 +198,8 @@ export const estLaRacineDUneRubrique = (adresse: string): boolean => sansRequete
  */
 export function pageParente(adresse: string, parametres: ParametresDePage = {}): string | null {
   const chemin = sansRequete(adresse);
+  // L'assurance (un lieu) du menu Argent revient à Argent.
+  if (chemin === '/production/lieu' && /[?&]lieu=assurance(&|$)/.test(adresse)) return ROUTES.rubrique('argent');
   for (const [motif, parent] of PARENTS) {
     const trouve = motif.exec(chemin);
     if (trouve) return parent(trouve, parametres);

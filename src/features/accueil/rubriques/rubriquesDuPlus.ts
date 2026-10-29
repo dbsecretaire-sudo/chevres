@@ -230,3 +230,17 @@ export const TUILES_VISITES: TuileVisites[] = [
 
 /** Le titre d'une page de rubrique (celui de la barre du haut), ou une chaîne vide quand la rubrique n'existe pas. */
 export const titreDeLaRubrique = (nom: string | undefined): string => (nom && RUBRIQUES[nom] ? RUBRIQUES[nom].titre : '');
+
+/**
+ * Les écrans d'une rubrique, avec leur chemin et, pour un lieu (« ?lieu=assurance »), son identifiant : le Précédent de ces écrans
+ * ramène à la rubrique elle-même (Argent, par exemple).
+ */
+export const entreesDeLaRubrique = (nom: string): { chemin: string; lieu?: string }[] =>
+  (RUBRIQUES[nom]?.sections ?? []).flatMap((s) => s.lignes).map((ligne) => {
+    const [chemin, requete] = ligne.route.split('?');
+    return { chemin, lieu: requete?.match(/lieu=([^&]+)/)?.[1] };
+  });
+
+/** Vrai quand l'adresse (et son lieu, s'il y en a un) est un écran de la rubrique : son Précédent est alors la rubrique. */
+export const estUnEcranDeLaRubrique = (nom: string, adresse: string, lieu?: string): boolean =>
+  entreesDeLaRubrique(nom).some((e) => e.chemin === adresse && (!e.lieu || e.lieu === lieu));
