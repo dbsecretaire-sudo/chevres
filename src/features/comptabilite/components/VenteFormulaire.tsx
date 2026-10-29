@@ -1,5 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
+import { OngletsSaisie, type OngletSaisie } from '@/shared/components/OngletsSaisie';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ChampPaiement } from '@/features/comptabilite/components/ChampPaiement';
 import { ChampCircuit } from '@/features/commercial/components/ChampCircuit';
@@ -162,10 +163,20 @@ export function VenteFormulaire({
   const peutReajuster = reajustementPossible(client, form.categorie, venteADeclarer(form));
   const reajustement = peutReajuster && !!form.reajustement;
 
+  /** Les volets de la modification : Général (la date, le client, la facture), Détails (ce qui est vendu), Coût (le prix et le règlement). */
+  const [onglet, setOnglet] = useState<'general' | 'details' | 'cout'>('general');
+  const onglets: OngletSaisie<'general' | 'details' | 'cout'>[] = [
+    { value: 'general', label: TEXTES.comptabilite.ficheFacture.ongletGeneral },
+    { value: 'details', label: TEXTES.comptabilite.ficheFacture.ongletDetails },
+    { value: 'cout', label: TEXTES.comptabilite.ficheFacture.ongletCout },
+  ];
+
   return (
     <>
+      <OngletsSaisie onglets={onglets} valeur={onglet} onChange={setOnglet} />
 
-      {/* L'identification : la date, le client, la déclaration de la vente (n° de facture) et le paiement — comme à la création. */}
+      {/* L'identification : la date, le client, la déclaration de la vente (n° de facture) et le circuit — comme à la création. */}
+      {onglet === 'general' ? (
       <SectionForm>
         <DateField
           label={TEXTES.commun.general.date}
@@ -224,22 +235,15 @@ export function VenteFormulaire({
           />
         ) : null}
 
-        {/* Le paiement : encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
-        <ChampPaiement
-          libellePayee="Encaissé"
-          libelleAttente="À encaisser"
-          enAttente={form.payee === false}
-          onEnAttente={(attente) => onChange(avecPaiement(form, attente))}
-          echeance={form.echeance ?? ''}
-          onEcheance={(echeance) => onChange({ ...form, echeance })}
-        />
         <ChampCircuit
           value={form.circuit ?? ''}
           onChange={(circuit) => onChange({ ...form, circuit: circuit || undefined })}
         />
       </SectionForm>
+      ) : null}
 
-      {/* Les informations : la catégorie, ce qui est vendu et son prix. */}
+      {/* Les informations : la catégorie, ce qui est vendu. */}
+      {onglet === 'details' ? (
       <SectionForm>
         <SelectField
           label={T.categorieDeRecette}
@@ -375,6 +379,11 @@ export function VenteFormulaire({
             )}
           </View>
         )}
+      </SectionForm>
+      ) : null}
+
+      {onglet === 'cout' ? (
+      <SectionForm>
         {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
         <Checkbox
           label={TEXTES.comptabilite.nouvelleEcriture.offert}
@@ -448,8 +457,18 @@ export function VenteFormulaire({
           />
         ) : null}
 
+        {/* Le paiement : encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
+        <ChampPaiement
+          libellePayee="Encaissé"
+          libelleAttente="À encaisser"
+          enAttente={form.payee === false}
+          onEnAttente={(attente) => onChange(avecPaiement(form, attente))}
+          echeance={form.echeance ?? ''}
+          onEcheance={(echeance) => onChange({ ...form, echeance })}
+        />
         {complement}
       </SectionForm>
+      ) : null}
 
     </>
   );
