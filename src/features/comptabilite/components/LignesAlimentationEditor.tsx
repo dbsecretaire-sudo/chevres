@@ -216,7 +216,6 @@ export function LignesAlimentationEditor({ lignes, onChange, activite, offerte, 
                   </View>
                 </View>
             <View style={{ gap: 6 }}>
-              <Text style={commonStyles.lineSemiBold}>Cheptel</Text>
               <View>
                 {/* Le cheptel concerné (ou « Matériel », un investissement) : une case pleine largeur, comme sur la maquette. */}
                 <SelectField<string>
