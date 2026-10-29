@@ -143,7 +143,6 @@ export default function FicheBonDeLivraison({ id }: { id: string }) {
 
   /** Lie (ou délie, avec un identifiant vide) la facture de l'abattoir : tout de suite, pour qu'elle s'affiche et que les frais suivent. */
   const lierLaFacture = async (idFacture: string) => {
-    if (vendu) return;
     setFactureId(idFacture);
     if (existant) await modifier({ ...existant, factureId: idFacture || undefined, fraisAbattoir: undefined });
   };
