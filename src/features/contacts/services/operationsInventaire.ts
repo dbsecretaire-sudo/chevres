@@ -44,7 +44,7 @@ export const operationsDeLaRubrique = (rubrique: RubriqueOperations, sens?: Sens
  * Les rubriques de l'inventaire avec leurs listes : celles d'office de l'espèce (pas de fromages pour des cochons, pas d'œufs sans poules),
  * puis celles que l'utilisateur a ajoutées. Une rubrique sans liste n'est pas proposée.
  */
-export function rubriquesDOperations(
+function rubriquesDOperations(
   archive: Pick<ArchiveStock, 'listes' | 'categories' | 'reglagesCategories'>,
 ): RubriqueOperations[] {
   const espece = especeCourante();
@@ -78,7 +78,7 @@ export const libelleOperation = (sens: SensOperation, liste: string): string =>
 // --- Le lien avec les catégories d'écriture : ce que chaque liste ouvre dans une nouvelle écriture -----------------------------------------
 
 /** La catégorie de dépense qu'ouvre une liste de l'inventaire (achat, ou vente dans les dépenses). */
-export function depenseDeLaListe(categorie: string, liste: string, sens: SensOperation = 'achat'): string {
+function depenseDeLaListe(categorie: string, liste: string, sens: SensOperation = 'achat'): string {
   if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX)
     return sens === 'vente' ? CATEGORIE_DEPENSE.ANIMAUX_VIVANTS_VENTE : CATEGORIE_DEPENSE.ANIMAUX_VIVANTS;
   if (categorie === CATEGORIE_INVENTAIRE.MATIERES_PREMIERES && liste === SECTION_STOCK.ALIMENTS)
@@ -93,7 +93,7 @@ export function depenseDeLaListe(categorie: string, liste: string, sens: SensOpe
 }
 
 /** Le groupe de recette qu'ouvre une liste de l'inventaire (vente, ou achat dans les recettes). */
-export function groupeRecetteDeLaListe(categorie: string, liste: string): string {
+function groupeRecetteDeLaListe(categorie: string, liste: string): string {
   if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_ANIMAUX && liste === SECTION_STOCK.ANIMAUX)
     return GROUPE_RECETTE.VIANDE;
   if (categorie === CATEGORIE_INVENTAIRE.PRODUITS_FINIS) {

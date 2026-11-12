@@ -17,7 +17,7 @@ export interface CopieDonnees {
 }
 
 /** Le pont de la version Windows (voir bureau/preload.js) : ce que l'ordinateur offre à l'application, et seulement cela. */
-export interface PontBureau {
+interface PontBureau {
   /** Toutes les données enregistrées au démarrage. */
   donnees: Record<string, string>;
   dossiers: { documents: string; cache: string };

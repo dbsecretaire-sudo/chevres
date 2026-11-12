@@ -7,15 +7,6 @@ export const STATUT_ELEMENT = {
   TERMINE: 'termine',
 } as const;
 
-/** Filtres de l'explorateur : par avancement, ou les contenus dont l'échéance est dépassée. */
-export const FILTRE_DOSSIERS = {
-  TOUT: 'tout',
-  A_FAIRE: STATUT_ELEMENT.A_FAIRE,
-  EN_COURS: STATUT_ELEMENT.EN_COURS,
-  TERMINE: STATUT_ELEMENT.TERMINE,
-  EN_RETARD: 'en_retard',
-} as const;
-
 /** Ce qu'on fait pour facturer un contenu : une facture, un acompte, ou une prestation ajoutée sur la note du client. */
 export const TYPE_FACTURATION = {
   FACTURE: 'facture',

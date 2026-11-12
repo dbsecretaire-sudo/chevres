@@ -4,7 +4,7 @@ import { CAUSE_ENTREE, CAUSE_SORTIE } from '@/shared/constants/suiviMouvements';
 import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 
 /** Les classes d'âge de la pyramide, en mois : de la borne basse (comprise) à la borne haute (exclue) ; la dernière n'a pas de borne haute. */
-export const CLASSES_D_AGE: { cle: string; de: number; a?: number }[] = [
+const CLASSES_D_AGE: { cle: string; de: number; a?: number }[] = [
   { cle: 'moins6', de: 0, a: 6 },
   { cle: 'de6a12', de: 6, a: 12 },
   { cle: 'de1a2', de: 12, a: 24 },

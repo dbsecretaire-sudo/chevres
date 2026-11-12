@@ -10,7 +10,7 @@ import { ESPECES_PETITS_RUMINANTS } from '@/shared/constants/primes';
 import { todayISO } from '@/shared/utils/dates';
 
 /** Ce que la santé du troupeau demande aujourd'hui : les animaux en délai d'attente (lait, viande) et l'état du bilan sanitaire annuel. */
-export interface SanteDuTroupeau {
+interface SanteDuTroupeau {
   nombreLait: number;
   finLait?: string;
   nombreViande: number;

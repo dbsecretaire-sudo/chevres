@@ -54,7 +54,7 @@ export interface TranchePrime {
 }
 
 /** Les plafonds et conditions d'une aide : tout se règle dans Organisation › Cheptel, ce sont les valeurs proposées d'office. */
-export interface ReglesPrime {
+interface ReglesPrime {
   /** Les plafonds d'une aide se multiplient par le nombre d'associés d'un GAEC (transparence). */
   transparenceGaec?: boolean;
   /** La quantité maximale comptée (hectares, animaux ou UGB) : au-delà, elle ne touche plus l'aide. */

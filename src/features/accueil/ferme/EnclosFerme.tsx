@@ -1,18 +1,14 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Balade } from '@/features/accueil/ferme/animations';
-import { DecorEnclos } from '@/features/accueil/ferme/DecorEnclos';
-import { DecorEstive } from '@/features/accueil/ferme/DecorEstive';
-import { categorieAccueil } from '@/features/accueil/services/statsAccueil';
-import type { Chevre } from '@/features/cheptel/types';
-import { CATEGORIE_ANIMAL } from '@/shared/constants/cheptel';
+
+
+
+
+
+
+
 import { TYPE_ANIMAL_ETABLISSEMENT } from '@/shared/constants/etablissements';
 import { especeCourante } from '@/shared/dictionnaire/animaux';
-import { colors } from '@/shared/theme/colors';
-import { TEXTES } from '@/shared/textes';
-import { formatDateFR } from '@/shared/utils/dates';
 
-const T = TEXTES.accueil.ferme.zones;
+
 
 /** Le dessin d'un animal de l'enclos, selon l'espèce de l'établissement (un dessin simple, remplaçable par une illustration). */
 const DESSIN_PAR_ESPECE: Record<string, string> = {
@@ -24,149 +20,5 @@ const DESSIN_PAR_ESPECE: Record<string, string> = {
   [TYPE_ANIMAL_ETABLISSEMENT.DOMESTIQUES]: '🐕',
 };
 
-interface Props {
-  /** Les animaux qui représentent le troupeau dans l'enclos (jusqu'à quatre). */
-  vedettes: readonly Chevre[];
-  nombreAnimaux?: number;
-  naissances?: number;
-  /** Le troupeau est à l'estive : le décor passe de l'enclos à la montagne (sa zone, sa date de descente). */
-  estive?: { zone?: string; descente?: string };
-  /** Un appui sur l'enclos : la page du cheptel. */
-  onAppui: () => void;
-  /** De quoi laisser la place des colonnes de boutons posées sur la scène, à gauche et à droite. */
-  margeGauche?: number;
-  margeDroite?: number;
-  margeBas?: number;
-  /** Sans son cadre (bord et coins arrondis) : la scène l'entoure elle-même, avec les maisons et la route. */
-  sansCadre?: boolean;
-}
-
 /** Le dessin de l'espèce de l'établissement (la tête de chaque animal de la liste de la chèvrerie). */
 export const dessinDeLEspece = (): string => DESSIN_PAR_ESPECE[especeCourante()] ?? '🐐';
-
-/** Un animal de l'enclos : son dessin (plus petit pour un petit), sa boucle en étiquette, et il se balade. */
-function AnimalDeLEnclos({ animal, rang, taille }: { animal: Chevre; rang: number; taille: number }) {
-  const petit = categorieAccueil(animal) === CATEGORIE_ANIMAL.CABRIT;
-  const boucle = animal.numeroBoucle?.trim();
-  return (
-    <Balade amplitude={14 + (rang % 2) * 8} amplitudeY={10 + (rang % 3) * 4} duree={2600 + rang * 700}>
-      <View style={styles.animal}>
-        <Text
-          style={{ fontSize: petit ? Math.round(taille * 0.64) : taille }}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        >
-          {DESSIN_PAR_ESPECE[especeCourante()] ?? '🐐'}
-        </Text>
-        {boucle ? (
-          <View style={styles.etiquette}>
-            <Text style={styles.etiquetteTexte}>{boucle.slice(-5)}</Text>
-          </View>
-        ) : null}
-      </View>
-    </Balade>
-  );
-}
-
-/**
- * L'enclos du troupeau, au centre de l'accueil : l'espèce choisie, trois ou quatre animaux (leurs boucles) qui se promènent et représentent le
- * troupeau, et l'effectif. Pendant la transhumance, des montagnes remplacent l'enclos. Un appui fait sortir les bulles du cheptel ; la petite
- * porte entre dans la chèvrerie.
- */
-export function EnclosFerme({
-  vedettes,
-  nombreAnimaux,
-  naissances,
-  estive,
-  onAppui,
-  margeGauche = 0,
-  margeDroite = 0,
-  margeBas = 0,
-  sansCadre,
-}: Props) {
-  /** La hauteur que l'enclos laisse au troupeau (entre le titre et l'effectif) : les animaux rapetissent quand elle manque, le texte reste entier. */
-  const [hauteurTroupeau, setHauteurTroupeau] = useState(0);
-  const taille = hauteurTroupeau > 0 ? Math.max(22, Math.min(44, hauteurTroupeau - 40)) : 44;
-  return (
-    <View style={styles.conteneur}>
-      <Pressable
-        style={[
-          styles.enclos,
-          estive ? styles.montagne : null,
-          sansCadre ? styles.sansCadre : null,
-          { paddingLeft: 14 + margeGauche, paddingRight: 14 + margeDroite, paddingBottom: 14 + margeBas },
-        ]}
-        onPress={onAppui}
-        accessibilityRole="button"
-        accessibilityLabel={estive ? T.estive(estive.zone) : T.enclos}
-      >
-        {/* Le décor, fixe et en fond : sentier, arbres, maquis et fleurs ; en estive, montagnes, nuages et cailloux. */}
-        {estive ? <DecorEstive /> : <DecorEnclos />}
-        <Text style={styles.titre} numberOfLines={2}>
-          {estive ? T.estive(estive.zone) : T.enclos}
-        </Text>
-        {/* Le troupeau prend la place qui reste entre le titre (en haut) et le texte (en bas) : ni l'un ni l'autre ne sont rognés. */}
-        <View style={styles.zoneTroupeau} onLayout={(e) => setHauteurTroupeau(e.nativeEvent.layout.height)}>
-          {vedettes.length > 0 ? (
-            <View style={styles.troupeau}>
-              {vedettes.map((a, i) => (
-                <AnimalDeLEnclos key={a.id} animal={a} rang={i} taille={taille} />
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.vide}>{T.aucunAnimal}</Text>
-          )}
-        </View>
-        <View style={styles.bas}>
-          {estive?.descente ? <Text style={styles.descente}>{T.descenteLe(formatDateFR(estive.descente))}</Text> : null}
-          <Text style={styles.effectif} numberOfLines={2}>
-            {nombreAnimaux === undefined ? '…' : TEXTES.accueil.ferme.bandeau.animaux(nombreAnimaux)}
-            {naissances ? ` · ${T.nes(naissances)}` : ''}
-          </Text>
-        </View>
-      </Pressable>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  conteneur: { flex: 1 },
-  enclos: {
-    flex: 1,
-    backgroundColor: '#D9E8BE',
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: '#A9794A',
-    borderStyle: 'dashed',
-    padding: 8,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 4,
-  },
-  zoneTroupeau: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', minHeight: 0, overflow: 'hidden' },
-  bas: { alignItems: 'center', gap: 4 },
-  sansCadre: { borderWidth: 0, borderRadius: 0 },
-  montagne: { backgroundColor: '#C9DEEF', borderStyle: 'solid', borderColor: '#7F9DB8' },
-  descente: { fontSize: 12, color: colors.primaryDark },
-  titre: { fontSize: 14, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
-  troupeau: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    gap: 22,
-    paddingVertical: 4,
-  },
-  animal: { alignItems: 'center', gap: 2 },
-  etiquette: {
-    backgroundColor: '#F2C94C',
-    borderRadius: 6,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: '#B58B1A',
-  },
-  etiquetteTexte: { fontSize: 11, fontWeight: '700', color: '#4A3A07' },
-  vide: { fontSize: 13, color: colors.textMuted },
-  effectif: { fontSize: 13, fontWeight: '700', color: colors.primaryDark, textAlign: 'center' },
-});

@@ -10,7 +10,7 @@ import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 
 /** Une option que chaque catégorie applique ou non (une case à cocher dans le réglage de la catégorie). */
-export interface OptionParCategorie {
+interface OptionParCategorie {
   cle: string;
   titre: string;
   coche: (categorieId: string) => boolean;
@@ -18,7 +18,7 @@ export interface OptionParCategorie {
 }
 
 /** Des options du même sujet (l'affichage dans les factures, les recettes permises…), sous un titre. */
-export interface GroupeDOptions {
+interface GroupeDOptions {
   titre: string;
   options: OptionParCategorie[];
 }

@@ -64,7 +64,7 @@ const POIDS_PAR_DEFAUT: Record<Modele, { frais: number; affine: number }> = {
 };
 
 /** Le modèle d'une étiquette, d'après le nom du fromage (« Brocciu affiné », « Crottin », « Frais »…). */
-export function modeleDuFromage(produit: string): Modele {
+function modeleDuFromage(produit: string): Modele {
   const nom = produit.toLowerCase();
   if (nom.includes('crottin')) return 'crottin';
   if (nom.includes('brocciu')) return 'brocciu';

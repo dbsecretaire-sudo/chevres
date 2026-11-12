@@ -2,7 +2,7 @@
  * Ce que la carte « Transformation » de l'accueil compte : les fromages en stock, les plats préparés et les savons, la boucherie et la charcuterie (les produits de viande ajoutés
  * au stock), et la viande : les animaux abattus qui restent à facturer à un client (pas ceux du cheptel). Les niveaux négatifs (plus vendu que fabriqué) ne comptent pas.
  */
-export interface CompteTransformation {
+interface CompteTransformation {
   fromages: number;
   charcuterie: number;
   viande: number;

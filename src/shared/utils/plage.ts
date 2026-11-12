@@ -2,7 +2,7 @@
 const PLAGE = /^(\d+)\s*[-–]\s*(\d+)$/;
 
 /** Une plage de numéros tapée (du plus petit au plus grand, même tapée à l'envers), ou rien quand le texte n'en est pas une. */
-export interface Plage {
+interface Plage {
   /** Les deux nombres tels qu'ils ont été tapés (pour les afficher). */
   debut: string;
   fin: string;

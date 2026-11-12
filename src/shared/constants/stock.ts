@@ -412,4 +412,3 @@ export const LETTRE_CATEGORIE_LOT: Record<string, string> = {
 };
 
 /** La lettre de la catégorie quand le nom du produit n'en donne aucune. */
-export const LETTRE_CATEGORIE_LOT_PAR_DEFAUT = 'X';

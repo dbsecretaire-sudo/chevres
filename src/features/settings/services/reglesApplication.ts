@@ -4,7 +4,7 @@ import { TAUX_TVA_ACHAT_DEFAUT, TAUX_TVA_ACHAT_ENTREPRISE_DEFAUT, TAUX_TVA_CARBU
 import { DELAI_ENREGISTREMENT_AUTO } from '@/shared/constants/temps';
 
 /** Une règle que l'application applique : un titre court et ce qu'elle fait, en une ou deux phrases. */
-export interface RegleApplication {
+interface RegleApplication {
   /** Son identifiant stable : de quoi dire plus tard « celle-ci s'affiche » ou « celle-ci se personnalise ». */
   id: string;
   titre: string;
@@ -12,7 +12,7 @@ export interface RegleApplication {
 }
 
 /** Les règles d'un même domaine (le cheptel, les ventes, la comptabilité…). */
-export interface GroupeDeRegles {
+interface GroupeDeRegles {
   id: string;
   titre: string;
   regles: RegleApplication[];

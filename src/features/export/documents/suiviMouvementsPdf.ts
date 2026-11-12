@@ -107,7 +107,7 @@ interface Feuille {
 }
 
 /** Découpe une année en feuilles de douze lignes ; chaque feuille reprend l'effectif où la précédente s'est arrêtée. */
-export function feuillesDuSuivi(suivi: SuiviAnnuel, aujourdhui: string): Feuille[] {
+function feuillesDuSuivi(suivi: SuiviAnnuel, aujourdhui: string): Feuille[] {
   const morceaux: LigneMouvement[][] = [];
   for (let i = 0; i < suivi.lignes.length; i += LIGNES_PAR_PAGE_SUIVI)
     morceaux.push(suivi.lignes.slice(i, i + LIGNES_PAR_PAGE_SUIVI));
@@ -319,7 +319,7 @@ const STYLES = `
 `;
 
 /** Le document complet : une feuille par douze mouvements, pour chaque année demandée. */
-export function suiviMouvementsHtml(
+function suiviMouvementsHtml(
   suivis: SuiviAnnuel[],
   identite: IdentiteSuivi,
   colonne: ColonneSuivi,
@@ -449,7 +449,7 @@ export function remplirSuiviMouvements(
 }
 
 /** Les campagnes dont la feuille officielle est embarquée : les autres suivis sont dessinés d'après le même modèle. */
-export const CAMPAGNES_OFFICIELLES_SUIVI: readonly number[] = [2026];
+const CAMPAGNES_OFFICIELLES_SUIVI: readonly number[] = [2026];
 
 /** Crée le PDF du suivi des mouvements pour les années demandées (une feuille par douze mouvements) et le partage. */
 export async function exporterSuiviMouvementsPdf(annees: number[]): Promise<void> {

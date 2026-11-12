@@ -7,7 +7,7 @@ import { GENRE_ARTICLE } from '@/shared/constants/stock';
 import { generateId } from '@/shared/utils/id';
 
 /** Où range-t-on l'article : un genre d'article (aliments, matériel, bâtiments, entretien…), ou une liste ajoutée (genre « personnalisé » et son identifiant). */
-export interface CibleDeplacement {
+interface CibleDeplacement {
   genre: GenreArticle;
   listeId?: string;
 }

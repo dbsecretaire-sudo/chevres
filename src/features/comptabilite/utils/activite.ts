@@ -23,7 +23,7 @@ export const activiteLigne = (
 ): ActiviteComptable => ligne.activite ?? activiteFacture(f);
 
 /** La part d'une facture qui revient à une activité : la facture elle-même si elle n'en concerne qu'une. */
-export interface PartFacture {
+interface PartFacture {
   activite: ActiviteComptable;
   /** Copie de la facture limitée à cette activité : `montant` et `lignesAlimentation` sont ceux de la part. */
   facture: Facture;

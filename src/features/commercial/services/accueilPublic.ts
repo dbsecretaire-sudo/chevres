@@ -12,7 +12,7 @@ export const etapesAccueilManquantes = (archive: Pick<ArchiveCommercial, 'accuei
   ETAPES_ACCUEIL_OBLIGATOIRES.filter((etape) => !archive.accueilPublic?.[etape]?.fait);
 
 /** Vrai quand la ferme reçoit du public : des visites ou des formules d'agritourisme existent. */
-export const accueilDuPublic = (archive: Pick<ArchiveCommercial, 'visites' | 'formules'>): boolean =>
+const accueilDuPublic = (archive: Pick<ArchiveCommercial, 'visites' | 'formules'>): boolean =>
   archive.visites.length > 0 || archive.formules.length > 0;
 
 /**

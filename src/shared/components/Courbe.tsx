@@ -11,7 +11,7 @@ const MARGE = 12;
 /** Au-delà de ce nombre de points, seuls le premier et le dernier portent leur libellé. */
 const POINTS_LIBELLES_MAX = 8;
 
-export interface SerieCourbe {
+interface SerieCourbe {
   couleur: string;
   /** Une valeur par libellé de l'axe (rien quand la série n'a pas de valeur à ce point). */
   valeurs: (number | undefined)[];

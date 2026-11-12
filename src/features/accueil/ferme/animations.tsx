@@ -6,7 +6,7 @@ import { AccessibilityInfo, Animated, Easing, type StyleProp, type ViewStyle } f
 // et une animation qui boucle en interaction bloquerait pour toujours le rendu des listes (FlatList) des écrans ouverts par-dessus.
 
 /** Vrai quand l'appareil demande de réduire les animations : l'accueil reste fixe. */
-export function useMouvementReduit(): boolean {
+function useMouvementReduit(): boolean {
   const [reduit, setReduit] = useState(false);
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled()

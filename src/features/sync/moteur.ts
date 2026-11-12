@@ -16,13 +16,13 @@ import { appliquerModification, modificationsDe, type Modification } from '@/sha
 import { envoyerPiecesEnAttente, mettreEnFileLesPiecesAnciennes, piecesDeLAppareil, recevoirPiecesManquantes } from '@/features/fichiers/services/piecesSynchro';
 
 /** Nombre maximal de modifications par envoi (le serveur refuse au-delà). */
-export const TAILLE_LOT = 200;
+const TAILLE_LOT = 200;
 
 /** Taille maximale d'un envoi, en caractères : au-dessus, le serveur refuse la requête entière. */
-export const TAILLE_MAX_ENVOI = 3500000;
+const TAILLE_MAX_ENVOI = 3500000;
 
 /** Une fiche plus lourde que cette taille ne part jamais : elle reste sur l'appareil. Elle doit tenir dans un envoi. */
-export const TAILLE_MAX_FICHE_ENVOI = 3000000;
+const TAILLE_MAX_FICHE_ENVOI = 3000000;
 
 /** La taille des données à la dernière synchronisation réussie : un envoi qui les réduit de moitié est suspect. */
 const CLE_TAILLE_CONNUE = 'troupeau:v1:sync-taille-connue';
@@ -43,7 +43,7 @@ export class EnvoiSuspect extends Error {
   }
 }
 
-export interface OptionsEnvoi {
+interface OptionsEnvoi {
   /** Envoyer même si les données de l'appareil ont beaucoup diminué (après une confirmation). */
   forcer?: boolean;
 }
@@ -101,7 +101,7 @@ function constituerLot(file: Modification[]): { lot: Modification[]; tropLourdes
 }
 
 /** Le bilan d'un envoi : combien de modifications sont parties, et combien sont restées sur l'appareil faute d'être acceptées. */
-export interface BilanEnvoi {
+interface BilanEnvoi {
   envoyees: number;
   refusees: number;
 }

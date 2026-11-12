@@ -7,7 +7,7 @@ import { ATELIER } from '@/shared/constants/ateliers';
 import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 
 /** Ce que la plaque du côté « Agritourisme » de l'accueil compte : les visites prévues, les visiteurs et les recettes de l'année. */
-export interface CompteAgritourisme {
+interface CompteAgritourisme {
   aVenir: number;
   visiteurs: number;
   recettes: number;

@@ -27,7 +27,7 @@ const estNumerique = (v: unknown): boolean =>
 const estIdentifiant = (v: unknown): boolean =>
   typeof v === 'string' && /^[A-Za-z]{0,3}\s?\d{6,}$/.test(v.trim());
 
-export interface OptionsTableau {
+interface OptionsTableau {
   /** La dernière ligne est un total : en gras, sur un fond teinté. */
   totaux?: boolean;
 }
@@ -151,7 +151,7 @@ function enTeteExploitationHtml(infos: InfosExploitation | undefined, especes: E
 }
 
 /** Les options d'un document : un sous-titre sous le titre (l'année, la période…). */
-export interface OptionsDocument {
+interface OptionsDocument {
   sousTitre?: string;
 }
 
@@ -234,7 +234,7 @@ export function documentHtml(
 }
 
 /** Les options d'impression : A4 en portrait (par défaut) ou en paysage pour les tableaux larges. */
-export interface OptionsImpression {
+interface OptionsImpression {
   paysage?: boolean;
   /** Un document à la taille exacte de la feuille (un formulaire) : aucune marge autour de la page. */
   sansMarges?: boolean;

@@ -25,7 +25,7 @@ const T = TEXTES.cheptel.suiviMouvements;
 const B = T.bordereauPerte;
 
 /** Une perte déclarée sur un bordereau : le jour (AAAA-MM-JJ) et le nombre de femelles perdues. */
-export type PerteBordereau = PerteDuJour;
+type PerteBordereau = PerteDuJour;
 
 /** Les cases d'un champ à remplir (un chiffre par case), de la largeur d'une case en mm ; les nombres se rangent à droite. */
 function casesHtml(valeur: string, nombre: number, largeurMm: number, aDroite = false): string {
@@ -164,7 +164,7 @@ const STYLES = enPixels(`
   .coupe span { margin-top: -2.6mm; background: ${colors.surface}; padding: 0 1mm; `);
 
 /** Le document : deux bordereaux de perte par page A4 (comme le formulaire papier), un par jour de perte. */
-export function bordereauxPerteHtml(
+function bordereauxPerteHtml(
   pertes: PerteBordereau[],
   identite: IdentiteSuivi,
   colonne: ColonneSuivi,
@@ -207,7 +207,7 @@ const OFFICIEL = {
 } as const;
 
 /** Les campagnes dont la feuille officielle est embarquée : les autres bordereaux sont dessinés d'après le même modèle. */
-export const CAMPAGNES_OFFICIELLES_BORDEREAUX: readonly number[] = [2026];
+const CAMPAGNES_OFFICIELLES_BORDEREAUX: readonly number[] = [2026];
 
 /**
  * Remplit la feuille officielle de la campagne 2026 : un bordereau de perte par jour de perte, deux par feuille (comme le formulaire à
@@ -242,7 +242,7 @@ export function remplirBordereauxPerte(
 }
 
 /** Les pertes des années demandées, jour par jour (les bordereaux à remplir). */
-export async function pertesDesAnnees(annees: number[]): Promise<PerteBordereau[]> {
+async function pertesDesAnnees(annees: number[]): Promise<PerteBordereau[]> {
   const animaux = deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL));
   return annees.flatMap((annee) => pertesDeLAnnee(animaux, annee));
 }

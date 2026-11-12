@@ -7,7 +7,7 @@ import { estUnEcranDeLaRubrique } from '@/features/accueil/rubriques/rubriquesDu
  */
 
 /** Les pages racines : l'accueil et les rubriques de la barre du bas. L'Atelier n'en est plus une : il s'ouvre depuis la Ferme. */
-export const PAGES_RACINES: readonly string[] = ['/', '/cheptel', '/comptabilite', '/contacts', '/comptabilite/contacts', '/comptabilite/stocks', '/plus'];
+const PAGES_RACINES: readonly string[] = ['/', '/cheptel', '/comptabilite', '/contacts', '/comptabilite/contacts', '/comptabilite/stocks', '/plus'];
 
 /** Les pages ouvertes depuis les tuiles de l'accueil (Estive, Santé, Partenaires) : leur Précédent est l'accueil. */
 const PAGES_DE_L_ACCUEIL: Record<string, string> = {

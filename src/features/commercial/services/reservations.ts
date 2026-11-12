@@ -24,7 +24,7 @@ import { loadAllYears } from '@/shared/storage/localStore';
  * Le bon de commande ouvert d'un client : celui qui est déjà à préparer ou à livrer pour lui, sinon un nouveau. Tout ce qu'on réserve
  * pour un client va dans le même bon.
  */
-export async function bonDeCommandeOuvert(client: Client): Promise<Commande> {
+async function bonDeCommandeOuvert(client: Client): Promise<Commande> {
   const archive = await lireArchiveCommercial();
   const ouvert = archive.commandes.find((c) => c.clientId === client.id && commandeOuverte(c));
   // Le circuit de vente est celui du contact (sa fiche), plus celui de la commande : un bon sans circuit prend celui de son contact.
@@ -124,7 +124,7 @@ export async function libererLotsReserves(identifiants: string[]): Promise<void>
 }
 
 /** Supprime un bon de commande resté vide (aucune ligne, aucun animal réservé) : il n'a plus de raison d'être. */
-export async function retirerLeBonVide(bon: Commande, animauxReserves: number): Promise<void> {
+async function retirerLeBonVide(bon: Commande, animauxReserves: number): Promise<void> {
   if (bon.lignes.length === 0 && animauxReserves === 0) await supprimerCommande(bon.id);
 }
 

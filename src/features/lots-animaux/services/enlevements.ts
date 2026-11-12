@@ -46,7 +46,7 @@ export const titreDeLEnlevement = (e: Pick<EnlevementEquarrissage, 'date' | 'num
 };
 
 /** Ce qu'un enlèvement change sur la fiche d'un animal : son statut et son jour (« Équarrissage le … »), ou son retrait de l'enlèvement (le statut reste). */
-export interface ChangementAnimalEnleve {
+interface ChangementAnimalEnleve {
   id: string;
   /** Vrai : l'animal est pris par l'enlèvement (mort, au jour de l'enlèvement) ; faux : il en est retiré (le statut reste, le lien s'efface). */
   enleve: boolean;

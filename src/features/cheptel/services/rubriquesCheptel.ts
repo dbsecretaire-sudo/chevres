@@ -6,7 +6,7 @@ import { TEXTES } from '@/shared/textes';
 type Icone = keyof typeof Ionicons.glyphMap;
 
 /** Une ligne d'un menu du Cheptel : un écran, avec son titre, une phrase qui dit ce qu'on y trouve, et son icône. */
-export interface LigneRubrique {
+interface LigneRubrique {
   cle: string;
   titre: string;
   aide?: string;
@@ -15,7 +15,7 @@ export interface LigneRubrique {
 }
 
 /** Un groupe de lignes qui vont ensemble. */
-export interface GroupeRubrique {
+interface GroupeRubrique {
   cle: string;
   titre: string;
   lignes: LigneRubrique[];

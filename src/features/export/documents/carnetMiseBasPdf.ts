@@ -37,16 +37,16 @@ export const LIGNES_PAR_PAGE = 32;
  * n° du petit, de la mère et du père et le sexe ; à droite les observations, l'âge de départ ou de mort et le poids), 16 lignes de 7,6 mm
  * qui se retrouvent d'une page à l'autre, avec le titre, l'en-tête et la légende dans les 148 mm de hauteur moins les marges.
  */
-export const LIGNES_PAR_PAGE_LIVRET = 16;
+const LIGNES_PAR_PAGE_LIVRET = 16;
 
 /**
  * Le carnet en feuilles A4 à ranger dans un classeur, ou en livret A6 : des feuilles A4 en portrait de quatre pages par face, à imprimer
  * recto verso, à couper en deux et à plier (comme le carnet papier, qui ouvert fait la moitié d'un A4).
  */
-export type FormatCarnet = 'a4' | 'livret';
+type FormatCarnet = 'a4' | 'livret';
 
 /** Une ligne du carnet : une mise bas (la mère et tous ses petits). Le père reste à écrire à la main. */
-export interface LigneCabri {
+interface LigneCabri {
   date: string;
   numero: string;
   mere: string;
@@ -306,7 +306,7 @@ export function porteesParAnnee(portees: PorteeNaissance[]): { annee: string; po
 }
 
 /** Les résultats de production d'une année, d'après ses mises bas (ce qui dépend de la reproduction reste à écrire à la main). */
-export interface ResultatsProduction {
+interface ResultatsProduction {
   /** Les femelles ayant mis bas (chacune compte une fois). */
   misesBas: number;
   /** Les petits nés (mort-nés compris), selon la taille de la portée. */
@@ -532,7 +532,7 @@ const PAGE_BLANCHE = '<div class="page blanche"></div>';
 const QUATRIEME_DE_COUVERTURE = '<div class="page"><div class="couverture"></div></div>';
 
 /** Les coordonnées utiles que le carnet reprend des contacts : chacune en deux lignes (le nom, puis le téléphone et l'adresse). */
-export interface ContactsDuCarnet {
+interface ContactsDuCarnet {
   veterinaire: string[];
   groupement: string[];
 }
@@ -546,7 +546,7 @@ function coordonneesDeLaCategorie(fournisseurs: Fournisseur[], categorie: string
 }
 
 /** Le vétérinaire et le groupement sanitaire (GDS) des coordonnées utiles, d'après les contacts de ces catégories. */
-export function contactsDuCarnet(fournisseurs: Fournisseur[]): ContactsDuCarnet {
+function contactsDuCarnet(fournisseurs: Fournisseur[]): ContactsDuCarnet {
   return {
     veterinaire: coordonneesDeLaCategorie(fournisseurs, CATEGORIE_FOURNISSEUR.VETERINAIRE),
     groupement: coordonneesDeLaCategorie(fournisseurs, CATEGORIE_FOURNISSEUR.GROUPEMENT_SANITAIRE),

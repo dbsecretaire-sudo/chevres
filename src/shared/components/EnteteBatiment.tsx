@@ -25,7 +25,7 @@ function FlecheRetour() {
 }
 
 /** La gauche de l'en-tête d'un bâtiment de la ferme (laiterie, abattoir, vétérinaire…) : la flèche de retour ; la maison est dans le bandeau. */
-export function EnteteBatiment(): ReactElement {
+function EnteteBatiment(): ReactElement {
   return afficheBureau() ? <FlecheRetourBureau /> : <FlecheRetour />;
 }
 

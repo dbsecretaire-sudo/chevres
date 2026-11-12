@@ -205,7 +205,7 @@ if ($action === 'ecrire' && $methode === 'PUT') {
   repondre(200, ['version' => $nouvelle]);
 }
 
-// Les fiches, une à une (voir synchro.php et schema-v2.sql) : envoi des modifications, puis réception de ce qui a changé.
+// Les fiches, une à une (voir synchro.php) : envoi des modifications, puis réception de ce qui a changé.
 $etablissement = (string) ($_GET['etablissement'] ?? $corps['etablissement'] ?? '');
 if (!preg_match('/^[a-z0-9_\-]{1,64}$/', $etablissement)) repondre(400, ['erreur' => 'Établissement invalide.']);
 // Un utilisateur ne touche qu'à ses exploitations.
@@ -227,7 +227,7 @@ if ($action === 'refuser' && $methode === 'POST') {
   repondre(200, ['refusees' => refuserAttentes($db, $etablissement, (array) ($corps['ids'] ?? []))]);
 }
 
-// Les fichiers joints (voir schema-pieces.sql) : envoi d'un fichier, en base64, 5 Mo au plus ; réception par son identifiant.
+// Les fichiers joints : envoi d'un fichier, en base64, 5 Mo au plus ; réception par son identifiant.
 // Réservé au modérateur pour l'instant : les pièces d'un utilisateur attendront la validation comme les autres saisies.
 if ($action === 'piece_envoyer' && $methode === 'POST') {
   if (!estModerateur($moi)) repondre(403, ['erreur' => 'Les pièces jointes ne sont pas encore ouvertes aux utilisateurs.']);

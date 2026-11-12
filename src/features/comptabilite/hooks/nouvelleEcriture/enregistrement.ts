@@ -140,7 +140,7 @@ export async function sortirLesAnimauxDeLaVente(vente: Vente): Promise<void> {
 }
 
 /** Ce que l'enregistrement d'une dépense lit de la saisie. */
-export interface DepenseAEnregistrer {
+interface DepenseAEnregistrer {
   date: string;
   tiers: string;
   /** Une dépense « Animaux vivants » : les animaux achetés entrent au cheptel (une fiche chacun). */

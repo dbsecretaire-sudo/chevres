@@ -71,7 +71,7 @@ export interface PilotageTva {
   controles: ControleTva[];
 }
 
-export interface EntreePilotageTva {
+interface EntreePilotageTva {
   annee: number;
   ventes: Vente[];
   factures: Facture[];
@@ -153,7 +153,7 @@ function controlerTva(ventes: Vente[], factures: Facture[]): ControleTva[] {
 }
 
 /** Le pilotage de la TVA d'une année, d'après les ventes et les factures données (calcul pur). */
-export function calculerPilotageTva(entree: EntreePilotageTva): PilotageTva {
+function calculerPilotageTva(entree: EntreePilotageTva): PilotageTva {
   const { annee, ventes, factures, regime, periodicite } = entree;
   const sansTva = regime === REGIME_TVA_PILOTAGE.FRANCHISE || regime === REGIME_TVA_PILOTAGE.RFA;
   const pas = MOIS_PAR_PERIODE[periodicite];

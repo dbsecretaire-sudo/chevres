@@ -16,7 +16,7 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.aTraiter;
 
 /** Les déclarations à valider d'un établissement (RSA trimestriel), d'après ses réglages. */
-export function aTraiterRappels(
+function aTraiterRappels(
   infos: InfosExploitation | undefined,
   aujourdhui: string,
   etablissement: Pick<Etablissement, 'id' | 'nom'>,
@@ -39,7 +39,7 @@ export function aTraiterRappels(
  * Les lots à rappeler : une ligne qui dit combien de lots vendus ont un contrôle non ok, puis une ligne par rappel déjà lancé qui
  * attend d'être validé.
  */
-export function aTraiterLots(
+function aTraiterLots(
   archive: ArchiveStock,
   etablissement: Pick<Etablissement, 'id' | 'nom'>,
 ): ATraiter[] {

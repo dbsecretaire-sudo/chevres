@@ -11,14 +11,14 @@ const arrondi = (valeur: number): number => Math.round(valeur * 100) / 100;
 const montantDe = (v: Vente): number => v.prix ?? 0;
 
 /** Le nombre de jours de `debut` à `fin` (deux dates AAAA-MM-JJ) ; négatif si `fin` précède `debut`. */
-export function joursEntre(debut: string, fin: string): number {
+function joursEntre(debut: string, fin: string): number {
   return Math.round(
     (new Date(`${fin}${HEURE_MIDI}`).getTime() - new Date(`${debut}${HEURE_MIDI}`).getTime()) / MS_PAR_JOUR,
   );
 }
 
 /** Ce qui a été vendu d'un produit : les quantités (dans leur unité) et le montant. */
-export interface LigneProduit {
+interface LigneProduit {
   cle: string;
   libelle: string;
   unite: string;
@@ -30,7 +30,7 @@ export interface LigneProduit {
 }
 
 /** Ce qu'un client a acheté sur la période. */
-export interface LigneClient {
+interface LigneClient {
   client: string;
   nombre: number;
   montant: number;
@@ -38,7 +38,7 @@ export interface LigneClient {
 }
 
 /** Ce qu'un circuit de vente a rapporté. */
-export interface LigneCircuit {
+interface LigneCircuit {
   circuit: string;
   nombre: number;
   montant: number;
@@ -48,12 +48,12 @@ export interface LigneCircuit {
 }
 
 /** Une vente pas encore encaissée, avec son retard (jours depuis son échéance ; 0 quand elle n'est pas échue). */
-export interface Impaye {
+interface Impaye {
   vente: Vente;
   retard: number;
 }
 
-export interface StatistiquesVentes {
+interface StatistiquesVentes {
   total: number;
   nombre: number;
   panierMoyen: number;
@@ -167,7 +167,7 @@ export function statistiquesVentes(
 }
 
 /** Un client à relancer : sa dernière vente, le nombre de jours depuis, et ce qu'il a acheté en tout. */
-export interface ClientARelancer {
+interface ClientARelancer {
   client: Client;
   nomAffiche: string;
   derniere: string;

@@ -130,7 +130,7 @@ export const PERIMETRES_RENTABILITE = {
   atelier: [ATELIER.LAIT, ATELIER.FROMAGE, ATELIER.PETITS, ATELIER.ANIMAUX, ATELIER.VIANDE, ATELIER.PLATS, ATELIER.SAVONS, ATELIER.OEUFS],
 } as const satisfies Record<string, readonly Atelier[]>;
 
-export type PerimetreRentabilite = keyof typeof PERIMETRES_RENTABILITE;
+type PerimetreRentabilite = keyof typeof PERIMETRES_RENTABILITE;
 
 /** La rentabilité de l'année active et de l'activité choisie, rechargée à chaque retour sur l'écran. */
 export function useRentabilite() {

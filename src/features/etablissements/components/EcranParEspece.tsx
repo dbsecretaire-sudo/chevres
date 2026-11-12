@@ -11,11 +11,6 @@ function ParEspece({ children }: { children: ReactElement }) {
   return <Fragment key={espece}>{children}</Fragment>;
 }
 
-/** À passer en `screenLayout` d'un Stack, ou d'un Tabs dont les écrans ne sont pas eux-mêmes des navigateurs. */
-export const ecranParEspece = ({ children }: { children: ReactElement }): ReactElement => (
-  <ParEspece>{children}</ParEspece>
-);
-
 /**
  * Comme ecranParEspece, mais sans recréer les écrans nommés : ceux qui suivent déjà l'espèce active par eux-mêmes
  * (la liste de la comptabilité), ou qui sont des navigateurs imbriqués (cheptel, comptabilité dans les onglets).

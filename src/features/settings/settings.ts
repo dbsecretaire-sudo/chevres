@@ -155,10 +155,6 @@ export interface InfosEntreprise {
   taxeSejourParNuit?: number;
 }
 
-/** Le montant de la taxe de séjour d'une entreprise (celui d'avant le montant fixe est repris tel quel). */
-export const montantTaxeSejourDe = (infos?: InfosEntreprise): number | undefined =>
-  infos?.montantTaxeSejour ?? infos?.taxeSejourParNuit;
-
 /** Une catégorie de lots d'animaux : son identifiant (celui que portent les lots) et son nom, que l'utilisateur peut changer. */
 export interface CategorieLotReglage {
   id: string;

@@ -37,7 +37,7 @@ export const CRITERES_PRECIS_VIDES: CriteresPrecis = {
   anneePresence: '',
 };
 
-export interface CriteresCheptel extends CriteresPrecis {
+interface CriteresCheptel extends CriteresPrecis {
   recherche: string;
   statutFiltre: StatutFiltre;
   categorieFiltre: CategorieFiltre;

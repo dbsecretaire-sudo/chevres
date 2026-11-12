@@ -5,10 +5,10 @@ import { ROUTES } from '@/shared/constants/routes';
 // Des calculs purs, sans écran : ils se testent à part.
 
 /** L'icône d'un minuteur (l'écran choisit le dessin). */
-export type IconeMinuteur = 'lait' | 'viande' | 'declaration' | 'bilan' | 'circulation' | 'facturer' | 'rappel';
+type IconeMinuteur = 'lait' | 'viande' | 'declaration' | 'bilan' | 'circulation' | 'facturer' | 'rappel';
 
 /** Une échéance ou un reste à faire, en pastille ronde sur le côté de l'accueil. */
-export interface Minuteur {
+interface Minuteur {
   id: string;
   icone: IconeMinuteur;
   /** Son nom court (« RSA », « Délai lait »). */

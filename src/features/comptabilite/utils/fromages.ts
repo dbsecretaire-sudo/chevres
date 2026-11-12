@@ -5,7 +5,7 @@ import { PREFIXE_FROMAGE_AJOUTE } from '@/shared/constants/stock';
 import { LABEL_TYPE_FROMAGE } from '@/shared/textes/libelles';
 
 /** Les types de fromage d'office, quand le stock n'en propose pas (même liste que les types de la vente). */
-export const OPTIONS_TYPE_FROMAGE = Object.entries(LABEL_TYPE_FROMAGE).map(([value, label]) => ({
+const OPTIONS_TYPE_FROMAGE = Object.entries(LABEL_TYPE_FROMAGE).map(([value, label]) => ({
   value: value as string,
   label,
 }));

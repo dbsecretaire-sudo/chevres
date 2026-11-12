@@ -18,7 +18,7 @@ import {
 } from '@/shared/textes/libelles';
 import { TEXTES } from '@/shared/textes';
 
-export interface RecapCompte {
+interface RecapCompte {
   numero: string;
   libelle: string;
   total: number;

@@ -5,7 +5,7 @@ import { CATEGORIE_DEPENSE, OBJET_ASSURANCE, TYPE_FACTURE } from '@/shared/const
 import { LABEL_OBJET_ASSURANCE } from '@/shared/textes/libelles';
 
 /** Un contrat qu'on peut proposer d'après ce qui est déjà noté : son nom, et ce qu'on en sait (la prime, la périodicité, la prochaine échéance). */
-export interface PropositionContrat {
+interface PropositionContrat {
   /** Ce qu'il couvre, avec son assureur : la même clé que celle gardée dans le contrat (`source`), pour ne pas le proposer deux fois. */
   cle: string;
   nom: string;

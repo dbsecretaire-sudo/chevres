@@ -40,7 +40,7 @@ export function separerNomPrenom(complet: string): { nom: string; prenom: string
 }
 
 /** Le cadre « Identification de l'entité collective » : ce que l'utilisateur en a saisi, complété par ses propres numéros quand il est lui-même le gestionnaire. */
-export interface EntiteCollective {
+interface EntiteCollective {
   numeroPacage: string;
   siret: string;
   commune: string;
@@ -293,10 +293,10 @@ export function remplirDeclarationEstive(d: DonneesEstive): Promise<string> {
 }
 
 /** Les campagnes dont le formulaire officiel est embarqué : les autres sont dessinées d'après le même modèle. */
-export const CAMPAGNES_OFFICIELLES: readonly number[] = [2026];
+const CAMPAGNES_OFFICIELLES: readonly number[] = [2026];
 
 /** Les données de la déclaration d'une année : l'exploitation, l'effectif de caprins au jour de la montée et ce que l'utilisateur a saisi. */
-export async function donneesDeLaDeclaration(annee: number, estive: ReglagesEstive): Promise<DonneesEstive> {
+async function donneesDeLaDeclaration(annee: number, estive: ReglagesEstive): Promise<DonneesEstive> {
   const [tous, ventes, settings] = await Promise.all([
     loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL),
     listToutesVentes(),

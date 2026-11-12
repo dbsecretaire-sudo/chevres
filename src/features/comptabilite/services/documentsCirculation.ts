@@ -17,7 +17,7 @@ import { animauxDuLot } from '@/features/lots-animaux/services/lots';
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 
 /** Pendant combien de jours un document de circulation manquant est rappelé (au-delà, l'écriture est trop ancienne pour qu'on le réclame). */
-export const JOURS_RAPPEL_CIRCULATION = 365;
+const JOURS_RAPPEL_CIRCULATION = 365;
 
 /** Le genre d'une écriture à document : une vente, une dépense, ou un départ (bon de livraison « lot », vente d'animaux vivants « vivants »). */
 export type TypeDEcritureACirculation = 'vente' | 'facture' | 'lot' | 'vivants' | 'entree';

@@ -41,14 +41,14 @@ export type CleLieuTiers =
   | 'entrepot'
   | 'commercial';
 
-export interface LienDuLieu {
+interface LienDuLieu {
   /** La clé de ses textes (`TEXTES.production.lieux[lieu].liens[cle]`). */
   cle: string;
   icone: keyof typeof Ionicons.glyphMap;
   route: string;
 }
 
-export interface ConfigLieuTiers {
+interface ConfigLieuTiers {
   cle: CleLieuTiers;
   /** Son dessin sur la carte (un emoji). */
   emoji: string;

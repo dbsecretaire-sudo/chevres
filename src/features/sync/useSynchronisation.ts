@@ -20,7 +20,7 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.synchronisation;
 
 /** Ce que fait la synchronisation en ce moment, pour désactiver les boutons pendant ce temps. */
-export type Occupation = 'connexion' | 'envoi' | 'reception' | 'automatique' | null;
+type Occupation = 'connexion' | 'envoi' | 'reception' | 'automatique' | null;
 
 /** Les options d'un envoi ou d'une réception : « silencieux » pour la synchronisation automatique (pas de message de réussite ni d'erreur). */
 interface OptionsSynchro {

@@ -18,7 +18,7 @@ export function produitAnalyseDeLArticle(article: string): ProduitAnalyse | unde
 }
 
 /** Une fabrication (les lots nés ensemble d'un même mouvement de stock) : de quoi lui rattacher ses analyses. */
-export interface FabricationDuRegistre {
+interface FabricationDuRegistre {
   /** L'identifiant de la fabrication (celui du mouvement de stock de ses lots). */
   id: string;
   article: string;

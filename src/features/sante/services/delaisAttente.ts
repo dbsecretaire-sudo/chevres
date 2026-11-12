@@ -33,7 +33,7 @@ export const traitementConcerne = (t: Pick<Traitement, 'chevreNumeroBoucle'>, nu
   !t.chevreNumeroBoucle?.trim() || concerneLaBoucle(t.chevreNumeroBoucle, numeroBoucle);
 
 /** Un délai en cours : le traitement, ce qu'il protège et son dernier jour. */
-export interface DelaiEnCours {
+interface DelaiEnCours {
   traitement: Traitement;
   type: TypeDelai;
   fin: string;

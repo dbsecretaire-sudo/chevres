@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { PieceJointe } from '@/features/fichiers/types';
 
 /** Les fichiers joints qui attendent d'être envoyés au serveur de la ferme (leur fiche suffit : le contenu est dans l'appareil). */
-export const CLE_PIECES_A_ENVOYER = 'troupeau:v1:sync-pieces-a-envoyer';
+const CLE_PIECES_A_ENVOYER = 'troupeau:v1:sync-pieces-a-envoyer';
 
 /** La taille maximale d'un fichier joint synchronisé : 5 Mo. Au-delà, le fichier reste sur l'appareil seulement. */
 export const TAILLE_MAX_PIECE = 5 * 1024 * 1024;

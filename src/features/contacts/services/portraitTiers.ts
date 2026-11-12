@@ -2,7 +2,7 @@ import { CATEGORIE_CLIENT } from '@/shared/constants/clients';
 import { CATEGORIE_FOURNISSEUR } from '@/shared/constants/fournisseurs';
 
 /** Ce qui représente un tiers : son dessin, le décor qui l'entoure, et la couleur de son fond (de quoi faire une fiche vivante). */
-export interface PortraitTiers {
+interface PortraitTiers {
   emoji: string;
   decor: string;
   fond: string;

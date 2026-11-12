@@ -3,7 +3,7 @@ import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorCo
 import { colors } from '@/shared/theme/colors';
 import { styles } from '@/shared/styles/etablissements/SelecteurEspece.styles';
 
-export interface PuceMultiple<T extends string | number> {
+interface PuceMultiple<T extends string | number> {
   valeur: T;
   label: string;
 }

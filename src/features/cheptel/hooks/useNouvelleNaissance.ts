@@ -21,7 +21,7 @@ export interface CabritNaissanceForm {
   mortNe: boolean;
 }
 
-export const nouveauCabrit = (): CabritNaissanceForm => ({
+const nouveauCabrit = (): CabritNaissanceForm => ({
   key: generateId(),
   numeroBoucle: '',
   sexe: SEXE.FEMELLE,

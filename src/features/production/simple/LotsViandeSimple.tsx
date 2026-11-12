@@ -28,7 +28,7 @@ const S = TEXTES.production.viande.simple;
 const L = TEXTES.production.lotsViandeSimple;
 
 /** Ce que la liste montre : « afacturer » (la viande à facturer et facturée) ou « avendre » (la viande à vendre et vendue). */
-export type QuoiLotsViande = 'afacturer' | 'avendre';
+type QuoiLotsViande = 'afacturer' | 'avendre';
 
 /** Une ligne de la liste : son titre, son détail, et si c'est fait (facturée, vendue) ou non. */
 interface Ligne {

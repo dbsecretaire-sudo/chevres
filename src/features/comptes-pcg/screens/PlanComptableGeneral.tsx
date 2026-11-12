@@ -23,7 +23,7 @@ const simple = (texte: string): string =>
     .toLowerCase();
 
 /** Les lignes d'une recherche : les classes, et sous chacune ses comptes qui répondent (un numéro qui commence ainsi, ou tous les mots dans le libellé ou la note). */
-export function lignesDuPlan(recherche: string): Ligne[] {
+function lignesDuPlan(recherche: string): Ligne[] {
   const mots = simple(recherche).split(/\s+/).filter(Boolean);
   const lignes: Ligne[] = [];
   for (const { classe, titre, comptes } of PCG_COMPLET) {
@@ -47,7 +47,7 @@ export function lignesDuPlan(recherche: string): Ligne[] {
  * Les lignes d'une classe, comme sur la maquette : un compte à deux chiffres est une bande teintée (qu'on replie ou déplie), et les comptes qui
  * suivent, à trois ou quatre chiffres, sont des cartes rangées sous lui. Les comptes fermés (`fermes`) ne montrent pas les leurs.
  */
-export function lignesDeLaClasse(classe: ClassePcg, fermes: ReadonlySet<string>): Ligne[] {
+function lignesDeLaClasse(classe: ClassePcg, fermes: ReadonlySet<string>): Ligne[] {
   const lignes: Ligne[] = [];
   let groupe: string | null = null;
   for (const compte of classe.comptes) {

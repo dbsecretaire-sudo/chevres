@@ -66,7 +66,7 @@ export interface AnneePrecedente {
 }
 
 /** Un poste qu'un investissement touche : les grains de l'alimentation, toute l'alimentation (quand les grains ne se distinguent pas) ou le carburant. */
-export interface PostePisteInvestissement {
+interface PostePisteInvestissement {
   cle: 'grains' | 'alimentation' | 'carburant';
   /** Ce que le poste a coûté dans l'année. */
   montant: number;
@@ -91,7 +91,7 @@ export interface PisteInvestissement {
 }
 
 /** Un fromage de l'inventaire qui a un prix de vente et des litres de lait : de quoi le comparer à la vente du lait. */
-export interface FromagePrixLitres {
+interface FromagePrixLitres {
   /** L'identifiant de l'article de l'inventaire (« fromage:frais »). */
   cle: string;
   libelle: string;
@@ -124,7 +124,7 @@ export interface ValorisationLait {
   lignes: LigneValorisation[];
 }
 
-export interface EntreePlan {
+interface EntreePlan {
   rentabilite: Rentabilite;
   /** Ce que l'utilisateur a indiqué de chaque investissement (coût, prix d'après devis). */
   investissements?: Partial<Record<ValeurDe<typeof INVESTISSEMENT>, ReglageInvestissement>>;

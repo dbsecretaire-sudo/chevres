@@ -278,7 +278,7 @@ export async function supprimerListe(id: string, espece?: string): Promise<boole
 }
 
 /** Les débuts de compte saisis (« 701, 706 ») : de 2 à 6 chiffres, sans doublon ; vide si l'un d'eux n'est pas valable. */
-export function analyserPrefixes(texte: string): string[] {
+function analyserPrefixes(texte: string): string[] {
   const morceaux = texte.split(/[\s,;]+/).filter(Boolean);
   const valables = morceaux.every((p) =>
     new RegExp(`^\\d{${CHIFFRES_MIN_PREFIXE_COMPTE},${CHIFFRES_COMPTE_PCG}}$`).test(p),
@@ -308,7 +308,7 @@ function classesDesAutres(
 }
 
 /** Contrôle une catégorie : un nom, une classe de 2 chiffres que nulle autre catégorie n'a, et (si demandé) un début de compte valable. */
-export function controlerCategorie(
+function controlerCategorie(
   donnees: DonneesCategorie,
   /** Les classes des autres catégories. */
   classesPrises: string[],

@@ -14,10 +14,10 @@ const T = TEXTES.commercial.agritourisme.couts;
 const arrondi = (valeur: number): number => Math.round(valeur * 100) / 100;
 
 /** Le regroupement des charges d'agritourisme qui ne concernent aucun élément en particulier : elles se partagent entre toutes les visites. */
-export const ELEMENT_COMMUN = '';
+const ELEMENT_COMMUN = '';
 
 /** Une dépense d'un élément (« Assurance tout risque », « Carburant ») et son montant sur l'année. */
-export interface PosteCoutAgritourisme {
+interface PosteCoutAgritourisme {
   libelle: string;
   montant: number;
 }

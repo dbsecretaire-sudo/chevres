@@ -18,7 +18,7 @@ export interface VarianteDeFromage {
 /**
  * Un fromage affiné (le vieux, le brocciu affiné, le crottin affiné…) : reconnu à son type, ou à son nom quand c'est un fromage ajouté au stock.
  */
-export function estFromageAffine(article: string, libelle = ''): boolean {
+function estFromageAffine(article: string, libelle = ''): boolean {
   return article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.AFFINE}` || /affin/i.test(libelle);
 }
 
@@ -58,7 +58,7 @@ export const VARIANTES_DE_FROMAGE: readonly VarianteDeFromage[] = TYPES_DE_LAIT.
 ]);
 
 /** L'identifiant, dans la table des durées, d'un article (« base ») ou d'une de ses variantes. */
-export const cleDureeDeVie = (article: string, suffixe?: string): string => (suffixe ? `${article}|${suffixe}` : article);
+const cleDureeDeVie = (article: string, suffixe?: string): string => (suffixe ? `${article}|${suffixe}` : article);
 
 /** Les durées de conservation d'un article, par suffixe : « » pour sa durée de base, « nonsale|cru » pour une variante de fromage. */
 export function dureesDeVieDeLArticle(archive: Pick<ArchiveStock, 'dureeDeVie'>, article: string): Record<string, number> {
@@ -77,7 +77,7 @@ export function dureesDeVieDeLArticle(archive: Pick<ArchiveStock, 'dureeDeVie'>,
 const DUREES_PAR_DEFAUT = { frais: 21, brocciu: 7, brocciuAffine: 30, crottin: 21, crottinAffine: 28, affine: 90 } as const;
 
 /** La durée par défaut d'un fromage, d'après son article (son type) et son nom ; rien pour un autre produit. */
-export function dureeParDefaut(article: string, libelle = ''): number | undefined {
+function dureeParDefaut(article: string, libelle = ''): number | undefined {
   if (!article.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)) return undefined;
   const nom = libelle.toLowerCase();
   const affine = estFromageAffine(article, libelle);

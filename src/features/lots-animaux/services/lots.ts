@@ -138,11 +138,11 @@ export const estLotVerrouille = (lot: Pick<LotAnimaux, 'categorie' | 'abattoir'>
   estLotAutomatique(lot) || !!lot.abattoir || lot.categorie === CATEGORIE_LOT.ABATTOIR;
 
 /** Les lots de renouvellement de cette année (celle de désignation de leurs animaux). */
-export const lotsDeRenouvellement = (lots: LotAnimaux[], annee: number): LotAnimaux[] =>
+const lotsDeRenouvellement = (lots: LotAnimaux[], annee: number): LotAnimaux[] =>
   lots.filter((l) => l.categorie === CATEGORIE_LOT.RENOUVELLEMENT && l.renouvellement === annee);
 
 /** Le nom du lot de renouvellement d'une année : il ne se modifie pas. */
-export const nomDuLotDeRenouvellement = (annee: number): string =>
+const nomDuLotDeRenouvellement = (annee: number): string =>
   TEXTES.cheptel.lots.renouvellementAnnee(annee);
 
 /**
@@ -245,10 +245,10 @@ export function meresAyantMisBas(animaux: Chevre[], annee: number): Set<string> 
 }
 
 /** Le nom du lot de mise à la reproduction d'une année : il ne se modifie pas. */
-export const nomDuLotDeReproduction = (annee: number): string => TEXTES.cheptel.lots.reproductionAnnee(annee);
+const nomDuLotDeReproduction = (annee: number): string => TEXTES.cheptel.lots.reproductionAnnee(annee);
 
 /** La version actuelle du calcul des lots de mise à la reproduction (voir lotsDeReproductionDeLAnnee). */
-export const VERSION_CALCUL_REPRODUCTION = 2;
+const VERSION_CALCUL_REPRODUCTION = 2;
 
 /**
  * Les boucles des femelles mises à la reproduction pour les mises bas d'une année : celles qui ont mis bas (les mères des petits comptés
@@ -376,7 +376,7 @@ export function retirerLesLotsDeVisites(
 }
 
 /** Les catégories de lots d'office : elles ne se retirent pas (leurs lots se créent tout seuls), mais on peut les renommer et les ranger. */
-export function categoriesDeLotsParDefaut(): CategorieLotReglage[] {
+function categoriesDeLotsParDefaut(): CategorieLotReglage[] {
   const C = TEXTES.cheptel.lots.categories;
   return [
     { id: CATEGORIE_LOT.ABATTOIR, nom: C.abattoir },

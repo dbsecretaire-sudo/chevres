@@ -4,15 +4,7 @@ import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/reposi
 import { plageDeBoucles } from '@/features/stock/services/boucles';
 import { CLE_LAIT } from '@/features/stock/services/historiqueLait';
 import { quantiteDansLUniteDuStock } from '@/features/stock/services/unites';
-import {
-  articlesDuGenre,
-  cleArticle,
-  codeFromageDeLaVente,
-  estLigneDuCheptel,
-  libelleArticle,
-  lignesDeVenteDeProduits,
-  type ArticleAffiche,
-} from '@/features/stock/services/stock';
+import { articlesDuGenre, cleArticle, codeFromageDeLaVente, estLigneDuCheptel, lignesDeVenteDeProduits, type ArticleAffiche } from '@/features/stock/services/stock';
 import { lotVendable } from '@/features/stock/services/dossiersSavons';
 import type {
   ArchiveStock,
@@ -26,21 +18,8 @@ import type {
 import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { CATEGORIE_VENTE } from '@/shared/constants/comptabilite';
-import {
-  ETAT_LOT,
-  GENRE_ARTICLE,
-  LETTRE_CATEGORIE_LOT,
-  LETTRE_CATEGORIE_LOT_PAR_DEFAUT,
-  LETTRE_LAIT_LOT,
-  LETTRE_PRODUIT_LOT,
-  LETTRES_SEL_LOT,
-  LOTS_MAX_PAR_FABRICATION,
-  ORIGINE_MOUVEMENT,
-  PRODUIT_A_LOTS,
-  SEPARATEUR_NUMERO_LOT,
-  TRI_LOT,
-} from '@/shared/constants/stock';
-import { MS_PAR_JOUR } from '@/shared/constants/temps';
+import { ETAT_LOT, GENRE_ARTICLE, LOTS_MAX_PAR_FABRICATION, ORIGINE_MOUVEMENT, PRODUIT_A_LOTS, TRI_LOT } from '@/shared/constants/stock';
+
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
@@ -227,26 +206,6 @@ export function fromagesRequis(
   if (idsDesFromages(vente).length > 0) return false;
   const article = articleDeLaVente(vente, archive);
   return !!article && lotsAChoisir(archive, article, vente.id).length > 0;
-}
-
-/** Le jour de l'année d'une date AAAA-MM-JJ (1 pour le 1er janvier, 365 ou 366 pour le dernier jour). */
-export function jourDeLAnnee(date: string): number {
-  const [annee, mois, jour] = date.split('-').map(Number);
-  return Math.round((Date.UTC(annee, mois - 1, jour) - Date.UTC(annee, 0, 0)) / MS_PAR_JOUR);
-}
-
-/** La lettre de la catégorie d'un produit dans son numéro de lot : celle d'office (Frais, Vieux, Crottin, Brocciu), sinon l'initiale de son nom. */
-export function lettreDeCategorie(article: string, archive: ArchiveStock): string {
-  const code = article.split(':')[1];
-  const dOffice = LETTRE_CATEGORIE_LOT[code];
-  if (dOffice) return dOffice;
-  const initiale = libelleArticle(article, archive)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .charAt(0)
-    .toUpperCase();
-  return /[A-Z]/.test(initiale) ? initiale : LETTRE_CATEGORIE_LOT_PAR_DEFAUT;
 }
 
 /**

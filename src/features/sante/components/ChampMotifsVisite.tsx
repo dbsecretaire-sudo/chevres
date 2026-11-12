@@ -13,10 +13,10 @@ const T = TEXTES.comptabilite.nouvelleEcriture.visite;
 const V = TEXTES.exploitation.nouvelleVisite;
 
 /** Ce qui sépare les motifs d'une visite dans le texte enregistré (le motif libre est le dernier). */
-export const SEPARATEUR_MOTIFS = ' · ';
+const SEPARATEUR_MOTIFS = ' · ';
 
 /** Les motifs de la liste que le texte enregistré nomme, et ce qui reste (le motif libre). */
-export function motifsDeLaVisite(texte: string, liste: string[]): { choisis: string[]; libre: string } {
+function motifsDeLaVisite(texte: string, liste: string[]): { choisis: string[]; libre: string } {
   const parties = texte.split(SEPARATEUR_MOTIFS);
   return {
     choisis: liste.filter((m) => parties.includes(m)),
@@ -25,7 +25,7 @@ export function motifsDeLaVisite(texte: string, liste: string[]): { choisis: str
 }
 
 /** Le texte enregistré : les motifs choisis (dans l'ordre de la liste), puis le motif libre. */
-export const texteDesMotifs = (choisis: string[], libre: string): string =>
+const texteDesMotifs =(choisis: string[], libre: string): string =>
   [...choisis, ...(libre.trim() ? [libre] : [])].join(SEPARATEUR_MOTIFS);
 
 interface Props {

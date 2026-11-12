@@ -5,7 +5,7 @@ import { GENRE_ARTICLE, ORIGINE_MOUVEMENT } from '@/shared/constants/stock';
 import type { MouvementStock } from '@/features/stock/types';
 
 /** Un fromage de l'inventaire dans le tableau de répartition : son prix, ses litres de lait et ce que coûtent ses emballages. */
-export interface FromageRepartition {
+interface FromageRepartition {
   cle: string;
   libelle: string;
   prix: number;
@@ -46,7 +46,7 @@ export interface Repartition {
 const arrondi = (valeur: number): number => Math.round(valeur * 100) / 100;
 
 /** La recette du brocciu : les proportions qui servent à calculer ses quantités d'après le petit-lait des autres fromages. */
-export interface RecetteBrocciu {
+interface RecetteBrocciu {
   litresPetitLaitParLot: number;
   /** Les litres de lait caillé dont sortent ces litres de petit-lait. */
   litresLaitCailleParLot: number;

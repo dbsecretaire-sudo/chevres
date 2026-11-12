@@ -24,7 +24,7 @@ export const saisonDePrime = (annee: number): { debut: string; fin: string } => 
 });
 
 /** Les aides perçues pendant la saison d'une année (septembre de l'année → août de la suivante), par aide d'office (calcul pur). */
-export function calculerPrimesPercues(factures: Facture[], annee: number): PrimesPercues {
+function calculerPrimesPercues(factures: Facture[], annee: number): PrimesPercues {
   const debut = debutDeSaison(annee);
   const fin = finDeSaison(annee);
   const percues: PrimesPercues = {};

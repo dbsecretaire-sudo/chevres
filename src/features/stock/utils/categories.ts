@@ -10,7 +10,7 @@ import {
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 
-export type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
+type Categorie = ValeurDe<typeof CATEGORIE_INVENTAIRE>;
 export type Section = ValeurDe<typeof SECTION_STOCK>;
 
 const T = TEXTES.stock;

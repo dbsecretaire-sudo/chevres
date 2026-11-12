@@ -21,7 +21,7 @@ export interface ColonneDuTableau<T> {
 }
 
 /** Une case du pied d'un tableau : elle couvre une ou plusieurs colonnes (« Balance » sous Débit et Crédit réunis). Les cases d'une ligne se suivent et couvrent toutes les colonnes. */
-export interface CaseDePied {
+interface CaseDePied {
   /** Les clés des colonnes qu'elle couvre, dans l'ordre. */
   colonnes: string[];
   contenu: ReactNode;

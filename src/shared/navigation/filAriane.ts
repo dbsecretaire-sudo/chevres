@@ -1,7 +1,7 @@
 import type { MenuBureau as DefinitionMenu } from '@/bureau/pont';
 
 /** Une étape du fil d'Ariane (« Atelier > Gestion > Réserver > Nouvelle commande ») : son nom, et la page où elle mène quand on peut y aller. */
-export interface Maillon {
+interface Maillon {
   libelle: string;
   route?: string;
 }
@@ -13,10 +13,10 @@ export const routesDuMenu = (menu: DefinitionMenu): string[] => [
 ];
 
 /** Une entrée d'un menu : un écran, ou un trait (qui porte le titre de la partie qui suit). */
-export type EntreeDeMenu = NonNullable<DefinitionMenu['items']>[number];
+type EntreeDeMenu = NonNullable<DefinitionMenu['items']>[number];
 
 /** Une partie d'un menu long : son titre (absent pour les premières entrées) et ses entrées. */
-export interface PartieDeMenu {
+interface PartieDeMenu {
   titre?: string;
   entrees: EntreeDeMenu[];
 }

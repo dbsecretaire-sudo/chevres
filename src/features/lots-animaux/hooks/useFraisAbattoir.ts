@@ -6,7 +6,7 @@ import { useLots } from '@/features/lots-animaux/hooks/useLots';
 import { fraisDuLotPourLaVente } from '@/features/lots-animaux/services/lots';
 
 /** Les frais d'abattoir d'un jour d'abattage pour une vente : la part, en € TTC, et le taux de TVA de la facture de l'abattoir liée. */
-export interface FraisAbattoir {
+interface FraisAbattoir {
   montant: number;
   tauxTva?: number;
 }

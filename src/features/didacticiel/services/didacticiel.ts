@@ -5,7 +5,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
 /** Une option de l'application, expliquée : son nom, ce qu'elle fait, et l'écran où on la trouve (un appui l'ouvre). */
-export interface EtapeDidacticiel {
+interface EtapeDidacticiel {
   /** Son identifiant stable. */
   id: string;
   titre: string;
@@ -17,7 +17,7 @@ export interface EtapeDidacticiel {
 }
 
 /** Une partie de l'application (un onglet), avec ses options. */
-export interface ChapitreDidacticiel {
+interface ChapitreDidacticiel {
   id: string;
   titre: string;
   presentation: string;

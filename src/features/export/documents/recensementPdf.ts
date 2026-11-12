@@ -14,7 +14,7 @@ import { TEXTES } from '@/shared/textes';
 const R = TEXTES.cheptel.suiviMouvements.recensement;
 
 /** Ce que le formulaire reprend de l'exploitation. */
-export interface DonneesRecensement {
+interface DonneesRecensement {
   recensement: Recensement;
   identite: IdentiteSuivi;
   /** La première ligne de l'adresse de l'exploitation (le lieu-dit) ; à défaut, la commune. */
@@ -49,7 +49,7 @@ const STYLES = `
 `;
 
 /** Le recensement annuel des ovins et caprins : le formulaire de la Chambre d'agriculture, avec les effectifs calculés d'après le cheptel. */
-export function recensementHtml(d: DonneesRecensement): string {
+function recensementHtml(d: DonneesRecensement): string {
   const { recensement: r, identite: i } = d;
   const caprins = d.colonne === COLONNE_SUIVI_PAR_ESPECE.chevres;
   const effectif = [

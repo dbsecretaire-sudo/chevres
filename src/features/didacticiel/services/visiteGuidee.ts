@@ -5,11 +5,11 @@ export const ONGLETS_DU_BAS = ['accueil', 'cheptel', 'production', 'commercial',
 export type OngletDuBas = (typeof ONGLETS_DU_BAS)[number];
 
 /** La hauteur d'un en-tête d'écran et celle de la barre des onglets du bas (sans la marge du système : barre d'état en haut, barre de navigation en bas). */
-export const HAUTEUR_ENTETE = 56;
+const HAUTEUR_ENTETE = 56;
 export const HAUTEUR_BARRE_ONGLETS = 56;
 const LARGEUR_FLECHE_RETOUR = 64;
 
-export interface ZoneEcran {
+interface ZoneEcran {
   x: number;
   y: number;
   w: number;
@@ -73,7 +73,7 @@ export const etapesPourLEcran = (etapes: readonly EtapeVisite[], bureau: boolean
   etapes.filter((e) => !(bureau && e.onglet) && !(colonnes && e.etroit));
 
 /** La rubrique d'une adresse (cheptel, production, commercial, comptabilite, organisation), d'après son début. */
-export function rubriqueDeLAdresse(adresse: string): string {
+function rubriqueDeLAdresse(adresse: string): string {
   const chemin = adresse.split('?')[0];
   if (/^\/(cheptel|sante)(\/|$)/.test(chemin)) return 'cheptel';
   if (/^\/production(\/|$)/.test(chemin)) return 'production';

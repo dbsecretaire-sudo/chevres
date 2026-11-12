@@ -104,7 +104,7 @@ export function lignesDuCarnet(
 }
 
 /** Le nombre de lignes d'une page du carnet : celui du formulaire papier. */
-export const LIGNES_PAR_PAGE_CARNET = 9;
+const LIGNES_PAR_PAGE_CARNET = 9;
 
 /**
  * Les lignes réparties en pages de neuf, toujours : la dernière page est complétée de lignes vides, et une page vide quand il n'y a

@@ -4,7 +4,7 @@ import { SEXE, STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments';
 
 /** L'âge (en mois) à partir duquel les animaux comptent dans le recensement : les plus de 6 mois. */
-export const MOIS_RECENSEMENT = 6;
+const MOIS_RECENSEMENT = 6;
 
 /** Ce que demande le recensement annuel des ovins et caprins (règlement CE 21/2004), au 1er janvier d'une année. */
 export interface Recensement {

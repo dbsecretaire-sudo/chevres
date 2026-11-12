@@ -23,9 +23,9 @@ import { UNITES_STOCK, genreAvecUnite } from '@/features/stock/services/unites';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
 import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesModal';
-import { DetailLotsModal } from '@/features/stock/components/DetailLotsModal';
+
 import { dureesDeVieDeLArticle } from '@/features/stock/services/dlc';
-import { estArticleAvecLots, estArticlePlat, estArticleSavon, lotsDeLInventaire } from '@/features/stock/services/lots';
+import { estArticleAvecLots, estArticlePlat, estArticleSavon } from '@/features/stock/services/lots';
 import { Button } from '@/shared/components/Button';
 import {
   bouclesDeLEspece,
@@ -209,9 +209,6 @@ export default function StockFromagerie() {
   /** La sorte de boucles dont on regarde le détail, et si sa fenêtre est ouverte. */
   const [boucleOuverte, setBoucleOuverte] = useState<ArticleAffiche | null>(null);
   const [boucleVisible, setBoucleVisible] = useState(false);
-  /** Le fromage dont on regarde les lots (par numéro de lot), et si sa fenêtre est ouverte. */
-  const [fromageOuvert, setFromageOuvert] = useState<ArticleAffiche | null>(null);
-  const [fromageVisible, setFromageVisible] = useState(false);
   /** La synchronisation des boucles avec le cheptel : les numéros que portent les animaux, et si sa fenêtre est ouverte. */
   const [possibles, setPossibles] = useState<BouclePossible[]>([]);
   const [synchroOuverte, setSynchroOuverte] = useState(false);
@@ -833,24 +830,6 @@ export default function StockFromagerie() {
           charger();
         }}
         onFermer={() => setLaitOuvert(null)}
-      />
-
-      <DetailLotsModal
-        visible={fromageVisible}
-        article={fromageOuvert}
-        lots={archive.lots ?? []}
-        sansLot={
-          fromageOuvert
-            ? Math.max(
-                0,
-                (niveaux.get(fromageOuvert.cle) ?? 0) -
-                  lotsDeLInventaire(archive, 'en_stock', fromageOuvert.cle).length,
-              )
-            : 0
-        }
-        onChange={charger}
-        archive={archive}
-        onFermer={() => setFromageVisible(false)}
       />
 
       <DetailBouclesModal

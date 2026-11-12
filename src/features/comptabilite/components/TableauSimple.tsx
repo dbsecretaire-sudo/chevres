@@ -2,14 +2,14 @@ import { ScrollView, Text, View } from 'react-native';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/comptabilite/RepartitionLait.styles';
 
-export interface ColonneTableau {
+interface ColonneTableau {
   cle: string;
   titre: string;
   /** La largeur de la colonne (px). */
   largeur: number;
 }
 
-export interface LigneTableau {
+interface LigneTableau {
   cle: string;
   /** Le texte de chaque cellule, par clé de colonne. */
   cellules: Record<string, string>;

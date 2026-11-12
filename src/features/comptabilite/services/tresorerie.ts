@@ -62,7 +62,7 @@ export interface Tresorerie {
   totaux: { aEncaisser: number; aPayer: number; emprunts: number };
 }
 
-export interface EntreeTresorerie {
+interface EntreeTresorerie {
   annee: number;
   ventes: Vente[];
   factures: Facture[];

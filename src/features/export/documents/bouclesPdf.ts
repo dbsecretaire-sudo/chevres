@@ -24,7 +24,7 @@ const T = TEXTES.stock.boucles;
 const P = TEXTES.export.pdf.boucles;
 
 /** Ce que l'en-tête de la liste dit de l'exploitation : le nom, l'adresse et le n° de cheptel (comme sur le formulaire officiel). */
-export interface IdentiteListe {
+interface IdentiteListe {
   nom: string;
   adresse: string[];
   cheptel: string;

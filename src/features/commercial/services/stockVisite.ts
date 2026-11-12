@@ -5,7 +5,7 @@ import type { ArchiveStock, LotFromage } from '@/features/stock/types';
 import { GENRE_ARTICLE } from '@/shared/constants/stock';
 
 /** Ce qu'une visite doit sortir du stock pour un article : la quantité totale. */
-export interface BesoinDeVisite {
+interface BesoinDeVisite {
   article: string;
   quantite: number;
 }
@@ -25,7 +25,7 @@ export function besoinsDeLaVisite(formule: Pick<FormuleAgritourisme, 'besoins'> 
 }
 
 /** Un produit de l'inventaire qu'une formule peut consommer, rangé par catégorie (fromages, charcuterie et viande, plats, matières alimentaires…). */
-export interface ArticleDeBesoin extends ArticleAffiche {
+interface ArticleDeBesoin extends ArticleAffiche {
   groupe: string;
 }
 

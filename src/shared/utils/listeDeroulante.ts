@@ -9,7 +9,7 @@ export const LISTE_DEROULANTE = { dataSet: { liste: 'deroulante' } } as object;
 export const TITRE_LISTE_DEROULANTE = { dataSet: { liste: 'titre' } } as object;
 
 /** Le champ qui ouvre la liste, et la fenêtre où elle s'ouvre (en pixels de l'écran, avant zoom). */
-export interface MesuresListe {
+interface MesuresListe {
   champ: { left: number; top: number; bottom: number; width: number };
   fenetre: { largeur: number; hauteur: number };
   /** Le zoom de la page (1 sans zoom) : les mesures de l'écran sont divisées par lui. */
@@ -17,7 +17,7 @@ export interface MesuresListe {
 }
 
 /** Où poser la liste : à la largeur du champ (au moins 260), juste dessous, ou au-dessus quand il n'y a pas la place dessous ; sa hauteur est bornée. */
-export interface PositionListe {
+interface PositionListe {
   left: number;
   largeur: number;
   maxHeight: number;
@@ -26,7 +26,7 @@ export interface PositionListe {
   bottom?: number;
 }
 
-export const LARGEUR_MINI_LISTE = 260;
+const LARGEUR_MINI_LISTE = 260;
 
 export function positionDeLaListe({ champ, fenetre, zoom = 1 }: MesuresListe): PositionListe {
   const z = zoom || 1;

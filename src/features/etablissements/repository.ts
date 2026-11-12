@@ -159,7 +159,7 @@ export async function choisirEtablissementActif(id: string): Promise<void> {
 export type ProfilEtablissement = Pick<DonneesEtablissement, 'animaux'>;
 
 /** Vrai si aucune espèce n'est renseignée. */
-export const profilEstVide = (profil: ProfilEtablissement): boolean => (profil.animaux?.length ?? 0) === 0;
+const profilEstVide = (profil: ProfilEtablissement): boolean => (profil.animaux?.length ?? 0) === 0;
 
 export async function profilEtablissementActif(): Promise<ProfilEtablissement> {
   const actif = (await listEtablissements()).find((e) => e.id === getIdEtablissementActif());

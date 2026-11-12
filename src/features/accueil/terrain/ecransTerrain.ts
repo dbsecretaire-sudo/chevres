@@ -85,9 +85,6 @@ const TUILES_DU_PLUS: TuileTerrain[] = RUBRIQUES_DU_PLUS.filter((r) => r.cle ===
 /** Le titre de l'écran terrain d'une zone. */
 export const titreDuTerrain = (zone: ZoneTerrain): string => TEXTES.accueil.ferme.terrain.titres[zone];
 
-/** L'adresse de l'écran terrain d'une zone. */
-export const routeDuTerrain = (zone: ZoneTerrain): string => ROUTES.terrain(zone);
-
 /** Les grands boutons d'une zone, dans l'ordre où on s'en sert. Un nombre à zéro ne s'affiche pas. */
 export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerrain[] {
   const avec = (nombre: number | undefined, alerte = false): Pick<TuileTerrain, 'nombre' | 'alerte'> =>

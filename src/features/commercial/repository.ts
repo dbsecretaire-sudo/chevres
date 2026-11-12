@@ -76,7 +76,7 @@ export async function getCommande(id: string): Promise<Commande | undefined> {
 }
 
 /** Le numéro d'une nouvelle commande : « C-année-001 », le rang suivant de l'année. */
-export function numeroDeCommande(commandes: Commande[], date: string): string {
+function numeroDeCommande(commandes: Commande[], date: string): string {
   const prefixe = PREFIXE_NUMERO_COMMANDE;
   const annee = date.slice(0, 4);
   const debut = `${prefixe}-${annee}-`;

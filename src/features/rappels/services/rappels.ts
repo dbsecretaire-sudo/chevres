@@ -71,7 +71,7 @@ export function periodeDeRappel(id: string): number {
 }
 
 /** Ce qui détermine les rappels d'un établissement : son type, et ce que l'utilisateur a désactivé ou validé. */
-export interface ContexteRappels {
+interface ContexteRappels {
   desactives?: readonly string[];
   valides?: readonly string[];
 }
@@ -79,7 +79,7 @@ export interface ContexteRappels {
 const deuxChiffres = (n: number) => String(n).padStart(2, '0');
 
 /** Le dernier jour du mois `mois` (1 à 12) de l'année `annee`, au format AAAA-MM-JJ. */
-export function finDuMois(annee: number, mois: number): string {
+function finDuMois(annee: number, mois: number): string {
   const dernier = new Date(annee, mois, 0).getDate();
   return `${annee}-${deuxChiffres(mois)}-${deuxChiffres(dernier)}`;
 }

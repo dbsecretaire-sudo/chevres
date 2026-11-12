@@ -4,7 +4,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { LOT_ABATTOIR } from '@/features/didacticiel/services/adresses';
 
 /** Une étape d'un parcours de cas : ce qu'on fait, où, et l'écran qui s'ouvre. */
-export interface EtapeParcours {
+interface EtapeParcours {
   /** Son numéro, tel qu'on le lit (« 1 », « 5A »). */
   numero: string;
   titre: string;
@@ -50,7 +50,7 @@ export type Picto =
   | 'restaure';
 
 /** Un cas du quotidien suivi pas à pas : on le lit dans le didacticiel, ou on le parcourt en visite guidée. */
-export interface Parcours {
+interface Parcours {
   id: string;
   titre: string;
   resume: string;

@@ -4,7 +4,7 @@ import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/Tab
 import { colors } from '@/shared/theme/colors';
 
 /** Une option d'une catégorie : son titre, et si elle est cochée. */
-export interface CaseDeCategorie {
+interface CaseDeCategorie {
   cle: string;
   titre: string;
   coche: (id: string) => boolean;

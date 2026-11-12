@@ -5,10 +5,10 @@ import { useSynchronisation } from '@/features/sync/useSynchronisation';
 import { lireCurseur, surAttente } from '@/shared/storage/depot';
 
 /** Le délai entre la dernière saisie et l'envoi : une fiche saisie en plusieurs fois part une fois, complète. */
-export const DELAI_ENVOI_MS = 3000;
+const DELAI_ENVOI_MS = 3000;
 
 /** Un compte utilisateur qui n'est pas encore prêt, ou une attente qui a échoué : on réessaie après ce délai (ce n'est pas une vérification des données). */
-export const DELAI_NOUVEL_ESSAI_MS = 20000;
+const DELAI_NOUVEL_ESSAI_MS = 20000;
 /**
  * La synchronisation sans bouton. À l'ouverture de l'application, et chaque fois qu'elle revient au premier plan, elle reçoit ce que les autres ont envoyé.
  * Après une saisie, elle envoie ce qui attend, quelques secondes plus tard. Sans connexion, ou avant la première synchronisation (qui se fait à la main, avec

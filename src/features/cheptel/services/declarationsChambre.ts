@@ -4,7 +4,7 @@ import type { PieceJointe } from '@/features/fichiers/types';
 import { CLE_STOCKAGE, PREFIXE_STOCKAGE } from '@/shared/constants/stockage';
 import { ecrireDonnee, lireCurseur, lireValeurLocale, surReception } from '@/shared/storage/depot';
 
-export const CLE_DECLARATIONS_CHAMBRE = `${PREFIXE_STOCKAGE}${CLE_STOCKAGE.DECLARATIONS_CHAMBRE}`;
+const CLE_DECLARATIONS_CHAMBRE = `${PREFIXE_STOCKAGE}${CLE_STOCKAGE.DECLARATIONS_CHAMBRE}`;
 
 /** Une déclaration par année et espèce : son fichier, ou une liste de fichiers dans l'ancien format. */
 export type DeclarationsChambre = Record<string, PieceJointe | PieceJointe[]>;

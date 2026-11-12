@@ -2,7 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { styles } from '@/shared/styles/components/ColonnesVerticales.styles';
 
-export interface ColonneGraphique {
+interface ColonneGraphique {
   cle: string;
   libelle: string;
   valeur: number;

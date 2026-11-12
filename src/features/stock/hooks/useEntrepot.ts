@@ -26,7 +26,7 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.production.lieux.entrepot;
 
 /** Les catégories du stock et, pour chacune (par sa clé de catégorie), ses rubriques avec leurs cartes. */
-export interface Entrepot {
+interface Entrepot {
   categories: CategorieDuStock[];
   groupesParCategorie: Map<string, GroupeDeCartes[]>;
 }

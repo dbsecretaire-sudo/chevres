@@ -60,7 +60,7 @@ export interface ChampDetail {
 }
 
 /** Un bloc du détail : un élément ajouté, modifié ou supprimé, ou la fiche entière. */
-export interface BlocDetail {
+interface BlocDetail {
   titre: string;
   champs: ChampDetail[];
 }
@@ -88,7 +88,7 @@ export function libelleZone(zone: string): string {
 }
 
 /** Le nom d'un champ en français : son libellé s'il est connu, sinon son nom découpé (« prixVente » devient « Prix vente »). */
-export function libelleChamp(cle: string): string {
+function libelleChamp(cle: string): string {
   if (LIBELLE_CHAMP[cle]) return LIBELLE_CHAMP[cle];
   const decoupe = cle.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
   return decoupe.charAt(0).toUpperCase() + decoupe.slice(1);
@@ -101,7 +101,7 @@ const estReferenceTechnique = (cle: string): boolean => cle === 'id' || /Id$/.te
  * La valeur d'un champ, en français : dates en jj/mm/aaaa, oui ou non, sexe, statut et espèce traduits, nombres à la française. Rend undefined
  * pour une valeur qu'on ne montre pas (un objet sans nom lisible).
  */
-export function valeurFrancaise(cle: string, valeur: unknown): string | undefined {
+function valeurFrancaise(cle: string, valeur: unknown): string | undefined {
   if (valeur === null || valeur === undefined || valeur === '') return '—';
   if (typeof valeur === 'boolean') return valeur ? 'Oui' : 'Non';
   if (typeof valeur === 'number') return valeur.toLocaleString('fr-FR');

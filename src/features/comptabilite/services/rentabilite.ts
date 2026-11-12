@@ -77,7 +77,7 @@ export interface Rentabilite {
   effectif?: number;
 }
 
-export interface EntreeRentabilite {
+interface EntreeRentabilite {
   annee: number;
   ventes: Vente[];
   factures: Facture[];

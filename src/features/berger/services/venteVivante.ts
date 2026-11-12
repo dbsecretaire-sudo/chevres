@@ -13,7 +13,7 @@ import { generateId } from '@/shared/utils/id';
 import { nomComplet } from '@/shared/utils/personne';
 
 /** Ce qu'on saisit pour une vente vivante : la date, le prix, et l'acheteur (sans lui, le document de circulation n'a pas où se ranger). */
-export interface SaisieVenteVivante {
+interface SaisieVenteVivante {
   activite: Parameters<typeof enregistrerLaVente>[0]['activite'];
   date: string;
   prix: number;

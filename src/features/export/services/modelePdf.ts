@@ -23,14 +23,14 @@ export interface Outils {
 }
 
 /** Un rectangle du modèle, en points : le coin bas gauche, puis la largeur et la hauteur. */
-export interface Zone {
+interface Zone {
   x: number;
   y: number;
   largeur: number;
   hauteur: number;
 }
 
-export interface OptionsModele {
+interface OptionsModele {
   /**
    * La partie du modèle qu'on reprend (par défaut, la page entière) : un modèle qui porte deux formulaires (le bordereau de perte et celui
    * de localisation) n'en donne qu'un.

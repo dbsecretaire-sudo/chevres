@@ -7,7 +7,7 @@ import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 /** Un morceau de texte, ou un lien cliquable (son nom et le site où il mène). */
-export type SegmentExplication =
+type SegmentExplication =
   string | { libelle: string; lien: (typeof LIEN_AIDE)[keyof typeof LIEN_AIDE] };
 
 /** Un bloc d'une explication : un paragraphe (texte et liens à la suite) ou une image. */

@@ -11,7 +11,7 @@ import { formatDateShortFR } from '@/shared/utils/dates';
 const T = TEXTES.rappels.analysesPlats;
 
 /** Les jours entre deux analyses de chaque produit transformé (absent : pas de rappel pour ce produit). */
-export interface JoursEntreAnalyses {
+interface JoursEntreAnalyses {
   plat?: number;
   savon?: number;
 }

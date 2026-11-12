@@ -10,7 +10,7 @@ import { formatDateFR } from '@/shared/utils/dates';
 const T = TEXTES.exploitation.visiteLiee;
 
 /** Le nom d'une visite dans la liste : la date de la facture du vétérinaire, son nom et ce qu'elle décrit (« 12/03/2026 · Cabinet vétérinaire · Contrôle du troupeau »). */
-export const libelleDeLaVisite = (facture: Pick<Facture, 'date' | 'tiers' | 'description'>): string =>
+const libelleDeLaVisite = (facture: Pick<Facture, 'date' | 'tiers' | 'description'>): string =>
   [formatDateFR(facture.date), facture.tiers, facture.description].filter(Boolean).join(' · ');
 
 /**

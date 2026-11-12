@@ -28,7 +28,7 @@ export function moisDeclares(etude: MoisDeLAnnee): MoisDeLAnnee[] {
 }
 
 /** Ce qui s'écrit dans les trois colonnes du formulaire, pour un mois déclaré. */
-export interface MontantsDuMois {
+interface MontantsDuMois {
   /** Le chiffre d'affaires après abattement, en euros sans centimes (nouvel installé seulement). */
   ca?: number;
   /** Les aides courantes (PAC…), en euros sans centimes ; l'ICHN n'y entre pas (elle se déclare chaque année). */

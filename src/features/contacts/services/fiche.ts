@@ -66,7 +66,7 @@ export const balanceDuContact = (ecritures: Pick<EcritureClient, 'montant'>[]): 
   Math.round(ecritures.reduce((somme, e) => somme + e.montant, 0) * 100) / 100;
 
 /** La catégorie d'un contact : une seule, ou le conflit quand ses deux fiches en ont deux différentes (à choisir). */
-export interface CategorieDuContact {
+interface CategorieDuContact {
   id?: string;
   conflit?: { client: string; fournisseur: string };
 }

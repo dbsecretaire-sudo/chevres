@@ -29,7 +29,7 @@ export interface Choix {
 }
 
 /** L'identifiant d'un choix ajouté : son nom, précédé d'un repère (il reste lisible si une liste ne le connaît pas). */
-export const PREFIXE_CHOIX_AJOUTE = 'perso:';
+const PREFIXE_CHOIX_AJOUTE = 'perso:';
 
 /**
  * Les choix proposés : ceux d'office (renommés, sauf ceux masqués), puis ceux de l'utilisateur. Un choix masqué reste proposé s'il est celui déjà choisi

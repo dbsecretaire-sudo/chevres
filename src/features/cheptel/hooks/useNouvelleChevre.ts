@@ -11,14 +11,14 @@ import { SEXE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
 import { TEXTES } from '@/shared/textes';
 
-export interface CabritForm {
+interface CabritForm {
   key: string;
   numeroBoucle: string;
   sexe: Sexe;
   mortNe: boolean;
 }
 
-export const nouveauCabrit = (): CabritForm => ({
+const nouveauCabrit = (): CabritForm => ({
   key: generateId(),
   numeroBoucle: '',
   sexe: SEXE.FEMELLE,

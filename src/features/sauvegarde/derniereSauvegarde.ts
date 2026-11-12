@@ -4,10 +4,10 @@ import { CLE_STOCKAGE } from '@/shared/constants/stockage';
 import { todayISO } from '@/shared/utils/dates';
 
 /** Au-delà de ce nombre de jours sans sauvegarde, l'accueil le rappelle. */
-export const DELAI_RAPPEL_SAUVEGARDE_JOURS = 14;
+const DELAI_RAPPEL_SAUVEGARDE_JOURS = 14;
 
 /** Ce qu'on sait des sauvegardes de l'établissement : la dernière (export ou Drive) et le jour où le suivi a commencé. */
-export interface SuiviSauvegarde {
+interface SuiviSauvegarde {
   derniere?: string;
   depuis: string;
 }

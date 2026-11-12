@@ -2,7 +2,7 @@ import { PDFDocument } from 'pdf-lib';
 import { MODELE_RSA_ANNUELLE } from '@/features/comptabilite/formulaires/rsaAnnuelle';
 
 /** Ce qu'il faut pour la déclaration annuelle : ce que la notice demande, et que l'application ne connaît pas toujours. */
-export interface DonneesRsaAnnuelle {
+interface DonneesRsaAnnuelle {
   /** L'année du dernier revenu imposé ou imposable connu (celle de l'avis d'imposition). */
   anneeRevenu: number;
   /** Le bénéfice micro-BA de cette année, tel qu'il figure sur l'avis (« bénéfices agricoles régime micro imposables »), en euros. */

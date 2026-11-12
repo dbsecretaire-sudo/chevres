@@ -3,7 +3,6 @@ import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 
 /** Format des fichiers CSV synchronisés avec Drive : colonnes, types de champs et séparateurs — à modifier ici uniquement. */
 
-export const EXTENSION_CSV = '.csv';
 
 /** Séparateur des lignes d'une même facture (aliments/carburants) dans une cellule. */
 export const SEPARATEUR_LIGNES = '|';

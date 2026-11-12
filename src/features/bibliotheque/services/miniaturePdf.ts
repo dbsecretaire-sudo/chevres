@@ -3,7 +3,7 @@ import { pieceExiste, uriAffichagePiece } from '@/features/fichiers/services/pie
 import type { PieceJointe } from '@/features/fichiers/types';
 
 /** La largeur de la miniature, en pixels. */
-export const LARGEUR_MINIATURE_PDF = 160;
+const LARGEUR_MINIATURE_PDF = 160;
 
 /** Les miniatures déjà produites (ou en cours), par pièce : une pièce n'est lue qu'une fois. */
 const miniatures = new Map<string, Promise<string | undefined>>();

@@ -310,7 +310,7 @@ export function codeFromageDeLaVente(vente: Vente, archive: ArchiveStock): strin
 }
 
 /** Le nombre de fromages d'une vente : sa quantité (les fromages se vendent à la pièce ; au poids, rien n'est décompté). */
-export function fromagesVendus(vente: Vente): number {
+function fromagesVendus(vente: Vente): number {
   return vente.unite === UNITE_VENTE.PIECE ? Math.round(vente.quantite) : 0;
 }
 
@@ -857,7 +857,7 @@ export function bilanLait(archive: ArchiveStock, litresVendus: number, ventesDat
 }
 
 /** Une sortie de lait (vente au récolteur, fabrication de fromages) : son identifiant, sa date et ses litres. */
-export interface SortieLait {
+interface SortieLait {
   id: string;
   date: string;
   litres: number;
@@ -882,7 +882,7 @@ export function productionDeduite(litresNotes: number, sorties: SortieLait[]): S
 }
 
 /** Le lait utilisé pour les fabrications d'un fromage sur une année : par fromage, et mois par mois. */
-export interface StatistiqueLait {
+interface StatistiqueLait {
   /** Litres de lait par fromage sur l'année. */
   litresParFromage: number;
   litres: number;
@@ -934,7 +934,7 @@ export function statistiqueLait(
 export const prixDesOeufs = (archive: Pick<ArchiveStock, 'prix'>): number =>
   archive.prix[CLE_PRIX_OEUFS] ?? PRIX_OEUF_DEFAUT;
 
-export function prixUnitaireDeLaVente(
+function prixUnitaireDeLaVente(
   vente: Vente,
   archive: ArchiveStock,
   /** Les prix de la catégorie du contact de la vente, par identifiant d'article (la grille de tarifs) : ils passent avant l'inventaire. */

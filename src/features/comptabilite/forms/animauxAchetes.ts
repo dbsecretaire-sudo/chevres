@@ -22,7 +22,7 @@ export const animalAcheteVide = (): AnimalAcheteForm => ({
 });
 
 /** Un animal est complet quand sa date de naissance est une vraie date. */
-export const animalAcheteComplet = (a: AnimalAcheteForm): boolean => estDateISO(a.naissance);
+const animalAcheteComplet = (a: AnimalAcheteForm): boolean => estDateISO(a.naissance);
 
 /**
  * Les animaux achetés qu'on peut enregistrer, ou le message de ce qui manque : au moins un animal, chacun avec sa date de naissance, et

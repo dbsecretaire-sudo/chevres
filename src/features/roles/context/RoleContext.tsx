@@ -6,7 +6,7 @@ import { definirModeSimple } from '@/shared/hooks/useModeSimple';
 import { afficheSobre } from '@/shared/utils/affichage';
 import { estBureau } from '@/shared/utils/plateforme';
 
-export type Role = ValeurDe<typeof ROLE>;
+type Role = ValeurDe<typeof ROLE>;
 
 interface RoleContextValue {
   /** Le rôle choisi au lancement ; absent tant qu'on ne l'a pas choisi. */

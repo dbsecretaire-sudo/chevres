@@ -3,24 +3,7 @@ import type { Categorie, RecordMap } from '@/shared/storage/types';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { LigneAlimentation, LigneCarburant, LigneMarchandise } from '@/features/comptabilite/types';
 
-import {
-  CHAMPS_BOOLEEN,
-  CHAMPS_BOOLEEN_TROIS_ETATS,
-  CHAMPS_FICHIERS,
-  CHAMPS_JSON,
-  CHAMPS_LIGNES_ALIMENTATION,
-  CHAMPS_LIGNES_CARBURANT,
-  CHAMPS_LIGNES_MARCHANDISES,
-  CHAMPS_NOMBRE,
-  COLONNES_CSV,
-  CSV_NON,
-  CSV_OUI,
-  EXTENSION_CSV,
-  GENRE_EQUIPEMENT,
-  GENRE_MATERIEL,
-  SEPARATEUR_CHAMPS,
-  SEPARATEUR_LIGNES,
-} from '@/shared/constants/csv';
+import { CHAMPS_BOOLEEN, CHAMPS_BOOLEEN_TROIS_ETATS, CHAMPS_FICHIERS, CHAMPS_JSON, CHAMPS_LIGNES_ALIMENTATION, CHAMPS_LIGNES_CARBURANT, CHAMPS_LIGNES_MARCHANDISES, CHAMPS_NOMBRE, COLONNES_CSV, CSV_NON, CSV_OUI, GENRE_EQUIPEMENT, GENRE_MATERIEL, SEPARATEUR_CHAMPS, SEPARATEUR_LIGNES } from '@/shared/constants/csv';
 
 /** Un texte libre dans une ligne : les séparateurs du fichier y sont remplacés par une espace (ils casseraient la ligne). */
 const proteger = (texte: string): string => texte.replace(/[|:]/g, ' ');
@@ -205,9 +188,6 @@ export function fromCSV<C extends Categorie>(categorie: C, csv: string): RecordM
     });
 }
 
-/** Le nom du fichier qui réunit toutes les années d'une catégorie (« cheptel.csv »). */
-export const fileNameForCategorie = (categorie: Categorie): string => `${categorie}${EXTENSION_CSV}`;
-
 /**
  * Toutes les années d'une catégorie dans un seul fichier : une colonne « annee » dit de quelle année est chaque ligne (l'année ne se déduit pas
  * toujours de la ligne : c'est celle où l'enregistrement est rangé).
@@ -242,8 +222,4 @@ export function fromCSVParAnnees<C extends Categorie>(categorie: C, csv: string)
     parAnnee.set(annee, [...(parAnnee.get(annee) ?? []), obj as unknown as RecordMap[C]]);
   }
   return parAnnee;
-}
-
-export function fileNameFor(categorie: Categorie, annee: number): string {
-  return `${categorie}_${annee}${EXTENSION_CSV}`;
 }

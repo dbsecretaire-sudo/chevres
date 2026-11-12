@@ -29,7 +29,7 @@ import { generateId } from '@/shared/utils/id';
 const CHIFFRES_MAX = 15;
 
 /** L'espèce d'une boucle : la sienne, ou l'espèce par défaut de l'établissement pour une ancienne boucle. */
-export const especeDeLaBoucle = (b: Pick<BoucleStock, 'espece'>): string => b.espece ?? especeParDefaut();
+const especeDeLaBoucle = (b: Pick<BoucleStock, 'espece'>): string => b.espece ?? especeParDefaut();
 
 /** Les boucles de l'espèce active (chaque espèce a les siennes : les boucles des chèvres ne sont pas celles des cochons). */
 export const bouclesDeLEspece = (boucles: BoucleStock[] | undefined): BoucleStock[] =>
@@ -359,7 +359,7 @@ export function avecPoses(
  * La date de pose d'une boucle d'après la fiche de l'animal qui la porte : sa date de bouclage, ou celle de sa boucle rouge ou de
  * son rebouclage selon la sorte de la boucle. Les listes la montrent telle que la fiche la donne, même avant la synchronisation.
  */
-export function datePoseSelonLAnimal(
+function datePoseSelonLAnimal(
   article: string,
   animal: Pick<Chevre, 'dateBouclage' | 'dateBoucleRouge' | 'dateRebouclage'> | undefined,
 ): string | undefined {

@@ -4,7 +4,7 @@
  * bouton (`x` vers la droite, `y` vers le bas).
  */
 
-export interface Point {
+interface Point {
   x: number;
   y: number;
 }

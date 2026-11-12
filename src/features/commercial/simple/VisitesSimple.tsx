@@ -14,7 +14,7 @@ import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 const T = TEXTES.commercial.agritourisme.simple;
 
 /** Les visites, de la plus récente à la plus ancienne (celles d'une formule seulement quand `formuleId` est donné). */
-export const visitesTriees = (visites: VisiteAgritourisme[], formuleId?: string): VisiteAgritourisme[] =>
+const visitesTriees = (visites: VisiteAgritourisme[], formuleId?: string): VisiteAgritourisme[] =>
   visites.filter((v) => !formuleId || v.formuleId === formuleId).sort((a, b) => b.date.localeCompare(a.date));
 
 /**

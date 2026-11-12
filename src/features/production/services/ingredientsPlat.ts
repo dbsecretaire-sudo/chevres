@@ -18,7 +18,7 @@ export interface IngredientProposable extends ArticleAffiche {
 /**
  * Les groupes où l'on range les ingrédients : les mêmes pour tous les produits, comme dans la bibliothèque de recettes, pour que le choix se lise partout pareil.
  */
-export interface GroupesDesIngredients {
+interface GroupesDesIngredients {
   fromages: string;
   charcuterie: string;
   autres: string;
@@ -107,7 +107,7 @@ export interface SaisieIngredient {
 }
 
 /** Un ingrédient dont le stock ne suffit pas : ce qu'il y a, ce qui est demandé. */
-export interface IngredientEnManque {
+interface IngredientEnManque {
   libelle: string;
   enStock: number;
   demande: number;

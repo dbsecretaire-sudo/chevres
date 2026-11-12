@@ -96,7 +96,7 @@ export function definirCategoriesFournisseur(choisies?: CategorieFournisseurRegl
 }
 
 /** Les catégories qui ne s'offrent plus au choix : elles ne restent visibles que tant qu'un contact les porte (ses anciennes fiches ne perdent pas leur catégorie). */
-export const ANCIENNES_CATEGORIES_FOURNISSEUR: readonly string[] = [CATEGORIE_FOURNISSEUR.GROUPEMENT];
+const ANCIENNES_CATEGORIES_FOURNISSEUR: readonly string[] = [CATEGORIE_FOURNISSEUR.GROUPEMENT];
 
 /** Les catégories à proposer : sans les anciennes que personne n'utilise (`utilisees` : les catégories portées par un contact). */
 export const sansAnciennesInutilisees = <C extends { id: string }>(categories: readonly C[], utilisees: ReadonlySet<string>): C[] =>

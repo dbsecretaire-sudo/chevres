@@ -34,7 +34,7 @@ import { nomComplet } from '@/shared/utils/personne';
 const C = TEXTES.cheptel.circulation;
 
 /** Le type du lieu d'arrivée, tel que le formulaire le propose (les cases à cocher). */
-export const LIEU_ARRIVEE = {
+const LIEU_ARRIVEE = {
   ELEVAGE: 'elevage',
   OPERATEUR: 'operateur',
   CENTRE: 'centre',
@@ -42,10 +42,10 @@ export const LIEU_ARRIVEE = {
   ABATTOIR: 'abattoir',
   PARTICULIER: 'particulier',
 } as const;
-export type LieuArrivee = (typeof LIEU_ARRIVEE)[keyof typeof LIEU_ARRIVEE];
+type LieuArrivee = (typeof LIEU_ARRIVEE)[keyof typeof LIEU_ARRIVEE];
 
 /** Ce que le document de circulation reprend d'une vente d'animaux. */
-export interface DonneesCirculation {
+interface DonneesCirculation {
   /** La date du chargement : celle de la vente. */
   date: string;
   depart: { numeroExploitation: string; siren: string; nom: string; adresse: string; codePostal: string; commune: string };
@@ -250,7 +250,7 @@ export function zonesACompleter(d: DonneesCirculation): ZoneACompleter[] {
  * départ et l'arrivée, les nombres d'animaux, les indicatifs et les numéros individuels, la mention sanitaire, la date, et, tout en bas, le
  * mouvement que l'exploitation notifie à l'EDE (« je notifie un départ » pour une vente, « une arrivée » pour un achat).
  */
-export function zonesPrerempliees(d: DonneesCirculation): ZoneACompleter[] {
+function zonesPrerempliees(d: DonneesCirculation): ZoneACompleter[] {
   const zones: ZoneACompleter[] = [
     [148, 759, 50, 11],
     [143, 670, 126, 11],

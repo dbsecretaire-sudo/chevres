@@ -4,7 +4,7 @@ import { colors } from '@/shared/theme/colors';
 /** Le texte de l'onglet actif (26 points) est presque deux fois plus grand que celui des autres (14) : son onglet a un coefficient de largeur à la mesure. */
 const COEFFICIENT_ACTIF = 1.9;
 
-export interface OngletTitre {
+interface OngletTitre {
   libelle: string;
   /** Absent pour la page courante : elle ne se touche pas. */
   onPress?: () => void;

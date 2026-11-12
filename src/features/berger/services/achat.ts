@@ -10,7 +10,7 @@ import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { generateId } from '@/shared/utils/id';
 
 /** Ce qu'on saisit pour un achat : la boucle (facultative), le sexe, le vendeur, la date, et le prix (facultatif). */
-export interface SaisieAchat {
+interface SaisieAchat {
   boucle: string;
   sexe: ValeurDe<typeof SEXE>;
   vendeur: string;

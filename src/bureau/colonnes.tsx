@@ -5,7 +5,7 @@ import { estLaRacineDUneRubrique, ligneDuMenuDe } from '@/bureau/retour';
 import { afficheBureau } from '@/shared/utils/affichage';
 
 /** À partir de cette largeur de fenêtre (en pixels), la version Windows montre deux colonnes : le menu de la rubrique et l'écran ouvert. */
-export const LARGEUR_DEUX_COLONNES = 900;
+const LARGEUR_DEUX_COLONNES = 900;
 
 /** Vrai quand la fenêtre est assez large pour deux colonnes, dans la version Windows seulement (le téléphone ne change pas). */
 export function useDeuxColonnes(): boolean {

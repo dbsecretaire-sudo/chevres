@@ -6,12 +6,6 @@ export const DOSSIER_PIECES_LOCAL = 'pieces';
 /** Version Windows : l'adresse sous laquelle la fenêtre affiche un fichier de l'ordinateur (suivie du chemin, encodé). */
 export const ADRESSE_FICHIERS_BUREAU = 'app://local/fichier/';
 
-/** Sous-dossier, dans le dossier Drive de l'établissement, des fichiers joints. */
-export const DOSSIER_PIECES_DRIVE = 'Pièces';
-
-/** Sépare l'identifiant du nom d'origine dans le nom d'un fichier sur Drive. */
-export const SEPARATEUR_NOM_PIECE = '__';
-
 export const MIME_FICHIER = {
   PDF: 'application/pdf',
   WORD: 'application/msword',

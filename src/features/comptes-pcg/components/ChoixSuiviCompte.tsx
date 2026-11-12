@@ -10,7 +10,7 @@ import type { ArchiveStock } from '@/features/stock/types';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
-export type SuiviCompte = 'inventaire' | 'service';
+type SuiviCompte = 'inventaire' | 'service';
 
 const T = TEXTES.comptesPcg.nouveauComptePcg;
 

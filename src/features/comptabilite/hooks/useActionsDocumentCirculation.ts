@@ -23,10 +23,10 @@ import { TEXTES } from '@/shared/textes';
 const T = TEXTES.cheptel.circulation;
 
 /** Ce dont on dépose le document : une vente, une dépense, un bon de livraison ou une vente d'animaux vivants, avec le document déjà déposé s'il y en a un. */
-export type EcritureDuDocument = Pick<EcritureACirculation, 'type' | 'id' | 'depose'>;
+type EcritureDuDocument = Pick<EcritureACirculation, 'type' | 'id' | 'depose'>;
 
 /** Une ligne du menu d'un document de circulation. */
-export type OptionDuMenu = Option;
+type OptionDuMenu = Option;
 
 /**
  * Ce qu'on fait du document de circulation d'une écriture : le déposer (ou le remplacer), l'ouvrir, le retirer, ou générer le modèle

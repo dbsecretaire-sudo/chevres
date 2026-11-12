@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // Les rôles et les exploitations. Trois rôles : l'administrateur voit tout (tous les comptes, toutes les exploitations) ; le modérateur
 // valide les saisies de ses exploitations et gère les comptes qui les partagent ; l'utilisateur ne fait que des saisies, qui attendent
-// la validation. Un compte est relié à une ou plusieurs exploitations (table acces_exploitations, voir schema-acces.sql).
+// la validation. Un compte est relié à une ou plusieurs exploitations (table acces_exploitations).
 // Chargé par index.php, après synchro.php (qui fournit motifDeRefus et pousserModifications).
 
 const ROLE_ADMINISTRATEUR = 'administrateur';

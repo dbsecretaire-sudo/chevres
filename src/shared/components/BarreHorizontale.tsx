@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { styles } from '@/shared/styles/components/BarreHorizontale.styles';
 
-export interface SegmentBarre {
+interface SegmentBarre {
   /** La part de la piste que prend ce segment (0 à 1). */
   part: number;
   couleur: string;

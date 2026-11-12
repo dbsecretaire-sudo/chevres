@@ -5,7 +5,7 @@ import { chevreRow, type IndicatifParEspece } from '@/features/export/services/l
 import { yearOf } from '@/shared/utils/dates';
 
 /** Une ligne du registre : une valeur par colonne. */
-export type LigneRegistre = Record<string, string>;
+type LigneRegistre = Record<string, string>;
 
 /** Ce qu'on écrit à la place d'un numéro de boucle quand l'animal n'en a pas (registre complet). */
 const TRAIT = '—';
@@ -21,7 +21,7 @@ function anneeDesignation(c: Chevre): number {
     : yearOf(c.dateNaissance);
 }
 
-export interface OptionsRegistre {
+interface OptionsRegistre {
   /**
    * Tous les animaux bouclés — vivants, morts, vendus, abattus, autoconsommés — avec leur statut (sans les notes), et les
    * animaux autoconsommés sans boucle (un trait à la place du numéro) ; les autres animaux sans boucle n'y figurent pas. Sans cette

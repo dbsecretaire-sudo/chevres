@@ -1,5 +1,5 @@
 /** Les démarches réglementaires de l'atelier (fromages, viande, charcuterie, plats) : ce que l'éleveur coche, date et justifie par des pièces. */
-export const ETAPE_ATELIER = {
+const ETAPE_ATELIER = {
   DECLARATION_ACTIVITE: 'declaration_activite',
   AGREMENT: 'agrement',
   PMS: 'pms',

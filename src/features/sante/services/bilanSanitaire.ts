@@ -1,7 +1,7 @@
 import type { VisiteVeterinaire } from '@/features/sante/types';
 
 /** Combien de jours avant son échéance un bilan sanitaire est dit « bientôt expiré ». */
-export const JOURS_BILAN_BIENTOT = 60;
+const JOURS_BILAN_BIENTOT = 60;
 
 /** Vrai pour une visite qui est un bilan sanitaire (son motif le dit : « Bilan sanitaire annuel », « bilan sanitaire d'élevage »…). */
 export const estBilanSanitaire = (visite: Pick<VisiteVeterinaire, 'motif'>): boolean =>

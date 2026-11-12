@@ -68,7 +68,7 @@ import { parseDecimal, totalMontants } from '@/shared/utils/nombres';
 import { TEXTES } from '@/shared/textes';
 
 /** Toutes les valeurs saisies dans le formulaire « Nouvelle écriture » (tout en texte, converti ici). */
-export interface SaisieEcriture {
+interface SaisieEcriture {
   activite: ActiviteComptable;
   type: TypeFacture;
   date: string;
@@ -176,7 +176,7 @@ export interface ErreurSaisie {
   message?: string;
 }
 
-export type ResultatSaisie =
+type ResultatSaisie =
   { erreur: ErreurSaisie } | { vente: Omit<Vente, 'id'> } | { facture: Omit<Facture, 'id'> };
 
 function construireVente(s: SaisieEcriture): ResultatSaisie {

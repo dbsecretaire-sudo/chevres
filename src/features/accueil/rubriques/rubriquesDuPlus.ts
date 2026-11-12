@@ -314,7 +314,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
 };
 
 /** Une tuile de la rubrique Visites : la visite à créer d'abord (remplie en vert, la principale), puis les visites du jour et le reste. */
-export interface TuileVisites {
+interface TuileVisites {
   libelle: string;
   aide: string;
   icone: Icone;
@@ -342,7 +342,7 @@ export const titreDeLaRubrique = (nom: string | undefined): string => (nom && RU
  * Les écrans d'une rubrique, avec leur chemin et, pour un lieu (« ?lieu=assurance »), son identifiant : le Précédent de ces écrans
  * ramène à la rubrique elle-même (Argent, par exemple).
  */
-export const entreesDeLaRubrique = (nom: string): { chemin: string; lieu?: string }[] =>
+const entreesDeLaRubrique = (nom: string): { chemin: string; lieu?: string }[] =>
   (RUBRIQUES[nom]?.sections ?? []).flatMap((s) => s.lignes).map((ligne) => {
     const [chemin, requete] = ligne.route.split('?');
     return { chemin, lieu: requete?.match(/lieu=([^&]+)/)?.[1] };

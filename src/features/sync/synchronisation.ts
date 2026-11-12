@@ -3,7 +3,7 @@ import { construireSauvegardeComplete, restaurerSauvegarde, type ResultatImport 
 import { getIdEtablissementActif } from '@/shared/storage/etablissementActif';
 
 /** L'adresse de l'API de synchronisation, sur l'hébergement OVH. */
-export const URL_SERVEUR_SYNC = 'https://chevres.pronta.corsica/api/index.php';
+const URL_SERVEUR_SYNC = 'https://chevres.pronta.corsica/api/index.php';
 
 /** L'exploitation par défaut du serveur : celle des comptes créés avant les accès multiples, et celle de l'administrateur sans exploitation. */
 const EXPLOITATION_PAR_DEFAUT = 'exploitation';

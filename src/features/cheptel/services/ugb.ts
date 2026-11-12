@@ -23,7 +23,7 @@ export const cleAides = (annee: number, espece: EspeceAnimale | string): string 
  * Les aides d'une année et d'une espèce : celles enregistrées pour elles, à défaut celles de l'année précédente la plus proche de
  * la même espèce (un montant se reprend d'une année à l'autre tant qu'on ne le change pas), à défaut les réglages d'avant les années.
  */
-export function reglagesDesAides(
+function reglagesDesAides(
   infos: InfosExploitation | undefined,
   annee: number,
   espece: EspeceAnimale | string,
@@ -101,14 +101,14 @@ export function baseDeLaPrime(
 type CleAideOffice = (typeof PRIMES)[number]['cle'];
 
 /** Le nom d'une aide d'office : celui qu'on lui a donné, à défaut le nom d'origine (long, ou court pour le bilan). */
-export function nomDeLAide(infos: InfosExploitation | undefined, cle: CleAideOffice, court = false): string {
+function nomDeLAide(infos: InfosExploitation | undefined, cle: CleAideOffice, court = false): string {
   const choisi = infos?.ugbPrimes?.primes?.[cle]?.nom?.trim();
   const textes = TEXTES.cheptel.ugbPrimes.primes[cle];
   return choisi || (court ? textes.court : textes.titre);
 }
 
 /** Les plafonds d'une aide : ceux saisis, à défaut ceux d'office (REGLES_PRIMES, pour une aide d'office) ; une valeur de 0 veut dire « sans ». */
-export interface PlafondsAide {
+interface PlafondsAide {
   transparenceGaec: boolean;
   plafond: number;
   minimum: number;
@@ -132,11 +132,11 @@ export function plafondsDeLAide(infos: InfosExploitation | undefined, cle: strin
 }
 
 /** Le nombre d'associés d'un GAEC (1 hors GAEC) : il multiplie les plafonds des aides en transparence. */
-export const associesGaec = (infos: InfosExploitation | undefined): number =>
+const associesGaec = (infos: InfosExploitation | undefined): number =>
   Math.max(1, Math.round(infos?.ugbPrimes?.associes ?? 1));
 
 /** Les animaux vivants d'une espèce : les petits (non sevrés) et les sevrés. */
-export interface EffectifUgb {
+interface EffectifUgb {
   petits: number;
   sevres: number;
 }
@@ -162,7 +162,7 @@ export const formaterUgb = (valeur: number): string =>
   String(Math.round(valeur * 100) / 100).replace('.', ',');
 
 /** Ce sur quoi les primes se calculent : l'UGB, le nombre d'animaux sevrés et les hectares admissibles. */
-export interface QuantitesPrimes {
+interface QuantitesPrimes {
   ugb: number;
   tetes: number;
   hectares: number;

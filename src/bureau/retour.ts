@@ -59,7 +59,7 @@ const ECRANS_DU_MENU = new Set(
 export const dansLeMenuDeGauche = (adresse: string): boolean => ECRANS_DU_MENU.has(sansRequete(adresse));
 
 /** Ce que la requête de l'adresse apporte à la page parente (« ?famille=… », « ?groupementId=… »). */
-export interface ParametresDePage {
+interface ParametresDePage {
   famille?: string;
   groupementId?: string;
   /** La fiche du contact d'où vient une page de dossier. */

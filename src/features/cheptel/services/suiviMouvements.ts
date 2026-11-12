@@ -16,7 +16,7 @@ import { compteAuxDocuments } from '@/features/cheptel/utils/compteAuxDocuments'
 /** Un nombre d'animaux par catégorie du formulaire (les jeunes, les femelles éligibles, les mâles). */
 export type Effectifs = Record<CategorieSuivi, number>;
 
-export const effectifsNuls = (): Effectifs => ({
+const effectifsNuls = (): Effectifs => ({
   [CATEGORIE_SUIVI.JEUNES]: 0,
   [CATEGORIE_SUIVI.FEMELLES]: 0,
   [CATEGORIE_SUIVI.MALES]: 0,

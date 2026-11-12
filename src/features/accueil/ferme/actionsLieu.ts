@@ -5,7 +5,7 @@ import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { TEXTES } from '@/shared/textes';
 
 /** Une bulle d'action autour d'un bouton de l'accueil : son icône, son nom, et l'écran qu'elle ouvre. */
-export interface ActionDeLieu {
+interface ActionDeLieu {
   cle: string;
   titre: string;
   icone: keyof typeof Ionicons.glyphMap;

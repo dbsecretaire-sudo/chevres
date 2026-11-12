@@ -28,7 +28,7 @@ export const CATEGORIE_ANIMAL = {
 } as const;
 
 /** Seuils qui dépendent de l'espèce de l'établissement. */
-export interface ParametresEspece {
+interface ParametresEspece {
   /** En dessous de cet âge, l'animal est un petit (cabri, agneau, veau, porcelet, poussin) ; au-delà, un adulte. */
   agePetitMax: Duree;
   /** À partir de cet âge, un petit sevré mange comme un adulte et compte dans l'effectif. */
@@ -59,7 +59,7 @@ export const PARAMETRES_ESPECE: Record<EspeceAnimale, ParametresEspece> = {
 };
 
 /** Seuils de l'espèce courante. */
-export const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[especeCourante()];
+const parametresEspece = (): ParametresEspece => PARAMETRES_ESPECE[especeCourante()];
 
 /** Âge en dessous duquel un animal de l'espèce courante est un petit. */
 export const agePetitMax = (): Duree => parametresEspece().agePetitMax;
