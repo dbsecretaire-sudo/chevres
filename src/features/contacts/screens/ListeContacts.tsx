@@ -30,10 +30,11 @@ const T = TEXTES.contacts;
 const TOUTES = 'toutes';
 const A_CHOISIR = 'a-choisir';
 
-/** Un groupe de la liste : sa catégorie (le titre du groupe) et ses contacts. */
+/** Un groupe de la liste : sa catégorie (le titre du groupe), ses contacts, et leur nombre (affiché même replié). */
 interface Groupe {
   titre: string;
   data: Contact[];
+  nombre: number;
 }
 
 /**
@@ -53,6 +54,8 @@ export default function ListeContacts() {
   const [categorieChoisie, setCategorieChoisie] = useState(TOUTES);
   /** La feuille des catégories est-elle ouverte ? */
   const [choixOuvert, setChoixOuvert] = useState(false);
+  /** La catégorie dépliée (son titre) : les autres restent repliées, une seule à la fois. */
+  const [categorieOuverte, setCategorieOuverte] = useState<string | null>(null);
   const { categories, idsConnus } = useCategoriesContact();
 
   /** Ce que dit la ligne d'un contact : recettes et/ou dépenses, sa catégorie (ou « à choisir »), ses coordonnées. */
@@ -121,11 +124,15 @@ export default function ListeContacts() {
   // Toutes les catégories : la liste est regroupée par catégorie (un titre par groupe). Une catégorie choisie : une seule liste, sans titre.
   const groupes: Groupe[] =
     categorieChoisie !== TOUTES
-      ? [{ titre: '', data: filtres }]
+      ? [{ titre: '', data: filtres, nombre: filtres.length }]
       : [
           ...categories.map((x) => ({ titre: x.nom, data: filtres.filter((c) => cleCategorieDe(c) === x.id) })),
           { titre: T.categorieAChoisir, data: filtres.filter((c) => cleCategorieDe(c) === A_CHOISIR) },
-        ].filter((g) => g.data.length > 0);
+        ]
+          .filter((g) => g.data.length > 0)
+          .map((g) => ({ ...g, nombre: g.data.length }));
+  // Une catégorie repliée n'affiche que son titre. Pendant une recherche, toutes sont dépliées (on cherche un contact).
+  const repliee = (titre: string) => !!titre && !recherche.trim() && categorieOuverte !== titre;
 
   return (
     <Screen scroll={false}>
@@ -155,16 +162,24 @@ export default function ListeContacts() {
         />
       ) : (
         <SectionList
-          sections={groupes}
+          sections={groupes.map((g) => ({ ...g, data: repliee(g.titre) ? [] : g.data }))}
           keyExtractor={(item) => item.cle}
           contentContainerStyle={[commonStyles.listeBlocAvecFab, { paddingHorizontal: 16 }]}
           stickySectionHeadersEnabled={false}
           ListEmptyComponent={<EmptyState title={T.aucun} subtitle={T.aucunSousTitre} />}
           renderSectionHeader={({ section }) =>
             section.titre ? (
-              <Text style={styles.titreGroupe}>
-                {section.titre} · {section.data.length}
-              </Text>
+              <Pressable
+                onPress={() => setCategorieOuverte((actuelle) => (actuelle === section.titre ? null : section.titre))}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: !repliee(section.titre) }}
+                style={styles.enteteGroupe}
+              >
+                <Text style={styles.titreGroupe}>
+                  {section.titre} · {section.nombre}
+                </Text>
+                <Ionicons name={repliee(section.titre) ? 'chevron-forward' : 'chevron-down'} size={18} color={colors.textMuted} />
+              </Pressable>
             ) : null
           }
           renderItem={({ item, index, section }) => (
@@ -252,6 +267,12 @@ const styles = StyleSheet.create({
   ligneChoisie: { backgroundColor: '#E4EEDF' },
   ligneTexte: { fontSize: 15, color: colors.text },
   ligneTexteChoisi: { fontWeight: '700', color: colors.primary },
+  enteteGroupe: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   titreGroupe: {
     marginTop: 14,
     marginBottom: 6,

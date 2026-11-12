@@ -17,7 +17,7 @@ import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
-import { laitsPermis, variantesImposees, type TypeLait } from '@/features/stock/services/dlc';
+import { estFromageAffine, laitsPermis, variantesImposees, type TypeLait } from '@/features/stock/services/dlc';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { exporterGuideLotsPdf } from '@/features/export/documents/guideLotsPdf';
 import { lireArchiveStock } from '@/features/stock/repository';
@@ -101,6 +101,8 @@ function FabricationDeLots() {
   const imposee = variantesImposees(article, nomDuFromage);
   const saleEffectif: 'oui' | 'non' | '' = imposee.sale === undefined ? sale : imposee.sale ? 'oui' : 'non';
   const laitEffectif: TypeLait | '' = imposee.lait ?? lait;
+  // Un affiné se fait d'un fromage déjà fait (la recette le prend au stock) : pas de lait, donc pas de litres à indiquer.
+  const sansLitres = fromage && estFromageAffine(article, nomDuFromage);
   const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive) : '');
 
   const choisirArticle = (cle: string) => {
@@ -126,7 +128,7 @@ function FabricationDeLots() {
     if (fromage && (!saleEffectif || (laitsPermis(article, nomDuFromage).length > 0 && !laitEffectif)))
       return Alert.alert(TEXTES.production.fabrication.varianteRequise);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
-    if (fromage && !(laitUtilise > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
+    if (fromage && !sansLitres && !(laitUtilise > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
     const utilises = ingredients
       .map((i) => ({ i, q: parseDecimal(i.quantite) }))
       .filter(({ i, q }) => i.article && q > 0)
@@ -141,7 +143,7 @@ function FabricationDeLots() {
         date,
         quantite: nombre,
         debut: premier,
-        litres: fromage ? laitUtilise : undefined,
+        litres: fromage && !sansLitres ? laitUtilise : undefined,
         sale: fromage ? saleEffectif === 'oui' : undefined,
         lait: fromage && laitEffectif ? laitEffectif : undefined,
         ingredients: utilises,
@@ -222,7 +224,7 @@ function FabricationDeLots() {
           label={TEXTES.production.fabrication.guide}
           onPress={() => exporterGuideLotsPdf()}
         />
-        {fromage ? (
+        {fromage && !sansLitres ? (
           <>
             <FormField
               label={TEXTES.production.fabrication.litresCaille}

@@ -18,7 +18,7 @@ export interface VarianteDeFromage {
 /**
  * Un fromage affiné (le vieux, le brocciu affiné, le crottin affiné…) : reconnu à son type, ou à son nom quand c'est un fromage ajouté au stock.
  */
-function estFromageAffine(article: string, libelle = ''): boolean {
+export function estFromageAffine(article: string, libelle = ''): boolean {
   return article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.AFFINE}` || /affin/i.test(libelle);
 }
 

@@ -15,7 +15,7 @@ import {
 import { ingredientsEnManque } from '@/features/production/services/ingredientsPlat';
 import { CLE_LAIT } from '@/features/stock/services/historiqueLait';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
-import { laitsPermis, variantesImposees, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
+import { estFromageAffine, laitsPermis, variantesImposees, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
 import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
@@ -113,6 +113,8 @@ export function FabricationSimple({
   const choisir = (article: ArticleAffiche) => {
     setSaisie('');
     if (!fromage) return setEtape(savon ? { nom: 'poids', article } : { nom: 'nombre', article });
+    // Un affiné se fait d'un fromage déjà fait (frais, crottin ou brocciu, pris au stock par la recette) : pas de lait, donc pas de litres à demander.
+    if (estFromageAffine(article.cle, article.libelle)) return setEtape({ nom: 'nombre', article });
     // Le vieux n'est jamais salé, le brocciu toujours salé et pasteurisé : ces questions ne se posent pas.
     const imposee = variantesImposees(article.cle, article.libelle);
     if (imposee.sale === undefined) return setEtape({ nom: 'sale', article });

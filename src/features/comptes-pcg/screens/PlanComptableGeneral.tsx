@@ -45,18 +45,18 @@ function lignesDuPlan(recherche: string): Ligne[] {
 
 /**
  * Les lignes d'une classe, comme sur la maquette : un compte à deux chiffres est une bande teintée (qu'on replie ou déplie), et les comptes qui
- * suivent, à trois ou quatre chiffres, sont des cartes rangées sous lui. Les comptes fermés (`fermes`) ne montrent pas les leurs.
+ * suivent, à trois ou quatre chiffres, sont des cartes rangées sous lui. Un seul groupe est déplié à la fois (`ouvert`) : les autres ne montrent pas les leurs.
  */
-function lignesDeLaClasse(classe: ClassePcg, fermes: ReadonlySet<string>): Ligne[] {
+function lignesDeLaClasse(classe: ClassePcg, ouvert: string | null): Ligne[] {
   const lignes: Ligne[] = [];
   let groupe: string | null = null;
   for (const compte of classe.comptes) {
     if (compte.numero.length <= 2) {
       groupe = compte.numero;
-      lignes.push({ type: 'compte', cle: compte.numero, compte, groupe: true, ouvert: !fermes.has(compte.numero) });
+      lignes.push({ type: 'compte', cle: compte.numero, compte, groupe: true, ouvert: compte.numero === ouvert });
       continue;
     }
-    if (groupe !== null && compte.numero.startsWith(groupe) && fermes.has(groupe)) continue;
+    if (groupe !== null && compte.numero.startsWith(groupe) && groupe !== ouvert) continue;
     lignes.push({ type: 'compte', cle: compte.numero, compte, groupe: false });
   }
   return lignes;
@@ -70,20 +70,15 @@ function lignesDeLaClasse(classe: ClassePcg, fermes: ReadonlySet<string>): Ligne
 export default function PlanComptableGeneral() {
   const [recherche, setRecherche] = useState('');
   const [classeChoisie, setClasseChoisie] = useState(PCG_COMPLET[0].classe);
-  const [fermes, setFermes] = useState<ReadonlySet<string>>(new Set());
+  /** Le groupe déplié (un numéro à deux chiffres), ou aucun : un seul à la fois. */
+  const [ouvert, setOuvert] = useState<string | null>(null);
   const estRecherche = recherche.trim().length > 0;
   const classe = PCG_COMPLET.find((c) => c.classe === classeChoisie) ?? PCG_COMPLET[0];
   const lignes = useMemo(
-    () => (estRecherche ? lignesDuPlan(recherche) : lignesDeLaClasse(classe, fermes)),
-    [estRecherche, recherche, classe, fermes],
+    () => (estRecherche ? lignesDuPlan(recherche) : lignesDeLaClasse(classe, ouvert)),
+    [estRecherche, recherche, classe, ouvert],
   );
-  const basculer = (numero: string) =>
-    setFermes((actuels) => {
-      const suite = new Set(actuels);
-      if (suite.has(numero)) suite.delete(numero);
-      else suite.add(numero);
-      return suite;
-    });
+  const basculer = (numero: string) => setOuvert((actuel) => (actuel === numero ? null : numero));
 
   return (
     <Screen scroll={false}>

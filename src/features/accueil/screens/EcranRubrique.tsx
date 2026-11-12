@@ -27,7 +27,7 @@ export default function EcranRubrique() {
         </>
       ) : null}
       {/* Les pages ouvertes depuis la Santé reviennent à la Santé. */}
-      <SectionsRubrique sections={rubrique.sections} retour={nom && ['sante', 'mouvement', 'historique'].includes(nom) ? ROUTES.rubrique(nom) : undefined} />
+      <SectionsRubrique repliables={nom === 'documents'} sections={rubrique.sections} retour={nom && ['sante', 'mouvement', 'historique'].includes(nom) ? ROUTES.rubrique(nom) : undefined} />
       {/* Les mouvements de l'année active, sous les boutons : une recherche, le plus récent en tête. */}
       {nom === 'mouvement' ? <HistoriqueMouvements /> : null}
     </ScrollView>
