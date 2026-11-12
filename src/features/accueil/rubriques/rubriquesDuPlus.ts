@@ -1,5 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
-import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { FAMILLE_CONTROLE, ONGLET_SANTE } from '@/shared/constants/controles';
+import { CATEGORIE_LOT } from '@/shared/constants/lots';
 import { ROUTES } from '@/shared/constants/routes';
 
 type Icone = keyof typeof Ionicons.glyphMap;
@@ -28,7 +29,6 @@ export interface Rubrique {
 /** Les rubriques du menu « Plus », dans l'ordre de la maquette. */
 export const RUBRIQUES_DU_PLUS = [
   { cle: 'reglementation', libelle: 'Réglementation', aide: 'Cadre, étiquetage, agrément, analyses', icone: 'shield-checkmark-outline' },
-  { cle: 'argent', libelle: 'Argent', aide: 'Factures, ventes, banque, assurance', icone: 'cash-outline' },
   { cle: 'partenaires', libelle: 'Partenaires', aide: 'Abattoir, équarrissage, clients', icone: 'people-outline' },
   { cle: 'bilans', libelle: 'Bilans', aide: 'Bilan annuel, rentabilité, export', icone: 'stats-chart-outline' },
   { cle: 'historique', libelle: 'Historique', aide: 'Naissances, soins, lots, ventes', icone: 'time-outline' },
@@ -37,6 +37,114 @@ export const RUBRIQUES_DU_PLUS = [
 
 /** Les pages de rubrique, par leur clé (la clé de la rubrique du menu « Plus », et « mouvement » qui s'ouvre depuis les chèvres). */
 export const RUBRIQUES: Record<string, Rubrique> = {
+  // La santé des chèvres : le groupement sanitaire (GDS), le vétérinaire, les traitements, et les lots de reproduction, d'avortement et de renouvellement.
+  sante: {
+    titre: 'Santé',
+    sousTitre: 'Ce qui touche à la santé du troupeau',
+    sections: [
+      {
+        titre: 'Groupement sanitaire (GDS)',
+        lignes: [
+          { libelle: 'GDS', aide: 'Cotisations, versements et contacts', icone: 'shield-checkmark-outline', route: ROUTES.lieu('groupementSanitaire') },
+          { libelle: 'Documents du GDS', aide: 'Campagnes et attestations', icone: 'document-text-outline', route: ROUTES.DOCUMENTS_GDS },
+        ],
+      },
+      {
+        titre: 'Vétérinaire',
+        lignes: [
+          { libelle: 'Vétérinaire', aide: 'Contact, factures et visites', icone: 'medical-outline', route: ROUTES.lieu('veterinaire') },
+          { libelle: 'Visites du vétérinaire', aide: 'Ses visites et ses rapports d’essais', icone: 'medical-outline', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, ONGLET_SANTE) },
+        ],
+      },
+      {
+        titre: 'Traitements',
+        lignes: [
+          { libelle: 'Traitements', aide: 'Soins donnés et délais d’attente', icone: 'medkit-outline', route: ROUTES.CHEPTEL_TRAITEMENTS },
+          { libelle: 'Nouveau traitement', aide: 'Un soin donné à un animal ou à un lot', icone: 'add-circle-outline', route: ROUTES.CHEPTEL_TRAITEMENT_NOUVEAU },
+          { libelle: 'Qualité du lait', aide: 'Analyses, résumé et contrôles du lait', icone: 'water-outline', route: ROUTES.santeControlesOnglet('laitier', 'analyse') },
+        ],
+      },
+      {
+        titre: 'Alimentation',
+        lignes: [
+          { libelle: 'Aliments', aide: 'Rations et aliments des animaux', icone: 'nutrition-outline', route: ROUTES.SANTE_ALIMENTATION },
+        ],
+      },
+      {
+        titre: 'Reproduction',
+        lignes: [
+          { libelle: 'Mise à la reproduction', aide: 'Les femelles mises à la reproduction', icone: 'heart-outline', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.REPRODUCTION) },
+          { libelle: 'Avortements', aide: 'Les femelles qui ont avorté', icone: 'alert-circle-outline', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.AVORTEMENT) },
+          { libelle: 'Renouvellement', aide: 'Les animaux désignés pour le renouvellement', icone: 'refresh-outline', route: ROUTES.lotsDeLaCategorie(CATEGORIE_LOT.RENOUVELLEMENT) },
+        ],
+      },
+    ],
+  },
+  // Le commerce de la ferme : les ventes, les commandes et les circuits, puis la viande et les animaux vendus. C'est la page « Commerce » de la Ferme.
+  commerce: {
+    titre: 'Commerce',
+    sousTitre: 'Ce qui se vend',
+    sections: [
+      {
+        titre: 'Commandes et circuits',
+        lignes: [
+          { libelle: 'Commandes', aide: 'Commandes et bons', icone: 'cart-outline', route: ROUTES.COMMERCIAL_COMMANDES },
+          { libelle: 'Circuit de vente', aide: 'Ce que rapporte chaque circuit', icone: 'storefront-outline', route: ROUTES.COMMERCIAL_CIRCUITS },
+          { libelle: 'Tarifs', aide: 'Prix des produits', icone: 'pricetag-outline', route: ROUTES.COMMERCIAL_TARIFS },
+        ],
+      },
+      {
+        titre: 'Viande et animaux',
+        lignes: [
+          { libelle: 'Viande et animaux vendus', aide: 'À facturer, facturés, vendus', icone: 'restaurant-outline', route: ROUTES.PRODUCTION_VIANDE },
+          { libelle: 'Ventes d’animaux vivants', aide: 'Acheteurs et documents', icone: 'cash-outline', route: ROUTES.VENTES_VIVANTS },
+        ],
+      },
+    ],
+  },
+  // Les documents, par usage : ce qu'on présente, ce qu'on imprime, ce qu'on envoie. C'est la page « Documents » de la Ferme.
+  documents: {
+    titre: 'Documents',
+    sousTitre: 'Ce qu’il faut présenter, imprimer ou envoyer',
+    sections: [
+      {
+        titre: 'À présenter',
+        lignes: [
+          { libelle: 'Registre des analyses', aide: 'Résultats par lot et par date', icone: 'list-outline', route: ROUTES.PRODUCTION_REGISTRE_ANALYSES },
+          { libelle: 'Rappels de lots', aide: 'Lots à rappeler et rappels faits', icone: 'notifications-outline', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
+          { libelle: 'Cadre réglementaire', aide: 'Vue d’ensemble des obligations', icone: 'shield-checkmark-outline', route: ROUTES.CADRE_REGLEMENTAIRE_ATELIER },
+          { libelle: 'Dossier PAC', aide: 'Suivi, bordereaux, recensement', icone: 'document-text-outline', route: ROUTES.CHEPTEL_DOSSIER_PAC },
+          { libelle: 'Documents de circulation', aide: 'Ovins et caprins : à déposer', icone: 'swap-horizontal-outline', route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION },
+          { libelle: 'Documents d’identification', aide: 'Document d’identification et d’installation', icone: 'card-outline', route: ROUTES.DOCUMENTS_IDENTIFICATION },
+        ],
+      },
+      {
+        titre: 'À imprimer',
+        lignes: [
+          { libelle: 'Étiquettes', aide: 'Étiquettes des produits', icone: 'pricetag-outline', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
+          { libelle: 'Accueil du public', aide: 'Obligations et informations', icone: 'information-circle-outline', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
+          { libelle: 'Organismes', aide: 'Groupements, laboratoires, organismes de contrôle', icone: 'business-outline', route: ROUTES.lieu('organismes') },
+        ],
+      },
+      {
+        titre: 'À envoyer',
+        lignes: [
+          { libelle: 'Export pour le comptable', aide: 'Export et PDF', icone: 'server-outline', route: ROUTES.EXPORT_DONNEES },
+          { libelle: 'Sauvegarde', aide: 'Fichier de secours', icone: 'save-outline', route: ROUTES.SAUVEGARDE_LOCALE },
+        ],
+      },
+      {
+        titre: 'Réglementation et contrôles',
+        lignes: [
+          { libelle: 'Bibliothèque de documents', aide: 'Pièces jointes et justificatifs', icone: 'document-outline', route: ROUTES.CHEPTEL_BIBLIOTHEQUE },
+          { libelle: 'Boucles', aide: 'Les numéros de boucle des animaux', icone: 'pricetag-outline', route: ROUTES.lieu('boucles') },
+          { libelle: 'Contrôles des animaux', aide: 'Identification et registre d’élevage', icone: 'checkmark-circle-outline', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX) },
+          { libelle: 'Terrains', aide: 'Contrôles de surface', icone: 'map-outline', route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE) },
+          { libelle: 'Qualité du lait', aide: 'Analyses, résumé et contrôles du lait', icone: 'water-outline', route: ROUTES.santeControlesOnglet('laitier', 'analyse') },
+        ],
+      },
+    ],
+  },
   reglementation: {
     titre: 'Réglementation',
     sousTitre: 'Ce qu’il faut pour vendre',
@@ -57,13 +165,12 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Contrôles des animaux', aide: 'Identification et registre d’élevage', icone: 'checkmark-circle-outline', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX) },
           { libelle: 'Terrains', aide: 'Contrôles de surface', icone: 'map-outline', route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE) },
           { libelle: 'Dossier PAC', aide: 'Suivi, bordereaux, recensement', icone: 'document-text-outline', route: ROUTES.CHEPTEL_DOSSIER_PAC },
-          { libelle: 'Contrôle laitier', aide: 'La qualité du lait', icone: 'water-outline', route: ROUTES.santeControles('laitier') },
+          { libelle: 'Qualité du lait', aide: 'Analyses, résumé et contrôles du lait', icone: 'water-outline', route: ROUTES.santeControlesOnglet('laitier', 'analyse') },
         ],
       },
       {
         titre: 'Analyses et rappels',
         lignes: [
-          { libelle: 'Analyses', aide: 'Lait, fromages', icone: 'flask-outline', route: ROUTES.santeControles('analyse') },
           { libelle: 'Registre des analyses', aide: 'Résultats par lot et par date', icone: 'list-outline', route: ROUTES.PRODUCTION_REGISTRE_ANALYSES },
           { libelle: 'Rappels de lots', aide: 'Lots à rappeler et rappels faits', icone: 'notifications-outline', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
           { libelle: 'Export pour un contrôle', aide: 'Registre complet en un fichier', icone: 'download-outline', route: ROUTES.EXPORT_DONNEES },
@@ -127,7 +234,6 @@ export const RUBRIQUES: Record<string, Rubrique> = {
       {
         titre: 'Bilans',
         lignes: [
-          { libelle: 'Bilan annuel', aide: 'Chèvres, atelier, visites', icone: 'stats-chart-outline', route: ROUTES.CHEPTEL_BILAN },
           { libelle: 'Tableau de bord du cheptel', aide: 'Pyramide des âges et mouvements', icone: 'bar-chart-outline', route: ROUTES.CHEPTEL_TABLEAU_DE_BORD },
           { libelle: 'Rentabilité de l’atelier', aide: 'Coût et marge par produit', icone: 'trending-up-outline', route: ROUTES.RENTABILITE },
           { libelle: 'Statistiques de production', aide: 'Lait, fromages, viande', icone: 'pie-chart-outline', route: ROUTES.PRODUCTION_STATISTIQUES },
@@ -150,13 +256,11 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Soins et traitements', aide: 'Par animal et par date', icone: 'medkit-outline', route: ROUTES.CHEPTEL_TRAITEMENTS },
           { libelle: 'Lots d’animaux', aide: 'Groupes nommés', icone: 'layers-outline', route: ROUTES.CHEPTEL_LOTS },
           { libelle: 'Ventes d’animaux vivants', aide: 'Acheteurs et documents', icone: 'cash-outline', route: ROUTES.VENTES_VIVANTS },
-          { libelle: 'Grange', aide: 'Foin, aliments et stock', icone: 'home-outline', route: ROUTES.lieu('grange') },
         ],
       },
       {
         titre: 'Atelier',
         lignes: [
-          { libelle: 'Lots de l’atelier', aide: 'Fabriqués, contrôlés, rappelés', icone: 'cube-outline', route: ROUTES.PRODUCTION_LOTS },
           { libelle: 'Lait par animal', aide: 'Lait et traites', icone: 'water-outline', route: ROUTES.PRODUCTION_LAIT },
           { libelle: 'Viande', aide: 'Ventes et lots de viande', icone: 'restaurant-outline', route: ROUTES.PRODUCTION_VIANDE },
           { libelle: 'Stock', aide: 'Toutes les catégories : fromages, viande, aliments, boucles…', icone: 'cube-outline', route: ROUTES.COMPTABILITE_STOCKS },
@@ -177,12 +281,12 @@ export const RUBRIQUES: Record<string, Rubrique> = {
       {
         titre: 'Exploitation',
         lignes: [
-          { libelle: 'Établissement', aide: 'Mon exploitation, SIRET, tarifs', icone: 'business-outline', route: ROUTES.ORGANISATION_ETABLISSEMENT },
-          { libelle: 'Synchronisation', aide: 'Serveur de la ferme, entre les téléphones', icone: 'cloud-outline', route: ROUTES.GOOGLE_DRIVE },
-          { libelle: 'Sauvegarde et export', aide: 'Fichier de secours', icone: 'save-outline', route: ROUTES.ORGANISATION_DONNEES },
-          { libelle: 'Réglages du cheptel', aide: 'UGB, primes, effectif déclaré', icone: 'settings-outline', route: ROUTES.CHEPTEL_REGLAGES },
-          { libelle: 'Recettes de l’atelier', aide: 'Fromages, charcuterie, plats, savons', icone: 'book-outline', route: ROUTES.PRODUCTION_RECETTES },
-          { libelle: 'Tous les réglages', aide: 'Année, mode, options', icone: 'options-outline', route: ROUTES.REGLAGES },
+          { libelle: 'Agritourisme (visites)', aide: 'Visites de la ferme, formules et groupes', icone: 'leaf-outline', route: '/visites' },
+          { libelle: 'Mon établissement', aide: 'Informations, statut, dossiers des contacts.', icone: 'business-outline', route: ROUTES.ORGANISATION_ETABLISSEMENT },
+          { libelle: 'Listes de choix', aide: 'Ce qu’une assurance couvre, les catégories de dépense : ajoutez, masquez.', icone: 'list-outline', route: ROUTES.ORGANISATION_LISTES },
+          { libelle: 'Contacts', aide: 'Le carnet d’adresses de vos contacts, leurs catégories et ce qu’elles changent.', icone: 'person-outline', route: ROUTES.ORGANISATION_TIERS },
+          { libelle: 'Mes données', aide: 'Export et PDF, sauvegarde, Google Drive.', icone: 'server-outline', route: ROUTES.ORGANISATION_DONNEES },
+          { libelle: 'Réglages', aide: 'Les règles que l’application applique aujourd’hui.', icone: 'settings-outline', route: ROUTES.ORGANISATION_REGLES },
         ],
       },
     ],
@@ -202,6 +306,7 @@ export const RUBRIQUES: Record<string, Rubrique> = {
           { libelle: 'Vente vivante', aide: 'Acheteur et document de circulation', icone: 'cash-outline', route: ROUTES.VENTES_VIVANTS },
           { libelle: 'Envoi à l’abattoir', aide: 'Départ d’un lot d’animaux', icone: 'exit-outline', route: ROUTES.lotAbattoirNouveau() },
           { libelle: 'Sortie ou mort', aide: 'Déclarer un décès, avec sa cause', icone: 'close-circle-outline', route: ROUTES.CHEPTEL_DECES },
+          { libelle: 'Équarrissage', aide: 'Enlèvement d’un animal mort', icone: 'trash-outline', route: ROUTES.lieu('equarrissage') },
         ],
       },
     ],
@@ -215,6 +320,8 @@ export interface TuileVisites {
   icone: Icone;
   route: string;
   principale?: boolean;
+  /** Une ligne du menu sous les tuiles, et non une tuile (comme les rubriques de Chèvres). */
+  menu?: boolean;
 }
 
 /** Les tuiles de la rubrique Visites, comme sur la maquette (Windows les reprend dans son menu Visites). */
@@ -224,8 +331,8 @@ export const TUILES_VISITES: TuileVisites[] = [
   { libelle: 'Encaisser', aide: 'Montant et paiement', icone: 'cash-outline', route: ROUTES.commercialVentes('encaisser') },
   { libelle: 'Repas', aide: 'Formules et réservations', icone: 'restaurant-outline', route: ROUTES.COMMERCIAL_FORMULES },
   { libelle: 'Groupes', aide: 'Cars et associations', icone: 'people-outline', route: ROUTES.COMMERCIAL_GROUPES },
-  { libelle: 'Tarifs', aide: 'Prix des formules', icone: 'pricetag-outline', route: ROUTES.COMMERCIAL_TARIFS },
-  { libelle: 'Accueil du public', aide: 'Obligations et informations', icone: 'information-circle-outline', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
+  { libelle: 'Tarifs', aide: 'Prix des formules', icone: 'pricetag-outline', route: ROUTES.COMMERCIAL_FORMULES },
+  { libelle: 'Accueil du public', aide: 'Obligations et informations', icone: 'information-circle-outline', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC, menu: true },
 ];
 
 /** Le titre d'une page de rubrique (celui de la barre du haut), ou une chaîne vide quand la rubrique n'existe pas. */

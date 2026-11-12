@@ -2,6 +2,7 @@ import type { Facture, TypeFromage, Vente } from '@/features/comptabilite/types'
 import { infosCategorie } from '@/features/stock/utils/categories';
 import { lignesProductionDe } from '@/features/comptabilite/utils/lignesProduction';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
+import { UNITE_PAR_DEFAUT_PIECE } from '@/features/stock/services/unites';
 import type { ArchiveStock, GenreArticle, LaitJour, MouvementStock } from '@/features/stock/types';
 import {
   CATEGORIE_VENTE,
@@ -44,6 +45,7 @@ import { ACTIVITE_COMMUNE } from '@/shared/constants/etablissements';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
 import { TEXTES } from '@/shared/textes';
 import { generateId } from '@/shared/utils/id';
+import { ID_LISTE_DENREES, ID_LISTE_MATIERES_SAVON } from '@/features/stock/services/denrees';
 import { loadAllYears } from '@/shared/storage/localStore';
 import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { COMPTE_BOUCLES } from '@/shared/constants/planComptable';
@@ -66,6 +68,8 @@ export interface ArticleAffiche {
   litresParFromage?: number;
   /** Le prix au kilo vif d'un animal vivant, quand on l'a fixé (le prix de l'animal entier est `prix`). */
   prixVif?: number;
+  /** L'unité de sa quantité en stock (« kg », « pièce »…), quand on l'a choisie. */
+  unite?: string;
 }
 
 /** La clé de la ligne des petits d'une espèce dans le stock de viande (cabris, agneaux, veaux, porcelets, poussins). */
@@ -191,6 +195,9 @@ export function articlesDuGenre(
       prix: archive.prix[a.cle],
       prixVif: archive.prixVif?.[a.cle],
       litresParFromage: archive.litresParFromage?.[a.cle],
+      unite:
+        archive.unites?.[a.cle] ??
+        (genre === GENRE_ARTICLE.EMBALLAGE || genre === GENRE_ARTICLE.FROMAGE ? UNITE_PAR_DEFAUT_PIECE : undefined),
     }));
 }
 
@@ -541,14 +548,18 @@ export async function ajouterArticle(
   activite?: string,
   /** Pour un article personnalisé : la liste qui le contient. */
   listeId?: string,
+  /** L'unité de sa quantité en stock (« kg », « pièce »…), quand on la choisit à l'ajout. */
+  unite?: string,
 ): Promise<string> {
   const archive = await lireArchiveStock();
   const id = generateId();
+  const cle = cleArticle(genre, id);
   await remplacerArchiveStock({
     ...archive,
     articles: [...archive.articles, { id, genre, nom: nom.trim(), activite, listeId }],
+    unites: unite ? { ...archive.unites, [cle]: unite } : archive.unites,
   });
-  return cleArticle(genre, id);
+  return cle;
 }
 
 /** Supprime un article ajouté par l'utilisateur, ses mouvements, et son nom dans les conditionnements. */
@@ -662,6 +673,43 @@ export async function renommerArticle(cle: string, nom: string): Promise<void> {
   } else {
     await remplacerArchiveStock({ ...archive, noms: { ...archive.noms, [cle]: nom.trim() } });
   }
+}
+
+/** Fixe l'unité de la quantité d'un article (« kg », « pièce »…) ; sans unité, elle est retirée et la quantité reste nue. */
+export async function definirUniteArticle(cle: string, unite: string | undefined): Promise<void> {
+  const archive = await lireArchiveStock();
+  const unites = { ...archive.unites };
+  if (unite) unites[cle] = unite;
+  else delete unites[cle];
+  await remplacerArchiveStock({ ...archive, unites });
+}
+
+/**
+ * Les consommables des listes de départ (farine, huiles, soude…) qui ne sont pas encore dans les consommables du stock : ceux qu'on n'a pas nommés à la main.
+ */
+export function consommablesManquants(archive: Pick<ArchiveStock, 'articles'>): string[] {
+  const dansLesListes = archive.articles
+    .filter((a) => a.listeId === ID_LISTE_DENREES || a.listeId === ID_LISTE_MATIERES_SAVON)
+    .map((a) => a.nom.trim());
+  const dejaLa = new Set(
+    archive.articles.filter((a) => a.genre === GENRE_ARTICLE.EQUIPEMENT).map((a) => a.nom.trim().toLowerCase()),
+  );
+  return [...new Set(dansLesListes)].filter((nom) => !dejaLa.has(nom.toLowerCase()));
+}
+
+/** Ajoute au stock des consommables les consommables manquants (sans unité : on la renseigne ensuite) ; rend leur nombre. */
+export async function ajouterConsommablesManquants(): Promise<number> {
+  const archive = await lireArchiveStock();
+  const manquants = consommablesManquants(archive);
+  if (manquants.length === 0) return 0;
+  await remplacerArchiveStock({
+    ...archive,
+    articles: [
+      ...archive.articles,
+      ...manquants.map((nom) => ({ id: generateId(), genre: GENRE_ARTICLE.EQUIPEMENT, nom })),
+    ],
+  });
+  return manquants.length;
 }
 
 /**

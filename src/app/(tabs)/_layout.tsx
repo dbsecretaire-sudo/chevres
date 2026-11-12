@@ -17,7 +17,8 @@ import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { MenuDeLaFenetre } from '@/bureau/MenuDeLaFenetre';
 import { EnDeuxColonnes } from '@/bureau/EnDeuxColonnes';
-import { afficheBureau } from '@/shared/utils/affichage';
+import { afficheBureau, afficheTablette } from '@/shared/utils/affichage';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
 import { SynchronisationAutomatique } from '@/features/sync/SynchronisationAutomatique';
 import { ExigerConnexion } from '@/features/sync/ExigerConnexion';
 import { useRole } from '@/features/roles/context/RoleContext';
@@ -31,6 +32,7 @@ const PAGES_ORGANISATION = [
   'export-donnees',
   'pdf-donnees',
   'sauvegarde-locale',
+  'copies-automatiques',
   'google-drive',
   'structure-dossiers',
   'informations-exploitation',
@@ -87,6 +89,8 @@ function Onglets() {
         // Dans la version Windows, les menus de la barre du haut remplacent la barre d'icônes du bas.
         // Sur le téléphone, la barre a la hauteur de son icône et de son nom (la barre de navigation du système est sous le bandeau, plus bas).
         tabBarStyle: afficheBureau() ? { display: 'none' } : { height: 60 },
+        // Sur la tablette, chaque page tient dans la colonne centrée ; la barre du bas, elle, prend toute la largeur.
+        sceneStyle: afficheTablette() ? colonneCentree : undefined,
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.blanc,
         headerTitleStyle: { fontWeight: '700' },
@@ -110,7 +114,7 @@ function Onglets() {
       <Tabs.Screen
         name="cheptel"
         options={{
-          title: TEXTES.commun.general.cheptel,
+          title: TEXTES.commun.general.ferme,
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons
@@ -168,12 +172,19 @@ function Onglets() {
       {/* Une page de rubrique du mode avancé (les listes du « Plus », le mouvement des chèvres) : son titre vient de la rubrique ouverte. */}
       <Tabs.Screen
         name="rubrique/[nom]"
-        options={({ route }) => ({
-          href: null,
-          title: titreDeLaRubrique((route.params as { nom?: string } | undefined)?.nom),
-        })}
+        options={({ route }) => {
+          const nom = (route.params as { nom?: string } | undefined)?.nom;
+          return {
+            href: null,
+            title: titreDeLaRubrique(nom),
+            // Documents et Commerce s'ouvrent depuis la Ferme : la flèche y revient.
+            ...(nom === 'documents' || nom === 'commerce' ? { headerLeft: () => <HeaderBackTo to={ROUTES.CHEPTEL} /> } : {}),
+          };
+        }}
       />
-      {/* La rubrique « Visites » : le tourisme, séparé des ventes et des contacts. */}
+      {/* La rubrique « Contacts » : clients, fournisseurs, intervenants, abattoir et équarrissage. */}
+      <Tabs.Screen name="contacts" options={{ title: TEXTES.contacts.titre }} />
+      {/* La rubrique « Visites » : le tourisme, séparé des ventes et des contacts. Elle est dans Plus sur le téléphone. */}
       <Tabs.Screen name="visites" options={{ title: 'Visites' }} />
       <Tabs.Screen
         name="comptabilite"
@@ -249,6 +260,7 @@ function Onglets() {
         ['export-donnees', TEXTES.settings.reglages.export, ROUTES.ORGANISATION_DONNEES],
         ['pdf-donnees', TEXTES.settings.reglages.pdf, ROUTES.ORGANISATION_DONNEES],
         ['sauvegarde-locale', TEXTES.settings.reglages.sauvegardeLocale, ROUTES.ORGANISATION_DONNEES],
+        ['copies-automatiques', TEXTES.settings.reglages.copiesAutomatiques.titre, ROUTES.SAUVEGARDE_LOCALE],
         ['google-drive', TEXTES.settings.reglages.googleDrive, ROUTES.ORGANISATION_DONNEES],
       ].map(([name, title, retour]) => (
         <Tabs.Screen

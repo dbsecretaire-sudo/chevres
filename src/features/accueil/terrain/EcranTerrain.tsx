@@ -16,6 +16,9 @@ import {
   type ZoneTerrain,
 } from '@/features/accueil/terrain/ecransTerrain';
 import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { ListRow } from '@/shared/components/ListRow';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
 import { styles } from '@/shared/styles/accueil/EcranTerrain.styles';
 import { AccentColorProvider } from '@/shared/theme/AccentColorContext';
@@ -27,6 +30,12 @@ const TUILE_PRINCIPALE: Partial<Record<ZoneTerrain, string>> = {
   troupeau: 'scanner',
   atelier: 'scanLot',
   accueil: 'nouvelleVisite',
+};
+
+/** Les tuiles mises en tête de chaque zone, dans cet ordre ; les autres suivent. Toutes les tuiles de la zone sont toujours affichées. */
+const TUILES_EN_TETE: Partial<Record<ZoneTerrain, string[]>> = {
+  troupeau: ['cheptel', 'scanner', 'naissance', 'traitement', 'mouvement', 'deces'],
+  atelier: ['fabriquer', 'scanLot', 'ventes', 'lait', 'stock', 'recettes'],
 };
 
 /**
@@ -43,7 +52,7 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
   // « Écrire le numéro de boucle » : la photo se ferme, et on tape le numéro (il ouvre la même fiche que le scan).
   const [saisieOuverte, setSaisieOuverte] = useState(false);
   const [numeroSaisi, setNumeroSaisi] = useState('');
-  const surTuile = (t: TuileTerrain) => (t.cle === 'scanner' ? setScanOuvert(true) : ouvrir(t.route));
+  const surTuile =(t: TuileTerrain) => (t.cle === 'scanner' ? setScanOuvert(true) : ouvrir(t.route));
   const trouverLaChevre = async (numero: string) => {
     const animaux = await listTousLesAnimauxDeLEspece();
     const animal = animaux.find((a) => (a.numeroBoucle ?? '').trim() === numero.trim() && a.statut === STATUT_CHEVRE.VIVANTE);
@@ -58,6 +67,7 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
     animaux: f.stats?.totalVivantes,
     naissances: f.stats?.cabritsAnnee,
     delais: f.delais,
+    grammesParAnimalParJour: f.stats?.gParAnimalParJour,
     ventesSansDocument: f.ventesSansDocument,
     aCompleter: f.aCompleter,
     lotsAFacturer: f.lotsAFacturer,
@@ -67,6 +77,32 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
     stockNegatif: f.stockNegatif,
     visitesAVenir: f.agritourisme.aVenir,
   };
+  const toutes = tuilesDuTerrain(zone, comptes);
+  // « Fabriquer » : les quatre produits en grandes tuiles à pastille, pour que la page ne paraisse pas vide.
+  const grandes = zone === 'fabriquer';
+  const ordre = TUILES_EN_TETE[zone];
+  const tuiles = ordre
+    ? [
+        ...ordre.map((cle) => toutes.find((t) => t.cle === cle)).filter((t): t is TuileTerrain => t !== undefined),
+        ...toutes.filter((t) => !ordre.includes(t.cle)),
+      ]
+    : toutes;
+  // Les lignes (réglages, rubriques du « Plus ») se rangent sous les grandes tuiles, en liste titrée « Gestion ».
+  const grandesTuiles = tuiles.filter((t) => !t.ligne);
+  // Un menu titré par groupe (« Gestion » par défaut), dans l'ordre où les groupes apparaissent.
+  const lignesDeMenu = tuiles.filter((t) => t.ligne);
+  const titresDesMenus = [...new Set(lignesDeMenu.map((t) => t.groupe ?? 'Gestion'))];
+  const gestion = titresDesMenus.map((titre) => (
+    <GroupeAccueil key={titre} titre={titre}>
+      <BlocLignes>
+        {lignesDeMenu
+          .filter((t) => (t.groupe ?? 'Gestion') === titre)
+          .map((t) => (
+            <ListRow key={t.cle} title={t.titre} icone={t.icone} onPress={() => surTuile(t)} />
+          ))}
+      </BlocLignes>
+    </GroupeAccueil>
+  ));
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       {/* Ce qui demande une action (alertes de santé, rappels) passe au-dessus des tuiles. Avec « remplir », les tuiles prennent la place restante, sans défiler. */}
@@ -77,18 +113,28 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
           <View style={{ flex: 1 }} onLayout={(e) => setHauteur(e.nativeEvent.layout.height)}>
             <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
               <GrilleDeTuiles
-                tuiles={tuilesDuTerrain(zone, comptes)}
+                tuiles={grandesTuiles}
                 principale={TUILE_PRINCIPALE[zone]}
                 onAppui={surTuile}
                 hauteurDispo={hauteur}
+                variante={grandes ? 'simple' : 'avance'}
+                grandes={grandes}
               />
+              {gestion}
             </ScrollView>
           </View>
         </View>
       ) : (
         <ScrollView style={commonStyles.screenBg} contentContainerStyle={styles.contenu}>
           {enTete}
-          <GrilleDeTuiles tuiles={tuilesDuTerrain(zone, comptes)} principale={TUILE_PRINCIPALE[zone]} onAppui={surTuile} />
+          <GrilleDeTuiles
+            tuiles={grandesTuiles}
+            principale={TUILE_PRINCIPALE[zone]}
+            onAppui={surTuile}
+            variante={grandes ? 'simple' : 'avance'}
+            grandes={grandes}
+          />
+          {gestion}
         </ScrollView>
       )}
       <ScannerBoucleModal

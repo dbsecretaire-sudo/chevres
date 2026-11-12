@@ -50,6 +50,8 @@ export interface Transaction {
   volet?: string;
   /** Ce que la facture détaille (ses aliments, son matériel, ses marchandises, ses carburants), pour la recherche. */
   termes?: string[];
+  /** La catégorie du tiers (du contact qui porte ce nom : client ou fournisseur), pour le filtre par catégorie de tiers. */
+  categorieTiers?: string;
 }
 
 /** Les noms des lignes d'une facture : aliments et matériel, marchandises, carburants (de quoi retrouver « Fourmix »). */

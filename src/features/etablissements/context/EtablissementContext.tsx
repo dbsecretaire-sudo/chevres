@@ -15,6 +15,7 @@ import {
   initialiserEtablissements,
   listEtablissements,
   modifierEtablissement,
+  rafraichirEtablissements,
   supprimerEtablissement,
   type DonneesEtablissement,
   type Etablissement,
@@ -22,13 +23,19 @@ import {
 import { ROUTES } from '@/shared/constants/routes';
 import { destinationDe } from '@/features/a-traiter/services/destination';
 import { SelecteurEtablissement } from '@/features/etablissements/components/SelecteurEtablissement';
+import { lireConnexion } from '@/features/sync/synchronisation';
 import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { TEXTES } from '@/shared/textes';
 
 interface EtablissementContextValue {
   etablissements: Etablissement[];
   actif: Etablissement;
+  /** Ouvre le choix de l'établissement ; sans effet quand l'établissement ne se change pas (modérateur, compte utilisateur). */
   ouvrirSelecteur: () => void;
+  /** Vrai sauf pour un modérateur ou un compte utilisateur : eux ne changent pas d'établissement une fois celui-ci pris. */
+  peutChangerEtablissement: boolean;
+  /** Vrai pour l'administrateur seul : lui crée, modifie et supprime les établissements (ils sont ceux du serveur). */
+  peutGerer: boolean;
   /** L'écran où l'on voulait arriver en ouvrant l'établissement (la cloche « À traiter », un nouvel établissement) : donné une seule fois, une fois le mode choisi. */
   prendreLaDestination: () => string | undefined;
   /** Espèces de l'établissement actif (une seule la plupart du temps). */
@@ -37,7 +44,7 @@ interface EtablissementContextValue {
   espece: EspeceAnimale;
   /** Change d'espèce et revient sur l'écran indiqué (l'écran courant par défaut) une fois les données rechargées. */
   changerEspece: (espece: EspeceAnimale) => Promise<void>;
-  /** Relit la liste des établissements (après une restauration qui a changé les types de l'établissement actif). */
+  /** Relit la liste des établissements (depuis le serveur, puis la copie locale) après une synchronisation ou une connexion. */
   recharger: () => Promise<void>;
 }
 
@@ -48,15 +55,22 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
   const [liste, setListe] = useState<Etablissement[]>([]);
   const [actifId, setActifId] = useState('');
   const [espece, setEspece] = useState<EspeceAnimale>(especeCourante());
+  // Le rôle du compte connecté (absent hors connexion) : il décide de ce qu'on peut changer ici.
+  const [roleCompte, setRoleCompte] = useState<string | undefined>(undefined);
   // L'application s'ouvre toujours sur le choix de l'établissement ; le mode (normal ou avancé) se demande ensuite, pour l'établissement choisi.
   const [selecteurOuvert, setSelecteurOuvert] = useState(true);
   const destinationEnAttente = useRef<(() => string) | undefined>(undefined);
+  const peutChangerEtablissement = roleCompte !== 'moderateur' && roleCompte !== 'utilisateur';
+  const peutGerer = roleCompte === 'administrateur';
 
   useEffect(() => {
-    initialiserEtablissements().then(({ liste: l, actifId: a }) => {
+    Promise.all([initialiserEtablissements(), lireConnexion().catch(() => null)]).then(([{ liste: l, actifId: a }, connexion]) => {
       setListe(l);
       setActifId(a);
       setEspece(especeCourante());
+      setRoleCompte(connexion?.role);
+      // Un modérateur ou un compte utilisateur n'a pas le choix de son établissement : on passe directement au choix du mode.
+      if (connexion?.role === 'utilisateur' || connexion?.role === 'moderateur') setSelecteurOuvert(false);
       setPret(true);
     });
   }, []);
@@ -76,11 +90,35 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
     return destination?.();
   }, []);
 
+  // Pas de navigation ni de remontage de l'arbre : les écrans se recréent seuls (voir ecranParEspece).
+  const changerEspece = useCallback(async (nouvelle: EspeceAnimale) => {
+    await choisirEspeceCourante(nouvelle);
+    setEspece(especeCourante());
+  }, []);
+
+  /**
+   * Relit la liste (serveur, puis copie locale) et le rôle du compte. Appelée après une connexion et à chaque synchronisation : un modérateur
+   * ou un utilisateur n'a qu'une exploitation, ouverte tout de suite, sans passer par le choix de l'établissement.
+   */
+  const recharger = useCallback(async () => {
+    await rafraichirEtablissements();
+    const connexion = await lireConnexion().catch(() => null);
+    setRoleCompte(connexion?.role);
+    const l = await listEtablissements();
+    setListe(l);
+    if ((connexion?.role === 'moderateur' || connexion?.role === 'utilisateur') && l.length > 0) {
+      await choisirEtablissementActif(l[0].id);
+      setActifId(l[0].id);
+      setSelecteurOuvert(false);
+    }
+    setEspece(especeCourante());
+  }, []);
+
+  /** Crée l'établissement (administrateur) et l'ouvre sur ses informations : on les remplit d'abord (statut, régime, TVA, tarifs). */
   const creer = useCallback(
     async (donnees: DonneesEtablissement) => {
       const nouveau = await creerEtablissement(donnees);
-      setListe((prev) => [...prev, nouveau]);
-      // Un nouvel établissement s'ouvre sur ses informations : on les remplit d'abord (statut, régime, TVA, tarifs).
+      setListe(await listEtablissements());
       await entrer(nouveau.id, () => ROUTES.INFORMATIONS_EXPLOITATION);
     },
     [entrer],
@@ -88,17 +126,6 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
 
   const modifier = useCallback(async (id: string, donnees: DonneesEtablissement) => {
     await modifierEtablissement(id, donnees);
-    setEspece(especeCourante());
-    setListe((prev) => prev.map((e) => (e.id === id ? { ...e, ...donnees, nom: donnees.nom.trim() } : e)));
-  }, []);
-
-  // Pas de navigation ni de remontage de l'arbre : les écrans se recréent seuls (voir ecranParEspece).
-  const changerEspece = useCallback(async (nouvelle: EspeceAnimale) => {
-    await choisirEspeceCourante(nouvelle);
-    setEspece(especeCourante());
-  }, []);
-
-  const recharger = useCallback(async () => {
     setListe(await listEtablissements());
     setEspece(especeCourante());
   }, []);
@@ -106,7 +133,7 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
   const supprimer = useCallback(async (id: string) => {
     const resultat = await supprimerEtablissement(id);
     if (!resultat.supprime) return;
-    setListe((prev) => prev.filter((e) => e.id !== id));
+    setListe(await listEtablissements());
     setActifId(resultat.actifId);
     setEspece(especeCourante());
   }, []);
@@ -120,6 +147,7 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
       <SelecteurEtablissement
         etablissements={liste}
         actifId={actif.id}
+        peutGerer={peutGerer}
         onChoisir={(id) => entrer(id)}
         onOuvrirATraiter={(item) => entrer(item.etablissementId, () => destinationDe(item))}
         onCreer={creer}
@@ -135,7 +163,11 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
       value={{
         etablissements: liste,
         actif,
-        ouvrirSelecteur: () => setSelecteurOuvert(true),
+        ouvrirSelecteur: () => {
+          if (peutChangerEtablissement) setSelecteurOuvert(true);
+        },
+        peutChangerEtablissement,
+        peutGerer,
         prendreLaDestination,
         especes: especesActives(),
         espece,

@@ -9,6 +9,7 @@ import { TYPE_FACTURE } from '@/shared/constants/comptabilite';
 
 export interface StatsAccueil {
   totalVivantes: number;
+  totalBoucles: number;
   chevres: number;
   boucs: number;
   cabrits: number;
@@ -65,8 +66,13 @@ export function calculerStatsAccueil({
   const totalFactures = (type: Facture['type']) =>
     factures.filter((f) => f.type === type).reduce((sum, f) => sum + f.montant, 0);
 
+  const boucles = vivantes.filter(
+    (c) => c.numeroBoucle
+  ).length;
+
   return {
     totalVivantes: vivantes.length,
+    totalBoucles: boucles,
     chevres: nombre(CATEGORIE_ANIMAL.CHEVRE),
     boucs: nombre(CATEGORIE_ANIMAL.BOUC),
     cabrits: nombre(CATEGORIE_ANIMAL.CABRIT),

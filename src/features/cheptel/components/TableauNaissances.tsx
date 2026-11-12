@@ -17,11 +17,14 @@ export function TableauNaissances({
   portees,
   ouvrirFiche,
   vide,
+  clients,
 }: {
   portees: readonly PorteeNaissance[];
   /** Ouvre la fiche d'un petit. */
   ouvrirFiche: (id: string) => void;
   vide: string;
+  /** Le client qui a acheté chaque petit vendu. */
+  clients: ReadonlyMap<string, string>;
 }) {
   const colonnes: readonly ColonneDuTableau<PorteeNaissance>[] = [
     { cle: 'date', titre: 'Date', poids: 1.2, valeur: (p) => p.date, texte: (p) => formatDateFR(p.date) },
@@ -40,7 +43,7 @@ export function TableauNaissances({
           {p.cabrits.map((c) => (
             <Pressable key={c.id} onPress={() => ouvrirFiche(c.id)} accessibilityRole="link">
               <Text style={{ fontSize: 13, color: colors.primaryDark, textDecorationLine: 'underline' }}>
-                {libelleChevre(c)} <Text style={{ color: colors.textMuted, textDecorationLine: 'none' }}>· {statutLabel(c.statut, c.sexe)}</Text>
+                {libelleChevre(c)} <Text style={{ color: colors.textMuted, textDecorationLine: 'none' }}>· {statutLabel(c.statut, c.sexe)}{clients.get(c.id) ? ` · ${clients.get(c.id)}` : ''}</Text>
               </Text>
             </Pressable>
           ))}

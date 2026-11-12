@@ -12,7 +12,6 @@ import { ChampVisiteLiee } from '@/features/sante/components/ChampVisiteLiee';
 import {
   choisirFichiers,
   ouvrirPiece,
-  piecesDisponibles,
   rangerFichier,
   supprimerPiece,
 } from '@/features/fichiers/services/pieces';
@@ -69,12 +68,8 @@ export default function DocumentsGds({ rubriques = DOCUMENTS_GDS, aide = T.aide 
   const enregistrer = (suivant: ReturnType<typeof ajouterUnDocumentGds>) =>
     patchSettings({ exploitation: { ...settings.exploitation, gds: suivant } });
 
-  /** Choisit un fichier et le range sur l'appareil ; rien si on renonce ou si les fichiers sont indisponibles (le web). */
+  /** Choisit un fichier et le range (sur l'appareil, ou directement sur le serveur depuis le web) ; rien si on renonce. */
   const choisir = async () => {
-    if (!piecesDisponibles()) {
-      Alert.alert(TEXTES.fichiers.indisponibleWeb);
-      return undefined;
-    }
     try {
       const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
       if (!choisi) return undefined;

@@ -28,6 +28,25 @@ export const suiviMouvementsTextes = {
   /** Ce qui s'écrit dans la colonne « Nom de l'acheteur ou du vendeur » quand la vente n'en donne pas. */
   abattoir: 'Abattoir',
   autoConsommation: 'Autoconsommation',
+  /** La page Mouvement : l'historique de l'année active, avec sa recherche. Une lettre de cause n'a pas le même sens à l'entrée et à la sortie (P, C). */
+  historique: {
+    titre: (annee: number) => `Historique des mouvements ${annee}`,
+    recherche: 'Rechercher (date, cause, acheteur…)',
+    aucun: 'Aucun mouvement enregistré sur cette année.',
+    causesEntree: {
+      N: 'Naissance',
+      A: 'Achat',
+      C: 'Changement de catégorie',
+      P: 'Prise en pension',
+    } as Record<string, string>,
+    causesSortie: {
+      M: 'Mort',
+      V: 'Vente',
+      P: 'Mise en pension',
+      C: 'Changement de catégorie',
+      AU: 'Autre sortie',
+    } as Record<string, string>,
+  },
   /** Le recensement annuel des ovins et caprins de la Chambre d'agriculture (règlement CE 21/2004). */
   recensement: {
     bouton: 'Recensement annuel (PDF)',

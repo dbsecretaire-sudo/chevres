@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Alert, FlatList, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -13,6 +13,7 @@ import { lireBibliotheque, retirerDocument } from '@/features/bibliotheque/repos
 import type { DocumentGenere } from '@/features/bibliotheque/types';
 import { ouvrirPiece, piecesDisponibles, pieceExiste, supprimerPiece } from '@/features/fichiers/services/pieces';
 import { enregistrerSurAppareil } from '@/features/bibliotheque/services/telechargement';
+import { miniaturePdf } from '@/features/bibliotheque/services/miniaturePdf';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -22,6 +23,34 @@ const T = TEXTES.export.bibliotheque;
 
 /** « 17/10/2026 à 14:32 » d'une date ISO. */
 const quand = (iso: string): string => `${formatDateFR(iso.slice(0, 10))} · ${iso.slice(11, 16)}`;
+
+/**
+ * Une ligne de document : la première page du PDF en miniature à gauche (une icône en attendant, ou si elle ne se lit pas), le titre et la date.
+ */
+function LigneDocument({ document, trailing, onPress }: { document: DocumentGenere; trailing: ReactNode; onPress: () => void }) {
+  const [uri, setUri] = useState<string | undefined>();
+  useEffect(() => {
+    let actif = true;
+    miniaturePdf(document.piece)
+      .then((miniature) => {
+        if (actif) setUri(miniature);
+      })
+      .catch(() => undefined);
+    return () => {
+      actif = false;
+    };
+  }, [document.piece]);
+  return (
+    <ListRow
+      title={document.titre}
+      subtitle={`${quand(document.genereLe)} · ${document.nomFichier}`}
+      image={uri ? { uri } : undefined}
+      icone={uri ? undefined : 'document-text-outline'}
+      trailing={trailing}
+      onPress={onPress}
+    />
+  );
+}
 
 /**
  * La bibliothèque : tous les documents (PDF) que l'application a générés, du plus récent au plus ancien, pour garder un historique. Un appui
@@ -72,9 +101,8 @@ export default function BibliothequeDocuments() {
         ListEmptyComponent={<EmptyState title={recherche.trim() ? T.aucunResultat : T.aucun} />}
         renderItem={({ item, index }) => (
           <LigneDeBloc index={index} total={affiches.length}>
-            <ListRow
-              title={item.titre}
-              subtitle={`${quand(item.genereLe)} · ${item.nomFichier}`}
+            <LigneDocument
+              document={item}
               trailing={
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                   {piecesDisponibles() ? (

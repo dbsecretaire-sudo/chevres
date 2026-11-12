@@ -1,11 +1,12 @@
 import { documentHtml, echapper, ecrireEtPartagerPdf, noteHtml } from '@/features/export/services/htmlPdf';
 import { getSettings, type InfosExploitation } from '@/features/settings/settings';
 import { lireArchiveStock, noterEtiquettesImprimees } from '@/features/stock/repository';
+import { etiquetteRondeHtml } from '@/features/export/documents/etiquetteRondePdf';
 import { etiquetteDuLot, type EtiquetteDeLot } from '@/features/stock/services/etiquetteLot';
 import { FORMAT_EXPORT, NOM_FICHIER_EXPORT_ETIQUETTES_LOTS } from '@/shared/constants/export';
 import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
-import { formatDateFR } from '@/shared/utils/dates';
+import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 
 const P = TEXTES.export.pdf.etiquettesLot;
 
@@ -19,10 +20,14 @@ const STYLE = `<style>
 </style>`;
 
 function etiquetteHtml(e: EtiquetteDeLot, infos: InfosExploitation | undefined, contenuNet: string | undefined): string {
+  // Un fromage a son étiquette ronde (9 cm, ou 4 cm pour le crottin) : DDM, numéro de lot et poids net.
+  if (e.fromage) return etiquetteRondeHtml(e);
   const responsable = [infos?.nomExploitant, infos?.adresseExploitant].filter(Boolean).map(echapper).join(', ');
   const lignes = [
     `<div class="ligne">${echapper(P.fabriqueLe(formatDateFR(e.dateFabrication)))}</div>`,
     e.dlc ? `<div class="ligne"><strong>${echapper(P.dlc(formatDateFR(e.dlc)))}</strong></div>` : '',
+    e.poidsNetKg ? `<div class="ligne"><strong>${echapper(P.poidsNet(String(e.poidsNetKg).replace('.', ',')))}</strong></div>` : '',
+    e.prixPiece !== undefined ? `<div class="ligne"><strong>${echapper(P.prixPiece(formatMontant(e.prixPiece)))}</strong></div>` : '',
     e.lait ? `<div class="ligne">${echapper([e.sale ? P.sale : P.nonSale, P.lait[e.lait]].join(' · '))}</div>` : '',
     e.finCure ? `<div class="ligne">${echapper(P.finCure(formatDateFR(e.finCure)))}</div>` : '',
     e.ddm
@@ -63,10 +68,12 @@ export async function exporterEtiquettesLotPdf(lotId: string, contenuNet?: strin
   const lot = (archive.lots ?? []).find((l) => l.id === lotId);
   if (!lot) return;
   const lots = lot.mouvementId ? (archive.lots ?? []).filter((l) => l.mouvementId === lot.mouvementId) : [lot];
-  // Un nombre souhaité : autant d'étiquettes de ce lot ; sinon, une par lot de la fabrication.
+  // Chaque étiquette porte le numéro de son propre fromage (un lot par pièce), dans l'ordre des numéros. Un nombre souhaité : autant d'étiquettes, en reprenant
+  // les numéros de la fabrication s'il y en a moins ; sinon, une par lot de la fabrication.
+  const parNumero = [...lots].sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
   const etiquettes = nombre
-    ? Array.from({ length: nombre }, () => etiquetteDuLot(lot, archive))
-    : lots.map((l) => etiquetteDuLot(l, archive));
+    ? Array.from({ length: nombre }, (_, i) => etiquetteDuLot(parNumero[i % parNumero.length] ?? lot, archive))
+    : parNumero.map((l) => etiquetteDuLot(l, archive));
   const titre = P.titre(etiquettes[0].produit);
   await ecrireEtPartagerPdf(
     documentHtml(titre, settings.exploitation, etiquettesHtml(etiquettes, settings.exploitation, contenuNet), undefined, ''),

@@ -2,6 +2,8 @@ import type { Vente } from '@/features/comptabilite/types';
 import { idsDesFromages } from '@/features/comptabilite/utils/ventes';
 import { lireArchiveStock, remplacerArchiveStock } from '@/features/stock/repository';
 import { plageDeBoucles } from '@/features/stock/services/boucles';
+import { CLE_LAIT } from '@/features/stock/services/historiqueLait';
+import { quantiteDansLUniteDuStock } from '@/features/stock/services/unites';
 import {
   articlesDuGenre,
   cleArticle,
@@ -247,36 +249,13 @@ export function lettreDeCategorie(article: string, archive: ArchiveStock): strin
   return /[A-Z]/.test(initiale) ? initiale : LETTRE_CATEGORIE_LOT_PAR_DEFAUT;
 }
 
-/** Le début du numéro des lots d'un produit fabriqué un jour : « FF261 » (fromage, frais, 2026, 1er jour). */
-export function prefixeDeLot(article: string, date: string, archive: ArchiveStock, variante?: { sale: boolean; lait: string }): string {
-  const produit = estArticleFromage(article)
-    ? PRODUIT_A_LOTS.FROMAGE
-    : estArticlePlat(article)
-      ? PRODUIT_A_LOTS.PLAT
-      : estArticleSavon(article)
-        ? PRODUIT_A_LOTS.SAVON
-        : PRODUIT_A_LOTS.CHARCUTERIE;
-  const annee = String(Number(date.slice(0, 4)) % 100).padStart(2, '0');
-  // Un fromage dont on sait s'il est salé et de quel lait : ses lettres suivent celle de sa catégorie (« FFNSC261 » : frais, non salé, cru).
-  const lettresVariante =
-    produit === PRODUIT_A_LOTS.FROMAGE && variante
-      ? `${variante.sale ? LETTRES_SEL_LOT.SALE : LETTRES_SEL_LOT.NON_SALE}${LETTRE_LAIT_LOT[variante.lait] ?? ''}`
-      : '';
-  return `${LETTRE_PRODUIT_LOT[produit]}${lettreDeCategorie(article, archive)}${lettresVariante}${annee}${jourDeLAnnee(date)}`;
-}
-
 /**
- * Le numéro du premier lot d'une fabrication, « FF261-1 » : le produit (F fromage, B boucherie), sa catégorie (F frais, V vieux,
- * C crottin, B brocciu, l'initiale du nom sinon), l'année, le jour de l'année, puis le n° du produit. Une deuxième fabrication du même
- * jour continue la numérotation de la première.
+ * Le numéro du premier lot d'une fabrication : un identifiant incrémenté, en chiffres seuls (652, 653…), le suivant du plus grand numéro
+ * déjà pris par un lot, tous produits confondus. Les anciens numéros (« FF26297-16 ») restent tels quels.
  */
-export function numeroDeLot(archive: ArchiveStock, article: string, date: string, variante?: { sale: boolean; lait: string }): string {
-  const prefixe = prefixeDeLot(article, date, archive, variante);
-  const debut = `${prefixe}${SEPARATEUR_NUMERO_LOT}`;
-  const rangs = (archive.lots ?? [])
-    .filter((l) => l.numero.startsWith(debut))
-    .map((l) => Number(l.numero.slice(debut.length)) || 0);
-  return `${debut}${Math.max(0, ...rangs) + 1}`;
+export function numeroDeLot(archive: Pick<ArchiveStock, 'lots'>): string {
+  const pris = (archive.lots ?? []).map((l) => (/^\d+$/.test(l.numero.trim()) ? Number(l.numero) : 0));
+  return String(Math.max(0, ...pris) + 1);
 }
 
 /** Ce qui empêche de fabriquer ces fromages : le premier numéro manque, la plage est trop grande, ou un numéro est déjà pris. */
@@ -337,15 +316,19 @@ export function fabriquerFromages(saisie: {
       ...(saisie.sale !== undefined ? { sale: saisie.sale } : {}),
       ...(saisie.lait ? { lait: saisie.lait } : {}),
     }));
+    const tousUtilises = (saisie.ingredients ?? []).filter((i) => i.article && i.quantite > 0);
+    // Le lait de l'inventaire ne sort pas comme un article : ce sont des litres, à défaut de ceux saisis pour la fabrication (la recette peut en demander).
+    const laitUtilise = tousUtilises.filter((i) => i.article === CLE_LAIT).reduce((somme, i) => somme + i.quantite, 0);
+    const litresRetenus = saisie.litres && saisie.litres > 0 ? saisie.litres : laitUtilise > 0 ? laitUtilise : undefined;
+    const utilises = tousUtilises.filter((i) => i.article !== CLE_LAIT);
     const mouvement: MouvementStock = {
       id: mouvementId,
       article: saisie.article,
       date: saisie.date,
       delta: numeros.length,
       origine: ORIGINE_MOUVEMENT.MANUEL,
-      litres: saisie.litres && saisie.litres > 0 ? saisie.litres : undefined,
+      litres: litresRetenus,
     };
-    const utilises = (saisie.ingredients ?? []).filter((i) => i.article && i.quantite > 0);
     const sorties: MouvementStock[] = utilises.map((i) => ({
       id: generateId(),
       article: i.article,
@@ -357,12 +340,12 @@ export function fabriquerFromages(saisie: {
     const notes = saisie.notes?.trim() || undefined;
     // Les ingrédients et les notes sont gardés une seule fois pour tous les lots, comme pour un plat préparé.
     const platsFabriques =
-      utilises.length > 0 || notes
+      tousUtilises.length > 0 || notes
         ? {
             ...(archive.platsFabriques ?? {}),
             [mouvementId]: {
               notes,
-              ingredients: utilises.map((i) => ({ article: i.article, quantite: i.quantite, lotIds: i.lotIds })),
+              ingredients: tousUtilises.map((i) => ({ article: i.article, quantite: i.quantite, lotIds: i.lotIds })),
             },
           }
         : archive.platsFabriques;
@@ -400,6 +383,10 @@ function fabriquerTransforme(
     const numeros = plageDeBoucles(saisie.debut, saisie.quantite) as string[];
     const mouvementId = generateId();
     const utilises = saisie.ingredients.filter((i) => i.article && i.quantite > 0);
+    // Le lait de l'inventaire ne sort pas comme un article : ce sont des litres, comme ceux saisis pour le savon.
+    const laitUtilise = utilises.filter((i) => i.article === CLE_LAIT).reduce((somme, i) => somme + i.quantite, 0);
+    const stockUtilise = utilises.filter((i) => i.article !== CLE_LAIT);
+    const litresRetenus = litres && litres > 0 ? litres : laitUtilise > 0 ? laitUtilise : undefined;
     const pris = new Set(utilises.flatMap((i) => i.lotIds));
     const nouveaux: LotFromage[] = numeros.map((numero) => ({
       id: generateId(),
@@ -414,9 +401,9 @@ function fabriquerTransforme(
       date: saisie.date,
       delta: numeros.length,
       origine: ORIGINE_MOUVEMENT.MANUEL,
-      litres: litres && litres > 0 ? litres : undefined,
+      litres: litresRetenus,
     };
-    const sorties: MouvementStock[] = utilises.map((i) => ({
+    const sorties: MouvementStock[] = stockUtilise.map((i) => ({
       id: generateId(),
       article: i.article,
       date: saisie.date,
@@ -454,11 +441,19 @@ export function fabriquerPlats(saisie: {
   notes?: string;
   ingredients: readonly { article: string; quantite: number; lotIds: string[] }[];
 }): Promise<void> {
-  return fabriquerTransforme(saisie, ORIGINE_MOUVEMENT.PLAT, {
-    dateSterilisation: saisie.dateSterilisation || undefined,
-    ddm: saisie.ddm || undefined,
-    notes: saisie.notes?.trim() || undefined,
-  });
+  // Le lait de chèvre d'un plat est pris en litres dans le stock de lait, comme celui d'un savon : il ne sort pas comme un article.
+  const laitUtilise = saisie.ingredients.filter((i) => i.article === CLE_LAIT).reduce((somme, i) => somme + i.quantite, 0);
+  const sansLait = saisie.ingredients.filter((i) => i.article !== CLE_LAIT);
+  return fabriquerTransforme(
+    { ...saisie, ingredients: sansLait },
+    ORIGINE_MOUVEMENT.PLAT,
+    {
+      dateSterilisation: saisie.dateSterilisation || undefined,
+      ddm: saisie.ddm || undefined,
+      notes: saisie.notes?.trim() || undefined,
+    },
+    laitUtilise > 0 ? laitUtilise : undefined,
+  );
 }
 
 /**
@@ -536,6 +531,17 @@ export function lotsDeLaFabrication(lots: LotFromage[], lot: LotFromage): LotFro
 }
 
 /** Réserve des lots pour un client (sans réservation : ils sont libérés). */
+/** Le poids net et le prix de la pièce vendue, notés sur son lot (ils vont sur son étiquette). */
+export function enregistrerPeseeDuLot(id: string, poidsNetKg: number, prixPiece: number): Promise<void> {
+  return enFile(async () => {
+    const archive = await lireArchiveStock();
+    await remplacerArchiveStock({
+      ...archive,
+      lots: (archive.lots ?? []).map((l) => (l.id === id ? { ...l, poidsNetKg, prixPiece } : l)),
+    });
+  });
+}
+
 export function reserverLots(ids: string[], reservation?: LotFromage['reservation']): Promise<void> {
   return enFile(async () => {
     const archive = await lireArchiveStock();
@@ -742,6 +748,48 @@ export const recettesDuProduit = (
   (archive.recettes ?? [])
     .filter((r) => r.produit === produit && (!article || !r.article || r.article === article))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+
+/**
+ * Une quantité de recette pour la fabrication : la recette se rédige pour une pièce (ou pour un kilo de savon), la fabrication en donne le nombre ou le poids.
+ */
+export const quantiteDeLaFabrication = (quantiteDeReference: number, facteur: number): number =>
+  Math.round(quantiteDeReference * facteur * 1e6) / 1e6;
+
+/**
+ * Les ingrédients qu'une fabrication reprend de sa recette, pour le nombre de pièces (ou le poids d'un savon) donné : la recette de l'article, sinon celle du
+ * produit entier ; rien sans recette. Le lait en fait partie (il sort en litres). Chaque quantité de recette est convertie dans l'unité du stock de l'ingrédient
+ * (2 g de sel sortent du stock de sel en kilos, 0,002 kg).
+ */
+export function ingredientsDeLaRecette(
+  archive: Pick<ArchiveStock, 'recettes' | 'unites'>,
+  produit: string,
+  article: string,
+  facteur: number,
+): { article: string; quantite: number; lotIds: string[] }[] {
+  const recettes = recettesDuProduit(archive, produit, article);
+  const recette = recettes.find((r) => r.article === article) ?? recettes.find((r) => !r.article);
+  return (recette?.ingredients ?? []).map((i) => ({
+    article: i.article,
+    quantite: quantiteDeLaFabrication(quantiteDansLUniteDuStock(i.quantite, i.unite, archive.unites?.[i.article]), facteur),
+    lotIds: [],
+  }));
+}
+
+/**
+ * Les produits qu'on peut fabriquer : un article de l'inventaire ET une recette pour lui (la sienne, ou une recette du produit entier). Un produit
+ * sans recette n'est pas proposé, même s'il est dans l'inventaire.
+ */
+export function articlesAFabriquer(
+  archive: ArchiveStock,
+  produit: ValeurDe<typeof PRODUIT_A_LOTS>,
+  espece: EspeceAnimale,
+): ArticleAffiche[] {
+  const recettesDuProduitCourant = (archive.recettes ?? []).filter((r) => r.produit === produit);
+  const produitEntier = recettesDuProduitCourant.some((r) => !r.article);
+  return articlesDuProduit(produit, archive, espece).filter(
+    (a) => produitEntier || recettesDuProduitCourant.some((r) => r.article === a.cle),
+  );
+}
 
 /** Garde une recette (nouvelle, ou celle qui porte déjà son identifiant : elle est remplacée). */
 export function enregistrerRecette(recette: RecetteDeFabrication): Promise<void> {

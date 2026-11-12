@@ -1,4 +1,6 @@
-import { ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/shared/theme/colors';
 import { TableauVisitesVeterinaire } from '@/features/sante/components/TableauVisitesVeterinaire';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { BlocLignes } from '@/shared/components/BlocListe';
@@ -10,11 +12,34 @@ import { rapportsDeLaVisite, traitementsDeLaVisite } from '@/features/sante/serv
 import type { Traitement, VisiteVeterinaire } from '@/features/sante/types';
 import type { DocumentGdsDepose } from '@/features/settings/settings';
 import { formatDateFR, formatMontant } from '@/shared/utils/dates';
-import { styles } from '@/shared/styles/exploitation/ListeVisites.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.exploitation.listeVisites;
+
+/** Une icône à droite d'une visite : pleine (le traitement) ou en contour (le rapport d'essais). Un appui ouvre la page, sans ouvrir la visite. */
+function IconeVisite({ icone, libelle, pleine = false, onPress }: { icone: 'medkit' | 'flask-outline'; libelle: string; pleine?: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={libelle}
+      onPress={onPress}
+      hitSlop={6}
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: pleine ? colors.primary : colors.surface,
+        borderWidth: 1,
+        borderColor: pleine ? colors.primary : colors.border,
+      }}
+    >
+      <Ionicons name={icone} size={22} color={pleine ? colors.blanc : colors.primary} />
+    </Pressable>
+  );
+}
 
 /**
  * Les visites du vétérinaire : la liste de ses factures, de la plus récente à la plus ancienne (une facture est une visite, qu'elle ait ou non une fiche de visite). Sous chacune, en
@@ -86,10 +111,22 @@ export function ListeVisitesVeterinaire({
               key={facture.id}
               // Le cabinet, la date et les animaux : les motifs de la visite se lisent sur sa fiche.
               title={facture.tiers || visite?.motif || facture.description}
-              subtitle={[formatDateFR(facture.date), nombreDAnimaux > 0 ? T.animaux(nombreDAnimaux) : undefined]
+              subtitle={[formatDateFR(facture.date), nombreDAnimaux > 0 ? T.animaux(nombreDAnimaux) : undefined, formatMontant(facture.montant)]
                 .filter(Boolean)
                 .join(' · ')}
-              trailing={<Text style={styles.cout}>{formatMontant(facture.montant)}</Text>}
+              // À droite : le traitement (s'il y en a un) et le rapport d'essais (s'il existe), chacun ouvre sa page.
+              trailing={
+                rattaches.length > 0 || rapportAnnonce || fichiers.length > 0 ? (
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {rattaches.length > 0 ? (
+                      <IconeVisite icone="medkit" libelle="Ouvrir le traitement" pleine onPress={() => onOuvrirTraitement(rattaches[0])} />
+                    ) : null}
+                    {rapportAnnonce || fichiers.length > 0 ? (
+                      <IconeVisite icone="flask-outline" libelle="Ouvrir le rapport d’essais" onPress={() => onOuvrirRapport(facture)} />
+                    ) : null}
+                  </View>
+                ) : undefined
+              }
               icone="medical"
               onPress={ouvrir}
             />,
@@ -115,20 +152,6 @@ export function ListeVisitesVeterinaire({
               />
             )),
             ...(actes.length + rattaches.length === 0 ? [<ListRow key={`${facture.id}:sans-traitement`} retrait grise title={T.aucunTraitement} />] : []),
-            // Ses rapports d'essais, en retrait ; sans rapport, une ligne qui le dit.
-            // Un rapport annoncé (case cochée, avec son numéro) et ses fichiers déposés sont un seul rapport : une seule ligne, qui donne ses documents ; les fichiers ne se listent à part que sans rapport annoncé.
-            ...(rapportAnnonce
-              ? [
-                  <ListRow
-                    key={`${facture.id}:rapport`}
-                    retrait
-                    title={TEXTES.cheptel.ficheChevre.sante.rapportEssais(visite?.numeroRapport)}
-                    subtitle={fichiers.length > 0 ? T.documentsDuRapport(fichiers.length) : undefined}
-                    icone="flask-outline"
-                    onPress={() => onOuvrirRapport(facture)}
-                  />,
-                ]
-              : []),
             ...(rapportAnnonce ? [] : fichiers).map((r) => (
               <ListRow
                 key={`${facture.id}:fichier:${r.piece.id}`}

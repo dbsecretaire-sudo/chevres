@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { PageBerger } from '@/features/berger/components/PageBerger';
 import { EnteteBerger } from '@/features/berger/components/EnteteBerger';
 import { useEnvoiBerger } from '@/features/berger/hooks/useEnvoiBerger';
-import { COMPTES_VIDES, tuilesDuTerrain } from '@/features/accueil/terrain/ecransTerrain';
+import { COMPTES_VIDES, tuilesDuTerrain, type TuileTerrain } from '@/features/accueil/terrain/ecransTerrain';
 import { EtiquettesSimple } from '@/features/production/simple/EtiquettesSimple';
 import { FabricationSimple } from '@/features/production/simple/FabricationSimple';
 import { LaitSimple } from '@/features/production/simple/LaitSimple';
@@ -23,6 +23,8 @@ const PRODUITS_DES_TUILES: Record<string, typeof PRODUIT_A_LOTS.FROMAGE | typeof
 };
 /** Les tuiles qui s'ouvrent ici, sans quitter la page : les autres (le stock) ouvrent leur page. */
 const AVEC_FLUX = ['fabriquer', 'lait', 'etiquettes', 'ventes', 'scanLot'];
+/** Les trois tuiles qu'on utilise en atelier : elles sont en tête, dans cet ordre. Les autres suivent, toutes affichées. */
+const TUILES_PRINCIPALES = ['fabriquer', 'scanLot', 'ventes'];
 
 /**
  * La fromagerie du mode normal : le menu de l'atelier (lait du jour, fabriquer, scanner un lot, étiquettes, vendre, stock). « Fabriquer » ouvre les quatre produits
@@ -68,19 +70,21 @@ export function AtelierSimple({ onQuitter }: { onQuitter: () => void }) {
     );
   if (tuile === 'scanLot')
     return (
-      <PageBerger titre="Scanner un lot" onRetour={retour}>
+      <PageBerger titre="Information du lot" onRetour={retour}>
         <ScanLotSimple onRetour={retour} />
       </PageBerger>
     );
+  const toutes = tuilesDuTerrain('atelier', COMPTES_VIDES);
+  const principales = TUILES_PRINCIPALES.map((cle) => toutes.find((t) => t.cle === cle)).filter((t) => t !== undefined);
+  const autres = toutes.filter((t) => !TUILES_PRINCIPALES.includes(t.cle));
+  const ouvrir = (t: TuileTerrain) => {
+    if (AVEC_FLUX.includes(t.cle)) setTuile(t.cle);
+    else router.push(t.route as never);
+  };
   return (
     <ScrollView contentContainerStyle={{ padding: 12, gap: 12 }}>
       <EnteteBerger titre={TEXTES.roles.berger.fromagerie} onRetour={onQuitter} aEnvoyer={aEnvoyer} onEnvoyer={envoyer} />
-      <GrilleDeTuiles
-        variante="simple"
-        principale="fabriquer"
-        tuiles={tuilesDuTerrain('atelier', COMPTES_VIDES)}
-        onAppui={(t) => (AVEC_FLUX.includes(t.cle) ? setTuile(t.cle) : router.push(t.route as never))}
-      />
+      <GrilleDeTuiles variante="simple" principale="fabriquer" tuiles={[...principales, ...autres]} onAppui={ouvrir} />
     </ScrollView>
   );
 }

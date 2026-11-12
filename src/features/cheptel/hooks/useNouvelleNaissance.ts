@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { enregistrerNaissance } from '@/features/cheptel/repository/naissances';
 import { numeroBoucleExiste } from '@/features/cheptel/repository/chevres';
 import { useMeresPossibles } from '@/features/cheptel/hooks/useMeresPossibles';
+import { useConfirmerSortie } from '@/shared/hooks/useConfirmerSortie';
 import type { Sexe } from '@/features/cheptel/types';
 import { todayISO } from '@/shared/utils/dates';
 import { generateId } from '@/shared/utils/id';
@@ -50,6 +51,12 @@ export function useNouvelleNaissance() {
   const [cabrits, setCabrits] = useState<CabritNaissanceForm[]>(cabritsInitiaux(params.sexes));
   const [enregistrement, setEnregistrement] = useState(false);
   const optionsMeres = useMeresPossibles(date, params.mereNumeroBoucle);
+  /** Vrai dès qu'une donnée est saisie : quitter l'écran demande alors confirmation. */
+  const saisieCommencee =
+    (!params.mereNumeroBoucle && mereNumeroBoucle.trim() !== '') ||
+    notes.trim() !== '' ||
+    cabrits.some((c) => c.numeroBoucle.trim() !== '' || c.nom.trim() !== '' || c.mortNe);
+  const sortie = useConfirmerSortie(saisieCommencee);
 
   const majCabrit = (key: string, patch: Partial<CabritNaissanceForm>) => {
     setCabrits((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
@@ -94,7 +101,7 @@ export function useNouvelleNaissance() {
         }
       }
 
-      await enregistrerNaissance({
+      const creees = await enregistrerNaissance({
         date,
         mereNumeroBoucle: mereNumeroBoucle.trim(),
         cabrits: cabrits.map((c) => ({
@@ -105,8 +112,11 @@ export function useNouvelleNaissance() {
         })),
         notes: notes.trim() || undefined,
       });
-      // On revient à la liste des animaux (et non à l'écran d'où la naissance a été déclarée).
-      router.dismissTo(ROUTES.CHEPTEL_LISTE);
+      // On revient à la fiche de la mère, la chèvre qui vient de mettre bas ; sans mère connue, à la liste des animaux.
+      sortie.laisserPartir();
+      const mereId = creees.find((c) => c.mereId)?.mereId;
+      if (mereId) router.replace(ROUTES.ficheChevre(mereId) as never);
+      else router.dismissTo(ROUTES.CHEPTEL_LISTE);
     } finally {
       setEnregistrement(false);
     }
@@ -127,6 +137,7 @@ export function useNouvelleNaissance() {
     ajouterCabrit,
     supprimerCabrit,
     enregistrement,
+    sortie,
     annuler,
     enregistrer,
   };

@@ -15,6 +15,9 @@ export const bilanAnnuelTextes = {
   },
   t1erSemestreTardifsValeur: (valeur: number) => `1er semestre (tardifs ${valeur})`,
   t2eSemestreCabrisAnnee: (annee: number) => `2e semestre (${V().petit.pluriel} ${annee})`,
+  /** Les mises bas de la saison, sur la liste du troupeau : les tardifs (2e semestre de l'année d'avant), puis le 1er semestre de l'année. */
+  saisonTardifs: (annee: number) => `2e semestre (tardifs ${annee})`,
+  saisonPremierSemestre: (annee: number) => `1er semestre (${annee})`,
   /** Les ventes déclarées dans la comptabilité : la fiche de l'animal passe en vendu. */
   vendusStock: 'Vendus (inventaire)',
   venduesStock: 'Vendues (inventaire)',

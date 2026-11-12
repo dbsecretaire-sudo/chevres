@@ -54,15 +54,13 @@ export default function BilanAnnuel() {
     enregistrer: async () => {
       const valeur = declare.trim() ? parseDecimal(declare) : undefined;
       if (valeur === declareEnregistre) return true;
-      const { [cleAides(annee, espece)]: _ancien, ...autres } =
-        settings.exploitation?.ugbPrimes?.effectifsDeclares ?? {};
+      // Seule cette année est touchée : un effectif vide (null) la retire, les autres années restent (voir fusionnerReglages).
       await patchSettings({
         exploitation: {
           ...settings.exploitation,
           ugbPrimes: {
             ...settings.exploitation?.ugbPrimes,
-            effectifsDeclares:
-              valeur === undefined ? autres : { ...autres, [cleAides(annee, espece)]: valeur },
+            effectifsDeclares: { [cleAides(annee, espece)]: valeur ?? null } as unknown as Record<string, number>,
           },
         },
       });

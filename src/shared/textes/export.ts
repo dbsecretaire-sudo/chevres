@@ -115,6 +115,8 @@ export const TEXTES_EXPORT = {
       inci: 'Ingrédients (INCI)',
       sansComposition: 'Ingrédients : à renseigner',
       contenuNet: (contenu: string) => `Contenu net : ${contenu}`,
+      poidsNet: (kg: string) => `Poids net : ${kg} kg`,
+      prixPiece: (prix: string) => `Prix : ${prix}`,
       responsable: 'Personne responsable',
       responsableAbsent: 'Nom et adresse du responsable : à renseigner dans les informations de l’exploitation',
       noteSavon:
@@ -237,51 +239,21 @@ export const TEXTES_EXPORT = {
       rappeleEtat: 'Rappelé',
       vendu: (date: string) => (date ? `Vendu le ${date}` : 'Vendu'),
     },
-    /** Le guide des numéros de lot : la lecture d'un numéro, les lettres des produits, les règles. */
+    /** Le guide des numéros de lot : le prochain numéro, et les règles. */
     guideLots: {
       titre: 'Guide des numéros de lot',
       cartes: {
-        exemple: 'Un numéro d’aujourd’hui',
-        exempleDetail: (date: string) => `Premier lot fabriqué le ${date}`,
-        jour: 'Jour de l’année',
-        jourDetail: 'De 1 (1er janvier) à 365',
+        exemple: 'Le prochain numéro',
+        exempleDetail: 'Un chiffre, le suivant du dernier lot',
       },
       sections: {
-        lire: 'Comment lire un numéro de lot',
-        produits: 'Les lettres de vos produits',
+        lire: 'Comment se donne un numéro de lot',
         regles: 'À retenir',
       },
-      colonnes: {
-        partie: 'Partie',
-        exemple: 'Dans l’exemple',
-        sens: 'Ce que ça veut dire',
-        produit: 'Produit',
-        lettreProduit: 'Produit (1re lettre)',
-        lettreCategorie: 'Catégorie (2e lettre)',
-        debut: 'Début du numéro',
-        premier: 'Premier lot aujourd’hui',
-      },
-      partie: {
-        produit: '1re lettre',
-        categorie: '2e lettre',
-        annee: 'Année',
-        jour: 'Jour de l’année',
-        numero: 'Numéro du produit',
-      },
-      sens: {
-        produit: 'Le produit : F pour un fromage, B pour la boucherie et la charcuterie.',
-        categorie:
-          'La catégorie : F frais, V vieux (affiné), C crottin, B brocciu ; pour un autre produit, l’initiale de son nom (Figatellu : F, Tomme : T).',
-        annee: 'L’année de fabrication, sur 2 chiffres.',
-        jour: 'Le jour de l’année de la fabrication, sans zéro devant (de 1 à 365).',
-        numero: 'Un tiret puis le numéro du produit dans la fabrication : -1, -2, -3…',
-      },
-      aucunProduit: 'Aucun produit dans l’inventaire.',
-      noteProduits: (date: string) => `Les numéros sont ceux qu’un lot fabriqué le ${date} prendrait.`,
       regles: [
-        'Chaque produit d’une fabrication a son numéro : le premier se termine par -1, les suivants par -2, -3…',
-        'Deux fabrications du même produit le même jour se poursuivent : si la première s’arrête à -5, la suivante commence à -6.',
-        'Un autre jour, ou un autre produit, repart à -1.',
+        'Chaque lot prend le numéro suivant : 652, puis 653, 654…, tous produits confondus.',
+        'Les numéros ne repartent jamais de zéro, et ne se réutilisent pas.',
+        'Les anciens numéros (du type FF26297-16) restent valables pour les lots déjà faits.',
         'Un numéro de lot se note sur le produit (étiquette ou tampon) : il sert à retrouver la fabrication, et à rappeler les lots vendus si besoin.',
       ],
     },

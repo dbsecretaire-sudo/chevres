@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
+import { reappliquerEspeces } from '@/features/etablissements/repository';
 import { noterSauvegarde } from '@/features/sauvegarde/derniereSauvegarde';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import {
@@ -10,7 +11,8 @@ import {
   seDeconnecter,
   type Connexion,
 } from '@/features/sync/synchronisation';
-import { premiereSynchronisation, recevoirChangements, synchroniser } from '@/features/sync/moteur';
+import { EnvoiSuspect, premiereSynchronisation, recevoirChangements, synchroniser } from '@/features/sync/moteur';
+import { alignerLesStatutsSurLesVentes } from '@/features/comptabilite/services/alignementStatuts';
 import { lireAttente, lireCurseur, surAttente } from '@/shared/storage/depot';
 import { remettreAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { TEXTES } from '@/shared/textes';
@@ -23,6 +25,8 @@ export type Occupation = 'connexion' | 'envoi' | 'reception' | 'automatique' | n
 /** Les options d'un envoi ou d'une réception : « silencieux » pour la synchronisation automatique (pas de message de réussite ni d'erreur). */
 interface OptionsSynchro {
   silencieux?: boolean;
+  /** L'envoi a été confirmé malgré un garde-fou (données de l'appareil beaucoup plus petites que celles du serveur). */
+  forcer?: boolean;
 }
 
 /** La synchronisation avec le serveur de la ferme : connexion, envoi et réception, avec les messages d'erreur. */
@@ -61,6 +65,8 @@ export function useSynchronisation() {
     try {
       await seConnecter(identifiant, motDePasse);
       setConnexion(await lireConnexion());
+      // La liste des établissements vient du compte qui vient de se connecter : on la relit, avec le rôle.
+      await recharger();
     } catch (erreur) {
       signaler(erreur);
     } finally {
@@ -75,6 +81,10 @@ export function useSynchronisation() {
 
   /** Après une synchronisation : les données reçues s'affichent, et ce qui était en attente est parti. */
   const finirSynchronisation = async () => {
+    // Les animaux désignés par une vente sont sortis du cheptel, même si une mise à jour venue d'un autre appareil les a remis vivants.
+    await alignerLesStatutsSurLesVentes().catch(() => undefined);
+    // Les espèces de l'exploitation arrivent avec la synchronisation : on les prend en compte tout de suite (sans relancer l'application).
+    await reappliquerEspeces().catch(() => undefined);
     await recharger();
     await refreshSettings();
     await noterSauvegarde();
@@ -83,17 +93,24 @@ export function useSynchronisation() {
   };
 
   /** Envoie ce qui attend, puis reçoit ce que les autres ont envoyé. En silencieux, rien ne s'affiche : ce qui n'est pas parti reste en file. */
-  const envoyer = async ({ silencieux = false }: OptionsSynchro = {}) => {
+  const envoyer = async ({ silencieux = false, forcer = false }: OptionsSynchro = {}) => {
     setOccupe(silencieux ? 'automatique' : 'envoi');
     try {
-      const bilan = await synchroniser();
+      const bilan = await synchroniser({ forcer });
       await remettreAEnvoyer();
       await finirSynchronisation();
       if (silencieux) return;
       if (bilan.refusees > 0) Alert.alert(T.erreurTitre, T.refusees(bilan.refusees));
       else Alert.alert(T.envoyee, T.envoyeeTexte);
     } catch (erreur) {
-      if (!silencieux) signaler(erreur);
+      if (erreur instanceof EnvoiSuspect) {
+        // Rien n'est parti : les modifications restent en file. L'envoi n'a lieu qu'après une confirmation explicite.
+        if (!silencieux)
+          Alert.alert(T.envoiSuspectTitre, T.envoiSuspect(erreur.tailleLocale, erreur.tailleConnue), [
+            { text: T.annuler, style: 'cancel' },
+            { text: T.envoyerQuandMeme, style: 'destructive', onPress: () => envoyer({ forcer: true }) },
+          ]);
+      } else if (!silencieux) signaler(erreur);
       else if (erreur instanceof ConnexionExpiree) setConnexion(null);
       await actualiserEnAttente().catch(() => undefined);
     } finally {
@@ -106,8 +123,11 @@ export function useSynchronisation() {
     setOccupe(silencieux ? 'automatique' : 'reception');
     try {
       // La toute première fois, la première synchronisation complète se fait (elle envoie aussi ce que cet appareil a déjà).
-      if ((await lireCurseur()) === undefined) await premiereSynchronisation();
-      else await recevoirChangements();
+      if ((await lireCurseur()) === undefined) {
+        // Un compte utilisateur ne fait que recevoir : sa première synchronisation ne renvoie pas les données de cet appareil (elles iraient en validation).
+        if ((await lireConnexion())?.role === 'utilisateur') await recevoirChangements();
+        else await premiereSynchronisation();
+      } else await recevoirChangements();
       await finirSynchronisation();
       if (!silencieux) Alert.alert(T.recue, T.recueTexte);
     } catch (erreur) {

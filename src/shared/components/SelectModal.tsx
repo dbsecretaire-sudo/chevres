@@ -16,6 +16,8 @@ export interface SelectOption<T extends string> {
   shortLabel?: string;
   /** Le titre du groupe de la ligne : il s'affiche au-dessus de la première ligne de chaque groupe (les lignes d'un groupe se suivent). */
   groupe?: string;
+  /** Une option visible mais non choisissable (un article sans stock) : elle s'affiche grisée. */
+  desactivee?: boolean;
 }
 
 interface Props<T extends string> {
@@ -184,7 +186,8 @@ export function SelectModal<T extends string>({
               keyExtractor={(item, index) => `${item.nom}|${index}`}
               renderItem={({ item }) => (
                 <Pressable
-                  style={styles.option}
+                  style={[styles.option, item.option?.desactivee && { opacity: 0.4 }]}
+                  disabled={item.option?.desactivee}
                   onPress={() => {
                     if (item.categorie) setGroupeChoisi(item.nom);
                     else if (item.option) {
@@ -228,7 +231,9 @@ export function SelectModal<T extends string>({
                       styles.option,
                       item.groupe && !avecPuces && !parCategories && styles.optionGroupee,
                       item.value === value && styles.optionSelected,
+                      item.desactivee && { opacity: 0.4 },
                     ]}
+                    disabled={item.desactivee}
                     onPress={() => {
                       onSelect(item.value);
                       fermer();

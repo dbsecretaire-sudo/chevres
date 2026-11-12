@@ -36,7 +36,13 @@ export function ListeDeChoix({
             key={c.cle}
             libelle={c.libelle}
             onPress={() => onChoisir(c)}
-            icone={c.icone ? <MaterialCommunityIcons name={c.icone} size={44} color={colors.blanc} /> : undefined}
+            icone={
+              c.image ? (
+                <DessinDeCarte emoji={c.image.emoji} cle={c.image.cle} />
+              ) : c.icone ? (
+                <MaterialCommunityIcons name={c.icone} size={44} color={colors.blanc} />
+              ) : undefined
+            }
           />
         ))}
       </View>

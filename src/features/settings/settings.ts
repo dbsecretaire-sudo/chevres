@@ -4,6 +4,7 @@ import type { INVESTISSEMENT } from '@/shared/constants/economies';
 import { currentYear } from '@/shared/utils/dates';
 import { cleStockage } from '@/features/etablissements/repository';
 import { CLE_STOCKAGE } from '@/shared/constants/stockage';
+import { ecrireDonnee, lireCurseur, lireValeurLocale, surReception } from '@/shared/storage/depot';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { EtapeReglementaire } from '@/features/stock/types';
 import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
@@ -543,15 +544,37 @@ const DEFAULTS: AppSettings = {
   anneeActive: currentYear(),
 };
 
+/** La zone synchronisée des primes prévisionnelles (propre à l'établissement, comme ses réglages). */
+const clePrimes = () => cleStockage(CLE_STOCKAGE.PRIMES_PREVISIONNELLES);
+
+/** Prévient quand les primes arrivent d'un autre appareil. Rend la fonction qui arrête l'écoute. */
+export function surPrimesRecues(ecouteur: () => void): () => void {
+  return surReception((zone) => {
+    if (zone === clePrimes()) ecouteur();
+  });
+}
+
 export async function getSettings(): Promise<AppSettings> {
   const raw = await AsyncStorage.getItem(cle());
   let reglages: AppSettings = { ...DEFAULTS };
+  // Les primes d'avant la zone synchronisée, si les réglages locaux en gardent (un appareil neuf n'en a pas).
+  let anciennesPrimes: InfosExploitation['ugbPrimes'] | undefined;
   if (raw) {
     try {
-      reglages = { ...DEFAULTS, ...(JSON.parse(raw) as AppSettings) };
+      const lus = JSON.parse(raw) as AppSettings;
+      anciennesPrimes = lus.exploitation?.ugbPrimes;
+      reglages = { ...DEFAULTS, ...lus };
     } catch {
       // Des réglages illisibles : ceux d'office.
     }
+  }
+  // Les primes prévisionnelles viennent de leur zone synchronisée. Tant qu'elle n'existe pas, on reprend celles des réglages (avant) et on les y range.
+  const primesSynchronisees = (await lireValeurLocale(clePrimes())) as InfosExploitation['ugbPrimes'] | undefined;
+  if (primesSynchronisees) {
+    reglages = { ...reglages, exploitation: { ...reglages.exploitation, ugbPrimes: primesSynchronisees } };
+  } else if (anciennesPrimes && (await lireCurseur()) !== undefined) {
+    // Seul un appareil déjà synchronisé range ses anciennes primes dans la zone : un appareil neuf n'écrit rien avant d'avoir reçu celles du serveur.
+    await ecrireDonnee(clePrimes(), anciennesPrimes);
   }
   // Les catégories de client servent hors des écrans (calcul d'une vente) : elles sont posées à chaque lecture des réglages.
   definirCategoriesClient(reglages.exploitation?.categoriesClient);
@@ -560,9 +583,40 @@ export async function getSettings(): Promise<AppSettings> {
   return reglages;
 }
 
+const estObjetSimple = (valeur: unknown): valeur is Record<string, unknown> =>
+  typeof valeur === 'object' && valeur !== null && !Array.isArray(valeur);
+
+/**
+ * Fusionne une modification dans les réglages actuels : les objets se fusionnent champ par champ, une valeur null retire le champ, les autres
+ * valeurs remplacent. Ainsi, un écran dont la copie est en retard ne peut plus effacer ce qu'il ne modifie pas.
+ */
+function fusionnerReglages(actuel: unknown, modification: unknown): unknown {
+  if (modification === null) return undefined;
+  if (modification === undefined) return actuel;
+  if (!estObjetSimple(modification) || !estObjetSimple(actuel)) return modification;
+  const resultat: Record<string, unknown> = { ...actuel };
+  for (const [cle, valeur] of Object.entries(modification)) {
+    if (valeur === undefined) continue;
+    const fusion = fusionnerReglages(actuel[cle], valeur);
+    if (fusion === undefined) delete resultat[cle];
+    else resultat[cle] = fusion;
+  }
+  return resultat;
+}
+
 export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const current = await getSettings();
-  const next = { ...current, ...patch };
+  const next = fusionnerReglages(current, patch) as AppSettings;
+  // Les primes changées partent vers leur zone synchronisée (les autres réglages restent sur l'appareil). Un appareil qui n'a pas encore
+  // synchronisé ne les envoie pas : sa copie n'est pas fiable, et elle écraserait celle du serveur.
+  const primes = next.exploitation?.ugbPrimes;
+  if (
+    primes &&
+    JSON.stringify(primes) !== JSON.stringify(current.exploitation?.ugbPrimes) &&
+    (await lireCurseur()) !== undefined
+  ) {
+    await ecrireDonnee(clePrimes(), primes);
+  }
   await AsyncStorage.setItem(cle(), JSON.stringify(next));
   definirCategoriesClient(next.exploitation?.categoriesClient);
   definirCategoriesFournisseur(next.exploitation?.categoriesFournisseur);

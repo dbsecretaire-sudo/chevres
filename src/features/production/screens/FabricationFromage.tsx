@@ -17,13 +17,13 @@ import { Button } from '@/shared/components/Button';
 import { DateField } from '@/shared/components/DateField';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
-import { variantesImposees, type TypeLait } from '@/features/stock/services/dlc';
+import { laitsPermis, variantesImposees, type TypeLait } from '@/features/stock/services/dlc';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { exporterGuideLotsPdf } from '@/features/export/documents/guideLotsPdf';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle } from '@/features/stock/services/boucles';
 import {
-  articlesDuProduit,
+  articlesAFabriquer,
   erreurFabrication,
   fabriquerFromages,
   numeroDeLot,
@@ -79,7 +79,8 @@ function FabricationDeLots() {
 
   useEffect(() => {
     lireArchiveStock().then((a) => {
-      const proposes = articlesDuProduit(produit, a, espece);
+      // Un produit ne se fabrique que s'il a une recette et un article dans l'inventaire.
+      const proposes = articlesAFabriquer(a, produit, espece);
       setArchive(a);
       setArticles(proposes);
       if (proposes[0]) setArticle(proposes[0].cle);
@@ -89,32 +90,18 @@ function FabricationDeLots() {
   // Les ingrédients d'une fromagerie : la présure, le sel et les ferments, puis les articles des listes de l'inventaire.
   const proposables = useMemo(
     () =>
-      archive
-        ? ingredientsProposables(
-            archive,
-            {
-              fromages: '',
-              charcuterie: '',
-              autres: TEXTES.production.fabricationPlat.ingredients.groupeAutres,
-              fromagerie: TEXTES.production.recettes.groupeFromagerie,
-              animaux: TEXTES.production.recettes.groupeAnimaux,
-            },
-            { fromagerie: true },
-          )
-        : [],
+      archive ? ingredientsProposables(archive, {}, { fromagerie: true }) : [],
     [archive],
   );
 
-  // Le numéro du premier lot se propose d'après le produit et la date (on peut le modifier ensuite).
-  // Le vieux est toujours salé, le brocciu toujours salé et pasteurisé : on ne les demande pas.
-  const imposee = variantesImposees(article);
+  // Le numéro du premier lot se propose : le suivant du dernier lot (on peut le modifier ensuite).
+  // Le vieux n'est jamais salé, le brocciu toujours salé et pasteurisé : on ne les demande pas.
+  // Le nom du fromage dit s'il est affiné (un fromage ajouté au stock n'a pas de type d'office).
+  const nomDuFromage = articles.find((a) => a.cle === article)?.libelle ?? '';
+  const imposee = variantesImposees(article, nomDuFromage);
   const saleEffectif: 'oui' | 'non' | '' = imposee.sale === undefined ? sale : imposee.sale ? 'oui' : 'non';
   const laitEffectif: TypeLait | '' = imposee.lait ?? lait;
-  const premier =
-    premierSaisi ??
-    (archive && article && date
-      ? numeroDeLot(archive, article, date, fromage && saleEffectif && laitEffectif ? { sale: saleEffectif === 'oui', lait: laitEffectif } : undefined)
-      : '');
+  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive) : '');
 
   const choisirArticle = (cle: string) => {
     setArticle(cle);
@@ -136,7 +123,8 @@ function FabricationDeLots() {
     if (!archive) return;
     const erreur = erreurFabrication(archive, article, premier, nombre);
     if (erreur) return Alert.alert(erreur);
-    if (fromage && (!saleEffectif || !laitEffectif)) return Alert.alert(TEXTES.production.fabrication.varianteRequise);
+    if (fromage && (!saleEffectif || (laitsPermis(article, nomDuFromage).length > 0 && !laitEffectif)))
+      return Alert.alert(TEXTES.production.fabrication.varianteRequise);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
     if (fromage && !(laitUtilise > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
     const utilises = ingredients
@@ -195,20 +183,22 @@ function FabricationDeLots() {
               ]}
             />
             )}
-            <SelectField
-              label={TEXTES.production.fabrication.lait}
-              required
-              value={lait}
-              onChange={(v) => {
-                setLait(v as TypeLait);
-                setPremierSaisi(null);
-              }}
-              options={[
-                { value: 'cru', label: TEXTES.production.fabrication.laitCru },
-                { value: 'pasteurise', label: TEXTES.production.fabrication.laitPasteurise },
-                { value: 'uht', label: TEXTES.production.fabrication.laitUht },
-              ]}
-            />
+            {laitsPermis(article, nomDuFromage).length > 0 ? (
+              <SelectField
+                label={TEXTES.production.fabrication.lait}
+                required
+                value={lait}
+                onChange={(v) => {
+                  setLait(v as TypeLait);
+                  setPremierSaisi(null);
+                }}
+                options={[
+                  { value: 'cru', label: TEXTES.production.fabrication.laitCru },
+                  { value: 'pasteurise', label: TEXTES.production.fabrication.laitPasteurise },
+                  { value: 'uht', label: TEXTES.production.fabrication.laitUht },
+                ].filter((o) => laitsPermis(article, nomDuFromage).includes(o.value as TypeLait))}
+              />
+            ) : null}
           </>
         ) : null}
         <DateField label={T.date} required value={date} onChange={changerDate} />
@@ -230,7 +220,7 @@ function FabricationDeLots() {
         <Button
           variant="secondary"
           label={TEXTES.production.fabrication.guide}
-          onPress={() => exporterGuideLotsPdf(espece)}
+          onPress={() => exporterGuideLotsPdf()}
         />
         {fromage ? (
           <>
@@ -257,7 +247,7 @@ function FabricationDeLots() {
             notes={notes}
             archive={archive}
             ingredients={ingredients}
-            quantite={quantite}
+            facteur={nombre}
             onChange={() => lireArchiveStock().then(setArchive)}
             onAppliquer={(r) => {
               setIngredients(

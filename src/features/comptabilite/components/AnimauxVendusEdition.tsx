@@ -67,6 +67,8 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
   const [abattusOuvert, setAbattusOuvert] = useState(false);
   const [unParUn, setUnParUn] = useState(false);
   const [detailOuvert, setDetailOuvert] = useState(false);
+  /** Les animaux que désigne une autre vente (de toutes les années) : ils ne sont plus à vendre ici, même s'ils étaient vivants à la date de la facture. */
+  const [dejaVendus, setDejaVendus] = useState<ReadonlySet<string>>(new Set());
   const ids = idsDesAnimaux(form);
   const cle = ids.join(SEPARATEUR_ANIMAUX);
   const fraisDuJour = useFraisAbattoir();
@@ -81,9 +83,10 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
       listAnimauxPresentsLe(espece, estDateISO(form.date) ? form.date : todayISO()).then(setVivants);
       lireArchiveStock().then((archive) => setTiptags(numerosTiptag(archive.boucles))).catch(() => undefined);
       // Les jours d'abattage à facturer : les animaux de cette vente y restent (ils sont à elle).
-      Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
-        setJours(joursAbattusAFacturer(abattus, ventes, form.id)),
-      );
+      Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) => {
+        setJours(joursAbattusAFacturer(abattus, ventes, form.id));
+        setDejaVendus(new Set(ventes.filter((v) => v.id !== form.id).flatMap(idsDesAnimaux)));
+      });
     }, [espece, form.id, form.date]),
   );
 
@@ -110,7 +113,12 @@ export function AnimauxVendusEdition({ form, onChange }: Props) {
         (a) => !ids.includes(a.id) && !estPetit(a),
       )
     : vivants.filter(
-        (a) => !ids.includes(a.id) && estPetit(a) === petits && !!a.numeroBoucle === declaree && (petits || !estTiptag(a, tiptags)),
+        (a) =>
+          !ids.includes(a.id) &&
+          !dejaVendus.has(a.id) &&
+          estPetit(a) === petits &&
+          !!a.numeroBoucle === declaree &&
+          (petits || !estTiptag(a, tiptags)),
       );
   /** La liste à cocher : les animaux proposés et ceux déjà choisis (cochés). */
   const aCocher = [...choisis, ...proposes].sort(parBoucleCroissante);

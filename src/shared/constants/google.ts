@@ -20,5 +20,9 @@ export const CLE_VISION_NON_CONFIGUREE = 'À_REMPLACER';
  * ⚠️ Contrairement au Client ID OAuth, cette clé permet d'appeler l'API et donc de générer des coûts si
  * elle est volée (ex : APK décompilé). Avant de l'utiliser : activez l'API "Cloud Vision API", restreignez
  * la clé à cette seule API, et définissez une alerte de budget sur le projet.
+ *
+ * La clé ne figure JAMAIS dans le code (le dépôt est publié) : elle se donne par la variable
+ * EXPO_PUBLIC_GOOGLE_VISION_API_KEY, dans le fichier `.env.local` à la racine (ignoré par git),
+ * ou dans les variables d'environnement du build (EAS).
  */
-export const GOOGLE_VISION_API_KEY = CLE_VISION_NON_CONFIGUREE;
+export const GOOGLE_VISION_API_KEY: string = process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY ?? CLE_VISION_NON_CONFIGUREE;

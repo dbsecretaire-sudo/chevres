@@ -135,7 +135,7 @@ export const TEXTES_ACCUEIL = {
         etiquettes: 'Étiquettes',
         ventes: 'Vendre',
         cadreReglementaire: 'Cadre réglementaire',
-        scanLot: 'Scanner un lot',
+        scanLot: 'Information du lot',
         viandeAVendre: 'Viande à vendre',
         viandeAFacturer: 'Viande à facturer',
         stock: 'Stock',
@@ -146,7 +146,7 @@ export const TEXTES_ACCUEIL = {
       },
     },
     /** La barre du bas. */
-    barre: { annee: 'Année', espece: 'Animal', didacticiel: 'Didacticiel', reglages: 'Organisation' },
+    barre: { annee: 'Année', espece: 'Animal', didacticiel: 'Didacticiel', reglages: 'Réglages', stock: 'Stock' },
     bulles: {
       contactsEtEcritures: 'Contacts et écritures',
       fabriquerFromage: 'Fromage',

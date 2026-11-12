@@ -6,6 +6,8 @@ import { useAccordDesLots } from '@/features/lots-animaux/hooks/useAccordDesLots
 import { estLieuTiers } from '@/features/accueil/services/lieuxTiers';
 import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { enteteDuBatiment } from '@/shared/components/EnteteBatiment';
+import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
+import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
 import { enteteControle } from '@/features/exploitation/utils/enteteControle';
 import type { FamilleControle } from '@/features/exploitation/types';
@@ -52,7 +54,11 @@ export default function ProductionLayout() {
         headerLeft: enteteBureau(),
       }}
     >
-      <Stack.Screen name="index" options={{ title: TEXTES.production.titre }} />
+      {/* L'atelier se quitte vers la Ferme, d'où on l'ouvre. */}
+      <Stack.Screen
+        name="index"
+        options={{ title: TEXTES.production.titre, headerLeft: () => <HeaderBackTo to={ROUTES.CHEPTEL} /> }}
+      />
       <Stack.Screen
         name="fromages"
         options={{ title: TEXTES.production.fromages.titre, headerLeft: enteteDuBatiment() }}
@@ -85,9 +91,7 @@ export default function ProductionLayout() {
           return {
             title: estLieuTiers(lieu)
               ? TEXTES.production.lieux[lieu].titre
-              : lieu === 'grange'
-                ? TEXTES.production.lieux.entrepot.grange
-                : lieu === 'fromagerie'
+              : lieu === 'fromagerie'
                   ? TEXTES.production.lieux.fromagerie.titre
                   : lieu === 'animaux'
                     ? TEXTES.production.lieux.cheptel.titre
@@ -95,8 +99,6 @@ export default function ProductionLayout() {
                       ? TEXTES.production.lieux.documents.liens.boucles.titre
                       : TEXTES.production.titre,
             headerLeft: enteteDuBatiment(),
-            // La grange et le stock de l'atelier ont la capsule de la ferme à la place de l'en-tête ; la page des boucles a son en-tête.
-            headerShown: lieu !== 'grange',
           };
         }}
       />
@@ -148,7 +150,10 @@ export default function ProductionLayout() {
         name="recettes"
         options={{ title: TEXTES.production.recettes.page.titre, headerLeft: enteteDuBatiment() }}
       />
-      <Stack.Screen name="recette" options={{ title: TEXTES.production.recettes.edition.titreNouvelle }} />
+      <Stack.Screen
+        name="recette"
+        options={{ title: TEXTES.production.recettes.edition.titreNouvelle }}
+      />
       <Stack.Screen
         name="registre-analyses"
         options={{ title: TEXTES.analysesProduits.registre.titre, headerLeft: enteteDuBatiment() }}

@@ -120,7 +120,12 @@ export function normaliserArchiveStock(archive: Partial<ArchiveStock> | undefine
   for (const [cle, jours] of Object.entries(archive?.dureeDeVie ?? {})) {
     if (typeof jours === 'number' && jours > 0) dureeDeVie[cle] = Math.round(jours);
   }
+  const unites: Record<string, string> = {};
+  for (const [cle, unite] of Object.entries(archive?.unites ?? {})) {
+    if (typeof unite === 'string' && unite.trim()) unites[cle] = unite;
+  }
   return {
+    unites,
     mouvements: Array.isArray(archive?.mouvements) ? archive.mouvements : [],
     articles: Array.isArray(archive?.articles) ? archive.articles : [],
     conditionnements,

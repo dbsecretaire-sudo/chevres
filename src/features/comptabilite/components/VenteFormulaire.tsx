@@ -25,6 +25,7 @@ import {
   fraisAbattoirFacturesAuClient,
   numeroFactureLibre,
   prixLibre,
+  prixPersonnaliseAuClient,
   reajustementPossible,
 } from '@/features/clients/services/categorie';
 import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAnimaux';
@@ -58,7 +59,8 @@ import {
   reglageEtatAnimaux,
   venteADeclarer,
 } from '@/features/comptabilite/utils/ventes';
-import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
+import { ChampTauxTva } from '@/features/comptabilite/components/ecriture/ChampTauxTva';
+import { parseDecimal } from '@/shared/utils/nombres';
 import { ChampFraisAbattoir } from '@/features/comptabilite/components/ChampFraisAbattoir';
 import { useFraisAbattoir } from '@/features/lots-animaux/hooks/useFraisAbattoir';
 import { nomComplet } from '@/shared/utils/personne';
@@ -154,7 +156,8 @@ export function VenteFormulaire({
   const animalEntier = form.categorie === CATEGORIE_VENTE.VIANDE;
   /** Vente offerte : chaque ligne (les animaux, les frais d'abattoir) a son bouton « Cadeau » (actif : offerte ; désactivé : facturée). */
   const produitOffert = !!form.offert && form.cadeauProduit !== false;
-  const fraisOfferts = !!form.offert && (form.cadeauFrais ?? !((form.fraisAbattoir ?? 0) > 0));
+  // Les frais d'abattoir s'offrent à part, sur une vente avec facture : même sans offrir le reste de la vente.
+  const fraisOfferts = form.cadeauFrais ?? !((form.fraisAbattoir ?? 0) > 0);
   /** Les frais d'abattoir refacturés comptent dans le prix total (viande à l'inventaire seulement). */
   // Un animal vivant ne passe pas par l'abattoir : pas de frais d'abattoir.
   const frais = animalEntier && roleDuDetail !== ROLE_VIANDE.VIVANT && prixInventaire && !fraisOfferts ? (form.fraisAbattoir ?? 0) : 0;
@@ -166,6 +169,15 @@ export function VenteFormulaire({
 
   /** Les volets de la modification : Général (la date, le client, la facture), Détails (ce qui est vendu), Coût (le prix et le règlement). */
   const [onglet, setOnglet] = useState<'general' | 'details' | 'cout'>('general');
+  /** « Prix du produit personnalisé » : cochée, le prix de l'unité se saisit pour cette vente (il remplace celui de l'inventaire). */
+  const [prixPersoCoche, setPrixPersoCoche] = useState(!!form.prixUnitairePersonnalise);
+  /** Le prix de l'unité tel que saisi (la virgule se garde pendant la frappe). */
+  const [prixUnitaireTexte, setPrixUnitaireTexte] = useState(
+    form.prixUnitairePersonnalise ? String(form.prixUnitairePersonnalise).replace('.', ',') : '',
+  );
+  /** L'unité du prix personnalisé : celle du calcul du total (au kilo pour un petit ou un animal sur pied, au litre pour le lait, à la pièce sinon). */
+  const auKilo = roleDuDetail !== undefined && (roleDuDetail !== ROLE_VIANDE.VIVANT || !!form.venduAuPoids);
+  const unitePrix = form.categorie === CATEGORIE_VENTE.LAIT ? 'litre' : auKilo ? 'kg' : 'piece';
   const onglets: OngletSaisie<'general' | 'details' | 'cout'>[] = [
     { value: 'general', label: TEXTES.comptabilite.ficheFacture.ongletGeneral },
     { value: 'details', label: TEXTES.comptabilite.ficheFacture.ongletDetails },
@@ -380,10 +392,13 @@ export function VenteFormulaire({
             )}
           </View>
         )}
+        {/* Les animaux vendus (et les lots) se changent ici, avec ce qui est vendu. */}
+        {complement}
       </SectionForm>
       ) : null}
 
       {onglet === 'cout' ? (
+      <>
       <SectionForm>
         {/* Le prix total vient de l'inventaire (prix défini × quantité ou × poids) : on ne le saisit pas. */}
         <Interrupteur
@@ -391,35 +406,8 @@ export function VenteFormulaire({
           value={!!form.offert}
           onChange={(offert) => onChange({ ...form, offert: offert ? true : undefined })}
         />
-        <FormField
-          label={TEXTES.comptabilite.ficheVente.prixTotal}
-          required
-          value={
-            produitOffert
-              ? String(fraisOfferts ? 0 : (form.fraisAbattoir ?? 0)).replace('.', ',')
-              : prixInventaire
-                ? totalInventaire !== undefined
-                  ? String(Math.round((totalInventaire + frais) * 100) / 100).replace('.', ',')
-                  : ''
-                : montantTexte
-          }
-          onChangeText={onChangerMontant}
-          editable={!prixInventaire && !produitOffert}
-          style={prixInventaire || produitOffert ? commonStyles.verrouille : undefined}
-          keyboardType="decimal-pad"
-          placeholder="0,00"
-        />
-        {prixInventaire && totalInventaire === undefined ? (
-          <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
-        ) : null}
-        {/* Les frais d'abattoir refacturés au client : leur montant et leur taux de TVA. */}
-        {form.offert && animalEntier ? (
-          <BoutonCadeau
-            actif={produitOffert}
-            onChange={(actif) => onChange({ ...form, cadeauProduit: actif })}
-            ligne={T.cadeauAnimaux}
-          />
-        ) : null}
+        {/* La séparation entre ce qui est offert et le prix total de la vente. */}
+        {/* Les frais d'abattoir refacturés au client, ou offerts (seulement pour une vente offerte et avec facture) : même bulle que l'offre. */}
         {animalEntier && roleDuDetail !== ROLE_VIANDE.VIVANT && (prixInventaire || fraisAbattoirFacturesAuClient(client)) ? (
           <ChampFraisAbattoir
             valeur={form.fraisAbattoir ? String(form.fraisAbattoir).replace('.', ',') : ''}
@@ -428,7 +416,8 @@ export function VenteFormulaire({
             tauxParDefaut={String(form.tauxTva ?? '')}
             montantViande={produitOffert ? 0 : (totalInventaire ?? 0)}
             cadeau={
-              form.offert
+              // « Abattoir offert » ne se propose qu'à une vente avec facture ; il est indépendant de l'offre du reste.
+              venteADeclarer(form)
                 ? {
                     actif: fraisOfferts,
                     // Facturer les frais : ceux de la facture de l'abattoir liée au lot (ou ceux déjà enregistrés).
@@ -457,7 +446,75 @@ export function VenteFormulaire({
             }
           />
         ) : null}
-
+      </SectionForm>
+      <SectionForm>
+        {/* Le prix total et, à côté, « personnaliser » : le prix unitaire propre à cette vente. */}
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <FormField
+              label={TEXTES.comptabilite.ficheVente.prixTotal}
+              required
+              value={
+                produitOffert
+                  ? '0,00'
+                  : prixInventaire
+                    ? totalInventaire !== undefined
+                      ? String(Math.round((totalInventaire + frais) * 100) / 100).replace('.', ',')
+                      : ''
+                    : montantTexte
+              }
+              onChangeText={onChangerMontant}
+              editable={!prixInventaire && !produitOffert}
+              style={prixInventaire || produitOffert ? commonStyles.verrouille : undefined}
+              keyboardType="decimal-pad"
+              placeholder="0,00"
+            />
+          </View>
+          {prixInventaire && (prixPersonnaliseAuClient(client) || prixPersoCoche) ? (
+            <View style={{ width: 170 }}>
+              <Interrupteur
+                label="personnaliser"
+                value={prixPersoCoche}
+                onChange={(coche) => {
+                  setPrixPersoCoche(coche);
+                  if (!coche) {
+                    setPrixUnitaireTexte('');
+                    onChange({ ...form, prixUnitairePersonnalise: undefined });
+                  }
+                }}
+              />
+            </View>
+          ) : null}
+        </View>
+        {prixInventaire && totalInventaire === undefined ? (
+          <Text style={commonStyles.note}>{T.aucunPrixInventaire}</Text>
+        ) : null}
+        {/* Le prix personnalisé (exceptionnel, pour cette vente) : l'unité se saisit, et le total suit l'inventaire recalculé. */}
+        {prixInventaire && (prixPersonnaliseAuClient(client) || prixPersoCoche) ? (
+          <>
+            {prixPersoCoche ? (
+              <>
+                <FormField
+                  label={T.prixParUnite[unitePrix]}
+                  value={prixUnitaireTexte}
+                  onChangeText={(valeur) => {
+                    setPrixUnitaireTexte(valeur);
+                    onChange({ ...form, prixUnitairePersonnalise: parseDecimal(valeur) || undefined });
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder={T.ex2}
+                />
+                <Text style={commonStyles.note}>{T.prixPersonnaliseAide}</Text>
+              </>
+            ) : null}
+          </>
+        ) : null}
+        {/* Le taux de TVA de la vente : le HT et la TVA du total s'en déduisent. */}
+        <ChampTauxTva
+          value={form.tauxTva !== undefined ? String(form.tauxTva) : ''}
+          onChange={(taux) => onChange({ ...form, tauxTva: Number(taux) })}
+          ttc={produitOffert ? 0 : prixInventaire ? (totalInventaire ?? 0) + frais : parseDecimal(montantTexte)}
+        />
         {/* Le paiement : encaissée (la date du jour s'enregistre en la cochant payée), ou pas encore, avec la date prévue. */}
         <ChampPaiement
           libellePayee="Encaissé"
@@ -467,8 +524,8 @@ export function VenteFormulaire({
           echeance={form.echeance ?? ''}
           onEcheance={(echeance) => onChange({ ...form, echeance })}
         />
-        {complement}
       </SectionForm>
+      </>
       ) : null}
 
     </>

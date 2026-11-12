@@ -19,6 +19,7 @@ import { PastilleAlerte } from '@/shared/components/PastilleAlerte';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { useFiltreEspeceStock } from '@/features/stock/hooks/useFiltreEspeceStock';
 import { SelectField } from '@/shared/components/SelectField';
+import { UNITES_STOCK, genreAvecUnite } from '@/features/stock/services/unites';
 import { NomModal } from '@/features/dossiers/components/NomModal';
 import { ArticleStockModal } from '@/features/stock/components/ArticleStockModal';
 import { DetailBouclesModal } from '@/features/stock/components/DetailBouclesModal';
@@ -66,6 +67,7 @@ import {
   enregistrerLaitJour,
   positionnerArticle,
   renommerArticle,
+  definirUniteArticle,
   masquerArticle,
   supprimerArticle,
   roleDeLaViande,
@@ -82,7 +84,7 @@ import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable'
 import { useRole } from '@/features/roles/context/RoleContext';
 import { ROLE } from '@/shared/constants/roles';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
-import { piecesDisponibles } from '@/features/fichiers/services/pieces';
+import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { definirImageArticle, type ChoixImage } from '@/features/stock/services/imagesArticles';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
@@ -113,6 +115,9 @@ const PANNEAU_DE_JEU = { panneau: '#EFE3C4', bord: '#C2A76B' };
 
 /** Les boucles d'identification ne s'ajoutent pas à la main : elles entrent par un achat en comptabilité. */
 type GenreAjoutable = Exclude<GenreArticle, typeof GENRE_ARTICLE.BOUCLE>;
+
+/** L'unité proposée d'office à l'ajout d'un consommable : on le compte à la pièce. */
+const UNITE_PAR_DEFAUT = 'pièce';
 
 const TEXTES_AJOUT: Record<GenreAjoutable, { titre: string; exemple: string }> = {
   [GENRE_ARTICLE.FROMAGE]: { titre: T.ajouter.fromage, exemple: T.ajouter.exempleFromage },
@@ -160,6 +165,8 @@ export default function StockFromagerie() {
     useFiltreEspeceStock();
   /** L'activité choisie à la création d'un article : « toutes les activités » (vide) d'office. */
   const [activiteAjout, setActiviteAjout] = useState('');
+  /** L'unité d'un consommable ajouté (« pièce » d'office) : elle se change à l'ajout, puis dans la fiche de l'article. */
+  const [uniteAjout, setUniteAjout] = useState<string>(UNITE_PAR_DEFAUT);
   const { onglet: ongletDemande, espece: especeDemandee, vue } = useLocalSearchParams<{
     onglet?: string;
     espece?: string;
@@ -218,6 +225,8 @@ export default function StockFromagerie() {
   const [listeAjout, setListeAjout] = useState<ListeInventaire | null>(null);
   /** L'article qu'on s'apprête à supprimer (la confirmation est ouverte quand il est présent). */
   const [aSupprimer, setASupprimer] = useState<ArticleAffiche | null>(null);
+  /** L'article dont on ouvre le menu d'actions (un appui sur sa carte). */
+  const [actionsDe, setActionsDe] = useState<ArticleAffiche | null>(null);
   /** L'article dont on regarde l'historique (un appui sur sa carte). */
   const [historiqueDe, setHistoriqueDe] = useState<ArticleAffiche | null>(null);
   /** L'article dont on modifie le nom (le crayon de sa ligne). */
@@ -349,23 +358,15 @@ export default function StockFromagerie() {
         setBoucleVisible(true);
       } else if (estLigneDuCheptel(a.cle)) {
         // L'animal sur pied et l'animal vivant suivent le cheptel : on n'y ajoute ni ne retire à la main.
-      } else if (estArticleAvecLots(a.cle)) {
-        // Le mode normal ne modifie pas les lots (contrôle, dates, sélection) : la fenêtre ne s'ouvre pas.
-        if (!simple) {
-          setFromageOuvert(a);
-          setFromageVisible(true);
-        }
-      } else {
-        // Les autres articles (aliments, emballages, entretien, matériel, listes ajoutées…) : leur historique ; la quantité se saisit depuis lui.
-        if (!simple) setHistoriqueDe(a);
+      } else if (!simple) {
+        // Un article ouvre son menu : modifier, historique, entrée ou sortie, supprimer. Le mode normal ne modifie rien : pas de menu.
+        setActionsDe(a);
       }
     };
     /** Le crayon d'un article : l'image d'une boucle, ou son nom, son compte et sa suppression. */
     const modifierArticle = (a: ArticleAffiche) =>
       boucles
-        ? piecesDisponibles()
-          ? setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
-          : undefined
+        ? setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
         : setRenomme(a);
     if (comptable) {
       // Affichage sobre sur un grand écran : l'inventaire en tableau (le déplacement par appui long reste aux cartes).
@@ -375,7 +376,7 @@ export default function StockFromagerie() {
         return {
           article: a,
           niveau,
-          quantite: a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau),
+          quantite: quantiteAffichee(a, niveau),
           note: resume ? resume.resume : sousLeNom(a),
         };
       });
@@ -384,7 +385,7 @@ export default function StockFromagerie() {
           lignes={lignes}
           libelleModifier={boucles ? T.articleModal.image.modifier : TEXTES.commun.general.modifier}
           onOuvrir={(l, i) => ouvrirArticle(l.article, i)}
-          onModifier={simple || (boucles && !piecesDisponibles()) ? undefined : (l) => modifierArticle(l.article)}
+          onModifier={simple ? undefined : (l) => modifierArticle(l.article)}
         />
       );
     }
@@ -404,18 +405,17 @@ export default function StockFromagerie() {
                 key={a.cle}
                 rang={i}
                 titre={a.libelle}
-                quantite={a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : T.unites(niveau)}
+                quantite={quantiteAffichee(a, niveau)}
                 niveau={niveau}
                 sous={resume ? resume.resume : sousLeNom(a)}
                 selectionnee={prise === a.cle}
                 libelleDuCrayon={boucles ? T.articleModal.image.modifier : undefined}
+                dessin={<DessinDeCarte emoji={emojiDeLArticle(genreDeLaCle(a.cle), a.libelle)} cle={a.cle} />}
                 onRenommer={
                   simple
                     ? undefined
                     : boucles
-                    ? piecesDisponibles()
-                      ? () => setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
-                      : undefined
+                    ? () => setImageDe({ cle: a.cle, titre: a.libelle, emoji: emojiDeLArticle(genreDeLaCle(a.cle), a.libelle) })
                     : () => setRenomme(a)
                 }
                 onLongPress={deplacable ? () => setPrise(a.cle) : undefined}
@@ -435,17 +435,25 @@ export default function StockFromagerie() {
     Alert.alert(T.boucles.synchro.fait(reprises));
   };
 
-  const valider = async (cle: string, delta: number, litres?: number) => {
-    // Retirer d'un consommable (aliment, emballage, entretien), c'est ce qui a été consommé.
-    const consomme =
-      delta < 0 && NATURE_PAR_GENRE[cle.split(':')[0] as GenreArticle] === NATURE_STOCK.CONSOMMABLE;
-    await ajouterMouvementManuel(
-      cle,
-      delta,
-      todayISO(),
-      litres,
-      consomme ? ORIGINE_MOUVEMENT.CONSOMMATION : ORIGINE_MOUVEMENT.MANUEL,
-    );
+  /** La quantité d'une carte : le kilo des aliments, l'unité choisie d'un article (« 25 kg »), sinon le compte d'avant. */
+  const quantiteAffichee = (a: ArticleAffiche, niveau: number): string =>
+    a.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? T.kilos(niveau) : a.unite ? `${niveau} ${a.unite}` : T.unites(niveau);
+
+  const valider = async (cle: string, delta: number, litres?: number, unite?: string) => {
+    // Une variation nulle (on ne change que l'unité) ne fait pas de mouvement.
+    if (delta !== 0) {
+      // Retirer d'un consommable (aliment, emballage, entretien), c'est ce qui a été consommé.
+      const consomme =
+        delta < 0 && NATURE_PAR_GENRE[cle.split(':')[0] as GenreArticle] === NATURE_STOCK.CONSOMMABLE;
+      await ajouterMouvementManuel(
+        cle,
+        delta,
+        todayISO(),
+        litres,
+        consomme ? ORIGINE_MOUVEMENT.CONSOMMATION : ORIGINE_MOUVEMENT.MANUEL,
+      );
+    }
+    if (unite !== undefined) await definirUniteArticle(cle, unite);
     setArticle(null);
     charger();
   };
@@ -503,11 +511,14 @@ export default function StockFromagerie() {
     setListeAjout(liste ?? null);
     // L'article est proposé pour l'animal actif ; on peut le passer à une autre activité, ou à toutes.
     setActiviteAjout(especes.includes(especeActive) ? especeActive : '');
+    setUniteAjout(UNITE_PAR_DEFAUT);
     setAjout(genre);
   };
 
   const creer = async (nom: string) => {
-    if (ajout) await ajouterArticle(ajout, nom, activiteAjout || undefined, listeAjout?.id);
+    // Seul un consommable a une unité choisie à l'ajout ; les autres articles restent comptés nus.
+    const consommableAjoute = !!ajout && genreAvecUnite(ajout);
+    if (ajout) await ajouterArticle(ajout, nom, activiteAjout || undefined, listeAjout?.id, consommableAjoute ? uniteAjout : undefined);
     setAjout(null);
     setListeAjout(null);
     charger();
@@ -543,9 +554,9 @@ export default function StockFromagerie() {
   const avecDlcPour = (cle: string): boolean =>
     cle.startsWith(`${GENRE_ARTICLE.FROMAGE}:`) || (estArticleAvecLots(cle) && roleDeLaViande(cle) === undefined && !estArticlePlat(cle) && !estArticleSavon(cle));
 
-  /** Vrai quand le crayon modifie un fromage ou une viande (produit fini ou animal) : on n'y change que le prix. */
+  /** Vrai quand le crayon modifie une viande, un plat ou un savon (produit fini ou animal) : on n'y change que le prix. Un fromage se renomme (son nom est libre). */
   const produitFiniModifie =
-    !!renomme && [GENRE_ARTICLE.FROMAGE, GENRE_ARTICLE.VIANDE, GENRE_ARTICLE.PLAT, GENRE_ARTICLE.SAVON].some((g) => renomme.cle.startsWith(`${g}:`));
+    !!renomme && [GENRE_ARTICLE.VIANDE, GENRE_ARTICLE.PLAT, GENRE_ARTICLE.SAVON].some((g) => renomme.cle.startsWith(`${g}:`));
 
   /** Une seule catégorie est déroulée à la fois : en ouvrir une referme l'autre. */
   const basculerCategorie = (categorie: string) =>
@@ -850,13 +861,37 @@ export default function StockFromagerie() {
         onFermer={() => setBoucleVisible(false)}
       />
 
+      <OptionsModal
+        visible={!!actionsDe}
+        onClose={() => setActionsDe(null)}
+        title={actionsDe?.libelle}
+        options={
+          actionsDe
+            ? [
+                { label: TEXTES.commun.general.modifier, icon: 'create-outline', onPress: () => setRenomme(actionsDe) },
+                { label: T.historiqueArticle.titre, icon: 'time-outline', onPress: () => setHistoriqueDe(actionsDe) },
+                { label: T.modal.entreeSortie, icon: 'swap-vertical-outline', onPress: () => setArticle(actionsDe) },
+                ...(estSupprimable(actionsDe.cle)
+                  ? [{ label: TEXTES.commun.general.supprimer, icon: 'trash-outline' as const, color: colors.danger, onPress: () => setASupprimer(actionsDe) }]
+                  : []),
+              ]
+            : []
+        }
+      />
       <MouvementStockModal
         article={article}
-        unite={article?.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`) ? TEXTES.commun.general.kg : undefined}
+        unite={
+          article?.cle.startsWith(`${GENRE_ARTICLE.ALIMENT}:`)
+            ? TEXTES.commun.general.kg
+            : article
+              ? archive.unites?.[article.cle]
+              : undefined
+        }
         consommable={
           !!article &&
           NATURE_PAR_GENRE[article.cle.split(':')[0] as GenreArticle] === NATURE_STOCK.CONSOMMABLE
         }
+        avecUnite={!!article && genreAvecUnite(article.cle.split(':')[0])}
         niveau={article ? niveaux.get(article.cle) : undefined}
         libelleLitres={
           article?.cle === cleArticle(GENRE_ARTICLE.FROMAGE, 'brocciu') ? T.modal.litresBrocciu : undefined
@@ -954,17 +989,27 @@ export default function StockFromagerie() {
           setListeAjout(null);
         }}
         enfants={
-          especes.length > 1 ? (
-            <SelectField<string>
-              label={T.ajouter.activite}
-              value={activiteAjout}
-              onChange={setActiviteAjout}
-              options={[
-                { value: '', label: T.ajouter.toutesActivites },
-                ...especes.map((e) => ({ value: e as string, label: LABEL_ACTIVITE_COMPTABLE[e] })),
-              ]}
-            />
-          ) : null
+          <>
+            {especes.length > 1 ? (
+              <SelectField<string>
+                label={T.ajouter.activite}
+                value={activiteAjout}
+                onChange={setActiviteAjout}
+                options={[
+                  { value: '', label: T.ajouter.toutesActivites },
+                  ...especes.map((e) => ({ value: e as string, label: LABEL_ACTIVITE_COMPTABLE[e] })),
+                ]}
+              />
+            ) : null}
+            {ajout && genreAvecUnite(ajout) ? (
+              <SelectField<string>
+                label={T.modal.unite}
+                value={uniteAjout}
+                onChange={setUniteAjout}
+                options={UNITES_STOCK.map((u) => ({ value: u.cle, label: u.libelle }))}
+              />
+            ) : null}
+          </>
         }
       />
     </Screen>

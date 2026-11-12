@@ -7,19 +7,20 @@ import { TEXTES } from '@/shared/textes';
 
 /** Nom de l'établissement actif et crayon, dans l'en-tête de l'Accueil : ouvre le choix de l'établissement. */
 export function EtablissementHeaderButton() {
-  const { actif, ouvrirSelecteur } = useEtablissement();
+  const { actif, ouvrirSelecteur, peutChangerEtablissement } = useEtablissement();
 
   return (
     <Pressable
       style={styles.bouton}
       onPress={ouvrirSelecteur}
+      disabled={!peutChangerEtablissement}
       hitSlop={8}
       accessibilityLabel={TEXTES.etablissements.selecteurEtablissement.changerDEtablissement}
     >
       <Text style={styles.nom} numberOfLines={1}>
         {actif.nom}
       </Text>
-      <Ionicons name="pencil" size={18} color={colors.blanc} />
+      {peutChangerEtablissement ? <Ionicons name="pencil" size={18} color={colors.blanc} /> : null}
     </Pressable>
   );
 }

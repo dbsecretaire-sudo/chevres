@@ -4,21 +4,26 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { lireArchiveStock } from '@/features/stock/repository';
 import {
-  articlesDuProduit,
+  articlesAFabriquer,
   erreurFabrication,
   fabriquerFromages,
   fabriquerPlats,
   fabriquerSavons,
+  ingredientsDeLaRecette,
   numeroDeLot,
 } from '@/features/stock/services/lots';
+import { ingredientsEnManque } from '@/features/production/services/ingredientsPlat';
+import { CLE_LAIT } from '@/features/stock/services/historiqueLait';
 import { emojiDeLArticle } from '@/features/stock/services/entrepotJeu';
-import { TYPES_DE_LAIT, variantesImposees, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
+import { laitsPermis, variantesImposees, type TypeLait, type VarianteDeFromage } from '@/features/stock/services/dlc';
 import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { Button } from '@/shared/components/Button';
+import { FabricationTablette } from '@/features/production/tablette/FabricationTablette';
 import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
+import { afficheTablette } from '@/shared/utils/affichage';
 import { JOURS_DE_CURE_SAVON, PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { styles } from '@/shared/styles/roles/Roles.styles';
 import { colors } from '@/shared/theme/colors';
@@ -46,13 +51,17 @@ const ICONE_DU_PRODUIT = {
   [PRODUIT_A_LOTS.SAVON]: 'hand-wash',
 } as const;
 
-/** Où l'on en est : choisir le produit, dire (un fromage) s'il est salé et de quel lait, les litres de lait caillé, combien, puis voir que c'est enregistré. */
+/**
+ * Où l'on en est : choisir le produit, dire (un fromage) s'il est salé et de quel lait, les litres de lait caillé, ou pour un savon son poids total, combien, puis voir
+ * que c'est enregistré.
+ */
 type Etape =
   | { nom: 'produit' }
   | { nom: 'sale'; article: ArticleAffiche }
   | { nom: 'lait'; article: ArticleAffiche; sale: boolean }
   | { nom: 'litres'; article: ArticleAffiche; variante?: VarianteDeFromage }
-  | { nom: 'nombre'; article: ArticleAffiche; litres?: number; variante?: VarianteDeFromage }
+  | { nom: 'poids'; article: ArticleAffiche }
+  | { nom: 'nombre'; article: ArticleAffiche; litres?: number; poids?: number; variante?: VarianteDeFromage }
   | { nom: 'fait'; titre: string; detail: string }
   | { nom: 'erreur'; message: string };
 
@@ -82,9 +91,19 @@ export function FabricationSimple({
   useEffect(() => {
     lireArchiveStock().then((a) => {
       setArchive(a);
-      setArticles(articlesDuProduit(produit, a, espece));
+      setArticles(articlesAFabriquer(a, produit, espece));
     });
   }, [espece, produit]);
+
+  // L'interface Windows mobile, sur tablette : le lot tient sur une seule page (le savon garde ses étapes).
+  if (!savon && afficheTablette()) return <FabricationTablette produit={produit} onTerminer={onTerminer} />;
+
+  // Le poids tapé d'un savon : si le stock ne suffit pas pour la recette à ce poids, on ne peut pas valider.
+  const poidsManque =
+    !!archive &&
+    etape.nom === 'poids' &&
+    parseDecimal(saisie) > 0 &&
+    ingredientsEnManque(archive, ingredientsDeLaRecette(archive, produit, etape.article.cle, parseDecimal(saisie))).length > 0;
 
   const recommencer = () => {
     setSaisie('');
@@ -93,35 +112,44 @@ export function FabricationSimple({
 
   const choisir = (article: ArticleAffiche) => {
     setSaisie('');
-    if (!fromage) return setEtape(savon ? { nom: 'litres', article } : { nom: 'nombre', article });
-    // Le vieux est toujours salé, le brocciu toujours salé et pasteurisé : ces questions ne se posent pas.
-    const imposee = variantesImposees(article.cle);
+    if (!fromage) return setEtape(savon ? { nom: 'poids', article } : { nom: 'nombre', article });
+    // Le vieux n'est jamais salé, le brocciu toujours salé et pasteurisé : ces questions ne se posent pas.
+    const imposee = variantesImposees(article.cle, article.libelle);
     if (imposee.sale === undefined) return setEtape({ nom: 'sale', article });
-    if (!imposee.lait) return setEtape({ nom: 'lait', article, sale: imposee.sale });
-    setEtape({ nom: 'litres', article, variante: { sale: imposee.sale, lait: imposee.lait } });
+    if (!imposee.lait && laitsPermis(article.cle, article.libelle).length > 0) return setEtape({ nom: 'lait', article, sale: imposee.sale });
+    setEtape({ nom: 'litres', article, variante: imposee.lait ? { sale: imposee.sale, lait: imposee.lait } : undefined });
   };
 
-  const fabriquer = async (article: ArticleAffiche, nombre: number, litres?: number, variante?: VarianteDeFromage) => {
+  const fabriquer = async (
+    article: ArticleAffiche,
+    nombre: number,
+    litres?: number,
+    variante?: VarianteDeFromage,
+    poids?: number,
+  ) => {
     if (!archive) return;
     try {
       const date = todayISO();
-      const debut = numeroDeLot(archive, article.cle, date, fromage ? variante : undefined);
+      const debut = numeroDeLot(archive);
       const erreur = erreurFabrication(archive, article.cle, debut, nombre);
       if (erreur) return setEtape({ nom: 'erreur', message: erreur });
       // Les litres par fromage se recalculent à chaque fabrication : les litres caillés divisés par le nombre de fromages, gardés pour la fois suivante.
       if (fromage && litres && litres > 0 && nombre > 0)
         await definirLitresParFromage(article.cle, Math.round((litres / nombre) * 100) / 100);
+      // Les ingrédients viennent de la recette, calculée pour le nombre de pièces (ou le poids d'un savon). Le lait d'un fromage est demandé en litres : il n'en vient pas.
+      const ingredients = ingredientsDeLaRecette(archive, produit, article.cle, savon ? (poids ?? 0) : nombre).filter(
+        (i) => !fromage || i.article !== CLE_LAIT,
+      );
       if (produit === PRODUIT_A_LOTS.PLAT) {
-        await fabriquerPlats({ article: article.cle, date, quantite: nombre, debut, ingredients: [] });
-      } else if (produit === PRODUIT_A_LOTS.SAVON) {
+        await fabriquerPlats({ article: article.cle, date, quantite: nombre, debut, ingredients });
+      } else if (savon) {
         await fabriquerSavons({
           article: article.cle,
           date,
           quantite: nombre,
           debut,
           finCure: ajouterJours(date, JOURS_DE_CURE_SAVON),
-          litresLait: litres,
-          ingredients: [],
+          ingredients,
         });
       } else {
         await fabriquerFromages({
@@ -132,6 +160,7 @@ export function FabricationSimple({
           litres: fromage ? litres : undefined,
           sale: variante?.sale,
           lait: variante?.lait,
+          ingredients,
         });
       }
       await noterAEnvoyer();
@@ -190,7 +219,7 @@ export function FabricationSimple({
           <Text style={styles.titre}>{T.quelLait}</Text>
           <ListeDeChoix
             presentation={presentation}
-            choix={TYPES_DE_LAIT.map((lait) => ({ cle: lait, libelle: LAITS[lait], icone: 'water' as const }))}
+            choix={laitsPermis(etape.article.cle, etape.article.libelle).map((lait) => ({ cle: lait, libelle: LAITS[lait], icone: 'water' as const }))}
             onChoisir={(c) => {
               setSaisie('');
               setEtape({ nom: 'litres', article: etape.article, variante: { sale: etape.sale, lait: c.cle as TypeLait } });
@@ -200,10 +229,35 @@ export function FabricationSimple({
         </ScrollView>
       ) : null}
 
+      {/* Le poids total d'un savon : la recette s'y rapporte (et le lait de chèvre qu'elle demande en sort). */}
+      {etape.nom === 'poids' ? (
+        <ScrollView contentContainerStyle={styles.contenuDefilant}>
+          <Text style={styles.detail}>{etape.article.libelle}</Text>
+          <Text style={styles.titre}>{T.combienDeSavon}</Text>
+          <ClavierNumerique valeur={saisie} onChange={setSaisie} virgule />
+          {/* Le poids tapé : centré, non modifiable à la main. */}
+          <View style={styles.affichageNumero} accessibilityLabel={`${T.poids} ${saisie}`}>
+            <Text style={styles.affichageNumeroTexte}>{saisie}</Text>
+          </View>
+          {/* Le stock doit suffire pour ce poids : sinon Valider reste grisé et le dit. */}
+          {poidsManque ? <Text style={styles.detail}>{T.ingredientsInsuffisants}</Text> : null}
+          <Button
+            label={T.valider}
+            disabled={!(parseDecimal(saisie) > 0) || poidsManque}
+            onPress={() => {
+              const poids = parseDecimal(saisie);
+              setSaisie('');
+              setEtape({ nom: 'nombre', article: etape.article, poids });
+            }}
+          />
+          <Button label={T.retour} variant="secondary" onPress={recommencer} />
+        </ScrollView>
+      ) : null}
+
       {etape.nom === 'litres' ? (
         <ScrollView contentContainerStyle={styles.contenuDefilant}>
           <Text style={styles.detail}>{etape.article.libelle}</Text>
-          <Text style={styles.titre}>{savon ? T.combienDeLaitSavon : T.combienDeLitres}</Text>
+          <Text style={styles.titre}>{T.combienDeLitres}</Text>
           <ClavierNumerique valeur={saisie} onChange={setSaisie} virgule />
           {/* Les litres tapés : centrés, non modifiables à la main. */}
           <View style={styles.affichageNumero} accessibilityLabel={`${T.litres} ${saisie}`}>
@@ -218,17 +272,6 @@ export function FabricationSimple({
               setEtape({ nom: 'nombre', article: etape.article, litres, variante: etape.variante });
             }}
           />
-          {/* Un savon peut se faire sans lait de chèvre : on passe cette étape. */}
-          {savon ? (
-            <Button
-              label={T.sansLait}
-              variant="secondary"
-              onPress={() => {
-                setSaisie('');
-                setEtape({ nom: 'nombre', article: etape.article });
-              }}
-            />
-          ) : null}
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
         </ScrollView>
       ) : null}
@@ -245,7 +288,7 @@ export function FabricationSimple({
           <Button
             label={T.valider}
             disabled={!(Math.round(parseDecimal(saisie)) > 0)}
-            onPress={() => fabriquer(etape.article, Math.round(parseDecimal(saisie)), etape.litres, etape.variante)}
+            onPress={() => fabriquer(etape.article, Math.round(parseDecimal(saisie)), etape.litres, etape.variante, etape.poids)}
           />
           <Button label={T.retour} variant="secondary" onPress={recommencer} />
         </ScrollView>

@@ -26,15 +26,26 @@ export const compteProposePour = (
   especes: readonly string[],
 ): boolean => especes.length === 0 || especes.some((e) => !(c.masquePour ?? []).includes(e));
 
+/**
+ * L'identifiant d'un compte du plan de départ : le même sur tous les appareils. Avec un identifiant tiré au hasard, deux appareils qui
+ * créent le plan se synchronisent avec deux comptes pour un même numéro (c'est ce qui créait les doublons).
+ */
+const idCompteInitial = (numero: string): string => `pcg-${numero}`;
+
+/** Un seul compte par numéro : garde le premier. Efface les doublons déjà synchronisés avant l'identifiant fixe. */
+function sansDoublons(comptes: CompteComptableEnregistre[]): CompteComptableEnregistre[] {
+  const vus = new Set<string>();
+  return comptes.filter((c) => {
+    if (vus.has(c.numero)) return false;
+    vus.add(c.numero);
+    return true;
+  });
+}
+
 function comptesInitiaux(): CompteComptableEnregistre[] {
-  const numeros = new Set<string>();
-  const comptes: CompteComptableEnregistre[] = [];
-  for (const c of [...COMPTES_PCG_DEPENSE, ...COMPTES_PCG_RECETTE]) {
-    if (numeros.has(c.numero)) continue;
-    numeros.add(c.numero);
-    comptes.push({ id: generateId(), ...c });
-  }
-  return comptes;
+  return sansDoublons(
+    [...COMPTES_PCG_DEPENSE, ...COMPTES_PCG_RECETTE].map((c) => ({ id: idCompteInitial(c.numero), ...c })),
+  );
 }
 
 /**
@@ -58,7 +69,7 @@ function avecComptesAutomatiques(comptes: CompteComptableEnregistre[]): CompteCo
     numeros.add(c.numero);
     return true;
   });
-  return manquants.length > 0 ? [...comptes, ...manquants.map((c) => ({ id: generateId(), ...c }))] : comptes;
+  return manquants.length > 0 ? [...comptes, ...manquants.map((c) => ({ id: idCompteInitial(c.numero), ...c }))] : comptes;
 }
 
 async function lireTous(): Promise<CompteComptableEnregistre[]> {
@@ -70,7 +81,7 @@ async function lireTous(): Promise<CompteComptableEnregistre[]> {
   }
   try {
     const enregistres = JSON.parse(raw) as CompteComptableEnregistre[];
-    const complets = avecComptesAutomatiques(enregistres);
+    const complets = sansDoublons(avecComptesAutomatiques(enregistres));
     if (complets.length !== enregistres.length) await ecrireTous(complets);
     return complets;
   } catch {

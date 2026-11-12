@@ -20,6 +20,8 @@ import { TEXTES } from '@/shared/textes';
 interface Props {
   etablissements: Etablissement[];
   actifId: string;
+  /** Vrai pour l'administrateur seul : il crée, modifie et supprime les établissements. */
+  peutGerer: boolean;
   onChoisir: (id: string) => void;
   /** Ouvre l'établissement d'une chose à traiter, sur l'écran qui la concerne. */
   onOuvrirATraiter: (item: ATraiter) => void;
@@ -36,6 +38,7 @@ type Mode = { type: 'liste' } | { type: 'creation' } | { type: 'edition'; id: st
 export function SelecteurEtablissement({
   etablissements,
   actifId,
+  peutGerer,
   onChoisir,
   onOuvrirATraiter,
   onCreer,
@@ -111,8 +114,12 @@ export function SelecteurEtablissement({
               titre={t.modifierLEtablissement}
               libelleValider={TEXTES.commun.general.enregistrer}
               onValider={async (donnees) => {
-                await onModifier(enEdition.id, donnees);
-                setMode({ type: 'liste' });
+                try {
+                  await onModifier(enEdition.id, donnees);
+                  setMode({ type: 'liste' });
+                } catch (e: any) {
+                  setErreur(e?.message ?? String(e));
+                }
               }}
               onAnnuler={() => setMode({ type: 'liste' })}
             />
@@ -134,7 +141,7 @@ export function SelecteurEtablissement({
               actifId={actifId}
               aTraiterDe={duEtablissement}
               onChoisir={onChoisir}
-              onModifier={(id) => setMode({ type: 'edition', id })}
+              onModifier={peutGerer ? (id) => setMode({ type: 'edition', id }) : undefined}
             />
           ) : (
           <>
@@ -145,7 +152,7 @@ export function SelecteurEtablissement({
                   etablissement={e}
                   actif={e.id === actifId}
                   onChoisir={() => onChoisir(e.id)}
-                  onModifier={() => setMode({ type: 'edition', id: e.id })}
+                  onModifier={peutGerer ? () => setMode({ type: 'edition', id: e.id }) : undefined}
                   aTraiter={duEtablissement(e.id)}
                   ouvert={estOuvert(e.id)}
                   onBasculer={() => setOuverts((actuels) => ({ ...actuels, [e.id]: !estOuvert(e.id) }))}
@@ -158,7 +165,7 @@ export function SelecteurEtablissement({
         )}
       </ScrollView>
 
-      {mode.type === 'liste' && (
+      {mode.type === 'liste' && peutGerer && (
         <Fab
           options={[
             {
@@ -186,7 +193,11 @@ export function SelecteurEtablissement({
         onConfirm={async () => {
           const cible = aSupprimer;
           setASupprimer(null);
-          if (cible) await onSupprimer(cible.id);
+          try {
+            if (cible) await onSupprimer(cible.id);
+          } catch (e: any) {
+            setErreur(e?.message ?? String(e));
+          }
           setMode({ type: 'liste' });
         }}
       />

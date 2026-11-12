@@ -4,7 +4,7 @@ import { getFacture } from '@/features/comptabilite/repository/factures';
 import type { Facture } from '@/features/comptabilite/types';
 import { enregistrerVisiteVeterinaire, getVisiteVeterinaire } from '@/features/sante/repository/visitesVeterinaire';
 import type { VisiteVeterinaire } from '@/features/sante/types';
-import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { TYPES_FICHIERS_ACCEPTES } from '@/shared/constants/fichiers';
 import { todayISO } from '@/shared/utils/dates';
@@ -48,7 +48,6 @@ export function useVisiteVeterinaire(visiteId?: string) {
   }, [visiteId]);
 
   const ajouterFichiers = async () => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {

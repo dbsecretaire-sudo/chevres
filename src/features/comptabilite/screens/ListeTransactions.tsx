@@ -17,19 +17,6 @@ import { TEXTES } from '@/shared/textes';
 import { TableauEcritures } from '@/features/comptabilite/components/TableauEcritures';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 
-/** Une pastille d'année : pleine quand elle est choisie, comme sur la maquette des écritures. */
-function PastilleAnnee({ libelle, actif, onPress }: { libelle: string; actif: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: actif }}
-      onPress={onPress}
-      style={{ paddingVertical: 7, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: actif ? colors.primary : colors.border, backgroundColor: actif ? colors.primary : colors.surface }}
-    >
-      <Text style={{ fontWeight: '600', color: actif ? colors.blanc : colors.text }}>{libelle}</Text>
-    </Pressable>
-  );
-}
 
 export default function ComptabiliteIndex() {
   const router = useRouter();
@@ -55,18 +42,6 @@ export default function ComptabiliteIndex() {
                 {/* Comme sur la maquette : la rubrique d'où vient la page, en légende de la liste. */}
                 <Text style={commonStyles.muted}>Argent · toutes les factures</Text>
                 {e.restriction ? <BandeauRestriction titre={e.restriction.titre} onEffacer={e.effacerRestriction} /> : null}
-                {/* Les années en pastilles : les deux plus récentes, puis « Toutes les années ». */}
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {e.annees.slice(0, 2).map((annee) => (
-                    <PastilleAnnee
-                      key={annee}
-                      libelle={String(annee)}
-                      actif={!e.toutesAnnees && e.anneeActive === annee}
-                      onPress={() => e.setAnneeActive(annee)}
-                    />
-                  ))}
-                  <PastilleAnnee libelle="Toutes les années" actif={e.toutesAnnees} onPress={e.choisirToutesAnnees} />
-                </View>
                 <CarteSolde
                   soldes={e.soldes}
                   anneeActive={e.anneeActive}

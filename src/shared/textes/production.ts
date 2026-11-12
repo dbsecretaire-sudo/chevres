@@ -20,9 +20,9 @@ const LIENS_DE_LAGRITOURISME = {
 /** Textes de l'interface — l'onglet Production (fromages, viande vendue, contrôle laitier). À modifier ici uniquement. */
 /** Avant de fabriquer avec des ingrédients que le stock ne couvre pas : on prévient, on laisse continuer. */
 const STOCK_INSUFFISANT = {
-  titre: 'Stock insuffisant',
+  titre: 'Ingrédients insuffisants',
   message: (lignes: string) =>
-    `Le stock ne suffit pas :
+    `Les ingrédients de cette recette sont insuffisants :
 ${lignes}
 
 Fabriquer quand même ? Le stock de ces articles passera en négatif.`,
@@ -211,8 +211,18 @@ export const TEXTES_PRODUCTION = {
     supprimerQuestion: (nom: string) => `Supprimer la recette « ${nom} » ?`,
     supprimerMessage: 'Les fabrications déjà faites ne changent pas.',
     notes: 'Notes de la fabrication',
-    groupeFromagerie: 'Présure, sel et ferments',
+    groupeFromagerie: 'Consommables',
     groupeAnimaux: 'Produits animaux',
+    groupeProduitsFinis: 'Produits finis',
+    groupeConditionnement: 'Conditionnement',
+    groupeLait: 'Lait',
+    quantiteParPiece: 'Quantité pour 1 pièce',
+    quantiteParKg: 'Quantité pour 1 kg de savon',
+    /** Les quantités d'une recette se rapportent à une pièce, ou pour un savon à un kilo : la fabrication donne le nombre ou le poids, et elles s'en calculent. */
+    referencePieces: 'Les quantités sont pour 1 pièce : le nombre de pièces est demandé à chaque fabrication, et les quantités s’en calculent.',
+    referenceSavon: 'Les quantités sont pour 1 kg de savon : le poids total est demandé à chaque fabrication, et les quantités s’en calculent.',
+    avantRecette: 'Indiquez d’abord le nombre de pièces : la recette calcule ses quantités d’après lui.',
+    avantRecetteSavon: 'Indiquez d’abord le poids total du savon : la recette calcule ses quantités d’après lui.',
     sectionAideFromagerie: 'Une recette par préparation (fromage frais, vieux, crottin, brocciu…) : ses ingrédients et son explicatif (le cahier des charges d’une AOP, par exemple) se reprennent d’un appui.',
     ingredientsFromagerieAide: 'La présure, le sel, les ferments lactiques et les articles de vos listes : ce qui sort du stock pour cette fabrication.',
     page: {
@@ -220,8 +230,6 @@ export const TEXTES_PRODUCTION = {
       intro: 'La bibliothèque de recettes de l’atelier. Ajoutez une recette ici en choisissant son produit, ou depuis une fabrication (« Enregistrer comme recette »). Chaque recette se modifie ou se supprime.',
       aucune: 'Aucune recette pour le moment.',
       ingredients: (n: number) => `${n} ingrédient${n > 1 ? 's' : ''}`,
-      renommer: 'Renommer',
-      renommerTitre: 'Nom de la recette',
       sansIngredient: 'Aucun ingrédient',
       produit: { fromage: 'Fromages', charcuterie: 'Charcuterie', plat: 'Plats préparés', savon: 'Savons' } as Record<string, string>,
     },
@@ -233,10 +241,8 @@ export const TEXTES_PRODUCTION = {
       nom: 'Nom de la recette',
       article: 'Article concerné',
       toutLeProduit: 'Tout le produit',
-      quantite: 'Nombre de pièces',
-      litresFromage: 'Litres de lait',
-      litresSavon: 'Litres de lait de chèvre',
-      joursCure: 'Jours de cure',
+      joursCure: 'Jours de séchage',
+      joursAffinage: 'Jours d’affinage',
       enregistrer: 'Enregistrer la recette',
       nomRequis: 'Donnez un nom à la recette.',
       ajouter: 'Ajouter une recette',
@@ -255,6 +261,8 @@ export const TEXTES_PRODUCTION = {
     aucunSavon: 'Choisissez un savon, ou créez-en un.',
     date: 'Date de fabrication',
     quantite: 'Nombre de pains',
+    poidsTotal: 'Poids total du savon (kg)',
+    poidsAide: 'Le poids total est demandé à chaque fabrication : les quantités de la recette s’en calculent.',
     premier: 'N° du premier lot',
     premierAide: 'Chaque pain a son numéro de lot, à la suite du premier.',
     dernier: (numero: string) => `Dernier lot : ${numero}`,
@@ -274,6 +282,7 @@ export const TEXTES_PRODUCTION = {
       produit: 'Ingrédient',
       choisirProduit: 'Choisir un ingrédient',
       quantite: 'Quantité utilisée',
+      quantiteLait: 'Litres de lait',
       retirer: 'Retirer cet ingrédient',
       lots: 'Lots utilisés',
       compteur: (pris: number, total: number) => `${pris} lot${pris > 1 ? 's' : ''} choisi${pris > 1 ? 's' : ''} sur ${total}.`,
@@ -786,10 +795,10 @@ export const TEXTES_PRODUCTION = {
     calculPieces: (quantite: string, libelle: string, prix: string) => `${quantite} ${libelle} × ${prix}`,
     calculLitres: (quantite: string, prix: string) => `${quantite} L × ${prix} le litre (prix de l’inventaire)`,
   },
-  /** « Scanner un lot » : le numéro photographié ou tapé, puis ce qu'on sait du lot. */
+  /** « Information sur un lot » : le numéro photographié ou tapé, puis ce qu'on sait du lot. */
   scanLotSimple: {
-    titre: 'Scanner un lot',
-    aide: 'Photographiez le numéro du lot sur l’étiquette, ou tapez-le.',
+    titre: 'Information du lot',
+    aide: 'Tapez le numéro du lot.',
     scanner: 'Photographier le numéro',
     numeroDuLot: 'Numéro du lot',
     chercher: 'Chercher',
@@ -867,8 +876,9 @@ export const TEXTES_PRODUCTION = {
     erreur: 'L’enregistrement n’a pas marché. Réessayez.',
     fait: (nombre: number, produit: string) => `${nombre} ${nombre > 1 ? 'fabriqués' : 'fabriqué'} : ${produit}`,
     combienDeLait: 'Combien de litres de lait ?',
-    combienDeLaitSavon: 'Combien de litres de lait de chèvre ?',
-    sansLait: 'Sans lait de chèvre',
+    combienDeSavon: 'Quel poids total de savon ?',
+    ingredientsInsuffisants: 'Tous les ingrédients nécessaires à cette recette ne sont pas suffisants dans le stock.',
+    poids: 'Poids total (kg)',
     laitFait: (litres: number) => `${String(litres).replace('.', ',')} L de lait ajoutés`,
     etiquettes: {
       quoi: 'Quel produit ?',
@@ -932,6 +942,7 @@ export const TEXTES_PRODUCTION = {
       produit: 'Ingrédient',
       choisirProduit: 'Choisir un ingrédient',
       quantite: 'Quantité utilisée',
+      quantiteLait: 'Litres de lait',
       retirer: 'Retirer cet ingrédient',
       lots: 'Lots utilisés',
       compteur: (pris: number, total: number) => `${pris} lot${pris > 1 ? 's' : ''} choisi${pris > 1 ? 's' : ''} sur ${total}.`,

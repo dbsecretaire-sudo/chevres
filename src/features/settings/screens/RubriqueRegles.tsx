@@ -6,6 +6,7 @@ import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
 import { SectionDeroulante } from '@/shared/components/SectionDeroulante';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { reglesDeLApplication } from '@/features/settings/services/reglesApplication';
+import { CarteCodeAcces } from '@/features/settings/components/CarteCodeAcces';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
@@ -39,6 +40,7 @@ export default function RubriqueRegles() {
   if (comptable) {
     return (
       <Screen>
+        <CarteCodeAcces />
         <Text style={commonStyles.note}>{T.aideRegles}</Text>
         {groupes.map((groupe) => (
           <GroupeAccueil key={groupe.id} titre={`${groupe.titre} (${groupe.regles.length})`}>
@@ -50,6 +52,7 @@ export default function RubriqueRegles() {
   }
   return (
     <Screen>
+      <CarteCodeAcces />
       <Text style={commonStyles.note}>{T.aideRegles}</Text>
       {groupes.map((groupe) => (
         <SectionDeroulante

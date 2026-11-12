@@ -1,14 +1,10 @@
-import { Switch, Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { useAccueilEnDeuxColonnes } from '@/bureau/colonnes';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { LigneRubrique } from '@/features/settings/components/LigneRubrique';
-import { CarteCodeAcces } from '@/features/settings/components/CarteCodeAcces';
-import { useRole } from '@/features/roles/context/RoleContext';
-import { ROLE } from '@/shared/constants/roles';
 import { ROUTES } from '@/shared/constants/routes';
 import { styles } from '@/shared/styles/settings/Reglages.styles';
-import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.settings.reglages;
@@ -19,25 +15,11 @@ const T = TEXTES.settings.reglages;
  * onglet : le cheptel dans Cheptel › Réglages ; la comptabilité, l'inventaire (conditionnement) et la fiscalité dans Comptabilité.
  */
 export default function Reglages() {
-  const { role, choisir } = useRole();
   // Deux colonnes : le menu est déjà à gauche, la colonne de droite montre l'établissement.
   const redirection = useAccueilEnDeuxColonnes(ROUTES.ORGANISATION_ETABLISSEMENT);
   if (redirection) return redirection;
   return (
     <Screen>
-      {/* Comme sur la maquette : le mode avancé, en interrupteur (le bandeau du menu Plus renvoie ici). Éteint, on passe au mode normal. */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>{TEXTES.roles.choix.secretaire}</Text>
-          <Text style={{ color: colors.textMuted }}>{TEXTES.roles.choix.secretaireAide}</Text>
-        </View>
-        <Switch
-          value={role === ROLE.SECRETAIRE}
-          onValueChange={(avance) => choisir(avance ? ROLE.SECRETAIRE : ROLE.BERGER)}
-          trackColor={{ true: colors.primary }}
-        />
-      </View>
-      <CarteCodeAcces />
       <BlocLignes>
         <LigneRubrique
           titre={T.sectionEtablissement}

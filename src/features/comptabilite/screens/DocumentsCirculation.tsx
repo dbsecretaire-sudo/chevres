@@ -9,7 +9,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { OptionsModal } from '@/shared/components/OptionsModal';
-import { ApercuPiece } from '@/features/fichiers/components/ApercuPiece';
+import { VignetteDocument } from '@/features/fichiers/components/VignetteDocument';
 import { listTousLesAnimauxDeLEspece } from '@/features/cheptel/repository/chevres';
 import { listToutesFactures } from '@/features/comptabilite/repository/factures';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
@@ -56,20 +56,22 @@ const lignesDuDocument = (e: EcritureACirculation): EcritureLiee[] =>
         },
       ];
 
-/** Le document ouvert : son aperçu, puis les factures concernées (la prestation de l'abattoir et/ou la vente), qui s'ouvrent d'un appui. */
+/** Le document ouvert : sa miniature, puis les factures concernées (la prestation de l'abattoir et/ou la vente), qui s'ouvrent d'un appui. */
 function DetailDuDocument({
   item,
   ouvrir,
+  ouvrirDocument,
 }: {
   item: EcritureACirculation;
   ouvrir: (type: 'vente' | 'facture', id: string) => void;
+  ouvrirDocument: () => void;
 }) {
   const D = T.detail;
   const lignes = lignesDuDocument(item);
   return (
     <View style={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}>
       <Text style={commonStyles.lineSemiBold}>{D.document}</Text>
-      {item.depose ? <ApercuPiece piece={item.depose.piece} /> : <Text style={[commonStyles.note, { color: colors.danger }]}>{D.manque}</Text>}
+      {item.depose ? <VignetteDocument piece={item.depose.piece} ouvrir={ouvrirDocument} /> : <Text style={[commonStyles.note, { color: colors.danger }]}>{D.manque}</Text>}
       <Text style={commonStyles.lineSemiBold}>{D.ecrituresLiees}</Text>
       {lignes.length === 0 ? <Text style={commonStyles.mutedItalic}>{D.aucuneEcriture}</Text> : null}
       {lignes.map((l) => (
@@ -134,7 +136,7 @@ export default function DocumentsCirculation() {
 
   const ouvrirEcritureLiee = (type: 'vente' | 'facture', id: string) =>
     router.push((type === 'vente' ? ROUTES.ficheVente(id) : ROUTES.ficheFacture(id)) as never);
-  const { options } = useActionsDocumentCirculation(charger);
+  const { options, ouvrir: ouvrirDocument } = useActionsDocumentCirculation(charger);
   const optionsDuMenu = menu
     ? options(menu, {
         supplement: [
@@ -186,10 +188,12 @@ export default function DocumentsCirculation() {
                 }
                 trailing={
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    {/* La miniature du document de cette ligne : un appui ouvre ce document-là. */}
+                    {item.depose ? <VignetteDocument piece={item.depose.piece} ouvrir={() => ouvrirDocument(item)} /> : null}
                     <Text
                       style={[
                         commonStyles.mutedItalic,
-                        { textAlign: 'right', maxWidth: 150, color: depot ? colors.primary : colors.danger },
+                        { textAlign: 'right', maxWidth: 110, color: depot ? colors.primary : colors.danger },
                       ]}
                     >
                       {depot ? T.ajoute(depot.date, depot.heure) : T.manquant}
@@ -224,7 +228,7 @@ export default function DocumentsCirculation() {
                 }
                 onPress={() => setOuverte(ouverte === item.cle ? null : item.cle)}
               />
-              {ouvert ? <DetailDuDocument item={item} ouvrir={ouvrirEcritureLiee} /> : null}
+              {ouvert ? <DetailDuDocument item={item} ouvrir={ouvrirEcritureLiee} ouvrirDocument={() => ouvrirDocument(item)} /> : null}
             </LigneDeBloc>
           );
         }}

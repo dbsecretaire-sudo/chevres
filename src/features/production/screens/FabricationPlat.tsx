@@ -20,7 +20,7 @@ import {
 import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle } from '@/features/stock/services/boucles';
 import {
-  articlesDuProduit,
+  articlesAFabriquer,
   erreurFabrication,
   fabriquerPlats,
   numeroDeLot,
@@ -67,7 +67,7 @@ export default function FabricationPlat() {
     lireArchiveStock().then((a) => {
       setArchive(a);
       setArticle(
-        (deja) => choisir ?? (deja || articlesDuProduit(PRODUIT_A_LOTS.PLAT, a, espece)[0]?.cle || ''),
+        (deja) => choisir ?? (deja || articlesAFabriquer(a, PRODUIT_A_LOTS.PLAT, espece)[0]?.cle || ''),
       );
     });
   useEffect(() => {
@@ -76,22 +76,16 @@ export default function FabricationPlat() {
   }, [espece]);
 
   const plats = useMemo(
-    () => (archive ? articlesDuProduit(PRODUIT_A_LOTS.PLAT, archive, espece) : []),
+    () => (archive ? articlesAFabriquer(archive, PRODUIT_A_LOTS.PLAT, espece) : []),
     [archive, espece],
   );
   const proposables = useMemo(
     () =>
-      archive
-        ? ingredientsProposables(archive, {
-            fromages: T.ingredients.groupeFromages,
-            charcuterie: T.ingredients.groupeCharcuterie,
-            autres: T.ingredients.groupeAutres,
-          })
-        : [],
+      archive ? ingredientsProposables(archive) : [],
     [archive],
   );
 
-  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive, article, date) : '');
+  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive) : '');
   const nombre = Math.round(Number(quantite) || 0);
   const dernier = nombre > 0 && premier ? derniereBoucle(premier, nombre) : undefined;
   const sterilisation = sterilisationSaisie ?? date;
@@ -194,7 +188,7 @@ export default function FabricationPlat() {
             notes={notes}
             archive={archive}
             ingredients={ingredients}
-            quantite={quantite}
+            facteur={nombre}
             onChange={() => charger()}
             onAppliquer={(r) => {
               if (r.notes) setNotes(r.notes);

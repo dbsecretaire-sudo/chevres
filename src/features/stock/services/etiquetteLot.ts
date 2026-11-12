@@ -11,6 +11,8 @@ export interface EtiquetteDeLot {
   dateFabrication: string;
   /** Vrai pour un savon (un cosmétique : liste INCI, « à utiliser de préférence avant »). */
   savon: boolean;
+  /** Vrai pour un fromage : son étiquette est ronde (DDM, numéro de lot, poids net). */
+  fromage: boolean;
   /** La date de durabilité minimale (AAAA-MM-JJ), quand la fabrication en a une. */
   ddm?: string;
   /** La DLC (AAAA-MM-JJ) d'un fromage ou d'un produit de charcuterie : sa fabrication plus la durée de conservation réglée dans l'inventaire. */
@@ -22,11 +24,14 @@ export interface EtiquetteDeLot {
   finCure?: string;
   /** La liste INCI d'un savon (sa liste d'ingrédients, du dossier), ou les noms des ingrédients d'un plat dans l'ordre de leur quantité. */
   composition?: string;
+  /** Le poids net (kg) et le prix de la pièce, quand elle a été pesée à la vente. */
+  poidsNetKg?: number;
+  prixPiece?: number;
 }
 
 /** L'étiquette d'un lot de plat préparé ou de savon. */
 export function etiquetteDuLot(
-  lot: Pick<LotFromage, 'article' | 'numero' | 'dateFabrication' | 'mouvementId' | 'sale' | 'lait'>,
+  lot: Pick<LotFromage, 'article' | 'numero' | 'dateFabrication' | 'mouvementId' | 'sale' | 'lait' | 'poidsNetKg' | 'prixPiece'>,
   archive: Pick<ArchiveStock, 'platsFabriques' | 'dossiersSavons' | 'articles' | 'noms' | 'dureeDeVie'>,
 ): EtiquetteDeLot {
   const savon = estArticleSavon(lot.article);
@@ -40,11 +45,14 @@ export function etiquetteDuLot(
     numero: lot.numero,
     dateFabrication: lot.dateFabrication,
     savon,
+    fromage: lot.article.startsWith('fromage:'),
     ddm: fabrication?.ddm,
     dlc: fabrication?.ddm ? undefined : dlcDuLot(lot, archive),
     sale: lot.sale,
     lait: lot.lait,
     finCure: savon ? fabrication?.finCure : undefined,
     composition: inci || (noms.length > 0 ? noms.join(', ') : undefined),
+    poidsNetKg: lot.poidsNetKg,
+    prixPiece: lot.prixPiece,
   };
 }

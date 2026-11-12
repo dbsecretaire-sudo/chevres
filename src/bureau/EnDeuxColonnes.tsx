@@ -11,7 +11,7 @@ import { useRetourContexte } from '@/shared/navigation/contexteRetour';
 import { ROUTES } from '@/shared/constants/routes';
 import { DispositionComptable } from '@/features/accueil/shell/DispositionComptable';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
-import { afficheBureau } from '@/shared/utils/affichage';
+import { afficheBureau, afficheTablette } from '@/shared/utils/affichage';
 import { LARGEUR_MENU, styles } from '@/shared/styles/bureau/EnDeuxColonnes.styles';
 
 /** Les écrans des tiers (clients, fournisseurs) : des écrans de la comptabilité, mais de l'Organisation. */
@@ -27,6 +27,7 @@ const PAGES_ORGANISATION = [
   'export-donnees',
   'pdf-donnees',
   'sauvegarde-locale',
+  'copies-automatiques',
   'google-drive',
   'structure-dossiers',
   'informations-exploitation',
@@ -66,6 +67,8 @@ export function EnDeuxColonnes({ children }: PropsWithChildren) {
   const comptable = useDispositionComptable();
   // L'affichage sobre dans une fenêtre large : un poste de comptabilité (menu en arbre à gauche, barre d'outils, tableaux).
   if (comptable) return <DispositionComptable>{children}</DispositionComptable>;
+  // Sur la tablette, la barre du bas garde toute la largeur : la colonne centrée est donnée à chaque page (sceneStyle, dans (tabs)/_layout.tsx).
+  if (afficheTablette()) return <>{children}</>;
   // Sur le téléphone (et dans un navigateur ordinaire), les écrans s'affichent seuls, dans une colonne de largeur limitée et centrée.
   return afficheBureau() ? (
     <EnDeuxColonnesBureau>{children}</EnDeuxColonnesBureau>

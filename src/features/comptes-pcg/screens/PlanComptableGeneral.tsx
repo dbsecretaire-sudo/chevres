@@ -114,7 +114,7 @@ export default function PlanComptableGeneral() {
       <FlatList
         data={lignes}
         keyExtractor={(l) => (l.type === 'classe' ? l.cle : `${l.cle}`)}
-        contentContainerStyle={commonStyles.listFab}
+        contentContainerStyle={[commonStyles.listeBlocAvecFab, { paddingHorizontal: 8 }]}
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={<EmptyState title={T.aucun} />}
         renderItem={({ item }) => {
@@ -159,25 +159,24 @@ const styles = StyleSheet.create({
   classeTexte: { fontSize: 15, fontWeight: '700', color: colors.text },
   classeTexteActive: { color: colors.blanc },
   titreClasse: { marginTop: 8, fontSize: 13, fontWeight: '700', color: colors.textMuted },
+  // Les lignes se suivent sans espace : un fin trait sépare chacune de la suivante.
   groupe: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginTop: 8,
     padding: 12,
-    borderRadius: 10,
     backgroundColor: colors.badgeBg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   carte: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginTop: 8,
     padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   numero: { minWidth: 44, fontSize: 15, fontWeight: '800', color: colors.text, fontVariant: ['tabular-nums'] },
   texte: { flex: 1, gap: 2 },

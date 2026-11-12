@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { piecesDisponibles } from '@/features/fichiers/services/pieces';
 import { HistoriqueArticleModal } from '@/features/stock/components/HistoriqueArticleModal';
 import { ModaleImageArticle } from '@/features/stock/components/ModaleImageArticle';
+import { DessinDeCarte } from '@/features/stock/components/DessinDeCarte';
 import { Apparition } from '@/features/accueil/ferme/animations';
 import {
   formaterQuantite,
@@ -90,7 +90,8 @@ export function RubriquesDeCartes({
                   quantite={quantiteDeLaCarte(c)}
                   niveau={c.niveau}
                   libelleDuCrayon={TEXTES.stock.articleModal.image.modifier}
-                  onRenommer={piecesDisponibles() && !simple ? () => setImageDe(c) : undefined}
+                  dessin={<DessinDeCarte emoji={c.emoji} cle={c.cle} />}
+                  onRenommer={simple ? undefined : () => setImageDe(c)}
                   // Un article (et le lait) : son historique ; les œufs n'en ont pas, ils ouvrent l'inventaire.
                   onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
                 />
@@ -132,9 +133,12 @@ export function CarteDeStock({
   onLongPress,
   onRenommer,
   pastilles,
+  dessin,
 }: {
   /** Ce que dit le crayon (changer le nom, ou seulement l'image). */
   libelleDuCrayon?: string;
+  /** Le dessin de l'article (son image choisie, ou son emoji), à gauche de la carte. */
+  dessin?: ReactNode;
   /** Plusieurs quantités l'une sous l'autre (le lait) à la place de la quantité unique ; une couleur imposée (rouge) ou le signe de la quantité. */
   pastilles?: readonly { icone: string; quantite: string; niveau: number; couleur?: 'vert' | 'rouge' }[];
   titre: string;
@@ -158,6 +162,7 @@ export function CarteDeStock({
             accessibilityRole="button"
             accessibilityLabel={`${titre} : ${quantite}`}
           >
+            {dessin ? <View style={styles.dessin}>{dessin}</View> : null}
             <View style={styles.texte}>
               <Text style={styles.nom} numberOfLines={2}>
                 {titre}
@@ -226,6 +231,7 @@ const styles = StyleSheet.create({
   carteSelectionnee: { borderColor: colors.primary },
   zone: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingRight: 28 },
   texte: { flex: 1, gap: 2 },
+  dessin: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
   nom: { fontSize: 16, fontWeight: '700', color: colors.text },
   sous: { fontSize: 13, color: colors.textMuted },
   quantites: { alignItems: 'flex-end', gap: 2 },

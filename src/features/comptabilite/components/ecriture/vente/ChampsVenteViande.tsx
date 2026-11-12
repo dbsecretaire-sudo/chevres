@@ -4,7 +4,7 @@ import { estDateISO, formatDateFR, formatMontant, todayISO } from '@/shared/util
 import { parseDecimal } from '@/shared/utils/nombres';
 import { ChampEtatAnimaux } from '@/features/comptabilite/components/ChampEtatAnimaux';
 import { estClientAbattoir } from '@/features/clients/services/categorie';
-import { reglageEtatAnimaux } from '@/features/comptabilite/utils/ventes';
+import { idsDesAnimaux, reglageEtatAnimaux } from '@/features/comptabilite/utils/ventes';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
@@ -104,6 +104,8 @@ export function ChampsVenteViande({ e }: Props) {
   const [tiptagsLus, setTiptagsLus] = useState(false);
   /** Les jours d'abattage dont la viande n'est pas encore facturée : on y choisit tous les animaux, ou certains numéros. */
   const [jours, setJours] = useState<JourAbattu[]>([]);
+  /** Les animaux que désigne une vente déjà enregistrée : ils ne sont plus à vendre, même s'ils sont encore vivants dans la fiche. */
+  const [dejaVendus, setDejaVendus] = useState<ReadonlySet<string>>(new Set());
   const [abattusOuvert, setAbattusOuvert] = useState(false);
   /** Les animaux se choisissent un par un (au lieu de prendre le lot d'un jour d'abattage), et le détail du lot est déroulé. */
   const [unParUn, setUnParUn] = useState(false);
@@ -124,9 +126,10 @@ export function ChampsVenteViande({ e }: Props) {
           setTiptagsLus(true);
         })
         .catch(() => setTiptagsLus(true));
-      Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) =>
-        setJours(joursAbattusAFacturer(abattus, ventes)),
-      );
+      Promise.all([listAnimauxAbattusDe(espece), listToutesVentes()]).then(([abattus, ventes]) => {
+        setJours(joursAbattusAFacturer(abattus, ventes));
+        setDejaVendus(new Set(ventes.flatMap(idsDesAnimaux)));
+      });
     }, [espece, e.date]),
   );
   /** Une ligne de la liste : le n° de boucle (ou le nom), M ou F, et la date de naissance. */
@@ -189,6 +192,7 @@ export function ChampsVenteViande({ e }: Props) {
         (a) =>
           // Vente déclarée (facture) : l'animal a obligatoirement une boucle ; sinon, il n'en a pas.
           !!a.numeroBoucle === e.avecFacture &&
+          !dejaVendus.has(a.id) &&
           (!lignePetits || estPetit(a)) &&
           (!ligneAdultes || (!estPetit(a) && !estTiptag(a, tiptags))),
       );

@@ -97,7 +97,6 @@ export const BOUTONS_DE_LA_FERME = {
   exploitation: {
     gestion: [
       ['cheptel', C.cheptel],
-      ['grange', C.grange],
       ['documents', C.documents],
       ['organismes', C.organismes],
       ['bilanAnnuel', C.bilanAnnuel],

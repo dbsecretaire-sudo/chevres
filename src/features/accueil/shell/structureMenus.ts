@@ -18,7 +18,7 @@ type Entree = NonNullable<DefinitionMenu['items']>[number];
 function entreesDuBouton(cle: string, libelle: string): Entree[] {
   if (ROUTE_DIRECTE[cle]) return [{ label: libelle, route: ROUTE_DIRECTE[cle] }];
   return actionsDuLieu(cle as CibleDesBulles).map((a) => ({
-    label: cle === 'fabriquer' ? `${libelle} · ${a.titre.replace(/^Fabriquer /i, '')}` : cle === 'grange' ? `${libelle} · ${a.titre}` : a.titre,
+    label: cle === 'fabriquer' ? `${libelle} · ${a.titre.replace(/^Fabriquer /i, '')}` : a.titre,
     route: a.route,
   }));
 }
@@ -111,7 +111,10 @@ export function menusDeLaFenetre(): DefinitionMenu[] {
     label: 'Chèvres',
     items: [
       { label: 'Accueil des chèvres', route: ROUTES.CHEPTEL },
-      ...tuiles('troupeau'),
+      // Les rubriques du « Plus » (réglementation, argent…) restent dans Plus, pas sous les chèvres.
+      ...tuilesDuTerrain('troupeau', COMPTES_VIDES)
+        .filter((t) => !t.cle.startsWith('plus-'))
+        .map((t) => ({ label: t.titre, route: t.route })),
       separateur('Suivi'),
       ...groupesCheptel(especeDuSuivi(especeCourante())).flatMap((groupe) => [
         separateur(groupe.titre),
@@ -127,23 +130,90 @@ export function menusDeLaFenetre(): DefinitionMenu[] {
     label: 'Visites',
     items: TUILES_VISITES.map((t) => ({ label: t.libelle, route: t.route })),
   };
+  // Les partenaires (abattoir, équarrissage, clients) sont dans les Contacts ; l'argent et les bilans, dans la Comptabilité : le Plus ne les reprend plus.
   const plusRubriques: DefinitionMenu = {
     label: 'Plus',
     items: [
       { label: 'Accueil', route: '/' },
-      ...RUBRIQUES_DU_PLUS.flatMap((r) => [
+      ...RUBRIQUES_DU_PLUS.filter((r) => !['partenaires', 'argent', 'bilans'].includes(r.cle)).flatMap((r) => [
         separateur(r.libelle),
         ...RUBRIQUES[r.cle].sections.flatMap((s) => [separateur(s.titre), ...s.lignes.map((l) => ({ label: l.libelle, route: l.route }))]),
       ]),
     ],
   };
+  const menus = menusParNom();
+  const sections = (rubrique: string) =>
+    RUBRIQUES[rubrique].sections.flatMap((s) => [separateur(s.titre), ...s.lignes.map((l) => ({ label: l.libelle, route: l.route }))]);
+  // Les documents, par usage : ceux qu'on présente, ceux qu'on imprime, ceux qu'on envoie.
+  const documents: Entree[] = [
+    separateur('À présenter'),
+    { label: 'Registre des analyses', route: ROUTES.PRODUCTION_REGISTRE_ANALYSES },
+    { label: 'Rappels de lots', route: ROUTES.PRODUCTION_RAPPELS_LOTS },
+    { label: 'Cadre réglementaire', route: ROUTES.CADRE_REGLEMENTAIRE_ATELIER },
+    { label: 'Dossier PAC', route: ROUTES.CHEPTEL_DOSSIER_PAC },
+    { label: 'Documents de circulation', route: ROUTES.CHEPTEL_DOCUMENTS_CIRCULATION },
+    { label: 'Documents d’identification', route: ROUTES.DOCUMENTS_IDENTIFICATION },
+    separateur('À imprimer'),
+    { label: 'Étiquettes', route: ROUTES.PRODUCTION_ETIQUETTES_SIMPLE },
+    { label: 'Accueil du public', route: ROUTES.COMMERCIAL_ACCUEIL_PUBLIC },
+    { label: 'Organismes', route: ROUTES.lieu('organismes') },
+    separateur('À envoyer'),
+    { label: 'Export pour le comptable', route: ROUTES.EXPORT_DONNEES },
+    { label: 'Sauvegarde', route: ROUTES.SAUVEGARDE_LOCALE },
+  ];
+  // La Ferme : le troupeau, l'atelier, le commerce et les documents.
+  const ferme: DefinitionMenu = {
+    label: 'Ferme',
+    route: ROUTES.CHEPTEL,
+    items: [
+      ...(chevres.items ?? []),
+      separateur('Atelier'),
+      ...(atelier.items ?? []),
+      separateur('Commerce'),
+      // Les ventes (le chiffre d'affaires) sont dans l'Atelier, pas au Commerce.
+      ...(menus.commercial.items ?? []).filter((e) => !('route' in e && e.route === ROUTES.COMMERCIAL_VENTES)),
+      separateur('Documents'),
+      ...documents,
+    ],
+  };
+  // Les Contacts : clients, fournisseurs, abattoir et équarrissage.
+  const contacts: DefinitionMenu = {
+    label: 'Contacts',
+    route: ROUTES.CONTACTS,
+    items: [...(menus.contacts.items ?? []), ...sections('partenaires'), { label: 'Laboratoires d’analyse', route: ROUTES.lieu('organismes') }],
+  };
+  // La Comptabilité : ses pages, puis l'argent (factures, ventes, banque) et les bilans, qui étaient dans le Plus.
+  const comptabilite: DefinitionMenu = {
+    label: 'Comptabilité',
+    route: ROUTES.COMPTABILITE,
+    items: [
+      ...(menus.comptabilite.items ?? []),
+      separateur('Comptes et véhicules'),
+      { label: 'Plan comptable', route: ROUTES.PLAN_COMPTABLE },
+      { label: 'Flotte', route: ROUTES.FLOTTE },
+      separateur('Bilans'),
+      ...sections('bilans'),
+    ],
+  };
+  // Le Plus : ses listes, les visites (l'agritourisme) et l'organisation.
+  const plus: DefinitionMenu = {
+    label: 'Plus',
+    route: '/plus',
+    items: [
+      ...(plusRubriques.items ?? []),
+      separateur('Visites'),
+      ...(visites.items ?? []),
+      separateur('Organisation'),
+      ...(menus.organisation.items ?? []),
+    ],
+  };
   // Les pages que les quatre rubriques ne reprennent pas encore : elles restent dans Plus, par thème de l'ancienne organisation.
-  const montrees = routesDeMenus([chevres, atelier, visites, plusRubriques]);
+  const montrees = routesDeMenus([ferme, contacts, comptabilite, plus]);
   const restantes = menusDuPoste().flatMap((theme) => {
     const pages = (theme.items ?? []).filter((e): e is { label: string; route: string } => 'route' in e && !montrees.has(e.route));
     return pages.length > 0 ? [separateur(theme.label), ...pages] : [];
   });
-  return [chevres, atelier, visites, { ...plusRubriques, items: [...(plusRubriques.items ?? []), ...restantes] }];
+  return [ferme, contacts, comptabilite, { ...plus, items: [...(plus.items ?? []), ...restantes] }];
 }
 
 /**
@@ -291,6 +361,7 @@ const THEMES_DU_POSTE: readonly { label: string; route?: string; entrees?: Entre
       '/export-donnees',
       '/pdf-donnees',
       '/sauvegarde-locale',
+      '/copies-automatiques',
       '/google-drive',
     ],
   },

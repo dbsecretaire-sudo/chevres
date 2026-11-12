@@ -16,19 +16,36 @@ export interface VarianteDeFromage {
 }
 
 /**
- * Ce qu'un fromage est toujours, sans qu'on le demande : le vieux (l'affiné) est toujours salé ; le brocciu est toujours salé et pasteurisé. Rien d'imposé pour les autres :
+ * Un fromage affiné (le vieux, le brocciu affiné, le crottin affiné…) : reconnu à son type, ou à son nom quand c'est un fromage ajouté au stock.
+ */
+export function estFromageAffine(article: string, libelle = ''): boolean {
+  return article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.AFFINE}` || /affin/i.test(libelle);
+}
+
+/**
+ * Ce qu'un fromage est toujours, sans qu'on le demande : un affiné n'est jamais salé ; le brocciu est toujours salé et pasteurisé. Rien d'imposé pour les autres :
  * on demande alors s'il est salé et de quel lait.
  */
-export function variantesImposees(article: string): { sale?: boolean; lait?: TypeLait } {
-  if (article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.AFFINE}`) return { sale: true };
+export function variantesImposees(article: string, libelle = ''): { sale?: boolean; lait?: TypeLait } {
+  if (estFromageAffine(article, libelle)) return { sale: false };
   if (article === `${GENRE_ARTICLE.FROMAGE}:${TYPE_FROMAGE.BROCCIU}`) return { sale: true, lait: TYPE_LAIT_FROMAGE.PASTEURISE };
   return {};
 }
 
-/** Les variantes possibles d'un fromage : toutes, moins celles que son type exclut (un vieux n'est jamais non salé). */
-export function variantesPossibles(article: string): VarianteDeFromage[] {
-  const imposee = variantesImposees(article);
-  return VARIANTES_DE_FROMAGE.filter((v) => (imposee.sale === undefined || v.sale === imposee.sale) && (!imposee.lait || v.lait === imposee.lait));
+/**
+ * Les laits qu'un fromage peut prendre, dans l'ordre où on les propose. Un affiné n'a aucun choix de lait : vide, on ne le demande pas.
+ */
+export function laitsPermis(article: string, libelle = ''): TypeLait[] {
+  return estFromageAffine(article, libelle) ? [] : [...TYPES_DE_LAIT];
+}
+
+/** Les variantes possibles d'un fromage : toutes, moins celles que son type exclut (un affiné : jamais salé, pas de lait à choisir). */
+export function variantesPossibles(article: string, libelle = ''): VarianteDeFromage[] {
+  const imposee = variantesImposees(article, libelle);
+  const laits = laitsPermis(article, libelle);
+  return VARIANTES_DE_FROMAGE.filter(
+    (v) => (imposee.sale === undefined || v.sale === imposee.sale) && (!imposee.lait || v.lait === imposee.lait) && laits.includes(v.lait),
+  );
 }
 
 /** Le suffixe d'une variante (« nonsale|cru ») : il s'ajoute à l'identifiant de l'article pour retrouver sa durée de conservation. */
@@ -53,22 +70,42 @@ export function dureesDeVieDeLArticle(archive: Pick<ArchiveStock, 'dureeDeVie'>,
   return resultat;
 }
 
-/** La durée de conservation d'un lot, en jours : celle de sa variante (salé ou non, lait) quand le lot la connaît, sinon celle de base du produit. */
+/**
+ * Les durées de conservation par défaut (jours) d'un fromage dont la durée n'est pas réglée : le frais, le brocciu, le crottin, et l'affiné (le vieux, et les
+ * affinés ajoutés au stock d'après leur nom). Repères à ajuster d'après la fiche de chaque produit.
+ */
+const DUREES_PAR_DEFAUT = { frais: 21, brocciu: 7, brocciuAffine: 30, crottin: 21, crottinAffine: 28, affine: 90 } as const;
+
+/** La durée par défaut d'un fromage, d'après son article (son type) et son nom ; rien pour un autre produit. */
+export function dureeParDefaut(article: string, libelle = ''): number | undefined {
+  if (!article.startsWith(`${GENRE_ARTICLE.FROMAGE}:`)) return undefined;
+  const nom = libelle.toLowerCase();
+  const affine = estFromageAffine(article, libelle);
+  if (nom.includes('brocciu') || article.endsWith(':brocciu')) return affine ? DUREES_PAR_DEFAUT.brocciuAffine : DUREES_PAR_DEFAUT.brocciu;
+  if (nom.includes('crottin') || article.endsWith(':crottin')) return affine ? DUREES_PAR_DEFAUT.crottinAffine : DUREES_PAR_DEFAUT.crottin;
+  if (affine) return DUREES_PAR_DEFAUT.affine;
+  return DUREES_PAR_DEFAUT.frais;
+}
+
+/**
+ * La durée de conservation d'un lot, en jours : celle de sa variante (salé ou non, lait) quand le lot la connaît, sinon celle de base du produit, sinon
+ * la durée par défaut de son fromage.
+ */
 export function dureeDeVieDuLot(
   lot: Pick<LotFromage, 'article' | 'sale' | 'lait'>,
-  archive: Pick<ArchiveStock, 'dureeDeVie'>,
+  archive: Pick<ArchiveStock, 'dureeDeVie'> & Partial<Pick<ArchiveStock, 'noms'>>,
 ): number | undefined {
   const table = archive.dureeDeVie ?? {};
   const precise =
     lot.sale !== undefined && lot.lait ? table[cleDureeDeVie(lot.article, suffixeDeVariante({ sale: lot.sale, lait: lot.lait }))] : undefined;
-  const jours = precise ?? table[lot.article];
+  const jours = precise ?? table[lot.article] ?? dureeParDefaut(lot.article, archive.noms?.[lot.article] ?? lot.article.split(':')[1]);
   return jours && jours > 0 ? jours : undefined;
 }
 
-/** La DLC d'un lot (AAAA-MM-JJ) : la date de fabrication plus la durée de conservation de son produit ; rien tant que cette durée n'est pas réglée. */
+/** La DLC d'un lot (AAAA-MM-JJ) : la date de fabrication plus la durée de conservation de son produit (ou sa durée par défaut). */
 export function dlcDuLot(
   lot: Pick<LotFromage, 'article' | 'dateFabrication' | 'sale' | 'lait'>,
-  archive: Pick<ArchiveStock, 'dureeDeVie'>,
+  archive: Pick<ArchiveStock, 'dureeDeVie'> & Partial<Pick<ArchiveStock, 'noms'>>,
 ): string | undefined {
   const jours = dureeDeVieDuLot(lot, archive);
   return jours && lot.dateFabrication ? ajouterJours(lot.dateFabrication, jours) : undefined;

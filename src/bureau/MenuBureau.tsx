@@ -135,6 +135,7 @@ export function menusParNom() {
       { label: TEXTES.settings.reglages.export, route: ROUTES.EXPORT_DONNEES },
       { label: TEXTES.settings.reglages.pdf, route: ROUTES.PDF_DONNEES },
       { label: TEXTES.settings.reglages.sauvegardeLocale, route: ROUTES.SAUVEGARDE_LOCALE },
+      { label: TEXTES.settings.reglages.copiesAutomatiques.titre, route: ROUTES.COPIES_AUTOMATIQUES },
       { label: TEXTES.settings.reglages.googleDrive, route: ROUTES.GOOGLE_DRIVE },
       { separateur: true },
       { label: TEXTES.settings.reglages.sectionRegles, route: ROUTES.ORGANISATION_REGLES },

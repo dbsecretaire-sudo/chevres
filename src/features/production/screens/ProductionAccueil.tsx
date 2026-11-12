@@ -103,6 +103,13 @@ function ListeProduction() {
       : []),
     { cle: 'viande', ...T.viande, icone: 'restaurant', route: ROUTES.PRODUCTION_VIANDE },
     { cle: 'charcuterie', ...T.charcuterie, icone: 'cut', route: ROUTES.PRODUCTION_CHARCUTERIE },
+    {
+      cle: 'recettes',
+      titre: 'Recettes de l’atelier',
+      aide: 'Fromages, charcuterie, plats, savons',
+      icone: 'book-outline' as const,
+      route: ROUTES.PRODUCTION_RECETTES,
+    },
   ];
   /** L'analyse et le contrôle du lait (une laiterie seulement) et les rappels de lots : un groupe titré chacun. */
   const laitier: Ligne[] = laiterie

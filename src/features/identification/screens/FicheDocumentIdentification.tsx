@@ -12,7 +12,6 @@ import { SelectField } from '@/shared/components/SelectField';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
 import {
   choisirFichiers,
-  piecesDisponibles,
   rangerFichier,
   supprimerPiece,
 } from '@/features/fichiers/services/pieces';
@@ -69,7 +68,6 @@ export default function FicheDocumentIdentification() {
   }, [id]);
 
   const ajouterFichiers = async () => {
-    if (!piecesDisponibles()) return setErreur(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {

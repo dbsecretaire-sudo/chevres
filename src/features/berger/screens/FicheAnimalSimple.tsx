@@ -36,8 +36,17 @@ export function FicheAnimalSimple({ animal, onSoin, onMouvement, onNaissance, on
 
       <Text style={commonStyles.cardTitle}>{T.ficheActions}</Text>
       <View style={commonStyles.gap10}>
+        {/* La naissance est l'action la plus fréquente d'une chèvre : un grand bouton, le premier et le plus facile à toucher. */}
+        {animal.sexe === SEXE.FEMELLE ? (
+          <Button
+            label={T.ficheNaissance}
+            variant="secondary"
+            onPress={onNaissance}
+            style={{ minHeight: 160 }}
+            styleTexte={{ fontSize: 24 }}
+          />
+        ) : null}
         <Button label={T.soin} variant="secondary" onPress={onSoin} />
-        {animal.sexe === SEXE.FEMELLE ? <Button label={T.ficheNaissance} variant="secondary" onPress={onNaissance} /> : null}
         <Button label={T.mouvement} variant="secondary" onPress={onMouvement} />
         <Button label={T.ficheDeces} variant="secondary" onPress={onDeces} />
       </View>

@@ -5,6 +5,8 @@ import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { useLots } from '@/features/lots-animaux/hooks/useLots';
 import { useVentesVivants } from '@/features/lots-animaux/hooks/useVentesVivants';
 import type { DocumentCirculationDepose } from '@/features/comptabilite/types';
+import type { PieceJointe } from '@/features/fichiers/types';
+import { choisirEtEnvoyerPieceWeb, ouvrirPieceDistante } from '@/features/fichiers/services/piecesWeb';
 import {
   choisirFichiers,
   ouvrirPiece,
@@ -57,13 +59,18 @@ export function useActionsDocumentCirculation(recharger: () => Promise<void> | v
     await deposerDocumentCirculation(e, document);
   };
   const deposer = async (e: EcritureDuDocument) => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
-      const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
-      if (!choisi) return;
-      const piece = await rangerFichier(choisi);
-      // Le fichier remplacé est effacé de l'appareil.
-      if (e.depose) await supprimerPiece(e.depose.piece);
+      // Sur le téléphone ou le PC, le fichier est rangé dans l'appareil ; sur le web, il part directement vers le serveur.
+      let piece: PieceJointe | undefined;
+      if (piecesDisponibles()) {
+        const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
+        piece = choisi ? await rangerFichier(choisi) : undefined;
+      } else {
+        piece = await choisirEtEnvoyerPieceWeb(TYPES_FICHIERS_ACCEPTES);
+      }
+      if (!piece) return;
+      // Le fichier remplacé n'est jamais effacé du serveur : seule sa copie sur l'appareil part.
+      if (e.depose && piecesDisponibles()) await supprimerPiece(e.depose.piece);
       await poser(e, { piece, deposeLe: new Date().toISOString() });
       await recharger();
     } catch (erreur: unknown) {
@@ -72,12 +79,20 @@ export function useActionsDocumentCirculation(recharger: () => Promise<void> | v
   };
   const ouvrir = async (e: EcritureDuDocument) => {
     if (!e.depose) return;
+    if (!piecesDisponibles()) {
+      try {
+        await ouvrirPieceDistante(e.depose.piece);
+      } catch (erreur: unknown) {
+        Alert.alert(erreur instanceof Error ? erreur.message : T.fichierIntrouvable);
+      }
+      return;
+    }
     if (!(await pieceExiste(e.depose.piece))) return Alert.alert(T.fichierIntrouvable);
     await ouvrirPiece(e.depose.piece);
   };
   const retirer = async (e: EcritureDuDocument) => {
     if (!e.depose) return;
-    await supprimerPiece(e.depose.piece);
+    if (piecesDisponibles()) await supprimerPiece(e.depose.piece);
     await poser(e, undefined);
     await recharger();
   };
@@ -109,5 +124,5 @@ export function useActionsDocumentCirculation(recharger: () => Promise<void> | v
     ...supplement,
   ];
 
-  return { options };
+  return { options, ouvrir };
 }

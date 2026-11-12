@@ -12,6 +12,8 @@ export interface Modification {
   zone: string;
   identifiant: string;
   contenu: unknown | null;
+  /** Vrai : la saisie a été faite en mode normal, par un modérateur ou un administrateur ; elle attend la validation au lieu d'entrer tout de suite. */
+  enAttente?: boolean;
 }
 
 const estUneFiche = (element: unknown): element is { id: string } =>

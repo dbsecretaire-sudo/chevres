@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
 import { Screen } from '@/shared/components/ScreenList';
 import { ListRow } from '@/shared/components/ListRow';
+import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { Fab } from '@/shared/components/Fab';
@@ -184,26 +185,28 @@ export default function ComptesPcgIndex() {
       <FlatList
         data={filtres}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={commonStyles.listFab}
+        contentContainerStyle={[commonStyles.listeBlocAvecFab, { paddingHorizontal: 8 }]}
         ListEmptyComponent={
           <EmptyState
             title={TEXTES.comptesPcg.listeComptesPcg.aucunCompte}
             subtitle={TEXTES.comptesPcg.listeComptesPcg.ajoutezDesComptesPcgPour}
           />
         }
-        renderItem={({ item }) => (
-          <ListRow
-            title={item.numero}
-            subtitle={item.libelle}
-            onPress={() =>
-              router.push(
-                ROUTES.ficheComptePcg(
-                  item.id,
-                  especes.length > 1 && filtreCourant !== FILTRE_STOCK_TOUT ? filtreCourant : undefined,
-                ),
-              )
-            }
-          />
+        renderItem={({ item, index }) => (
+          <LigneDeBloc index={index} total={filtres.length}>
+            <ListRow
+              title={item.numero}
+              subtitle={item.libelle}
+              onPress={() =>
+                router.push(
+                  ROUTES.ficheComptePcg(
+                    item.id,
+                    especes.length > 1 && filtreCourant !== FILTRE_STOCK_TOUT ? filtreCourant : undefined,
+                  ),
+                )
+              }
+            />
+          </LigneDeBloc>
         )}
       />
       )}

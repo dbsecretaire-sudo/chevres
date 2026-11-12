@@ -10,7 +10,10 @@ import { filDeLaPage, pageDuMenuRetenue, retenirPageDuMenu } from '@/shared/navi
 import { useLibelleDuFil } from '@/shared/navigation/titreDeLaPage';
 import { usePositionDansLesMenus } from '@/features/accueil/shell/usePositionDansLesMenus';
 import { parentDeLaPage } from '@/features/accueil/navigation/parentDeLaPage';
+import { useRetour } from '@/shared/navigation/origineRetour';
 import { useRole } from '@/features/roles/context/RoleContext';
+import { TitreAOnglets } from '@/shared/components/TitreAOnglets';
+import { ONGLETS_FERME } from '@/shared/navigation/ongletsFerme';
 import { ROLE } from '@/shared/constants/roles';
 import { colors } from '@/shared/theme/colors';
 import { colonneCentree } from '@/shared/theme/miseEnPage';
@@ -57,6 +60,8 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   // Pas de flèche de retour ici : sur téléphone elle est dans la barre du bas (BandeauFerme), et le poste de comptabilité (affichage sobre) n'en a pas.
   const droite = options.headerRight ? options.headerRight(parametres) : null;
   const titre = typeof options.title === 'string' ? options.title : '';
+  // Sur la Ferme, l'Atelier, le Commerce et les Documents, le titre est la rangée à onglets : la page courante y est en gras.
+  const ongletFerme = ONGLETS_FERME.find((o) => o.adresse === adresse);
   // La page peut donner son propre nom à la dernière étape (la fiche d'un contact : le nom du contact, à la place de « Contact »).
   const nomDeLaPage = useLibelleDuFil(adresse);
   // Le fil d'Ariane remplace le titre, sur le téléphone comme sur le poste de comptabilité.
@@ -64,13 +69,16 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
   // Le fil d'Ariane ne reste que pour le poste de comptabilité et Windows : sur le téléphone, le titre de la page suffit.
   const filAffiche = comptable || afficheBureau() ? fil : [];
   // Le Précédent : la page d'où l'on vient, lue dans une seule règle (parentDeLaPage). Une page racine n'en a pas.
-  const { lieu } = useGlobalSearchParams<{ lieu?: string }>();
+  const { lieu, retour: retourDeLAppelant } = useGlobalSearchParams<{ lieu?: string; retour?: string }>();
   const parent = parentDeLaPage(adresse, lieu);
-  const retourDuTelephone = () => {
-    if (parent) router.replace(parent as never);
+  // Une page ouverte d'un bouton (la viande, depuis Chèvres) revient d'où l'on a cliqué ; sinon, le Précédent de la page.
+  // Une page ouverte depuis une autre (le lot, depuis une vente) revient à celle qui l'a appelée : son adresse est dans `retour`.
+  const retourDuTelephone = useRetour(() => {
+    if (retourDeLAppelant) router.replace(retourDeLAppelant as never);
+    else if (parent) router.replace(parent as never);
     else if (back) navigation.goBack();
     else router.back();
-  };
+  });
   const couleur = (StyleSheet.flatten(options.headerStyle as StyleProp<ViewStyle>)?.backgroundColor ??
     colors.primary) as string;
   // Le mode normal n'a pas la navigation du mode avancé (capsule, fil d'Ariane) : la page seule, avec un « Retour » en bas.
@@ -84,35 +92,48 @@ export function EnTeteApplication({ options, back, navigation, route }: PropsEnT
           </View>
         </View>
       )}
-      {droite || titre ? (
+      {droite || titre || ongletFerme ? (
         // Le titre n'est pas une seconde bulle sous la capsule : le texte est posé sur la page, avec la flèche et les boutons de l'écran dans de
         // petites pastilles de sa couleur (téléphone comme Windows).
         // La colonne centrée (largeur maximale) est un conteneur à part : avec des marges sur elle-même, la flèche collait au bord de la fenêtre.
         <View style={comptable ? undefined : colonneCentree}>
           <View style={[styles.titreLibre, comptable && styles.titreComptable]}>
             {/* Sur le téléphone : une flèche ronde pour revenir, comme sur les maquettes. */}
-            {!comptable && !afficheBureau() && parent !== undefined && options.headerBackVisible !== false ? (
+            {/* La Ferme, l'Atelier, le Commerce et les Documents se parcourent par leurs onglets : pas de flèche de retour. */}
+            {!comptable && !afficheBureau() && !ongletFerme && parent !== undefined && options.headerBackVisible !== false ? (
               <Pressable onPress={retourDuTelephone} accessibilityRole="button" accessibilityLabel="Retour" style={styles.retour}>
                 <Ionicons name="chevron-back" size={22} color={colors.text} />
               </Pressable>
             ) : null}
             {/* Un titre long (« Association et coopérative agricole ») passe sur deux lignes plutôt que d'être coupé. */}
-            <Text style={[styles.titre, { color: comptable || afficheBureau() ? couleur : colors.text }, !comptable && styles.titrePhone]} numberOfLines={comptable ? 2 : 3}>
-              {filAffiche.length > 1
-                ? filAffiche.map((maillon, i) => (
-                    <Text key={`${i}-${maillon.libelle}`}>
-                      {i > 0 ? <Text style={styles.separateur}>{' > '}</Text> : null}
-                      {maillon.route ? (
-                        <Text style={styles.etape} onPress={() => router.push(maillon.route as never)} accessibilityRole="link">
-                          {maillon.libelle}
-                        </Text>
-                      ) : (
-                        maillon.libelle
-                      )}
-                    </Text>
-                  ))
-                : titre}
-            </Text>
+            {ongletFerme ? (
+              <View style={styles.ongletsFerme}>
+                <TitreAOnglets
+                  courant={ongletFerme.libelle}
+                  onglets={ONGLETS_FERME.map((o) => ({
+                    libelle: o.libelle,
+                    onPress: o.adresse === adresse ? undefined : () => router.push(o.adresse as never),
+                  }))}
+                />
+              </View>
+            ) : (
+              <Text style={[styles.titre, { color: comptable || afficheBureau() ? couleur : colors.text }, !comptable && styles.titrePhone]} numberOfLines={comptable ? 2 : 3}>
+                {filAffiche.length > 1
+                  ? filAffiche.map((maillon, i) => (
+                      <Text key={`${i}-${maillon.libelle}`}>
+                        {i > 0 ? <Text style={styles.separateur}>{' > '}</Text> : null}
+                        {maillon.route ? (
+                          <Text style={styles.etape} onPress={() => router.push(maillon.route as never)} accessibilityRole="link">
+                            {maillon.libelle}
+                          </Text>
+                        ) : (
+                          maillon.libelle
+                        )}
+                      </Text>
+                    ))
+                  : titre}
+              </Text>
+            )}
             {droite ? <View style={[styles.pastilleBouton, { backgroundColor: couleur }]}>{droite}</View> : null}
           </View>
         </View>
@@ -137,6 +158,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   titre: { flex: 1, fontSize: 18, fontWeight: '700', color: colors.blanc },
+  // La rangée à onglets, à la place du titre : elle prend la largeur restante, à côté de la flèche de retour.
+  ongletsFerme: { flex: 1 },
   // Le titre sur la page (téléphone) : une ligne sans fond.
   titreLibre: {
     flexDirection: 'row',

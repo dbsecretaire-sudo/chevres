@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Linking, Pressable, Text, View } from 'react-native';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
-import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { EtapeReglementaire } from '@/features/stock/types';
@@ -35,7 +35,6 @@ export default function CadreReglementaireAtelier() {
   const maj = (cle: string, modification: Partial<EtapeReglementaire>) =>
     patchSettings({ exploitation: { ...infos, cadreAtelier: { ...etapes, [cle]: { ...(etapes[cle] ?? {}), ...modification } } } });
   const ajouterFichiers = async (cle: string) => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) nouveaux.push(await rangerFichier(choisi));

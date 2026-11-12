@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { listClients } from '@/features/clients/repository';
 import { lireArchiveCommercial } from '@/features/commercial/repository';
@@ -58,10 +58,15 @@ export function useFicheVente(id: string | undefined) {
   /** La grille de tarifs (prix par catégorie de contact) : le prix de la vente suit la catégorie de son client. */
   const [tarifs, setTarifs] = useState<Record<string, Record<string, number>>>({});
   const [erreur, setErreur] = useState<{ titre: string; message?: string } | null>(null);
+  /** La vente telle qu'elle est enregistrée (les saisies automatiques s'enchaînent sur elle, pas sur l'affichage en retard). */
+  const dernierEnregistre = useRef<Vente | null>(null);
+  /** Les enregistrements se suivent, l'un après l'autre. */
+  const fileEnregistrement = useRef<Promise<boolean>>(Promise.resolve(true));
 
   const charger = useCallback(async () => {
     if (!id) return;
     const v = await getVente(id);
+    dernierEnregistre.current = v ?? null;
     setVente(v ?? null);
     setForm(v ?? null);
     setMontantTexte(montantEnTexte(v));
@@ -129,7 +134,7 @@ export function useFicheVente(id: string | undefined) {
   };
 
   /** Enregistré tout seul (`auto`), il ne dit rien d'une saisie incomplète et laisse la fiche en modification. */
-  const enregistrerModifications = async (auto = false): Promise<boolean> => {
+  const enregistrer = async (auto: boolean): Promise<boolean> => {
     if (!form) return false;
     const refuser = (e: { titre: string; message?: string }) => {
       if (!auto) setErreur(e);
@@ -260,12 +265,14 @@ export function useFicheVente(id: string | undefined) {
       await saveVente(nettoye);
       // Un animal retiré de la vente (il y était, il n'y est plus) qui avait été vendu revient dans le cheptel actif ; ceux à l'abattoir gardent
       // leur statut. Ceux de la vente passent « vendus » à sa date.
-      for (const id of (vente ? idsDesAnimaux(vente) : []).filter((x) => !animauxForm.includes(x))) {
-        if (vente && revientVivantApresLaVente((await getChevre(id))?.statut, vente)) await reactiverChevre(id);
+      const precedente = dernierEnregistre.current;
+      for (const id of (precedente ? idsDesAnimaux(precedente) : []).filter((x) => !animauxForm.includes(x))) {
+        if (precedente && revientVivantApresLaVente((await getChevre(id))?.statut, precedente)) await reactiverChevre(id);
       }
       // Les animaux vendus : « abattoir » pour une vente de viande déclarée (à la date d'abattoir), « morte » si elle ne l'est pas, « vendus » sinon.
       const sortie = sortieDesAnimauxDeLaVente(nettoye);
       for (const id of animauxForm) await declarerStatutChevre(id, sortie.statut, sortie.date);
+      dernierEnregistre.current = nettoye;
       setVente(nettoye);
       if (!auto) {
         setForm(nettoye);
@@ -279,6 +286,13 @@ export function useFicheVente(id: string | undefined) {
         message: TEXTES.commun.general.impossibleDEnregistrerLesModifications,
       });
     }
+  };
+
+  /** Enregistre la fiche : les demandes se font à la suite, chacune une fois la précédente terminée. */
+  const enregistrerModifications = (auto = false): Promise<boolean> => {
+    const suite = fileEnregistrement.current.then(() => enregistrer(auto));
+    fileEnregistrement.current = suite.catch(() => false);
+    return suite;
   };
 
   // Tout changement de la fiche s'enregistre tout seul.

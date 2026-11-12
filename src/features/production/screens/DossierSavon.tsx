@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
-import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { dossierEnRegle, etapesManquantes } from '@/features/stock/services/dossiersSavons';
@@ -94,7 +94,6 @@ export default function DossierSavon() {
     await charger();
   };
   const ajouterFichiers = async (e: string) => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) nouveaux.push(await rangerFichier(choisi));

@@ -21,7 +21,7 @@ import { lireArchiveStock } from '@/features/stock/repository';
 import { derniereBoucle } from '@/features/stock/services/boucles';
 import { dossierEnRegle } from '@/features/stock/services/dossiersSavons';
 import {
-  articlesDuProduit,
+  articlesAFabriquer,
   erreurFabrication,
   fabriquerSavons,
   numeroDeLot,
@@ -58,6 +58,8 @@ export default function FabricationSavon() {
   const [quantite, setQuantite] = useState('');
   const [premierSaisi, setPremierSaisi] = useState<string | null>(null);
   const [litres, setLitres] = useState('');
+  /** Le poids total du savon fabriqué, en kilos : la recette s'y rapporte (elle se garde pour un kilo). */
+  const [poids, setPoids] = useState('');
   /** La saponification suit la date de fabrication, et la fin de cure la saponification, tant qu'on ne les a pas changées. */
   const [saponificationSaisie, setSaponificationSaisie] = useState<string | null>(null);
   const [finCureSaisie, setFinCureSaisie] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function FabricationSavon() {
     lireArchiveStock().then((a) => {
       setArchive(a);
       setArticle(
-        (deja) => choisir ?? (deja || articlesDuProduit(PRODUIT_A_LOTS.SAVON, a, espece)[0]?.cle || ''),
+        (deja) => choisir ?? (deja || articlesAFabriquer(a, PRODUIT_A_LOTS.SAVON, espece)[0]?.cle || ''),
       );
     });
   useEffect(() => {
@@ -81,26 +83,16 @@ export default function FabricationSavon() {
   }, [espece]);
 
   const savons = useMemo(
-    () => (archive ? articlesDuProduit(PRODUIT_A_LOTS.SAVON, archive, espece) : []),
+    () => (archive ? articlesAFabriquer(archive, PRODUIT_A_LOTS.SAVON, espece) : []),
     [archive, espece],
   );
   const proposables = useMemo(
     () =>
-      archive
-        ? ingredientsProposables(
-            archive,
-            {
-              fromages: T.ingredients.groupeFromages,
-              charcuterie: T.ingredients.groupeCharcuterie,
-              autres: T.ingredients.groupeAutres,
-            },
-            { listesSeulement: true },
-          )
-        : [],
+      archive ? ingredientsProposables(archive, {}, { listesSeulement: true }) : [],
     [archive],
   );
 
-  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive, article, date) : '');
+  const premier = premierSaisi ?? (archive && article && date ? numeroDeLot(archive) : '');
   const nombre = Math.round(Number(quantite) || 0);
   const dernier = nombre > 0 && premier ? derniereBoucle(premier, nombre) : undefined;
   const saponification = saponificationSaisie ?? date;
@@ -189,6 +181,14 @@ export default function FabricationSavon() {
           onChangeText={(v) => /^\d*$/.test(v) && setQuantite(v)}
           keyboardType="number-pad"
         />
+        {/* Le poids total : la recette du savon se calcule d'après lui. */}
+        <FormField
+          label={T.poidsTotal}
+          value={poids}
+          onChangeText={(v) => /^\d*[.,]?\d*$/.test(v) && setPoids(v)}
+          keyboardType="decimal-pad"
+        />
+        <Text style={commonStyles.note}>{T.poidsAide}</Text>
         <FormField
           label={T.premier}
           required
@@ -217,8 +217,7 @@ export default function FabricationSavon() {
             notes={notes}
             archive={archive}
             ingredients={ingredients}
-            quantite={quantite}
-            litres={litres}
+            facteur={parseDecimal(poids)}
             joursCure={Math.round((Date.parse(finCure) - Date.parse(saponification)) / 86_400_000)}
             onChange={() => charger()}
             onAppliquer={(r) => {

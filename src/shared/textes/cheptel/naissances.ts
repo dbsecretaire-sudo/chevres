@@ -19,7 +19,20 @@ export const naissancesTextes = {
   bilan: (naissances: number, meres: number) =>
     `${naissances} naissance${naissances > 1 ? 's' : ''} · ${meres} mère${meres > 1 ? 's' : ''}`,
   aucuneNaissanceEnregistree: 'Aucune naissance enregistrée',
+  aucuneNaissanceFiltree: 'Aucune naissance ne répond à ces filtres',
   declarezUneNaissanceDepuisL: 'Déclarez une naissance avec le bouton +.',
+  /** Le filtre par statut des petits : tous, vivants ou vendus. */
+  statut: {
+    tous: 'Tous',
+    vivants: 'Vivants',
+    vendus: 'Vendus',
+  },
+  /** Le champ de recherche de la liste des naissances. */
+  recherche: {
+    libelle: 'Rechercher',
+    exemple: 'ex : Dupont, 00488, F, 02/03/2026',
+    effacer: 'Effacer la recherche',
+  },
   mereEspace: 'Mère ',
   get cabri() {
     return V().petit.singulier;

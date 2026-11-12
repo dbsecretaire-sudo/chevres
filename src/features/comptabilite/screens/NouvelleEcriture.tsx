@@ -5,6 +5,7 @@ import { Screen } from '@/shared/components/Screen';
 import { DateField } from '@/shared/components/DateField';
 import { Button } from '@/shared/components/Button';
 import { InfoModal } from '@/shared/components/InfoModal';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { precocherFraisTouristiques } from '@/features/comptabilite/services/fraisTouristiques';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { ATELIER } from '@/shared/constants/ateliers';
@@ -410,6 +411,14 @@ export default function NouvelleFacture() {
         title={e.erreur?.titre ?? ''}
         message={e.erreur?.message}
         onClose={() => e.setErreur(null)}
+      />
+      <ConfirmModal
+        visible={e.sortie.enAttente}
+        title={TEXTES.commun.sortieSansEnregistrer.titre}
+        message={TEXTES.commun.sortieSansEnregistrer.message}
+        confirmLabel={TEXTES.commun.sortieSansEnregistrer.quitter}
+        onCancel={e.sortie.rester}
+        onConfirm={e.sortie.quitter}
       />
     </AccentColorProvider>
   );

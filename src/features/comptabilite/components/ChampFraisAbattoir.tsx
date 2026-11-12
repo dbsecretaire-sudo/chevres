@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
-import { BoutonCadeau } from '@/features/comptabilite/components/BoutonCadeau';
 import { Checkbox } from '@/shared/components/Checkbox';
+import { Interrupteur } from '@/shared/components/Interrupteur';
 import { FormField } from '@/shared/components/FormField';
 import { SelectField } from '@/shared/components/SelectField';
 import { OPTIONS_TAUX_TVA } from '@/features/comptabilite/utils/tva';
@@ -49,9 +49,8 @@ export function ChampFraisAbattoir({
   const facturer = cadeau ? !cadeau.actif : frais > 0;
   return (
     <View style={commonStyles.gap6}>
-      {cadeau ? (
-        <BoutonCadeau actif={cadeau.actif} onChange={cadeau.onChange} ligne={T.cadeauFrais} />
-      ) : null}
+      {/* Vente offerte et avec facture : l'abattoir peut être offert (sinon ses frais sont refacturés au client). */}
+      {cadeau ? <Interrupteur label="Abattoir offert" value={cadeau.actif} onChange={cadeau.onChange} /> : null}
       {!cadeau && onFacturer && proposition && proposition > 0 ? (
         <Checkbox
           label={T.facturerLesFrais(formatMontant(proposition))}

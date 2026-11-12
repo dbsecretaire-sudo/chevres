@@ -110,7 +110,7 @@ export const SECTIONS: {
   {
     section: SECTION_STOCK.EQUIPEMENT_CONSOMMABLE,
     categorie: CATEGORIE_INVENTAIRE.AUTRES_APPROVISIONNEMENTS,
-    titre: T.titresListes.equipement,
+    titre: T.titresListes.consommables,
     genre: GENRE_ARTICLE.EQUIPEMENT,
   },
   {

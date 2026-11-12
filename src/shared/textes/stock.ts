@@ -419,6 +419,7 @@ export const TEXTES_STOCK = {
     emballages: 'Achat — Emballages',
     entretien: 'Achat — Entretien',
     equipement: 'Achat — Équipement',
+    consommables: 'Achat — Consommables',
     materiel: 'Achat — Matériel',
   },
   sections: {
@@ -523,6 +524,9 @@ export const TEXTES_STOCK = {
   modal: {
     titre: (article: string) => `Inventaire : ${article}`,
     quantite: 'Quantité',
+    unite: 'Unité',
+    entreeSortie: 'Entrée ou sortie de stock',
+    uniteRequise: 'Choisissez l’unité de l’article.',
     litres: 'Litres de lait utilisés',
     litresBrocciu: 'Litres de lait versés dans le lactosérum',
     laitUtilise: (nombre: number, par: string, total: string) =>

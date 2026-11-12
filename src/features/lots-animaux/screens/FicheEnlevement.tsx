@@ -11,7 +11,7 @@ import { ChampBoucles } from '@/features/lots-animaux/components/ChampBoucles';
 import { ChoixContactDuLot } from '@/features/lots-animaux/components/ChoixContactDuLot';
 import { useEnlevements } from '@/features/lots-animaux/hooks/useEnlevements';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
-import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { TYPES_ANALYSES_ACCEPTES } from '@/shared/constants/fichiers';
 import { useEnregistrementAuto } from '@/shared/hooks/useEnregistrementAuto';
@@ -63,7 +63,6 @@ export default function FicheEnlevement() {
   );
 
   const ajouterFichiers = async () => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_ANALYSES_ACCEPTES, true)) nouveaux.push(await rangerFichier(choisi));

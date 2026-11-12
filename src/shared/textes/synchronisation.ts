@@ -26,4 +26,9 @@ export const TEXTES_SYNCHRONISATION = {
   reconnecteToi: 'Reconnecte-toi pour continuer.',
   erreurTitre: 'Erreur de synchronisation',
   connexionRequise: 'Connecte-toi d’abord pour envoyer les données.',
+  envoiSuspectTitre: 'Envoi bloqué',
+  envoiSuspect: (locale: number, connue: number) =>
+    `Les données de cet appareil pèsent ${Math.round(locale / 1000)} Ko, contre ${Math.round(connue / 1000)} Ko à la dernière synchronisation. Un envoi pourrait effacer les données du serveur : vérifie avant d’envoyer.`,
+  envoyerQuandMeme: 'Envoyer quand même',
+  annuler: 'Annuler',
 } as const;

@@ -32,6 +32,9 @@ export const modeAffichage: ModeAffichage = lireMode();
 /** Vrai dans la version Windows en affichage « bureau » : les menus de la fenêtre, les deux colonnes, la flèche de retour de page parente. */
 export const afficheBureau = (): boolean => estBureau() && modeAffichage === AFFICHAGE.BUREAU;
 
+/** Vrai dans la version Windows en affichage « mobile » : l'interface du téléphone, adaptée à une tablette (deux colonnes dans les écrans de fabrication et de vente). */
+export const afficheTablette = (): boolean => estBureau() && modeAffichage === AFFICHAGE.MOBILE;
+
 /** Vrai en affichage « sobre » : sans couleur ni dessin. */
 export const afficheSobre = (): boolean => modeAffichage === AFFICHAGE.SOBRE;
 

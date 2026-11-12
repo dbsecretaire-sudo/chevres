@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { piecesDisponibles, uriAffichagePiece } from '@/features/fichiers/services/pieces';
+import { lirePieceDistante } from '@/features/fichiers/services/piecesWeb';
 import { useImageDeLArticle } from '@/features/stock/hooks/useImageDeLArticle';
 import { choisirUneImage, type ChoixImage } from '@/features/stock/services/imagesArticles';
 import { Button } from '@/shared/components/Button';
@@ -24,10 +26,23 @@ export function ChampImageArticle({
   onChoix: (choix: ChoixImage | null) => void;
 }) {
   const actuelle = useImageDeLArticle(cle);
-  if (!piecesDisponibles()) return <Text style={commonStyles.note}>{T.indisponible}</Text>;
+  // Sur la PWA, l'image actuelle se lit sur le serveur : elle n'est pas sur l'appareil.
+  const [distante, setDistante] = useState<string | undefined>();
+  useEffect(() => {
+    if (!actuelle || piecesDisponibles()) return;
+    let actif = true;
+    lirePieceDistante(actuelle)
+      .then((donnees) => {
+        if (actif) setDistante(donnees);
+      })
+      .catch(() => undefined);
+    return () => {
+      actif = false;
+    };
+  }, [actuelle]);
   const retiree = !!choix && 'retirer' in choix;
-  const uri =
-    choix && 'fichier' in choix ? choix.fichier.uri : actuelle && !retiree ? uriAffichagePiece(actuelle) : undefined;
+  const apercu = actuelle && !retiree ? (piecesDisponibles() ? uriAffichagePiece(actuelle) : distante) : undefined;
+  const uri = choix && 'fichier' in choix ? choix.fichier.uri : apercu;
   return (
     <View style={commonStyles.gap6}>
       <Text style={commonStyles.lineBold}>{T.titre}</Text>

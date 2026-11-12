@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type PropsWithChildren } from 'react';
-import { type AppSettings, getSettings, updateSettings } from '@/features/settings/settings';
+import { type AppSettings, getSettings, surPrimesRecues, updateSettings } from '@/features/settings/settings';
 import { currentYear } from '@/shared/utils/dates';
 import { TEXTES } from '@/shared/textes';
 
@@ -31,6 +31,9 @@ export function AppSettingsProvider({ children }: PropsWithChildren) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshSettings();
   }, [refreshSettings]);
+
+  // Les primes changées sur un autre appareil : on les relit.
+  useEffect(() => surPrimesRecues(() => void refreshSettings()), [refreshSettings]);
 
   const setAnneeActive = useCallback(async (annee: number) => {
     const next = await updateSettings({ anneeActive: annee, toutesAnnees: false });

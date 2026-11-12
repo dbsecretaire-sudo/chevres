@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { appeler, ConnexionExpiree, jetonDeConnexion } from '@/features/sync/synchronisation';
+import { appeler, ConnexionExpiree, exploitationDeLaConnexion, jetonDeConnexion } from '@/features/sync/synchronisation';
 import {
   ajouterAttente,
   ecrireCurseur,
@@ -15,9 +15,6 @@ import {
 import { appliquerModification, modificationsDe, type Modification } from '@/shared/storage/fiches';
 import { envoyerPiecesEnAttente, mettreEnFileLesPiecesAnciennes, piecesDeLAppareil, recevoirPiecesManquantes } from '@/features/fichiers/services/piecesSynchro';
 
-/** L'exploitation sur le serveur : une seule, pour tous les appareils. */
-export const EXPLOITATION_SYNC = 'exploitation';
-
 /** Nombre maximal de modifications par envoi (le serveur refuse au-delà). */
 export const TAILLE_LOT = 200;
 
@@ -26,6 +23,53 @@ export const TAILLE_MAX_ENVOI = 3500000;
 
 /** Une fiche plus lourde que cette taille ne part jamais : elle reste sur l'appareil. Elle doit tenir dans un envoi. */
 export const TAILLE_MAX_FICHE_ENVOI = 3000000;
+
+/** La taille des données à la dernière synchronisation réussie : un envoi qui les réduit de moitié est suspect. */
+const CLE_TAILLE_CONNUE = 'troupeau:v1:sync-taille-connue';
+
+/** En dessous de cette taille, les données sont trop petites pour que le garde-fou compare quoi que ce soit. */
+const TAILLE_MINI_CONTROLEE = 100000;
+
+/** La part des données qui doit rester sur l'appareil pour qu'un envoi ne soit pas suspect. */
+const PART_MINI_ENVOYABLE = 0.5;
+
+/** Un envoi qui réduit trop les données de l'appareil : il ne part pas sans confirmation. */
+export class EnvoiSuspect extends Error {
+  constructor(
+    readonly tailleLocale: number,
+    readonly tailleConnue: number,
+  ) {
+    super('Envoi suspect');
+  }
+}
+
+export interface OptionsEnvoi {
+  /** Envoyer même si les données de l'appareil ont beaucoup diminué (après une confirmation). */
+  forcer?: boolean;
+}
+
+/** La taille des données synchronisées de l'appareil, en caractères. */
+async function tailleLocale(): Promise<number> {
+  let total = 0;
+  for (const cle of (await AsyncStorage.getAllKeys()).filter(estSynchronisable)) {
+    total += (await AsyncStorage.getItem(cle))?.length ?? 0;
+  }
+  return total;
+}
+
+/** Bloque l'envoi si les données de l'appareil ont presque disparu depuis la dernière synchronisation (une restauration vide, par exemple). */
+async function verifierTailleAvantEnvoi(forcer: boolean | undefined): Promise<void> {
+  if (forcer) return;
+  const connue = Number((await AsyncStorage.getItem(CLE_TAILLE_CONNUE)) ?? 0);
+  if (connue < TAILLE_MINI_CONTROLEE) return;
+  const locale = await tailleLocale();
+  if (locale < connue * PART_MINI_ENVOYABLE) throw new EnvoiSuspect(locale, connue);
+}
+
+/** Après une synchronisation réussie, la taille actuelle des données devient la référence. */
+async function noterTailleConnue(): Promise<void> {
+  await AsyncStorage.setItem(CLE_TAILLE_CONNUE, String(await tailleLocale()));
+}
 
 /** Une seule synchronisation à la fois : sinon deux envois pourraient partir ensemble. */
 let enCours: Promise<unknown> | null = null;
@@ -66,9 +110,11 @@ export interface BilanEnvoi {
  * Envoie au serveur, par lots, tout ce qui attend dans la file. Une fiche que le serveur refuse (trop lourde, mal formée) reste sur l'appareil
  * et n'empêche pas les autres de partir. Une erreur de connexion ou de réseau arrête l'envoi : ce qui reste part à la prochaine fois.
  */
-export function envoyerAttente(): Promise<BilanEnvoi> {
+export function envoyerAttente(options: OptionsEnvoi = {}): Promise<BilanEnvoi> {
   return enExclusivite(async () => {
+    await verifierTailleAvantEnvoi(options.forcer);
     const jeton = await jetonDeConnexion();
+    const exploitation = await exploitationDeLaConnexion();
     let envoyees = 0;
     const refusees = new Set<string>();
     for (;;) {
@@ -81,7 +127,7 @@ export function envoyerAttente(): Promise<BilanEnvoi> {
 
       const { statut, json } = await appeler('pousser', 'POST', {
         jeton,
-        corps: { etablissement: EXPLOITATION_SYNC, modifications: lot },
+        corps: { etablissement: exploitation, modifications: lot },
       });
       if (statut === 401) throw new ConnexionExpiree(json.erreur);
       if (statut !== 200) throw new Error(json.erreur ?? 'Envoi impossible.');
@@ -104,13 +150,14 @@ export function envoyerAttente(): Promise<BilanEnvoi> {
 export function recevoirChangements(fichesRecues?: Set<string>): Promise<number> {
   return enExclusivite(async () => {
     const jeton = await jetonDeConnexion();
+    const exploitation = await exploitationDeLaConnexion();
     let recues = 0;
     // Les fichiers joints citées par les fiches reçues : téléchargés une fois la réception finie.
     for (;;) {
       const depuis = (await lireCurseur()) ?? 0;
       const { statut, json } = await appeler('tirer', 'GET', {
         jeton,
-        parametres: `&etablissement=${EXPLOITATION_SYNC}&depuis=${depuis}`,
+        parametres: `&etablissement=${exploitation}&depuis=${depuis}`,
       });
       if (statut === 401) throw new ConnexionExpiree(json.erreur);
       if (statut !== 200) throw new Error(json.erreur ?? 'Réception impossible.');
@@ -133,7 +180,8 @@ export function recevoirChangements(fichesRecues?: Set<string>): Promise<number>
       await ecrireCurseur(Number(json.curseur));
       if (!json.encore) {
         // Toutes les pièces des données de l'appareil, et non seulement celles de cette réception : une pièce pas encore envoyée est reprise ici.
-        await recevoirPiecesManquantes(EXPLOITATION_SYNC, await piecesDeLAppareil());
+        await recevoirPiecesManquantes(exploitation, await piecesDeLAppareil());
+        await noterTailleConnue();
         return recues;
       }
     }
@@ -145,7 +193,7 @@ export function recevoirChangements(fichesRecues?: Set<string>): Promise<number>
  * en a une autre (une valeur par défaut, par exemple, qui écraserait des espèces déjà enregistrées). Seules les fiches que le serveur ne connaît
  * pas encore partent ensuite.
  */
-export async function premiereSynchronisation(): Promise<BilanEnvoi> {
+export async function premiereSynchronisation(options: OptionsEnvoi = {}): Promise<BilanEnvoi> {
   if ((await lireCurseur()) !== undefined) return { envoyees: 0, refusees: 0 };
   const fichesDuServeur = new Set<string>();
   await recevoirChangements(fichesDuServeur);
@@ -155,20 +203,21 @@ export async function premiereSynchronisation(): Promise<BilanEnvoi> {
     if (valeur === undefined) continue;
     await ajouterAttente(modificationsDe(cle, undefined, valeur).filter((m) => !fichesDuServeur.has(cleFiche(m))));
   }
-  return envoyerAttente();
+  return envoyerAttente(options);
 }
 
 /** Une synchronisation complète : ce que cet appareil a envoyé, puis ce que les autres ont envoyé. */
-export async function synchroniser(): Promise<BilanEnvoi> {
+export async function synchroniser(options: OptionsEnvoi = {}): Promise<BilanEnvoi> {
   await mettreEnFileLesPiecesAnciennes();
+  const exploitation = await exploitationDeLaConnexion();
   if ((await lireCurseur()) === undefined) {
-    const bilan = await premiereSynchronisation();
-    await envoyerPiecesEnAttente(EXPLOITATION_SYNC);
+    const bilan = await premiereSynchronisation(options);
+    await envoyerPiecesEnAttente(exploitation);
     return bilan;
   }
-  const bilan = await envoyerAttente();
+  const bilan = await envoyerAttente(options);
   // Les fichiers joints partent après les fiches qui les citent, puis on reçoit ce que les autres ont envoyé (y compris leurs fichiers).
-  await envoyerPiecesEnAttente(EXPLOITATION_SYNC);
+  await envoyerPiecesEnAttente(exploitation);
   await recevoirChangements();
   return bilan;
 }

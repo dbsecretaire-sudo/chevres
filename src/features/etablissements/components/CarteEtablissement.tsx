@@ -14,7 +14,8 @@ interface Props {
   /** Dernier établissement utilisé. */
   actif: boolean;
   onChoisir: () => void;
-  onModifier: () => void;
+  /** Absent : pas de crayon (seul l'administrateur modifie un établissement). */
+  onModifier?: () => void;
   /** Ce qui attend dans cet établissement (le badge rouge du logo ; un appui sur le logo le déplie sous la ligne). */
   aTraiter: ATraiter[];
   ouvert: boolean;
@@ -77,14 +78,16 @@ export function CarteEtablissement({
             {types || TEXTES.etablissements.selecteurEtablissement.typeNonRenseigne}
           </Text>
         </View>
-        <Pressable
-          style={styles.crayon}
-          hitSlop={10}
-          onPress={onModifier}
-          accessibilityLabel={TEXTES.etablissements.selecteurEtablissement.modifier}
-        >
-          <Ionicons name="create-outline" size={22} color={colors.textMuted} />
-        </Pressable>
+        {onModifier ? (
+          <Pressable
+            style={styles.crayon}
+            hitSlop={10}
+            onPress={onModifier}
+            accessibilityLabel={TEXTES.etablissements.selecteurEtablissement.modifier}
+          >
+            <Ionicons name="create-outline" size={22} color={colors.textMuted} />
+          </Pressable>
+        ) : null}
       </Pressable>
       {ouvert && aTraiter.length > 0 ? (
         <ATraiterEtablissement items={aTraiter} onOuvrir={onOuvrirATraiter} />

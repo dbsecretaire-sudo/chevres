@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dlcDuLot, dureeDeVieDuLot, dureesDeVieDeLArticle, suffixeDeVariante, VARIANTES_DE_FROMAGE, variantesImposees, variantesPossibles } from '@/features/stock/services/dlc';
+import { dlcDuLot, dureeDeVieDuLot, dureesDeVieDeLArticle, laitsPermis, suffixeDeVariante, VARIANTES_DE_FROMAGE, variantesImposees, variantesPossibles } from '@/features/stock/services/dlc';
 import { definirDureesDeVie } from '@/features/stock/services/stock';
 import { lireArchiveStock } from '@/features/stock/repository';
 
@@ -20,9 +20,10 @@ describe('la DLC d’un fromage selon le sel et le lait', () => {
     expect(dureeDeVieDuLot(lot, archive)).toBe(5);
   });
 
-  it('rien tant qu’aucune durée n’est réglée', () => {
-    expect(dureeDeVieDuLot(lot, { dureeDeVie: undefined })).toBeUndefined();
-    expect(dlcDuLot(lot, { dureeDeVie: {} })).toBeUndefined();
+  it('sans durée réglée, la durée par défaut du fromage (frais : 21 jours) ; un autre produit n’en a pas', () => {
+    expect(dureeDeVieDuLot(lot, { dureeDeVie: undefined })).toBe(21);
+    expect(dlcDuLot(lot, { dureeDeVie: {} })).toBe('2026-11-14');
+    expect(dureeDeVieDuLot({ ...lot, article: 'savon:huile' }, { dureeDeVie: {} })).toBeUndefined();
   });
 
   it('la DLC est la fabrication plus la durée', () => {
@@ -35,11 +36,17 @@ describe('la DLC d’un fromage selon le sel et le lait', () => {
     expect(suffixeDeVariante({ sale: true, lait: 'pasteurise' })).toBe('sale|pasteurise');
   });
 
-  it('le vieux est toujours salé, le brocciu toujours salé et pasteurisé', () => {
-    expect(variantesImposees('fromage:affine')).toEqual({ sale: true });
+  it('le vieux n’est jamais salé ni au lait cru, le brocciu toujours salé et pasteurisé', () => {
+    expect(variantesImposees('fromage:affine')).toEqual({ sale: false });
+    expect(laitsPermis('fromage:affine')).toEqual([]);
+    expect(laitsPermis('fromage:frais')).toEqual(['cru', 'pasteurise', 'uht']);
     expect(variantesImposees('fromage:brocciu')).toEqual({ sale: true, lait: 'pasteurise' });
     expect(variantesImposees('fromage:frais')).toEqual({});
-    expect(variantesPossibles('fromage:affine')).toHaveLength(3);
+    expect(variantesPossibles('fromage:affine')).toEqual([]);
+    // Un affiné ajouté au stock n'a pas de type : son nom le dit.
+    expect(variantesImposees('fromage:brocciu-1', 'Brocciu affiné')).toEqual({ sale: false });
+    expect(laitsPermis('fromage:brocciu-1', 'Brocciu affiné')).toEqual([]);
+    expect(laitsPermis('fromage:brocciu-1', 'Brocciu')).toEqual(['cru', 'pasteurise', 'uht']);
     expect(variantesPossibles('fromage:brocciu')).toEqual([{ sale: true, lait: 'pasteurise' }]);
     expect(variantesPossibles('fromage:frais')).toHaveLength(6);
   });

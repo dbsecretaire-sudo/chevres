@@ -10,7 +10,7 @@ import { Screen } from '@/shared/components/Screen';
 import { SelectField } from '@/shared/components/SelectField';
 import { SelectFieldEditable } from '@/shared/components/SelectFieldEditable';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
-import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import { laboratoiresDeLaListe } from '@/features/exploitation/services/laboratoires';
 import { listFournisseurs } from '@/features/fournisseurs/repository';
@@ -137,7 +137,6 @@ export default function NouvelleAnalyseProduit() {
   }, [archive, fabricationDemandee]);
 
   const ajouterFichiers = async () => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_ANALYSES_ACCEPTES, true)) nouveaux.push(await rangerFichier(choisi));

@@ -37,7 +37,15 @@ describe('écrans terrain des zones de l’accueil', () => {
 
   it('le troupeau montre les six tuiles de la maquette, dans l’ordre ; le cheptel donne le nombre d’animaux, et le délai d’attente se signale en rouge', () => {
     const propre = tuilesDuTerrain('troupeau', comptes());
-    expect(propre.map((t) => t.cle)).toEqual(['scanner', 'naissance', 'traitement', 'mouvement', 'deces', 'cheptel']);
+    // Les six tuiles du troupeau, puis la liste « Gestion » : les réglages du cheptel et les rubriques du « Plus », en lignes (sans chiffre).
+    expect(propre.slice(0, 6).map((t) => t.cle)).toEqual(['scanner', 'naissance', 'traitement', 'mouvement', 'deces', 'cheptel']);
+    expect(propre.slice(0, 6).some((t) => t.ligne)).toBe(false);
+    // La viande est au Commerce, les réglementations aux Documents, l'argent et les bilans à la Comptabilité : la Ferme ne garde que l'historique.
+    expect(propre.slice(6).map((t) => t.titre)).toEqual(['Réglages du cheptel', 'Bilan annuel', 'Historique']);
+    expect(propre.slice(6).every((t) => t.ligne)).toBe(true);
+    expect(propre[6]).toMatchObject({ route: ROUTES.CHEPTEL_REGLAGES });
+    expect(propre[7]).toMatchObject({ route: ROUTES.CHEPTEL_BILAN });
+    expect(propre[8].route.startsWith('/rubrique/')).toBe(true);
     expect(propre.find((t) => t.cle === 'cheptel')).toMatchObject({ nombre: 236, alerte: false });
     expect(propre.find((t) => t.cle === 'traitement')?.nombre).toBeUndefined();
     const alertes = tuilesDuTerrain('troupeau', comptes({ delais: 3 }));
@@ -54,15 +62,20 @@ describe('écrans terrain des zones de l’accueil', () => {
     expect(alerte).toMatchObject({ nombre: 3, alerte: true, route: ROUTES.CHEPTEL_A_COMPLETER });
   });
 
-  it('l’atelier suit la maquette : lait, fabriquer, scanner un lot, étiquettes, vendre, stock ; un stock négatif se signale', () => {
+  it('l’atelier suit la maquette : six tuiles (fabriquer, scanner un lot, vendre, lait, stock, recettes), et des menus dessous ; un stock négatif se signale', () => {
     const tuiles = tuilesDuTerrain('atelier', comptes({ viandeAFacturer: 4, stockNegatif: true, lotsARappeler: 1 }));
-    expect(tuiles.map((t) => t.cle)).toEqual(['lait', 'fabriquer', 'scanLot', 'etiquettes', 'ventes', 'stock']);
+    const tuilesPrincipales = tuiles.filter((t) => !t.ligne).map((t) => t.cle);
+    expect(tuilesPrincipales.sort()).toEqual(['fabriquer', 'lait', 'recettes', 'scanLot', 'stock', 'ventes']);
     // Toutes les ventes sont réunies dans une tuile « Vendre », sans chiffre.
     expect(tuiles.find((t) => t.cle === 'ventes')).toMatchObject({ titre: 'Vendre' });
     expect(tuiles.find((t) => t.cle === 'ventes')?.nombre).toBeUndefined();
     expect(tuiles.find((t) => t.cle === 'stock')?.alerte).toBe(true);
-    // Les lots, le cadre réglementaire (dans le menu « Plus ») et les contacts ne sont pas sur l'atelier.
-    expect(tuiles.some((t) => t.cle === 'lotsAtelier' || t.cle === 'cadreReglementaire' || t.cle === 'contacts')).toBe(false);
+    // Les menus : les lots (avec les étiquettes et la viande), la réglementation, les partenaires, les bilans et l'argent.
+    expect(tuiles.filter((t) => t.ligne && t.groupe === 'Lots').map((t) => t.cle)).toEqual(['etiquettes', 'lotsDeLAtelier', 'viandeAtelier', 'historiqueRappels']);
+    // L'argent, les bilans et les partenaires ne sont plus dans l'atelier : ils sont dans la Comptabilité et les Contacts.
+    expect(tuiles.filter((t) => t.ligne && ['Argent', 'Bilans', 'Partenaires'].includes(t.groupe ?? '')).length).toBe(0);
+    // Le contact n'est pas sur l'atelier.
+    expect(tuiles.some((t) => t.cle === 'contacts')).toBe(false);
     // « Fabriquer » ouvre sa propre page, et c'est là que les quatre fabrications ouvrent la page de leur produit.
     expect(tuiles.find((t) => t.cle === 'fabriquer')?.route).toBe(ROUTES.terrain('fabriquer'));
     const fabriquer = tuilesDuTerrain('fabriquer', comptes());

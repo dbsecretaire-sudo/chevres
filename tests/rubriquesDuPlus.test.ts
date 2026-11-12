@@ -3,8 +3,8 @@ import { RUBRIQUES, RUBRIQUES_DU_PLUS, titreDeLaRubrique } from '@/features/accu
 import { ROUTES } from '@/shared/constants/routes';
 
 describe('les rubriques du mode avancé', () => {
-  it('le menu « Plus » a les six rubriques de la maquette, dans son ordre, et chacune a sa page', () => {
-    expect(RUBRIQUES_DU_PLUS.map((r) => r.cle)).toEqual(['reglementation', 'argent', 'partenaires', 'bilans', 'historique', 'reglages']);
+  it('le menu « Plus » a ses rubriques de la maquette, dans son ordre, et chacune a sa page', () => {
+    expect(RUBRIQUES_DU_PLUS.map((r) => r.cle)).toEqual(['reglementation', 'partenaires', 'bilans', 'historique', 'reglages']);
     for (const r of RUBRIQUES_DU_PLUS) expect(RUBRIQUES[r.cle]).toBeDefined();
   });
 
@@ -16,9 +16,8 @@ describe('les rubriques du mode avancé', () => {
     }
   });
 
-  it('Ventes est dans Argent, Clients et Contacts sont dans Partenaires, comme sur la maquette', () => {
+  it('Clients et Contacts sont dans Partenaires, comme sur la maquette', () => {
     const routesDe = (nom: string) => RUBRIQUES[nom].sections.flatMap((s) => s.lignes.map((l) => l.route));
-    expect(routesDe('argent')).toContain(ROUTES.COMMERCIAL_VENTES);
     expect(routesDe('partenaires')).toContain(ROUTES.CLIENTS);
     expect(routesDe('partenaires')).toContain(ROUTES.CONTACTS);
   });
@@ -26,7 +25,7 @@ describe('les rubriques du mode avancé', () => {
   it('le mouvement des chèvres propose l’entrée, la vente vivante, l’abattoir et les sorties', () => {
     const routes = RUBRIQUES.mouvement.sections.flatMap((s) => s.lignes.map((l) => l.route));
     // La sortie « Sortie ou mort » ouvre la page Décès, comme la tuile Décès des chèvres : un seul chemin pour déclarer un décès.
-    expect(routes).toEqual([ROUTES.CHEPTEL_NOUVELLE, ROUTES.VENTES_VIVANTS, ROUTES.lotAbattoirNouveau(), ROUTES.CHEPTEL_DECES]);
+    expect(routes).toEqual([ROUTES.CHEPTEL_NOUVELLE, ROUTES.VENTES_VIVANTS, ROUTES.lotAbattoirNouveau(), ROUTES.CHEPTEL_DECES, ROUTES.lieu('equarrissage')]);
   });
 
   it('le titre d’une rubrique vient de sa page ; une rubrique inconnue n’a pas de titre', () => {

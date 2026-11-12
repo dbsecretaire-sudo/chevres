@@ -18,8 +18,8 @@ export const SEPARATEUR_CLE = ':';
 /** Segment ajouté au préfixe pour les établissements autres que l'établissement historique. */
 export const SEGMENT_ETABLISSEMENT = 'e';
 
-/** L'établissement historique garde le préfixe d'origine : les données déjà saisies restent accessibles sans migration. */
-export const ID_ETABLISSEMENT_DEFAUT = 'defaut';
+/** L'établissement par défaut est l'exploitation du serveur « exploitation » : il garde le préfixe d'origine, les données restent sans migration. */
+export const ID_ETABLISSEMENT_DEFAUT = 'exploitation';
 
 /** Noms (suffixes) des clés de stockage. */
 export const CLE_STOCKAGE = {
@@ -34,6 +34,8 @@ export const CLE_STOCKAGE = {
   IDENTIFICATION: 'identification',
   /** Les déclarations à la Chambre d'agriculture (une par année et espèce, avec leur fichier). Zone synchronisée, pour que le web et les autres appareils les voient. */
   DECLARATIONS_CHAMBRE: 'declarations-chambre',
+  /** Les primes prévisionnelles (le paramétrage des aides : taux, plafonds, coefficients, effectifs déclarés). Zone synchronisée, pour être les mêmes sur tous les appareils. */
+  PRIMES_PREVISIONNELLES: 'primes-previsionnelles',
   /** Les tiers que l'utilisateur ajoute aux partenaires ou en retire (Organisation, dans Partenaires). */
   PARTENAIRES: 'partenaires',
   /** La date de la dernière sauvegarde (fichier ou Google Drive) : l'accueil rappelle d'en faire une quand elle date de trop. */

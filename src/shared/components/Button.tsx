@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, Text, type TextStyle, type ViewStyle } from 'react-native';
 
 import { BadgeAlerte } from '@/shared/components/BadgeAlerte';
 import { useAccentColor, useAccentSoftColor } from '@/shared/theme/AccentColorContext';
@@ -13,11 +13,13 @@ interface Props {
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
+  /** La taille du texte, quand le bouton doit être plus grand que les autres. */
+  styleTexte?: TextStyle;
   /** Un « ! » rouge sur le bouton : c'est ici qu'on fait ce qui est à faire. */
   badge?: boolean;
 }
 
-export function Button({ label, onPress, variant = 'primary', loading, disabled, style, badge }: Props) {
+export function Button({ label, onPress, variant = 'primary', loading, disabled, style, styleTexte, badge }: Props) {
   const accent = useAccentColor();
   const accentSoft = useAccentSoftColor();
   const isDisabled = disabled || loading;
@@ -49,6 +51,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
             comptable && styles.texteCompact,
             variant === 'secondary' && { color: accent },
             variant === 'danger' && styles.texteDanger,
+            styleTexte,
           ]}
         >
           {label}

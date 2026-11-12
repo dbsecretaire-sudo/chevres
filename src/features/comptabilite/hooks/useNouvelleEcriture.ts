@@ -4,6 +4,7 @@ import {
   useState,
 } from 'react';
 import { useRetour } from '@/shared/navigation/origineRetour';
+import { useConfirmerSortie } from '@/shared/hooks/useConfirmerSortie';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import type { Commande, LigneCommande } from '@/features/commercial/types';
 import type { Chevre } from '@/features/cheptel/types';
@@ -614,6 +615,24 @@ export function useNouvelleEcriture(
     if (elements[0]) appliquerElement(elements[0]);
   };
 
+  /** Vrai dès qu'une donnée est saisie (les choix par défaut ne comptent pas) : quitter alors demande confirmation. */
+  const saisieCommencee =
+    description.trim() !== '' ||
+    montant.trim() !== '' ||
+    tiers.trim() !== '' ||
+    numeroFacture.trim() !== '' ||
+    quantite.trim() !== '' ||
+    poidsKg.trim() !== '' ||
+    fraisAbattoir.trim() !== '' ||
+    bouclesDebut.trim() !== '' ||
+    motifVisite.trim() !== '' ||
+    animaux.length > 0 ||
+    fromages.length > 0 ||
+    stockArticle !== '' ||
+    clientId !== '' ||
+    fournisseurId !== '';
+  const sortie = useConfirmerSortie(saisieCommencee);
+
   /** Enregistre l'écriture, puis ferme l'écran ; avec `enchainer`, reste dessus pour saisir la suivante. */
   const enregistrer = async (enchainer = false) => {
     setEnregistrement(true);
@@ -786,7 +805,10 @@ export function useNouvelleEcriture(
           setEcheance(commande?.echeance ?? '');
         }
         suiteDeLaCommande.current = null;
-      } else retour();
+      } else {
+        sortie.laisserPartir();
+        retour();
+      }
     } finally {
       setEnregistrement(false);
     }
@@ -812,6 +834,7 @@ export function useNouvelleEcriture(
     montant: offertCoche && estProductionVente ? '0,00' : montant,
     setMontant,
     enregistrement,
+    sortie,
     erreur,
     setErreur,
     enregistrer,

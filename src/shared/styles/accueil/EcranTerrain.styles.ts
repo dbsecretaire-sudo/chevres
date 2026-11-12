@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
+import { LARGEUR_TUILE } from '@/shared/theme/miseEnPage';
 
 /** De grandes zones à toucher (plus de 100 points de haut) : de quoi les atteindre avec des gants ou les mains sales. */
 export const styles = StyleSheet.create({
   contenu: { padding: 12, gap: 12, paddingBottom: 24 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   tuile: {
-    flexBasis: '47%',
+    flexBasis: LARGEUR_TUILE,
     flexGrow: 1,
     minHeight: 112,
     borderRadius: 18,

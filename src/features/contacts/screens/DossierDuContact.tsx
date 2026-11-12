@@ -9,7 +9,7 @@ import { ChampRecherche } from '@/shared/components/ChampRecherche';
 import { entreeDuContact } from '@/features/contacts/components/DossiersDuContact';
 import { getContact } from '@/features/contacts/repository';
 import type { Contact } from '@/features/contacts/services/contacts';
-import { choisirFichiers, piecesDisponibles, rangerFichier } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier } from '@/features/fichiers/services/pieces';
 import {
   enregistrerContenu,
   listTousControles,
@@ -118,7 +118,6 @@ export default function DossierDuContact() {
   /** Chaque fichier choisi (Word, Excel, PDF, image) devient un contenu terminé de ce dossier. */
   const importer = async () => {
     if (!entree) return;
-    if (!piecesDisponibles()) return setErreur(TEXTES.fichiers.indisponibleWeb);
     try {
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {
         const piece = await rangerFichier(choisi);

@@ -5,7 +5,7 @@ import { lireArchiveCommercial, enregistrerEtapeAccueil } from '@/features/comme
 import { etapesAccueilManquantes } from '@/features/commercial/services/accueilPublic';
 import type { ArchiveCommercial } from '@/features/commercial/types';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
-import { choisirFichiers, piecesDisponibles, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
+import { choisirFichiers, rangerFichier, supprimerPiece } from '@/features/fichiers/services/pieces';
 import type { PieceJointe } from '@/features/fichiers/types';
 import type { EtapeReglementaire } from '@/features/stock/types';
 import { Checkbox } from '@/shared/components/Checkbox';
@@ -58,7 +58,6 @@ export default function AccueilPublic() {
     await charger();
   };
   const ajouterFichiers = async (e: string) => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) nouveaux.push(await rangerFichier(choisi));

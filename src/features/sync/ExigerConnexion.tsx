@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { lireConnexion, seConnecter, type Connexion } from '@/features/sync/synchronisation';
+import { lireConnexion, seConnecter, surDeconnexion, type Connexion } from '@/features/sync/synchronisation';
 import { colors } from '@/shared/theme/colors';
 
 /**
@@ -15,6 +15,8 @@ export function ExigerConnexion({ children }: { children: ReactNode }) {
       .then(setConnexion)
       .catch(() => setConnexion(null));
   }, []);
+  // Une déconnexion (depuis Plus) referme l'accès : le formulaire de connexion revient.
+  useEffect(() => surDeconnexion(() => setConnexion(null)), []);
   if (connexion === undefined) return null;
   if (connexion) return <>{children}</>;
   return <FormulaireConnexion onConnecte={setConnexion} />;

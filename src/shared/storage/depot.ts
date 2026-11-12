@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PREFIXE_STOCKAGE, SEPARATEUR_CLE } from '@/shared/constants/stockage';
+import { modeSimpleActif } from '@/shared/hooks/useModeSimple';
 import { fusionnerModifications, modificationsDe, type Modification } from '@/shared/storage/fiches';
 
 /** La file des modifications pas encore envoyées au serveur, sur cet appareil. */
@@ -9,7 +10,8 @@ export const CLE_ATTENTE = 'troupeau:v1:sync-attente';
 export const CLE_CURSEUR = 'troupeau:v1:sync-curseur';
 
 /** Les segments des clés qui restent propres à l'appareil : les années et les index (ils se reconstruisent), les réglages, les dates de sauvegarde, l'établissement actif. */
-const SEGMENTS_LOCAUX = ['index', 'years', 'settings', 'derniere-sauvegarde', 'etablissement-actif'];
+// La liste des établissements est une copie de celle du serveur : elle ne se synchronise pas.
+const SEGMENTS_LOCAUX = ['index', 'years', 'settings', 'derniere-sauvegarde', 'etablissement-actif', 'etablissements'];
 
 /** Les clés propres à l'appareil : jamais envoyées au serveur. */
 export function estSynchronisable(cle: string): boolean {
@@ -80,7 +82,9 @@ export function ecrireDonnee(cle: string, valeur: unknown): Promise<void> {
 
     const modifications = modificationsDe(cle, avant, valeur);
     if (modifications.length === 0) return;
-    await ecrireAttenteSansVerrou(fusionnerModifications([...(await lireAttente()), ...modifications]));
+    // En mode normal, la saisie attend la validation (un modérateur ou un administrateur la valide ou la refuse, comme pour un utilisateur).
+    const aMettre = modeSimpleActif() ? modifications.map((modification) => ({ ...modification, enAttente: true })) : modifications;
+    await ecrireAttenteSansVerrou(fusionnerModifications([...(await lireAttente()), ...aMettre]));
   });
 }
 

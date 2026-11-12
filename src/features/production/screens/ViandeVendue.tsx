@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
+import { noterOrigine } from '@/shared/navigation/origineRetour';
 import { FlatList, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { LotsViandeSimple } from '@/features/production/simple/LotsViandeSimple';
@@ -82,8 +82,6 @@ type SorteDeVendus = 'morts' | 'vivants';
 function ViandeVendueComplete() {
   const router = useRouter();
   const simple = useRole().role === ROLE.BERGER;
-  /** L'adresse de cet écran : la fiche d'un animal ouverte d'ici y revient. */
-  const retour = useAdresseCourante();
   const { espece } = useEtablissement();
   const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
   const regrouper = !!settings.toutesAnnees;
@@ -198,9 +196,11 @@ function ViandeVendueComplete() {
   );
   const groupesAFacturer = groupes.filter((g) => g.avecBoucle);
   const { lots, creer } = useLots();
-  /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à la viande. */
-  const ouvrirLot = (id: string) =>
-    `${ROUTES.lotDeProduction(id)}&retour=${encodeURIComponent(ROUTES.PRODUCTION_VIANDE)}`;
+  /** L'adresse de cet écran, avec son onglet et son sous-onglet : ce qu'on ouvre d'ici (vente, animal, lot) y revient à cet endroit précis. */
+  const sousDeLaPage = onglet === 'vendue' ? sousOnglet : onglet === 'avendre' ? dispo : undefined;
+  const adresseDeLaPage = `${ROUTES.PRODUCTION_VIANDE}?onglet=${onglet}${sousDeLaPage ? `&sous=${sousDeLaPage}` : ''}`;
+  /** Un lot (d'abattoir ou d'animaux vendus) ouvert d'ici : la flèche de retour revient à cet onglet de la viande. */
+  const ouvrirLot = (id: string) => `${ROUTES.lotDeProduction(id)}&retour=${encodeURIComponent(adresseDeLaPage)}`;
   const parNaissance = (a: Chevre, b: Chevre) => b.dateNaissance.localeCompare(a.dateNaissance);
   const sansBoucle = [...animaux.values()].filter((a) => especeDe(a) === espece && !a.numeroBoucle?.trim());
   /** À vendre : les animaux sans boucle vivants, ou déjà à l'abattoir, qu'aucune vente ne désigne. */
@@ -546,7 +546,10 @@ function ViandeVendueComplete() {
                   onPress={
                     simple
                       ? undefined
-                      : () => router.push(ROUTES.ficheVenteDepuis(item.id, ROUTES.PRODUCTION_VIANDE) as never)
+                      : () => {
+                          noterOrigine(adresseDeLaPage, ROUTES.ficheVente(item.id));
+                          router.push(ROUTES.ficheVente(item.id) as never);
+                        }
                   }
                 />
               </LigneDeBloc>
@@ -611,7 +614,10 @@ function ViandeVendueComplete() {
                   {
                     label: TEXTES.cheptel.reservation.ouvrirLaFiche,
                     icon: 'paw' as const,
-                    onPress: () => router.push(ROUTES.ficheChevreDepuis(menu.id, retour)),
+                    onPress: () => {
+                      noterOrigine(adresseDeLaPage, ROUTES.ficheChevre(menu.id));
+                      router.push(ROUTES.ficheChevre(menu.id) as never);
+                    },
                   },
                 ]
               : []

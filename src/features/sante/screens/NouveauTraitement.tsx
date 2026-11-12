@@ -10,11 +10,11 @@ import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { ChampBoucles } from '@/features/lots-animaux/components/ChampBoucles';
 import { ChampVisiteLiee } from '@/features/sante/components/ChampVisiteLiee';
 import { useLots } from '@/features/lots-animaux/hooks/useLots';
+import { useConfirmerSortie } from '@/shared/hooks/useConfirmerSortie';
 import { listToutesVisitesVeterinaire } from '@/features/sante/repository/visitesVeterinaire';
 import { ListeFichiers } from '@/features/fichiers/components/ListeFichiers';
 import {
   choisirFichiers,
-  piecesDisponibles,
   rangerFichier,
   supprimerPiece,
 } from '@/features/fichiers/services/pieces';
@@ -72,6 +72,10 @@ export default function NouveauTraitement() {
   const retires = useRef<PieceJointe[]>([]);
   const ajoutes = useRef<PieceJointe[]>([]);
   const enregistre = useRef(false);
+  /** Une création avec une donnée saisie : quitter sans enregistrer demande confirmation (une fiche existante ne se perd pas ainsi). */
+  const sortie = useConfirmerSortie(
+    !id && (produit.trim() !== '' || motif.trim() !== '' || boucles.trim() !== '' || notes.trim() !== '' || fichiers.length > 0),
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -129,7 +133,6 @@ export default function NouveauTraitement() {
   const parLaVisite = !!visiteId;
 
   const ajouterFichiers = async () => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const nouveaux: PieceJointe[] = [];
       for (const choisi of await choisirFichiers(TYPES_FICHIERS_ACCEPTES, true)) {
@@ -178,6 +181,7 @@ export default function NouveauTraitement() {
         fichiers: fichiers.length > 0 ? fichiers : undefined,
       });
       enregistre.current = true;
+      sortie.laisserPartir();
       await Promise.all(retires.current.map((p) => supprimerPiece(p)));
       retournerALaPageDAvant(router);
     } finally {
@@ -262,6 +266,14 @@ export default function NouveauTraitement() {
           confirmLabel={TEXTES.commun.general.supprimer}
           onCancel={() => setSuppressionOuverte(false)}
           onConfirm={supprimer}
+        />
+        <ConfirmModal
+          visible={sortie.enAttente}
+          title={TEXTES.commun.sortieSansEnregistrer.titre}
+          message={TEXTES.commun.sortieSansEnregistrer.message}
+          confirmLabel={TEXTES.commun.sortieSansEnregistrer.quitter}
+          onCancel={sortie.rester}
+          onConfirm={sortie.quitter}
         />
       </Screen>
     </AccentColorProvider>

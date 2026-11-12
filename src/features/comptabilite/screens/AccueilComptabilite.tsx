@@ -35,13 +35,6 @@ export default function AccueilComptabilite() {
   /** Les écritures, avec l'inventaire de l'exploitation. */
   const ecritures: Rubrique[] = [
     { cle: 'ecritures', titre: T.ecritures, icone: 'list', route: ROUTES.COMPTABILITE_LISTE },
-    {
-      cle: 'contacts',
-      titre: TEXTES.contacts.titre,
-      aide: TEXTES.contacts.aideRubrique,
-      icone: 'people',
-      route: ROUTES.CONTACTS,
-    },
     ...(inventaireAccessible()
       ? [
           {
@@ -70,6 +63,7 @@ export default function AccueilComptabilite() {
       route: ROUTES.RENTABILITE,
     },
     { cle: 'tva', titre: T.tva.titre, aide: T.tva.aide, icone: 'pricetag', route: ROUTES.TVA },
+    { cle: 'bilans', titre: 'Bilans', aide: 'Bilan annuel, rentabilité, export', icone: 'stats-chart', route: ROUTES.rubrique('bilans') },
   ];
   /** Les déclarations, avec les comptes du plan comptable (toujours à portée). */
   const declarations: Rubrique[] = [
@@ -80,6 +74,9 @@ export default function AccueilComptabilite() {
       icone: 'receipt',
       route: ROUTES.FISCALITE,
     },
+  ];
+  /** Les comptes et les véhicules : le plan comptable, les comptes, et la flotte (les véhicules et leurs assurances). */
+  const comptesEtVehicules: Rubrique[] = [
     {
       cle: 'comptes',
       titre: TEXTES.settings.reglages.comptesPcg,
@@ -87,6 +84,8 @@ export default function AccueilComptabilite() {
       icone: 'list',
       route: ROUTES.COMPTES_PCG,
     },
+    { cle: 'plan', titre: TEXTES.comptesPcg.planGeneral.titre, icone: 'book', route: ROUTES.PLAN_COMPTABLE },
+    { cle: 'flotte', titre: TEXTES.flotte.titre, aide: 'Les véhicules de l’exploitation et leurs assurances', icone: 'car', route: ROUTES.FLOTTE },
   ];
   const technique: Rubrique[] = [
     {
@@ -101,6 +100,7 @@ export default function AccueilComptabilite() {
     { titre: G.ecritures, lignes: ecritures },
     { titre: G.pilotage, lignes: pilotage },
     { titre: G.declarations, lignes: declarations },
+    { titre: 'Comptes et véhicules', lignes: comptesEtVehicules },
     { titre: G.technique, lignes: technique },
   ];
   return (

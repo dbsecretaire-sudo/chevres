@@ -11,7 +11,8 @@ interface Props {
   actifId: string;
   aTraiterDe: (id: string) => ATraiter[];
   onChoisir: (id: string) => void;
-  onModifier: (id: string) => void;
+  /** Absent : pas de « Modifier » (seul l'administrateur modifie un établissement). */
+  onModifier?: (id: string) => void;
 }
 
 /**
@@ -30,11 +31,12 @@ export function TableauEtablissements({ etablissements, actifId, aTraiterDe, onC
       aligne: 'droite',
       triable: false,
       valeur: () => '',
-      rendu: (e) => (
-        <Pressable onPress={() => onModifier(e.id)} hitSlop={6} accessibilityRole="button">
-          <Text style={styles.lien}>{TEXTES.commun.general.modifier}</Text>
-        </Pressable>
-      ),
+      rendu: (e) =>
+        onModifier ? (
+          <Pressable onPress={() => onModifier(e.id)} hitSlop={6} accessibilityRole="button">
+            <Text style={styles.lien}>{TEXTES.commun.general.modifier}</Text>
+          </Pressable>
+        ) : null,
     },
   ];
   return (

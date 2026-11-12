@@ -238,9 +238,9 @@ export function ArticleStockModal({
             // Repliée d'office : la fenêtre reste courte sur un téléphone, où le champ de l'image s'ajoute déjà.
             <SectionDeroulante titre={T.dlcJours} ouverte={dlcOuverte} onBasculer={() => setDlcOuverte((o) => !o)}>
               <Text style={commonStyles.note}>{T.dlcFromageAide}</Text>
-              {TYPES_DE_LAIT.filter((lait) => variantesPossibles(cle ?? '').some((v) => v.lait === lait)).map((lait) => (
+              {TYPES_DE_LAIT.filter((lait) => variantesPossibles(cle ?? '', nom ?? '').some((v) => v.lait === lait)).map((lait) => (
                 <View key={lait} style={commonStyles.row}>
-                  {[false, true].filter((sale) => variantesPossibles(cle ?? '').some((v) => v.lait === lait && v.sale === sale)).map((sale) => {
+                  {[false, true].filter((sale) => variantesPossibles(cle ?? '', nom ?? '').some((v) => v.lait === lait && v.sale === sale)).map((sale) => {
                     const suffixe = suffixeDeVariante({ sale, lait });
                     return (
                       <View key={suffixe} style={commonStyles.flex1}>

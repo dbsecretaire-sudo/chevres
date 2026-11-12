@@ -162,7 +162,7 @@ const PARENTS: [RegExp, (m: RegExpExecArray, p: ParametresDePage) => string][] =
   [/^\/organisation-categories-(client|tiers)$/, () => ROUTES.ORGANISATION_TIERS],
   [/^\/documents-identification$/, () => ROUTES.ORGANISATION_ETABLISSEMENT],
   [/^\/document-identification$/, () => ROUTES.DOCUMENTS_IDENTIFICATION],
-  [/^\/(export-donnees|pdf-donnees|sauvegarde-locale|google-drive)$/, () => ROUTES.ORGANISATION_DONNEES],
+  [/^\/(export-donnees|pdf-donnees|sauvegarde-locale|copies-automatiques|google-drive)$/, () => ROUTES.ORGANISATION_DONNEES],
   [/^\/structure-dossiers$/, () => ROUTES.ORGANISATION_ETABLISSEMENT],
   [/^\/clients\/(?!liste$|index$|journal$|dossiers-clients$|nouveau$)[^/]+$/, () => ROUTES.CLIENTS],
   [/^\/clients\/(nouveau|journal|dossiers-clients)$/, () => ROUTES.CLIENTS],

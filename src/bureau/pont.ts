@@ -6,12 +6,27 @@ export interface MenuBureau {
   items?: ({ label: string; route: string } | { separateur: true; titre?: string })[];
 }
 
+/** Une copie quotidienne des données (ou une copie gardée avant une restauration), telle que l'ordinateur la liste. */
+export interface CopieDonnees {
+  nom: string;
+  taille: number;
+  /** La date de la dernière écriture du fichier (ISO). */
+  modifiee: string;
+  /** Le nombre de rubriques enregistrées dans la copie, ou null si elle ne se lit pas. */
+  rubriques: number | null;
+}
+
 /** Le pont de la version Windows (voir bureau/preload.js) : ce que l'ordinateur offre à l'application, et seulement cela. */
 export interface PontBureau {
   /** Toutes les données enregistrées au démarrage. */
   donnees: Record<string, string>;
   dossiers: { documents: string; cache: string };
   ecrireStockage: (ecrire: Record<string, string>, retirer: string[]) => Promise<void>;
+  /** Les copies automatiques des données : la liste, et la restauration de l'une d'elles (l'application se rouvre ensuite). */
+  copies: {
+    lister: () => Promise<CopieDonnees[]>;
+    restaurer: (nom: string) => Promise<void>;
+  };
   fichiers: {
     creerDossier: (chemin: string) => Promise<void>;
     copier: (de: string, vers: string) => Promise<void>;

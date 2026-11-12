@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
 import { LigneDeBloc } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
-import { PucesDefilantes } from '@/shared/components/PucesDefilantes';
 import { Fab } from '@/shared/components/Fab';
 import { FlecheRetourDepuis } from '@/shared/components/FlecheRetourDepuis';
 import {
@@ -20,6 +20,7 @@ import { portraitDeTiers } from '@/features/contacts/services/portraitTiers';
 import { categorieDuContact } from '@/features/contacts/services/fiche';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { ROUTES } from '@/shared/constants/routes';
+import { colors } from '@/shared/theme/colors';
 import { TEXTES } from '@/shared/textes';
 import { TableauContacts } from '@/features/contacts/components/TableauContacts';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
@@ -29,9 +30,16 @@ const T = TEXTES.contacts;
 const TOUTES = 'toutes';
 const A_CHOISIR = 'a-choisir';
 
+/** Un groupe de la liste : sa catégorie (le titre du groupe) et ses contacts. */
+interface Groupe {
+  titre: string;
+  data: Contact[];
+}
+
 /**
  * Les contacts : les clients et les fournisseurs en une seule liste, chacun une fois — avec « Recettes » s'il a une fiche client,
  * « Dépenses » s'il a une fiche fournisseur. Un appui ouvre sa fiche unique (une catégorie, une balance, toutes ses écritures).
+ * Les catégories se choisissent en pastilles au-dessus de la liste ; « Toutes » regroupe les contacts par catégorie.
  */
 export default function ListeContacts() {
   const router = useRouter();
@@ -43,6 +51,8 @@ export default function ListeContacts() {
   const [recherche, setRecherche] = useState('');
   /** La catégorie choisie en puce (rien : toutes ; `A_CHOISIR` : les contacts dont la catégorie est à choisir). */
   const [categorieChoisie, setCategorieChoisie] = useState(TOUTES);
+  /** La feuille des catégories est-elle ouverte ? */
+  const [choixOuvert, setChoixOuvert] = useState(false);
   const { categories, idsConnus } = useCategoriesContact();
 
   /** Ce que dit la ligne d'un contact : recettes et/ou dépenses, sa catégorie (ou « à choisir »), ses coordonnées. */
@@ -108,15 +118,30 @@ export default function ListeContacts() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contacts, recherche, categorieChoisie, idsConnus]);
 
+  // Toutes les catégories : la liste est regroupée par catégorie (un titre par groupe). Une catégorie choisie : une seule liste, sans titre.
+  const groupes: Groupe[] =
+    categorieChoisie !== TOUTES
+      ? [{ titre: '', data: filtres }]
+      : [
+          ...categories.map((x) => ({ titre: x.nom, data: filtres.filter((c) => cleCategorieDe(c) === x.id) })),
+          { titre: T.categorieAChoisir, data: filtres.filter((c) => cleCategorieDe(c) === A_CHOISIR) },
+        ].filter((g) => g.data.length > 0);
+
   return (
     <Screen scroll={false}>
       <FlecheRetourDepuis retour={retour} />
-      <View style={commonStyles.topPadded}>
-        <Text style={commonStyles.note}>{T.aide}</Text>
+      {/* Le haut : le problème à classer, la recherche, et les catégories en pastilles. */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 0, gap: 8 }}>
         {aClasser > 0 ? <Text style={commonStyles.lineBold}>{T.aClasser(aClasser)}</Text> : null}
         <ChampRecherche value={recherche} onChangeText={setRecherche} placeholder={T.recherche} />
         {puces.length > 2 ? (
-          <PucesDefilantes puces={puces} valeur={categorieChoisie} onChoisir={setCategorieChoisie} />
+          // Une seule ligne : la catégorie choisie. Un appui ouvre la liste des catégories, avec leur nombre de contacts.
+          <Pressable onPress={() => setChoixOuvert(true)} accessibilityRole="button" accessibilityLabel="Choisir une catégorie" style={styles.selecteur}>
+            <Text style={styles.selecteurTexte} numberOfLines={1}>
+              {puces.find((p) => p.valeur === categorieChoisie)?.label ?? T.toutesLesCategories(contacts.length)}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={colors.primary} />
+          </Pressable>
         ) : null}
       </View>
 
@@ -129,23 +154,60 @@ export default function ListeContacts() {
           }}
         />
       ) : (
-      <FlatList
-        data={filtres}
-        keyExtractor={(item) => item.cle}
-        contentContainerStyle={commonStyles.listeBlocAvecFab}
-        ListEmptyComponent={<EmptyState title={T.aucun} subtitle={T.aucunSousTitre} />}
-        renderItem={({ item, index }) => (
-          <LigneDeBloc index={index} total={filtres.length}>
-            <ListRow
-              title={item.nom}
-              subtitle={sousTitreDe(item) || undefined}
-              emoji={portraitDeTiers(categorieDuContact(item, idsConnus).id).emoji}
-              onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
-            />
-          </LigneDeBloc>
-        )}
-      />
+        <SectionList
+          sections={groupes}
+          keyExtractor={(item) => item.cle}
+          contentContainerStyle={[commonStyles.listeBlocAvecFab, { paddingHorizontal: 16 }]}
+          stickySectionHeadersEnabled={false}
+          ListEmptyComponent={<EmptyState title={T.aucun} subtitle={T.aucunSousTitre} />}
+          renderSectionHeader={({ section }) =>
+            section.titre ? (
+              <Text style={styles.titreGroupe}>
+                {section.titre} · {section.data.length}
+              </Text>
+            ) : null
+          }
+          renderItem={({ item, index, section }) => (
+            <LigneDeBloc index={index} total={section.data.length}>
+              <ListRow
+                title={item.nom}
+                subtitle={sousTitreDe(item) || undefined}
+                emoji={portraitDeTiers(categorieDuContact(item, idsConnus).id).emoji}
+                onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
+              />
+            </LigneDeBloc>
+          )}
+        />
       )}
+
+      {/* La liste des catégories, en feuille du bas : un appui choisit, et la feuille se ferme. */}
+      <Modal visible={choixOuvert} transparent animationType="fade" onRequestClose={() => setChoixOuvert(false)}>
+        <Pressable style={styles.fond} onPress={() => setChoixOuvert(false)} accessibilityLabel={TEXTES.commun.general.fermer}>
+          <Pressable style={styles.feuille} onPress={() => undefined}>
+            <Text style={styles.feuilleTitre}>Catégorie</Text>
+            <ScrollView>
+              {puces.map((p) => {
+                const choisie = p.valeur === categorieChoisie;
+                return (
+                  <Pressable
+                    key={p.valeur}
+                    onPress={() => {
+                      setCategorieChoisie(p.valeur);
+                      setChoixOuvert(false);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: choisie }}
+                    style={[styles.ligne, choisie && styles.ligneChoisie]}
+                  >
+                    <Text style={[styles.ligneTexte, choisie && styles.ligneTexteChoisi]}>{p.label}</Text>
+                    {choisie ? <Ionicons name="checkmark" size={20} color={colors.primary} /> : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Fab
         options={[
@@ -155,3 +217,48 @@ export default function ListeContacts() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  selecteur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    backgroundColor: colors.blanc,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  selecteurTexte: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.text },
+  fond: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
+  feuille: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    padding: 16,
+    maxHeight: '70%',
+  },
+  feuilleTitre: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 8 },
+  ligne: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+  },
+  ligneChoisie: { backgroundColor: '#E4EEDF' },
+  ligneTexte: { fontSize: 15, color: colors.text },
+  ligneTexteChoisi: { fontWeight: '700', color: colors.primary },
+  titreGroupe: {
+    marginTop: 14,
+    marginBottom: 6,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
+  },
+});

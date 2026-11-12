@@ -12,7 +12,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import { useAdresseCourante } from '@/shared/hooks/useAdresseCourante';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
-import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
+import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { LigneFiltres } from '@/features/etablissements/components/LigneFiltres';
 import { ListRow } from '@/shared/components/ListRow';
 import type { Chevre } from '@/features/cheptel/types';
@@ -34,8 +34,6 @@ import { TEXTES } from '@/shared/textes';
 
 const T = TEXTES.cheptel.suiviMouvements;
 
-/** Le choix « toutes les années » de la liste. */
-const TOUTES = 'toutes';
 
 /** Les documents qui se génèrent d'un appui : un document par ligne. */
 type Document = 'suivi' | 'bordereaux' | 'recensement';
@@ -75,7 +73,8 @@ export function ContenuDossierPac({
   const retour = useAdresseCourante();
   const { espece } = useEtablissement();
   const [annees, setAnnees] = useState<number[]>([]);
-  const [choix, setChoix] = useState(String(currentYear()));
+  // L'année est celle de la barre du haut (la même partout) : pas de second choix d'année sur cette page.
+  const { settings } = useAppSettings();
   /** Le document en cours de génération (sa ligne montre un indicateur, les autres attendent). */
   const [encours, setEncours] = useState<Document | null>(null);
   /** Vrai quand les bordereaux demandés n'ont aucune perte à déclarer. */
@@ -91,12 +90,8 @@ export function ContenuDossierPac({
     });
   }, [espece]);
 
-  const options = [
-    { value: TOUTES, label: T.toutesLesAnnees },
-    ...[...annees].reverse().map((a) => ({ value: String(a), label: String(a) })),
-  ];
-  const anneesChoisies = choix === TOUTES ? annees : [Number(choix)];
-  const annee = choix === TOUTES ? currentYear() : Number(choix);
+  const anneesChoisies = settings.toutesAnnees ? annees : [settings.anneeActive];
+  const annee = settings.toutesAnnees ? currentYear() : settings.anneeActive;
   // Le recensement de l'année choisie d'après le cheptel : de quoi expliquer son nombre de petits nés.
   const recensement = animauxDuCheptel.length > 0 ? recensementAnnuel(animauxDuCheptel, annee + 1) : null;
   const rienAFaire = annees.length === 0;
@@ -132,18 +127,6 @@ export function ContenuDossierPac({
     <>
       {/* L'espèce et l'année, en haut : ce que les documents ci-dessous reprennent. */}
       <LigneFiltres>
-        {/* Les organismes et les documents portent toujours sur la campagne en cours : pas de choix d'année. */}
-        {rienAFaire || partie !== 'tout' ? null : (
-          <ChoixDeroulant<string>
-            titre={T.annee}
-            valeur={choix}
-            options={options}
-            onChoisir={(valeur) => {
-              setChoix(valeur);
-              setSansPerte(false);
-            }}
-          />
-        )}
         <SelecteurEspece />
       </LigneFiltres>
       {pourOrganismes ? null : <Text style={commonStyles.note}>{T.fenetreAide}</Text>}

@@ -125,6 +125,10 @@ export interface LotFromage {
   lait?: ValeurDe<typeof TYPE_LAIT_FROMAGE>;
   /** Réservé pour un client particulier : le lot reste en stock jusqu'à sa vente. */
   reservation?: { client: string; clientId?: string; date: string };
+  /** Le poids net de la pièce, pesé à la vente (kg) : il figure sur son étiquette. */
+  poidsNetKg?: number;
+  /** Le prix de la pièce vendue (€) : il figure sur son étiquette. */
+  prixPiece?: number;
 }
 
 /** Un ingrédient d'une fabrication de plats : l'article du stock, la quantité sortie, et les lots (numéros) choisis quand il en a. */
@@ -183,8 +187,12 @@ export interface RecetteDeFabrication {
   /** Un savon : les litres de lait de chèvre, et les jours de cure après la saponification. */
   litresLait?: number;
   joursCure?: number;
-  /** Les ingrédients du stock et leur quantité. */
-  ingredients: { article: string; quantite: number }[];
+  /** Un fromage qui s'affine (le vieux, le crottin, le brocciu) : les jours d'affinage. */
+  joursAffinage?: number;
+  /** La préparation, étape par étape. */
+  etapes?: string[];
+  /** Les ingrédients du stock, leur quantité et l'unité de cette quantité (celle de la recette, convertie à la fabrication). */
+  ingredients: { article: string; quantite: number; unite?: string }[];
 }
 
 /** Le dossier réglementaire d'un savon (un produit cosmétique, règlement CE 1223/2009) : sa liste INCI et ses étapes. */
@@ -230,6 +238,8 @@ export interface ArchiveStock {
   prixVif?: Record<string, number>;
   /** Les litres de lait qu'il faut pour un fromage (par identifiant d'article) : la fabrication en déduit le lait utilisé, et la rentabilité compare le fromage à la vente du lait. */
   litresParFromage?: Record<string, number>;
+  /** L'unité de la quantité en stock d'un article (« kg », « g », « pièce », « cl », « L »), par identifiant d'article : le 25 du sel devient 25 kg. Absente : la quantité est nue. */
+  unites?: Record<string, string>;
   /** La durée de conservation, en jours, d'un fromage ou d'un produit de boucherie / charcuterie : la DLC d'un lot est sa date de fabrication plus ces jours. La clé est l'identifiant de l'article (durée de base) ou, pour un fromage, « article|salé ou non|lait » (voir dlc.ts). */
   dureeDeVie?: Record<string, number>;
   /** Les listes que l'utilisateur a ajoutées aux catégories de l'inventaire. */

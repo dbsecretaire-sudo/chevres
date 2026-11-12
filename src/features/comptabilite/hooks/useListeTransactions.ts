@@ -16,6 +16,12 @@ import { ETAT_CONSERVE } from '@/shared/constants/etatConserve';
 import { useEtatConserve } from '@/features/etablissements/hooks/useEtatConserve';
 import { toutesLesAnneesConnues } from '@/shared/storage/annees';
 import { memeJourDansLAnnee } from '@/shared/utils/dates';
+import { listContacts } from '@/features/contacts/repository';
+import { categorieDuContact } from '@/features/contacts/services/fiche';
+
+/** Un nom de tiers, sans casse ni accents : pour retrouver le contact d'une écriture. */
+const cleNomTiers = (nom: string): string =>
+  nom.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /**
  * Transactions de l'année active (ou de toutes les années quand « Tout » est choisi), par activité, filtrées et recherchées,
@@ -56,12 +62,24 @@ export function useListeTransactions() {
   }
 
   const charger = useCallback(async () => {
-    const [toutesAnnees, liste] = await Promise.all([
+    const [toutesAnnees, liste, contacts] = await Promise.all([
       toutesLesAnneesConnues(),
       listTransactions(regrouper ? undefined : settings.anneeActive),
+      listContacts(),
     ]);
+    // La catégorie de tiers de chaque écriture : celle du contact qui porte son nom.
+    const categorieParNom = new Map<string, string>();
+    for (const contact of contacts) {
+      const categorie = categorieDuContact(contact);
+      if ('id' in categorie && categorie.id) categorieParNom.set(cleNomTiers(contact.nom), categorie.id);
+    }
     setAnnees(toutesAnnees);
-    setTransactions(liste);
+    setTransactions(
+      liste.map((t) => {
+        const categorieTiers = categorieParNom.get(cleNomTiers(t.titre));
+        return categorieTiers ? { ...t, categorieTiers } : t;
+      }),
+    );
   }, [settings.anneeActive, regrouper]);
 
   useFocusEffect(

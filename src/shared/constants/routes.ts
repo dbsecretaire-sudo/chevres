@@ -300,7 +300,10 @@ export const ROUTES = {
   EXPORT_DONNEES: '/export-donnees',
   PDF_DONNEES: '/pdf-donnees',
   SAUVEGARDE_LOCALE: '/sauvegarde-locale',
+  COPIES_AUTOMATIQUES: '/copies-automatiques',
   GOOGLE_DRIVE: '/google-drive',
+  /** L'administration : les comptes, leurs rôles et exploitations, et les saisies des utilisateurs à valider (modérateur seul). */
+  ADMINISTRATION: '/administration',
   dossierClient: (id: string) => `/clients/dossiers/${id}` as const,
   sousDossier: (id: string) => `/clients/sous-dossier/${id}` as const,
   elementNouveau: (dossierId: string) => `/clients/element/nouveau?dossierId=${dossierId}` as const,

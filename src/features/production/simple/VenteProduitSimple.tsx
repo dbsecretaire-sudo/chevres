@@ -7,6 +7,9 @@ import { listClients } from '@/features/clients/repository';
 import type { Client } from '@/features/clients/types';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { ControlePrix, type UnitePrix } from '@/features/production/simple/ControlePrix';
+import { fromageDeLArticle } from '@/features/production/simple/fromageDeLArticle';
+import { VenteFromageTablette } from '@/features/production/tablette/VenteFromageTablette';
+import { afficheTablette } from '@/shared/utils/affichage';
 import { ListeDeChoix, type Choix } from '@/features/production/simple/ListeDeChoix';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { articlesDuProduit, lotsAChoisir } from '@/features/stock/services/lots';
@@ -15,7 +18,7 @@ import { Button } from '@/shared/components/Button';
 import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { GrosBouton } from '@/shared/components/GrosBouton';
 import { SelectField } from '@/shared/components/SelectField';
-import { CATEGORIE_VENTE, TYPE_CHOIX_FACTURE, TYPE_FROMAGE, UNITE_VENTE } from '@/shared/constants/comptabilite';
+import { CATEGORIE_VENTE, TYPE_CHOIX_FACTURE, UNITE_VENTE } from '@/shared/constants/comptabilite';
 import { CIRCUIT_VENTE } from '@/shared/constants/commercial';
 import { CLE_PRIX_LAIT, type PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import type { ValeurDe } from '@/shared/constants/valeurDe';
@@ -46,13 +49,6 @@ interface LotAVendre {
 /** Où l'on en est : le client, puis (selon le produit) les lots ou le produit et la quantité, le prix et le paiement, puis la vente est notée. */
 type Etape = 'client' | 'lots' | 'produit' | 'quantite' | 'prix' | 'fait';
 
-/** Le code de fromage d'un article de l'inventaire (« fromage:frais » → « frais ») : un fromage ajouté par l'utilisateur est « autre », avec son nom. */
-function fromageDeLArticle(cle: string, libelle: string): { typeFromage: ValeurDe<typeof TYPE_FROMAGE>; typeFromageLibre?: string } {
-  const code = cle.split(':')[1];
-  const connu = (Object.values(TYPE_FROMAGE) as string[]).includes(code) && code !== TYPE_FROMAGE.AUTRE;
-  return connu ? { typeFromage: code as ValeurDe<typeof TYPE_FROMAGE> } : { typeFromage: TYPE_FROMAGE.AUTRE, typeFromageLibre: libelle };
-}
-
 /**
  * Vendre un produit au plus simple, comme la viande : le client, les lots (le type de fromage se déduit du lot choisi), le prix total (le prix de l'inventaire × la quantité,
  * proposé d'avance) puis « Payé ? ». La vente est notée sans facture, dans la catégorie du produit et par le circuit préféré du client (la vente à la ferme sinon) : elle se retrouve
@@ -80,6 +76,9 @@ export function VenteProduitSimple({ produit, onRetour }: { produit: ProduitVend
       })
       .catch(() => undefined);
   }, []);
+
+  // L'interface Windows mobile, sur tablette : un fromage se vend pièce par pièce, sur une seule page.
+  if (produit.categorie === CATEGORIE_VENTE.FROMAGE && afficheTablette()) return <VenteFromageTablette produit={produit} onRetour={onRetour} />;
 
   const articles = produit.articles && archive ? articlesDuProduit(produit.articles, archive, espece) : [];
   /** Les lots en stock du produit, tous articles confondus ; une fois un lot choisi, seuls ceux du même article restent (une vente porte un seul produit). */

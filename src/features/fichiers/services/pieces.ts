@@ -9,6 +9,7 @@ import { todayISO } from '@/shared/utils/dates';
 import { estBureau } from '@/shared/utils/plateforme';
 import { generateId } from '@/shared/utils/id';
 import { ajouterPieceAEnvoyer, TAILLE_MAX_PIECE } from '@/features/fichiers/services/piecesFile';
+import { envoyerPieceWeb, ouvrirPieceDistante } from '@/features/fichiers/services/piecesWeb';
 
 /** Les fichiers joints sont rangés dans l'appareil : indisponibles sur le web, mais pas dans la version Windows. */
 export const piecesDisponibles = (): boolean => Platform.OS !== 'web' || estBureau();
@@ -52,6 +53,8 @@ export async function choisirFichiers(types: string[], multiple = false): Promis
 
 /** Range une copie du fichier dans l'appareil, la met en file pour le serveur de la ferme, et renvoie sa fiche. Un fichier trop lourd est refusé. */
 export async function rangerFichier(source: FichierChoisi): Promise<PieceJointe> {
+  // Sur le web, rien n'est rangé dans le navigateur : le fichier part directement vers le serveur.
+  if (!piecesDisponibles()) return envoyerPieceWeb(source);
   // La taille n'est connue que sur le téléphone : sur l'ordinateur, le fichier est rangé sans cette vérification.
   const taille = ((await FileSystem.getInfoAsync(source.uri)) as { size?: number }).size;
   if (taille && taille > TAILLE_MAX_PIECE) throw new Error('Ce fichier dépasse 5 Mo : il ne peut pas être envoyé à la ferme.');
@@ -69,6 +72,8 @@ export async function rangerFichier(source: FichierChoisi): Promise<PieceJointe>
 }
 
 export async function supprimerPiece(piece: PieceJointe): Promise<void> {
+  // Sur le web, il n'y a pas de copie à effacer : le fichier reste sur le serveur, jamais effacé depuis l'application.
+  if (!piecesDisponibles()) return;
   await FileSystem.deleteAsync(uriPiece(piece), { idempotent: true });
 }
 
@@ -78,6 +83,8 @@ export async function pieceExiste(piece: PieceJointe): Promise<boolean> {
 
 /** Ouvre le fichier avec une autre application de l'appareil (lecteur PDF, Word, Excel, galerie…). */
 export async function ouvrirPiece(piece: PieceJointe): Promise<void> {
+  // Sur le web, le fichier est lu depuis le serveur et s'ouvre dans un nouvel onglet.
+  if (!piecesDisponibles()) return ouvrirPieceDistante(piece);
   // Sur l'ordinateur, le fichier s'ouvre avec le programme de Windows qui lui convient (Word, Excel, lecteur PDF…).
   if (estBureau()) return window.bureau?.fichiers.ouvrir(uriPiece(piece));
   if (!(await Sharing.isAvailableAsync())) return;

@@ -14,11 +14,6 @@ import { entrerAvecRetour } from '@/shared/navigation/contexteRetour';
 import { GrilleTerrain } from '@/features/accueil/terrain/EcranTerrain';
 import { afficheBureau } from '@/shared/utils/affichage';
 import { BlocSante } from '@/features/sante/components/BlocSante';
-import { TuileRappels } from '@/features/rappels/components/TuileRappels';
-import { useFermeAccueil } from '@/features/accueil/ferme/useFermeAccueil';
-import { useAccueil } from '@/features/accueil/hooks/useAccueil';
-import { colors } from '@/shared/theme/colors';
-import { Text, View } from 'react-native';
 
 /**
  * L'onglet Chèvres, et l'accueil de l'élevage. Sur le téléphone : le compteur d'aliment, les alertes de santé et les rappels, puis les six tuiles de la maquette
@@ -31,23 +26,15 @@ export default function AccueilCheptel() {
 
 /** La page Chèvres du téléphone : l'aliment par animal et par jour (en tête, comme sur la maquette), puis les alertes et les tuiles. */
 function PageChevresTelephone() {
-  const { stats } = useAccueil();
-  const { nombreDeRappels: rappels } = useFermeAccueil();
-  const grammes = stats?.gParAnimalParJour;
   return (
     <GrilleTerrain
       zone="troupeau"
       enTete={
         <>
+          {/* Le titre à onglets (Ferme, Atelier, Commerce, Documents) est dans l'en-tête de la page : il n'est pas repris ici. */}
           <SelecteurEspece />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.badgeBg, borderRadius: 14, padding: 12 }}>
-            <Text style={{ color: colors.textMuted }}>Aliment par animal et par jour</Text>
-            <Text style={{ fontWeight: '800', color: colors.primary }}>
-              {grammes === undefined ? '—' : `${Math.round(grammes).toLocaleString('fr-FR')} g`}
-            </Text>
-          </View>
+          {/* L'aliment par animal et par jour est sur la tuile des soins (voir ecransTerrain). */}
           <BlocSante />
-          <TuileRappels nombre={rappels} />
         </>
       }
     />

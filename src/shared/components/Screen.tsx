@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
 import { styles } from '@/shared/styles/components/Screen.styles';
 import { commonStyles } from '@/shared/styles/commonStyles';
+import { colonneCentree } from '@/shared/theme/miseEnPage';
+import { afficheTablette } from '@/shared/utils/affichage';
 
 /**
  * Un écran. Dans les onglets, la barre du bas gère déjà le bord inférieur de l'écran (la barre de navigation d'Android) : y
@@ -27,7 +29,13 @@ export function Screen({
       {scroll ? (
         <ScrollView
           style={fond}
-          contentContainerStyle={[styles.content, comptable && { maxWidth: 820, width: '100%' }, marge]}
+          contentContainerStyle={[
+            styles.content,
+            comptable && { maxWidth: 820, width: '100%' },
+            // Sur la tablette, le contenu prend la colonne élargie (la même que l'en-tête et le bandeau du bas).
+            afficheTablette() && colonneCentree,
+            marge,
+          ]}
         >
           {children}
         </ScrollView>

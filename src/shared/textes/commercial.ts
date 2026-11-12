@@ -27,7 +27,7 @@ export const TEXTES_COMMERCIAL = {
       aide: 'Clients, fournisseurs, organismes, groupements : coordonnées, écritures, courriers, contrats, échéances.',
     },
     ventes: {
-      titre: 'Chiffre d’affaires',
+      titre: 'Ventes',
       aide: 'Par produit, par contact et par mois ; paiements en attente.',
     },
     clients: { titre: 'Contacts', aide: 'Les fiches de vos contacts et leurs achats.' },
@@ -55,7 +55,7 @@ export const TEXTES_COMMERCIAL = {
     },
   },
   ventes: {
-    titre: 'Chiffre d’affaires',
+    titre: 'Ventes',
     /** Le lien de l'atelier : ce qu'on fabrique et vend. */
     atelier: {
       titre: 'Ventes de l’atelier',

@@ -16,7 +16,6 @@ import { ApercuPiece } from '@/features/fichiers/components/ApercuPiece';
 import {
   choisirFichiers,
   ouvrirPiece,
-  piecesDisponibles,
   rangerFichier,
   supprimerPiece,
 } from '@/features/fichiers/services/pieces';
@@ -85,7 +84,6 @@ export default function NouveauLotAbattoir() {
   const choisis = animaux.filter((a) => ids.includes(a.id));
 
   const deposer = async () => {
-    if (!piecesDisponibles()) return Alert.alert(TEXTES.fichiers.indisponibleWeb);
     try {
       const [choisi] = await choisirFichiers(TYPES_FICHIERS_ACCEPTES);
       if (!choisi) return;

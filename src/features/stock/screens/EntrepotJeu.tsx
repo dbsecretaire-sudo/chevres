@@ -124,7 +124,7 @@ export default function EntrepotJeu({
       haut={
         <>
           {sansOnglets ? null : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pastilles}>
+            <View style={styles.pastilles}>
               {categories.map((c) => {
                 const actif = c.categorie === actuelle?.categorie;
                 return (
@@ -140,7 +140,7 @@ export default function EntrepotJeu({
                   </Pressable>
                 );
               })}
-            </ScrollView>
+            </View>
           )}
           {avecRetour ? (
             <View style={styles.enTete}>
@@ -171,7 +171,8 @@ const styles = StyleSheet.create({
   fiche: { gap: 12, padding: 12 },
   titreFiche: { fontSize: 16, fontWeight: '800', color: colors.text },
   boutons: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  pastilles: { gap: 8, paddingVertical: 4 },
+  // Les pastilles passent à la ligne suivante quand la fenêtre est étroite (pas de défilement latéral).
+  pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4 },
   pastille: {
     paddingVertical: 8,
     paddingHorizontal: 14,

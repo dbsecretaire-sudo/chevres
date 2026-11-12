@@ -14,7 +14,7 @@ export const FILTRES_VIDES: FiltresTransactions = {
 };
 
 export const filtresSontActifs = (f: FiltresTransactions) =>
-  !!(f.dateDebut || f.dateFin || f.montantMin || f.montantMax);
+  !!(f.dateDebut || f.dateFin || f.montantMin || f.montantMax || f.sens || f.tiers?.trim() || f.categorieTiers);
 
 const enNombre = (texte: string) => (texte ? Number(texte.replace(',', '.')) : undefined);
 
@@ -33,8 +33,16 @@ export function filtrerTransactions(
   const min = enNombre(filtres.montantMin);
   const max = enNombre(filtres.montantMax);
   const recherchee = recherche.trim().toLowerCase();
+  const tiers = filtres.tiers?.trim().toLowerCase() ?? '';
 
   return transactions.filter((t) => {
+    // Débit : les sorties ; crédit : les entrées.
+    if (filtres.sens === 'debit' && t.sens !== SENS_TRANSACTION.SORTIE) return false;
+    if (filtres.sens === 'credit' && t.sens !== SENS_TRANSACTION.ENTREE) return false;
+    // Le tiers : une partie de son nom (la ligne de l'écriture).
+    if (tiers && !(t.titre ?? '').toLowerCase().includes(tiers)) return false;
+    // La catégorie du tiers (celle de son contact).
+    if (filtres.categorieTiers && t.categorieTiers !== filtres.categorieTiers) return false;
     if (filtres.dateDebut && t.date < filtres.dateDebut) return false;
     if (filtres.dateFin && t.date > filtres.dateFin) return false;
     if (min !== undefined || max !== undefined) {

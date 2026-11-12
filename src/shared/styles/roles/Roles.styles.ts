@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { colors } from '@/shared/theme/colors';
+import { LARGEUR_TUILE } from '@/shared/theme/miseEnPage';
 
 /** De très grands boutons, une action chacun : faits pour être touchés avec des gants, sans réfléchir. */
 export const styles = StyleSheet.create({
@@ -24,7 +25,7 @@ export const styles = StyleSheet.create({
   grosTexteCompact: { fontSize: 22 },
   /** Les gros boutons se rangent par deux sur une ligne (un seul, seul sur sa ligne, prend toute la largeur). */
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  moitie: { flexBasis: '47%', flexGrow: 1, minHeight: 130, padding: 12 },
+  moitie: { flexBasis: LARGEUR_TUILE, flexGrow: 1, minHeight: 130, padding: 12 },
   grosTexteMoitie: { fontSize: 20 },
   grosBoutonAppuye: { opacity: 0.85 },
   grosTexte: { fontSize: 24, fontWeight: '800', color: colors.blanc, textAlign: 'center' },

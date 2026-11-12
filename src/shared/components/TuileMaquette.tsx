@@ -27,6 +27,8 @@ interface Props {
   large?: boolean;
   /** Une hauteur imposée (l'écran qui remplit la place restante) ; sans elle, la tuile garde sa hauteur minimale. */
   hauteur?: number;
+  /** Une grande pastille et un grand titre (présentation « simple ») : pour une page de peu de tuiles, qui doit se voir de loin. */
+  grande?: boolean;
 }
 
 /** Une tuile de la maquette, sous l'une des deux présentations. Elle est accessible au doigt, sans être un gros bouton plein. */
@@ -42,6 +44,7 @@ export function TuileMaquette({
   desactive = false,
   large = false,
   hauteur,
+  grande = false,
 }: Props) {
   const simple = variante === 'simple';
   const couleurIcone = principale ? colors.blanc : colors.primary;
@@ -65,7 +68,9 @@ export function TuileMaquette({
       ]}
     >
       {simple ? (
-        <View style={[styles.pastille, principale ? styles.pastillePrincipale : null]}>{icone(couleurIcone)}</View>
+        <View style={[styles.pastille, principale ? styles.pastillePrincipale : null, grande ? styles.pastilleGrande : null]}>
+          {icone(couleurIcone)}
+        </View>
       ) : (
         <View style={styles.hautAvance}>
           {icone(couleurIcone)}
@@ -75,7 +80,7 @@ export function TuileMaquette({
         </View>
       )}
       <View style={simple ? styles.basSimple : styles.basAvance}>
-        <Text style={[styles.titre, simple ? styles.centre : null, { color: couleurTexte }]}>{libelle}</Text>
+        <Text style={[styles.titre, simple ? styles.centre : null, grande ? styles.titreGrand : null, { color: couleurTexte }]}>{libelle}</Text>
         {simple && nombre ? (
           <Text style={[styles.nombreSimple, alerte ? styles.nombreAlerte : null, principale ? styles.blanc : null]}>{nombre}</Text>
         ) : null}
@@ -103,10 +108,12 @@ const styles = StyleSheet.create({
   desactivee: { opacity: 0.4 },
   pastille: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.badgeBg, alignItems: 'center', justifyContent: 'center' },
   pastillePrincipale: { backgroundColor: 'rgba(255,255,255,0.2)' },
+  pastilleGrande: { width: 96, height: 96, borderRadius: 48 },
   hautAvance: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   basSimple: { alignItems: 'center', gap: 2 },
   basAvance: { gap: 2 },
   titre: { fontSize: 16, fontWeight: '700' },
+  titreGrand: { fontSize: 20 },
   centre: { textAlign: 'center' },
   detail: { fontSize: 13 },
   nombre: { fontSize: 22, fontWeight: '800', color: colors.primary },

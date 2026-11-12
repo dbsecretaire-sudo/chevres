@@ -124,6 +124,42 @@ function copieDuJour() {
   }
 }
 
+// Les copies (voir copieDuJour) : leur liste, et la restauration de l'une d'elles. Avant la restauration, les données actuelles sont gardées
+// dans une copie « avant-restauration » : elle permet d'annuler, et elle n'est pas effacée au bout de trente jours.
+const NOM_COPIE = /^donnees_.+\.json$/;
+
+function nombreDeRubriques(chemin) {
+  const contenu = lireFichierDonnees(chemin);
+  return contenu && typeof contenu === 'object' ? Object.keys(contenu).length : null;
+}
+
+ipcMain.handle('copies:lister', () => {
+  if (!fs.existsSync(dossierCopies())) return [];
+  return fs
+    .readdirSync(dossierCopies())
+    .filter((nom) => NOM_COPIE.test(nom))
+    .sort()
+    .reverse()
+    .map((nom) => {
+      const chemin = path.join(dossierCopies(), nom);
+      const { size, mtime } = fs.statSync(chemin);
+      return { nom, taille: size, modifiee: mtime.toISOString(), rubriques: nombreDeRubriques(chemin) };
+    });
+});
+
+ipcMain.handle('copies:restaurer', (_e, nom) => {
+  if (typeof nom !== 'string' || !NOM_COPIE.test(nom) || path.basename(nom) !== nom) throw new Error('Copie inconnue.');
+  const copie = lireFichierDonnees(path.join(dossierCopies(), nom));
+  if (!copie || typeof copie !== 'object' || !Object.keys(copie).some((cle) => cle.startsWith('troupeau:v1:'))) {
+    throw new Error('Cette copie est illisible ou ne contient pas de données.');
+  }
+  fs.mkdirSync(dossierCopies(), { recursive: true });
+  const avant = `donnees_avant-restauration_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+  fs.writeFileSync(path.join(dossierCopies(), avant), JSON.stringify(donnees));
+  donnees = copie;
+  ecrireDonnees();
+});
+
 const planifierEcriture = () => {
   if (!aEcrire) aEcrire = setTimeout(ecrireDonnees, 300);
 };
@@ -327,23 +363,23 @@ function servirApplication() {
 /** La largeur de la fenêtre à l'ouverture : celle d'un grand téléphone, que l'accueil « ferme » remplit bien. */
 const LARGEUR_PAR_DEFAUT = 800;
 
-/** L'affichage sobre est un poste de comptabilité (menu à gauche, tableaux) : sa fenêtre s'ouvre large, avec ces proportions (environ 5 sur 4), posée au milieu de l'écran. */
-const LARGEUR_SOBRE = 1265;
-const HAUTEUR_SOBRE = 1025;
+/** Les affichages sobre et mobile (tablette) ouvrent la fenêtre large, avec les proportions des captures (environ 5 sur 4), posée au milieu de l'écran. */
+const LARGEUR_LARGE = 1265;
+const HAUTEUR_LARGE = 1025;
 
 function creerFenetre() {
-  // Haute comme l'écran (sa zone utile, sans la barre des tâches), étroite, et posée au milieu : l'accueil « ferme » est pensé en hauteur.
+  // L'affichage bureau (menus de la fenêtre) : haute comme l'écran (sa zone utile, sans la barre des tâches), étroite, et posée au milieu.
   const zone = screen.getPrimaryDisplay().workArea;
-  const sobre = (donnees['bureau:affichage'] ?? 'sobre') === 'sobre';
-  const largeur = Math.min(sobre ? LARGEUR_SOBRE : LARGEUR_PAR_DEFAUT, zone.width);
-  const hauteur = sobre ? Math.min(HAUTEUR_SOBRE, zone.height) : zone.height;
+  const bureau = (donnees['bureau:affichage'] ?? 'sobre') === 'bureau';
+  const largeur = Math.min(bureau ? LARGEUR_PAR_DEFAUT : LARGEUR_LARGE, zone.width);
+  const hauteur = bureau ? zone.height : Math.min(HAUTEUR_LARGE, zone.height);
   const fenetre = new BrowserWindow({
     width: largeur,
     height: hauteur,
     x: zone.x + Math.round((zone.width - largeur) / 2),
     y: zone.y + Math.round((zone.height - hauteur) / 2),
-    // Le poste de comptabilité a besoin de place pour son menu et ses tableaux.
-    minWidth: sobre ? 820 : 420,
+    // Les affichages larges ont besoin de place pour leurs colonnes et leurs tableaux.
+    minWidth: bureau ? 420 : 820,
     minHeight: 600,
     title: TEXTES.titre,
     backgroundColor: '#f4f2ec',

@@ -1,42 +1,72 @@
-import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
+import { ScrollView, Pressable, Text, View } from 'react-native';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { RUBRIQUES_DU_PLUS } from '@/features/accueil/rubriques/rubriquesDuPlus';
+import { changerAffichage } from '@/bureau/changerAffichage';
+import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { SectionsRubrique } from '@/features/accueil/components/SectionsRubrique';
+import { RUBRIQUES } from '@/features/accueil/rubriques/rubriquesDuPlus';
+import { CarteModeAvance } from '@/features/settings/components/CarteModeAvance';
+import { seDeconnecter } from '@/features/sync/synchronisation';
+import { BlocLignes } from '@/shared/components/BlocListe';
+import { ListRow } from '@/shared/components/ListRow';
 import { ROUTES } from '@/shared/constants/routes';
 import { colors } from '@/shared/theme/colors';
+import { TEXTES } from '@/shared/textes';
+import { AFFICHAGE, modeAffichage, type ModeAffichage } from '@/shared/utils/affichage';
+import { estBureau } from '@/shared/utils/plateforme';
 
 /**
- * La page « Plus », comme sur la maquette : les rubriques qui ne tiennent pas dans la barre du bas (chacune ouvre sa page de liste), plus l'accueil de la ferme
- * et les rappels.
+ * La page « Plus » : l'exploitation (agritourisme, établissement, listes, contacts, données, réglages), puis le mode avancé,
+ * l'administration et la déconnexion, et l'affichage.
  */
 export default function EcranPlus() {
   const router = useRouter();
-  const ouvrir = (route: string) => router.push(route as never);
+  // Sous Windows, les autres affichages (version Windows soft, mobile, sobre) : un choix recharge la fenêtre.
+  const autresAffichages: ModeAffichage[] = estBureau() ? Object.values(AFFICHAGE).filter((mode) => mode !== modeAffichage) : [];
+  const [deconnexionDemandee, setDeconnexionDemandee] = useState(false);
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} style={{ backgroundColor: colors.background }}>
-      {/* Le titre « Plus » est dans la capsule du haut ; la ligne ci-dessous dit ce que cette page regroupe. */}
-      <Text style={{ color: colors.textMuted }}>Tout le reste de l’application</Text>
-      {/* Comme sur la maquette : le mode avancé est affiché en tête de la page, avec le chemin pour le changer. */}
-      <View style={{ alignSelf: 'flex-start', backgroundColor: colors.text, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 }}>
-        <Text style={{ color: colors.blanc, fontSize: 13, fontWeight: '600' }}>Mode avancé activé · Réglages › Mode avancé</Text>
-      </View>
-      {RUBRIQUES_DU_PLUS.map((r) => (
-        <Pressable
-          key={r.cle}
-          accessibilityRole="button"
-          onPress={() => ouvrir(ROUTES.rubrique(r.cle))}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}
-        >
-          <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.badgeBg, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name={r.icone} size={22} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>{r.libelle}</Text>
-            <Text style={{ color: colors.textMuted }}>{r.aide}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-      ))}
+      <SectionsRubrique sections={RUBRIQUES.reglages.sections} />
+      <GroupeAccueil titre="Plus">
+        <CarteModeAvance />
+        <BlocLignes>
+          <ListRow
+            title="Administrateur"
+            subtitle="Comptes, rôles et saisies à valider"
+            icone="shield-outline"
+            onPress={() => router.push(ROUTES.ADMINISTRATION as never)}
+          />
+          {/* Se déconnecter du compte de la ferme : le mode avancé se referme jusqu'à la prochaine connexion. */}
+          <ListRow title="Déconnexion" icone="log-out-outline" onPress={() => setDeconnexionDemandee(true)} />
+        </BlocLignes>
+      </GroupeAccueil>
+      {autresAffichages.length > 0 ? (
+        <View style={{ gap: 10, marginTop: 8 }}>
+          <Text style={{ color: colors.textMuted, fontWeight: '700' }}>{TEXTES.navigation.affichage.titre}</Text>
+          {autresAffichages.map((mode) => (
+            <Pressable
+              key={mode}
+              accessibilityRole="button"
+              onPress={() => changerAffichage(mode)}
+              style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>{TEXTES.navigation.affichage[mode]}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      <ConfirmModal
+        visible={deconnexionDemandee}
+        title="Déconnexion"
+        message="Voulez-vous vraiment vous déconnecter de l’application ?"
+        confirmLabel="Se déconnecter"
+        onCancel={() => setDeconnexionDemandee(false)}
+        onConfirm={() => {
+          setDeconnexionDemandee(false);
+          seDeconnecter().catch(() => undefined);
+        }}
+      />
     </ScrollView>
   );
 }

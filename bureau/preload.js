@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('bureau', {
   donnees: donneesAuDemarrage,
   dossiers: ipcRenderer.sendSync('fs:dossiers'),
   ecrireStockage: (ecrire, retirer) => appeler('stockage:ecrire', { ecrire, retirer }),
+  copies: {
+    lister: () => appeler('copies:lister'),
+    restaurer: (nom) => appeler('copies:restaurer', nom),
+  },
   fichiers: {
     creerDossier: (chemin) => appeler('fs:creerDossier', chemin),
     copier: (de, vers) => appeler('fs:copier', { de, vers }),

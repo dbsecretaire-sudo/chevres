@@ -21,12 +21,20 @@ export const TEXTES_COMMUN = {
     effacer: 'Effacer le filtre',
     filtrer: (colonne: string) => `Filtrer la colonne ${colonne.replace(/\n/g, ' ')}`,
   },
+  /** Quitter un formulaire de création avec une saisie non enregistrée : la saisie est perdue, on le demande d'abord. */
+  sortieSansEnregistrer: {
+    titre: 'Quitter sans enregistrer ?',
+    message: 'La saisie en cours sera perdue.',
+    quitter: 'Quitter',
+  },
   general: {
     separateurListe: ', ',
     informationsDeLExploitation: 'Informations de l’exploitation',
     informationsDeLEntreprise: 'Informations de l’entreprise',
     nonRenseigne: 'Non renseigné',
     cheptel: 'Cheptel',
+    /** Le titre de l'onglet et de la page des chèvres : la rubrique s'appelle la Ferme. */
+    ferme: 'Ferme',
     comptabilite: 'Comptabilité',
     exploitation: 'Exploitation',
     bilanAnnuel: 'Bilan annuel',

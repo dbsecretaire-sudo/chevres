@@ -5,6 +5,8 @@ import { CATEGORIE_STOCKAGE } from '@/shared/constants/stockage';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { deEspeceCourante } from '@/features/cheptel/utils/espece';
 import { TEXTES } from '@/shared/textes';
+import type { Vente } from '@/features/comptabilite/types';
+import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 
 // Naissances : pas de fichier dédié — un cabrit est une Chevre dont
 // dateNaissance + mereNumeroBoucle le rattachent à une portée. On enregistre
@@ -60,6 +62,16 @@ export interface PorteeNaissance {
   date: string;
   mereNumeroBoucle: string;
   cabrits: Chevre[];
+}
+
+/** Le client qui a acheté chaque animal vendu : le nom donné sur la vente qui le désigne (sans nom, rien). */
+export function clientsDesAnimaux(ventes: readonly Vente[]): Map<string, string> {
+  const clients = new Map<string, string>();
+  for (const v of ventes) {
+    const client = v.client?.trim();
+    if (client) for (const id of idsDesAnimaux(v)) clients.set(id, client);
+  }
+  return clients;
 }
 
 /** Regroupe les cabrits du cheptel par (mère, date de naissance) pour l'écran Naissances. */

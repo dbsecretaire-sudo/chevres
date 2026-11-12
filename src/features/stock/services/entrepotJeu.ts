@@ -86,6 +86,8 @@ export function formaterQuantite(n: number): string {
 interface ArticleBrut {
   cle: string;
   libelle: string;
+  /** L'unité de sa quantité en stock, quand elle est choisie (« kg », « pièce »…). */
+  unite?: string;
 }
 
 /** La carte du lait : ce qu'il en reste (en litres), d'après le bilan du lait. */
@@ -134,7 +136,7 @@ export function groupesDeLaCategorie(categorie: CategorieDuStock, lecture: Lectu
         titre: a.libelle,
         emoji: emojiDeLArticle(genre, a.libelle),
         niveau: lecture.niveau(a.cle),
-        unite: uniteDuGenre(genre),
+        unite: a.unite ?? uniteDuGenre(genre),
         section: sectionDuDetail,
       })),
     );

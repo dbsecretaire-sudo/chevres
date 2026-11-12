@@ -1,9 +1,11 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
-import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { SectionsRubrique } from '@/features/accueil/components/SectionsRubrique';
 import { RUBRIQUES, type Rubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
-import { BlocLignes } from '@/shared/components/BlocListe';
-import { ListRow } from '@/shared/components/ListRow';
+import { ROUTES } from '@/shared/constants/routes';
+import { CarteCodeAcces } from '@/features/settings/components/CarteCodeAcces';
+import { CarteModeAvance } from '@/features/settings/components/CarteModeAvance';
+import { HistoriqueMouvements } from '@/features/cheptel/components/HistoriqueMouvements';
 import { colors } from '@/shared/theme/colors';
 
 /**
@@ -12,27 +14,22 @@ import { colors } from '@/shared/theme/colors';
  */
 export default function EcranRubrique() {
   const { nom } = useLocalSearchParams<{ nom?: string }>();
-  const router = useRouter();
   const rubrique: Rubrique | undefined = nom ? RUBRIQUES[nom] : undefined;
   if (!rubrique) return null;
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }} style={{ backgroundColor: colors.background }}>
       <Text style={{ color: colors.textMuted }}>{rubrique.sousTitre}</Text>
-      {rubrique.sections.map((section) => (
-        <GroupeAccueil key={section.titre} titre={section.titre}>
-          <BlocLignes>
-            {section.lignes.map((ligne) => (
-              <ListRow
-                key={ligne.libelle}
-                title={ligne.libelle}
-                subtitle={ligne.aide}
-                icone={ligne.icone}
-                onPress={() => router.push(ligne.route as never)}
-              />
-            ))}
-          </BlocLignes>
-        </GroupeAccueil>
-      ))}
+      {/* Les réglages de l'application : le mode avancé et le code d'accès, en tête de la page Plus. */}
+      {nom === 'reglages' ? (
+        <>
+          <CarteModeAvance />
+          <CarteCodeAcces />
+        </>
+      ) : null}
+      {/* Les pages ouvertes depuis la Santé reviennent à la Santé. */}
+      <SectionsRubrique sections={rubrique.sections} retour={nom && ['sante', 'mouvement', 'historique'].includes(nom) ? ROUTES.rubrique(nom) : undefined} />
+      {/* Les mouvements de l'année active, sous les boutons : une recherche, le plus récent en tête. */}
+      {nom === 'mouvement' ? <HistoriqueMouvements /> : null}
     </ScrollView>
   );
 }

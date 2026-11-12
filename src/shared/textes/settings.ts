@@ -95,6 +95,23 @@ export const TEXTES_SETTINGS = {
       `Génère un rapport (cheptel, ventes, factures, visites, contrôles) pour l’année ${annee}, en PDF ou en Excel, prêt à partager ou envoyer à la comptabilité.`,
     exporter: 'Exporter',
     sauvegardeLocale: 'Sauvegarde locale',
+    copiesAutomatiques: {
+      titre: 'Copies automatiques',
+      entree: 'Copies automatiques',
+      entreeDetail: 'Une copie de chaque jour, gardée 30 jours sur cet ordinateur',
+      aide:
+        'Une copie de vos données est faite chaque jour sur cet ordinateur. Restaurer une copie remet les données comme elles étaient ce jour-là : les données actuelles sont gardées, dans une copie « avant restauration », pour pouvoir revenir en arrière.',
+      aucune: 'Aucune copie pour le moment.',
+      avantRestauration: 'Avant une restauration',
+      rubriques: (nombre: number | null) => (nombre === null ? 'copie illisible' : `${nombre} rubriques`),
+      taille: (octets: number) => `${Math.round(octets / 1000)} Ko`,
+      restaurer: 'Restaurer',
+      confirmerTitre: 'Restaurer cette copie ?',
+      confirmerTexte:
+        'Les données actuelles de cet ordinateur seront remplacées par cette copie, et l’application se rouvrira. Les données actuelles restent gardées dans une copie « avant restauration ».',
+      annuler: 'Annuler',
+      erreurTitre: 'Restauration impossible',
+    },
     get exporteToutesLesDonneesDe() {
       const contenu = 'cheptel, ventes, factures, visites, contrôles, contacts';
       return `Exporte toutes les données de l’appli (toutes années, ${contenu}) dans un seul fichier à conserver ailleurs (mail, stockage…) — permet de tout récupérer après une réinstallation, sans passer par Google Drive.`;

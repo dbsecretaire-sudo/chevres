@@ -28,7 +28,7 @@ describe('plats préparés', () => {
     expect(
       articlesDuProduit(PRODUIT_A_LOTS.PLAT, archive, FILTRE_STOCK_TOUT as never).map((a) => a.libelle),
     ).toContain('Civet de sanglier');
-    expect(numeroDeLot(archive, cle, '2026-10-22')).toMatch(/^PC26295-1$/);
+    expect(numeroDeLot(archive)).toMatch(/^\d+$/);
   });
 
   it('fabriquer des plats les fait entrer au stock, sort les ingrédients et garde leurs lots, la stérilisation et la durabilité', async () => {

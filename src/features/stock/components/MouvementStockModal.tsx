@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { Button } from '@/shared/components/Button';
 import { FormField } from '@/shared/components/FormField';
+import { SelectField } from '@/shared/components/SelectField';
+import { UNITES_STOCK } from '@/features/stock/services/unites';
 import { parseDecimal } from '@/shared/utils/nombres';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -21,8 +23,13 @@ interface Props {
   niveau?: number;
   /** L'unité de la quantité (kg pour un aliment), rappelée dans le libellé du champ. */
   unite?: string;
-  /** Reçoit la variation (positive pour un ajout, négative pour un retrait) et les litres de lait éventuels. */
-  onValider: (cle: string, delta: number, litres?: number) => void;
+  /** Un article qui se compte (consommable) : son unité se choisit ici, à côté de la quantité. */
+  avecUnite?: boolean;
+  /**
+   * Reçoit la variation (positive pour un ajout, négative pour un retrait, zéro quand on ne change que l'unité), les litres de lait éventuels, et l'unité
+   * choisie (avec `avecUnite`).
+   */
+  onValider: (cle: string, delta: number, litres?: number, unite?: string) => void;
   /** Quand il est donné, un bouton permet de supprimer l'article (un article ajouté par l'utilisateur). */
   onSupprimer?: () => void;
   onFermer: () => void;
@@ -40,6 +47,7 @@ export function MouvementStockModal({
   libelleLitres,
   litresParFromage,
   unite,
+  avecUnite,
   consommable,
   niveau,
   onValider,
@@ -48,16 +56,19 @@ export function MouvementStockModal({
 }: Props) {
   const [quantite, setQuantite] = useState('');
   const [litres, setLitres] = useState('');
+  const [uniteSaisie, setUniteSaisie] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
-    // Chaque ouverture repart sans quantité.
+    // Chaque ouverture repart sans quantité, avec l'unité de l'article.
     if (article) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuantite('');
       setLitres('');
+      setUniteSaisie(unite ?? '');
       setErreur(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article]);
 
   /** La quantité saisie avec son signe : positive pour un ajout, négative pour un retrait (le « − » typographique est accepté). */
@@ -65,7 +76,12 @@ export function MouvementStockModal({
 
   const valider = () => {
     if (!article) return;
-    if (nombre === 0) return setErreur(T.quantiteInvalide);
+    // Une unité changée sans quantité : on ne fait que la noter (aucun mouvement).
+    const uniteChoisie = avecUnite ? uniteSaisie || undefined : undefined;
+    const uniteChangee = avecUnite && uniteChoisie !== (unite || undefined);
+    // L'unité d'un consommable ou d'une immobilisation est obligatoire : sans elle, la quantité serait nue.
+    if (avecUnite && !uniteChoisie) return setErreur(T.uniteRequise);
+    if (nombre === 0 && !uniteChangee) return setErreur(T.quantiteInvalide);
     const litresUtilises = litresParFromage
       ? Math.round(nombre * litresParFromage * 100) / 100
       : litres.trim()
@@ -77,25 +93,45 @@ export function MouvementStockModal({
       article.cle,
       nombre,
       nombre > 0 && litresUtilises && litresUtilises > 0 ? litresUtilises : undefined,
+      uniteChoisie,
     );
   };
+
+  const champQuantite = (
+    <FormField
+      label={avecUnite ? T.quantite : unite ? `${T.quantite} (${unite})` : T.quantite}
+      required
+      value={quantite}
+      onChangeText={(texte) => {
+        setQuantite(texte);
+        setErreur(null);
+      }}
+      keyboardType={CLAVIER_QUANTITE}
+      placeholder="0"
+    />
+  );
 
   return (
     <Modal visible={!!article} transparent animationType="fade" onRequestClose={onFermer}>
       <Pressable style={commonStyles.backdrop} onPress={onFermer}>
         <Pressable style={commonStyles.modalSheet} onPress={(e) => e.stopPropagation()}>
           <Text style={commonStyles.subheading}>{T.titre(article?.libelle ?? '')}</Text>
-          <FormField
-            label={unite ? `${T.quantite} (${unite})` : T.quantite}
-            required
-            value={quantite}
-            onChangeText={(texte) => {
-              setQuantite(texte);
-              setErreur(null);
-            }}
-            keyboardType={CLAVIER_QUANTITE}
-            placeholder="0"
-          />
+          {avecUnite ? (
+            <View style={commonStyles.row}>
+              <View style={commonStyles.flex1}>{champQuantite}</View>
+              <View style={commonStyles.flex1}>
+                <SelectField<string>
+                  label={T.unite}
+                  required
+                  value={uniteSaisie}
+                  onChange={setUniteSaisie}
+                  options={UNITES_STOCK.map((u) => ({ value: u.cle, label: u.libelle }))}
+                />
+              </View>
+            </View>
+          ) : (
+            champQuantite
+          )}
           <Text style={commonStyles.note}>{consommable ? T.aideConsommable : T.aide}</Text>
           {consommable && article && niveau && niveau > 0 ? (
             <Button

@@ -94,7 +94,7 @@ function tirerModifications(PDO $db, string $etablissement, int $depuis): array 
   $requete = $db->prepare(
     'SELECT j.rang, j.zone, j.identifiant, f.contenu, f.version, f.modifie_le, f.modifie_par
      FROM journal j
-     JOIN fiches f ON f.etablissement = j.etablissement AND f.zone = j.zone AND f.identifiant = j.identifiant
+     LEFT JOIN fiches f ON f.etablissement = j.etablissement AND f.zone = j.zone AND f.identifiant = j.identifiant
      WHERE j.etablissement = ? AND j.rang > ?
      ORDER BY j.rang
      LIMIT ' . LIMITE_LECTURE

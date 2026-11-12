@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
-import { ChoixPastilles } from '@/shared/components/ChoixPastilles';
+import { SelectField } from '@/shared/components/SelectField';
 import { OPTIONS_TAUX_TVA, tvaDuTtc } from '@/features/comptabilite/utils/tva';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { formatMontant } from '@/shared/utils/dates';
@@ -15,13 +15,12 @@ interface Props {
   parProduit?: () => void;
 }
 
-/** Le taux de TVA en pastilles, comme sur la maquette, avec le HT et la TVA calculés à partir du montant TTC saisi. */
+/** Le taux de TVA dans une liste déroulante (dépenses comme ventes), avec le HT et la TVA calculés à partir du montant TTC saisi. */
 export function ChampTauxTva({ value, onChange, ttc = 0, parProduit }: Props) {
   const tva = tvaDuTtc(ttc, Number(value));
   return (
     <View style={commonStyles.gap10}>
-      <Text style={commonStyles.lineBold}>{TEXTES.commun.general.tauxDeTva}</Text>
-      <ChoixPastilles options={OPTIONS_TAUX_TVA} value={value} onChange={onChange} />
+      <SelectField<string> label={TEXTES.commun.general.tauxDeTva} value={value} onChange={onChange} options={OPTIONS_TAUX_TVA} />
       {parProduit ? (
         <Pressable onPress={parProduit} accessibilityRole="link">
           <Text style={commonStyles.lien}>{TEXTES.comptabilite.nouvelleEcriture.tvaParProduit}</Text>

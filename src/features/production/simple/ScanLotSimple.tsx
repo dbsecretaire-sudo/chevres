@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ScannerBoucleModal } from '@/features/cheptel/components/ScannerBoucleModal';
 import { listToutesVentes } from '@/features/comptabilite/repository/ventes';
 import type { Vente } from '@/features/comptabilite/types';
 import { useEtablissement } from '@/features/etablissements/context/EtablissementContext';
 import { ListeDeChoix } from '@/features/production/simple/ListeDeChoix';
-import { formaterNumeroDeLot, lettresDesNumeros, lotsDuNumero } from '@/features/production/simple/lotsDuNumero';
+import { formaterNumeroDeLot, lotsDuNumero } from '@/features/production/simple/lotsDuNumero';
 import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
 import { lireArchiveStock } from '@/features/stock/repository';
 import { etiquetteDuLot } from '@/features/stock/services/etiquetteLot';
@@ -22,7 +21,7 @@ import { formatDateFR, formatMontant } from '@/shared/utils/dates';
 const T = TEXTES.production.scanLotSimple;
 
 /**
- * « Scanner un lot » au plus simple : on photographie (ou on tape) le numéro du lot, et la page montre ce qu'on sait de lui — sa date de fabrication, son contrôle (✓ vert, ou
+ * « Information du lot » au plus simple : on tape le numéro du lot, et la page montre ce qu'on sait de lui — sa date de fabrication, son contrôle (✓ vert, ou
  * ✗ rouge avec la date du rappel), et, s'il est vendu, le prix de la vente et le client. En lecture seule : le contrôle et les rappels se font dans le mode avancé.
  */
 export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
@@ -30,8 +29,6 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
   const [archive, setArchive] = useState<ArchiveStock | null>(null);
   const [ventes, setVentes] = useState<Vente[]>([]);
   const [saisie, setSaisie] = useState('');
-  // L'appareil photo s'ouvre d'office (« Annuler » mène à la saisie du numéro) ; il se rouvre pour scanner un autre lot.
-  const [scanOuvert, setScanOuvert] = useState(true);
   /** Les lots trouvés pour le numéro cherché (rien tant qu'on n'a pas cherché), et celui qu'on regarde. */
   const [trouves, setTrouves] = useState<LotFromage[] | null>(null);
   const [choisi, setChoisi] = useState<LotFromage | null>(null);
@@ -51,22 +48,10 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
     setChoisi(lots.length === 1 ? lots[0] : null);
   };
 
-  /** Les numéros de lot connus : de quoi placer le « - » et choisir les lettres du clavier. */
+  /** Les numéros de lot connus : de quoi placer le « - » dans le numéro tapé. */
   const numeros = (archive?.lots ?? []).map((l) => l.numero);
   const articles = archive ? Object.values(PRODUIT_A_LOTS).flatMap((p) => articlesDuProduit(p, archive, espece)) : [];
   const nomDeLArticle = (cle: string) => articles.find((a) => a.cle === cle)?.libelle ?? '';
-
-  const scanner = (
-    <ScannerBoucleModal
-      lot
-      visible={scanOuvert}
-      onClose={() => setScanOuvert(false)}
-      onDetected={(lu) => {
-        setSaisie(lu);
-        chercher(lu);
-      }}
-    />
-  );
 
   /** Le retour à la page d'avant, quand elle est donnée (le menu de la fromagerie du mode normal) ; sinon c'est celui de la barre du bas. */
   const lienRetour = onRetour ? (
@@ -108,7 +93,7 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
         ) : (
           <Text style={styles.ligne}>{choisi.dateVente ? T.venduSansFiche(formatDateFR(choisi.dateVente)) : T.pasVendu}</Text>
         )}
-        <Button label={T.autreLot} variant="secondary" style={styles.pleine} onPress={() => { setChoisi(null); setTrouves(null); setSaisie(''); setScanOuvert(true); }} />
+        <Button label={T.autreLot} variant="secondary" style={styles.pleine} onPress={() => { setChoisi(null); setTrouves(null); setSaisie(''); }} />
         {lienRetour}
       </ScrollView>
     );
@@ -125,16 +110,14 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
           onChoisir={(c) => setChoisi(trouves.find((l) => l.id === c.cle) ?? null)}
         />
         <Button label={T.autreLot} variant="secondary" style={styles.pleine} onPress={() => setTrouves(null)} />
-        {scanner}
       </ScrollView>
     );
 
   return (
     <ScrollView contentContainerStyle={[styles.centre, { gap: 12 }]} keyboardShouldPersistTaps="handled">
-      {/* Le titre « Scanner un lot » est déjà dans l'en-tête de la page : ici, seulement ce qu'on fait. */}
+      {/* Le titre « Information du lot » est déjà dans l'en-tête de la page : ici, seulement ce qu'on fait. */}
       <Text style={stylesRoles.detail}>{T.aide}</Text>
-      <Button label={T.scanner} style={styles.pleine} onPress={() => setScanOuvert(true)} />
-      <ClavierNumerique valeur={saisie} onChange={setSaisie} lettres={lettresDesNumeros(numeros)} />
+      <ClavierNumerique valeur={saisie} onChange={setSaisie} />
       {/* Le numéro tapé : centré, non modifiable à la main, avec son « - » placé tout seul. */}
       <View style={[stylesRoles.affichageNumero, styles.pleine]} accessibilityLabel={`${T.numeroDuLot} ${saisie}`}>
         <Text style={stylesRoles.affichageNumeroTexte}>{formaterNumeroDeLot(saisie, numeros)}</Text>
@@ -142,7 +125,6 @@ export function ScanLotSimple({ onRetour }: { onRetour?: () => void }) {
       <Button label={T.chercher} variant="secondary" style={styles.pleine} disabled={!saisie.trim()} onPress={() => chercher(saisie)} />
       {trouves && trouves.length === 0 ? <Text style={[stylesRoles.detail, { color: colors.danger }]}>{T.introuvable}</Text> : null}
       {lienRetour}
-      {scanner}
     </ScrollView>
   );
 }

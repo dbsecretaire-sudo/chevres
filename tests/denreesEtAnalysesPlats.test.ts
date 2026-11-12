@@ -37,9 +37,8 @@ describe('matières alimentaires consommables', () => {
     expect(propose.find((a) => a.libelle === 'Soupe de légumes')?.groupe).toBe('Plats');
     const farine = propose.find((a) => a.libelle === 'Farine');
     expect(farine?.groupe).toMatch(/Matières alimentaires consommables/);
-    expect(ingredientsProposables(archive, groupes).find((a) => a.libelle === 'Farine')?.groupe).toMatch(
-      /Matières alimentaires/,
-    );
+    // Les ingrédients d'un plat ou d'un savon se rangent comme ceux d'un fromage : sous « Consommables ».
+    expect(ingredientsProposables(archive, groupes).find((a) => a.libelle === 'Farine')?.groupe).toBe('Consommables');
   });
 });
 

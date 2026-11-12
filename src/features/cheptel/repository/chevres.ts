@@ -10,6 +10,7 @@ import { PARAMETRES_ESPECE, SEXE, STATUT_CHEVRE } from '@/shared/constants/chept
 import { deEspeceCourante, especeDe } from '@/features/cheptel/utils/espece';
 import { especeCourante, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
+import { misesBasDeLaSaison, type MisesBasDeLaSaison } from '@/features/cheptel/services/misesBasSaison';
 
 /** Animaux vivants de l'espèce courante. */
 export async function listChevresVivantes(): Promise<Chevre[]> {
@@ -122,6 +123,11 @@ export async function dernieresMisesBasParMere(): Promise<Record<string, string>
     if (!actuelle || c.dateNaissance > actuelle) resultat[c.mereNumeroBoucle] = c.dateNaissance;
   }
   return resultat;
+}
+
+/** Les mises bas de la saison de l'année, par mère de l'espèce courante (voir misesBasDeLaSaison). */
+export async function chargerMisesBasDeLaSaison(annee: number): Promise<Record<string, MisesBasDeLaSaison>> {
+  return misesBasDeLaSaison(deEspeceCourante(await loadAllYears(CATEGORIE_STOCKAGE.CHEPTEL)), annee);
 }
 
 export async function getChevre(id: string): Promise<Chevre | undefined> {
