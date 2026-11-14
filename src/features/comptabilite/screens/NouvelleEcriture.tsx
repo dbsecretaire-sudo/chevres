@@ -69,6 +69,8 @@ export default function NouvelleFacture() {
     produitLibelle?: string;
     /** L'état des animaux (depuis leur réservation) : « vivants » ou « morts ». */
     etat?: string;
+    /** « vivants » : la vente d'un départ d'animaux vivants (liste des ventes ou assistant du lot) ; ses animaux et sa catégorie sont verrouillés. */
+    depart?: string;
     /** Un bon de commande à transformer en vente tout de suite (depuis la validation de la préparation). */
     commande?: string;
     /** Seulement ces lignes du bon (identifiants séparés par « ; ») : la facturation depuis les lots d'un produit. */
@@ -114,6 +116,7 @@ export default function NouvelleFacture() {
       : undefined,
     params.etat,
     params.lot,
+    params.depart === 'vivants',
   );
   // La catégorie de dépense demandée par l'adresse (une catégorie connue) : elle se choisit d'office, et change quand l'adresse en demande une autre.
   const [depenseVue, setDepenseVue] = useState<string | undefined>(undefined);
@@ -362,12 +365,15 @@ export default function NouvelleFacture() {
         ) : (
           <>
             <Button label={TEXTES.commun.general.enregistrer} onPress={() => e.enregistrer()} loading={e.enregistrement} />
-            <Button
-              variant="secondary"
-              label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
-              onPress={() => e.enregistrer(true)}
-              loading={e.enregistrement}
-            />
+            {/* Un départ verrouillé concerne ses seuls animaux : on n'en enchaîne pas une autre écriture. */}
+            {e.departVerrouille ? null : (
+              <Button
+                variant="secondary"
+                label={TEXTES.comptabilite.nouvelleEcriture.enregistrerEtAjouter}
+                onPress={() => e.enregistrer(true)}
+                loading={e.enregistrement}
+              />
+            )}
             <Button variant="secondary" label={TEXTES.comptabilite.nouvelleEcriture.precedent} onPress={() => setEtape(etape - 1)} />
           </>
         )}

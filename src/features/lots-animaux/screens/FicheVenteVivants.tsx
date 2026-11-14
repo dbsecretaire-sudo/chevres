@@ -100,11 +100,11 @@ export default function FicheVenteVivants() {
         {/* La vente elle-même, au nom de l'acheteur (le détenteur d'arrivée) : après le document de circulation. */}
         <Button
           label={C.facturerLeDepart}
-          disabled={!document || !existant}
+          disabled={!document || !existant || idsDesAnimaux.length === 0}
           onPress={() =>
             existant &&
             router.push(
-              `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.ANIMAL_VIVANT}&lot=${existant.id}&animaux=${idsDesAnimaux.join(SEPARATEUR_ANIMAUX)}&etat=vivants${acheteur ? `&client=${acheteur}` : ''}` as never,
+              `${ROUTES.COMPTABILITE_NOUVELLE}?type=emise&categorie=${CATEGORIE_RECETTE.ANIMAL_VIVANT}&animaux=${idsDesAnimaux.join(SEPARATEUR_ANIMAUX)}&etat=vivants&depart=vivants${acheteur ? `&client=${acheteur}` : ''}` as never,
             )
           }
         />

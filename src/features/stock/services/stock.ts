@@ -258,6 +258,16 @@ export function niveauxDeStock(
 ): Map<string, number> {
   const niveaux = new Map<string, number>();
   for (const m of mouvements) niveaux.set(m.article, (niveaux.get(m.article) ?? 0) + m.delta);
+  // Les lignes du cheptel suivent les animaux vivants : une espèce qui n'en a plus aucun n'a rien en stock, même si des ventes sont notées
+  // (sinon le stock tombe en négatif, les ventes n'ayant plus d'animal en face).
+  if (effectifs) {
+    for (const cle of [...niveaux.keys()]) {
+      const role = roleDeLaViande(cle);
+      if (!role) continue;
+      const espece = cle.slice(`${GENRE_ARTICLE.VIANDE}:`.length, -(role.length + 1));
+      if (!(espece in effectifs)) niveaux.set(cle, 0);
+    }
+  }
   for (const [espece, effectif] of Object.entries(effectifs ?? {})) {
     niveaux.set(cleArticle(GENRE_ARTICLE.VIANDE, `${espece}_${ROLE_VIANDE.JEUNE}`), effectif?.petits ?? 0);
     // L'animal vivant : les adultes vivants, boucs compris. L'animal sur pied : les chèvres mortes, déjà à l'abattoir et pas

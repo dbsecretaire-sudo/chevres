@@ -108,6 +108,16 @@ export const RUBRIQUES: Record<string, Rubrique> = {
     sousTitre: 'Ce qu’il faut présenter, imprimer ou envoyer',
     sections: [
       {
+        titre: 'Réglementation et contrôles',
+        lignes: [
+          { libelle: 'Bibliothèque de documents', aide: 'Pièces jointes et justificatifs', icone: 'document-outline', route: ROUTES.CHEPTEL_BIBLIOTHEQUE },
+          { libelle: 'Boucles', aide: 'Les numéros de boucle des animaux', icone: 'pricetag-outline', route: ROUTES.lieu('boucles') },
+          { libelle: 'Contrôles des animaux', aide: 'Identification et registre d’élevage', icone: 'checkmark-circle-outline', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX) },
+          { libelle: 'Terrains', aide: 'Contrôles de surface', icone: 'map-outline', route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE) },
+          { libelle: 'Qualité du lait', aide: 'Analyses, résumé et contrôles du lait', icone: 'water-outline', route: ROUTES.santeControlesOnglet('laitier', 'analyse') },
+        ],
+      },
+      {
         titre: 'À présenter',
         lignes: [
           { libelle: 'Registre des analyses', aide: 'Résultats par lot et par date', icone: 'list-outline', route: ROUTES.PRODUCTION_REGISTRE_ANALYSES },
@@ -131,16 +141,6 @@ export const RUBRIQUES: Record<string, Rubrique> = {
         lignes: [
           { libelle: 'Export pour le comptable', aide: 'Export et PDF', icone: 'server-outline', route: ROUTES.EXPORT_DONNEES },
           { libelle: 'Sauvegarde', aide: 'Fichier de secours', icone: 'save-outline', route: ROUTES.SAUVEGARDE_LOCALE },
-        ],
-      },
-      {
-        titre: 'Réglementation et contrôles',
-        lignes: [
-          { libelle: 'Bibliothèque de documents', aide: 'Pièces jointes et justificatifs', icone: 'document-outline', route: ROUTES.CHEPTEL_BIBLIOTHEQUE },
-          { libelle: 'Boucles', aide: 'Les numéros de boucle des animaux', icone: 'pricetag-outline', route: ROUTES.lieu('boucles') },
-          { libelle: 'Contrôles des animaux', aide: 'Identification et registre d’élevage', icone: 'checkmark-circle-outline', route: ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.ANIMAUX) },
-          { libelle: 'Terrains', aide: 'Contrôles de surface', icone: 'map-outline', route: ROUTES.santeControles(FAMILLE_CONTROLE.SURFACE) },
-          { libelle: 'Qualité du lait', aide: 'Analyses, résumé et contrôles du lait', icone: 'water-outline', route: ROUTES.santeControlesOnglet('laitier', 'analyse') },
         ],
       },
     ],

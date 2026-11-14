@@ -215,7 +215,7 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
       ? s.fromages.length
       : 0;
   const quantiteNum =
-    categorie === CATEGORIE_VENTE.VIANDE
+    categorie === CATEGORIE_VENTE.VIANDE || (estAnimal && s.animaux.length > 0)
       ? s.animaux.length || parseDecimal(s.quantite)
       : lotsDeFromages || parseDecimal(s.quantite);
   if (!s.reajustement && quantiteNum <= 0) {
@@ -290,7 +290,8 @@ function construireVente(s: SaisieEcriture): ResultatSaisie {
             // Un abattoir : vivants ; des adultes : selon la ligne choisie ; des cabris : morts avec facture, au choix (morts par défaut) sans facture.
             return reglage.choix ? (s.etatAnimaux === 'vivants' ? 'vivants' : 'morts') : reglage.etat;
           })(),
-      animaux: estViande && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
+      // Les animaux vendus (viande, ou animal sur pied / vivant) : ce sont eux que la vente fait sortir du cheptel.
+      animaux: (estViande || estAnimal) && s.animaux.length > 0 ? s.animaux.join(SEPARATEUR_ANIMAUX) : undefined,
       fromages: lotsDeFromages > 0 ? s.fromages.join(SEPARATEUR_ANIMAUX) : undefined,
       dateAbattoir:
         estViande &&

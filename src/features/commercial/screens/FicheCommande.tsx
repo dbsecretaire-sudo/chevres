@@ -48,7 +48,7 @@ import { idsDesAnimaux } from '@/features/comptabilite/utils/ventes';
 import { SelectModalMultiple } from '@/shared/components/SelectModalMultiple';
 import { STATUT_CHEVRE } from '@/shared/constants/cheptel';
 import { ROUTES } from '@/shared/constants/routes';
-import { articlesDuGenre, estLigneDuCheptel, type ArticleAffiche } from '@/features/stock/services/stock';
+import { articlesDuGenre, type ArticleAffiche } from '@/features/stock/services/stock';
 import { useNiveauxStock } from '@/features/stock/hooks/useNiveauxStock';
 import { ajouterMois } from '@/features/comptabilite/services/tresorerie';
 import { ajouterJours } from '@/shared/utils/calendrier';
@@ -137,10 +137,11 @@ export default function FicheCommande() {
         setAnimaux(lesAnimaux);
         setIdsVendus(new Set(lesVentes.flatMap((v) => idsDesAnimaux(v))));
         setVentesLues(lesVentes);
-        // Les produits qu'on commande : les fromages, puis la viande et la charcuterie de l'inventaire (hors animaux du cheptel).
+        // Les produits qu'on commande : les fromages, puis la viande (animaux du cheptel compris) et la charcuterie de l'inventaire.
         setFromages([
           ...articlesDuGenre(GENRE_ARTICLE.FROMAGE, stock),
-          ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock).filter((a) => !estLigneDuCheptel(a.cle)),
+          // La viande de l'espèce courante seulement (celle affichée en haut de l'écran).
+          ...articlesDuGenre(GENRE_ARTICLE.VIANDE, stock, especeCourante()),
           ...articlesDuGenre(GENRE_ARTICLE.PLAT, stock),
           ...articlesDuGenre(GENRE_ARTICLE.SAVON, stock),
         ]);
@@ -358,9 +359,11 @@ export default function FicheCommande() {
   ];
   /** Le stock qu'il reste de chaque produit : dans la liste, et sous la ligne avec ce qui reste après la commande. */
   const enStock = (article: string): number => niveaux.get(article) ?? 0;
+  // Les produits se choisissent par catégorie (fromages, viande, plats, savons) : la catégorie est celle du genre de l'article.
   const optionsFromages = fromages.map((f) => ({
     value: f.cle,
     label: `${f.libelle} (${T.enStock(enStock(f.cle))})`,
+    groupe: T.categories[f.cle.split(':')[0]],
   }));
 
   return (
@@ -403,6 +406,7 @@ export default function FicheCommande() {
               label={T.fromage}
               value={l.article}
               options={optionsFromages}
+              parCategories
               onChange={(article) => changerFromage(l.id, article)}
             />
             {/* Les lots réservés pour cette ligne : leurs numéros (suivi), repris par la vente à la facturation. */}

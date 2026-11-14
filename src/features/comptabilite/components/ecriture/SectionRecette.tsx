@@ -168,6 +168,17 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
     <>
       {/* Les informations : la catégorie, ce qui est vendu et son montant. */}
       <SectionForm>
+        {/* Un départ d'animaux vivants : sa catégorie est celle du départ, elle ne se change pas (ni son détail). */}
+        {e.departVerrouille ? (
+          <FormField
+            label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
+            value={libelleCategorieVente({ categorie: e.categorieRecette as Vente['categorie'], activite: e.activite })}
+            editable={false}
+            style={commonStyles.verrouille}
+            aide={TEXTES.comptabilite.nouvelleEcriture.departVerrouille}
+          />
+        ) : null}
+        {e.departVerrouille ? null : (
         <AncreVisite id="ecriture.categorie">
         <ChampCategorieCompte
           label={TEXTES.comptabilite.nouvelleEcriture.categorieDeRecette}
@@ -207,9 +218,10 @@ export function SectionRecetteVente({ e }: { e: EtatNouvelleEcriture }) {
           onGererComptes={() => router.push(ROUTES.COMPTES_PCG)}
         />
         </AncreVisite>
+        )}
 
         {/* Seconde liste : lait ou fromage ; boucherie, petits, animal sur pied ou vivant. */}
-        {e.categoriesDuGroupe.length > 1 && (
+        {e.categoriesDuGroupe.length > 1 && !e.departVerrouille && (
           <SelectField
             label={TEXTES.comptabilite.nouvelleEcriture.detailDeLaVente}
             required

@@ -7,6 +7,7 @@ import { enteteBureau } from '@/bureau/FlecheRetourBureau';
 import { colors } from '@/shared/theme/colors';
 import { HeaderBackTo } from '@/shared/components/HeaderBackTo';
 import { ROUTES } from '@/shared/constants/routes';
+import { libelleDeLaSorte } from '@/features/stock/services/boucles';
 import { TEXTES } from '@/shared/textes';
 
 export default function CheptelLayout() {
@@ -32,6 +33,16 @@ export default function CheptelLayout() {
       <Stack.Screen name="documents-circulation" options={{ title: TEXTES.cheptel.circulation.titreEcran }} />
       <Stack.Screen name="dossier-pac" options={{ title: TEXTES.cheptel.accueil.lignes.dossierPac.titre }} />
       <Stack.Screen name="[id]" options={{ title: TEXTES.navigation.layout.ficheChevre }} />
+      <Stack.Screen
+        name="boucles-sorte"
+        options={({ route }) => ({ title: libelleDeLaSorte((route.params as { article?: string } | undefined)?.article) })}
+      />
+      <Stack.Screen
+        name="boucle-detail"
+        options={({ route }) => ({
+          title: TEXTES.stock.boucles.fiche.titre((route.params as { numero?: string } | undefined)?.numero ?? ''),
+        })}
+      />
       <Stack.Screen
         name="nouvelle"
         options={{

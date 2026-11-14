@@ -134,7 +134,11 @@ export function useNouvelleEcriture(
   etatInitial?: string,
   /** Le lot d'abattoir à facturer (depuis son assistant, ou le choix d'un lot) : ses animaux sont déjà sortis ; sa facture se lie à lui. */
   lotInitial?: string,
+  /** Une vente d'animaux vivants d'un départ (depuis la liste des ventes ou l'assistant du lot) : animaux, nombre et catégorie sont verrouillés. */
+  departVivant?: boolean,
 ) {
+  /** Les animaux et la catégorie viennent du départ : on ne les change pas dans l'écriture. */
+  const departVerrouille = !!departVivant && !!animauxInitiaux?.length;
   // Revenir d'où l'on vient : la page d'un lieu qui a ouvert l'écriture, sinon l'écran d'avant.
   const retour = useRetour();
   const { settings, setAnneeActive, choisirToutesAnnees, patchSettings } = useAppSettings();
@@ -266,7 +270,7 @@ export function useNouvelleEcriture(
   const [typeFromageLibre, setTypeFromageLibre] = useState(
     codeFromageDepart && !fromageConnu ? (departLots?.libelle ?? '') : '',
   );
-  const [quantite, setQuantite] = useState('');
+  const [quantite, setQuantite] = useState(departVerrouille ? String(animauxInitiaux?.length ?? 1) : '');
   const [unite, setUnite] = useState<UniteVente>(UNITE_VENTE.PIECE);
   const [poidsKg, setPoidsKg] = useState('');
   const [jeune, setJeune] = useState<boolean | undefined>();
@@ -338,8 +342,8 @@ export function useNouvelleEcriture(
     const declaree = venteDeclareeParDefaut(clients.find((c) => c.id === id));
     if (declaree !== avecFacture) {
       setAvecFacture(declaree);
-      // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus.
-      setAnimaux([]);
+      // Avec facture, les animaux ont une boucle ; sans, ils n'en ont pas : ceux déjà choisis ne conviennent plus (sauf ceux d'un départ verrouillé).
+      if (!departVerrouille) setAnimaux([]);
     }
   };
   const estProductionVente = type === TYPE_FACTURE.EMISE && estCategorieVente(categorieRecette);
@@ -444,6 +448,8 @@ export function useNouvelleEcriture(
   };
 
   const changerCategorieRecette = (v: CategorieRecette) => {
+    // Un départ verrouillé reste une vente d'animaux vivants : sa catégorie ne change pas.
+    if (departVerrouille) return;
     setCategorieRecette(v);
     // Le détail (et les animaux choisis) d'une vente de viande ne vaut pas pour une autre catégorie : on repart de zéro.
     if (v !== categorieRecette) {
@@ -912,6 +918,7 @@ export function useNouvelleEcriture(
     etatAnimaux,
     setEtatAnimaux,
     animaux,
+    departVerrouille,
     fromages,
     setFromages,
     dateAbattoir,

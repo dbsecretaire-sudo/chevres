@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { RubriquesDeCartes } from '@/features/stock/components/CartesDuStock';
 import { CadreDeJeu } from '@/features/stock/components/CadreDeJeu';
+import type { CarteStock } from '@/features/stock/services/entrepotJeu';
 import { useEntrepot } from '@/features/stock/hooks/useEntrepot';
 import { BoutonPlat } from '@/shared/components/BoutonPlat';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
@@ -28,6 +29,7 @@ export default function EntrepotJeu({
   lieu,
   avecCompte,
   avecRetour,
+  onDetailBoucles,
 }: {
   seulement?: string;
   titre?: string;
@@ -41,6 +43,8 @@ export default function EntrepotJeu({
   avecCompte?: boolean;
   /** Vrai : la page a sa flèche de retour et son titre en grand, en tête (la grange). */
   avecRetour?: boolean;
+  /** Une carte de boucles ouvre ce tableau détaillé (sinon, son historique). */
+  onDetailBoucles?: (carte: CarteStock) => void;
 }) {
   const router = useRouter();
   const comptable = useDispositionComptable();
@@ -99,7 +103,7 @@ export default function EntrepotJeu({
             ))}
           </View>
         )}
-        <RubriquesDeCartes groupes={groupes} origine={origine} />
+        <RubriquesDeCartes groupes={groupes} origine={origine} onDetailBoucles={onDetailBoucles} />
         {role === ROLE.BERGER ? null : (
           <View style={styles.boutons}>
             <BoutonPlat
@@ -161,7 +165,7 @@ export default function EntrepotJeu({
       }
     >
       <ScrollView ref={defilement} style={styles.defile} contentContainerStyle={styles.rubriques} showsVerticalScrollIndicator={false}>
-        <RubriquesDeCartes groupes={groupes} origine={origine} />
+        <RubriquesDeCartes groupes={groupes} origine={origine} onDetailBoucles={onDetailBoucles} />
       </ScrollView>
     </CadreDeJeu>
   );

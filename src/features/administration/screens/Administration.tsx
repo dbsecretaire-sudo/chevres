@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { appeler, exploitationDeLaConnexion, lireConnexion, seDeconnecter, type Connexion } from '@/features/sync/synchronisation';
 import { recevoirChangements } from '@/features/sync/moteur';
-import { detaillerSaisie, libelleZone, resumerSaisie, type ChampDetail } from '@/features/administration/services/resumeSaisie';
+import { libelleZone, resumerSaisie } from '@/features/administration/services/resumeSaisie';
+import { DetailDeLaSaisie } from '@/features/administration/components/DetailDeLaSaisie';
+import { ROUTES } from '@/shared/constants/routes';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { SelectField } from '@/shared/components/SelectField';
 import { colors } from '@/shared/theme/colors';
@@ -33,19 +35,6 @@ interface Attente {
   actuel: unknown;
   auteur: string;
   cree_le: string;
-}
-
-/** Une saisie déjà décidée (validée ou refusée) : ce qu'elle était, et qui a décidé. */
-interface Decision {
-  id: number;
-  zone: string;
-  identifiant: string;
-  contenu: unknown;
-  actuel: unknown;
-  auteur: string;
-  decision: 'validee' | 'refusee';
-  decide_par: string;
-  decide_le: string;
 }
 
 /**
@@ -121,9 +110,7 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
   const [comptes, setComptes] = useState<Compte[]>([]);
   const [exploitationsConnues, setExploitationsConnues] = useState<Exploitation[]>([]);
   const [attentes, setAttentes] = useState<Attente[]>([]);
-  /** L'historique des saisies décidées : affiché sous les saisies à valider, sur demande (bouton « Historique »). */
-  const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
-  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const router = useRouter();
   const [selection, setSelection] = useState<string | null>(null);
   /** La saisie dont on regarde le détail (la fenêtre s'ouvre quand elle n'est pas vide). */
   const [detail, setDetail] = useState<Attente | null>(null);
@@ -172,24 +159,6 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
     // (sinon elle n'arrive qu'à la prochaine synchronisation).
     if (reponse.statut === 200) await recevoirChangements().catch(() => undefined);
     await charger();
-    if (historiqueOuvert) await chargerHistorique();
-  };
-
-  /** Recharge l'historique des décisions de l'exploitation. */
-  const chargerHistorique = async () => {
-    const reponse = await appeler('attentes-historique', 'GET', {
-      jeton,
-      parametres: `&etablissement=${await exploitationDeLaConnexion()}`,
-    });
-    if (reponse.statut === 200) setDecisions(reponse.json.decisions ?? []);
-    else setMessage(reponse.json.erreur ?? 'Chargement de l’historique impossible.');
-  };
-
-  /** Affiche ou masque l'historique ; à l'affichage, il est rechargé. */
-  const basculerHistorique = async () => {
-    const ouvrir = !historiqueOuvert;
-    setHistoriqueOuvert(ouvrir);
-    if (ouvrir) await chargerHistorique();
   };
 
   /** Déconnecte toutes les sessions (tous les comptes, tous les appareils). La session de l'administrateur en fait partie : cet appareil revient à la connexion. */
@@ -216,8 +185,7 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
             <Text style={commonStyles.cardTitle}>Saisies à valider</Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityState={{ expanded: historiqueOuvert }}
-              onPress={basculerHistorique}
+              onPress={() => router.push(ROUTES.ADMINISTRATION_HISTORIQUE as never)}
               style={[bouton, { borderWidth: 1, borderColor: colors.primary }]}
             >
               <Text style={{ color: colors.primary, fontWeight: '700' }}>Historique</Text>
@@ -246,36 +214,6 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
               </View>
             </View>
           ))}
-          {historiqueOuvert ? (
-            <View style={{ gap: 10, marginTop: 6 }}>
-              <Text style={commonStyles.cardTitle}>Historique</Text>
-              {decisions.length === 0 ? <Text style={commonStyles.muted}>Aucune saisie décidée pour l’instant.</Text> : null}
-              {decisions.map((decision) => (
-                <Pressable
-                  key={decision.id}
-                  accessibilityRole="button"
-                  onPress={() =>
-                    setDetail({
-                      id: decision.id,
-                      zone: decision.zone,
-                      identifiant: decision.identifiant,
-                      contenu: decision.contenu,
-                      actuel: decision.actuel,
-                      auteur: decision.auteur,
-                      cree_le: `${decision.decision === 'validee' ? 'Validée' : 'Refusée'} par ${decision.decide_par} le ${decision.decide_le}`,
-                    })
-                  }
-                  style={carte}
-                >
-                  <Text style={{ fontWeight: '700', color: colors.text }}>{libelleZone(decision.zone)}</Text>
-                  <Text style={{ color: colors.text }}>
-                    {decision.decision === 'validee' ? 'Validée' : 'Refusée'} par {decision.decide_par} · saisie de {decision.auteur}
-                  </Text>
-                  <Text style={commonStyles.muted}>{decision.decide_le}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
         </View>
       ) : null}
 
@@ -355,47 +293,6 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
 
       {detail ? <DetailDeLaSaisie attente={detail} onFermer={() => setDetail(null)} /> : null}
     </ScrollView>
-  );
-}
-
-/** Une ligne du détail : « avant → après » pour un champ modifié, la seule valeur pour un ajout ou une suppression. */
-function texteChamp(champ: ChampDetail): string {
-  if (champ.apres === undefined) return champ.avant ?? '—';
-  if (champ.avant === undefined) return champ.apres;
-  return `${champ.avant} → ${champ.apres}`;
-}
-
-/** Toutes les informations d'une saisie d'utilisateur, dans une fenêtre : chaque élément, avec ce qui change. */
-function DetailDeLaSaisie({ attente, onFermer }: { attente: Attente; onFermer: () => void }) {
-  const blocs = detaillerSaisie(attente.actuel, attente.contenu);
-  return (
-    <Modal transparent animationType="fade" visible onRequestClose={onFermer}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 16 }}>
-        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, maxHeight: '85%', gap: 10 }}>
-          <Text style={{ fontWeight: '800', fontSize: 16, color: colors.text }}>{libelleZone(attente.zone)}</Text>
-          <Text style={commonStyles.muted}>
-            {attente.auteur} · {attente.cree_le}
-          </Text>
-          <ScrollView>
-            <View style={{ gap: 12 }}>
-              {blocs.map((bloc, i) => (
-                <View key={`${i}-${bloc.titre}`} style={{ gap: 4 }}>
-                  <Text style={{ fontWeight: '700', color: colors.text }}>{bloc.titre}</Text>
-                  {bloc.champs.map((champ) => (
-                    <Text key={champ.nom} style={{ color: colors.text }}>
-                      {champ.nom} : {texteChamp(champ)}
-                    </Text>
-                  ))}
-                </View>
-              ))}
-            </View>
-          </ScrollView>
-          <Pressable accessibilityRole="button" onPress={onFermer} style={[bouton, { backgroundColor: colors.primary, alignSelf: 'flex-end' }]}>
-            <Text style={{ color: colors.blanc, fontWeight: '700' }}>Fermer</Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
   );
 }
 

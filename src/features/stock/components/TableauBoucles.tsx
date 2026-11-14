@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ChoixDeroulant } from '@/shared/components/ChoixDeroulant';
 import { FiltreColonne } from '@/shared/components/FiltreColonne';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
+import type { BoucleStock } from '@/features/stock/types';
 import {
   estArticleRebouclage,
   estBoucleDeRemplacement,
@@ -40,7 +41,16 @@ export function FiltresBoucles({ liste }: { liste: ListeBoucles }) {
  * porte n'est plus vivant. Un appui sur le titre d'une colonne trie la liste d'après elle. C'est la même vue dans l'inventaire et
  * dans les contrôles : l'inventaire des boucles ne se modifie qu'en comptabilité (achat) et au cheptel (pose).
  */
-export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBoucles; pleinePage?: boolean }) {
+export function TableauBoucles({
+  liste,
+  pleinePage = false,
+  onOuvrirBoucle,
+}: {
+  liste: ListeBoucles;
+  pleinePage?: boolean;
+  /** Un appui sur une ligne (une boucle numérotée) : sa fiche. */
+  onOuvrirBoucle?: (boucle: BoucleStock) => void;
+}) {
   const { lignes, tri, trierPar, morts, etat, filtres } = liste;
   /** La boucle de remplacement (rouge, rebouclage) s'achète en quantité : son numéro est celui de remplacement (vide tant qu'elle est en stock), avec sa date d'achat. */
   const rouge = estBoucleDeRemplacement(liste.article);
@@ -118,7 +128,13 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
       ) : (
         <ScrollView style={pleinePage ? undefined : styles.liste} nestedScrollEnabled>
           {lignes.map((b, i) => (
-            <View key={b.id} style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}>
+            <Pressable
+              key={b.id}
+              disabled={!onOuvrirBoucle || !b.numero}
+              onPress={() => onOuvrirBoucle?.(b)}
+              accessibilityRole={onOuvrirBoucle && b.numero ? 'button' : undefined}
+              style={[styles.ligne, i > 0 ? styles.ligneSeparee : undefined]}
+            >
               <View style={styles.colonneNumero}>
                 <Text style={styles.texteLigne}>{b.numero}</Text>
                 {b.remarque ? <Text style={styles.remarqueBoucle}>{texteDeLaRemarque(b.remarque)}</Text> : null}
@@ -141,7 +157,7 @@ export function TableauBoucles({ liste, pleinePage = false }: { liste: ListeBouc
                   accessibilityLabel={T.morte}
                 />
               </View>
-            </View>
+            </Pressable>
           ))}
         </ScrollView>
       )}

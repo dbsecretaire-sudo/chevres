@@ -922,6 +922,8 @@ export const TEXTES_COMPTABILITE = {
     preciserLeType: 'Préciser le type',
     ex2: 'ex: 2',
     nombreDeTetes: 'Nombre de têtes',
+    departVerrouille: 'Les animaux de ce départ sont ceux de la vente : ni leur nombre, ni la catégorie ne se changent ici.',
+    animauxDuDepart: 'Animaux du départ',
     nombreDOeufs: 'Nombre d’œufs',
     precision: 'Précision',
     get nombreDeCabris() {

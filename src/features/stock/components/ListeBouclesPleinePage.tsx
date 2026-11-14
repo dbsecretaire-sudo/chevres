@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FiltresBoucles, TableauBoucles } from '@/features/stock/components/TableauBoucles';
 import type { ListeBoucles } from '@/features/stock/hooks/useListeBoucles';
 import { libelleDeLaSorte } from '@/features/stock/services/boucles';
+import type { BoucleStock } from '@/features/stock/types';
 import { colors } from '@/shared/theme/colors';
 import { commonStyles } from '@/shared/styles/commonStyles';
 import { TEXTES } from '@/shared/textes';
@@ -13,10 +14,12 @@ interface Props {
   liste: ListeBoucles;
   visible: boolean;
   onFermer: () => void;
+  /** Un appui sur une boucle : sa fiche. */
+  onOuvrirBoucle?: (boucle: BoucleStock) => void;
 }
 
 /** Une liste de boucles en pleine page : son titre, ses filtres et tout le tableau, sans la hauteur limitée de la section. */
-export function ListeBouclesPleinePage({ liste, visible, onFermer }: Props) {
+export function ListeBouclesPleinePage({ liste, visible, onFermer, onOuvrirBoucle }: Props) {
   const T = TEXTES.stock.boucles;
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onFermer}>
@@ -30,7 +33,7 @@ export function ListeBouclesPleinePage({ liste, visible, onFermer }: Props) {
           </View>
           <FiltresBoucles liste={liste} />
           <ScrollView style={commonStyles.flex1}>
-            <TableauBoucles liste={liste} pleinePage />
+            <TableauBoucles liste={liste} pleinePage onOuvrirBoucle={onOuvrirBoucle} />
           </ScrollView>
         </View>
       </SafeAreaView>

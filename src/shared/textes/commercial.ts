@@ -169,6 +169,8 @@ export const TEXTES_COMMERCIAL = {
     lignes: 'Produits commandés',
     ajouterLigne: 'Ajouter un produit',
     fromage: 'Produit (fromage, viande, charcuterie)',
+    /** Les catégories du choix d'un produit : chaque produit se range dans la sienne (fromage, viande, plat, savon). */
+    categories: { fromage: 'Fromages', viande: 'Viande et charcuterie', plat: 'Plats préparés', savon: 'Savons' } as Record<string, string>,
     enStock: (n: number) => `${n} en stock`,
     lotsReserves: (liste: string) => `Lots réservés : ${liste}`,
     resteEnStock: (stock: number, apres: number) =>

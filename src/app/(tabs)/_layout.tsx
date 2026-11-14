@@ -240,6 +240,15 @@ function Onglets() {
           headerLeft: () => <HeaderBackTo to="/" />,
         }}
       />
+      <Tabs.Screen
+        name="administration-historique"
+        options={{
+          href: null,
+          title: 'Historique des saisies',
+          // Destination fixe : on revient aux saisies à valider, d'où l'écran est ouvert.
+          headerLeft: () => <HeaderBackTo to="/administration" />,
+        }}
+      />
       {/* Les pages de l'organisation : une par rubrique, puis les écrans de chaque rubrique (la flèche remonte d'un niveau). */}
       {[
         ['organisation-etablissement', TEXTES.settings.reglages.sectionEtablissement, ROUTES.REGLAGES],

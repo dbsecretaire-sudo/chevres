@@ -1,4 +1,6 @@
 import { estUnEcranDeLaRubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
+import { FAMILLE_CONTROLE } from '@/shared/constants/controles';
+import { ROUTES } from '@/shared/constants/routes';
 
 /**
  * Le Précédent du téléphone, pour chaque page : la page d'où l'on vient (la racine de sa rubrique, ou l'accueil pour les lieux de la ferme).
@@ -13,6 +15,9 @@ const PAGES_RACINES: readonly string[] = ['/', '/cheptel', '/comptabilite', '/co
 const PAGES_DE_L_ACCUEIL: Record<string, string> = {
   // Le Dossier PAC (ex-Estive) est dans les Documents : sa flèche y revient.
   '/cheptel/dossier-pac': '/rubrique/documents',
+  // Les boucles (la fiche d'une boucle, le tableau d'une sorte) reviennent à la liste des boucles des contrôles.
+  '/cheptel/boucle-detail': ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
+  '/cheptel/boucles-sorte': ROUTES.santeControlesOnglet(FAMILLE_CONTROLE.ANIMAUX, FAMILLE_CONTROLE.BOUCLES),
   '/cheptel/traitements': '/',
   '/commercial/partenaires': '/',
   '/rappels': '/',

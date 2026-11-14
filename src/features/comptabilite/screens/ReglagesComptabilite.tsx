@@ -13,7 +13,6 @@ import { useRappels } from '@/features/rappels/hooks/useRappels';
 import { useAppSettings } from '@/features/settings/context/AppSettingsContext';
 import { reglagesTva } from '@/features/comptabilite/utils/reglagesTva';
 import { getSettings, synchroBouclesActive } from '@/features/settings/settings';
-import { MarquerBoucles } from '@/features/stock/components/MarquerBoucles';
 import { synchroniserPoseBoucles } from '@/features/stock/services/boucles';
 import { PERIODICITE_TVA, REGIME_TVA_PILOTAGE } from '@/shared/constants/tva';
 import { LABEL_PERIODICITE_TVA, LABEL_REGIME_TVA_PILOTAGE } from '@/shared/textes/libelles';
@@ -102,7 +101,6 @@ export default function ReglagesComptabilite() {
           }}
         />
         <Text style={commonStyles.note}>{TEXTES.stock.boucles.synchro.optionAide}</Text>
-        <MarquerBoucles />
       </SectionForm>
 
       {/* Les taux proposés par produit : la TVA des ventes et l'imposition des aides. */}

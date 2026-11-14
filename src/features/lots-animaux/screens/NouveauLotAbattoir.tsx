@@ -132,9 +132,9 @@ export default function NouveauLotAbattoir() {
         await patchSettings({ exploitation: { ...settings.exploitation, ventesVivants: ventes } });
         if (suite === 'vente') {
           router.replace(
-            `${nouvelle}?type=emise&categorie=${CATEGORIE_RECETTE.ANIMAL_VIVANT}&lot=${vente.id}&animaux=${choisis
+            `${nouvelle}?type=emise&categorie=${CATEGORIE_RECETTE.ANIMAL_VIVANT}&animaux=${choisis
               .map((a) => a.id)
-              .join(SEPARATEUR_ANIMAUX)}&etat=vivants${acheteurId ? `&client=${acheteurId}` : ''}` as never,
+              .join(SEPARATEUR_ANIMAUX)}&etat=vivants&depart=vivants${acheteurId ? `&client=${acheteurId}` : ''}` as never,
           );
         } else {
           router.replace(ROUTES.venteVivants(vente.id) as never);

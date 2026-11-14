@@ -11,6 +11,7 @@ import {
   type CarteStock,
   type GroupeDeCartes,
 } from '@/features/stock/services/entrepotJeu';
+import { estArticleBoucle } from '@/features/stock/services/boucles';
 import { Frisson } from '@/shared/components/ListeReordonnable';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
 import { useDispositionComptable } from '@/shared/hooks/useDispositionComptable';
@@ -43,10 +44,13 @@ const COLONNES_STOCK: readonly ColonneDuTableau<CarteStock>[] = [
 export function RubriquesDeCartes({
   groupes,
   origine,
+  onDetailBoucles,
 }: {
   groupes: readonly GroupeDeCartes[];
   /** La page où l'on est (l'adresse) : la flèche de retour de la page ouverte par une carte y ramène. */
   origine?: string;
+  /** Une carte de boucles ouvre ce tableau détaillé au lieu de l'historique de l'article. */
+  onDetailBoucles?: (carte: CarteStock) => void;
 }) {
   const router = useRouter();
   // Le poste de comptabilité : chaque rubrique est un tableau (article, quantité), pas une liste de cartes.
@@ -63,6 +67,13 @@ export function RubriquesDeCartes({
     if (origine) noterOrigine(origine, destination);
     router.push(destination as never);
   };
+  /** Un appui sur une carte : les œufs ouvrent l'inventaire ; une boucle ouvre son tableau détaillé ; un article, son historique. */
+  const ouvrirLaCarte = (c: CarteStock) => {
+    if (c.cle === 'oeufs') ouvrirLeStock(c);
+    else if (simple) return;
+    else if (onDetailBoucles && estArticleBoucle(c.cle)) onDetailBoucles(c);
+    else setHistoriqueDe(c);
+  };
   return (
     <>
       {groupes.map((g) =>
@@ -75,7 +86,7 @@ export function RubriquesDeCartes({
               lignes={g.cartes}
               cleDeLaLigne={(c) => c.cle}
               vide={T.vide}
-              onLigne={(c) => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
+              onLigne={ouvrirLaCarte}
             />
           </View>
         ) : (
@@ -93,7 +104,7 @@ export function RubriquesDeCartes({
                   dessin={<DessinDeCarte emoji={c.emoji} cle={c.cle} />}
                   onRenommer={simple ? undefined : () => setImageDe(c)}
                   // Un article (et le lait) : son historique ; les œufs n'en ont pas, ils ouvrent l'inventaire.
-                  onPress={() => (c.cle === 'oeufs' ? ouvrirLeStock(c) : simple ? undefined : setHistoriqueDe(c))}
+                  onPress={() => ouvrirLaCarte(c)}
                 />
               ))}
               {g.cartes.length === 0 ? <Text style={styles.vide}>{T.vide}</Text> : null}

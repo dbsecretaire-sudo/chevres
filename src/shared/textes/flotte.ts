@@ -102,6 +102,7 @@ export const TEXTES_FLOTTE = {
     motifTropPercu: 'Trop-perçu de prime après résiliation',
     enCours: (assureur: string, date: string) => `Assuré chez ${assureur} (dernière prime le ${date}).`,
     resilieeLe: (date: string) => `Assurance résiliée le ${date}.`,
+    sousContrat: (assureur: string) => `Assuré chez ${assureur} (contrat lié, aucune prime notée pour l’instant).`,
     aucune: 'Ce véhicule n’est pas assuré.',
     unSeul: 'Un véhicule ne s’assure qu’une fois à la fois : pour changer d’assureur, résiliez d’abord.',
   },
