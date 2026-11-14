@@ -35,6 +35,19 @@ interface Attente {
   cree_le: string;
 }
 
+/** Une saisie déjà décidée (validée ou refusée) : ce qu'elle était, et qui a décidé. */
+interface Decision {
+  id: number;
+  zone: string;
+  identifiant: string;
+  contenu: unknown;
+  actuel: unknown;
+  auteur: string;
+  decision: 'validee' | 'refusee';
+  decide_par: string;
+  decide_le: string;
+}
+
 /**
  * Un compte tel que reçu. Un serveur qui n'a pas encore les exploitations multiples ne renvoie que « etablissement » : on le prend alors
  * comme seule exploitation, pour que l'écran ne plante pas.
@@ -70,8 +83,6 @@ const ROLES_DONNABLES: Record<Role, { valeur: Role; libelle: string }[]> = {
 
 const LIBELLE_ROLE: Record<string, string> = { administrateur: 'Administrateur', moderateur: 'Modérateur', utilisateur: 'Utilisateur' };
 
-/** La teinte du compte déplié, et celle d'une exploitation cochée. */
-const FOND_SELECTION = '#E4EEDF';
 
 /** Un mot de passe : au moins 9 caractères, comme côté serveur. */
 const MOT_DE_PASSE_MINIMUM = 9;
@@ -110,6 +121,9 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
   const [comptes, setComptes] = useState<Compte[]>([]);
   const [exploitationsConnues, setExploitationsConnues] = useState<Exploitation[]>([]);
   const [attentes, setAttentes] = useState<Attente[]>([]);
+  /** L'historique des saisies décidées : affiché sous les saisies à valider, sur demande (bouton « Historique »). */
+  const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
+  const [decisions, setDecisions] = useState<Decision[]>([]);
   const [selection, setSelection] = useState<string | null>(null);
   /** La saisie dont on regarde le détail (la fenêtre s'ouvre quand elle n'est pas vide). */
   const [detail, setDetail] = useState<Attente | null>(null);
@@ -154,9 +168,28 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
       corps: { ids: [id] },
     });
     setMessage(reponse.statut === 200 ? null : (reponse.json.erreur ?? 'Action impossible.'));
-    // Refusée : cet appareil reçoit tout de suite la version du serveur, pour que la saisie refusée disparaisse de sa copie locale (sinon elle y reste jusqu'à la prochaine synchronisation).
-    if (action === 'refuser' && reponse.statut === 200) await recevoirChangements().catch(() => undefined);
+    // Validée ou refusée : cet appareil reçoit tout de suite la version du serveur. Refusée, la saisie disparaît de sa copie locale ; validée, elle y apparaît
+    // (sinon elle n'arrive qu'à la prochaine synchronisation).
+    if (reponse.statut === 200) await recevoirChangements().catch(() => undefined);
     await charger();
+    if (historiqueOuvert) await chargerHistorique();
+  };
+
+  /** Recharge l'historique des décisions de l'exploitation. */
+  const chargerHistorique = async () => {
+    const reponse = await appeler('attentes-historique', 'GET', {
+      jeton,
+      parametres: `&etablissement=${await exploitationDeLaConnexion()}`,
+    });
+    if (reponse.statut === 200) setDecisions(reponse.json.decisions ?? []);
+    else setMessage(reponse.json.erreur ?? 'Chargement de l’historique impossible.');
+  };
+
+  /** Affiche ou masque l'historique ; à l'affichage, il est rechargé. */
+  const basculerHistorique = async () => {
+    const ouvrir = !historiqueOuvert;
+    setHistoriqueOuvert(ouvrir);
+    if (ouvrir) await chargerHistorique();
   };
 
   /** Déconnecte toutes les sessions (tous les comptes, tous les appareils). La session de l'administrateur en fait partie : cet appareil revient à la connexion. */
@@ -179,7 +212,17 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
 
       {estModerateur ? (
         <View style={{ gap: 10 }}>
-          <Text style={commonStyles.cardTitle}>Saisies à valider</Text>
+          <View style={[commonStyles.rowSpaceBetween, { alignItems: 'center' }]}>
+            <Text style={commonStyles.cardTitle}>Saisies à valider</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: historiqueOuvert }}
+              onPress={basculerHistorique}
+              style={[bouton, { borderWidth: 1, borderColor: colors.primary }]}
+            >
+              <Text style={{ color: colors.primary, fontWeight: '700' }}>Historique</Text>
+            </Pressable>
+          </View>
           {attentes.length === 0 ? <Text style={commonStyles.muted}>Aucune saisie en attente.</Text> : null}
           {attentes.map((attente) => (
             <View key={attente.id} style={carte}>
@@ -203,6 +246,36 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
               </View>
             </View>
           ))}
+          {historiqueOuvert ? (
+            <View style={{ gap: 10, marginTop: 6 }}>
+              <Text style={commonStyles.cardTitle}>Historique</Text>
+              {decisions.length === 0 ? <Text style={commonStyles.muted}>Aucune saisie décidée pour l’instant.</Text> : null}
+              {decisions.map((decision) => (
+                <Pressable
+                  key={decision.id}
+                  accessibilityRole="button"
+                  onPress={() =>
+                    setDetail({
+                      id: decision.id,
+                      zone: decision.zone,
+                      identifiant: decision.identifiant,
+                      contenu: decision.contenu,
+                      actuel: decision.actuel,
+                      auteur: decision.auteur,
+                      cree_le: `${decision.decision === 'validee' ? 'Validée' : 'Refusée'} par ${decision.decide_par} le ${decision.decide_le}`,
+                    })
+                  }
+                  style={carte}
+                >
+                  <Text style={{ fontWeight: '700', color: colors.text }}>{libelleZone(decision.zone)}</Text>
+                  <Text style={{ color: colors.text }}>
+                    {decision.decision === 'validee' ? 'Validée' : 'Refusée'} par {decision.decide_par} · saisie de {decision.auteur}
+                  </Text>
+                  <Text style={commonStyles.muted}>{decision.decide_le}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -217,7 +290,7 @@ function Gestion({ connexion, roleDuViewer }: { connexion: Connexion; roleDuView
             compte.role === 'administrateur' ? 'Toutes les exploitations' : compte.exploitations.map((id) => nomDe(exploitationsConnues, id)).join(', ');
           // Le compte se déplie sur place, sous sa ligne : rôle, exploitations et « Enregistrer » apparaissent dessous, administrateur compris.
           return (
-            <View key={compte.identifiant} style={{ borderRadius: 10, backgroundColor: selectionne ? FOND_SELECTION : colors.surface, overflow: 'hidden' }}>
+            <View key={compte.identifiant} style={{ borderRadius: 10, backgroundColor: colors.surface, overflow: 'hidden' }}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ expanded: selectionne }}
@@ -343,10 +416,11 @@ function DetailCompte({
   onApres: (erreur?: string) => Promise<void>;
 }) {
   const [role, setRole] = useState<string>(compte.role);
-  const [exploitations, setExploitations] = useState<string[]>(compte.exploitations);
-  // Seul l'administrateur donne les exploitations, et seulement aux comptes qui ne sont pas administrateurs.
+  // Un compte n'a qu'une seule exploitation : celle qu'on choisit dans la liste.
+  const [exploitation, setExploitation] = useState<string>(compte.exploitations[0] ?? '');
+  // Seul l'administrateur donne l'exploitation, et seulement aux comptes qui ne sont pas administrateurs.
   const peutChoisirExploitations = roleDuViewer === 'administrateur' && role !== 'administrateur';
-  // Les cases : les exploitations enregistrées sur le serveur, par leur nom.
+  // La liste : les exploitations enregistrées sur le serveur, par leur nom.
   const choix = [...exploitationsConnues].sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
 
   const enregistrer = async () => {
@@ -355,14 +429,12 @@ function DetailCompte({
       corps: {
         identifiant: compte.identifiant,
         role,
-        ...(roleDuViewer === 'administrateur' ? { exploitations: role === 'administrateur' ? [] : exploitations } : {}),
+        ...(roleDuViewer === 'administrateur'
+          ? { exploitations: role === 'administrateur' || !exploitation ? [] : [exploitation] }
+          : {}),
       },
     });
     await onApres(reponse.statut === 200 ? undefined : (reponse.json.erreur ?? 'Enregistrement impossible.'));
-  };
-
-  const basculer = (identifiant: string) => {
-    setExploitations((actuelles) => (actuelles.includes(identifiant) ? actuelles.filter((e) => e !== identifiant) : [...actuelles, identifiant]));
   };
 
   return (
@@ -376,36 +448,16 @@ function DetailCompte({
       <View style={separation}>
         <Text style={titreSection}>Exploitations</Text>
         {peutChoisirExploitations ? (
-          <View style={{ gap: 8 }}>
-            {choix.map((exploitation) => {
-              const coche = exploitations.includes(exploitation.etablissement);
-              return (
-                <Pressable
-                  key={exploitation.etablissement}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: coche }}
-                  onPress={() => basculer(exploitation.etablissement)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: 12,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: coche ? colors.primary : colors.border,
-                    backgroundColor: coche ? FOND_SELECTION : colors.surface,
-                  }}
-                >
-                  <Ionicons name={coche ? 'checkbox' : 'square-outline'} size={22} color={colors.primary} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontWeight: '600' }}>{exploitation.nom}</Text>
-                    <Text style={[commonStyles.muted, { fontSize: 12 }]}>{exploitation.etablissement}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-            {choix.length === 0 ? <Text style={commonStyles.muted}>Aucune exploitation enregistrée sur le serveur.</Text> : null}
-          </View>
+          choix.length === 0 ? (
+            <Text style={commonStyles.muted}>Aucune exploitation enregistrée sur le serveur.</Text>
+          ) : (
+            <SelectField<string>
+              label=""
+              value={exploitation}
+              onChange={setExploitation}
+              options={choix.map((e) => ({ value: e.etablissement, label: e.nom }))}
+            />
+          )
         ) : (
           <Text style={{ color: colors.text }}>
             {role === 'administrateur'

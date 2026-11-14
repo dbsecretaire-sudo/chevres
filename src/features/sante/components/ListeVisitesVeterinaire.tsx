@@ -83,7 +83,7 @@ export function ListeVisitesVeterinaire({
         <ListRow title={T.traitements.titre} subtitle={T.traitements.aide} icone="medkit" onPress={onOuvrirTraitements} />
         <ListRow title={T.rapportsEssais.titre} subtitle={T.rapportsEssais.aide} icone="flask-outline" onPress={onOuvrirRapports} />
       </BlocLignes>
-      <GroupeAccueil titre={T.titre} espace>
+      <GroupeAccueil titre={T.titre}>
       {comptable ? (
         <TableauVisitesVeterinaire
           factures={factures}

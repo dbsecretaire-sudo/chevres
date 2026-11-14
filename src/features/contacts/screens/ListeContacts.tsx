@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '@/shared/components/ScreenList';
-import { LigneDeBloc } from '@/shared/components/BlocListe';
+import { GroupeListe } from '@/shared/components/GroupeListe';
+import { BlocListe } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ChampRecherche } from '@/shared/components/ChampRecherche';
@@ -161,38 +162,31 @@ export default function ListeContacts() {
           }}
         />
       ) : (
-        <SectionList
-          sections={groupes.map((g) => ({ ...g, data: repliee(g.titre) ? [] : g.data }))}
-          keyExtractor={(item) => item.cle}
-          contentContainerStyle={[commonStyles.listeBlocAvecFab, { paddingHorizontal: 16 }]}
-          stickySectionHeadersEnabled={false}
-          ListEmptyComponent={<EmptyState title={T.aucun} subtitle={T.aucunSousTitre} />}
-          renderSectionHeader={({ section }) =>
-            section.titre ? (
-              <Pressable
-                onPress={() => setCategorieOuverte((actuelle) => (actuelle === section.titre ? null : section.titre))}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: !repliee(section.titre) }}
-                style={styles.enteteGroupe}
-              >
-                <Text style={styles.titreGroupe}>
-                  {section.titre} · {section.nombre}
-                </Text>
-                <Ionicons name={repliee(section.titre) ? 'chevron-forward' : 'chevron-down'} size={18} color={colors.textMuted} />
-              </Pressable>
-            ) : null
-          }
-          renderItem={({ item, index, section }) => (
-            <LigneDeBloc index={index} total={section.data.length}>
-              <ListRow
-                title={item.nom}
-                subtitle={sousTitreDe(item) || undefined}
-                emoji={portraitDeTiers(categorieDuContact(item, idsConnus).id).emoji}
-                onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
-              />
-            </LigneDeBloc>
-          )}
-        />
+        // Chaque catégorie est un bloc (GroupeListe) : son titre se replie, et ses contacts forment le même bloc.
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={[commonStyles.listeBlocAvecFab, { paddingHorizontal: 16, paddingTop: 12, gap: 0 }]}>
+          {groupes.length === 0 ? <EmptyState title={T.aucun} subtitle={T.aucunSousTitre} /> : null}
+          <BlocListe>
+          {groupes.map((g) => (
+            <GroupeListe
+              key={g.titre || 'toutes'}
+              titre={g.titre || undefined}
+              nombre={g.titre ? g.nombre : undefined}
+              ouvert={!repliee(g.titre)}
+              onBasculer={g.titre ? () => setCategorieOuverte((actuelle) => (actuelle === g.titre ? null : g.titre)) : undefined}
+            >
+              {g.data.map((item) => (
+                <ListRow
+                  key={item.cle}
+                  title={item.nom}
+                  subtitle={sousTitreDe(item) || undefined}
+                  emoji={portraitDeTiers(categorieDuContact(item, idsConnus).id).emoji}
+                  onPress={() => router.push(ROUTES.ficheContact(item.cle) as never)}
+                />
+              ))}
+            </GroupeListe>
+          ))}
+          </BlocListe>
+        </ScrollView>
       )}
 
       {/* La liste des catégories, en feuille du bas : un appui choisit, et la feuille se ferme. */}
@@ -267,19 +261,4 @@ const styles = StyleSheet.create({
   ligneChoisie: { backgroundColor: '#E4EEDF' },
   ligneTexte: { fontSize: 15, color: colors.text },
   ligneTexteChoisi: { fontWeight: '700', color: colors.primary },
-  enteteGroupe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  titreGroupe: {
-    marginTop: 14,
-    marginBottom: 6,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: colors.textMuted,
-  },
 });

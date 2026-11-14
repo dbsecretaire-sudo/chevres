@@ -1,6 +1,6 @@
 # Serveur de synchronisation (hébergé chez OVH)
 
-Ce dossier n'est pas publié avec l'appli : ses fichiers PHP sont copiés à la main sur l'hébergement, dans `/www/pronta/chevres/api/`. La base de données (prontabchevres) est déjà en place : aucun script SQL n'est à relancer.
+Ce dossier n'est pas publié avec l'appli : ses fichiers PHP sont copiés à la main sur l'hébergement, dans `/www/pronta/chevres/api/`. La base de données (prontabchevres) est déjà en place. Une seule table s'ajoute : lance une fois `attentes-decidees.sql` dans phpMyAdmin (onglet SQL), avant de mettre les fichiers à jour.
 
 ## Fichiers
 
@@ -23,5 +23,6 @@ Ce dossier n'est pas publié avec l'appli : ses fichiers PHP sont copiés à la 
 - Le serveur date les modifications lui-même (l'heure des téléphones n'entre pas en jeu).
 - Une saisie d'un utilisateur, ou faite en mode normal par un modérateur ou un administrateur, attend dans la file de validation (`attentes_validation`) : elle n'entre dans les données qu'une fois validée.
 - Un refus supprime la saisie de la file et la signale aux appareils (journal).
+- Chaque décision (validée ou refusée) est gardée dans `attentes_decidees`, avec la fiche telle qu'elle était : c'est l'historique des saisies à valider.
 - Un envoi est refusé en entier s'il contient une fiche invalide.
 - Une fiche fait au plus 4 Mo, un envoi au plus 200 fiches.

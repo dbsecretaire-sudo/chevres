@@ -1,47 +1,23 @@
 import type { PropsWithChildren } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { texteDeBalance } from '@/features/comptabilite/services/balanceDesEcritures';
-import { colors } from '@/shared/theme/colors';
-import { styles } from '@/shared/styles/components/GroupeAccueil.styles';
+import { GroupeListe } from '@/shared/components/GroupeListe';
+import { useMenusRepliables } from '@/features/accueil/components/MenusRepliables';
 
 /**
- * Un groupe de l'accueil d'un onglet (Cheptel, Production, Comptabilité) : son titre en petites capitales, puis son bloc de lignes. `espace` : de la place autour du titre (au-dessus et en dessous).
- * `onBasculer` : le titre se replie et se déplie d'un appui ; le bloc n'est visible que si `ouvert` est vrai.
+ * Un groupe de menus (Ferme, Atelier, Commerce, Comptabilité, Plus) : la présentation commune de `GroupeListe`. Dans un `MenusRepliables`, le titre
+ * se replie d'un appui, et un seul groupe reste déplié à la fois ; hors de ce cadre, le groupe reste déplié. `balance` : la balance des écritures.
  */
-export function GroupeAccueil({
-  titre,
-  balance,
-  espace = false,
-  ouvert = false,
-  onBasculer,
-  children,
-}: PropsWithChildren<{ titre: string; balance?: number; espace?: boolean; ouvert?: boolean; onBasculer?: () => void }>) {
-  // La balance des écritures du groupe, en chiffres seulement, sur la même ligne que le titre.
-  const contenuTitre = (
-    <>
-      <Text style={styles.titre}>{titre}</Text>
-      {balance !== undefined ? (
-        <Text style={[styles.balance, { color: balance < 0 ? colors.danger : colors.text }]}>{texteDeBalance(balance)}</Text>
-      ) : null}
-      {onBasculer ? <Ionicons name={ouvert ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} /> : null}
-    </>
-  );
+export function GroupeAccueil({ titre, balance, children }: PropsWithChildren<{ titre: string; balance?: number }>) {
+  const menus = useMenusRepliables();
   return (
-    <View style={[styles.groupe, espace && styles.groupeAere]}>
-      {onBasculer ? (
-        <Pressable
-          onPress={onBasculer}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: ouvert }}
-          style={[styles.ligneTitre, espace && styles.titreAere]}
-        >
-          {contenuTitre}
-        </Pressable>
-      ) : (
-        <View style={[styles.ligneTitre, espace && styles.titreAere]}>{contenuTitre}</View>
-      )}
-      {onBasculer && !ouvert ? null : children}
-    </View>
+    <GroupeListe
+      titre={titre}
+      balance={balance !== undefined ? texteDeBalance(balance) : undefined}
+      balanceNegative={balance !== undefined && balance < 0}
+      ouvert={!menus || menus.ouvert === titre}
+      onBasculer={menus ? () => menus.basculer(titre) : undefined}
+    >
+      {children}
+    </GroupeListe>
   );
 }

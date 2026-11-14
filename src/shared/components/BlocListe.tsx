@@ -12,9 +12,15 @@ export const useDansBloc = (): boolean => useContext(BlocListeContext);
  * chaque ligne sauf la première).
  */
 export function BlocListe({ children }: PropsWithChildren) {
+  const dedans = useDansBloc();
+  // Déjà dans un bloc : pas de second cadre blanc, les lignes rejoignent le bloc qui les contient.
+  if (dedans) return <>{children}</>;
   return (
     <BlocListeContext.Provider value>
-      <View style={styles.bloc}>{children}</View>
+      <View style={styles.bloc}>
+        {/* Décalé d'un trait vers le haut : le premier trait de chaque ligne tombe sous le bord du bloc, qui ne se voit pas deux fois. */}
+        <View style={styles.contenu}>{children}</View>
+      </View>
     </BlocListeContext.Provider>
   );
 }

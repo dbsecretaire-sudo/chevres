@@ -4,6 +4,7 @@ import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { useRouter } from 'expo-router';
 import { changerAffichage } from '@/bureau/changerAffichage';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { MenusRepliables } from '@/features/accueil/components/MenusRepliables';
 import { SectionsRubrique } from '@/features/accueil/components/SectionsRubrique';
 import { RUBRIQUES } from '@/features/accueil/rubriques/rubriquesDuPlus';
 import { CarteModeAvance } from '@/features/settings/components/CarteModeAvance';
@@ -27,6 +28,7 @@ export default function EcranPlus() {
   const [deconnexionDemandee, setDeconnexionDemandee] = useState(false);
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} style={{ backgroundColor: colors.background }}>
+      <MenusRepliables>
       <SectionsRubrique sections={RUBRIQUES.reglages.sections} />
       <GroupeAccueil titre="Plus">
         <CarteModeAvance />
@@ -41,6 +43,7 @@ export default function EcranPlus() {
           <ListRow title="Déconnexion" icone="log-out-outline" onPress={() => setDeconnexionDemandee(true)} />
         </BlocLignes>
       </GroupeAccueil>
+      </MenusRepliables>
       {autresAffichages.length > 0 ? (
         <View style={{ gap: 10, marginTop: 8 }}>
           <Text style={{ color: colors.textMuted, fontWeight: '700' }}>{TEXTES.navigation.affichage.titre}</Text>

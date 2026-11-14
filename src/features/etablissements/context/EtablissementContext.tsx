@@ -21,7 +21,6 @@ import {
   type Etablissement,
 } from '@/features/etablissements/repository';
 import { ROUTES } from '@/shared/constants/routes';
-import { destinationDe } from '@/features/a-traiter/services/destination';
 import { SelecteurEtablissement } from '@/features/etablissements/components/SelecteurEtablissement';
 import { lireConnexion } from '@/features/sync/synchronisation';
 import { especeCourante, especesActives, type EspeceAnimale } from '@/shared/dictionnaire/animaux';
@@ -149,7 +148,6 @@ export function EtablissementProvider({ children }: PropsWithChildren) {
         actifId={actif.id}
         peutGerer={peutGerer}
         onChoisir={(id) => entrer(id)}
-        onOuvrirATraiter={(item) => entrer(item.etablissementId, () => destinationDe(item))}
         onCreer={creer}
         onModifier={modifier}
         onSupprimer={supprimer}

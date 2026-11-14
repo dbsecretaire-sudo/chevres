@@ -9,17 +9,6 @@ export const TEXTES_ROLES = {
     changerEtablissement: 'Changer d’établissement',
     changerDeMode: 'Changer de mode',
   },
-  /** La liste de ce que le berger a saisi vite et que la secrétaire complète (Cheptel › À compléter). */
-  aCompleter: {
-    titre: 'À compléter',
-    rien: 'Rien à compléter.',
-    rienAide: 'Les naissances et les morts saisies en mode normal apparaissent ici, avec leurs détails à compléter.',
-    sansBoucle: 'Sans boucle',
-    fait: 'Fait',
-    naissanceDu: (date: string) => `Naissance du ${date}`,
-    mereDe: (boucle: string) => `mère ${boucle}`,
-    morteLe: (date: string) => `Morte le ${date}`,
-  },
   berger: {
     titre: 'Mode normal',
     chevres: 'Chèvres',
@@ -105,11 +94,11 @@ export const TEXTES_ROLES = {
     pasUneFemelle: (boucle: string) => `La boucle ${boucle} n’est pas celle d’une femelle.`,
     naissanceFaite: (femelles: number, males: number) =>
       `${femelles + males} ${femelles + males > 1 ? 'petits enregistrés' : 'petit enregistré'} : ${femelles} ${femelles > 1 ? 'femelles' : 'femelle'}, ${males} ${males > 1 ? 'mâles' : 'mâle'}`,
-    naissanceDetail: (boucle: string) => `Nés aujourd’hui de la mère ${boucle}. La secrétaire posera les boucles.`,
+    naissanceDetail: (boucle: string) => `Nés aujourd’hui de la mère ${boucle}.`,
     femelles: 'Femelles',
     males: 'Mâles',
     mortFaite: 'Mort enregistrée',
-    mortDetail: (boucle: string) => `Boucle ${boucle}, aujourd’hui. La secrétaire complétera le reste.`,
+    mortDetail: (boucle: string) => `Boucle ${boucle}, aujourd’hui.`,
     annulee: 'C’est annulé.',
     erreur: 'L’enregistrement n’a pas marché. Réessayez.',
   },

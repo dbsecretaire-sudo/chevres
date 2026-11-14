@@ -20,6 +20,8 @@ import { noterAEnvoyer } from '@/shared/storage/aEnvoyer';
 import { definirLitresParFromage, type ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock, GenreArticle } from '@/features/stock/types';
 import { ClavierNumerique } from '@/features/berger/components/ClavierNumerique';
+import { ChoixLotsAffine } from '@/features/production/components/ChoixLotsAffine';
+import { affinesPossibles } from '@/features/production/services/affines';
 import { Button } from '@/shared/components/Button';
 import { FabricationTablette } from '@/features/production/tablette/FabricationTablette';
 import { ListeDeChoix, type PresentationDesChoix } from '@/features/production/simple/ListeDeChoix';
@@ -87,6 +89,8 @@ export function FabricationSimple({
   const [articles, setArticles] = useState<ArticleAffiche[]>([]);
   const [etape, setEtape] = useState<Etape>({ nom: 'produit' });
   const [saisie, setSaisie] = useState('');
+  // Un affiné : les lots de fromage frais cochés (le nombre d'affinés s'en déduit, sans le taper).
+  const [lotsAffines, setLotsAffines] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     lireArchiveStock().then((a) => {
@@ -107,14 +111,21 @@ export function FabricationSimple({
 
   const recommencer = () => {
     setSaisie('');
+    setLotsAffines({});
     setEtape({ nom: 'produit' });
   };
+
+  /** Un affiné : ses fromages se choisissent par lots, le nombre s'en déduit. */
+  const estAffine = (article: ArticleAffiche) => fromage && estFromageAffine(article.cle, article.libelle);
 
   const choisir = (article: ArticleAffiche) => {
     setSaisie('');
     if (!fromage) return setEtape(savon ? { nom: 'poids', article } : { nom: 'nombre', article });
     // Un affiné se fait d'un fromage déjà fait (frais, crottin ou brocciu, pris au stock par la recette) : pas de lait, donc pas de litres à demander.
-    if (estFromageAffine(article.cle, article.libelle)) return setEtape({ nom: 'nombre', article });
+    if (estAffine(article)) {
+      setLotsAffines({});
+      return setEtape({ nom: 'nombre', article });
+    }
     // Le vieux n'est jamais salé, le brocciu toujours salé et pasteurisé : ces questions ne se posent pas.
     const imposee = variantesImposees(article.cle, article.libelle);
     if (imposee.sale === undefined) return setEtape({ nom: 'sale', article });
@@ -128,6 +139,7 @@ export function FabricationSimple({
     litres?: number,
     variante?: VarianteDeFromage,
     poids?: number,
+    lots?: Record<string, string[]>,
   ) => {
     if (!archive) return;
     try {
@@ -139,9 +151,10 @@ export function FabricationSimple({
       if (fromage && litres && litres > 0 && nombre > 0)
         await definirLitresParFromage(article.cle, Math.round((litres / nombre) * 100) / 100);
       // Les ingrédients viennent de la recette, calculée pour le nombre de pièces (ou le poids d'un savon). Le lait d'un fromage est demandé en litres : il n'en vient pas.
-      const ingredients = ingredientsDeLaRecette(archive, produit, article.cle, savon ? (poids ?? 0) : nombre).filter(
-        (i) => !fromage || i.article !== CLE_LAIT,
-      );
+      // Un affiné prend les lots cochés pour chacun de ses fromages (sans plus que la quantité entière).
+      const ingredients = ingredientsDeLaRecette(archive, produit, article.cle, savon ? (poids ?? 0) : nombre)
+        .filter((i) => !fromage || i.article !== CLE_LAIT)
+        .map((i) => (lots?.[i.article] ? { ...i, lotIds: lots[i.article].slice(0, Math.floor(i.quantite)) } : i));
       if (produit === PRODUIT_A_LOTS.PLAT) {
         await fabriquerPlats({ article: article.cle, date, quantite: nombre, debut, ingredients });
       } else if (savon) {
@@ -278,7 +291,31 @@ export function FabricationSimple({
         </ScrollView>
       ) : null}
 
-      {etape.nom === 'nombre' ? (
+      {/* Un affiné : on coche les lots de fromage frais ; le nombre d'affinés s'en déduit (rien à taper). */}
+      {etape.nom === 'nombre' && estAffine(etape.article) ? (
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+          <Text style={styles.detail}>{etape.article.libelle}</Text>
+          <Text style={styles.titre}>Quels fromages frais ?</Text>
+          <ChoixLotsAffine archive={archive} produit={produit} article={etape.article.cle} lotsChoisis={lotsAffines} onChange={setLotsAffines} />
+          <Button
+            label={T.valider}
+            disabled={affinesPossibles(archive, produit, etape.article.cle, lotsAffines) <= 0}
+            onPress={() =>
+              fabriquer(
+                etape.article,
+                affinesPossibles(archive, produit, etape.article.cle, lotsAffines),
+                undefined,
+                undefined,
+                undefined,
+                lotsAffines,
+              )
+            }
+          />
+          <Button label={T.retour} variant="secondary" onPress={recommencer} />
+        </ScrollView>
+      ) : null}
+
+      {etape.nom === 'nombre' && !estAffine(etape.article) ? (
         <ScrollView contentContainerStyle={styles.contenuDefilant}>
           <Text style={styles.detail}>{etape.article.libelle}</Text>
           <Text style={styles.titre}>{fromage ? T.combienDeFromages : T.combienDePieces}</Text>

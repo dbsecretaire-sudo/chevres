@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { filtrerCheptel, chiffresCheptel, type FiltreCheptel } from '@/features/berger/services/cheptelSimple';
 import { FiltresCheptel } from '@/features/cheptel/components/FiltresCheptel';
+import { BlocListe, separationBloc } from '@/shared/components/BlocListe';
 import { useListeCheptel } from '@/features/cheptel/hooks/useListeCheptel';
 import { chargerMisesBasDeLaSaison, listChevresVivantes } from '@/features/cheptel/repository/chevres';
 import type { MisesBasDeLaSaison } from '@/features/cheptel/services/misesBasSaison';
@@ -65,7 +66,8 @@ export function ListeTroupeau() {
       <View style={{ backgroundColor: colors.primary, borderRadius: 16, padding: 14 }}>
         <Text style={{ color: colors.blanc, fontSize: 18, fontWeight: '800' }}>{T.cheptelBandeau(chiffres.vivantes, chiffres.nees)}</Text>
       </View>
-      <FiltresCheptel e={liste} />
+      {/* Le compteur suit les pastilles (femelles, mâles, chevrettes) : il compte les animaux affichés en dessous. */}
+      <FiltresCheptel e={liste} nombre={animaux.length} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {FILTRES.map((f) => {
           const actif = filtre === f.cle;
@@ -89,21 +91,14 @@ export function ListeTroupeau() {
           );
         })}
       </View>
-      {animaux.map((a) => (
+      {/* Les animaux forment un seul bloc blanc, sans espace entre les lignes : un fin trait les sépare. */}
+      <BlocListe>
+      {animaux.map((a, i) => (
         <Pressable
           key={a.id}
           accessibilityRole="button"
           onPress={() => ouvrir(ROUTES.ficheChevre(a.id))}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12,
-            backgroundColor: colors.surface,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: colors.border,
-            padding: 12,
-          }}
+          style={[{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 }, i > 0 && separationBloc]}
         >
           <View style={{ backgroundColor: JAUNE_BOUCLE, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
             <Text style={{ fontWeight: '800', color: colors.text }}>{a.numeroBoucle || '—'}</Text>
@@ -130,7 +125,8 @@ export function ListeTroupeau() {
           </View>
         </Pressable>
       ))}
-      {animaux.length === 0 ? <Text style={{ color: colors.textMuted, textAlign: 'center' }}>{T.cheptelAucun}</Text> : null}
+      </BlocListe>
+      {animaux.length === 0 ?<Text style={{ color: colors.textMuted, textAlign: 'center' }}>{T.cheptelAucun}</Text> : null}
     </ScrollView>
   );
 }

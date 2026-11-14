@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
 import { SectionsRubrique } from '@/features/accueil/components/SectionsRubrique';
+import { MenusRepliables } from '@/features/accueil/components/MenusRepliables';
 import { RUBRIQUES, type Rubrique } from '@/features/accueil/rubriques/rubriquesDuPlus';
 import { ROUTES } from '@/shared/constants/routes';
 import { CarteCodeAcces } from '@/features/settings/components/CarteCodeAcces';
@@ -27,7 +28,9 @@ export default function EcranRubrique() {
         </>
       ) : null}
       {/* Les pages ouvertes depuis la Santé reviennent à la Santé. */}
-      <SectionsRubrique repliables={nom === 'documents'} sections={rubrique.sections} retour={nom && ['sante', 'mouvement', 'historique'].includes(nom) ? ROUTES.rubrique(nom) : undefined} />
+      <MenusRepliables>
+        <SectionsRubrique sections={rubrique.sections} retour={nom && ['sante', 'mouvement', 'historique'].includes(nom) ? ROUTES.rubrique(nom) : undefined} />
+      </MenusRepliables>
       {/* Les mouvements de l'année active, sous les boutons : une recherche, le plus récent en tête. */}
       {nom === 'mouvement' ? <HistoriqueMouvements /> : null}
     </ScrollView>

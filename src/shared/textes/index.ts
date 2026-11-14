@@ -1,4 +1,3 @@
-import { TEXTES_A_TRAITER } from '@/shared/textes/aTraiter';
 import { TEXTES_ACCUEIL } from '@/shared/textes/accueil';
 import { TEXTES_ANALYSES_PRODUITS } from '@/shared/textes/analysesProduits';
 import { TEXTES_CHEPTEL } from '@/shared/textes/cheptel';
@@ -33,7 +32,6 @@ import { TEXTES_SYNCHRONISATION } from '@/shared/textes/synchronisation';
 /** Tous les textes de l'application, groupés par domaine puis par écran. */
 export const TEXTES = {
   accueil: TEXTES_ACCUEIL,
-  aTraiter: TEXTES_A_TRAITER,
   analysesProduits: TEXTES_ANALYSES_PRODUITS,
   cheptel: TEXTES_CHEPTEL,
   clients: TEXTES_CLIENTS,

@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { ATraiter } from '@/features/a-traiter/types';
 import type { Etablissement } from '@/features/etablissements/repository';
 import { libelleTypesEtablissement } from '@/features/etablissements/utils/typesEtablissement';
 import { TableauDeDonnees, type ColonneDuTableau } from '@/shared/components/TableauDeDonnees';
@@ -9,21 +8,19 @@ import { TEXTES } from '@/shared/textes';
 interface Props {
   etablissements: readonly Etablissement[];
   actifId: string;
-  aTraiterDe: (id: string) => ATraiter[];
   onChoisir: (id: string) => void;
   /** Absent : pas de « Modifier » (seul l'administrateur modifie un établissement). */
   onModifier?: (id: string) => void;
 }
 
 /**
- * Le choix de l'établissement du poste de comptabilité (affichage sobre, grande fenêtre) : un tableau — nom, types, choses à traiter —, dont une ligne ouvre
+ * Le choix de l'établissement du poste de comptabilité (affichage sobre, grande fenêtre) : un tableau — nom et espèces —, dont une ligne ouvre
  * l'établissement. Le dernier utilisé est marqué d'une étoile ; « Modifier » ouvre sa fiche.
  */
-export function TableauEtablissements({ etablissements, actifId, aTraiterDe, onChoisir, onModifier }: Props) {
+export function TableauEtablissements({ etablissements, actifId, onChoisir, onModifier }: Props) {
   const colonnes: readonly ColonneDuTableau<Etablissement>[] = [
     { cle: 'nom', titre: 'Établissement', poids: 3, valeur: (e) => e.nom, texte: (e) => `${e.id === actifId ? '★ ' : ''}${e.nom}` },
     { cle: 'types', titre: 'Espèces', poids: 3, valeur: (e) => libelleTypesEtablissement(e) || 'Espèces non renseignées' },
-    { cle: 'traiter', titre: 'À traiter', poids: 1, aligne: 'droite', valeur: (e) => aTraiterDe(e.id).length, texte: (e) => (aTraiterDe(e.id).length ? String(aTraiterDe(e.id).length) : '') },
     {
       cle: 'modifier',
       titre: '',

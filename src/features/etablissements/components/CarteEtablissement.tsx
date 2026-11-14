@@ -1,8 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/shared/theme/colors';
-import { ATraiterEtablissement } from '@/features/a-traiter/components/ATraiterEtablissement';
-import type { ATraiter } from '@/features/a-traiter/types';
 import type { Etablissement } from '@/features/etablissements/repository';
 import { libelleTypesEtablissement } from '@/features/etablissements/utils/typesEtablissement';
 import { ICONE_ETABLISSEMENT } from '@/shared/constants/etablissements';
@@ -16,27 +14,13 @@ interface Props {
   onChoisir: () => void;
   /** Absent : pas de crayon (seul l'administrateur modifie un établissement). */
   onModifier?: () => void;
-  /** Ce qui attend dans cet établissement (le badge rouge du logo ; un appui sur le logo le déplie sous la ligne). */
-  aTraiter: ATraiter[];
-  ouvert: boolean;
-  onBasculer: () => void;
-  onOuvrirATraiter: (item: ATraiter) => void;
 }
 
 /**
  * Un établissement, sur une ligne : son logo, son nom et ses types ; un appui l'ouvre. Le crayon, discret, le modifie. Le
  * dernier utilisé a un contour vert.
  */
-export function CarteEtablissement({
-  etablissement,
-  actif,
-  onChoisir,
-  onModifier,
-  aTraiter,
-  ouvert,
-  onBasculer,
-  onOuvrirATraiter,
-}: Props) {
+export function CarteEtablissement({ etablissement, actif, onChoisir, onModifier }: Props) {
   const types = libelleTypesEtablissement(etablissement);
 
   return (
@@ -45,31 +29,9 @@ export function CarteEtablissement({
         style={({ pressed }) => [styles.ligne, actif && styles.ligneActive, pressed && styles.lignePressee]}
         onPress={onChoisir}
       >
-        {aTraiter.length > 0 ? (
-          <Pressable
-            style={styles.logo}
-            hitSlop={6}
-            onPress={onBasculer}
-            accessibilityLabel={TEXTES.aTraiter.logo(aTraiter.length)}
-          >
-            <Ionicons
-              name={ICONE_ETABLISSEMENT as keyof typeof Ionicons.glyphMap}
-              size={26}
-              color={colors.primary}
-            />
-            <View style={styles.badge}>
-              <Text style={styles.badgeTexte}>{aTraiter.length}</Text>
-            </View>
-          </Pressable>
-        ) : (
-          <View style={styles.logo}>
-            <Ionicons
-              name={ICONE_ETABLISSEMENT as keyof typeof Ionicons.glyphMap}
-              size={26}
-              color={colors.primary}
-            />
-          </View>
-        )}
+        <View style={styles.logo}>
+          <Ionicons name={ICONE_ETABLISSEMENT as keyof typeof Ionicons.glyphMap} size={26} color={colors.primary} />
+        </View>
         <View style={styles.texte}>
           <Text style={styles.nom} numberOfLines={1}>
             {etablissement.nom}
@@ -89,9 +51,6 @@ export function CarteEtablissement({
           </Pressable>
         ) : null}
       </Pressable>
-      {ouvert && aTraiter.length > 0 ? (
-        <ATraiterEtablissement items={aTraiter} onOuvrir={onOuvrirATraiter} />
-      ) : null}
     </View>
   );
 }

@@ -97,20 +97,9 @@ export default function Naissances() {
     }, [espece]),
   );
 
-  return (
-    <Screen scroll={false}>
-      <LigneFiltres>
-        <YearPicker
-          annees={annees}
-          value={settings.anneeActive}
-          onChange={setAnneeActive}
-          tout={regrouper}
-          onChoisirTout={choisirToutesAnnees}
-        />
-        <SelecteurEspece />
-      </LigneFiltres>
-      {portees.length > 0 ? (
-        <View style={styles.carnet}>
+  // Le carnet, les statuts et la recherche font partie de la page qui défile avec la liste : seuls les années et l'espèce restent en haut.
+  const entete = portees.length > 0 ? (
+        <View style={[styles.carnet, styles.enteteDeListe]}>
           <Button
             variant="secondary"
             label={TEXTES.cheptel.naissances.carnetLivretBouton}
@@ -140,17 +129,34 @@ export default function Naissances() {
           </View>
           <RechercheNaissances valeur={recherche} onChange={setRecherche} />
         </View>
-      ) : null}
-      {comptable ? (
-        <TableauNaissances
-          portees={affichees}
-          ouvrirFiche={(id) => router.push(ROUTES.ficheChevreDepuis(id, retour))}
-          vide={libelleVide}
-          clients={clients}
+  ) : null;
+
+  return (
+    <Screen scroll={false}>
+      <LigneFiltres>
+        <YearPicker
+          annees={annees}
+          value={settings.anneeActive}
+          onChange={setAnneeActive}
+          tout={regrouper}
+          onChoisirTout={choisirToutesAnnees}
         />
+        <SelecteurEspece />
+      </LigneFiltres>
+      {comptable ? (
+        <>
+          {entete}
+          <TableauNaissances
+            portees={affichees}
+            ouvrirFiche={(id) => router.push(ROUTES.ficheChevreDepuis(id, retour))}
+            vide={libelleVide}
+            clients={clients}
+          />
+        </>
       ) : (
       <FlatList
         data={affichees}
+        ListHeaderComponent={entete}
         keyExtractor={(item) => `${item.mereNumeroBoucle}__${item.date}`}
         contentContainerStyle={styles.liste}
         ListEmptyComponent={

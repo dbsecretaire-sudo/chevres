@@ -6,8 +6,6 @@ import { Button } from '@/shared/components/Button';
 import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { InfoModal } from '@/shared/components/InfoModal';
 import { Fab } from '@/shared/components/Fab';
-import { useATraiter } from '@/features/a-traiter/hooks/useATraiter';
-import type { ATraiter } from '@/features/a-traiter/types';
 import { CarteEtablissement } from '@/features/etablissements/components/CarteEtablissement';
 import { FormulaireEtablissement } from '@/features/etablissements/components/FormulaireEtablissement';
 import type { DonneesEtablissement, Etablissement } from '@/features/etablissements/repository';
@@ -23,8 +21,6 @@ interface Props {
   /** Vrai pour l'administrateur seul : il crée, modifie et supprime les établissements. */
   peutGerer: boolean;
   onChoisir: (id: string) => void;
-  /** Ouvre l'établissement d'une chose à traiter, sur l'écran qui la concerne. */
-  onOuvrirATraiter: (item: ATraiter) => void;
   onCreer: (donnees: DonneesEtablissement) => Promise<void>;
   onModifier: (id: string, donnees: DonneesEtablissement) => Promise<void>;
   onSupprimer: (id: string) => Promise<void>;
@@ -40,7 +36,6 @@ export function SelecteurEtablissement({
   actifId,
   peutGerer,
   onChoisir,
-  onOuvrirATraiter,
   onCreer,
   onModifier,
   onSupprimer,
@@ -52,11 +47,6 @@ export function SelecteurEtablissement({
   const [aSupprimer, setASupprimer] = useState<Etablissement | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [creationEnCours, setCreationEnCours] = useState(false);
-  const aTraiter = useATraiter(etablissements);
-  /** Les établissements dont on a déplié la cloche : tout est replié au départ. */
-  const [ouverts, setOuverts] = useState<Record<string, boolean>>({});
-  const duEtablissement = (id: string) => aTraiter.filter((i) => i.etablissementId === id);
-  const estOuvert = (id: string) => ouverts[id] ?? false;
 
   // Plus de bouton « Retour » : le bouton retour d'Android revient à la liste, puis ferme l'écran.
   useEffect(() => {
@@ -82,9 +72,6 @@ export function SelecteurEtablissement({
       >
         <View style={styles.top}>
           <Text style={commonStyles.heading}>{t.choisirUnEtablissement}</Text>
-          {aTraiter.length > 0 ? (
-            <Text style={commonStyles.muted}>{TEXTES.aTraiter.resume(aTraiter.length)}</Text>
-          ) : null}
         </View>
 
         {mode.type === 'creation' && (
@@ -139,7 +126,6 @@ export function SelecteurEtablissement({
             <TableauEtablissements
               etablissements={etablissements}
               actifId={actifId}
-              aTraiterDe={duEtablissement}
               onChoisir={onChoisir}
               onModifier={peutGerer ? (id) => setMode({ type: 'edition', id }) : undefined}
             />
@@ -153,10 +139,6 @@ export function SelecteurEtablissement({
                   actif={e.id === actifId}
                   onChoisir={() => onChoisir(e.id)}
                   onModifier={peutGerer ? () => setMode({ type: 'edition', id: e.id }) : undefined}
-                  aTraiter={duEtablissement(e.id)}
-                  ouvert={estOuvert(e.id)}
-                  onBasculer={() => setOuverts((actuels) => ({ ...actuels, [e.id]: !estOuvert(e.id) }))}
-                  onOuvrirATraiter={onOuvrirATraiter}
                 />
               ))}
             </BlocLignes>

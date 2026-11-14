@@ -217,14 +217,20 @@ if ($action === 'attentes' && $methode === 'GET') {
   repondre(200, ['attentes' => listerAttentes($db, $etablissement)]);
 }
 
+// L'historique des décisions (validées ou refusées), pour le modérateur.
+if ($action === 'attentes-historique' && $methode === 'GET') {
+  if (!estModerateur($moi)) repondre(403, ['erreur' => 'Réservé au modérateur.']);
+  repondre(200, ['decisions' => listerDecisions($db, $etablissement)]);
+}
+
 if ($action === 'valider' && $methode === 'POST') {
   if (!estModerateur($moi)) repondre(403, ['erreur' => 'Réservé au modérateur.']);
-  repondre(200, validerAttentes($db, $etablissement, (array) ($corps['ids'] ?? [])));
+  repondre(200, validerAttentes($db, $etablissement, (array) ($corps['ids'] ?? []), $moi['identifiant']));
 }
 
 if ($action === 'refuser' && $methode === 'POST') {
   if (!estModerateur($moi)) repondre(403, ['erreur' => 'Réservé au modérateur.']);
-  repondre(200, ['refusees' => refuserAttentes($db, $etablissement, (array) ($corps['ids'] ?? []))]);
+  repondre(200, ['refusees' => refuserAttentes($db, $etablissement, (array) ($corps['ids'] ?? []), $moi['identifiant'])]);
 }
 
 // Les fichiers joints : envoi d'un fichier, en base64, 5 Mo au plus ; réception par son identifiant.

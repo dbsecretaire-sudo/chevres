@@ -19,6 +19,8 @@ export const styles = StyleSheet.create({
   },
   premiere: { borderTopLeftRadius: 14, borderTopRightRadius: 14 },
   derniere: { borderBottomLeftRadius: 14, borderBottomRightRadius: 14, borderBottomWidth: 1 },
+  /** Le contenu d'un bloc, décalé d'un trait vers le haut (voir BlocListe). */
+  contenu: { marginTop: -1 },
   /** Le trait entre deux lignes d'un bloc. */
   separation: { borderTopWidth: 1, borderTopColor: colors.border },
   // Un texte seul dans un bloc (« Aucun contact pour ce lieu ») : la marge d'une ligne.

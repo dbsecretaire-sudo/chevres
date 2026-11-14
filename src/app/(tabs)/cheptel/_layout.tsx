@@ -58,7 +58,6 @@ export default function CheptelLayout() {
         }}
       />
       <Stack.Screen name="menu" options={{ title: TEXTES.accueil.ferme.colonnes.cheptel }} />
-      <Stack.Screen name="a-completer" options={{ title: TEXTES.roles.aCompleter.titre }} />
       <Stack.Screen name="naissances" options={{ title: TEXTES.navigation.layout.naissances }} />
       <Stack.Screen
         name="historique"

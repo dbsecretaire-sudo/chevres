@@ -44,7 +44,6 @@ const LIBELLE_CHAMP: Record<string, string> = {
   renouvellement: 'Renouvellement',
   renouvellementAnnee: 'Année de renouvellement',
   poidsKg: 'Poids (kg)',
-  aCompleter: 'À compléter',
   notes: 'Notes',
   reservation: 'Réservation',
 };

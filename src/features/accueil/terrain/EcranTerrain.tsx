@@ -17,6 +17,7 @@ import {
 } from '@/features/accueil/terrain/ecransTerrain';
 import { GrilleDeTuiles } from '@/features/accueil/terrain/GrilleDeTuiles';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { MenusRepliables } from '@/features/accueil/components/MenusRepliables';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { ListRow } from '@/shared/components/ListRow';
 import { useOuvrir } from '@/shared/navigation/useOuvrir';
@@ -69,7 +70,6 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
     delais: f.delais,
     grammesParAnimalParJour: f.stats?.gParAnimalParJour,
     ventesSansDocument: f.ventesSansDocument,
-    aCompleter: f.aCompleter,
     lotsAFacturer: f.lotsAFacturer,
     viandeAFacturer: f.transformation.viande,
     viandeAVendre: f.viandeAVendre,
@@ -92,17 +92,22 @@ export function GrilleTerrain({ zone, enTete, remplir = false }: { zone: ZoneTer
   // Un menu titré par groupe (« Gestion » par défaut), dans l'ordre où les groupes apparaissent.
   const lignesDeMenu = tuiles.filter((t) => t.ligne);
   const titresDesMenus = [...new Set(lignesDeMenu.map((t) => t.groupe ?? 'Gestion'))];
-  const gestion = titresDesMenus.map((titre) => (
-    <GroupeAccueil key={titre} titre={titre}>
-      <BlocLignes>
-        {lignesDeMenu
-          .filter((t) => (t.groupe ?? 'Gestion') === titre)
-          .map((t) => (
-            <ListRow key={t.cle} title={t.titre} icone={t.icone} onPress={() => surTuile(t)} />
-          ))}
-      </BlocLignes>
-    </GroupeAccueil>
-  ));
+  // Les menus se replient : un seul groupe déplié à la fois.
+  const gestion = (
+    <MenusRepliables>
+      {titresDesMenus.map((titre) => (
+        <GroupeAccueil key={titre} titre={titre}>
+          <BlocLignes>
+            {lignesDeMenu
+              .filter((t) => (t.groupe ?? 'Gestion') === titre)
+              .map((t) => (
+                <ListRow key={t.cle} title={t.titre} icone={t.icone} onPress={() => surTuile(t)} />
+              ))}
+          </BlocLignes>
+        </GroupeAccueil>
+      ))}
+    </MenusRepliables>
+  );
   return (
     <AccentColorProvider color={colors.primary} softColor={colors.badgeBg}>
       {/* Ce qui demande une action (alertes de santé, rappels) passe au-dessus des tuiles. Avec « remplir », les tuiles prennent la place restante, sans défiler. */}

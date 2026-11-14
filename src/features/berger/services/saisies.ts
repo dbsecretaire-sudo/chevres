@@ -19,26 +19,22 @@ export const rangeesDePetits = (maximum: number): number[][] => {
   return [...rangees, [0]];
 };
 
-/**
- * Les petits d'une naissance saisie sur le terrain : on connaît le nombre de femelles et de mâles (au moins un petit). Chacun est marqué « à compléter » : la secrétaire
- * pose les boucles à la maison.
- */
+/** Les petits d'une naissance saisie sur le terrain : on connaît le nombre de femelles et de mâles (au moins un petit). */
 export const petitsDuBerger = (femelles: number, males: number): CabritInput[] => {
   const f = Math.max(0, femelles);
   const m = Math.max(0, males);
   const petits: CabritInput[] = [
-    ...Array.from({ length: f }, () => ({ sexe: SEXE.FEMELLE, aCompleter: true })),
-    ...Array.from({ length: m }, () => ({ sexe: SEXE.MALE, aCompleter: true })),
+    ...Array.from({ length: f }, () => ({ sexe: SEXE.FEMELLE })),
+    ...Array.from({ length: m }, () => ({ sexe: SEXE.MALE })),
   ];
-  return petits.length > 0 ? petits : [{ sexe: SEXE.FEMELLE, aCompleter: true }];
+  return petits.length > 0 ? petits : [{ sexe: SEXE.FEMELLE }];
 };
 
-/** La fiche d'un animal mort, saisie sur le terrain : morte au jour donné, à compléter (la cause, l'enlèvement) à la maison. */
+/** La fiche d'un animal mort, saisie sur le terrain : morte au jour donné, le reste de la fiche ne change pas. */
 export const animalMort = (animal: Chevre, date: string): Chevre => ({
   ...animal,
   statut: STATUT_CHEVRE.MORTE,
   dateStatut: date,
-  aCompleter: true,
 });
 
 /** Les animaux vivants du troupeau (de l'espèce courante), où chercher la boucle scannée. */

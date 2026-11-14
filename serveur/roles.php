@@ -99,13 +99,36 @@ function numerosAttente(array $ids): array {
   return array_values(array_filter(array_map('intval', $ids), static fn(int $id): bool => $id > 0));
 }
 
+/**
+ * Garde la trace d'une décision (validée ou refusée) dans attentes_decidees, avec la fiche telle qu'elle était avant : l'historique
+ * peut ainsi montrer ce qui a été décidé, même après la décision.
+ */
+function archiverDecision(PDO $db, string $etablissement, array $ligne, string $decision, string $decideur): void {
+  $db->prepare(
+    'INSERT INTO attentes_decidees (etablissement, zone, identifiant, contenu, actuel, auteur, decision, decide_par) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  )->execute([
+    $etablissement,
+    $ligne['zone'],
+    $ligne['identifiant'],
+    $ligne['contenu'],
+    $ligne['actuel'] ?? null,
+    $ligne['auteur'],
+    $decision,
+    $decideur,
+  ]);
+}
+
 /** Valide des saisies : chacune entre dans les données, au nom de son auteur, puis sort de la file. Une saisie refusée reste en attente. */
-function validerAttentes(PDO $db, string $etablissement, array $ids): array {
+function validerAttentes(PDO $db, string $etablissement, array $ids, string $decideur): array {
   $ids = numerosAttente($ids);
   if ($ids === []) return ['validees' => 0, 'refusees' => []];
   $marques = implode(',', array_fill(0, count($ids), '?'));
+  // « actuel » : la fiche avant la validation, pour l'historique.
   $requete = $db->prepare(
-    "SELECT id, zone, identifiant, contenu, auteur FROM attentes_validation WHERE etablissement = ? AND id IN ($marques) ORDER BY id"
+    "SELECT a.id, a.zone, a.identifiant, a.contenu, a.auteur, f.contenu AS actuel
+     FROM attentes_validation a
+     LEFT JOIN fiches f ON f.etablissement = a.etablissement AND f.zone = a.zone AND f.identifiant = a.identifiant
+     WHERE a.etablissement = ? AND a.id IN ($marques) ORDER BY a.id"
   );
   $requete->execute([$etablissement, ...$ids]);
   $validees = 0;
@@ -118,6 +141,7 @@ function validerAttentes(PDO $db, string $etablissement, array $ids): array {
     ];
     $resultat = pousserModifications($db, $ligne['auteur'], $etablissement, [$modification]);
     if ($resultat['recu'] === 1) {
+      archiverDecision($db, $etablissement, $ligne, 'validee', $decideur);
       $db->prepare('DELETE FROM attentes_validation WHERE id = ?')->execute([(int) $ligne['id']]);
       $validees++;
     } else {
@@ -128,13 +152,18 @@ function validerAttentes(PDO $db, string $etablissement, array $ids): array {
 }
 
 /** Refuse des saisies : elles sortent de la file sans entrer dans les données. Rend leur nombre. */
-function refuserAttentes(PDO $db, string $etablissement, array $ids): int {
+function refuserAttentes(PDO $db, string $etablissement, array $ids, string $decideur): int {
   $ids = numerosAttente($ids);
   if ($ids === []) return 0;
   $marques = implode(',', array_fill(0, count($ids), '?'));
   $db->beginTransaction();
   try {
-    $lecture = $db->prepare("SELECT zone, identifiant FROM attentes_validation WHERE etablissement = ? AND id IN ($marques)");
+    $lecture = $db->prepare(
+      "SELECT a.id, a.zone, a.identifiant, a.contenu, a.auteur, f.contenu AS actuel
+       FROM attentes_validation a
+       LEFT JOIN fiches f ON f.etablissement = a.etablissement AND f.zone = a.zone AND f.identifiant = a.identifiant
+       WHERE a.etablissement = ? AND a.id IN ($marques)"
+    );
     $lecture->execute([$etablissement, ...$ids]);
     $refusees = $lecture->fetchAll();
     $requete = $db->prepare("DELETE FROM attentes_validation WHERE etablissement = ? AND id IN ($marques)");
@@ -142,6 +171,7 @@ function refuserAttentes(PDO $db, string $etablissement, array $ids): int {
     // Le journal signale la fiche aux appareils : ils reprennent la version du serveur, sans la saisie refusée (qui ne doit pas rester chez eux).
     $journal = $db->prepare('INSERT INTO journal (etablissement, zone, identifiant) VALUES (?, ?, ?)');
     foreach ($refusees as $ligne) {
+      archiverDecision($db, $etablissement, $ligne, 'refusee', $decideur);
       $journal->execute([$etablissement, $ligne['zone'], $ligne['identifiant']]);
     }
     $db->commit();
@@ -150,6 +180,29 @@ function refuserAttentes(PDO $db, string $etablissement, array $ids): int {
     $db->rollBack();
     throw $erreur;
   }
+}
+
+/** L'historique des décisions d'une exploitation, de la plus récente à la plus ancienne (les 200 dernières). */
+function listerDecisions(PDO $db, string $etablissement): array {
+  $requete = $db->prepare(
+    'SELECT id, zone, identifiant, contenu, actuel, auteur, decision, decide_par, decide_le
+     FROM attentes_decidees WHERE etablissement = ? ORDER BY id DESC LIMIT 200'
+  );
+  $requete->execute([$etablissement]);
+  return array_map(
+    static fn(array $ligne): array => [
+      'id' => (int) $ligne['id'],
+      'zone' => $ligne['zone'],
+      'identifiant' => $ligne['identifiant'],
+      'contenu' => $ligne['contenu'] === null ? null : json_decode($ligne['contenu'], true),
+      'actuel' => $ligne['actuel'] === null ? null : json_decode($ligne['actuel'], true),
+      'auteur' => $ligne['auteur'],
+      'decision' => $ligne['decision'],
+      'decide_par' => $ligne['decide_par'],
+      'decide_le' => $ligne['decide_le'],
+    ],
+    $requete->fetchAll(),
+  );
 }
 
 /** Tous les comptes, avec leur rôle et leurs exploitations. */
@@ -290,6 +343,10 @@ function affecterCompte(PDO $db, array $moi, string $identifiant, string $role, 
   }
   if ($role !== ROLE_ADMINISTRATEUR && $exploitations === []) {
     throw new InvalidArgumentException('Un compte qui n’est pas administrateur a besoin d’une exploitation.');
+  }
+  // Un compte n'a qu'une seule exploitation.
+  if ($role !== ROLE_ADMINISTRATEUR && count($exploitations) > 1) {
+    throw new InvalidArgumentException('Un compte n’a qu’une seule exploitation.');
   }
   // Une exploitation doit déjà exister (elle se crée d'abord dans Mes établissements) : on vérifie avant de toucher aux accès.
   if ($role !== ROLE_ADMINISTRATEUR) {

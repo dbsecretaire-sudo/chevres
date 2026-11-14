@@ -250,7 +250,6 @@ export const RUBRIQUES: Record<string, Rubrique> = {
       {
         titre: 'Animaux',
         lignes: [
-          { libelle: 'À compléter', aide: 'Naissances et morts saisies sur le terrain', icone: 'create-outline', route: ROUTES.CHEPTEL_A_COMPLETER },
           { libelle: 'Naissances', aide: 'Mises bas, portée par portée', icone: 'heart-outline', route: ROUTES.CHEPTEL_NAISSANCES },
           { libelle: 'Sorties et morts', aide: 'Vendues, abattues, mortes', icone: 'exit-outline', route: ROUTES.CHEPTEL_HISTORIQUE },
           { libelle: 'Soins et traitements', aide: 'Par animal et par date', icone: 'medkit-outline', route: ROUTES.CHEPTEL_TRAITEMENTS },

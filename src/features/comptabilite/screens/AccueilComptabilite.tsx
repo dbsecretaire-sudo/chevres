@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/shared/components/Screen';
 import { BlocLignes } from '@/shared/components/BlocListe';
 import { GroupeAccueil } from '@/features/accueil/components/GroupeAccueil';
+import { MenusRepliables } from '@/features/accueil/components/MenusRepliables';
 import { ListRow } from '@/shared/components/ListRow';
 import { AncreVisite } from '@/shared/components/AncreVisite';
 import { SelecteurEspece } from '@/features/etablissements/components/SelecteurEspece';
@@ -106,23 +107,25 @@ export default function AccueilComptabilite() {
   return (
     <Screen>
       <SelecteurEspece />
-      {groupes.map((groupe) => (
-        <GroupeAccueil key={groupe.titre} titre={groupe.titre}>
-          <BlocLignes>
-            {groupe.lignes.map((l) => (
-              <AncreVisite key={l.cle} id={`rubrique:${l.route}`}>
-                <ListRow
-                  title={l.titre}
-                  subtitle={l.aide}
-                  icone={l.icone}
-                  actif={estActive(l.route)}
-                  onPress={() => ouvrir(l.route)}
-                />
-              </AncreVisite>
-            ))}
-          </BlocLignes>
-        </GroupeAccueil>
-      ))}
+      <MenusRepliables>
+        {groupes.map((groupe) => (
+          <GroupeAccueil key={groupe.titre} titre={groupe.titre}>
+            <BlocLignes>
+              {groupe.lignes.map((l) => (
+                <AncreVisite key={l.cle} id={`rubrique:${l.route}`}>
+                  <ListRow
+                    title={l.titre}
+                    subtitle={l.aide}
+                    icone={l.icone}
+                    actif={estActive(l.route)}
+                    onPress={() => ouvrir(l.route)}
+                  />
+                </AncreVisite>
+              ))}
+            </BlocLignes>
+          </GroupeAccueil>
+        ))}
+      </MenusRepliables>
     </Screen>
   );
 }

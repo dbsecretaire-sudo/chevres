@@ -47,7 +47,7 @@ Le sens est toujours **écran → hook → service → repository**. Un service 
 | `contacts`, `clients`, `fournisseurs` | les contacts (fiche commune) et leurs deux familles |
 | `dossiers` | les dossiers rattachés à un contact (les anciennes activités secrétariat, gîte, bar et trading ont été retirées : l'application ne gère plus que des exploitations) |
 | `accueil` | l'accueil « ferme » et la **coque de l'application** (`accueil/shell` : menus, en-tête, barre du bas) |
-| `rappels`, `a-traiter` | les rappels de l'accueil et ce qui reste à traiter par établissement |
+| `rappels` | les rappels de l'accueil (rappels de lots, déclarations) |
 | `etablissements`, `especes` | les établissements (données séparées) et les espèces élevées |
 | `settings` | les réglages, rangés dans `settings.exploitation` (lots, enlèvements, ventes d'animaux vivants, GDS…) |
 | `drive`, `sauvegarde`, `export`, `fichiers`, `bibliotheque` | Google Drive (fusion à 3 voies), sauvegarde locale, PDF et Excel (`export/documents`), pièces jointes, bibliothèque de documents |

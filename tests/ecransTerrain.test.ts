@@ -7,7 +7,6 @@ const comptes = (surcharge: Partial<ComptesTerrain> = {}): ComptesTerrain => ({
   naissances: 18,
   delais: 0,
   ventesSansDocument: 0,
-  aCompleter: 0,
   lotsAFacturer: 0,
   viandeAFacturer: 0,
   viandeAVendre: 0,
@@ -37,15 +36,13 @@ describe('écrans terrain des zones de l’accueil', () => {
 
   it('le troupeau montre les six tuiles de la maquette, dans l’ordre ; le cheptel donne le nombre d’animaux, et le délai d’attente se signale en rouge', () => {
     const propre = tuilesDuTerrain('troupeau', comptes());
-    // Les six tuiles du troupeau, puis la liste « Gestion » : les réglages du cheptel et les rubriques du « Plus », en lignes (sans chiffre).
+    // Les six tuiles du troupeau, puis les lignes « Gestion » (réglages du cheptel, bilan), puis celles de l'Historique, sans chiffre.
     expect(propre.slice(0, 6).map((t) => t.cle)).toEqual(['scanner', 'naissance', 'traitement', 'mouvement', 'deces', 'cheptel']);
     expect(propre.slice(0, 6).some((t) => t.ligne)).toBe(false);
-    // La viande est au Commerce, les réglementations aux Documents, l'argent et les bilans à la Comptabilité : la Ferme ne garde que l'historique.
-    expect(propre.slice(6).map((t) => t.titre)).toEqual(['Réglages du cheptel', 'Bilan annuel', 'Historique']);
+    expect(propre.slice(6, 8).map((t) => t.titre)).toEqual(['Réglages du cheptel', 'Bilan annuel']);
     expect(propre.slice(6).every((t) => t.ligne)).toBe(true);
     expect(propre[6]).toMatchObject({ route: ROUTES.CHEPTEL_REGLAGES });
     expect(propre[7]).toMatchObject({ route: ROUTES.CHEPTEL_BILAN });
-    expect(propre[8].route.startsWith('/rubrique/')).toBe(true);
     expect(propre.find((t) => t.cle === 'cheptel')).toMatchObject({ nombre: 236, alerte: false });
     expect(propre.find((t) => t.cle === 'traitement')?.nombre).toBeUndefined();
     const alertes = tuilesDuTerrain('troupeau', comptes({ delais: 3 }));
@@ -57,9 +54,14 @@ describe('écrans terrain des zones de l’accueil', () => {
     expect(tuilesDuTerrain('troupeau', comptes({ ventesSansDocument: 2 })).find((t) => t.cle === 'mouvement')).toMatchObject({ nombre: 2, alerte: true });
   });
 
-  it('les naissances et morts à compléter se voient sur le cheptel, en rouge, à la place du nombre d’animaux', () => {
-    const alerte = tuilesDuTerrain('troupeau', comptes({ aCompleter: 3 })).find((t) => t.cle === 'cheptel');
-    expect(alerte).toMatchObject({ nombre: 3, alerte: true, route: ROUTES.CHEPTEL_A_COMPLETER });
+  it('l’historique s’affiche dans son groupe, sans ligne « Historique » qui fasse doublon et sans « à compléter »', () => {
+    const tuiles = tuilesDuTerrain('troupeau', comptes());
+    expect(tuiles.some((t) => t.titre === 'Historique')).toBe(false);
+    const historique = tuiles.filter((t) => t.groupe === 'Historique');
+    expect(historique.map((t) => t.titre)).toEqual(expect.arrayContaining(['Naissances', 'Sorties et morts', 'Stock']));
+    expect(historique.some((t) => t.titre === 'À compléter')).toBe(false);
+    expect(historique.every((t) => t.ligne)).toBe(true);
+    expect(historique.find((t) => t.titre === 'Naissances')).toMatchObject({ route: ROUTES.CHEPTEL_NAISSANCES });
   });
 
   it('l’atelier suit la maquette : six tuiles (fabriquer, scanner un lot, vendre, lait, stock, recettes), et des menus dessous ; un stock négatif se signale', () => {

@@ -1,7 +1,7 @@
 import type { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { PRODUIT_A_LOTS } from '@/shared/constants/stock';
 import { ROUTES } from '@/shared/constants/routes';
-import { RUBRIQUES_DU_PLUS } from '@/features/accueil/rubriques/rubriquesDuPlus';
+import { RUBRIQUES } from '@/features/accueil/rubriques/rubriquesDuPlus';
 import { TEXTES } from '@/shared/textes';
 
 /**
@@ -43,8 +43,6 @@ export interface ComptesTerrain {
   /** L'aliment moyen par animal et par jour, en grammes (affiché sur la tuile des soins). */
   grammesParAnimalParJour?: number;
   ventesSansDocument: number;
-  /** Ce que le berger a saisi sur le terrain et qui reste à compléter. */
-  aCompleter: number;
   lotsAFacturer: number;
   /** Les animaux abattus qui restent à facturer à un client. */
   viandeAFacturer: number;
@@ -59,7 +57,6 @@ export interface ComptesTerrain {
 export const COMPTES_VIDES: ComptesTerrain = {
   delais: 0,
   ventesSansDocument: 0,
-  aCompleter: 0,
   lotsAFacturer: 0,
   viandeAFacturer: 0,
   viandeAVendre: 0,
@@ -71,16 +68,19 @@ export const COMPTES_VIDES: ComptesTerrain = {
 const T = TEXTES.accueil.ferme.terrain.tuiles;
 
 /**
- * Les rubriques du menu « Plus » (Réglementation, Argent, Partenaires, Bilans, Historique ; « Réglages » reste dans le menu) : la page Chèvres les
- * reprend en liste sous « Gestion », sous les six tuiles du troupeau. Elles s'ouvrent comme dans le menu « Plus ».
+ * Les menus de l'Historique (naissances, sorties, soins, lots, stock, rappels…) : ils s'affichent directement dans le groupe « Historique » de la page
+ * Chèvres, sans une ligne « Historique » qui ferait doublon avec le titre.
  */
-const TUILES_DU_PLUS: TuileTerrain[] = RUBRIQUES_DU_PLUS.filter((r) => r.cle === 'historique').map((r) => ({
-  cle: `plus-${r.cle}`,
-  titre: r.libelle,
-  icone: r.icone,
-  route: ROUTES.rubrique(r.cle),
-  ligne: true,
-}));
+const TUILES_DE_L_HISTORIQUE: TuileTerrain[] = RUBRIQUES.historique.sections
+  .flatMap((section) => section.lignes)
+  .map((ligne) => ({
+    cle: `historique-${ligne.route}`,
+    titre: ligne.libelle,
+    icone: ligne.icone,
+    route: ligne.route,
+    ligne: true,
+    groupe: 'Historique',
+  }));
 
 /** Le titre de l'écran terrain d'une zone. */
 export const titreDuTerrain = (zone: ZoneTerrain): string => TEXTES.accueil.ferme.terrain.titres[zone];
@@ -91,7 +91,7 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
     nombre ? { nombre, alerte } : {};
   switch (zone) {
     case 'troupeau':
-      // Comme sur la maquette : les six tuiles du troupeau, puis la liste « Gestion » (réglages du cheptel, rubriques du « Plus »), sans chiffre.
+      // Comme sur la maquette : les six tuiles du troupeau, puis les listes « Gestion » (réglages du cheptel, bilan) et « Historique », sans chiffre.
       return [
         { cle: 'scanner', titre: T.scanner, icone: 'scan', route: ROUTES.CHEPTEL_LISTE },
         { cle: 'naissance', titre: T.naissance, icone: 'heart', route: ROUTES.CHEPTEL_NAISSANCES, ...avec(c.naissances) },
@@ -109,13 +109,11 @@ export function tuilesDuTerrain(zone: ZoneTerrain, c: ComptesTerrain): TuileTerr
         // Les ventes de vivants sans document de circulation se signalent sur Mouvement (où se font les ventes vivantes).
         { cle: 'mouvement', titre: T.mouvement, icone: 'swap-horizontal', route: ROUTES.rubrique('mouvement'), ...avec(c.ventesSansDocument, true) },
         { cle: 'deces', titre: T.deces, icone: 'add', route: ROUTES.CHEPTEL_DECES },
-        // Le cheptel montre le nombre d'animaux ; quand le berger a saisi des naissances ou des morts à compléter, ce chiffre (en rouge) remplace le nombre.
-        c.aCompleter
-          ? { cle: 'cheptel', titre: T.cheptel, icone: 'list', route: ROUTES.CHEPTEL_A_COMPLETER, nombre: c.aCompleter, alerte: true }
-          : { cle: 'cheptel', titre: T.cheptel, icone: 'list', route: ROUTES.CHEPTEL_LISTE, ...avec(c.animaux) },
+        // Le cheptel montre le nombre d'animaux.
+        { cle: 'cheptel', titre: T.cheptel, icone: 'list', route: ROUTES.CHEPTEL_LISTE, ...avec(c.animaux) },
         { cle: 'reglagesCheptel', titre: 'Réglages du cheptel', icone: 'settings-outline', route: ROUTES.CHEPTEL_REGLAGES, ligne: true },
         { cle: 'bilanAnnuel', titre: 'Bilan annuel', icone: 'stats-chart-outline', route: ROUTES.CHEPTEL_BILAN, ligne: true },
-        ...TUILES_DU_PLUS,
+        ...TUILES_DE_L_HISTORIQUE,
       ];
     case 'atelier':
       // Comme sur la maquette : le lait, fabriquer (une page avec les produits), scanner un lot, les étiquettes, vendre, le stock.

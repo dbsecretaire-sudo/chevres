@@ -25,9 +25,13 @@ import { derniereBoucle } from '@/features/stock/services/boucles';
 import {
   articlesAFabriquer,
   erreurFabrication,
+  estArticleFromage,
   fabriquerFromages,
+  ingredientsDeLaRecette,
   numeroDeLot,
 } from '@/features/stock/services/lots';
+import { ChoixLotsAffine } from '@/features/production/components/ChoixLotsAffine';
+import { affinesPossibles } from '@/features/production/services/affines';
 import { definirLitresParFromage } from '@/features/stock/services/stock';
 import type { ArticleAffiche } from '@/features/stock/services/stock';
 import type { ArchiveStock } from '@/features/stock/types';
@@ -65,6 +69,8 @@ function FabricationDeLots() {
   const [article, setArticle] = useState('');
   const [date, setDate] = useState(todayISO());
   const [quantite, setQuantite] = useState('');
+  /** Un affiné : les lots de fromage frais cochés (le nombre s'en déduit, sans le taper). */
+  const [lotsAffines, setLotsAffines] = useState<Record<string, string[]>>({});
   /** Le numéro du premier lot tapé à la main (vide : celui qui est proposé d'après le produit et la date). */
   const [premierSaisi, setPremierSaisi] = useState<string | null>(null);
   /** Les litres de lait par fromage, demandés une seule fois quand l'inventaire ne les a pas encore. */
@@ -108,13 +114,15 @@ function FabricationDeLots() {
   const choisirArticle = (cle: string) => {
     setArticle(cle);
     setPremierSaisi(null);
+    setLotsAffines({});
   };
   const changerDate = (nouvelle: string) => {
     setDate(nouvelle);
     setPremierSaisi(null);
   };
 
-  const nombre = Math.round(Number(quantite) || 0);
+  // Un affiné se compte d'après les lots de fromage frais cochés ; les autres d'après la quantité tapée.
+  const nombre = sansLitres ? affinesPossibles(archive, produit, article, lotsAffines) : Math.round(Number(quantite) || 0);
   /** Les litres de lait par fromage : ceux de l'inventaire, sinon ceux qu'on vient d'indiquer. */
   // Les litres caillés sont saisis ; le litrage par fromage s'en déduit et se garde pour l'inventaire (statistiques).
   const laitUtilise = Math.round(parseDecimal(litresSaisis) * 100) / 100;
@@ -129,10 +137,18 @@ function FabricationDeLots() {
       return Alert.alert(TEXTES.production.fabrication.varianteRequise);
     // Le lait utilisé est une entrée de l'inventaire : il faut le dire pour un fromage.
     if (fromage && !sansLitres && !(laitUtilise > 0)) return Alert.alert(TEXTES.production.fabrication.litresRequis);
-    const utilises = ingredients
-      .map((i) => ({ i, q: parseDecimal(i.quantite) }))
-      .filter(({ i, q }) => i.article && q > 0)
-      .map(({ i, q }) => ({ article: i.article, quantite: q, lotIds: lotsPrisPourIngredient(archive, i, q) }));
+    // Un affiné : ses fromages viennent de la recette (pour le nombre d'affinés), avec les lots cochés ; les autres ingrédients, comme saisis.
+    const utilises = [
+      ...ingredients
+        .map((i) => ({ i, q: parseDecimal(i.quantite) }))
+        .filter(({ i, q }) => i.article && q > 0 && !(sansLitres && estArticleFromage(i.article)))
+        .map(({ i, q }) => ({ article: i.article, quantite: q, lotIds: lotsPrisPourIngredient(archive, i, q) })),
+      ...(sansLitres
+        ? ingredientsDeLaRecette(archive, produit, article, nombre)
+            .filter((i) => estArticleFromage(i.article))
+            .map((i) => ({ article: i.article, quantite: i.quantite, lotIds: (lotsAffines[i.article] ?? []).slice(0, Math.floor(i.quantite)) }))
+        : []),
+    ];
     if (!confirme && alerterSiStockInsuffisant(archive, utilises, () => fabriquer(true))) return;
     setEnregistrement(true);
     try {
@@ -204,13 +220,17 @@ function FabricationDeLots() {
           </>
         ) : null}
         <DateField label={T.date} required value={date} onChange={changerDate} />
-        <FormField
-          label={T.quantite}
-          required
-          value={quantite}
-          onChangeText={(v) => /^\d*$/.test(v) && setQuantite(v)}
-          keyboardType="number-pad"
-        />
+        {sansLitres ? (
+          <ChoixLotsAffine archive={archive} produit={produit} article={article} lotsChoisis={lotsAffines} onChange={setLotsAffines} />
+        ) : (
+          <FormField
+            label={T.quantite}
+            required
+            value={quantite}
+            onChangeText={(v) => /^\d*$/.test(v) && setQuantite(v)}
+            keyboardType="number-pad"
+          />
+        )}
         <FormField
           label={T.premier}
           required

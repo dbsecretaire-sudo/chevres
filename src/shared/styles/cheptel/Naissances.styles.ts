@@ -4,6 +4,8 @@ import { colors } from '@/shared/theme/colors';
 export const styles = StyleSheet.create({
   /** Le bouton du carnet et son bilan, tout près des filtres. */
   carnet: { paddingHorizontal: 16, gap: 10 },
+  /** En tête de la liste : de la place avant la première mise bas. */
+  enteteDeListe: { paddingBottom: 12 },
   /** Une mise bas : ses lignes se touchent (titre, nombre de petits, petits), sans blanc entre elles. */
   carte: { gap: 2, paddingVertical: 10 },
   liste: { paddingBottom: 140 },

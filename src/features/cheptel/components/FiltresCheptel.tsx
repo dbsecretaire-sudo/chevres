@@ -28,7 +28,7 @@ function LigneFiltres({ gauche, droite }: { gauche: React.ReactNode; droite?: Re
  * La barre de la liste du cheptel : le champ de recherche et « Filtrer » sur une ligne, comme en comptabilité. Les filtres
  * (statut, catégorie, tri, critères précis) sont dans la fenêtre qu'ouvre « Filtrer ».
  */
-export function FiltresCheptel({ e }: { e: EtatListeCheptel }) {
+export function FiltresCheptel({ e, nombre }: { e: EtatListeCheptel; nombre?: number }) {
   const [ouvert, setOuvert] = useState(false);
   return (
     <>
@@ -51,7 +51,7 @@ export function FiltresCheptel({ e }: { e: EtatListeCheptel }) {
       <View style={styles.resultatRow}>
         <Text style={commonStyles.mutedBold}>
           {T.resultatDeuxPoints}
-          {e.filtrees.length}
+          {nombre ?? e.filtrees.length}
         </Text>
         {e.filtresActifs ? (
           <Pressable onPress={e.reinitialiserFiltres}>

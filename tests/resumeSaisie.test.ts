@@ -94,14 +94,13 @@ describe('detaillerSaisie', () => {
   it('montre tous les champs d’un animal ajouté, en français', () => {
     const blocs = detaillerSaisie(
       [chevre('a')],
-      [chevre('a'), chevre('b', { numeroBoucle: 'FR123', dateNaissance: '2026-11-10', sexe: 'F', espece: 'chevres', aCompleter: true })],
+      [chevre('a'), chevre('b', { numeroBoucle: 'FR123', dateNaissance: '2026-11-10', sexe: 'F', espece: 'chevres' })],
     );
     expect(blocs).toHaveLength(1);
     expect(blocs[0].titre).toBe('Ajouté : FR123');
     expect(blocs[0].champs).toContainEqual({ nom: 'Date de naissance', apres: '10/11/2026' });
     expect(blocs[0].champs).toContainEqual({ nom: 'Sexe', apres: 'Femelle' });
     expect(blocs[0].champs).toContainEqual({ nom: 'Espèce', apres: 'Chèvres' });
-    expect(blocs[0].champs).toContainEqual({ nom: 'À compléter', apres: 'Oui' });
     expect(blocs[0].champs.find((c) => c.nom === 'id')).toBeUndefined();
   });
 
